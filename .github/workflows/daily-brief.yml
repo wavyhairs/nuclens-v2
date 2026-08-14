@@ -1,0 +1,290 @@
+name: Daily Brief (통합 일일 브리핑)
+
+env:
+  SITE_URL: ${{ vars.SITE_URL || 'https://nuclens-v2.pages.dev' }}
+  CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT || 'nuclens-v2' }}
+
+# 원자력뉴스봇 통합: news_bot(수집)이 쌓은 curated 큐를 국내/해외 카드 브리핑으로 발송.
+# ※ 소셜(last30days)은 무겁고 타임아웃 위험이 있어 이 워크플로에선 제외 — curated(RSS) 중심.
+#
+# 발송 원자성 (outbox 패턴, 2026-07):
+#   ① plan  — 선별→outbox.json(pending) 기록, 큐에서 발송분 hash 만 제거
+#   ② claim push — outbox+큐를 발송 **전에** push. 실패하면 발송하지 않는다
+#      (예전엔 발송 후 push 라 push 실패 시 다음날 통째 재발송·중복이 났음).
+#      큐를 [] 로 덮지 않고 hash 단위로 지우므로, 그 사이 crawl 이 넣은 새 기사도 안전.
+#   ③ send  — outbox 의 pending 브리핑만 발송 (재실행 시 sent 는 건너뜀 = 중복 억제)
+#   ④ confirm push — 발송 결과·delivery_log 기록. 충돌 시 결과(outbox_result.json,
+#      untracked 라 reset 에도 생존)를 재병합해 재시도.
+
+on:
+  # 목표 도착 시각은 07:25 KST 지만 **예약은 06:25 KST(21:25 UTC)** 다.
+  # GitHub cron 은 예약대로 안 뜬다 — 12일 실측(7/23~8/3) 지연이 50~66분
+  # (중앙값 61분)으로 놀랍도록 일정했고, 발송 스텝까지 +5분이라 22:25 예약의
+  # 실제 도착은 08:15~08:36 KST 였다. 지연만큼 앞당겨 07:20~07:37 도착을 맞춘다.
+  # 지연이 사라지는 최선의 날에도 06:30 도착이라 무해하다. :25 는 정시 큐 회피.
+  schedule:
+    - cron: '25 21 * * *'
+  workflow_dispatch:
+    inputs:
+      force_audio:
+        description: '오늘 오디오를 새 코드로 다시 생성 (텔레그램 재발송 안 함)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # outbox/큐/delivery_log 커밋
+
+concurrency:
+  group: daily-brief
+  cancel-in-progress: false
+
+jobs:
+  brief:
+    if: github.event_name == 'workflow_dispatch' || vars.AUTOMATION_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    # 2026-08-03 정기 실행이 15분 벽에 걸려 취소됐다 — 스텝은 전부 성공한 뒤
+    # 마지막 스모크가 끝나는 순간(15분 09초)이었다. Plan·trend·배포(TTS 포함)가
+    # 각각 3~7분이라 15분은 여유가 없다.
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # hourly crawl이 보존한 최신 임베딩을 웹 이슈 연결에도 사용한다.
+      - name: Restore embeddings cache
+        uses: actions/cache/restore@v4
+        with:
+          path: embeddings.json
+          key: ${{ runner.os }}-nuclear-embeddings-daily-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-nuclear-embeddings-
+
+      # 오디오 브리핑 mp3 는 git 이 아니라 Actions 캐시에 산다 (embeddings 패턴).
+      # 이전 산출물이 있어야 같은 날짜 재실행이 TTS 를 다시 부르지 않는다.
+      - name: Restore audio cache
+        uses: actions/cache/restore@v4
+        with:
+          path: web/public/data/audio
+          key: ${{ runner.os }}-nuclens-audio-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-nuclens-audio-
+
+      - name: Backfill 21-day briefing embeddings
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_EMBEDDING_MODEL: gemini-embedding-2
+        run: python embedding_pipeline.py --window-days 21 --max-new 150 --require-nonzero
+
+      - name: Plan (선별 → outbox 작성 → 큐 정리)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+        run: python daily_brief.py --plan
+
+      - name: Push claim (발송 전 커밋 — 실패 시 발송 중단)
+        id: claim
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for i in 1 2 3 4 5; do
+            git add outbox.json digest_queue.json
+            if git diff --cached --quiet; then echo "변경 없음 (재실행/empty)"; exit 0; fi
+            git commit -m "chore: daily brief claim"
+            if git push origin HEAD:main; then echo "claim push 성공"; exit 0; fi
+            echo "push 충돌 — 재시도 $i/5"
+            # 오늘 outbox 를 보존한 채 최신 main 위에서 재계획 (plan 은 오늘 outbox 재사용 → Gemini 재호출 0)
+            cp outbox.json /tmp/outbox.keep
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/outbox.keep outbox.json
+            python daily_brief.py --plan
+            sleep $((RANDOM % 8 + 4))
+          done
+          echo "!! claim push 5회 실패 → 발송하지 않음 (중복 방지). 큐는 origin 에 그대로 남아 내일 재시도."
+          exit 1
+
+      - name: Send (텔레그램 발송)
+        id: send
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python daily_brief.py --send
+
+      - name: Confirm (결과 병합 + delivery log) — 충돌 시 재시도
+        if: always() && steps.claim.conclusion == 'success'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for i in 1 2 3 4 5; do
+            python daily_brief.py --confirm
+            git add outbox.json delivery_log.jsonl
+            if git diff --cached --quiet; then echo "기록할 변경 없음"; exit 0; fi
+            git commit -m "chore: daily brief confirm"
+            if git push origin HEAD:main; then echo "confirm push 성공"; exit 0; fi
+            echo "push 충돌 — 재시도 $i/5"
+            git fetch origin main
+            git reset --hard origin/main
+            sleep $((RANDOM % 8 + 4))
+          done
+          echo "!! confirm push 5회 실패 — 발송 상태 미기록. 36h 창 안 재실행 시 중복 발송 가능성 (수동 확인 권장)"
+          exit 1
+
+      # 웹 트렌드 '흐름 해석' 생성 — 하루 1회, Gemini 호출 +1. 실패해도 브리핑엔 비치명.
+      - name: Trend insights (웹 트렌드 흐름 해석)
+        if: always() && steps.claim.conclusion == 'success'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for i in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            python trend_insights.py
+            # daily_lead 실패는 비치명 — trend insights 커밋을 같이 죽이면 안 된다
+            # (2026-08-02 실사고: 파일 부재 → git add pathspec 실패 → 스텝 사망)
+            python daily_lead.py || echo "[lead] daily_lead 실패 — 비치명, 계속"
+            git add trend_insights.json
+            if [ -f daily_leads.json ]; then git add daily_leads.json; fi
+            if git diff --cached --quiet; then echo "변경 없음"; exit 0; fi
+            git commit -m "chore: trend insights"
+            if git push origin HEAD:main; then echo "insights push 성공"; exit 0; fi
+            echo "push 충돌 — 재시도 $i/3"
+            sleep $((RANDOM % 8 + 4))
+          done
+          echo "insights push 실패 — 비치명, 다음날 재시도"
+          exit 0
+
+      # GitHub ubuntu 러너에 ffmpeg 가 없다 (2026-08-04 실측 — 로컬엔 있어서
+      # 로컬 검증이 못 잡았다). 오디오 mp3 변환 전용. 실패해도 비치명 —
+      # audio_brief 가 ffmpeg 부재를 감지하고 스스로 스킵한다.
+      - name: Install ffmpeg (오디오 브리핑용)
+        if: always() && steps.claim.conclusion == 'success'
+        run: |
+          sudo apt-get update -qq >/dev/null 2>&1 || true
+          sudo apt-get install -y -qq ffmpeg >/dev/null 2>&1 || echo "ffmpeg 설치 실패 — 오디오 스킵 (비치명)"
+
+      # 아침 브리핑·흐름 해석을 nuclens.pages.dev에 즉시 반영 (하루 1회 확정 배포)
+      - name: Deploy web to Cloudflare Pages
+        if: always() && steps.claim.conclusion == 'success'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          GEMINI_TTS_MODEL: ${{ vars.GEMINI_TTS_MODEL || 'gemini-3.1-flash-tts-preview' }}
+          # 오디오 브리핑 텔레그램 발송용 (audio_brief.send_telegram_audio)
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN 미설정 — 웹 배포 스킵"; exit 0; fi
+          git fetch origin main && git reset --hard origin/main
+          python web/build_data.py
+          # 오디오 브리핑 — build_data 산출물을 재료로 쓰므로 반드시 그 뒤,
+          # 배포 전. 실패해도 배포는 계속한다 (오디오는 부가 기능).
+          # 1차 실패 시 90초 뒤 한 번 더. build_data 가 방금 같은 무료 버킷을
+          # 쓰고 끝나는데 오디오가 곧바로 이어 붙어서, 분당 한도면 여기서 풀린다.
+          # 잡 예산은 전문가 브리핑까지 포함해 40분으로 확장했다. generate() 는 그날
+          # mp3 가 이미 있으면 스킵하므로 성공한 날엔 sleep 을 안 탄다.
+          # 일일 한도였다면 재시도도 실패하고, 로그의 '[gemini] 일일 한도 판정'
+          # 한 줄이 어느 쪽이었는지 말해 준다.
+          audio_args=""
+          if [ "${{ inputs.force_audio }}" = "true" ]; then
+            audio_args="--force --no-send"
+          fi
+          python audio_brief.py $audio_args || {
+            echo "[audio] 빠른 브리핑 1차 실패 — 90초 뒤 1회 재시도"
+            sleep 90
+            python audio_brief.py $audio_args || echo "[audio] 빠른 브리핑 재시도도 실패 — 비치명, 배포 계속"
+          }
+          # 전문가 브리핑 — NucBrief의 dossier→시간배분→episode plan→1인 전문가
+          # 대본→독립검증/수정 알고리즘을 nuclear의 기존 Gemini/TTS 스택 위에 이식.
+          # fast와 audio.json variants를 공유하지만 서로 실패에 독립적이다.
+          expert_args=""
+          if [ "${{ inputs.force_audio }}" = "true" ]; then expert_args="--force"; fi
+          python expert_audio_brief.py $expert_args || {
+            echo "[expert-audio] 1차 실패 — 90초 뒤 1회 재시도"
+            sleep 90
+            python expert_audio_brief.py $expert_args || echo "[expert-audio] 재시도도 실패 — 빠른 브리핑/웹 배포는 계속"
+          }
+          npx --yes wrangler@4 pages deploy web/public --project-name="$CLOUDFLARE_PAGES_PROJECT" --branch=main --commit-dirty=true
+          # 배포 후 라이브 스모크 (crawl.yml과 동일 기준)
+          sleep 15
+          base="$SITE_URL"; cb=$(date +%s)
+          count=$(curl -sf --max-time 30 "$base/data/news.json?cb=$cb" | python -c "import json,sys; print(len(json.load(sys.stdin)))") \
+            || { echo "::error::스모크 실패 — news.json이 JSON이 아니거나 접근 불가"; exit 1; }
+          [ "$count" -gt 0 ] || { echo "::error::스모크 실패 — 기사 0건"; exit 1; }
+          echo "스모크 OK — 기사 ${count}건"
+
+      # 오디오 산출물을 다음 배포(짝수시 crawl·deploy-web)가 복원할 수 있게 저장.
+      # audio.json 이 있어야 저장한다 — 빈 디렉터리 저장은 경고만 남긴다.
+      - name: Check audio cache
+        if: always()
+        id: audio-cache
+        run: |
+          if [ -f web/public/data/audio/audio.json ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Save audio cache
+        if: always() && steps.audio-cache.outputs.available == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: web/public/data/audio
+          key: ${{ runner.os }}-nuclens-audio-${{ github.run_id }}
+
+      # 이슈 병합·KEEI 매칭 LLM 판정 캐시. 위 배포 스텝의 git reset --hard 뒤에
+      # build_data 가 쓰기 때문에 여기서 따로 커밋해야 살아남는다.
+      # 캐시가 없으면 빌드마다 같은 쌍을 다시 묻고(KEEI 는 최대 150쌍) 판정이
+      # 흔들린다.
+      - name: Commit issue review cache
+        if: always()
+        run: |
+          # 파일별로 가드한다 — 한 파일이 없어서 git add 가 실패하면 나머지
+          # 파일의 커밋까지 같이 죽는다(daily_leads.json 데드락과 같은 함정).
+          for f in issue_llm_reviews.json keei_llm_matches.json issue_insights.json; do
+            if [ -f "$f" ]; then git add "$f"; fi
+          done
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: issue review cache"
+          for i in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git fetch origin main || exit 0
+            git rebase origin/main || { git rebase --abort || true; exit 0; }
+          done
+          echo "캐시 push 실패 — 비치명, 다음 빌드에서 재시도"
+
+      # 하루 1회 실제 브라우저 렌더링 검증 — API 정상인데 app.js 오류로 화면만
+      # 깨지는 경우(2026-08-01 빈 화면 사고 유형)를 잡는다. 브라우저 설치 비용
+      # 때문에 hourly crawl이 아닌 여기서만 실행.
+      - name: Render smoke (라이브 화면 검증)
+        if: always() && steps.claim.conclusion == 'success'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "배포 미사용 — 렌더링 스모크 스킵"; exit 0; fi
+          npm install --no-save playwright@1
+          npx playwright install --with-deps chromium
+          node web/tests/render_smoke.mjs

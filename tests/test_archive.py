@@ -1,0 +1,224 @@
+"""news_archive(영구 아카이브) + 통제 태그 정규화 테스트. 외부 호출 0."""
+
+import json
+import os
+import sys
+import tempfile
+import unittest
+from datetime import datetime, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+import news_archive
+
+# news_bot 은 모듈 로드 시 필수 env 를 요구 — 더미 주입 후 import
+for _k in ("NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
+    os.environ.setdefault(_k, "test-dummy")
+import news_bot  # noqa: E402
+import data_quality  # noqa: E402
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+class ArchiveDirMixin(unittest.TestCase):
+    """ARCHIVE_DIR 을 임시 폴더로 돌려 실제 저장소를 건드리지 않는다."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self._orig_dir = news_archive.ARCHIVE_DIR
+        news_archive.ARCHIVE_DIR = Path(self._tmp.name)
+
+    def tearDown(self):
+        news_archive.ARCHIVE_DIR = self._orig_dir
+        self._tmp.cleanup()
+
+
+class TestMakeRecord(unittest.TestCase):
+    def test_fields_and_datetime_pub(self):
+        article = {
+            "hash": "abc123", "link": "https://world-nuclear-news.org/x",
+            "title": "NRC approves licence", "domain": "world-nuclear-news.org",
+            "feed": "WNN", "pub": datetime(2026, 7, 30, 3, 0, tzinfo=timezone.utc),
+        }
+        cur = {
+            "importance": "must_read", "section": "international", "scope": "overseas",
+            "category": "규제", "title_kr": "NRC 인허가 승인", "summary": "요약",
+            "implication": "", "why_important": "중요", "tags": ["#NRC"],
+            "topics": ["regulation"], "countries": ["US"], "article_type": "policy",
+            "features": {"novelty": 2},
+        }
+        r = news_archive.make_record(article, cur, "2026-07-30T04:00:00+00:00")
+        self.assertEqual(r["v"], news_archive.RECORD_VERSION)
+        self.assertEqual(r["hash"], "abc123")
+        self.assertEqual(r["pub"], "2026-07-30T03:00:00+00:00")
+        self.assertEqual(r["topics"], ["regulation"])
+        self.assertEqual(r["countries"], ["US"])
+        self.assertEqual(r["article_type"], "policy")
+        self.assertIn(r["source_tier"], (1, 2, 3))
+        self.assertEqual(r["publisher"], "World Nuclear News")
+        self.assertEqual(r["source_type"], "specialist_media")
+        self.assertIsNone(r["event_date"])
+        self.assertNotIn("description", r)  # 원문 본문 미저장 (저작권)
+
+    def test_open_question_reject_survives_into_the_archive(self):
+        """게이트 사유는 아카이브 화이트리스트에 있어야 남는다.
+
+        make_record 는 지정한 키만 옮긴다. 여기 없으면 크롤이 사유를 계산해도
+        커밋되는 곳이 한 군데도 없어(delivery_log 는 크롤 잡이 커밋 안 함)
+        "왜 0건인가"를 다음에도 재현부터 해야 한다.
+        """
+        cur = {"importance": "must_read", "open_question": "",
+               "open_question_source": "unknown", "open_question_reject": "llm_null"}
+        r = news_archive.make_record({"hash": "h1"}, cur, _now_iso())
+        self.assertEqual(r["open_question_reject"], "llm_null")
+
+    def test_missing_fields_safe(self):
+        r = news_archive.make_record({"hash": "h1"}, {}, _now_iso())
+        self.assertEqual(r["topics"], [])
+        self.assertEqual(r["tags"], [])
+        self.assertEqual(r["pub"], "")
+        self.assertEqual(r["open_question_reject"], "")
+
+
+class TestAppendDedup(ArchiveDirMixin):
+    def test_append_and_hash_load(self):
+        now = _now_iso()
+        recs = [news_archive.make_record({
+                    "hash": f"h{i}", "link": f"https://example.com/{i}", "title": f"기사 {i}"
+                }, {}, now)
+                for i in range(3)]
+        self.assertEqual(news_archive.append_records(recs), 3)
+        hashes = news_archive.load_recent_hashes()
+        self.assertEqual(hashes, {"h0", "h1", "h2"})
+        # 호출부 패턴: 이미 있는 hash 는 거른 뒤 append → 재실행해도 안 불어남
+        new = [r for r in recs if r["hash"] not in hashes]
+        self.assertEqual(news_archive.append_records(new), 0)
+
+    def test_month_file_routing(self):
+        now = datetime.now(timezone.utc)
+        rec = news_archive.make_record({
+            "hash": "hx", "link": "https://example.com/month", "title": "월 라우팅 기사"
+        }, {}, now.isoformat())
+        news_archive.append_records([rec])
+        expected = Path(self._tmp.name) / f"{now.strftime('%Y-%m')}.jsonl"
+        self.assertTrue(expected.exists())
+        line = json.loads(expected.read_text(encoding="utf-8").strip())
+        self.assertEqual(line["hash"], "hx")
+
+    def test_broken_line_skipped(self):
+        now = datetime.now(timezone.utc)
+        path = Path(self._tmp.name) / f"{now.strftime('%Y-%m')}.jsonl"
+        path.write_text('{"hash": "ok"}\n{broken json\n', encoding="utf-8")
+        self.assertEqual(news_archive.load_recent_hashes(), {"ok"})
+
+
+class TestBackfill(ArchiveDirMixin):
+    def test_backfill_skips_existing(self):
+        now = _now_iso()
+        news_archive.append_records(
+            [news_archive.make_record({
+                "hash": "old1", "link": "https://example.com/old", "title": "기존 기사"
+            }, {}, now)])
+        curated = {
+            "old1": {"title": "이미 있음", "link": "", "cached_at": now},
+            "new1": {"title": "새 항목", "link": "https://ex.com/a", "domain": "ex.com",
+                     "importance": "nice_to_know", "cached_at": now},
+        }
+        cpath = Path(self._tmp.name) / "curated.json"
+        cpath.write_text(json.dumps(curated, ensure_ascii=False), encoding="utf-8")
+        self.assertEqual(news_archive.backfill_from_curated(cpath), 1)
+        self.assertEqual(news_archive.load_recent_hashes(), {"old1", "new1"})
+
+
+class TestControlledTagNorm(unittest.TestCase):
+    def test_topics_whitelist_and_cap(self):
+        self.assertEqual(news_bot.norm_topics(["SMR", "waste", "없는태그", "fusion", "finance"]),
+                         ["smr", "waste", "fusion"])  # 목록 밖 컷 + 최대 3개
+        self.assertEqual(news_bot.norm_topics("smr"), [])  # 리스트 아님 → 빈 값
+
+    def test_countries_whitelist(self):
+        self.assertEqual(news_bot.norm_countries(["us", "fr", "jp"]), ["US", "FR"])
+        self.assertEqual(news_bot.norm_countries(["uk", "de"]), ["GB", "DE"])
+        self.assertEqual(news_bot.norm_countries(["EU_ETC", "OTHER"]), ["UNSPECIFIED"])
+        self.assertEqual(news_bot.norm_countries(["ca", "rs"]), ["CA", "RS"])
+        self.assertEqual(news_bot.norm_countries(["KOREA"]), [])
+
+    def test_article_type_fallback(self):
+        self.assertEqual(news_bot.norm_article_type("policy"), "policy")
+        self.assertEqual(news_bot.norm_article_type("속보"), "news")
+        self.assertEqual(news_bot.norm_article_type(None), "news")
+
+
+class SourceUrlTests(unittest.TestCase):
+    """이슈 160개 중 38개(24%)의 원문 링크가 Google News 리다이렉트였다.
+
+    브라우저에선 실제 매체로 넘어가지만 클릭 전에 목적지를 알 수 없고, Google News
+    주소는 시간이 지나면 만료된다 — "나중에 다시 찾는다"가 업무인 사람에겐 인용이
+    끊긴다는 뜻이다.
+    """
+
+    def test_the_resolved_address_wins_when_we_have_it(self):
+        record = {"url": "https://news.google.com/rss/articles/CBMi123",
+                  "resolved_url": "https://www.yna.co.kr/view/AKR2026"}
+        self.assertEqual(data_quality.source_url(record),
+                         "https://www.yna.co.kr/view/AKR2026")
+
+    def test_without_it_nothing_changes(self):
+        record = {"url": "https://www.edaily.co.kr/news/1"}
+        self.assertEqual(data_quality.source_url(record),
+                         "https://www.edaily.co.kr/news/1")
+        self.assertEqual(data_quality.source_url({"url": "https://a/b",
+                                                  "resolved_url": ""}),
+                         "https://a/b")
+
+    def test_the_dedup_key_is_never_touched(self):
+        """`url` 을 실주소로 바꾸면 같은 기사가 새 기사로 다시 들어온다 —
+        url_hash 가 그 위에 서 있다. 표시용 주소만 따로 둔다.
+        """
+        article = {"hash": "h1", "link": "https://news.google.com/rss/articles/CBMi9",
+                   "title": "제목", "resolved_url": "https://www.yna.co.kr/view/AKR9"}
+        record = news_archive.make_record(article, {}, "2026-08-11T00:00:00Z")
+        self.assertEqual(record["url"], "https://news.google.com/rss/articles/CBMi9")
+        self.assertEqual(record["resolved_url"], "https://www.yna.co.kr/view/AKR9")
+        self.assertEqual(data_quality.source_url(record),
+                         "https://www.yna.co.kr/view/AKR9")
+
+
+class DisplayPublisherTests(unittest.TestCase):
+    """한국 독자에게 `hidomin.com` 은 매체명이 아니다.
+
+    아카이브 1,017건 실측(2026-08-10) 601건(59%)이 도메인 그대로였다. 도메인→이름
+    표를 손으로 만들지 않는 이유는 유지비만이 아니다 — 표가 **틀린다**.
+    `chosun.com` 의 실제 매체가 조선비즈인 기사가 있었다. 본문 때문에 어차피 받는
+    페이지의 og:site_name 이 표보다 정확하다(표본 29건 중 25건 확보).
+    """
+
+    def test_a_hostname_is_replaced_by_the_name_the_page_gives(self):
+        self.assertEqual(
+            news_archive.display_publisher("v.daum.net", "노컷뉴스"), "노컷뉴스")
+        self.assertEqual(
+            news_archive.display_publisher("chosun.com", "조선비즈"), "조선비즈")
+
+    def test_a_real_name_is_never_overwritten(self):
+        # Google News <source> 가 준 이름이 이미 맞다. 페이지 이름으로 덮으면
+        # 포털 미러의 이름이 원 매체를 지울 수 있다.
+        self.assertEqual(
+            news_archive.display_publisher("전기신문", "노컷뉴스"), "전기신문")
+
+    def test_no_name_means_no_change(self):
+        self.assertEqual(
+            news_archive.display_publisher("edaily.co.kr", ""), "edaily.co.kr")
+
+    def test_hostname_detection(self):
+        self.assertTrue(news_archive.looks_like_hostname("hankyung.com"))
+        self.assertTrue(news_archive.looks_like_hostname("v.daum.net"))
+        self.assertFalse(news_archive.looks_like_hostname("World Nuclear News"))
+        self.assertFalse(news_archive.looks_like_hostname("전기신문"))
+        self.assertFalse(news_archive.looks_like_hostname(""))
+
+
+if __name__ == "__main__":
+    unittest.main()
