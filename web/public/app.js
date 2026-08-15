@@ -1240,8 +1240,22 @@ function renderEmptyBriefing(briefing, issueList) {
   const view = emptyBriefingState(briefing);
   document.getElementById("changedIssues").hidden = true;
   document.getElementById("todayAgenda").hidden = true;
-  // 히어로가 이미 사유를 말했으므로 목록에서 같은 문장을 되풀이하지 않는다.
-  // 목록은 '그래서 어디로 가면 되는가'만 담당한다.
+  // 사유는 히어로가 말하고, 목록은 '그래서 어디로 가면 되는가'만 담당한다.
+  // 그 전제가 코드에 없어서 emptyBriefingState 가 만든 title 이 아무 데도 안
+  // 붙고 있었다 — 0건인 날 화면에는 고정 헤드라인("이번 주 원자력, 무엇이
+  // 달라졌나")만 남아, 아래가 비었는데 위에서는 달라진 게 있다고 말했다.
+  // 2026-08-16 라이브에서 실제로 그렇게 났다(발송 실패로 그날 이슈가 0건).
+  const hero = document.getElementById("briefingHero");
+  // 이슈가 있던 날에서 날짜를 옮겨 오면 그날의 히어로 형태가 그대로 남는다.
+  if (hero) hero.classList.remove("lead-issue", "weekly-hero", "no-lead");
+  document.getElementById("briefingKicker").textContent = "주간 원자력 인텔리전스";
+  document.getElementById("briefingTitle").textContent = view.title;
+  document.getElementById("briefingDateLabel").textContent =
+    briefing && briefing.date ? dateWeekdayLabel(briefing.date) : "";
+  // 같은 이유로 직전 날짜의 선두 카드도 걷는다 — 0건이라면서 카드가 하나 떠
+  // 있는 화면이 된다.
+  document.getElementById("leadIssue").hidden = true;
+  document.getElementById("leadCard").innerHTML = "";
   document.getElementById("showChangedIssues").hidden = true;
   // 근거 칩도 함께 지운다 — 안 그러면 직전 브리핑의 근거가 남아 없는 문장을 가리킨다
   const staleEvidence = document.getElementById("headlineEvidence");

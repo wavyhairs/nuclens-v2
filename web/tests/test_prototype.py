@@ -1266,6 +1266,45 @@ class RenderSmokeContractTests(unittest.TestCase):
         self.assertIn("skeleton-card", html)
         self.assertIn("#issueList article:not(.skeleton-card)", smoke)
 
+    def test_empty_briefing_puts_its_reason_on_the_hero(self):
+        """0건인 날의 사유는 화면 어딘가에 실제로 붙어야 한다.
+
+        `emptyBriefingState` 는 title 과 detail 을 만드는데 renderEmptyBriefing 이
+        detail 만 그리고 title 을 버리고 있었다. 그러면 히어로에는 고정 헤드라인
+        ("이번 주 원자력, 무엇이 달라졌나")만 남아, 목록이 비었는데 위에서는
+        달라진 게 있다고 말하는 화면이 된다 — 2026-08-16 라이브에서 그렇게 났고
+        (발송 실패로 그날 이슈 0건) 스모크의 '이슈 0건인데 사유 문구가 없음'이
+        그걸 잡았다. 목록 쪽 주석은 "히어로가 이미 사유를 말했으므로"라고
+        적혀 있었으니, 계약을 코드로 못 박는 자리는 여기다.
+        """
+        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        body = re.search(r"function renderEmptyBriefing\(.*?\n\}", script, re.S)
+        self.assertIsNotNone(body, "renderEmptyBriefing 을 찾지 못했다")
+        self.assertIn("view.title", body.group(0),
+                      "renderEmptyBriefing 이 사유(title)를 어디에도 붙이지 않는다")
+        self.assertRegex(body.group(0), r'getElementById\("briefingTitle"\)')
+
+    def test_smoke_knows_every_empty_briefing_reason(self):
+        """빈 상태 문구를 고치면서 스모크를 안 고치면 07:25 에 CI 가 빨개진다.
+
+        스모크는 '아는 사유 문구'가 화면에 있는지로 렌더 실패와 조용한 날을
+        가른다. 그 목록이 app.js 와 어긋나면 멀쩡한 날에 워크플로가 죽는다.
+        """
+        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        smoke = (ROOT / "tests" / "render_smoke.mjs").read_text(encoding="utf-8")
+        state = re.search(r"function emptyBriefingState\(.*?\n\}", script, re.S)
+        self.assertIsNotNone(state, "emptyBriefingState 를 찾지 못했다")
+        titles = re.findall(r'title:\s*"([^"]+)"', state.group(0))
+        self.assertGreaterEqual(len(titles), 3, f"사유 문구를 못 읽었다: {titles}")
+        known = re.search(r"const known = /\((.+?)\)/;", smoke)
+        self.assertIsNotNone(known, "스모크의 known 정규식을 찾지 못했다")
+        patterns = known.group(1).split("|")
+        for title in titles:
+            self.assertTrue(
+                any(part in title for part in patterns),
+                f"스모크가 모르는 빈 상태 문구다: {title!r} — render_smoke.mjs 의 known 에 추가할 것",
+            )
+
 
 class GeneratedDataTests(unittest.TestCase):
     @classmethod
