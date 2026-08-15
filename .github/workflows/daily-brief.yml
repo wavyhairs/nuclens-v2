@@ -241,7 +241,9 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
           GEMINI_TTS_MODEL: ${{ vars.GEMINI_TTS_MODEL || 'gemini-3.1-flash-tts-preview' }}
-          # 오디오 브리핑 텔레그램 발송용 (audio_brief.send_telegram_audio)
+          # 오디오 브리핑 텔레그램 발송용 — 빠른·전문가 두 변형이 공유한다
+          # (audio_brief.send_telegram_audio). 위 Send 스텝이 기사 카드를 먼저
+          # 보내므로 채널에는 기사 → 빠른 → 전문가 순으로 도착한다.
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
@@ -269,7 +271,7 @@ jobs:
           # 대본→독립검증/수정 알고리즘을 nuclear의 기존 Gemini/TTS 스택 위에 이식.
           # fast와 audio.json variants를 공유하지만 서로 실패에 독립적이다.
           expert_args=""
-          if [ "${{ inputs.force_audio }}" = "true" ]; then expert_args="--force"; fi
+          if [ "${{ inputs.force_audio }}" = "true" ]; then expert_args="--force --no-send"; fi
           python expert_audio_brief.py $expert_args || {
             echo "[expert-audio] 1차 실패 — 90초 뒤 1회 재시도"
             sleep 90

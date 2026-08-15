@@ -31,11 +31,13 @@ from audio_brief import (
     WEB_DATA,
     _audio_manifest,
     _check_not_truncated,
+    _mark_sent,
     _script_models,
     _tts_models,
     _write_audio_variant,
     call_tts,
     load_briefing,
+    send_telegram_audio,
     split_script,
     to_mp3,
     trim_silence,
@@ -709,7 +711,7 @@ def synthesize_expert(script: str) -> tuple[bytes, int, list[str], list[str]]:
     return b"".join(merged), rate, segment_models, warnings
 
 
-def generate(force: bool = False) -> bool:
+def generate(force: bool = False, send: bool = True) -> bool:
     if not is_available():
         print("[expert-audio] GEMINI_API_KEY 없음 — 스킵")
         return False
@@ -724,7 +726,15 @@ def generate(force: bool = False) -> bool:
     manifest = _audio_manifest()
     existing = ((manifest.get("variants") or {}).get(EXPERT_VARIANT) or {}) if manifest.get("date") == date else {}
     if not force and existing.get("file") and (AUDIO_DIR / existing["file"]).exists():
-        print(f"[expert-audio] {date} 전문가 브리핑 이미 생성됨 — 스킵")
+        existing_path = AUDIO_DIR / existing["file"]
+        # 생성은 됐는데 발송만 실패한 날이 있다(429·네트워크 타임아웃). 그날 재실행이
+        # 10분짜리 TTS 를 다시 부르지 않고 발송만 이어받게 한다 — 빠른 브리핑과 같은 계약.
+        if not existing.get("telegram_sent_at"):
+            if send and send_telegram_audio(existing_path, {"date": date, **existing}):
+                _mark_sent(date, EXPERT_VARIANT, existing)
+        else:
+            print(f"[expert-audio] {date} 전문가 브리핑 이미 생성·발송됨 "
+                  f"({existing_path.name}) — 스킵")
         return True
 
     issues = selected_issues(briefing, by_id)
@@ -790,13 +800,18 @@ def generate(force: bool = False) -> bool:
             if old.name != current:
                 old.unlink(missing_ok=True)
     print(f"[expert-audio] {date} 완료 — {file_name} ({duration}초, {mp3_path.stat().st_size/1024:.0f} KB)")
+    # 기사 카드 → 빠른 브리핑 → 전문가 브리핑 순으로 같은 채널에 도착한다.
+    # 워크플로가 audio_brief 를 먼저 돌리므로 이 순서는 호출 순서가 보장한다.
+    if send and send_telegram_audio(mp3_path, meta):
+        _mark_sent(date, EXPERT_VARIANT, meta)
     return True
 
 
 if __name__ == "__main__":
     ok = False
     try:
-        ok = generate(force="--force" in sys.argv)
+        ok = generate(force="--force" in sys.argv,
+                      send="--no-send" not in sys.argv)
     except Exception as exc:  # noqa: BLE001 — 오디오는 웹 배포 비치명 기능
         import traceback
         traceback.print_exc()

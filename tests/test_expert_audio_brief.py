@@ -1,11 +1,14 @@
 """expert_audio_brief.py — NucBrief 알고리즘 이식 회귀 테스트."""
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
+import audio_brief
 import expert_audio_brief as expert
 from gemini_client import GeminiError
 
@@ -311,6 +314,182 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
             expert._tts_models = original_models
             expert._tts_chunk_retry = original_chunk
             expert.trim_silence = original_trim
+
+
+class ExpertTelegramDeliveryTests(unittest.TestCase):
+    """전문가 브리핑의 텔레그램 발송 계약.
+
+    이 경로는 통째로 없었다 — 전문가 브리핑은 mp3 를 만들어 웹에만 올리고
+    끝났고, 구독자가 받는 건 3분짜리 빠른 브리핑 하나뿐이었다. 빠른 브리핑과
+    같은 계약(생성 후 발송 / 발송 실패 시 다음 실행이 회수 / --no-send 는
+    재발송 안 함)을 전문가 쪽에도 건다.
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        base = Path(self._tmp.name)
+        audio_dir = base / "data" / "audio"
+        audio_dir.mkdir(parents=True)
+        # _audio_manifest·_write_audio_variant 는 audio_brief 의 전역 AUDIO_DIR 을
+        # 본다. expert 는 같은 이름을 자기 네임스페이스로 import 했으므로 두 곳을
+        # 함께 갈지 않으면 매니페스트만 진짜 web/public 으로 새어 나간다.
+        self._orig_dirs = (expert.AUDIO_DIR, expert.WEB_DATA,
+                           audio_brief.AUDIO_DIR, audio_brief.WEB_DATA)
+        expert.AUDIO_DIR = audio_brief.AUDIO_DIR = audio_dir
+        expert.WEB_DATA = audio_brief.WEB_DATA = base / "data"
+        self._orig_fns = (expert.is_available, expert.load_briefing,
+                          expert.selected_issues, expert.generate_expert_script,
+                          expert.synthesize_expert, expert.to_mp3,
+                          expert.send_telegram_audio)
+        self.addCleanup(self._restore)
+
+        self.sent = []
+        self.send_ok = True
+        self.script_calls = 0
+        self.tts_calls = 0
+
+        expert.is_available = lambda: True
+        expert.load_briefing = lambda web_data: (briefing(), {})
+        expert.selected_issues = lambda brief, by_id: [issue(i) for i in range(1, 4)]
+        expert.generate_expert_script = self._fake_script
+        expert.synthesize_expert = self._fake_tts
+        expert.to_mp3 = self._fake_mp3
+        expert.send_telegram_audio = self._fake_send
+
+    def _restore(self):
+        (expert.AUDIO_DIR, expert.WEB_DATA,
+         audio_brief.AUDIO_DIR, audio_brief.WEB_DATA) = self._orig_dirs
+        (expert.is_available, expert.load_briefing,
+         expert.selected_issues, expert.generate_expert_script,
+         expert.synthesize_expert, expert.to_mp3,
+         expert.send_telegram_audio) = self._orig_fns
+
+    def _fake_script(self, brief, issues):
+        self.script_calls += 1
+        script = "\n".join(f"HOST: 문단 {i} 의 해설입니다." for i in range(1, 8))
+        return script, dossiers_of(4000, 3), {"segments": []}, {"passed": True}
+
+    def _fake_tts(self, script):
+        self.tts_calls += 1
+        return b"\x00\x40" * 24000 * 10, 24000, ["tts-a"], []
+
+    def _fake_mp3(self, pcm, rate, path, bitrate="128k"):
+        path.write_bytes(b"mp3")
+
+    def _fake_send(self, mp3_path, meta):
+        self.sent.append((mp3_path.name, dict(meta)))
+        return self.send_ok
+
+    def _manifest(self):
+        return json.loads((expert.AUDIO_DIR / "audio.json").read_text(encoding="utf-8"))
+
+    def _seed(self, **extra):
+        """이미 오늘치 전문가 mp3 가 있는 상태."""
+        (expert.AUDIO_DIR / "briefing-expert-2026-08-14.mp3").write_bytes(b"mp3")
+        audio_brief._write_audio_variant("2026-08-14", expert.EXPERT_VARIANT, {
+            "date": "2026-08-14", "key": expert.EXPERT_VARIANT,
+            "label": "전문가 브리핑", "file": "briefing-expert-2026-08-14.mp3",
+            "duration_sec": 600, **extra,
+        })
+
+    def test_generate_sends_expert_audio_and_marks_meta(self):
+        self.assertTrue(expert.generate())
+        self.assertEqual(1, len(self.sent))
+        self.assertEqual("briefing-expert-2026-08-14.mp3", self.sent[0][0])
+        # 캡션이 두 브리핑을 구분할 수 있게 label 이 meta 에 실려 나간다.
+        self.assertEqual("전문가 브리핑", self.sent[0][1]["label"])
+        variant = self._manifest()["variants"][expert.EXPERT_VARIANT]
+        self.assertIn("telegram_sent_at", variant)
+
+    def test_no_send_generates_without_delivering(self):
+        """품질 재생성(--force --no-send)은 채널에 같은 회차를 두 번 올리지 않는다."""
+        self.assertTrue(expert.generate(send=False))
+        self.assertEqual([], self.sent)
+        self.assertNotIn("telegram_sent_at",
+                         self._manifest()["variants"][expert.EXPERT_VARIANT])
+
+    def test_send_failure_leaves_meta_unmarked_so_next_run_retries(self):
+        self.send_ok = False
+        self.assertTrue(expert.generate())  # 발송 실패가 생성 성공을 뒤집지는 않는다
+        self.assertNotIn("telegram_sent_at",
+                         self._manifest()["variants"][expert.EXPERT_VARIANT])
+
+    def test_skip_path_recovers_generated_but_unsent_audio(self):
+        """생성 뒤 발송 전에 죽은 실행을 다음 실행이 10분 TTS 없이 회수한다."""
+        self._seed()
+        self.assertTrue(expert.generate())
+        self.assertEqual(1, len(self.sent))
+        self.assertEqual(0, self.tts_calls)     # TTS 재호출 0
+        self.assertEqual(0, self.script_calls)  # 대본 재생성 0
+        self.assertIn("telegram_sent_at",
+                      self._manifest()["variants"][expert.EXPERT_VARIANT])
+
+    def test_already_sent_is_not_resent(self):
+        self._seed(telegram_sent_at="2026-08-14T07:30:00+09:00")
+        self.assertTrue(expert.generate())
+        self.assertEqual([], self.sent)
+        self.assertEqual(0, self.tts_calls)
+
+
+class TelegramCaptionTests(unittest.TestCase):
+    """두 브리핑이 같은 채널에 연달아 도착한다 — 캡션만으로 구분돼야 한다."""
+
+    def _capture(self, meta):
+        """send_telegram_audio 가 텔레그램에 실제로 싣는 payload."""
+        import requests
+        captured = {}
+
+        class _Response:
+            ok = True
+            status_code = 200
+
+            @staticmethod
+            def json():
+                return {"ok": True}
+
+        def fake_post(url, data=None, files=None, timeout=None):
+            captured.update(data)
+            return _Response()
+
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        mp3 = Path(tmp.name) / "briefing.mp3"
+        mp3.write_bytes(b"mp3")
+        orig_post, orig_resolve = requests.post, audio_brief.gemini_client._resolve
+        requests.post = fake_post
+        audio_brief.gemini_client._resolve = lambda key, default=None: {
+            "TELEGRAM_BOT_TOKEN": "token", "TELEGRAM_CHAT_ID": "chat",
+            "SITE_URL": "https://nuclens-v2.pages.dev",
+        }.get(key, default)
+        try:
+            self.assertTrue(audio_brief.send_telegram_audio(mp3, meta))
+        finally:
+            requests.post = orig_post
+            audio_brief.gemini_client._resolve = orig_resolve
+        return captured
+
+    def test_caption_and_title_name_the_variant(self):
+        fast = self._capture({"date": "2026-08-14", "label": "빠른 브리핑",
+                              "description": "3분 요약", "duration_sec": 170})
+        expert_payload = self._capture({"date": "2026-08-14", "label": "전문가 브리핑",
+                                        "description": "10분 해설", "duration_sec": 600})
+        self.assertIn("빠른 브리핑", fast["caption"])
+        self.assertIn("2분 50초", fast["caption"])
+        self.assertIn("전문가 브리핑", expert_payload["caption"])
+        self.assertIn("10분 00초", expert_payload["caption"])
+        self.assertNotEqual(fast["title"], expert_payload["title"])
+
+    def test_caption_links_to_the_deployed_site_not_the_v1_domain(self):
+        payload = self._capture({"date": "2026-08-14", "label": "빠른 브리핑",
+                                 "duration_sec": 170})
+        self.assertIn("nuclens-v2.pages.dev", payload["caption"])
+
+    def test_legacy_meta_without_label_still_produces_a_clean_caption(self):
+        """v1 매니페스트로 재발송이 돌아도 캡션에 'None' 이 찍히면 안 된다."""
+        payload = self._capture({"date": "2026-08-14", "duration_sec": 165})
+        self.assertNotIn("None", payload["caption"])
+        self.assertIn("오디오 브리핑", payload["caption"])
 
 
 if __name__ == "__main__":
