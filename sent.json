@@ -1,9 +1,5 @@
 {
   "sent": {
-    "1d208509cda0e0e3": "2026-08-01T15:50:46.737498+00:00",
-    "f5955f85282534e8": "2026-08-01T15:50:46.737498+00:00",
-    "c5f7249d42b62a32": "2026-08-01T15:50:46.737498+00:00",
-    "d3407b46deefcdc9": "2026-08-01T15:50:46.737498+00:00",
     "e849648735ee7c9f": "2026-08-01T21:42:22.671623+00:00",
     "4bdd65d0c09aaf72": "2026-08-01T22:42:31.730896+00:00",
     "32306cfb5d495ced": "2026-08-02T01:29:08.029915+00:00",
@@ -3419,14 +3415,18 @@
     "3a2f93c91e348323": "2026-08-15T15:21:03.365152+00:00",
     "7e2a555d7c2bbf2b": "2026-08-15T15:21:03.365152+00:00",
     "5dcf5cc7354ff99a": "2026-08-15T15:21:03.365152+00:00",
-    "e69556445f4be310": "2026-08-15T15:21:03.365152+00:00"
+    "e69556445f4be310": "2026-08-15T15:21:03.365152+00:00",
+    "e9d30594a7058915": "2026-08-15T18:30:54.587698+00:00",
+    "a442147c1539028a": "2026-08-15T18:30:54.587698+00:00",
+    "54d98fd4721f281b": "2026-08-15T18:30:54.587698+00:00",
+    "8b047295e2c80dc9": "2026-08-15T18:30:54.587698+00:00"
   },
   "source_yield": {
-    "at": "2026-08-15T15:23:19+00:00",
+    "at": "2026-08-15T18:33:41+00:00",
     "counts": {
       "한수원 보도자료": 10,
-      "원안위 보도자료": 15,
-      "산업부 보도자료": 10,
+      "원안위 보도자료": 0,
+      "산업부 보도자료": 0,
       "원자력연구원 보도자료": 10,
       "IAEA Top News": 15,
       "WNN": 44,
@@ -3434,20 +3434,21 @@
       "NucNet": 15,
       "SFEN": 10,
       "DOE": 10,
-      "Reuters 원자력": 4,
-      "La Tribune 원자력": 6,
+      "Reuters 원자력": 3,
+      "La Tribune 원자력": 4,
       "POWER Magazine": 10,
       "Le Monde 에너지": 20,
       "FT 원자력": 10,
       "Les Échos 원자력": 12,
       "E&E News 원자력": 1,
-      "Nuclear Engineering International": 13,
-      "Euractiv 원자력": 70,
+      "Nuclear Engineering International": 12,
+      "Euractiv 원자력": 67,
       "국내 원자력 보도": 9
     },
-    "kept": {
-      "국내 원자력 보도": 2
-    },
-    "errors": {}
+    "kept": {},
+    "errors": {
+      "원안위 보도자료": "ConnectTimeout: HTTPSConnectionPool(host='www.nssc.go.kr', port=443): Max retries exceeded with url: /ajaxf/FR_BBS_SVC/BBSViewList.do (Caused by ConnectTimeoutE",
+      "산업부 보도자료": "ConnectTimeout: HTTPSConnectionPool(host='www.motir.go.kr', port=443): Max retries exceeded with url: /kor/article/ATCL3f49a5a8c/rss (Caused by ConnectTimeoutEr"
+    }
   }
 }
