@@ -1754,8 +1754,21 @@ class GeneratedDataTests(unittest.TestCase):
                         and right_countries & (set(member.get("countries") or []) - non_country_scopes)
                         for member in members
                     )
-                    self.assertTrue(has_cross_border_bridge)
-                self.assertFalse(build_data._facility_conflict(left, right))
+                    # 실패했을 때 '어느 묶음이 왜'를 말해야 한다. 예전엔 메시지가
+                    # 없어서 CI 가 `False is not true` 한 줄만 남겼고, 러너의
+                    # issue_audit.json 은 배포가 막히면 어디에도 안 남아 조사할
+                    # 재료가 통째로 사라졌다(2026-08-16).
+                    self.assertTrue(has_cross_border_bridge, (
+                        f"국경 충돌: issue={cluster.get('issue_id')} "
+                        f"『{left.get('title_kr')}』{sorted(left_countries)} ↔ "
+                        f"『{right.get('title_kr')}』{sorted(right_countries)} — "
+                        f"양국을 함께 명시한 연결 기사가 묶음에 없다 "
+                        f"(members={[sorted(set(m.get('countries') or []) - non_country_scopes) for m in members]})"
+                    ))
+                self.assertFalse(build_data._facility_conflict(left, right), (
+                    f"설비 충돌: issue={cluster.get('issue_id')} "
+                    f"『{left.get('title_kr')}』 ↔ 『{right.get('title_kr')}』"
+                ))
 
     def test_region_matches_confident_country_tags(self):
         self.assertEqual(self.meta["region_classification_version"], "country-first-v1")
