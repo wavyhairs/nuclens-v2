@@ -802,6 +802,25 @@ class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
         yml = (self.ROOT / ".github" / "workflows" / "crawl.yml").read_text(encoding="utf-8")
         self.assertIn("discovery_state.json", yml)
 
+    def test_every_workflow_that_builds_site_data_passes_the_gemini_key(self):
+        """빌드가 데이터를 만드는 곳이면 이슈 병합 판정도 같이 돌아야 한다.
+
+        build_data 의 이슈 병합 회색지대 판정은 LLM 을 부른다. 키가 없으면
+        '병합 안 함'으로 떨어지는데, 세 워크플로가 **같은 라이브 데이터를
+        덮어쓰므로** 키를 안 넘기는 하나가 나머지의 결과를 지운다.
+
+        2026-08-16 실측: deploy-web 이 `호출 0회 → 실패 40 [no_api_key]` 로
+        빌드해 crawl 의 `호출 2회 → 실패 0` 결과를 덮었다. 미판정 쌍이 안 묶여
+        이슈가 잘게 쪼개졌고(평균 생존 1.28→1.13주), 주별 합계가 내려가
+        흐름 탭의 주간 비교 게이트를 2.02 로 넘겨 표와 그래프가 사라졌다.
+        """
+        for name in ("crawl.yml", "daily-brief.yml", "deploy-web.yml"):
+            yml = (self.ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
+            if "build_data.py" not in yml:
+                continue
+            self.assertIn("GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}", yml,
+                          f"{name} 이 build_data 를 돌리는데 GEMINI_API_KEY 를 안 넘긴다")
+
     def test_append_only_logs_merge_by_union(self):
         """rebase 가 붙으려면 append 충돌이 자동 해소돼야 한다.
 
