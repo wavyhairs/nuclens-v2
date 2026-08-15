@@ -18,7 +18,11 @@ concurrency:
 
 jobs:
   weekly:
-    if: github.event_name == 'workflow_dispatch' || vars.AUTOMATION_ENABLED == 'true'
+    # daily-brief 와 같은 규칙 — 이쪽도 텔레그램으로 나간다. 발송 계열은 한
+    # 스위치로 묶어야 '주간만 몰래 나가는' 상태가 안 생긴다.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (vars.AUTOMATION_ENABLED == 'true' && vars.BRIEFING_ENABLED == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -41,7 +41,14 @@ concurrency:
 
 jobs:
   brief:
-    if: github.event_name == 'workflow_dispatch' || vars.AUTOMATION_ENABLED == 'true'
+    # 스위치가 둘이다. AUTOMATION_ENABLED 는 전체 정지용 마스터고, BRIEFING_ENABLED
+    # 는 '발송'만 따로 잠근다 — 수집·웹 갱신은 돌리면서 텔레그램 발송은 내용을
+    # 검토한 뒤에 켜고 싶은 구간이 있기 때문이다. 그 구간에 스위치가 하나뿐이면
+    # 수집을 켜는 순간 발송도 같이 나간다.
+    # workflow_dispatch 는 둘 다 우회한다 — 검토용 수동 실행이 그 목적이다.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (vars.AUTOMATION_ENABLED == 'true' && vars.BRIEFING_ENABLED == 'true')
     runs-on: ubuntu-latest
     # 2026-08-03 정기 실행이 15분 벽에 걸려 취소됐다 — 스텝은 전부 성공한 뒤
     # 마지막 스모크가 끝나는 순간(15분 09초)이었다. Plan·trend·배포(TTS 포함)가

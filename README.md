@@ -92,7 +92,18 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `GEMINI_API_KEY` | ⭕ | 없으면 큐레이션·투자관점 생략(fallback 발송) |
 | `IMAP_USER` / `IMAP_PASSWORD` | ⭕ | ANS 뉴스레터 수집 (Gmail 앱 비밀번호, 공백 제거) |
 
-`GEMINI_MODEL` 은 Repository **Variable** (기본 `gemini-3.1-flash-lite`).
+## Variables (GitHub Actions)
+
+| 이름 | 기본 | 용도 |
+|---|---|---|
+| `AUTOMATION_ENABLED` | 없음(=정지) | 마스터 스위치. `true` 여야 정기 실행이 돈다 |
+| `BRIEFING_ENABLED` | 없음(=발송 안 함) | 발송 계열(daily-brief·weekly) 전용. **둘 다 `true`** 여야 텔레그램으로 나간다 |
+| `GEMINI_MODEL` | `gemini-3.1-flash-lite` | 큐레이션 모델 |
+| `SITE_URL` / `CLOUDFLARE_PAGES_PROJECT` | 워크플로 기본값 | 배포·스모크 대상 |
+
+스위치를 둘로 나눈 이유: 수집·웹 갱신은 돌리면서 발송은 내용을 검토한 뒤에
+켜고 싶은 구간이 있다. 하나뿐이면 수집을 켜는 순간 발송도 같이 나간다.
+`workflow_dispatch` 는 둘 다 우회하므로 검토용 수동 실행은 언제든 가능하다.
 
 ## 로컬 테스트
 
