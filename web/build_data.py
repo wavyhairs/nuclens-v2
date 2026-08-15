@@ -3201,7 +3201,12 @@ def empty_briefing_row(briefing_date: str, stats: dict | None) -> dict:
         "primary_source_count": 0,
         "tracked_issue_count": 0,
         "verified_issue_count": 0,
-        "headline": "",
+        # daily_lead 는 같은 상태에서 EMPTY_HEADLINE 을 낸다. 여기만 빈 문자열이라
+        # 두 경로가 같은 날을 다르게 적고 있었다 — headline 은 히어로가 아니라
+        # 아카이브 목록과 RSS 가 쓰는 값이라(build_briefings 주석) 비면 그날 행이
+        # 통째로 빈칸이 되고, RSS 는 or 폴백에 걸려 "이번 주 원자력, 무엇이
+        # 달라졌나"라는 사실과 다른 제목을 내보낸다. 0건인 날은 0건이라고 적는다.
+        "headline": EMPTY_HEADLINE,
         "headline_kind": "empty",
         "headline_evidence": [],
         "changed_issue_count": 0,
