@@ -4587,6 +4587,43 @@ class CollectionTimestampTests(unittest.TestCase):
         self.assertIn('"collector_stamp"', source)
 
 
+class StaleBriefingWordingTests(unittest.TestCase):
+    """브리핑이 밀린 것을 '수집 지연'이라 쓰면 멀쩡한 수집기를 의심하게 된다.
+
+    2026-08-16: `collector_stamp` 는 1시간 전이고 `state` 도 ok 인데 배너는
+    `수집 지연 · 자동 수집이 중지돼 있습니다` 였다. 실제 사태는 브리핑이 36시간
+    넘게 안 나온 것이었고(BRIEFING_STALE_HOURS), build_data 는 '브리핑이 2일째
+    갱신되지 않았습니다'라는 정확한 문장을 status.json 에 이미 싣고 있었다.
+    watcher_running 분기만 그 message 를 버리고 문구를 하드코딩하고 있었다.
+
+    수집이 진짜 멈춘 날은 build_data 가 state=error 로 올리고 app.js 의 앞
+    분기가 받는다 — 그래서 이 분기의 문구는 브리핑을 가리켜야 맞다.
+    """
+
+    def setUp(self):
+        self.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        self.branch = (self.script.split("!state.systemStatus.watcher_running")[1]
+                       .split("} else")[0])
+
+    def test_the_watcher_branch_uses_the_message_the_build_ships(self):
+        self.assertIn("state.systemStatus.message", self.branch)
+
+    def test_the_lead_names_the_briefing_not_the_collector(self):
+        self.assertIn('lead = "업데이트 지연"', self.branch)
+
+    def test_no_branch_blames_collection_for_a_stale_briefing(self):
+        self.assertNotIn("자동 수집이 중지돼 있습니다", self.script)
+
+    def test_a_stalled_collector_still_reaches_the_error_branch_first(self):
+        """이 분기가 브리핑 전용이라는 전제의 근거 — 수집 정지는 error 로 간다."""
+        source = (ROOT / "build_data.py").read_text(encoding="utf-8")
+        block = source.split("def system_status(")[1].split("\ndef ")[0]
+        collector = block.split("COLLECTOR_STALE_HOURS")[1].split("elif")[0]
+        self.assertIn('"error"', collector)
+        self.assertLess(self.script.index('state.systemStatus?.state === "error"'),
+                        self.script.index("!state.systemStatus.watcher_running"))
+
+
 class SavedIssuesPackTests(unittest.TestCase):
     """브리핑은 이슈 하나로 끝나지 않는다.
 
