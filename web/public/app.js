@@ -774,9 +774,18 @@ function renderSystemStatus() {
     lead = "검증 중";
     message = "새 데이터를 검증하고 있습니다 · 완료 전까지 마지막 정상 데이터를 표시합니다";
   } else if (state.systemStatus && !state.systemStatus.watcher_running) {
+    // 이 분기에 오는 사태는 **브리핑** 쪽뿐이다. 수집이 멈춘 날은 build_data 가
+    // state=error 로 올리므로 위 분기가 먼저 받는다(build_data.system_status).
+    // 그런데 문구가 수집이 멈춘 것처럼 박혀 있어, 수집이 멀쩡한데도
+    // 수집기를 의심하게 만들었다 — 2026-08-16: collector_stamp 는 1시간 전이고
+    // state 도 ok 인데 배너는 수집 중지였다. 실제 사태는 브리핑이 36시간 넘게
+    // 안 나온 것. build_data 는 '브리핑이 2일째 갱신되지 않았습니다'라는 정확한
+    // 문장을 status.json 에 이미 싣고 있는데 여기서만 그걸 버렸다. 바로 위
+    // error 분기는 같은 필드를 제대로 쓴다 — 어긋난 쪽은 이 분기다.
     status = "warning";
-    lead = "수집 지연";
-    message = `자동 수집이 중지돼 있습니다 · 마지막 정상 브리핑 ${dateTimeLabel(briefedAt)}`;
+    lead = "업데이트 지연";
+    message = `${state.systemStatus.message || "브리핑이 갱신되지 않았습니다"}`
+      + ` · 마지막 정상 브리핑 ${dateTimeLabel(briefedAt)}`;
   } else if (briefingStaleDays() > 0) {
     // 수집기가 돌고 status.json 이 ok 인데도 새 브리핑이 안 나오는 날이 있다.
     // 그때 '정상'이라고 쓰면 사용자는 오늘 것을 보고 있다고 믿는다 — 가장 나쁜
