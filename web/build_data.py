@@ -1238,6 +1238,59 @@ def _country_conflict(left: dict, right: dict) -> bool:
     return bool(left_countries and right_countries and left_countries.isdisjoint(right_countries))
 
 
+# 나라를 특정하지 못하는 범위 태그. 'EUROPE' 두 건은 서로 다른 나라일 수 있어
+# 국가 대조에서 뺀다. 위 쌍 단위 _country_conflict 가 'OTHER' 만 빼는 것은
+# 그쪽이 "이 둘은 확실히 다른 나라"를 잡는 좁은 판정이기 때문이고, 여기서는
+# 화면 게이트와 같은 불변식을 쓰므로 범위를 맞춘다.
+NON_COUNTRY_SCOPES = frozenset({"OTHER", "UNSPECIFIED", "GLOBAL", "EUROPE", "EU"})
+
+
+def _cluster_countries(article: dict) -> set[str]:
+    return set(article.get("countries") or []) - NON_COUNTRY_SCOPES
+
+
+def _cluster_country_conflict(article: dict, members: list[dict]) -> bool:
+    """이 기사를 묶음에 넣으면 국경이 어긋나는가.
+
+    쌍 단위 판정은 전이적이지 않은데(위 '클러스터 전체 거부권'과 같은 함정)
+    매칭은 최근 멤버 3건하고만 비교한다. 그 사이를 **국가가 겹치는 다국가
+    기사**가 이어 주면 양 끝이 서로 다른 나라인 묶음이 만들어진다. 인접 쌍은
+    전부 국가가 겹쳐 _country_conflict 를 통과하므로 아무도 못 막는다.
+
+    실측 2026-08-15 라이브 issue-5190f5f0f0d050de:
+
+        RO ──[HU,RO]── HU ──[FR,HU]── FR
+
+    『다뉴브강 역대 최저 수위, 헝가리·루마니아 원전에 기후 위험 노출』 19건
+    안에 『프랑스 원전 13기, 가뭄과 해파리로 발전 용량 감소』가 들어가 있었다.
+    가뭄이라는 주제는 같지만 다뉴브강과 프랑스 원전은 다른 사건이다.
+
+    국경을 넘는 **하나의** 사건은 막으면 안 된다 — 두코바니처럼 한국·체코를
+    함께 다루는 보도가 실제로 있는 경우다. 그래서 양국을 함께 명시한 멤버
+    (브리지)가 있으면 통과시킨다. 화면 데이터 게이트
+    (test_generated_issue_clusters_have_no_country_or_facility_conflicts)가
+    검사하는 것과 **같은 불변식**이다 — 배포 직전에 잡던 것을 병합 시점에서
+    막는다.
+    """
+    incoming = _cluster_countries(article)
+    if not incoming:
+        return False
+    member_countries = [_cluster_countries(member) for member in members]
+    for other in member_countries:
+        if not other or not incoming.isdisjoint(other):
+            continue
+        if any(bridge & incoming and bridge & other for bridge in member_countries):
+            continue
+        return True
+    return False
+
+
+def _cluster_facility_conflict(article: dict, members: list[dict]) -> bool:
+    """설비도 같은 전이 구멍이 있다. 이쪽은 브리지 예외가 없다 —
+    한빛 3호기와 한빛 4호기는 어떤 기사를 경유해도 같은 사건이 아니다."""
+    return any(_facility_conflict(article, member) for member in members)
+
+
 # 같은 **설비·프로젝트**를 다루는 쌍은 후속 보도일 가능성이 높다. 기관·기업까지
 # 넣으면 신호가 죽는다 — 실측(2026-08-05, 판정 완료 185쌍):
 #
@@ -1724,6 +1777,12 @@ def cluster_selected_articles(
                 for member in issue["members"]
             ):
                 continue
+            # 국가·설비 충돌에도 같은 전체 거부권을 준다. 아래 매칭은 최근 3건만
+            # 보므로 blocked_by 는 그 3건에 대해서만 계산된다 — 더 오래된 멤버와
+            # 나라가 어긋나도 통과한다(_cluster_country_conflict 주석의 실측 사고).
+            if _cluster_country_conflict(article, issue["members"]) or \
+                    _cluster_facility_conflict(article, issue["members"]):
+                continue
             # 대표 기사 한 건만 보면 표현이 단계적으로 바뀌는 A→B→C 후속 보도가
             # 끊길 수 있다. 최근 기사 3건 중 가장 가까운 연결을 사용한다.
             for reference in issue["members"][-3:]:
@@ -1848,6 +1907,11 @@ def attach_evidence_articles(
                 _pair_id(article["hash"], member["hash"]) in veto_pairs
                 for member in card_members
             ):
+                continue
+            # 카드 묶음과 같은 전체 거부권 — 근거 기사도 묶음 멤버로 화면에 실리고
+            # 데이터 게이트의 검사 대상이라, 여기서 빠지면 같은 구멍이 남는다.
+            if _cluster_country_conflict(article, card_members) or \
+                    _cluster_facility_conflict(article, card_members):
                 continue
             # 근거끼리 chaining 되지 않도록 카드 멤버만 앵커로 사용한다.
             for reference in card_members[-3:]:
