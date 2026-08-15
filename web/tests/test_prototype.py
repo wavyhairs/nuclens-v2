@@ -1045,6 +1045,77 @@ class IssueSimilarityTests(unittest.TestCase):
             same_cluster, [],
             f"'다른 사건'으로 기각된 b·c 가 한 묶음에 있다: {members}")
 
+    def _danube_drought_articles(self):
+        """2026-08-15 라이브 issue-5190f5f0f0d050de 의 최소 재현.
+
+        RO ──[HU,RO]── HU ──[FR,HU]── FR. 인접 쌍은 전부 국가가 겹쳐
+        _country_conflict 를 통과하는데 양 끝은 서로 소다.
+        """
+        return [
+            {
+                "hash": "ro", "briefing_date": "2026-08-01", "article_date": "2026-08-01",
+                "title_kr": "다뉴브강 수위 저하로 원전 전력 생산 차질 비상사태 선포",
+                "tags": ["#다뉴브강", "#가뭄"], "countries": ["RO"],
+            },
+            {
+                "hash": "huro", "briefing_date": "2026-08-02", "article_date": "2026-08-02",
+                "title_kr": "다뉴브강 수위 저하로 원전 전력 생산 차질 우려 확산",
+                "tags": ["#다뉴브강", "#가뭄"], "countries": ["HU", "RO"],
+            },
+            {
+                "hash": "frhu", "briefing_date": "2026-08-03", "article_date": "2026-08-03",
+                "title_kr": "다뉴브강 수위 저하로 원전 전력 생산 차질 장기화 전망",
+                "tags": ["#다뉴브강", "#가뭄"], "countries": ["FR", "HU"],
+            },
+            {
+                "hash": "fr", "briefing_date": "2026-08-04", "article_date": "2026-08-04",
+                "title_kr": "다뉴브강 수위 저하로 원전 전력 생산 차질 지속 관측",
+                "tags": ["#다뉴브강", "#가뭄"], "countries": ["FR"],
+            },
+        ]
+
+    def test_country_conflict_vetoes_the_whole_cluster_not_just_recent_members(self):
+        """국가 충돌도 전이적이지 않다 — 다국가 기사가 징검다리가 된다.
+
+        2026-08-15 라이브(issue-5190f5f0f0d050de): 『다뉴브강 역대 최저 수위,
+        헝가리·루마니아 원전에 기후 위험 노출』 19건 안에 『프랑스 원전 13기,
+        가뭄과 해파리로 발전 용량 감소』가 들어가 있었다. 매칭이 최근 멤버
+        3건만 보는데 그 3건과는 국가가 겹쳐서 아무도 못 막았다.
+        """
+        issues = build_data.cluster_selected_articles(
+            self._danube_drought_articles(), None, None, None, [])
+        members = {issue["issue_id"]: [m["hash"] for m in issue["members"]] for issue in issues}
+        together = [hashes for hashes in members.values() if "ro" in hashes and "fr" in hashes]
+        self.assertEqual(
+            together, [],
+            f"국가가 서로 소인 ro·fr 이 연결 기사 없이 한 묶음에 있다: {members}")
+
+    def test_a_real_cross_border_event_still_merges_through_its_bridge(self):
+        """과교정 방지 — 국경을 넘는 하나의 사건은 계속 묶여야 한다.
+
+        두코바니처럼 한국·체코를 함께 명시한 보도가 있으면 그것이 연결 근거다.
+        브리지 없는 chaining 만 막고 이건 통과시킨다.
+        """
+        articles = [
+            {
+                "hash": "kr", "briefing_date": "2026-08-01", "article_date": "2026-08-01",
+                "title_kr": "두코바니 신규 원전 건설 계약 발효 절차 본격 착수",
+                "tags": ["#두코바니", "#수출"], "countries": ["KR"],
+            },
+            {
+                "hash": "krcz", "briefing_date": "2026-08-02", "article_date": "2026-08-02",
+                "title_kr": "두코바니 신규 원전 건설 계약 발효 절차 한국 체코 합의",
+                "tags": ["#두코바니", "#수출"], "countries": ["KR", "CZ"],
+            },
+            {
+                "hash": "cz", "briefing_date": "2026-08-03", "article_date": "2026-08-03",
+                "title_kr": "두코바니 신규 원전 건설 계약 발효 절차 현지 승인 완료",
+                "tags": ["#두코바니", "#수출"], "countries": ["CZ"],
+            },
+        ]
+        issues = build_data.cluster_selected_articles(articles, None, None, None, [])
+        self.assertEqual(len(issues), 1, f"브리지가 있는 국경 사건이 갈렸다: {issues}")
+
     def test_veto_does_not_fire_without_a_rejection(self):
         """거부권이 없을 땐 기존 병합 동작이 그대로여야 한다(과교정 방지)."""
         articles = self._nrc_rulemaking_articles()
@@ -1740,7 +1811,9 @@ class GeneratedDataTests(unittest.TestCase):
 
     def test_generated_issue_clusters_have_no_country_or_facility_conflicts(self):
         by_hash = {article["hash"]: article for article in self.news}
-        non_country_scopes = {"OTHER", "UNSPECIFIED", "GLOBAL", "EUROPE", "EU"}
+        # build_data 가 병합 시점에 쓰는 것과 **같은 집합**이어야 한다. 따로
+        # 적어 두면 둘이 조용히 어긋나 게이트와 병합이 다른 규칙을 쓰게 된다.
+        non_country_scopes = set(build_data.NON_COUNTRY_SCOPES)
         for cluster in self.issue_audit["clusters"]:
             members = [by_hash[member["hash"]] for member in cluster["members"]]
             for left, right in combinations(members, 2):
