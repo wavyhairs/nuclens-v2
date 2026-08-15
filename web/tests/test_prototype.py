@@ -1434,6 +1434,12 @@ class GeneratedDataTests(unittest.TestCase):
 
     def test_latest_briefing_keeps_previous_day_articles(self):
         latest = self.briefings[0]
+        # 0건인 날은 물어볼 기사가 없다. 여기서 그냥 assert 하면 '조용한 날'과
+        # '전날 기사를 잃어버린 날'이 같은 실패로 보이고, 그날 배포가 막힌다
+        # (2026-08-16 deploy-web 실패). 0건이 정상 상태라는 건 선정 하한과
+        # render_smoke 가 이미 세운 계약이다.
+        if not latest["issues"]:
+            self.skipTest(f"{latest['date']} 는 선정 0건 — 이 검사의 대상이 아니다")
         articles = [
             article
             for issue in latest["issues"]
@@ -2121,6 +2127,9 @@ class GeneratedDataTests(unittest.TestCase):
         self.assertNotIn('class="issue-why"', script)
         self.assertNotIn("이 이슈가 위에 있는 이유", script)
         for briefing in self.briefings:
+            # 이슈가 없는 날은 any([]) 가 False 라 '보관을 그만뒀다'와 구분이 안 된다.
+            if not briefing["issues"]:
+                continue
             self.assertTrue(any(issue["selection_reasons"] for issue in briefing["issues"]))
 
     def test_weekly_charts_do_not_force_horizontal_scroll(self):
@@ -2735,6 +2744,25 @@ class EmptyBriefingRowTests(unittest.TestCase):
         self.assertEqual(cut["below_floor_count"], 6)
         self.assertEqual(cut["issues"], [])
         self.assertEqual(rows[0]["date"], "2026-08-02")  # briefings[0] 이 최신
+
+    def test_all_cut_day_says_so_in_its_headline(self):
+        """0건인 날의 headline 은 비면 안 된다 — 히어로가 아니라 목록·RSS 가 쓴다.
+
+        같은 '0건' 상태를 daily_lead 는 EMPTY_HEADLINE 으로, empty_briefing_row 는
+        빈 문자열로 적고 있었다. 빈 값은 아카이브 목록의 그날 행을 통째로 빈칸으로
+        만들고, RSS 는 or 폴백에 걸려 "이번 주 원자력, 무엇이 달라졌나"라는 사실과
+        다른 제목을 내보낸다. 2026-08-16 deploy-web 이 여기서 4건 실패했다.
+
+        두 경로가 같은 문장을 쓰는지까지 묶는다 — 한쪽만 고치면 다시 갈라진다.
+        """
+        stats = {"2026-08-01": self._stats("2026-08-01", 0, 2),
+                 "2026-08-02": self._stats("2026-08-02", 6, 6)}
+        rows = build_data.build_briefings(self._news("2026-08-01"), [], "", {}, stats)
+        cut = {row["date"]: row for row in rows}["2026-08-02"]
+        self.assertEqual(cut["headline_kind"], "empty")
+        self.assertTrue(cut["headline"])
+        self.assertEqual(cut["headline"], build_data.daily_lead([])["headline"])
+        self.assertLessEqual(len(cut["headline"]), build_data.HEADLINE_LIMIT)
 
     def test_does_not_backfill_before_the_data_window(self):
         stats = {"2026-05-01": self._stats("2026-05-01", 4, 4),
