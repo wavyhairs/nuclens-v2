@@ -821,6 +821,28 @@ class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
             self.assertIn("GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}", yml,
                           f"{name} 이 build_data 를 돌리는데 GEMINI_API_KEY 를 안 넘긴다")
 
+    def test_daily_brief_measures_data_gates_and_commits_the_record(self):
+        """지표를 껐으면 어디선가는 재야 한다.
+
+        추적률·주별 합계 비율은 배포 게이트로 못 쓴다(2026-08-03, 08-11 사고).
+        그래서 deploy-web 에서 껐는데, crawl·daily-brief 는 웹 테스트를 아예 안
+        돌려서 **아무 데서도 재지 않는 상태**가 됐다. 2026-08-15 에 흐름 탭의
+        표와 그래프가 통째로 사라진 것을 화면에서 눈으로 발견한 이유다.
+
+        재기만 하고 커밋하지 않으면 러너와 함께 사라진다 — delivery_log 커밋이
+        빠지면 이 계측은 존재 이유가 없다(delivery_log.jsonl 이 애초에 이
+        클래스의 주제인 것과 같은 이유다).
+        """
+        yml = (self.ROOT / ".github" / "workflows" / "daily-brief.yml").read_text(encoding="utf-8")
+        self.assertIn("python data_gate_metrics.py", yml)
+        metrics_line = next(line for line in yml.splitlines()
+                            if "python data_gate_metrics.py" in line)
+        # 게이트가 아니다 — 실패가 배포를 죽이면 안 된다.
+        self.assertIn("||", metrics_line, f"계측이 배포를 죽일 수 있다: {metrics_line.strip()}")
+        commit_step = yml.split("Commit issue review cache")[1]
+        self.assertIn("delivery_log.jsonl", commit_step,
+                      "계측 기록을 커밋하지 않아 러너와 함께 사라진다")
+
     def test_append_only_logs_merge_by_union(self):
         """rebase 가 붙으려면 append 충돌이 자동 해소돼야 한다.
 
