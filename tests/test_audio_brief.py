@@ -577,11 +577,16 @@ class ExitCodeContractTests(unittest.TestCase):
 
     def _run(self, env_extra: dict) -> int:
         env = {**os.environ, "GEMINI_API_KEY": "", **env_extra}
-        # .env 가 있는 개발 머신에서 키가 되살아나지 않게 임시 디렉터리에서 돈다.
+        # 키를 되살리지 않는 것은 임시 디렉터리가 아니라 `GEMINI_API_KEY=""` 다.
+        # `_ENV_PATH` 가 cwd 가 아니라 `__file__` 기준이라 어디서 돌든 저장소
+        # 루트의 .env 를 읽는다 — 예전 주석은 그 점을 잘못 적고 있었고, 실제로
+        # 개발 머신에 .env 가 생기자 이 테스트가 진짜 TTS 를 호출했다.
+        # 빈 문자열이 .env 를 이기는 규칙은 gemini_client._resolve 가 보장한다.
         with tempfile.TemporaryDirectory() as tmp:
             return subprocess.run(
                 [sys.executable, str(ROOT / "audio_brief.py")],
                 cwd=tmp, env=env, capture_output=True, text=True, timeout=60,
+                encoding="utf-8", errors="replace",
             ).returncode
 
     def test_no_api_key_exits_nonzero(self):

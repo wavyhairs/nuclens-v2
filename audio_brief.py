@@ -59,10 +59,10 @@ TTS_MODELS = ["gemini-3.1-flash-tts-preview", "gemini-2.5-flash-preview-tts"]
 # 웹 플레이어가 보고 있을 수 있고, 진행자 목소리 교체가 값 하나 수정이 된다.
 VOICES = {"HOST": "Kore"}
 
-# 대본 생성은 기본 MODEL(2.5-flash)이 아니라 별도 무료 버킷을 쓴다 — 크롤
+# 대본 생성은 기본 MODEL(GEMINI_MODEL)이 아니라 별도 무료 버킷을 쓴다 — 크롤
 # 큐레이션·브리핑 체인이 쓰는 버킷은 저녁이면 고갈돼 하루 1회짜리 이 호출이
 # 3연속 429 로 굶었다(2026-08-04 실측: 같은 시각 단독 프로브는 성공).
-SCRIPT_MODEL_DEFAULT = "gemini-2.5-flash-lite"
+SCRIPT_MODEL_DEFAULT = "gemini-3.5-flash-lite"
 SCRIPT_RETRIES = 6     # 기본 3(≈2분)으로는 2026-08-10 분당 한도 창을 못 넘겼다
 
 

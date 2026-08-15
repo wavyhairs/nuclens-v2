@@ -154,7 +154,7 @@ MAX_NEW_PAIRS_PER_RUN = 40
 # ("헝가리 총리, 팍스 원전 마지막 터빈 '안전하게 가동 중' 발표" ↔ 가뭄 클러스터,
 # 코사인 0.8716)가 신규 이슈로 갈라졌다. 사용자가 "팔로잉이 안 된다"고 지적한
 # 그 증상이다. audio_brief.GEMINI_SCRIPT_MODEL 과 같은 처방 — 버킷을 분리한다.
-REVIEW_MODEL_DEFAULT = "gemini-2.5-flash-lite"
+REVIEW_MODEL_DEFAULT = "gemini-3.5-flash-lite"
 
 
 def _review_model() -> str:

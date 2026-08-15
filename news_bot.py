@@ -3,6 +3,7 @@ import html
 import json
 import os
 import re
+import sys
 import time
 import unicodedata
 from datetime import datetime, timedelta, timezone
@@ -44,11 +45,29 @@ from embedding_pipeline import (
     save_cache as save_embedding_store,
 )
 
-NAVER_CLIENT_ID = os.environ["NAVER_CLIENT_ID"]
-NAVER_CLIENT_SECRET = os.environ["NAVER_CLIENT_SECRET"]
-TELEGRAM_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+# 비밀값은 '환경변수 먼저, 없으면 .env' 로 찾는다. 이 규칙의 단일 구현이
+# gemini_client._resolve 이고 audio_brief 도 텔레그램 토큰을 거기서 가져온다.
+#
+# 2026-08-15: 여기만 os.environ[...] 이라 .env 를 아예 안 봤다. README 가 안내하는
+# 로컬 설정을 그대로 해도 crawl 만 `KeyError: 'NAVER_CLIENT_ID'` 로 죽었고,
+# 트레이스백에는 무엇을 어디에 넣으라는 말이 없었다.
+def _required_secret(key: str) -> str:
+    value = gemini_client._resolve(key)
+    if not value:
+        sys.exit(f"ERROR: {key} 누락.\n"
+                 "  - 로컬: .env 파일에 설정\n"
+                 "  - GitHub Actions: Repository Secrets에 등록")
+    return value
+
+
+# 텔레그램 토큰은 여기서 요구하지 않는다. crawl 은 수집·큐레이션만 하고 아무것도
+# 발송하지 않는다 — 유일한 사용처였던 send_telegram() 은 호출자가 없는 죽은 함수라
+# 2026-08-15 에 지웠다(발송은 daily_brief→telegram_send, 오디오는
+# audio_brief.send_telegram_audio 가 각자 맡는다). 필수로 두면 수집만 돌려보려는
+# 사람이 쓰지도 않을 키 두 개를 채워야 했다.
+NAVER_CLIENT_ID = _required_secret("NAVER_CLIENT_ID")
+NAVER_CLIENT_SECRET = _required_secret("NAVER_CLIENT_SECRET")
+GEMINI_API_KEY = gemini_client._resolve("GEMINI_API_KEY", "") or ""
 
 KST = timezone(timedelta(hours=9))
 LOOKBACK_HOURS = 6
@@ -68,7 +87,6 @@ DIGEST_QUEUE_FILE = Path("digest_queue.json")
 DELIVERY_LOG_FILE = Path("delivery_log.jsonl")
 
 NAVER_URL = "https://openapi.naver.com/v1/search/news.json"
-TELEGRAM_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 
 DOMAIN_SCORE = {
     "hani.co.kr": 9, "chosun.com": 9, "joongang.co.kr": 9,
@@ -786,23 +804,6 @@ def search_naver(query: str, display: int = 30) -> list[dict]:
     return r.json().get("items", [])
 
 
-def send_telegram(text: str) -> bool:
-    import requests
-
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": text,
-        "parse_mode": "HTML",
-        "disable_web_page_preview": False,
-    }
-    r = requests.post(TELEGRAM_URL, data=payload, timeout=10)
-    if not r.ok:
-        print(f"  ! Telegram error: {r.status_code} {r.text}")
-        return False
-    time.sleep(1)
-    return True
-
-
 # '원전' 앵커에 걸리지만 원자력이 아닌 동음이의. '기원전 8세기', '호메로스를 원전(原典)
 # 으로 한 각색' 류가 실제로 검색에 섞인다(2026-08-05 '원전' 최신순 실측). 앵커 판정 전에
 # 지워 버리면 다른 앵커가 없는 한 걸리지 않는다.
@@ -1422,14 +1423,28 @@ def classify_request_failure(exc: Exception) -> str:
       - ``quota``   한도 소진. ``call_json`` 이 이미 429 를 백오프로 3회 재시도한
                     뒤에 올라온 것이므로, 여기서 또 부르면 남은 한도만 태우고
                     같은 실패를 반복한다 → 재시도 금지 (기존 판단 유지).
+      - ``config``  모델명·키·권한이 틀렸다. 시간이 지나도 안 풀리는 유일한 종류라
+                    ``quota`` 보다 나쁘다 — 기다리면 낫는 게 아니라 매 회차 같은
+                    자리에서 100% 실패한다. 사람이 설정을 고쳐야 한다.
       - ``timeout`` 응답이 느렸을 뿐. 입력을 줄이면 짧아지므로 분할 재시도 대상.
       - ``other``   원인 불명. 함부로 다시 부르지 않는다 (기존 기본값 유지).
 
     ``truncated`` 는 예외 타입(``GeminiTruncated``)으로 이미 갈라지므로 여기 없다.
+
+    ``config`` 신설 근거 (2026-08-15 실측): 구글이 ``gemini-2.5-flash`` 를 신규 키에
+    막으면서 전 chunk 가 ``HTTP 404 NOT_FOUND`` 로 죽었다. 그때 라벨이 ``other`` 라
+    32/32 건이 fallback 으로 강등돼 **영구 열화**됐고(아래 QUOTA_EXHAUSTED 주석의
+    sent 마킹 문제와 같은 자리다) 크롤은 exit 0 으로 끝나 워크플로가 초록이었다.
+    400 은 여기 넣지 않는다 — 한 기사의 내용 때문에 나는 일회성 400 이 섞여 있어
+    크롤 전체를 세우면 과잉이다.
     """
     msg = str(exc)
     if "RESOURCE_EXHAUSTED" in msg or "HTTP 429" in msg:
         return "quota"
+    if ("HTTP 404" in msg or "NOT_FOUND" in msg
+            or "HTTP 403" in msg or "PERMISSION_DENIED" in msg
+            or "HTTP 401" in msg or "UNAUTHENTICATED" in msg):
+        return "config"
     if "TimeoutError" in msg or "timed out" in msg.lower():
         return "timeout"
     return "other"
@@ -1456,6 +1471,14 @@ SPLITTABLE_FAILURES = {"truncated", "timeout"}
 # 41초 대기 재시도 3회로도 못 뚫었다. 보류하면 그 대가가 '한 시간 지연'이지만
 # 강등하면 '영구 열화'다.
 QUOTA_EXHAUSTED = False
+
+# 이번 실행에서 설정 오류(모델명·키·권한)를 만났는가. 첫 사유 문자열을 담는다.
+#
+# QUOTA_EXHAUSTED 와 같은 이유로 적재를 보류한다 — 강등의 피해는 sent 마킹이
+# 영구라는 데서 오고, 그건 원인이 한도든 설정이든 똑같다. 다른 점은 회복 경로다:
+# 한도는 기다리면 풀리지만 설정은 사람이 고치기 전엔 매 회차 100% 실패한다.
+# 그래서 이쪽은 보류에 더해 **종료 코드로도 알린다**(main 끝).
+CONFIG_ERROR = ""
 
 
 def request_failure_reason(failures: dict[str, list[str]], chunk: list[dict]) -> str:
@@ -1734,9 +1757,11 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 time.sleep(1)
                 process(chunk[mid:], f"{label}b")
                 return
-            global QUOTA_EXHAUSTED
+            global QUOTA_EXHAUSTED, CONFIG_ERROR
             if reason == "quota":
                 QUOTA_EXHAUSTED = True
+            if reason == "config" and not CONFIG_ERROR:
+                CONFIG_ERROR = detail
             for art in chunk:
                 lost[art["hash"]] = detail
             capped = " (분할 예산 소진)" if reason in SPLITTABLE_FAILURES else ""
@@ -2084,7 +2109,14 @@ def collect_discovery(state: dict, anchors: list[str], negative_terms: str = "")
     dstate = discovery.load_state()
     queries, dstate = discovery.plan_queries(rows, registry, dstate)
     if not queries:
-        print("[discovery] 쿼리 0건(전부 냉각 중이거나 씨앗 없음)")
+        # 0건의 사유를 가른다 — 예산 소진과 '물을 게 없음'은 대응이 정반대인데
+        # 한 문장으로 뭉뚱그리면 예산을 늘려야 할 때 냉각 설정을 들여다보게 된다.
+        spent = int((dstate.get("spent") or {}).get("count") or 0)
+        if spent >= discovery.DAILY_QUERY_BUDGET:
+            print(f"[discovery] 오늘 예산 소진 "
+                  f"({spent}/{discovery.DAILY_QUERY_BUDGET}) → 건너뜀")
+        else:
+            print("[discovery] 쿼리 0건(전부 냉각 중이거나 씨앗 없음)")
         return []
 
     out: list[dict] = []
@@ -2103,8 +2135,10 @@ def collect_discovery(state: dict, anchors: list[str], negative_terms: str = "")
     dstate = discovery.prune_state(dstate)
     discovery.save_state(dstate)
     yielded = sum(1 for r in results if r["new_article_count"])
+    spent = int((dstate.get("spent") or {}).get("count") or 0)
     print(f"[discovery] 쿼리 {len(queries)}건 → 신규 {len(out)}건 "
-          f"(성과 있는 쿼리 {yielded}건, 엔티티 {len({q['entity_id'] for q in queries})}개)")
+          f"(성과 있는 쿼리 {yielded}건, 엔티티 {len({q['entity_id'] for q in queries})}개, "
+          f"오늘 {spent}/{discovery.DAILY_QUERY_BUDGET})")
     return out
 
 
@@ -2347,9 +2381,11 @@ def main() -> None:
     # 수렴하는지가 S1 의 성패다. 근거: docs/score_distribution.md §4.
     features_missing = 0
     skipped_quota = 0
+    skipped_config = 0
     # 모듈 전역이라 한 프로세스에서 두 번 돌면 이전 실행의 판정이 남는다.
-    global QUOTA_EXHAUSTED
+    global QUOTA_EXHAUSTED, CONFIG_ERROR
     QUOTA_EXHAUSTED = False
+    CONFIG_ERROR = ""
     now_iso = datetime.now(timezone.utc).isoformat()
 
     all_candidates: list[dict] = []
@@ -2465,12 +2501,15 @@ def main() -> None:
         else:
             previous = curated.get(h) or {}
             cur = batch_results.get(h)
-            if cur is None and QUOTA_EXHAUSTED:
-                # 한도 소진 중에는 fallback 으로 강등해 큐에 넣지 않는다.
-                # sent 마킹을 하지 않으므로 한도가 풀린 뒤 다음 크롤이 다시 수집해
+            if cur is None and (QUOTA_EXHAUSTED or CONFIG_ERROR):
+                # 한도 소진·설정 오류 중에는 fallback 으로 강등해 큐에 넣지 않는다.
+                # sent 마킹을 하지 않으므로 원인이 풀린 뒤 다음 크롤이 다시 수집해
                 # 제대로 큐레이션한다. LOOKBACK(6h) 밖으로 밀려난 기사는 놓치지만,
                 # 전량을 영구 강등시키는 것보다 낫다 — 강등분은 되돌릴 방법이 없다.
-                skipped_quota += 1
+                if CONFIG_ERROR:
+                    skipped_config += 1
+                else:
+                    skipped_quota += 1
                 continue
             if cur is None:
                 cur = fallback_curation(article)
@@ -2587,6 +2626,26 @@ def main() -> None:
         print(gemini_client.format_call_stats())
     except Exception as exc:  # 계측이 본 작업을 죽이면 안 된다
         print(f"[gemini] 호출 통계 실패: {exc}")
+
+    # 수집·상태 저장은 여기까지 정상으로 끝냈다. 그러나 설정 오류는 다음 회차에도
+    # 똑같이 100% 실패하므로 **종료 코드로 알려야** 워크플로가 빨간불이 된다.
+    # 오디오에서 같은 교훈을 이미 치렀다(tests/test_audio_brief.py:570 — 무조건
+    # sys.exit(0) 이라 그날 음원이 통째로 빠졌는데 워크플로는 success 였다).
+    if CONFIG_ERROR:
+        print(f"[gemini] 설정 오류로 큐레이션 불가 — {skipped_config}건 적재 보류: "
+              f"{CONFIG_ERROR[:300]}")
+        # **ListModels 로 확인하지 말 것.** 죽은 모델도 목록에 남고
+        # supportedGenerationMethods 에 generateContent 까지 달려 나온다 —
+        # 2026-08-15 실측: 이 사고를 낸 gemini-2.5-flash 가 404 를 뱉는 그 순간에도
+        # 목록에는 멀쩡히 있었다. 목록을 보라고 안내하면 "이상 없음"이라는 오답을
+        # 준다. 판정은 실제 generateContent 1토큰 호출로만 난다.
+        print("  GEMINI_MODEL 이 이 키로 실제 호출되는지 확인할 것 — 목록 조회가 아니라 1토큰 호출로:\n"
+              "    curl -s -X POST -H 'Content-Type: application/json' \\\n"
+              "      -d '{\"contents\":[{\"parts\":[{\"text\":\"hi\"}]}],"
+              "\"generationConfig\":{\"maxOutputTokens\":1}}' \\\n"
+              "      \"https://generativelanguage.googleapis.com/v1beta/models/$GEMINI_MODEL"
+              ":generateContent?key=$GEMINI_API_KEY\"")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

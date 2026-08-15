@@ -47,8 +47,16 @@ def _load_env_file() -> dict[str, str]:
 
 
 def _resolve(key: str) -> str | None:
-    """환경변수 먼저, 없으면 .env 파일에서 가져옴."""
-    return os.environ.get(key) or _ENV_FILE.get(key)
+    """환경변수 먼저, 없으면 .env 파일에서 가져옴.
+
+    빈 문자열로 '설정된' 환경변수는 .env 로 넘어가지 않는다 — 근거는
+    gemini_client._resolve 의 같은 판정에 적어 두었다. 여기서는 묵은 .env 가
+    발송 대상 채팅을 되살리는 것을 막는다.
+    """
+    value = os.environ.get(key)
+    if value is None:
+        value = _ENV_FILE.get(key)
+    return value or None
 
 
 _ENV_FILE = _load_env_file()

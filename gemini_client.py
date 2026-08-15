@@ -6,9 +6,30 @@ connect-ai의 `_quickLLMCall` 패턴을 차용 — 단일 system+user 메시지,
 
 환경 변수:
     GEMINI_API_KEY   — Google AI Studio 발급 키 (필수)
-    GEMINI_MODEL     — 모델 ID (기본 gemini-2.5-flash, 무료 티어 500 RPD)
-                       sesang-tracker와 키를 공유하는 환경에서 2.0-flash는
-                       free tier limit=0 응답이 나와 2.5로 고정
+    GEMINI_MODEL     — 모델 ID (기본 gemini-3.1-flash-lite)
+
+                       **flash 를 기본으로 두지 말 것.** 무료 티어(2026-08-15,
+                       AI Studio 표시값 · 실측 일치):
+
+                         gemini-3.5-flash        20 RPD /  5 RPM
+                         gemini-3.7-flash        20 RPD
+                         gemini-3.1-flash-lite  500 RPD / 15 RPM  ← 기본
+                         gemini-3.5-flash-lite  500 RPD / 15 RPM  ← 별도 버킷
+
+                       flash 계열의 20 RPD 는 이 파이프라인이 쓸 수 있는 양이
+                       아니다 — 크롤 회차당 3~4회에 brief·trend·keei_match 를
+                       더하면 하루 수십 회다. 아침이면 소진되고 그 뒤 온종일
+                       QUOTA_EXHAUSTED 로 적재가 보류된다. 500 RPD 를 주던
+                       gemini-2.5-flash 는 신규 키에 막혔다(404, 아래 참고).
+
+                       RPM 15 도 같이 본다. 분당 한도는 쪼개도 안 풀리므로
+                       버스트가 몰리는 자리(chunk 분할·배치 재시도)에서는
+                       백오프가 유일한 답이다.
+
+                       **모델을 바꿀 땐 https://ai.dev/rate-limit 에서 그 모델의
+                       RPD·RPM 을 먼저 볼 것.** 목록 조회(ListModels)로는 알 수
+                       없고 — 죽은 모델도 generateContent 를 달고 목록에 남는다 —
+                       한도는 429 응답 본문에만 실려 온다.
 
 사용법:
     from gemini_client import call_json
@@ -48,11 +69,26 @@ _ENV_FILE = _load_env()
 
 
 def _resolve(key: str, default: str | None = None) -> str | None:
-    return os.environ.get(key) or _ENV_FILE.get(key) or default
+    """환경변수 먼저, 없으면 .env, 그것도 없으면 default.
+
+    **빈 문자열로 '설정된' 환경변수는 .env 로 넘어가지 않는다.** `os.environ.get(key)
+    or ...` 는 값이 "" 일 때도 falsy 라 .env 를 봤는데, 그건 이 함수가 스스로 적어 둔
+    우선순위(환경변수 > .env)를 어긴다. `KEY=` 는 '값이 없다'는 명시적 선언이지
+    '못 찾았다'가 아니다.
+
+    2026-08-15 에 실제로 물렸다: `GEMINI_API_KEY=""` 로 LLM 을 끈 채 audio_brief 를
+    띄우는 테스트가, 개발 머신에 .env 가 생기자마자 진짜 키를 되찾아 실제 TTS 를
+    호출했다(60초 타임아웃). 프로덕션에서도 같은 구조다 — 키를 비워 호출을 막으려
+    해도 묵은 .env 가 조용히 되살려 과금이 난다.
+    """
+    value = os.environ.get(key)
+    if value is None:
+        value = _ENV_FILE.get(key)
+    return value or default
 
 
 API_KEY = _resolve("GEMINI_API_KEY")
-MODEL = _resolve("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = _resolve("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
 # Gemini REST 엔드포인트 — SDK 안 쓰고 stdlib urllib만 사용 (의존성 0)
 _ENDPOINT = (

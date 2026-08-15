@@ -62,8 +62,9 @@ MAX_NEW_PER_RUN = 40
 MAX_OUTPUT_TOKENS = 8192
 
 # 무료 티어 쿼터는 모델별 버킷이다. 크롤 큐레이션·트렌드·리드가 쓰는 기본
-# 2.5-flash 버킷에 얹으면 저녁마다 굶는다(issue_review 가 실제로 그렇게 죽었다).
-INSIGHT_MODEL_DEFAULT = "gemini-2.5-flash-lite"
+# 모델(GEMINI_MODEL) 버킷에 얹으면 저녁마다 굶는다(issue_review 가 실제로 그렇게
+# 죽었다).
+INSIGHT_MODEL_DEFAULT = "gemini-3.5-flash-lite"
 
 SYSTEM_PROMPT = """너는 한국수력원자력 정책 부서에 원자력 뉴스를 정리해 주는 편집자다.
 

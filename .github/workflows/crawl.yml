@@ -6,7 +6,11 @@ env:
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    # 3시간 간격. 검색 창(LOOKBACK_HOURS=6)의 절반이라 cron 이 한 회차 밀려도
+    # 창이 끊기지 않는다 — 매시간에서 내린 이유는 유입 자체가 아니라 그 유입이
+    # 전부 LLM 큐레이션을 타서 Gemini 무료 쿼터를 태우기 때문이다.
+    # 브리핑 직전 최신분은 daily-brief.yml 이 따로 1회 수집한다.
+    - cron: "0 */3 * * *"
   workflow_dispatch:
     inputs:
       fetch_publications:
@@ -51,10 +55,9 @@ jobs:
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # 텔레그램 키는 넘기지 않는다 — crawl 은 발송하지 않는다(news_bot 상단 주석).
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
           # 이메일 뉴스레터 수집 (선택 — 미설정 시 자동 스킵)
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
@@ -90,7 +93,7 @@ jobs:
       - name: Sync recent archive to policy web
         continue-on-error: true
         # policy_web_sync.py 는 별도 트랙(Supabase 웹)에서 준비 중 — 파일이 커밋되면
-        # 자동 활성화. 없을 땐 스킵해 매시간 에러 표시로 진짜 장애가 묻히는 것을 방지.
+        # 자동 활성화. 없을 땐 스킵해 회차마다 에러 표시로 진짜 장애가 묻히는 것을 방지.
         run: |
           if [ ! -f policy_web_sync.py ]; then echo "policy_web_sync.py 없음 — 스킵"; exit 0; fi
           python policy_web_sync.py --lookback-days 7
@@ -102,14 +105,14 @@ jobs:
       # "몇 시인가"가 아니라 "오늘 했는가"로 판단한다(--once-per-day). cron 지연으로
       # 특정 시각을 놓치면 그날 수집이 통째로 빠지는데, IAEA·EIA 는 RSS 최신
       # 40건만 노출하고 워터마크가 없어 그 사이 발간물이 영구 유실된다.
-      # 이미 수집한 날은 즉시 리턴하므로 매시간 돌아도 HTTP 요청 0.
-      # Pages 배포 예산 +0 — 다음 짝수시 배포·daily-brief 배포에 자연 반영.
+      # 이미 수집한 날은 즉시 리턴하므로 3시간마다 돌아도 HTTP 요청 0.
+      # Pages 배포 예산 +0 — 다음 회차 배포·daily-brief 배포에 자연 반영.
       - name: Fetch publications (1일 1회)
         continue-on-error: true
         env:
           # 영문 제목의 한국어 해석용(배치 1회). 없으면 원문 제목으로 뜬다.
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
         run: |
           if [ "${{ inputs.fetch_publications }}" = "true" ]; then
             echo "dispatch 강제 실행"; python pubs_fetch.py
@@ -158,8 +161,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuclens-audio-
 
-      # nuclens.pages.dev 갱신 — 2시간 간격(짝수 UTC시)만 배포.
-      # Pages 무료 티어 월 500회 제한: 매시간(720회/월)은 초과 → 짝수시(~360회/월)로 제한.
+      # nuclens.pages.dev 갱신 — 3시간 간격.
+      # Pages 무료 티어 월 500회 제한: 크롤이 3시간마다이므로 회차마다 배포해도
+      # 하루 8회(~240회/월)로 여유가 있다. daily-brief 배포분이 더해져도 마찬가지.
       # 시크릿 미설정이면 조용히 스킵 (크롤 본연 기능에 비치명).
       - name: Deploy web to Cloudflare Pages
         env:
@@ -171,12 +175,16 @@ jobs:
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN 미설정 — 웹 배포 스킵"; exit 0; fi
           # 배포 간격은 '지금 몇 시인가'가 아니라 '마지막 배포 이후 얼마나
-          # 지났나'로 잰다. 짝수시 판정은 cron 지연에 취약하다 — GitHub cron 은
-          # 상시 밀리는데, 짝수시에 예약된 실행이 이 스텝에 홀수시로 도달하면
-          # 건너뛰고, 그 다음 홀수시 실행도 건너뛴다. 그러면 배포가 통째로
+          # 지났나'로 잰다. 시각 기반 판정은 cron 지연에 취약하다 — GitHub cron 은
+          # 상시 밀리는데, 예약 시각에 걸어 두면 밀린 실행이 판정을 빗나가
+          # 건너뛰고 그 다음 실행도 건너뛴다. 그러면 배포가 통째로
           # 사라진다(2026-08-03 실측: 23:17 UTC 이후 4시간 배포 0회).
           # 라이브 meta.json 의 생성 시각을 보고 판단하므로 상태 파일이 필요 없다.
-          MIN_GAP_MIN=105
+          #
+          # 목표 간격 3시간에서 15분을 뺀 값이다. 정확히 180 으로 두면 179분에
+          # 도착한 회차가 건너뛰고 다음 회차까지 3시간을 더 기다려 실제 간격이
+          # 6시간이 된다 — 여유분은 cron 지연을 흡수하라고 있는 것이다.
+          MIN_GAP_MIN=165
           age=$(python - <<'PY'
           import json, time, urllib.request
           from datetime import datetime
@@ -197,7 +205,7 @@ jobs:
           python web/build_data.py
           npx --yes wrangler@4 pages deploy web/public --project-name="$CLOUDFLARE_PAGES_PROJECT" --branch=main --commit-dirty=true
 
-      # 이슈 병합 회색지대 LLM 판정 캐시. 커밋하지 않으면 빌드마다(하루 12회+)
+      # 이슈 병합 회색지대 LLM 판정 캐시. 커밋하지 않으면 빌드마다(하루 8회+)
       # 같은 쌍을 다시 물어보게 되고, 판정이 흔들리면 이슈 묶음도 같이 흔들린다.
       # 배포 스텝 뒤라 앞의 "Commit state" 에 실을 수 없어 별도 스텝으로 둔다.
       # 실패해도 크롤 본연 기능에 비치명이므로 항상 성공으로 끝낸다.
@@ -221,7 +229,7 @@ jobs:
           echo "캐시 push 실패 — 비치명, 다음 빌드에서 재시도"
 
       # 배포 후 라이브 스모크 — "데이터는 올라갔는데 화면이 죽는" 사고(2026-08-01) 재발 감지.
-      # 홀수시·시크릿 미설정으로 배포를 스킵한 경우엔 직전 배포본을 검사하게 되므로 무해.
+      # 간격 미달·시크릿 미설정으로 배포를 스킵한 경우엔 직전 배포본을 검사하게 되므로 무해.
       - name: Smoke test live site
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -239,7 +247,7 @@ jobs:
           # 스모크가 상시 실패하고 있었다(2026-08-02 규명). UA 를 명시한다.
           UA = {"User-Agent": "nuclens-smoke/1.0"}
           names = ["news.json", "briefings.json", "issues.json", "trend.json", "meta.json", "insights.json", "publications.json"]
-          # 새로 추가된 파일은 첫 배포 전까지 라이브에 없다. 홀수시 실행은 배포를
+          # 새로 추가된 파일은 첫 배포 전까지 라이브에 없다. 간격 미달 회차는 배포를
           # 건너뛰고 '직전 배포본'을 검사하므로, 필수로 두면 병합 직후 한 번은
           # 무조건 빨갛게 뜬다. 빌드가 항상 생성한다는 보장은 웹 단위 테스트가
           # 이미 하고 있으므로 여기서는 404 만 눈감아 준다(형식 검사는 그대로).

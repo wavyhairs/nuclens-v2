@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import gemini_client
 import issue_review
 
 
@@ -367,7 +368,12 @@ class TestQuotaBucketSeparation(unittest.TestCase):
     """
 
     def test_default_model_is_not_the_shared_flash_bucket(self):
-        self.assertNotEqual(issue_review.REVIEW_MODEL_DEFAULT, "gemini-2.5-flash")
+        """기준은 `gemini_client.MODEL` — 박아 둔 모델명이 아니다.
+
+        리터럴로 두면 기본 모델이 바뀐 순간 검사가 조용히 무력해진다(2026-08-15
+        에 실제로 그랬다). 자세한 근거는 test_issue_insight 의 같은 검사에.
+        """
+        self.assertNotEqual(issue_review.REVIEW_MODEL_DEFAULT, gemini_client.MODEL)
 
     def test_call_passes_the_review_model(self):
         with tempfile.TemporaryDirectory() as tmp:

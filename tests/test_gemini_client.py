@@ -1,11 +1,39 @@
 """Gemini 호출 계측 — 429 의 범인을 세어서 가린다."""
+import os
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import gemini_client
+
+
+class TestSecretResolutionPrecedence(unittest.TestCase):
+    """환경변수가 .env 를 이긴다 — 빈 문자열도 '값'이다.
+
+    `os.environ.get(k) or _ENV_FILE.get(k)` 는 "" 이 falsy 라 .env 로 넘어갔다.
+    그러면 키를 비워 LLM 을 끄려 해도 묵은 .env 가 되살린다 — 테스트에서는 실제
+    TTS 호출로, 프로덕션에서는 의도치 않은 과금으로 나타난다(2026-08-15).
+    """
+
+    def test_env_var_wins_over_dotenv(self):
+        with patch.dict(gemini_client._ENV_FILE, {"K_X": "from-dotenv"}, clear=False), \
+                patch.dict(os.environ, {"K_X": "from-env"}):
+            self.assertEqual(gemini_client._resolve("K_X"), "from-env")
+
+    def test_explicitly_empty_env_var_does_not_fall_back_to_dotenv(self):
+        with patch.dict(gemini_client._ENV_FILE, {"K_X": "from-dotenv"}, clear=False), \
+                patch.dict(os.environ, {"K_X": ""}):
+            self.assertIsNone(gemini_client._resolve("K_X"))
+            # default 는 여전히 받는다 — '값 없음'과 '기본값 없음'은 다른 질문이다.
+            self.assertEqual(gemini_client._resolve("K_X", "fallback"), "fallback")
+
+    def test_dotenv_still_used_when_env_var_is_absent(self):
+        with patch.dict(gemini_client._ENV_FILE, {"K_X": "from-dotenv"}, clear=False):
+            os.environ.pop("K_X", None)
+            self.assertEqual(gemini_client._resolve("K_X"), "from-dotenv")
 
 
 class TestCallInstrumentation(unittest.TestCase):

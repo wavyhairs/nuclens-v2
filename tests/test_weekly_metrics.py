@@ -1,4 +1,5 @@
 """weekly_bot / metrics / gemini_client 단위 테스트."""
+import copy
 import io
 import json
 import os
@@ -275,6 +276,38 @@ class TestWeeklyReportStore(unittest.TestCase):
     def test_source_issue_count_is_not_article_count(self):
         """기사 수를 쓰면 후속 보도가 많은 주가 실제보다 풍성해 보인다."""
         self.assertEqual(weekly_bot.count_unique_issues(self.ITEMS), 2)
+
+    def test_same_event_in_different_wording_counts_once(self):
+        """이 픽스처가 진짜 과제다 — 제목 완전일치는 상류가 이미 걷어낸다.
+
+        옛 구현(제목 앞 40자)은 완전일치만 잡아 실질 no-op 였다. 매체마다 같은
+        발표를 다르게 쓰는 쪽을 못 잡으면 '후속 보도가 많은 주 = 풍성한 주'
+        착시가 그대로 남는다.
+        """
+        items = [
+            {"hash": "aaaaaaaa1111", "title_kr": "한수원, 체코 두코바니 신규 원전 본계약 체결"},
+            {"hash": "bbbbbbbb2222", "title_kr": "한수원 체코 두코바니 원전 본계약 체결 완료"},
+            {"hash": "cccccccc3333", "title_kr": "미국 NRC, SMR 인허가 규정 개정안 의결"},
+        ]
+        self.assertEqual(weekly_bot.count_unique_issues(items), 2)
+
+    def test_different_units_of_the_same_plant_stay_separate(self):
+        """호기 충돌 거부권 — 서식만 같고 대상이 다른 쌍이 붙으면 안 된다."""
+        items = [
+            {"hash": "aaaaaaaa1111", "title_kr": "고리2호기 계속운전 심사 착수"},
+            {"hash": "bbbbbbbb2222", "title_kr": "한빛1호기 계속운전 심사 결과 발표"},
+        ]
+        self.assertEqual(weekly_bot.count_unique_issues(items), 2)
+
+    def test_counting_does_not_mutate_the_caller_items(self):
+        """세는 행위가 curated 항목에 story_* 메타데이터를 남기면 안 된다."""
+        items = [
+            {"hash": "aaaaaaaa1111", "title_kr": "한수원, 체코 두코바니 신규 원전 본계약 체결"},
+            {"hash": "bbbbbbbb2222", "title_kr": "한수원 체코 두코바니 원전 본계약 체결 완료"},
+        ]
+        before = copy.deepcopy(items)
+        weekly_bot.count_unique_issues(items)
+        self.assertEqual(items, before)
 
     def test_evidence_hashes_pruned_to_known_and_ordered(self):
         synthesis = {"policy_shifts": [{"what": "x", "evidence_hashes": [

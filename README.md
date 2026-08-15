@@ -1,15 +1,15 @@
 # 원자력 뉴스봇 (nuclear-news)
 
 해외 전문지 RSS·한국 기관 보도자료·Google News·ANS 이메일 뉴스레터에서 원자력 뉴스를
-매시간 수집하고, 매일 아침 텔레그램으로 **국내/해외 투자 관점 카드 브리핑**을 보낸다.
+3시간마다 수집하고, 매일 아침 텔레그램으로 **국내/해외 투자 관점 카드 브리핑**을 보낸다.
 금요일엔 주간 판세 리포트.
 
 ## 파이프라인
 
 ```
-crawl (매시간)          news_bot.py    RSS·Naver·이메일 수집 → dedup → Gemini batch
+crawl (3시간마다)       news_bot.py    RSS·Naver·이메일 수집 → dedup → Gemini batch
                                        큐레이션(+랭킹 feature) → digest_queue.json 적재
-daily-brief (07:25 KST) daily_brief.py --plan/--send/--confirm
+daily-brief (07:25 KST) news_bot.py 로 직전 1회 수집 → daily_brief.py --plan/--send/--confirm
                                        story dedup → 랭킹(ranking.py) → 카드 브리핑 발송
                                        → Nuclens 데이터 빌드 → 빠른/전문가 오디오 → Pages 배포
 weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강약·watchlist)
@@ -92,7 +92,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `GEMINI_API_KEY` | ⭕ | 없으면 큐레이션·투자관점 생략(fallback 발송) |
 | `IMAP_USER` / `IMAP_PASSWORD` | ⭕ | ANS 뉴스레터 수집 (Gmail 앱 비밀번호, 공백 제거) |
 
-`GEMINI_MODEL` 은 Repository **Variable** (기본 `gemini-2.5-flash`).
+`GEMINI_MODEL` 은 Repository **Variable** (기본 `gemini-3.1-flash-lite`).
 
 ## 로컬 테스트
 

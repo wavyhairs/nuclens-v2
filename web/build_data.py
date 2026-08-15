@@ -1972,10 +1972,16 @@ def usable_detail(article: dict) -> str:
     # 500억 달러 시대 겨냥…'인 기사가 '한수원, 신규 원전 부지 후보지 선정'으로
     # 둔갑해 must_read 로 올라갔다. 사람이 selection_overrides 로 내렸다).
     # 요지만 지우면 **거짓말은 남고 진실이 사라진다.** 사람이 볼 수 있게 남긴다.
+    # 어긋난 당사자인 **요지를 같이 남긴다.** 2026-08-15 이전에는 제목 두 개
+    # (title_kr·title)만 적었는데, 국내 기사는 둘이 같은 문자열이라 로그에 같은 말이
+    # 두 번 찍혔고 정작 무엇과 어긋났는지가 빠져 있었다 — 어느 쪽이 틀렸는지 사람이
+    # 가르라는 자리인데 가를 재료가 없었다.
     _DETAIL_MISMATCHES.append({
         "hash": str(article.get("hash") or "")[:8],
         "title_kr": title[:60],
         "title": str(article.get("title") or "")[:60],
+        "detail": detail[:80],
+        "overlap": hits / len(tokens),
         "importance": str(article.get("importance") or ""),
     })
     return ""
@@ -4474,8 +4480,13 @@ def build() -> None:
         print(f"[build_data] 요지↔제목 불일치 {len(seen)}건"
               f"{f' (must_read {len(flagged)}건 — 확인 필요)' if flagged else ''}")
         for row in list(seen.values())[:5]:
-            print(f"    {row['hash']} [{row['importance']}] "
-                  f"생성={row['title_kr'][:34]} / 원문={row['title'][:34]}")
+            # 번역 제목이 따로 있을 때만 원문을 덧붙인다 — 국내 기사는 같은 문자열이다.
+            origin = row["title"][:34]
+            same = not origin or origin == row["title_kr"][:34]
+            print(f"    {row['hash']} [{row['importance']}] 겹침 {row['overlap']:.0%}\n"
+                  f"      제목={row['title_kr'][:44]}"
+                  f"{'' if same else f' / 원문={origin}'}\n"
+                  f"      요지={row['detail'][:44]}")
     atlas = meta["atlas_readiness"]
     print(
         "[build_data:atlas] "
