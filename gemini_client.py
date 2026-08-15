@@ -210,6 +210,18 @@ def format_call_stats() -> str:
 _DAILY_QUOTA_MARKERS = ("PerDay", "per_day", "PerDayPerProject", "RequestsPerDay")
 
 
+def _rejects_thinking_config(body_text: str) -> bool:
+    """400 이 thinkingConfig 때문인지. 아니면 벗어도 안 낫는다.
+
+    구글은 이 경우 필드명을 안 알려 주고 'Request contains an invalid argument.'
+    만 준다(2026-08-16 실측). 그래서 필드명이 보이면 그걸 믿고, 안 보이면 그
+    포괄 문구일 때만 벗어 본다 — 무관한 400 까지 재시도로 태우지 않는다.
+    """
+    if "thinking" in body_text.lower():
+        return True
+    return "INVALID_ARGUMENT" in body_text
+
+
 def _is_daily_quota(body_text: str) -> bool:
     """429 본문이 일일 한도 소진을 가리키는가.
 
@@ -360,6 +372,20 @@ def call_json(
         except urllib.error.HTTPError as e:
             body_text = e.read().decode("utf-8", errors="replace")
             last_err = GeminiError(f"HTTP {e.code}: {body_text[:600]}")
+            # thinkingConfig 를 안 받는 모델이 있다. 실측(2026-08-16):
+            #   gemini-3.5-flash-lite  thinkingBudget=0 → 400 INVALID_ARGUMENT
+            #   gemini-3.1-flash-lite  thinkingBudget=0 → 200
+            # 다른 요소(temperature·maxOutputTokens·responseMimeType)는 양쪽 다
+            # 통과하므로 범인은 이 필드 하나다. 모델 이름을 박아 두면 다음 모델에서
+            # 같은 일이 또 나므로, 400 을 만나면 이 필드만 벗고 한 번 더 본다.
+            # 벗은 뒤에도 400 이면 진짜 잘못된 요청이라 그때 올린다.
+            if (e.code == 400 and "thinkingConfig" in generation_config
+                    and _rejects_thinking_config(body_text)):
+                print(f"[gemini] {model or MODEL} 가 thinkingConfig 를 거부 — "
+                      f"제거 후 재시도 ({label})")
+                generation_config.pop("thinkingConfig")
+                body["generationConfig"] = generation_config
+                continue
             # 429/5xx만 재시도
             if e.code not in (429, 500, 502, 503, 504) or attempt == retries:
                 raise last_err from e

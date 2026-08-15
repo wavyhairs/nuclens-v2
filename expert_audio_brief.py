@@ -44,11 +44,29 @@ from audio_brief import (
 EXPERT_VARIANT = "expert"
 EXPERT_TARGET_SECONDS = 600
 EXPERT_BODY_SECONDS = 540
-EXPERT_MAX_ISSUES = 6
+# 상한이지 목표가 아니다. 그날 브리핑에 이슈가 이보다 적으면 적은 대로 간다.
+# 6 이었을 때는 뉴스가 많은 날에도 재료가 6개에서 잘려, 분량을 재료에 맞춰도
+# 브리핑이 길어질 수 없었다 — 길이를 재료가 정하게 하려면 재료 쪽 뚜껑을 열어야
+# 한다. 실측(2026-08-14): 브리핑 이슈 15개 중 6개만 오디오에 들어갔다.
+EXPERT_MAX_ISSUES = 9
 EXPERT_MIN_ISSUE_SECONDS = 55
 EXPERT_MAX_ISSUE_SECONDS = 150
-EXPERT_MIN_SPOKEN = 3600
-EXPERT_MAX_SPOKEN = 5200
+# 분량은 고정 목표가 아니라 그날 재료에서 유도한다. 10분을 지키려고 상수를
+# 박아 두면, 재료가 얇은 날에는 모델이 confirmed_facts 밖을 지어내야만 통과하고
+# (그건 금지다) 실제로는 통째로 실패한다. 실측(2026-08-14): dossiers 5,768자에
+# 목표 3,600자를 요구해 2회 연속 미달로 전문가 브리핑이 아예 안 나왔다.
+#
+# 비율은 같은 실측에서 얻었다 — 대본 2,461자 / dossiers 5,768자 = 0.43.
+# 사실을 새로 만들지 않는 한 이 근처가 사실상 상한이다.
+SPOKEN_PER_SOURCE_CHAR = 0.43
+# 목표 대비 허용 폭. 아래는 '모델이 성의 없이 줄였다', 위는 '재료 밖으로 나갔다'.
+SPOKEN_BAND = (0.72, 1.35)
+# 절대 한계. 이보다 짧으면 전문가 브리핑이라 부를 수 없고, 길면 TTS 청크와
+# 생성 시간이 워크플로 예산을 넘는다.
+SPOKEN_ABS_MIN = 1200
+SPOKEN_ABS_MAX = 9000
+# 빠른 브리핑 실측(1,150자 → 170초). 분량↔재생시간 환산에 쓴다.
+CHARS_PER_SECOND = 6.76
 EXPERT_TTS_RETRIES = 2
 EXPERT_EARLY_RESTART_SEGMENTS = 2
 
@@ -275,6 +293,28 @@ def _weight(issue: dict, highlight_ids: set[str]) -> float:
     return weight
 
 
+def spoken_target(dossiers: list[dict]) -> int:
+    """그날 재료에서 본문 목표 글자수를 만든다.
+
+    기사가 적거나 원문이 얇은 날은 짧게, 많은 날은 10분을 넘겨도 길게 — 길이를
+    정하는 것은 시계가 아니라 그날 뉴스다.
+    """
+    volume = len(json.dumps(dossiers, ensure_ascii=False))
+    return int(min(SPOKEN_ABS_MAX, max(SPOKEN_ABS_MIN, volume * SPOKEN_PER_SOURCE_CHAR)))
+
+
+def spoken_bounds(dossiers: list[dict]) -> tuple[int, int, int]:
+    """(목표, 하한, 상한). 검증과 프롬프트가 같은 값을 보게 한 곳에서 만든다."""
+    target = spoken_target(dossiers)
+    low, high = SPOKEN_BAND
+    return target, int(target * low), int(target * high)
+
+
+def body_seconds(target_chars: int) -> int:
+    """목표 글자수 → 본문 초. 오프닝·클로징 몫으로 10%를 남긴다."""
+    return max(120, int(target_chars / CHARS_PER_SECOND * 0.9))
+
+
 def allocate_seconds(briefing: dict, issues: list[dict], total: int = EXPERT_BODY_SECONDS) -> list[dict]:
     """NucBrief의 중요도 기반 시간배분을 deterministic하게 이식한다."""
     if not issues:
@@ -348,13 +388,23 @@ def plan_prompt(briefing: dict, dossiers: list[dict], allocations: list[dict]) -
 
 
 def script_prompt(briefing: dict, dossiers: list[dict], plan: dict) -> str:
-    return f"""EpisodePlan과 dossiers만 근거로 약 10분의 1인 전문가 Script를 작성하십시오.
+    n = max(1, len(dossiers))
+    target, low, high = spoken_bounds(dossiers)
+    # 문단당 2~5문장(대략 120~250자)으로 목표 분량을 채우려면 세그먼트 하나가
+    # 여러 문단이어야 한다. 그 산수를 적어 주지 않으면 모델은 '이슈당 한 문단 +
+    # 종합 한 문단'으로 끝낸다(2026-08-14 실측: 7문단·1,690자, 목표의 절반 미만).
+    per = max(2, round(target / n / 200))
+    return f"""EpisodePlan과 dossiers만 근거로 1인 전문가 Script를 작성하십시오.
 
 [전달 방식]
 - 화자는 수석 원자력 분석가 한 명뿐이며 모든 줄은 HOST: 로 시작합니다.
 - 가상의 질문자, 자문자답, '네/그렇군요/맞습니다' 같은 대화형 추임새를 금지합니다.
 - 뉴스 제목을 연속 낭독하지 말고 전문가가 자료를 보며 설명하는 구어체 존댓말로 씁니다.
-- 문단 하나는 2~5문장. 기사마다 기계적으로 같은 서식을 반복하지 않습니다.
+- 문단 하나는 2~5문장(120~250자)이며 한 줄에 하나씩 씁니다.
+- **주제 하나를 한 문단으로 끝내지 마십시오.** 세그먼트 {n}개 각각을 사실 정리 ·
+  단계와 미확정사항 · 해석으로 나눠 {per}개 안팎의 문단으로 펼치고, 마지막에
+  종합 문단을 둡니다. 전체 {n * per + 1}개 안팎이 되어야 목표 분량이 나옵니다.
+- 기사마다 기계적으로 같은 서식을 반복하지 않습니다.
 - 정책·사업과 기술·운영의 두 관점은 필요할 때 자연스럽게 통합합니다.
 
 [정확성]
@@ -364,7 +414,9 @@ def script_prompt(briefing: dict, dossiers: list[dict], plan: dict) -> str:
 - 수치·기관·날짜·호기명은 dossier와 일치해야 합니다.
 - 막연한 '중요합니다/기대됩니다/귀추가 주목됩니다'를 쓰지 않습니다.
 - 오프닝과 클로징은 시스템이 붙이므로 인사/마무리를 쓰지 않습니다.
-- 본문 대사 합계 {EXPERT_MIN_SPOKEN:,}~{EXPERT_MAX_SPOKEN:,}자를 목표로 합니다.
+- 본문 대사 합계 {low:,}~{high:,}자(목표 {target:,}자)로 씁니다. 이 범위는 오늘
+  dossiers 분량에서 나온 값입니다 — 채우려고 근거 없는 문장을 늘리지 말고
+  재료가 허락하는 만큼만 깊이 쓰십시오.
 
 [출력 JSON]
 {{"script":"HOST: ...\\nHOST: ..."}}
@@ -377,7 +429,22 @@ def script_prompt(briefing: dict, dossiers: list[dict], plan: dict) -> str:
 {json.dumps(dossiers, ensure_ascii=False, indent=2)}"""
 
 
-def normalize_script(text: str) -> tuple[str, int]:
+def min_paragraphs(issue_count: int) -> int:
+    """이슈 수에서 문단 하한을 만든다.
+
+    고정 8이었는데 selected_issues 는 EXPERT_MAX_ISSUES 까지만 뽑는다. 모델은
+    이슈당 한 문단 + 종합 한 문단을 쓰므로 자연스러운 최소가 7 — 하한 8 을
+    산술적으로 못 넘는다. 실측(2026-08-14, 2회 재현): 이슈 6개 → 7문단 → 매번
+    '형식 미달'. 이슈가 적은 날일수록 더 못 넘는다.
+
+    이슈당 최소 한 문단 + 종합 한 문단을 요구하되, 한 이슈를 여러 문단으로
+    펼치라는 프롬프트와 맞물리도록 하한 자체는 낮게 둔다. 분량이 모자란 것은
+    글자 수 게이트가 잡는다 — 여기서 두 번 잡을 일이 아니다.
+    """
+    return max(3, issue_count + 1)
+
+
+def normalize_script(text: str, issue_count: int = 7) -> tuple[str, int]:
     lines: list[str] = []
     spoken = 0
     for raw in str(text or "").splitlines():
@@ -398,8 +465,9 @@ def normalize_script(text: str) -> tuple[str, int]:
             continue
         lines.append(f"HOST: {body}")
         spoken += len(body)
-    if len(lines) < 8:
-        raise ValueError(f"전문가 대본 문단 {len(lines)}개 — 형식 미달")
+    floor = min_paragraphs(issue_count)
+    if len(lines) < floor:
+        raise ValueError(f"전문가 대본 문단 {len(lines)}개 — 하한 {floor} 미달")
     return "\n".join(lines), spoken
 
 
@@ -459,12 +527,13 @@ def verification_passed(report: dict) -> bool:
 
 
 def repair_prompt(dossiers: list[dict], script: str, report: dict) -> str:
+    _, low, high = spoken_bounds(dossiers)
     return f"""검증보고서의 지적만 반영해 전체 대본을 수정하십시오.
 - unsupported claim은 삭제하거나 dossier가 직접 허용하는 조건형 문장으로 낮춥니다.
 - 사업단계 오류를 우선 수정합니다.
 - 정보량과 전문가 깊이는 유지합니다.
 - 수석 원자력 분석가 한 명만 말하며 모든 줄은 HOST: 로 시작합니다.
-- 본문 대사 {EXPERT_MIN_SPOKEN:,}~{EXPERT_MAX_SPOKEN:,}자 범위를 지킵니다.
+- 본문 대사 {low:,}~{high:,}자 범위를 지킵니다.
 
 [출력 JSON] {{"script":"HOST: ...\\nHOST: ..."}}
 [검증보고서]
@@ -478,29 +547,67 @@ def repair_prompt(dossiers: list[dict], script: str, report: dict) -> str:
 def generate_expert_script(briefing: dict, issues: list[dict]) -> tuple[str, list[dict], dict, dict]:
     dossier_payload = _call_structured(
         DOSSIER_SYSTEM, dossier_prompt(briefing, issues), label="expert_dossiers",
-        temperature=0.1, max_output_tokens=10000,
+        # 이슈 상한을 9 로 올렸으므로 dossier 출력도 같이 늘려야 한다 — 여기서
+        # 잘리면 뒤 단계가 얇은 재료로 짧은 대본을 쓰고 분량 게이트에 걸린다.
+        # 실측(2026-08-16): 9개에서 14,000 도 output 13,985 로 거의 정확히 채워
+        # 잘렸다. 폴백 모델이 받아 주긴 하지만 그건 회차마다 호출 하나를 버리는
+        # 것이고, 폴백이 막히면(그날 400 이 그랬다) 통째로 실패한다.
+        temperature=0.1, max_output_tokens=20000,
     )
     dossiers = normalize_dossiers(dossier_payload, issues)
-    allocations = allocate_seconds(briefing, issues)
+    target, low, high = spoken_bounds(dossiers)
+    # 시간 배분도 같은 목표에서 유도한다. 본문 초를 상수로 두면 재료가 얇은 날
+    # plan 이 채울 수 없는 시간을 요구하고, 많은 날은 10분에서 잘린다.
+    allocations = allocate_seconds(briefing, issues, body_seconds(target))
     plan = _call_structured(
         PLAN_SYSTEM, plan_prompt(briefing, dossiers, allocations), label="expert_plan",
-        temperature=0.2, max_output_tokens=5000,
+        # 이슈 상한 6→9 와 함께 올린다. 실측(2026-08-16): 9개에서 output 4,983 으로
+        # 5,000 을 거의 정확히 채워 MAX_TOKENS 로 잘렸다 — 이슈당 약 550 토큰이다.
+        temperature=0.2, max_output_tokens=9000,
     )
     draft = _call_structured(
         SCRIPT_SYSTEM, script_prompt(briefing, dossiers, plan), label="expert_script",
         temperature=0.35, max_output_tokens=12000,
     )
-    script, spoken = normalize_script(draft.get("script"))
-    if spoken < EXPERT_MIN_SPOKEN or spoken > EXPERT_MAX_SPOKEN:
+    n = len(issues)
+    # 1차 원고의 형식 미달은 아직 예외가 아니다. 짧은 원고는 문단도 적어서 두
+    # 실패가 늘 같이 오는데, 여기서 raise 하면 아래 재시도가 **필요한 순간에
+    # 정확히 도달 불가**가 된다(2026-08-14 실측: 7문단·1,690자로 재시도 없이 사망).
+    # 재요청 프롬프트에 무엇이 모자랐는지 실제 수치를 실어 보낸다.
+    try:
+        script, spoken = normalize_script(draft.get("script"), n)
+        shortfall = ""
+    except ValueError as exc:
+        script, spoken, shortfall = "", 0, str(exc)
+
+    if shortfall or spoken < low or spoken > high:
+        note = shortfall or f"직전 원고는 {spoken:,}자였습니다"
         retry = _call_structured(
             SCRIPT_SYSTEM,
             script_prompt(briefing, dossiers, plan)
-            + f"\n\n[재요청] 직전 원고는 {spoken:,}자였습니다. 목표 범위를 반드시 지켜 전체를 다시 쓰십시오.",
+            + f"\n\n[재요청] {note}. 문단 {min_paragraphs(n)}개 이상,"
+              f" 본문 {low:,}~{high:,}자를 반드시 지켜 전체를 다시 쓰십시오.",
             label="expert_script_length_retry", temperature=0.3, max_output_tokens=12000,
         )
-        script, spoken = normalize_script(retry.get("script"))
-        if spoken < EXPERT_MIN_SPOKEN * 0.85 or spoken > EXPERT_MAX_SPOKEN * 1.08:
-            raise ValueError(f"전문가 대본 분량 {spoken:,}자 — 허용범위 이탈")
+        script, spoken = normalize_script(retry.get("script"), n)
+
+    # 목표 미달로 대본을 버리지 않는다. 실측(2026-08-14): 재료를 5,768→8,070자로
+    # 늘려도 대본은 2,461→2,480자로 사실상 그대로였다 — 단일 호출에서 모델이 쓰는
+    # 길이는 재료가 아니라 모델이 정하고, 재시도로도 안 움직인다. 그 상태에서
+    # 목표를 게이트로 쓰면 멀쩡한 17문단 대본을 18자 모자라다고 버리게 된다
+    # (앞서 문단 하한에서 이미 같은 실수를 했다).
+    #
+    # 게이트는 쓰레기를 막는 자리다. 분량 목표는 프롬프트로 밀되, 실패는 절대
+    # 한계에서만 낸다. 미달분은 meta 에 남겨 화면·로그에서 보이게 한다.
+    # 재료에 비례해 진짜로 길어지게 하려면 세그먼트별로 나눠 부르는 구조가
+    # 필요하다 — 이 파일의 다음 개선 지점이다.
+    if spoken < SPOKEN_ABS_MIN or spoken > SPOKEN_ABS_MAX:
+        raise ValueError(
+            f"전문가 대본 분량 {spoken:,}자 — 절대한계 "
+            f"{SPOKEN_ABS_MIN:,}~{SPOKEN_ABS_MAX:,}자 이탈")
+    if spoken < low:
+        print(f"[expert-audio] 분량 미달 — {spoken:,}자 (목표 {target:,}, 하한 {low:,})."
+              f" 재료가 얇거나 모델이 안 늘렸다. 대본은 그대로 쓴다.")
 
     report = _call_structured(
         VERIFY_SYSTEM, verification_prompt(briefing, dossiers, script), label="expert_verify",
@@ -511,7 +618,7 @@ def generate_expert_script(briefing: dict, issues: list[dict]) -> tuple[str, lis
             REPAIR_SYSTEM, repair_prompt(dossiers, script, report), label="expert_repair",
             temperature=0.15, max_output_tokens=12000,
         )
-        script, _ = normalize_script(repaired.get("script"))
+        script, _ = normalize_script(repaired.get("script"), n)
         report = _call_structured(
             VERIFY_SYSTEM, verification_prompt(briefing, dossiers, script), label="expert_verify_after_repair",
             temperature=0.0, max_output_tokens=6000,
@@ -639,7 +746,10 @@ def generate(force: bool = False) -> bool:
         "date": date,
         "key": EXPERT_VARIANT,
         "label": "전문가 브리핑",
-        "description": "선정된 핵심 이슈를 수석 원자력 분석가가 사업 단계·기술·정책 의미까지 약 10분간 통합 해설합니다.",
+        # 길이는 그날 재료가 정하므로 '약 10분'을 박아 두면 6분짜리에도 10분이라
+        # 적힌다. 실제 duration 에서 만든다 — 화면은 이 문자열을 그대로 보여 준다.
+        "description": (f"선정된 핵심 이슈를 수석 원자력 분석가가 사업 단계·기술·정책"
+                        f" 의미까지 약 {max(1, round(duration / 60))}분간 통합 해설합니다."),
         "file": file_name,
         "duration_sec": duration,
         "generated_at": datetime.now(KST).isoformat(),
@@ -649,6 +759,10 @@ def generate(force: bool = False) -> bool:
         "delivery_mode": "expert_single",
         "issue_count": len(issues),
         "dossier_count": len(dossiers),
+        # 그날 재료가 요구한 분량과 실제. 둘이 벌어지는 날이 쌓이면 단일 호출
+        # 구조의 한계가 수치로 남는다 — '짧게 느껴진다'는 인상 대신 근거가 된다.
+        "spoken_target": spoken_target(dossiers),
+        "spoken_ratio": round(spoken / max(1, spoken_target(dossiers)), 2),
         "verification": {
             key: verification.get(key) for key in (
                 "coverage_score", "factual_support_score", "stage_precision_score",
