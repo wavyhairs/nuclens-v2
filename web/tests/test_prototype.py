@@ -1515,9 +1515,13 @@ class GeneratedDataTests(unittest.TestCase):
         for rate in ("1", "1.25", "1.5", "2"):
             self.assertIn(f'data-rate="{rate}"', html)
         self.assertIn("syncAudioRateButtons", script)
-        # 날짜가 다른 브리핑에서는 숨는다 — renderBriefing 모든 경로에서 판정
+        # 날짜가 다른 브리핑에서는 숨는다 — renderBriefing 모든 경로에서 판정.
+        # audio v2 에서 판정 자리가 renderAudioBrief 본문에서 audioVariantsFor 로
+        # 내려갔다. variant 를 고르는 유일한 입구라 여기서 막으면 fast·expert 양쪽과
+        # 실패 fallback 경로까지 한 번에 덮인다.
         self.assertIn("renderAudioBrief(briefing)", script)
-        self.assertIn("meta.date === briefing.date", script)
+        self.assertIn("meta.date !== briefing.date) return {}", script)
+        self.assertIn("const variants = audioVariantsFor(briefing)", script)
         # 모바일이 본 무대 — hero-actions 처럼 숨기지 말고 44px 터치 타깃
         self.assertIn(".hero-audio button { min-height: 44px; }", style)
         self.assertNotIn(".hero-audio { display: none", style)

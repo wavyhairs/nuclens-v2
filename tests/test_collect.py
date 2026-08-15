@@ -310,6 +310,28 @@ class TestRequestFailureClassification(unittest.TestCase):
         self.assertEqual(nb.classify_request_failure(
             GeminiError("응답 구조 비정상")), "other")
 
+    def test_config_labels(self):
+        """2026-08-15: 구글이 gemini-2.5-flash 를 신규 키에 막아 전 chunk 가 404 로
+        죽었다. 그때 라벨이 'other' 라 32/32 건이 fallback 으로 영구 강등됐고
+        크롤은 exit 0 이었다. 기다려서 낫는 실패와 같은 칸에 두면 안 된다."""
+        for msg in ('HTTP 404: {"error": {"code": 404, "message": "This model '
+                    'models/gemini-2.5-flash is no longer available to new users."}}',
+                    "NOT_FOUND", "HTTP 403: forbidden", "PERMISSION_DENIED",
+                    "HTTP 401: unauthorized", "UNAUTHENTICATED"):
+            self.assertEqual(nb.classify_request_failure(GeminiError(msg)), "config", msg[:40])
+
+    def test_config_is_not_splittable_and_400_stays_other(self):
+        """쪼개도 모델명은 그대로다. 400 은 한 기사 내용 때문일 수 있어 제외한다 —
+        크롤 전체를 세우는 대가가 크다."""
+        self.assertNotIn("config", nb.SPLITTABLE_FAILURES)
+        self.assertEqual(nb.classify_request_failure(
+            GeminiError("HTTP 400: invalid argument")), "other")
+
+    def test_quota_wins_over_config_when_both_shapes_appear(self):
+        """429 본문에 문서 링크(404 아님)가 섞여도 한도 판정이 유지돼야 한다."""
+        self.assertEqual(nb.classify_request_failure(GeminiError(
+            "HTTP 429: RESOURCE_EXHAUSTED — see https://ai.google.dev/docs")), "quota")
+
     def test_only_size_shaped_failures_are_splittable(self):
         self.assertEqual(nb.SPLITTABLE_FAILURES, {"truncated", "timeout"})
 

@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import gemini_client
 import issue_insight
 
 
@@ -212,10 +213,17 @@ class TestGenerate(unittest.TestCase):
         self.assertTrue(stats["status"].startswith("error"))
 
     def test_uses_a_separate_model_bucket(self):
-        """공용 2.5-flash 버킷에 얹으면 저녁마다 429 로 죽는다(issue_review 전례)."""
+        """공용 버킷에 얹으면 저녁마다 429 로 죽는다(issue_review 전례).
+
+        **비교 대상은 `gemini_client.MODEL` 이지 박아 둔 모델명이 아니다.**
+        2026-08-15 까지 이 자리는 `"gemini-2.5-flash"` 리터럴이었는데, 그날 기본
+        모델이 바뀌자(2.5-flash 가 신규 키에 막혀 3.1-flash-lite 로) 이 검사는
+        아무것도 지키지 않게 됐다 — 보조를 현재 기본 모델로 바꿔 버킷이 합쳐져도
+        통과한다. 지켜야 할 성질은 '특정 모델이 아님'이 아니라 '기본과 다름'이다.
+        """
         (_result, _stats), client = self.run_one("")
         self.assertEqual(client.kwargs[0]["model"], issue_insight._resolve_model())
-        self.assertNotEqual(issue_insight.INSIGHT_MODEL_DEFAULT, "gemini-2.5-flash")
+        self.assertNotEqual(issue_insight.INSIGHT_MODEL_DEFAULT, gemini_client.MODEL)
 
 
 class TestApply(unittest.TestCase):

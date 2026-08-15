@@ -24,6 +24,8 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from ranking import cluster_duplicates
+
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
@@ -309,15 +311,24 @@ def save_weekly_report(synthesis: dict, agg: dict, items: list[dict],
 
 
 def count_unique_issues(items: list[dict]) -> int:
-    """제목 정규화로 같은 사건을 하나로 센다. 웹의 이슈 병합만큼 정교하진 않지만
-    '후속 보도가 많은 주 = 풍성한 주'라는 착시는 막는다."""
-    seen = set()
-    for item in items:
-        title = (item.get("title_kr") or item.get("title") or "").strip().lower()
-        key = "".join(ch for ch in title if ch.isalnum())
-        if key:
-            seen.add(key[:40])
-    return len(seen)
+    """같은 사건을 하나로 센다 — '후속 보도가 많은 주 = 풍성한 주' 착시 차단.
+
+    2026-08-15: 제목 앞 40자 정규화로 세던 옛 구현은 **실질 no-op 이었다.**
+    상류가 완전일치 제목을 이미 걷어낸 뒤라 앞 40자가 겹치는 쌍이 남지 않는다
+    (실측 852건 입력 → 848). 매체마다 같은 발표에 다른 표현을 쓰는 게 문제인데
+    접두사 비교로는 그걸 못 잡는다.
+
+    일일 브리핑의 `ranking.cluster_duplicates` 를 그대로 쓴다. 문자열 ratio +
+    토큰 자카드에 호기 충돌 거부권까지 아카이브로 조정된 판정기이고, LLM 을
+    타지 않아 '주 1회 1호출' 계약도 깨지 않는다. 같은 입력 852건 → 649.
+
+    점수를 비우고 부르므로 대표 선택은 입력 순서를 따른다. 여기서 필요한 건
+    개수뿐이라 대표가 누구인지는 결과를 바꾸지 않는다. 얕은 복사를 넘기는 이유는
+    `cluster_duplicates` 가 대표에 story_* 메타데이터를 **덧쓰기** 때문이다 —
+    호출자의 curated 항목이 세는 행위만으로 오염되면 안 된다.
+    """
+    kept, _ = cluster_duplicates([dict(item) for item in items], {})
+    return len(kept)
 
 
 def format_weekly(items: list[dict], synthesis: dict | None = None) -> str:

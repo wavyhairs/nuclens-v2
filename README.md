@@ -92,7 +92,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `GEMINI_API_KEY` | ⭕ | 없으면 큐레이션·투자관점 생략(fallback 발송) |
 | `IMAP_USER` / `IMAP_PASSWORD` | ⭕ | ANS 뉴스레터 수집 (Gmail 앱 비밀번호, 공백 제거) |
 
-`GEMINI_MODEL` 은 Repository **Variable** (기본 `gemini-2.5-flash`).
+`GEMINI_MODEL` 은 Repository **Variable** (기본 `gemini-3.1-flash-lite`).
 
 ## 로컬 테스트
 
