@@ -591,16 +591,28 @@ def send_telegram_audio(mp3_path: Path, meta: dict) -> bool:
     telegram_send.py 는 import 시점에 토큰이 없으면 sys.exit 하므로(모듈 상단
     가드) 여기서는 sendAudio 를 직접 부른다. requests 는 이미 requirements 에
     있다. 텔레그램 오디오 플레이어는 자체 배속(1/1.5/2×)을 제공한다.
+
+    캡션·제목은 meta 의 label/description 에서 만든다. 빠른·전문가 두 변형이 같은
+    채널에 연달아 도착하는데, 예전처럼 '오디오 브리핑'을 박아 두면 3분짜리와
+    10분짜리가 같은 이름으로 나란히 앉아 어느 쪽이 무엇인지 알 수 없다.
     """
     token = gemini_client._resolve("TELEGRAM_BOT_TOKEN")
     chat_id = gemini_client._resolve("TELEGRAM_CHAT_ID")
     if not token or not chat_id:
         print("[audio] 텔레그램 미설정 — 발송 스킵")
         return False
+    # v1 매니페스트에는 label/description 이 없다. 그 시절 meta 로 재발송이 돌아도
+    # 캡션에 'None' 이 찍히지 않게 받아 둔다.
+    label = meta.get("label") or "오디오 브리핑"
+    summary = meta.get("description") or "오늘의 핵심 원자력 뉴스"
+    # 캡션의 링크는 실제 배포 대상을 따라간다 — v1 도메인이 하드코딩돼 있어
+    # V2 로 옮긴 뒤에도 청취자를 옛 사이트로 보내고 있었다.
+    site = (gemini_client._resolve("SITE_URL") or "https://nuclens-v2.pages.dev")
+    site = site.split("://")[-1].rstrip("/")
     minutes, seconds = divmod(int(meta.get("duration_sec") or 0), 60)
     caption = (
-        f"🎧 {meta.get('date', '')} 오디오 브리핑 ({minutes}분 {seconds:02d}초)\n"
-        "핵심 뉴스 요약 · nuclens.pages.dev"
+        f"🎧 {meta.get('date', '')} {label} ({minutes}분 {seconds:02d}초)\n"
+        f"{summary}\n{site}"
     )
     import requests
     try:
@@ -609,7 +621,7 @@ def send_telegram_audio(mp3_path: Path, meta: dict) -> bool:
             data={
                 "chat_id": chat_id,
                 "caption": caption,
-                "title": f"Nuclens 브리핑 {meta.get('date', '')}",
+                "title": f"Nuclens {label} {meta.get('date', '')}",
                 "performer": "Nuclens",
                 "duration": int(meta.get("duration_sec") or 0),
             },
