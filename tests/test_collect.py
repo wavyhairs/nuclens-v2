@@ -876,7 +876,8 @@ class TestNaverQueryHasNoExclusionOperator(unittest.TestCase):
     """🔴 네이버 검색 API 는 '-' 를 제외 연산자로 처리하지 않는다.
 
     추가 검색어로 AND 결합해 버리므로 negative_terms 를 쿼리에 붙이면 결과가
-    붕괴한다. 실측(2026-08-06, openapi.naver.com/v1/search/news.json):
+    붕괴한다. 실측(2026-08-06, 당시 주소 openapi.naver.com/v1/search/news.json —
+    지금은 API HUB 로 옮겼지만 검색 엔진은 같아 이 성질도 그대로다):
 
         '계속운전'                                     total 360,614
         '계속운전 -주가 -채용 … -기념식'(프로덕션 9개)  total **0**
@@ -911,6 +912,46 @@ class TestNaverQueryHasNoExclusionOperator(unittest.TestCase):
 
     def test_query_is_the_keyword_verbatim(self):
         self.assertEqual("계속운전", self._captured_query("계속운전"))
+
+    def test_calls_api_hub_endpoint_with_gateway_headers(self):
+        """🔴 폐지된 창구를 부르면 401 이 나는데 워크플로는 초록불로 끝난다.
+
+        네이버 검색 API 는 2026-06-25 NAVER API HUB(NCP)로 옮겨졌고, 구 주소
+        openapi.naver.com 은 살아 있는 자격증명에도 401 을 준다. 실측
+        (2026-08-15 크롤 회차): 401 이 107 회 찍혔는데 discovery 오류가 비치명
+        처리라 exit 0 으로 끝났다 — 수집 0 건인 채로 워크플로는 성공이었다.
+
+        주소와 헤더 이름을 같이 고정한다. 둘 중 하나만 되돌려도 401 이고,
+        게이트웨이는 헤더를 못 찾으면 '값이 틀리다'가 아니라 '인증 정보가
+        없다'고 답해 원인 판정이 갈린다.
+        """
+        seen = {}
+
+        class _Resp:
+            @staticmethod
+            def raise_for_status():
+                return None
+
+            @staticmethod
+            def json():
+                return {"items": []}
+
+        def fake_get(url, headers=None, params=None, timeout=None):
+            seen["url"] = url
+            seen["headers"] = headers or {}
+            return _Resp()
+
+        with patch.dict(sys.modules):
+            import requests
+            with patch.object(requests, "get", fake_get):
+                nb.search_naver("계속운전")
+
+        self.assertIn("naverapihub.apigw.ntruss.com", seen["url"])
+        self.assertNotIn("openapi.naver.com", seen["url"])
+        self.assertEqual(
+            {"X-NCP-APIGW-API-KEY-ID", "X-NCP-APIGW-API-KEY"},
+            set(seen["headers"]),
+        )
 
     def test_search_naver_takes_no_negative_terms_argument(self):
         # 시그니처에 남겨 두면 호출부가 다시 넘긴다.

@@ -86,7 +86,12 @@ DIGEST_QUEUE_FILE = Path("digest_queue.json")
 # 브리핑에 못 올라갔나'의 일부라 같은 타임라인에 있어야 대조가 된다.
 DELIVERY_LOG_FILE = Path("delivery_log.jsonl")
 
-NAVER_URL = "https://openapi.naver.com/v1/search/news.json"
+# 네이버 검색 API 는 2026-06-25 NAVER API HUB(네이버 클라우드 플랫폼)로 옮겨졌다.
+# 구 주소 openapi.naver.com/v1/search/news.json 은 같은 자격증명에 401
+# (`errorCode 024 / NID AUTH Result Invalid`)을 준다 — 키가 죽은 것이 아니라
+# 창구가 닫힌 것이다. 응답 스키마는 그대로라(total·items·description·link·
+# originallink·pubDate·title) 파싱은 손대지 않는다.
+NAVER_URL = "https://naverapihub.apigw.ntruss.com/search/v1/news"
 
 DOMAIN_SCORE = {
     "hani.co.kr": 9, "chosun.com": 9, "joongang.co.kr": 9,
@@ -794,9 +799,12 @@ def search_naver(query: str, display: int = 30) -> list[dict]:
     """
     import requests
 
+    # API HUB 는 NCP API Gateway 를 앞단에 두므로 헤더 이름이 다르다. 구 이름을
+    # 그대로 보내면 401 `Authentication information are missing` 이 온다 — 값이
+    # 틀린 게 아니라 게이트웨이가 헤더를 못 찾는 것이라 메시지가 갈린다.
     headers = {
-        "X-Naver-Client-Id": NAVER_CLIENT_ID,
-        "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
+        "X-NCP-APIGW-API-KEY-ID": NAVER_CLIENT_ID,
+        "X-NCP-APIGW-API-KEY": NAVER_CLIENT_SECRET,
     }
     params = {"query": query, "display": display, "sort": "date"}
     r = requests.get(NAVER_URL, headers=headers, params=params, timeout=10)
