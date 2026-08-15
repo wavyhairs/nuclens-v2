@@ -2109,7 +2109,14 @@ def collect_discovery(state: dict, anchors: list[str], negative_terms: str = "")
     dstate = discovery.load_state()
     queries, dstate = discovery.plan_queries(rows, registry, dstate)
     if not queries:
-        print("[discovery] 쿼리 0건(전부 냉각 중이거나 씨앗 없음)")
+        # 0건의 사유를 가른다 — 예산 소진과 '물을 게 없음'은 대응이 정반대인데
+        # 한 문장으로 뭉뚱그리면 예산을 늘려야 할 때 냉각 설정을 들여다보게 된다.
+        spent = int((dstate.get("spent") or {}).get("count") or 0)
+        if spent >= discovery.DAILY_QUERY_BUDGET:
+            print(f"[discovery] 오늘 예산 소진 "
+                  f"({spent}/{discovery.DAILY_QUERY_BUDGET}) → 건너뜀")
+        else:
+            print("[discovery] 쿼리 0건(전부 냉각 중이거나 씨앗 없음)")
         return []
 
     out: list[dict] = []
@@ -2128,8 +2135,10 @@ def collect_discovery(state: dict, anchors: list[str], negative_terms: str = "")
     dstate = discovery.prune_state(dstate)
     discovery.save_state(dstate)
     yielded = sum(1 for r in results if r["new_article_count"])
+    spent = int((dstate.get("spent") or {}).get("count") or 0)
     print(f"[discovery] 쿼리 {len(queries)}건 → 신규 {len(out)}건 "
-          f"(성과 있는 쿼리 {yielded}건, 엔티티 {len({q['entity_id'] for q in queries})}개)")
+          f"(성과 있는 쿼리 {yielded}건, 엔티티 {len({q['entity_id'] for q in queries})}개, "
+          f"오늘 {spent}/{discovery.DAILY_QUERY_BUDGET})")
     return out
 
 

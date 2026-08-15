@@ -1138,11 +1138,23 @@ class TestDiscoveryPlanning(unittest.TestCase):
         from datetime import datetime, timezone
         return datetime(2026, 8, 6, 7, 0, tzinfo=timezone.utc)
 
-    def _plan(self, rows, state=None, budget=None):
-        kwargs = {} if budget is None else {"budget": budget}
+    def _plan(self, rows, state=None, budget=None, per_run_cap=None, now=None):
+        kwargs = {}
+        if budget is not None:
+            kwargs["budget"] = budget
+        if per_run_cap is not None:
+            kwargs["per_run_cap"] = per_run_cap
         return self.d.plan_queries(rows, self.registry,
                                    state or {"version": 1, "queries": {}},
-                                   now=self.now, **kwargs)
+                                   now=now or self.now, **kwargs)
+
+    def _three_entity_rows(self):
+        """홀텍·원안위·팍스 — 이 픽스처에서 나오는 쿼리는 총 12개다."""
+        return self._rows(
+            {"title": "홀텍, 오이스터 크릭 해체 승인", "importance": "must_read"},
+            {"title": "원자력안전위원회, 계속운전 심사 착수", "importance": "must_read"},
+            {"title": "헝가리 팍스 원전 가동 중 발표"},
+        )
 
     def test_state_change_wording_makes_an_entity_a_seed(self):
         rows = self._rows({"title": "헝가리 총리, 팍스 원전 마지막 터빈 '안전하게 가동 중' 발표"})
@@ -1167,6 +1179,66 @@ class TestDiscoveryPlanning(unittest.TestCase):
             counts[q["entity_id"]] = counts.get(q["entity_id"], 0) + 1
         self.assertLessEqual(max(counts.values()), self.d.MAX_QUERIES_PER_ENTITY)
         self.assertIn("paks", counts)
+
+    def test_budget_is_a_daily_total_not_a_per_run_cap(self):
+        """예산은 **하루 총량**이다. 2026-08-15 까지는 회차당이었다.
+
+        `plan_queries` 가 crawl 마다 새로 세다 보니 이름은 DAILY_QUERY_BUDGET(30)
+        인데 매시간 크롤에서는 하루 최대 720개가 나갔다. 늘어난 유입은 전부 LLM
+        큐레이션을 타므로 태우는 쪽은 네이버 한도가 아니라 Gemini 쿼터다.
+
+        같은 state 를 이어서 넘기면 남은 만큼만 나와야 한다.
+        """
+        rows = self._three_entity_rows()
+        state = {"version": 1, "queries": {}}
+        first, state = self._plan(rows, state, budget=8, per_run_cap=5)
+        second, state = self._plan(rows, state, budget=8, per_run_cap=5)
+        third, state = self._plan(rows, state, budget=8, per_run_cap=5)
+        self.assertEqual([len(first), len(second), len(third)], [5, 3, 0])
+        self.assertEqual(state["spent"], {"date": "2026-08-06", "count": 8})
+
+    def test_one_run_cannot_eat_the_whole_day(self):
+        """총량만 있으면 아침 첫 크롤이 하루치를 다 쓰고 저녁엔 못 묻는다.
+
+        씨앗은 그날 들어온 기사에서 나오므로, 늦게 뜬 사건일수록 물을 기회가
+        사라지는 쪽이 손해가 크다.
+        """
+        rows = self._three_entity_rows()
+        queries, state = self._plan(rows, budget=40, per_run_cap=4)
+        self.assertEqual(len(queries), 4)
+        self.assertEqual(state["spent"]["count"], 4)
+
+    def test_budget_resets_on_the_kst_day_boundary(self):
+        """하루 경계는 KST 다 — UTC 로 재면 한국 시간 오전 9시에 리셋된다.
+
+        이 저장소의 '오늘'은 브리핑도 아카이브도 전부 KST 다. 16:00 UTC 는 UTC
+        로는 같은 날이지만 KST 로는 이미 다음 날 01:00 이라, 예산이 여기서
+        풀리지 않으면 사람이 보는 날짜와 어긋난 채로 반나절이 묶인다.
+        """
+        from datetime import datetime, timezone
+        rows = self._three_entity_rows()
+        exhausted = {"version": 1, "queries": {},
+                     "spent": {"date": "2026-08-06", "count": 40}}
+        same_day, _ = self._plan(rows, dict(exhausted), budget=40, per_run_cap=5)
+        self.assertEqual(same_day, [])
+
+        next_kst_day = datetime(2026, 8, 6, 16, 0, tzinfo=timezone.utc)
+        queries, state = self._plan(rows, dict(exhausted), budget=40,
+                                    per_run_cap=5, now=next_kst_day)
+        self.assertEqual(len(queries), 5)
+        self.assertEqual(state["spent"], {"date": "2026-08-07", "count": 5})
+
+    def test_stale_or_missing_spent_record_does_not_crash(self):
+        """상태 파일은 손으로도 고쳐지고 옛 버전에는 이 칸이 아예 없다."""
+        rows = self._three_entity_rows()
+        for spent in (None, {}, {"date": "2026-08-06"}, {"date": None, "count": None},
+                      "쓰레기", {"date": "2026-08-06", "count": "3"}):
+            with self.subTest(spent=spent):
+                state = {"version": 1, "queries": {}}
+                if spent is not None:
+                    state["spent"] = spent
+                queries, state = self._plan(rows, state, budget=40, per_run_cap=5)
+                self.assertEqual(len(queries), 5)
 
     def test_generic_names_are_asked_by_full_name(self):
         """고리·월성은 match_policy 가 자유문 매칭을 막아 둔 이름이다 — 별칭('고리')
