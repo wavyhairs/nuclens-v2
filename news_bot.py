@@ -1039,6 +1039,10 @@ _HANJA_SURNAME = {
 # 한글 한 글자 표식은 성일 때만 인정한다. '전 대통령'(전직)·'고 대통령'(고인)은
 # 성이 아니라 관형사라 여기서 빼야 멀쩡한 이름을 깎지 않는다.
 _HANGUL_SURNAME_MARKS = set(_HANJA_SURNAME.values()) - {"전", "고"}
+# 출력 쪽 **풀네임**의 성으로 인정할 글자. 위 표식과 달리 '전'·'고'를 빼지 않는다 —
+# 그 둘을 뺀 이유는 한 글자 표식이 관형사일 수 있어서인데(전 대통령=전직), 여기서
+# 보는 것은 2글자 이상 풀네임이라 전재준·고현정 같은 실명을 놓칠 이유가 없다.
+_OUTPUT_SURNAMES = frozenset(_HANJA_SURNAME.values())
 
 
 def _surname_of(mark: str) -> str:
@@ -1100,6 +1104,17 @@ def strip_unsourced_person_names(value, source_text: str, where: str = "") -> st
             return match.group(0)
         # 풀네임이 원문에 그대로 있으면 대조할 것도 없다.
         if name in source_text or name[0] in surnames:
+            return match.group(0)
+        # 첫 글자가 성이 아니면 애초에 이름이 아니다. 원문 쪽 _surname_of 는
+        # '모르는 글자면 대조를 포기한다'를 이미 지키는데 출력 쪽에는 그 대칭이
+        # 없어서, 직함 앞의 관형형이 통째로 이름으로 잡혔다.
+        #
+        # 실측 2026-08-16 (polinews, 원문 `[이슈] 李대통령, '호남반도체' …`):
+        #   "…전력 수요를 충족하기 위한 대통령의 직접 지시는…"
+        #   →"…전력 수요를 충족하기 대통령의 직접 지시는…"
+        # '위한'이 성 위(魏)의 이름으로 잡혀 문장이 깨졌다. 이 기사는 대통령을
+        # 잘못 지목한 적이 없다 — 가드가 멀쩡한 문장을 깎은 것이다.
+        if name[0] not in _OUTPUT_SURNAMES:
             return match.group(0)
         UNSOURCED_NAME_DROPS.append(
             f"{where[:40]} | 원문 {''.join(surnames)} {title} ↔ 출력 {name} {title}")
