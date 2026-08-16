@@ -9,6 +9,7 @@
 import json
 import os
 import re
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -1492,3 +1493,65 @@ class TestBatchIdentityIsNotPositional(unittest.TestCase):
             nb.curate_batch(articles, [], {"aaaaaaaa11": "다뉴브강 수위가 취수 기준선 아래로 내려갔다."})
         message = call.call_args[0][1]
         self.assertIn("본문: 다뉴브강 수위가 취수 기준선 아래로 내려갔다.", message)
+
+
+class TestImportDoesNotRequireCredentials(unittest.TestCase):
+    """news_bot 을 들여오는 것만으로 프로세스가 죽으면 안 된다.
+
+    실사고 2026-08-16: web/build_data 가 운영 콘솔에 실을 **수집원 목록 하나**를
+    읽으려고 import news_bot 을 했다가 배포 워크플로가 통째로 실패했다
+    (`ERROR: NAVER_CLIENT_ID 누락` → exit 1). 모듈 최상위에서 _required_secret 을
+    부르고 있었고, 그 sys.exit 이 내는 SystemExit 은 Exception 이 아니라
+    호출부의 try/except 도 통과했다.
+
+    같은 이유로 이 파일을 포함한 테스트·도구 5곳이 쓰지도 않을 키를 가짜로
+    채워 넣고 있었다. 자격증명은 **쓸 때** 확인한다.
+    """
+
+    def _run(self, snippet: str):
+        env = dict(os.environ)
+        # `KEY=` 는 '값이 없다'는 명시적 선언이라 gemini_client._resolve 가
+        # .env 로 넘어가지 않는다 — 개발 머신의 .env 와 무관하게 CI 를 재현한다.
+        for key in ("NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET",
+                    "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "GEMINI_API_KEY"):
+            env[key] = ""
+        env["PYTHONIOENCODING"] = "utf-8"
+        # 안내 문구가 한글이다. Windows 기본 코덱(cp1252)으로 받으면 검사할
+        # 문자열이 오기도 전에 디코딩이 깨진다.
+        return subprocess.run(
+            [sys.executable, "-c", snippet],
+            cwd=str(Path(__file__).parent.parent),
+            env=env, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=120,
+        )
+
+    def test_importing_without_secrets_succeeds(self):
+        done = self._run(
+            "import news_bot;"
+            "print(len(news_bot.RSS_SOURCES), len(news_bot.OFFICIAL_DIRECT_SOURCES))"
+        )
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual(done.stdout.split(), [str(len(nb.RSS_SOURCES)),
+                                               str(len(nb.OFFICIAL_DIRECT_SOURCES))])
+
+    def test_the_missing_key_still_fails_loudly_at_first_use(self):
+        """나가는 자리를 옮긴 것이지 검사를 없앤 게 아니다."""
+        done = self._run("import news_bot; news_bot._naver_auth()")
+        self.assertNotEqual(done.returncode, 0)
+        self.assertIn("NAVER_CLIENT_ID 누락", done.stdout + done.stderr)
+        # 무엇을 어디에 넣으라는 안내가 사라지면 이 검사의 값어치가 없다.
+        self.assertIn(".env", done.stdout + done.stderr)
+
+    def test_the_search_call_resolves_credentials_itself(self):
+        """모듈 상수로 되돌아가면 임포트 시점 종료가 같이 돌아온다.
+
+        함수 **안**의 _required_secret 은 정상이다 — 들여쓰기 없는 줄에서
+        부르는 것만 잡는다. 그게 임포트만으로 실행되는 자리다.
+        """
+        source = (Path(__file__).parent.parent / "news_bot.py").read_text(encoding="utf-8")
+        top_level = [line for line in source.splitlines()
+                     if line and not line[0].isspace() and "_required_secret(" in line]
+        self.assertEqual(
+            [line for line in top_level if not line.startswith("def ")], [],
+            "자격증명 확인이 모듈 최상위로 돌아왔다")
+        self.assertIn("_naver_auth()", source)

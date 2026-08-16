@@ -65,8 +65,22 @@ def _required_secret(key: str) -> str:
 # 2026-08-15 에 지웠다(발송은 daily_brief→telegram_send, 오디오는
 # audio_brief.send_telegram_audio 가 각자 맡는다). 필수로 두면 수집만 돌려보려는
 # 사람이 쓰지도 않을 키 두 개를 채워야 했다.
-NAVER_CLIENT_ID = _required_secret("NAVER_CLIENT_ID")
-NAVER_CLIENT_SECRET = _required_secret("NAVER_CLIENT_SECRET")
+
+
+# 네이버 자격증명은 **쓸 때** 확인한다.
+#
+# 모듈 최상위에서 _required_secret 을 부르면 임포트만으로 sys.exit 한다. 그러면
+# 이 모듈을 들여오는 쪽이 전부 인질이 된다 — 실제 사고(2026-08-16): web/build_data
+# 가 운영 콘솔에 실을 **수집원 목록 하나**를 읽으려고 import news_bot 을 했다가
+# 배포 워크플로가 통째로 죽었다. SystemExit 은 Exception 이 아니라 try/except 도
+# 안 잡힌다. 같은 이유로 테스트·도구 5곳이 쓰지도 않을 키를 가짜로 채워 넣고 있었다.
+#
+# 실패는 여전히 시끄럽다 — 안내 문구가 그대로 살아 있고, 나가는 자리만 '임포트
+# 시점'에서 '첫 호출'로 옮겼다. 키가 정말 필요한 순간에 죽는 쪽이 더 정확하다.
+def _naver_auth() -> tuple[str, str]:
+    return _required_secret("NAVER_CLIENT_ID"), _required_secret("NAVER_CLIENT_SECRET")
+
+
 GEMINI_API_KEY = gemini_client._resolve("GEMINI_API_KEY", "") or ""
 
 KST = timezone(timedelta(hours=9))
@@ -802,9 +816,10 @@ def search_naver(query: str, display: int = 30) -> list[dict]:
     # API HUB 는 NCP API Gateway 를 앞단에 두므로 헤더 이름이 다르다. 구 이름을
     # 그대로 보내면 401 `Authentication information are missing` 이 온다 — 값이
     # 틀린 게 아니라 게이트웨이가 헤더를 못 찾는 것이라 메시지가 갈린다.
+    client_id, client_secret = _naver_auth()
     headers = {
-        "X-NCP-APIGW-API-KEY-ID": NAVER_CLIENT_ID,
-        "X-NCP-APIGW-API-KEY": NAVER_CLIENT_SECRET,
+        "X-NCP-APIGW-API-KEY-ID": client_id,
+        "X-NCP-APIGW-API-KEY": client_secret,
     }
     params = {"query": query, "display": display, "sort": "date"}
     r = requests.get(NAVER_URL, headers=headers, params=params, timeout=10)
