@@ -5488,12 +5488,16 @@ class AdminConsoleTests(unittest.TestCase):
         story = self.merges["story"]
         for key in ("contract_version", "totals", "by_date", "merges"):
             self.assertIn(key, story)
-        for key in ("merge", "duplicate", "single", "folded_articles"):
+        for key in ("merge", "duplicate", "collected", "single", "folded_articles",
+                    "collect_folded_articles", "stage_vetoes", "display_promotions"):
             self.assertIn(key, story["totals"])
         for row in story["merges"]:
-            self.assertIn(row["relation"], ("merge", "duplicate"))
+            # `collected` 는 수집 단계에서 접힌 story 다. 예전에는 이 계층이 아예
+            # 없었다 — 그때 접힌 기사는 story 가 만들어지기 전에 삭제됐으므로.
+            self.assertIn(row["relation"], ("merge", "duplicate", "collected"))
             self.assertGreaterEqual(row["article_count"], 1)
-            for key in ("reason", "fingerprint", "related_titles", "sources", "title"):
+            for key in ("reason", "fingerprint", "related_titles", "sources", "title",
+                        "raw_sources", "raw_source_count", "display_candidates"):
                 self.assertIn(key, row)
         # 날짜 집계가 빈 문자열 한 칸으로 뭉치면 안 된다(발송 전 수집분 폴백).
         self.assertNotIn("", [row["date"] for row in story["by_date"]])
@@ -5530,21 +5534,61 @@ class AdminConsoleTests(unittest.TestCase):
         bases = [org.split("(")[0].strip() for org in self.config["publications"]["orgs"]]
         self.assertEqual(len(bases), len(set(bases)), self.config["publications"]["orgs"])
 
-    def test_the_console_is_read_only_and_kept_out_of_the_reader_app(self):
+    def test_the_console_is_read_only_and_kept_out_of_the_reader_bundle(self):
         """여기서 설정을 고칠 수 있게 만들면 저장소와 화면이 갈라진다.
 
-        독자 앱과도 분리한다 — 합치면 독자가 받는 번들에 아무도 안 보는 진단
-        코드가 얹히고, 콘솔을 고칠 때마다 독자 화면 회귀를 걱정하게 된다.
+        독자 앱의 **코드**와는 계속 분리한다 — 합치면 독자가 받는 번들에 아무도
+        안 보는 진단 코드가 얹히고, 콘솔을 고칠 때마다 독자 화면 회귀를 걱정하게
+        된다. 다만 독자 화면에서 콘솔로 **가는 링크**는 2026-08-16에 생겼다
+        (톱니바퀴). 링크가 보인다고 열리는 것은 아니다 — 자물쇠는 엣지에 있다.
         """
         self.assertIn("읽기 전용", self.html)
-        for tag in ("<form", "<input", "<textarea", "method=\"post\""):
+        # 입력 필드는 없어야 한다. 유일하게 허용되는 form 은 세션 종료(로그아웃)로,
+        # 설정을 고치는 것이 아니라 쿠키를 지우는 상태 변경이라 POST 여야 한다.
+        for tag in ("<input", "<textarea", "<select"):
             self.assertNotIn(tag, self.html.lower(), tag)
-        self.assertNotIn("admin", (ROOT / "public" / "index.html").read_text(encoding="utf-8"))
-        self.assertNotIn("admin_merges", (ROOT / "public" / "app.js").read_text(encoding="utf-8"))
+        forms = re.findall(r"<form[^>]*>", self.html, re.IGNORECASE)
+        self.assertEqual(len(forms), 1, f"로그아웃 외의 form 이 생겼다: {forms}")
+        self.assertIn("/admin/logout", forms[0])
+        self.assertIn('method="POST"', forms[0], "쿠키를 지우는 요청은 GET 이면 안 된다")
+
+        reader_html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        reader_js = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        self.assertIn('href="/admin/"', reader_html, "독자 화면에 콘솔 입구가 없다")
+        # 독자 번들은 콘솔 데이터를 몰라야 한다. 진단 JSON 은 /admin/data 아래에
+        # 있고 그 경로는 인증 없이는 401 이라, 여기서 부르면 조용히 실패한다.
+        self.assertNotIn("/admin/data", reader_js)
+        self.assertNotIn("admin_merges", reader_js)
+
         self.assertIn('content="noindex,nofollow"', self.html)
         self.assertIn("Disallow: /", (ROOT / "public" / "robots.txt").read_text(encoding="utf-8"))
         # 진단 화면이 옛 판단을 보여 주면 볼 이유가 없다.
         self.assertIn("/admin/*", (ROOT / "public" / "_headers").read_text(encoding="utf-8"))
+
+    def test_the_console_is_locked_at_the_edge_not_in_the_browser(self):
+        """화면만 가리는 것은 가린 게 아니다.
+
+        /admin 은 정적 파일이라 화면 스크립트로 비밀번호를 물으면 URL 하나로
+        그대로 읽힌다. 그래서 자물쇠는 Pages Function 이고, 콘솔 데이터도 공개
+        경로(/data)가 아니라 그 자물쇠가 닿는 /admin/data 아래에 둔다.
+        """
+        middleware = ROOT.parent / "functions" / "admin" / "_middleware.js"
+        self.assertTrue(middleware.exists(), "엣지 자물쇠가 없다 — /admin 이 공개된다")
+        source = middleware.read_text(encoding="utf-8")
+        # KV 가 안 붙어 있을 때 통과시키면 '설정을 깜빡한 것'이 곧 '공개'가 된다.
+        self.assertIn("return setupPage();", source)
+        self.assertIn("ADMIN_KV", source)
+        self.assertIn("HttpOnly", source)
+        # 0000 은 부트스트랩이지 비밀번호가 아니다. 바꾸기 전에는 진단 화면도
+        # 데이터 JSON 도 열리면 안 된다 — 그 경로가 있으면 0000 이 방치된다.
+        self.assertIn('BOOTSTRAP_PASSWORD = "0000"', source)
+        self.assertIn('jsonError("password_change_required", 403)', source)
+
+        # 빌드가 콘솔 데이터를 공개 경로에 쓰면 자물쇠가 무의미해진다.
+        build_source = (ROOT / "build_data.py").read_text(encoding="utf-8")
+        self.assertIn("ADMIN_OUT_DIR", build_source)
+        self.assertNotIn('"admin_merges.json"', build_source)
+        self.assertIn("/admin/data/", self.script)
 
     def test_the_console_keeps_its_tabs_on_narrow_screens(self):
         """독자 앱은 좁은 화면에서 상단 탭을 접고 하단 고정 탭으로 옮긴다.

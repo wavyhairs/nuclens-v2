@@ -206,6 +206,10 @@
 .admin-link { margin: 0; font-size: var(--t-caption); }
 .admin-link a { color: var(--c-secondary); }
 
+/* 세션 종료. form 이 헤더 flex 안에서 자기 높이를 만들지 않도록 감싼다. */
+.admin-logout { display: inline-flex; margin: 0; }
+.admin-logout .icon-button { width: auto; padding: 0 var(--sp-3); font-size: var(--t-caption); }
+
 @media (max-width: 767px) {
   .admin-main { padding: var(--sp-5) 0 var(--sp-16); }
   .admin-panel { gap: var(--sp-8); }

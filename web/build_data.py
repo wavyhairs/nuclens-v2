@@ -65,6 +65,10 @@ SITE_DIR = Path(__file__).resolve().parent
 # 프로토타입 원본 위치에서 쓸 때는 BOT_DIR 환경 변수로 지정.
 BOT_DIR = Path(os.environ.get("BOT_DIR", SITE_DIR.parent))
 OUT_DIR = Path(os.environ.get("OUTPUT_DIR", SITE_DIR / "public" / "data"))
+# 운영 콘솔 데이터는 **/data 밖**에 둔다. /data 는 독자 화면이 쓰는 공개 경로라
+# 엣지의 접근 통제(functions/admin/_middleware.js)가 닿지 않는다. 화면만 잠그고
+# 데이터를 공개 경로에 두면 URL 하나로 그대로 읽힌다 — 잠근 게 아니다.
+ADMIN_OUT_DIR = Path(os.environ.get("ADMIN_OUTPUT_DIR", OUT_DIR.parent / "admin" / "data"))
 GENERATION_ID = os.environ.get("GENERATION_ID", "")
 
 SHOW_MARKET = False
@@ -2428,6 +2432,32 @@ def _is_independent_source(article: dict) -> bool:
     return article.get("evidence_role") == "independent"
 
 
+def _story_source_identity(source: dict) -> str:
+    """story 근거 목록의 매체를 기사 출처와 **같은 키 체계**로 정규화한다.
+
+    두 목록이 다른 키를 쓰면 같은 매체가 두 출처로 세어져 검증 상태가 부풀어 오른다.
+    'Le Monde' 가 기사 쪽에서는 `pub:lemonde`, story 쪽에서는 `le monde` 로 잡히던
+    자리다 — 검증 배지는 과대 계상하는 순간 배지가 아니라 소음이 된다.
+    """
+    return _source_identity({
+        "publisher": source.get("publisher") or "",
+        "domain": source.get("domain") or "",
+        # publisher·domain 이 둘 다 비면 기사 단위로 남긴다(합치지 않는다).
+        "hash": f"story:{source.get('identity') or ''}",
+    })
+
+
+def _story_sources_of(article: dict) -> list[dict]:
+    """선정 단계에서 이 기사에 접힌 보도 매체 목록.
+
+    수집 단계에서 접힌 기사(raw_sources)까지 story_cluster 가 이미 합쳐 둔 목록이다.
+    예전에는 수집 단계에서 통째로 삭제돼 여기 오지 못했고, 그래서 하나의 사건을 열
+    매체가 보도해도 검증은 '단일 출처'였다.
+    """
+    values = article.get("story_sources")
+    return [v for v in values if isinstance(v, dict)] if isinstance(values, list) else []
+
+
 def pick_open_question(members: list[dict]) -> str:
     """이슈에 붙일 '아직 확정되지 않은 것' 한 문장.
 
@@ -2487,12 +2517,31 @@ def verification_state(articles: list[dict], checked_at: str = "") -> dict:
     - unverified: 배포 자료 재인용뿐이거나 근거가 부족
 
     근거가 없으면 문장을 지어내지 않고 unverified로 남긴다.
+
+    **기사 행 하나 = 출처 하나가 아니다.** 하나의 카드는 같은 사건을 쓴 여러 매체를
+    접은 story 이고, 그 매체 목록이 `story_sources` 다. 수집 단계가 중복을 지우던
+    시절에는 이 목록이 비어 있어서 `corroborated`(독립 출처 2곳 이상)가 사실상
+    도달 불가능한 상태였다 — 열 매체가 보도한 사건도 '단일 출처·확인 중'으로
+    표시됐다. 이제 story 매체를 함께 세므로 이 상태가 실제 복수 출처 확인을 뜻한다.
     """
     official = {_source_identity(article) for article in articles if _is_official_source(article)}
     independent = {
         _source_identity(article) for article in articles if _is_independent_source(article)
-    } - official
+    }
     all_sources = {_source_identity(article) for article in articles}
+
+    story_outlets: set[str] = set()
+    for article in articles:
+        for source in _story_sources_of(article):
+            identity = _story_source_identity(source)
+            story_outlets.add(identity)
+            all_sources.add(identity)
+            role = str(source.get("evidence_role") or "").lower()
+            if role == "primary":
+                official.add(identity)
+            elif role == "independent":
+                independent.add(identity)
+    independent -= official
 
     if official:
         status = "official"
@@ -2505,9 +2554,13 @@ def verification_state(articles: list[dict], checked_at: str = "") -> dict:
 
     official_article = next((article for article in articles if _is_official_source(article)), None)
     independent_labels = list(dict.fromkeys(
-        (article.get("publisher") or article.get("domain") or "").strip()
-        for article in articles if _is_independent_source(article)
-        and (article.get("publisher") or article.get("domain"))
+        label for label in (
+            [(article.get("publisher") or article.get("domain") or "").strip()
+             for article in articles if _is_independent_source(article)]
+            + [(source.get("publisher") or source.get("domain") or "").strip()
+               for article in articles for source in _story_sources_of(article)
+               if str(source.get("evidence_role") or "").lower() == "independent"]
+        ) if label
     ))
     return {
         "status": status,
@@ -2515,6 +2568,8 @@ def verification_state(articles: list[dict], checked_at: str = "") -> dict:
         "source_count": len(all_sources),
         "independent_source_count": len(independent),
         "official_source_count": len(official),
+        # 같은 사건을 실제로 보도한 매체 수. 카드 개수가 아니라 매체 개수다.
+        "story_outlet_count": len(story_outlets),
         "checked_at": checked_at,
         "checks": [
             {
@@ -2530,6 +2585,12 @@ def verification_state(articles: list[dict], checked_at: str = "") -> dict:
                 "passed": len(independent) >= 2,
                 "label": "독립 출처 2곳 이상 연결",
                 "detail": " · ".join(independent_labels[:3]),
+            },
+            {
+                "kind": "outlets",
+                "passed": len(story_outlets) >= 2,
+                "label": "복수 매체가 같은 사건을 보도",
+                "detail": f"보도 매체 {len(story_outlets)}곳" if story_outlets else "",
             },
         ],
     }
@@ -4043,11 +4104,35 @@ def _read_json(path: Path, fallback):
 #
 #   story  같은 날 여러 매체의 같은 사건 (daily_brief 의 LLM 판단 — 근거 문장이 있다)
 #   issue  날짜를 넘어 잇는 클러스터 (build_data 의 규칙 매칭 — 점수·차단 사유가 있다)
+def load_story_audits(limit: int = 14) -> list[dict]:
+    """delivery_log 의 story_audit 레코드(단계 충돌 분리·대표 교체)를 최신순으로 읽는다.
+
+    병합은 카드에 흔적을 남기지만 **분리는 아무 흔적도 남기지 않는다.** 두 기사가
+    끝내 안 붙었다는 사실은 결과물 어디에도 없어서, 이 줄을 안 읽으면 운영 콘솔이
+    "왜 분리됐나"에 영원히 답할 수 없다.
+    """
+    path = BOT_DIR / "delivery_log.jsonl"
+    if not path.exists():
+        return []
+    rows: list[dict] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(row, dict) and row.get("record_type") == "story_audit":
+            rows.append(row)
+    rows.sort(key=lambda row: (str(row.get("date") or ""),
+                               str(row.get("generated_at") or "")), reverse=True)
+    return rows[:limit]
+
+
 def build_admin_merges(
     news_items: list[dict],
     issue_catalog: list[dict],
     issue_audit: dict,
     generated_at: datetime,
+    story_audits: list[dict] | None = None,
 ) -> dict:
     """병합 판단을 사람이 되짚을 수 있는 형태로 모은다."""
     issue_of_hash: dict[str, dict] = {}
@@ -4056,13 +4141,21 @@ def build_admin_merges(
             issue_of_hash.setdefault(str(article.get("hash") or ""), issue)
 
     # ① story 계층. 대표 기사 한 줄이 접힌 형제 전부를 들고 있다.
+    #
+    # `collected` 는 **수집 단계**에서 접힌 story 다. 예전에는 이 계층이 아예 없었다 —
+    # 그때 접힌 기사는 삭제됐고, 그래서 화면에 남은 카드의 매체 수는 실제보다 작았고
+    # 그 차이를 되짚을 방법도 없었다. 이제 같은 화면에서 함께 본다.
     story_rows = []
     relation_counts: Counter = Counter()
     folded_articles = 0
+    collect_folded = 0
     for item in news_items:
         relation = str(item.get("story_relation") or "single")
         relation_counts[relation] += 1
-        if relation not in ("merge", "duplicate"):
+        raw_sources = [s for s in (item.get("story_raw_sources") or []) if isinstance(s, dict)]
+        raw_count = int(item.get("story_raw_source_count") or len(raw_sources))
+        collect_folded += raw_count
+        if relation not in ("merge", "duplicate", "collected"):
             continue
         count = int(item.get("story_article_count") or 1)
         folded_articles += max(0, count - 1)
@@ -4084,6 +4177,14 @@ def build_admin_merges(
             "related_titles": item.get("story_related_titles") or [],
             "sources": item.get("story_sources") or [],
             "context": item.get("story_context") or [],
+            # 수집 단계 근거 — 큐레이션 전이라 제목·매체·URL 만 있다.
+            "raw_sources": raw_sources[:12],
+            "raw_source_count": raw_count,
+            # 화면 대표를 story 완성 뒤에 고른 결과.
+            "display_reason": item.get("story_display_reason") or "",
+            "display_candidates": int(item.get("story_display_candidates") or 1),
+            "display_swapped_from": item.get("story_display_swapped_from") or "",
+            "display_swapped_from_title": item.get("story_display_swapped_from_title") or "",
             "issue_id": (owner or {}).get("issue_id", ""),
         })
     # 접은 기사가 많은 순 = 되짚을 값이 큰 순. 같으면 최신부터.
@@ -4160,6 +4261,19 @@ def build_admin_merges(
         for match in cluster["matches"]:
             method_counts[match["method"]] += 1
 
+    # ④ 붙지 않은 story — 사건 단계가 달라 일부러 갈라 둔 쌍과, story 완성 뒤에
+    #    화면 대표를 바꾼 판단. 둘 다 결과물에 흔적이 없어 로그에서만 온다.
+    stage_vetoes: list[dict] = []
+    display_promotions: list[dict] = []
+    for audit in (story_audits or []):
+        day = str(audit.get("date") or "")
+        for veto in (audit.get("stage_vetoes") or []):
+            if isinstance(veto, dict):
+                stage_vetoes.append({**veto, "date": day})
+        for promo in (audit.get("display_promotions") or []):
+            if isinstance(promo, dict):
+                display_promotions.append({**promo, "date": day})
+
     return {
         "generated_at": generated_at.isoformat(),
         "story": {
@@ -4167,14 +4281,22 @@ def build_admin_merges(
             "totals": {
                 "merge": relation_counts.get("merge", 0),
                 "duplicate": relation_counts.get("duplicate", 0),
+                "collected": relation_counts.get("collected", 0),
                 "single": relation_counts.get("single", 0),
                 "folded_articles": folded_articles,
+                # 수집 단계에서 접힌 기사 수. 예전 파이프라인에서는 이 숫자만큼이
+                # story 가 만들어지기 전에 삭제됐다.
+                "collect_folded_articles": collect_folded,
+                "stage_vetoes": len(stage_vetoes),
+                "display_promotions": len(display_promotions),
             },
             "by_date": [
                 {"date": day, "count": count}
                 for day, count in sorted(story_by_date.items(), reverse=True)
             ],
             "merges": story_rows,
+            "stage_vetoes": stage_vetoes[:120],
+            "display_promotions": display_promotions[:60],
         },
         "issue": {
             "matching_version": issue_audit.get("matching_version", ""),
@@ -4456,6 +4578,15 @@ def build() -> None:
             "story_related_titles": (delivery or {}).get("story_related_titles", []),
             "story_sources": (delivery or {}).get("story_sources", []),
             "story_context": (delivery or {}).get("story_context", []),
+            # 수집 단계에서 접힌 근거와, story 완성 뒤에 화면 대표를 고른 판단.
+            # 운영 콘솔이 "왜 이 기사가 이 카드의 얼굴인가"에 답하는 재료다.
+            "story_raw_sources": (delivery or {}).get("story_raw_sources", []),
+            "story_raw_source_count": (delivery or {}).get("story_raw_source_count", 0),
+            "story_display_reason": (delivery or {}).get("story_display_reason", ""),
+            "story_display_candidates": (delivery or {}).get("story_display_candidates", 1),
+            "story_display_swapped_from": (delivery or {}).get("story_display_swapped_from", ""),
+            "story_display_swapped_from_title": (delivery or {}).get(
+                "story_display_swapped_from_title", ""),
             # 보고서 검토 추천은 발송 시점의 판단이라 아카이브 레코드가 아니라
             # delivery_log 에 실려 온다 (daily_brief.plan_briefs).
             "report_pick": delivery.get("report_pick", "") if delivery else "",
@@ -4902,6 +5033,7 @@ def build() -> None:
               "generation_id": generation_id}
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    ADMIN_OUT_DIR.mkdir(parents=True, exist_ok=True)
     outputs = (
         ("news.json", news_items),
         ("briefings.json", briefings),
@@ -4912,13 +5044,21 @@ def build() -> None:
         ("publications.json", publications),
         ("entities.json", entities_view),
         ("issue_audit.json", issue_audit),
-        ("admin_merges.json", build_admin_merges(news_items, issue_catalog, issue_audit, now)),
-        ("admin_config.json", build_admin_config(now)),
         ("manifest.json", manifest),
         ("status.json", status),
     )
+    admin_outputs = (
+        ("merges.json", build_admin_merges(news_items, issue_catalog, issue_audit, now,
+                                           load_story_audits())),
+        ("config.json", build_admin_config(now)),
+    )
     for name, payload in outputs:
         (OUT_DIR / name).write_text(
+            json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
+    for name, payload in admin_outputs:
+        (ADMIN_OUT_DIR / name).write_text(
             json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
             encoding="utf-8",
         )

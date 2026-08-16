@@ -300,6 +300,9 @@ jobs:
             || { echo "::error::스모크 실패 — news.json이 JSON이 아니거나 접근 불가"; exit 1; }
           [ "$count" -gt 0 ] || { echo "::error::스모크 실패 — 기사 0건"; exit 1; }
           echo "스모크 OK — 기사 ${count}건"
+          # 운영 콘솔이 인증 없이 열려 있지 않은지 확인한다. Function 폴더가 업로드
+          # 에서 빠져도 배포는 조용히 성공하므로, 살아 있는 사이트에 직접 물어야 안다.
+          bash web/tools/verify_admin_gate.sh "$base"
 
       # 오디오 산출물을 다음 배포(정기 crawl·deploy-web)가 복원할 수 있게 저장.
       # audio.json 이 있어야 저장한다 — 빈 디렉터리 저장은 경고만 남긴다.

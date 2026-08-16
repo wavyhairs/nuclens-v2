@@ -1,6 +1,10 @@
 # 절대 GitHub에 올라가면 안 되는 것들
 .env
 *.local
+# Cloudflare Pages 로컬 시크릿 (wrangler pages dev 가 읽는다 — 운영 콘솔 비밀번호)
+.dev.vars
+# wrangler 로컬 실행 상태 (pages dev 캐시 — 커밋 불필요)
+.wrangler/
 
 # 로컬 검색 결과 (용량 크고 공개 불필요)
 raw/
@@ -17,6 +21,9 @@ web/public/data/
 web/public/rss.xml
 web/public/issue/
 web/public/brief/
+# 운영 콘솔 데이터. 화면 파일(admin/*.html·css·js)은 추적하고 데이터만 뺀다 —
+# 엣지 접근 통제가 닿도록 /data 밖에 두는 것이지 공개 자료라는 뜻이 아니다.
+web/public/admin/data/
 
 # Python
 __pycache__/

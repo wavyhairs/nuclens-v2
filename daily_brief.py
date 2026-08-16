@@ -667,6 +667,17 @@ def plan_briefs(queue: list[dict],
         meta["story_related_titles"] = (a.get("story_related_titles") or [])[:12]
         meta["story_sources"] = (a.get("story_sources") or [])[:12]
         meta["story_context"] = (a.get("story_context") or [])[:8]
+        # 수집 단계에서 접힌 근거. 예전에는 이 자리에 아무것도 없었다 — 그 기사들이
+        # story 가 만들어지기 전에 삭제됐기 때문이다. 이제 여기까지 온다.
+        meta["story_raw_sources"] = (a.get("raw_sources") or [])[:12]
+        meta["story_raw_source_count"] = len(a.get("raw_sources") or [])
+        # 화면 대표를 story 완성 뒤에 골랐다는 사실과 그 사유.
+        meta["story_display_reason"] = a.get("story_display_reason", "")
+        meta["story_display_candidates"] = int(a.get("story_display_candidates") or 1)
+        if a.get("story_display_swapped_from"):
+            meta["story_display_swapped_from"] = a.get("story_display_swapped_from")
+            meta["story_display_swapped_from_title"] = a.get(
+                "story_display_swapped_from_title", "")
         # 빈 값은 넣지 않는다 — 하루 0~2건짜리 표식이라 나머지 전 줄에
         # report_pick:"" 이 붙으면 로그가 그만큼 읽기 어려워진다.
         if report_picks.get(h):
@@ -694,6 +705,14 @@ def plan_briefs(queue: list[dict],
                 "overseas": region_stats(forn_diag, forn, forn_pool),
             },
             "dropped_duplicates": dom_diag["dropped_duplicates"] + forn_diag["dropped_duplicates"],
+            # 병합만 기록하면 진단 화면은 반쪽이다. "왜 붙었나"의 짝은 "왜 안 붙었나"인데,
+            # 분리는 결과물에 아무 흔적을 남기지 않아 여기서 잡지 않으면 영영 안 보인다.
+            "story_audit": {
+                "stage_vetoes": (dom_diag.get("stage_vetoes") or [])
+                                + (forn_diag.get("stage_vetoes") or []),
+                "display_promotions": (dom_diag.get("display_promotions") or [])
+                                      + (forn_diag.get("display_promotions") or []),
+            },
             "prune_hashes": prune}
 
 
@@ -804,6 +823,39 @@ def append_selection_stats(outbox: dict, path: Path | None = None,
         "generated_at": now.astimezone(KST).isoformat(),
         "pipeline_status": "partial" if failed else "ok",
         **{k: v for k, v in stats.items()},
+    }
+    with path.open("a", encoding="utf-8") as fp:
+        fp.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    return True
+
+
+def append_story_audit(outbox: dict, path: Path | None = None,
+                       now: datetime | None = None) -> bool:
+    """그날의 story 병합/분리 판단을 delivery_log.jsonl 에 한 줄 남긴다.
+
+    기사 레코드에는 '이 카드가 무엇을 접었나'만 실린다. 그 반대편 — 제목이 닮았는데
+    **사건 단계가 달라 일부러 갈라 둔 쌍**과, story 완성 뒤 대표를 바꾼 판단 — 은
+    어느 기사에도 남지 않는다. 남기지 않으면 운영 콘솔이 "왜 분리됐나"에 답할 수
+    없으므로 selection_stats 와 같은 방식으로 계약에 못 박는다.
+    """
+    audit = outbox.get("story_audit")
+    if not isinstance(audit, dict):
+        return False
+    vetoes = audit.get("stage_vetoes") or []
+    promotions = audit.get("display_promotions") or []
+    if not vetoes and not promotions:
+        return False
+    path = path or DELIVERY_LOG_FILE
+    now = now or datetime.now(timezone.utc)
+    rec = {
+        "record_type": "story_audit",
+        "date": outbox.get("date", ""),
+        "generated_at": now.astimezone(KST).isoformat(),
+        # 상한을 둔다 — 이 줄은 매일 붙고 로그는 지우지 않는다.
+        "stage_vetoes": vetoes[:60],
+        "display_promotions": promotions[:40],
+        "stage_veto_count": len(vetoes),
+        "display_promotion_count": len(promotions),
     }
     with path.open("a", encoding="utf-8") as fp:
         fp.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -921,6 +973,7 @@ def cmd_confirm() -> int:
     # 발송이 전부 실패해도 통계는 남긴다 — 웹이 '조용한 날'과 '파이프라인 실패'를
     # 구분하려면 오늘 파이프라인이 돌았다는 사실 자체가 필요하다.
     append_selection_stats(outbox)
+    append_story_audit(outbox)
     save_outbox(outbox)
     print(f"[daily_brief] confirm — 상태 {outbox.get('status')}, delivery_log +{n}건")
     return 0
@@ -995,6 +1048,7 @@ def main() -> int:
     send_outbox(outbox)
     append_delivery_log(outbox)
     append_selection_stats(outbox)
+    append_story_audit(outbox)
     if not args.from_curated and not args.keep_queue:
         pruned = prune_queue(queue, set(outbox["prune_hashes"]))
         save_queue(pruned)

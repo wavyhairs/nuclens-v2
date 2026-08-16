@@ -28,6 +28,7 @@ try:
 except (AttributeError, ValueError):
     pass
 
+import event_stage
 from gemini_client import GeminiError, call_json, is_available
 from story_cluster import consolidate_story_metadata
 
@@ -417,12 +418,33 @@ def _dedup_articles_impl(articles: list[dict], scores: dict[str, float], *,
     dropped: list[dict] = []
     for group in groups:
         indices = group["indices"]
+        relation = group.get("relation") or "merge"
         win = max(indices, key=score_of)
         winner = articles[win]
+
+        # 단순 재전재(duplicate)라면서 사건 단계가 갈리는 것은 모순이다 — 재전재는
+        # 같은 사건을 다시 실은 것이므로 단계가 넘어갈 수 없다. 그런 조합만 되돌린다.
+        # relation="merge"(원인분석·수치보강)는 건드리지 않는다: 그 판정은 제목 밖의
+        # 맥락을 읽어야 하고, 그건 이 모듈이 아니라 모델이 더 잘한다.
+        vetoed: list[int] = []
+        if relation == "duplicate" and len(indices) > 1:
+            win_stages = event_stage.article_stages(winner)
+            for i in list(indices):
+                if i == win:
+                    continue
+                if event_stage.stage_conflict(win_stages,
+                                              event_stage.article_stages(articles[i])):
+                    vetoed.append(i)
+            if vetoed:
+                indices = [i for i in indices if i not in vetoed]
+                winner.setdefault("story_stage_vetoes", []).extend(
+                    event_stage.veto_record(winner, articles[i], stage=stage)
+                    for i in vetoed)
+
         members = [articles[i] for i in indices]
         consolidate_story_metadata(
             winner, members,
-            relation=group.get("relation") or "merge",
+            relation=relation,
             reason=group.get("reason") or "",
             fingerprint=group.get("fingerprint") or {},
             stage=stage,
@@ -433,9 +455,12 @@ def _dedup_articles_impl(articles: list[dict], scores: dict[str, float], *,
                 continue
             d = dict(articles[i])
             d["dup_of"] = winner.get("hash", "")
-            d["dup_reason"] = group.get("relation") or "merge"
+            d["dup_reason"] = relation
             d["dup_explanation"] = group.get("reason") or ""
             dropped.append(d)
+        # 거부권으로 떨어져 나온 기사는 버리지 않고 독립 story 로 되돌린다.
+        for i in vetoed:
+            kept.append(articles[i])
     return kept, dropped
 
 
