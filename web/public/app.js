@@ -2031,21 +2031,59 @@ function renderPubs() {
 
 function articleTimelineRow(article, briefingDate, currentStage = "이번 브리핑", shownDetail = "") {
   const url = safeUrl(article.url);
-  const stage = article.briefing_date === briefingDate ? currentStage : "이전 흐름";
+  // 근거 원문은 어느 브리핑에도 실린 적이 없다(briefing_date 가 비어 있다).
+  // '이전 흐름'이라고 적으면 예전 브리핑에 나갔던 것처럼 읽힌다 — 자기 구역의
+  // 제목이 이미 '추가 근거 원문'이라고 말하므로 여기서는 비운다.
+  const stage = article.member_role === "evidence"
+    ? ""
+    : (article.briefing_date === briefingDate ? currentStage : "이전 흐름");
   // 원문 대신 읽는 기사 내용. 위 '기사 내용' 블록이 이미 보여 준 문장은 건너뛴다 —
   // 같은 문단을 한 화면에 두 번 두면 정보가 아니라 소음이다.
   const detail = String(article.detail || "").trim();
   const body = detail && detail !== shownDetail
     ? `<details class="timeline-detail"><summary>내용 보기</summary><p>${esc(detail)}</p></details>`
     : "";
+  // 기준일보다 나중에 나온 기사는 상대 표기가 없어 relativeArticleDate 가 날짜로
+  // 떨어진다 — 그러면 같은 날짜가 두 줄 연달아 선다. 근거 원문은 브리핑 이후에도
+  // 계속 붙으므로 이 겹침이 줄줄이 보인다. 같으면 아랫줄을 비운다.
+  const dateText = dateLabel(article.article_date);
+  const relative = relativeArticleDate(article.article_date, briefingDate);
   return `<li>
-    <div class="timeline-date"><span>${esc(dateLabel(article.article_date))}</span><small>${esc(relativeArticleDate(article.article_date, briefingDate))}</small><em>${stage}</em></div>
+    <div class="timeline-date"><span>${esc(dateText)}</span>${relative === dateText ? "" : `<small>${esc(relative)}</small>`}${stage ? `<em>${esc(stage)}</em>` : ""}</div>
     <div class="timeline-copy">
       ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(article.title_kr)}</a>` : `<span>${esc(article.title_kr)}</span>`}
       <small>${esc(sourceLabel(article))}${isOfficial(article) ? " · 1차 출처" : ""}</small>
       ${body}
     </div>
   </li>`;
+}
+
+// 타임라인은 최신순이다. 같은 날짜 안에서만 1차 출처를 앞에 세운다 — 1차 출처를
+// 통째로 위로 올리면 아래 '최근 5건'이 최근이 아니게 된다.
+function byTimelineOrder(a, b) {
+  return String(b.article_date).localeCompare(String(a.article_date))
+    || Number(isOfficial(b)) - Number(isOfficial(a));
+}
+
+// V1 은 선정된 핵심 기사만 보여줬다. V2 는 장기 타임라인에 미선정 관련 보도까지
+// 근거로 붙이면서 목록이 길어졌다 — 실측 2026-08-16 '테라파워 나트륨 SMR 공급망'
+// 이슈는 선정 2건 + 근거 16건이 한 <ol> 에 18행으로 서서, 정작 브리핑에 나간 2건이
+// 그 사이에 묻혔다.
+//
+// 정보를 버리지는 않는다. 목록을 '최근 것 몇 건 + 나머지 접기'로 편다. 대부분의
+// 이슈는 애초에 이 한도에 걸리지 않아(250건 중 선정 5건 초과 1건) 아무것도 안 바뀐다.
+const TIMELINE_HEAD = 5;
+
+function timelineList(articles, options) {
+  const row = article => articleTimelineRow(
+    article, options.contextDate, options.stage, options.shownDetail);
+  const head = articles.slice(0, TIMELINE_HEAD);
+  const rest = articles.slice(TIMELINE_HEAD);
+  return `<ol class="timeline dialog-timeline">${head.map(row).join("")}</ol>${rest.length
+    ? `<details class="timeline-more"><summary>${esc(options.moreLabel)} ${rest.length}건 더 보기</summary>
+        <ol class="timeline dialog-timeline">${rest.map(row).join("")}</ol>
+      </details>`
+    : ""}`;
 }
 
 function currentIssueById(issueId) {
@@ -2291,16 +2329,24 @@ function openIssueDialog(issueId, updateUrl = true) {
     .filter(reason => String(reason || "").trim())
     .map(reason => `<span class="topic-chip">${esc(reason)}</span>`).join("");
   const contextDate = state.view === "news" ? state.briefingDate : issue.last_seen;
-  const articles = [...(issue.related_articles || [])].sort((a, b) => (
-    Number(isOfficial(b)) - Number(isOfficial(a)) || String(b.article_date).localeCompare(String(a.article_date))
-  ));
+  // member_role 이 두 종류를 가른다: card 는 실제로 브리핑에 나간 기사,
+  // evidence 는 뒤에 매칭으로 붙은 미선정 보도다(build_data.py 가 그렇게 싣고,
+  // test_global_issue_catalog_contains_each_delivered_article_once 가 잠근다).
+  const allArticles = issue.related_articles || [];
+  const cardArticles = allArticles
+    .filter(article => (article.member_role || "card") !== "evidence").sort(byTimelineOrder);
+  const evidenceArticles = allArticles
+    .filter(article => article.member_role === "evidence").sort(byTimelineOrder);
   const related = relatedIssues(issue);
   // 원문(대개 영문)에 들어가지 않고도 읽히도록 만든 기사 요지. 2026-08-07 이전
   // 아카이브에는 없으므로 빈 값이 정상이고, 그때는 이 블록이 통째로 빠진다.
   const issueDetail = String(issue.detail || "").trim();
   document.getElementById("issueDialogContent").innerHTML = `
     <h2 id="issueDialogTitle" tabindex="-1">${esc(issue.title)}</h2>
-    <div class="dialog-meta"><span>${esc(issueStatusText(issue, state.view !== "news"))}</span><span>${dateLabel(issue.first_seen)} 시작</span><span>누적 ${issue.article_count}건</span></div>
+    <div class="dialog-meta"><span>${esc(issueStatusText(issue, state.view !== "news"))}</span><span>${dateLabel(issue.first_seen)} 시작</span><span>${
+      evidenceArticles.length
+        ? `선정 ${cardArticles.length}건 · 추가 근거 ${evidenceArticles.length}건`
+        : `누적 ${issue.article_count}건`}</span></div>
     <section class="dialog-update" aria-labelledby="issueUpdateTitle">
       <h3 id="issueUpdateTitle">한 줄 결론</h3>
       ${issue.summary ? `<p>${esc(issue.summary)}</p>` : '<p class="empty">요약이 없습니다.</p>'}
@@ -2316,9 +2362,26 @@ function openIssueDialog(issueId, updateUrl = true) {
     </section>
     ${keeiDialogSection(issue)}
     <section class="dialog-history" aria-labelledby="issueHistoryTitle">
-      <div class="dialog-section-head"><h3 id="issueHistoryTitle">사건 타임라인과 근거 원문</h3></div>
-      <ol class="timeline dialog-timeline">${articles.map(article => articleTimelineRow(article, contextDate, state.view === "news" ? "이번 브리핑" : "최근 브리핑", issueDetail)).join("")}</ol>
+      <div class="dialog-section-head"><h3 id="issueHistoryTitle">주요 사건 타임라인</h3><span>브리핑에 선정된 ${cardArticles.length}건</span></div>
+      ${cardArticles.length
+        ? timelineList(cardArticles, {
+            contextDate,
+            stage: state.view === "news" ? "이번 브리핑" : "최근 브리핑",
+            shownDetail: issueDetail,
+            moreLabel: "이전 사건",
+          })
+        : '<p class="empty">선정된 사건이 없습니다.</p>'}
     </section>
+    ${evidenceArticles.length ? `<details class="dialog-evidence">
+      <summary>추가 근거 원문 ${evidenceArticles.length}건</summary>
+      <p class="dialog-evidence-note">브리핑에 선정되지는 않았지만 같은 사건을 다룬 보도입니다. 검증에는 함께 셉니다.</p>
+      ${timelineList(evidenceArticles, {
+        contextDate,
+        stage: state.view === "news" ? "이번 브리핑" : "최근 브리핑",
+        shownDetail: issueDetail,
+        moreLabel: "이전 근거",
+      })}
+    </details>` : ""}
     ${related.length ? `<section class="dialog-related" aria-labelledby="issueRelatedTitle">
       <div class="dialog-section-head"><h3 id="issueRelatedTitle">관련 이슈</h3><span>같은 주제로 연결된 이슈입니다</span></div>
       <ul>${related.map(item => `<li>
