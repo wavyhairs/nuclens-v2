@@ -3078,29 +3078,26 @@ def load_daily_leads() -> dict[str, dict]:
     return leads if isinstance(leads, dict) else {}
 
 
-def load_weekly_report(issue_rows: list[dict]) -> dict | None:
-    """봇이 금요일에 저장한 주간 판세 리포트 → 화면용.
-
-    문장마다 evidence_hashes 를 이슈 상세 링크로 바꾼다. 전역 key_events 만으로는
-    어떤 근거가 어느 문장 것인지 알 수 없어 모든 문장에 같은 칩이 붙는다.
-    """
-    try:
-        raw = json.loads((BOT_DIR / "weekly_reports.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    reports = raw.get("reports")
-    if not isinstance(reports, dict) or not reports:
-        return None
-    report = dict(reports[max(reports)])
-
-    # 봇은 hash 앞 8자리만 남긴다(프롬프트 토큰 절약). 이슈 카탈로그는 전체
-    # hash 로 색인돼 있어 _evidence_chips 를 그대로 쓰면 하나도 안 걸린다.
+def _short_hash_index(issue_rows: list[dict]) -> dict[str, dict]:
+    """hash 앞 8자리 → 이슈. 봇이 프롬프트 토큰을 아끼려 8자리만 남기는데,
+    이슈 카탈로그는 전체 hash 로 색인돼 있어 그대로 조회하면 하나도 안 걸린다."""
     by_short: dict[str, dict] = {}
     for row in issue_rows:
         for article in row.get("related_articles") or []:
             short = str(article.get("hash") or "")[:8]
             if short and short not in by_short:
                 by_short[short] = row
+    return by_short
+
+
+def _enrich_weekly_report(raw: dict, issue_rows: list[dict],
+                          by_short: dict[str, dict]) -> dict:
+    """저장된 주간 리포트 → 화면용.
+
+    문장마다 evidence_hashes 를 이슈 상세 링크로 바꾼다. 전역 key_events 만으로는
+    어떤 근거가 어느 문장 것인지 알 수 없어 모든 문장에 같은 칩이 붙는다.
+    """
+    report = dict(raw)
 
     def chips(short_hashes) -> list[dict]:
         # 매핑 실패는 칩만 비우고 넘어간다 — 화면 전체가 깨지면 안 된다.
@@ -3114,7 +3111,7 @@ def load_weekly_report(issue_rows: list[dict]) -> dict | None:
         return out[:2]
 
     for key in ("policy_shifts", "theme_moves"):
-        rows = [r for r in (report.get(key) or []) if isinstance(r, dict)]
+        rows = [dict(r) for r in (report.get(key) or []) if isinstance(r, dict)]
         for row in rows:
             row["evidence"] = chips(row.get("evidence_hashes"))
             row.pop("evidence_hashes", None)
@@ -3128,6 +3125,49 @@ def load_weekly_report(issue_rows: list[dict]) -> dict | None:
     if merged is not None:
         report["source_issue_count"] = merged
     return report
+
+
+def _stored_weekly_reports() -> dict:
+    try:
+        raw = json.loads((BOT_DIR / "weekly_reports.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    reports = raw.get("reports")
+    return reports if isinstance(reports, dict) else {}
+
+
+def load_weekly_reports(issue_rows: list[dict]) -> dict[str, dict]:
+    """week_start(YYYY-MM-DD) → 그 주 리포트. **전부** 내보낸다.
+
+    예전에는 `reports[max(reports)]` 하나만 내보냈다. 그러면 화면이 어느 날짜를
+    열든 같은 주의 결론을 붙인다 — 7월 브리핑에도 8월 8~14일 결론이 뜨고, 이번 주
+    브리핑에는 지난주 결론이 '오늘 분석'처럼 붙는다. 실측(2026-08-16): 저장된
+    2주치(W32·W33) 중 W33 하나만 사이트로 나갔다.
+
+    키를 week_id 가 아니라 week_start 로 잡는 이유: week_id 는 ISO 주차(월~일)인데
+    리포트의 실제 구간은 토~금(금요일 실행, 직전 7일)이라 둘이 어긋난다. 화면이
+    날짜로 주차를 계산해 맞춰야 하므로 구간 시작일이 유일하게 안전한 키다.
+    """
+    by_short = _short_hash_index(issue_rows)
+    out: dict[str, dict] = {}
+    for raw in _stored_weekly_reports().values():
+        if not isinstance(raw, dict):
+            continue
+        start = raw.get("week_start")
+        if not isinstance(start, str) or not start:
+            continue
+        out[start] = _enrich_weekly_report(raw, issue_rows, by_short)
+    return out
+
+
+def load_weekly_report(issue_rows: list[dict]) -> dict | None:
+    """가장 최신 주간 리포트 하나. 트렌드 탭의 '주간 판세' 패널이 쓴다 —
+    그 패널은 선택 날짜와 무관한 독립 코너이고 기간을 스스로 표시한다."""
+    reports = _stored_weekly_reports()
+    if not reports:
+        return None
+    return _enrich_weekly_report(reports[max(reports)], issue_rows,
+                                 _short_hash_index(issue_rows))
 
 
 def merged_issue_count(issue_rows: list[dict], start: object, end: object) -> int | None:
@@ -4271,8 +4311,13 @@ def build() -> None:
 
     trend = {
         # 금요일 주간 판세 리포트. 없으면 None → 프론트가 기존 정량 트렌드만 그린다
-        # (목요일에 빈 탭이 되지 않게 하는 폴백).
+        # (목요일에 빈 탭이 되지 않게 하는 폴백). 트렌드 탭의 독립 패널 전용 —
+        # 선택 날짜에 붙는 화면은 아래 weekly_reports 에서 그 주 것을 고른다.
         "weekly_report": load_weekly_report(issue_catalog),
+        # week_start → 그 주 리포트. 날짜를 옮기면 그 날짜가 속한 주차 것을
+        # 보여주기 위해 전부 싣는다. 없는 주는 키가 없다 — 다른 주 내용을
+        # 대신 끼우지 않는다.
+        "weekly_reports": load_weekly_reports(issue_catalog),
         # 이번 주 움직인 이슈 — 키워드 단위 흐름 해석을 대체한다(중복 제거)
         "weekly_movers": build_weekly_movers(
             issue_catalog, briefings[0]["date"] if briefings else ""),

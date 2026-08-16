@@ -3258,6 +3258,59 @@ class WeeklyReportTests(unittest.TestCase):
             report = self._load(Path(tmp))
             self.assertEqual(report["source_issue_count"], 2)  # 지난달 이슈는 제외
 
+    def test_every_week_is_exported_not_just_the_latest(self):
+        """🔴 최신 한 주만 내보내면 화면이 어느 날짜를 열든 같은 주를 말한다.
+
+        실측(2026-08-16): 저장된 2주치(W32 8/1~8/7 · W33 8/8~8/14) 중 W33 하나만
+        사이트로 나가서, 7월 브리핑에도 8/8~14 결론이 붙고 이번 주 브리핑에는
+        지난주 결론이 '오늘 분석'처럼 붙었다.
+
+        키가 week_id 가 아니라 week_start 인 이유: week_id 는 ISO 주차(월~일)인데
+        리포트 구간은 토~금이라 둘이 어긋난다. 화면은 날짜로 구간을 계산해 맞춘다.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)
+            reports = {
+                "2026-W32": {"week_id": "2026-W32", "week_start": "2026-08-01",
+                             "week_end": "2026-08-07", "policy_shifts": [{"what": "W32 결론"}],
+                             "watchpoints": ["W32 확인"], "theme_moves": [], "key_events": []},
+                "2026-W33": {"week_id": "2026-W33", "week_start": "2026-08-08",
+                             "week_end": "2026-08-14", "policy_shifts": [{"what": "W33 결론"}],
+                             "watchpoints": ["W33 확인"], "theme_moves": [], "key_events": []},
+            }
+            (path / "weekly_reports.json").write_text(
+                json.dumps({"schema_version": 1, "reports": reports}, ensure_ascii=False),
+                encoding="utf-8")
+            original = build_data.BOT_DIR
+            build_data.BOT_DIR = path
+            try:
+                exported = build_data.load_weekly_reports(self.ROWS)
+                latest = build_data.load_weekly_report(self.ROWS)
+            finally:
+                build_data.BOT_DIR = original
+
+            self.assertEqual({"2026-08-01", "2026-08-08"}, set(exported))
+            self.assertEqual("W32 결론", exported["2026-08-01"]["policy_shifts"][0]["what"])
+            self.assertEqual("W33 결론", exported["2026-08-08"]["policy_shifts"][0]["what"])
+            # 트렌드 탭의 독립 패널은 최신 하나를 계속 쓴다 — 선택 날짜와 무관하다.
+            self.assertEqual("W33 결론", latest["policy_shifts"][0]["what"])
+
+    def test_exported_weeks_do_not_share_mutated_rows(self):
+        """한 주를 가공하면서 다른 주의 원본을 건드리면 안 된다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            self._store(Path(tmp))
+            original = build_data.BOT_DIR
+            build_data.BOT_DIR = Path(tmp)
+            try:
+                exported = build_data.load_weekly_reports(self.ROWS)
+                raw = json.loads((Path(tmp) / "weekly_reports.json").read_text(encoding="utf-8"))
+            finally:
+                build_data.BOT_DIR = original
+            self.assertIn("evidence", exported["2026-07-27"]["policy_shifts"][0])
+            # 원본 파일의 evidence_hashes 는 그대로다.
+            self.assertIn("evidence_hashes",
+                          raw["reports"]["2026-W31"]["policy_shifts"][0])
+
     def test_corrupt_file_does_not_break_the_build(self):
         with tempfile.TemporaryDirectory() as tmp:
             (Path(tmp) / "weekly_reports.json").write_text("{ 깨진", encoding="utf-8")
@@ -3405,6 +3458,55 @@ class WeeklyRenderTests(unittest.TestCase):
         self.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
         self.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
         self.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+
+    def test_date_bound_blocks_pick_the_week_of_the_selected_briefing(self):
+        """🔴 선택 날짜에 붙는 블록이 '최신 한 주'를 읽으면 날짜를 옮겨도 안 바뀐다.
+
+        실측(2026-08-16): 7월 브리핑에도 8/8~14 결론이 뜨고, 이번 주 브리핑에는
+        지난주 결론이 오늘 분석인 것처럼 붙었다. 원인은 두 렌더러가 모두
+        `state.trend.weekly_report`(=최신 하나)를 읽은 것이다.
+
+        날짜에 매인 블록은 weeklyReportFor(date) 로만 재료를 얻어야 한다.
+        트렌드 탭의 독립 패널(renderWeeklyReport)은 선택 날짜와 무관하고 기간을
+        스스로 표시하므로 최신 하나를 계속 써도 된다 — 그래서 예외로 둔다.
+        """
+        for name in ("renderTodayAgenda", "renderHomeIntelligence"):
+            match = re.search(rf"function {name}\(.*?\n\}}", self.script, re.S)
+            self.assertIsNotNone(match, f"{name} 을 찾지 못했다")
+            body = match.group(0)
+            self.assertIn("weeklyReportFor(briefing.date)", body,
+                          f"{name} 이 선택 날짜의 주차 리포트를 고르지 않는다")
+            self.assertNotIn("state.trend?.weekly_report;", body,
+                             f"{name} 이 아직 최신 한 주를 읽는다")
+
+    def test_missing_week_is_stated_not_backfilled(self):
+        """그 주 리포트가 없으면 직전 주로 대신 채우지 않는다.
+
+        대체하면 '지난주 결론이 오늘 분석처럼 붙는' 원래 문제가 그대로 남는다.
+        비었다는 사실을 화면이 말하고, 본문은 내지 않는다.
+        """
+        match = re.search(r"function weeklyReportFor\(.*?\n\}", self.script, re.S)
+        self.assertIsNotNone(match)
+        body = match.group(0)
+        # 폴백 흔적: 최신 키를 집거나 정렬해서 앞뒤를 집는 코드가 있으면 안 된다.
+        for banned in ("Object.keys", "sort(", "at(-1)", "weekly_report;"):
+            self.assertNotIn(banned, body, f"weeklyReportFor 에 폴백 흔적: {banned}")
+        self.assertIn("return reports[start] || null", body)
+        # 빈 상태를 말하는 자리가 실제로 있는가.
+        self.assertIn('id="agendaPending"', self.html)
+        self.assertIn("agendaPending", self.script)
+        self.assertIn(".agenda-pending", self.style)
+
+    def test_agenda_title_carries_the_week_range(self):
+        """며칠간 같은 내용인 이유가 화면에서 설명돼야 한다."""
+        match = re.search(r"function renderTodayAgenda\(.*?\n\}", self.script, re.S)
+        body = match.group(0)
+        self.assertIn("weekRangeLabel(briefing.date)", body)
+        self.assertIn("주간 3분", body)
+        # index.html 의 기본 문구도 '오늘'이 아니어야 한다 — 렌더 전 한 프레임 동안
+        # 보이고, brief/<date>/ 정적 페이지의 초기 제목이기도 하다.
+        self.assertIn('id="todayAgendaTitle">주간 3분<', self.html)
+        self.assertNotIn("오늘 3분</strong>", self.html)
 
     def test_weekly_report_only_owns_the_two_week_corners(self):
         """주간 판세는 오늘 화면이 담당하는 문장을 다시 내지 않는다.

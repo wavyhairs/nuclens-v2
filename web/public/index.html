@@ -144,7 +144,7 @@
     </section>
 
     <!-- 부팅 스켈레톤. 예전에는 #issueList 안에 앉아 있었는데, 그 위의 세 섹션
-         (오늘 3분·가장 먼저 볼 이슈·지금 달라진 이슈)이 전부 hidden 으로 시작해
+         (주간 3분·가장 먼저 볼 이슈·지금 달라진 이슈)이 전부 hidden 으로 시작해
          데이터가 오면 한꺼번에 펴졌다. 실측 2026-08-10: 그 순간 #todayIssues 가
          442px → 1893px 로 **1451px** 밀려 CLS 0.90 이 찍혔다(good 기준 0.1).
          화면에 이미 그려 놓은 것을 밀어내지 않으려면, 로딩 중에는 나중에
@@ -156,12 +156,19 @@
       <article class="issue-card skeleton-card" aria-hidden="true"><i></i><i></i><i></i><i></i></article>
     </div>
 
-    <!-- 오늘 3분은 기사 목차가 아니라 의사결정용 스캔 화면이다. 제목 나열은
+    <!-- 주간 3분은 기사 목차가 아니라 의사결정용 스캔 화면이다. 제목 나열은
          카드가 이미 하고 있어서 같은 문장을 두 번 내보내던 자리였고, 필터·정렬이
          걸리면 목차 번호와 카드 번호가 어긋나기까지 했다. 이제 결론과 다음 확인만
-         담는다 — 새로 달라진 사실과 확인할 것이 이 영역의 소유 범위다. -->
+         담는다 — 새로 달라진 사실과 확인할 것이 이 영역의 소유 범위다.
+
+         제목은 renderTodayAgenda 가 선택 날짜의 주차 구간으로 바꿔 쓴다
+         ("8월 8일–14일 주간 3분"). 재료가 주간 리포트뿐이라 며칠간 내용이 같은데,
+         '오늘 3분'이라는 이름이 매일 새 분석처럼 읽히게 만들고 있었다. -->
     <nav id="todayAgenda" class="today-agenda" aria-labelledby="todayAgendaTitle" hidden>
-      <div class="agenda-head"><strong id="todayAgendaTitle">오늘 3분</strong><span id="todayAgendaMeta"></span></div>
+      <div class="agenda-head"><strong id="todayAgendaTitle">주간 3분</strong><span id="todayAgendaMeta"></span></div>
+      <!-- 그 주 리포트가 아직 없는 날. 직전 주 내용을 대신 끼우지 않는다 —
+           지난주 결론이 오늘 분석인 것처럼 붙는 것이 원래 문제였다. -->
+      <p class="agenda-pending" id="agendaPending" hidden></p>
       <div class="agenda-block" id="agendaConclusions" hidden>
         <span class="agenda-label">이번 주 결론</span>
         <ol id="agendaConclusionList"></ol>
