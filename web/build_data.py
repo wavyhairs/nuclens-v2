@@ -85,6 +85,43 @@ ISSUE_EMBEDDING_THRESHOLD = 0.92
 ISSUE_EMBEDDING_CANDIDATE_THRESHOLD = 0.70
 LOCAL_EMBEDDING_CANDIDATE_THRESHOLD = 0.18
 LOCAL_EMBEDDING_DIMENSION = 1024
+STORY_CONTRACT_VERSION = "briefing-story-v2"
+# 자동 병합 규칙의 문턱. issue_match_diagnostics 안에 숫자로 박혀 있던 것을 끌어
+# 올린다 — 운영 콘솔(/admin)이 "무엇이 걸려서 붙었나"를 화면에 적으려면 규칙과
+# 표시가 같은 값을 봐야 한다. 코드에만 있으면 화면이 옛 숫자를 말하게 된다.
+# 값은 그대로다. 바꿀 때는 MERGE_RULES 의 설명도 같이 고칠 것.
+TITLE_MATCH_RATIO = 0.78
+TAGS_MATCH_MIN_SHARED = 2
+TAGS_MATCH_TITLE_RATIO = 0.32
+TAGS_MATCH_TOKEN_RATIO = 0.20
+TITLE_TAGS_MATCH_RATIO = 0.55
+FINGERPRINT_MATCH_SIMILARITY = 0.78
+FINGERPRINT_MATCH_MIN_COMPARED = 3
+FINGERPRINT_MATCH_MIN_SHARED_AXES = 2
+FINGERPRINT_MATCH_AXES = ("actors", "assets", "event", "action")
+
+# 화면이 읽는 규칙표. id 는 diagnostics["method"] 값과 1:1 이다.
+MERGE_RULES = (
+    {"id": "title", "label": "제목 유사도",
+     "detail": f"제목 유사도 {TITLE_MATCH_RATIO} 이상"},
+    {"id": "tags", "label": "공통 태그",
+     "detail": f"구체 태그 {TAGS_MATCH_MIN_SHARED}개 공유 + "
+               f"제목 {TAGS_MATCH_TITLE_RATIO} 또는 토큰 {TAGS_MATCH_TOKEN_RATIO} 이상"},
+    {"id": "title_tags", "label": "태그+제목",
+     "detail": f"구체 태그 1개 공유 + 제목 유사도 {TITLE_TAGS_MATCH_RATIO} 이상"},
+    {"id": "story_fingerprint", "label": "사건 지문",
+     "detail": f"지문 유사도 {FINGERPRINT_MATCH_SIMILARITY} 이상 · "
+               f"{FINGERPRINT_MATCH_MIN_COMPARED}축 이상 비교 · "
+               f"행위자/대상/사건 중 {FINGERPRINT_MATCH_MIN_SHARED_AXES}축 이상 일치"},
+    {"id": "embedding", "label": "임베딩",
+     "detail": f"코사인 유사도 {ISSUE_EMBEDDING_THRESHOLD} 이상"},
+    {"id": "manual_approved", "label": "사람 승인",
+     "detail": "issue_match_overrides.json 에서 승인"},
+    {"id": "llm_approved", "label": "LLM 승인",
+     "detail": "회색지대(0.84~0.92)를 LLM 검수가 같은 사건으로 판정"},
+    {"id": "blocked", "label": "차단",
+     "detail": "국가 또는 설비가 충돌해 병합하지 않음"},
+)
 MATCH_OVERRIDES_FILE = BOT_DIR / "issue_match_overrides.json"
 SITE_URL = os.environ.get("SITE_URL", "https://nuclens-v2.pages.dev").rstrip("/")
 KST = timezone(timedelta(hours=9))
@@ -1382,22 +1419,25 @@ def issue_similarity(
     method = "none"
     matched = False
     if not blocked_by:
-        if title_ratio >= 0.78:
+        if title_ratio >= TITLE_MATCH_RATIO:
             matched, method = True, "title"
-        elif tag_shared >= 2 and (title_ratio >= 0.32 or token_ratio >= 0.20):
+        elif tag_shared >= TAGS_MATCH_MIN_SHARED and (
+            title_ratio >= TAGS_MATCH_TITLE_RATIO or token_ratio >= TAGS_MATCH_TOKEN_RATIO
+        ):
             matched, method = True, "tags"
         # 구체 태그가 같고 제목 절반 이상이 겹치면 같은 후속 이슈로 본다.
         # 실측 예: "12차 전기본 … 정책 혼선"과
         # "12차 전력수급기본계획 … 정부 부처 간 혼선".
-        elif tag_shared >= 1 and title_ratio >= 0.55:
+        elif tag_shared >= 1 and title_ratio >= TITLE_TAGS_MATCH_RATIO:
             matched, method = True, "title_tags"
         # Daily Brief의 story fingerprint를 웹 issue 연결에도 사용한다. 다만 자유형
         # LLM 필드라 단독 느슨 매칭은 금지하고, 최소 3축을 비교해 actor/asset/event
         # 가운데 두 축 이상이 겹치는 강한 경우만 자동 연결한다.
         elif (
-            fingerprint_similarity >= 0.78
-            and fingerprint_diag.get("compared", 0) >= 3
-            and len(set(fingerprint_diag.get("shared") or []) & {"actors", "assets", "event", "action"}) >= 2
+            fingerprint_similarity >= FINGERPRINT_MATCH_SIMILARITY
+            and fingerprint_diag.get("compared", 0) >= FINGERPRINT_MATCH_MIN_COMPARED
+            and len(set(fingerprint_diag.get("shared") or []) & set(FINGERPRINT_MATCH_AXES))
+            >= FINGERPRINT_MATCH_MIN_SHARED_AXES
         ):
             matched, method = True, "story_fingerprint"
             score = max(score, fingerprint_similarity)
@@ -3981,6 +4021,310 @@ def build_period_trends(all_items: list[dict], end_date: str) -> dict[str, dict]
         }
     return periods
 
+
+def _read_json(path: Path, fallback):
+    """설정 파일을 읽는다. 없거나 깨졌으면 fallback — 운영 콘솔 하나 때문에
+    빌드 전체가 죽으면 안 된다. 대신 화면이 '못 읽었다'를 말할 수 있게
+    호출부에서 빈 값과 오류를 구분해 싣는다."""
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return fallback
+
+
+# ── 운영 콘솔(/admin) 데이터 ────────────────────────────────────────────────
+#
+# 이 서비스에서 더 위험한 실패는 누락이 아니라 **오병합**이다. 놓친 기사는 다음
+# 회차에 다시 들어오지만, 서로 다른 사건이 한 카드로 붙으면 그 카드가 근거 목록과
+# 검증 배지까지 달고 사실처럼 굳는다 — 그리고 아무도 그걸 되짚을 화면이 없었다.
+#
+# 병합은 두 계층에서 일어난다. 둘을 한 파일에 담는 이유는 관리자가 "이 카드가 왜
+# 이렇게 생겼나"를 물을 때 어느 계층에서 붙었는지를 모르기 때문이다.
+#
+#   story  같은 날 여러 매체의 같은 사건 (daily_brief 의 LLM 판단 — 근거 문장이 있다)
+#   issue  날짜를 넘어 잇는 클러스터 (build_data 의 규칙 매칭 — 점수·차단 사유가 있다)
+def build_admin_merges(
+    news_items: list[dict],
+    issue_catalog: list[dict],
+    issue_audit: dict,
+    generated_at: datetime,
+) -> dict:
+    """병합 판단을 사람이 되짚을 수 있는 형태로 모은다."""
+    issue_of_hash: dict[str, dict] = {}
+    for issue in issue_catalog:
+        for article in issue.get("related_articles") or []:
+            issue_of_hash.setdefault(str(article.get("hash") or ""), issue)
+
+    # ① story 계층. 대표 기사 한 줄이 접힌 형제 전부를 들고 있다.
+    story_rows = []
+    relation_counts: Counter = Counter()
+    folded_articles = 0
+    for item in news_items:
+        relation = str(item.get("story_relation") or "single")
+        relation_counts[relation] += 1
+        if relation not in ("merge", "duplicate"):
+            continue
+        count = int(item.get("story_article_count") or 1)
+        folded_articles += max(0, count - 1)
+        owner = issue_of_hash.get(str(item.get("hash") or ""))
+        story_rows.append({
+            "hash": item.get("hash", ""),
+            "title": item.get("title_kr") or item.get("title") or "",
+            "briefing_date": item.get("briefing_date") or "",
+            "article_date": item.get("article_date") or "",
+            "publisher": item.get("publisher") or item.get("domain") or "",
+            "relation": relation,
+            "reason": item.get("story_reason") or "",
+            "stage": item.get("story_dedup_stage") or "",
+            "article_count": count,
+            "outlet_count": int(item.get("story_outlet_count") or 1),
+            "tier1_count": int(item.get("story_tier1_count") or 0),
+            "independent_outlet_count": int(item.get("story_independent_outlet_count") or 0),
+            "fingerprint": item.get("story_fingerprint") or {},
+            "related_titles": item.get("story_related_titles") or [],
+            "sources": item.get("story_sources") or [],
+            "context": item.get("story_context") or [],
+            "issue_id": (owner or {}).get("issue_id", ""),
+        })
+    # 접은 기사가 많은 순 = 되짚을 값이 큰 순. 같으면 최신부터.
+    story_rows.sort(key=lambda row: (row["article_count"], row["briefing_date"]), reverse=True)
+    # 발송 전 수집분은 briefing_date 가 아직 비어 있다 — 그때는 보도일로 센다.
+    # 빈 문자열 하나로 몰아 두면 날짜별 집계가 통째로 '(없음)' 한 줄이 된다.
+    story_by_date: Counter = Counter()
+    for row in story_rows:
+        story_by_date[row["briefing_date"] or row["article_date"]] += 1
+
+    # ② issue 계층. 클러스터는 '가장 약한 연결'이 먼저 오게 세운다 — 점수가 빠듯한
+    # 병합이 곧 의심스러운 병합이고, 관리자가 위에서부터 훑으면 된다.
+    titles = {issue["issue_id"]: issue.get("title", "") for issue in issue_catalog}
+    clusters = []
+    for cluster in issue_audit.get("clusters") or []:
+        matches = [
+            {
+                "hash": match.get("hash", ""),
+                "reference_hash": match.get("reference_hash", ""),
+                "method": match.get("method") or "none",
+                "score": match.get("score"),
+                "title_ratio": match.get("title_ratio"),
+                "token_ratio": match.get("token_ratio"),
+                "tag_shared": match.get("tag_shared"),
+                "topic_shared": match.get("topic_shared"),
+                "embedding_similarity": match.get("embedding_similarity"),
+                "local_embedding_similarity": match.get("local_embedding_similarity"),
+                "story_fingerprint_similarity": match.get("story_fingerprint_similarity"),
+                "story_fingerprint_shared": match.get("story_fingerprint_shared") or [],
+                "shared_facility_entities": match.get("shared_facility_entities") or [],
+                "blocked_by": match.get("blocked_by") or [],
+                "member_role": match.get("member_role") or "card",
+            }
+            for match in (cluster.get("matches") or [])
+        ]
+        scores = [float(m["score"]) for m in matches if isinstance(m.get("score"), (int, float))]
+        clusters.append({
+            "issue_id": cluster.get("issue_id", ""),
+            "title": titles.get(cluster.get("issue_id", ""), ""),
+            "first_seen": cluster.get("first_seen", ""),
+            "last_seen": cluster.get("last_seen", ""),
+            "briefing_dates": cluster.get("briefing_dates") or [],
+            "members": cluster.get("members") or [],
+            "member_count": len(cluster.get("members") or []),
+            "matches": matches,
+            "weakest_score": min(scores) if scores else None,
+            "methods": sorted({m["method"] for m in matches if m["method"] != "none"}),
+        })
+    clusters.sort(key=lambda row: (row["weakest_score"] is None, row["weakest_score"] or 0))
+
+    # ③ 붙지 않은 경계선. 자동 병합 바로 아래 구간이라 문턱을 조금만 내리면 붙는다 —
+    # "안 붙어서 다행인가, 붙었어야 했나"를 여기서 눈으로 고른다.
+    borderline = sorted(
+        (
+            {
+                "candidate_id": row.get("candidate_id", ""),
+                "left_title": row.get("left_title", ""),
+                "right_title": row.get("right_title", ""),
+                "left_date": row.get("left_date", ""),
+                "right_date": row.get("right_date", ""),
+                "score": row.get("candidate_score"),
+                "method": row.get("candidate_method", ""),
+                "review_state": row.get("review_state", ""),
+                "diagnostics": row.get("diagnostics") or {},
+            }
+            for row in (issue_audit.get("review_candidates") or [])
+        ),
+        key=lambda row: float(row["score"] or 0),
+        reverse=True,
+    )[:40]
+
+    method_counts: Counter = Counter()
+    for cluster in clusters:
+        for match in cluster["matches"]:
+            method_counts[match["method"]] += 1
+
+    return {
+        "generated_at": generated_at.isoformat(),
+        "story": {
+            "contract_version": STORY_CONTRACT_VERSION,
+            "totals": {
+                "merge": relation_counts.get("merge", 0),
+                "duplicate": relation_counts.get("duplicate", 0),
+                "single": relation_counts.get("single", 0),
+                "folded_articles": folded_articles,
+            },
+            "by_date": [
+                {"date": day, "count": count}
+                for day, count in sorted(story_by_date.items(), reverse=True)
+            ],
+            "merges": story_rows,
+        },
+        "issue": {
+            "matching_version": issue_audit.get("matching_version", ""),
+            "window_days": issue_audit.get("issue_window_days"),
+            "rules": [dict(rule) for rule in MERGE_RULES],
+            "thresholds": {
+                "embedding": ISSUE_EMBEDDING_THRESHOLD,
+                "embedding_candidate": ISSUE_EMBEDDING_CANDIDATE_THRESHOLD,
+                "local_embedding_candidate": LOCAL_EMBEDDING_CANDIDATE_THRESHOLD,
+            },
+            "totals": {
+                "clusters": len(clusters),
+                "review_candidates": len(issue_audit.get("review_candidates") or []),
+                "manual_approved": len(issue_audit.get("overrides", {}).get("approved") or []),
+                "manual_rejected": len(issue_audit.get("overrides", {}).get("rejected") or []),
+                "llm_approved": len(issue_audit.get("llm_approved") or []),
+                "llm_rejected": len(issue_audit.get("llm_rejected") or []),
+            },
+            "method_counts": dict(method_counts.most_common()),
+            "clusters": clusters,
+            "borderline": borderline,
+        },
+    }
+
+
+def build_admin_config(generated_at: datetime) -> dict:
+    """무엇을 어디서 긁어오는가 — 수집 설정을 화면이 읽을 형태로 모은다.
+
+    값은 전부 실제 설정 파일과 모듈에서 읽는다. 화면에 숫자를 손으로 적으면
+    설정이 바뀌어도 화면은 옛날을 말하고, 그러면 이 화면을 볼 이유가 없다.
+    읽기 전용이다 — 여기서 고칠 수 있게 만들면 저장소와 화면이 갈라진다.
+    """
+    keyword_groups = []
+    raw_keywords = _read_json(BOT_DIR / "keywords.json", {})
+    for name, group in (raw_keywords or {}).items():
+        if not isinstance(group, dict):
+            continue
+        keyword_groups.append({
+            "name": name,
+            "keywords": [str(k) for k in (group.get("keywords") or [])],
+            "anchors": [str(k) for k in (group.get("anchors") or [])],
+            # 검색 쿼리에 그대로 붙는 문자열이라 쪼개지 않고 원문 그대로 보인다.
+            "negative_terms": str(group.get("negative_terms") or ""),
+        })
+
+    sources_config = _read_json(BOT_DIR / "sources.json", {})
+    tiers = []
+    for tier in (1, 2, 3):
+        for row in sources_config.get(f"tier{tier}") or []:
+            if not isinstance(row, dict):
+                continue
+            tiers.append({
+                "tier": tier,
+                "domain": row.get("domain", ""),
+                "name": row.get("name", ""),
+                "source_type": row.get("source_type", ""),
+                "evidence_role": row.get("evidence_role", ""),
+            })
+
+    # news_bot 은 수집 실행 모듈이라 임포트 실패가 빌드를 죽이면 안 된다.
+    # 못 읽으면 빈 목록이 아니라 '못 읽었다'를 화면에 적는다 — 조용한 0 은
+    # '수집원이 없다'로 읽힌다.
+    feeds: list[dict] = []
+    official: list[dict] = []
+    anti_keywords: list[str] = []
+    feed_error = ""
+    try:
+        import news_bot as _nb  # noqa: PLC0415
+        for row in _nb.RSS_SOURCES:
+            url = str(row.get("url") or "")
+            feeds.append({
+                "name": row.get("name", ""),
+                "domain": row.get("domain_label", ""),
+                "url": url,
+                # 직접 피드와 Google News 우회는 신뢰도가 다르다 — 우회는 색인
+                # 지연·관련도순 정렬을 타므로 구분해서 보여야 한다.
+                "via": "google_news" if "news.google.com" in url else "direct",
+                "require_keywords": bool(row.get("require_keywords")),
+            })
+        for row in _nb.OFFICIAL_DIRECT_SOURCES:
+            official.append({
+                "name": row.get("name", ""),
+                "publisher": row.get("publisher", ""),
+                "domain": row.get("domain_label", ""),
+                "kind": row.get("kind", ""),
+                "url": row.get("url", ""),
+            })
+        anti_keywords = [str(k) for k in _nb.ANTI_KEYWORDS]
+    except Exception as exc:  # noqa: BLE001 — 원인을 화면에 그대로 보낸다
+        feed_error = f"{type(exc).__name__}: {exc}"[:200]
+
+    publication_sources: list[dict] = []
+    pubs_error = ""
+    try:
+        import pubs_fetch as _pf  # noqa: PLC0415
+        publication_sources = [{"id": str(row.get("id") or "")} for row in _pf.SOURCES]
+        # 같은 기관이 '국제원자력기구'와 '국제원자력기구(IAEA)' 두 이름으로 실려
+        # 온다. 그대로 세우면 7개 기관이 아니라 기관이 두 배로 보인다 — 괄호 앞을
+        # 열쇠로 묶고 약칭이 붙은 긴 쪽을 남긴다.
+        by_base: dict[str, str] = {}
+        for row in (_read_json(BOT_DIR / "publications.json", {}) or {}).get("items", []):
+            if not isinstance(row, dict):
+                continue
+            label = str(row.get("org_kr") or row.get("org") or "").strip()
+            if not label:
+                continue
+            base = label.split("(")[0].strip()
+            if len(label) > len(by_base.get(base, "")):
+                by_base[base] = label
+        publication_orgs = sorted(by_base.values())
+    except Exception as exc:  # noqa: BLE001
+        pubs_error = f"{type(exc).__name__}: {exc}"[:200]
+        publication_orgs = []
+
+    discovery = _read_json(BOT_DIR / "discovery_state.json", {})
+    return {
+        "generated_at": generated_at.isoformat(),
+        "keywords": {
+            "groups": keyword_groups,
+            "totals": {
+                "groups": len(keyword_groups),
+                "keywords": sum(len(g["keywords"]) for g in keyword_groups),
+                "anchors": sum(len(g["anchors"]) for g in keyword_groups),
+            },
+        },
+        "anti_keywords": anti_keywords,
+        "feeds": {
+            "rss": feeds,
+            "official": official,
+            "error": feed_error,
+        },
+        "publications": {
+            "sources": publication_sources,
+            "orgs": publication_orgs,
+            "error": pubs_error,
+        },
+        "search": {
+            "engines": ["naver"],
+            # discovery 가 성과를 보고 스스로 늘리고 줄이는 쿼리 풀이다.
+            # 고정 키워드와 다른 층이라 숫자만 밝히고 목록은 싣지 않는다.
+            "learned_query_count": len(discovery.get("queries") or {}),
+        },
+        "source_tiers": {
+            "tier1_bonus": sources_config.get("tier1_bonus"),
+            "tier2_bonus": sources_config.get("tier2_bonus"),
+            "rows": tiers,
+        },
+    }
+
+
 def build_rss(briefings: list[dict], generated_at: datetime) -> bytes:
     """최신 이슈 카드를 보고서형 RSS 2.0으로 직렬화한다."""
     ET.register_namespace("atom", "http://www.w3.org/2005/Atom")
@@ -4463,7 +4807,7 @@ def build() -> None:
         "news_window_days": NEWS_WINDOW_DAYS,
         "long_trend_window_days": LONG_TREND_WINDOW_DAYS,
         "trend_period_days": list(TREND_PERIOD_DAYS),
-        "story_contract_version": "briefing-story-v2",
+        "story_contract_version": STORY_CONTRACT_VERSION,
         "embedding_model": EMBEDDING_MODEL,
         "embedding_cache_entries": len(embeddings),
         "remote_embedding_selected_count": remote_embedded_selected_count,
@@ -4564,6 +4908,8 @@ def build() -> None:
         ("publications.json", publications),
         ("entities.json", entities_view),
         ("issue_audit.json", issue_audit),
+        ("admin_merges.json", build_admin_merges(news_items, issue_catalog, issue_audit, now)),
+        ("admin_config.json", build_admin_config(now)),
         ("manifest.json", manifest),
         ("status.json", status),
     )

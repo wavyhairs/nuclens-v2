@@ -14,5 +14,9 @@
 /style.css
   Cache-Control: no-cache
 
+# 운영 콘솔. 진단 화면이 옛 판단을 보여 주면 볼 이유가 없다 — 지면과 같은 계약.
+/admin/*
+  Cache-Control: no-cache
+
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
