@@ -1,13 +1,19 @@
-"""Nuclens 전문가 오디오 브리핑 — story/issue를 1인 수석 분석가가 약 10분 해설한다.
+"""Nuclens 전문가 오디오 브리핑 — 그날 브리핑 전체를 1인 수석 분석가가 해설한다.
 
 설계 원칙
 - 뉴스 탐색·story dedup·선정은 nuclear-news-main의 결과를 그대로 신뢰한다.
+- **텔레그램으로 나간 기사는 전부 들어온다.** 이슈 상한이 없고, 길이는 시계가
+  아니라 그날 재료가 정한다. 그래서 대본을 한 번에 부르지 않고 배치로 나눠
+  부른다 — 단일 호출은 재료가 늘어도 길어지지 않기 때문이다(generate_expert_script).
+- **국내를 다 말한 뒤 해외로 넘어간다.** 배치는 지역 경계를 넘지 않으므로 한
+  호출은 한 지역의 dossier만 보고, 국내 설명에 해외 사실이 섞일 경로가 없다.
 - NucBrief의 강점(Article Dossier → 시간배분 → Episode Plan → 대본 → 독립검증/수정)을
   별도 프레임워크 의존성 없이 기존 gemini_client 호출 방식으로 이식한다.
 - '분석은 다중 관점, 전달은 단일 화자': 정책·사업 / 기술·운영 렌즈는 dossier에서
   각각 점검하되 최종 음성은 수석 원자력 분석가(Kore) 한 명만 말한다.
 - TTS는 audio_brief의 검증된 900자 청크·무음 trim·450ms gap·dynaudnorm+loudnorm을
   재사용하되, 긴 프로그램의 완주율을 위해 모델 전환을 초반/후반에 다르게 처리한다.
+  **음색보다 완주가 위다** — TTS 한계가 RPD라 재생성분이 그날 예산에서 빠진다.
 - 빠른 브리핑과 독립적으로 실패한다. audio/audio.json의 variants.expert만 갱신한다.
 """
 from __future__ import annotations
@@ -44,13 +50,25 @@ from audio_brief import (
 )
 
 EXPERT_VARIANT = "expert"
-EXPERT_TARGET_SECONDS = 600
+# EXPERT_TARGET_SECONDS(600) 는 지웠다 — 아무도 안 읽는 상수였고, 길이를 재료가
+# 정하게 된 뒤로는 '10분 목표'라고 잘못 읽히기까지 했다.
 EXPERT_BODY_SECONDS = 540
-# 상한이지 목표가 아니다. 그날 브리핑에 이슈가 이보다 적으면 적은 대로 간다.
-# 6 이었을 때는 뉴스가 많은 날에도 재료가 6개에서 잘려, 분량을 재료에 맞춰도
-# 브리핑이 길어질 수 없었다 — 길이를 재료가 정하게 하려면 재료 쪽 뚜껑을 열어야
-# 한다. 실측(2026-08-14): 브리핑 이슈 15개 중 6개만 오디오에 들어갔다.
-EXPERT_MAX_ISSUES = 9
+# 이슈 상한은 없앴다. 텔레그램으로 나간 기사는 전부 오디오에도 들어간다.
+# 뚜껑이 9 였을 때 실측(2026-08-16): 브리핑 17개 중 9개만 오디오에 들어가
+# 새울 3호기 자동정지 같은 국내 운영 이슈가 매일 밖으로 밀렸다.
+#
+# 다만 뚜껑만 열면 분량이 따라오지 않는다 — 단일 호출에서 모델이 쓰는 길이는
+# 재료가 아니라 모델이 정한다(실측 2026-08-14: 재료를 5,768→8,070자로 늘려도
+# 대본은 2,461→2,480자). 그래서 아래 두 배치 상수로 **호출 자체를 나눈다**.
+# 이슈가 늘면 배치가 늘고, 배치가 늘어야 분량이 는다.
+DOSSIER_BATCH_ISSUES = 6
+# 대본 호출당 이슈 수. 분량이 재료를 따라가게 하는 핵심 손잡이 — 줄이면 이슈당
+# 더 깊어지고 호출·쿼터가 늘어난다.
+SCRIPT_BATCH_ISSUES = 5
+# 이슈 하나에 붙일 '지난 회차' 기사 수. 오늘 나간 기사는 상한 없이 전부 넣고,
+# 맥락용 과거 기사만 여기서 자른다 — 안 자르면 이력 긴 이슈 하나가 프롬프트를
+# 다 먹는다(실측 2026-08-16: 두산에너빌리티 건 related 13건).
+MATERIAL_CONTEXT_ARTICLES = 4
 EXPERT_MIN_ISSUE_SECONDS = 55
 EXPERT_MAX_ISSUE_SECONDS = 150
 # 분량은 고정 목표가 아니라 그날 재료에서 유도한다. 10분을 지키려고 상수를
@@ -65,12 +83,29 @@ SPOKEN_PER_SOURCE_CHAR = 0.43
 SPOKEN_BAND = (0.72, 1.35)
 # 절대 한계. 이보다 짧으면 전문가 브리핑이라 부를 수 없고, 길면 TTS 청크와
 # 생성 시간이 워크플로 예산을 넘는다.
+#
+# 상한은 이슈 상한을 없애면서 9,000 에서 올렸다. 이슈 17개면 배치 대본 합이
+# 7,000자 근처가 정상인데(이슈당 ~450자), 9,000 에 걸리면 뉴스가 많은 날마다
+# 전문가 브리핑이 통째로 죽는다 — 상한은 폭주를 막는 자리지 성수기를 막는
+# 자리가 아니다. 15,000자 ≈ 17청크 ≈ 재생 37분으로, 이 위는 워크플로 예산
+# (오디오 스텝 실측 5분, 청크당 ~35초)이 실제로 위험해지는 구간이다.
 SPOKEN_ABS_MIN = 1200
-SPOKEN_ABS_MAX = 9000
+SPOKEN_ABS_MAX = 15000
 # 빠른 브리핑 실측(1,150자 → 170초). 분량↔재생시간 환산에 쓴다.
 CHARS_PER_SECOND = 6.76
 EXPERT_TTS_RETRIES = 2
 EXPERT_EARLY_RESTART_SEGMENTS = 2
+
+# 방송 순서. 웹 issue 의 region 값이 이 셋뿐이다(실측 2026-08-16: 국내 70 /
+# 해외 146 / 국내·해외 3). 모르는 값은 해외 블록으로 보낸다 — 프로그램 첫머리를
+# 정체불명 이슈에 내주지 않는다.
+REGION_ORDER = ("국내", "국내·해외", "해외")
+
+
+def region_of(issue: dict) -> str:
+    region = str(issue.get("region") or "").strip()
+    return region if region in REGION_ORDER else "해외"
+
 
 # 단일 화자에 남으면 안 되는 대화 흔적. 문장 중간의 정상적인 '맞습니다'는 건드리지 않는다.
 _SINGLE_FILLER_RE = re.compile(
@@ -153,15 +188,33 @@ def _compact_article(article: dict) -> dict:
     }
 
 
-def issue_material(issue: dict) -> dict:
+def material_articles(issue: dict, briefing_date: str = "") -> list[dict]:
+    """이 이슈로 오늘 나간 기사 **전부** + 맥락용 과거 기사 몇 건.
+
+    예전에는 `related[:5]` 였다. related 는 이슈의 이력이라 최신순이 보장되지
+    않아서, 오늘 텔레그램으로 나간 기사가 6번째에 있으면 오디오에서 통째로
+    빠졌다 — '보낸 기사는 전부 넣는다'가 성립하지 않았다.
+    """
+    related = [row for row in (issue.get("related_articles") or []) if isinstance(row, dict)]
+    if not briefing_date:
+        return related[:1 + MATERIAL_CONTEXT_ARTICLES]
+    today = [row for row in related if str(row.get("briefing_date") or "") == briefing_date]
+    today_ids = {id(row) for row in today}
+    context = [row for row in related if id(row) not in today_ids][:MATERIAL_CONTEXT_ARTICLES]
+    return today + context if today else related[:1 + MATERIAL_CONTEXT_ARTICLES]
+
+
+def issue_material(issue: dict, briefing_date: str = "") -> dict:
     """웹 issue를 NucBrief ArticleDossier 입력과 같은 증거 묶음으로 만든다."""
-    related = issue.get("related_articles") or []
-    articles = [_compact_article(row) for row in related[:5] if isinstance(row, dict)]
+    articles = [_compact_article(row) for row in material_articles(issue, briefing_date)]
     if not articles:
         articles = [_compact_article(issue)]
     return {
         "issue_id": issue.get("issue_id") or "",
         "title": issue.get("title") or issue.get("title_kr") or "",
+        # 국내/해외를 재료에 적어 준다. 없을 때 모델은 기사 본문에서 짐작했고,
+        # 그래서 국내 이슈 설명에 해외 사실이 섞여 들어왔다.
+        "region": region_of(issue),
         "summary": issue.get("summary") or "",
         "detail": issue.get("detail") or "",
         "latest_change": issue.get("latest_change") or "",
@@ -185,8 +238,19 @@ def issue_material(issue: dict) -> dict:
     }
 
 
-def selected_issues(briefing: dict, by_id: dict, limit: int = EXPERT_MAX_ISSUES) -> list[dict]:
-    """하이라이트 우선 + 나머지 순서를 보존. 같은 issue_id는 한 번만."""
+def selected_issues(briefing: dict, by_id: dict, limit: int | None = None) -> list[dict]:
+    """그날 브리핑 이슈 전부를 국내 → 해외 순으로. 같은 issue_id는 한 번만.
+
+    묶음 안에서는 하이라이트 우선 + 브리핑 순서(=랭킹)를 그대로 지킨다.
+    `sorted` 가 안정 정렬이라 지역만 갈라지고 우선순위는 안 흔들린다.
+
+    지역을 왜 섞지 않는가: 국내와 해외가 번갈아 나오면 듣는 사람이 매 문단마다
+    '지금 어느 나라 얘기인가'를 다시 잡아야 한다. 배치도 지역 경계를 넘지
+    않으므로, 대본 호출 하나는 한 지역의 dossier만 본다 — 국내 설명에 해외
+    사실이 섞여 들어갈 경로 자체가 없어진다.
+
+    limit 은 수동 실행·테스트용 뚜껑이다. 정규 경로는 상한을 두지 않는다.
+    """
     ids: list[str] = []
     for row in briefing.get("highlight_issues") or []:
         if isinstance(row, dict) and row.get("issue_id"):
@@ -201,13 +265,50 @@ def selected_issues(briefing: dict, by_id: dict, limit: int = EXPERT_MAX_ISSUES)
             continue
         seen.add(issue_id)
         unique.append(by_id[issue_id])
-        if len(unique) >= limit:
+        if limit is not None and len(unique) >= limit:
             break
-    return unique
+    return sorted(unique, key=lambda issue: REGION_ORDER.index(region_of(issue)))
+
+
+def script_blocks(issues: list[dict]) -> list[tuple[str, list[dict]]]:
+    """(블록 이름, 이슈들) — 대본 호출이 넘지 않는 경계.
+
+    '국내·해외' 이슈는 국내 블록 끝에 둔다. 한국이 당사자인 사건이고, 그 자리가
+    해외 블록으로 넘어가는 전환 지점이라 흐름이 끊기지 않는다.
+    """
+    buckets: dict[str, list[dict]] = {name: [] for name in REGION_ORDER}
+    for issue in issues:
+        buckets[region_of(issue)].append(issue)
+    domestic = buckets["국내"] + buckets["국내·해외"]
+    blocks = []
+    if domestic:
+        blocks.append(("국내", domestic))
+    if buckets["해외"]:
+        blocks.append(("해외", buckets["해외"]))
+    return blocks
+
+
+def even_batches(rows: list[dict], size: int) -> list[list[dict]]:
+    """rows 를 최대 size 로 **고르게** 나눈다.
+
+    단순히 size 로 끊으면 11개가 5·5·1 이 되어 마지막 호출이 이슈 하나짜리
+    대본을 쓴다 — 그 배치만 유난히 얇아진다. 4·4·3 으로 고르게 나눈다.
+    """
+    if not rows:
+        return []
+    count = max(1, -(-len(rows) // size))
+    base, extra = divmod(len(rows), count)
+    out: list[list[dict]] = []
+    start = 0
+    for i in range(count):
+        take = base + (1 if i < extra else 0)
+        out.append(rows[start:start + take])
+        start += take
+    return out
 
 
 def dossier_prompt(briefing: dict, issues: list[dict]) -> str:
-    material = [issue_material(issue) for issue in issues]
+    material = [issue_material(issue, str(briefing.get("date") or "")) for issue in issues]
     return f"""다음 {len(material)}개 briefing story를 각각 dossier로 구조화하십시오.
 
 [두 분석 렌즈 — 하나의 호출 안에서 각각 점검]
@@ -224,11 +325,14 @@ def dossier_prompt(briefing: dict, issues: list[dict]) -> str:
 - URL과 source hash는 입력에 있는 것만 사용합니다.
 - 같은 story에 여러 기사가 있으면 추가 정보는 합치되 서로 모순되면 uncertainties에 기록합니다.
 - story metadata의 outlet_count는 사실 자체가 아니라 '복수 매체 확인 신호'로만 사용합니다.
+- **region은 입력값을 그대로 옮깁니다.** 국내 story의 dossier에 해외 사실을,
+  해외 story의 dossier에 국내 사실을 섞지 마십시오.
 
 [출력 JSON]
 {{"dossiers":[{{
  "issue_id":"...",
  "title":"...",
+ "region":"국내|해외|국내·해외",
  "confirmed_facts":[{{"fact":"...","source_hashes":["..."],"source_urls":["..."]}}],
  "current_stage":"...",
  "stage_basis":"...",
@@ -247,7 +351,7 @@ def dossier_prompt(briefing: dict, issues: list[dict]) -> str:
 {json.dumps(material, ensure_ascii=False, indent=2)}"""
 
 
-def normalize_dossiers(payload: dict, issues: list[dict]) -> list[dict]:
+def normalize_dossiers(payload: dict, issues: list[dict], briefing_date: str = "") -> list[dict]:
     raw = payload.get("dossiers") if isinstance(payload, dict) else None
     rows = raw if isinstance(raw, list) else []
     by_id = {str(row.get("issue_id")): row for row in rows if isinstance(row, dict) and row.get("issue_id")}
@@ -257,10 +361,11 @@ def normalize_dossiers(payload: dict, issues: list[dict]) -> list[dict]:
         dossier = by_id.get(issue_id)
         if not dossier:
             # LLM이 하나를 빼먹어도 전체 오디오를 잃지 않는다. 구조화된 웹 사실로 최소 dossier 생성.
-            material = issue_material(issue)
+            material = issue_material(issue, briefing_date)
             dossier = {
                 "issue_id": issue_id,
                 "title": material["title"],
+                "region": material["region"],
                 "confirmed_facts": [
                     {"fact": text, "source_hashes": [a["hash"] for a in material["articles"] if a.get("hash")],
                      "source_urls": [a["url"] for a in material["articles"] if a.get("url")]}
@@ -301,13 +406,22 @@ def spoken_target(dossiers: list[dict]) -> int:
     기사가 적거나 원문이 얇은 날은 짧게, 많은 날은 10분을 넘겨도 길게 — 길이를
     정하는 것은 시계가 아니라 그날 뉴스다.
     """
+    return int(min(SPOKEN_ABS_MAX, max(SPOKEN_ABS_MIN, raw_spoken_target(dossiers))))
+
+
+def raw_spoken_target(dossiers: list[dict]) -> int:
+    """절대 한계를 씌우기 전의 재료 기반 목표.
+
+    배치 하나에 프로그램 전체의 하한(SPOKEN_ABS_MIN)을 씌우면 배치마다 1,200자를
+    요구하게 되어, 배치가 늘수록 목표가 폭주한다. 한계는 합계에만 건다.
+    """
     volume = len(json.dumps(dossiers, ensure_ascii=False))
-    return int(min(SPOKEN_ABS_MAX, max(SPOKEN_ABS_MIN, volume * SPOKEN_PER_SOURCE_CHAR)))
+    return max(300, int(volume * SPOKEN_PER_SOURCE_CHAR))
 
 
-def spoken_bounds(dossiers: list[dict]) -> tuple[int, int, int]:
+def spoken_bounds(dossiers: list[dict], clamp: bool = True) -> tuple[int, int, int]:
     """(목표, 하한, 상한). 검증과 프롬프트가 같은 값을 보게 한 곳에서 만든다."""
-    target = spoken_target(dossiers)
+    target = spoken_target(dossiers) if clamp else raw_spoken_target(dossiers)
     low, high = SPOKEN_BAND
     return target, int(target * low), int(target * high)
 
@@ -368,8 +482,13 @@ def allocate_seconds(briefing: dict, issues: list[dict], total: int = EXPERT_BOD
 
 
 def plan_prompt(briefing: dict, dossiers: list[dict], allocations: list[dict]) -> str:
-    return f"""약 10분짜리 1인 전문가 브리핑 EpisodePlan을 작성하십시오.
+    return f"""1인 전문가 브리핑 EpisodePlan을 작성하십시오.
 - allocations의 seconds는 바꾸지 않습니다.
+- **allocations의 순서도 바꾸지 않습니다.** 국내 story를 먼저 모두 다루고 그
+  다음 해외로 넘어가는 순서이며, 지역을 오가면 듣는 사람이 매 문단마다 어느
+  나라 이야기인지 다시 잡아야 합니다.
+- transition은 같은 지역 안에서 잇습니다. 국내 → 해외 경계의 전환 문장은
+  시스템이 붙이므로 여기서 쓰지 않습니다.
 - 공통 주제가 강하면 integrated_theme, 아니면 expert_news_magazine을 선택합니다.
 - 오프닝은 오늘의 2~3개 핵심 흐름을 예고하고, 본문은 각 핵심 story에 대해 가능한 범위에서
   '무슨 일 → 현재 단계 → 기술·운영 의미 → 정책·사업 의미 → 다음 관찰점'으로 연결합니다.
@@ -389,23 +508,38 @@ def plan_prompt(briefing: dict, dossiers: list[dict], allocations: list[dict]) -
 {json.dumps(dossiers, ensure_ascii=False, indent=2)}"""
 
 
-def script_prompt(briefing: dict, dossiers: list[dict], plan: dict) -> str:
+def script_prompt(briefing: dict, dossiers: list[dict], plan: dict,
+                  block: str = "", part: tuple[int, int] = (1, 1)) -> str:
     n = max(1, len(dossiers))
-    target, low, high = spoken_bounds(dossiers)
+    # 배치 프롬프트는 그 배치 재료만 보고 분량을 정한다. 전체 하한을 씌우면
+    # 배치마다 프로그램 전체 분량을 요구하게 된다.
+    target, low, high = spoken_bounds(dossiers, clamp=part == (1, 1) and not block)
     # 문단당 2~5문장(대략 120~250자)으로 목표 분량을 채우려면 세그먼트 하나가
     # 여러 문단이어야 한다. 그 산수를 적어 주지 않으면 모델은 '이슈당 한 문단 +
     # 종합 한 문단'으로 끝낸다(2026-08-14 실측: 7문단·1,690자, 목표의 절반 미만).
     per = max(2, round(target / n / 200))
+    index, total = part
+    scope = ""
+    if block:
+        scope = (f"\n[이 원고의 범위]\n"
+                 f"- 오늘 브리핑의 **{block}** 구간, 그 중 {total}개 중 {index}번째 묶음입니다.\n"
+                 f"- 아래 Dossiers에 있는 {n}개 story만 다룹니다. 다른 구간의 사건을\n"
+                 f"  끌어오거나 언급하지 마십시오 — {'해외' if block == '국내' else '국내'} 사건은\n"
+                 f"  다른 원고가 담당합니다.\n"
+                 f"- 이 묶음은 프로그램의 일부이므로 '오늘 브리핑을 시작하겠습니다' 같은\n"
+                 f"  도입도, 전체를 마무리하는 문장도 쓰지 않습니다. 본문만 씁니다.\n")
     return f"""EpisodePlan과 dossiers만 근거로 1인 전문가 Script를 작성하십시오.
-
+{scope}
 [전달 방식]
 - 화자는 수석 원자력 분석가 한 명뿐이며 모든 줄은 HOST: 로 시작합니다.
 - 가상의 질문자, 자문자답, '네/그렇군요/맞습니다' 같은 대화형 추임새를 금지합니다.
 - 뉴스 제목을 연속 낭독하지 말고 전문가가 자료를 보며 설명하는 구어체 존댓말로 씁니다.
 - 문단 하나는 2~5문장(120~250자)이며 한 줄에 하나씩 씁니다.
 - **주제 하나를 한 문단으로 끝내지 마십시오.** 세그먼트 {n}개 각각을 사실 정리 ·
-  단계와 미확정사항 · 해석으로 나눠 {per}개 안팎의 문단으로 펼치고, 마지막에
-  종합 문단을 둡니다. 전체 {n * per + 1}개 안팎이 되어야 목표 분량이 나옵니다.
+  단계와 미확정사항 · 해석으로 나눠 {per}개 안팎의 문단으로 펼칩니다.
+  {"마지막에 이 구간을 묶는 종합 문단을 하나 둡니다." if index == total
+   else "이 묶음은 뒤에 다음 묶음이 이어지므로 종합 문단으로 닫지 않습니다."}
+  전체 {n * per + (1 if index == total else 0)}개 안팎이 되어야 목표 분량이 나옵니다.
 - 기사마다 기계적으로 같은 서식을 반복하지 않습니다.
 - 정책·사업과 기술·운영의 두 관점은 필요할 때 자연스럽게 통합합니다.
 
@@ -434,7 +568,7 @@ def script_prompt(briefing: dict, dossiers: list[dict], plan: dict) -> str:
 def min_paragraphs(issue_count: int) -> int:
     """이슈 수에서 문단 하한을 만든다.
 
-    고정 8이었는데 selected_issues 는 EXPERT_MAX_ISSUES 까지만 뽑는다. 모델은
+    고정 8이었는데 한 호출이 받는 이슈는 배치 하나(≤SCRIPT_BATCH_ISSUES)다. 모델은
     이슈당 한 문단 + 종합 한 문단을 쓰므로 자연스러운 최소가 7 — 하한 8 을
     산술적으로 못 넘는다. 실측(2026-08-14, 2회 재현): 이슈 6개 → 7문단 → 매번
     '형식 미달'. 이슈가 적은 날일수록 더 못 넘는다.
@@ -546,63 +680,135 @@ def repair_prompt(dossiers: list[dict], script: str, report: dict) -> str:
 {script}"""
 
 
-def generate_expert_script(briefing: dict, issues: list[dict]) -> tuple[str, list[dict], dict, dict]:
-    dossier_payload = _call_structured(
-        DOSSIER_SYSTEM, dossier_prompt(briefing, issues), label="expert_dossiers",
-        # 이슈 상한을 9 로 올렸으므로 dossier 출력도 같이 늘려야 한다 — 여기서
-        # 잘리면 뒤 단계가 얇은 재료로 짧은 대본을 쓰고 분량 게이트에 걸린다.
-        # 실측(2026-08-16): 9개에서 14,000 도 output 13,985 로 거의 정확히 채워
-        # 잘렸다. 폴백 모델이 받아 주긴 하지만 그건 회차마다 호출 하나를 버리는
-        # 것이고, 폴백이 막히면(그날 400 이 그랬다) 통째로 실패한다.
-        temperature=0.1, max_output_tokens=20000,
-    )
-    dossiers = normalize_dossiers(dossier_payload, issues)
-    target, low, high = spoken_bounds(dossiers)
-    # 시간 배분도 같은 목표에서 유도한다. 본문 초를 상수로 두면 재료가 얇은 날
-    # plan 이 채울 수 없는 시간을 요구하고, 많은 날은 10분에서 잘린다.
-    allocations = allocate_seconds(briefing, issues, body_seconds(target))
-    plan = _call_structured(
-        PLAN_SYSTEM, plan_prompt(briefing, dossiers, allocations), label="expert_plan",
-        # 이슈 상한 6→9 와 함께 올린다. 실측(2026-08-16): 9개에서 output 4,983 으로
-        # 5,000 을 거의 정확히 채워 MAX_TOKENS 로 잘렸다 — 이슈당 약 550 토큰이다.
-        temperature=0.2, max_output_tokens=9000,
-    )
+def _plan_for(plan: dict, issue_ids: set[str]) -> dict:
+    """이 배치가 담당하는 세그먼트만 남긴 plan.
+
+    opening_focus·closing_synthesis 는 빼고 준다 — 배치마다 그게 보이면 모델이
+    묶음마다 인사와 마무리를 쓴다. 프레임은 시스템이 한 번만 붙인다.
+    """
+    segments = [row for row in (plan.get("segments") or [])
+                if isinstance(row, dict) and str(row.get("issue_id") or "") in issue_ids]
+    return {"structure": plan.get("structure"), "segments": segments}
+
+
+def _batch_script(briefing: dict, dossiers: list[dict], plan: dict,
+                  block: str, part: tuple[int, int]) -> tuple[str, int]:
+    """배치 하나의 대본. 형식·분량 미달이면 수치를 실어 한 번 다시 부른다."""
+    n = len(dossiers)
+    _, low, high = spoken_bounds(dossiers, clamp=False)
+    prompt = script_prompt(briefing, dossiers, plan, block, part)
     draft = _call_structured(
-        SCRIPT_SYSTEM, script_prompt(briefing, dossiers, plan), label="expert_script",
-        temperature=0.35, max_output_tokens=12000,
+        SCRIPT_SYSTEM, prompt,
+        label=f"expert_script_{block}_{part[0]}", temperature=0.35, max_output_tokens=12000,
     )
-    n = len(issues)
     # 1차 원고의 형식 미달은 아직 예외가 아니다. 짧은 원고는 문단도 적어서 두
     # 실패가 늘 같이 오는데, 여기서 raise 하면 아래 재시도가 **필요한 순간에
     # 정확히 도달 불가**가 된다(2026-08-14 실측: 7문단·1,690자로 재시도 없이 사망).
-    # 재요청 프롬프트에 무엇이 모자랐는지 실제 수치를 실어 보낸다.
     try:
         script, spoken = normalize_script(draft.get("script"), n)
         shortfall = ""
     except ValueError as exc:
         script, spoken, shortfall = "", 0, str(exc)
-
     if shortfall or spoken < low or spoken > high:
         note = shortfall or f"직전 원고는 {spoken:,}자였습니다"
         retry = _call_structured(
             SCRIPT_SYSTEM,
-            script_prompt(briefing, dossiers, plan)
-            + f"\n\n[재요청] {note}. 문단 {min_paragraphs(n)}개 이상,"
-              f" 본문 {low:,}~{high:,}자를 반드시 지켜 전체를 다시 쓰십시오.",
-            label="expert_script_length_retry", temperature=0.3, max_output_tokens=12000,
+            prompt + f"\n\n[재요청] {note}. 문단 {min_paragraphs(n)}개 이상,"
+                     f" 본문 {low:,}~{high:,}자를 반드시 지켜 전체를 다시 쓰십시오.",
+            label=f"expert_script_retry_{block}_{part[0]}",
+            temperature=0.3, max_output_tokens=12000,
         )
         script, spoken = normalize_script(retry.get("script"), n)
+    return script, spoken
 
-    # 목표 미달로 대본을 버리지 않는다. 실측(2026-08-14): 재료를 5,768→8,070자로
-    # 늘려도 대본은 2,461→2,480자로 사실상 그대로였다 — 단일 호출에서 모델이 쓰는
-    # 길이는 재료가 아니라 모델이 정하고, 재시도로도 안 움직인다. 그 상태에서
-    # 목표를 게이트로 쓰면 멀쩡한 17문단 대본을 18자 모자라다고 버리게 된다
-    # (앞서 문단 하한에서 이미 같은 실수를 했다).
+
+def _spoken_chars(script: str) -> int:
+    """실제 읽히는 글자 수 — 'HOST: ' 라벨은 빼고 센다."""
+    return sum(len(match.group(2)) for match in
+               (SPEAKER_RE.match(line) for line in script.splitlines()) if match)
+
+
+def merge_reports(reports: list[dict]) -> dict:
+    """구간별 검증 결과를 하나로. 점수는 최솟값, 지적은 합집합."""
+    keys = ("coverage_score", "factual_support_score", "stage_precision_score",
+            "expert_depth_score", "single_speaker_score")
+    rows = [r for r in reports if isinstance(r, dict)]
+    if not rows:
+        return {"passed": False, "unsupported_critical_claims": []}
+    merged = {key: min(float(r.get(key) or 0) for r in rows) for key in keys}
+    claims = [c for r in rows for c in (r.get("unsupported_critical_claims") or [])]
+    merged["unsupported_critical_claims"] = claims
+    merged["passed"] = all(bool(r.get("passed")) for r in rows) and not claims
+    return merged
+
+
+def _block_bridge(block: str) -> str:
+    return {"해외": "HOST: 국내 소식은 여기까지입니다. 이어서 해외 동향을 보겠습니다."}.get(block, "")
+
+
+def generate_expert_script(briefing: dict, issues: list[dict]) -> tuple[str, list[dict], dict, dict]:
+    """dossier → 시간배분 → plan → **구간·배치별 대본** → 구간별 검증.
+
+    대본을 한 번에 부르지 않는 이유가 이 함수의 전부다. 실측(2026-08-14):
+    재료를 5,768→8,070자로 늘려도 대본은 2,461→2,480자로 그대로였다 — 단일
+    호출에서 모델이 쓰는 길이는 재료가 아니라 모델이 정하고, 재시도로도 안
+    움직인다. 그래서 이슈 뚜껑만 열면 이슈 17개가 같은 2,500자에 눌려 담기고
+    이슈당 깊이는 오히려 얕아진다. **분량이 재료를 따라가게 하려면 호출을
+    나눠야 한다.**
+
+    배치는 지역 경계를 넘지 않는다(script_blocks). 그래서 한 호출은 한 지역의
+    dossier만 보고, 국내 설명에 해외 사실이 섞일 경로가 사라진다.
+    """
+    date = str(briefing.get("date") or "")
+    dossiers: list[dict] = []
+    batches = even_batches(issues, DOSSIER_BATCH_ISSUES)
+    for index, batch in enumerate(batches, 1):
+        # 한 호출에 다 넣으면 출력 토큰에서 잘린다 — 실측(2026-08-16): 9개에서
+        # output 13,985 로 20,000 을 향해 붙었다. 배치를 고정하면 이슈가 늘어도
+        # 호출당 출력은 그대로다.
+        payload = _call_structured(
+            DOSSIER_SYSTEM, dossier_prompt(briefing, batch),
+            label=f"expert_dossiers_{index}", temperature=0.1, max_output_tokens=20000,
+        )
+        dossiers.extend(normalize_dossiers(payload, batch, date))
+    by_issue = {str(row.get("issue_id") or ""): row for row in dossiers}
+
+    target, low, _high = spoken_bounds(dossiers)
+    # 시간 배분도 같은 목표에서 유도한다. 본문 초를 상수로 두면 재료가 얇은 날
+    # plan 이 채울 수 없는 시간을 요구하고, 많은 날은 10분에서 잘린다.
+    allocations = allocate_seconds(briefing, issues, body_seconds(target))
+    plan = _call_structured(
+        PLAN_SYSTEM, plan_prompt(briefing, dossiers, allocations), label="expert_plan",
+        # 실측(2026-08-16): 이슈당 약 550 토큰. 이슈 수를 따라 올린다 — 상수로
+        # 두면 뉴스가 많은 날 MAX_TOKENS 로 잘린다.
+        temperature=0.2, max_output_tokens=min(20000, 2000 + 800 * len(issues)),
+    )
+
+    drafted: list[tuple[str, list[dict], list[dict], str]] = []
+    for block, rows in script_blocks(issues):
+        block_dossiers = [by_issue[str(r.get("issue_id") or "")] for r in rows
+                          if str(r.get("issue_id") or "") in by_issue]
+        chunks = even_batches(rows, SCRIPT_BATCH_ISSUES)
+        block_parts: list[str] = []
+        for index, chunk in enumerate(chunks, 1):
+            # 순서는 chunk 를 따라간다 — set 으로 뽑으면 배치 안 순서가 흔들려
+            # 랭킹대로 말하지 않는 날이 생긴다.
+            ids = [str(r.get("issue_id") or "") for r in chunk]
+            text, _count = _batch_script(
+                briefing, [by_issue[i] for i in ids if i in by_issue],
+                _plan_for(plan, set(ids)), block, (index, len(chunks)))
+            block_parts.append(text)
+        block_script = "\n".join(block_parts)
+        print(f"[expert-audio] {block} 구간 — 이슈 {len(rows)}개 / 호출 {len(chunks)}회 "
+              f"/ 대사 {_spoken_chars(block_script):,}자")
+        drafted.append((block, rows, block_dossiers, block_script))
+
+    # 분량 게이트는 **검증 앞에** 둔다. 쓰레기 대본에 구간마다 검증·수정 호출을
+    # 쓰고 나서 버리면, 쿼터가 가장 급한 날에 정확히 두 배로 쓴다.
     #
-    # 게이트는 쓰레기를 막는 자리다. 분량 목표는 프롬프트로 밀되, 실패는 절대
-    # 한계에서만 낸다. 미달분은 meta 에 남겨 화면·로그에서 보이게 한다.
-    # 재료에 비례해 진짜로 길어지게 하려면 세그먼트별로 나눠 부르는 구조가
-    # 필요하다 — 이 파일의 다음 개선 지점이다.
+    # 목표 미달로는 버리지 않는다 — 게이트는 쓰레기를 막는 자리다. 분량 목표는
+    # 프롬프트로 밀되 실패는 절대 한계에서만 낸다. 미달분은 meta 에 남긴다.
+    spoken = sum(_spoken_chars(text) for _b, _r, _d, text in drafted)
     if spoken < SPOKEN_ABS_MIN or spoken > SPOKEN_ABS_MAX:
         raise ValueError(
             f"전문가 대본 분량 {spoken:,}자 — 절대한계 "
@@ -611,23 +817,34 @@ def generate_expert_script(briefing: dict, issues: list[dict]) -> tuple[str, lis
         print(f"[expert-audio] 분량 미달 — {spoken:,}자 (목표 {target:,}, 하한 {low:,})."
               f" 재료가 얇거나 모델이 안 늘렸다. 대본은 그대로 쓴다.")
 
-    report = _call_structured(
-        VERIFY_SYSTEM, verification_prompt(briefing, dossiers, script), label="expert_verify",
-        temperature=0.0, max_output_tokens=6000,
-    )
-    if not verification_passed(report):
-        repaired = _call_structured(
-            REPAIR_SYSTEM, repair_prompt(dossiers, script, report), label="expert_repair",
-            temperature=0.15, max_output_tokens=12000,
-        )
-        script, _ = normalize_script(repaired.get("script"), n)
+    parts: list[str] = []
+    reports: list[dict] = []
+    for block, rows, block_dossiers, block_script in drafted:
         report = _call_structured(
-            VERIFY_SYSTEM, verification_prompt(briefing, dossiers, script), label="expert_verify_after_repair",
-            temperature=0.0, max_output_tokens=6000,
+            VERIFY_SYSTEM, verification_prompt(briefing, block_dossiers, block_script),
+            label=f"expert_verify_{block}", temperature=0.0, max_output_tokens=6000,
         )
+        if not verification_passed(report):
+            repaired = _call_structured(
+                REPAIR_SYSTEM, repair_prompt(block_dossiers, block_script, report),
+                label=f"expert_repair_{block}", temperature=0.15, max_output_tokens=12000,
+            )
+            block_script, _ = normalize_script(repaired.get("script"), len(rows))
+            report = _call_structured(
+                VERIFY_SYSTEM, verification_prompt(briefing, block_dossiers, block_script),
+                label=f"expert_verify_after_repair_{block}", temperature=0.0, max_output_tokens=6000,
+            )
+        reports.append(report)
+        bridge = _block_bridge(block)
+        if bridge and parts:
+            parts.append(bridge)
+        parts.append(block_script)
+
+    script = "\n".join(part for part in parts if part)
+    report = merge_reports(reports)
     if not verification_passed(report):
-        claims = report.get("unsupported_critical_claims") if isinstance(report, dict) else []
-        raise ValueError(f"전문가 대본 검증 미통과 — critical={len(claims or [])}, scores={_score_summary(report)}")
+        claims = report.get("unsupported_critical_claims") or []
+        raise ValueError(f"전문가 대본 검증 미통과 — critical={len(claims)}, scores={_score_summary(report)}")
     return apply_expert_frame(script, briefing, plan), dossiers, plan, report
 
 
@@ -654,10 +871,18 @@ def _tts_chunk_retry(index: int, chunk: str, model: str) -> tuple[bytes, int]:
 
 
 def synthesize_expert(script: str) -> tuple[bytes, int, list[str], list[str]]:
-    """긴 10분 대본용 hybrid fallback.
+    """긴 대본용 hybrid fallback.
 
     초반(완료<=2청크)에 모델이 바뀌면 음색 일관성을 위해 처음부터 다시 만든다.
     후반부에는 완주율/쿼터를 위해 정상 청크를 보존하고 실패한 지점부터 다음 모델로 잇는다.
+
+    **음색보다 완주를 위에 둔다.** 전 구간을 한 모델로 통일해 봤는데(2026-08-16),
+    그러면 마지막 청크에서 실패할 때마다 앞의 전부를 다시 만들어야 한다. TTS
+    모델의 한계는 RPD(하루 요청 수)라 재생성분이 그대로 그날 예산에서 빠지고,
+    대본이 길어진 뒤로는 청크가 6~8개라 한 번의 재생성이 예산을 두 배로 먹는다.
+    같은 이유로 재시도 사이 백오프도 두지 않는다 — 하루 한도는 기다린다고
+    회복되지 않는다. 음색이 구간 경계에서 달라지는 것은 warnings 로 남긴다.
+
     모든 청크는 trim 후 정확히 450ms gap으로 연결한다.
     """
     chunks = split_script(script, limit=CHUNK_SPOKEN)

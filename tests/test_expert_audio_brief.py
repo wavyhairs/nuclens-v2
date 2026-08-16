@@ -52,16 +52,66 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
     def test_selects_highlights_then_rest_without_duplicates(self):
         by_id = {f"i{i}": issue(i) for i in range(1, 8)}
         rows = expert.selected_issues(briefing(), by_id)
-        # 상한(EXPERT_MAX_ISSUES)은 뚜껑이지 목표가 아니다 — 그날 있는 만큼 간다.
-        # 브리핑에 이슈가 7개뿐이면 7개 전부, 하이라이트가 앞에 온다.
+        # 지역이 없으면 전부 해외 블록이라 순서가 그대로다. 하이라이트가 앞에 온다.
         self.assertEqual([r["issue_id"] for r in rows],
                          ["i1", "i2", "i3", "i4", "i5", "i6", "i7"])
 
-    def test_issue_cap_still_bounds_a_heavy_news_day(self):
+    def test_heavy_news_day_keeps_every_issue(self):
+        """🔴 상한 9 는 매일 국내 운영 이슈를 밖으로 밀어냈다.
+
+        실측(2026-08-16): 브리핑 17개 중 9개만 오디오에 들어가 '새울 3호기
+        시운전 중 자동정지' 같은 국내 운영 이슈가 탈락했다. 텔레그램으로 나간
+        기사는 전부 오디오에도 들어간다 — 분량은 그만큼 늘어나면 된다.
+        """
         by_id = {f"i{i}": issue(i) for i in range(1, 21)}
         heavy = dict(briefing(), issues=[{"issue_id": f"i{i}"} for i in range(1, 21)])
         rows = expert.selected_issues(heavy, by_id)
-        self.assertEqual(expert.EXPERT_MAX_ISSUES, len(rows))
+        self.assertEqual(20, len(rows))
+
+    def test_domestic_runs_before_overseas_without_reordering_priority(self):
+        """국내를 다 말한 뒤 해외로 넘어간다. 묶음 안 우선순위는 안 흔든다."""
+        regions = {1: "해외", 2: "국내", 3: "해외", 4: "국내·해외", 5: "국내"}
+        by_id = {f"i{i}": dict(issue(i), region=regions.get(i, "해외")) for i in range(1, 6)}
+        rows = expert.selected_issues(
+            dict(briefing(), highlight_issues=[{"issue_id": "i1"}],
+                 issues=[{"issue_id": f"i{i}"} for i in range(1, 6)]), by_id)
+        # 국내(i2,i5) → 국내·해외(i4) → 해외(i1,i3). i1 은 하이라이트라 해외 안에서 앞.
+        self.assertEqual([r["issue_id"] for r in rows], ["i2", "i5", "i4", "i1", "i3"])
+
+        blocks = expert.script_blocks(rows)
+        self.assertEqual([name for name, _ in blocks], ["국내", "해외"])
+        # '국내·해외' 는 국내 블록 끝 — 해외로 넘어가는 전환 지점이다.
+        self.assertEqual([r["issue_id"] for r in blocks[0][1]], ["i2", "i5", "i4"])
+        self.assertEqual([r["issue_id"] for r in blocks[1][1]], ["i1", "i3"])
+
+    def test_script_batches_are_even_and_never_cross_regions(self):
+        """5·5·1 로 끊으면 마지막 호출이 이슈 하나짜리 대본을 쓴다."""
+        rows = [issue(i) for i in range(1, 12)]
+        batches = expert.even_batches(rows, expert.SCRIPT_BATCH_ISSUES)
+        self.assertEqual([len(b) for b in batches], [4, 4, 3])
+        self.assertEqual(11, sum(len(b) for b in batches))
+        # 순서 보존 — 배치가 랭킹을 흔들면 안 된다.
+        self.assertEqual([r["issue_id"] for b in batches for r in b],
+                         [f"i{i}" for i in range(1, 12)])
+
+    def test_material_keeps_every_article_sent_today(self):
+        """🔴 related[:5] 는 오늘 나간 기사를 빠뜨렸다.
+
+        related 는 이슈의 이력이라 최신순이 아니다. 오늘 발송분이 6번째에 있으면
+        오디오 재료에서 통째로 빠졌다 — '보낸 기사는 전부 넣는다'가 깨진다.
+        """
+        rows = [{"hash": f"old{i}", "briefing_date": "2026-08-10"} for i in range(6)]
+        rows.append({"hash": "today1", "briefing_date": "2026-08-14"})
+        rows.append({"hash": "today2", "briefing_date": "2026-08-14"})
+        material = expert.issue_material(dict(issue(1), related_articles=rows), "2026-08-14")
+        hashes = [a["hash"] for a in material["articles"]]
+        self.assertIn("today1", hashes)
+        self.assertIn("today2", hashes)
+        # 과거 기사는 맥락용이라 상한이 있다.
+        self.assertEqual(expert.MATERIAL_CONTEXT_ARTICLES,
+                         sum(1 for h in hashes if h.startswith("old")))
+        # 지역을 재료에 적어 준다 — 없으면 모델이 본문에서 짐작한다.
+        self.assertIn("region", material)
 
     def test_time_allocation_is_bounded_and_near_target(self):
         rows = [issue(i, 36 if i == 1 else 8) for i in range(1, 7)]
@@ -119,16 +169,16 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
         def fake_call(system, message, **kw):
             label = kw.get("label", "")
             calls.append(label)
-            if label == "expert_dossiers":
+            if label.startswith("expert_dossiers"):
                 return {"dossiers": [{"issue_id": f"i{i}"} for i in range(1, 7)]}
             if label == "expert_plan":
                 return {"segments": []}
-            if label == "expert_script":
-                # 1차: 문단 2개 — 하한(7)에도 분량에도 미달
-                return {"script": "HOST: 짧은 원고.\nHOST: 두 번째."}
-            if label == "expert_script_length_retry":
+            if label.startswith("expert_script_retry"):
                 body = "가" * 700
                 return {"script": "\n".join(f"HOST: {body}" for _ in range(8))}
+            if label.startswith("expert_script"):
+                # 1차: 문단 2개 — 하한에도 분량에도 미달
+                return {"script": "HOST: 짧은 원고.\nHOST: 두 번째."}
             return {}
 
         original = expert._call_structured
@@ -140,8 +190,8 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
         finally:
             expert._call_structured = original
 
-        self.assertIn("expert_script_length_retry", calls,
-                      "1차 원고가 형식 미달일 때 길이 재시도가 호출되지 않았다")
+        self.assertTrue(any(label.startswith("expert_script_retry") for label in calls),
+                        f"1차 원고가 형식 미달일 때 길이 재시도가 호출되지 않았다: {calls}")
 
     def test_length_target_follows_the_material_not_a_fixed_ten_minutes(self):
         """🔴 고정 목표는 재료가 얇은 날 '지어내야만 통과'를 요구한다.
@@ -215,6 +265,90 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
 
         self.assertTrue(script, "목표 미달이라는 이유로 대본이 버려졌다")
         self.assertIn("HOST:", script)
+
+    def _record_calls(self, issues: list[dict]) -> list[tuple[str, str]]:
+        """generate_expert_script 를 돌리고 (label, message) 를 전부 모은다."""
+        seen: list[tuple[str, str]] = []
+
+        def fake_call(system, message, **kw):
+            label = kw.get("label", "")
+            seen.append((label, message))
+            if label.startswith("expert_dossiers"):
+                import re as _re
+                ids = _re.findall(r'"issue_id": "(i\d+)"', message)
+                return {"dossiers": [{"issue_id": i, "title": f"이슈 {i[1:]}",
+                                      "body": "가" * 400} for i in dict.fromkeys(ids)]}
+            if label == "expert_plan":
+                return {"segments": []}
+            if label.startswith("expert_script"):
+                return {"script": "\n".join(f"HOST: {'가' * 150}" for _ in range(12))}
+            if label.startswith("expert_verify"):
+                return {"passed": True, "coverage_score": 99, "factual_support_score": 99,
+                        "stage_precision_score": 99, "expert_depth_score": 99,
+                        "single_speaker_score": 100, "unsupported_critical_claims": []}
+            return {}
+
+        original = expert._call_structured
+        expert._call_structured = fake_call
+        try:
+            expert.generate_expert_script(briefing(), issues)
+        finally:
+            expert._call_structured = original
+        return seen
+
+    def test_more_issues_produce_more_script_calls(self):
+        """🔴 뚜껑만 열면 분량이 안 따라온다 — 호출이 늘어야 분량이 는다.
+
+        실측(2026-08-14): 재료를 5,768→8,070자로 늘려도 단일 호출 대본은
+        2,461→2,480자로 그대로였다. 이슈 17개를 그 한 호출에 넣으면 같은
+        2,500자에 눌려 담겨 이슈당 깊이는 오히려 얕아진다.
+        """
+        def script_calls(count: int) -> int:
+            issues = [dict(issue(i), region="해외") for i in range(1, count + 1)]
+            labels = [label for label, _ in self._record_calls(issues)]
+            # 길이 재시도는 같은 배치의 두 번째 호출이라 세지 않는다.
+            return sum(1 for label in labels
+                       if label.startswith("expert_script")
+                       and not label.startswith("expert_script_retry"))
+
+        few, many = script_calls(4), script_calls(17)
+        self.assertEqual(1, few)          # 4개는 한 호출로 충분하다
+        self.assertGreater(many, few)
+        self.assertEqual(4, many)         # 17 → 5·4·4·4
+
+    def test_a_script_call_never_sees_the_other_region(self):
+        """🔴 국내 설명에 해외 사실이 섞이던 경로를 구조로 막는다.
+
+        재료에 region 이 없어서 모델이 기사 본문으로 지역을 짐작했다. 이제 배치가
+        지역 경계를 넘지 않으므로, 한 호출의 프롬프트에는 다른 지역 story 가
+        애초에 들어 있지 않다.
+        """
+        issues = ([dict(issue(i), region="국내", title=f"국내이슈{i}") for i in (1, 2)]
+                  + [dict(issue(i), region="해외", title=f"해외이슈{i}") for i in (3, 4)])
+        calls = self._record_calls(expert.selected_issues(
+            dict(briefing(), highlight_issues=[],
+                 issues=[{"issue_id": f"i{i}"} for i in range(1, 5)]),
+            {f"i{i}": row for i, row in zip(range(1, 5), issues)}))
+        script_calls = [(label, message) for label, message in calls
+                        if label.startswith("expert_script")
+                        and not label.startswith("expert_script_retry")]
+        self.assertEqual(2, len(script_calls))          # 국내 1 + 해외 1
+        domestic = next(m for label, m in script_calls if "국내" in label)
+        overseas = next(m for label, m in script_calls if "해외" in label)
+        self.assertIn("i1", domestic)
+        self.assertNotIn("i3", domestic)
+        self.assertIn("i3", overseas)
+        self.assertNotIn("i1", overseas)
+
+    def test_bridge_line_marks_the_domestic_to_overseas_handover(self):
+        issues = ([dict(issue(1), region="국내")] + [dict(issue(2), region="해외")])
+        calls = self._record_calls(issues)
+        self.assertTrue(calls)
+        # 전환 문장은 시스템이 붙인다 — plan 프롬프트가 그렇게 지시한다.
+        plan_message = next(m for label, m in calls if label == "expert_plan")
+        self.assertIn("전환 문장은", plan_message)
+        self.assertIn("해외", expert._block_bridge("해외"))
+        self.assertEqual("", expert._block_bridge("국내"))
 
     def test_absolute_floor_still_rejects_garbage(self):
         """반대로, 절대 한계 밑은 여전히 실패해야 한다 — 게이트를 없앤 게 아니다."""
@@ -291,6 +425,13 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
             expert.trim_silence = original_trim
 
     def test_tts_late_model_switch_resumes_to_finish(self):
+        """후반 전환은 정상 구간을 보존하고 이어 붙인다 — 음색보다 완주가 위다.
+
+        전 구간 한 모델로 통일해 봤는데(2026-08-16), 마지막 청크에서 실패할 때마다
+        앞 전부를 다시 만들어야 했다. TTS 한계는 RPD 라 재생성분이 그대로 그날
+        예산에서 빠지고, 대본이 길어진 뒤로는 청크가 6~8개라 재생성 한 번이
+        예산을 두 배로 먹는다. 음색 차이는 warnings 로 남긴다.
+        """
         original_models = expert._tts_models
         original_chunk = expert._tts_chunk_retry
         original_trim = expert.trim_silence
@@ -314,6 +455,28 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
             expert._tts_models = original_models
             expert._tts_chunk_retry = original_chunk
             expert.trim_silence = original_trim
+
+    def test_tts_retry_does_not_sleep_because_the_limit_is_daily(self):
+        """RPD 는 기다린다고 회복되지 않는다 — 재시도에 백오프를 두지 않는다."""
+        original_call = expert.call_tts
+        original_check = expert._check_not_truncated
+        attempts: list[str] = []
+        try:
+            def fake_call(chunk, models=None):
+                attempts.append(models[0])
+                if len(attempts) < 2:
+                    raise GeminiError("HTTP 429")
+                return b"\x00\x40" * 100, 24000
+            expert.call_tts = fake_call
+            expert._check_not_truncated = lambda *a, **k: None
+            _pcm, rate = expert._tts_chunk_retry(1, "가" * 100, "m1")
+            self.assertEqual(24000, rate)
+            self.assertEqual(["m1", "m1"], attempts)  # 같은 모델로 한 번 더
+            self.assertEqual(2, expert.EXPERT_TTS_RETRIES)
+            self.assertFalse(hasattr(expert, "EXPERT_TTS_BACKOFF_SEC"))
+        finally:
+            expert.call_tts = original_call
+            expert._check_not_truncated = original_check
 
 
 class ExpertTelegramDeliveryTests(unittest.TestCase):

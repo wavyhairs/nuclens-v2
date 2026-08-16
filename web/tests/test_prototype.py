@@ -315,6 +315,25 @@ class SelectionReasonTests(unittest.TestCase):
         reasons = build_data.selection_reasons({"score": 5, "breakdown": {"time_decay": -1}})
         self.assertEqual(reasons, ["브리핑 우선순위"])
 
+    def test_restored_briefing_keeps_the_reasons_v1_actually_showed(self):
+        """복원 회차는 breakdown 이 없다 — 지어내는 대신 원본 문구를 싣는다.
+
+        v1(nuclens.pages.dev)이 배포한 published data 에는 점수 내역이 없다.
+        breakdown 을 역산해 채우면 '왜 뽑혔는지'를 숫자로 설명하는 자리에 만들어
+        낸 숫자가 들어가고, 그러면 그 설명 전체가 못 믿을 것이 된다. 대신 그날
+        실제로 화면에 나갔던 selection_reasons 를 레코드에 실어 그대로 쓴다.
+        """
+        restored = {"score": 26.7, "selection_reasons": ["정책 결정", "정책 영향 큼"],
+                    "restored_from": "https://nuclens.pages.dev"}
+        self.assertEqual(build_data.selection_reasons(restored),
+                         ["정책 결정", "정책 영향 큼"])
+        # 최대 2개는 그대로. 빈 문자열은 버린다.
+        noisy = {"score": 1, "selection_reasons": ["가", "", "나", "다"]}
+        self.assertEqual(build_data.selection_reasons(noisy), ["가", "나"])
+        # breakdown 이 있는 정상 회차는 예전 계산을 그대로 탄다.
+        normal = {"score": 22.5, "breakdown": {"event:policy_decision": 6, "korea_relevance": 3.6}}
+        self.assertEqual(build_data.selection_reasons(normal), ["정책 결정", "국내 관련성 높음"])
+
     def test_official_and_specialist_labels_are_distinct(self):
         delivery = {"score": 5, "breakdown": {"source_tier1": 4}}
         self.assertEqual(
