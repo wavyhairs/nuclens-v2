@@ -5431,6 +5431,132 @@ class WebFontWeightTests(unittest.TestCase):
         self.assertEqual(lost_console, set(), f"콘솔 문구가 빠졌다: {sorted(lost_console)[:20]}")
 
 
+def _template_interpolations(script: str) -> list[tuple[str, str]]:
+    """자바스크립트에서 `${...}` 를 (표현식, 그것이 든 템플릿 리터럴 전체) 로 낸다.
+
+    작은 상태 기계가 필요한 이유: 백틱은 주석·따옴표 문자열 안에도 나타난다.
+    단순히 세면 `"\\`"` 하나가 이후 파일 전체의 판정을 뒤집고, 그러면 XSS 검사가
+    조용히 아무것도 안 보게 된다 — 초록불인 채로.
+
+    정규식 리터럴도 반드시 건너뛴다. `esc()` 안의 `/[&<>"']/g` 에 든 따옴표를
+    문자열 시작으로 읽으면 그 뒤 수백 줄이 통째로 '문자열 안'이 되어 검사 대상이
+    24개로 줄어든다 — 실제로 그렇게 됐고, 아래 sanity 검사가 그걸 잡았다.
+
+    프레임 하나가 템플릿 리터럴 하나 또는 그 안의 `${}` 표현식 하나다. 중첩
+    템플릿(`` `<a>${x ? `<b>${y}</b>` : ""}</a>` ``)도 이 규칙으로 그대로 풀린다.
+    """
+    out: list[tuple[str, str]] = []
+    frames: list[list] = []      # ["tpl", 시작] | ["expr", 중괄호깊이, 시작, 템플릿시작]
+    quote = ""                   # ' 또는 " 안
+    comment = ""                 # // 또는 /*
+    previous = ""                # 직전 유의미 문자 — / 가 정규식인지 나눗셈인지 가른다
+    index, size = 0, len(script)
+
+    def in_template() -> bool:
+        return bool(frames) and frames[-1][0] == "tpl"
+
+    while index < size:
+        char = script[index]
+        pair = script[index:index + 2]
+        if comment:
+            if comment == "//" and char == "\n":
+                comment = ""
+            elif comment == "/*" and pair == "*/":
+                comment, index = "", index + 1
+            index += 1
+            continue
+        if quote:
+            if char == "\\":
+                index += 2
+                continue
+            if char == quote:
+                quote = ""
+            index += 1
+            continue
+        # 템플릿 리터럴 **본문**에서는 따옴표도 주석도 정규식도 그냥 글자다.
+        if not in_template():
+            if pair in ("//", "/*"):
+                comment, index = pair, index + 2
+                continue
+            if char in "'\"":
+                quote, index = char, index + 1
+                continue
+            # 값이 올 자리의 `/` 는 정규식이다. 값 뒤(식별자·닫는 괄호·숫자)에
+            # 오는 `/` 는 나눗셈이라 건너뛰면 안 된다.
+            if char == "/" and (previous == "" or previous in "(,=:[!&|?{};+*%<>~^"):
+                index += 1
+                in_class = False
+                while index < size:
+                    current = script[index]
+                    if current == "\\":
+                        index += 2
+                        continue
+                    if current == "[":
+                        in_class = True
+                    elif current == "]":
+                        in_class = False
+                    elif current == "/" and not in_class:
+                        break
+                    index += 1
+                index += 1
+                previous = "/"
+                continue
+        if char == "\\":
+            index += 2
+            continue
+        if not char.isspace():
+            previous = char
+        if char == "`":
+            # 열림·닫힘 둘 다 여기로 온다. 본문은 아래에서 시작 위치로 되찾는다.
+            if in_template():
+                frames.pop()
+            else:
+                frames.append(["tpl", index])
+            index += 1
+            continue
+        if pair == "${" and in_template():
+            frames.append(["expr", 0, index + 2, frames[-1][1]])
+            index += 2
+            continue
+        if frames and frames[-1][0] == "expr":
+            if char == "{":
+                frames[-1][1] += 1
+            elif char == "}":
+                if frames[-1][1] == 0:
+                    _, _, start, tpl_start = frames.pop()
+                    out.append((script[start:index], tpl_start))
+                else:
+                    frames[-1][1] -= 1
+        index += 1
+
+    # 템플릿 본문은 끝나야 알 수 있으므로 시작 위치만 들고 있다가 여기서 채운다.
+    bodies: dict[int, str] = {}
+    for _, tpl_start in out:
+        if tpl_start not in bodies:
+            bodies[tpl_start] = _template_body(script, tpl_start)
+    return [(expr, bodies[tpl_start]) for expr, tpl_start in out]
+
+
+def _template_body(script: str, start: int) -> str:
+    """`start` 의 백틱에서 시작하는 템플릿 리터럴의 본문을 되돌려 준다."""
+    depth, index = 0, start + 1
+    while index < len(script):
+        char = script[index]
+        if char == "\\":
+            index += 2
+            continue
+        if script[index:index + 2] == "${":
+            depth += 1
+            index += 2
+            continue
+        if char == "}" and depth:
+            depth -= 1
+        elif char == "`" and not depth:
+            return script[start:index + 1]
+        index += 1
+    return script[start:]
+
+
 class AdminConsoleTests(unittest.TestCase):
     """운영 콘솔(/admin) — 오병합을 사람이 되짚는 자리.
 
@@ -5534,24 +5660,75 @@ class AdminConsoleTests(unittest.TestCase):
         bases = [org.split("(")[0].strip() for org in self.config["publications"]["orgs"]]
         self.assertEqual(len(bases), len(set(bases)), self.config["publications"]["orgs"])
 
-    def test_the_console_is_read_only_and_kept_out_of_the_reader_bundle(self):
-        """여기서 설정을 고칠 수 있게 만들면 저장소와 화면이 갈라진다.
+    def test_console_edits_never_overwrite_the_repository_config(self):
+        """콘솔이 쓰기를 얻었다(2026-08-16). 얻지 **않은** 것이 무엇인지 잠근다.
 
-        독자 앱의 **코드**와는 계속 분리한다 — 합치면 독자가 받는 번들에 아무도
-        안 보는 진단 코드가 얹히고, 콘솔을 고칠 때마다 독자 화면 회귀를 걱정하게
-        된다. 다만 독자 화면에서 콘솔로 **가는 링크**는 2026-08-16에 생겼다
-        (톱니바퀴). 링크가 보인다고 열리는 것은 아니다 — 자물쇠는 엣지에 있다.
+        예전 규칙은 '읽기 전용'이었다. 이유는 화면과 저장소가 갈라지는 것이었지,
+        관리자가 설정을 못 고쳐야 한다는 것이 아니었다. 그래서 규칙을 바꾸는 대신
+        갈라짐을 구조로 막았다 — 콘솔은 기본 파일을 **덮어쓰지 않고** "무엇을
+        더하고 무엇을 뺐다"라는 항목만 쌓는다(admin_overrides.py). 덧칠은 손편집과
+        교환법칙이 성립하므로 둘이 서로를 조용히 지우지 않는다.
+
+        이 테스트가 지키는 것은 그 경계다. 콘솔이 keywords.json 이나 sources.json
+        을 직접 쓰기 시작하면 예전 문제가 그대로 돌아온다.
         """
-        self.assertIn("읽기 전용", self.html)
-        # 입력 필드는 없어야 한다. 유일하게 허용되는 form 은 세션 종료(로그아웃)로,
-        # 설정을 고치는 것이 아니라 쿠키를 지우는 상태 변경이라 POST 여야 한다.
-        for tag in ("<input", "<textarea", "<select"):
-            self.assertNotIn(tag, self.html.lower(), tag)
-        forms = re.findall(r"<form[^>]*>", self.html, re.IGNORECASE)
-        self.assertEqual(len(forms), 1, f"로그아웃 외의 form 이 생겼다: {forms}")
-        self.assertIn("/admin/logout", forms[0])
-        self.assertIn('method="POST"', forms[0], "쿠키를 지우는 요청은 GET 이면 안 된다")
+        # ① 쓰기는 오직 한 창구로만 나간다. 저장소 파일 이름이 쓰기 경로에 등장하면
+        #    그때부터 '화면이 파일의 주인'이 되고, 손편집이 조용히 사라진다.
+        self.assertIn("/admin/api/overrides", self.script)
+        # 덧칠 모듈은 읽기만 한다. 여기서 파일을 쓰기 시작하면 기본 설정의 주인이
+        # 둘이 되고, 그때부터 '누가 마지막에 썼나'가 설정을 정한다.
+        overlay = (ROOT.parent / "admin_overrides.py").read_text(encoding="utf-8")
+        for writer in ("write_text(", "open(", "json.dump("):
+            self.assertNotIn(writer, overlay, f"덧칠 모듈이 쓰기를 한다: {writer}")
+        # 화면이 부르는 쓰기 주소는 하나뿐이어야 한다. 두 번째 창구가 생기면
+        # 검증도 두 벌이 되고, 새로 생긴 쪽이 화이트리스트를 안 거친다.
+        posts = re.findall(r'method:\s*"(\w+)"', self.script)
+        self.assertEqual(set(posts), {"POST"}, f"예상 밖의 메서드: {posts}")
+        fetches = {re.split(r"[?$]", url)[0]
+                   for url in re.findall(r'fetch\(\s*[`"\']([^`"\']+)', self.script)}
+        # 읽기는 /admin/data/, 쓰기는 /admin/api/overrides. 둘 다 엣지 자물쇠
+        # 안쪽이고, 그 밖의 주소가 생기면 인증이 닿지 않는 경로가 열린 것이다.
+        self.assertEqual(fetches, {"/admin/data/", "/admin/api/overrides"},
+                         f"콘솔이 예상 밖의 경로를 부른다: {fetches}")
 
+        # ② 쓰기 창구는 엣지 자물쇠 **안쪽**에 있어야 한다. functions/admin/ 밖에
+        #    두면 미들웨어가 닿지 않아 인증 없이 판정을 심을 수 있다.
+        api = ROOT.parent / "functions" / "admin" / "api" / "overrides.js"
+        self.assertTrue(api.exists(), "쓰기 창구가 없다")
+        api_source = api.read_text(encoding="utf-8")
+        # 화면을 믿지 않는다 — 종류 화이트리스트와 교차 출처 확인이 서버에 있어야 한다.
+        self.assertIn("KINDS", api_source)
+        self.assertIn("Origin", api_source)
+        middleware = (ROOT.parent / "functions" / "admin" / "_middleware.js").read_text(encoding="utf-8")
+        self.assertIn("/admin/api/", middleware,
+                      "쓰기 경로가 미들웨어의 데이터 경로 판정에 없다 — 인증 실패 시 HTML 이 돌아간다")
+
+        # ③ 파이썬 쪽 종류 목록과 자바스크립트 쪽 화이트리스트가 갈라지면, 콘솔은
+        #    저장에 성공했다고 말하는데 파이프라인은 그 항목을 조용히 무시한다.
+        import admin_overrides  # noqa: PLC0415
+
+        for kind in admin_overrides.KINDS:
+            self.assertIn(f'"{kind}"', api_source, f"쓰기 창구가 모르는 판정 종류: {kind}")
+
+        # ④ 편집 폼이 생겼다. 로그아웃만은 여전히 POST 여야 한다(프리페치·크롤러가
+        #    GET 링크를 눌러 세션을 끊는 것을 막는 규칙은 그대로다).
+        logout = [form for form in re.findall(r"<form[^>]*>", self.html, re.IGNORECASE)
+                  if "/admin/logout" in form]
+        self.assertEqual(len(logout), 1, "로그아웃 폼이 하나가 아니다")
+        self.assertIn('method="POST"', logout[0], "쿠키를 지우는 요청은 GET 이면 안 된다")
+
+        # ⑤ 즉시 반영되지 않는다는 사실을 화면이 말해야 한다. 침묵하면 관리자는
+        #    같은 판정을 몇 번씩 다시 누르고 목록이 중복으로 찬다.
+        self.assertIn("다음 수집", self.html)
+
+    def test_the_console_is_kept_out_of_the_reader_bundle(self):
+        """독자 앱의 **코드**와는 계속 분리한다.
+
+        합치면 독자가 받는 번들에 아무도 안 보는 진단 코드가 얹히고, 콘솔을 고칠
+        때마다 독자 화면 회귀를 걱정하게 된다. 다만 독자 화면에서 콘솔로 **가는
+        링크**는 2026-08-16에 생겼다(톱니바퀴). 링크가 보인다고 열리는 것은
+        아니다 — 자물쇠는 엣지에 있다.
+        """
         reader_html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
         reader_js = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
         self.assertIn('href="/admin/"', reader_html, "독자 화면에 콘솔 입구가 없다")
@@ -5606,12 +5783,24 @@ class AdminConsoleTests(unittest.TestCase):
     def test_the_console_escapes_everything_it_renders(self):
         """제목·판단 근거는 LLM 과 매체가 쓴 문자열이다 — 그대로 innerHTML 에 붙는다.
 
-        데이터 객체의 필드를 꺼내 쓰는 `${...}` 는 전부 esc()/ratio()/chips()/stat()
-        을 거쳐야 한다. 지역 변수(계산된 개수·URL 조각)는 이 규칙 밖이라 데이터
-        접근만 골라 본다 — 중괄호를 세어 맞추므로 중첩 템플릿에도 걸린다.
+        데이터 객체의 필드를 꺼내 쓰는 `${...}` 는 전부 esc() 나 이미 이스케이프해
+        돌려주는 도우미를 거쳐야 한다. 지역 변수(계산된 개수·URL 조각)는 이 규칙
+        밖이라 데이터 접근만 골라 본다.
+
+        **HTML 을 만드는 템플릿만 본다.** 콘솔이 쓰기를 얻으면서 confirm·toast 같은
+        평문 메시지에도 같은 필드가 들어가는데(`'${data.label}' 수집을 중지합니다`),
+        그건 innerHTML 이 아니라 위험이 없다. 구분하지 않으면 규칙이 시끄러워지고,
+        시끄러운 규칙은 결국 필드 이름을 바꿔 피하게 만든다 — 그러면 진짜 XSS 를
+        놓친다. 그래서 `<` 가 든 템플릿 안의 보간만 센다.
         """
         self.assertIn("function esc(", self.script)
-        safe = ("esc(", "ratio(", "chips(", "stat(")
+        # 이미 이스케이프한 HTML 을 돌려주는 도우미들. 이 목록에 새 이름을 더할
+        # 때는 그 함수가 **자기 안에서** esc() 를 부르는지 반드시 확인할 것.
+        safe = (
+            "esc(", "ratio(", "chips(", "stat(",
+            "editableChips(", "addForm(", "tierForm(", "splitForm(",
+            "storySplitBlock(", "feedAddCard(", "pendingBadge(", "option(",
+        )
         # 자유 문자열 필드만 본다. 건수·비율은 빌드가 만든 숫자라 위험이 없고,
         # 그것까지 걸면 규칙이 시끄러워져 아무도 안 고치게 된다. 여기 이름들은
         # LLM(제목·판단 근거)과 매체(발행처·도메인)가 쓴 값이다.
@@ -5621,20 +5810,16 @@ class AdminConsoleTests(unittest.TestCase):
             r"|kind|source_type|evidence_role|url|tag)\b"
         )
         leaked = []
-        for start in (index for index, _ in enumerate(self.script) if self.script.startswith("${", index)):
-            depth, cursor = 0, start + 1
-            while cursor < len(self.script):
-                if self.script[cursor] == "{":
-                    depth += 1
-                elif self.script[cursor] == "}":
-                    depth -= 1
-                    if depth == 0:
-                        break
-                cursor += 1
-            expression = self.script[start + 2:cursor]
+        for expression, template in _template_interpolations(self.script):
+            if "<" not in template:
+                continue  # HTML 이 아니다 — confirm·toast 같은 평문 메시지
             if data.search(expression) and not any(helper in expression for helper in safe):
                 leaked.append(expression.strip()[:70])
         self.assertEqual(leaked, [], f"이스케이프 없이 붙는 값: {leaked}")
+        # 위 규칙은 '<' 가 든 템플릿이 실제로 있을 때만 의미가 있다. 콘솔이
+        # 통째로 리팩터링돼 검사 대상이 0 이 되면 초록불이 거짓이 된다.
+        scanned = sum(1 for _, template in _template_interpolations(self.script) if "<" in template)
+        self.assertGreater(scanned, 100, f"HTML 보간을 {scanned}개밖에 못 찾았다 — 스캐너가 깨졌다")
 
 
 if __name__ == "__main__":

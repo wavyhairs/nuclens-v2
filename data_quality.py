@@ -203,6 +203,14 @@ def _source_indexes() -> tuple[dict[str, dict], dict[str, dict]]:
         config = json.loads(_SOURCES_PATH.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         config = {}
+    # 운영 콘솔의 등급 수정. sources.py 와 같은 덧칠을 써야 '선정 점수는 tier1 인데
+    # 화면 배지는 tier3' 같은 어긋남이 생기지 않는다.
+    try:
+        import admin_overrides
+
+        config = admin_overrides.sources_config(config)
+    except Exception:  # noqa: BLE001 — 품질 계약이 덧칠 때문에 죽으면 안 된다
+        pass
 
     by_domain: dict[str, dict] = {}
     by_name: dict[str, dict] = {}

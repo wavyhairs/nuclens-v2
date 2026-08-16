@@ -42,6 +42,11 @@
 남는다. 판단한 쌍은 `issue_match_overrides.json` 의 `approved`/`rejected` 에 두
 해시와 근거를 기록하면 다음 빌드부터 재현된다.
 
+같은 판단을 운영 콘솔(`/admin`)의 '병합 진단'에서 버튼으로도 내릴 수 있다. 콘솔
+판정은 KV → `admin_overrides.json` 을 거쳐 `load_match_overrides()` 가 저장소 파일과
+**같은 통**에 붓는다 — 둘을 따로 두면 "왜 안 붙었나"를 두 곳에서 찾아야 하고,
+한쪽만 보고 규칙을 고치게 된다. 자세한 것은 루트 README 의 "운영 콘솔에서 고치기".
+
 KEEI 세계 원전시장 인사이트 목차와 이슈를 잇는 판정도 같은 구조다
 (`keei_match.py`) — 파이썬이 후보를 좁히고 LLM 이 판정한다.
 
@@ -87,6 +92,15 @@ node --check web/public/app.js
 
 ```bash
 node web/tests/render_smoke.mjs
+```
+
+운영 콘솔은 브라우저 없이 검증한다 — 최소 DOM 을 흉내 내고 방금 빌드한 JSON 으로
+한 번 그려 본다(3초). 콘솔이 중간에 예외를 던지면 증상은 흰 화면 하나뿐이라
+관리자가 '데이터가 없다'로 읽는다.
+
+```bash
+node web/tests/admin_gate.mjs     # 자물쇠·쓰기 입력 검증 계약
+node web/tests/admin_render.mjs   # 실제 산출물로 화면 렌더 (build_data 이후)
 ```
 
 ## localStorage 키

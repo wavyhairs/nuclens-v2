@@ -1119,9 +1119,19 @@ def load_match_overrides(path: Path = MATCH_OVERRIDES_FILE) -> dict[str, set[str
     except (OSError, json.JSONDecodeError):
         raw = {}
 
+    # 운영 콘솔에서 누른 잇기·끊기를 저장소 파일과 **같은 통**에 붓는다. 둘을
+    # 따로 두면 "왜 안 붙었나"를 두 곳에서 찾아야 하고, 한쪽만 보고 규칙을 고치게 된다.
+    console = {"approved": [], "rejected": []}
+    try:
+        import admin_overrides  # noqa: PLC0415
+
+        console = admin_overrides.issue_pair_overrides()
+    except Exception as exc:  # noqa: BLE001 — 덧칠 실패가 빌드를 세우면 안 된다
+        print(f"[admin] 이슈 판정 덧칠 실패 → 저장소 파일만 사용: {exc}")
+
     def keys(name: str) -> set[str]:
         result = set()
-        for row in raw.get(name) or []:
+        for row in list(raw.get(name) or []) + list(console.get(name) or []):
             if isinstance(row, str) and "--" in row:
                 result.add(row)
             elif isinstance(row, dict):
@@ -2142,6 +2152,9 @@ def _story_contract(article: dict) -> dict:
     hashes = article.get("story_article_hashes")
     if not isinstance(hashes, list):
         hashes = []
+    members = article.get("story_members")
+    if not isinstance(members, list):
+        members = []
     return {
         "story_contract_available": bool(article.get("story_contract_available", False)),
         "story_article_count": article_count,
@@ -2154,6 +2167,8 @@ def _story_contract(article: dict) -> dict:
         "story_fingerprint": fingerprint,
         "story_article_hashes": [str(x) for x in hashes[:12] if str(x).strip()],
         "story_related_titles": [str(x)[:180] for x in titles[:12] if str(x).strip()],
+        # 운영 콘솔의 수동 분리 단위 (hash↔제목 짝). 옛 회차에는 없다.
+        "story_members": [x for x in members[:16] if isinstance(x, dict) and x.get("hash")],
         "story_sources": [x for x in sources[:12] if isinstance(x, dict)],
         "story_context": [x for x in contexts[:8] if isinstance(x, dict)],
     }
@@ -4127,6 +4142,109 @@ def load_story_audits(limit: int = 14) -> list[dict]:
     return rows[:limit]
 
 
+def _split_units(item: dict, raw_sources: list[dict],
+                 known: dict[str, dict] | None = None) -> list[dict]:
+    """이 카드에서 사람이 떼어낼 수 있는 기사들 (hash ↔ 제목 짝).
+
+    제목 목록만으로는 분리를 지정할 수 없다 — 같은 제목이 여러 매체에 있고, 판정은
+    hash 로 남아야 다음 회차에 재현된다. 그래서 짝이 있는 것만 올린다. 재료는 셋이고
+    앞의 것이 이긴다.
+
+      ① ``story_members``      hash·제목·매체가 같이 적힌 최신 계약
+      ② ``raw_sources``        수집 단계에서 접힌 기사 — 여기에도 hash 가 있다
+      ③ ``story_article_hashes`` + 아카이브 조회
+         선정 단계(LLM)에서 접힌 기사는 그 전에 이미 아카이브에 **따로** 실려 있다
+         (수집이 개별 레코드로 넣고 story 병합은 그 뒤에 일어난다). 그래서 hash 로
+         제목을 되찾을 수 있다 — ①②가 붙기 전의 옛 회차가 이 경로로 살아난다.
+    """
+    units: list[dict] = []
+    seen: set[str] = {str(item.get("hash") or "")}
+
+    def add(member_hash: str, title: str, publisher: str, stage: str) -> None:
+        if not member_hash or member_hash in seen:
+            return
+        seen.add(member_hash)
+        units.append({
+            "hash": member_hash,
+            "title": title[:180],
+            "publisher": publisher[:100],
+            "fold_stage": stage[:40],
+        })
+
+    for member in list(item.get("story_members") or []) + list(raw_sources):
+        if isinstance(member, dict):
+            add(str(member.get("hash") or ""), str(member.get("title") or ""),
+                str(member.get("publisher") or member.get("domain") or ""),
+                str(member.get("fold_stage") or ""))
+
+    for member_hash in (item.get("story_article_hashes") or []):
+        archived = (known or {}).get(str(member_hash))
+        if not archived:
+            # 제목을 못 찾은 hash 는 올리지 않는다. 16진수만 보여 주고 "떼시겠습니까"를
+            # 묻는 것은 검토가 아니라 도박이다.
+            continue
+        add(str(member_hash),
+            str(archived.get("title_kr") or archived.get("title") or ""),
+            str(archived.get("publisher") or archived.get("domain") or ""),
+            str(item.get("story_dedup_stage") or ""))
+    return units[:16]
+
+
+def build_admin_judgments(news_items: list[dict], generated_at: datetime) -> dict:
+    """콘솔이 남긴 병합 판정과, 그 판정이 실제로 얼마나 넓은지.
+
+    학습 규칙에서 제일 위험한 실패는 **과적용**이다. "고리 2호기 ↔ 한빛 3호기"로
+    배웠는데 축을 '원전'처럼 넓게 적으면 그 뒤로 모든 원전 기사가 서로 안 붙는다 —
+    그리고 그 사고는 조용하다(비슷한 카드가 두 칸을 먹을 뿐, 어디에도 이유가 없다).
+    그래서 규칙마다 **최근 30일 기사 중 각 축에만 걸린 건수**를 함께 낸다.
+    양쪽이 두세 건이면 좁은 규칙이고, 수십 건씩이면 지워야 할 규칙이다.
+    """
+    try:
+        import admin_overrides  # noqa: PLC0415
+    except Exception as exc:  # noqa: BLE001
+        return {"available": False, "error": f"{type(exc).__name__}: {exc}"[:200],
+                "entries": [], "rules": [], "synced_at": ""}
+
+    cutoff = (generated_at.date() - timedelta(days=30)).isoformat()
+    recent = [item for item in news_items if str(item.get("article_date") or "") >= cutoff]
+    texts = [admin_overrides.article_text(item) for item in recent]
+
+    rules = []
+    for rule in admin_overrides.learned_rules():
+        left_only = right_only = 0
+        for text in texts:
+            has_left = any(term in text for term in rule["left_terms"])
+            has_right = any(term in text for term in rule["right_terms"])
+            if has_left and not has_right:
+                left_only += 1
+            elif has_right and not has_left:
+                right_only += 1
+        rules.append({
+            **rule,
+            "left_only": left_only,
+            "right_only": right_only,
+            # 이 규칙이 갈라 놓을 수 있는 조합의 상한. 실제 발동은 두 기사가 같은
+            # 병합 후보로 만났을 때뿐이라 이보다 훨씬 적지만, 넓이는 이 수가 말한다.
+            "reach": left_only * right_only,
+            "sample_days": 30,
+        })
+
+    summary = admin_overrides.summary()
+    merge_kinds = ("story_split", "issue_split", "issue_join", "learned_rule")
+    return {
+        "available": True,
+        "error": "",
+        "synced_at": summary["synced_at"],
+        "updated_at": summary["updated_at"],
+        "entries": [
+            entry for entry in admin_overrides.load()["entries"]
+            if entry.get("kind") in merge_kinds
+        ],
+        "rules": rules,
+        "sample_articles": len(recent),
+    }
+
+
 def build_admin_merges(
     news_items: list[dict],
     issue_catalog: list[dict],
@@ -4139,6 +4257,9 @@ def build_admin_merges(
     for issue in issue_catalog:
         for article in issue.get("related_articles") or []:
             issue_of_hash.setdefault(str(article.get("hash") or ""), issue)
+    # 접힌 기사의 제목을 hash 로 되찾기 위한 색인. 선정 단계에서 접힌 기사는
+    # 수집 때 이미 개별 레코드로 아카이브에 들어가 있다.
+    item_by_hash = {str(item.get("hash") or ""): item for item in news_items}
 
     # ① story 계층. 대표 기사 한 줄이 접힌 형제 전부를 들고 있다.
     #
@@ -4175,6 +4296,11 @@ def build_admin_merges(
             "independent_outlet_count": int(item.get("story_independent_outlet_count") or 0),
             "fingerprint": item.get("story_fingerprint") or {},
             "related_titles": item.get("story_related_titles") or [],
+            # 수동 분리가 집는 단위. story_members 가 붙기 전의 회차에는 없으므로
+            # 수집 단계 근거(raw_sources)로 물러난다 — 그쪽도 hash 를 들고 있고,
+            # 실제로 접힌 기사의 대부분이 거기 있다. 둘 다 없으면 화면이
+            # "이 회차는 분리 단위를 남기지 않았습니다"로 물러난다(LLM 병합 구간).
+            "members": _split_units(item, raw_sources, item_by_hash),
             "sources": item.get("story_sources") or [],
             "context": item.get("story_context") or [],
             # 수집 단계 근거 — 큐레이션 전이라 제목·매체·URL 만 있다.
@@ -4241,6 +4367,10 @@ def build_admin_merges(
         (
             {
                 "candidate_id": row.get("candidate_id", ""),
+                # 콘솔의 '붙이기'가 승인 쌍을 쓰려면 hash 가 필요하다 — 제목은
+                # 사람이 읽는 이름이지 판정이 재현되는 열쇠가 아니다.
+                "left_hash": row.get("left_hash", ""),
+                "right_hash": row.get("right_hash", ""),
                 "left_title": row.get("left_title", ""),
                 "right_title": row.get("right_title", ""),
                 "left_date": row.get("left_date", ""),
@@ -4276,6 +4406,9 @@ def build_admin_merges(
 
     return {
         "generated_at": generated_at.isoformat(),
+        # 사람이 내린 판정과 그 판정의 넓이. 병합 진단과 같은 파일에 두는 이유는
+        # "무엇이 붙었나"와 "내가 무엇을 갈라 뒀나"를 한 화면에서 대조해야 하기 때문이다.
+        "judgments": build_admin_judgments(news_items, generated_at),
         "story": {
             "contract_version": STORY_CONTRACT_VERSION,
             "totals": {
@@ -4327,33 +4460,58 @@ def build_admin_config(generated_at: datetime) -> dict:
 
     값은 전부 실제 설정 파일과 모듈에서 읽는다. 화면에 숫자를 손으로 적으면
     설정이 바뀌어도 화면은 옛날을 말하고, 그러면 이 화면을 볼 이유가 없다.
-    읽기 전용이다 — 여기서 고칠 수 있게 만들면 저장소와 화면이 갈라진다.
+
+    **덧칠을 적용한 뒤의 값을 낸다.** 콘솔에서 키워드를 지웠는데 화면이 여전히
+    기본 파일을 그리면, 관리자는 자기가 누른 것이 먹혔는지 확인할 방법이 없다.
+    기본값과의 차이는 `overrides.entries` 로 따로 실어 보내 화면이 표시한다.
     """
+    try:
+        import admin_overrides as _ao  # noqa: PLC0415
+
+        overlay = _ao.summary()
+        overlay_error = ""
+    except Exception as exc:  # noqa: BLE001
+        _ao = None
+        overlay = {"total": 0, "counts": {}, "synced_at": "", "updated_at": "", "source": ""}
+        overlay_error = f"{type(exc).__name__}: {exc}"[:200]
+
     keyword_groups = []
-    raw_keywords = _read_json(BOT_DIR / "keywords.json", {})
+    base_keywords = _read_json(BOT_DIR / "keywords.json", {}) or {}
+    raw_keywords = _ao.keywords_config(base_keywords) if _ao else base_keywords
     for name, group in (raw_keywords or {}).items():
         if not isinstance(group, dict):
             continue
+        base_group = base_keywords.get(name) if isinstance(base_keywords.get(name), dict) else {}
         keyword_groups.append({
             "name": name,
             "keywords": [str(k) for k in (group.get("keywords") or [])],
             "anchors": [str(k) for k in (group.get("anchors") or [])],
             # 검색 쿼리에 그대로 붙는 문자열이라 쪼개지 않고 원문 그대로 보인다.
             "negative_terms": str(group.get("negative_terms") or ""),
+            # 화면은 칩 단위로 지우므로 쪼갠 형태도 함께 준다.
+            "negative_list": _ao.negative_terms_list(group.get("negative_terms")) if _ao
+                             else str(group.get("negative_terms") or "").split(),
+            # 기본 파일에 있던 것과 콘솔이 더한 것을 화면이 구분해 표시한다.
+            "base_keywords": [str(k) for k in (base_group.get("keywords") or [])],
+            "base_anchors": [str(k) for k in (base_group.get("anchors") or [])],
         })
 
-    sources_config = _read_json(BOT_DIR / "sources.json", {})
+    base_sources = _read_json(BOT_DIR / "sources.json", {}) or {}
+    sources_config = _ao.sources_config(base_sources) if _ao else base_sources
     tiers = []
     for tier in (1, 2, 3):
         for row in sources_config.get(f"tier{tier}") or []:
             if not isinstance(row, dict):
                 continue
             tiers.append({
-                "tier": tier,
+                # 정렬 호환용 키(tier1/2/3 배열)와 실제 등급(rank_tier)이 다를 수
+                # 있다 — 콘솔에서 등급을 옮기면 rank_tier 가 먼저 바뀐다.
+                "tier": int(row.get("rank_tier") or tier),
                 "domain": row.get("domain", ""),
                 "name": row.get("name", ""),
                 "source_type": row.get("source_type", ""),
                 "evidence_role": row.get("evidence_role", ""),
+                "aliases": [str(a) for a in (row.get("aliases") or [])][:12],
             })
 
     # news_bot 은 수집 실행 모듈이라 임포트 실패가 빌드를 죽이면 안 된다.
@@ -4416,8 +4574,27 @@ def build_admin_config(generated_at: datetime) -> dict:
         publication_orgs = []
 
     discovery = _read_json(BOT_DIR / "discovery_state.json", {})
+    config_kinds = (
+        "keyword_add", "keyword_remove", "anchor_add", "anchor_remove",
+        "negative_add", "negative_remove", "anti_add", "anti_remove",
+        "feed_add", "feed_disable", "official_disable", "tier_upsert", "tier_remove",
+    )
     return {
         "generated_at": generated_at.isoformat(),
+        # 콘솔 편집이 실제 파이프라인에 도달했는지를 화면이 판정하는 근거.
+        # 콘솔은 KV 의 최신본과 이 목록을 대조해 "아직 반영 안 됨"을 표시한다.
+        "overrides": {
+            "synced_at": overlay["synced_at"],
+            "updated_at": overlay["updated_at"],
+            "source": overlay.get("source", ""),
+            "total": overlay["total"],
+            "counts": overlay["counts"],
+            "error": overlay_error,
+            "entries": [
+                entry for entry in (_ao.load()["entries"] if _ao else [])
+                if entry.get("kind") in config_kinds
+            ],
+        },
         "keywords": {
             "groups": keyword_groups,
             "totals": {
@@ -4576,6 +4753,7 @@ def build() -> None:
             "story_fingerprint": (delivery or {}).get("story_fingerprint", {}),
             "story_article_hashes": (delivery or {}).get("story_article_hashes", []),
             "story_related_titles": (delivery or {}).get("story_related_titles", []),
+            "story_members": (delivery or {}).get("story_members", []),
             "story_sources": (delivery or {}).get("story_sources", []),
             "story_context": (delivery or {}).get("story_context", []),
             # 수집 단계에서 접힌 근거와, story 완성 뒤에 화면 대표를 고른 판단.

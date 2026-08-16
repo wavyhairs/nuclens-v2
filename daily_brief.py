@@ -665,6 +665,9 @@ def plan_briefs(queue: list[dict],
         meta["story_fingerprint"] = a.get("story_fingerprint", {})
         meta["story_article_hashes"] = (a.get("story_article_hashes") or [])[:12]
         meta["story_related_titles"] = (a.get("story_related_titles") or [])[:12]
+        # 접힌 기사의 hash↔제목 짝. 운영 콘솔의 수동 분리가 이것 없이는 "어느
+        # 기사를 떼는가"를 지정할 수 없다(제목만으로는 재현되지 않는다).
+        meta["story_members"] = (a.get("story_members") or [])[:16]
         meta["story_sources"] = (a.get("story_sources") or [])[:12]
         meta["story_context"] = (a.get("story_context") or [])[:8]
         # 수집 단계에서 접힌 근거. 예전에는 이 자리에 아무것도 없었다 — 그 기사들이

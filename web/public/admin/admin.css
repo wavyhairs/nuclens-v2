@@ -9,14 +9,44 @@
 
 .admin-body { min-height: 100vh; }
 .admin-topbar-inner { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
-.admin-exit {
+
+/* 헤더 도구 셋 — 전부 글자다.
+ *
+ * 예전에는 독자 화면의 `.icon-button` 을 빌려 썼는데 그 클래스는 아이콘 하나를
+ * 담는 정사각형(width:40px, padding:0)이라 '비밀번호 변경'이 40px 안에서 세 줄로
+ * 접혔다. 로그아웃 버튼만 admin.css 에서 폭을 되돌려 놔 셋 중 하나만 멀쩡했다.
+ * 빌려 쓰지 않고 여기서 정의한다 — 폭은 글자가 정하고, 줄바꿈은 없다.
+ */
+.admin-tools { flex-wrap: nowrap; gap: var(--sp-2); }
+.admin-tool {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
   justify-content: center;
-  width: auto;
+  /* 40px. 독자 헤더의 도구와 같은 높이다 — 여기만 낮추면 같은 줄에 선 두 크롬이
+     서로 다른 물건으로 보인다. 좁은 화면에서는 44px 로 올린다(아래). */
+  min-height: 40px;
   padding: 0 var(--sp-3);
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: var(--r-1);
+  background: rgb(255 255 255 / 7%);
   color: rgb(255 255 255 / 82%);
   font-size: var(--t-min);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--mo-1), border-color var(--mo-1), color var(--mo-1);
 }
-.admin-exit:hover { text-decoration: none; color: #fff; }
+.admin-tool:hover {
+  border-color: rgb(255 255 255 / 42%);
+  background: rgb(255 255 255 / 13%);
+  color: #fff;
+  text-decoration: none;
+}
+/* 세션을 끊는 버튼. 다른 도구와 같은 무게로 두면 '서비스 화면'을 누르려다 잘못
+   눌러 8시간짜리 세션이 날아간다. 색으로만 구분하지 않고 테두리도 다르게 한다. */
+.admin-tool.danger { border-color: rgb(255 255 255 / 34%); background: transparent; }
+.admin-tool.danger:hover { border-color: var(--c-critical); background: rgb(255 255 255 / 10%); }
+.admin-tool:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 .admin-main { padding: var(--sp-8) 0 var(--sp-16); }
 .admin-panel { display: grid; gap: var(--sp-12); }
@@ -207,8 +237,193 @@
 .admin-link a { color: var(--c-secondary); }
 
 /* 세션 종료. form 이 헤더 flex 안에서 자기 높이를 만들지 않도록 감싼다. */
-.admin-logout { display: inline-flex; margin: 0; }
-.admin-logout .icon-button { width: auto; padding: 0 var(--sp-3); font-size: var(--t-caption); }
+.admin-logout { display: inline-flex; flex: none; margin: 0; }
+
+/* ── 편집 ────────────────────────────────────────────────────────────────
+ *
+ * 콘솔이 읽기 전용을 벗었다. 편집 컨트롤은 진단 내용보다 눈에 덜 띄어야 한다 —
+ * 이 화면에 오는 이유는 여전히 "왜 이렇게 묶였나"를 읽기 위해서고, 고치는 것은
+ * 읽고 난 뒤의 일이다. 그래서 작은 글자, 테두리만, 채움 없음.
+ */
+.admin-mini {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 var(--sp-3);
+  border: var(--bd-1) solid var(--c-border-strong);
+  background: var(--c-surface);
+  color: var(--c-text-secondary);
+  font-size: var(--t-min);
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.admin-mini:hover { border-color: var(--c-secondary); color: var(--c-secondary); }
+.admin-mini.primary { border-color: var(--c-secondary); color: var(--c-secondary); }
+.admin-mini.danger:hover { border-color: var(--c-critical); color: var(--c-critical-text); }
+.admin-mini:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+
+/* 아직 파이프라인에 도달하지 않은 판정. 여기서 침묵하면 관리자는 자기가 누른 것이
+   먹혔는지 알 방법이 없고, 같은 판정을 몇 번씩 다시 누른다. */
+.admin-pending {
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--bd-2) solid var(--c-critical);
+  background: var(--c-surface);
+}
+.admin-pending strong { display: block; font-size: var(--t-caption); }
+.admin-pending p { margin: var(--sp-1) 0 0; color: var(--c-text-secondary); font-size: var(--t-min); line-height: 1.6; }
+
+.admin-hint {
+  margin: 0;
+  padding: var(--sp-2) 0;
+  color: var(--c-text-muted);
+  font-size: var(--t-min);
+  line-height: 1.6;
+}
+
+/* 지울 수 있는 칩. topic-chip 과 같은 어법이되 × 를 붙일 자리를 만든다. */
+.admin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 3px var(--sp-1) 3px var(--sp-2);
+  border: var(--bd-1) solid var(--c-border);
+  color: var(--c-text-secondary);
+  font-size: var(--t-min);
+}
+/* 콘솔에서 더한 말. 기본 파일에서 온 것과 구분해야 무엇을 되돌리는지 알고 누른다. */
+.admin-chip.added { border-color: var(--c-secondary); color: var(--c-secondary); }
+.admin-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  min-height: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-text-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.admin-chip-x:hover { color: var(--c-critical-text); }
+.admin-chip-x:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 1px; }
+
+/* 목록 항목 옆에 동작 버튼이 서는 줄. */
+.admin-actions { display: grid; gap: var(--sp-1); margin: 0; padding: 0; list-style: none; }
+.admin-actions li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: var(--bd-1) solid var(--c-border);
+  font-size: var(--t-caption);
+}
+.admin-actions strong { font-weight: 600; }
+.admin-actions small { display: block; color: var(--c-text-muted); font-size: var(--t-min); }
+.admin-members.with-action li { grid-template-columns: 84px minmax(0, 1fr) auto; align-items: start; }
+.admin-members.with-action .admin-mini,
+.admin-members.with-action .admin-badge { grid-column: 3; grid-row: 1 / span 2; align-self: center; }
+
+/* 인라인 폼. 목록 바로 아래에서 열려 문맥을 잃지 않게 한다. */
+.admin-form-slot:empty { display: none; }
+.admin-form {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+  padding: var(--sp-4);
+  border: var(--bd-2) solid var(--c-border-strong);
+  background: var(--c-surface-sunken);
+}
+.admin-form-title { margin: 0; font-size: var(--t-caption); font-weight: 700; }
+.admin-form-buttons { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.admin-field-row { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+.admin-field { display: grid; gap: var(--sp-1); min-width: 0; }
+.admin-field.grow { flex: 1 1 240px; }
+.admin-field > span { color: var(--c-text-muted); font-size: var(--t-min); font-weight: 650; }
+.admin-field > span small { display: block; font-weight: 400; }
+.admin-field input,
+.admin-field select,
+.admin-inline-form input {
+  min-height: 36px;
+  padding: 0 var(--sp-2);
+  border: var(--bd-1) solid var(--c-border-strong);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-size: var(--t-caption);
+}
+.admin-field input:focus-visible,
+.admin-field select:focus-visible,
+.admin-inline-form input:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 1px; }
+.admin-field input[readonly] { color: var(--c-text-muted); }
+.admin-inline-form { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
+.admin-inline-form input { flex: 1 1 200px; min-width: 0; }
+.admin-check { display: flex; align-items: center; gap: var(--sp-2); color: var(--c-text-secondary); font-size: var(--t-min); }
+.admin-check small { color: var(--c-text-muted); }
+
+/* 판별축. 학습에서 제일 위험한 실패는 축을 너무 넓게 잡는 것이라, 고르는 자리
+   바로 아래에 '얼마나 넓은가'를 붙여 둔다 — 저장한 뒤에 알면 늦다. */
+.admin-axis {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: var(--sp-3);
+  border: var(--bd-1) solid var(--c-border);
+}
+.admin-axis legend { padding: 0 var(--sp-1); color: var(--c-text-muted); font-size: var(--t-min); font-weight: 650; }
+.admin-axis legend small { font-weight: 400; }
+.admin-axis-side { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: var(--sp-2); align-items: center; }
+.admin-axis-side > span { color: var(--c-text-muted); font-size: var(--t-min); }
+.admin-axis-side > div { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.admin-chip-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px var(--sp-2);
+  border: var(--bd-1) solid var(--c-border);
+  font-size: var(--t-min);
+  cursor: pointer;
+}
+.admin-chip-toggle:has(input:checked) { border-color: var(--c-secondary); color: var(--c-secondary); }
+.admin-axis-reach { margin: 0; color: var(--c-text-muted); font-size: var(--t-min); line-height: 1.5; }
+.admin-axis-reach.warn { color: var(--c-critical-text); font-weight: 650; }
+.admin-axis-view { display: grid; gap: var(--sp-2); }
+.admin-axis-view > div { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: var(--sp-2); align-items: start; }
+.admin-axis-view span { color: var(--c-text-muted); font-size: var(--t-min); }
+
+.admin-filter-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.admin-filter {
+  min-height: 32px;
+  padding: 0 var(--sp-3);
+  border: var(--bd-1) solid var(--c-border);
+  background: transparent;
+  color: var(--c-text-muted);
+  font-size: var(--t-min);
+  cursor: pointer;
+}
+.admin-filter.active { border-color: var(--c-secondary); color: var(--c-secondary); font-weight: 650; }
+
+/* 저장 결과. 화면 어디서 눌렀든 한 자리에서 말한다 — 버튼 옆에 두면 목록을
+   다시 그릴 때 메시지도 같이 사라져 "저장이 됐나?"가 남는다. */
+.admin-toast {
+  position: fixed;
+  z-index: var(--z-topbar);
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  max-width: min(420px, calc(100% - 32px));
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--bd-2) solid var(--c-secondary);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: var(--t-caption);
+  line-height: 1.5;
+}
+.admin-toast.error { border-color: var(--c-critical); color: var(--c-critical-text); }
 
 @media (max-width: 767px) {
   .admin-main { padding: var(--sp-5) 0 var(--sp-16); }
@@ -225,7 +440,21 @@
   }
   .admin-topbar-inner .main-tabs { display: flex; width: 100%; gap: var(--sp-6); }
   .admin-topbar-inner .main-tab { min-height: 40px; }
-  .admin-exit { display: none; }
+  /* 좁은 화면에서도 셋을 다 남긴다. 비밀번호 변경은 자주 쓰지 않지만, 여기서
+     숨기면 '어디서 바꾸지'를 물을 곳이 없다 — 콘솔에는 설정 메뉴가 따로 없다.
+     대신 '서비스 화면'은 브랜드 로고가 같은 곳으로 가므로 중복이라 접는다. */
+  .admin-tools .admin-tool:first-child { display: none; }
+  /* 44px. 40px 이면 엄지로 눌렀을 때 옆 버튼이 같이 잡힌다 — 여기서 잘못 눌리는
+     것은 '잠그기'이고, 그러면 8시간짜리 세션이 날아간다. 폭은 여백만 줄인다. */
+  .admin-tool { min-height: 44px; padding: 0 var(--sp-2); }
+  .admin-actions li { flex-wrap: wrap; }
+  .admin-members.with-action li { grid-template-columns: minmax(0, 1fr); }
+  .admin-members.with-action .admin-mini,
+  .admin-members.with-action .admin-badge { grid-column: 1; grid-row: auto; justify-self: start; }
+  .admin-axis-side { grid-template-columns: minmax(0, 1fr); }
+  .admin-axis-view > div { grid-template-columns: minmax(0, 1fr); }
+  .admin-inline-form { flex-wrap: wrap; }
+  .admin-toast { right: var(--sp-3); left: var(--sp-3); bottom: calc(68px + env(safe-area-inset-bottom)); max-width: none; }
   .admin-card-head { display: grid; }
   .admin-card-scale { text-align: left; }
   /* 라벨 열을 접는다 — 92px 을 떼면 근거 문장이 두세 글자씩 끊긴다. */

@@ -29,17 +29,21 @@
     <nav class="main-tabs" id="adminTabs" aria-label="콘솔 화면">
       <button class="main-tab active" data-panel="merges" aria-pressed="true">병합 진단</button>
       <button class="main-tab" data-panel="config" aria-pressed="false">수집 설정</button>
+      <button class="main-tab" data-panel="judgments" aria-pressed="false">내 판정</button>
     </nav>
-    <div class="header-tools">
-      <a class="global-search-trigger admin-exit" href="/">서비스 화면 →</a>
+    <!-- 헤더 도구 셋. `.icon-button` 을 그대로 쓰면 안 된다 — 그 클래스는 독자
+         화면의 **아이콘 전용** 버튼이라 width:40px 로 못박혀 있고, 글자를 넣으면
+         40px 안에서 세 줄로 접힌다(실측: '비밀번호 변경'). 콘솔의 도구는 전부
+         글자라 폭을 내용에 맡기는 전용 클래스를 쓴다. -->
+    <div class="header-tools admin-tools">
+      <a class="admin-tool" href="/">서비스 화면</a>
       <!-- 변경 화면은 미들웨어가 그린다(functions/admin/_middleware.js). 여기에
-           비밀번호 입력칸을 두면 콘솔이 '읽기 전용'이라는 규칙이 흐려지고, 폼이
-           두 곳에 흩어져 드리프트한다. -->
-      <a class="icon-button admin-password-link" href="/admin/password">비밀번호 변경</a>
+           비밀번호 입력칸을 두면 폼이 두 곳에 흩어져 드리프트한다. -->
+      <a class="admin-tool" href="/admin/password">비밀번호 변경</a>
       <!-- 로그아웃은 GET 링크로 두면 안 된다 — 프리페치·크롤러가 눌러 세션을 끊는다.
            쿠키를 지우는 것은 상태 변경이므로 POST 로 보낸다. -->
       <form method="POST" action="/admin/logout" class="admin-logout">
-        <button class="icon-button" type="submit" aria-label="운영 콘솔 로그아웃">잠그기</button>
+        <button class="admin-tool danger" type="submit" aria-label="운영 콘솔 잠그기">잠그기</button>
       </form>
     </div>
   </div>
@@ -56,6 +60,8 @@
        근거 목록과 검증 배지까지 달고 사실처럼 굳는다. 그래서 이 화면의 기본
        정렬은 '최신'이 아니라 '가장 의심스러운 것'이다. -->
   <section id="panel-merges" class="admin-panel">
+    <div id="mergePending" class="admin-pending" hidden></div>
+
     <section class="admin-section" aria-labelledby="storyMergeTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="storyMergeTitle">같은 날 병합 — story</h2></div>
@@ -99,21 +105,33 @@
   </section>
 
   <!-- ── 수집 설정 ───────────────────────────────────────────────────────
-       읽기 전용이다. 여기서 고칠 수 있게 만들면 저장소(keywords.json ·
-       sources.json · news_bot)와 화면이 갈라지고, 그때부터 둘 다 못 믿는다. -->
+       고칠 수 있다. 다만 저장소 파일을 덮어쓰지 않는다 — 여기서 누른 것은
+       "무엇을 더하고 무엇을 뺐다"라는 항목으로 쌓이고(admin_overrides.py),
+       기본 파일(keywords.json · sources.json)은 그대로 남는다. 그래야 저장소
+       손편집과 콘솔 편집이 서로를 조용히 지우지 않는다. -->
   <section id="panel-config" class="admin-panel" hidden>
+    <div id="configPending" class="admin-pending" hidden></div>
+
     <section class="admin-section" aria-labelledby="keywordConfigTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="keywordConfigTitle">고정 키워드</h2></div>
-        <span class="data-note">keywords.json · 읽기 전용</span>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="keywordConfigTitle">검색 키워드</h2></div>
+        <span class="data-note">keywords.json + 콘솔 편집 · 네이버 검색에 그대로 나갑니다</span>
       </div>
       <div id="keywordStats" class="admin-stats"></div>
       <div id="keywordGroups" class="admin-list"></div>
     </section>
 
+    <section class="admin-section" aria-labelledby="antiConfigTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="antiConfigTitle">공통 제외어</h2></div>
+        <span class="data-note">그룹과 무관하게 제목에 걸리면 버립니다</span>
+      </div>
+      <div id="antiKeywords" class="admin-list"></div>
+    </section>
+
     <section class="admin-section" aria-labelledby="feedConfigTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="feedConfigTitle">수집원</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="feedConfigTitle">수집원</h2></div>
         <span class="data-note">news_bot.RSS_SOURCES · OFFICIAL_DIRECT_SOURCES · pubs_fetch</span>
       </div>
       <div id="feedStats" class="admin-stats"></div>
@@ -122,17 +140,44 @@
 
     <section class="admin-section" aria-labelledby="tierConfigTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="tierConfigTitle">출처 등급</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="tierConfigTitle">출처 등급</h2></div>
         <span class="data-note">sources.json · 선정 점수 가산과 근거 역할을 정합니다</span>
       </div>
       <div id="tierTable"></div>
     </section>
   </section>
+
+  <!-- ── 내 판정 ─────────────────────────────────────────────────────────
+       콘솔에서 누른 것이 전부 여기 한 목록으로 모인다. 학습된 병합 규칙도
+       설정 변경도 같은 항목이라 지우는 경로가 하나다 — "잘못 배운 것 같은데
+       어디서 지우지?"가 생기지 않게. -->
+  <section id="panel-judgments" class="admin-panel" hidden>
+    <section class="admin-section" aria-labelledby="ruleTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="ruleTitle">학습된 판별축</h2></div>
+        <span class="data-note">분리 판정에서 배운 규칙 · 새 사건에도 적용됩니다</span>
+      </div>
+      <div id="learnedRules" class="admin-list"></div>
+    </section>
+
+    <section class="admin-section" aria-labelledby="entryTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="entryTitle">전체 판정 기록</h2></div>
+        <span class="data-note">지우면 그 판단만 사라지고 나머지는 그대로입니다</span>
+      </div>
+      <div id="entryFilters" class="admin-filter-row"></div>
+      <div id="entryList" class="admin-list"></div>
+    </section>
+  </section>
 </main>
+
+<!-- 저장 결과·오류를 말하는 자리. 화면 어디서 눌렀든 여기 한 곳에 뜬다 —
+     버튼 옆마다 메시지를 두면 목록을 다시 그릴 때 같이 사라진다. -->
+<div id="adminToast" class="admin-toast" role="status" aria-live="polite" hidden></div>
 
 <footer class="foot">
   <div class="wrap foot-bottom">
-    <p>운영 콘솔은 읽기 전용입니다 — 설정 변경은 저장소에서 합니다.</p>
+    <p>콘솔에서 내린 판정은 다음 수집(최대 3시간)부터 적용됩니다 — 기본 설정 파일은 저장소에 그대로 남습니다.</p>
     <p id="adminGenerated">생성 시각 확인 중</p>
   </div>
 </footer>

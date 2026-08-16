@@ -77,6 +77,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuclens-audio-
 
+      # 콘솔 판정을 빌드 전에 내려놓는다. 여기서 커밋하지는 않는다(이 워크플로는
+      # 상태 파일을 커밋하지 않는다) — 콘솔 화면이 자기 편집을 그대로 되비추게 하는
+      # 것이 목적이고, 저장소 기록은 crawl·daily-brief 가 남긴다.
+      - name: Sync admin console judgments
+        continue-on-error: true
+        run: python tools/sync_admin_overrides.py
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Build site data
         env:
           # crawl·daily-brief 와 같은 이유로 필요하다 — build_data 의 이슈 병합
@@ -111,6 +121,12 @@ jobs:
       # 아무거나 통과하는데, 어느 쪽이든 배포 뒤에야 알게 된다.
       - name: Admin gate contract
         run: node web/tests/admin_gate.mjs
+
+      # 콘솔이 실제 빌드 산출물로 끝까지 그려지는가. 파이썬 테스트는 JSON 의 모양을
+      # 보지 그 JSON 을 받은 admin.js 가 예외 없이 도는지는 못 본다 — 그 실패는
+      # 흰 화면 하나로만 나타나고 관리자는 '데이터가 없다'로 읽는다.
+      - name: Admin console renders
+        run: node web/tests/admin_render.mjs
 
       # 데이터 지표 게이트는 끈다. 추적률은 "오늘 뉴스가 어떻게 묶였나"의 결과지
       # 화면 코드의 성질이 아니다 — 켜 두면 뉴스가 한산한 날 CSS 오타 수정도

@@ -28,6 +28,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import event_stage
+import admin_overrides
 from sources import credibility
 from story_cluster import (
     choose_display_representative,
@@ -526,6 +527,13 @@ def cluster_duplicates(items: list[dict], scores: dict[str, float],
                 # 제목은 같은 사건처럼 보이지만 단계가 넘어갔다 — 별도 사건으로 둔다.
                 if vetoes is not None:
                     vetoes.append(event_stage.veto_record(rep, art, stage="local_title"))
+                continue
+            # 운영 콘솔에서 사람이 갈라 둔 조합·거기서 배운 판별축. 단계 거부권과
+            # 같은 자리에 서야 한다 — 여기를 통과하면 그 아래에서 되돌릴 곳이 없다.
+            admin_veto = admin_overrides.merge_blocked(rep, art) if rep is not None else None
+            if admin_veto:
+                if vetoes is not None:
+                    vetoes.append({**admin_veto, "stage": "local_title"})
                 continue
             rep_hash = kh
             break

@@ -40,6 +40,9 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `expert_audio_brief.py` | Nuclens 전문가 브리핑: dossier→시간배분→episode plan→1인 전문가 대본→검증/수정→TTS. 길이는 그날 재료가 정한다 (기사 적으면 짧게, 많으면 10분 초과) |
 | `web/build_data.py` + `web/public/` | story 계약을 issue/timeline으로 연결하고 7·30·90·180·365일 흐름과 두 오디오를 Cloudflare Pages에 제공 |
 | `functions/admin/_middleware.js` | 운영 콘솔(`/admin`) 엣지 접근 통제 — 비밀번호(KV)·서명 세션·시도 제한. KV 미연결이면 **잠근다** |
+| `functions/admin/api/overrides.js` | 콘솔의 쓰기 창구 — 사람 판정을 KV 에 적는다(종류 화이트리스트·교차출처 확인·낙관적 동시성) |
+| `admin_overrides.py` + `admin_overrides.json` | 그 판정을 수집·선정에 얹는 **덧칠**. 기본 설정 파일을 덮어쓰지 않는다 |
+| `tools/sync_admin_overrides.py` | KV → `admin_overrides.json`. 워크플로 시작에서 돌고, 실패해도 커밋된 판정을 지우지 않는다 |
 | `scorer.py` `synthesize.py` `send_research.py` | 소셜(last30days) 경로 — 수동 실행 전용 |
 
 ## 상태 파일 (git 이 DB)
@@ -47,6 +50,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | 파일 | 내용 |
 |---|---|
 | `sent.json` | 수집 dedup (URL hash, 14일 보존) |
+| `admin_overrides.json` | 운영 콘솔에서 내린 사람 판정(분리·학습 규칙·수집 설정 편집). KV 에서 끌어와 커밋한다 |
 | `curated.json` | 큐레이션 캐시 (14일) — weekly 의 입력 |
 | `digest_queue.json` | 발송 대기 큐 (발송분만 hash 단위 제거, 3일 자동 정리). 각 항목의 `raw_sources` 는 수집 단계에서 접힌 기사 — 삭제하지 않고 대표에 매단 근거 |
 | `outbox.json` | 오늘의 발송 계획·상태 (pending/sent/failed) — 중복 발송 방지 핵심 |
@@ -108,6 +112,9 @@ V1 에서 가져온 빠른 제목 중복 알고리즘에는 단계 개념이 없
 얼굴인가"(대표 교체)를 같은 화면에서 본다. 분리는 결과물에 아무 흔적을 남기지 않아
 `delivery_log` 의 `record_type: "story_audit"` 줄로만 남는다.
 
+**⑥ 그리고 이제 되짚는 데서 끝나지 않는다** (2026-08-16 후속) — 전문가가 화면에서
+직접 갈라 놓고, 그 판단을 규칙으로 남긴다. 아래 "운영 콘솔에서 고치기" 참조.
+
 회귀 테스트: `python -m unittest tests.test_event_stage tests.test_ranking tests.test_story_dedup`
 
 ## 운영 콘솔 접근 (`/admin`)
@@ -159,6 +166,98 @@ KV 가 안 붙어 있으면 콘솔은 **503 으로 잠긴다.** 통과시키면 
 ```bash
 npx wrangler@4 pages dev web/public --kv ADMIN_KV
 ```
+
+## 운영 콘솔에서 고치기 (2026-08-16)
+
+콘솔은 읽기 전용이었다. 이유는 "화면과 저장소가 갈라지면 둘 다 못 믿는다"였지
+관리자가 설정을 못 고쳐야 한다는 것이 아니었다. 그래서 규칙을 푸는 대신 **갈라짐을
+구조로 막고** 쓰기를 열었다.
+
+### 덮어쓰지 않는다 — 덧칠한다
+
+콘솔에서 누른 것은 항목 하나(`entry`)로 쌓인다. `keywords.json` 도 `sources.json` 도
+그대로 남고, 파이프라인이 읽을 때 그 위에 덧칠된다(`admin_overrides.py`).
+
+- **비파괴적**: 콘솔이 읽은 것은 지난 빌드의 스냅샷이다. 전체 파일을 다시 쓰게
+  하면 그 사이 저장소에서 손으로 고친 내용을 조용히 되돌린다. "무엇을 더하고
+  무엇을 뺐다"만 적으면 손편집과 교환법칙이 성립한다.
+- **되돌릴 수 있다**: 항목을 지우면 그 판단만 사라지고 정확히 기본 동작으로 간다.
+- **한 통에 모인다**: 학습된 병합 규칙도 키워드 편집도 같은 목록이라 지우는
+  경로가 하나다 — "잘못 배운 것 같은데 어디서 지우지?"가 생기지 않게.
+
+### 흐름 — KV 는 버퍼, git 은 여전히 DB
+
+```
+콘솔 화면 → POST /admin/api/overrides → Cloudflare KV
+                                          ↓  (워크플로 시작)
+                        tools/sync_admin_overrides.py
+                                          ↓
+                        admin_overrides.json (커밋됨)
+                                          ↓
+      news_bot · ranking · dedup · build_data 가 읽는다
+```
+
+엣지에서 저장소로 직접 쓰지 않는다 — 그러려면 GitHub 쓰기 토큰을 엣지에 둬야 하고,
+콘솔 비밀번호 하나가 저장소 쓰기로 번진다. 대신 KV 에 쌓고 워크플로가 커밋하므로
+판정 하나하나가 커밋 이력에 남는다.
+
+**그래서 즉시 적용되지 않는다.** 다음 수집(최대 3시간)부터 듣는다. 화면은 그 사실을
+숨기지 않고 "다음 수집부터"로 표시하며, 바로 적용하려면 `crawl` 워크플로를 수동
+실행한다. KV 를 못 읽으면 **마지막으로 커밋된 판정을 그대로 쓴다** — 실패했다고 빈
+파일을 쓰면 몇 주치 판정이 네트워크 오류 한 번에 사라지고 그 사고는 조용하다.
+
+### 할 수 있는 것 / 못 하는 것
+
+| 화면 | 할 수 있는 것 | 못 하는 것과 이유 |
+|---|---|---|
+| 병합 진단 (같은 날) | 잘못 묶인 기사 **분리** + 판별축 학습 | **소급 안 됨.** 이미 나간 회차 카드는 그대로다 — 접힌 기사는 아카이브에 별도 레코드가 없어 되살릴 재료가 없다. 다른 카드로 **붙이기**도 없다: 대표 선정·`story_outlet_count`·검증 배지가 발송 파이프라인 안에서 한 번에 계산되므로 사후 결합은 `delivery_log`(append-only)와 아카이브를 되써야 한다 |
+| 병합 진단 (이슈) | **분리**와 **붙이기** 둘 다 | — (`issue_match_overrides.json` 의 approved/rejected 와 같은 통에 붓는다) |
+| 수집 설정 | 검색 키워드·앵커·제외어·공통 제외어 추가/삭제, RSS 수집원 추가/중지, 출처 등급·성격·근거 역할 수정 | **기관 직접 수집은 중지만.** 게시판마다 전용 파서(`kind`)가 코드에 있어야 읽히는데, 화면에서 주소만 넣게 하면 파서 없는 항목이 매 수집마다 조용히 0건을 내고 그건 '그 기관이 조용한 날'과 구분되지 않는다 |
+
+### 학습 — 쌍 차단이 아니라 판별축
+
+기사 hash 쌍을 막는 것은 *기록*이지 학습이 아니다. 같은 기사가 다시 오지 않으므로
+그 쌍은 두 번 만나지 않는다(수집 dedup 이 14일 막는다). 실제로 앞을 바꾸는 것은
+분리할 때 함께 저장하는 **판별축**이다.
+
+```
+"고리 2호기 계속운전 심사"  ↔  "한빛 3호기 계속운전 심사"
+      왼쪽 축: 고리 2호기          오른쪽 축: 한빛 3호기
+→ 앞으로 한쪽이 왼쪽 축만, 다른 쪽이 오른쪽 축만 말하면 접지 않는다
+```
+
+발동 조건은 `event_stage.stage_conflict` 와 **같은 보수성**이다 — 양쪽 다 말했고
+겹치는 축이 하나도 없을 때만. 한쪽이 침묵하거나 두 축을 다 말하면 판정하지 않는다.
+규칙 하나를 잘못 배워도 무관한 사건까지 갈라 놓지 않게 하는 것이 여기서 제일 중요하다.
+
+**과적용이 유일한 위험**이라 화면이 넓이를 계속 보여 준다. 축을 고르는 동안에는
+현재 화면 자료에서 몇 건에 걸리는지가 즉시 뜨고, 저장한 뒤에는 '내 판정' 탭이
+최근 30일 기준 실측(`left_only ↔ right_only`)을 붙인다. 수십 건씩이면 지울 규칙이다.
+
+거부권이 서는 곳은 접는 곳 전부다 — 수집 퍼지 제목·수집 임베딩(`news_bot`),
+제목/설비 중복(`ranking.cluster_duplicates`), LLM story 판정(`dedup`), 그리고
+이슈 매칭(`build_data`). 한 곳이라도 빠지면 그 경로로 그대로 접힌다
+(`tests/test_admin_overrides.py` 가 네 곳을 전부 잠근다).
+
+### 1회 설정 — 토큰 권한 하나
+
+동기화는 배포에 이미 쓰는 `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` 를
+그대로 쓴다. 다만 그 토큰에 권한 두 가지가 필요하다.
+
+- **Workers KV Storage: Read** — 판정을 읽는다
+- **Cloudflare Pages: Read** — `ADMIN_KV` 네임스페이스 ID 를 프로젝트 바인딩에서
+  찾아낸다 (사람이 설정할 값을 늘리지 않으려는 것. 못 찾으면 `ADMIN_KV_NAMESPACE_ID`
+  를 직접 줄 수도 있다)
+
+권한이 없으면 워크플로 로그에 그 사실이 찍히고 **수집은 그대로 돈다** — 콘솔 편집만
+반영되지 않는다. 로컬 확인:
+
+```bash
+CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... python tools/sync_admin_overrides.py
+```
+
+회귀 테스트: `python -m unittest tests.test_admin_overrides` ·
+`node web/tests/admin_gate.mjs` · `node web/tests/admin_render.mjs`
 
 ## 발송 원자성 (outbox 패턴)
 

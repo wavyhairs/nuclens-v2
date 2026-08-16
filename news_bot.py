@@ -45,6 +45,7 @@ from embedding_pipeline import (
     save_cache as save_embedding_store,
 )
 import event_stage
+import admin_overrides
 from story_cluster import attach_raw_source, consolidate_story_metadata, raw_sources_of
 
 # 비밀값은 '환경변수 먼저, 없으면 .env' 로 찾는다. 이 규칙의 단일 구현이
@@ -300,6 +301,18 @@ ANTI_KEYWORDS: list[str] = [
     "동호회", "체육대회", "야유회",
     "청사 이전", "사옥 이전", "조직 개편 안내",
 ]
+
+# ---- 운영 콘솔 덧칠 ---------------------------------------------------------
+# 위 세 목록(RSS_SOURCES · OFFICIAL_DIRECT_SOURCES · ANTI_KEYWORDS)은 코드 상수라
+# 예전에는 배포 없이 바꿀 방법이 없었다. `/admin` 의 수집 설정에서 더하거나 끈 것을
+# 여기서 한 번 얹는다 — **정의 직후**에 얹어야 이 모듈을 임포트해서 목록을 읽는
+# 쪽(web/build_data 의 콘솔 데이터, 테스트)이 실제 수집과 같은 것을 본다.
+#
+# 덧칠 자체가 실패해도 수집은 기본 목록으로 계속 돈다(admin_overrides 계약).
+RSS_SOURCES = admin_overrides.rss_sources(RSS_SOURCES)
+OFFICIAL_DIRECT_SOURCES = admin_overrides.official_sources(OFFICIAL_DIRECT_SOURCES)
+ANTI_KEYWORDS = admin_overrides.anti_keywords(ANTI_KEYWORDS)
+
 MIN_DESCRIPTION_LEN = 30  # 본문 길이 필터 - 이보다 짧으면 stub으로 보고 드롭
 
 KR_SLD = (".co.kr", ".or.kr", ".go.kr", ".ne.kr", ".re.kr", ".ac.kr")
@@ -717,6 +730,12 @@ def semantic_dedup(articles: list[dict], emb_cache: dict,
                 if vetoes is not None:
                     vetoes.append(event_stage.veto_record(
                         kept_art, art, stage="collect_embedding"))
+                continue
+            # 사람이 이미 "다른 사건"이라고 판정한 조합·학습된 판별축.
+            admin_veto = admin_overrides.merge_blocked(kept_art, art)
+            if admin_veto:
+                if vetoes is not None:
+                    vetoes.append({**admin_veto, "stage": "collect_embedding"})
                 continue
             attach_raw_source(kept_art, art, stage="collect_embedding",
                               reason="임베딩 의미 중복", similarity=similarity)
@@ -2445,7 +2464,15 @@ def format_must_read(article: dict, curation: dict) -> str:
 
 
 def main() -> None:
-    config = json.loads(KEYWORDS_FILE.read_text(encoding="utf-8"))
+    # keywords.json 이 기본이고, 콘솔에서 더하거나 뺀 말이 그 위에 얹힌다.
+    # 덧칠은 파일을 덮어쓰지 않는다 — 저장소 손편집과 콘솔 편집이 서로를 지우지
+    # 않게 하려는 것이 이 구조의 목적이다(admin_overrides 모듈 주석).
+    config = admin_overrides.keywords_config(
+        json.loads(KEYWORDS_FILE.read_text(encoding="utf-8")))
+    overlay = admin_overrides.summary()
+    if overlay["total"]:
+        print(f"[admin] 콘솔 판정 {overlay['total']}건 적용 "
+              f"(동기화 {overlay['synced_at'] or '기록 없음'})")
     state = load_state()
     curated = load_curated()
     queue = load_queue()
@@ -2526,6 +2553,10 @@ def main() -> None:
             if event_stage.stage_conflict(stages, event_stage.article_stages(kept_art)):
                 stage_vetoes.append(event_stage.veto_record(
                     kept_art, art, stage="collect_fuzzy_title"))
+                continue
+            admin_veto = admin_overrides.merge_blocked(kept_art, art)
+            if admin_veto:
+                stage_vetoes.append({**admin_veto, "stage": "collect_fuzzy_title"})
                 continue
             rep = kept_art
             break
