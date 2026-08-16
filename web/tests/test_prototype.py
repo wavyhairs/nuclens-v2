@@ -2660,6 +2660,61 @@ class GeneratedDataTests(unittest.TestCase):
         self.assertIn("function renderSlopeGraph", script)
         self.assertIn('class="slope-series"', script)
 
+    def test_screen_copy_uses_no_internal_story_jargon(self):
+        """'story' 는 파이프라인 내부 용어다 — 화면에는 '선정 사건'으로 나간다.
+
+        같은 날 여러 매체가 쓴 같은 사건을 하나로 접은 단위를 코드는 story 라
+        부르지만, 읽는 사람에게 story 는 '기사'인지 '연재'인지 알 수 없는 말이다.
+        필드 이름(story_count 등)은 그대로 두고 **눈에 보이는 문구만** 바꾼다.
+        """
+        html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        # index.html 은 주석·태그를 걷어낸 본문 전체를 본다.
+        visible = re.sub(r"<!--.*?-->", " ", html, flags=re.S)
+        visible = re.sub(r"<(script|style)\b.*?</\1>", " ", visible, flags=re.S | re.I)
+        visible = re.sub(r"<[^>]+>", " ", visible)
+        self.assertNotIn("story", visible.lower(), "화면 문구에 내부 용어가 남았다")
+        self.assertIn("중복 보도를 합친 선정 사건 기준", html)
+        # app.js 는 식별자에도 story 가 들어가므로 알려진 문구만 못 박는다.
+        for jargon in ("브리핑 story", "briefing story", "story-level", "story-v2",
+                       "동일 story", "복수매체 story", "선정 story", "story ${"):
+            self.assertNotIn(jargon, script, jargon)
+        for phrase in ("동일 사건 중복 보도 제거", "선정 사건 ", "동일 사건 보도 "):
+            self.assertIn(phrase, script, phrase)
+
+    def test_keyword_comparison_follows_the_period_toggle(self):
+        """7일/30일/분기/반기/1년 토글은 키워드 비교의 **비교 상대**까지 바꾼다.
+
+        build_data.py 는 기간마다 자기 직전 구간을 집계해 tag_comparison 에 싣는다.
+        화면이 비교를 붙일지는 기간이 아니라 previous_period_complete 로 정해야
+        한다 — 7일에 묶어 두면 archive 가 길어져도 30일은 영영 비교가 안 붙는다.
+        """
+        html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+        self.assertIn(
+            "const comparisonMode = pdata ? Boolean(pdata.previous_period_complete) : weekMode;",
+            script, "비교 여부를 기간으로 잠그면 안 된다")
+        self.assertIn("function previousPeriodLabel", script)
+        self.assertIn("function previousPeriodRange", script)
+        # 표 머리줄·해석문·모바일 라벨 어디에도 '이번 주/전주'가 박혀 있으면 안 된다.
+        table = script[script.index("function renderKeywordTable"):]
+        table = table[:table.index("\nfunction ")]
+        for hardcoded in ("이번 주", "전주"):
+            self.assertNotIn(hardcoded, table, hardcoded)
+        self.assertIn('id="keywordMeta"', html)
+        self.assertIn("--kw-now-label", script)
+        self.assertIn('content: var(--kw-now-label', style)
+        self.assertIn('content: var(--kw-prev-label', style)
+        # 비교 구간이 없는 기간에서는 빈 칸이 라벨만 남기지 않아야 한다.
+        self.assertIn(".keyword-row > span:empty { display: none; }", style)
+        # 기간마다 previous 창이 실제로 계산돼 나오는가(계약 확인).
+        periods = json.loads((DATA_DIR / "trend.json").read_text(encoding="utf-8"))["periods"]
+        for days in ("7", "30", "90", "180", "365"):
+            self.assertIn("previous_period_complete", periods[days], days)
+            self.assertIn("requested_start", periods[days], days)
+            self.assertEqual(len(periods[days]["tag_comparison"]) <= 12, True, days)
+
     def test_p2_archive_tracking_sort_filters_and_highlight_exist(self):
         html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
         script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
