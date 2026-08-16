@@ -1,0 +1,232 @@
+/* 운영 콘솔 전용 배치.
+ *
+ * 색·간격·타입은 style.css 의 토큰을 그대로 쓴다. 콘솔이 자기 팔레트를 가지면
+ * 같은 데이터가 두 화면에서 다른 것으로 읽히고, 밝기 모드 전환도 두 벌이 된다.
+ * 여기 있는 것은 콘솔에만 있는 형태뿐이다 — 지표 타일, 판단 근거 블록, 진단 표.
+ *
+ * 어법도 지면을 따른다: 라운드 0, 그림자 없음, 위계는 테두리 굵기로.
+ */
+
+.admin-body { min-height: 100vh; }
+.admin-topbar-inner { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+.admin-exit {
+  justify-content: center;
+  width: auto;
+  padding: 0 var(--sp-3);
+  color: rgb(255 255 255 / 82%);
+  font-size: var(--t-min);
+}
+.admin-exit:hover { text-decoration: none; color: #fff; }
+
+.admin-main { padding: var(--sp-8) 0 var(--sp-16); }
+.admin-panel { display: grid; gap: var(--sp-12); }
+.admin-section { display: grid; gap: var(--sp-4); }
+
+/* 지표 타일. 숫자만 크게 세우고 아래에 '무엇을 센 값인가'를 붙인다 —
+   라벨 없는 숫자는 관리자에게 아무것도 말하지 않는다. */
+/* 칸 사이 선은 gap 이 아니라 각 칸의 테두리로 긋는다. gap 을 선으로 쓰면 마지막
+   줄에 남는 빈 칸까지 선 색으로 칠해져(실측 390px: 5칸을 2열에 넣어 회색 덩어리
+   하나가 생겼다) 없는 지표가 하나 있는 것처럼 보인다. */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  border: var(--bd-2) solid var(--c-border-strong);
+  background: var(--c-surface);
+}
+.admin-stat {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-3);
+  border-right: var(--bd-1) solid var(--c-border);
+  border-bottom: var(--bd-1) solid var(--c-border);
+}
+.admin-stat > span { color: var(--c-text-muted); font-size: var(--t-min); }
+.admin-stat > strong { font-size: 21px; font-variant-numeric: tabular-nums; }
+.admin-stat > small { color: var(--c-text-muted); font-size: var(--t-min); line-height: 1.45; }
+
+.admin-list { display: grid; gap: var(--sp-4); }
+.admin-card {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: var(--bd-2) solid var(--c-border);
+  background: var(--c-surface);
+}
+.admin-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-5); }
+.admin-card-head h3 { margin: var(--sp-1) 0 0; font-size: 17px; line-height: 1.4; }
+.admin-card-head h4 { margin: 0; font-size: var(--t-caption); }
+.admin-card-scale {
+  display: grid;
+  flex: none;
+  margin: 0;
+  color: var(--c-text-secondary);
+  font-size: var(--t-caption);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.admin-card-scale small { color: var(--c-text-muted); font-size: var(--t-min); }
+.admin-kicker { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin: 0; color: var(--c-text-muted); font-size: var(--t-min); }
+
+.admin-badge {
+  padding: 2px var(--sp-2);
+  border: var(--bd-1) solid var(--c-border-strong);
+  color: var(--c-text-secondary);
+  font-size: var(--t-min);
+  font-weight: 650;
+  white-space: nowrap;
+}
+/* 주의를 끌어야 하는 것에만. 라임은 지면 평면에 셋까지라는 규칙이 있어
+   여기서는 경고색 테두리로만 구분한다 — 콘솔이 형광펜이 되면 안 된다. */
+.admin-badge.warn { border-color: var(--c-critical); color: var(--c-critical-text); }
+.admin-badge.muted { border-color: var(--c-border); color: var(--c-text-muted); }
+
+/* 판단 근거. 이 화면의 핵심이라 라벨 열을 주고 본문 크기로 세운다 —
+   상세의 해석 블록(.dialog-meaning)과 같은 어법이다. */
+.admin-reason {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: var(--sp-5);
+  margin: 0;
+  padding: var(--sp-3) 0;
+  border-top: var(--bd-1) solid var(--c-border);
+  color: var(--c-text);
+  font-size: var(--t-body);
+  line-height: 1.7;
+}
+.admin-reason > strong { color: var(--c-text-muted); font-size: var(--t-min); font-weight: 700; line-height: 1.7; }
+.admin-reason.empty { color: var(--c-text-muted); }
+.admin-reason code { font-size: var(--t-caption); word-break: break-all; }
+
+/* 사건 지문 — LLM 이 무엇을 보고 같은 사건이라 했는지의 축. */
+.admin-fingerprint {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  gap: var(--sp-2) var(--sp-5);
+  margin: 0;
+  padding: var(--sp-3);
+  border: var(--bd-1) solid var(--c-border);
+  background: var(--c-surface-sunken);
+}
+.admin-fingerprint div { display: grid; gap: 1px; min-width: 0; }
+.admin-fingerprint dt { color: var(--c-text-muted); font-size: var(--t-min); }
+.admin-fingerprint dd { margin: 0; font-size: var(--t-caption); line-height: 1.5; }
+
+.admin-evidence > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  color: var(--c-secondary);
+  font-size: var(--t-caption);
+  cursor: pointer;
+}
+/* display:flex 가 기본 펼침 마커를 지운다 — 직접 그린다(지면의 접기 어법). */
+.admin-evidence > summary::-webkit-details-marker { display: none; }
+.admin-evidence > summary::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--mo-fast, 120ms) ease;
+}
+.admin-evidence[open] > summary::before { transform: rotate(45deg); }
+@media (prefers-reduced-motion: reduce) {
+  .admin-evidence > summary::before { transition: none; }
+}
+.admin-evidence > summary:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+
+.admin-titles, .admin-sources, .admin-members { margin: 0; padding: 0 0 var(--sp-2); list-style: none; }
+.admin-titles li {
+  padding: var(--sp-2) 0 var(--sp-2) var(--sp-3);
+  border-left: var(--bd-2) solid var(--c-border);
+  color: var(--c-text-secondary);
+  font-size: var(--t-caption);
+  line-height: 1.5;
+}
+.admin-sources li { display: grid; gap: 1px; padding: var(--sp-2) 0; border-bottom: var(--bd-1) solid var(--c-border); font-size: var(--t-caption); }
+.admin-sources small { color: var(--c-text-muted); font-size: var(--t-min); }
+.admin-members li {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 2px var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: var(--bd-1) solid var(--c-border);
+  font-size: var(--t-caption);
+}
+.admin-members time { color: var(--c-text-muted); font-size: var(--t-min); font-variant-numeric: tabular-nums; }
+.admin-members small { grid-column: 2; color: var(--c-text-muted); font-size: var(--t-min); }
+
+.admin-rules { border: var(--bd-1) solid var(--c-border); padding: 0 var(--sp-3); background: var(--c-surface); }
+.admin-rules > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--c-secondary);
+  font-size: var(--t-caption);
+  cursor: pointer;
+}
+.admin-rule-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-4);
+}
+.admin-rule { display: grid; align-content: start; gap: var(--sp-1); }
+.admin-rule .admin-badge { justify-self: start; }
+.admin-rule p { margin: 0; color: var(--c-text-secondary); font-size: var(--t-min); line-height: 1.5; }
+.admin-rule small { color: var(--c-text-muted); font-size: var(--t-min); }
+
+/* 진단 표는 넓다. 지면이 가로로 밀리는 대신 표 안에서만 스크롤한다. */
+.admin-table-scroll { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: var(--t-min); }
+.admin-table th, .admin-table td {
+  /* 양쪽 여백. 오른쪽 정렬 숫자 옆에 왼쪽 정렬 글자가 오면 둘이 붙어 한 값처럼
+     읽힌다(실측: 임베딩 0.30 과 지문 일치 —). 첫 열만 지면에 맞춰 흘려 둔다. */
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: var(--bd-1) solid var(--c-border);
+  text-align: left;
+  vertical-align: top;
+}
+.admin-table th:first-child, .admin-table td:first-child { padding-left: 0; }
+.admin-table th:last-child, .admin-table td:last-child { padding-right: 0; }
+.admin-table th { color: var(--c-text-muted); font-weight: 650; white-space: nowrap; }
+/* 숫자 열은 오른쪽 정렬이다 — 머리글만 왼쪽에 두면 어느 숫자가 어느 열인지
+   눈으로 못 따라간다. th 와 td 가 같은 클래스를 쓰게 해서 어긋날 수 없게 한다. */
+.admin-table th.num,
+.admin-table td.num { text-align: right; white-space: nowrap; }
+.admin-table td.num { font-variant-numeric: tabular-nums; }
+.admin-table small { display: block; color: var(--c-text-muted); }
+.admin-table.borderline td { max-width: 280px; }
+.admin-table a { color: var(--c-secondary); }
+
+.admin-chip-block { display: grid; gap: var(--sp-2); }
+.admin-link { margin: 0; font-size: var(--t-caption); }
+.admin-link a { color: var(--c-secondary); }
+
+@media (max-width: 767px) {
+  .admin-main { padding: var(--sp-5) 0 var(--sp-16); }
+  .admin-panel { gap: var(--sp-8); }
+  /* 독자 앱은 좁은 화면에서 상단 탭을 접고 하단 고정 탭으로 옮긴다(.mobile-tabs).
+     콘솔에는 그 하단 바가 없다 — 접기만 물려받으면 '수집 설정'으로 갈 길이
+     통째로 사라진다(실측 390px: 탭이 안 보였다). 여기서는 줄을 하나 내준다. */
+  .admin-body .topbar { height: auto; }
+  .admin-topbar-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2) var(--sp-4);
+    padding-block: var(--sp-2);
+  }
+  .admin-topbar-inner .main-tabs { display: flex; width: 100%; gap: var(--sp-6); }
+  .admin-topbar-inner .main-tab { min-height: 40px; }
+  .admin-exit { display: none; }
+  .admin-card-head { display: grid; }
+  .admin-card-scale { text-align: left; }
+  /* 라벨 열을 접는다 — 92px 을 떼면 근거 문장이 두세 글자씩 끊긴다. */
+  .admin-reason { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
+  .admin-members li { grid-template-columns: minmax(0, 1fr); }
+  .admin-members small { grid-column: 1; }
+  .admin-table.borderline td { max-width: 200px; }
+}

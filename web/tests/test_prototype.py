@@ -5382,6 +5382,173 @@ class WebFontWeightTests(unittest.TestCase):
         chrome += (ROOT / "public" / "app.js").read_text(encoding="utf-8")
         lost = {c for c in chrome if 0xAC00 <= ord(c) <= 0xD7A3 and ord(c) not in cmap}
         self.assertEqual(lost, set(), f"화면 문구가 빠졌다: {sorted(lost)[:20]}")
+        # 운영 콘솔도 같은 폰트를 쓴다 — 한글이 빠지면 진단 화면만 두부가 된다.
+        console = (ROOT / "public" / "admin" / "index.html").read_text(encoding="utf-8")
+        console += (ROOT / "public" / "admin" / "admin.js").read_text(encoding="utf-8")
+        lost_console = {c for c in console if 0xAC00 <= ord(c) <= 0xD7A3 and ord(c) not in cmap}
+        self.assertEqual(lost_console, set(), f"콘솔 문구가 빠졌다: {sorted(lost_console)[:20]}")
+
+
+class AdminConsoleTests(unittest.TestCase):
+    """운영 콘솔(/admin) — 오병합을 사람이 되짚는 자리.
+
+    이 서비스에서 더 위험한 실패는 누락이 아니라 오병합이다. 놓친 기사는 다음
+    회차에 다시 들어오지만, 서로 다른 사건이 한 카드로 붙으면 그 카드가 근거
+    목록과 검증 배지까지 달고 사실처럼 굳는다. 그 판단을 볼 화면이 없으면
+    아무도 못 잡는다.
+    """
+
+    ADMIN = ROOT / "public" / "admin"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (cls.ADMIN / "index.html").read_text(encoding="utf-8")
+        cls.script = (cls.ADMIN / "admin.js").read_text(encoding="utf-8")
+        cls.style = (cls.ADMIN / "admin.css").read_text(encoding="utf-8")
+        now = datetime.now(timezone(timedelta(hours=9)))
+        news = json.loads((DATA_DIR / "news.json").read_text(encoding="utf-8"))
+        issues = json.loads((DATA_DIR / "issues.json").read_text(encoding="utf-8"))
+        audit = json.loads((DATA_DIR / "issue_audit.json").read_text(encoding="utf-8"))
+        cls.merges = build_data.build_admin_merges(news, issues, audit, now)
+        cls.config = build_data.build_admin_config(now)
+
+    def test_merge_rules_cover_every_method_the_matcher_can_emit(self):
+        """규칙표에 없는 method 가 나오면 화면이 영문 식별자를 그대로 뱉는다.
+
+        `none` 은 규칙이 아니라 '아무 규칙도 안 걸렸다'는 뜻이라 제외한다 —
+        그 쌍은 애초에 병합되지 않는다.
+        """
+        source = (ROOT / "build_data.py").read_text(encoding="utf-8")
+        emitted = set(re.findall(r'method = True, "(\w+)"', source))
+        emitted |= set(re.findall(r'"method": "(\w+)"', source))
+        emitted |= {"blocked"}
+        emitted.discard("none")
+        known = {rule["id"] for rule in build_data.MERGE_RULES}
+        self.assertEqual(emitted - known, set(), "규칙표에 빠진 method")
+
+    def test_merge_rule_thresholds_are_the_ones_the_matcher_uses(self):
+        """화면이 옛 숫자를 말하면 진단이 아니라 오해가 된다 — 상수 하나를 공유한다."""
+        source = (ROOT / "build_data.py").read_text(encoding="utf-8")
+        # 문턱이 매칭부에 리터럴로 되돌아오면 규칙표와 갈라진다.
+        matcher = source[source.index("    if not blocked_by:"):source.index("    elif blocked_by:")]
+        self.assertNotRegex(matcher, r">= 0\.\d+", "매칭부에 숫자가 다시 박혔다")
+        detail = next(r["detail"] for r in build_data.MERGE_RULES if r["id"] == "title")
+        self.assertIn(str(build_data.TITLE_MATCH_RATIO), detail)
+        embedding = next(r["detail"] for r in build_data.MERGE_RULES if r["id"] == "embedding")
+        self.assertIn(str(build_data.ISSUE_EMBEDDING_THRESHOLD), embedding)
+
+    def test_story_merges_carry_the_reason_and_the_folded_titles(self):
+        """점수만 있으면 '왜'를 못 읽고, 결국 아무도 검토하지 않는다.
+
+        접힌 형제 제목이 진짜 증거다 — 제목들이 서로 다른 사건으로 읽히면
+        그게 오병합이고, 사람은 그걸 한눈에 안다. 지표는 못 한다.
+        """
+        story = self.merges["story"]
+        for key in ("contract_version", "totals", "by_date", "merges"):
+            self.assertIn(key, story)
+        for key in ("merge", "duplicate", "single", "folded_articles"):
+            self.assertIn(key, story["totals"])
+        for row in story["merges"]:
+            self.assertIn(row["relation"], ("merge", "duplicate"))
+            self.assertGreaterEqual(row["article_count"], 1)
+            for key in ("reason", "fingerprint", "related_titles", "sources", "title"):
+                self.assertIn(key, row)
+        # 날짜 집계가 빈 문자열 한 칸으로 뭉치면 안 된다(발송 전 수집분 폴백).
+        self.assertNotIn("", [row["date"] for row in story["by_date"]])
+        self.assertIn("판단 근거", self.script)
+
+    def test_issue_clusters_are_sorted_weakest_link_first(self):
+        """관리자는 위에서부터 훑는다 — 그러면 위가 가장 의심스러워야 한다."""
+        clusters = self.merges["issue"]["clusters"]
+        scores = [c["weakest_score"] for c in clusters if c["weakest_score"] is not None]
+        self.assertEqual(scores, sorted(scores), "약한 연결이 먼저 와야 한다")
+        for cluster in clusters:
+            self.assertGreaterEqual(cluster["member_count"], 2, cluster["issue_id"])
+            for match in cluster["matches"]:
+                self.assertIn("method", match)
+                self.assertIn("blocked_by", match)
+        self.assertIn("rules", self.merges["issue"])
+        self.assertIn("borderline", self.merges["issue"])
+
+    def test_config_reads_the_real_files_not_hand_written_numbers(self):
+        """설정이 바뀌어도 화면이 옛날을 말하면 이 화면을 볼 이유가 없다."""
+        raw = json.loads((ROOT.parent / "keywords.json").read_text(encoding="utf-8"))
+        expected = sum(len(group.get("keywords") or [])
+                       for group in raw.values() if isinstance(group, dict))
+        self.assertEqual(self.config["keywords"]["totals"]["keywords"], expected)
+        self.assertEqual(len(self.config["feeds"]["rss"]), len(news_bot.RSS_SOURCES))
+        self.assertEqual(len(self.config["feeds"]["official"]),
+                         len(news_bot.OFFICIAL_DIRECT_SOURCES))
+        self.assertEqual(self.config["anti_keywords"], list(news_bot.ANTI_KEYWORDS))
+        self.assertFalse(self.config["feeds"]["error"], self.config["feeds"]["error"])
+        # 직접 피드와 Google News 우회는 신뢰도가 다르다 — 같은 것으로 보이면 안 된다.
+        self.assertEqual({row["via"] for row in self.config["feeds"]["rss"]},
+                         {"direct", "google_news"})
+        # 같은 기관이 약칭 유무로 두 번 서면 기관 수가 두 배로 보인다.
+        bases = [org.split("(")[0].strip() for org in self.config["publications"]["orgs"]]
+        self.assertEqual(len(bases), len(set(bases)), self.config["publications"]["orgs"])
+
+    def test_the_console_is_read_only_and_kept_out_of_the_reader_app(self):
+        """여기서 설정을 고칠 수 있게 만들면 저장소와 화면이 갈라진다.
+
+        독자 앱과도 분리한다 — 합치면 독자가 받는 번들에 아무도 안 보는 진단
+        코드가 얹히고, 콘솔을 고칠 때마다 독자 화면 회귀를 걱정하게 된다.
+        """
+        self.assertIn("읽기 전용", self.html)
+        for tag in ("<form", "<input", "<textarea", "method=\"post\""):
+            self.assertNotIn(tag, self.html.lower(), tag)
+        self.assertNotIn("admin", (ROOT / "public" / "index.html").read_text(encoding="utf-8"))
+        self.assertNotIn("admin_merges", (ROOT / "public" / "app.js").read_text(encoding="utf-8"))
+        self.assertIn('content="noindex,nofollow"', self.html)
+        self.assertIn("Disallow: /", (ROOT / "public" / "robots.txt").read_text(encoding="utf-8"))
+        # 진단 화면이 옛 판단을 보여 주면 볼 이유가 없다.
+        self.assertIn("/admin/*", (ROOT / "public" / "_headers").read_text(encoding="utf-8"))
+
+    def test_the_console_keeps_its_tabs_on_narrow_screens(self):
+        """독자 앱은 좁은 화면에서 상단 탭을 접고 하단 고정 탭으로 옮긴다.
+
+        콘솔에는 그 하단 바가 없다 — 접기만 물려받으면 '수집 설정'으로 갈 길이
+        통째로 사라진다(실측 390px: 탭이 아예 안 보였다).
+        """
+        self.assertIn(".main-tabs { display: none; }",
+                      (ROOT / "public" / "style.css").read_text(encoding="utf-8"))
+        self.assertIn(".admin-topbar-inner .main-tabs { display: flex;", self.style)
+        for panel in ("merges", "config"):
+            self.assertIn(f'data-panel="{panel}"', self.html)
+            self.assertIn(f'id="panel-{panel}"', self.html)
+
+    def test_the_console_escapes_everything_it_renders(self):
+        """제목·판단 근거는 LLM 과 매체가 쓴 문자열이다 — 그대로 innerHTML 에 붙는다.
+
+        데이터 객체의 필드를 꺼내 쓰는 `${...}` 는 전부 esc()/ratio()/chips()/stat()
+        을 거쳐야 한다. 지역 변수(계산된 개수·URL 조각)는 이 규칙 밖이라 데이터
+        접근만 골라 본다 — 중괄호를 세어 맞추므로 중첩 템플릿에도 걸린다.
+        """
+        self.assertIn("function esc(", self.script)
+        safe = ("esc(", "ratio(", "chips(", "stat(")
+        # 자유 문자열 필드만 본다. 건수·비율은 빌드가 만든 숫자라 위험이 없고,
+        # 그것까지 걸면 규칙이 시끄러워져 아무도 안 고치게 된다. 여기 이름들은
+        # LLM(제목·판단 근거)과 매체(발행처·도메인)가 쓴 값이다.
+        data = re.compile(
+            r"\.(?:title|reason|publisher|name|domain|identity|stage|issue_id"
+            r"|left_title|right_title|label|detail|negative_terms|event_family"
+            r"|kind|source_type|evidence_role|url|tag)\b"
+        )
+        leaked = []
+        for start in (index for index, _ in enumerate(self.script) if self.script.startswith("${", index)):
+            depth, cursor = 0, start + 1
+            while cursor < len(self.script):
+                if self.script[cursor] == "{":
+                    depth += 1
+                elif self.script[cursor] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                cursor += 1
+            expression = self.script[start + 2:cursor]
+            if data.search(expression) and not any(helper in expression for helper in safe):
+                leaked.append(expression.strip()[:70])
+        self.assertEqual(leaked, [], f"이스케이프 없이 붙는 값: {leaked}")
 
 
 if __name__ == "__main__":

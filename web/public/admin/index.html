@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#12251e">
+  <title>운영 콘솔 · Nuclens⁺</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/pretendard/v1.3.9/PretendardVariable.subset.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- 독자 화면과 같은 토큰·기본 조판을 쓴다. 콘솔만 다른 디자인 언어를 쓰면
+       "이건 같은 데이터인가"를 매번 다시 묻게 된다. 콘솔 전용 배치만 admin.css. -->
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body class="admin-body">
+<a class="skip-link" href="#adminMain">본문으로 바로가기</a>
+
+<header class="topbar">
+  <div class="wrap topbar-inner admin-topbar-inner">
+    <a class="brand" href="/" aria-label="Nuclens 플러스 오늘 브리핑">
+      <span class="brand-mark" aria-hidden="true">N</span>
+      <span class="brand-copy">
+        <strong>NUCLENS<sup aria-hidden="true">+</sup></strong>
+        <small>운영 콘솔 · 관리자용</small>
+      </span>
+    </a>
+    <nav class="main-tabs" id="adminTabs" aria-label="콘솔 화면">
+      <button class="main-tab active" data-panel="merges" aria-pressed="true">병합 진단</button>
+      <button class="main-tab" data-panel="config" aria-pressed="false">수집 설정</button>
+    </nav>
+    <div class="header-tools">
+      <a class="global-search-trigger admin-exit" href="/">서비스 화면 →</a>
+    </div>
+  </div>
+</header>
+
+<main id="adminMain" class="wrap admin-main">
+  <div id="adminStatus" class="readiness-panel" role="status" aria-live="polite">
+    <div><strong>운영 데이터를 불러오고 있습니다</strong><p>admin_merges.json · admin_config.json</p></div>
+  </div>
+
+  <!-- ── 병합 진단 ───────────────────────────────────────────────────────
+       이 서비스에서 더 위험한 실패는 누락이 아니라 오병합이다. 놓친 기사는
+       다음 회차에 다시 들어오지만, 서로 다른 사건이 한 카드로 붙으면 그 카드가
+       근거 목록과 검증 배지까지 달고 사실처럼 굳는다. 그래서 이 화면의 기본
+       정렬은 '최신'이 아니라 '가장 의심스러운 것'이다. -->
+  <section id="panel-merges" class="admin-panel">
+    <section class="admin-section" aria-labelledby="storyMergeTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="storyMergeTitle">같은 날 병합 — story</h2></div>
+        <span class="data-note">같은 날 여러 매체가 쓴 같은 사건을 하나로 접은 판단입니다</span>
+      </div>
+      <div id="storyStats" class="admin-stats"></div>
+      <div id="storyMerges" class="admin-list"></div>
+    </section>
+
+    <section class="admin-section" aria-labelledby="issueMergeTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="issueMergeTitle">날짜를 넘는 병합 — 이슈</h2></div>
+        <span class="data-note">약한 연결부터 세웁니다 · 점수가 빠듯한 병합이 곧 의심스러운 병합입니다</span>
+      </div>
+      <div id="issueStats" class="admin-stats"></div>
+      <details class="admin-rules">
+        <summary>자동 병합 규칙</summary>
+        <div id="mergeRules" class="admin-rule-list"></div>
+      </details>
+      <div id="issueClusters" class="admin-list"></div>
+    </section>
+
+    <section class="admin-section" aria-labelledby="borderlineTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="borderlineTitle">붙지 않은 경계선</h2></div>
+        <span class="data-note">문턱 바로 아래라 조금만 내리면 붙습니다 · 붙었어야 했는지 여기서 고릅니다</span>
+      </div>
+      <div id="borderline" class="admin-list"></div>
+    </section>
+  </section>
+
+  <!-- ── 수집 설정 ───────────────────────────────────────────────────────
+       읽기 전용이다. 여기서 고칠 수 있게 만들면 저장소(keywords.json ·
+       sources.json · news_bot)와 화면이 갈라지고, 그때부터 둘 다 못 믿는다. -->
+  <section id="panel-config" class="admin-panel" hidden>
+    <section class="admin-section" aria-labelledby="keywordConfigTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="keywordConfigTitle">고정 키워드</h2></div>
+        <span class="data-note">keywords.json · 읽기 전용</span>
+      </div>
+      <div id="keywordStats" class="admin-stats"></div>
+      <div id="keywordGroups" class="admin-list"></div>
+    </section>
+
+    <section class="admin-section" aria-labelledby="feedConfigTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="feedConfigTitle">수집원</h2></div>
+        <span class="data-note">news_bot.RSS_SOURCES · OFFICIAL_DIRECT_SOURCES · pubs_fetch</span>
+      </div>
+      <div id="feedStats" class="admin-stats"></div>
+      <div id="feedTables"></div>
+    </section>
+
+    <section class="admin-section" aria-labelledby="tierConfigTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="tierConfigTitle">출처 등급</h2></div>
+        <span class="data-note">sources.json · 선정 점수 가산과 근거 역할을 정합니다</span>
+      </div>
+      <div id="tierTable"></div>
+    </section>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-bottom">
+    <p>운영 콘솔은 읽기 전용입니다 — 설정 변경은 저장소에서 합니다.</p>
+    <p id="adminGenerated">생성 시각 확인 중</p>
+  </div>
+</footer>
+
+<script src="/admin/admin.js"></script>
+</body>
+</html>
