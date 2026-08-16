@@ -174,7 +174,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-13T21:32:58.761746+00:00"
+    "queued_at": "2026-08-13T21:32:58.761746+00:00",
+    "story_display_hash": "a519ec27d94058f0",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "4a62b340c12dcae7",
@@ -492,51 +495,6 @@
     "queued_at": "2026-08-13T21:32:58.761746+00:00"
   },
   {
-    "hash": "9dac780789493824",
-    "title": "En Roumanie, particuliers et entreprises appelés à économiser l’électricité, après l’arrêt de la centrale nucléaire du pays faute d’eau dans le Danube",
-    "title_kr": "루마니아, 다뉴브강 수위 저하로 원전 가동 중단 후 전력 절약 요청",
-    "link": "https://www.lemonde.fr/planete/article/2026/08/13/en-roumanie-particuliers-et-entreprises-appeles-a-economiser-l-electricite-apres-l-arret-de-la-centrale-nucleaire-du-pays-faute-d-eau-dans-le-danube_6745823_3244.html",
-    "domain": "lemonde.fr",
-    "publisher": "Le Monde",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 2,
-    "feed": "정책",
-    "matched": "Le Monde 에너지",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "루마니아는 다뉴브강 수위 저하로 인해 국내 유일한 원자력 발전소가 가동을 중단하자 개인과 기업에 전력 절약을 요청했다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#기후변화",
-      "#전력시장",
-      "#원전운영"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "incident_safety",
-      "korea_relevance": 1,
-      "market_materiality": 2,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 10,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-13T22:28:57.879845+00:00"
-  },
-  {
     "hash": "6e0f01bbe683d81d",
     "title": "EU's uncertain stance on Russian nuclear fuel holds back investments, Urenco CEO says",
     "title_kr": "유렌코 CEO, EU의 러시아 핵연료 불확실한 입장 투자 저해 지적",
@@ -803,7 +761,10 @@
     "event_date_type": "deadline",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-14T03:20:58.197630+00:00"
+    "queued_at": "2026-08-14T03:20:58.197630+00:00",
+    "story_display_hash": "2bb2250389314760",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "b26f03a0965ec70e",
@@ -1027,7 +988,87 @@
     "event_date_type": "occurrence",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-14T05:22:51.086507+00:00"
+    "queued_at": "2026-08-14T05:22:51.086507+00:00",
+    "story_article_count": 4,
+    "story_article_hashes": [
+      "c671b6f1783eaaba",
+      "e58953de03298e1b",
+      "1ee2c8c92ea5e4da"
+    ],
+    "story_outlet_count": 3,
+    "story_tier1_count": 0,
+    "story_independent_outlet_count": 3,
+    "story_sources": [
+      {
+        "identity": "ainews1.co.kr",
+        "publisher": "ainews1.co.kr",
+        "domain": "ainews1.co.kr",
+        "tier": 3,
+        "evidence_role": "independent"
+      },
+      {
+        "identity": "the-biz.co.kr",
+        "publisher": "the-biz.co.kr",
+        "domain": "the-biz.co.kr",
+        "tier": 3,
+        "evidence_role": "independent"
+      },
+      {
+        "identity": "이뉴스투데이",
+        "publisher": "이뉴스투데이",
+        "domain": "enewstoday.co.kr",
+        "tier": 3,
+        "evidence_role": "independent"
+      }
+    ],
+    "story_related_titles": [
+      "상반기 국내 원전 발전량 17% 감소",
+      "상반기 국내 원전 발전량 17% 감소, 이용률 80.5% 하락",
+      "원전 정비로 석탄 발전 증가, 한전 상반기 이익 17% 감소"
+    ],
+    "story_context": [
+      {
+        "hash": "c671b6f1783eaaba",
+        "title": "상반기 국내 원전 발전량 17% 감소",
+        "summary": "탈원전 백지화 기조에도 불구하고 올해 상반기 국내 원전 발전량이 전년 대비 17% 감소함.",
+        "detail": ""
+      },
+      {
+        "hash": "e58953de03298e1b",
+        "title": "상반기 국내 원전 발전량 17% 감소, 이용률 80.5% 하락",
+        "summary": "올해 상반기 국내 원전 발전량은 82.08TWh로 전년 동기 대비 17.0% 감소했으며, 원전 이용률도 9.9%p 하락한 80.5%를 기록했다.",
+        "detail": "한국전력 전력통계월보에 따르면 올해 상반기 국내 원전 발전량은 82.08TWh로 지난해 같은 기간 98.87TWh보다 16.80TWh(17.0%) 감소했다. 원전 이용률은 지난해 상반기 90.4%에서 올해 80.5%로 9.9%포인트 하락했다. 전체 전력 생산에서 원전이 차지하는 비중은 34.4%에서 28.6%로 5.8%포인트 떨어졌다. 한국수력원자력은 발전량 및 이용률 하락의 주요 원인으로 계획예방정비의 상반기 집중을 꼽았으며, 올해 상반기 원전 정비일수는 1048일로 전년 동기 404일보다 644일 늘었다고 설명했다. 한수원은 하반기에 정비 일정이 추가로 지연되지 않도록 관리하여 이용률을 끌어올릴 방침이다."
+      },
+      {
+        "hash": "1ee2c8c92ea5e4da",
+        "title": "원전 정비로 석탄 발전 증가, 한전 상반기 이익 17% 감소",
+        "summary": "고리 4호기와 한빛 1호기가 계속운전 설비 개선 작업에 들어갔고 월성 3개 호기가 대규모 정비 중인 가운데, 한국전력의 상반기 이익이 17% 감소했다.",
+        "detail": ""
+      }
+    ],
+    "story_relation": "duplicate",
+    "story_reason": "title/facility duplicate",
+    "story_dedup_stage": "local_title",
+    "story_members": [
+      {
+        "hash": "c671b6f1783eaaba",
+        "title": "상반기 국내 원전 발전량 17% 감소",
+        "publisher": "ainews1.co.kr",
+        "fold_stage": "local_title"
+      },
+      {
+        "hash": "e58953de03298e1b",
+        "title": "상반기 국내 원전 발전량 17% 감소, 이용률 80.5% 하락",
+        "publisher": "이뉴스투데이",
+        "fold_stage": ""
+      }
+    ],
+    "story_raw_source_count": 0,
+    "story_display_swapped_from": "c671b6f1783eaaba",
+    "story_display_swapped_from_title": "상반기 국내 원전 발전량 17% 감소",
+    "story_display_reason": "본문 요지가 있는 기사로 교체",
+    "story_display_hash": "e58953de03298e1b",
+    "story_display_candidates": 2
   },
   {
     "hash": "2170588c48fdb209",
@@ -1118,7 +1159,7 @@
     "event_date_precision": "day",
     "event_date_source": "article_text",
     "queued_at": "2026-08-14T05:22:51.086507+00:00",
-    "story_article_count": 2,
+    "story_article_count": 3,
     "story_article_hashes": [
       "0362503194a61a9f",
       "06d19dc122234889"
@@ -1162,7 +1203,25 @@
     ],
     "story_relation": "duplicate",
     "story_reason": "title/facility duplicate",
-    "story_dedup_stage": "local_title"
+    "story_dedup_stage": "local_title",
+    "story_members": [
+      {
+        "hash": "0362503194a61a9f",
+        "title": "빌 게이츠, SMR 협력 확대 위해 방한…총리·재계 총수 회동",
+        "publisher": "insight.co.kr",
+        "fold_stage": "local_title"
+      },
+      {
+        "hash": "06d19dc122234889",
+        "title": "빌 게이츠 방한, 최태원·정기선과 SMR 협력 확대 논의",
+        "publisher": "chosun.com",
+        "fold_stage": ""
+      }
+    ],
+    "story_raw_source_count": 0,
+    "story_display_hash": "0362503194a61a9f",
+    "story_display_candidates": 2,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "c3d41dc4b32819d7",
@@ -1293,7 +1352,20 @@
         "carbon neutrality"
       ],
       "event_date": "2026-08-13"
-    }
+    },
+    "story_members": [
+      {
+        "hash": "b35eb39f321ab57c",
+        "title": "국회 기후특위, 2045년 탄소중립법 개정안 의결",
+        "publisher": "esgeconomy.com",
+        "fold_stage": "editorial_final"
+      }
+    ],
+    "story_reason": "탄소중립법 개정안 의결은 국가 온실가스 감축 목표에 관한 입법 활동입니다.",
+    "story_raw_source_count": 0,
+    "story_display_hash": "b35eb39f321ab57c",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "13204c48ee1a4cd9",
@@ -1384,94 +1456,6 @@
     "queued_at": "2026-08-14T05:22:51.086507+00:00"
   },
   {
-    "hash": "e93c5467c89ec2ba",
-    "title": "두산에너빌, 테라파워 차세대 원전 핵심기기 수주…美 SMR 입지 넓힌다",
-    "title_kr": "두산에너빌리티, 테라파워 차세대 원전 핵심 기자재 수주",
-    "link": "https://www.apnews.kr/news/articleView.html?idxno=3050479",
-    "domain": "apnews.kr",
-    "publisher": "apnews.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원자력안전위원회",
-    "importance": "nice_to_know",
-    "section": "smr",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "두산에너빌리티가 미국 테라파워의 나트륨 원자로에 들어가는 원자로 보호용기 등 핵심 기자재 제작 사업을 수주하며 글로벌 SMR 공급망 입지를 넓혔다.",
-    "detail": "두산에너빌리티는 8월 14일 미국 첨단 원자력 기술 기업 테라파워의 나트륨(Natrium) 원자로에 들어가는 원자로 보호용기, 원자로 지지구조물, 원자로 내부구조물 제작 사업을 수주했다고 밝혔다. 이번 수주는 단순 제작 계약을 넘어 양사가 2024년 말부터 설계 단계부터 협력하여 제작성 검토 및 설계 개선을 진행한 결과이다. 두산에너빌리티가 제작할 기자재는 미국 와이오밍주 케머러에 건설 중인 테라파워의 첫 원자력발전소에 공급되며, 이 발전소는 345MW 규모의 첨단 원자로를 포함한다. 테라파워는 미국 원자력규제위원회(NRC)로부터 건설허가를 취득한 뒤 2026년 봄 원자로 건설에 들어갔다.",
-    "implication": "두산에너빌리티의 테라파워 SMR 핵심 기자재 수주는 한국 기업이 글로벌 차세대 원전 시장에서 제조 공급사로서의 입지를 강화하는 중요한 계기가 될 것이다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR경쟁",
-      "#기술협력"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "contract_award",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-14",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-14T05:22:51.086507+00:00"
-  },
-  {
-    "hash": "541195b5decf38c7",
-    "title": "두산에너빌리티, 美 차세대 원전 핵심 제작 맡는다…테라파워 기자재 수...",
-    "title_kr": "두산에너빌리티, 美 테라파워 차세대 원전 핵심 기자재 제작 수주",
-    "link": "https://www.straightnews.co.kr/news/articleView.html?idxno=308941",
-    "domain": "straightnews.co.kr",
-    "publisher": "straightnews.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "SMR",
-    "matched": "TerraPower",
-    "importance": "nice_to_know",
-    "section": "smr",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "두산에너빌리티가 미국 테라파워(TerraPower)의 나트륨 원자로에 사용될 원자로 보호용기 등 핵심 기자재 제작 사업을 수주했다.",
-    "detail": "두산에너빌리티는 테라파워 나트륨 원자로의 원자로 보호용기, 원자로 지지구조물, 원자로 내부구조물을 제작한다고 14일 밝혔다. 이는 차세대 원전 분야에서 제조 역량을 확보하고 글로벌 공급 기업으로서 입지를 확대하기 위한 계획이다. 두산에너빌리티는 2024년 12월 테라파워 초도호기 핵심 기자재 제작성 검토 계약을 체결한 후 설계 개선사항을 개발·적용해 실제 제작 발주가 가능한 수준으로 발전시켰다.",
-    "implication": "두산에너빌리티는 2024년 12월 제작성 검토 계약을 시작으로 테라파워와의 협력을 강화하며 차세대 원전 시장에서 입지를 확대하고 있다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR",
-      "#원전수주"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "contract_award",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-14T05:22:51.086507+00:00"
-  },
-  {
     "hash": "b3fe6868b8391d2d",
     "title": "345MW 테라파워 원자로 기자재, 두산에너빌리티가 제작",
     "title_kr": "두산에너빌리티, 美 테라파워 345MW급 나트륨 원자로 기자재 제작",
@@ -1513,7 +1497,10 @@
     "event_date_type": "occurrence",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-14T05:22:51.086507+00:00"
+    "queued_at": "2026-08-14T05:22:51.086507+00:00",
+    "story_display_hash": "b3fe6868b8391d2d",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "7c2866f6ebb6d238",
@@ -1633,7 +1620,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "e23ff98e54867612",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "37bb8e2982714116",
@@ -1766,7 +1756,7 @@
       }
     ],
     "story_relation": "duplicate",
-    "story_reason": "title/facility duplicate",
+    "story_reason": "당진시와 동서발전의 석탄발전 폐지 대응 협약은 지역 단위의 에너지 전환 정책입니다.",
     "story_dedup_stage": "editorial_final",
     "story_fingerprint": {
       "countries": [
@@ -1784,7 +1774,19 @@
         "just transition"
       ],
       "event_date": "2026-08-12"
-    }
+    },
+    "story_members": [
+      {
+        "hash": "21e4b78b256bbd70",
+        "title": "당진시·한국동서발전, 석탄발전 폐지 공동 대응 협약 체결",
+        "publisher": "ccnnews.co.kr",
+        "fold_stage": "editorial_final"
+      }
+    ],
+    "story_raw_source_count": 0,
+    "story_display_hash": "21e4b78b256bbd70",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "0cbfb9e759a63e36",
@@ -1857,7 +1859,7 @@
       }
     ],
     "story_relation": "single",
-    "story_reason": "웨스팅하우스와 아멘텀의 AP1000/AP300 협력 확대 계약으로, 기업 간의 기술 플랫폼 협력임.",
+    "story_reason": "웨스팅하우스와 아멘텀의 원전 기술 플랫폼 협력 계약입니다.",
     "story_dedup_stage": "editorial_final",
     "story_fingerprint": {
       "countries": [
@@ -1876,7 +1878,19 @@
         "SMR development"
       ],
       "event_date": "2024-08-14"
-    }
+    },
+    "story_members": [
+      {
+        "hash": "0cbfb9e759a63e36",
+        "title": "美 웨스팅하우스·아멘텀, AP1000·AP300 협력 확대 계약",
+        "publisher": "theguru.co.kr",
+        "fold_stage": "editorial_final"
+      }
+    ],
+    "story_raw_source_count": 0,
+    "story_display_hash": "0cbfb9e759a63e36",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "c2d9e76a1128876d",
@@ -1920,7 +1934,10 @@
     "event_date_type": "scheduled",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "c2d9e76a1128876d",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "ddc8fbfefc3999a5",
@@ -1997,7 +2014,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "97b0956b9bc2bde5",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "761809b46c950412",
@@ -2030,7 +2050,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "761809b46c950412",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "2bb28184ba99a896",
@@ -2063,51 +2086,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
-  },
-  {
-    "hash": "9f64b18b47e75f11",
-    "title": "美테라파워 핵심기자재, 두산에너빌리티가 수주",
-    "title_kr": "두산에너빌리티, 美 테라파워 SMR 핵심 기자재 수주",
-    "link": "https://www.munhwa.com/article/11609626",
-    "domain": "munhwa.com",
-    "publisher": "munhwa.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원자력 정책",
-    "importance": "nice_to_know",
-    "section": "smr",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "두산에너빌리티가 미국 와이오밍주 케머러에 건설 중인 테라파워의 345MW급 초도 원전에 핵심 기자재를 공급하는 계약을 수주했다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR부품",
-      "#테라파워"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "contract_award",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 3,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "2bb28184ba99a896",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "8836b83ddd1f027b",
@@ -2140,130 +2122,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
-  },
-  {
-    "hash": "31715b9c7ef12b5a",
-    "title": "그리드위즈, SMR 통해 AI DC 전력·냉각 솔루션 사업 개발 나선다",
-    "title_kr": "그리드위즈, 알엑스와 SMR 기반 AI 데이터센터 솔루션 개발 협력",
-    "link": "https://www.electimes.com/news/articleView.html?idxno=371320",
-    "domain": "electimes.com",
-    "publisher": "전기신문",
-    "source_type": "specialist_media",
-    "evidence_role": "independent",
-    "source_tier": 2,
-    "feed": "SMR",
-    "matched": "SMR 인허가",
-    "importance": "nice_to_know",
-    "section": "smr",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "그리드위즈와 SMR 전문기업 알엑스가 AI 데이터센터의 전력 및 냉각 솔루션 사업 개발을 위한 업무협약(MOU)을 11일 체결했다.",
-    "detail": "에너지테크 기업 그리드위즈와 SMR 전문기업 알엑스는 11일 업무협약을 체결하고 AI 데이터센터 등 대규모 전력 소비자를 위한 통합 전력·냉각 솔루션 사업 개발에 나선다. 이번 협약은 알엑스의 SMR 설계·인허가 역량과 그리드위즈의 전력망 유연성 역량을 결합하여 공동 사업 기회를 발굴하기 위함이다. 양사는 SMR을 기저전원으로 활용하고 ESS, DR, VPP 등 전력망 유연성 자원을 연계하는 통합 전력 공급 모델과 SMR 저온 열원을 데이터센터 냉각에 활용하는 전력·열 통합 운영 모델을 개발할 계획이다. 이를 통해 AI 데이터센터 에너지 최적화 시스템과 실증사업을 공동 추진하고, SMR 및 분산에너지 연계 사업 전반으로 협력을 확대할 방침이다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR",
-      "#데이터센터",
-      "#전력시장"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 2,
-    "event_date": "2024-08-11",
-    "event_date_type": "occurrence",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
     "queued_at": "2026-08-14T07:04:46.508563+00:00",
-    "story_article_count": 3,
-    "story_article_hashes": [
-      "31715b9c7ef12b5a",
-      "acb97b0ce02d93e6",
-      "689e80f53446f692"
-    ],
-    "story_outlet_count": 3,
-    "story_tier1_count": 0,
-    "story_independent_outlet_count": 3,
-    "story_sources": [
-      {
-        "identity": "industrynews.co.kr",
-        "publisher": "industrynews.co.kr",
-        "domain": "industrynews.co.kr",
-        "tier": 3,
-        "evidence_role": "independent"
-      },
-      {
-        "identity": "에너지경제",
-        "publisher": "에너지경제",
-        "domain": "ekn.kr",
-        "tier": 3,
-        "evidence_role": "independent"
-      },
-      {
-        "identity": "전기신문",
-        "publisher": "전기신문",
-        "domain": "electimes.com",
-        "tier": 2,
-        "evidence_role": "independent"
-      }
-    ],
-    "story_related_titles": [
-      "그리드위즈, 알엑스와 SMR 기반 AI 데이터센터 솔루션 개발 협력",
-      "그리드위즈-알엑스, AI 데이터센터용 SMR 전력·냉각 통합 솔루션 개발 추진",
-      "그리드위즈, SMR 전문기업 알엑스와 AI 데이터센터 전력·냉각 솔루션 개발 협력"
-    ],
-    "story_context": [
-      {
-        "hash": "31715b9c7ef12b5a",
-        "title": "그리드위즈, 알엑스와 SMR 기반 AI 데이터센터 솔루션 개발 협력",
-        "summary": "그리드위즈와 SMR 전문기업 알엑스가 AI 데이터센터의 전력 및 냉각 솔루션 사업 개발을 위한 업무협약(MOU)을 11일 체결했다.",
-        "detail": "에너지테크 기업 그리드위즈와 SMR 전문기업 알엑스는 11일 업무협약을 체결하고 AI 데이터센터 등 대규모 전력 소비자를 위한 통합 전력·냉각 솔루션 사업 개발에 나선다. 이번 협약은 알엑스의 SMR 설계·인허가 역량과 그리드위즈의 전력망 유연성 역량을 결합하여 공동 사업 기회를 발굴하기 위함이다. 양사는 SMR을 기저전원으로 활용하고 ESS, DR, VPP 등 전력망 유연성 자원을 연계하는 통합 전력 공급 모델과 SMR 저온 열원을 데이터센터 냉각에 활용하는 전력·열 통합 운영 모델을 개발할 계획이다. 이를 통해 AI 데이터센터 에너지 최적화 시스템과 실증사업을 공동 추진하고, SMR 및 분산에너지 연계 사업 전반으로 협력을 확대할 방침이다."
-      },
-      {
-        "hash": "acb97b0ce02d93e6",
-        "title": "그리드위즈-알엑스, AI 데이터센터용 SMR 전력·냉각 통합 솔루션 개발 추진",
-        "summary": "그리드위즈와 알엑스가 AI 데이터센터 등 대규모 전력 소비자를 위한 SMR 기반 전력 및 냉각 통합 솔루션 개발을 위해 협력한다.",
-        "detail": "이번 협약은 알엑스의 SMR 설계 및 인허가 역량과 그리드위즈의 전력망 유연성 역량을 결합하여 AI 산업 확산에 따른 대규모 전력 수요에 대응하기 위함이다. 양사는 SMR을 활용한 분산 전원 시스템 구축을 목표로 하며, 이는 데이터센터의 안정적인 전력 공급과 효율적인 냉각 시스템 구현에 기여할 것으로 기대된다."
-      },
-      {
-        "hash": "689e80f53446f692",
-        "title": "그리드위즈, SMR 전문기업 알엑스와 AI 데이터센터 전력·냉각 솔루션 개발 협력",
-        "summary": "에너지테크 기업 그리드위즈가 SMR 전문기업 알엑스와 협력하여 AI 데이터센터 등 대규모 전력 소비자를 위한 SMR 기반 전력·냉각 통합 솔루션 개발에 착수한다.",
-        "detail": "그리드위즈는 8월 11일 알엑스와 이 같은 협약을 체결하고, 인공지능(AI) 데이터센터의 급증하는 전력 수요에 대응하기 위한 SMR 기반의 효율적인 전력 및 냉각 시스템 개발을 목표로 한다."
-      }
-    ],
-    "story_relation": "duplicate",
-    "story_reason": "title/facility duplicate",
-    "story_dedup_stage": "editorial_final",
-    "story_fingerprint": {
-      "countries": [
-        "South Korea"
-      ],
-      "actors": [
-        "Gridwiz",
-        "RX"
-      ],
-      "assets": [
-        "SMR",
-        "AI Data Center"
-      ],
-      "event_family": "business_cooperation",
-      "drivers": [
-        "energy efficiency"
-      ],
-      "event_date": "2024-08-11"
-    }
+    "story_display_hash": "8836b83ddd1f027b",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "529d91e70a15b58d",
@@ -2296,7 +2158,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "529d91e70a15b58d",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "3adb831d2b239086",
@@ -2329,7 +2194,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "3adb831d2b239086",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "ec2f10d0dc9b458a",
@@ -2374,7 +2242,10 @@
     "event_date_type": "announcement",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "ec2f10d0dc9b458a",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "3d757b48fa787ee2",
@@ -2407,7 +2278,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "3d757b48fa787ee2",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "1c3803433a22450b",
@@ -2486,96 +2360,6 @@
       "korea_relevance": 3,
       "market_materiality": 2,
       "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
-  },
-  {
-    "hash": "3af723097ae316dd",
-    "title": "빌 게이츠 방한 속 두산, 테라파워 SMR 기자재 첫 계약",
-    "title_kr": "빌 게이츠 방한 중 두산에너빌리티, 테라파워 SMR 기자재 계약",
-    "link": "https://www.tournews21.com/news/articleView.html?idxno=141044",
-    "domain": "tournews21.com",
-    "publisher": "tournews21.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원자력 정책",
-    "importance": "nice_to_know",
-    "section": "smr",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "두산에너빌리티가 빌 게이츠가 설립한 미국 테라파워의 SMR 나트륨 원자로 핵심 기자재 제작 계약을 체결했다.",
-    "detail": "두산에너빌리티는 빌 게이츠 게이츠 재단 이사장이 설립한 미국 소형모듈원전(SMR) 개발사 테라파워의 SMR 나트륨 원자로에 핵심 기자재를 공급하는 계약을 맺었다. 이 프로젝트는 미국에서 상업 규모 건설 단계에 진입한 최초의 SMR 프로젝트 중 하나로, 미국 정부의 SMR 확대 정책 지원을 받는다. 테라파워는 미국 원자력규제위원회(NRC)로부터 건설 허가를 취득하여 올해 봄 착공에 들어갔다.",
-    "implication": "두산에너빌리티가 미국 테라파워 SMR 프로젝트에 참여하며 미국 SMR 시장 진출을 가속화하고, 이는 미국 정부의 SMR 확대 정책과 맞물려 진행된다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR",
-      "#두산에너빌리티",
-      "#테라파워"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "contract_award",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
-  },
-  {
-    "hash": "a58ad15fc6751018",
-    "title": "민형배 광주전남특별시장 \"SK, 전남 동부권에 100조원 투자 발표 예정\"",
-    "title_kr": "SK, 전남 동부권에 AI 데이터센터 등 100조원 투자 예정",
-    "link": "https://www.ziksir.com/news/articleView.html?idxno=143271",
-    "domain": "ziksir.com",
-    "publisher": "ziksir.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "반도체 클러스터 전력",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "민형배 광주전남통합특별시장이 SK그룹이 전남 동부권에 AI 데이터센터와 생산설비 등을 포함해 약 100조원을 투자할 계획을 조만간 발표할 예정이라고 밝혔다.",
-    "detail": "민형배 광주전남통합특별시장은 14일 시의회 비공개 간담회에서 SK그룹의 전남 동부권 투자 계획을 공개했다. SK그룹은 앞서 호남권 반도체 클러스터에 400조원을 투자할 계획을 발표했으며, 이 중 AI 데이터센터와 일부 생산설비 투자가 전남 동부권에 배치될 전망이다. 또한 광주 군공항 부지에 계획된 반도체 공장이 삼성전자 5기, SK 4기 등 총 9기로 늘어날 가능성이 제기되었으며, 정부도 기존 4기보다 확대하는 방안을 검토 중이다.",
-    "implication": "대규모 반도체 및 AI 데이터센터 투자가 전남 지역의 전력 수요를 크게 증가시킬 것으로 예상되며, 이는 향후 전력 수급 계획에 중요한 변수로 작용할 것이다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#AI데이터센터",
-      "#반도체",
-      "#전력수요"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 2,
       "novelty": 0,
       "evidence_strength": 0,
       "report_worthiness": 1
@@ -2675,7 +2459,10 @@
     "event_date_type": "occurrence",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "62ff2517b7a04c6b",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "da12e1fe235847f0",
@@ -2765,7 +2552,72 @@
     "event_date_type": "occurrence",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_article_count": 3,
+    "story_article_hashes": [
+      "b5b6dd18f36e542a",
+      "02aeb0ee9f7c9c42"
+    ],
+    "story_outlet_count": 2,
+    "story_tier1_count": 0,
+    "story_independent_outlet_count": 2,
+    "story_sources": [
+      {
+        "identity": "newspim.com",
+        "publisher": "newspim.com",
+        "domain": "newspim.com",
+        "tier": 3,
+        "evidence_role": "independent"
+      },
+      {
+        "identity": "뉴시스",
+        "publisher": "뉴시스",
+        "domain": "newsis.com",
+        "tier": 3,
+        "evidence_role": "independent"
+      }
+    ],
+    "story_related_titles": [
+      "한성숙 국무총리, 빌 게이츠 테라파워 의장과 면담",
+      "빌 게이츠 테라파워 이사장, 국무총리 면담 위해 정부서울청사 방문"
+    ],
+    "story_context": [
+      {
+        "hash": "b5b6dd18f36e542a",
+        "title": "한성숙 국무총리, 빌 게이츠 테라파워 의장과 면담",
+        "summary": "한성숙 국무총리가 14일 서울 정부서울청사에서 빌 게이츠 테라파워(TerraPower) 이사회 의장과 면담을 가졌다.",
+        "detail": ""
+      },
+      {
+        "hash": "02aeb0ee9f7c9c42",
+        "title": "빌 게이츠 테라파워 이사장, 국무총리 면담 위해 정부서울청사 방문",
+        "summary": "마이크로소프트 공동창업자이자 테라파워 이사장인 빌 게이츠가 8월 14일 오후 한성숙 국무총리와 면담을 위해 정부서울청사를 방문하여 채이배 비서실장과 대화했다.",
+        "detail": "마이크로소프트(MS) 공동창업자인 빌 게이츠 테라파워 이사장이 2026년 8월 14일 오후 한성숙 국무총리와의 면담을 위해 서울 종로구 정부서울청사에 등청하며 채이배 국무총리 비서실장과 대화하는 모습이 포착되었다."
+      }
+    ],
+    "story_relation": "duplicate",
+    "story_reason": "title/facility duplicate",
+    "story_dedup_stage": "local_title",
+    "story_members": [
+      {
+        "hash": "b5b6dd18f36e542a",
+        "title": "한성숙 국무총리, 빌 게이츠 테라파워 의장과 면담",
+        "publisher": "newspim.com",
+        "fold_stage": "local_title"
+      },
+      {
+        "hash": "02aeb0ee9f7c9c42",
+        "title": "빌 게이츠 테라파워 이사장, 국무총리 면담 위해 정부서울청사 방문",
+        "publisher": "뉴시스",
+        "fold_stage": ""
+      }
+    ],
+    "story_raw_source_count": 0,
+    "story_display_swapped_from": "b5b6dd18f36e542a",
+    "story_display_swapped_from_title": "한성숙 국무총리, 빌 게이츠 테라파워 의장과 면담",
+    "story_display_reason": "본문 요지가 있는 기사로 교체",
+    "story_display_hash": "02aeb0ee9f7c9c42",
+    "story_display_candidates": 2
   },
   {
     "hash": "765a93ff5069b920",
@@ -2843,7 +2695,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "0a28019a9f23fb4f",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "59247106ff1143e1",
@@ -2876,7 +2731,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T07:04:46.508563+00:00"
+    "queued_at": "2026-08-14T07:04:46.508563+00:00",
+    "story_display_hash": "59247106ff1143e1",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "af8b604160b1cc63",
@@ -2920,7 +2778,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T08:55:51.231329+00:00"
+    "queued_at": "2026-08-14T08:55:51.231329+00:00",
+    "story_display_hash": "af8b604160b1cc63",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "aab3ce653eda03aa",
@@ -2965,7 +2826,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T08:55:51.231329+00:00"
+    "queued_at": "2026-08-14T08:55:51.231329+00:00",
+    "story_display_hash": "aab3ce653eda03aa",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "e2596a6a6086c5d9",
@@ -3056,7 +2920,7 @@
     "event_date_precision": "day",
     "event_date_source": "article_text",
     "queued_at": "2026-08-14T08:55:51.231329+00:00",
-    "story_article_count": 3,
+    "story_article_count": 5,
     "story_article_hashes": [
       "08dd50ff562f3a76",
       "decd100e4797c739",
@@ -3115,7 +2979,28 @@
     ],
     "story_relation": "duplicate",
     "story_reason": "title/facility duplicate",
-    "story_dedup_stage": "local_title"
+    "story_dedup_stage": "local_title",
+    "story_members": [
+      {
+        "hash": "08dd50ff562f3a76",
+        "title": "한글과컴퓨터, 상반기 역대 최대 매출 기록…한수원 등 AI 공급 확대",
+        "publisher": "ceoscoredaily.com",
+        "fold_stage": "local_title"
+      },
+      {
+        "hash": "decd100e4797c739",
+        "title": "한글과컴퓨터, 상반기 최대 매출 달성…한수원 등 AI 공급으로 글로벌 공략",
+        "publisher": "newsroad.co.kr",
+        "fold_stage": ""
+      },
+      {
+        "hash": "acc705b510076678",
+        "title": "한글과컴퓨터, 상반기 최대 매출 달성 배경은 AI…한수원 공급 주목",
+        "publisher": "thebell.co.kr",
+        "fold_stage": ""
+      }
+    ],
+    "story_raw_source_count": 0
   },
   {
     "hash": "decd100e4797c739",
@@ -3250,7 +3135,10 @@
     "event_date_type": "occurrence",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-14T08:55:51.231329+00:00"
+    "queued_at": "2026-08-14T08:55:51.231329+00:00",
+    "story_display_hash": "59c75ca4cedea0b6",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "44c8137dead103cc",
@@ -3339,7 +3227,7 @@
     "event_date_precision": "day",
     "event_date_source": "title",
     "queued_at": "2026-08-14T09:50:31.710650+00:00",
-    "story_article_count": 2,
+    "story_article_count": 3,
     "story_article_hashes": [
       "b5b6dd18f36e542a",
       "02aeb0ee9f7c9c42"
@@ -3383,7 +3271,22 @@
     ],
     "story_relation": "duplicate",
     "story_reason": "title/facility duplicate",
-    "story_dedup_stage": "local_title"
+    "story_dedup_stage": "local_title",
+    "story_members": [
+      {
+        "hash": "b5b6dd18f36e542a",
+        "title": "한성숙 국무총리, 빌 게이츠 테라파워 의장과 면담",
+        "publisher": "newspim.com",
+        "fold_stage": "local_title"
+      },
+      {
+        "hash": "02aeb0ee9f7c9c42",
+        "title": "빌 게이츠 테라파워 이사장, 국무총리 면담 위해 정부서울청사 방문",
+        "publisher": "뉴시스",
+        "fold_stage": ""
+      }
+    ],
+    "story_raw_source_count": 0
   },
   {
     "hash": "512eab0d49085003",
@@ -3427,7 +3330,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T09:50:31.710650+00:00"
+    "queued_at": "2026-08-14T09:50:31.710650+00:00",
+    "story_display_hash": "512eab0d49085003",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "11b18266d43329e6",
@@ -3516,7 +3422,10 @@
     "event_date_type": "announcement",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-14T10:46:30.106109+00:00"
+    "queued_at": "2026-08-14T10:46:30.106109+00:00",
+    "story_display_hash": "0a0b042da1ae8b7d",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "3c82d2767715cd92",
@@ -3561,7 +3470,10 @@
     "event_date_type": "announcement",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-14T11:35:13.255146+00:00"
+    "queued_at": "2026-08-14T11:35:13.255146+00:00",
+    "story_display_hash": "3c82d2767715cd92",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "c0d9c880f59a8f1c",
@@ -3605,7 +3517,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T11:35:13.255146+00:00"
+    "queued_at": "2026-08-14T11:35:13.255146+00:00",
+    "story_display_hash": "c0d9c880f59a8f1c",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "980b2b15592da9da",
@@ -3650,7 +3565,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-14T11:35:13.255146+00:00"
+    "queued_at": "2026-08-14T11:35:13.255146+00:00",
+    "story_display_hash": "980b2b15592da9da",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "e33fa94cf7cd9d64",
@@ -4011,7 +3929,7 @@
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
     "queued_at": "2026-08-15T13:37:11.825737+00:00",
-    "story_article_count": 3,
+    "story_article_count": 4,
     "story_article_hashes": [
       "c671b6f1783eaaba",
       "e58953de03298e1b",
@@ -4070,7 +3988,22 @@
     ],
     "story_relation": "duplicate",
     "story_reason": "title/facility duplicate",
-    "story_dedup_stage": "local_title"
+    "story_dedup_stage": "local_title",
+    "story_members": [
+      {
+        "hash": "c671b6f1783eaaba",
+        "title": "상반기 국내 원전 발전량 17% 감소",
+        "publisher": "ainews1.co.kr",
+        "fold_stage": "local_title"
+      },
+      {
+        "hash": "e58953de03298e1b",
+        "title": "상반기 국내 원전 발전량 17% 감소, 이용률 80.5% 하락",
+        "publisher": "이뉴스투데이",
+        "fold_stage": ""
+      }
+    ],
+    "story_raw_source_count": 0
   },
   {
     "hash": "df2f0f149506a489",
@@ -4115,7 +4048,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-15T13:37:11.825737+00:00"
+    "queued_at": "2026-08-15T13:37:11.825737+00:00",
+    "story_display_hash": "df2f0f149506a489",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "8866bf24956afeb0",
@@ -4473,7 +4409,10 @@
     "event_date_type": "announcement",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-15T14:25:16.118768+00:00"
+    "queued_at": "2026-08-15T14:25:16.118768+00:00",
+    "story_display_hash": "999871bf2143be5f",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "f23d52daba6bc9f7",
@@ -4518,7 +4457,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-15T14:25:16.118768+00:00"
+    "queued_at": "2026-08-15T14:25:16.118768+00:00",
+    "story_display_hash": "f23d52daba6bc9f7",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "ebb55c23efce3634",
@@ -4563,7 +4505,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-15T14:44:53.927412+00:00"
+    "queued_at": "2026-08-15T14:44:53.927412+00:00",
+    "story_display_hash": "ebb55c23efce3634",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "5dcf5cc7354ff99a",
@@ -4609,7 +4554,7 @@
     "event_date_precision": "day",
     "event_date_source": "article_text",
     "queued_at": "2026-08-15T15:21:03.365152+00:00",
-    "story_article_count": 4,
+    "story_article_count": 5,
     "story_article_hashes": [
       "5dcf5cc7354ff99a",
       "37bb8e2982714116",
@@ -4683,7 +4628,25 @@
     ],
     "story_relation": "duplicate",
     "story_reason": "title/facility duplicate",
-    "story_dedup_stage": "local_title"
+    "story_dedup_stage": "local_title",
+    "story_members": [
+      {
+        "hash": "5dcf5cc7354ff99a",
+        "title": "HD현대 정기선 회장, 테라파워와 SMR 사업 협력 강화",
+        "publisher": "tf.co.kr",
+        "fold_stage": "local_title"
+      },
+      {
+        "hash": "37bb8e2982714116",
+        "title": "정기선 HD현대 회장, 빌 게이츠와 네 번째 만남…SMR 사업 협력 주목",
+        "publisher": "에너지경제",
+        "fold_stage": ""
+      }
+    ],
+    "story_raw_source_count": 0,
+    "story_display_hash": "5dcf5cc7354ff99a",
+    "story_display_candidates": 2,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "e69556445f4be310",
@@ -4757,7 +4720,7 @@
       }
     ],
     "story_relation": "single",
-    "story_reason": "아르헨티나의 민간 주도 송전망 인프라 투자 사업 추진으로, 국가별 인프라 투자 계획임.",
+    "story_reason": "아르헨티나의 민간 주도 송전망 인프라 투자 사업입니다.",
     "story_dedup_stage": "editorial_final",
     "story_fingerprint": {
       "countries": [
@@ -4774,7 +4737,19 @@
         "infrastructure investment"
       ],
       "event_date": "2027-06-30"
-    }
+    },
+    "story_members": [
+      {
+        "hash": "e69556445f4be310",
+        "title": "아르헨티나, 20년 만의 민간 주도 에너지 인프라 투자 사업 추진",
+        "publisher": "theguru.co.kr",
+        "fold_stage": "editorial_final"
+      }
+    ],
+    "story_raw_source_count": 0,
+    "story_display_hash": "e69556445f4be310",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "a442147c1539028a",
@@ -4910,7 +4885,7 @@
     "event_date_precision": "day",
     "event_date_source": "article_text",
     "queued_at": "2026-08-15T21:21:47.597084+00:00",
-    "story_article_count": 3,
+    "story_article_count": 4,
     "story_article_hashes": [
       "d48f68a022448837",
       "ca2583a6dd5df575",
@@ -4969,7 +4944,25 @@
     ],
     "story_relation": "duplicate",
     "story_reason": "title/facility duplicate",
-    "story_dedup_stage": "local_title"
+    "story_dedup_stage": "local_title",
+    "story_members": [
+      {
+        "hash": "d48f68a022448837",
+        "title": "정기선 HD현대 회장, 빌 게이츠 테라파워 의장과 4번째 회동",
+        "publisher": "newslock.co.kr",
+        "fold_stage": "local_title"
+      },
+      {
+        "hash": "ca2583a6dd5df575",
+        "title": "정기선 HD현대 회장, 빌 게이츠 테라파워 이사장과 SMR 협력 논의",
+        "publisher": "munhwa.com",
+        "fold_stage": ""
+      }
+    ],
+    "story_raw_source_count": 0,
+    "story_display_hash": "d48f68a022448837",
+    "story_display_candidates": 2,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "6d52917de753aa8c",
@@ -5183,7 +5176,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-15T21:40:24.478168+00:00"
+    "queued_at": "2026-08-15T21:40:24.478168+00:00",
+    "story_display_hash": "ad7979e976c2f6e0",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "86bf816312e219a5",
@@ -5230,185 +5226,6 @@
     "queued_at": "2026-08-15T22:53:55.802685+00:00"
   },
   {
-    "hash": "72fdb8f9c170e368",
-    "title": "미군, 마이크로원자로 기지 배치…2030년 목표",
-    "title_kr": "미군, 2030년까지 마이크로원자로 기지 배치 추진",
-    "link": "https://www.g-enews.com/view.php?ud=202608160658121142fbbec65dfb_1",
-    "domain": "g-enews.com",
-    "publisher": "g-enews.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원전 수출",
-    "importance": "nice_to_know",
-    "section": "smr",
-    "scope": "overseas",
-    "category": "정책",
-    "summary": "미군이 2030년 배치를 목표로 마이크로원자로를 군 기지에 도입하는 계획을 추진 중이다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR",
-      "#마이크로원자로",
-      "#미군"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 1,
-      "market_materiality": 1,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": "2030-01-01",
-    "event_date_type": "scheduled",
-    "event_date_precision": "year",
-    "event_date_source": "title",
-    "queued_at": "2026-08-15T22:53:55.802685+00:00"
-  },
-  {
-    "hash": "114d22fbd5a28b36",
-    "title": "AI 핵심 인프라 재생에너지…전력 안정성 높이는 ESS 입지 확대",
-    "title_kr": "정부, AI 시대 대비 ESS 및 무탄소 전력 인프라 확대 전략 추진",
-    "link": "https://www.yna.co.kr/view/AKR20260814177500003?input=1195m",
-    "domain": "yna.co.kr",
-    "publisher": "연합뉴스",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 2,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "정부가 AI 시대 국가 경쟁력 확보를 위해 2030년까지 재생에너지 비중을 20% 이상으로 확대하고, 전력 안정성을 위한 ESS 인프라를 선제 구축한다.",
-    "detail": "기후에너지환경부는 '전기국가' 전략을 통해 재생에너지와 원전을 기반으로 무탄소 전력 공급을 확대할 방침이다. 재생에너지의 간헐성을 보완하기 위해 ESS의 역할이 강조되며, 국내 배터리 업계는 전기차 의존도를 낮추고 전력망·산업용 ESS 시장으로 사업 영역을 확장할 기회를 맞이했다. 정부는 2030년까지 재생에너지 설비 용량을 100GW 이상으로 늘릴 계획이다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#ESS",
-      "#재생에너지",
-      "#전력망"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": "2030-01-01",
-    "event_date_type": "deadline",
-    "event_date_precision": "year",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-15T22:53:55.802685+00:00"
-  },
-  {
-    "hash": "b2f90d7ef7549859",
-    "title": "캐나다, 우라늄 광산 착공…세계 공급 20% 생산",
-    "title_kr": "스페인 알마라즈 원전 수명 2030년까지 연장",
-    "link": "https://www.g-enews.com/view.php?ud=202608160715337728fbbec65dfb_1",
-    "domain": "g-enews.com",
-    "publisher": "g-enews.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원자력 정책",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "정책",
-    "summary": "스페인 정부가 알마라즈 원자력 발전소의 가동 시한을 2030년까지 연장하기로 결정했다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#계속운전",
-      "#스페인"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 1,
-      "market_materiality": 1,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 3,
-    "event_date": "2030-01-01",
-    "event_date_type": "effective",
-    "event_date_precision": "year",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-15T22:53:55.802685+00:00"
-  },
-  {
-    "hash": "af1b1cdc6e2dbaee",
-    "title": "‘12차 전기본’ 4·5차 정책토론회 20일 개최…’지역별 요금제’ 공청회는 28일 유력",
-    "title_kr": "제12차 전력수급기본계획 4·5차 정책토론회 20일 개최",
-    "link": "https://news.google.com/rss/articles/CBMifEFVX3lxTE5wR0xTcW5IczhCNEdwSEJ6OXpsSW15WUN6OXlVQjBkQVN3N3RDWmVVeUtoRTFUazloWFdMMldlSXFxSlNIakprZjVrdGZod29SbHlYQnpVQkVWY3hzeWdlVnNPYnBpOUE2elQ1bDZpSjRmd3F5SmZyUU5wamc?oc=5",
-    "domain": "busan.com",
-    "publisher": "부산일보",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "국내 원자력 보도",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "기후에너지환경부와 제12차 전기본 총괄위원회는 20일 국회에서 전기국가 전환 및 전력수요·재생에너지 전망을 주제로 4·5차 대국민 토론회를 개최한다.",
-    "detail": "이번 토론회는 4차(전기국가 전환)와 5차(전력수요·재생에너지 전망)로 나뉘어 진행된다. 4차 토론회에서는 AI·반도체 등 첨단산업 성장에 따른 전기화 대응 정책을 논의하며, 5차 토론회에서는 지난 6월 발표된 메가프로젝트를 반영해 2040년까지의 전력수요 재전망 결과를 공개한다. 정부는 토론회에서 수렴된 전문가와 국민 의견을 12차 전기본 수립에 반영할 계획이다.",
-    "implication": "메가프로젝트 추진에 따른 전력수요 재전망 결과가 향후 원전 등 기저전원 설비 계획에 직접적인 영향을 미칠 것으로 보인다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전력수급기본계획",
-      "#에너지정책",
-      "#전력수요"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 2,
-    "event_date": "2026-08-20",
-    "event_date_type": "scheduled",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-15T23:09:28.754066+00:00"
-  },
-  {
     "hash": "e141baba53724369",
     "title": "태양광 발전 늘면서…전력시장 피크 점점 '저녁형'으로",
     "title_kr": "태양광 발전 확대에 따른 전력시장 피크 시간대 저녁으로 이동",
@@ -5451,231 +5268,10 @@
     "event_date_type": "announcement",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-15T23:09:28.754066+00:00"
-  },
-  {
-    "hash": "73a8666563f58f28",
-    "title": "[이슈] ㈜LS, 상반기 영업익 1조 돌파…반기 만에 지난해 연간 실적 돌파",
-    "title_kr": "㈜LS, 상반기 영업이익 1조 원 돌파",
-    "link": "https://www.startuptoday.co.kr/news/articleView.html?idxno=809831",
-    "domain": "startuptoday.co.kr",
-    "publisher": "startuptoday.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "market",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "㈜LS가 AI 데이터센터 전력설비 프로젝트 수주와 초고압 변압기 수익성 개선에 힘입어 상반기 영업이익 1조 원을 달성했다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전력기기",
-      "#실적",
-      "#데이터센터"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 2,
-      "market_materiality": 2,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 3,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-15T23:09:28.754066+00:00"
-  },
-  {
-    "hash": "ae21735117027b17",
-    "title": "\"전력기기 호황 타고 질주\"…효성중공업, 실적·현금창출력 '큰폭 개선...",
-    "title_kr": "효성중공업, 북미 전력기기 호황으로 상반기 실적 급증",
-    "link": "https://www.youthdaily.co.kr/news/article.html?no=225152",
-    "domain": "youthdaily.co.kr",
-    "publisher": "youthdaily.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "market",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "효성중공업이 미국 내 AI 데이터센터 및 노후 전력망 교체 수요 증가에 힘입어 상반기 영업이익 4,166억 원을 기록했다.",
-    "detail": "효성중공업의 상반기 영업이익은 전년 동기 대비 56.3% 증가했다. 미국 시장 내 초고압 변압기와 차단기 판매가 실적을 견인했으며, 영업활동 현금흐름은 4,537억 원으로 3배 가까이 급증했다. 신용평가업계는 북미 시장의 우호적 수급 여건이 2030년까지 지속될 것으로 전망하고 있다.",
-    "implication": "미국 내 전력 인프라 교체 및 데이터센터 수요가 전력기기 제조사의 장기적 수익성 개선을 뒷받침하고 있다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전력기기",
-      "#데이터센터",
-      "#북미시장"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 2,
-      "market_materiality": 2,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-17",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-15T23:09:28.754066+00:00"
-  },
-  {
-    "hash": "1182253279c464e4",
-    "title": "원전 ‘안전하다면 계속운전’ 제대로 하고 있나",
-    "title_kr": "원전 ‘안전하다면 계속운전’ 원칙과 현장 실태의 괴리",
-    "link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9TWHNTSk9HSHl1RmFWQUlWSDJ0OVE2UU9IY0VJc043N1d3UGljLWFUc2dRcjNBamlGUDN6dnBBSGlmSmxWQmFzcTIxZVdRVjdLYm1rQlRlaDdWdnI3T292Z1ExX2lNQjBFU0RzUQ?oc=5",
-    "domain": "mindlenews.com",
-    "publisher": "세상을 바꾸는 시민언론 민들레",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "국내 원자력 보도",
-    "importance": "nice_to_know",
-    "section": "khnp",
-    "scope": "kr",
-    "category": "규제",
-    "summary": "고리 2호기 계속운전 경제성 평가 비용 중 42.7%가 안전설비와 무관한 지역상생협력비로 책정되는 등 안전성 평가의 객관성에 의문이 제기되었다.",
-    "detail": "고리 2호기 계속운전 경제성 평가에 반영된 총 3,068억 원 중 안전설비와 무관한 지역상생협력비가 1,310억 원에 달한다. 또한 안전성 증진 사항(884억 원)은 규제기관 심사 중임에도 비용이 미리 확정되었으며, 내진평가 시 최신 기준을 전면 적용하는 대신 신규 설비에만 강화된 기준을 적용하는 방식이 채택되었다. 다수호기 동시사고 위험 평가 또한 공통원인사건을 고려하지 않은 정상운전 배출량 합산에 그치고 있다는 지적이 있다.",
-    "implication": "계속운전 인허가 과정에서 안전성 평가의 투명성과 최신 기술기준 적용의 일관성에 대한 사회적 감시가 강화될 것으로 보인다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#계속운전",
-      "#고리2호기",
-      "#안전성평가"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "regulatory_action",
-      "korea_relevance": 3,
-      "market_materiality": 1,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
-  },
-  {
-    "hash": "99a8ba7ef52935ac",
-    "title": "\"AI 전력난 겨냥\"… 韓 델타엑스, 美 조지아에 1.41억 달러 BESS 생산 캠퍼...",
-    "title_kr": "韓 델타엑스, 美 조지아에 1.41억 달러 규모 BESS 생산 캠퍼스 신설",
-    "link": "https://www.g-enews.com/view.php?ud=2026081608421267380c8c1c064d_1",
-    "domain": "g-enews.com",
-    "publisher": "g-enews.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "한국의 델타엑스가 미국 조지아주에 1억 4,100만 달러를 투자해 BESS 제조 시설을 구축하며 SK온과 협력한다.",
-    "detail": "델타엑스는 조지아주 월튼 카운티 먼로 산업단지에 25에이커 규모의 통합 캠퍼스를 조성한다. 1단계로 10만 평방피트 규모의 BESS 조립 공장을 건설하며 약 250개의 일자리를 창출할 예정이다. SK온과 협력하여 AI 기반 배터리 어레이 설계 및 모듈 조립을 수행하며, 북미 공급망 생태계를 구축할 방침이다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#BESS",
-      "#데이터센터",
-      "#공급망"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 2,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-15",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
-  },
-  {
-    "hash": "816ceb23752d9e65",
-    "title": "LS, 올 상반기 날아올랐다…\"2026년 반기 만에 지난해 영업이익 상회\"",
-    "title_kr": "LS, 올 상반기 실적 호조…전력 슈퍼사이클 수혜",
-    "link": "http://www.bizwnews.com/news/articleView.html?idxno=143481",
-    "domain": "bizwnews.com",
-    "publisher": "bizwnews.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "market",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "LS가 AI 데이터센터 증설과 글로벌 노후 전력망 교체 수요에 힘입어 상반기 실적이 지난해 연간 영업이익을 상회했다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전력망",
-      "#실적"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "market_signal",
-      "korea_relevance": 2,
-      "market_materiality": 3,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 1,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
+    "queued_at": "2026-08-15T23:09:28.754066+00:00",
+    "story_display_hash": "e141baba53724369",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "bc0d8560029849a4",
@@ -5723,50 +5319,6 @@
     "queued_at": "2026-08-16T01:21:35.007632+00:00"
   },
   {
-    "hash": "afe93d2b0c9c616c",
-    "title": "광복절에 다시 본 '필승코리아 펀드'…7년간 수익률 612.01%",
-    "title_kr": "필승코리아 펀드, 설정 7년 만에 수익률 612% 기록",
-    "link": "https://www.straightnews.co.kr/news/articleView.html?idxno=308975",
-    "domain": "straightnews.co.kr",
-    "publisher": "straightnews.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원전 수출",
-    "importance": "market",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "일본 수출규제 대응을 위해 출범한 필승코리아 펀드가 반도체, AI, 원전 등 국내 기업 투자로 7년간 612%의 수익률을 달성했다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#펀드",
-      "#투자"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "market_signal",
-      "korea_relevance": 2,
-      "market_materiality": 2,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
-  },
-  {
     "hash": "e45bd31bf5de2942",
     "title": "[주간 산업 나침반] KAI 지분 15% 넘긴 한화...반도체 메가프로젝트 '전...",
     "title_kr": "한화, KAI 지분 15% 확보…공정위 기업결합 심사 착수",
@@ -5808,7 +5360,10 @@
     "event_date_type": "announcement",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
+    "queued_at": "2026-08-16T01:21:35.007632+00:00",
+    "story_display_hash": "e45bd31bf5de2942",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "bed8baeb231ef947",
@@ -5853,7 +5408,10 @@
     "event_date_type": "announcement",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
+    "queued_at": "2026-08-16T01:21:35.007632+00:00",
+    "story_display_hash": "bed8baeb231ef947",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "7a33396adf5ba05e",
@@ -5897,7 +5455,70 @@
     "event_date_type": "occurrence",
     "event_date_precision": "day",
     "event_date_source": "article_text",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
+    "queued_at": "2026-08-16T01:21:35.007632+00:00",
+    "story_article_count": 2,
+    "story_article_hashes": [
+      "7a33396adf5ba05e",
+      "da12e1fe235847f0"
+    ],
+    "story_outlet_count": 2,
+    "story_tier1_count": 0,
+    "story_independent_outlet_count": 2,
+    "story_sources": [
+      {
+        "identity": "hansbiz.co.kr",
+        "publisher": "hansbiz.co.kr",
+        "domain": "hansbiz.co.kr",
+        "tier": 3,
+        "evidence_role": "independent"
+      },
+      {
+        "identity": "jeollailbo.com",
+        "publisher": "jeollailbo.com",
+        "domain": "jeollailbo.com",
+        "tier": 3,
+        "evidence_role": "independent"
+      }
+    ],
+    "story_related_titles": [
+      "김윤덕 국토부 장관, 부안 수소도시 조성 현장 점검",
+      "김윤덕 국토부 장관, 부안 수소도시 조성사업 현장 점검"
+    ],
+    "story_members": [
+      {
+        "hash": "7a33396adf5ba05e",
+        "title": "김윤덕 국토부 장관, 부안 수소도시 조성 현장 점검",
+        "publisher": "hansbiz.co.kr",
+        "fold_stage": ""
+      },
+      {
+        "hash": "da12e1fe235847f0",
+        "title": "김윤덕 국토부 장관, 부안 수소도시 조성사업 현장 점검",
+        "publisher": "jeollailbo.com",
+        "fold_stage": ""
+      }
+    ],
+    "story_context": [
+      {
+        "hash": "7a33396adf5ba05e",
+        "title": "김윤덕 국토부 장관, 부안 수소도시 조성 현장 점검",
+        "summary": "김윤덕 국토교통부 장관이 부안군 신재생에너지단지 내 수소도시 조성 현장을 방문해 인프라 구축 현황을 점검했다.",
+        "detail": "부안군은 재생에너지를 활용한 수소 생산·이송·활용 모델을 구축 중이다. 이번 방문에는 한수원, 현대건설 등 관계 기관이 참석하여 수소 배관망 구축 및 통합 안전운영 센터 설립 등 핵심 과제를 논의했다."
+      },
+      {
+        "hash": "da12e1fe235847f0",
+        "title": "김윤덕 국토부 장관, 부안 수소도시 조성사업 현장 점검",
+        "summary": "김윤덕 국토교통부 장관이 14일 부안 수소도시 조성사업 현장을 점검하며 재생에너지 연계 수소 생산 및 활용 기반 구축 현황을 확인했다.",
+        "detail": "김윤덕 국토교통부 장관은 14일 부안군 하서면 신재생에너지단지를 방문하여 부안 수소도시 조성사업 추진 상황을 점검했다. 이 사업은 2024년부터 2027년까지 총사업비 약 400억 원을 투입하여 수소 생산, 저장, 이송, 활용의 전 과정을 아우르는 기반시설을 구축한다. 현장 점검에는 권익현 부안군수, 국토교통과학기술진흥원, 전북테크노파크, 한전KPS, 한국가스기술공사, 한전KDN, 현대건설, 한국수력원자력 등 참여 기관 및 기업 관계자들이 참석했다. 방문단은 2.5메가와트급 수전해 기반 수소생산기지와 단지 내 수소스테이션을 둘러보며 핵심 인프라의 가동 및 구축 상태를 살폈다. 이 생산기지는 하루 1톤 이상의 수소 생산을 목표로 하며, 생산된 수소는 군내 수소충전소와 연구시설 등에 공급될 예정이다."
+      }
+    ],
+    "story_relation": "duplicate",
+    "story_reason": "title/facility duplicate",
+    "story_dedup_stage": "local_title",
+    "story_raw_source_count": 0,
+    "story_display_hash": "7a33396adf5ba05e",
+    "story_display_candidates": 2,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "c041a2e0e6c1b779",
@@ -5936,51 +5557,6 @@
       "novelty": 0,
       "evidence_strength": 0,
       "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-15",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
-  },
-  {
-    "hash": "565a77d9ffdd8577",
-    "title": "\"빌 게이츠 원전, 현대건설이 짓는다\"… 테라파워 '나트륨' 4세대 SMR 최...",
-    "title_kr": "현대건설, 테라파워 4세대 SMR '나트륨' EPC 총괄 파트너 선정",
-    "link": "https://www.g-enews.com/view.php?ud=2026081609094248280c8c1c064d_1",
-    "domain": "g-enews.com",
-    "publisher": "g-enews.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원전 수출",
-    "importance": "must_read",
-    "section": "smr",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "현대건설이 빌 게이츠가 설립한 테라파워의 4세대 SMR '나트륨' 프로젝트(최대 8기)의 EPC 총괄 파트너로 선정되었다.",
-    "detail": "미국 와이오밍주 케머러 실증 발전소를 시작으로 최대 8기의 나트륨 원자로 EPC를 수행한다. 나트륨 원자로는 345MW급 소듐냉각고속로(SFR)에 500MW급 용융염 ESS를 결합한 모델이다. SK이노베이션 등 SK그룹과의 전략적 협력을 통해 향후 한국 내 상업용 도입 및 글로벌 공동 수출을 추진할 계획이다.",
-    "implication": "국내 건설사가 차세대 4세대 원전 시장의 EPC 주도권을 확보함으로써 글로벌 SMR 공급망 내 핵심 지위를 선점했다.",
-    "why_important": "현대건설이 테라파워의 4세대 SMR 실증 및 후속 호기 EPC를 총괄하게 됨에 따라, 한국 기업의 차세대 원전 시장 진출이 가속화될 전망이다.",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR",
-      "#테라파워",
-      "#현대건설"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "contract_award",
-      "korea_relevance": 3,
-      "market_materiality": 3,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 3
     },
     "prior_coverage": 0,
     "event_date": "2026-08-15",
@@ -6035,51 +5611,6 @@
     "queued_at": "2026-08-16T01:21:35.007632+00:00"
   },
   {
-    "hash": "664069beff9cc919",
-    "title": "‘3대 메가 프로젝트’ 전력수요 잠정치 20일 공개한다",
-    "title_kr": "정부, 3대 메가프로젝트 반영한 제12차 전기본 전력수요 잠정치 20일 공개",
-    "link": "https://www.hani.co.kr/arti/society/environment/1273073.html",
-    "domain": "hani.co.kr",
-    "publisher": "hani.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "전력수급기본계획",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "정부가 3대 메가프로젝트에 따른 신규 전력 수요를 반영한 제12차 전력수급기본계획의 잠정치를 20일 정책토론회에서 공개한다.",
-    "detail": "정부와 제12차 전기본 수립 총괄위원회는 20일 국회의원회관에서 제4·5차 대국민 정책토론회를 개최한다. 오후 2시 열리는 5차 토론회에서 3대 메가프로젝트 수요가 반영된 2040년 전력 수요 전망치가 제시될 예정이다. 이번 잠정치에는 전체 예상 수요 중 사업 계획이 구체화된 일부 수요만 포함될 것으로 보인다. 정부는 지난 4월 131.8~138.2GW 규모의 잠정안을 발표했으나, 6월 24.7GW 규모의 신규 수요가 예상되는 3대 메가프로젝트 발표 이후 전망치를 재검토해왔다.",
-    "implication": "이번 잠정치는 3대 메가프로젝트에 따른 전력망 및 발전 설비 확충 규모를 가늠할 수 있는 기초 자료가 될 것이다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전기본",
-      "#전력수요",
-      "#메가프로젝트"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-20",
-    "event_date_type": "scheduled",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
-  },
-  {
     "hash": "e39a5781ea57766c",
     "title": "한전·가스공사 상반기 이자만 2조7천억원",
     "title_kr": "한전·가스공사 상반기 이자비용 2.7조원…재무 부담 지속",
@@ -6122,7 +5653,112 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
+    "queued_at": "2026-08-16T01:21:35.007632+00:00",
+    "story_article_count": 4,
+    "story_article_hashes": [
+      "e39a5781ea57766c",
+      "07bdaa8201bdcc8b",
+      "86da111f769b9b42",
+      "3f159c0f2ef8f84e"
+    ],
+    "story_outlet_count": 4,
+    "story_tier1_count": 0,
+    "story_independent_outlet_count": 4,
+    "story_sources": [
+      {
+        "identity": "fnnews.com",
+        "publisher": "fnnews.com",
+        "domain": "fnnews.com",
+        "tier": 3,
+        "evidence_role": "independent"
+      },
+      {
+        "identity": "joongang.co.kr",
+        "publisher": "joongang.co.kr",
+        "domain": "joongang.co.kr",
+        "tier": 3,
+        "evidence_role": "independent"
+      },
+      {
+        "identity": "kmib.co.kr",
+        "publisher": "kmib.co.kr",
+        "domain": "kmib.co.kr",
+        "tier": 3,
+        "evidence_role": "independent"
+      },
+      {
+        "identity": "에너지경제",
+        "publisher": "에너지경제",
+        "domain": "ekn.kr",
+        "tier": 3,
+        "evidence_role": "independent"
+      }
+    ],
+    "story_related_titles": [
+      "한전·가스공사 상반기 이자비용 2.7조원…재무 부담 지속",
+      "한전·가스공사, 상반기 이자 비용 2.7조 원 기록",
+      "한전·가스공사 상반기 이자비용 2.7조원 돌파",
+      "한전·가스공사 상반기 이자 비용 2.7조원…전기요금 인상 압박 가중"
+    ],
+    "story_members": [
+      {
+        "hash": "e39a5781ea57766c",
+        "title": "한전·가스공사 상반기 이자비용 2.7조원…재무 부담 지속",
+        "publisher": "fnnews.com",
+        "fold_stage": "local_title"
+      },
+      {
+        "hash": "07bdaa8201bdcc8b",
+        "title": "한전·가스공사, 상반기 이자 비용 2.7조 원 기록",
+        "publisher": "joongang.co.kr",
+        "fold_stage": ""
+      },
+      {
+        "hash": "86da111f769b9b42",
+        "title": "한전·가스공사 상반기 이자비용 2.7조원 돌파",
+        "publisher": "에너지경제",
+        "fold_stage": ""
+      },
+      {
+        "hash": "3f159c0f2ef8f84e",
+        "title": "한전·가스공사 상반기 이자 비용 2.7조원…전기요금 인상 압박 가중",
+        "publisher": "kmib.co.kr",
+        "fold_stage": ""
+      }
+    ],
+    "story_context": [
+      {
+        "hash": "e39a5781ea57766c",
+        "title": "한전·가스공사 상반기 이자비용 2.7조원…재무 부담 지속",
+        "summary": "에너지 가격 상승과 요금 동결 여파로 한전과 가스공사의 상반기 이자비용이 2조 7천억원을 상회하며 재무 부담이 가중되고 있다.",
+        "detail": "한전의 상반기 이자비용은 2조 790억원으로 전년 대비 6.0% 감소했으나, 부채는 210조 7160억원으로 증가했다. 가스공사의 상반기 이자비용은 6490억원이며, 미수금은 14조 1780억원으로 소폭 늘었다. 한전은 2027년 말까지 한시적으로 사채 발행 한도를 자본금·적립금 합계의 5배로 늘린 특례를 적용받고 있으나, 이후 한도가 2배로 축소될 예정이라 재무 구조 개선이 시급하다. 하반기 중동 정세에 따른 LNG 가격 상승이 SMP에 반영될 경우 추가적인 수익성 악화가 우려된다."
+      },
+      {
+        "hash": "07bdaa8201bdcc8b",
+        "title": "한전·가스공사, 상반기 이자 비용 2.7조 원 기록",
+        "summary": "한국전력과 한국가스공사가 올해 상반기에만 총 2조 7000억 원의 이자 비용을 지출했다.",
+        "detail": "한국전력은 2조 790억 원, 한국가스공사는 6490억 원의 이자 비용을 각각 기록했다. 에너지 가격 상승 영향이 하반기에 본격 반영될 것으로 예상되는 가운데, 반도체 클러스터 및 AI 데이터센터 등 메가프로젝트를 위한 송·배전망 건설 비용 부담이 가중되고 있다."
+      },
+      {
+        "hash": "86da111f769b9b42",
+        "title": "한전·가스공사 상반기 이자비용 2.7조원 돌파",
+        "summary": "한국전력과 한국가스공사의 올해 상반기 이자비용이 2조 7천억 원을 넘어섰으며, 하반기 에너지 가격 상승 시 재무 부담이 가중될 전망이다.",
+        "detail": "한국전력과 한국가스공사가 올해 상반기에만 2조 7천억 원이 넘는 이자비용을 지출했다. 중동 전쟁에 따른 에너지 가격 상승이 하반기에 본격 반영될 경우 재무 구조에 추가적인 악영향이 우려된다. 정부는 지역별 차등 전기요금제 도입을 검토 중이나, 이는 한전의 수익성에 변수로 작용할 수 있다."
+      },
+      {
+        "hash": "3f159c0f2ef8f84e",
+        "title": "한전·가스공사 상반기 이자 비용 2.7조원…전기요금 인상 압박 가중",
+        "summary": "한국전력과 한국가스공사의 상반기 이자 비용이 2조 7천억 원을 넘어서며 전기요금 인상 압박이 커지고 있다.",
+        "detail": "한전의 상반기 이자 비용은 2조 790억 원, 가스공사는 6,490억 원으로 집계되었다. 한전의 부채는 지난해 말 205조 원에서 상반기 210조 원으로 증가했다. 한전은 2038년까지 AI 데이터센터 등 메가프로젝트 송·변전 설비에 72조 8천억 원, 배전망에 10조 2천억 원을 투자할 계획이다."
+      }
+    ],
+    "story_relation": "duplicate",
+    "story_reason": "한전 및 가스공사의 재무 부담은 에너지 공기업의 경영 실적에 관한 독립적인 시장 신호입니다.",
+    "story_dedup_stage": "editorial_final",
+    "story_raw_source_count": 0,
+    "story_display_hash": "e39a5781ea57766c",
+    "story_display_candidates": 4,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "dfe9d0036b877499",
@@ -6167,7 +5803,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-16T01:21:35.007632+00:00"
+    "queued_at": "2026-08-16T01:21:35.007632+00:00",
+    "story_display_hash": "dfe9d0036b877499",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "0a82aedd01891ada",
@@ -6212,7 +5851,10 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-16T03:49:57.213071+00:00"
+    "queued_at": "2026-08-16T03:49:57.213071+00:00",
+    "story_display_hash": "0a82aedd01891ada",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "afe5bece60078c65",
@@ -6305,51 +5947,6 @@
     "queued_at": "2026-08-16T03:49:57.213071+00:00"
   },
   {
-    "hash": "42bd36f94f24e28c",
-    "title": "마이크론 목표가 1549달러, 메모리값 상승 지속 전망",
-    "title_kr": "마이크론, AI 데이터센터 수요에 따른 메모리 가격 상승 전망",
-    "link": "https://www.tokenpost.kr/news/market/391554",
-    "domain": "tokenpost.kr",
-    "publisher": "tokenpost.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "market",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "AI 데이터센터와 고성능 컴퓨팅 수요 확대로 2026년 하반기까지 DRAM 및 NAND 가격 상승세가 지속될 것으로 전망되며, 월가 목표주가가 상향 조정되었다.",
-    "detail": "키뱅크는 2026년 3분기와 4분기 메모리 가격이 큰 폭으로 오를 것으로 예상했다. AI 인프라 투자가 메모리 업황의 핵심 변수로 작용하고 있으며, 장기공급계약(LTA) 비중 확대가 실적 변동성을 낮출 것으로 분석된다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#메모리",
-      "#AI",
-      "#데이터센터"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "market_signal",
-      "korea_relevance": 1,
-      "market_materiality": 2,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T03:49:57.213071+00:00"
-  },
-  {
     "hash": "406e7fa08f4ee23d",
     "title": "SMIC, AI 데이터센터 보조 칩 특수에 2분기 깜짝 실적",
     "title_kr": "SMIC, AI 데이터센터 보조 칩 수요 급증으로 2분기 실적 호조",
@@ -6395,186 +5992,6 @@
     "queued_at": "2026-08-16T03:49:57.213071+00:00"
   },
   {
-    "hash": "4184f9584371025b",
-    "title": "원전 복귀 나선 서방… 스페인 수명연장·美 가스 결합 SMR",
-    "title_kr": "스페인 알마라즈 원전 수명연장 및 미국 하이브리드 SMR 추진",
-    "link": "https://www.g-enews.com/view.php?ud=202608161103313619fbbec65dfb_1",
-    "domain": "g-enews.com",
-    "publisher": "g-enews.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원자력 정책",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "규제",
-    "summary": "스페인이 알마라즈 원전 1·2호기 운영 허가를 2030년까지 연장했으며, 미국 텍사스주는 2.5GW 규모의 하이브리드 발전 프로젝트에 착수했다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#계속운전",
-      "#SMR",
-      "#에너지안보"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "regulatory_action",
-      "korea_relevance": 1,
-      "market_materiality": 1,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 2,
-    "event_date": "2026-08-14",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T03:49:57.213071+00:00"
-  },
-  {
-    "hash": "953414e97d3544c5",
-    "title": "빌 게이츠 방한, K-SMR 공급망 현실화… SK·HD현대·두산, 테라파워와 ...",
-    "title_kr": "빌 게이츠 방한, 국내 기업 테라파워 SMR 공급망 참여 본격화",
-    "link": "https://www.koreaittimes.com/news/articleView.html?idxno=156163",
-    "domain": "koreaittimes.com",
-    "publisher": "koreaittimes.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원전 수출",
-    "importance": "nice_to_know",
-    "section": "smr",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "빌 게이츠 테라파워 창업자 방한을 계기로 SK이노베이션, HD현대, 두산에너빌리티의 테라파워 SMR 사업 참여가 구체화되었다.",
-    "detail": "테라파워와 SK이노베이션은 글로벌 공동사업 추진을 위한 주요 조건 합의서를 체결하고, 실증로 및 후속 상용 프로젝트 참여와 국내 공급망 활용을 검토하기로 했다. HD현대는 테라파워 원자로 용기 제작을 위한 생산체계 구축을 추진 중이며, 두산에너빌리티는 원자로 보호용기 등 핵심 기자재 제작 계약을 체결했다. 김정관 산업부 장관은 테라파워의 설계와 한국의 제조·건설 역량을 결합해 SMR 경제성을 높이겠다고 밝혔다.",
-    "implication": "단순 재무적 투자 관계였던 국내 기업들이 테라파워의 실증로 건설 및 후속 상용화 프로젝트의 핵심 공급망 파트너로 격상되었다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR",
-      "#테라파워",
-      "#공급망"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-14",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T03:49:57.213071+00:00"
-  },
-  {
-    "hash": "70c810d1c38cccfa",
-    "title": "한미반도체, 반도체 장비주에 다시 쏠린 시선...SMR 효과는?",
-    "title_kr": "한미반도체 주가 상승세와 SMR 협력 이슈",
-    "link": "https://www.cbci.co.kr/news/articleView.html?idxno=598602",
-    "domain": "cbci.co.kr",
-    "publisher": "cbci.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "SMR",
-    "matched": "SMR",
-    "importance": "market",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "한미반도체가 최근 5거래일 연속 상승세를 보인 가운데, 빌 게이츠 방한과 테라파워 협력 등 SMR 관련 이슈가 시장의 관심을 끌고 있다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#한미반도체",
-      "#SMR",
-      "#주식"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "market_signal",
-      "korea_relevance": 1,
-      "market_materiality": 2,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T03:49:57.213071+00:00"
-  },
-  {
-    "hash": "fb1014df46236dd8",
-    "title": "12차 전기본 전력수요 다시 짠다…'3대 메가' 반영 전망 20일 공개",
-    "title_kr": "정부, 제12차 전력수급기본계획 전력수요 재산정 및 20일 공개",
-    "link": "https://www.news1.kr/society/environment/6260506",
-    "domain": "news1.kr",
-    "publisher": "뉴스1",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "전력수급기본계획",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "정부가 6월 확정된 3대 메가프로젝트에 따른 추가 전력수요를 반영하기 위해 제12차 전력수급기본계획의 수요 전망을 재산정하여 20일 공개할 예정이다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전기본",
-      "#전력수요",
-      "#산업정책"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 1,
-    "event_date": "2026-08-20",
-    "event_date_type": "scheduled",
-    "event_date_precision": "day",
-    "event_date_source": "title",
-    "queued_at": "2026-08-16T03:49:57.213071+00:00"
-  },
-  {
     "hash": "4049424c7f7f06f5",
     "title": "미국 의회 수력 인허가 개혁…원전·SMR 규제에도 시사점",
     "title_kr": "미국 의회, 수력발전 인허가 개혁 법안 추진…원전 규제 완화 시사",
@@ -6617,7 +6034,65 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-16T03:49:57.213071+00:00"
+    "queued_at": "2026-08-16T03:49:57.213071+00:00",
+    "story_article_count": 1,
+    "story_article_hashes": [
+      "4049424c7f7f06f5"
+    ],
+    "story_outlet_count": 1,
+    "story_tier1_count": 0,
+    "story_independent_outlet_count": 1,
+    "story_sources": [
+      {
+        "identity": "에너지안전신문",
+        "publisher": "에너지안전신문",
+        "domain": "esnews.kr",
+        "tier": 3,
+        "evidence_role": "independent"
+      }
+    ],
+    "story_related_titles": [
+      "미국 의회, 수력발전 인허가 개혁 법안 추진…원전 규제 완화 시사"
+    ],
+    "story_members": [
+      {
+        "hash": "4049424c7f7f06f5",
+        "title": "미국 의회, 수력발전 인허가 개혁 법안 추진…원전 규제 완화 시사",
+        "publisher": "에너지안전신문",
+        "fold_stage": "semantic_story"
+      }
+    ],
+    "story_context": [
+      {
+        "hash": "4049424c7f7f06f5",
+        "title": "미국 의회, 수력발전 인허가 개혁 법안 추진…원전 규제 완화 시사",
+        "summary": "미국 의회가 수력발전의 신규 건설 및 재허가 절차를 간소화하는 초당적 법안을 추진하며 전력 인프라 인허가 개혁에 속도를 내고 있다.",
+        "detail": "미국 의회는 수력발전소의 건설과 기존 설비의 재허가 과정을 지연시키는 연방 인허가 절차를 개선하기 위한 법안을 논의 중이다. 전력 수요 급증에 대응하기 위해 에너지 인프라 전반의 행정 절차를 효율화하려는 움직임이다. 이러한 인허가 개혁 기조는 향후 원자력 발전 및 SMR 도입을 위한 규제 환경 개선에도 영향을 미칠 것으로 관측된다."
+      }
+    ],
+    "story_relation": "single",
+    "story_reason": "미국 의회의 수력발전 인허가 개혁 법안 추진 소식입니다.",
+    "story_dedup_stage": "editorial_final",
+    "story_fingerprint": {
+      "countries": [
+        "USA"
+      ],
+      "actors": [
+        "US Congress"
+      ],
+      "assets": [
+        "Hydropower"
+      ],
+      "event_family": "policy_decision",
+      "drivers": [
+        "regulatory reform"
+      ],
+      "event_date": ""
+    },
+    "story_raw_source_count": 0,
+    "story_display_hash": "4049424c7f7f06f5",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "86da111f769b9b42",
@@ -6665,51 +6140,6 @@
     "queued_at": "2026-08-16T03:49:57.213071+00:00"
   },
   {
-    "hash": "4dab5ec4e27919a9",
-    "title": "﻿비에이치아이, 2분기 영업이익 123% 상승한 455억원…사상 최대 규모",
-    "title_kr": "비에이치아이, 2분기 영업이익 455억 달성…전년 대비 123% 급증",
-    "link": "http://www.e-platform.net/news/articleView.html?idxno=104584",
-    "domain": "e-platform.net",
-    "publisher": "e-platform.net",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "12차 전기본",
-    "importance": "market",
-    "section": "khnp",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "비에이치아이가 2분기 연결 기준 매출 2,963억 원, 영업이익 455억 원을 기록하며 분기 기준 사상 최대 영업이익률 15.4%를 달성했다.",
-    "detail": "비에이치아이는 수익성 높은 프로젝트의 매출 인식 확대와 원가 경쟁력 개선에 힘입어 6개 분기 연속 시장 기대치를 상회하는 실적을 기록했다. 2분기 영업이익은 전년 동기 대비 123.1% 증가한 455억 원이며, 당기순이익은 203억 원을 기록했다. 회사는 AI 데이터센터 및 반도체 클러스터 조성에 따른 글로벌 전력 인프라 투자 확대 기조에 맞춰 신규 수주를 지속적으로 확보할 계획이다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#비에이치아이",
-      "#실적발표",
-      "#전력인프라"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 2,
-      "market_materiality": 3,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-14",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T03:49:57.213071+00:00"
-  },
-  {
     "hash": "9cab845080d526a9",
     "title": "효성중공업에 쏠린 시선…테라파워, 한국과 '나트륨 원자로' 협력 확대",
     "title_kr": "테라파워, 한국 기업과 나트륨 원자로 협력 확대",
@@ -6753,52 +6183,6 @@
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
     "queued_at": "2026-08-16T03:49:57.213071+00:00"
-  },
-  {
-    "hash": "479eb23a61ad65ae",
-    "title": "[독립신문 정책] 12차 전력수급기본계획, 2040년 전력수요 다시 짠다…‘전기국가’ 전략 본격화",
-    "title_kr": "정부, 제12차 전력수급기본계획 통해 2040년 전력수요 재산정",
-    "link": "https://news.google.com/rss/articles/CBMia0FVX3lxTFB3SWlnMHJIQ1hyTnQ0LUs5TGRKaEcxZWJFVDlGYnJ3VmE2d3hvYVliRld0UndaWkhHSXh5ZnRvZzlQZmROM013TnpaOEE0ejR0WlpJTUxiN0h2RUtmZWZibHFXSV9QbTNqT3JJ?oc=5",
-    "domain": "ainews1.co.kr",
-    "publisher": "ainews1.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "국내 원자력 보도",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "정부가 제12차 전력수급기본계획 수립을 통해 2040년 전력수요를 재산정하고 '전기국가' 전략을 본격화한다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전력수급기본계획",
-      "#전력수요",
-      "#에너지정책"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 2,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T06:40:37.347275+00:00",
-    "raw_sources": []
   },
   {
     "hash": "d13c8102b7be2903",
@@ -6924,225 +6308,10 @@
     "story_relation": "collected",
     "story_reason": "수집 단계 동일 기사 병합",
     "story_dedup_stage": "collect_fold",
-    "story_raw_source_count": 2
-  },
-  {
-    "hash": "67b1530f243d1683",
-    "title": "재생에너지 시장서 존재감 키우는 ESS",
-    "title_kr": "AI 시대 핵심 인프라로 부상하는 ESS",
-    "link": "http://www.smedaily.co.kr/news/articleView.html?idxno=361830",
-    "domain": "smedaily.co.kr",
-    "publisher": "smedaily.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "기후에너지환경부가 하반기 업무보고를 통해 AI 시대 경쟁력 확보를 위한 ESS 중요성을 강조하며 관련 시장이 확대되고 있다.",
-    "detail": "기후에너지환경부는 AI 시대 국가 경쟁력 확보를 위해 재생에너지의 불안정성을 보완할 ESS의 중요성을 강조했다. 데이터센터의 운영 안정성을 위해 UPS를 넘어선 전력 효율화 및 ESS 수요가 증가하고 있다. 삼성SDI 등 국내 배터리 업계는 이를 통해 정체된 시장의 새로운 활로를 모색하고 있다.",
-    "implication": "AI 데이터센터의 전력 안정성 확보를 위한 ESS 수요가 국내 배터리 업계의 신규 사업 기회로 연결되고 있다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#ESS",
-      "#데이터센터",
-      "#배터리"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 2,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 1,
-    "event_date": "2026-08-16",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T06:40:37.347275+00:00",
-    "raw_sources": [
-      {
-        "hash": "ff6cd44461d26e1a",
-        "title": "전기차 밖으로 나온 K-배터리…AI 데이터센터 전력시장 공략",
-        "link": "https://www.m-i.kr/news/articleView.html?idxno=1402803",
-        "identity": "m-i.kr",
-        "publisher": "m-i.kr",
-        "domain": "m-i.kr",
-        "feed": "정책",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 14:44:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.89
-      },
-      {
-        "hash": "023c1759594b1e6c",
-        "title": "정유로 벌고 AI로 키운다…GS, 2.4GW 데이터센터 승부수",
-        "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=477820",
-        "identity": "pinpointnews.co.kr",
-        "publisher": "pinpointnews.co.kr",
-        "domain": "pinpointnews.co.kr",
-        "feed": "정책",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 15:00:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.8543
-      }
-    ],
-    "story_article_count": 3,
-    "story_article_hashes": [
-      "67b1530f243d1683",
-      "ff6cd44461d26e1a",
-      "023c1759594b1e6c"
-    ],
-    "story_outlet_count": 3,
-    "story_tier1_count": 0,
-    "story_independent_outlet_count": 1,
-    "story_sources": [
-      {
-        "identity": "m-i.kr",
-        "publisher": "m-i.kr",
-        "domain": "m-i.kr",
-        "tier": null,
-        "evidence_role": ""
-      },
-      {
-        "identity": "pinpointnews.co.kr",
-        "publisher": "pinpointnews.co.kr",
-        "domain": "pinpointnews.co.kr",
-        "tier": null,
-        "evidence_role": ""
-      },
-      {
-        "identity": "smedaily.co.kr",
-        "publisher": "smedaily.co.kr",
-        "domain": "smedaily.co.kr",
-        "tier": 3,
-        "evidence_role": "independent"
-      }
-    ],
-    "story_related_titles": [
-      "AI 시대 핵심 인프라로 부상하는 ESS",
-      "전기차 밖으로 나온 K-배터리…AI 데이터센터 전력시장 공략",
-      "정유로 벌고 AI로 키운다…GS, 2.4GW 데이터센터 승부수"
-    ],
-    "story_context": [
-      {
-        "hash": "67b1530f243d1683",
-        "title": "AI 시대 핵심 인프라로 부상하는 ESS",
-        "summary": "기후에너지환경부가 하반기 업무보고를 통해 AI 시대 경쟁력 확보를 위한 ESS 중요성을 강조하며 관련 시장이 확대되고 있다.",
-        "detail": "기후에너지환경부는 AI 시대 국가 경쟁력 확보를 위해 재생에너지의 불안정성을 보완할 ESS의 중요성을 강조했다. 데이터센터의 운영 안정성을 위해 UPS를 넘어선 전력 효율화 및 ESS 수요가 증가하고 있다. 삼성SDI 등 국내 배터리 업계는 이를 통해 정체된 시장의 새로운 활로를 모색하고 있다."
-      }
-    ],
-    "story_relation": "collected",
-    "story_reason": "수집 단계 동일 기사 병합",
-    "story_dedup_stage": "collect_fold",
-    "story_raw_source_count": 2
-  },
-  {
-    "hash": "119e44ac765f13f0",
-    "title": "원전 복귀 나선 서방… 스페인 수명연장·美 가스 결합 SMR",
-    "title_kr": "서방 원전 수명연장 및 SMR-가스 복합발전 확대",
-    "link": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxNZVJVSU5KaVFxcFVCMUZ0bmF0OTR6RXhsR2F1N252RlYxUFdldUNZWUYxMGxUNjFqV2ZESVh3TVJ4LXRBZktORThSenl4YU1TbHV0UkhQVFE5MXlRYTU0Qk41TXQ3d3F2U0lRVS12eXlKODRMN3IwUk9jUlpsY2tBemZzOHQ0eE5m?oc=5",
-    "domain": "g-enews.com",
-    "publisher": "글로벌이코노믹",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "SMR",
-    "matched": "국내 원자력 보도",
-    "importance": "nice_to_know",
-    "section": "smr",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "스페인이 알마라즈 원전 수명을 2030년까지 연장하고, 미국은 텍사스에 SMR과 천연가스를 결합한 2.5GW 복합 발전소를 건설한다.",
-    "detail": "스페인 정부는 전력난 방지를 위해 알마라즈 1·2호기 운영 허가를 2030년 6월까지 연장했다. 미국 블루에너지는 GE 버노바 히타치와 협력해 텍사스주 빅토리아에 2.5GW 규모 복합 발전소를 건설하며, 2032년부터 300MWe급 BWRX-300 SMR 5기를 도입할 계획이다. 이는 데이터센터 전력 수요 대응을 위한 것으로, 한국 원전 소부장 업계의 해외 진출 기회가 확대될 것으로 관측된다.",
-    "implication": "글로벌 데이터센터 전력 공급을 위해 SMR과 가스발전을 결합하는 하이브리드 모델이 확산하며 한국 기업의 공급망 참여 기회가 늘고 있다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR",
-      "#수명연장",
-      "#해외수주"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "project_milestone",
-      "korea_relevance": 2,
-      "market_materiality": 2,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-14",
-    "event_date_type": "occurrence",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T06:40:37.347275+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "9b707d5bc0e90593",
-    "title": "전남광주통합특별시의회, SK 100조원 투자계획에 지원체계 가동 예고",
-    "title_kr": "전남광주통합특별시의회, SK 100조원 투자 지원 예고",
-    "link": "http://www.srtimes.kr/news/articleView.html?idxno=210141",
-    "domain": "srtimes.kr",
-    "publisher": "srtimes.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "전남광주통합특별시의회가 SK그룹의 대규모 AI·반도체 투자 계획에 대해 조례 및 예산 지원을 신속히 검토하겠다고 밝혔다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SK",
-      "#투자",
-      "#데이터센터"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 2,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T06:40:37.347275+00:00",
-    "raw_sources": []
+    "story_raw_source_count": 2,
+    "story_display_hash": "d13c8102b7be2903",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "e1414275f1990284",
@@ -7188,7 +6357,10 @@
     "event_date_precision": "day",
     "event_date_source": "article_text",
     "queued_at": "2026-08-16T06:40:37.347275+00:00",
-    "raw_sources": []
+    "raw_sources": [],
+    "story_display_hash": "e1414275f1990284",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "ff7da4a1a729f0f1",
@@ -7280,203 +6452,66 @@
     "event_date_precision": "day",
     "event_date_source": "article_text",
     "queued_at": "2026-08-16T06:40:37.347275+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "b9719697dda27644",
-    "title": "SK이노베이션·테라파워, 나트륨 SMR 사업협력 합의서 체결",
-    "title_kr": "SK이노베이션-테라파워, 나트륨 SMR 사업협력 합의서 체결",
-    "link": "http://www.lawissue.co.kr/view.php?ud=202608161426572978f4ab64559d_12",
-    "domain": "lawissue.co.kr",
-    "publisher": "lawissue.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원자력 정책",
-    "importance": "must_read",
-    "section": "smr",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "SK이노베이션이 테라파워와 나트륨 SMR 글로벌 사업 확대 및 국내 적용을 위한 사업협력 합의서를 체결했다.",
-    "detail": "SK이노베이션과 테라파워는 미국 내 SMR 실증로 참여 확대, 국내 공급망 활용, 한국형 나트륨 SMR 사업모델 개발 등을 추진하기로 합의했다. 테라파워의 '케머러 1호기'는 지난 3월 NRC 건설허가를 획득한 바 있다. 양사는 향후 미국 정부의 정책·금융 지원과 연계하여 글로벌 프로젝트를 공동 발굴할 계획이다.",
-    "implication": "SK그룹의 테라파워 지분 투자가 실질적인 SMR 사업 모델 개발 및 국내 공급망 구축으로 구체화되고 있다.",
-    "why_important": "SK이노베이션이 테라파워의 2대 주주로서 미국 내 실증로 참여를 넘어 국내 사업화 및 글로벌 프로젝트 공동 발굴을 공식화한 전략적 진전이다.",
-    "open_question": "국내 나트륨 SMR 사업모델인 'K-나트륨'의 구체적인 추진 방향은 향후 검토를 통해 확정될 예정이다.",
-    "open_question_source": "article_text",
-    "watch_next": "",
-    "tags": [
-      "#SK이노베이션",
-      "#테라파워",
-      "#SMR"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "contract_award",
-      "korea_relevance": 3,
-      "market_materiality": 3,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 1,
-    "event_date": "2026-08-14",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T06:40:37.347275+00:00",
-    "raw_sources": [
-      {
-        "hash": "719103e4dd4fefb1",
-        "title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 수주",
-        "link": "https://www.segye.com/newsView/20260816509334?OutUrl=naver",
-        "identity": "segye.com",
-        "publisher": "segye.com",
-        "domain": "segye.com",
-        "feed": "정책",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 14:56:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.8688
-      },
-      {
-        "hash": "183c17bf3b970d91",
-        "title": "Bill Gates Visit Puts Korean Companies at the Center of TerraPower's SMR ...",
-        "link": "https://www.koreaittimes.com/news/articleView.html?idxno=156164",
-        "identity": "koreaittimes.com",
-        "publisher": "koreaittimes.com",
-        "domain": "koreaittimes.com",
-        "feed": "SMR",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 11:40:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.87
-      },
-      {
-        "hash": "f3f581e85458b942",
-        "title": "HD현대-테라파워-현대건설, 美 SMR 시장 속도",
-        "link": "https://www.starnewskorea.com/business-life/2026/08/16/2026081615191569557",
-        "identity": "starnewskorea.com",
-        "publisher": "starnewskorea.com",
-        "domain": "starnewskorea.com",
-        "feed": "SMR",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 15:23:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.8775
-      }
-    ],
-    "story_article_count": 4,
+    "raw_sources": [],
+    "story_article_count": 1,
     "story_article_hashes": [
-      "b9719697dda27644",
-      "719103e4dd4fefb1",
-      "183c17bf3b970d91",
-      "f3f581e85458b942"
+      "b0cd9558972bc66d"
     ],
-    "story_outlet_count": 4,
+    "story_outlet_count": 1,
     "story_tier1_count": 0,
     "story_independent_outlet_count": 1,
     "story_sources": [
       {
-        "identity": "koreaittimes.com",
-        "publisher": "koreaittimes.com",
-        "domain": "koreaittimes.com",
-        "tier": null,
-        "evidence_role": ""
-      },
-      {
-        "identity": "lawissue.co.kr",
-        "publisher": "lawissue.co.kr",
-        "domain": "lawissue.co.kr",
+        "identity": "zdnet.co.kr",
+        "publisher": "zdnet.co.kr",
+        "domain": "zdnet.co.kr",
         "tier": 3,
         "evidence_role": "independent"
-      },
-      {
-        "identity": "segye.com",
-        "publisher": "segye.com",
-        "domain": "segye.com",
-        "tier": null,
-        "evidence_role": ""
-      },
-      {
-        "identity": "starnewskorea.com",
-        "publisher": "starnewskorea.com",
-        "domain": "starnewskorea.com",
-        "tier": null,
-        "evidence_role": ""
       }
     ],
     "story_related_titles": [
-      "SK이노베이션-테라파워, 나트륨 SMR 사업협력 합의서 체결",
-      "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 수주",
-      "Bill Gates Visit Puts Korean Companies at the Center of TerraPower's SMR ...",
-      "HD현대-테라파워-현대건설, 美 SMR 시장 속도"
+      "정부 7대 SEED 프로젝트 내 핵융합 포함 찬반 논쟁"
+    ],
+    "story_members": [
+      {
+        "hash": "b0cd9558972bc66d",
+        "title": "정부 7대 SEED 프로젝트 내 핵융합 포함 찬반 논쟁",
+        "publisher": "zdnet.co.kr",
+        "fold_stage": "semantic_story"
+      }
     ],
     "story_context": [
       {
-        "hash": "b9719697dda27644",
-        "title": "SK이노베이션-테라파워, 나트륨 SMR 사업협력 합의서 체결",
-        "summary": "SK이노베이션이 테라파워와 나트륨 SMR 글로벌 사업 확대 및 국내 적용을 위한 사업협력 합의서를 체결했다.",
-        "detail": "SK이노베이션과 테라파워는 미국 내 SMR 실증로 참여 확대, 국내 공급망 활용, 한국형 나트륨 SMR 사업모델 개발 등을 추진하기로 합의했다. 테라파워의 '케머러 1호기'는 지난 3월 NRC 건설허가를 획득한 바 있다. 양사는 향후 미국 정부의 정책·금융 지원과 연계하여 글로벌 프로젝트를 공동 발굴할 계획이다."
+        "hash": "b0cd9558972bc66d",
+        "title": "정부 7대 SEED 프로젝트 내 핵융합 포함 찬반 논쟁",
+        "summary": "정부의 7대 SEED 프로젝트에 SMR과 핵융합이 포함되자 시민단체와 학계 간의 찬반 성명이 이어지고 있다.",
+        "detail": "정부는 미래 성장엔진으로 SMR과 핵융합을 포함한 7대 SEED 프로젝트를 발표했다. 이에 원자력안전과미래 등은 안전성 및 경제성 검증 부족을 이유로 예산 재검토를 요구했으나, 핵융합혁신연합과 한국물리학회는 핵융합 상용화 추진을 환영하는 성명을 발표했다. 과기정통부는 국가전략기술로서 과감한 투자가 필요하다는 입장을 고수하고 있다."
       }
     ],
-    "story_relation": "collected",
-    "story_reason": "수집 단계 동일 기사 병합",
-    "story_dedup_stage": "collect_fold",
-    "story_raw_source_count": 3
-  },
-  {
-    "hash": "642b4aff5978f36e",
-    "title": "엔비디아, 에스비에너지 30억달러 투자 논의",
-    "title_kr": "엔비디아, 에스비에너지에 최대 30억 달러 투자 논의",
-    "link": "https://www.tokenpost.kr/news/breaking/391611",
-    "domain": "tokenpost.kr",
-    "publisher": "tokenpost.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "엔비디아가 소프트뱅크 계열 에스비에너지의 오하이오 데이터센터 프로젝트에 최대 30억 달러를 투자하는 방안을 논의 중이다.",
-    "detail": "엔비디아의 이번 투자는 오픈AI 인프라 자금 조달 협상의 일환으로, 에스비에너지가 추진하는 10GW 규모 데이터센터 개발 프로젝트와 연계되어 있다. 에스비에너지는 이르면 9월 상장을 통해 50억 달러 조달을 목표로 하고 있다.",
-    "implication": "빅테크 기업들이 데이터센터 전력 인프라 확보를 위해 에너지 기업에 직접 투자하는 사례가 늘고 있다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#엔비디아",
-      "#데이터센터",
-      "#투자"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 1,
-      "market_materiality": 3,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
+    "story_relation": "single",
+    "story_reason": "정부의 7대 SEED 프로젝트 내 핵융합 포함에 대한 찬반 논쟁은 R&D 전략에 관한 독립적인 이슈입니다.",
+    "story_dedup_stage": "editorial_final",
+    "story_fingerprint": {
+      "countries": [
+        "South Korea"
+      ],
+      "actors": [
+        "Ministry of Science and ICT"
+      ],
+      "assets": [
+        "SMR",
+        "Nuclear fusion"
+      ],
+      "event_family": "policy_decision",
+      "drivers": [
+        "R&D strategy"
+      ],
+      "event_date": "2026-08-12"
     },
-    "prior_coverage": 1,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T06:40:37.347275+00:00",
-    "raw_sources": []
+    "story_raw_source_count": 0,
+    "story_display_hash": "b0cd9558972bc66d",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "7cbd2f83914d9080",
@@ -7639,178 +6674,6 @@
     "story_raw_source_count": 4
   },
   {
-    "hash": "719103e4dd4fefb1",
-    "title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 수주",
-    "title_kr": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
-    "link": "https://www.segye.com/newsView/20260816509334?OutUrl=naver",
-    "domain": "segye.com",
-    "publisher": "segye.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "NRC 원자력",
-    "importance": "must_read",
-    "section": "smr",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "두산에너빌리티가 미국 테라파워의 와이오밍주 345MW급 차세대 소듐냉각고속로(SFR) 건설 프로젝트에 원자로 핵심 기자재를 공급하는 계약을 체결했다.",
-    "detail": "이번 계약을 통해 두산에너빌리티는 원자로 보호용기, 지지구조물, 내부구조물 등을 제작한다. 테라파워의 원자로는 액체 나트륨을 냉각재로 사용하며, 용융염 에너지 저장 시스템을 결합해 최대 500MW까지 출력을 높일 수 있다. 두산에너빌리티는 2024년 12월 제작성 검토 계약 이후 설계를 개선하며 신뢰를 확보했다.",
-    "implication": "미국 내 상업 규모 차세대 원전 건설 프로젝트에 국내 기업이 핵심 기자재 공급사로 참여함으로써 글로벌 SMR 공급망 내 입지를 강화했다.",
-    "why_important": "미국 NRC 건설허가를 취득하고 착공에 들어간 실질적인 차세대 SMR 프로젝트에 국내 기업이 핵심 기자재를 공급하는 성과를 달성했다.",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR",
-      "#테라파워",
-      "#두산에너빌리티"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "contract_award",
-      "korea_relevance": 3,
-      "market_materiality": 3,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 3
-    },
-    "prior_coverage": 6,
-    "event_date": "2026-08-16",
-    "event_date_type": "unknown",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T09:27:59.987448+00:00",
-    "raw_sources": [
-      {
-        "hash": "21b11a69def02cde",
-        "title": "SK이노·테라파워, SMR 사업화 나선다…AI 데이터센터 전력시장 공략",
-        "link": "https://www.econovill.com/news/articleView.html?idxno=748094",
-        "identity": "econovill.com",
-        "publisher": "econovill.com",
-        "domain": "econovill.com",
-        "feed": "정책",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 18:18:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.8591
-      },
-      {
-        "hash": "f3f581e85458b942",
-        "title": "HD현대-테라파워-현대건설, 美 SMR 시장 속도",
-        "link": "https://www.starnewskorea.com/business-life/2026/08/16/2026081615191569557",
-        "identity": "starnewskorea.com",
-        "publisher": "starnewskorea.com",
-        "domain": "starnewskorea.com",
-        "feed": "SMR",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 15:23:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.871
-      }
-    ],
-    "story_article_count": 3,
-    "story_article_hashes": [
-      "719103e4dd4fefb1",
-      "21b11a69def02cde",
-      "f3f581e85458b942"
-    ],
-    "story_outlet_count": 3,
-    "story_tier1_count": 0,
-    "story_independent_outlet_count": 1,
-    "story_sources": [
-      {
-        "identity": "econovill.com",
-        "publisher": "econovill.com",
-        "domain": "econovill.com",
-        "tier": null,
-        "evidence_role": ""
-      },
-      {
-        "identity": "segye.com",
-        "publisher": "segye.com",
-        "domain": "segye.com",
-        "tier": 3,
-        "evidence_role": "independent"
-      },
-      {
-        "identity": "starnewskorea.com",
-        "publisher": "starnewskorea.com",
-        "domain": "starnewskorea.com",
-        "tier": null,
-        "evidence_role": ""
-      }
-    ],
-    "story_related_titles": [
-      "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
-      "SK이노·테라파워, SMR 사업화 나선다…AI 데이터센터 전력시장 공략",
-      "HD현대-테라파워-현대건설, 美 SMR 시장 속도"
-    ],
-    "story_context": [
-      {
-        "hash": "719103e4dd4fefb1",
-        "title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
-        "summary": "두산에너빌리티가 미국 테라파워의 와이오밍주 345MW급 차세대 소듐냉각고속로(SFR) 건설 프로젝트에 원자로 핵심 기자재를 공급하는 계약을 체결했다.",
-        "detail": "이번 계약을 통해 두산에너빌리티는 원자로 보호용기, 지지구조물, 내부구조물 등을 제작한다. 테라파워의 원자로는 액체 나트륨을 냉각재로 사용하며, 용융염 에너지 저장 시스템을 결합해 최대 500MW까지 출력을 높일 수 있다. 두산에너빌리티는 2024년 12월 제작성 검토 계약 이후 설계를 개선하며 신뢰를 확보했다."
-      }
-    ],
-    "story_relation": "collected",
-    "story_reason": "수집 단계 동일 기사 병합",
-    "story_dedup_stage": "collect_fold",
-    "story_raw_source_count": 2
-  },
-  {
-    "hash": "93d6205823452ddf",
-    "title": "채굴사 해시레이트 21.2% 감소, AI 임대 확대",
-    "title_kr": "비트코인 채굴업체들, AI 데이터센터로 인프라 전환 가속",
-    "link": "https://www.tokenpost.kr/news/cryptocurrency/391613",
-    "domain": "tokenpost.kr",
-    "publisher": "tokenpost.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "상장 비트코인 채굴업체들이 전력 인프라를 AI 및 고성능 컴퓨팅(HPC) 데이터센터로 전환하며 매출 구조를 다변화하고 있다.",
-    "detail": "2026년 2분기 상장 채굴업체들의 해시레이트가 전 분기 대비 감소했으며, 이는 채굴 설비를 AI 인프라로 재배치한 결과로 해석된다. 코어사이언티픽은 AMD와 2.5GW 규모 파트너십을 체결했고, 테라울프는 앤트로픽과 401MW 규모 임대 계약을 맺었다. 채굴업체들은 이미 확보된 대규모 전력과 냉각 설비를 활용해 AI 데이터센터 임대 및 콜로케이션 사업으로 수익 모델을 전환 중이다.",
-    "implication": "채굴업체가 보유한 대규모 전력 인프라가 AI 데이터센터 시장의 핵심 자산으로 재평가받으며 전력 시장의 수급 구조에 영향을 미치고 있다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#데이터센터",
-      "#전력인프라",
-      "#AI"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 1,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 1,
-    "event_date": "2026-06-30",
-    "event_date_type": "occurrence",
-    "event_date_precision": "month",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T09:27:59.987448+00:00",
-    "raw_sources": []
-  },
-  {
     "hash": "bc0500d3de56466a",
     "title": "[전력기기 슈퍼사이클②]HD현대일렉트릭, 북미 전력 시장 선점…앨라배...",
     "title_kr": "HD현대일렉트릭, 북미 전력기기 시장 점유율 확대",
@@ -7854,53 +6717,10 @@
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
     "queued_at": "2026-08-16T09:27:59.987448+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "9ddff9f82d2068a6",
-    "title": "\"양다리 안 돼\" 美, 한국 등 동맹에 '中 AI 기구 가입 금지' 최후통첩",
-    "title_kr": "美, 동맹국에 중국 주도 AI 협력기구 가입 금지 압박",
-    "link": "https://www.hankookilbo.com/news/article/A2026081615470005737?did=NA",
-    "domain": "hankookilbo.com",
-    "publisher": "hankookilbo.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "must_read",
-    "section": "international",
-    "scope": "overseas",
-    "category": "정책",
-    "summary": "미국 정부가 한국 등 동맹국에 중국이 주도하는 AI 협력기구(WAICO)에 참여하지 말 것을 요구하는 서한을 전달했다.",
-    "detail": "미 국무부는 '팍스 실리카' 서명국들에게 중국의 WAICO 가입 시 회원 자격 박탈 가능성을 경고했다. 이는 중국의 AI 생태계 확장을 차단하려는 의도로, 특히 핵심 광물과 우라늄 생산국인 카자흐스탄의 참여에 위기감을 느끼고 있다. 한국 정부는 미중 관계 속에서 전략적 선택을 고심 중이다.",
-    "implication": "미국의 대중국 기술 통제 기조가 AI를 넘어 핵심 광물 및 에너지 공급망 전반으로 확대되고 있어, 향후 원자력 연료주기 관련 협력에도 영향을 미칠 가능성이 있다.",
-    "why_important": "미국의 대중국 기술 봉쇄 정책이 동맹국에 대한 강한 압박으로 구체화되고 있으며, 이는 향후 글로벌 에너지 및 핵심 광물 공급망 정책에 직접적인 변수로 작용할 것이다.",
-    "open_question": "한국 정부의 WAICO 참여 여부는 아직 결정되지 않았다",
-    "open_question_source": "article_text",
-    "watch_next": "",
-    "tags": [
-      "#수출통제",
-      "#AI",
-      "#공급망"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 3
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-14",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T09:27:59.987448+00:00",
-    "raw_sources": []
+    "raw_sources": [],
+    "story_display_hash": "bc0500d3de56466a",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "7af4254535918448",
@@ -8038,7 +6858,10 @@
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
     "queued_at": "2026-08-16T09:27:59.987448+00:00",
-    "raw_sources": []
+    "raw_sources": [],
+    "story_display_hash": "56e91c636434557b",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "69b6983fa66bc95b",
@@ -8083,52 +6906,6 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "queued_at": "2026-08-16T09:27:59.987448+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "de07d32b2651c788",
-    "title": "1410원대로 내려온 환율, 빨라진 '대미 투자' 시계에 반등 여부 촉각",
-    "title_kr": "대미 투자 본격화에 따른 환율 변동성 및 SMR 협력 가능성",
-    "link": "https://www.sisajournal-e.com/news/articleView.html?idxno=423120",
-    "domain": "sisajournal-e.com",
-    "publisher": "sisajournal-e.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "SMR",
-    "matched": "SMR",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "한국 정부의 대미 투자 본격화가 환율 상승 요인으로 작용할 수 있으며, 테라파워와의 SMR 협력 등 대미 투자 1호 프로젝트 발표가 임박했다.",
-    "detail": "미국 정부는 한국의 대미 투자 지연을 이유로 상호관세 인상을 경고했다. 정부는 이르면 8월 말 대미 투자 1호 프로젝트를 발표할 예정이다. 빌 게이츠 테라파워 의장의 방한으로 SMR 분야 협력 가능성이 제기되었으며, 대규모 대미 투자가 외화 유출을 유발해 환율 상승을 자극할 수 있다는 우려가 있다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#대미투자",
-      "#SMR",
-      "#환율"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 3,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 2
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-31",
-    "event_date_type": "scheduled",
-    "event_date_precision": "month",
-    "event_date_source": "article_text",
     "queued_at": "2026-08-16T09:27:59.987448+00:00",
     "raw_sources": []
   },
@@ -8225,144 +7002,6 @@
     "raw_sources": []
   },
   {
-    "hash": "ade565d956f0f34a",
-    "title": "수은, 빌 게이츠와 'SMR 상용화' 협력 논의",
-    "title_kr": "수출입은행, 빌 게이츠와 SMR 상용화 금융 협력 논의",
-    "link": "http://www.fnnews.com/news/202608161810286668",
-    "domain": "fnnews.com",
-    "publisher": "fnnews.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원전 수출",
-    "importance": "nice_to_know",
-    "section": "smr",
-    "scope": "kr",
-    "category": "시장",
-    "summary": "황기연 한국수출입은행장이 지난 14일 빌 게이츠 테라파워 창업자와 만나 SMR 상용화를 위한 금융 협력 방안을 논의했다.",
-    "detail": "이번 면담에서 양측은 차세대 원전인 SMR의 상용화를 앞당기기 위한 금융 지원 및 협력 방안을 다각도로 검토했다. 빌 게이츠 이사장은 한국 기업들이 보유한 우수한 원전 제조 및 시공 역량을 높게 평가하며 향후 협력 가능성을 시사했다.",
-    "implication": "테라파워의 SMR 프로젝트와 한국 금융기관 간의 협력 체계가 구체화되면서 국내 원전 기업의 글로벌 SMR 시장 진출 기반이 강화될 것으로 보인다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR",
-      "#테라파워",
-      "#수출입은행"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 1,
-    "event_date": "2026-08-14",
-    "event_date_type": "occurrence",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T09:27:59.987448+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "147ece88607645c4",
-    "title": "美 3500억 투자·신규 관세 압박 확대… 김정관, 3주 만에 긴급 방미",
-    "title_kr": "김정관 산업부 장관, 대미 투자 및 관세 협상 위해 긴급 방미",
-    "link": "https://www.financialpost.co.kr/news/articleView.html?idxno=270663",
-    "domain": "financialpost.co.kr",
-    "publisher": "financialpost.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "원전 수출",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "김정관 산업통상자원부 장관이 3500억 달러 규모의 대미 투자 계획과 미국의 추가 관세 조치 대응을 위해 16일 미국으로 긴급 출국했다.",
-    "detail": "이번 방미는 대미 전략 투자 1호 사업인 미국 내 가스복합화력발전소 건설 등 투자 대상과 사업 구조를 최종 조율하기 위한 목적이다. 미국 측은 투자 이행 속도를 관세 협상의 지렛대로 활용하고 있으며, 한국산 제품에 대한 추가 관세 부과 가능성이 제기되고 있다. 정부는 기존 관세와의 중복 부과를 방지하고 경쟁국 대비 불리하지 않은 수준의 관세율을 확보하는 데 협상력을 집중할 계획이다.",
-    "implication": "대미 투자 이행 속도가 관세 협상과 직결된 상황에서, 투자 사업의 조기 확정과 통상 지휘부 공백 해소가 시급한 과제로 부상했다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#대미투자",
-      "#통상협상",
-      "#관세"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 2
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-16",
-    "event_date_type": "occurrence",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T09:27:59.987448+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "2568d6eea4a5a88b",
-    "title": "미 주정부, AI 데이터센터 전력비 전가 막는다",
-    "title_kr": "미국 주정부, AI 데이터센터 전력망 비용 전가 방지 규제 도입",
-    "link": "https://www.tokenpost.kr/news/policy/391651",
-    "domain": "tokenpost.kr",
-    "publisher": "tokenpost.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "규제",
-    "summary": "미국 버지니아, 뉴저지, 뉴욕 등 주정부가 AI 데이터센터의 전력망 인프라 비용을 주민 요금으로 전가하지 못하도록 하는 규제를 잇달아 도입하고 있다.",
-    "detail": "버지니아주는 7월 1일부터 데이터센터 전력 소비에 소비세를 부과하기 시작했으며, 뉴저지주는 데이터센터를 별도 공공요금 체계로 다루는 법안을 통과시켰다. 뉴욕주는 50MW 이상 초대형 데이터센터에 대해 1년간 모라토리엄을 시행했다. 연방 차원에서도 데이터센터의 전력·물 사용 정보 공개를 의무화하는 법안이 발의되는 등 규제 움직임이 확산되고 있다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#데이터센터",
-      "#전력망",
-      "#규제"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "regulatory_action",
-      "korea_relevance": 0,
-      "market_materiality": 1,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T09:27:59.987448+00:00",
-    "raw_sources": []
-  },
-  {
     "hash": "eb56e5bd5bc76c87",
     "title": "SK텔레콤 기업가치 바꿀 한 수…전국에 AI 데이터센터 깐다",
     "title_kr": "SK텔레콤, AI 데이터센터 사업 확대 통한 기업가치 제고",
@@ -8408,34 +7047,82 @@
     "queued_at": "2026-08-16T12:40:07.264720+00:00",
     "raw_sources": [
       {
-        "hash": "21b11a69def02cde",
-        "title": "SK이노·테라파워, SMR 사업화 나선다…AI 데이터센터 전력시장 공략",
-        "link": "https://www.econovill.com/news/articleView.html?idxno=748094",
-        "identity": "econovill.com",
-        "publisher": "econovill.com",
-        "domain": "econovill.com",
+        "hash": "13a5edd7eb1df05a",
+        "title": "AIDC 판 키우는 통신3사…통신 이을 수익원으로 키운다[통신 AI베팅③]",
+        "link": "https://www.newsis.com/view/NISX20260814_0003750210",
+        "identity": "뉴시스",
+        "publisher": "뉴시스",
+        "domain": "newsis.com",
         "feed": "정책",
         "tier": null,
         "evidence_role": "",
-        "pub": "2026-08-16 18:18:00+09:00",
+        "pub": "2026-08-16 15:00:00+09:00",
         "fold_stage": "collect_embedding",
         "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.8737
+        "similarity": 0.9485
+      },
+      {
+        "hash": "ff6cd44461d26e1a",
+        "title": "전기차 밖으로 나온 K-배터리…AI 데이터센터 전력시장 공략",
+        "link": "https://www.m-i.kr/news/articleView.html?idxno=1402803",
+        "identity": "m-i.kr",
+        "publisher": "m-i.kr",
+        "domain": "m-i.kr",
+        "feed": "정책",
+        "tier": null,
+        "evidence_role": "",
+        "pub": "2026-08-16 14:44:00+09:00",
+        "fold_stage": "collect_embedding",
+        "fold_reason": "임베딩 의미 중복",
+        "similarity": 0.8544
+      },
+      {
+        "hash": "023c1759594b1e6c",
+        "title": "정유로 벌고 AI로 키운다…GS, 2.4GW 데이터센터 승부수",
+        "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=477820",
+        "identity": "pinpointnews.co.kr",
+        "publisher": "pinpointnews.co.kr",
+        "domain": "pinpointnews.co.kr",
+        "feed": "정책",
+        "tier": null,
+        "evidence_role": "",
+        "pub": "2026-08-16 15:00:00+09:00",
+        "fold_stage": "collect_embedding",
+        "fold_reason": "임베딩 의미 중복",
+        "similarity": 0.8516
+      },
+      {
+        "hash": "eb56e5bd5bc76c87",
+        "title": "SK텔레콤 기업가치 바꿀 한 수…전국에 AI 데이터센터 깐다",
+        "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=477840",
+        "identity": "pinpointnews.co.kr",
+        "publisher": "pinpointnews.co.kr",
+        "domain": "pinpointnews.co.kr",
+        "feed": "정책",
+        "tier": null,
+        "evidence_role": "",
+        "pub": "2026-08-16 16:24:00+09:00",
+        "fold_stage": "collect_embedding",
+        "fold_reason": "임베딩 의미 중복",
+        "similarity": 0.8962
       }
     ],
-    "story_article_count": 2,
+    "story_article_count": 5,
     "story_article_hashes": [
-      "eb56e5bd5bc76c87",
-      "21b11a69def02cde"
+      "7cbd2f83914d9080",
+      "13a5edd7eb1df05a",
+      "ff6cd44461d26e1a",
+      "023c1759594b1e6c",
+      "eb56e5bd5bc76c87"
     ],
-    "story_outlet_count": 2,
+    "story_outlet_count": 3,
     "story_tier1_count": 0,
     "story_independent_outlet_count": 1,
     "story_sources": [
       {
-        "identity": "econovill.com",
-        "publisher": "econovill.com",
-        "domain": "econovill.com",
+        "identity": "m-i.kr",
+        "publisher": "m-i.kr",
+        "domain": "m-i.kr",
         "tier": null,
         "evidence_role": ""
       },
@@ -8443,40 +7130,41 @@
         "identity": "pinpointnews.co.kr",
         "publisher": "pinpointnews.co.kr",
         "domain": "pinpointnews.co.kr",
+        "tier": null,
+        "evidence_role": ""
+      },
+      {
+        "identity": "뉴시스",
+        "publisher": "뉴시스",
+        "domain": "newsis.com",
         "tier": 3,
         "evidence_role": "independent"
       }
     ],
     "story_related_titles": [
-      "SK텔레콤, AI 데이터센터 사업 확대 통한 기업가치 제고",
-      "SK이노·테라파워, SMR 사업화 나선다…AI 데이터센터 전력시장 공략"
-    ],
-    "story_members": [
-      {
-        "hash": "eb56e5bd5bc76c87",
-        "title": "SK텔레콤, AI 데이터센터 사업 확대 통한 기업가치 제고",
-        "publisher": "pinpointnews.co.kr",
-        "fold_stage": ""
-      },
-      {
-        "hash": "21b11a69def02cde",
-        "title": "SK이노·테라파워, SMR 사업화 나선다…AI 데이터센터 전력시장 공략",
-        "publisher": "econovill.com",
-        "fold_stage": "collect_embedding"
-      }
+      "통신업계, AI 데이터센터(AIDC)를 신성장 동력으로 주목",
+      "AIDC 판 키우는 통신3사…통신 이을 수익원으로 키운다[통신 AI베팅③]",
+      "전기차 밖으로 나온 K-배터리…AI 데이터센터 전력시장 공략",
+      "정유로 벌고 AI로 키운다…GS, 2.4GW 데이터센터 승부수",
+      "SK텔레콤 기업가치 바꿀 한 수…전국에 AI 데이터센터 깐다"
     ],
     "story_context": [
       {
-        "hash": "eb56e5bd5bc76c87",
-        "title": "SK텔레콤, AI 데이터센터 사업 확대 통한 기업가치 제고",
-        "summary": "SK텔레콤이 통신사에서 AI 인프라 기업으로 전환하며, 2027년 울산 AIDC 개소를 시작으로 전국 주요 권역에 대형 AI 데이터센터 구축을 추진한다.",
-        "detail": "SK텔레콤은 AI 데이터센터(AIDC) 사업을 핵심 성장축으로 삼아 사업 구조를 재편하고 있다. 2분기 AI DC 매출은 전년 동기 대비 92.5% 증가한 1,362억 원을 기록했다. 울산 AIDC는 2027년 말 1단계 개소 후 2029년 2단계가 예정되어 있으며, 2030년에는 구로 AIDC가 가동될 계획이다. 향후 영남, 충청, 서남권 등 전국으로 프로젝트를 확대할 방침이다."
+        "hash": "7cbd2f83914d9080",
+        "title": "통신업계, AI 데이터센터(AIDC)를 신성장 동력으로 주목",
+        "summary": "통신사들이 기존 통신 사업의 성장 한계를 극복하기 위해 고밀도 전력·냉각 설비를 갖춘 AIDC 사업을 새로운 수익원으로 추진하고 있다.",
+        "detail": "생성형 AI 확산으로 인한 추론 연산 수요 급증에 따라 통신사들은 기존 데이터센터 경험과 네트워크 인프라를 활용해 AIDC 시장에 진출하고 있다. AIDC는 일반 데이터센터보다 높은 상면 단가를 기대할 수 있으며, 클라우드 및 기업 AX 사업과 연계가 가능하다. 정재헌 SK텔레콤 대표는 AIDC를 지능을 생산해 글로벌 시장에 공급하는 수출 공장으로 정의하며, 하이퍼스케일 AIDC 건설이 기술 고도화와 산업화의 기회가 될 것이라고 강조했다."
       }
     ],
     "story_relation": "collected",
     "story_reason": "수집 단계 동일 기사 병합",
     "story_dedup_stage": "collect_fold",
-    "story_raw_source_count": 1
+    "story_raw_source_count": 4,
+    "story_display_swapped_from": "7cbd2f83914d9080",
+    "story_display_swapped_from_title": "통신업계, AI 데이터센터(AIDC)를 신성장 동력으로 주목",
+    "story_display_reason": "동일 조건에서 랭킹 점수가 높은 기사로 교체",
+    "story_display_hash": "eb56e5bd5bc76c87",
+    "story_display_candidates": 2
   },
   {
     "hash": "5961cffdb5fdd8ce",
@@ -8525,372 +7213,6 @@
     "raw_sources": []
   },
   {
-    "hash": "4d4464de943be9a8",
-    "title": "부산·울산 전기료 고작 10% 할인 “지역 차등요금 맞나”",
-    "title_kr": "정부, 지역별 전기요금 차등제 산업용 10% 할인안 제시",
-    "link": "https://www.busan.com/view/busan/view.php?code=2026081618281719000",
-    "domain": "busan.com",
-    "publisher": "busan.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "지역별 차등 전기요금",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "정부가 지역별 전기요금 차등제에서 남부권 산업용 요금을 최대 10% 인하하는 안을 제시했으나, 원전 밀집지역인 부산·울산 등은 기대에 못 미친다며 반발하고 있다.",
-    "detail": "정부안은 전국을 4개 권역으로 나누어 수도권에서 먼 남부권에 최대 10% 할인을 적용하는 방안이다. 부산·울산 지역은 10기 원전이 가동·추진 중인 지역 특성을 고려할 때 할인율이 낮다는 지적이 제기된다. 일부 전문가는 원전 기여도를 반영한 실질적인 요금 인하를 주장하고 있다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전기요금",
-      "#차등요금제",
-      "#원전수용성"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 2
-    },
-    "prior_coverage": 4,
-    "event_date": "2026-08-28",
-    "event_date_type": "scheduled",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T12:40:07.264720+00:00",
-    "raw_sources": [
-      {
-        "hash": "f430ca936a1680a8",
-        "title": "부울경 산업 전기료 10%↓…반도체 기업 올까",
-        "link": "http://www.kookje.co.kr/news2011/asp/newsbody.asp?code=0200&key=20260817.22002004296",
-        "identity": "kookje.co.kr",
-        "publisher": "kookje.co.kr",
-        "domain": "kookje.co.kr",
-        "feed": "정책",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 19:36:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.8925
-      },
-      {
-        "hash": "61b4b92888beace5",
-        "title": "부울경 산업 전기료 10%↓…반도체 기업 올까",
-        "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxNblRLVUxyb3hnRFZ1YXd4Q2UxWmdYZDZXamRrTE1HRGR3ZVdMbUJLY1JXRS1MdFU5eEkxU0l5akh1VkdEMnFsUC1LeHpUeGtURHpxaEZHNXNMM3B0N3BSTkFsUWxzSFphTGkxd3dwSjBTMEZab0RLSnMxNXhOZV9QVHlvN2RTSy1raWxmc19R?oc=5",
-        "identity": "국제신문",
-        "publisher": "국제신문",
-        "domain": "kookje.co.kr",
-        "feed": "정책",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 10:32:00+00:00",
-        "fold_stage": "collect_title",
-        "fold_reason": "제목 완전일치"
-      }
-    ],
-    "story_article_count": 3,
-    "story_article_hashes": [
-      "4d4464de943be9a8",
-      "f430ca936a1680a8",
-      "61b4b92888beace5"
-    ],
-    "story_outlet_count": 3,
-    "story_tier1_count": 0,
-    "story_independent_outlet_count": 1,
-    "story_sources": [
-      {
-        "identity": "busan.com",
-        "publisher": "busan.com",
-        "domain": "busan.com",
-        "tier": 3,
-        "evidence_role": "independent"
-      },
-      {
-        "identity": "kookje.co.kr",
-        "publisher": "kookje.co.kr",
-        "domain": "kookje.co.kr",
-        "tier": null,
-        "evidence_role": ""
-      },
-      {
-        "identity": "국제신문",
-        "publisher": "국제신문",
-        "domain": "kookje.co.kr",
-        "tier": null,
-        "evidence_role": ""
-      }
-    ],
-    "story_related_titles": [
-      "정부, 지역별 전기요금 차등제 산업용 10% 할인안 제시",
-      "부울경 산업 전기료 10%↓…반도체 기업 올까"
-    ],
-    "story_members": [
-      {
-        "hash": "4d4464de943be9a8",
-        "title": "정부, 지역별 전기요금 차등제 산업용 10% 할인안 제시",
-        "publisher": "busan.com",
-        "fold_stage": ""
-      },
-      {
-        "hash": "f430ca936a1680a8",
-        "title": "부울경 산업 전기료 10%↓…반도체 기업 올까",
-        "publisher": "kookje.co.kr",
-        "fold_stage": "collect_embedding"
-      },
-      {
-        "hash": "61b4b92888beace5",
-        "title": "부울경 산업 전기료 10%↓…반도체 기업 올까",
-        "publisher": "국제신문",
-        "fold_stage": "collect_title"
-      }
-    ],
-    "story_context": [
-      {
-        "hash": "4d4464de943be9a8",
-        "title": "정부, 지역별 전기요금 차등제 산업용 10% 할인안 제시",
-        "summary": "정부가 지역별 전기요금 차등제에서 남부권 산업용 요금을 최대 10% 인하하는 안을 제시했으나, 원전 밀집지역인 부산·울산 등은 기대에 못 미친다며 반발하고 있다.",
-        "detail": "정부안은 전국을 4개 권역으로 나누어 수도권에서 먼 남부권에 최대 10% 할인을 적용하는 방안이다. 부산·울산 지역은 10기 원전이 가동·추진 중인 지역 특성을 고려할 때 할인율이 낮다는 지적이 제기된다. 일부 전문가는 원전 기여도를 반영한 실질적인 요금 인하를 주장하고 있다."
-      }
-    ],
-    "story_relation": "collected",
-    "story_reason": "수집 단계 동일 기사 병합",
-    "story_dedup_stage": "collect_fold",
-    "story_raw_source_count": 2
-  },
-  {
-    "hash": "7c0c67326b4bcb19",
-    "title": "\"한국, HBM 말고도 기회 있다\"…다시 뜨는 '미국 CPU'에 들썩",
-    "title_kr": "AI 에이전트 시대, CPU 수요 급증 전망",
-    "link": "https://www.hankyung.com/article/2026081642247",
-    "domain": "hankyung.com",
-    "publisher": "hankyung.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "market",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "AI 에이전트 시대 도래에 따라 데이터센터 내 CPU 코어 수요가 기존 대비 4배 증가할 것이라는 전망이 나왔다.",
-    "detail": "트렌드포스가 인용한 Arm 전망에 따르면, AI 데이터센터 전력 1GW당 필요한 CPU 코어 수가 기존 3,000만 개에서 1억 2,000만 개로 늘어날 것으로 관측된다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#AI",
-      "#데이터센터",
-      "#CPU"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "market_signal",
-      "korea_relevance": 1,
-      "market_materiality": 2,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 1,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T12:40:07.264720+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "f7fb3d73512b4f68",
-    "title": "“전력·부지·냉각 한계 타개”… AI 데이터센터, 바다로 간다",
-    "title_kr": "AI 데이터센터, 전력·냉각 한계 극복 위해 해상으로 이동",
-    "link": "https://www.kmib.co.kr/article/view.asp?arcid=9000003475&cp=nv",
-    "domain": "kmib.co.kr",
-    "publisher": "kmib.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "송전망 건설",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "기술",
-    "summary": "육상 데이터센터의 전력 및 냉각 한계를 극복하기 위해 부유식(FDC) 및 해저(UDC) 데이터센터 상용화가 추진되고 있다.",
-    "detail": "삼성중공업, HD한국조선해양 등 국내 기업과 일본 MOL 등이 FDC 개발에 속도를 내고 있다. FDC는 육상 대비 건설 기간을 최대 3년 단축할 수 있고 바닷물을 냉각수로 활용해 효율이 높다. 중국은 상하이 해역에서 UDC를 가동 중이다.",
-    "implication": "해상 데이터센터는 육상 전력망 부담을 줄이고 냉각 효율을 극대화할 수 있어, 향후 대규모 AI 인프라 구축의 새로운 대안으로 부상하고 있다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#데이터센터",
-      "#해상데이터센터",
-      "#AI"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "project_milestone",
-      "korea_relevance": 2,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 0,
-    "event_date": "2028-06-30",
-    "event_date_type": "scheduled",
-    "event_date_precision": "month",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T12:40:07.264720+00:00",
-    "raw_sources": [
-      {
-        "hash": "96dffa21b827ca27",
-        "title": "반대 직면한 AI 데이터센터…물·전기 부족 문제는? [AI너머]",
-        "link": "https://news.kbs.co.kr/news/pc/view/view.do?ncd=8638262",
-        "identity": "kbs 뉴스",
-        "publisher": "KBS 뉴스",
-        "domain": "kbs.co.kr",
-        "feed": "정책",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 21:13:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.8628
-      },
-      {
-        "hash": "2f84ffbef77fd94a",
-        "title": "‘K-AI 우주데이터센터’ 구축 사업 시동",
-        "link": "http://www.kookje.co.kr/news2011/asp/newsbody.asp?code=0200&key=20260817.22012002898",
-        "identity": "kookje.co.kr",
-        "publisher": "kookje.co.kr",
-        "domain": "kookje.co.kr",
-        "feed": "정책",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 19:13:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.8741
-      },
-      {
-        "hash": "3ee945d20be45df5",
-        "title": "[ICT 종합] LG전자, 엔비디아와 휴머노이드 로봇 만든다 소식 외",
-        "link": "https://www.gamevu.co.kr/news/articleView.html?idxno=60067",
-        "identity": "gamevu.co.kr",
-        "publisher": "gamevu.co.kr",
-        "domain": "gamevu.co.kr",
-        "feed": "정책",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 19:48:00+09:00",
-        "fold_stage": "collect_embedding",
-        "fold_reason": "임베딩 의미 중복",
-        "similarity": 0.8765
-      }
-    ],
-    "story_article_count": 4,
-    "story_article_hashes": [
-      "f7fb3d73512b4f68",
-      "96dffa21b827ca27",
-      "2f84ffbef77fd94a",
-      "3ee945d20be45df5"
-    ],
-    "story_outlet_count": 4,
-    "story_tier1_count": 0,
-    "story_independent_outlet_count": 1,
-    "story_sources": [
-      {
-        "identity": "gamevu.co.kr",
-        "publisher": "gamevu.co.kr",
-        "domain": "gamevu.co.kr",
-        "tier": null,
-        "evidence_role": ""
-      },
-      {
-        "identity": "kbs 뉴스",
-        "publisher": "KBS 뉴스",
-        "domain": "kbs.co.kr",
-        "tier": null,
-        "evidence_role": ""
-      },
-      {
-        "identity": "kmib.co.kr",
-        "publisher": "kmib.co.kr",
-        "domain": "kmib.co.kr",
-        "tier": 3,
-        "evidence_role": "independent"
-      },
-      {
-        "identity": "kookje.co.kr",
-        "publisher": "kookje.co.kr",
-        "domain": "kookje.co.kr",
-        "tier": null,
-        "evidence_role": ""
-      }
-    ],
-    "story_related_titles": [
-      "AI 데이터센터, 전력·냉각 한계 극복 위해 해상으로 이동",
-      "반대 직면한 AI 데이터센터…물·전기 부족 문제는? [AI너머]",
-      "‘K-AI 우주데이터센터’ 구축 사업 시동",
-      "[ICT 종합] LG전자, 엔비디아와 휴머노이드 로봇 만든다 소식 외"
-    ],
-    "story_members": [
-      {
-        "hash": "f7fb3d73512b4f68",
-        "title": "AI 데이터센터, 전력·냉각 한계 극복 위해 해상으로 이동",
-        "publisher": "kmib.co.kr",
-        "fold_stage": ""
-      },
-      {
-        "hash": "96dffa21b827ca27",
-        "title": "반대 직면한 AI 데이터센터…물·전기 부족 문제는? [AI너머]",
-        "publisher": "KBS 뉴스",
-        "fold_stage": "collect_embedding"
-      },
-      {
-        "hash": "2f84ffbef77fd94a",
-        "title": "‘K-AI 우주데이터센터’ 구축 사업 시동",
-        "publisher": "kookje.co.kr",
-        "fold_stage": "collect_embedding"
-      },
-      {
-        "hash": "3ee945d20be45df5",
-        "title": "[ICT 종합] LG전자, 엔비디아와 휴머노이드 로봇 만든다 소식 외",
-        "publisher": "gamevu.co.kr",
-        "fold_stage": "collect_embedding"
-      }
-    ],
-    "story_context": [
-      {
-        "hash": "f7fb3d73512b4f68",
-        "title": "AI 데이터센터, 전력·냉각 한계 극복 위해 해상으로 이동",
-        "summary": "육상 데이터센터의 전력 및 냉각 한계를 극복하기 위해 부유식(FDC) 및 해저(UDC) 데이터센터 상용화가 추진되고 있다.",
-        "detail": "삼성중공업, HD한국조선해양 등 국내 기업과 일본 MOL 등이 FDC 개발에 속도를 내고 있다. FDC는 육상 대비 건설 기간을 최대 3년 단축할 수 있고 바닷물을 냉각수로 활용해 효율이 높다. 중국은 상하이 해역에서 UDC를 가동 중이다."
-      }
-    ],
-    "story_relation": "collected",
-    "story_reason": "수집 단계 동일 기사 병합",
-    "story_dedup_stage": "collect_fold",
-    "story_raw_source_count": 3
-  },
-  {
     "hash": "02323d930f0e515a",
     "title": "[포럼] 새 북방경제 플랫폼 만들려면",
     "title_kr": "중앙아시아 대상 패키지형 경제협력 플랫폼 구축 제안",
@@ -8932,98 +7254,6 @@
     "event_date": "2026-09-15",
     "event_date_type": "scheduled",
     "event_date_precision": "month",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T12:40:07.264720+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "72e4275928d79c6f",
-    "title": "[아침을 열며]산업의 속도, 사회의 속도",
-    "title_kr": "AI 산업 메가프로젝트 추진에 따른 전력 공급 과제",
-    "link": "https://www.khan.co.kr/article/202608162006005",
-    "domain": "khan.co.kr",
-    "publisher": "khan.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "정부의 3대 메가프로젝트 추진으로 서남권 반도체 팹과 전국 AI 데이터센터에 총 24.7GW의 추가 전력이 필요하며, 이는 원전 24기 분량에 해당한다.",
-    "detail": "정부는 반도체, 피지컬 AI, AI 데이터센터를 3대 메가프로젝트로 선정하고 속도전을 강조하고 있다. 그러나 대규모 전력 수요를 충족하기 위한 발전원 배분과 송전망 확보, 사회적 갈등 관리가 핵심 과제로 지목된다.",
-    "implication": "대규모 전력 인프라 확충 과정에서 발생하는 사회적 갈등과 전력망 확보 문제는 국가 에너지 정책의 핵심 변수가 될 것이다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전력수요",
-      "#반도체",
-      "#데이터센터"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 2
-    },
-    "prior_coverage": 0,
-    "event_date": "2028-12-31",
-    "event_date_type": "scheduled",
-    "event_date_precision": "year",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T12:40:07.264720+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "8ff6f76070565a2c",
-    "title": "라이엇, 앤트로픽과 91억 달러 계약…비트코인 채굴주 가치 공식 바뀐다",
-    "title_kr": "라이엇 플랫폼스, 앤트로픽과 91억 달러 규모 AI 컴퓨팅 계약",
-    "link": "http://coinreaders.com/253010",
-    "domain": "coinreaders.com",
-    "publisher": "coinreaders.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "market",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "비트코인 채굴기업 라이엇 플랫폼스가 앤트로픽과 20년간 91억 달러 규모의 AI 컴퓨팅 계약을 체결하며 데이터센터 사업자로 전환을 가속화한다.",
-    "detail": "라이엇은 텍사스주 록데일 캠퍼스에서 191MW 규모의 AI 컴퓨팅 용량을 제공한다. 비트코인 채굴시설은 부지와 전력망을 이미 확보하고 있어 AI 데이터센터 전환에 유리하나, GPU와 냉각설비 등 추가 자본 투자가 필요하다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#라이엇플랫폼스",
-      "#AI데이터센터",
-      "#비트코인채굴"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "contract_award",
-      "korea_relevance": 0,
-      "market_materiality": 3,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 1,
-    "event_date": "2026-08-16",
-    "event_date_type": "announcement",
-    "event_date_precision": "day",
     "event_date_source": "article_text",
     "queued_at": "2026-08-16T12:40:07.264720+00:00",
     "raw_sources": []
@@ -9072,7 +7302,10 @@
     "event_date_precision": "year",
     "event_date_source": "article_text",
     "queued_at": "2026-08-16T12:40:07.264720+00:00",
-    "raw_sources": []
+    "raw_sources": [],
+    "story_display_hash": "9e90d12220070b00",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "29f7a7f19c2a2e61",
@@ -9118,212 +7351,10 @@
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
     "queued_at": "2026-08-16T12:40:07.264720+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "4387c7d3e5f2ed37",
-    "title": "전력·광모듈, 골드만이 본 중국 AI 핵심축",
-    "title_kr": "골드만삭스, 중국 AI 하드웨어 인프라 투자 주목",
-    "link": "https://www.tokenpost.kr/news/cryptocurrency/391680",
-    "domain": "tokenpost.kr",
-    "publisher": "tokenpost.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "market",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "골드만삭스가 중국 AI 시장의 투자 무게중심이 소프트웨어에서 전력망, 광모듈, 데이터센터 등 하드웨어 인프라로 이동하고 있다고 분석했다.",
-    "detail": "중국 데이터센터 전력 수요는 2025년 25% 증가할 전망이며, 주요 기업의 AI 투자는 2026년 700억 달러를 상회할 것으로 보인다. 이는 한국 반도체 및 AI 인프라 투자 테마와 비교되는 투자 지표로 주목된다.",
-    "implication": "중국 AI 가치사슬의 하드웨어 병목 현상이 투자 판단의 핵심 변수로 부상하고 있다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#중국AI",
-      "#데이터센터",
-      "#하드웨어"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "market_signal",
-      "korea_relevance": 1,
-      "market_materiality": 2,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-12-31",
-    "event_date_type": "scheduled",
-    "event_date_precision": "year",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T12:40:07.264720+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "605a5482d6c70ee1",
-    "title": "‘3대 메가 프로젝트’ 전력수요 잠정치 20일 공개한다",
-    "title_kr": "정부, 20일 제12차 전력수급기본계획 신규 전력 수요 잠정치 공개",
-    "link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE5hUTBxY09wYkFHTE1UVy1aUkMxXzlZUlFpVVdzRUhhSDBJbDdjOHcxenU0VlRxZ1ZRSDFIZ1RyY0RVek1MYWo1TXJ0Vk81T2cxOExYZjhPUDc0TzVacHB3SzAxVlJQd1AzMjRSVw?oc=5",
-    "domain": "hani.co.kr",
-    "publisher": "한겨레",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "국내 원자력 보도",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "정부가 3대 메가 프로젝트 추진에 따른 추가 전력 수요를 반영한 2040년 전력 수요 전망 잠정치를 20일 공개한다.",
-    "detail": "산업통상자원부와 제12차 전기본 수립 총괄위원회는 20일 국회의원회관에서 정책토론회를 열고 2040년까지의 전력 수요 전망을 발표한다. 이번 잠정치는 지난 6월 발표된 3대 메가 프로젝트의 예상 수요 24.7GW 중 사업 계획이 구체화된 일부 물량을 반영한 수치다. 정부는 토론회에서 수렴된 전문가 및 시민 의견을 검토해 12차 전기본 수립 과정에 반영할 계획이다.",
-    "implication": "이번 잠정치는 3대 메가 프로젝트의 전체 수요가 아닌 구체화된 사업분만 반영하므로, 향후 추가적인 수요 상향 조정 가능성이 열려 있다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전기본",
-      "#전력수요",
-      "#메가프로젝트"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 2
-    },
-    "prior_coverage": 3,
-    "event_date": "2026-08-20",
-    "event_date_type": "scheduled",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T15:22:27.598917+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "f430ca936a1680a8",
-    "title": "부울경 산업 전기료 10%↓…반도체 기업 올까",
-    "title_kr": "부울경 지역 산업용 전기요금 10% 인하 추진",
-    "link": "http://www.kookje.co.kr/news2011/asp/newsbody.asp?code=0200&key=20260817.22002004296",
-    "domain": "kookje.co.kr",
-    "publisher": "kookje.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "송전망 건설",
-    "importance": "nice_to_know",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "부울경 지역 제조업 경쟁력 강화와 송전망 건설 부담 완화를 위해 산업용 전기요금을 10% 인하하는 방안이 논의되고 있다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전력요금"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 2,
-      "market_materiality": 2,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "prior_coverage": 1,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T15:22:27.598917+00:00",
-    "raw_sources": [
-      {
-        "hash": "61b4b92888beace5",
-        "title": "부울경 산업 전기료 10%↓…반도체 기업 올까",
-        "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxNblRLVUxyb3hnRFZ1YXd4Q2UxWmdYZDZXamRrTE1HRGR3ZVdMbUJLY1JXRS1MdFU5eEkxU0l5akh1VkdEMnFsUC1LeHpUeGtURHpxaEZHNXNMM3B0N3BSTkFsUWxzSFphTGkxd3dwSjBTMEZab0RLSnMxNXhOZV9QVHlvN2RTSy1raWxmc19R?oc=5",
-        "identity": "국제신문",
-        "publisher": "국제신문",
-        "domain": "kookje.co.kr",
-        "feed": "정책",
-        "tier": null,
-        "evidence_role": "",
-        "pub": "2026-08-16 10:32:00+00:00",
-        "fold_stage": "collect_title",
-        "fold_reason": "제목 완전일치"
-      }
-    ],
-    "story_article_count": 2,
-    "story_article_hashes": [
-      "f430ca936a1680a8",
-      "61b4b92888beace5"
-    ],
-    "story_outlet_count": 2,
-    "story_tier1_count": 0,
-    "story_independent_outlet_count": 1,
-    "story_sources": [
-      {
-        "identity": "kookje.co.kr",
-        "publisher": "kookje.co.kr",
-        "domain": "kookje.co.kr",
-        "tier": 3,
-        "evidence_role": "independent"
-      },
-      {
-        "identity": "국제신문",
-        "publisher": "국제신문",
-        "domain": "kookje.co.kr",
-        "tier": null,
-        "evidence_role": ""
-      }
-    ],
-    "story_related_titles": [
-      "부울경 지역 산업용 전기요금 10% 인하 추진",
-      "부울경 산업 전기료 10%↓…반도체 기업 올까"
-    ],
-    "story_members": [
-      {
-        "hash": "f430ca936a1680a8",
-        "title": "부울경 지역 산업용 전기요금 10% 인하 추진",
-        "publisher": "kookje.co.kr",
-        "fold_stage": ""
-      },
-      {
-        "hash": "61b4b92888beace5",
-        "title": "부울경 산업 전기료 10%↓…반도체 기업 올까",
-        "publisher": "국제신문",
-        "fold_stage": "collect_title"
-      }
-    ],
-    "story_context": [
-      {
-        "hash": "f430ca936a1680a8",
-        "title": "부울경 지역 산업용 전기요금 10% 인하 추진",
-        "summary": "부울경 지역 제조업 경쟁력 강화와 송전망 건설 부담 완화를 위해 산업용 전기요금을 10% 인하하는 방안이 논의되고 있다.",
-        "detail": ""
-      }
-    ],
-    "story_relation": "collected",
-    "story_reason": "수집 단계 동일 기사 병합",
-    "story_dedup_stage": "collect_fold",
-    "story_raw_source_count": 1
+    "raw_sources": [],
+    "story_display_hash": "29f7a7f19c2a2e61",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "96dffa21b827ca27",
@@ -9367,95 +7398,10 @@
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
     "queued_at": "2026-08-16T15:22:27.598917+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "669f3cd470352a4e",
-    "title": "美 투자 압박에 김정관 긴급 방미…대미투자·관세 해법 찾나",
-    "title_kr": "김정관 산업부 장관, 대미 투자 및 통상 현안 논의차 방미",
-    "link": "https://www.econovill.com/news/articleView.html?idxno=748132",
-    "domain": "econovill.com",
-    "publisher": "econovill.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "SMR",
-    "matched": "SMR",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "kr",
-    "category": "정책",
-    "summary": "김정관 산업통상부 장관이 대미 투자 프로젝트 지연에 따른 미국 측의 압박과 관세 조치 대응을 위해 긴급 방미했다.",
-    "detail": "김정관 장관은 미국 상무부의 대미 투자 프로젝트 발표 촉구와 상호관세 인상 가능성에 대응하기 위해 미국을 방문했다. 현재 텍사스주 가스복합화력발전단지 건설이 1호 프로젝트로 유력하나, 원전 및 SMR 투자 모델을 둘러싼 한미 간 이견이 지속되고 있다. 미국은 이달 말 무역법 301조에 근거한 과잉생산 조사 결과를 발표할 예정이며, 정부는 15% 상호관세 상한선 유지를 목표로 협의 중이다.",
-    "implication": "대미 투자 프로젝트의 상업적 합리성 확보와 원전 기술 모델에 대한 한미 간 이견이 연내 1호 프로젝트 선정의 핵심 변수로 작용하고 있다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#대미투자",
-      "#통상",
-      "#SMR"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 3,
-      "market_materiality": 2,
-      "policy_materiality": 3,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 2
-    },
-    "prior_coverage": 1,
-    "event_date": "2026-08-16",
-    "event_date_type": "occurrence",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T15:22:27.598917+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "ca01d5587a220b9b",
-    "title": "미 3대 지수 최고권, AI 대형주 쏠림 커졌다",
-    "title_kr": "미국 증시 최고권, AI 대형주 쏠림 현상 심화",
-    "link": "https://www.tokenpost.kr/news/market/391693",
-    "domain": "tokenpost.kr",
-    "publisher": "tokenpost.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "market",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "미국 증시가 AI 및 클라우드 실적 기대감으로 사상 최고치를 기록했으나, 대형 기술주 쏠림에 대한 경고가 제기되고 있다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [],
-    "related_reports": [],
-    "features": {
-      "event_type": "market_signal",
-      "korea_relevance": 1,
-      "market_materiality": 3,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": "2026-08-13",
-    "event_date_type": "occurrence",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "queued_at": "2026-08-16T15:22:27.598917+00:00",
-    "raw_sources": []
+    "raw_sources": [],
+    "story_display_hash": "96dffa21b827ca27",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "720f52adbf8e330e",
@@ -9544,7 +7490,63 @@
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
     "queued_at": "2026-08-16T15:22:27.598917+00:00",
-    "raw_sources": []
+    "raw_sources": [],
+    "story_article_count": 2,
+    "story_article_hashes": [
+      "1a95a9afd4ecd99b",
+      "9cab845080d526a9"
+    ],
+    "story_outlet_count": 1,
+    "story_tier1_count": 0,
+    "story_independent_outlet_count": 1,
+    "story_sources": [
+      {
+        "identity": "cbci.co.kr",
+        "publisher": "cbci.co.kr",
+        "domain": "cbci.co.kr",
+        "tier": 3,
+        "evidence_role": "independent"
+      }
+    ],
+    "story_related_titles": [
+      "테라파워, 국내 기업과 나트륨 원자로 상용화 협력 확대",
+      "테라파워, 한국 기업과 나트륨 원자로 협력 확대"
+    ],
+    "story_members": [
+      {
+        "hash": "1a95a9afd4ecd99b",
+        "title": "테라파워, 국내 기업과 나트륨 원자로 상용화 협력 확대",
+        "publisher": "cbci.co.kr",
+        "fold_stage": ""
+      },
+      {
+        "hash": "9cab845080d526a9",
+        "title": "테라파워, 한국 기업과 나트륨 원자로 협력 확대",
+        "publisher": "cbci.co.kr",
+        "fold_stage": ""
+      }
+    ],
+    "story_context": [
+      {
+        "hash": "1a95a9afd4ecd99b",
+        "title": "테라파워, 국내 기업과 나트륨 원자로 상용화 협력 확대",
+        "summary": "테라파워가 현대건설(HDEC) 및 SK이노베이션과 나트륨 원자로 상용화를 위한 협약을 체결하며 차세대 원전 협력을 강화한다.",
+        "detail": "테라파워는 현대건설을 최대 8기의 나트륨 원자로 건설을 위한 EPC 업체로 선정하고 상업적 자금 조달 및 건설 효율화에 협력하기로 했다. 또한 SK이노베이션과는 한국 내 상업용 나트륨 플랜트 개발 및 디지털 트윈·AI 기술을 활용한 운영 최적화 방안을 모색한다. 이번 협력은 미국과 한국을 포함한 글로벌 시장에서 차세대 원전 기술 도입을 가속화하기 위한 전략적 행보다."
+      },
+      {
+        "hash": "9cab845080d526a9",
+        "title": "테라파워, 한국 기업과 나트륨 원자로 협력 확대",
+        "summary": "테라파워가 현대건설, SK이노베이션 등 한국 기업들과 나트륨 원자로 기술 개발 및 상용화를 위한 협력을 강화하고 있다.",
+        "detail": "테라파워는 한국 방문을 계기로 현대건설, SK이노베이션과 나트륨 원자로 기술 개발 및 상용화를 위한 협력을 공식화했다. 효성중공업 등 전력기기 기업들도 글로벌 전력망 투자 확대에 따른 수혜가 기대되나, 특정 원전 프로젝트 참여 여부는 개별 계약을 통해 확인해야 한다. 테라파워는 한국의 원전 건설·운영 역량을 결합해 글로벌 시장에서 차세대 원전 상용화를 가속화할 계획이다."
+      }
+    ],
+    "story_relation": "duplicate",
+    "story_reason": "title/facility duplicate",
+    "story_dedup_stage": "local_title",
+    "story_raw_source_count": 0,
+    "story_display_hash": "1a95a9afd4ecd99b",
+    "story_display_candidates": 2,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "0304094c9de9eb5e",
@@ -9681,7 +7683,10 @@
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
     "queued_at": "2026-08-16T15:22:27.598917+00:00",
-    "raw_sources": []
+    "raw_sources": [],
+    "story_display_hash": "ac2ca5bbc5e881e2",
+    "story_display_candidates": 1,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "07bdaa8201bdcc8b",
@@ -9727,51 +7732,6 @@
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
     "queued_at": "2026-08-16T15:22:27.598917+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "4e5fa6152c305934",
-    "title": "미국 DOE 송전회랑 3곳 지정 중단…원전·AI 전력망 전략 재편",
-    "title_kr": "미국 DOE, 국가이익 전력송전회랑(NIETC) 3곳 지정 절차 중단",
-    "link": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE1zeG1La0VXWUVxcE1mVVlzMk1LNHEwR04xUEo5QXphOVR5Rjh4WGlNTDEwcF85cWhBOFpnd2xXT3JpaFlKSGlSbFA3N1YyOC1QVXlVUVFuQXZVa1Q3c216eDZyWWE?oc=5",
-    "domain": "esnews.kr",
-    "publisher": "에너지안전신문",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "국내 원자력 보도",
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "정책",
-    "summary": "미국 에너지부(DOE)가 이리호-캐나다 등 3개 국가이익 전력송전회랑(NIETC) 지정 절차를 중단했다.",
-    "detail": "미국 에너지부(DOE)가 이리호-캐나다 연결, 남서부 전력망 연결, 부족 에너지 접근 등 3개 국가이익 전력송전회랑(NIETC) 지정 절차를 중단했다. 이는 미국 내 전력망 확충 및 AI 데이터센터 전력 공급 전략의 변화를 시사한다.",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#전력망",
-      "#미국정책"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 1,
-      "market_materiality": 1,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T18:30:12.924846+00:00",
     "raw_sources": []
   },
   {
@@ -9954,7 +7914,10 @@
     "story_relation": "collected",
     "story_reason": "수집 단계 동일 기사 병합",
     "story_dedup_stage": "collect_fold",
-    "story_raw_source_count": 2
+    "story_raw_source_count": 2,
+    "story_display_hash": "68384fc3df5f5b93",
+    "story_display_candidates": 2,
+    "story_display_reason": "story 완성 후 유지"
   },
   {
     "hash": "3e7a0e79ed144761",
@@ -10050,7 +8013,7 @@
         "hash": "3e7a0e79ed144761",
         "title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
         "publisher": "financialpost.co.kr",
-        "fold_stage": ""
+        "fold_stage": "collect_fold"
       },
       {
         "hash": "62decf04a230225d",
@@ -10071,96 +8034,6 @@
     "story_reason": "수집 단계 동일 기사 병합",
     "story_dedup_stage": "collect_fold",
     "story_raw_source_count": 1
-  },
-  {
-    "hash": "db0d79e07c93fd34",
-    "title": "AI 붐, 이제 '증권화'로 간다",
-    "title_kr": "AI 데이터센터, 금융 증권화 모델로 진화",
-    "link": "https://www.g-enews.com/view.php?ud=2026081623251178899a1f309431_1",
-    "domain": "g-enews.com",
-    "publisher": "g-enews.com",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "market",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "AI 데이터센터가 단순 채권을 넘어 전력·냉각설비를 운영하며 수익을 창출하는 사업체로서 금융 증권화되고 있다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#데이터센터",
-      "#금융"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "market_signal",
-      "korea_relevance": 1,
-      "market_materiality": 2,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T18:30:12.924846+00:00",
-    "raw_sources": []
-  },
-  {
-    "hash": "5459515cbb4e6fb0",
-    "title": "테더 감사 통과, 윈터뮤트 10억달러 AI 투자",
-    "title_kr": "윈터뮤트, 5년간 10억 달러 AI 데이터센터 인프라 투자",
-    "link": "https://www.tokenpost.kr/news/briefing/391746",
-    "domain": "tokenpost.kr",
-    "publisher": "tokenpost.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "데이터센터 전력",
-    "importance": "market",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "윈터뮤트가 5년간 10억 달러를 투입해 고빈도매매와 AI 데이터센터 인프라를 구축할 계획이다.",
-    "detail": "윈터뮤트는 디지털자산 시장의 알고리즘 유동성 제공업체로, 이번 투자를 통해 서버 위치, 네트워크 지연시간 등 인프라 경쟁력을 강화하려 한다. AI 데이터센터는 전력, 서버, 데이터가 결합된 자본집약적 영역으로, 향후 수익 구조 변화가 주목된다.",
-    "implication": "크립토 기업들의 AI 인프라 투자가 가속화되고 있으며, 이는 데이터센터 전력 수요 증가와 직결되는 시장 신호로 해석된다.",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#데이터센터",
-      "#투자"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 1,
-      "market_materiality": 2,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 0,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T18:30:12.924846+00:00",
-    "raw_sources": []
   },
   {
     "hash": "4c5360f65a6e972b",
@@ -10268,51 +8141,5 @@
     "story_reason": "수집 단계 동일 기사 병합",
     "story_dedup_stage": "collect_fold",
     "story_raw_source_count": 1
-  },
-  {
-    "hash": "62decf04a230225d",
-    "title": "‘차세대’ 나트륨 SMR 협력 본격화…테라파워-SK이노, 합의서 체결",
-    "title_kr": "테라파워-SK이노베이션, 차세대 나트륨 SMR 협력 본격화",
-    "link": "http://www.kookje.co.kr/news2011/asp/newsbody.asp?code=0200&key=20260816.99099004151",
-    "domain": "kookje.co.kr",
-    "publisher": "kookje.co.kr",
-    "source_type": "general_media",
-    "evidence_role": "independent",
-    "source_tier": 3,
-    "feed": "정책",
-    "matched": "NRC 원자력",
-    "importance": "nice_to_know",
-    "section": "smr",
-    "scope": "overseas",
-    "category": "시장",
-    "summary": "SK이노베이션이 미국 테라파워의 나트륨 냉각 고속로 SMR 실증사업에 참여하며 차세대 원전 기술 협력을 본격화한다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "watch_next": "",
-    "tags": [
-      "#SMR",
-      "#테라파워",
-      "#SK이노베이션"
-    ],
-    "related_reports": [],
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 2,
-      "market_materiality": 2,
-      "policy_materiality": 1,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "prior_coverage": 1,
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "queued_at": "2026-08-16T19:28:11.559903+00:00",
-    "raw_sources": []
   }
 ]
