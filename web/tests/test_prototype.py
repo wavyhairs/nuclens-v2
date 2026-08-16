@@ -2047,7 +2047,7 @@ class GeneratedDataTests(unittest.TestCase):
         script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
         style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
         for heading in ("한 줄 결론", "이번에 달라진 점", "왜 중요한가", "시사점",
-                        "사건 타임라인과 근거 원문", "관련 이슈"):
+                        "주요 사건 타임라인", "추가 근거 원문", "관련 이슈"):
             self.assertIn(heading, script)
         self.assertIn("function relatedIssues", script)
         # 제목이 상세 진입점이므로 좁은 화면에서 타임라인 버튼을 숨겨도 길이 남는다.
@@ -2055,6 +2055,48 @@ class GeneratedDataTests(unittest.TestCase):
         self.assertRegex(style, r"\.issue-actions \.issue-detail-button[^{]*\{\s*display: none;")
         # JS 스크롤은 CSS의 모션 감소 설정을 자동으로 따르지 않는다.
         self.assertIn('matchMedia("(prefers-reduced-motion: reduce)")', script)
+
+    def test_detail_timeline_separates_selected_events_from_extra_evidence(self):
+        """선정된 사건과 그 뒤에 붙은 근거 원문은 한 목록에 섞이지 않는다.
+
+        V1 은 선정된 핵심 기사만 보여줬다. V2 가 미선정 관련 보도까지 근거로
+        붙이면서 목록이 길어졌고(실측 2026-08-16 '테라파워 나트륨 SMR 공급망':
+        선정 2건 + 근거 16건이 18행), 정작 브리핑에 나간 것이 그 사이에 묻혔다.
+        정보는 버리지 않고 구역만 나눈다 — 근거 쪽은 접힌 채로 시작한다.
+        """
+        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+        self.assertIn('member_role === "evidence"', script)
+        self.assertIn("function timelineList", script)
+        self.assertIn("function byTimelineOrder", script)
+        # 두 구역 모두 최근 몇 건만 먼저 세우고 나머지는 접는다.
+        self.assertRegex(script, r"const TIMELINE_HEAD = [345];\n")
+        self.assertIn('<details class="timeline-more">', script)
+        self.assertIn('<details class="dialog-evidence">', script)
+        for selector in (".dialog-evidence > summary", ".timeline-more > summary"):
+            self.assertIn(selector, style, selector)
+        # 손잡이는 한 벌만 그린다 — 같은 동작이 두 모양이면 다른 것으로 읽힌다.
+        self.assertIn(".dialog-evidence > summary::before", style)
+        self.assertIn(".timeline-more > summary::before", style)
+        # 건수가 든 곁말은 좁은 화면에서 반쯤 잘리면 거짓이 된다.
+        self.assertIn(".dialog-section-head { flex-wrap: wrap;", style)
+        # '최근 N건'이 최근이 아니게 되면 잘라내는 순간 거짓말이 된다 —
+        # 1차 출처 우선은 같은 날짜 안에서만 적용한다.
+        order = script[script.index("function byTimelineOrder"):]
+        order = order[:order.index("\n}")]
+        self.assertLess(order.index("article_date"), order.index("isOfficial"))
+        # 데이터가 실제로 두 종류를 싣고 있고, 화면이 쓰는 두 수가 원본과 맞는가.
+        catalog = json.loads((DATA_DIR / "issues.json").read_text(encoding="utf-8"))
+        evidence_total = 0
+        for issue in catalog:
+            articles = issue["related_articles"]
+            card = [a for a in articles if a.get("member_role") != "evidence"]
+            evidence = [a for a in articles if a.get("member_role") == "evidence"]
+            evidence_total += len(evidence)
+            self.assertEqual(len(card) + len(evidence), len(articles), issue["issue_id"])
+            self.assertEqual(len(card), issue["card_article_count"], issue["issue_id"])
+            self.assertEqual(len(evidence), issue["evidence_article_count"], issue["issue_id"])
+        self.assertTrue(evidence_total, "근거 원문이 하나도 없다")
 
     def test_card_body_is_three_labelled_slots_not_a_paragraph(self):
         """카드는 문단 하나가 아니라 라벨 붙은 세 칸이다.

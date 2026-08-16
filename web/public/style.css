@@ -1635,7 +1635,13 @@ body.booting .status-strip.loading { display: none; }
    가리던 문제(실측 2026-08-05: 19건 중 12건). 지우지 않고 접는다. 서가 그리드의
    자식이므로 전체 폭을 차지하도록 열을 넘긴다. */
 .pub-technical { grid-column: 1 / -1; border-top: 1px solid var(--c-border); padding-top: var(--sp-4); }
-.pub-technical > summary {
+/* ── 접기 손잡이 한 벌 ────────────────────────────────────────────────
+   서가의 기술문서와 상세의 근거 원문은 같은 동작을 한다: 정보를 지우지 않고
+   접어 둔다. 손잡이를 두 벌로 그리면 같은 동작이 다른 것으로 읽힌다.
+   레이아웃(테두리·여백)만 각자 정하고 손잡이는 여기 하나를 쓴다. */
+.pub-technical > summary,
+.dialog-evidence > summary,
+.timeline-more > summary {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
@@ -1646,8 +1652,12 @@ body.booting .status-strip.loading { display: none; }
 }
 /* display:flex 는 기본 펼침 마커를 지운다 — 실측으로 잡았다(화살표가 없으니
    클릭할 수 있는 줄로 안 읽힌다). 직접 그린다. */
-.pub-technical > summary::-webkit-details-marker { display: none; }
-.pub-technical > summary::before {
+.pub-technical > summary::-webkit-details-marker,
+.dialog-evidence > summary::-webkit-details-marker,
+.timeline-more > summary::-webkit-details-marker { display: none; }
+.pub-technical > summary::before,
+.dialog-evidence > summary::before,
+.timeline-more > summary::before {
   content: "";
   flex: none;
   width: 7px;
@@ -1657,11 +1667,17 @@ body.booting .status-strip.loading { display: none; }
   transform: rotate(-45deg);
   transition: transform var(--mo-fast, 120ms) ease;
 }
-.pub-technical[open] > summary::before { transform: rotate(45deg); }
+.pub-technical[open] > summary::before,
+.dialog-evidence[open] > summary::before,
+.timeline-more[open] > summary::before { transform: rotate(45deg); }
 @media (prefers-reduced-motion: reduce) {
-  .pub-technical > summary::before { transition: none; }
+  .pub-technical > summary::before,
+  .dialog-evidence > summary::before,
+  .timeline-more > summary::before { transition: none; }
 }
-.pub-technical > summary:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.pub-technical > summary:focus-visible,
+.dialog-evidence > summary:focus-visible,
+.timeline-more > summary:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
 .pub-technical-shelf {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
@@ -2304,6 +2320,10 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   .dialog-meaning strong,
   .dialog-open strong { line-height: 1.5; }
   .dialog-detail > small { grid-column: 1; }
+  /* 제목과 곁말이 한 줄을 다투면 곁말이 잘린다(390px 실측: '브리핑에 선정된 2건'
+     이 '브리핑에 선정'으로 끊겼다). 건수가 든 말이라 반쯤 잘리면 거짓이 된다 —
+     줄을 내준다. */
+  .dialog-section-head { flex-wrap: wrap; gap: 2px 16px; }
 }
 /* 타임라인 각 기사의 원문 내용. 기본은 접어 둔다 — 근거가 7건인 이슈에서 전부
    펼치면 타임라인이 사라진다. 여는 손잡이는 모바일 최소 터치 높이를 지킨다. */
@@ -2346,6 +2366,19 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
 .dialog-actions button { min-height: 38px; padding: 0 12px; border: 1px solid var(--c-border-strong); border-radius: var(--r-1); background: var(--c-surface); color: var(--c-secondary); font-size: var(--t-min); white-space: nowrap; }
 .dialog-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
 .dialog-section-head span { color: var(--c-text-muted); font-size: var(--t-min); }
+/* 선정된 사건과 그 뒤에 붙은 근거 원문은 성격이 다르다 — 같은 구역선(--c-border)
+   으로 나누되, 근거 쪽은 접힌 채로 시작한다. 손잡이 모양은 위 접기 한 벌을 쓴다. */
+.dialog-evidence { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--c-border); }
+.dialog-evidence > summary { font-weight: 650; }
+.dialog-evidence-note { margin: 2px 0 0; color: var(--c-text-muted); font-size: var(--t-min); }
+/* 두 구역 안에서 다시 접는 '더 보기'. 세로선은 .timeline li 가 각자 그리므로
+   손잡이 줄에도 같은 선을 이어 붙인다 — 안 그러면 목록 중간이 끊겨 보인다. */
+.timeline-more > summary {
+  padding-left: 17px;
+  border-left: 1px solid var(--c-border-strong);
+  color: var(--c-secondary);
+}
+.timeline-more > .timeline { margin-top: 0; }
 .timeline { margin: 12px 0 0; padding: 0; list-style: none; }
 .timeline li { position: relative; display: grid; grid-template-columns: 110px 1fr; gap: 15px; padding: 0 0 18px 17px; border-left: 1px solid var(--c-border-strong); }
 .timeline li::before { position: absolute; top: 5px; left: -5px; width: 9px; height: 9px; border: 2px solid var(--c-surface-raised); border-radius: 50%; background: var(--c-secondary); content: ""; }
