@@ -5935,6 +5935,15 @@ class AdminConsoleTests(unittest.TestCase):
         self.assertNotIn('"admin_merges.json"', build_source)
         self.assertIn("/admin/data/", self.script)
 
+        # 자물쇠와 쓰기 검증이 저장소에 있어도 **배포되지 않으면** 없는 것과 같다.
+        # functions/ 는 web/ 밖이라 화면 배포의 경로 필터에 따로 넣어야 한다 —
+        # 빠지면 엣지 코드만 고친 커밋이 다음 크롤까지 안 올라가고, 그 사이 콘솔은
+        # 새 화면인데 엣지는 옛 검증이다(화면은 저장했다는데 엣지가 되돌린다).
+        deploy = (ROOT.parent / ".github" / "workflows" / "deploy-web.yml").read_text(encoding="utf-8")
+        self.assertIn('- "functions/**"', deploy,
+                      "화면 배포가 Pages Function 변경을 안 집는다")
+        self.assertIn("wrangler@4 pages deploy web/public", deploy)
+
     def test_the_console_keeps_its_tabs_on_narrow_screens(self):
         """독자 앱은 좁은 화면에서 상단 탭을 접고 하단 고정 탭으로 옮긴다.
 
