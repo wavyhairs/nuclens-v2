@@ -27,8 +27,14 @@ from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import event_stage
 from sources import credibility
-from story_cluster import consolidate_story_metadata
+from story_cluster import (
+    choose_display_representative,
+    consolidate_story_metadata,
+    mark_display_representative,
+    promote_representative,
+)
 
 ROOT = Path(__file__).parent
 CONFIG_FILE = ROOT / "ranking_config.json"
@@ -477,8 +483,19 @@ def _facility_conflict(fac_a: frozenset[str], fac_b: frozenset[str]) -> bool:
 
 
 def cluster_duplicates(items: list[dict], scores: dict[str, float],
-                       threshold: float = 0.82) -> tuple[list[dict], list[dict]]:
+                       threshold: float = 0.82,
+                       vetoes: list[dict] | None = None) -> tuple[list[dict], list[dict]]:
     """제목 유사도(문자열 ratio + 토큰 자카드)로 같은 사건을 묶고 점수 최고 1건만 유지.
+
+    **사건 단계가 다르면 묶지 않는다.** 이 알고리즘은 V1 에서 왔고 V1 에는 '상태
+    변화는 별도 사건'이라는 개념이 없었다. 그대로 두면 `심사 착수 → 최종 승인`,
+    `가동 중단 → 재가동` 처럼 제목이 닮은 단계 전환이 AI story 판정을 보기도 전에
+    여기서 접혀 사라진다 — 하필 가장 중요한 뉴스가. `_facility_conflict` 와 같은
+    성격의 거부권이며, 판정은 event_stage.py 가 한다.
+
+    Args:
+        vetoes: 넘기면 거부권이 발동한 쌍이 여기 쌓인다. "왜 두 기사가 분리됐나"는
+            결과물에 아무 흔적을 남기지 않으므로, 받아 두지 않으면 되짚을 수 없다.
 
     Returns:
         (kept, dropped) — dropped 각 항목에 `dup_of`(대표 기사 hash)가 붙는다.
@@ -495,14 +512,23 @@ def cluster_duplicates(items: list[dict], scores: dict[str, float],
         toks = _title_tokens(art)
         facs = _title_facilities(art)
         tags = _norm_tags(art)
+        stages = event_stage.article_stages(art)
         rep_hash = None
         for kn, kt, kf, kg, kh in kept_sig:
             if _facility_conflict(facs, kf):
                 continue
-            if _same_event(norm, toks, kn, kt, threshold) or \
-                    _same_facility_event(facs, tags, kf, kg):
-                rep_hash = kh
-                break
+            if not (_same_event(norm, toks, kn, kt, threshold) or
+                    _same_facility_event(facs, tags, kf, kg)):
+                continue
+            rep = kept_by_hash.get(kh)
+            if rep is not None and event_stage.stage_conflict(
+                    stages, event_stage.article_stages(rep)):
+                # 제목은 같은 사건처럼 보이지만 단계가 넘어갔다 — 별도 사건으로 둔다.
+                if vetoes is not None:
+                    vetoes.append(event_stage.veto_record(rep, art, stage="local_title"))
+                continue
+            rep_hash = kh
+            break
         if rep_hash is not None:
             rep = kept_by_hash.get(rep_hash)
             if rep is not None:
@@ -687,6 +713,63 @@ SEMANTIC_HEAD_MULTIPLIER = 3
 SEMANTIC_HEAD_MIN = 12
 
 
+def _pick_display_representatives(
+    kept: list[dict],
+    pool: list[dict],
+    scores: dict[str, float],
+    dropped: list[dict],
+) -> tuple[list[dict], list[dict]]:
+    """story 별로 화면에 세울 기사 한 건을 최종 확정한다.
+
+    후보는 **큐레이션을 받은 기사**뿐이다. 수집 단계에서 접힌 raw_sources 는 제목과
+    URL 만 있어 카드를 만들 수 없다 — 그것들은 근거(매체 수·출처 목록)로만 쓴다.
+
+    대표가 바뀌면 접힌 기사들의 `dup_of` 도 새 대표를 가리키게 고친다. 안 고치면
+    daily_brief 의 큐 정리(prune)가 그 중복들을 못 찾아 다음 날 같은 사건이 다시
+    후보로 올라온다.
+    """
+    by_hash = {str(a.get("hash") or ""): a for a in pool if a.get("hash")}
+    out: list[dict] = []
+    promotions: list[dict] = []
+    for rep in kept:
+        hashes = rep.get("story_article_hashes")
+        hashes = hashes if isinstance(hashes, list) else []
+        candidates = [by_hash[h] for h in hashes if h in by_hash]
+        # 자기 자신만 남는 story 는 고를 것이 없다 — 그래도 '한 건 중 한 건'이라는
+        # 사실은 남긴다(진단 화면이 single 과 구분해서 읽는다).
+        if len(candidates) <= 1:
+            out.append(mark_display_representative(rep, candidates=1, reason="keep"))
+            continue
+        winner, reason = choose_display_representative(candidates, scores, current=rep)
+        if winner is None or winner is rep:
+            out.append(mark_display_representative(rep, candidates=len(candidates),
+                                                   reason=reason or "keep"))
+            continue
+        old_hash = str(rep.get("hash") or "")
+        new_hash = str(winner.get("hash") or "")
+        promote_representative(rep, winner, reason=reason)
+        mark_display_representative(winner, candidates=len(candidates), reason=reason)
+        for row in dropped:
+            if row.get("dup_of") == old_hash:
+                row["dup_of"] = new_hash
+        # 물러난 대표도 이제는 접힌 기사다 — 큐에서 함께 정리되도록 등록한다.
+        demoted = dict(rep)
+        demoted["dup_of"] = new_hash
+        demoted["dup_reason"] = "display_representative"
+        demoted["dup_explanation"] = reason
+        dropped.append(demoted)
+        promotions.append({
+            "from_hash": old_hash,
+            "from_title": (rep.get("title_kr") or rep.get("title") or "")[:120],
+            "to_hash": new_hash,
+            "to_title": (winner.get("title_kr") or winner.get("title") or "")[:120],
+            "reason": reason,
+            "candidates": len(candidates),
+        })
+        out.append(winner)
+    return out, promotions
+
+
 def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
                     now: datetime | None = None,
                     floor: dict | None = None,
@@ -728,8 +811,10 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
         scores[h] = s
         breakdowns[h] = b
 
+    stage_vetoes: list[dict] = []
     kept, dropped = cluster_duplicates(items, scores,
-                                       float(cfg.get("duplicate_similarity", 0.82)))
+                                       float(cfg.get("duplicate_similarity", 0.82)),
+                                       vetoes=stage_vetoes)
 
     def refresh_scores(rows: list[dict]) -> None:
         # dedup이 story_outlet_count 등 metadata를 합쳤으므로 coverage 가점을 재계산한다.
@@ -791,8 +876,19 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
         dropped = dropped + slate_dropped
         refresh_scores(kept)
 
+    # story 가 완성된 **뒤에야** 화면용 대표 한 건을 고른다. 이 자리 전까지 대표는
+    # 각 단계의 점수 1위였을 뿐이고, 그 점수는 story 가 아직 반쪽이던 시점의 값이다.
+    # 이제는 매체 등급·근거 역할·본문 유무가 전부 확정돼 있으므로 다시 고를 수 있다.
+    kept, promotions = _pick_display_representatives(kept, items, scores, dropped)
+    if promotions:
+        refresh_scores(kept)
+
     selected = select_diverse(kept, scores, k, cfg)
     diag = {
+        "display_promotions": promotions,
+        "stage_vetoes": stage_vetoes + [
+            v for a in kept for v in (a.get("story_stage_vetoes") or [])
+        ],
         "scores": scores,
         "breakdowns": breakdowns,
         "cap": cap_detail,

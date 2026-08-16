@@ -204,6 +204,10 @@ jobs:
           if [ "$age" -lt "$MIN_GAP_MIN" ]; then echo "간격 미달 — 배포 스킵"; exit 0; fi
           python web/build_data.py
           npx --yes wrangler@4 pages deploy web/public --project-name="$CLOUDFLARE_PAGES_PROJECT" --branch=main --commit-dirty=true
+          # 운영 콘솔이 인증 없이 열려 있지 않은지 확인한다. Function 폴더가 업로드
+          # 에서 빠져도 배포는 조용히 성공하므로, 살아 있는 사이트에 직접 물어야 안다.
+          sleep 15
+          bash web/tools/verify_admin_gate.sh "$SITE_URL"
 
       # 이슈 병합 회색지대 LLM 판정 캐시. 커밋하지 않으면 빌드마다(하루 8회+)
       # 같은 쌍을 다시 물어보게 되고, 판정이 흔들리면 이슈 묶음도 같이 흔들린다.

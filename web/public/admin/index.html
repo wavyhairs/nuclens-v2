@@ -32,13 +32,22 @@
     </nav>
     <div class="header-tools">
       <a class="global-search-trigger admin-exit" href="/">서비스 화면 →</a>
+      <!-- 변경 화면은 미들웨어가 그린다(functions/admin/_middleware.js). 여기에
+           비밀번호 입력칸을 두면 콘솔이 '읽기 전용'이라는 규칙이 흐려지고, 폼이
+           두 곳에 흩어져 드리프트한다. -->
+      <a class="icon-button admin-password-link" href="/admin/password">비밀번호 변경</a>
+      <!-- 로그아웃은 GET 링크로 두면 안 된다 — 프리페치·크롤러가 눌러 세션을 끊는다.
+           쿠키를 지우는 것은 상태 변경이므로 POST 로 보낸다. -->
+      <form method="POST" action="/admin/logout" class="admin-logout">
+        <button class="icon-button" type="submit" aria-label="운영 콘솔 로그아웃">잠그기</button>
+      </form>
     </div>
   </div>
 </header>
 
 <main id="adminMain" class="wrap admin-main">
   <div id="adminStatus" class="readiness-panel" role="status" aria-live="polite">
-    <div><strong>운영 데이터를 불러오고 있습니다</strong><p>admin_merges.json · admin_config.json</p></div>
+    <div><strong>운영 데이터를 불러오고 있습니다</strong><p>/admin/data/merges.json · /admin/data/config.json</p></div>
   </div>
 
   <!-- ── 병합 진단 ───────────────────────────────────────────────────────
@@ -56,9 +65,20 @@
       <div id="storyMerges" class="admin-list"></div>
     </section>
 
+    <!-- 병합만 보여 주면 진단은 반쪽이다. 두 기사가 끝내 안 붙었다는 사실은
+         결과물 어디에도 남지 않아서, 이 칸이 없으면 거부권이 과하게 걸려도
+         "비슷한 카드가 두 칸을 먹는다"로만 보이고 원인은 영영 안 보인다. -->
+    <section class="admin-section" aria-labelledby="storySplitTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="storySplitTitle">붙이지 않은 판단 — 사건 단계</h2></div>
+        <span class="data-note">심사↔승인·정지↔재가동처럼 상태가 넘어가면 제목이 닮아도 별도 사건입니다</span>
+      </div>
+      <div id="storySplits" class="admin-list"></div>
+    </section>
+
     <section class="admin-section" aria-labelledby="issueMergeTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="issueMergeTitle">날짜를 넘는 병합 — 이슈</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="issueMergeTitle">날짜를 넘는 병합 — 이슈</h2></div>
         <span class="data-note">약한 연결부터 세웁니다 · 점수가 빠듯한 병합이 곧 의심스러운 병합입니다</span>
       </div>
       <div id="issueStats" class="admin-stats"></div>
@@ -71,7 +91,7 @@
 
     <section class="admin-section" aria-labelledby="borderlineTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="borderlineTitle">붙지 않은 경계선</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="borderlineTitle">붙지 않은 경계선</h2></div>
         <span class="data-note">문턱 바로 아래라 조금만 내리면 붙습니다 · 붙었어야 했는지 여기서 고릅니다</span>
       </div>
       <div id="borderline" class="admin-list"></div>

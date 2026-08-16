@@ -44,6 +44,8 @@ from embedding_pipeline import (
     load_cache as load_embedding_store,
     save_cache as save_embedding_store,
 )
+import event_stage
+from story_cluster import attach_raw_source, consolidate_story_metadata, raw_sources_of
 
 # 비밀값은 '환경변수 먼저, 없으면 .env' 로 찾는다. 이 규칙의 단일 구현이
 # gemini_client._resolve 이고 audio_brief 도 텔레그램 토큰을 거기서 가져온다.
@@ -674,8 +676,19 @@ def get_or_compute_embedding(article: dict, cache_key: str, cache: dict) -> list
         return None
 
 
-def semantic_dedup(articles: list[dict], emb_cache: dict, threshold: float = SEMANTIC_DEDUP_THRESHOLD) -> list[dict]:
-    """임베딩 cosine similarity로 의미 중복 제거. 점수 높은 것 우선 유지."""
+def semantic_dedup(articles: list[dict], emb_cache: dict,
+                   threshold: float = SEMANTIC_DEDUP_THRESHOLD,
+                   vetoes: list[dict] | None = None) -> list[dict]:
+    """임베딩 cosine similarity로 의미 중복을 접는다. 점수 높은 것이 대표.
+
+    접힌 기사는 삭제하지 않고 대표의 `raw_sources` 로 남는다 — 임베딩이 닮았다는
+    것은 '같은 사건'이라는 뜻이지 '한 매체만 썼다'는 뜻이 아니다.
+
+    사건 단계가 갈리면(심사↔승인, 정지↔재가동) 유사도가 아무리 높아도 접지 않는다.
+    임베딩은 어휘가 겹치면 높게 나오는데, 단계 전환은 바로 그 겹치는 어휘 위에서
+    일어난다 — '고리2호기 계속운전 심사'와 '고리2호기 계속운전 승인'의 코사인은
+    거의 1 이다.
+    """
     if len(articles) < 2:
         return articles
 
@@ -692,14 +705,24 @@ def semantic_dedup(articles: list[dict], emb_cache: dict, threshold: float = SEM
         if emb is None:
             kept.append((art, emb))
             continue
-        is_dup = False
+        stages = event_stage.article_stages(art)
+        rep: dict | None = None
         for kept_art, kept_emb in kept:
             if kept_emb is None:
                 continue
-            if cosine_sim(emb, kept_emb) >= threshold:
-                is_dup = True
-                break
-        if not is_dup:
+            similarity = cosine_sim(emb, kept_emb)
+            if similarity < threshold:
+                continue
+            if event_stage.stage_conflict(stages, event_stage.article_stages(kept_art)):
+                if vetoes is not None:
+                    vetoes.append(event_stage.veto_record(
+                        kept_art, art, stage="collect_embedding"))
+                continue
+            attach_raw_source(kept_art, art, stage="collect_embedding",
+                              reason="임베딩 의미 중복", similarity=similarity)
+            rep = kept_art
+            break
+        if rep is None:
             kept.append((art, emb))
 
     return [art for art, _ in kept]
@@ -2336,8 +2359,28 @@ def collect_articles(feed_name: str, keywords: list[str], anchors: list[str], st
     return sorted(by_title.values(), key=lambda x: x["pub"])
 
 
+def _fold_pair(existing: dict, candidate: dict, *, stage: str, reason: str) -> dict:
+    """점수 높은 쪽을 대표로 두고, 진 쪽을 근거로 매달아 돌려준다."""
+    if candidate.get("score", 0) > existing.get("score", 0):
+        winner, loser = candidate, existing
+    else:
+        winner, loser = existing, candidate
+    attach_raw_source(winner, loser, stage=stage, reason=reason)
+    return winner
+
+
 def dedup_exact_candidates(articles: list[dict]) -> list[dict]:
-    """URL 정규화 1차, 제목 완전일치 2차로 수집 후보를 결정적으로 줄인다."""
+    """URL 정규화 1차, 제목 완전일치 2차로 수집 후보를 결정적으로 줄인다.
+
+    **줄인다 ≠ 지운다.** 예전에는 진 쪽을 그냥 버렸고, 그래서 story 가 만들어질
+    무렵에는 이미 매체 수·근거 수가 실제보다 작았다 — `story_outlet_count` 로
+    '복수 출처 확인'을 말할 수 없었던 이유가 이것이다. 이제 접힌 기사는 대표의
+    `raw_sources` 로 살아남아 story 단계까지 근거를 들고 간다.
+
+    URL 이 같은 쌍은 hash 도 같아서 근거로 합쳐도 매체 수가 늘지 않는다 — 같은
+    기사를 두 경로로 받은 것이지 두 매체가 보도한 것이 아니기 때문이다. 제목
+    완전일치 쌍은 URL 이 달라 서로 다른 매체로 집계된다.
+    """
     by_url: dict[str, dict] = {}
     for article in articles:
         normalized = normalize_url(article.get("link"))
@@ -2347,8 +2390,11 @@ def dedup_exact_candidates(articles: list[dict]) -> list[dict]:
         candidate["link"] = normalized
         candidate["hash"] = url_hash(normalized)
         existing = by_url.get(normalized)
-        if existing is None or candidate.get("score", 0) > existing.get("score", 0):
+        if existing is None:
             by_url[normalized] = candidate
+            continue
+        by_url[normalized] = _fold_pair(existing, candidate,
+                                        stage="collect_url", reason="정규화 URL 동일")
 
     by_title: dict[str, dict] = {}
     for article in by_url.values():
@@ -2356,8 +2402,11 @@ def dedup_exact_candidates(articles: list[dict]) -> list[dict]:
         if not key:
             continue
         existing = by_title.get(key)
-        if existing is None or article.get("score", 0) > existing.get("score", 0):
+        if existing is None:
             by_title[key] = article
+            continue
+        by_title[key] = _fold_pair(existing, article,
+                                   stage="collect_title", reason="제목 완전일치")
     return list(by_title.values())
 
 
@@ -2461,20 +2510,30 @@ def main() -> None:
 
     exact_kept = dedup_exact_candidates(all_candidates)
 
-    # Fuzzy dedup — 우라까이·받아쓰기 catch
+    # Fuzzy dedup — 우라까이·받아쓰기 catch.
+    # 접힌 기사는 대표의 raw_sources 로 남고, 사건 단계가 갈리면 접지 않는다.
+    stage_vetoes: list[dict] = []
     sorted_by_score = sorted(exact_kept, key=lambda x: x["score"], reverse=True)
     fuzzy_kept: list[dict] = []
     fuzzy_norms: list[str] = []
     for art in sorted_by_score:
         norm = normalize_title(art["title"])
-        is_dup = False
-        for kept_norm in fuzzy_norms:
-            if difflib.SequenceMatcher(None, norm, kept_norm).ratio() >= 0.82:
-                is_dup = True
-                break
-        if not is_dup:
+        stages = event_stage.article_stages(art)
+        rep: dict | None = None
+        for kept_art, kept_norm in zip(fuzzy_kept, fuzzy_norms):
+            if difflib.SequenceMatcher(None, norm, kept_norm).ratio() < 0.82:
+                continue
+            if event_stage.stage_conflict(stages, event_stage.article_stages(kept_art)):
+                stage_vetoes.append(event_stage.veto_record(
+                    kept_art, art, stage="collect_fuzzy_title"))
+                continue
+            rep = kept_art
+            break
+        if rep is None:
             fuzzy_kept.append(art)
             fuzzy_norms.append(norm)
+        else:
+            attach_raw_source(rep, art, stage="collect_fuzzy_title", reason="제목 유사")
 
     print(
         f"After dedup: {len(all_candidates)} candidates → {len(exact_kept)} URL/title unique "
@@ -2482,9 +2541,16 @@ def main() -> None:
     )
 
     emb_cache = load_embeddings_cache()
-    semantically_unique = semantic_dedup(fuzzy_kept, emb_cache)
+    semantically_unique = semantic_dedup(fuzzy_kept, emb_cache, vetoes=stage_vetoes)
     save_embeddings_cache(emb_cache)
-    print(f"After semantic dedup: {len(semantically_unique)} articles")
+    folded = sum(len(raw_sources_of(a)) for a in semantically_unique)
+    print(f"After semantic dedup: {len(semantically_unique)} articles "
+          f"(접힌 근거 {folded}건 보존 — 삭제 아님)")
+    if stage_vetoes:
+        # 조용히 갈라 두면 '수집이 늘었다'로만 보인다. 무엇이 왜 안 붙었는지는
+        # 여기서 말해야 나중에 되짚을 수 있다.
+        print(f"[stage] 사건 단계가 달라 분리 유지 {len(stage_vetoes)}쌍 "
+              f"— 예: {stage_vetoes[0]['explanation']}")
 
     final_articles = sorted(semantically_unique, key=lambda x: x["pub"])
 
@@ -2582,7 +2648,7 @@ def main() -> None:
         # must_read 포함 모든 비-noise 항목을 큐에 적재 — 즉시 개별 발송 폐지,
         # 일일 브리핑(daily_brief)으로 통합. must_read 는 rank가 높아 브리핑 상단 노출.
         profile = source_profile(article.get("domain", ""), article.get("publisher", ""))
-        queue.append({
+        entry = {
             "hash": h,
             "title": article["title"],
             "title_kr": cur.get("title_kr") or article["title"],
@@ -2623,7 +2689,21 @@ def main() -> None:
             "event_date_precision": cur.get("event_date_precision", "unknown"),
             "event_date_source": cur.get("event_date_source", "unknown"),
             "queued_at": now_iso,
-        })
+            # 수집 단계에서 접힌 기사들. 예전에는 여기서 이미 삭제돼 있었고, 그래서
+            # story 가 만들어질 때 매체 수·근거 수가 실제보다 작았다. 큐까지 들고
+            # 와야 story_outlet_count 를 '복수 출처 확인'으로 쓸 수 있다.
+            # list() 로 복사한다 — 큐 레코드와 수집 후보가 같은 목록을 공유하면
+            # 뒤 단계의 attach 가 이미 버린 객체까지 건드린다.
+            "raw_sources": list(raw_sources_of(article)),
+        }
+        if entry["raw_sources"]:
+            # 지금 집계해 둔다 — 큐 레코드 자체가 story 계약을 들고 있어야
+            # 랭킹·발송·웹이 같은 숫자를 본다. 뒤에서 다른 기사와 병합되면
+            # consolidate 가 이 값을 다시 계산한다(멤버의 raw_sources 까지 합쳐서).
+            consolidate_story_metadata(entry, [entry], relation="collected",
+                                       reason="수집 단계 동일 기사 병합",
+                                       stage="collect_fold")
+        queue.append(entry)
         state["sent"][h] = now_iso
         queued += 1
 

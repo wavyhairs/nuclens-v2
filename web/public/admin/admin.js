@@ -48,7 +48,19 @@ function chips(values, className = "topic-chip") {
     .map(value => `<span class="${className}">${esc(value)}</span>`).join("");
 }
 
-const RELATION_LABEL = { merge: "병합", duplicate: "중복", single: "단독" };
+const RELATION_LABEL = {
+  merge: "병합", duplicate: "중복", single: "단독",
+  // 수집 단계에서 접힌 것. 예전 파이프라인에서는 이 계층이 화면에 존재하지 않았다 —
+  // 그때는 접힌 기사가 story 가 만들어지기도 전에 삭제됐기 때문이다.
+  collected: "수집 병합",
+};
+
+const FOLD_STAGE_LABEL = {
+  collect_url: "URL 동일",
+  collect_title: "제목 완전일치",
+  collect_fuzzy_title: "제목 유사",
+  collect_embedding: "임베딩 의미 중복",
+};
 
 // ── 병합 진단 ──────────────────────────────────────────────────────────────
 
@@ -72,6 +84,25 @@ function storyRow(row) {
   // 그게 오병합이고, 사람은 그걸 한눈에 안다 — 지표는 못 한다.
   const titles = (row.related_titles || [])
     .map(title => `<li>${esc(title)}</li>`).join("");
+  // 수집 단계에서 접힌 기사. 큐레이션 전이라 제목·매체·URL 만 있다. 이것이
+  // story_outlet_count 를 실제 보도 매체 수로 만들어 주는 재료다.
+  const raws = (row.raw_sources || []).map(raw => {
+    const url = safeUrl(raw.link);
+    const label = esc(raw.title || "제목 없음");
+    return `<li>${url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${label}</a>` : label}
+      <small>${esc(raw.publisher || raw.domain || "매체 미상")} · ${
+        esc(FOLD_STAGE_LABEL[raw.fold_stage] || raw.fold_stage || "수집")}${
+        typeof raw.similarity === "number" ? ` · 유사도 ${ratio(raw.similarity)}` : ""}</small></li>`;
+  }).join("");
+  // 카드의 얼굴을 story 완성 뒤에 골랐다는 사실. 교체가 있었으면 무엇에서
+  // 무엇으로 바뀌었는지가 오병합만큼이나 자주 묻는 질문이다.
+  const display = row.display_swapped_from
+    ? `<p class="admin-reason"><strong>화면 대표 교체</strong>${esc(row.display_reason || "")}
+        — 이전 대표: ${esc(row.display_swapped_from_title || row.display_swapped_from)}</p>`
+    : (row.display_candidates > 1
+      ? `<p class="admin-reason"><strong>화면 대표</strong>후보 ${row.display_candidates}건 중 이 기사를 유지${
+          row.display_reason ? ` — ${esc(row.display_reason)}` : ""}</p>`
+      : "");
   return `<article class="admin-card">
     <div class="admin-card-head">
       <div>
@@ -82,15 +113,19 @@ function storyRow(row) {
         <h3>${esc(row.title)}</h3>
       </div>
       <p class="admin-card-scale">${row.article_count}건 통합<small>매체 ${row.outlet_count}곳 · 독립 ${
-        row.independent_outlet_count}곳${row.tier1_count ? ` · tier1 ${row.tier1_count}` : ""}</small></p>
+        row.independent_outlet_count}곳${row.tier1_count ? ` · tier1 ${row.tier1_count}` : ""}${
+        row.raw_source_count ? ` · 수집 단계 ${row.raw_source_count}건` : ""}</small></p>
     </div>
     ${row.reason
       ? `<p class="admin-reason"><strong>판단 근거</strong>${esc(row.reason)}</p>`
       : '<p class="admin-reason empty"><strong>판단 근거</strong>기록되지 않았습니다</p>'}
+    ${display}
     ${axes.length ? `<dl class="admin-fingerprint">${axes.map(([label, value]) =>
       `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>` : ""}
     ${titles ? `<details class="admin-evidence"><summary>접힌 기사 제목 ${
       (row.related_titles || []).length}건</summary><ul class="admin-titles">${titles}</ul></details>` : ""}
+    ${raws ? `<details class="admin-evidence"><summary>수집 단계에서 접힌 근거 ${
+      row.raw_source_count}건 — 예전에는 여기서 삭제됐습니다</summary><ul class="admin-titles">${raws}</ul></details>` : ""}
     ${sources ? `<details class="admin-evidence"><summary>출처 ${
       (row.sources || []).length}곳</summary><ul class="admin-sources">${sources}</ul></details>` : ""}
     ${row.issue_id ? `<p class="admin-link"><a href="/issue/${esc(row.issue_id)}">이 사건이 들어간 이슈 열기 →</a></p>` : ""}
@@ -106,8 +141,10 @@ function renderStory() {
   stats.innerHTML = [
     stat("병합", `${totals.merge || 0}건`, "서로 다른 기사를 한 사건으로"),
     stat("중복", `${totals.duplicate || 0}건`, "같은 기사의 재게재"),
-    stat("접힌 기사", `${totals.folded_articles || 0}건`, "화면에서 사라진 원문 수"),
-    stat("단독", `${totals.single || 0}건`, "병합 없음"),
+    stat("수집 병합", `${totals.collected || 0}건`, "수집 단계에서 접은 것"),
+    stat("접힌 기사", `${totals.folded_articles || 0}건`, "카드 뒤로 들어간 원문 수"),
+    // 예전에는 이 숫자만큼이 story 가 만들어지기 전에 사라졌다. 지금은 근거로 남는다.
+    stat("수집 근거 보존", `${totals.collect_folded_articles || 0}건`, "예전에는 삭제되던 수"),
     stat("계약 판", story.contract_version || "—", ""),
   ].join("");
   const rows = story.merges || [];
@@ -116,6 +153,51 @@ function renderStory() {
     : `<div class="empty-state"><strong>이 구간에 병합된 사건이 없습니다</strong>
        <p>story 병합은 daily_brief 가 회차를 만들 때 기록합니다. 아직 story 계약이
        붙지 않은 과거 회차는 전부 단독으로 나옵니다.</p></div>`;
+  renderStorySplits(story);
+}
+
+// "왜 붙었나"의 짝은 "왜 안 붙었나"다. 분리는 결과물에 아무 흔적을 남기지 않아서,
+// 이 화면이 없으면 거부권이 과하게 작동해도 아무도 모른다 — 그저 비슷한 카드가
+// 두 칸을 차지할 뿐이고, 그게 왜인지는 어디에도 안 적혀 있다.
+function renderStorySplits(story) {
+  const vetoes = story.stage_vetoes || [];
+  const promotions = story.display_promotions || [];
+  const box = document.getElementById("storySplits");
+  if (!box) return;
+  const vetoRows = vetoes.map(veto => `<article class="admin-card">
+    <div class="admin-card-head">
+      <div>
+        <p class="admin-kicker"><span class="admin-badge warn">단계 충돌</span>
+          <span>${esc(dateLabel(veto.date))}</span>
+          ${veto.stage ? `<span>${esc(veto.stage)}</span>` : ""}</p>
+        <h3>${esc(veto.explanation || "사건 단계가 다름")}</h3>
+      </div>
+    </div>
+    <ul class="admin-titles">
+      <li>${esc(veto.left_title)}<small>${esc(veto.left_stage_label || "-")}</small></li>
+      <li>${esc(veto.right_title)}<small>${esc(veto.right_stage_label || "-")}</small></li>
+    </ul>
+  </article>`).join("");
+
+  const promoRows = promotions.map(promo => `<article class="admin-card">
+    <div class="admin-card-head">
+      <div>
+        <p class="admin-kicker"><span class="admin-badge">대표 교체</span>
+          <span>${esc(dateLabel(promo.date))}</span>
+          <span>후보 ${esc(promo.candidates ?? "—")}건</span></p>
+        <h3>${esc(promo.to_title)}</h3>
+      </div>
+    </div>
+    <p class="admin-reason"><strong>사유</strong>${esc(promo.reason || "")}</p>
+    <ul class="admin-titles"><li>이전 대표<small>${esc(promo.from_title)}</small></li></ul>
+  </article>`).join("");
+
+  box.innerHTML = (vetoRows || promoRows)
+    ? vetoRows + promoRows
+    : `<div class="empty-state"><strong>단계 충돌로 갈라 둔 쌍이 없습니다</strong>
+       <p>제목이 닮았는데 심사↔승인·정지↔재가동처럼 사건 단계가 넘어간 조합만 여기
+       올라옵니다. 이 기록은 발송 회차(<code>delivery_log</code>)에서 옵니다 —
+       아직 회차가 없으면 비어 있는 것이 정상입니다.</p></div>`;
 }
 
 // 이슈 병합은 규칙이 판단한다. 어느 규칙이 걸렸는지(method)와 얼마나 빠듯했는지
@@ -330,8 +412,12 @@ function showPanel(panel) {
   history.replaceState(history.state, "", url);
 }
 
+// /admin/data 아래에서 읽는다. /data 는 독자 화면이 쓰는 공개 경로라 엣지의
+// 접근 통제(functions/admin/_middleware.js)가 닿지 않는다 — 화면만 잠그고 데이터를
+// 공개 경로에 두면 URL 하나로 그대로 읽힌다.
 async function loadJSON(name) {
-  const response = await fetch(`/data/${name}?cb=${Date.now()}`, { cache: "no-store" });
+  const response = await fetch(`/admin/data/${name}?cb=${Date.now()}`, { cache: "no-store" });
+  if (response.status === 401) throw new Error("세션이 만료되었습니다 — 다시 로그인하세요");
   if (!response.ok) throw new Error(`${name} ${response.status}`);
   return response.json();
 }
@@ -340,8 +426,8 @@ async function start() {
   const status = document.getElementById("adminStatus");
   try {
     [state.merges, state.config] = await Promise.all([
-      loadJSON("admin_merges.json"),
-      loadJSON("admin_config.json"),
+      loadJSON("merges.json"),
+      loadJSON("config.json"),
     ]);
   } catch (error) {
     // 콘솔이 조용히 비면 '병합이 하나도 없다'로 읽힌다 — 원인을 그대로 적는다.

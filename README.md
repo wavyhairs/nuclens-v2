@@ -35,9 +35,11 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `reports_kb.json.example` | 과거 보고서 KB 템플릿 — 채우면 보고서 추천 정밀화 |
 | `keywords.json` | Naver 검색 키워드 — JSON 만 편집 |
 | `dedup.py` + `story_cluster.py` | 동일 briefing story를 제목·본문요약·fingerprint로 병합하고 보도매체/근거를 보존 |
+| `event_stage.py` | 사건 단계(심사·승인·정지·재가동…) 판정 — **단계가 다르면 중복 처리 금지** 거부권 |
 | `audio_brief.py` | Nuclens 빠른 브리핑: 1인 라디오형 약 3분, 900자 TTS 청크/무음·음량 보정 |
 | `expert_audio_brief.py` | Nuclens 전문가 브리핑: dossier→시간배분→episode plan→1인 전문가 대본→검증/수정→TTS. 길이는 그날 재료가 정한다 (기사 적으면 짧게, 많으면 10분 초과) |
 | `web/build_data.py` + `web/public/` | story 계약을 issue/timeline으로 연결하고 7·30·90·180·365일 흐름과 두 오디오를 Cloudflare Pages에 제공 |
+| `functions/admin/_middleware.js` | 운영 콘솔(`/admin`) 엣지 접근 통제 — 비밀번호(KV)·서명 세션·시도 제한. KV 미연결이면 **잠근다** |
 | `scorer.py` `synthesize.py` `send_research.py` | 소셜(last30days) 경로 — 수동 실행 전용 |
 
 ## 상태 파일 (git 이 DB)
@@ -46,7 +48,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 |---|---|
 | `sent.json` | 수집 dedup (URL hash, 14일 보존) |
 | `curated.json` | 큐레이션 캐시 (14일) — weekly 의 입력 |
-| `digest_queue.json` | 발송 대기 큐 (발송분만 hash 단위 제거, 3일 자동 정리) |
+| `digest_queue.json` | 발송 대기 큐 (발송분만 hash 단위 제거, 3일 자동 정리). 각 항목의 `raw_sources` 는 수집 단계에서 접힌 기사 — 삭제하지 않고 대표에 매단 근거 |
 | `outbox.json` | 오늘의 발송 계획·상태 (pending/sent/failed) — 중복 발송 방지 핵심 |
 | `delivery_log.jsonl` | 발송 이력 + 점수 내역 + 모든 선정 story의 fingerprint/보도매체/병합 근거 — 뉴스와 Nuclens의 공통 계약 |
 
@@ -58,6 +60,8 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 - **기사(article) → briefing story → 장기 issue**의 3계층을 구분한다. 같은 날 같은 사건을
   여러 매체가 보도하면 story 하나로 합치고, 며칠 뒤 새 승인·재가동 같은 후속 action은
   장기 issue 타임라인으로 연결한다.
+- 화면에 한 카드가 서지만 그 카드는 **story 가 완성된 뒤에** 고른 대표다. 수집 단계가 미리
+  고르지 않는다 (아래 "사건 중심 파이프라인" 참조).
 - 웹 issue 연결도 Daily Brief의 `story_fingerprint`를 보조 증거로 사용하므로 뉴스 선정과
   사이트의 사건 정의가 서로 다른 규칙으로 움직이지 않는다.
 - 트렌드는 원문 기사 수가 아니라 **선정된 briefing story 수**를 센다. 7일·30일·분기(90일)·
@@ -68,6 +72,93 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
   웹 배포는 계속된다.
 - 장기 archive는 계속 Git에 누적하지만 Pages로는 경량 기간 집계만 내보내므로 1년 타임라인이
   생겨도 브라우저가 전체 원본 archive를 다운로드하지 않는다.
+
+## 사건 중심 파이프라인 (2026-08-16)
+
+"V1 위에 story 기능을 덧붙인 V2"에서 "처음부터 사건 중심으로 움직이는 V2"로 옮긴
+변경이다. 뿌리는 두 가지 구조적 약점이고(①②), 나머지는 그것을 고쳤을 때 비로소
+가능해지는 것들이다(③④⑤).
+
+**① 수집 단계는 이제 중복을 지우지 않는다.**
+`news_bot` 의 URL·제목·퍼지·임베딩 dedup 은 진 쪽을 삭제하는 대신 대표 기사의
+`raw_sources` 로 매단다. 예전에는 story 가 만들어지기도 전에 근거가 사라져서,
+열 매체가 보도한 사건도 화면에서는 매체 1곳으로 보였다. 이제 그 근거가 큐 →
+랭킹 → story 병합 → `delivery_log` 까지 그대로 흐른다.
+
+**② 사건 단계가 다르면 중복으로 접지 않는다.** (`event_stage.py`)
+V1 에서 가져온 빠른 제목 중복 알고리즘에는 단계 개념이 없어서
+`심사 착수 → 최종 승인`, `가동 중단 → 재가동` 같은 상태 전환이 AI story 판정 전에
+접혀 사라졌다 — 하필 가장 중요한 뉴스가. 이제 `ranking.cluster_duplicates()`,
+수집 단계 퍼지·임베딩 dedup, 그리고 LLM 이 "단순 재전재"라고 판정한 조합에
+거부권이 선다. **양쪽 모두 단계를 말했고 겹치는 단계가 하나도 없을 때만** 발동하므로,
+한쪽이라도 단계 표식이 없으면 예전과 똑같이 동작한다.
+
+**③ 화면용 대표는 story 완성 뒤에 고른다.**
+`ranking.rank_and_select()` 가 모든 dedup 단계를 마친 뒤 story 별로 대표를 다시
+고른다 — 본문 유무 → 출처 등급 → 근거 역할 → 랭킹 점수 순. 동점이면 유지하고,
+점수 차가 3.0 을 넘으면 바꾸지 않는다(품질이 중요도를 뒤집지 않게).
+
+**④ 그래서 `story_outlet_count` 가 실제 복수 출처 확인 지표가 된다.**
+웹의 검증 상태(`official`/`corroborated`/`partial`/`unverified`)가 이제 카드 개수가
+아니라 story 에 접힌 **매체 개수**를 센다. 예전에는 `corroborated`(독립 출처 2곳
+이상)가 사실상 도달 불가능했다 — 셀 매체가 수집 단계에서 이미 지워져 있었으므로.
+
+**⑤ 병합/분리 판단은 운영 콘솔에서 되짚는다.** (`/admin`)
+"왜 두 기사가 합쳐졌나"와 함께 **"왜 분리됐나"**(단계 충돌)와 "왜 이 기사가 카드의
+얼굴인가"(대표 교체)를 같은 화면에서 본다. 분리는 결과물에 아무 흔적을 남기지 않아
+`delivery_log` 의 `record_type: "story_audit"` 줄로만 남는다.
+
+회귀 테스트: `python -m unittest tests.test_event_stage tests.test_ranking tests.test_story_dedup`
+
+## 운영 콘솔 접근 (`/admin`)
+
+진단 데이터에는 어떤 기사가 왜 접혔는지, 어떤 매체를 어떤 등급으로 보는지가 전부
+들어 있다. 화면만 가리는 것은 가린 게 아니므로 **엣지에서** 막는다
+(`functions/admin/_middleware.js` — Cloudflare Pages Function).
+
+- 서비스 화면 우측 상단 톱니바퀴 → `/admin/` → 비밀번호 화면.
+  주소를 직접 쳐도 같은 화면이 나온다.
+- 콘솔 데이터는 `/data` 가 아니라 `/admin/data` 아래에 둔다. `/data` 는 독자 화면이
+  쓰는 공개 경로라 미들웨어가 닿지 않는다.
+- 세션은 서명된 HttpOnly 쿠키(8시간). 비밀번호를 바꾸면 서명 키가 갈려서 다른
+  기기의 로그인이 전부 끊긴다.
+
+### 최초 설정 (1회)
+
+비밀번호를 화면에서 바꾸려면 바뀐 값을 쓸 곳이 있어야 한다. 환경변수는 Function 이
+읽기만 할 수 있으므로 KV 네임스페이스 하나를 붙인다. **설정할 환경변수는 없다** —
+세션 서명 키도 KV 가 처음 쓸 때 스스로 만든다.
+
+1. Cloudflare 대시보드 → **Workers & Pages → KV** → Create namespace
+2. Pages 프로젝트 → **Settings → Bindings** → KV namespace, 변수명 `ADMIN_KV`
+3. 다시 배포
+
+KV 가 안 붙어 있으면 콘솔은 **503 으로 잠긴다.** 통과시키면 '설정을 깜빡한 것'이
+곧 '공개'가 되고, 그런 실수는 조용해서 몇 달을 간다.
+
+### 첫 로그인 — `0000` 은 부트스트랩이지 비밀번호가 아니다
+
+첫 비밀번호는 `0000` 이고, 들어가면 **비밀번호 변경 화면에서 못 빠져나온다.**
+진단 화면도 데이터 JSON 도 바꾸기 전에는 403 이다.
+
+강제인 이유: 여기서 위험한 것은 유출이 아니라 **추측**이다. 해시는 Cloudflare 밖으로
+안 나가지만, `0000` 은 경우의 수가 1만 가지고 `/admin/login` 은 인터넷에 열린 POST
+엔드포인트다. 자동화된 시도 앞에서는 잠긴 문이 아니므로, `0000` 이 방치될 수 있는
+경로를 아예 만들지 않는다.
+
+- 새 비밀번호는 8자 이상. 이후 콘솔 상단 **비밀번호 변경**에서 언제든 바꾼다.
+- 실패가 15분 안에 10회 쌓이면 그 IP 는 15분간 막힌다.
+- 비밀번호를 잊었다면 대시보드에서 KV 의 `admin:password` 키를 지운다 → 다시 `0000`.
+
+배포 워크플로는 매번 살아 있는 사이트에 `/admin/` 이 인증 없이 200 을 내는지 물어본다
+(`web/tools/verify_admin_gate.sh`). Function 폴더가 업로드에서 빠져도 배포는 조용히
+성공하므로, 그 실패를 시끄럽게 만드는 유일한 방법이다.
+
+로컬에서 확인하려면 KV 를 흉내 낸 채로 띄운다:
+
+```bash
+npx wrangler@4 pages dev web/public --kv ADMIN_KV
+```
 
 ## 발송 원자성 (outbox 패턴)
 

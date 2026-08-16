@@ -106,6 +106,12 @@ jobs:
       - name: Date math (app.js)
         run: node web/tests/date_window.mjs
 
+      # 운영 콘솔 자물쇠는 엣지에서 도는 JS 이고 해시·세션·비밀번호 규칙이 전부
+      # 그 안에 있다. 여기가 어긋나면 맞는 비밀번호로도 못 들어가거나 반대로
+      # 아무거나 통과하는데, 어느 쪽이든 배포 뒤에야 알게 된다.
+      - name: Admin gate contract
+        run: node web/tests/admin_gate.mjs
+
       # 데이터 지표 게이트는 끈다. 추적률은 "오늘 뉴스가 어떻게 묶였나"의 결과지
       # 화면 코드의 성질이 아니다 — 켜 두면 뉴스가 한산한 날 CSS 오타 수정도
       # 배포가 막힌다(2026-08-03 실측: 추적률 0.125 로 이 워크플로 첫 실행이 실패).
@@ -139,3 +145,8 @@ jobs:
             exit 1
           }
           echo "스모크 통과 — 미존재 경로가 404"
+
+      # 운영 콘솔이 실제로 잠겼는지는 **살아 있는 사이트에** 물어야 안다. Function
+      # 폴더가 업로드에서 빠져도 배포는 조용히 성공하고 /admin 은 그냥 열린다.
+      - name: Verify admin console is locked
+        run: bash web/tools/verify_admin_gate.sh "$SITE_URL"
