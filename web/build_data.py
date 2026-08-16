@@ -4263,7 +4263,11 @@ def build_admin_config(generated_at: datetime) -> dict:
                 "url": row.get("url", ""),
             })
         anti_keywords = [str(k) for k in _nb.ANTI_KEYWORDS]
-    except Exception as exc:  # noqa: BLE001 — 원인을 화면에 그대로 보낸다
+    # SystemExit 도 잡는다. news_bot 은 자격증명이 없으면 sys.exit 하던 모듈이고
+    # (2026-08-16 에 그 호출을 첫 사용 시점으로 옮겼다), SystemExit 은 Exception 이
+    # 아니라 except Exception 을 그냥 통과해 빌드를 죽였다. 콘솔 한 칸 때문에
+    # 배포가 멈추면 안 된다 — 못 읽었으면 그 사실을 화면에 적고 지나간다.
+    except (Exception, SystemExit) as exc:  # noqa: BLE001 — 원인을 화면에 그대로 보낸다
         feed_error = f"{type(exc).__name__}: {exc}"[:200]
 
     publication_sources: list[dict] = []
@@ -4285,7 +4289,7 @@ def build_admin_config(generated_at: datetime) -> dict:
             if len(label) > len(by_base.get(base, "")):
                 by_base[base] = label
         publication_orgs = sorted(by_base.values())
-    except Exception as exc:  # noqa: BLE001
+    except (Exception, SystemExit) as exc:  # noqa: BLE001 — 위와 같은 이유
         pubs_error = f"{type(exc).__name__}: {exc}"[:200]
         publication_orgs = []
 
