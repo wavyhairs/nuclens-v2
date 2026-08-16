@@ -148,7 +148,91 @@ const splittable = story.includes('data-act="split-open"');
 assert.ok(splittable || story.includes("분리 단위를"),
   "분리도 못 하고 왜 못 하는지도 안 적혀 있다");
 
+// 이슈 묶음에는 '나누기' 입구가 둘이다 — 기사 하나만 잘못 들어왔을 때와
+// 서로 다른 사건군이 섞였을 때. 실제 산출물에 묶음이 있으면 둘 다 붙어야 한다.
+const clusters = written.get("issueClusters");
+if (!clusters.includes("empty-state")) {
+  assert.ok(clusters.includes('data-preset="alone"'), "이슈에서 기사 하나를 뺄 입구가 없다");
+  assert.ok(clusters.includes('data-preset="manual"'), "두 사건으로 나눌 입구가 없다");
+  assert.ok(!clusters.includes('data-act="issue-split"'),
+    "상대를 코드가 고르는 옛 분리 버튼이 살아 있다");
+}
+
+// ── 사건 나누기 ────────────────────────────────────────────────────────────
+//
+// 여기가 2026-08-16 사고의 자리다. 예전 [떼어내기]는 상대 기사를 코드가 골라
+// (대표 기사) 눌린 즉시 저장했고, 화면은 그 상대를 끝까지 보여 주지 않았다.
+// 그래서 검사하는 것은 "무엇을 저장할지 화면이 말하는가"다 — 폼이 세운 두
+// 사건군과, 저장될 쌍 목록이 정확히 맞아떨어져야 한다.
+//
+// 스크립트 최상단의 `const state` 는 realm 의 전역 렉시컬 환경에 있어 같은
+// 컨텍스트에서 돌린 코드로 닿는다(sandbox 객체의 속성으로는 안 보인다).
+const state = vm.runInContext("state", sandbox);
+const groupSplitForm = vm.runInContext("groupSplitForm", sandbox);
+const groupSides = vm.runInContext("groupSides", sandbox);
+const groupSplitPreview = vm.runInContext("groupSplitPreview", sandbox);
+const suggestAxis = vm.runInContext("suggestAxis", sandbox);
+
+const fixture = {
+  issue_id: "issue-fixture", title: "고리 3·4호기 계속운전", methods: [],
+  member_count: 6, first_seen: "2026-08-01", last_seen: "2026-08-06", matches: [],
+  members: [
+    { hash: "k1", title: "원안위, 고리 3·4호기 계속운전 하반기 심의 예정", article_date: "2026-08-01", countries: ["KR"] },
+    { hash: "k2", title: "원안위, 고리 3·4호기 계속운전 연내 결론 목표", article_date: "2026-08-02", countries: ["KR"] },
+    { hash: "k3", title: "원안위, 고리 3·4호기 계속운전 하반기 심사 착수", article_date: "2026-08-03", countries: ["KR"] },
+    { hash: "k4", title: "고리 3·4호기 계속운전 심사 진행 상황 점검", article_date: "2026-08-04", countries: ["KR"] },
+    { hash: "m1", title: "산업부·원안위, 원전 수출 규제체계 업무협약 체결", article_date: "2026-08-05", countries: ["KR"] },
+    { hash: "m2", title: "산업부·원안위, 한국형 원전 해외진출 업무협약", article_date: "2026-08-06", countries: ["KR"] },
+  ],
+};
+state.merges.issue.clusters.push(fixture);
+
+// ① 폼은 묶인 기사를 **전부** 세운다. 하나라도 빠지면 그 기사는 어느 쪽인지
+//    아무도 정하지 않은 채 남고, 그러면 선이 그어지지 않는다.
+const form = groupSplitForm("issue-fixture", "m1", "manual");
+for (const member of fixture.members) {
+  assert.ok(form.includes(member.title), `나누기 화면에 ${member.hash} 가 없다`);
+}
+assert.ok(form.includes('name="side:k1"'), "기사마다 어느 쪽인지 고르는 자리가 없다");
+assert.ok(!form.includes('name="side:m1"'), "기준 기사에까지 선택지가 붙었다");
+
+// ② 화면이 세운 두 사건군 = 저장될 쌍. 이 둘이 어긋난 것이 사고의 본체였다.
+const picks = { k1: "split", k2: "split", k3: "split", k4: "split", m2: "keep" };
+const fakeForm = {
+  dataset: { issue: "issue-fixture", anchor: "m1" },
+  querySelector: () => null,
+  // 진짜 폼처럼 라디오를 통째로 돌려준다 — 콘솔은 선택자에 hash 를 끼워 넣지 않는다.
+  querySelectorAll: selector => (selector.includes("radio")
+    ? Object.entries(picks).flatMap(([hash, value]) => [
+      { name: `side:${hash}`, value: "keep", checked: value === "keep" },
+      { name: `side:${hash}`, value: "split", checked: value === "split" },
+    ])
+    : []),
+};
+const { left, right } = groupSides(fakeForm);
+// 배열은 vm realm 안에서 만들어져 프로토타입이 다르다 — 문자열로 비교한다.
+assert.equal(left.map(member => member.hash).join(","), "m1,m2", "기준 기사 쪽이 틀렸다");
+assert.equal(right.map(member => member.hash).join(","), "k1,k2,k3,k4");
+
+const preview = groupSplitPreview(left, right);
+assert.ok(preview.includes("8쌍"), `쌍 개수를 안 세거나 틀렸다: ${preview.slice(0, 200)}`);
+for (const member of [...left, ...right].slice(0, 4)) {
+  assert.ok(preview.includes(member.title.slice(0, 12)),
+    `저장 전 목록에 ${member.hash} 가 안 보인다`);
+}
+assert.ok(groupSplitPreview(left, []).includes("아직 아무것도 갈라지지 않습니다"),
+  "한쪽이 비었는데 갈라지는 것처럼 말한다");
+
+// ③ 판별축은 **나눈 뒤에** 두 사건군의 제목을 비교해서 나온다.
+const axis = suggestAxis(right.map(m => m.title), left.map(m => m.title));
+assert.ok(axis.left.includes("계속운전"), `왼쪽 축 후보가 이상하다: ${axis.left}`);
+assert.ok(axis.right.some(word => ["업무협약", "수출", "산업부"].includes(word)),
+  `오른쪽 축 후보가 이상하다: ${axis.right}`);
+assert.equal(axis.left.filter(word => axis.right.includes(word)).length, 0,
+  "양쪽에 같은 낱말이 올라왔다 — 그 축으로는 영원히 안 갈린다");
+
 console.log(
   `admin render: 화면 ${required.length}칸 렌더 통과` +
-  ` (수동 분리 ${splittable ? "가능" : "단위 없음 — 사유 표시"})`,
+  ` (수동 분리 ${splittable ? "가능" : "단위 없음 — 사유 표시"}` +
+  `, 사건 나누기 ${left.length}↔${right.length} 미리보기 확인)`,
 );

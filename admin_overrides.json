@@ -5,7 +5,8 @@
     "kind 는 admin_overrides.KINDS 에 있는 값만 유효하다. 모르는 kind 는 조용히 무시된다.",
     "enabled: false 는 지우지 않고 잠시 꺼 두는 것 — 되돌려 볼 때 쓴다.",
     "story_split 은 소급하지 않는다. 이미 나간 회차 카드는 그대로 남고, 다음 수집부터 그 조합을 접지 않는다.",
-    "learned_rule 은 원래 쌍이 아닌 새 조합에도 적용된다. 양쪽이 서로 다른 축을 말할 때만 발동한다."
+    "learned_rule 은 원래 쌍이 아닌 새 조합에도 적용된다. 양쪽이 서로 다른 축을 말할 때만 발동한다.",
+    "issue_group_split 은 쌍이 아니라 선이다. left_hashes × right_hashes 를 가로지르는 쌍 전부로 펼쳐진다 — 쌍 하나만 막으면 다른 멤버를 통해 도로 합쳐진다."
   ],
   "version": 1,
   "updated_at": "",

@@ -47,6 +47,7 @@ KINDS = (
     # ── 병합 진단 ──
     "story_split",      # 같은 날 두 기사를 앞으로 접지 않는다 (hash 쌍)
     "issue_split",      # 날짜를 넘는 연결을 끊는다 → issue_match_overrides.rejected
+    "issue_group_split",  # 한 이슈를 두 사건군으로 가른다 (쌍이 아니라 선)
     "issue_join",       # 끊긴 연결을 잇는다 → issue_match_overrides.approved
     "learned_rule",     # 분리에서 뽑아낸 판별축 — 새 쌍에도 적용된다
     # ── 수집 설정 ──
@@ -150,8 +151,60 @@ def _enabled(row: dict) -> bool:
 # ── ① 병합 거부권 ───────────────────────────────────────────────────────────
 
 
+def group_splits(path: Path | None = None) -> list[dict]:
+    """"이 묶음은 사실 두 사건이다" — 사람이 그은 **선** 하나.
+
+    항목 하나가 쌍 여러 개로 펼쳐진다. 왜 쌍을 하나씩 저장하지 않는가:
+
+    ① 사람이 한 판단은 하나다. 지울 때도 하나여야 한다. 여덟 줄로 쪼개 두면
+       그중 셋만 지운 상태가 만들어지고, 그 상태는 아무 뜻도 아니다.
+    ② **쌍 하나로는 갈라지지 않는다.** `build_data.assign_issues` 의 합류는
+       멤버 하나만 맞으면 되는 탐욕적 구조라(그 함수의 '클러스터 전체 거부권'
+       주석), 막히지 않은 다른 멤버를 통해 같은 이슈로 도로 들어온다. 선을
+       그으려면 선을 **가로지르는 쌍을 전부** 막아야 한다.
+
+    ③ 그래서 화면도 쌍을 고르게 하지 않는다. 사람이 아는 것은 "이 넷과 저 둘이
+       다른 사건"이지 "3번과 5번이 다른 사건"이 아니다. 쌍은 여기서 나온다.
+    """
+    out: list[dict] = []
+    for row in entries("issue_group_split", path):
+        if not _enabled(row):
+            continue
+        left = [h for h in (_text(v, 64) for v in _str_list(row.get("left_hashes"))) if h]
+        right = [h for h in (_text(v, 64) for v in _str_list(row.get("right_hashes"))) if h]
+        left = list(dict.fromkeys(left))
+        right = [h for h in dict.fromkeys(right) if h not in left]
+        if not left or not right:
+            # 한쪽이 비면 가를 것이 없다. 저장 창구가 막지만, 손편집도 있다.
+            continue
+        out.append({
+            "id": _text(row.get("id"), 64),
+            "issue_id": _text(row.get("issue_id"), 80),
+            "note": _text(row.get("note"), 300),
+            "created_at": _text(row.get("created_at"), 40),
+            "left_hashes": left,
+            "right_hashes": right,
+        })
+    return out
+
+
+def _group_split_pairs(path: Path | None = None) -> list[tuple[str, str, dict]]:
+    """선을 가로지르는 모든 쌍. (왼쪽, 오른쪽, 원래 항목)"""
+    return [
+        (left, right, split)
+        for split in group_splits(path)
+        for left in split["left_hashes"]
+        for right in split["right_hashes"]
+    ]
+
+
 def blocked_pairs(path: Path | None = None) -> set[frozenset[str]]:
-    """관리자가 "이 둘은 다른 사건"이라고 못 박은 hash 쌍."""
+    """관리자가 "이 둘은 다른 사건"이라고 못 박은 hash 쌍.
+
+    사건군을 가른 판정(`issue_group_split`)도 여기 들어온다. 관리자가 말한 것은
+    "이 넷과 저 둘은 다른 사건"이고, 그 말은 날짜를 넘는 연결에만 해당하지
+    않는다 — 같은 날 나란히 실려도 한 카드로 접히면 안 된다.
+    """
     pairs: set[frozenset[str]] = set()
     for row in entries("story_split", path):
         if not _enabled(row):
@@ -159,6 +212,9 @@ def blocked_pairs(path: Path | None = None) -> set[frozenset[str]]:
         left = _text(row.get("left_hash"), 64)
         right = _text(row.get("right_hash"), 64)
         if left and right and left != right:
+            pairs.add(frozenset((left, right)))
+    for left, right, _split in _group_split_pairs(path):
+        if left != right:
             pairs.add(frozenset((left, right)))
     return pairs
 
@@ -294,6 +350,18 @@ def issue_pair_overrides(path: Path | None = None) -> dict[str, list[dict]]:
                 "origin": "admin_console",
                 "entry_id": _text(row.get("id"), 64),
             })
+    # 사건군을 가른 판정은 선을 가로지르는 쌍 전부로 펼쳐진다(group_splits 참조).
+    for left, right, split in _group_split_pairs(path):
+        if left == right:
+            continue
+        out["rejected"].append({
+            "left_hash": left,
+            "right_hash": right,
+            "reviewed_at": split["created_at"][:10],
+            "note": split["note"],
+            "origin": "admin_console",
+            "entry_id": split["id"],
+        })
     return out
 
 
