@@ -345,7 +345,7 @@ function issueEvidenceText(issue) {
   const parts = [`근거 ${articleCount}건`];
   const storyArticles = Number(issue.story_article_count || 1);
   const storyOutlets = Number(issue.story_outlet_count || 1);
-  if (storyArticles > 1) parts.push(`동일 story ${storyArticles}건 통합`);
+  if (storyArticles > 1) parts.push(`동일 사건 보도 ${storyArticles}건 통합`);
   if (storyOutlets > 1) parts.push(`보도 매체 ${storyOutlets}곳`);
   if (state.independent_source_count > 0) parts.push(`독립 출처 ${state.independent_source_count}곳`);
   if (state.official_source_count > 0) parts.push(`공식 출처 ${state.official_source_count}건`);
@@ -2492,7 +2492,7 @@ function renderTrendReadiness() {
   document.getElementById("trendData").hidden = !ready;
   panel.classList.toggle("ready", ready);
   panel.innerHTML = ready
-    ? `<div><strong>분석 기간 ${dateLabel(start)}–${dateLabel(end)}</strong><p>${pdata ? `story-level 중복 제거 적용 · 브리핑 story ${articleCount}건` : `중복 제거 적용 · 원본 ${articleCount}건 → 연결 이슈 ${issueCount}개`}${basis}</p></div>${coverage}`
+    ? `<div><strong>분석 기간 ${dateLabel(start)}–${dateLabel(end)}</strong><p>${pdata ? `동일 사건 중복 보도 제거 적용 · 선정 사건 ${articleCount}건` : `중복 제거 적용 · 원본 ${articleCount}건 → 연결 이슈 ${issueCount}개`}${basis}</p></div>${coverage}`
     : `<div><strong>분류 기준을 확인하고 있습니다</strong><p>분류가 완료되면 분석 기간과 근거 데이터를 함께 표시합니다.${basis}</p></div>${coverage}`;
 }
 
@@ -2501,10 +2501,14 @@ function renderTrendReadiness() {
 // 실측 2026-08-10: '최근 30일'을 눌러도 위쪽 '분석 기간'만 7월 12일~로 바뀌고
 // 표는 top_tags_7d 를 그대로 그렸다. 사용자에게 같은 숫자를 30일치라고 읽힌 셈이다.
 //
-// 30일에는 비교 상대가 없다 — rising/new_tags 는 최근 7일 대 직전 7일로만
-// 계산된다(build_data.py). 없는 비교를 지어내는 대신 있는 것을 쓴다: 30일 건수와
-// 그중 최근 7일이 몇 건인가. 수집량이 주마다 널뛰는 이 데이터에서는 이쪽이
-// '변화'보다 정직하다 — 실측 데이터센터 30일 72건 중 71건이 최근 7일이었다.
+// 비교 상대도 같은 기간으로 따라간다. build_data.py 는 기간마다 자기 직전 구간
+// (30일이면 직전 30일, 분기면 직전 분기)의 tag 집계를 tag_comparison 에 실어 준다.
+// 그래서 화면이 7일에만 비교를 붙일 이유는 없다 — 붙일지 말지는 기간이 아니라
+// previous_period_complete 하나로 정한다.
+//
+// 없는 비교를 지어내지는 않는다. archive 가 직전 구간을 온전히 덮지 못하면
+// (2026-08-16 실측: archive 시작 7/18 이라 30일 이상은 전부 previous 없음)
+// 비교 열을 접고 선정 사건 건수만 남긴 뒤, 왜 접혔는지 해석문에 적는다.
 function periodData(period = state.period) {
   return state.trend?.periods?.[String(period)] || null;
 }
@@ -2538,10 +2542,24 @@ function periodLabel(period = state.period) {
   return ({ "7": "최근 7일", "30": "최근 30일", "90": "최근 분기", "180": "최근 반기", "365": "최근 1년" })[String(period)] || `최근 ${period}일`;
 }
 
+// 비교 상대 구간의 이름. '전주'는 7일에서만 맞는 말이라 기간을 따라 바뀌어야 한다.
+function previousPeriodLabel(period = state.period) {
+  return ({ "7": "직전 7일", "30": "직전 30일", "90": "직전 분기", "180": "직전 반기", "365": "직전 1년" })[String(period)] || `직전 ${period}일`;
+}
+
+// 비교 구간의 실제 날짜. periods[*].requested_start 앞 하루가 직전 구간의 끝이다.
+function previousPeriodRange(pdata) {
+  if (!pdata?.previous_period_complete || !pdata.requested_start) return null;
+  const end = shiftDate(pdata.requested_start, -1);
+  return { start: shiftDate(end, -(Number(pdata.days || state.period) - 1)), end };
+}
+
 function renderKeywordTable() {
   const weekMode = isWeekPeriod();
   const pdata = periodData();
-  const comparisonMode = weekMode && (pdata ? Boolean(pdata.previous_period_complete) : true);
+  // 기간이 아니라 '직전 구간이 archive 에 온전히 있는가'로 정한다. 구버전
+  // trend.json 에는 periods 가 없고 7일 rising/new_tags 만 있으므로 그때만 weekMode.
+  const comparisonMode = pdata ? Boolean(pdata.previous_period_complete) : weekMode;
   const sortBox = document.getElementById("keywordSort");
   for (const button of sortBox.querySelectorAll("[data-sort]")) {
     button.hidden = !comparisonMode && button.dataset.sort !== "mentions";
@@ -2557,33 +2575,54 @@ function renderKeywordTable() {
     : b.now - a.now);
   rows = rows.slice(0, 12);
 
+  const nowLabel = periodLabel();
+  const prevLabel = previousPeriodLabel();
   const head = comparisonMode
-    ? '<span>키워드</span><span>이번 주</span><span>전주</span><span>변화</span><span>상태</span><span></span>'
-    : `<span>키워드</span><span>${esc(periodLabel())}</span><span></span><span></span><span>story</span><span></span>`;
+    ? `<span>키워드</span><span>${esc(nowLabel)}</span><span>${esc(prevLabel)}</span><span>변화</span><span>상태</span><span></span>`
+    : `<span>키워드</span><span>${esc(nowLabel)}</span><span></span><span></span><span>기준</span><span></span>`;
   const body = rows.map(row => comparisonMode
     ? `<div class="keyword-row"><strong>${esc(row.tag)}</strong><span>${row.now}</span><span>${row.prev ?? 0}</span><span class="${(row.delta || 0) > 0 ? "positive" : (row.delta || 0) < 0 ? "negative" : ""}">${(row.delta || 0) > 0 ? "+" : (row.delta || 0) < 0 ? "−" : ""}${Math.abs(row.delta || 0)}</span><span>${row.isNew ? "신규" : (row.delta || 0) >= 3 ? "늘어남" : "이어짐"}</span><button type="button" data-keyword="${esc(row.tag)}">근거 ${row.now}건 →</button></div>`
-    : `<div class="keyword-row"><strong>${esc(row.tag)}</strong><span>${row.now}</span><span></span><span></span><span>중복 제거</span><button type="button" data-keyword="${esc(row.tag)}">story ${row.now}건 →</button></div>`
+    : `<div class="keyword-row"><strong>${esc(row.tag)}</strong><span>${row.now}</span><span></span><span></span><span>중복 제거</span><button type="button" data-keyword="${esc(row.tag)}">선정 사건 ${row.now}건 →</button></div>`
   ).join("");
-  document.getElementById("keywordTable").innerHTML = rows.length
+  const table = document.getElementById("keywordTable");
+  // 모바일은 머리줄을 접고 셀마다 ::before 라벨을 붙인다(style.css). 그 문구도
+  // 기간을 따라야 하므로 CSS 문자열로 넘긴다 — JSON.stringify 가 곧 CSS 문자열 토큰.
+  table.style.setProperty("--kw-now-label", JSON.stringify(nowLabel));
+  table.style.setProperty("--kw-prev-label", JSON.stringify(prevLabel));
+  table.innerHTML = rows.length
     ? `<div class="keyword-row keyword-head" aria-hidden="true">${head}</div>${body}`
     : '<p class="empty">조건에 맞는 키워드가 없습니다.</p>';
+
+  // 어느 구간을 어느 구간과 비교했는지는 표 위에 날짜로 못 박는다 — '분기'를
+  // 눌렀는데 archive 가 30일뿐이면 표에 뜨는 것은 분기가 아니라 그 30일이다.
+  const meta = document.getElementById("keywordMeta");
+  if (meta) {
+    if (!pdata) meta.textContent = "";
+    else {
+      const prevRange = previousPeriodRange(pdata);
+      const shortfall = pdata.complete_period ? "" : ` · ${nowLabel} 중 현재 축적 ${pdata.available_days || 0}일`;
+      meta.textContent = `${dateLabel(pdata.start)}–${dateLabel(pdata.end)}${
+        prevRange ? ` · ${prevLabel}(${dateLabel(prevRange.start)}–${dateLabel(prevRange.end)}) 대비` : " · 비교 구간 미축적"
+      }${shortfall}`;
+    }
+  }
 
   const interpretation = document.getElementById("keywordInterpretation");
   if (comparisonMode) {
     const strongest = [...keywordRows()].sort((a, b) => (b.delta || 0) - (a.delta || 0))[0];
     interpretation.textContent = strongest
-      ? `${strongest.tag}이(가) 전주보다 ${Math.abs(strongest.delta || 0)}건 ${Number(strongest.delta || 0) >= 0 ? "늘어" : "줄어"} 이번 주 변화가 가장 컸습니다.`
+      ? `${strongest.tag}이(가) ${prevLabel}보다 ${Math.abs(strongest.delta || 0)}건 ${Number(strongest.delta || 0) >= 0 ? "늘어" : "줄어"} ${nowLabel} 변화가 가장 컸습니다.`
       : "비교할 키워드가 아직 충분하지 않습니다.";
-  } else if (weekMode && pdata && !pdata.previous_period_complete) {
-    interpretation.textContent = "전주 전체가 archive에 아직 축적되지 않아 이번 주 story 건수만 표시합니다.";
+  } else if (pdata && !pdata.previous_period_complete) {
+    interpretation.textContent = `${prevLabel} 전체가 archive에 아직 축적되지 않아 ${nowLabel} 선정 사건 건수만 표시합니다.`;
   } else {
     const top = rows[0];
     interpretation.textContent = top
-      ? `${periodLabel()} 브리핑 story에서 ${top.tag} 관련 이슈가 ${top.now}건으로 가장 많이 선정됐습니다.`
+      ? `${nowLabel} 선정 사건에서 ${top.tag} 관련 이슈가 ${top.now}건으로 가장 많이 선정됐습니다.`
       : "비교할 키워드가 아직 충분하지 않습니다.";
   }
   document.getElementById("keywordEvidence").innerHTML = rows.map(row =>
-    `<p><strong>${esc(row.tag)}</strong> · ${esc(periodLabel())} briefing story ${row.now}건</p>`).join("");
+    `<p><strong>${esc(row.tag)}</strong> · ${esc(nowLabel)} 선정 사건 ${row.now}건</p>`).join("");
 }
 
 function renderPeriodTimeline() {
@@ -2598,9 +2637,9 @@ function renderPeriodTimeline() {
     else {
       const contractCoverage = Number(pdata.story_contract_coverage ?? 1);
       const contractNote = contractCoverage < 0.999
-        ? ` · story-v2 적용 ${Math.round(contractCoverage * 100)}% (이전 구간은 기존 선정 단위)`
-        : ` · 복수매체 story ${pdata.multi_source_story_count}건`;
-      meta.textContent = `${dateLabel(pdata.start)}–${dateLabel(pdata.end)} · story ${pdata.story_count}건${contractNote}${pdata.complete_period ? "" : ` · ${periodLabel()} 중 현재 축적 ${pdata.available_days || 0}일`}`;
+        ? ` · 사건 단위 집계 적용 ${Math.round(contractCoverage * 100)}% (이전 구간은 기존 선정 단위)`
+        : ` · 복수 매체 보도 사건 ${pdata.multi_source_story_count}건`;
+      meta.textContent = `${dateLabel(pdata.start)}–${dateLabel(pdata.end)} · 선정 사건 ${pdata.story_count}건${contractNote}${pdata.complete_period ? "" : ` · ${periodLabel()} 중 현재 축적 ${pdata.available_days || 0}일`}`;
     }
   }
   if (!rows.length) {
@@ -2612,10 +2651,10 @@ function renderPeriodTimeline() {
     const topics = (row.top_topics || []).map(topic => TOPIC_LABELS[topic] || topic).join(" · ");
     const highlights = (row.highlights || []).map(item => `<li>${esc(item.title)}</li>`).join("");
     const range = row.start === row.end ? dateLabel(row.start) : `${dateLabel(row.start)}–${dateLabel(row.end)}`;
-    return `<article class="period-timeline-row"><div class="period-timeline-date"><strong>${esc(range)}</strong><span>story ${row.story_count}건${row.multi_source_story_count ? ` · 복수매체 ${row.multi_source_story_count}` : ""}</span></div><div class="period-timeline-copy">${topics ? `<p>${esc(topics)}</p>` : ""}${highlights ? `<ul>${highlights}</ul>` : ""}</div></article>`;
+    return `<article class="period-timeline-row"><div class="period-timeline-date"><strong>${esc(range)}</strong><span>선정 사건 ${row.story_count}건${row.multi_source_story_count ? ` · 복수 매체 ${row.multi_source_story_count}` : ""}</span></div><div class="period-timeline-copy">${topics ? `<p>${esc(topics)}</p>` : ""}${highlights ? `<ul>${highlights}</ul>` : ""}</div></article>`;
   }).join("");
   const busiest = [...rows].sort((a, b) => b.story_count - a.story_count)[0];
-  if (interpretation && busiest) interpretation.textContent = `${pdata?.complete_period ? periodLabel() : "현재 축적 구간"} 중 ${dateLabel(busiest.start)}${busiest.end !== busiest.start ? `–${dateLabel(busiest.end)}` : ""} 구간에 선정 story ${busiest.story_count}건으로 움직임이 가장 많았습니다.${pdata && !pdata.complete_period ? " 데이터가 누적되면 선택 기간 전체로 자동 확장됩니다." : ""}`;
+  if (interpretation && busiest) interpretation.textContent = `${pdata?.complete_period ? periodLabel() : "현재 축적 구간"} 중 ${dateLabel(busiest.start)}${busiest.end !== busiest.start ? `–${dateLabel(busiest.end)}` : ""} 구간에 선정 사건 ${busiest.story_count}건으로 움직임이 가장 많았습니다.${pdata && !pdata.complete_period ? " 데이터가 누적되면 선택 기간 전체로 자동 확장됩니다." : ""}`;
 }
 
 function bars(element, rows, labelFn) {
@@ -2926,7 +2965,7 @@ function renderTrend() {
   bars(document.getElementById("countryBars"), countryRows, row => COUNTRY_LABELS[row.country] || row.country);
   const topCountry = countryRows[0];
   document.getElementById("countryInterpretation").textContent = topCountry
-    ? `${periodLabel()}에는 ${COUNTRY_LABELS[topCountry.country] || topCountry.country} 관련 briefing story가 ${topCountry.count}개로 가장 많았습니다.`
+    ? `${periodLabel()}에는 ${COUNTRY_LABELS[topCountry.country] || topCountry.country} 관련 선정 사건이 ${topCountry.count}건으로 가장 많았습니다.`
     : "국가별로 비교할 이슈가 아직 충분하지 않습니다.";
   renderSlopeGraph();
 }

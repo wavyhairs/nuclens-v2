@@ -3873,8 +3873,10 @@ def build_period_trends(all_items: list[dict], end_date: str) -> dict[str, dict]
         effective_start = max(requested_start, earliest)
         rows = [(d, row) for d, row in selected_with_dates if effective_start <= d <= end]
 
-        # 7일 키워드 화면은 '이번 주 vs 전 주'를 계속 제공하되, 양쪽 모두 기사 건수가
-        # 아니라 story 수를 쓴다. 이전 구간이 archive에 온전히 들어 있을 때만 비교한다.
+        # 키워드 비교의 상대는 기간 토글을 따라간다 — 30일이면 직전 30일, 분기면
+        # 직전 분기다. 양쪽 모두 기사 건수가 아니라 story 수를 쓴다. 이전 구간이
+        # archive에 온전히 들어 있을 때만 비교하고(previous_period_complete),
+        # 아니면 화면이 비교 열을 접는다(app.js renderKeywordTable).
         previous_end = requested_start - timedelta(days=1)
         previous_start = previous_end - timedelta(days=days - 1)
         previous_complete = bool(selected_with_dates) and earliest <= previous_start

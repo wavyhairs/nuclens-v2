@@ -21,8 +21,10 @@ function extract(name) {
   throw new Error(`${name}() 블록이 안 닫힌다`);
 }
 
-const { shiftDate, weekRange, briefingWeek, weekRangeLabel, trendStart, timeLabel } =
-  new Function(`
+const {
+  shiftDate, weekRange, briefingWeek, weekRangeLabel, trendStart, timeLabel,
+  periodLabel, previousPeriodLabel, previousPeriodRange,
+} = new Function(`
   ${extract("shiftDate")}
   ${extract("weekRange")}
   ${extract("briefingWeek")}
@@ -31,9 +33,16 @@ const { shiftDate, weekRange, briefingWeek, weekRangeLabel, trendStart, timeLabe
   ${extract("todayKST")}
   ${extract("dateTimeLabel")}
   ${extract("timeLabel")}
+  ${extract("periodLabel")}
+  ${extract("previousPeriodLabel")}
+  ${extract("previousPeriodRange")}
+  // periodLabel/previousPeriodRange 의 기본 인자는 state 를 본다 — 여기서는 항상
+  // 명시 인자로만 부르므로 참조만 살려 둔다.
+  const state = { period: 7 };
   // trendRange() 는 state/meta 에 얽혀 있어 창 계산부만 같은 헬퍼로 재현한다.
   const trendStart = (end, days) => shiftDate(end, -(days - 1));
-  return { shiftDate, weekRange, briefingWeek, weekRangeLabel, trendStart, timeLabel };
+  return { shiftDate, weekRange, briefingWeek, weekRangeLabel, trendStart, timeLabel,
+           periodLabel, previousPeriodLabel, previousPeriodRange };
 `)();
 
 const cases = [];
@@ -86,6 +95,29 @@ const oldStamp = timeLabel("2026-08-09T06:54:30+09:00");
 eq("오늘 시각은 HH:MM", /^\d{2}:\d{2}$/.test(nowKST), true);
 eq("지난 시각은 날짜 동반", /^\d{2}:\d{2}$/.test(oldStamp), false);
 eq("지난 시각에 월·일 포함", /8[.\s]*\s*9/.test(oldStamp), true);
+
+// 키워드 비교의 상대 구간은 기간 토글을 따라간다. 산술은 build_data.py 의
+//   previous_end   = requested_start - 1일
+//   previous_start = previous_end - (days - 1)
+// 과 한 글자도 어긋나면 안 된다 — 어긋나면 화면이 없는 주를 비교 상대로 적는다.
+const prev = (days, requestedStart) =>
+  previousPeriodRange({ days, requested_start: requestedStart, previous_period_complete: true });
+eq("직전 7일 끝", prev(7, "2026-08-10").end, "2026-08-09");
+eq("직전 7일 시작", prev(7, "2026-08-10").start, "2026-08-03");
+eq("직전 30일 시작", prev(30, "2026-07-18").start, "2026-06-18");
+eq("직전 30일 끝", prev(30, "2026-07-18").end, "2026-07-17");
+eq("직전 분기 시작", prev(90, "2026-05-19").start, "2026-02-18");
+eq("직전 구간 길이 = 기간 길이", 1 + (Date.parse(prev(90, "2026-05-19").end)
+  - Date.parse(prev(90, "2026-05-19").start)) / 86400000, 90);
+eq("직전 구간이 미축적이면 없음",
+  previousPeriodRange({ days: 30, requested_start: "2026-07-18", previous_period_complete: false }), null);
+eq("periods 없는 옛 데이터도 죽지 않는다", previousPeriodRange(null), null);
+
+// 라벨도 기간을 따라간다 — '전주'는 7일에서만 맞는 말이다.
+eq("30일 현재 라벨", periodLabel(30), "최근 30일");
+eq("30일 비교 라벨", previousPeriodLabel(30), "직전 30일");
+eq("분기 비교 라벨", previousPeriodLabel(90), "직전 분기");
+eq("1년 비교 라벨", previousPeriodLabel("365"), "직전 1년");
 
 const failed = cases.filter(row => !row.ok);
 for (const row of cases) {

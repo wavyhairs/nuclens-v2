@@ -340,6 +340,19 @@ button:disabled { cursor: not-allowed; opacity: .42; }
 }
 .brand-copy { display: grid; min-width: 0; line-height: 1.15; }
 .brand-copy strong { letter-spacing: .01em; font-size: 16px; font-weight: 750; }
+/* 판본 표식. UA 기본 sup 은 line-height 를 밀어 32px 마크와 기준선이 어긋난다 —
+   position 으로 띄우고 행 높이 기여를 0 으로 만든다. 워드마크 옆이라 자간도 끊는다. */
+.brand-copy strong sup,
+.foot-grid strong sup {
+  position: relative;
+  top: -.42em;
+  margin-left: .06em;
+  font-size: .62em;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 0;
+  vertical-align: baseline;
+}
 .brand-copy small {
   margin-top: 3px;
   color: rgb(255 255 255 / 62%);
@@ -2768,9 +2781,15 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   .keyword-row > span:nth-child(5) { grid-area: status; color: var(--c-text-muted); }
   .keyword-row > span:not(:first-child) { text-align: left; }
   .keyword-row > span:nth-child(5) { text-align: right; }
-  .keyword-row > span:nth-child(2)::before { color: var(--c-text-muted); content: "이번 주 "; }
-  .keyword-row > span:nth-child(3)::before { color: var(--c-text-muted); content: "전주 "; }
+  /* 라벨 문구는 기간 토글을 따라 바뀐다 — renderKeywordTable 이 #keywordTable 에
+     --kw-now-label / --kw-prev-label 을 심는다. 헤더 행이 접힌 화면이라 여기가
+     유일한 기간 표시다: '분기'를 눌러 놓고 '이번 주 12'로 읽히면 안 된다. */
+  .keyword-row > span:nth-child(2)::before { color: var(--c-text-muted); content: var(--kw-now-label, "이번 주") " "; }
+  .keyword-row > span:nth-child(3)::before { color: var(--c-text-muted); content: var(--kw-prev-label, "전주") " "; }
   .keyword-row > span:nth-child(4)::before { color: var(--c-text-muted); content: "변화 "; }
+  /* 비교 구간이 없는 기간에는 전주·변화 칸이 빈 span 으로 온다. 접지 않으면
+     숫자 없는 '전주'·'변화' 라벨만 두 개 남는다. */
+  .keyword-row > span:empty { display: none; }
   .keyword-row button { grid-area: link; justify-self: end; min-height: 44px; }
   /* 상단바와 같은 잉크. 위아래 크롬이 같은 재질이어야 그 사이가 지면으로 읽힌다 —
      한쪽만 밝으면 하단 탭이 콘텐츠의 일부처럼 떠 보인다. */
