@@ -424,12 +424,13 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
             expert._tts_chunk_retry = original_chunk
             expert.trim_silence = original_trim
 
-    def test_tts_late_model_switch_also_restarts_for_one_voice(self):
-        """🔴 후반 전환 때 정상 구간을 보존하면 프로그램 중간에서 음색이 바뀐다.
+    def test_tts_late_model_switch_resumes_to_finish(self):
+        """후반 전환은 정상 구간을 보존하고 이어 붙인다 — 음색보다 완주가 위다.
 
-        같은 voiceName(Kore)이라도 모델이 다르면 목소리가 다르게 들린다. 듣는
-        쪽에서는 화자가 교체된 것으로 읽힌다. 완주율보다 음색 일관성을 위에 둔다 —
-        대가는 마지막 청크에서 실패하면 앞 전부를 다시 만드는 것이다.
+        전 구간 한 모델로 통일해 봤는데(2026-08-16), 마지막 청크에서 실패할 때마다
+        앞 전부를 다시 만들어야 했다. TTS 한계는 RPD 라 재생성분이 그대로 그날
+        예산에서 빠지고, 대본이 길어진 뒤로는 청크가 6~8개라 재생성 한 번이
+        예산을 두 배로 먹는다. 음색 차이는 warnings 로 남긴다.
         """
         original_models = expert._tts_models
         original_chunk = expert._tts_chunk_retry
@@ -446,25 +447,20 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
             expert.trim_silence = lambda pcm, rate: pcm
             script = "\n".join([f"HOST: {'가'*850}{i}" for i in range(5)])
             _, _, models, warnings = expert.synthesize_expert(script)
-            self.assertEqual(models, ["m2"] * 5)      # 한 모델로만 끝난다
-            self.assertIn(("m2", 1), calls)           # 처음부터 다시 만들었다
-            self.assertTrue(any("음색을 통일" in text for text in warnings))
+            self.assertEqual(models[:3], ["m1", "m1", "m1"])
+            self.assertEqual(models[3:], ["m2", "m2"])
+            self.assertNotIn(("m2", 1), calls)  # 후반은 정상 구간 보존
+            self.assertTrue(any("후반" in text for text in warnings))
         finally:
             expert._tts_models = original_models
             expert._tts_chunk_retry = original_chunk
             expert.trim_silence = original_trim
 
-    def test_tts_retry_waits_before_giving_up_on_the_model(self):
-        """모델 전환이 전체 재생성이 됐으므로, 전환 전에 실제로 기다려야 한다.
-
-        429 를 즉시 다시 부르면 또 429 다. 여기서 못 버티면 모델이 바뀌고,
-        모델이 바뀌면 음색이 바뀐다.
-        """
+    def test_tts_retry_does_not_sleep_because_the_limit_is_daily(self):
+        """RPD 는 기다린다고 회복되지 않는다 — 재시도에 백오프를 두지 않는다."""
         original_call = expert.call_tts
         original_check = expert._check_not_truncated
-        original_sleep = expert.time.sleep
-        slept: list[float] = []
-        attempts = []
+        attempts: list[str] = []
         try:
             def fake_call(chunk, models=None):
                 attempts.append(models[0])
@@ -473,16 +469,14 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
                 return b"\x00\x40" * 100, 24000
             expert.call_tts = fake_call
             expert._check_not_truncated = lambda *a, **k: None
-            expert.time.sleep = slept.append
-            pcm, rate = expert._tts_chunk_retry(1, "가" * 100, "m1")
+            _pcm, rate = expert._tts_chunk_retry(1, "가" * 100, "m1")
             self.assertEqual(24000, rate)
-            self.assertEqual(2, len(attempts))
-            self.assertEqual(["m1", "m1"], attempts)  # 같은 모델로 다시 불렀다
-            self.assertEqual([expert.EXPERT_TTS_BACKOFF_SEC[0]], slept)
+            self.assertEqual(["m1", "m1"], attempts)  # 같은 모델로 한 번 더
+            self.assertEqual(2, expert.EXPERT_TTS_RETRIES)
+            self.assertFalse(hasattr(expert, "EXPERT_TTS_BACKOFF_SEC"))
         finally:
             expert.call_tts = original_call
             expert._check_not_truncated = original_check
-            expert.time.sleep = original_sleep
 
 
 class ExpertTelegramDeliveryTests(unittest.TestCase):

@@ -12,8 +12,8 @@
 - '분석은 다중 관점, 전달은 단일 화자': 정책·사업 / 기술·운영 렌즈는 dossier에서
   각각 점검하되 최종 음성은 수석 원자력 분석가(Kore) 한 명만 말한다.
 - TTS는 audio_brief의 검증된 900자 청크·무음 trim·450ms gap·dynaudnorm+loudnorm을
-  재사용하고, **모델은 프로그램 전체에서 하나만 쓴다** — 중간에 바뀌면 음색이
-  바뀌어 화자가 교체된 것처럼 들린다(synthesize_expert).
+  재사용하되, 긴 프로그램의 완주율을 위해 모델 전환을 초반/후반에 다르게 처리한다.
+  **음색보다 완주가 위다** — TTS 한계가 RPD라 재생성분이 그날 예산에서 빠진다.
 - 빠른 브리핑과 독립적으로 실패한다. audio/audio.json의 variants.expert만 갱신한다.
 """
 from __future__ import annotations
@@ -22,7 +22,6 @@ import json
 import re
 import subprocess
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
 
@@ -94,11 +93,8 @@ SPOKEN_ABS_MIN = 1200
 SPOKEN_ABS_MAX = 15000
 # 빠른 브리핑 실측(1,150자 → 170초). 분량↔재생시간 환산에 쓴다.
 CHARS_PER_SECOND = 6.76
-EXPERT_TTS_RETRIES = 3
-# 같은 모델 재시도 사이 대기(초). 429 를 즉시 다시 부르면 또 429 다 — 여기서
-# 못 버티면 모델이 바뀌고, 모델이 바뀌면 **음색이 바뀐다**. 모델 전환은 이제
-# 전체 재생성이라 비싸므로, 전환 전에 실제로 기다려 보는 값이 커졌다.
-EXPERT_TTS_BACKOFF_SEC = (20, 45)
+EXPERT_TTS_RETRIES = 2
+EXPERT_EARLY_RESTART_SEGMENTS = 2
 
 # 방송 순서. 웹 issue 의 region 값이 이 셋뿐이다(실측 2026-08-16: 국내 70 /
 # 해외 146 / 국내·해외 3). 모르는 값은 해외 블록으로 보낸다 — 프로그램 첫머리를
@@ -860,11 +856,7 @@ def _score_summary(report: dict) -> str:
 
 
 def _tts_chunk_retry(index: int, chunk: str, model: str) -> tuple[bytes, int]:
-    """HTTP 성공인데 짧게 잘린 TTS는 절대 채택하지 않고 동일 model로 재생성.
-
-    재시도 사이에 실제로 기다린다. 이 재시도가 버텨 내면 모델을 안 바꿔도 되고,
-    모델을 안 바꾸면 음색이 안 바뀐다 — 이 함수가 음색 일관성의 1차 방어선이다.
-    """
+    """HTTP 성공인데 짧게 잘린 TTS는 절대 채택하지 않고 동일 model로 한 번 재생성."""
     last: Exception | None = None
     for attempt in range(1, EXPERT_TTS_RETRIES + 1):
         try:
@@ -874,23 +866,23 @@ def _tts_chunk_retry(index: int, chunk: str, model: str) -> tuple[bytes, int]:
         except GeminiError as exc:
             last = exc
             if attempt < EXPERT_TTS_RETRIES:
-                wait = EXPERT_TTS_BACKOFF_SEC[min(attempt - 1, len(EXPERT_TTS_BACKOFF_SEC) - 1)]
-                print(f"[expert-audio] 청크 {index} 실패 — {model} 로 {wait}초 뒤 재생성 "
-                      f"{attempt+1}/{EXPERT_TTS_RETRIES}: {exc}")
-                time.sleep(wait)
+                print(f"[expert-audio] 청크 {index} 품질 실패 — {model} 동일 청크 재생성 {attempt+1}/{EXPERT_TTS_RETRIES}: {exc}")
     raise last or GeminiError(f"청크 {index} 생성 실패")
 
 
 def synthesize_expert(script: str) -> tuple[bytes, int, list[str], list[str]]:
-    """대본 전체를 **한 모델로만** 만든다.
+    """긴 대본용 hybrid fallback.
 
-    예전에는 후반부(완료>2청크)에 모델이 바뀌면 완주율을 위해 정상 청크를
-    보존하고 이어 붙였다. 그러면 프로그램 중간에서 화자 음색이 바뀐다 — 같은
-    voiceName(Kore)이라도 모델이 다르면 목소리가 다르게 들린다. 듣는 쪽에서는
-    화자가 교체된 것처럼 들리므로, 완주율보다 음색 일관성을 위에 둔다.
+    초반(완료<=2청크)에 모델이 바뀌면 음색 일관성을 위해 처음부터 다시 만든다.
+    후반부에는 완주율/쿼터를 위해 정상 청크를 보존하고 실패한 지점부터 다음 모델로 잇는다.
 
-    대가는 명확하다: 마지막 청크에서 실패하면 앞의 전부를 다시 만든다. 그래서
-    _tts_chunk_retry 의 백오프가 중요하다 — 거기서 버티면 여기까지 안 온다.
+    **음색보다 완주를 위에 둔다.** 전 구간을 한 모델로 통일해 봤는데(2026-08-16),
+    그러면 마지막 청크에서 실패할 때마다 앞의 전부를 다시 만들어야 한다. TTS
+    모델의 한계는 RPD(하루 요청 수)라 재생성분이 그대로 그날 예산에서 빠지고,
+    대본이 길어진 뒤로는 청크가 6~8개라 한 번의 재생성이 예산을 두 배로 먹는다.
+    같은 이유로 재시도 사이 백오프도 두지 않는다 — 하루 한도는 기다린다고
+    회복되지 않는다. 음색이 구간 경계에서 달라지는 것은 warnings 로 남긴다.
+
     모든 청크는 trim 후 정확히 450ms gap으로 연결한다.
     """
     chunks = split_script(script, limit=CHUNK_SPOKEN)
@@ -902,19 +894,23 @@ def synthesize_expert(script: str) -> tuple[bytes, int, list[str], list[str]]:
     last: Exception | None = None
 
     for model_index, model in enumerate(_tts_models()):
-        if model_index > 0:
+        if len(pieces) >= len(chunks):
+            break
+        completed = len(pieces)
+        if model_index > 0 and 0 < completed <= EXPERT_EARLY_RESTART_SEGMENTS:
             previous = segment_models[-1] if segment_models else "이전 모델"
-            print(f"[expert-audio] 모델 전환 {previous} → {model}: "
-                  f"{len(pieces)}청크 폐기 후 전체 재생성 (음색 통일)")
-            warnings.append(f"TTS 모델 전환으로 {model}에서 전체 음색을 통일했습니다.")
-        pieces = []
-        segment_models = []
-        rate = 0
+            print(f"[expert-audio] 초반 모델 전환 {previous} → {model}: {completed}청크 폐기 후 전체 재생성")
+            pieces = []
+            segment_models = []
+            rate = 0
+            completed = 0
+            warnings.append(f"초반 TTS 모델 전환으로 {model}에서 전체 음색을 통일했습니다.")
+
         try:
-            for index, chunk in enumerate(chunks, 1):
-                pcm, chunk_rate = _tts_chunk_retry(index, chunk, model)
+            for index in range(len(pieces), len(chunks)):
+                pcm, chunk_rate = _tts_chunk_retry(index + 1, chunks[index], model)
                 if rate and chunk_rate != rate:
-                    raise GeminiError(f"청크 {index} sample rate {chunk_rate} != {rate}")
+                    raise GeminiError(f"청크 {index+1} sample rate {chunk_rate} != {rate}")
                 rate = chunk_rate
                 pieces.append(trim_silence(pcm, rate))
                 segment_models.append(model)
@@ -926,6 +922,11 @@ def synthesize_expert(script: str) -> tuple[bytes, int, list[str], list[str]]:
 
     if len(pieces) != len(chunks):
         raise last or GeminiError(f"전문가 TTS 미완성 {len(pieces)}/{len(chunks)}")
+    if len(set(segment_models)) > 1:
+        warnings.append(
+            "후반 TTS 모델 전환 시 완주를 위해 정상 구간을 유지했습니다. "
+            "구간 경계에서 음색이 미세하게 달라질 수 있습니다."
+        )
     gap = b"\x00" * (int(rate * CHUNK_GAP_SEC) * 2)
     merged: list[bytes] = []
     for i, pcm in enumerate(pieces):
