@@ -85,4 +85,52 @@ assert.equal(safeNext("//evil.example/admin"), "/admin/");
 assert.equal(safeNext("/"), "/admin/");
 assert.equal(safeNext(null), "/admin/");
 
-console.log("admin gate: 해시·비밀번호 규칙·세션·리다이렉트 검사 통과");
+// ── ⑤ 쓰기 창구의 입력 검증 ────────────────────────────────────────────────
+//
+// 콘솔이 쓰기를 얻었으므로(2026-08-16) 신뢰 경계가 하나 늘었다. 화면을 믿으면
+// 안 된다 — 저장은 되는데 파이프라인이 못 읽는 항목(축이 빈 학습 규칙, http 가
+// 아닌 피드 주소)이 KV 에 남으면 관리자는 자기가 무엇을 고쳤는지 모르는 채로
+// 다음 수집을 기다린다. 그 실패는 조용하다.
+const { normalizeEntry, sameJudgment } = await import(
+  pathToFileURL(path.join(root, "functions", "admin", "api", "overrides.js")).href);
+
+assert.ok(normalizeEntry({ kind: "듣도보도못한종류" }).error, "모르는 종류가 통과한다");
+
+// 학습 규칙: 한쪽 축만으로는 아무것도 가르지 못한다.
+assert.ok(normalizeEntry({ kind: "learned_rule", left_terms: ["고리"], right_terms: [] }).error,
+  "한쪽 축만 있는 규칙이 저장된다");
+// 양쪽에 같은 말이 있으면 rule_conflict 가 영원히 침묵한다 — 저장해도 안 듣는다.
+assert.ok(normalizeEntry({
+  kind: "learned_rule", left_terms: ["원전", "고리"], right_terms: ["원전"],
+}).error, "겹치는 축이 저장된다");
+const rule = normalizeEntry({
+  kind: "learned_rule", left_terms: ["고리 2호기"], right_terms: ["한빛 3호기"],
+}).entry;
+assert.equal(rule.label, "고리 2호기 ↔ 한빛 3호기", "라벨을 자동으로 못 만든다");
+
+// 수집원: 수집기가 열 수 있는 주소만.
+assert.ok(normalizeEntry({ kind: "feed_add", url: "file:///etc/passwd" }).error);
+assert.ok(normalizeEntry({ kind: "feed_add", url: "javascript:alert(1)" }).error);
+const feed = normalizeEntry({ kind: "feed_add", url: "https://www.example.com/feed" }).entry;
+assert.equal(feed.domain_label, "example.com", "도메인 라벨을 못 만든다");
+
+// 출처 등급: 파이프라인이 아는 값만. 모르는 값이 들어가면 화면 배지가 빈다.
+assert.ok(normalizeEntry({ kind: "tier_upsert", domain: "a.com", tier: 9 }).error);
+assert.ok(normalizeEntry({
+  kind: "tier_upsert", domain: "a.com", tier: 1, evidence_role: "아무거나",
+}).error, "근거 역할 값이 검증되지 않는다");
+assert.ok(normalizeEntry({ kind: "tier_upsert", domain: "그냥이름", tier: 1 }).error);
+
+// 분리: 같은 기사끼리는 가를 수 없다.
+assert.ok(normalizeEntry({ kind: "story_split", left_hash: "a", right_hash: "a" }).error);
+assert.ok(normalizeEntry({ kind: "story_split", left_hash: "a" }).error);
+
+// 같은 판정을 두 번 누르면 두 줄이 생기고, 지울 때 하나만 지워 절반이 남는다.
+assert.equal(sameJudgment(
+  { kind: "keyword_add", group: "정책", value: "SMR" },
+  { kind: "keyword_add", group: "정책", value: "SMR" }), true);
+assert.equal(sameJudgment(
+  { kind: "keyword_add", group: "정책", value: "SMR" },
+  { kind: "keyword_add", group: "기술", value: "SMR" }), false);
+
+console.log("admin gate: 해시·비밀번호 규칙·세션·리다이렉트·쓰기 검증 통과");

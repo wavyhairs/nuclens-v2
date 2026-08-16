@@ -40,10 +40,18 @@ _SOURCES_PATH = Path(__file__).parent / "sources.json"
 def _load_config() -> dict:
     """sources.json 로딩. 실패 시 빈 설정(보너스 0)으로 폴백."""
     try:
-        return json.loads(_SOURCES_PATH.read_text(encoding="utf-8"))
+        cfg = json.loads(_SOURCES_PATH.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as e:
         print(f"[sources] sources.json 로딩 실패 → 출처 가중치 미적용: {e}")
         return {}
+    # 운영 콘솔의 등급 수정을 얹는다. data_quality._source_indexes 도 같은 덧칠을
+    # 쓰므로 한 도메인이 두 모듈에서 다른 등급으로 보이는 일이 없다.
+    try:
+        import admin_overrides
+        return admin_overrides.sources_config(cfg)
+    except Exception as e:  # noqa: BLE001 — 덧칠 실패가 기본 등급을 못 쓰게 만들면 안 된다
+        print(f"[sources] 콘솔 덧칠 실패 → 기본 sources.json 사용: {e}")
+        return cfg
 
 
 _CFG = _load_config()

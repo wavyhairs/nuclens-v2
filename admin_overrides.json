@@ -1,0 +1,15 @@
+{
+  "_note": "운영 콘솔(/admin)이 남긴 사람 판정. 손으로 고쳐도 되지만, 정상 경로는 콘솔이다 — 콘솔은 Cloudflare KV 에 쓰고 tools/sync_admin_overrides.py 가 워크플로 시작에서 이 파일로 끌어온다.",
+  "_how": [
+    "항목 하나 = 사람이 한 판단 하나. id 로 지우면 그 판단만 사라지고 나머지는 그대로다.",
+    "kind 는 admin_overrides.KINDS 에 있는 값만 유효하다. 모르는 kind 는 조용히 무시된다.",
+    "enabled: false 는 지우지 않고 잠시 꺼 두는 것 — 되돌려 볼 때 쓴다.",
+    "story_split 은 소급하지 않는다. 이미 나간 회차 카드는 그대로 남고, 다음 수집부터 그 조합을 접지 않는다.",
+    "learned_rule 은 원래 쌍이 아닌 새 조합에도 적용된다. 양쪽이 서로 다른 축을 말할 때만 발동한다."
+  ],
+  "version": 1,
+  "updated_at": "",
+  "synced_at": "",
+  "source": "repo",
+  "entries": []
+}

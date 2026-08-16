@@ -344,7 +344,9 @@ export async function onRequest(context) {
   const bootstrap = !storedHash;
   const secret = await sessionSecret(kv);
   const authenticated = await sessionIsValid(readCookie(request, COOKIE_NAME), secret);
-  const isDataRequest = path.startsWith("/admin/data/");
+  // 데이터 JSON 과 쓰기 창구(/admin/api/)는 화면이 아니라 fetch 가 부른다. 여기에
+  // 로그인 HTML 을 돌려주면 JSON.parse 가 깨지고, 화면은 '데이터가 없다'로 오독한다.
+  const isDataRequest = path.startsWith("/admin/data/") || path.startsWith("/admin/api/");
 
   if (path === "/admin/logout") {
     return redirect("/", sessionCookie("", 0));

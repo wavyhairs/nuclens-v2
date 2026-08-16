@@ -29,6 +29,7 @@ except (AttributeError, ValueError):
     pass
 
 import event_stage
+import admin_overrides
 from gemini_client import GeminiError, call_json, is_available
 from story_cluster import consolidate_story_metadata
 
@@ -422,24 +423,40 @@ def _dedup_articles_impl(articles: list[dict], scores: dict[str, float], *,
         win = max(indices, key=score_of)
         winner = articles[win]
 
-        # 단순 재전재(duplicate)라면서 사건 단계가 갈리는 것은 모순이다 — 재전재는
-        # 같은 사건을 다시 실은 것이므로 단계가 넘어갈 수 없다. 그런 조합만 되돌린다.
-        # relation="merge"(원인분석·수치보강)는 건드리지 않는다: 그 판정은 제목 밖의
-        # 맥락을 읽어야 하고, 그건 이 모듈이 아니라 모델이 더 잘한다.
+        # 모델의 묶음을 되돌리는 두 가지 거부권. 적용 범위가 서로 다르다.
+        #
+        # ① 사건 단계 충돌 — `duplicate` 에만. 단순 재전재라면서 단계가 갈리는 것은
+        #    모순이므로 그런 조합만 되돌린다. `merge`(원인분석·수치보강)는 건드리지
+        #    않는다: 그 판정은 제목 밖의 맥락을 읽어야 하고, 그건 이 모듈이 아니라
+        #    모델이 더 잘한다.
+        # ② 운영 콘솔의 사람 판정·학습된 판별축 — relation 을 가리지 않는다.
+        #    ①의 유보는 '제목만 보고 판단한다'는 약점에서 오는데, 사람은 두 기사를
+        #    다 읽고 판정했으므로 그 유보가 필요 없다.
         vetoed: list[int] = []
-        if relation == "duplicate" and len(indices) > 1:
+        veto_records: list[dict] = []
+        if len(indices) > 1:
             win_stages = event_stage.article_stages(winner)
             for i in list(indices):
                 if i == win:
                     continue
-                if event_stage.stage_conflict(win_stages,
-                                              event_stage.article_stages(articles[i])):
+                if relation == "duplicate" and event_stage.stage_conflict(
+                        win_stages, event_stage.article_stages(articles[i])):
                     vetoed.append(i)
+                    veto_records.append(
+                        event_stage.veto_record(winner, articles[i], stage=stage))
+                    continue
+                # 사람 판정은 relation 을 가리지 않는다. 단계 거부권이 duplicate 로
+                # 좁혀져 있는 것은 "재전재라면서 단계가 넘어가는 건 모순"이라는
+                # 좁은 근거에 기대기 때문인데, 관리자가 직접 갈라 둔 조합에는 그
+                # 유보가 필요 없다 — 전문가가 두 기사를 보고 다른 사건이라고 말한
+                # 것을 모델의 merge 판정이 덮으면 검토 자체가 무의미해진다.
+                admin_veto = admin_overrides.merge_blocked(winner, articles[i])
+                if admin_veto:
+                    vetoed.append(i)
+                    veto_records.append({**admin_veto, "stage": stage})
             if vetoed:
                 indices = [i for i in indices if i not in vetoed]
-                winner.setdefault("story_stage_vetoes", []).extend(
-                    event_stage.veto_record(winner, articles[i], stage=stage)
-                    for i in vetoed)
+                winner.setdefault("story_stage_vetoes", []).extend(veto_records)
 
         members = [articles[i] for i in indices]
         consolidate_story_metadata(

@@ -227,6 +227,37 @@ def _related_titles(article: dict) -> list[str]:
     return out
 
 
+def _member_records(article: dict) -> list[dict]:
+    """접힌 기사를 (hash, 제목, 매체) 로 짝지어 남긴다.
+
+    `story_article_hashes` 와 `story_related_titles` 는 각각 따로 모여서 자리가
+    맞지 않는다 — 제목 쪽은 대표 자신의 제목을 한 번 더 넣고, 해시 쪽은 앞 단계에서
+    이미 들어간 것을 다시 넣지 않기 때문이다. 사람이 "이 기사만 떼어 달라"고 할 때
+    필요한 것은 목록 두 개가 아니라 **짝**이므로 여기서 함께 적는다.
+    """
+    out: list[dict] = []
+    existing = article.get("story_members")
+    if isinstance(existing, list):
+        out.extend(m for m in existing if isinstance(m, dict) and m.get("hash"))
+    own = str(article.get("hash") or "")
+    if own:
+        out.append({
+            "hash": own,
+            "title": _clean(article.get("title_kr") or article.get("title"))[:180],
+            "publisher": source_label(article),
+            "fold_stage": _clean(article.get("story_dedup_stage"))[:40],
+        })
+    for raw in raw_sources_of(article):
+        if str(raw.get("hash") or ""):
+            out.append({
+                "hash": str(raw.get("hash")),
+                "title": _clean(raw.get("title"))[:180],
+                "publisher": _clean(raw.get("publisher") or raw.get("domain"))[:100],
+                "fold_stage": _clean(raw.get("fold_stage"))[:40],
+            })
+    return out
+
+
 def _context_records(article: dict) -> list[dict]:
     existing = article.get("story_context")
     if isinstance(existing, list) and existing:
@@ -263,6 +294,7 @@ def consolidate_story_metadata(
     sources_by_id: dict[str, dict] = {}
     hashes: list[str] = []
     titles: list[str] = []
+    members_out: list[dict] = []
     contexts: list[dict] = []
     article_count = 0
 
@@ -283,6 +315,7 @@ def consolidate_story_metadata(
                     sources_by_id[ident] = src
         hashes.extend(_article_hashes(art))
         titles.extend(_related_titles(art))
+        members_out.extend(_member_records(art))
         contexts.extend(_context_records(art))
 
     # Stable de-duplication while preserving order.
@@ -299,6 +332,18 @@ def consolidate_story_metadata(
 
     hashes = uniq(hashes)
     titles = uniq(titles)[:12]
+    # hash 로 한 번만. 같은 기사가 여러 단계를 거쳐 두 번 들어오면 나중 것이
+    # 접힘 단계를 더 정확히 말하므로 먼저 들어온 쪽을 남기되 빈 값만 채운다.
+    member_by_hash: dict[str, dict] = {}
+    for member in members_out:
+        prev = member_by_hash.get(member["hash"])
+        if prev is None:
+            member_by_hash[member["hash"]] = member
+            continue
+        for field in ("title", "publisher", "fold_stage"):
+            if not prev.get(field) and member.get(field):
+                prev[field] = member[field]
+    member_list = list(member_by_hash.values())[:16]
     # Context de-dup by hash/title, capped to avoid queue bloat.
     ctx_seen = set()
     ctx_out = []
@@ -342,6 +387,9 @@ def consolidate_story_metadata(
     representative["story_independent_outlet_count"] = independent_count
     representative["story_sources"] = source_list
     representative["story_related_titles"] = titles
+    # 운영 콘솔의 수동 분리가 집는 단위. 제목만으로는 어느 기사를 떼는지 지정할 수
+    # 없다 — 같은 제목이 여러 매체에 있고, 판정은 hash 로 남아야 재현된다.
+    representative["story_members"] = member_list
     representative["story_context"] = ctx_out
     existing_relation = str(representative.get("story_relation") or "")
     if relation in {"single", "collected"} and existing_relation in {"duplicate", "merge"}:
