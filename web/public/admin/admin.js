@@ -77,7 +77,8 @@ const FOLD_STAGE_LABEL = {
 };
 
 const KIND_LABEL = {
-  story_split: "같은 날 분리", issue_split: "이슈 분리", issue_join: "이슈 잇기",
+  story_split: "같은 날 분리", issue_split: "이슈 분리",
+  issue_group_split: "사건 나누기", issue_join: "이슈 잇기",
   learned_rule: "학습 규칙",
   keyword_add: "키워드 추가", keyword_remove: "키워드 삭제",
   anchor_add: "앵커 추가", anchor_remove: "앵커 삭제",
@@ -302,19 +303,38 @@ function storySplitBlock(row) {
 // 분리 사유를 물으면서 판별축을 제안한다. 제목에서 한쪽에만 있는 낱말이 곧
 // 후보다 — 사람은 그중 무엇이 '사건을 가르는 축'인지 한눈에 알지만, 그걸 처음부터
 // 타이핑하게 하면 아무도 안 한다.
-function suggestAxis(leftTitle, rightTitle) {
+//
+// 축은 **나눈 뒤에** 뽑는다. 기사 두 건만 비교하면 두 제목의 우연한 차이(매체가
+// 쓴 수식어, 날짜 표현)까지 후보로 올라오지만, 사건군 대 사건군으로 비교하면
+// 한쪽 군의 여러 제목에 반복해서 나오는 말이 위로 온다 — 그것이 사건을 가르는
+// 말일 가능성이 훨씬 높다. 그래서 인자는 제목 **목록** 둘이다.
+function suggestAxis(leftTitles, rightTitles) {
   const tokens = value => String(value || "")
     .split(/[^0-9A-Za-z가-힣]+/).filter(word => word.length >= 2);
-  const left = tokens(leftTitle);
-  const right = tokens(rightTitle);
-  const lower = list => new Set(list.map(word => word.toLowerCase()));
-  const rightSet = lower(right);
-  const leftSet = lower(left);
-  const uniq = list => [...new Set(list)];
-  return {
-    left: uniq(left.filter(word => !rightSet.has(word.toLowerCase()))).slice(0, 5),
-    right: uniq(right.filter(word => !leftSet.has(word.toLowerCase()))).slice(0, 5),
+  // 낱말 → 그 낱말이 나온 제목 수. 같은 제목에서 두 번 나와도 한 번으로 센다.
+  const frequency = titles => {
+    const counts = new Map();
+    for (const title of titles || []) {
+      for (const word of new Set(tokens(title))) {
+        const key = word.toLowerCase();
+        const seen = counts.get(key);
+        if (seen) seen.count += 1;
+        else counts.set(key, { word, count: 1 });
+      }
+    }
+    return counts;
   };
+  const left = frequency(leftTitles);
+  const right = frequency(rightTitles);
+  // 반대편 군에 **한 번도** 안 나온 말만 축이 될 수 있다. 양쪽에 다 있는 말로는
+  // 영원히 안 갈린다(admin_overrides.rule_conflict 는 겹치면 침묵한다).
+  const only = (mine, theirs) => [...mine.entries()]
+    .filter(([key]) => !theirs.has(key))
+    // 여러 제목에 걸친 말이 먼저. 같은 빈도면 제목에 나온 순서를 지킨다(안정 정렬).
+    .sort((a, b) => b[1].count - a[1].count)
+    .map(([, value]) => value.word)
+    .slice(0, 6);
+  return { left: only(left, right), right: only(right, left) };
 }
 
 // 이 축이 얼마나 넓은가를 **저장하기 전에** 보여 준다. 화면에 이미 실린 제목만
@@ -349,7 +369,7 @@ function allKnownTitles() {
 function splitForm(repHash, memberHash) {
   const row = (state.merges?.story?.merges || []).find(item => item.hash === repHash);
   const member = ((row || {}).members || []).find(item => item.hash === memberHash) || {};
-  const suggestion = suggestAxis(row?.title, member.title);
+  const suggestion = suggestAxis([row?.title], [member.title]);
   const chipRow = (side, words) => words.map((word, index) =>
     `<label class="admin-chip-toggle"><input type="checkbox" name="${side}" value="${esc(word)}"
       ${index === 0 ? "checked" : ""}> ${esc(word)}</label>`).join("") || '<small>제안 없음</small>';
@@ -477,25 +497,22 @@ function renderStorySplits(story) {
 // 이슈 병합은 규칙이 판단한다. 어느 규칙이 걸렸는지(method)와 얼마나 빠듯했는지
 // (score)를 같이 보여야 "이건 붙을 만했다 / 이건 아니다"를 가를 수 있다.
 function clusterRow(cluster) {
-  const anchor = (cluster.members || [])[0] || {};
+  const splittable = (cluster.members || []).filter(member => member.hash).length >= 2;
   const members = (cluster.members || []).map(member => {
-    // 클러스터에서 떼어내는 데는 거부 쌍 **하나**면 된다. 이슈 합류는 멤버 하나만
-    // 맞으면 되는 탐욕적 구조지만, 거부권은 클러스터 전체에 걸리기 때문이다
-    // (build_data.assign_issues 의 '클러스터 전체 거부권' 주석).
-    const partner = member.hash === anchor.hash ? (cluster.members || [])[1] : anchor;
-    const detached = partner && entriesOf("issue_split").some(entry =>
-      [entry.left_hash, entry.right_hash].sort().join("|")
-        === [member.hash, partner.hash].sort().join("|"));
+    const separated = splitSeparates(cluster, member.hash);
     return `<li><time>${esc(dateLabel(member.article_date))}</time>
       <span>${esc(member.title)}</span>
       <small>${esc((member.countries || []).join(" · ") || "국가 미분류")}${
         (member.facilities || []).length ? ` · ${esc(member.facilities.join(" · "))}` : ""}</small>
-      ${!partner ? ""
-        : detached ? '<span class="admin-badge">분리됨</span>'
-        : `<button class="admin-mini" data-act="issue-split"
-             data-left="${esc(member.hash)}" data-right="${esc(partner.hash)}"
-             data-left-title="${esc(member.title)}" data-right-title="${esc(partner.title)}"
-             data-issue="${esc(cluster.issue_id)}">떼어내기</button>`}
+      ${!splittable || !member.hash ? ""
+        : separated ? '<span class="admin-badge">갈라 둠</span>'
+        // 여기서 무엇과 갈라지는지는 **다음 화면**에서 정한다. 예전에는 이 버튼이
+        // 곧바로 저장했고 상대 기사는 코드가 골랐다(대표 기사) — 화면은 그 상대를
+        // 보여 주지 않았다. 그래서 "해외수출 기사를 뺀다"고 적힌 판정이 실제로는
+        // 계속운전 기사 둘을 갈라 놓는 일이 일어났다(2026-08-16 실측).
+        : `<button class="admin-mini" data-act="group-split-open"
+             data-issue="${esc(cluster.issue_id)}" data-anchor="${esc(member.hash)}"
+             data-preset="alone">이 기사만 분리…</button>`}
     </li>`;
   }).join("");
   const matches = (cluster.matches || []).map(match => {
@@ -523,8 +540,16 @@ function clusterRow(cluster) {
         ratio(cluster.weakest_score)} · ${(cluster.briefing_dates || []).length}회차</small></p>
     </div>
     <details class="admin-evidence" open>
-      <summary>묶인 기사 ${cluster.member_count}건 — 잘못 묶였으면 떼어냅니다</summary>
+      <summary>묶인 기사 ${cluster.member_count}건 — 잘못 묶였으면 나눕니다</summary>
+      ${pendingSplitNote(cluster)}
       <ul class="admin-members with-action">${members}</ul>
+      ${splittable ? `<div class="admin-form-buttons">
+        <button class="admin-mini" data-act="group-split-open"
+          data-issue="${esc(cluster.issue_id)}" data-preset="manual">두 사건으로 나누기…</button>
+        <small class="admin-hint-inline">기사 하나가 잘못 들어온 게 아니라
+          서로 다른 사건군이 섞였을 때 — 어느 기사가 어느 쪽인지 직접 세웁니다.</small>
+      </div>` : ""}
+      <div class="admin-form-slot" data-slot="issue-${esc(cluster.issue_id)}"></div>
     </details>
     ${matches ? `<details class="admin-evidence">
       <summary>연결 근거 ${(cluster.matches || []).length}쌍</summary>
@@ -535,6 +560,193 @@ function clusterRow(cluster) {
     </details>` : ""}
     <p class="admin-link"><a href="/issue/${esc(cluster.issue_id)}">이슈 상세 열기 →</a></p>
   </article>`;
+}
+
+// ── 사건 나누기 ─────────────────────────────────────────────────────────────
+//
+// 왜 '떼어내기'가 아니라 '나누기'인가 — 2026-08-16 에 실제로 벌어진 일
+// ------------------------------------------------------------------------
+// 예전 버튼은 멤버마다 [떼어내기] 하나였고, **상대 기사는 코드가 골랐다**(대표
+// 기사, 대표를 눌렀으면 두 번째 멤버). 화면은 그 상대를 끝까지 보여 주지 않았다.
+// 관리자는 "이 기사를 이 이슈에서 뺀다"로 읽었지만 저장된 것은 임의의 쌍이었고,
+// 그래서 사유에는 '해외수출'이라 적혀 있는데 실제 판정은 계속운전 기사 둘을
+// 갈라 놓은 기록이 남았다. 그 판정은 다음 빌드에서 **엉뚱한 두 기사**를 갈라 놓는다.
+//
+// 게다가 쌍 하나로는 애초에 갈라지지 않는다. build_data.assign_issues 의 합류는
+// 멤버 하나만 맞으면 되는 탐욕적 구조라, 막히지 않은 다른 멤버를 통해 같은
+// 이슈로 도로 들어온다. 하나씩 떼는 조작은 원리적으로 부족하다.
+//
+// 그래서 단위를 바꾼다. 사람이 아는 것은 "이 넷과 저 둘이 다른 사건"이지
+// "3번과 5번이 다른 사건"이 아니다. 화면은 **선**을 긋게 하고, 파이프라인이
+// 그 선을 가로지르는 쌍 전부로 펼친다(admin_overrides.group_splits).
+// 그리고 저장 직전에 어떤 쌍이 못 박히는지 그대로 보여 준다.
+
+function clusterOf(issueId) {
+  return (state.merges?.issue?.clusters || [])
+    .find(cluster => cluster.issue_id === issueId) || null;
+}
+
+// 이 멤버가 이미 (아직 반영 안 된 판정으로) 다른 멤버와 갈라졌는가.
+function splitSeparates(cluster, hash) {
+  if (!hash) return false;
+  const others = (cluster.members || [])
+    .map(member => member.hash).filter(other => other && other !== hash);
+  const crosses = (mine, theirs) =>
+    mine.includes(hash) && theirs.some(other => others.includes(other));
+  return entriesOf("issue_group_split").some(entry =>
+    crosses(entry.left_hashes || [], entry.right_hashes || [])
+      || crosses(entry.right_hashes || [], entry.left_hashes || []))
+    // 옛 방식(쌍 하나)으로 저장된 판정도 계속 보여 준다 — 지우려면 먼저 보여야 한다.
+    || entriesOf("issue_split").some(entry =>
+      (entry.left_hash === hash && others.includes(entry.right_hash))
+        || (entry.right_hash === hash && others.includes(entry.left_hash)));
+}
+
+function pendingSplitNote(cluster) {
+  const hashes = (cluster.members || []).map(member => member.hash).filter(Boolean);
+  const touches = entry => [...(entry.left_hashes || []), ...(entry.right_hashes || [])]
+    .some(hash => hashes.includes(hash));
+  const mine = entriesOf("issue_group_split")
+    .filter(entry => entry.issue_id === cluster.issue_id || touches(entry));
+  if (!mine.length) return "";
+  const lines = mine.map(entry =>
+    `<li>${esc(entrySubject(entry))}
+      <small>${(entry.left_hashes || []).length}건 ↔ ${(entry.right_hashes || []).length}건 · ${
+        esc(entry.note || "사유 없음")}</small></li>`).join("");
+  return `<p class="admin-reason"><strong>나누기 판정 ${mine.length}건</strong>
+    다음 빌드에서 갈라집니다. 이 화면의 묶음은 아직 나뉘기 전 상태입니다.</p>
+    <ul class="admin-titles">${lines}</ul>`;
+}
+
+// 사건군을 세우는 화면. 클릭한 기사는 왼쪽에 고정되고, 나머지는 관리자가
+// 한 건씩 어느 쪽인지 정한다. preset="alone" 은 "이 기사만 잘못 들어왔다" —
+// 나머지 전부를 반대쪽으로 세운 상태로 연다(그래도 저장 전에 보여 준다).
+function groupSplitForm(issueId, anchorHash, preset) {
+  const cluster = clusterOf(issueId);
+  if (!cluster) return "";
+  const members = (cluster.members || []).filter(member => member.hash);
+  const anchor = members.find(member => member.hash === anchorHash) || members[0] || {};
+  const rest = members.filter(member => member.hash !== anchor.hash);
+  const rows = rest.map(member => {
+    const name = `side:${member.hash}`;
+    const split = preset === "alone";
+    return `<li>
+      <div><strong>${esc(member.title || "제목 없음")}</strong>
+        <small>${esc(dateLabel(member.article_date))} · ${
+          esc((member.countries || []).join(" · ") || "국가 미분류")}</small></div>
+      <div class="admin-side-pick">
+        <label><input type="radio" name="${esc(name)}" value="keep"${
+          split ? "" : " checked"}> 같은 사건</label>
+        <label><input type="radio" name="${esc(name)}" value="split"${
+          split ? " checked" : ""}> 다른 사건</label>
+      </div>
+    </li>`;
+  }).join("");
+  return `<form class="admin-form" data-act="group-split-save"
+      data-issue="${esc(cluster.issue_id)}" data-anchor="${esc(anchor.hash || "")}">
+    <p class="admin-form-title">이 이슈를 두 사건으로 나눕니다</p>
+    <p class="admin-hint">기사 하나를 어딘가에서 떼는 것이 아니라 <strong>선을 하나 긋는</strong>
+      것입니다. 선을 가로지르는 조합은 앞으로 한 이슈로 붙지 않습니다. 쌍 하나만
+      막으면 다른 기사를 통해 도로 합쳐집니다 — 그래서 양쪽을 다 세웁니다.</p>
+    <ul class="admin-split-pick">
+      <li class="anchor">
+        <div><strong>${esc(anchor.title || "제목 없음")}</strong>
+          <small>기준 기사 — 아래에서 '같은 사건'을 고른 기사들과 함께 남습니다</small></div>
+        <div class="admin-side-pick"><span class="admin-badge">기준</span></div>
+      </li>
+      ${rows}
+    </ul>
+    <div class="admin-split-preview" data-role="preview"></div>
+    <label class="admin-field"><span>왜 다른 사건입니까</span>
+      <input name="note" type="text" maxlength="300" required
+             placeholder="예: 한쪽은 계속운전 심사, 다른 쪽은 원전 수출 업무협약"></label>
+    <fieldset class="admin-axis">
+      <legend>앞으로도 쓸 판별축
+        <small>두 사건군의 제목을 비교해 뽑은 후보입니다 — 고른 낱말이 서로 다른 쪽에
+          있으면 새 기사도 접지 않습니다</small></legend>
+      <div class="admin-axis-side"><span>같은 사건 쪽</span><div data-role="axis-left"></div></div>
+      <div class="admin-axis-side"><span>다른 사건 쪽</span><div data-role="axis-right"></div></div>
+      <p class="admin-axis-reach" data-role="reach"></p>
+      <label class="admin-check"><input type="checkbox" name="learn" checked>
+        이 판별축을 학습합니다 (끄면 이 기사들만 갈라 둡니다)</label>
+    </fieldset>
+    <div class="admin-form-buttons">
+      <button type="submit" class="admin-mini primary" data-role="save">이 나누기를 저장</button>
+      <button type="button" class="admin-mini" data-act="form-close">취소</button>
+    </div>
+  </form>`;
+}
+
+// 폼에 세워진 두 사건군. 화면의 라디오만 읽는다 — 여기가 저장될 값의 유일한 출처다.
+function groupSides(form) {
+  const cluster = clusterOf(form.dataset.issue);
+  const members = ((cluster || {}).members || []).filter(member => member.hash);
+  const anchor = members.find(member => member.hash === form.dataset.anchor) || members[0];
+  // 선택자에 hash 를 끼워 넣지 않는다(findSlot 의 같은 주의) — 값이 따옴표를 물면
+  // 선택자가 깨지고, 증상은 '눌러도 아무 일도 안 일어남'이라 원인을 찾기 어렵다.
+  // 라디오를 전부 훑어 이름에서 hash 를 떼어 낸다.
+  const picked = new Map();
+  for (const input of form.querySelectorAll('input[type="radio"]')) {
+    const name = String(input.name || "");
+    if (input.checked && name.startsWith("side:")) picked.set(name.slice(5), input.value);
+  }
+  const left = anchor ? [anchor] : [];
+  const right = [];
+  for (const member of members) {
+    if (!anchor || member.hash === anchor.hash) continue;
+    (picked.get(member.hash) === "split" ? right : left).push(member);
+  }
+  return { left, right };
+}
+
+// 저장 직전에 **무엇과 무엇이 갈라지는지** 그대로 적는다. 이 화면이 없어서
+// 사유와 실제 판정이 어긋난 기록이 남았다(위 주석의 2026-08-16 건).
+function groupSplitPreview(left, right) {
+  if (!right.length) {
+    return `<p class="admin-axis-reach">아직 아무것도 갈라지지 않습니다 —
+      '다른 사건' 쪽에 기사를 한 건 이상 세우세요.</p>`;
+  }
+  const pairs = [];
+  for (const one of left) {
+    for (const other of right) pairs.push([one, other]);
+  }
+  const visible = pairs.slice(0, 8);
+  const rest = pairs.length - visible.length;
+  const shown = visible.map(([one, other]) =>
+    `<li>${esc(one.title || one.hash)} <b>↔</b> ${esc(other.title || other.hash)}</li>`).join("");
+  return `<p class="admin-split-scale"><strong>${left.length}건</strong>
+      <span>↕</span> <strong>${right.length}건</strong>
+      <small>${esc(left[0]?.title || "")} 쪽 ↔ ${esc(right[0]?.title || "")} 쪽</small></p>
+    <p class="admin-form-title">저장하면 다음 ${pairs.length}쌍을 '다른 사건'으로 못 박습니다</p>
+    <ul class="admin-titles">${shown}${rest ? `<li>… 외 ${rest}쌍</li>` : ""}</ul>`;
+}
+
+// 축 후보는 사건군이 바뀔 때마다 다시 뽑는다 — 나눈 결과에서 나오는 것이지
+// 미리 정해 둘 수 있는 것이 아니다. 이미 고른 낱말은 살아남으면 그대로 둔다.
+function axisChips(side, words, checked) {
+  if (!words.length) return "<small>제안 없음</small>";
+  const keep = new Set(checked);
+  const any = words.some(word => keep.has(word));
+  return words.map((word, index) =>
+    `<label class="admin-chip-toggle"><input type="checkbox" name="${esc(side)}"
+      value="${esc(word)}"${(any ? keep.has(word) : index === 0) ? " checked" : ""}> ${
+      esc(word)}</label>`).join("");
+}
+
+function updateGroupSplit(form) {
+  const { left, right } = groupSides(form);
+  const preview = form.querySelector('[data-role="preview"]');
+  if (preview) preview.innerHTML = groupSplitPreview(left, right);
+  const picked = side => [...form.querySelectorAll(`input[name="${side}"]:checked`)]
+    .map(input => input.value);
+  const suggestion = suggestAxis(left.map(m => m.title), right.map(m => m.title));
+  for (const [side, words] of [["left", suggestion.left], ["right", suggestion.right]]) {
+    const box = form.querySelector(`[data-role="axis-${side}"]`);
+    if (box) box.innerHTML = axisChips(side, right.length ? words : [], picked(side));
+  }
+  const save = form.querySelector('[data-role="save"]');
+  if (save) save.disabled = !right.length;
+  updateReach(form);
 }
 
 function renderIssues() {
@@ -926,6 +1138,17 @@ function renderJudgments() {
 
 function entrySubject(entry) {
   if (entry.kind === "learned_rule") return entry.label || "판별축";
+  if (entry.kind === "issue_group_split") {
+    // 이 줄이 판정을 되짚는 유일한 단서다. 건수만 적으면 어느 판정인지 모르고,
+    // 제목을 다 적으면 표가 무너진다 — 양쪽 첫 제목과 건수를 함께 적는다.
+    const side = (titles, hashes) => {
+      const count = (hashes || []).length;
+      const head = (titles || [])[0] || (hashes || [])[0] || "제목 없음";
+      return count > 1 ? `${head} 외 ${count - 1}건` : head;
+    };
+    return `${side(entry.left_titles, entry.left_hashes)} ↔ ${
+      side(entry.right_titles, entry.right_hashes)}`;
+  }
   if (entry.left_title || entry.right_title) {
     return `${entry.left_title || entry.left_hash} ↔ ${entry.right_title || entry.right_hash}`;
   }
@@ -959,6 +1182,15 @@ async function onClick(event) {
   const data = trigger.dataset;
 
   if (act === "form-close") { closeForms(); return; }
+
+  // 칸마다 붙은 [쓰는 법]. 도움말 탭을 열고 해당 항목으로 데려간다 — 탭만 열면
+  // 관리자는 열두 항목 중에서 자기가 보던 칸을 다시 찾아야 한다.
+  if (act === "help-open") {
+    showPanel("help");
+    const topic = document.getElementById(data.topic || "");
+    topic?.scrollIntoView?.({ block: "start" });
+    return;
+  }
 
   if (act === "split-open") {
     closeForms();
@@ -1016,17 +1248,14 @@ async function onClick(event) {
     return;
   }
 
-  if (act === "issue-split") {
-    const note = prompt("왜 다른 사건입니까? (기록에 남습니다)");
-    if (note === null) return;
-    await submit({
-      op: "add",
-      entry: {
-        kind: "issue_split", left_hash: data.left, right_hash: data.right,
-        left_title: data.leftTitle, right_title: data.rightTitle,
-        issue_id: data.issue || "", note,
-      },
-    }, "이 기사를 이슈에서 떼어냈습니다 — 다음 빌드부터 갈라집니다.");
+  if (act === "group-split-open") {
+    closeForms();
+    const slot = findSlot(`issue-${data.issue}`);
+    if (!slot) return;
+    slot.innerHTML = groupSplitForm(data.issue, data.anchor || "", data.preset || "manual");
+    const form = slot.querySelector("form");
+    if (form) updateGroupSplit(form);
+    slot.querySelector("input[name='note']")?.focus();
     return;
   }
 
@@ -1121,6 +1350,44 @@ async function onSubmit(event) {
     return;
   }
 
+  if (act === "group-split-save") {
+    const { left, right } = groupSides(form);
+    // 화면이 막고 있지만 한 번 더 본다 — 한쪽이 비면 '모두 같은 사건'이라는 뜻이고,
+    // 그걸 저장하면 아무것도 안 하는 판정이 목록에만 쌓인다.
+    if (!left.length || !right.length) {
+      toast("'다른 사건' 쪽에 기사를 한 건 이상 세워야 나눌 수 있습니다.", "error");
+      return;
+    }
+    const note = String(data.get("note") || "").trim();
+    const axisLeft = data.getAll("left").map(String);
+    const axisRight = data.getAll("right").map(String);
+    const learn = data.get("learn") === "on" && axisLeft.length && axisRight.length;
+    const pairs = left.length * right.length;
+    const ok = await submit({
+      op: "add",
+      entry: {
+        kind: "issue_group_split", issue_id: form.dataset.issue,
+        left_hashes: left.map(member => member.hash),
+        right_hashes: right.map(member => member.hash),
+        left_titles: left.map(member => member.title || ""),
+        right_titles: right.map(member => member.title || ""),
+        note,
+      },
+    }, `${left.length}건 ↔ ${right.length}건으로 나눴습니다 — 쌍 ${pairs}개를 못 박습니다.`);
+    if (ok && learn) {
+      await submit({
+        op: "add",
+        entry: {
+          kind: "learned_rule", left_terms: axisLeft, right_terms: axisRight, note,
+          label: `${axisLeft[0]} ↔ ${axisRight[0]}`,
+          origin_pair: [left[0].hash, right[0].hash],
+        },
+      }, "판별축을 학습했습니다 — 새 기사에도 적용됩니다.");
+    }
+    closeForms();
+    return;
+  }
+
   if (act === "feed-add") {
     const mode = String(data.get("mode") || "direct");
     const name = String(data.get("name") || "").trim();
@@ -1181,7 +1448,10 @@ async function onSubmit(event) {
 
 // ── 뼈대 ───────────────────────────────────────────────────────────────────
 
-const PANELS = ["merges", "config", "judgments"];
+// 도움말도 하나의 화면이다. 별도 페이지로 빼지 않는 이유: 링크로 나가면 보던
+// 목록을 잃고 돌아올 때 처음부터 다시 훑게 된다. 탭이면 눌렀다 돌아와도 같은 자리다.
+// 내용은 index.html 에 정적으로 있다 — 데이터를 못 읽은 날에도 읽혀야 하므로.
+const PANELS = ["merges", "config", "judgments", "help"];
 
 function showPanel(panel) {
   state.panel = PANELS.includes(panel) ? panel : "merges";
@@ -1259,6 +1529,10 @@ async function start() {
   document.addEventListener("change", event => {
     const form = event.target.closest('form[data-act="split-save"]');
     if (form) updateReach(form);
+    // 사건군이 바뀌면 갈라질 쌍도 축 후보도 달라진다. 저장 버튼이 무엇을 저장할지는
+    // 항상 화면에 적혀 있어야 한다 — 그게 이번 개편의 요지다.
+    const group = event.target.closest('form[data-act="group-split-save"]');
+    if (group) updateGroupSplit(group);
     const feed = event.target.closest('form[data-act="feed-add"]');
     if (feed && event.target.name === "mode") {
       const google = event.target.value === "google";
@@ -1267,7 +1541,11 @@ async function start() {
       feed.querySelector('input[name="url"]').required = !google;
     }
   });
-  showPanel(new URLSearchParams(location.search).get("panel"));
+  // 도움말 항목 주소(/admin/#help-issue)를 그대로 붙여 쓸 수 있게. 이게 없으면
+  // 링크를 받은 사람은 병합 진단 화면에서 아무 일도 안 일어난 것을 보게 된다.
+  showPanel(String(location.hash || "").startsWith("#help-")
+    ? "help"
+    : new URLSearchParams(location.search).get("panel"));
 }
 
 start();

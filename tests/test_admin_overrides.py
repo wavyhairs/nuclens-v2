@@ -342,6 +342,89 @@ class MergeVetoTests(unittest.TestCase):
         self.assertEqual(pairs["approved"][0]["origin"], "admin_console")
 
 
+class GroupSplitTests(unittest.TestCase):
+    """"이 묶음은 사실 두 사건이다" — 쌍이 아니라 선으로 저장되는 판정.
+
+    왜 선인가는 `admin_overrides.group_splits` 의 주석과
+    `web/tests/test_prototype.py` 의 재현 테스트에 있다. 요지는 쌍 하나로는
+    갈라지지 않는다는 것이다 — 막히지 않은 다른 멤버를 통해 도로 합쳐진다.
+    여기서 보는 것은 항목 하나가 **선을 가로지르는 쌍 전부**로 펼쳐지는가다.
+    """
+
+    SPLIT = {
+        "id": "g-1", "kind": "issue_group_split", "issue_id": "issue-k1",
+        "left_hashes": ["k1", "k2", "k3", "k4"], "right_hashes": ["m1", "m2"],
+        "note": "한쪽은 계속운전 심사, 다른 쪽은 수출 업무협약",
+        "created_at": "2026-08-16T02:00:00Z",
+    }
+
+    def tearDown(self):
+        restore_overrides()
+
+    def test_one_entry_becomes_every_pair_that_crosses_the_line(self):
+        path = write_overrides([self.SPLIT])
+        rejected = admin_overrides.issue_pair_overrides(path)["rejected"]
+        self.assertEqual(len(rejected), 8)
+        self.assertEqual(
+            {(row["left_hash"], row["right_hash"]) for row in rejected},
+            {(left, right) for left in ("k1", "k2", "k3", "k4") for right in ("m1", "m2")})
+        # 같은 쪽끼리는 갈라지지 않는다 — 선 안쪽은 여전히 한 사건이다.
+        self.assertNotIn(("k1", "k2"), {(r["left_hash"], r["right_hash"]) for r in rejected})
+        self.assertEqual(rejected[0]["origin"], "admin_console")
+        self.assertEqual(rejected[0]["entry_id"], "g-1", "지울 때 되짚을 항목 id 가 없다")
+        self.assertEqual(rejected[0]["reviewed_at"], "2026-08-16")
+
+    def test_the_line_also_stops_the_same_day_fold(self):
+        """다른 사건이면 같은 날 한 카드로 접혀서도 안 된다.
+
+        관리자가 말한 것은 "이 넷과 저 둘은 다른 사건"이지 "날짜를 넘는 연결만
+        끊어라"가 아니다. 이슈 계층에서만 막으면 같은 날 나란히 실린 두 건이
+        `ranking.cluster_duplicates` 에서 그대로 접힌다.
+        """
+        path = write_overrides([self.SPLIT])
+        pairs = admin_overrides.blocked_pairs(path)
+        self.assertIn(frozenset(("k1", "m1")), pairs)
+        self.assertNotIn(frozenset(("k1", "k2")), pairs)
+        veto = admin_overrides.merge_blocked(
+            {"hash": "k4", "title_kr": "고리 3·4호기 계속운전 심사", "title": ""},
+            {"hash": "m2", "title_kr": "한국형 원전 해외진출 업무협약", "title": ""}, path)
+        self.assertIsNotNone(veto)
+        self.assertEqual(veto["kind"], "admin_split")
+
+    def test_a_one_sided_line_is_ignored(self):
+        """한쪽이 비면 가를 것이 없다. 저장 창구가 막지만 손편집도 있다."""
+        path = write_overrides([{**self.SPLIT, "right_hashes": []}])
+        self.assertEqual(admin_overrides.issue_pair_overrides(path)["rejected"], [])
+        self.assertEqual(admin_overrides.blocked_pairs(path), set())
+
+    def test_an_article_standing_on_both_sides_never_splits_from_itself(self):
+        path = write_overrides([{**self.SPLIT, "right_hashes": ["k1", "m1"]}])
+        rejected = admin_overrides.issue_pair_overrides(path)["rejected"]
+        self.assertNotIn("k1", {row["right_hash"] for row in rejected})
+        self.assertEqual(len(rejected), 4, "왼쪽 4건 × 오른쪽 1건이 아니다")
+
+    def test_deleting_the_entry_removes_the_whole_line_at_once(self):
+        """사람이 한 판단은 하나다 — 절반만 남는 상태가 만들어지면 안 된다."""
+        path = write_overrides([self.SPLIT])
+        self.assertEqual(len(admin_overrides.issue_pair_overrides(path)["rejected"]), 8)
+        path = write_overrides([])
+        self.assertEqual(admin_overrides.issue_pair_overrides(path)["rejected"], [])
+
+    def test_a_disabled_line_stops_applying(self):
+        path = write_overrides([{**self.SPLIT, "enabled": False}])
+        self.assertEqual(admin_overrides.issue_pair_overrides(path)["rejected"], [])
+        self.assertEqual(admin_overrides.blocked_pairs(path), set())
+
+    def test_a_broken_line_does_not_raise(self):
+        """이 모듈은 어떤 입력에도 예외를 올리지 않는다 — 올리면 수집이 선다."""
+        path = write_overrides([
+            {"id": "g-2", "kind": "issue_group_split", "left_hashes": "문자열", "right_hashes": 7},
+            {"id": "g-3", "kind": "issue_group_split"},
+        ])
+        self.assertEqual(admin_overrides.group_splits(path), [])
+        self.assertEqual(admin_overrides.issue_pair_overrides(path)["rejected"], [])
+
+
 class VetoIsWiredIntoThePipelineTests(unittest.TestCase):
     """모듈이 옳아도 호출 지점에 안 꽂혀 있으면 아무 일도 일어나지 않는다.
 

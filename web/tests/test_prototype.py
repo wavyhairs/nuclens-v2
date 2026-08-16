@@ -1147,6 +1147,94 @@ class IssueSimilarityTests(unittest.TestCase):
         issues = build_data.cluster_selected_articles(articles, None, None, overrides, [])
         self.assertEqual(len(issues), 1, "기각이 없는데 묶음이 갈렸다")
 
+    def _two_events_in_one_issue(self):
+        """계속운전 심사 4건 + 원전 수출 업무협약 2건이 한 이슈로 붙은 상태.
+
+        2026-08-16 라이브에서 관리자가 발견한 모양이다. 임베딩을 같게 주어
+        확실히 붙여 둔다 — 여기서 보려는 것은 '왜 붙었나'가 아니라 '어떻게
+        갈라야 갈라지나'이므로, 붙는 경로는 고정해 두는 편이 낫다.
+        """
+        def article(hash_, date, title, tags):
+            return {"hash": hash_, "briefing_date": date, "article_date": date,
+                    "title_kr": title, "tags": tags, "countries": ["KR"]}
+
+        return [
+            article("k1", "2026-08-01", "원안위, 고리 3·4호기 계속운전 하반기 심의 예정",
+                    ["#원안위", "#계속운전"]),
+            article("k2", "2026-08-02", "원안위, 고리 3·4호기 계속운전 연내 결론 목표",
+                    ["#원안위", "#계속운전"]),
+            article("k3", "2026-08-03", "원안위, 고리 3·4호기 계속운전 올해 하반기 심사 착수",
+                    ["#원안위", "#계속운전"]),
+            article("k4", "2026-08-04", "고리 3·4호기 계속운전 심사 진행 상황 점검",
+                    ["#원안위", "#계속운전"]),
+            article("m1", "2026-08-05", "산업부·원안위, 원전 수출 규제체계 업무협약 체결",
+                    ["#원안위", "#원전수출"]),
+            article("m2", "2026-08-06", "산업부·원안위, 한국형 원전 해외진출 업무협약 체결",
+                    ["#원안위", "#원전수출"]),
+        ]
+
+    def _clusters_of(self, articles, rejected):
+        embeddings = {item["hash"]: [1.0, 0.0] for item in articles}
+        issues = build_data.cluster_selected_articles(
+            articles, embeddings, None,
+            {"approved": set(), "rejected": set(rejected)}, [])
+        return sorted(sorted(member["hash"] for member in issue["members"]) for issue in issues)
+
+    def test_detaching_one_article_does_not_split_two_event_groups(self):
+        """관리자 콘솔이 쌍 하나만 저장하면 안 되는 이유 — 실측 재현.
+
+        2026-08-16: 콘솔의 [떼어내기]는 상대 기사를 **코드가** 골라(대표 기사)
+        쌍 하나를 저장했다. 그 조작으로는 사건군이 갈라지지 않는다. 합류가
+        멤버 하나만 맞으면 되는 탐욕적 구조라, 막히지 않은 다른 멤버를 통해
+        같은 이슈로 도로 들어오기 때문이다.
+
+        결과는 '안 갈라짐'보다 나쁘다 — 수출 기사 하나만 혼자 떨어지고 다른
+        하나는 계속운전 묶음에 그대로 남는다. 화면에는 '분리됨'이라 적힌 채로.
+        """
+        articles = self._two_events_in_one_issue()
+        pair = build_data._pair_id
+        self.assertEqual(
+            self._clusters_of(articles, set()),
+            [["k1", "k2", "k3", "k4", "m1", "m2"]],
+            "재현 전제가 깨졌다 — 여섯 건이 한 이슈로 붙어 있어야 한다")
+        self.assertEqual(
+            self._clusters_of(articles, {pair("k1", "m1")}),
+            [["k1", "k2", "k3", "k4", "m2"], ["m1"]],
+            "쌍 하나로 사건군이 갈라졌다 — 그렇다면 이 테스트의 전제가 바뀐 것")
+
+    def test_a_group_split_line_separates_both_event_groups(self):
+        """선을 가로지르는 쌍을 전부 막으면, 그리고 그때에만 두 사건군이 갈린다.
+
+        콘솔의 '두 사건으로 나누기'가 저장하는 것이 이 쌍 집합이다
+        (`admin_overrides.group_splits` 가 항목 하나를 이 집합으로 펼친다).
+        """
+        articles = self._two_events_in_one_issue()
+        pair = build_data._pair_id
+        line = {pair(left, right)
+                for left in ("k1", "k2", "k3", "k4") for right in ("m1", "m2")}
+        self.assertEqual(
+            self._clusters_of(articles, line),
+            [["k1", "k2", "k3", "k4"], ["m1", "m2"]],
+            "선을 다 막았는데도 사건군이 안 갈렸다")
+
+    def test_the_console_split_reaches_the_matcher_as_rejected_pairs(self):
+        """콘솔 항목 → 쌍 집합 → build_data. 중간이 끊기면 화면만 바뀐다."""
+        sys.path.insert(0, str(ROOT.parent))
+        import admin_overrides  # noqa: PLC0415
+
+        path = Path(tempfile.mkdtemp()) / "admin_overrides.json"
+        path.write_text(json.dumps({"version": 1, "entries": [{
+            "id": "g-1", "kind": "issue_group_split", "issue_id": "issue-k1",
+            "left_hashes": ["k1", "k2", "k3", "k4"], "right_hashes": ["m1", "m2"],
+            "note": "한쪽은 계속운전 심사, 다른 쪽은 수출 업무협약",
+        }]}, ensure_ascii=False), encoding="utf-8")
+        rejected = {build_data._pair_id(row["left_hash"], row["right_hash"])
+                    for row in admin_overrides.issue_pair_overrides(path)["rejected"]}
+        self.assertEqual(len(rejected), 8, "선을 가로지르는 쌍 8개가 다 나오지 않았다")
+        self.assertEqual(
+            self._clusters_of(self._two_events_in_one_issue(), rejected),
+            [["k1", "k2", "k3", "k4"], ["m1", "m2"]])
+
     def test_unselected_article_attaches_as_evidence_without_creating_a_card_issue(self):
         cards = [
             {
@@ -5720,6 +5808,86 @@ class AdminConsoleTests(unittest.TestCase):
         # ⑤ 즉시 반영되지 않는다는 사실을 화면이 말해야 한다. 침묵하면 관리자는
         #    같은 판정을 몇 번씩 다시 누르고 목록이 중복으로 찬다.
         self.assertIn("다음 수집", self.html)
+
+    def test_a_split_never_picks_its_own_counterpart(self):
+        """2026-08-16 — 화면이 끝까지 안 보여 준 상대와 갈라 놓은 사고.
+
+        [떼어내기] 버튼은 "이 기사를 이 이슈에서 뺀다"로 읽혔지만, 실제로는
+        **코드가 고른 상대**(대표 기사)와의 쌍 하나를 저장했다. 그래서 사유에는
+        '해외수출'이라 적힌 판정이 계속운전 기사 둘을 갈라 놓는 기록으로 남았다.
+        게다가 쌍 하나로는 사건군이 갈라지지도 않는다(`assign_issues` 의 탐욕적
+        합류 — `test_detaching_one_article_does_not_split_two_event_groups`).
+
+        그래서 잠그는 것은 두 가지다. ① 상대를 코드가 고르지 않는다.
+        ② 저장 전에 어떤 쌍이 못 박히는지 화면이 말한다.
+        """
+        # ① 상대를 코드가 고르던 경로. 이 버튼은 눌린 즉시 저장했다.
+        self.assertNotIn('data-act="issue-split"', self.script,
+                         "상대를 코드가 고르는 분리 버튼이 살아 있다")
+        # ② 나누기는 확인 화면을 거친다. 열기와 저장이 서로 다른 동작이어야 한다.
+        self.assertIn('data-act="group-split-open"', self.script)
+        self.assertIn('data-act="group-split-save"', self.script)
+        # ③ 저장 직전에 쌍 목록을 그린다 — 이 문구가 사라지면 확인 화면이 빈다.
+        self.assertIn("'다른 사건'으로 못 박습니다", self.script)
+        self.assertIn("function groupSplitPreview(", self.script)
+        # ④ 한쪽이 비면 저장할 수 없다. '모두 같은 사건'을 저장하면 아무것도 하지
+        #    않는 판정이 목록에만 쌓이고, 관리자는 갈라 놓았다고 믿는다.
+        self.assertIn("save.disabled = !right.length", self.script)
+        # ⑤ 저장되는 것은 화면이 세운 두 사건군 그대로다(양쪽 hash 목록).
+        self.assertIn("left_hashes: left.map(member => member.hash)", self.script)
+        self.assertIn("right_hashes: right.map(member => member.hash)", self.script)
+        # ⑥ 파이프라인이 그 항목을 선으로 펼친다. 여기가 끊기면 화면만 바뀐다.
+        overlay = (ROOT.parent / "admin_overrides.py").read_text(encoding="utf-8")
+        self.assertIn("def group_splits(", overlay)
+        self.assertIn("issue_group_split", (ROOT / "build_data.py").read_text(encoding="utf-8"))
+
+    def test_every_screen_says_how_to_use_it_and_the_link_lands(self):
+        """도움말은 있어도 닿지 않으면 없는 것과 같다.
+
+        콘솔은 칸마다 하는 일이 다르고 되돌리는 방법도 다르다(분리는 소급 안 되고,
+        키워드는 다음 수집부터, 판별축은 새 기사에도 적용된다). 그걸 화면마다
+        늘어놓으면 진단 목록이 설명서에 밀려 내려가므로 도움말 탭으로 뺐다 —
+        대신 칸마다 [쓰는 법] 이 해당 항목으로 곧장 데려가야 한다.
+
+        여기서 잠그는 것은 그 연결이다. 링크의 topic 오타 하나면 아무 데도 가지
+        않고, 그 실패는 조용하다(패널만 열리고 관리자는 열두 항목을 다시 훑는다).
+        """
+        # ① 탭과 패널이 짝이 맞아야 한다. showPanel 이 없는 id 를 만지면 예외가
+        #    나고 그 아래가 통째로 안 그려진다 — 증상은 흰 화면 하나다.
+        tabs = re.findall(r'data-panel="(\w+)"', self.html)
+        panels = re.findall(r'id="panel-(\w+)"', self.html)
+        listed = re.search(r"const PANELS = \[([^\]]+)\]", self.script)
+        self.assertEqual(sorted(tabs), sorted(panels), "탭과 패널이 어긋난다")
+        self.assertEqual(sorted(tabs), sorted(re.findall(r'"(\w+)"', listed.group(1))),
+                         "화면의 탭과 admin.js 의 PANELS 가 다르다")
+        self.assertIn("help", tabs, "도움말 탭이 없다")
+
+        # ② 진단·설정·판정의 **모든 칸**에 [쓰는 법] 이 있어야 한다. 하나만 빠져도
+        #    관리자는 그 칸에서 "여기는 설명이 없나"를 묻게 된다.
+        before_help = self.html.split('<section id="panel-help"')[0]
+        self.assertEqual(
+            before_help.count('data-act="help-open"'),
+            before_help.count('class="admin-section"'),
+            "설명이 붙지 않은 칸이 있다")
+
+        # ③ 링크가 가리키는 항목이 실제로 있어야 한다.
+        topics = re.findall(r'data-topic="([\w-]+)"', self.html)
+        anchors = re.findall(r'<a href="#(help-[\w-]+)"', self.html)
+        self.assertTrue(topics and anchors)
+        for target in topics + anchors:
+            self.assertIn(f'id="{target}"', self.html, f"도움말 항목이 없는 링크: {target}")
+        self.assertIn("scrollIntoView", self.script, "도움말을 열고 그 항목으로 안 데려간다")
+        # 항목 주소를 그대로 공유할 수 있어야 한다 — 받은 사람이 병합 진단 화면에서
+        # 아무 일도 안 일어나는 것을 보면 그 링크는 없는 것과 같다.
+        self.assertIn('"#help-"', self.script)
+
+        # ④ 도움말은 **정적**이어야 한다. admin.js 가 그리게 하면 데이터를 못 읽은
+        #    날(빌드 전·KV 미연결)에 도움말까지 같이 사라진다 — 하필 그때가
+        #    "왜 비어 있지"를 읽어야 할 때다.
+        self.assertNotIn("admin-help-card", self.script)
+        self.assertIn('id="help-issue"', self.html)
+        for word in ("소급", "다음 수집", "내 판정"):
+            self.assertIn(word, self.html, f"공통 규칙에서 '{word}' 가 빠졌다")
 
     def test_the_console_is_kept_out_of_the_reader_bundle(self):
         """독자 앱의 **코드**와는 계속 분리한다.

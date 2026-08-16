@@ -21,7 +21,7 @@ const MAX_BODY_BYTES = 64 * 1024;
 // admin_overrides.py 의 KINDS 와 같은 목록. 둘이 갈라지면 콘솔은 저장에 성공했다고
 // 말하는데 파이프라인은 그 항목을 조용히 무시한다 — 제일 나쁜 실패 방식이다.
 const KINDS = new Set([
-  "story_split", "issue_split", "issue_join", "learned_rule",
+  "story_split", "issue_split", "issue_group_split", "issue_join", "learned_rule",
   "keyword_add", "keyword_remove", "anchor_add", "anchor_remove",
   "negative_add", "negative_remove", "anti_add", "anti_remove",
   "feed_add", "feed_disable", "official_disable",
@@ -102,6 +102,27 @@ export function normalizeEntry(input) {
     if (entry.left_hash === entry.right_hash) return { error: "같은 기사끼리는 갈라 놓을 수 없습니다." };
     entry.left_title = text(input?.left_title, 180);
     entry.right_title = text(input?.right_title, 180);
+    entry.issue_id = text(input?.issue_id, 80);
+    return { entry };
+  }
+
+  // 사건군 나누기. 쌍이 아니라 **선**이다 — 파이프라인이 선을 가로지르는 쌍
+  // 전부로 펼친다(admin_overrides.group_splits). 한쪽이 비면 가를 것이 없고,
+  // 같은 기사가 양쪽에 서면 그 기사는 자기 자신과 다른 사건이 된다.
+  if (kind === "issue_group_split") {
+    entry.left_hashes = textList(input?.left_hashes, 60, 64);
+    entry.right_hashes = textList(input?.right_hashes, 60, 64);
+    if (!entry.left_hashes.length || !entry.right_hashes.length) {
+      return { error: "양쪽 모두 기사가 한 건 이상 필요합니다 — 한쪽이 비면 나눌 것이 없습니다." };
+    }
+    const both = entry.left_hashes.filter(hash => entry.right_hashes.includes(hash));
+    if (both.length) {
+      return { error: "같은 기사가 양쪽에 있습니다 — 한 기사는 한쪽에만 설 수 있습니다." };
+    }
+    // 제목은 화면 표시용이다. 없어도 판정은 성립하지만, 없으면 '내 판정' 목록이
+    // 16진수 두 줄이 되고 그건 되짚을 수 없는 기록이다.
+    entry.left_titles = textList(input?.left_titles, 60, 180);
+    entry.right_titles = textList(input?.right_titles, 60, 180);
     entry.issue_id = text(input?.issue_id, 80);
     return { entry };
   }
@@ -276,6 +297,14 @@ export async function onRequest(context) {
 
 export function sameJudgment(left, right) {
   if (left.kind !== right.kind) return false;
+  // 사건군 나누기는 목록이라 필드 비교로는 안 잡힌다. 순서만 다른 같은 선을
+  // 두 번 저장하면 쌍이 두 벌로 늘고, 지울 때 하나만 지워 절반이 남는다.
+  if (left.kind === "issue_group_split") {
+    const side = (row, key) => [...(row[key] || [])].map(String).sort().join("|");
+    return ["left_hashes", "right_hashes"].every(key => side(left, key) === side(right, key))
+      || (side(left, "left_hashes") === side(right, "right_hashes")
+        && side(left, "right_hashes") === side(right, "left_hashes"));
+  }
   const fields = {
     story_split: ["left_hash", "right_hash"],
     issue_split: ["left_hash", "right_hash"],

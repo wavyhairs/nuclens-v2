@@ -4230,7 +4230,8 @@ def build_admin_judgments(news_items: list[dict], generated_at: datetime) -> dic
         })
 
     summary = admin_overrides.summary()
-    merge_kinds = ("story_split", "issue_split", "issue_join", "learned_rule")
+    merge_kinds = ("story_split", "issue_split", "issue_group_split",
+                   "issue_join", "learned_rule")
     return {
         "available": True,
         "error": "",

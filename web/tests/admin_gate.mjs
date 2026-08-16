@@ -125,6 +125,29 @@ assert.ok(normalizeEntry({ kind: "tier_upsert", domain: "그냥이름", tier: 1 
 assert.ok(normalizeEntry({ kind: "story_split", left_hash: "a", right_hash: "a" }).error);
 assert.ok(normalizeEntry({ kind: "story_split", left_hash: "a" }).error);
 
+// 사건군 나누기: 쌍이 아니라 선이다. 한쪽이 비면 가를 것이 없고, 같은 기사가
+// 양쪽에 서면 그 기사는 자기 자신과 다른 사건이 된다.
+assert.ok(normalizeEntry({
+  kind: "issue_group_split", left_hashes: ["k1", "k2"], right_hashes: [],
+}).error, "한쪽이 빈 나누기가 저장된다");
+assert.ok(normalizeEntry({
+  kind: "issue_group_split", left_hashes: ["k1", "k2"], right_hashes: ["k2"],
+}).error, "같은 기사가 양쪽에 선 나누기가 저장된다");
+const line = normalizeEntry({
+  kind: "issue_group_split", issue_id: "issue-k1",
+  left_hashes: ["k1", "k2"], right_hashes: ["m1"],
+  left_titles: ["계속운전 심의", "계속운전 결론"], right_titles: ["수출 업무협약"],
+  note: "심사와 협약은 다른 사건",
+}).entry;
+assert.deepEqual(line.left_hashes, ["k1", "k2"]);
+assert.deepEqual(line.right_titles, ["수출 업무협약"],
+  "제목이 안 실리면 '내 판정' 목록이 16진수 두 줄이 된다");
+// 순서만 다른 같은 선을 두 번 저장하면 쌍이 두 벌로 늘고 절반만 지워진다.
+assert.equal(sameJudgment(line, { ...line, left_hashes: ["k2", "k1"] }), true);
+assert.equal(sameJudgment(line, { left_hashes: ["m1"], right_hashes: ["k1", "k2"], kind: line.kind }),
+  true, "좌우만 뒤집은 같은 선이 다른 판정으로 들어간다");
+assert.equal(sameJudgment(line, { ...line, right_hashes: ["m2"] }), false);
+
 // 같은 판정을 두 번 누르면 두 줄이 생기고, 지울 때 하나만 지워 절반이 남는다.
 assert.equal(sameJudgment(
   { kind: "keyword_add", group: "정책", value: "SMR" },

@@ -30,6 +30,7 @@
       <button class="main-tab active" data-panel="merges" aria-pressed="true">병합 진단</button>
       <button class="main-tab" data-panel="config" aria-pressed="false">수집 설정</button>
       <button class="main-tab" data-panel="judgments" aria-pressed="false">내 판정</button>
+      <button class="main-tab" data-panel="help" aria-pressed="false">도움말</button>
     </nav>
     <!-- 헤더 도구 셋. `.icon-button` 을 그대로 쓰면 안 된다 — 그 클래스는 독자
          화면의 **아이콘 전용** 버튼이라 width:40px 로 못박혀 있고, 글자를 넣으면
@@ -65,7 +66,8 @@
     <section class="admin-section" aria-labelledby="storyMergeTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="storyMergeTitle">같은 날 병합 — story</h2></div>
-        <span class="data-note">같은 날 여러 매체가 쓴 같은 사건을 하나로 접은 판단입니다</span>
+        <span class="data-note">같은 날 여러 매체가 쓴 같은 사건을 하나로 접은 판단입니다
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-story">쓰는 법</button></span>
       </div>
       <div id="storyStats" class="admin-stats"></div>
       <div id="storyMerges" class="admin-list"></div>
@@ -77,7 +79,8 @@
     <section class="admin-section" aria-labelledby="storySplitTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="storySplitTitle">붙이지 않은 판단 — 사건 단계</h2></div>
-        <span class="data-note">심사↔승인·정지↔재가동처럼 상태가 넘어가면 제목이 닮아도 별도 사건입니다</span>
+        <span class="data-note">심사↔승인·정지↔재가동처럼 상태가 넘어가면 제목이 닮아도 별도 사건입니다
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-stage">쓰는 법</button></span>
       </div>
       <div id="storySplits" class="admin-list"></div>
     </section>
@@ -85,7 +88,8 @@
     <section class="admin-section" aria-labelledby="issueMergeTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="issueMergeTitle">날짜를 넘는 병합 — 이슈</h2></div>
-        <span class="data-note">약한 연결부터 세웁니다 · 점수가 빠듯한 병합이 곧 의심스러운 병합입니다</span>
+        <span class="data-note">약한 연결부터 세웁니다 · 점수가 빠듯한 병합이 곧 의심스러운 병합입니다 · 잘못 묶였으면 <strong>두 사건으로 나눕니다</strong>
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-issue">쓰는 법</button></span>
       </div>
       <div id="issueStats" class="admin-stats"></div>
       <details class="admin-rules">
@@ -98,7 +102,8 @@
     <section class="admin-section" aria-labelledby="borderlineTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="borderlineTitle">붙지 않은 경계선</h2></div>
-        <span class="data-note">문턱 바로 아래라 조금만 내리면 붙습니다 · 붙었어야 했는지 여기서 고릅니다</span>
+        <span class="data-note">문턱 바로 아래라 조금만 내리면 붙습니다 · 붙었어야 했는지 여기서 고릅니다
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-borderline">쓰는 법</button></span>
       </div>
       <div id="borderline" class="admin-list"></div>
     </section>
@@ -115,7 +120,8 @@
     <section class="admin-section" aria-labelledby="keywordConfigTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="keywordConfigTitle">검색 키워드</h2></div>
-        <span class="data-note">keywords.json + 콘솔 편집 · 네이버 검색에 그대로 나갑니다</span>
+        <span class="data-note">keywords.json + 콘솔 편집 · 네이버 검색에 그대로 나갑니다
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-keywords">쓰는 법</button></span>
       </div>
       <div id="keywordStats" class="admin-stats"></div>
       <div id="keywordGroups" class="admin-list"></div>
@@ -124,7 +130,8 @@
     <section class="admin-section" aria-labelledby="antiConfigTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="antiConfigTitle">공통 제외어</h2></div>
-        <span class="data-note">그룹과 무관하게 제목에 걸리면 버립니다</span>
+        <span class="data-note">그룹과 무관하게 제목에 걸리면 버립니다
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-anti">쓰는 법</button></span>
       </div>
       <div id="antiKeywords" class="admin-list"></div>
     </section>
@@ -132,7 +139,8 @@
     <section class="admin-section" aria-labelledby="feedConfigTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="feedConfigTitle">수집원</h2></div>
-        <span class="data-note">news_bot.RSS_SOURCES · OFFICIAL_DIRECT_SOURCES · pubs_fetch</span>
+        <span class="data-note">news_bot.RSS_SOURCES · OFFICIAL_DIRECT_SOURCES · pubs_fetch
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-feeds">쓰는 법</button></span>
       </div>
       <div id="feedStats" class="admin-stats"></div>
       <div id="feedTables"></div>
@@ -141,7 +149,8 @@
     <section class="admin-section" aria-labelledby="tierConfigTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="tierConfigTitle">출처 등급</h2></div>
-        <span class="data-note">sources.json · 선정 점수 가산과 근거 역할을 정합니다</span>
+        <span class="data-note">sources.json · 선정 점수 가산과 근거 역할을 정합니다
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-tiers">쓰는 법</button></span>
       </div>
       <div id="tierTable"></div>
     </section>
@@ -155,7 +164,8 @@
     <section class="admin-section" aria-labelledby="ruleTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="ruleTitle">학습된 판별축</h2></div>
-        <span class="data-note">분리 판정에서 배운 규칙 · 새 사건에도 적용됩니다</span>
+        <span class="data-note">분리 판정에서 배운 규칙 · 새 사건에도 적용됩니다
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-rules">쓰는 법</button></span>
       </div>
       <div id="learnedRules" class="admin-list"></div>
     </section>
@@ -163,10 +173,275 @@
     <section class="admin-section" aria-labelledby="entryTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="entryTitle">전체 판정 기록</h2></div>
-        <span class="data-note">지우면 그 판단만 사라지고 나머지는 그대로입니다</span>
+        <span class="data-note">지우면 그 판단만 사라지고 나머지는 그대로입니다
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-entries">쓰는 법</button></span>
       </div>
       <div id="entryFilters" class="admin-filter-row"></div>
       <div id="entryList" class="admin-list"></div>
+    </section>
+  </section>
+
+  <!-- ── 도움말 ──────────────────────────────────────────────────────────
+       왜 정적 HTML 인가: 이 글은 데이터가 아니다. admin.js 가 그리게 하면
+       ① 데이터를 못 읽은 날(빌드 전·KV 미연결)에 도움말까지 같이 사라진다 —
+       하필 그때가 "왜 비어 있지"를 읽어야 할 때다. ② 문장이 템플릿 문자열
+       안으로 들어가 이스케이프 검사 대상이 되고, 고칠 때마다 JS 를 건드리게
+       된다. 여기 두면 저장소에서 그냥 읽히고 그냥 고쳐진다.
+
+       왜 화면마다 문구를 늘리지 않고 별도 탭인가: 각 칸의 `data-note` 한 줄은
+       "이게 무엇인가"까지만 말한다. 그 이상을 화면에 늘어놓으면 진단 목록이
+       설명서에 밀려 아래로 내려가고, 그러면 아무도 목록을 안 본다. 대신 칸마다
+       [쓰는 법] 이 여기 해당 항목으로 곧장 데려온다. -->
+  <section id="panel-help" class="admin-panel admin-help" hidden>
+    <section class="admin-section" aria-labelledby="helpTocTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">00</span><h2 id="helpTocTitle">항목별 사용법</h2></div>
+        <span class="data-note">화면의 칸 순서 그대로입니다 · 각 칸의 [쓰는 법] 이 여기로 옵니다</span>
+      </div>
+      <nav class="admin-help-toc" aria-label="도움말 목차">
+        <a href="#help-basics">먼저 알아 둘 것</a>
+        <a href="#help-story">같은 날 병합</a>
+        <a href="#help-stage">붙이지 않은 판단</a>
+        <a href="#help-issue">날짜를 넘는 병합</a>
+        <a href="#help-borderline">붙지 않은 경계선</a>
+        <a href="#help-keywords">검색 키워드</a>
+        <a href="#help-anti">공통 제외어</a>
+        <a href="#help-feeds">수집원</a>
+        <a href="#help-tiers">출처 등급</a>
+        <a href="#help-rules">학습된 판별축</a>
+        <a href="#help-entries">전체 판정 기록</a>
+        <a href="#help-trouble">막혔을 때</a>
+      </nav>
+
+      <article class="admin-help-card" id="help-basics">
+        <h3>먼저 알아 둘 것 — 네 가지 공통 규칙</h3>
+        <p class="admin-help-lead">여기서 무엇을 누르든 아래 넷은 그대로입니다. 이것만
+          알면 잘못 눌러도 되돌릴 수 있습니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>덧칠이지 덮어쓰기가 아님</dt><dd>누른 것은 <strong>항목 하나</strong>로
+            쌓입니다. <code>keywords.json</code>·<code>sources.json</code> 같은 기본 파일은
+            그대로 두고 "무엇을 더하고 무엇을 뺐다"만 적습니다. 그래서 저장소에서 손으로
+            고친 것과 여기서 누른 것이 서로를 조용히 지우지 않습니다.</dd></div>
+          <div><dt>다음 수집부터</dt><dd>즉시 반영되지 않습니다. 최대 3시간 뒤 다음 수집부터
+            듣습니다. 지금 적용하려면 GitHub Actions 의 <code>Nuclear news crawl</code>
+            워크플로를 수동 실행하세요. 목록의 <em>다음 수집부터</em> 배지가 아직 안 넘어간
+            판정이고, <em>적용됨</em> 은 파이프라인이 이미 읽고 있는 판정입니다.</dd></div>
+          <div><dt>되돌리기는 한 줄</dt><dd><strong>내 판정</strong> 탭에서 지우면 그 판단만
+            사라지고 정확히 원래 동작으로 돌아갑니다. 확신이 없으면 <em>잠시 끄기</em> 로
+            먼저 효력만 멈춰 보세요.</dd></div>
+          <div><dt>소급하지 않음</dt><dd>이미 나간 회차의 카드와 아카이브는 바뀌지 않습니다.
+            바뀌는 것은 앞으로 만들어질 회차뿐입니다. 접힌 기사는 아카이브에 별도 레코드가
+            없어 되살릴 재료 자체가 없습니다.</dd></div>
+        </dl>
+      </article>
+    </section>
+
+    <section class="admin-section" aria-labelledby="helpMergeTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="helpMergeTitle">병합 진단</h2></div>
+        <span class="data-note">이 서비스에서 더 위험한 실패는 누락이 아니라 오병합입니다</span>
+      </div>
+
+      <article class="admin-help-card" id="help-story">
+        <h3>같은 날 병합 — story</h3>
+        <p class="admin-help-lead">같은 날 여러 매체가 쓴 같은 사건을 카드 하나로 접은 판단입니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>무엇을 보나</dt><dd><strong>접힌 기사 제목</strong>이 진짜 증거입니다.
+            제목들이 서로 다른 사건으로 읽히면 그게 오병합입니다 — 사람은 한눈에 알고
+            지표는 못 합니다. 판단 근거(LLM 문장)와 사건 지문을 함께 읽으세요.</dd></div>
+          <div><dt>어떻게 고치나</dt><dd><em>잘못 묶였나 — 기사 N건 중에서 떼어내기</em> 를
+            열고 [떼어내기]. 남는 카드와 떼어낼 기사가 나란히 뜹니다. 사유를 적고, 아래
+            판별축에서 두 기사를 가르는 낱말을 고릅니다.</dd></div>
+          <div><dt>무엇이 바뀌나</dt><dd>앞으로 그 조합을 접지 않습니다. 그리고 판별축을 함께
+            저장하면 <strong>새 기사에도</strong> 적용됩니다 — 그쪽이 학습의 본체입니다
+            (hash 쌍 차단은 그 쌍 하나에만 듣는 기록입니다).</dd></div>
+          <div><dt>주의</dt><dd>이미 나간 카드는 바뀌지 않습니다. 다른 카드로 <strong>붙이는</strong>
+            기능은 없습니다 — 대표 선정·매체 수·검증 배지가 발송 파이프라인 안에서 한 번에
+            계산되므로 사후 결합은 발송 기록을 되써야 합니다.</dd></div>
+        </dl>
+      </article>
+
+      <article class="admin-help-card" id="help-stage">
+        <h3>붙이지 않은 판단 — 사건 단계</h3>
+        <p class="admin-help-lead">읽기 전용입니다. 제목이 닮았는데 <em>심사↔승인</em>,
+          <em>정지↔재가동</em>처럼 사건 단계가 넘어가 일부러 안 붙인 쌍이 여기 올라옵니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>왜 있나</dt><dd>병합만 보여 주면 진단이 반쪽입니다. 두 기사가 끝내 안
+            붙었다는 사실은 결과물 어디에도 남지 않아서, 이 칸이 없으면 거부권이 과하게
+            걸려도 "비슷한 카드가 두 칸을 먹는다"로만 보이고 원인은 안 보입니다.</dd></div>
+          <div><dt>여기 엉뚱한 쌍이 쌓이면</dt><dd>거부권이 과한 것입니다. 원인이 <em>관리자 분리</em>·
+            <em>학습 규칙</em> 배지면 내가 만든 판정이니 <strong>내 판정</strong> 에서 지우면
+            됩니다. 단계 판정(<code>event_stage</code>)이면 코드 쪽 문제입니다.</dd></div>
+          <div><dt>비어 있으면</dt><dd>정상입니다. 이 기록은 발송 회차에서 오므로 아직 회차가
+            없으면 비어 있습니다.</dd></div>
+        </dl>
+      </article>
+
+      <article class="admin-help-card" id="help-issue">
+        <h3>날짜를 넘는 병합 — 이슈</h3>
+        <p class="admin-help-lead">며칠에 걸쳐 이어지는 묶음입니다. <strong>가장 약한
+          연결부터</strong> 위에 섭니다 — 관리자는 위에서부터 훑으므로 위가 가장 의심스러워야
+          합니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>무엇을 보나</dt><dd>묶인 기사 목록과 <em>연결 근거</em> 표. 어느 규칙이
+            얼마나 빠듯하게 걸렸는지가 거기 있습니다. 점수가 문턱에 붙어 있으면 의심하세요.</dd></div>
+          <div><dt>입구가 둘</dt><dd><strong>[이 기사만 분리…]</strong> 는 기사 하나가 잘못
+            들어왔을 때, <strong>[두 사건으로 나누기…]</strong> 는 서로 다른 사건군이 섞였을 때
+            씁니다. 둘 다 <strong>같은 화면</strong>을 엽니다 — 다른 것은 처음 놓인 위치뿐입니다.</dd></div>
+          <div><dt>나누는 순서</dt><dd>① 기준 기사가 맨 위에 고정됩니다. ② 나머지를 한 건씩
+            <em>같은 사건</em> / <em>다른 사건</em> 으로 세웁니다. ③ 아래에 <code>4건 ↕ 2건</code>
+            과 <strong>못 박힐 쌍 목록</strong>(<code>A ↔ B</code>)이 그대로 뜹니다. ④ 사유를
+            적고 ⑤ 판별축을 확인한 뒤 저장합니다. 한쪽이 비어 있으면 저장 버튼은 잠깁니다.</dd></div>
+          <div><dt>왜 쌍이 아니라 선인가</dt><dd>쌍 하나만 끊으면 갈라지지 않습니다. 합류가
+            멤버 하나만 맞으면 되는 구조라 막히지 않은 다른 기사를 통해 도로 들어옵니다.
+            <span class="admin-help-figure">계속운전 4건 + 수출 MOU 2건이 한 이슈
+              <b>[k1 k2 k3 k4 m1 m2]</b><br>
+              쌍 하나(k1↔m1)만 끊으면 <b>[k1 k2 k3 k4 m2] [m1]</b> ← m2 가 남는다<br>
+              선을 가로지르는 쌍을 전부 끊으면 <b>[k1 k2 k3 k4] [m1 m2]</b></span>
+            그래서 화면은 <strong>선</strong>을 긋게 하고, 파이프라인이 그 선을 가로지르는 쌍
+            전부로 펼칩니다. 저장되는 항목은 하나라 지울 때도 하나입니다.</dd></div>
+          <div><dt>무엇이 바뀌나</dt><dd>선을 가로지르는 조합은 앞으로 한 이슈로 붙지 않고,
+            같은 날 한 카드로도 접히지 않습니다. 이미 나간 회차는 그대로입니다.</dd></div>
+          <div><dt>주의</dt><dd>사유는 <strong>실제로 갈라지는 쌍</strong>과 맞아야 합니다.
+            저장 전 쌍 목록이 그것을 확인하는 자리입니다 — 사유에는 '수출'이라 적고 실제로는
+            심사 기사 둘을 갈라 놓는 기록이 남은 적이 있습니다(2026-08-16).</dd></div>
+        </dl>
+      </article>
+
+      <article class="admin-help-card" id="help-borderline">
+        <h3>붙지 않은 경계선</h3>
+        <p class="admin-help-lead">자동 병합 문턱 바로 아래에서 안 붙은 쌍입니다. 조금만
+          내리면 붙는 자리라 "붙었어야 했나"를 사람이 고릅니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>어떻게 고치나</dt><dd>두 제목이 한 줄에 나란히 있습니다. 읽고 [잇기] 를
+            누르면 그 쌍이 <em>사람 승인</em>으로 들어가 다음 빌드부터 붙습니다.</dd></div>
+          <div><dt>안 붙을 수도 있음</dt><dd>승인해도 그 쌍이 국가·설비 충돌이나 다른 거부
+            판정에 걸려 있으면 거부가 이깁니다. <em>차단</em> 열을 먼저 보세요.</dd></div>
+        </dl>
+      </article>
+    </section>
+
+    <section class="admin-section" aria-labelledby="helpConfigTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="helpConfigTitle">수집 설정</h2></div>
+        <span class="data-note">여기서 고친 것은 다음 수집의 검색·수집 범위를 바꿉니다</span>
+      </div>
+
+      <article class="admin-help-card" id="help-keywords">
+        <h3>검색 키워드</h3>
+        <p class="admin-help-lead">그룹마다 <strong>검색어 · 앵커 · 제외어</strong>가 한 벌입니다.
+          검색어는 그대로 검색에 나가고, 앵커는 "이 기사가 원자력 문맥인가"를 확인하며,
+          제외어는 질의에서 빼는 말입니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>더하기</dt><dd>각 칸 아래 입력란에 적고 넣습니다. 예전에 지웠던 말을 다시
+            넣으면 '삭제' 항목이 사라집니다 — 반대 항목이 나란히 쌓이지 않습니다.</dd></div>
+          <div><dt>빼기</dt><dd>칩의 <em>×</em>. 내가 추가했던 값이면 그 추가가 사라지고,
+            기본 파일의 값이면 '삭제' 항목이 하나 쌓입니다.</dd></div>
+          <div><dt>그룹 신설은 없음</dt><dd>그룹은 검색어뿐 아니라 앵커와 제외어를 함께 갖는
+            한 벌입니다. 빈 그룹이 생기면 앵커 없이 검색이 나가고, 그건 잡음을 그대로
+            통과시킵니다.</dd></div>
+          <div><dt>주의</dt><dd>검색어를 넓게 넣으면 수집량이 늘고 잡음도 같이 늘어납니다.
+            효과는 다음 수집 로그와 '병합 진단'의 건수로 확인하세요.</dd></div>
+        </dl>
+      </article>
+
+      <article class="admin-help-card" id="help-anti">
+        <h3>공통 제외어</h3>
+        <p class="admin-help-lead">그룹과 무관하게 <strong>제목에 걸리면 버립니다.</strong>
+          가장 강한 도구이고, 그래서 가장 조용히 잘못됩니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>쓸 때</dt><dd>주가·채용·부고처럼 원자력과 무관한 맥락에서만 나오는 말.</dd></div>
+          <div><dt>쓰지 말 때</dt><dd><em>원전</em>·<em>정부</em>처럼 넓은 말. 버려진 기사는
+            어디에도 흔적을 남기지 않아 "왜 그 뉴스가 안 왔지"로만 드러납니다.</dd></div>
+        </dl>
+      </article>
+
+      <article class="admin-help-card" id="help-feeds">
+        <h3>수집원</h3>
+        <p class="admin-help-lead">RSS 수집원은 추가와 중지 둘 다 됩니다. 기관 직접 수집은
+          <strong>중지만</strong> 됩니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>RSS 추가</dt><dd>직접 피드 주소를 넣거나, Google News 우회로 만듭니다.
+            둘은 신뢰도가 다르니 화면에서도 구분해 표시합니다. 잡음 많은 종합 피드는
+            <em>필수 낱말</em>을 함께 주면 그 말이 든 항목만 통과합니다.</dd></div>
+          <div><dt>중지</dt><dd>기본 목록에 있는 곳도 끌 수 있습니다. 내가 추가한 곳을 끄면
+            추가 자체가 사라집니다.</dd></div>
+          <div><dt>기관은 왜 추가가 없나</dt><dd>기관 게시판은 전용 파서가 코드에 있어야
+            읽힙니다. 화면에서 주소만 넣게 하면 파서 없는 항목이 매 수집마다 조용히 0건을
+            내고, 그건 '그 기관이 조용한 날'과 구분되지 않습니다.</dd></div>
+        </dl>
+      </article>
+
+      <article class="admin-help-card" id="help-tiers">
+        <h3>출처 등급</h3>
+        <p class="admin-help-lead">도메인이 열쇠입니다. 등급은 선정 점수 가산에, 매체 성격과
+          근거 역할은 카드의 검증 상태 계산에 들어갑니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>등급 1·2·3</dt><dd>같은 사건이면 등급이 높은 출처의 기사가 카드의 얼굴이
+            됩니다. 등급을 옮기면 옛 등급에서 빠지고 새 등급으로 들어갑니다.</dd></div>
+          <div><dt>근거 역할</dt><dd><em>1차 원문</em>·<em>독립 취재</em>·<em>받아쓴 주장</em>.
+            '받아쓴 주장'은 여러 곳에 실려도 독립 출처로 세지 않습니다 — 복수 출처 확인
+            배지가 보도자료 재전재로 채워지는 것을 막는 자리입니다.</dd></div>
+          <div><dt>등급에서 빼기</dt><dd>가산이 사라질 뿐 수집은 계속합니다. 수집을 끊으려면
+            <strong>수집원</strong> 에서 중지하세요.</dd></div>
+        </dl>
+      </article>
+    </section>
+
+    <section class="admin-section" aria-labelledby="helpJudgmentTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="helpJudgmentTitle">내 판정</h2></div>
+        <span class="data-note">누른 것이 전부 여기 모입니다 — 지우는 경로가 하나입니다</span>
+      </div>
+
+      <article class="admin-help-card" id="help-rules">
+        <h3>학습된 판별축</h3>
+        <p class="admin-help-lead">분리·나누기에서 함께 저장한 축입니다. 원래 쌍이 아닌
+          <strong>새 조합</strong>에도 적용됩니다 — 이것이 '학습'이라 부를 수 있는 유일한
+          부분입니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>언제 발동하나</dt><dd>한쪽이 왼쪽 축만, 다른 쪽이 오른쪽 축만 말할 때만.
+            한쪽이 침묵하거나 두 축을 다 말하면 판정하지 않습니다 — '표식이 없다'는
+            '다르다'가 아니라 '못 읽었다'이기 때문입니다.</dd></div>
+          <div><dt>숫자 읽는 법</dt><dd>카드 오른쪽의 <code>왼쪽 ↔ 오른쪽</code> 은 최근 30일
+            기사 중 <strong>각 축에만</strong> 걸린 건수입니다. 둘 다 두세 건이면 좁고 좋은
+            규칙, 수십 건씩이면 무관한 사건까지 갈라 놓는 규칙입니다.</dd></div>
+          <div><dt>넓으면 지운다</dt><dd>과적용이 여기서 유일한 위험입니다. 그리고 그 사고는
+            조용합니다 — 비슷한 카드가 두 칸을 먹을 뿐 어디에도 이유가 없습니다.
+            <em>주의</em> 문구가 붙은 규칙은 지우는 쪽이 맞습니다.</dd></div>
+        </dl>
+      </article>
+
+      <article class="admin-help-card" id="help-entries">
+        <h3>전체 판정 기록</h3>
+        <p class="admin-help-lead">콘솔에서 누른 모든 것이 한 목록으로 모입니다. 병합 판정도
+          설정 편집도 같은 항목이라 지우는 경로가 하나입니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>내용 열</dt><dd>분리·나누기는 <code>A ↔ B</code> 로 적힙니다. 여기서 양쪽
+            제목을 읽고 "내가 의도한 것이 맞나"를 확인하세요.</dd></div>
+          <div><dt>상태 열</dt><dd><em>적용됨</em> 은 파이프라인이 이미 읽고 있는 판정,
+            <em>다음 수집부터</em> 는 아직 안 넘어간 판정입니다.</dd></div>
+          <div><dt>지우기 / 잠시 끄기</dt><dd>지우면 그 판단만 사라지고 기본 동작으로 정확히
+            돌아갑니다. 되돌려 볼 생각이면 지우지 말고 꺼 두세요.</dd></div>
+        </dl>
+      </article>
+
+      <article class="admin-help-card" id="help-trouble">
+        <h3>막혔을 때</h3>
+        <dl class="admin-help-steps">
+          <div><dt>"판정 저장은 지금 쓸 수 없습니다"</dt><dd>KV 가 안 붙었습니다. 읽기는 되고
+            쓰기만 막힌 상태입니다 — 배포의 <code>ADMIN_KV</code> 바인딩을 확인하세요.</dd></div>
+          <div><dt>"다른 곳에서 먼저 저장했습니다"</dt><dd>창을 두 개 열어 두었을 때 납니다.
+            화면이 낡았다는 뜻이므로 새로고침한 뒤 다시 누르세요.</dd></div>
+          <div><dt>"같은 판정이 이미 있습니다"</dt><dd>이미 저장된 판단입니다. <strong>내 판정</strong>
+            에서 확인하세요 — 같은 것을 두 줄로 만들면 지울 때 절반이 남습니다.</dd></div>
+          <div><dt>눌렀는데 아무 일도 없어 보임</dt><dd>정상입니다. 판정은 다음 수집부터
+            듣습니다. 지금 확인하려면 <code>Nuclear news crawl</code> 워크플로를 수동
+            실행하세요.</dd></div>
+          <div><dt>화면이 비어 있음</dt><dd>이 콘솔은 빌드 산출물을 읽습니다. 아직 빌드 전이면
+            비어 있는 것이 정상이고, 오류 문구가 떠 있으면 그 문장이 원인입니다.</dd></div>
+        </dl>
+      </article>
     </section>
   </section>
 </main>

@@ -366,6 +366,53 @@
 .admin-check { display: flex; align-items: center; gap: var(--sp-2); color: var(--c-text-secondary); font-size: var(--t-min); }
 .admin-check small { color: var(--c-text-muted); }
 
+/* 사건 나누기. 관리자가 양쪽을 직접 세우고, 저장 직전에 어떤 쌍이 못 박히는지
+   그대로 읽는다 — 예전에는 상대 기사를 코드가 골랐고 화면은 그걸 안 보여 줬다. */
+.admin-hint-inline { color: var(--c-text-muted); font-size: var(--t-min); line-height: 1.5; }
+.admin-split-pick { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.admin-split-pick li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-bottom: var(--bd-1) solid var(--c-border);
+  font-size: var(--t-caption);
+}
+.admin-split-pick li.anchor { border-bottom: var(--bd-2) solid var(--c-border-strong); }
+.admin-split-pick strong { font-weight: 600; }
+.admin-split-pick small { display: block; color: var(--c-text-muted); font-size: var(--t-min); }
+.admin-side-pick { display: flex; flex-shrink: 0; gap: var(--sp-2); }
+.admin-side-pick label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px var(--sp-2);
+  border: var(--bd-1) solid var(--c-border);
+  color: var(--c-text-muted);
+  font-size: var(--t-min);
+  cursor: pointer;
+}
+.admin-side-pick label:has(input:checked) {
+  border-color: var(--c-secondary);
+  color: var(--c-secondary);
+  font-weight: 650;
+}
+.admin-split-preview {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: var(--bd-2) solid var(--c-border-strong);
+  background: var(--c-surface);
+}
+.admin-split-preview .admin-titles { padding-bottom: 0; }
+.admin-split-preview .admin-titles b { color: var(--c-critical-text); }
+.admin-split-scale { margin: 0; font-size: var(--t-caption); }
+.admin-split-scale span { padding: 0 var(--sp-2); color: var(--c-text-muted); }
+.admin-split-scale small { display: block; color: var(--c-text-muted); font-size: var(--t-min); }
+.admin-mini[disabled] { opacity: 0.45; cursor: not-allowed; }
+
 /* 판별축. 학습에서 제일 위험한 실패는 축을 너무 넓게 잡는 것이라, 고르는 자리
    바로 아래에 '얼마나 넓은가'를 붙여 둔다 — 저장한 뒤에 알면 늦다. */
 .admin-axis {
@@ -395,6 +442,66 @@
 .admin-axis-view { display: grid; gap: var(--sp-2); }
 .admin-axis-view > div { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: var(--sp-2); align-items: start; }
 .admin-axis-view span { color: var(--c-text-muted); font-size: var(--t-min); }
+
+/* 도움말. 진단 화면과 같은 어법을 쓰되 **읽는 글**이라 한 가지가 다르다 —
+   줄 길이를 묶는다. 표와 목록은 화면을 다 써도 되지만 문장이 화면 폭을 다 쓰면
+   다음 줄 첫 글자를 못 찾는다. */
+.admin-help-card {
+  display: grid;
+  gap: var(--sp-3);
+  max-width: 82ch;
+  padding: var(--sp-4);
+  border: var(--bd-2) solid var(--c-border);
+  background: var(--c-surface);
+}
+.admin-help-card h3 { margin: 0; font-size: 17px; line-height: 1.4; }
+.admin-help-lead { margin: 0; color: var(--c-text-secondary); font-size: var(--t-caption); line-height: 1.7; }
+.admin-help-steps { display: grid; gap: 0; margin: 0; }
+.admin-help-steps > div {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: var(--sp-4);
+  padding: var(--sp-3) 0;
+  border-top: var(--bd-1) solid var(--c-border);
+}
+.admin-help-steps dt { color: var(--c-text-muted); font-size: var(--t-min); font-weight: 700; line-height: 1.7; }
+.admin-help-steps dd { margin: 0; font-size: var(--t-caption); line-height: 1.75; }
+.admin-help-steps em { color: var(--c-secondary); font-style: normal; font-weight: 650; }
+.admin-help-steps code { font-size: var(--t-min); }
+/* 갈라지는 모양을 글로만 적으면 안 읽힌다 — 세 줄짜리 그림 하나가 문단 하나보다 빠르다. */
+.admin-help-figure {
+  display: block;
+  margin: var(--sp-2) 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-left: var(--bd-3) solid var(--c-border-strong);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-secondary);
+  font-size: var(--t-min);
+  line-height: 1.9;
+}
+.admin-help-figure b { color: var(--c-text); font-variant-numeric: tabular-nums; }
+.admin-help-toc { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); }
+.admin-help-toc a {
+  padding: 3px var(--sp-2);
+  border: var(--bd-1) solid var(--c-border);
+  color: var(--c-text-secondary);
+  font-size: var(--t-min);
+}
+.admin-help-toc a:hover { border-color: var(--c-secondary); color: var(--c-secondary); text-decoration: none; }
+/* 칸 머리의 [쓰는 법]. 버튼이지만 글 안에 서므로 링크처럼 보인다 — 여기서
+   버튼처럼 생기면 '수집 설정'을 바꾸는 조작으로 오해받는다. */
+.admin-help-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-secondary);
+  font: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.admin-help-link:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
 
 .admin-filter-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .admin-filter {
@@ -438,8 +545,11 @@
     gap: var(--sp-2) var(--sp-4);
     padding-block: var(--sp-2);
   }
-  .admin-topbar-inner .main-tabs { display: flex; width: 100%; gap: var(--sp-6); }
+  /* 탭이 넷이 되면서 24px 간격으로는 390px 에 안 들어간다. 간격을 줄이고 줄바꿈을
+     허용한다 — 넘치면 접히는 편이 낫지, 잘려서 '도움말'이 사라지면 안 된다. */
+  .admin-topbar-inner .main-tabs { display: flex; flex-wrap: wrap; width: 100%; gap: var(--sp-2) var(--sp-4); }
   .admin-topbar-inner .main-tab { min-height: 40px; }
+  .admin-help-steps > div { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
   /* 좁은 화면에서도 셋을 다 남긴다. 비밀번호 변경은 자주 쓰지 않지만, 여기서
      숨기면 '어디서 바꾸지'를 물을 곳이 없다 — 콘솔에는 설정 메뉴가 따로 없다.
      대신 '서비스 화면'은 브랜드 로고가 같은 곳으로 가므로 중복이라 접는다. */
