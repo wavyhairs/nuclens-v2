@@ -100,6 +100,12 @@ jobs:
       - name: Check app.js parses
         run: node --check web/public/app.js
 
+      # 날짜 산술은 파이썬 테스트가 못 잡는다 — app.js 안에 있고 의존성이 없어서
+      # 지금까지 수동 실행 전용이었다. '최근 7일이 8일이 되던' 종류의 off-by-one 과
+      # 주간 리포트 구간(토~금) 매칭이 여기에 걸린다. 3초짜리라 배포 경로에 둔다.
+      - name: Date math (app.js)
+        run: node web/tests/date_window.mjs
+
       # 데이터 지표 게이트는 끈다. 추적률은 "오늘 뉴스가 어떻게 묶였나"의 결과지
       # 화면 코드의 성질이 아니다 — 켜 두면 뉴스가 한산한 날 CSS 오타 수정도
       # 배포가 막힌다(2026-08-03 실측: 추적률 0.125 로 이 워크플로 첫 실행이 실패).

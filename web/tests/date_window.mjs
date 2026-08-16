@@ -21,15 +21,19 @@ function extract(name) {
   throw new Error(`${name}() 블록이 안 닫힌다`);
 }
 
-const { shiftDate, weekRange, trendStart, timeLabel } = new Function(`
+const { shiftDate, weekRange, briefingWeek, weekRangeLabel, trendStart, timeLabel } =
+  new Function(`
   ${extract("shiftDate")}
   ${extract("weekRange")}
+  ${extract("briefingWeek")}
+  ${extract("dateLabel")}
+  ${extract("weekRangeLabel")}
   ${extract("todayKST")}
   ${extract("dateTimeLabel")}
   ${extract("timeLabel")}
   // trendRange() 는 state/meta 에 얽혀 있어 창 계산부만 같은 헬퍼로 재현한다.
   const trendStart = (end, days) => shiftDate(end, -(days - 1));
-  return { shiftDate, weekRange, trendStart, timeLabel };
+  return { shiftDate, weekRange, briefingWeek, weekRangeLabel, trendStart, timeLabel };
 `)();
 
 const cases = [];
@@ -44,6 +48,29 @@ eq("주간 창 길이 = 7일", 1 + (Date.parse("2026-08-09") - Date.parse(weekRa
 eq("월 경계", weekRange("2026-03-02").start, "2026-02-24");
 eq("윤년 2월", shiftDate("2028-03-01", -1), "2028-02-29");
 eq("연 경계", shiftDate("2026-01-01", -1), "2025-12-31");
+
+// 주간 리포트 구간은 **토~금**이다 — weekly_bot 이 금요일에 돌며 직전 7일을 묶고
+// (week_start = 실행일 -6), 저장된 값도 8/1~8/7 · 8/8~8/14 로 그렇다. ISO 주차
+// (월~일)로 계산하면 하루씩 밀려 매칭이 통째로 비고, 화면은 '집계 중'만 뜬다.
+eq("수요일 → 그 주 토~금", briefingWeek("2026-08-05").start, "2026-08-01");
+eq("수요일 끝", briefingWeek("2026-08-05").end, "2026-08-07");
+eq("월요일 → 직전 토 시작", briefingWeek("2026-08-10").start, "2026-08-08");
+eq("월요일 끝", briefingWeek("2026-08-10").end, "2026-08-14");
+eq("일요일 → 다음 금까지", briefingWeek("2026-08-16").start, "2026-08-15");
+eq("일요일 끝", briefingWeek("2026-08-16").end, "2026-08-21");
+// 경계 이틀: 금요일은 자기 주의 마지막 날, 토요일은 다음 주의 첫날.
+eq("금요일은 그 주 끝", briefingWeek("2026-08-14").end, "2026-08-14");
+eq("금요일 시작", briefingWeek("2026-08-14").start, "2026-08-08");
+eq("토요일은 새 주 시작", briefingWeek("2026-08-15").start, "2026-08-15");
+eq("주간 구간 길이 = 7일", 1 + (Date.parse(briefingWeek("2026-08-16").end)
+  - Date.parse(briefingWeek("2026-08-16").start)) / 86400000, 7);
+eq("빈 날짜는 빈 구간", briefingWeek("").start, "");
+
+// 제목: 같은 달이면 뒤쪽 달 이름을 뺀다. 달을 넘으면 둘 다 적는다.
+eq("같은 달 라벨", weekRangeLabel("2026-08-10"), "8월 8일–14일");
+eq("달 넘는 라벨", weekRangeLabel("2026-08-01"), "8월 1일–7일");
+eq("월 경계 라벨", weekRangeLabel("2026-07-30"), "7월 25일–31일");
+eq("연 경계 라벨", weekRangeLabel("2026-01-01"), "2025년 12월 27일–1월 2일".slice(6));
 
 // 트렌드 토글: 7일은 7일, 30일은 30일.
 eq("trend 7일 창", trendStart("2026-08-10", 7), "2026-08-04");

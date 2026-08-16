@@ -1282,6 +1282,36 @@ function weekRange(date) {
   return { start: shiftDate(date, -6), end: date };
 }
 
+// 주간 리포트의 구간은 **토~금**이다. weekly_bot 이 금요일에 돌면서 직전 7일을
+// 묶기 때문이고(week_start = 실행일 -6), 저장된 값도 8/1~8/7 · 8/8~8/14 로 그렇다.
+// ISO 주차(월~일)로 계산하면 하루씩 어긋나 매칭이 통째로 빈다.
+function briefingWeek(date) {
+  const parsed = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return { start: "", end: "" };
+  const toFriday = (5 - parsed.getUTCDay() + 7) % 7;   // 0=일 … 5=금 … 6=토
+  const end = shiftDate(date, toFriday);
+  return { start: shiftDate(end, -6), end };
+}
+
+// 그 주 리포트가 없으면 null 이다. **직전 주로 대체하지 않는다** — 지난주 결론이
+// 오늘 분석인 것처럼 붙는 것이 원래 문제였다(2026-08-16: 7월 브리핑에도 8/8~14
+// 결론이 떴다).
+function weeklyReportFor(date) {
+  const { start } = briefingWeek(date);
+  const reports = state.trend?.weekly_reports;
+  if (!start || !reports || typeof reports !== "object") return null;
+  return reports[start] || null;
+}
+
+// "8월 8일–14일" — 같은 달이면 뒤쪽 달 이름을 뺀다.
+function weekRangeLabel(date) {
+  const { start, end } = briefingWeek(date);
+  if (!start || !end) return "";
+  const tail = start.slice(0, 7) === end.slice(0, 7)
+    ? `${Number(end.slice(8, 10))}일` : dateLabel(end);
+  return `${dateLabel(start)}–${tail}`;
+}
+
 function weeklyChangedIssues(briefing) {
   const { start, end } = weekRange(briefing.date);
   return state.issues
@@ -1367,11 +1397,14 @@ function renderHomeIntelligence(briefing) {
 
 
   // 이번 주 해설이 담당하는 것은 '카드에 없는 연결·원인·파급'뿐이다.
-  //   · policy_shifts[].what  → 오늘 3분의 '이번 주 결론' 소유 (여기서 다시 안 낸다)
+  //   · policy_shifts[].what  → 주간 3분의 '이번 주 결론' 소유 (여기서 다시 안 낸다)
   //   · theme_moves           → 바로 위 '주제 변화' 소유 (4주 방향)
   //   · 남는 것 = weekly_intro(사건 간 연결) + so_what(파급효과)
   // 셋을 다 내던 예전 구성은 한 화면에서 같은 문장을 세 번 보게 만들었다.
-  const report = state.trend?.weekly_report;
+  //
+  // 주간 3분과 **같은 주차 리포트**를 본다. 여기만 최신 리포트를 쓰면 한 화면의
+  // 두 블록이 서로 다른 주를 말하게 된다.
+  const report = weeklyReportFor(briefing.date);
   const story = document.getElementById("homeWeeklyStory");
   const intro = dropTextsAlreadyOnCards([report?.weekly_intro], briefing);
   const soWhat = dropTextsAlreadyOnCards(
@@ -1403,9 +1436,21 @@ function dropTextsAlreadyOnCards(lines, briefing) {
     .filter(line => line && !onScreen.has(line) && !seen.has(line) && seen.add(line));
 }
 
+// 이 블록은 '오늘'이 아니라 **그 주**를 말한다. 재료가 weekly_bot 이 금요일에
+// 한 번 쓰는 주간 리포트뿐이라 날짜별로 달라질 내용 자체가 없다. 그런데 이름이
+// '오늘 3분'이라 매일 새 분석이 붙는 것처럼 읽혔고, 실제로는 어느 날짜를 열든
+// 저장된 마지막 한 주가 붙어 있었다 — 7월 브리핑에도 8/8~14 결론이 떴다.
+//
+// 그래서 두 가지를 바꾼다. ① 선택한 날짜가 속한 주차 리포트를 고른다.
+// ② 제목에 그 구간을 적는다 — 며칠간 내용이 같은 이유가 화면에서 설명된다.
+// 그 주 리포트가 아직 없으면 **직전 주로 대신 채우지 않고** 집계 중이라고 말한다.
 function renderTodayAgenda(briefing) {
   const agenda = document.getElementById("todayAgenda");
-  const report = state.trend?.weekly_report;
+  const report = weeklyReportFor(briefing.date);
+  const label = weekRangeLabel(briefing.date);
+  document.getElementById("todayAgendaTitle").textContent =
+    label ? `${label} 주간 3분` : "주간 3분";
+
   // 이번 주 결론 = 판이 바뀐 것. theme_moves 는 4주 방향이라 '주제 변화'의 몫이고,
   // 여기서 같이 내면 두 섹션이 같은 답을 한다.
   const conclusions = dropTextsAlreadyOnCards(
@@ -1425,9 +1470,16 @@ function renderTodayAgenda(briefing) {
   document.getElementById("agendaWatchList").innerHTML =
     watch.map(text => `<li>${esc(text)}</li>`).join("");
 
-  agenda.hidden = conclusions.length === 0 && watch.length === 0;
+  // 리포트가 있는데 문장이 전부 카드와 겹쳐 빈 경우와, 리포트 자체가 없는 경우를
+  // 가른다. 앞은 조용히 접고, 뒤는 왜 비었는지 말한다.
+  const pending = document.getElementById("agendaPending");
+  const empty = conclusions.length === 0 && watch.length === 0;
+  pending.hidden = !!report || !label;
+  pending.textContent = pending.hidden ? ""
+    : "이 주 리포트는 아직 집계 중입니다 — 주간 리포트는 금요일 오후에 만들어집니다.";
+  agenda.hidden = empty && pending.hidden;
   document.getElementById("todayAgendaMeta").textContent =
-    agenda.hidden ? "" : `결론 ${conclusions.length} · 확인 ${watch.length}`;
+    empty ? "" : `결론 ${conclusions.length} · 확인 ${watch.length}`;
 }
 
 // 좁은 화면에서는 이 블록이 오늘의 선두 이슈 **아래**로 간다.
