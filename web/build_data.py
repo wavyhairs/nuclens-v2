@@ -547,9 +547,18 @@ def date_of(record: dict) -> str:
 
 
 def selection_reasons(delivery: dict | None, source: dict | None = None) -> list[str]:
-    """내부 점수 내역을 카드용 설명 배지 최대 2개로 바꾼다."""
+    """내부 점수 내역을 카드용 설명 배지 최대 2개로 바꾼다.
+
+    복원된 회차(tools/restore_v1_briefing.py)는 breakdown 이 없다 — v1 이 배포한
+    published data 에 점수 내역이 없어서, 지어내는 대신 비워 두기로 했다. 대신
+    그날 실제로 화면에 나갔던 문구가 레코드에 실려 오므로 그걸 그대로 쓴다.
+    breakdown 이 있는 정상 회차는 예전과 똑같이 아래 계산을 탄다.
+    """
     if not delivery:
         return []
+    restored = delivery.get("selection_reasons")
+    if isinstance(restored, list) and restored:
+        return [str(reason) for reason in restored if str(reason).strip()][:2]
     breakdown = delivery.get("breakdown") or {}
     reasons: list[str] = []
 
