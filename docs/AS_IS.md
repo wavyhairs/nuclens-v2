@@ -159,7 +159,7 @@ Phase 5의 델타는 `archive/YYYY-MM.jsonl`(만료 없음) + `delivery_log.json
     ├ queue.append()          :1499  digest_queue.json (3일 컷, :1366)
     └ news_archive.append()   :1546  archive/YYYY-MM.jsonl (append-only, 만료 없음)
 
-[매일 22:25 UTC = 07:25 KST] daily-brief.yml
+[매일 19:05 UTC = 04:05 KST] daily-brief.yml
   daily_brief.py
     ├ plan_briefs()           :512
     │   ├ noise·market 제외   :543
@@ -524,7 +524,7 @@ Phase 0 조사 도중 같은 브랜치에 3커밋이 더 들어왔다. **명세 
 ### `34f2b81` 편집 override — 명세 1-2 에디터 픽과 인접
 
 `selection_overrides.json`으로 사람이 이슈 클러스터를 강제 포함(`promote`)·제외(`demote`)한다.
-**웹 레이어에만 적용된다** — 텔레그램 브리핑은 07:25 무인 발송이라 개입 창이 없다.
+**웹 레이어에만 적용된다** — 텔레그램 브리핑은 이른 아침(04:05 시작) 무인 발송이라 개입 창이 없다.
 
 > 명세 1-2는 에디터 픽을 **자동 0~2건**으로 요구한다. 이건 **수동** 장치다. 둘은 배타적이지
 > 않지만, "고정 슬롯을 만들지 않는다"는 명세 요구와 `promote`가 충돌할 수 있다

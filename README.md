@@ -9,7 +9,7 @@
 ```
 crawl (3시간마다)       news_bot.py    RSS·Naver·이메일 수집 → dedup → Gemini batch
                                        큐레이션(+랭킹 feature) → digest_queue.json 적재
-daily-brief (07:25 KST) news_bot.py 로 직전 1회 수집 → daily_brief.py --plan/--send/--confirm
+daily-brief (04:05 KST) news_bot.py 로 직전 1회 수집 → daily_brief.py --plan/--send/--confirm
                                        story dedup → 랭킹(ranking.py) → 카드 브리핑 발송
                                        → Nuclens 데이터 빌드 → 빠른/전문가 오디오 → Pages 배포
 weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강약·watchlist)
