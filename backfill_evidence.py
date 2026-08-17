@@ -120,8 +120,12 @@ def plan_record(record: dict, *, published_at: str = "",
     reasons: list[str] = []
     # curated.json 은 hash 를 키로만 갖는다. manifest 의 출처 결속은 레코드 안의
     # hash 를 보므로, 키에 있는 값을 레코드에도 적어 둬야 나중에 검증이 선다.
+    #
+    # 사유를 반드시 남긴다. 이것만 고치면 되는 레코드(재큐레이션이 hash 만 지운
+    # 경우)가 있는데, 사유가 없으면 report.changed 가 0 이라 파일이 아예 안 써진다.
     if article_hash and not clean_text(updated.get("hash")):
         updated["hash"] = article_hash
+        reasons.append("hash_restored")
 
     # ① 발행시각 — 아카이브에 남은 값만 쓴다. 없으면 지어내지 않고, 지금 무엇을
     #    대신 보고 있는지만 적는다.
@@ -166,6 +170,15 @@ def plan_record(record: dict, *, published_at: str = "",
 
     # ④ 근거 manifest — 원문 제목(+ 복구된 발행시각)이 있을 때만 만든다.
     #    본문은 저장하지 않으므로 manifest 도 제목이 말한 것까지만 봉인한다.
+    #
+    #    이미 결속이 살아 있는 manifest 는 손대지 않는다. 수집은 본문까지 보고
+    #    manifest 를 만들지만 이 스크립트는 제목·발췌만 본다 — 다시 만들면 본문
+    #    유래 사실이 조용히 사라진다(실측 2026-08-17: queue 25건·curated 64건이
+    #    줄고, 최악은 73개 사실 → 5개). 이 스크립트는 빈자리를 메우는 자리지
+    #    남의 근거를 다시 쓰는 자리가 아니다.
+    if gate.evidence_manifest_is_valid(updated.get("verified_evidence"),
+                                       article=updated):
+        return updated, reasons
     manifest = gate.build_evidence_manifest(_source_for(updated), article=updated)
     if manifest:
         components = gate.evidence_manifest_source_components(manifest)

@@ -953,6 +953,70 @@ class TestEvidenceManifestRefresh(unittest.TestCase):
         stored["hash"] = article["hash"]
         self.assertTrue(gate.evidence_manifest_is_valid(manifest, article=stored))
 
+    def test_binding_is_built_in_one_place_so_it_cannot_drift(self):
+        """레코드에 적는 값과 manifest 가 묶인 값이 갈라지면 결속이 무너진다."""
+        from datetime import datetime, timezone
+        import article_quality_gate as gate
+
+        now = datetime(2026, 8, 17, 0, 0, tzinfo=timezone.utc)
+        article = {
+            "hash": "stable-url-hash",
+            "title": "TerraPower equipment contract",
+            "description": "TerraPower signed a 345 MW equipment contract.",
+            "pub": datetime(2026, 8, 16, 0, 0, tzinfo=timezone.utc),
+        }
+        binding = nb.evidence_binding(article, now=now)
+        self.assertEqual(binding["hash"], "stable-url-hash")
+        self.assertEqual(binding["published_at"], "2026-08-16T00:00:00+00:00")
+
+        manifest = nb.refresh_evidence_manifest(article, {}, force=True, now=now)
+        stored = {
+            "title": article["title"], "title_kr": "테라파워 기자재 계약",
+            "summary": "테라파워가 345MW급 기자재 계약을 체결했다.",
+            "verified_evidence": manifest,
+            "verified_source_components":
+                gate.evidence_manifest_source_components(manifest),
+            "hash": binding["hash"],
+            "published_at": binding["published_at"],
+        }
+        self.assertTrue(gate.evidence_manifest_is_valid(manifest, article=stored))
+
+        # 발행시각만 어긋나도 결속이 깨져야 한다 — 안 깨지면 검사가 무의미하다.
+        drifted = {**stored, "published_at": "2026-08-01T00:00:00+00:00"}
+        self.assertFalse(gate.evidence_manifest_is_valid(manifest, article=drifted))
+
+    def test_unusable_publication_time_is_stored_empty_not_invented(self):
+        """파싱 불가·미래 값에 수집 시각을 발행시각인 척 적으면 안 된다.
+
+        빈 문자열은 실패가 아니라 기록이다 — '출처가 쓸 수 있는 발행시각을 주지
+        않았다'. manifest 도 같은 빈 값에 묶이므로 결속은 그대로 선다.
+        """
+        from datetime import datetime, timezone
+        import article_quality_gate as gate
+
+        now = datetime(2026, 8, 17, 0, 0, tzinfo=timezone.utc)
+        for label, pub in (("미래", datetime(2027, 1, 1, tzinfo=timezone.utc)),
+                           ("파싱불가", "어제쯤"), ("없음", None)):
+            with self.subTest(label=label):
+                article = {"hash": "h1", "title": "Reactor restart approved",
+                           "description": "The regulator approved a restart.",
+                           "pub": pub}
+                binding = nb.evidence_binding(article, now=now)
+                self.assertEqual(binding["published_at"], "")
+                manifest = nb.refresh_evidence_manifest(
+                    article, {}, force=True, now=now)
+                stored = {
+                    "title": article["title"], "title_kr": "재가동 승인",
+                    "summary": "규제기관이 재가동을 승인했다.",
+                    "verified_evidence": manifest,
+                    "verified_source_components":
+                        gate.evidence_manifest_source_components(manifest),
+                    "hash": binding["hash"],
+                    "published_at": binding["published_at"],
+                }
+                self.assertTrue(
+                    gate.evidence_manifest_is_valid(manifest, article=stored))
+
 
 class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
     """크롤이 남기는 진단 기록이 커밋돼야 한다.
