@@ -396,6 +396,42 @@ def load_archive() -> list[dict]:
     return records
 
 
+def brief_ranks_by_hash(path: Path | None = None) -> dict[str, int]:
+    """기사 hash → 텔레그램 카드 번호(지역별 1부터).
+
+    `daily_brief._item_meta` 가 2026-08-17 부터 `brief_rank` 를 적는다. 그 이전
+    발송분에는 없으므로 **파일에 적힌 순서**로 메운다 — `append_delivery_log` 가
+    `outbox["items"]`(국내 순서 → 해외 순서)를 그대로 이어 쓰므로 (날짜, 지역)
+    안의 등장 순서가 곧 카드 번호다. 완벽한 복원은 아니지만, 없는 값을 0 으로
+    두면 오디오가 옛 회차에서 순서를 통째로 잃는다.
+    """
+    path = path or (BOT_DIR / "delivery_log.jsonl")
+    if not path.exists():
+        return {}
+    ranks: dict[str, int] = {}
+    counters: dict[tuple[str, str], int] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(row, dict) or row.get("record_type"):
+            continue
+        article_hash = str(row.get("hash") or "")
+        day = str(row.get("date") or "")
+        if not article_hash or not day:
+            continue
+        region = str(row.get("brief_region") or row.get("region") or "")
+        explicit = row.get("brief_rank")
+        if isinstance(explicit, int) and explicit > 0:
+            ranks[article_hash] = explicit
+            counters[(day, region)] = max(counters.get((day, region), 0), explicit)
+            continue
+        counters[(day, region)] = counters.get((day, region), 0) + 1
+        ranks[article_hash] = counters[(day, region)]
+    return ranks
+
+
 def load_deliveries() -> dict[str, dict]:
     """기사 hash별 마지막 발송 메타를 읽는다.
 
@@ -2245,6 +2281,9 @@ def _article_view(article: dict, member_role: str = "card") -> dict:
         "topics": article.get("topics") or [],
         "url": source_url(article),
         "importance": article.get("importance", ""),
+        # 텔레그램 카드 번호. 오디오가 이슈 순서를 여기서 되찾는다.
+        "brief_rank": article.get("brief_rank"),
+        "brief_region": article.get("brief_region", ""),
         **_story_contract(article),
         "member_role": member_role,
     }
@@ -2742,6 +2781,29 @@ def daily_lead(issue_rows: list[dict], previous_headline: str = "") -> dict:
 
 def daily_headline(issue_rows: list[dict]) -> str:
     return daily_lead(issue_rows)["headline"]
+
+
+def _brief_position(members: list[dict]) -> dict:
+    """그날 텔레그램에서 이 이슈가 처음 나온 자리 (지역, 번호).
+
+    이슈 하나에 국내·해외 기사가 함께 접히는 날이 있다(region '국내·해외').
+    그때는 **국내를 먼저 읽는** 프로그램 순서에 맞춰 국내 자리를 대표로 쓴다.
+    번호가 하나도 없으면(옛 회차·미발송) 빈 값으로 두고, 읽는 쪽이 기존 정렬로
+    물러난다.
+    """
+    order = {"국내": 0, "국내·해외": 0, "해외": 1}
+    best: tuple[int, int, str] | None = None
+    for member in members:
+        rank = member.get("brief_rank")
+        if not isinstance(rank, int) or rank <= 0:
+            continue
+        region = str(member.get("brief_region") or member.get("region") or "")
+        key = (order.get(region, 1), rank, region)
+        if best is None or key < best:
+            best = key
+    if best is None:
+        return {"brief_rank": None, "brief_region": ""}
+    return {"brief_rank": best[1], "brief_region": best[2]}
 
 
 def order_issue_rows(issue_rows: list[dict]) -> None:
@@ -3459,6 +3521,11 @@ def build_briefings(news_items: list[dict], issues: list[dict], checked_at: str 
                 ),
                 "verification": verification_state(timeline, checked_at),
                 "region": "국내·해외" if len(regions) > 1 else next(iter(regions), ""),
+                # 이 이슈를 그날 텔레그램에서 처음 만난 자리. 이슈 하나에 그날
+                # 기사가 여럿 접혀 있으면 **가장 앞 번호**가 그 자리다 — 듣는
+                # 사람은 목록을 위에서부터 보므로 뒤 번호를 기준으로 하면
+                # 오디오가 화면보다 늦게 그 주제를 꺼낸다.
+                **_brief_position(current),
                 "importance": representative.get("importance", ""),
                 "selection_reasons": list(dict.fromkeys(reasons))[:2],
                 **_story_contract(representative),
@@ -3694,6 +3761,11 @@ def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_a
             "verification": verification_state(all_timeline, checked_at),
             "region": "국내·해외" if len(regions) > 1 else next(iter(regions), ""),
             "regions": sorted(regions),
+            # 이 이슈가 **가장 최근 회차**의 텔레그램에서 몇 번이었나. 오디오가
+            # 읽는 사전(issues.json)이 이 행이라, 여기 없으면 브리핑 행에만
+            # 넣어 봐야 닿지 않는다. `region` 이 여러 날의 합집합이라 '국내·해외'가
+            # 되는 이슈도 그날 실린 목록은 하나뿐이므로 brief_region 이 그것을 말한다.
+            **_brief_position(current),
             "importance": representative.get("importance", ""),
             "selection_reasons": list(dict.fromkeys(reasons))[:2],
             **_story_contract(representative),
@@ -4676,6 +4748,7 @@ def build() -> None:
     records = load_archive()
     validate_archive_records(records)
     deliveries = load_deliveries()
+    brief_ranks = brief_ranks_by_hash()
     now = datetime.now(KST)
     generation_id = GENERATION_ID or now.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     cutoff_news = (now - timedelta(days=NEWS_WINDOW_DAYS)).strftime("%Y-%m-%d")
@@ -4741,6 +4814,13 @@ def build() -> None:
             "curated": record.get("features") is not None,
             "selection_score": delivery.get("score") if delivery else None,
             "selection_reasons": selection_reasons(delivery, record),
+            # 텔레그램에 실제로 찍힌 카드 번호(지역별 1부터). 화면은 쓰지 않지만
+            # 오디오 브리핑이 설명 순서의 기준으로 쓴다 — 웹의 issue 정렬은
+            # 점수를 다시 줄 세우고 운영 콘솔의 승격·숨김까지 반영하므로
+            # 발송 순서와 다르다. 옛 발송분에는 이 필드가 없으므로
+            # brief_rank_fallback() 이 delivery_log 의 기록 순서로 메운다.
+            "brief_rank": brief_ranks.get(str(record.get("hash") or "")),
+            "brief_region": (delivery or {}).get("brief_region") or region,
             # daily_brief의 story-level dedup 결과. 웹 issue clustering과 검증 표시가
             # 같은 사건 정의를 공유하도록 delivery_log 계약을 그대로 이어받는다.
             "story_contract_available": bool(delivery and "story_article_count" in delivery),

@@ -21,7 +21,7 @@
     "other": 1
   },
   "feature_weights": {
-    "_comment": "각 feature(0~3)에 곱하는 배수. korea_relevance 1.2 = 한국 관련성 3점이면 +3.6점. evidence_strength 는 LLM 이 아니라 ranking.py 가 표현·수치로 판정한 값에 곱한다. novelty 는 0 — 수집 단계 4중 dedup 을 통과한 기사는 정의상 대부분 새 사건이라 판정할 것이 없다(실측 157건 중 137건이 3점). 후속 보도 신호는 tracking 가점이 대신한다(2026-08-01).",
+    "_comment": "각 feature(0~3)에 곱하는 배수. korea_relevance 1.2 = 한국 관련성 3점이면 +3.6점. evidence_strength 는 LLM 이 아니라 ranking.py 가 표현·수치로 판정한 값에 곱한다. novelty 는 0 — 수집 단계 4중 dedup 을 통과한 기사는 정의상 대부분 새 사건이라 판정할 것이 없다(실측 157건 중 137건이 3점). 후속 보도 신호는 tracking 가점이 대신한다(2026-08-01). 이 값을 올려 반복을 잡으려 하지 말 것: novelty 는 prior_coverage(=최근 21일 아카이브에서 제목이 닮은 기사 수)에서 나오므로 '크게 보도된 속보'를 깎는다. '어제 우리가 이미 보냈나'는 continuity 절이 본다(2026-08-17).",
     "korea_relevance": 1.2,
     "market_materiality": 1.0,
     "policy_materiality": 1.0,
@@ -70,9 +70,40 @@
   },
   "related_reports_bonus": 1.0,
   "tracking": {
-    "_comment": "추적 중인 이슈가 다시 움직였을 때의 가점. 점수가 기사 단위라 '며칠째 이어지는 이슈'가 순위에 안 들어가던 것을 보완. follow_up 은 최근 1~2회 다룬 사건, repeat 은 3회 초과.",
+    "_comment": "추적 중인 이슈가 다시 움직였을 때의 가점. 점수가 기사 단위라 '며칠째 이어지는 이슈'가 순위에 안 들어가던 것을 보완. follow_up 은 최근 1~2회 다룬 사건, repeat 은 3회 초과. 2026-08-17: 이 가점은 prior_coverage(=아카이브 보도량)만 보므로 '어제 보낸 이야기가 안 움직인 채 또 왔다'와 구분하지 못했다. continuity 가 그 경우를 판정해 가점을 되돌린다.",
     "follow_up": 1.5,
     "repeat": 0.5
+  },
+  "continuity": {
+    "_comment": "연속일 반복 게이트 (issue_continuity.py). 어제까지 **발송된** 기사와 같은 이슈인지 보고, 같으면 전일 대비 단계(협의→MOU→본계약, 신청→심사→승인, 전망→발표)가 움직였는지 판정한다. 움직였으면 감점을 거의 면제하고, 안 움직였으면 repeat_penalty 를 깎고 tracking 가점을 되돌린다. 재료는 delivery_log.jsonl(발송 이력)이지 아카이브가 아니다 — '언론이 얼마나 썼나'(prior_coverage)와 '우리가 이미 보냈나'는 다른 질문이다.",
+    "_windows": "감점이 만액으로 유지되는 날수는 **근거의 세기별로** 다르다(issue_continuity.penalty_window). 단계가 넘어감 0일 → 앵커만 공유 1일 → 진전 불확실(minor) 3일 → 같은 이슈·진전 없음 7일 → 제목이 사실상 동일 14일. 창을 넘어선 뒤에야 penalty_decay_per_day 로 식는다. 2026-08-17 이전에는 창이 없어 발송 당일부터 식었고, 그래서 3~4일 전 반복이 이미 40%로 통과했다.",
+    "_tuning": "① 같은 이슈가 며칠 간격으로 계속 나가면 repeat_window_days 를 늘린다(감점 크기 repeat_penalty 보다 이쪽이 먼저다 — 5.0 은 하한 14.0·상위권 20~29점 분포에서 '한 계단'이다). ② 중요한 후속이 죽으면 minor_window_days 를 줄이거나 title_similarity 를 올려 매칭을 좁힌다. ③ anchor_only_window_days 를 올리기 전에는 delivery_log 에서 match_reasons 가 anchors: 뿐인 판정을 직접 읽어 볼 것 — 이 경로는 간격이 벌어질수록 오탐이 는다. ④ 판정 내역은 delivery_log 의 selection_stats.continuity 와 각 기사 breakdown 의 continuity:* 에 남는다.",
+    "lookback_days": 14,
+    "title_similarity": 0.62,
+    "fingerprint_similarity": 0.55,
+    "fingerprint_min_axes": 2,
+    "anchor_min_shared": 2,
+    "repeat_penalty": 5.0,
+    "minor_penalty_ratio": 0.5,
+    "restatement_similarity": 0.85,
+    "progression_penalty": 0.5,
+    "repeat_window_days": 7,
+    "minor_window_days": 3,
+    "restatement_window_days": 14,
+    "anchor_only_window_days": 1,
+    "penalty_decay_per_day": 0.25,
+    "repeat_streak_penalty": 1.0,
+    "repeat_streak_max": 2.0,
+    "cancel_tracking_bonus": true,
+    "hard_drop": {
+      "_comment": "감점이 아니라 후보에서 빼는 조합 — '제목과 내용이 사실상 동일한 재전송'. 제목이 0.85 이상 닮았고 단계가 하나도 안 움직인(progression=none) 최근 14일 발송분. 0.85 는 실측 값이다: 발송 이력 365건에서 이 선 위 13쌍은 전부 재전송이었고(삼성중공업 MOU 제목 완전 일치, 중국 8기 승인 3회, IAEA 성명 3회), 다른 사안인데 제목이 닮은 최악의 쌍은 0.667 이었다(NRC 공청회 두 건). 진짜 안전장치는 이 숫자가 아니라 progression=none 조건이다 — 제목 끝에 '승인' 한 낱말만 붙어도 유사도는 0.9 를 넘지만 그건 단계가 움직인 것이라 여기 안 걸린다. enabled=false 로 두면 감점만 남는다.",
+      "_tail": "8~14일 구간은 문턱이 따로다(extended_similarity). 실측이 거기서 갈렸다 — 그 구간의 진짜 재전송은 제목이 글자 그대로 같았고(IAEA 성명 9일·13일 모두 1.0), 애매한 쪽은 0.906 이었다(웨스팅하우스-아멘텀 '협력 계약 체결' → 12일 뒤 '협력 확대 계약'). 확대 계약인지 재보도인지 가릴 재료가 없어서(event_date 는 발송 로그에 비어 있고 큐 값도 연도가 틀린다) 그 구간에서는 낱말 하나만 달라도 지우지 않고 감점만 한다.",
+      "enabled": true,
+      "similarity": 0.85,
+      "max_days": 14,
+      "extended_after_days": 7,
+      "extended_similarity": 0.95
+    }
   },
   "time_decay": {
     "_comment": "큐 적재 후 12시간마다 감점. 오래된 기사가 새 기사에 밀리게.",

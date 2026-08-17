@@ -1,0 +1,587 @@
+"""issue_continuity.py — 연속일 반복 게이트 회귀 테스트.
+
+사용자가 지목한 사례를 그대로 재현한다 (2026-08-17):
+  · 동일 이슈 + 내용 변화 없음      → 다음날 반복 선정 확률이 낮아진다
+  · 동일 이슈 + MOU→본계약          → 중요한 후속으로 유지된다
+  · 전혀 다른 신규 중요 기사        → 기존과 똑같이 경쟁한다
+"""
+import sys
+import unittest
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(ROOT))
+
+import issue_continuity as continuity
+import ranking
+
+NOW = datetime(2026, 8, 17, 1, 0, tzinfo=timezone.utc)
+TODAY = "2026-08-17"
+YESTERDAY = "2026-08-16"
+CFG = ranking.load_config()
+
+
+def article(title, *, h="c1", summary="", fingerprint=None, tags=None,
+            importance="nice_to_know", features=None, prior_coverage=None,
+            section="domestic", domain="example.co.kr"):
+    row = {
+        "hash": h, "title_kr": title, "title": title, "summary": summary,
+        "importance": importance, "section": section, "domain": domain,
+        "link": f"https://{domain}/{h}",
+        "queued_at": (NOW - timedelta(hours=2)).isoformat(),
+        "tags": tags or [],
+        "story_fingerprint": fingerprint or {},
+    }
+    if features is not None:
+        row["features"] = features
+    if prior_coverage is not None:
+        row["prior_coverage"] = prior_coverage
+    return row
+
+
+def sent(title, *, h="p1", date=YESTERDAY, summary="", fingerprint=None,
+         tags=None, region="국내"):
+    return {"date": date, "hash": h, "title_kr": title, "title": title,
+            "summary": summary, "region": region, "tags": tags or [],
+            "story_fingerprint": fingerprint or {}}
+
+
+def feat(**kw):
+    base = {"event_type": "contract_award", "korea_relevance": 3,
+            "market_materiality": 2, "policy_materiality": 2,
+            "novelty": 0, "evidence_strength": 0, "report_worthiness": 0}
+    base.update(kw)
+    return base
+
+
+# ---- ① 같은 이슈인가 -----------------------------------------------------------
+
+class SameIssueTests(unittest.TestCase):
+    def test_title_variation_matches(self):
+        """실측 2026-08-15/16 — 표기가 갈려도(알마라즈/알마라스) 같은 이슈다."""
+        prior = sent("스페인, 알마라즈 원전 운영 기한 2030년까지 연장")
+        cand = article("스페인 정부, 알마라스(Almaraz) 원전 운영 연장 승인")
+        match = continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG)
+        self.assertIsNotNone(match)
+        self.assertGreaterEqual(match["similarity"], 0.62)
+
+    def test_low_title_similarity_matches_by_anchor(self):
+        """실측 2026-08-16 테라파워 두 건 — 제목 유사도 0.36 은 어떤 문턱에도 못 미친다.
+
+        같은 당사자(TerraPower·두산에너빌리티)가 같은 사안을 이어 간다는 사실은
+        제목이 아니라 앵커·fingerprint 에서 나온다.
+        """
+        prior = sent(
+            "테라파워-한국 기업 SMR 협력, 한국 원전기업 수출 공급망 확대",
+            fingerprint={"countries": ["South Korea", "USA"],
+                         "actors": ["TerraPower", "Doosan Enerbility"],
+                         "assets": ["Natrium SMR"]})
+        cand = article(
+            "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+            fingerprint={"countries": ["USA"],
+                         "actors": ["TerraPower", "Doosan Enerbility", "HD Hyundai"],
+                         "assets": ["Kemmerer SMR"]})
+        self.assertLess(continuity.title_similarity(cand, prior), 0.62)
+        match = continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG)
+        self.assertIsNotNone(match)
+        self.assertTrue(any(r.startswith("anchors:") for r in match["reasons"]))
+
+    def test_one_word_title_does_not_contain_everything(self):
+        """어절 한둘짜리 제목이 포함비율 1.0 으로 아무 데나 붙으면 안 된다.
+
+        실측 2026-08-17: `옛 기사`(토큰 {기사}) 가 `미국 에너지부, … 관련 기사
+        발표` 와 유사도 1.0 으로 붙었다 — 포함비율의 분모가 1 이었기 때문이다.
+        창이 하루였을 때는 거의 안 드러났지만, 14일 창에서는 조용히 기사를
+        후보에서 지운다.
+        """
+        prior = sent("미국 에너지부, 80년 수명 연장된 원전 '80 클럽' 관련 기사 발표")
+        cand = article("옛 기사")
+        self.assertLess(continuity.title_similarity(cand, prior), 0.62)
+        self.assertIsNone(continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
+    def test_contained_title_still_matches_when_long_enough(self):
+        """짧은 쪽이 제 길이를 갖췄으면 포함비율은 그대로 근거다 (실측 IAEA 성명)."""
+        prior = sent("IAEA 사무총장, 우크라이나 상황 관련 성명 발표")
+        cand = article("IAEA 사무총장, 우크라이나 상황 관련 362차 성명 발표")
+        self.assertGreaterEqual(continuity.title_similarity(cand, prior), 0.85)
+
+    def test_unrelated_articles_do_not_match(self):
+        prior = sent("한전·가스공사 상반기 이자비용 2.7조원")
+        cand = article("정부, 영호남 산업용 전기요금 최대 10% 인하 방침")
+        self.assertIsNone(continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
+    def test_facility_conflict_vetoes_match(self):
+        """호기가 어긋나면 서식이 같아도 같은 사건일 수 없다 (기존 거부권과 같은 규칙)."""
+        prior = sent("원안위, 고리 2호기 계속운전 심사 착수")
+        cand = article("원안위, 한빛 1호기 계속운전 심사 결과 발표")
+        self.assertIsNone(continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
+    def test_shared_generic_anchor_alone_does_not_match(self):
+        """'SMR' 만 공유하는 다른 사업자 기사는 붙지 않는다."""
+        prior = sent("테라파워 나트륨 SMR, 美 와이오밍주 건설 현황")
+        cand = article("X-에너지, 텍사스 SMR 프로젝트에 10억 달러 공적 자금 확보")
+        self.assertIsNone(continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
+    def test_generic_anchors_measured_not_listed(self):
+        """그날의 유행어는 목록이 아니라 풀에서 세어 정한다."""
+        pool = [article(f"SMR 관련 기사 {i} 공급망 확대", h=f"h{i}") for i in range(12)]
+        generic = continuity.generic_anchors(pool)
+        self.assertIn("smr", generic)
+        self.assertNotIn("terrapower", generic)
+
+    def test_common_noun_alone_does_not_match(self):
+        """실측 2026-08-17 오탐 — '차세대' 하나로 무관한 두 기사가 붙었다."""
+        prior = sent("정부, SMR·차세대 태양광을 미래 성장동력으로 육성 발표")
+        cand = article("빌 게이츠 방한, AI 전력전쟁 속 빅테크의 차세대 원전 선점 동향")
+        self.assertIsNone(continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
+    def test_word_tail_alone_does_not_match(self):
+        """'시장서'·'본격화' 같은 어절 꼬리는 이름이 아니다."""
+        prior = sent("LS일렉트릭, 북미 데이터센터 배전 시장서 1.2조 원 수주")
+        cand = article("엔비디아, AI 인프라 시장서 GPU 공급 넘어 운영 역할 확대")
+        self.assertIsNone(continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
+    def test_named_anchor_pair_still_matches(self):
+        prior = sent("두산에너빌리티, 美 테라파워 SMR 핵심 기자재 공급 계약 체결")
+        cand = article("두산에너빌리티, 美 테라파워 345MW급 나트륨 원자로 기자재 제작")
+        self.assertIsNotNone(
+            continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
+    def test_named_anchors_exclude_domain_acronyms(self):
+        named = continuity.named_anchors(
+            article("테라파워, SMR 및 ESS 연계 사업 추진"))
+        self.assertIn("테라파워", named)
+        self.assertNotIn("smr", named)
+        self.assertNotIn("ess", named)
+
+
+# ---- ② 단계가 움직였는가 --------------------------------------------------------
+
+class ProgressionTests(unittest.TestCase):
+    def verdict(self, before, after, **kw):
+        return continuity.progression(sent(before), article(after, **kw))["verdict"]
+
+    def test_mou_to_contract_is_material(self):
+        self.assertEqual(
+            self.verdict("한수원, 필리핀 바탄 원전 협력 양해각서(MOU) 체결",
+                         "한수원, 필리핀 바탄 원전 복구 본계약 체결"),
+            "material")
+
+    def test_cooperation_to_supply_contract_is_material(self):
+        """사용자 지목: '협력 논의 → 공급 계약 체결'."""
+        self.assertEqual(
+            self.verdict("테라파워-한국 기업 SMR 협력, 한국 원전기업 수출 공급망 확대",
+                         "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결"),
+            "material")
+
+    def test_review_to_approval_is_material(self):
+        self.assertEqual(
+            self.verdict("원안위, 고리 2호기 계속운전 심사 착수",
+                         "원안위, 고리 2호기 계속운전 최종 승인"),
+            "material")
+
+    def test_plan_to_construction_is_material(self):
+        self.assertEqual(
+            self.verdict("한수원, 신규 원전 2기 건설 계획 발표",
+                         "한수원, 신규 원전 2기 착공"),
+            "material")
+
+    def test_bid_to_preferred_bidder_is_material(self):
+        self.assertEqual(
+            self.verdict("체코 신규 원전 입찰 마감, 3사 경쟁",
+                         "체코 신규 원전, 한수원 우선협상대상자 선정"),
+            "material")
+
+    def test_forecast_to_announcement_is_material(self):
+        self.assertEqual(
+            self.verdict("정부, 신규 원전 부지 이달 중 선정 전망",
+                         "정부, 신규 원전 부지 경북 영덕 공식 발표"),
+            "material")
+
+    def test_scope_expansion_is_material(self):
+        """사용자 지목: '기존 계약 → 계약 규모 확대'. 수치가 함께 새로 붙어야 한다."""
+        self.assertEqual(
+            self.verdict("두산에너빌리티, 테라파워에 원자로 기자재 공급계약 체결",
+                         "두산에너빌리티, 테라파워 공급계약 규모 확대…2조원 추가 수주"),
+            "material")
+
+    def test_expansion_word_without_numbers_is_not_material(self):
+        self.assertNotEqual(
+            self.verdict("두산에너빌리티, 테라파워에 원자로 기자재 공급계약 체결",
+                         "두산에너빌리티, 테라파워 공급계약 범위 확대"),
+            "material")
+
+    def test_one_extra_word_is_not_progression(self):
+        """실측 2026-08-17 — 한 낱말만 늘어난 재탕이 요약의 숫자 하나로 감점 절반을 받았다."""
+        verdict = continuity.progression(
+            sent("두산에너빌리티, 美 테라파워 SMR 핵심 기자재 공급 계약 체결"),
+            article("두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+                    summary="계약 규모는 345MW급 원자로 기자재다."))
+        self.assertEqual(verdict["verdict"], "none")
+
+    def test_restatement_guard_does_not_block_real_advance(self):
+        """제목이 닮았어도 척도가 올라갔으면 material 이다."""
+        verdict = continuity.progression(
+            sent("한수원, 필리핀 원전 협력 양해각서 체결"),
+            article("한수원, 필리핀 원전 협력 본계약 체결"))
+        self.assertEqual(verdict["verdict"], "material")
+
+    def test_retitled_restatement_is_none(self):
+        """사실관계가 같고 제목만 바뀐 재인용."""
+        self.assertEqual(
+            self.verdict("한수원, 체코 두코바니 원전 본계약 체결",
+                         "체코 두코바니 원전, 한수원과 본계약 체결"),
+            "none")
+
+    def test_unmarked_prior_is_only_minor(self):
+        """어제가 척도에 아무 말도 안 했으면 '넘어갔다'고 단정하지 않는다.
+
+        실측 알마라즈: 어제 '운영 기한 2030년까지 연장' 은 이미 승인 사실인데
+        승인이라는 낱말이 없다. material 로 두면 표현만 바꾼 재탕이 면제된다.
+        """
+        self.assertEqual(
+            self.verdict("스페인, 알마라즈 원전 운영 기한 2030년까지 연장",
+                         "스페인 정부, 알마라스(Almaraz) 원전 운영 연장 승인"),
+            "minor")
+
+    def test_state_flip_is_material(self):
+        verdict = continuity.progression(sent("한빛 3호기 가동중단"),
+                                         article("한빛 3호기 재가동"))
+        self.assertEqual(verdict["verdict"], "material")
+        self.assertEqual(verdict["kind"], "stage_flip")
+
+    def test_stage_flip_needs_prior_stage(self):
+        """어제가 침묵했으면 상태 전환으로 세지 않는다 (stage_conflict 와 같은 보수성)."""
+        self.assertNotEqual(
+            continuity.progression(sent("한빛 3호기 관련 지역 설명회"),
+                                   article("한빛 3호기, 업계 관심 집중"))["verdict"],
+            "material")
+
+    def test_roundup_original_title_does_not_leak_stages(self):
+        """묶음 기사의 원문 제목이 카드에 없는 단계를 들여오면 안 된다.
+
+        실측 2026-08-17 (g-enews, 원문 확인): 기사 본문이 캐나다 우라늄 광산
+        착공으로 시작해 중간에 스페인 알마라즈 연장을 다룬다. 큐레이션이 원자력
+        꼭지를 카드 제목으로 뽑는 것 자체는 옳지만, 두 제목을 합쳐 읽으면
+        '착공'(캐나다)이 딸려 와 스페인 반복 보도가 '상태 전환'으로 면제됐다.
+        """
+        cand = {
+            "title_kr": "스페인 알마라즈 원전 수명 2030년까지 연장",
+            "title": "캐나다, 우라늄 광산 착공…세계 공급 20% 생산",
+            "summary": "스페인 정부가 알마라즈 원전 가동 시한을 2030년까지 연장하기로 결정했다.",
+        }
+        self.assertEqual(continuity.subject_titles(cand), (cand["title_kr"],))
+        self.assertEqual(continuity._stages(cand), frozenset())
+        self.assertNotEqual(
+            continuity.progression(sent("스페인 정부, 알마라스 원전 운영 연장 승인"),
+                                   cand)["verdict"],
+            "material")
+
+    def test_translated_title_still_contributes_stages(self):
+        """원문이 외국어면 번역 관계다 — 번역이 떨어뜨린 표현을 원문에서 줍는다."""
+        row = {"title_kr": "스페인, 알마라즈 원전 운영 연장", "title": "Spain restarts Almaraz"}
+        self.assertEqual(len(continuity.subject_titles(row)), 2)
+        self.assertIn("restart", continuity._stages(row))
+
+    def test_restart_is_not_read_as_permit_approval(self):
+        """'재가동'의 앞 두 글자가 '재가'(裁可)로 잡히면 재가동이 인허가 승인이 된다."""
+        self.assertEqual(continuity.scale_tier(article("한빛 3호기 재가동"), "permit"), -1)
+
+
+# ---- ③ 점수에 실제로 반영되는가 -------------------------------------------------
+
+class ScoreEffectTests(unittest.TestCase):
+    def score(self, item):
+        return ranking.score_item(item, CFG, NOW)
+
+    def test_repeat_without_progression_loses_points(self):
+        """동일 이슈 + 내용 변화 없음 → 다음날 반복 선정 확률 감소."""
+        base = article("체코 두코바니 원전, 한수원과 본계약 체결",
+                       features=feat(), prior_coverage=1)
+        clean_score, _ = self.score(base)
+
+        repeated = dict(base)
+        continuity.annotate([repeated],
+                            [sent("한수원, 체코 두코바니 원전 본계약 체결")],
+                            CFG, TODAY)
+        self.assertEqual(repeated["continuity"]["progression"], "none")
+        repeat_score, breakdown = self.score(repeated)
+
+        self.assertLess(repeat_score, clean_score)
+        # 감점과 tracking 가점 취소가 함께 걸린다 — 하나만으로는 상쇄된다.
+        self.assertIn("continuity:none", breakdown)
+        self.assertIn("tracking:follow_up:cancelled", breakdown)
+        self.assertGreaterEqual(clean_score - repeat_score, 5.0)
+
+    def test_material_progression_keeps_score(self):
+        """동일 이슈 + MOU→본계약 → 중요한 후속 기사로 유지."""
+        base = article("한수원, 필리핀 바탄 원전 복구 본계약 체결",
+                       features=feat(), prior_coverage=1)
+        clean_score, _ = self.score(base)
+
+        follow_up = dict(base)
+        continuity.annotate([follow_up],
+                            [sent("한수원, 필리핀 바탄 원전 협력 양해각서(MOU) 체결")],
+                            CFG, TODAY)
+        self.assertEqual(follow_up["continuity"]["progression"], "material")
+        follow_score, breakdown = self.score(follow_up)
+
+        self.assertLessEqual(clean_score - follow_score, 1.0)
+        self.assertNotIn("tracking:follow_up:cancelled", breakdown)
+
+    def test_unrelated_new_article_is_untouched(self):
+        """전혀 다른 신규 중요 기사 → 기존과 동일하게 정상 경쟁."""
+        fresh = article("정부, 영호남 산업용 전기요금 최대 10% 인하 방침",
+                        features=feat(event_type="policy_decision"), prior_coverage=0)
+        before, _ = self.score(fresh)
+        continuity.annotate([fresh], [sent("한전·가스공사 상반기 이자비용 2.7조원")],
+                            CFG, TODAY)
+        self.assertNotIn("continuity", fresh)
+        after, breakdown = self.score(fresh)
+        self.assertEqual(before, after)
+        self.assertFalse([k for k in breakdown if k.startswith("continuity")])
+
+    def penalty_at(self, before, after, date, **kw):
+        item = article(after, features=feat(), **kw)
+        continuity.annotate([item], [sent(before, date=date)], CFG, TODAY)
+        return (item.get("continuity") or {}).get("penalty", 0.0)
+
+    def test_penalty_holds_through_the_window(self):
+        """사용자 지목 ① — 사흘 나흘 전 반복이 그새 식어 있으면 안 된다.
+
+        예전에는 발송 당일부터 하루 20% 씩 깎여 3일 전 반복이 이미 40% 였다.
+        지금은 창(repeat_window_days) 안에서는 만액이다. 실측 사례를 그대로 쓴다
+        (2026-08-02 → 08-05 헝가리 팍스 원전, 같은 이슈에 새 단계 없음).
+        """
+        before = "헝가리 총리, 팍스 원전 일요일 가동 중단 발표"
+        after = "헝가리 총리, 팍스 원전 마지막 터빈 '안전하게 가동 중' 발표"
+        full = self.penalty_at(before, after, "2026-08-16")     # 하루 전
+        self.assertEqual(full, 5.0)
+        for day in ("2026-08-14", "2026-08-11", "2026-08-10"):  # 3·6·7일 전
+            self.assertEqual(self.penalty_at(before, after, day), full)
+
+    def test_penalty_decays_outside_the_window(self):
+        """창을 넘어서면 식는다 — 한 달째 이어지는 이슈까지 잡지는 않는다."""
+        before = "헝가리 총리, 팍스 원전 일요일 가동 중단 발표"
+        after = "헝가리 총리, 팍스 원전 마지막 터빈 '안전하게 가동 중' 발표"
+        self.assertLess(self.penalty_at(before, after, "2026-08-08"),   # 9일 전
+                        self.penalty_at(before, after, "2026-08-10"))   # 7일 전
+
+    def test_anchor_only_match_uses_the_narrow_window(self):
+        """이름만 공유해 붙은 매칭은 예전 폭 그대로다.
+
+        실측 2026-08-17: 3~14일 간격 앵커 단독 매칭 5쌍 중 3쌍이 오탐이었다.
+        창을 넓히는 것은 제목·fingerprint 로 붙은 매칭에만 해당한다.
+        """
+        fp = {"actors": ["TerraPower", "Doosan Enerbility"]}
+        prior = sent("테라파워-한국 기업 SMR 협력, 수출 공급망 확대",
+                     date="2026-08-14", fingerprint=fp)
+        item = article("두산에너빌리티, 美 테라파워 SMR 핵심 기자재 제작 착수",
+                       features=feat(), fingerprint=fp)
+        continuity.annotate([item], [prior], CFG, TODAY)
+        cont = item["continuity"]
+        self.assertTrue(all(r.startswith("anchors:") for r in cont["match_reasons"]))
+        self.assertEqual(cont["window_days"], 1)
+        self.assertLess(cont["penalty"], 5.0)
+
+    def test_third_send_is_penalised_harder(self):
+        """창 안에서 세 번째로 오는 이슈. 실측: 중국 8기 승인이 나흘에 세 번 나갔다."""
+        before = "헝가리 총리, 팍스 원전 일요일 가동 중단 발표"
+        after = "헝가리 총리, 팍스 원전 마지막 터빈 '안전하게 가동 중' 발표"
+        twice = article(after, features=feat())
+        continuity.annotate([twice], [sent(before, h="s1", date="2026-08-15"),
+                                      sent(before, h="s2", date="2026-08-13")],
+                           CFG, TODAY)
+        self.assertEqual(twice["continuity"]["repeat_streak"], 2)
+        self.assertGreater(twice["continuity"]["penalty"],
+                           self.penalty_at(before, after, "2026-08-15"))
+
+    def test_fully_decayed_match_leaves_no_verdict(self):
+        """감쇠가 0 이면 판정을 남기지 않는다.
+
+        남기면 감점 0 에 tracking 취소만 살아남아, '닷새 전에 비슷한 게 있었다'는
+        이유로 오늘 기사가 조용히 1.5점을 잃는다 (실측 2026-08-17 큐에서 8건).
+        """
+        item = article("헝가리 총리, 팍스 원전 마지막 터빈 '안전하게 가동 중' 발표",
+                       features=feat())
+        continuity.annotate(
+            [item],
+            [sent("헝가리 총리, 팍스 원전 일요일 가동 중단 발표", date="2026-08-06")],
+            CFG, TODAY)
+        self.assertNotIn("continuity", item)
+
+    def test_empty_history_disables_the_gate(self):
+        item = article("체코 두코바니 원전, 한수원과 본계약 체결", features=feat())
+        diag = continuity.annotate([item], [], CFG, TODAY)
+        self.assertEqual(diag["matched"], 0)
+        self.assertNotIn("continuity", item)
+
+
+# ---- ④ 선정에서 빠지는가 --------------------------------------------------------
+
+class SelectionTests(unittest.TestCase):
+    def test_near_identical_repeat_is_dropped_from_candidates(self):
+        repeat = article("한수원, 체코 두코바니 원전 본계약 체결",
+                         h="r1", features=feat(), importance="must_read")
+        fresh = article("원안위, 새울 3호기 운영허가 심사 결과 의결",
+                        h="f1", features=feat(event_type="regulatory_action"))
+        continuity.annotate([repeat, fresh],
+                            [sent("한수원, 체코 두코바니 원전 본계약 체결", h="old")],
+                            CFG, TODAY)
+        self.assertTrue(repeat["continuity"]["drop"])
+
+        selected, diag = ranking.rank_and_select([repeat, fresh], 5, CFG, NOW)
+        self.assertEqual([a["hash"] for a in selected], ["f1"])
+        self.assertEqual(len(diag["dropped_repeat"]), 1)
+        self.assertEqual(diag["dropped_repeat"][0]["hash"], "r1")
+
+    def test_material_progression_survives_selection(self):
+        follow_up = article("한수원, 필리핀 바탄 원전 복구 본계약 체결",
+                            h="f2", features=feat(), importance="must_read")
+        continuity.annotate(
+            [follow_up],
+            [sent("한수원, 필리핀 바탄 원전 협력 양해각서(MOU) 체결", h="old")],
+            CFG, TODAY)
+        selected, diag = ranking.rank_and_select([follow_up], 5, CFG, NOW)
+        self.assertEqual([a["hash"] for a in selected], ["f2"])
+        self.assertEqual(diag["dropped_repeat"], [])
+
+    def test_restatement_is_excluded_for_two_weeks(self):
+        """사용자 지목 ② — 제목·내용이 사실상 같은 재전송은 한참 뒤에 와도 뺀다.
+
+        실측 2026-08-17: `IAEA 사무총장, 우크라이나 상황 관련 성명 발표` 가
+        7/24 · 8/02 · 8/15 세 번 나갔다(제목 동일). 예전 게이트는 어제분(max_days
+        =1)만 봤으므로 두 번째·세 번째를 통과시켰다.
+        """
+        for day, expected in (("2026-08-16", True),   # 하루 전
+                              ("2026-08-08", True),   # 9일 전 — 실측 IAEA 간격
+                              ("2026-08-03", True),   # 14일 전 — 창의 끝
+                              ("2026-08-01", False)): # 16일 전 — 창 밖
+            item = article("체코 두코바니 원전, 한수원과 본계약 체결",
+                           h="r3", features=feat())
+            continuity.annotate(
+                [item],
+                [sent("한수원, 체코 두코바니 원전 본계약 체결", h="old", date=day)],
+                CFG, TODAY)
+            self.assertEqual(bool((item.get("continuity") or {}).get("drop")),
+                             expected, f"prior={day}")
+
+    def test_old_repeat_needs_a_verbatim_title_to_be_dropped(self):
+        """8~14일 구간은 낱말 하나만 달라도 지우지 않는다 — 감점까지다.
+
+        실측 2026-08-17 큐: `웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결`
+        (8/05) → 12일 뒤 `美 웨스팅하우스·아멘텀, AP1000·AP300 협력 확대 계약`.
+        유사도 0.906. 요약에 새 체결일이 있어 '확대 계약'일 수 있는데 그것을
+        확인할 재료가 없다(event_date 는 발송 로그에 비어 있다). 같은 구간의
+        확실한 재전송(IAEA 성명)은 제목이 글자까지 같아 0.95 를 넘는다.
+        """
+        item = article("美 웨스팅하우스·아멘텀, AP1000·AP300 협력 확대 계약",
+                       h="w1", features=feat())
+        continuity.annotate(
+            [item],
+            [sent("웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결",
+                  h="old", date="2026-08-05")],
+            CFG, TODAY)
+        cont = item["continuity"]
+        self.assertGreaterEqual(cont["similarity"], 0.85)   # 최근이었다면 삭제 대상
+        self.assertFalse(cont["drop"])
+        self.assertGreater(cont["penalty"], 0)
+
+    def test_material_progression_is_allowed_regardless_of_gap(self):
+        """사용자 지목 ③ — 협의→계약·심사→승인은 기간과 관계없이 다시 나간다."""
+        follow_up = article("한수원, 필리핀 바탄 원전 복구 본계약 체결",
+                            h="f3", features=feat(), importance="must_read")
+        continuity.annotate(
+            [follow_up],
+            [sent("한수원, 필리핀 바탄 원전 협력 양해각서(MOU) 체결", h="old",
+                  date="2026-08-05")],   # 12일 전
+            CFG, TODAY)
+        # 만료돼 판정이 없거나, 있어도 삭제가 아니고 감점이 미미해야 한다.
+        cont = follow_up.get("continuity") or {}
+        self.assertFalse(cont.get("drop"))
+        self.assertLessEqual(cont.get("penalty", 0.0), 0.5)
+        selected, diag = ranking.rank_and_select([follow_up], 5, CFG, NOW)
+        self.assertEqual([a["hash"] for a in selected], ["f3"])
+        self.assertEqual(diag["dropped_repeat"], [])
+
+    def test_alias_pair_is_one_name_not_two(self):
+        """`풀네임(약어)` 두 표기는 이름 하나다.
+
+        실측 2026-08-17: 3~14일 간격 앵커 매칭 오탐 3쌍이 전부 이 형태였다 —
+        `anchors:nssc,원자력안전위원회` 하나로 정기검사 기사와 입법예고 기사가
+        붙었다. 창이 넓어질수록 이 오탐의 값이 비싸진다.
+        """
+        prior = sent("한울 4호기, 원자력안전위원회(NSSC) 정기검사 중 임계 허용",
+                     date="2026-08-11")
+        cand = article("원자력안전위원회(NSSC), 입법 및 행정예고 진행")
+        self.assertEqual(
+            continuity.distinct_names(
+                continuity.named_anchors(cand) & continuity.named_anchors(prior),
+                continuity.alias_groups(cand) + continuity.alias_groups(prior)),
+            1)
+        self.assertIsNone(continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
+    def test_two_real_names_still_match(self):
+        """별칭 병합이 서로 다른 두 당사자까지 접으면 안 된다."""
+        fp = {"actors": ["TerraPower", "Doosan Enerbility"]}
+        prior = sent("테라파워-한국 기업 SMR 협력, 수출 공급망 확대", fingerprint=fp)
+        cand = article("두산에너빌리티, 美 테라파워 SMR 핵심 기자재 공급 계약 체결",
+                       fingerprint=fp)
+        self.assertIsNotNone(
+            continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
+    def test_hard_drop_can_be_switched_off(self):
+        cfg = {**CFG, "continuity": {**(CFG.get("continuity") or {}),
+                                     "hard_drop": {"enabled": False}}}
+        repeat = article("한수원, 체코 두코바니 원전 본계약 체결", h="r2", features=feat())
+        continuity.annotate([repeat],
+                            [sent("한수원, 체코 두코바니 원전 본계약 체결", h="old")],
+                            cfg, TODAY)
+        self.assertFalse(repeat["continuity"]["drop"])
+        self.assertLess(repeat["continuity"]["score_delta"], 0)
+
+
+# ---- ⑤ 발송 이력 읽기 -----------------------------------------------------------
+
+class RecentSentTests(unittest.TestCase):
+    def test_reads_only_article_rows_inside_window(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "delivery_log.jsonl"
+            path.write_text("\n".join([
+                json.dumps({"date": "2026-08-16", "hash": "a", "title_kr": "어제"},
+                           ensure_ascii=False),
+                json.dumps({"date": "2026-08-01", "hash": "b", "title_kr": "옛날"},
+                           ensure_ascii=False),
+                json.dumps({"record_type": "selection_stats", "date": "2026-08-16"}),
+                "{ not json",
+            ]) + "\n", encoding="utf-8")
+            rows = continuity.load_recent_sent(
+                5, path=path, today=datetime(2026, 8, 17).date())
+        self.assertEqual([r["hash"] for r in rows], ["a"])
+
+    def test_missing_file_is_not_fatal(self):
+        rows = continuity.load_recent_sent(5, path=Path("/nonexistent/x.jsonl"))
+        self.assertEqual(rows, [])
+
+    def test_same_day_other_region_counts_as_sent(self):
+        """국내에서 이미 나간 이슈는 해외 풀에서 다시 겨루지 않는다.
+
+        실측 2026-08-16: 같은 테라파워 이슈가 국내 1번과 해외 3번을 동시에 먹었다.
+        두 지역이 각자 풀에서 따로 랭킹되기 때문이다.
+        """
+        domestic = article("테라파워-한국 기업 SMR 협력, 원전기업 수출 공급망 확대",
+                           h="d1", fingerprint={"actors": ["TerraPower", "Doosan Enerbility"]})
+        overseas = article("두산에너빌리티, 美 테라파워 SMR 핵심 기자재 공급 계약 체결",
+                           h="o1", fingerprint={"actors": ["TerraPower", "Doosan Enerbility"]})
+        record = continuity.as_sent_record(domestic, TODAY)
+        self.assertEqual(record["date"], TODAY)
+        continuity.annotate([overseas], [record], CFG, TODAY)
+        self.assertIn("continuity", overseas)
+        self.assertEqual(overseas["continuity"]["days_ago"], 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

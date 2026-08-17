@@ -103,8 +103,29 @@ REGION_ORDER = ("국내", "국내·해외", "해외")
 
 
 def region_of(issue: dict) -> str:
+    """방송 블록. 텔레그램이 실제로 실은 지역이 있으면 그것이 우선이다.
+
+    웹의 `region` 은 그날 접힌 기사들의 지역 집합에서 나오므로 국내 기사와 해외
+    기사가 한 이슈에 섞이면 '국내·해외'가 된다. 듣는 사람이 보고 있는 것은
+    텔레그램 목록이라, 그 카드가 국내 목록에 있었으면 국내에서 말해야 한다.
+    """
+    brief_region = str(issue.get("brief_region") or "").strip()
+    if brief_region in REGION_ORDER:
+        return brief_region
     region = str(issue.get("region") or "").strip()
     return region if region in REGION_ORDER else "해외"
+
+
+def brief_rank_of(issue: dict) -> int:
+    """텔레그램 카드 번호. 없으면 맨 뒤로 보낼 큰 수.
+
+    `daily_brief` 가 발송 시점에 적고(`brief_rank`), `build_data` 가 이슈로
+    올려 준다. 옛 회차에는 없을 수 있는데, 그때는 웹 정렬 순서를 그대로
+    쓰는 것이 정답이다 — 없는 번호를 0 으로 읽으면 그 이슈가 1번 자리로
+    올라와 프로그램 첫머리를 가져간다.
+    """
+    rank = issue.get("brief_rank")
+    return rank if isinstance(rank, int) and rank > 0 else 10_000
 
 
 # 단일 화자에 남으면 안 되는 대화 흔적. 문장 중간의 정상적인 '맞습니다'는 건드리지 않는다.
@@ -239,10 +260,18 @@ def issue_material(issue: dict, briefing_date: str = "") -> dict:
 
 
 def selected_issues(briefing: dict, by_id: dict, limit: int | None = None) -> list[dict]:
-    """그날 브리핑 이슈 전부를 국내 → 해외 순으로. 같은 issue_id는 한 번만.
+    """그날 브리핑 이슈 전부를 **텔레그램 발송 순서**로. 같은 issue_id는 한 번만.
 
-    묶음 안에서는 하이라이트 우선 + 브리핑 순서(=랭킹)를 그대로 지킨다.
-    `sorted` 가 안정 정렬이라 지역만 갈라지고 우선순위는 안 흔들린다.
+    사용자는 텔레그램 목록을 화면으로 보면서 듣는다. 그러니 본문에서 기사를
+    처음 꺼내는 순서는 화면의 번호와 같아야 한다 — 국내 1·2·3… 그다음 해외 1·2·3….
+
+    예전에는 `highlight_issues` 를 앞으로 당기고 그 뒤에 `issues` 순서를 이었다.
+    둘 다 **웹의 정렬**(`build_data.order_issue_rows`)이지 발송 순서가 아니다.
+    그 정렬은 (편집고정 → must_read → selection_score → 예고기사 후순위)로 다시
+    줄을 세우고 국내·해외를 맞물려 놓는데, 텔레그램 순서는 `ranking.select_diverse`
+    의 다양성 반영 탐욕 선택이라 둘이 어긋난다. 운영 콘솔의 승격·숨김까지 웹
+    정렬에는 들어가 있어서(`editor_pin`, hide), 화면에서 3번인 기사가 오디오에서
+    1번으로 나오는 날이 생겼다.
 
     지역을 왜 섞지 않는가: 국내와 해외가 번갈아 나오면 듣는 사람이 매 문단마다
     '지금 어느 나라 얘기인가'를 다시 잡아야 한다. 배치도 지역 경계를 넘지
@@ -252,12 +281,16 @@ def selected_issues(briefing: dict, by_id: dict, limit: int | None = None) -> li
     limit 은 수동 실행·테스트용 뚜껑이다. 정규 경로는 상한을 두지 않는다.
     """
     ids: list[str] = []
-    for row in briefing.get("highlight_issues") or []:
-        if isinstance(row, dict) and row.get("issue_id"):
-            ids.append(str(row["issue_id"]))
     for row in briefing.get("issues") or []:
         if isinstance(row, dict) and row.get("issue_id"):
             ids.append(str(row["issue_id"]))
+    # highlight_issues 는 issues 의 부분집합이지만, 옛 데이터·수동 편집으로
+    # 빠져 있을 수 있다. 순서를 정하는 것은 이제 brief_rank 이므로 뒤에 붙여도
+    # 자리가 흔들리지 않는다.
+    for row in briefing.get("highlight_issues") or []:
+        if isinstance(row, dict) and row.get("issue_id"):
+            ids.append(str(row["issue_id"]))
+
     unique: list[dict] = []
     seen: set[str] = set()
     for issue_id in ids:
@@ -265,9 +298,26 @@ def selected_issues(briefing: dict, by_id: dict, limit: int | None = None) -> li
             continue
         seen.add(issue_id)
         unique.append(by_id[issue_id])
-        if limit is not None and len(unique) >= limit:
-            break
-    return sorted(unique, key=lambda issue: REGION_ORDER.index(region_of(issue)))
+
+    # 번호가 없는 옛 회차는 들어온 순서(=웹 정렬)를 유지해야 한다. enumerate 를
+    # 후순위 키로 두면 `sorted` 안정성에 기대지 않고 그 사실이 코드에 남는다.
+    ordered = sorted(
+        enumerate(unique),
+        key=lambda pair: (REGION_ORDER.index(region_of(pair[1])),
+                          brief_rank_of(pair[1]), pair[0]),
+    )
+    rows = [issue for _index, issue in ordered]
+    return rows[:limit] if limit is not None else rows
+
+
+def order_signature(issues: list[dict]) -> list[str]:
+    """이 프로그램이 기사를 꺼내야 하는 순서 (issue_id 목록).
+
+    생성·검증·수정을 거치는 동안 이 목록이 기준으로 남는다. 프롬프트 문구
+    하나에 순서를 맡기지 않기 위해서다 — 순서는 파이썬이 정하고 모델은
+    받은 순서대로 쓰기만 한다.
+    """
+    return [str(issue.get("issue_id") or "") for issue in issues]
 
 
 def script_blocks(issues: list[dict]) -> list[tuple[str, list[dict]]]:
@@ -528,8 +578,21 @@ def script_prompt(briefing: dict, dossiers: list[dict], plan: dict,
                  f"  다른 원고가 담당합니다.\n"
                  f"- 이 묶음은 프로그램의 일부이므로 '오늘 브리핑을 시작하겠습니다' 같은\n"
                  f"  도입도, 전체를 마무리하는 문장도 쓰지 않습니다. 본문만 씁니다.\n")
+    # 듣는 사람은 텔레그램 목록을 보면서 듣는다. Dossiers 순서가 곧 그 목록
+    # 순서이므로 프롬프트에 명시한다 — 다만 이건 협조 요청이고, 지켜졌는지는
+    # script_order_report 가 결과물에서 확인한다.
+    running = "\n".join(
+        f"  {i}. {str(d.get('title') or '')[:60]}" for i, d in enumerate(dossiers, 1))
+    order_rule = (
+        "\n[설명 순서 — 반드시 지킬 것]\n"
+        "- 듣는 사람은 같은 순서로 번호가 매겨진 목록을 화면으로 보고 있습니다.\n"
+        "- 아래 순서대로, 각 story 를 **처음 설명하는 자리**가 어긋나지 않게 씁니다.\n"
+        f"{running}\n"
+        "- 주제가 비슷하다는 이유로 순서를 바꿔 묶지 마십시오. 이어지는 내용이면\n"
+        "  순서는 그대로 두고 '앞서 본 …와 이어집니다' 로 연결합니다.\n"
+        "- 한 story 를 서로 떨어진 두 자리에서 다시 설명하지 마십시오.\n")
     return f"""EpisodePlan과 dossiers만 근거로 1인 전문가 Script를 작성하십시오.
-{scope}
+{scope}{order_rule}
 [전달 방식]
 - 화자는 수석 원자력 분석가 한 명뿐이며 모든 줄은 HOST: 로 시작합니다.
 - 가상의 질문자, 자문자답, '네/그렇군요/맞습니다' 같은 대화형 추임새를 금지합니다.
@@ -607,6 +670,157 @@ def normalize_script(text: str, issue_count: int = 7) -> tuple[str, int]:
     return "\n".join(lines), spoken
 
 
+# ---- 순서 검증 -----------------------------------------------------------------
+#
+# 프롬프트 문구만으로는 순서가 안 지켜진다. 실제로 순서를 흔들 수 있는 자리가
+# 세 곳이다 — 대본 생성(모델이 관련 주제를 스스로 묶는다), 검증 뒤 수정
+# (`repair_prompt` 이 전체 대본을 다시 쓴다), 그리고 배치 병합. 그래서 결과물을
+# 직접 읽어 확인한다.
+#
+# 어떻게 세는가: 이슈마다 **그날 다른 이슈에는 없는 말**(고유 앵커)을 뽑고,
+# 문단마다 어느 이슈의 앵커가 가장 많이 나오는지로 그 문단의 주인을 정한다.
+# 고유 앵커가 없는 이슈는 판정하지 않는다 — 없는 근거로 경보를 울리면 그
+# 경보는 곧 무시된다.
+
+_ANCHOR_TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9\-]{2,}|[가-힣]{2,}")
+# 되짚기 표식. 프롬프트가 이 표현으로 잇도록 지시하므로 여기서도 같은 말을 본다.
+_BACKREFERENCE_RE = re.compile(
+    r"앞서|앞에서|앞의|먼저 본|먼저 말씀|말씀드린|언급한|언급했던|짚었던|살펴본")
+# 원자력 뉴스면 어디에나 나오는 말. 앵커로 쓰면 아무 문단이나 걸린다.
+_ORDER_STOPWORDS = frozenset({
+    "원자력", "원전", "에너지", "전력", "정부", "발표", "추진", "확대", "계획",
+    "사업", "산업", "기업", "협력", "체결", "공급", "시장", "국내", "해외",
+    "한국", "미국", "지원", "투자", "기술", "관련", "이번", "예정", "방침",
+    "결정", "논의", "강화", "구축", "도입", "브리핑", "이슈", "기사", "오늘",
+    "nuclear", "energy", "power", "korea", "korean",
+})
+
+
+def _issue_anchor_pool(issue: dict) -> set[str]:
+    fingerprint = issue.get("story_fingerprint")
+    fingerprint = fingerprint if isinstance(fingerprint, dict) else {}
+    parts = [issue.get("title") or issue.get("title_kr") or ""]
+    for key in ("actors", "assets", "countries"):
+        value = fingerprint.get(key)
+        if isinstance(value, list):
+            parts.extend(str(v) for v in value)
+    parts.extend(str(t).lstrip("#") for t in (issue.get("tags") or []))
+    tokens = {t.lower() for part in parts for t in _ANCHOR_TOKEN_RE.findall(str(part))}
+    return {t for t in tokens if t not in _ORDER_STOPWORDS}
+
+
+def issue_anchors(issues: list[dict]) -> dict[str, set[str]]:
+    """이슈별 **고유** 앵커. 다른 이슈와 겹치는 말은 버린다."""
+    pools = {str(i.get("issue_id") or ""): _issue_anchor_pool(i) for i in issues}
+    out: dict[str, set[str]] = {}
+    for issue_id, pool in pools.items():
+        others = set().union(*(p for k, p in pools.items() if k != issue_id)) \
+            if len(pools) > 1 else set()
+        out[issue_id] = pool - others
+    return out
+
+
+def script_order_report(script: str, issues: list[dict]) -> dict:
+    """대본이 이슈를 기대 순서대로, 한 번씩, 빠짐없이 설명하는가.
+
+    Returns:
+        {"ok", "expected", "observed", "missing", "out_of_order", "duplicated",
+         "unanchored"} — `observed` 는 각 이슈가 처음 등장한 순서다.
+
+    오프닝의 예고나 클로징의 종합에서 이름이 스치는 것까지 '설명'으로 세면
+    거의 매번 순서가 깨진 것처럼 보인다. 그래서 **문단의 주인**으로 센다 —
+    그 이슈의 앵커가 그 문단에서 최다일 때만 그 문단이 그 이슈 차례다.
+    """
+    expected = [str(i.get("issue_id") or "") for i in issues]
+    anchors = issue_anchors(issues)
+    unanchored = [i for i in expected if not anchors.get(i)]
+    judged = [i for i in expected if anchors.get(i)]
+
+    owners: list[str] = []
+    for line in str(script or "").splitlines():
+        match = SPEAKER_RE.match(line.strip())
+        body = (match.group(2) if match else line).lower()
+        if not body.strip():
+            continue
+        scores = {issue_id: sum(1 for a in anchors[issue_id] if a in body)
+                  for issue_id in judged}
+        best = max(scores.values(), default=0)
+        if best <= 0:
+            continue
+        # 되짚는 문장은 설명이 아니다. 프로그램은 관련 이슈를 순서대로 두되
+        # "앞서 본 …와 이어집니다" 로 잇도록 지시받는데, 그 문장이 앞 이슈를
+        # 더 많이 호명하면 그 이슈가 두 번 설명된 것으로 잡힌다. 되짚기 표식이
+        # 있고 두 이슈 이상을 함께 말하는 문단은 주인을 정하지 않는다.
+        mentioned = sum(1 for s in scores.values() if s > 0)
+        if mentioned >= 2 and _BACKREFERENCE_RE.search(body):
+            continue
+        winners = [i for i, s in scores.items() if s == best]
+        # 두 이슈를 같은 무게로 말하는 문단도 주인을 정하지 않는다.
+        if len(winners) == 1:
+            owners.append(winners[0])
+
+    observed: list[str] = []
+    runs: list[str] = []
+    for owner in owners:
+        if not runs or runs[-1] != owner:
+            runs.append(owner)
+        if owner not in observed:
+            observed.append(owner)
+
+    missing = [i for i in judged if i not in observed]
+    # 같은 이슈의 문단 덩어리가 두 번 이상 떨어져 나타나면 중복 설명이다.
+    duplicated = sorted({i for i in runs if runs.count(i) > 1})
+    # 기대 순서에서 실제로 나온 것만 남겨 비교한다 — 빠진 것은 missing 이 말한다.
+    out_of_order = [i for i in judged if i in observed] != observed
+    return {
+        "ok": not missing and not duplicated and not out_of_order,
+        "expected": expected,
+        "observed": observed,
+        "missing": missing,
+        "duplicated": duplicated,
+        "out_of_order": out_of_order,
+        "unanchored": unanchored,
+    }
+
+
+def order_repair_prompt(dossiers: list[dict], script: str, report: dict,
+                        titles: dict[str, str]) -> str:
+    """순서만 고치는 재요청. 사실·분량은 건드리지 않는다."""
+    order_lines = "\n".join(
+        f"{n}. [{issue_id}] {titles.get(issue_id, '')}"
+        for n, issue_id in enumerate(report["expected"], 1))
+    problems = []
+    if report["out_of_order"]:
+        problems.append("설명 순서가 아래 목록과 다릅니다.")
+    if report["missing"]:
+        problems.append("다음 story 가 본문에서 빠졌습니다: "
+                        + ", ".join(titles.get(i, i) for i in report["missing"]))
+    if report["duplicated"]:
+        problems.append("다음 story 를 서로 떨어진 자리에서 두 번 설명했습니다: "
+                        + ", ".join(titles.get(i, i) for i in report["duplicated"]))
+    return f"""아래 대본의 **설명 순서만** 고치십시오.
+
+[문제]
+{chr(10).join('- ' + p for p in problems)}
+
+[지켜야 할 순서]
+{order_lines}
+
+[규칙]
+- 문장을 새로 쓰지 말고 기존 문단을 **재배치**하십시오. 사실·수치·표현을 바꾸지 않습니다.
+- 빠진 story 가 있으면 그 자리에서 dossier 근거만으로 문단을 채웁니다.
+- 두 번 설명된 story 는 **처음 자리에 합치고** 뒤쪽 반복을 지웁니다.
+- 주제가 이어지더라도 순서를 바꿔 묶지 마십시오. 필요하면 "앞서 본 …와 이어집니다"
+  같은 연결 문장을 쓰되 위치는 그대로 둡니다.
+- 모든 줄은 HOST: 로 시작합니다. 인사·마무리는 쓰지 않습니다.
+
+[출력 JSON] {{"script":"HOST: ...\\nHOST: ..."}}
+[Dossiers]
+{json.dumps(dossiers, ensure_ascii=False, indent=2)}
+[기존 Script]
+{script}"""
+
+
 def expert_frame(briefing: dict, plan: dict) -> tuple[str, str]:
     date = datetime.strptime(str(briefing["date"]), "%Y-%m-%d")
     weekday = "월화수목금토일"[date.weekday()]
@@ -670,6 +884,8 @@ def repair_prompt(dossiers: list[dict], script: str, report: dict) -> str:
 - 정보량과 전문가 깊이는 유지합니다.
 - 수석 원자력 분석가 한 명만 말하며 모든 줄은 HOST: 로 시작합니다.
 - 본문 대사 {low:,}~{high:,}자 범위를 지킵니다.
+- **story 를 설명하는 순서를 바꾸지 마십시오.** 아래 Dossiers 순서가 듣는 사람이
+  화면에서 보고 있는 목록 순서입니다. 지적된 문장만 고치고 문단의 자리는 그대로 둡니다.
 
 [출력 JSON] {{"script":"HOST: ...\\nHOST: ..."}}
 [검증보고서]
@@ -819,6 +1035,7 @@ def generate_expert_script(briefing: dict, issues: list[dict]) -> tuple[str, lis
 
     parts: list[str] = []
     reports: list[dict] = []
+    order_reports: list[dict] = []
     for block, rows, block_dossiers, block_script in drafted:
         report = _call_structured(
             VERIFY_SYSTEM, verification_prompt(briefing, block_dossiers, block_script),
@@ -835,6 +1052,36 @@ def generate_expert_script(briefing: dict, issues: list[dict]) -> tuple[str, lis
                 label=f"expert_verify_after_repair_{block}", temperature=0.0, max_output_tokens=6000,
             )
         reports.append(report)
+
+        # 순서 확인은 **검증·수정 뒤**다. repair_prompt 가 전체 대본을 다시 쓰므로
+        # 그 앞에서 확인하면 정작 순서를 흔든 호출을 못 본다.
+        order = script_order_report(block_script, rows)
+        if not order["ok"]:
+            print(f"[expert-audio] {block} 구간 순서 이탈 — "
+                  f"뒤바뀜={order['out_of_order']} 누락={len(order['missing'])} "
+                  f"중복={len(order['duplicated'])} → 재배치 1회")
+            titles = {str(r.get("issue_id") or ""): str(r.get("title") or "")[:60]
+                      for r in rows}
+            try:
+                fixed = _call_structured(
+                    REPAIR_SYSTEM,
+                    order_repair_prompt(block_dossiers, block_script, order, titles),
+                    label=f"expert_reorder_{block}", temperature=0.1,
+                    max_output_tokens=12000)
+                candidate, _ = normalize_script(fixed.get("script"), len(rows))
+                recheck = script_order_report(candidate, rows)
+                # 재배치가 더 나쁘면 원본을 쓴다. 순서 때문에 사실이 검증된
+                # 대본을 버리는 것은 남는 장사가 아니다 — 이 단계는 검증을
+                # 다시 돌지 않으므로 새 대본의 사실 정확성은 보장되지 않는다.
+                if recheck["ok"] or (len(recheck["missing"]) <= len(order["missing"])
+                                     and not recheck["out_of_order"]):
+                    block_script, order = candidate, recheck
+                else:
+                    print(f"[expert-audio] {block} 재배치가 개선 없음 — 원본 유지")
+            except (GeminiError, ValueError) as exc:
+                print(f"[expert-audio] {block} 재배치 실패 — 원본 유지: {str(exc)[:140]}")
+        order_reports.append({"block": block, **order})
+
         bridge = _block_bridge(block)
         if bridge and parts:
             parts.append(bridge)
@@ -842,6 +1089,15 @@ def generate_expert_script(briefing: dict, issues: list[dict]) -> tuple[str, lis
 
     script = "\n".join(part for part in parts if part)
     report = merge_reports(reports)
+    # 프로그램 전체 기준으로 한 번 더 본다 — 구간별로는 맞는데 블록 병합에서
+    # 어긋나는 경우(국내 뒤에 해외가 와야 하는데 반대)를 여기서만 볼 수 있다.
+    report["order"] = {
+        "blocks": order_reports,
+        **script_order_report(script, issues),
+    }
+    if not report["order"]["ok"]:
+        print(f"[expert-audio] ⚠ 최종 순서 점검 미통과 — "
+              f"기대 {report['order']['expected']} / 관측 {report['order']['observed']}")
     if not verification_passed(report):
         claims = report.get("unsupported_critical_claims") or []
         raise ValueError(f"전문가 대본 검증 미통과 — critical={len(claims)}, scores={_score_summary(report)}")
@@ -1004,6 +1260,17 @@ def generate(force: bool = False, send: bool = True) -> bool:
                 "expert_depth_score", "single_speaker_score", "passed"
             )
         },
+        # 텔레그램 번호와 오디오 설명 순서가 맞았는가. ok=false 로 나가는 날이
+        # 쌓이면 그건 프롬프트가 아니라 구조를 고칠 신호다.
+        "order_check": {
+            key: (verification.get("order") or {}).get(key)
+            for key in ("ok", "out_of_order", "missing", "duplicated", "unanchored")
+        },
+        "brief_order": [
+            {"region": region_of(i), "brief_rank": i.get("brief_rank"),
+             "title": str(i.get("title") or "")[:60]}
+            for i in issues
+        ],
         "tts_models": list(dict.fromkeys(tts_models)),
         "warnings": warnings,
     }
