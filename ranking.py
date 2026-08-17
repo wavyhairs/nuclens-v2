@@ -239,6 +239,17 @@ def derive_novelty(item: dict) -> int:
     return 2 if prior <= 2 else 1
 
 
+def _continuity_of(item: dict) -> dict:
+    """`issue_continuity.annotate()` 가 붙여 둔 연속일 판정. 없으면 빈 dict.
+
+    이 모듈은 판정을 **하지 않는다** — 재료(delivery_log)가 외부 파일이라
+    들여오면 랭킹 테스트가 파일에 묶인다. news_bot 이 `prior_coverage` 를
+    주입하는 것과 같은 방향으로, 결과만 읽는다.
+    """
+    value = item.get("continuity")
+    return value if isinstance(value, dict) else {}
+
+
 def _tracking_bonus(item: dict, cfg: dict) -> tuple[float, str]:
     """추적 중인 이슈가 다시 움직였을 때의 가점.
 
@@ -353,6 +364,13 @@ def score_item(item: dict, cfg: dict,
             breakdown["related_reports"] = b
 
         track, track_key = _tracking_bonus(item, cfg)
+        # 추적 가점은 '이 이슈가 다시 움직였다'는 신호여야 한다. 어제 보낸 이야기가
+        # 단계 하나 안 움직인 채 다시 온 경우에도 붙고 있었다 — 감점 0(novelty
+        # 가중치)에 가점 >0 이면 중요한 이슈일수록 며칠 연속 상위에 남는다.
+        # 판정은 issue_continuity 가 하고 여기서는 그 결과를 읽기만 한다.
+        if track and _continuity_of(item).get("cancel_tracking"):
+            breakdown[f"{track_key}:cancelled"] = 0.0
+            track = 0.0
         if track:
             score += track
             breakdown[track_key] = track
@@ -368,6 +386,13 @@ def score_item(item: dict, cfg: dict,
         score -= decay
         breakdown["time_decay"] = round(-decay, 2)
 
+    # 연속일 반복 감점. legacy 경로에도 걸어야 한다 — features 결손 항목이 반복을
+    # 통째로 비껴가면 그 경로로 매일 같은 기사가 올라온다.
+    cont = _continuity_of(item)
+    delta = float(cont.get("score_delta") or 0.0)
+    if delta:
+        score += delta
+        breakdown[f"continuity:{cont.get('progression') or 'repeat'}"] = round(delta, 2)
 
     return round(score, 3), breakdown
 
@@ -848,6 +873,31 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
         dropped = dropped + head_dropped
         refresh_scores(kept)
 
+    # 연속일 반복 중 **삭제까지 가는** 조합. 감점(score_delta)은 위 score_item 이
+    # 이미 반영했고, 여기서 빠지는 것은 "제목까지 거의 같은데 단계가 하나도 안
+    # 움직인" 어제분뿐이다(issue_continuity.hard_drop). 하한 앞에 두는 이유는
+    # 하한과 캡이 세는 적격 수에서 이것들이 빠져야 하기 때문이다 — 남겨 두면
+    # 어차피 못 나갈 후보가 캡을 부풀린다.
+    repeats: list[dict] = []
+    if any(_continuity_of(a).get("drop") for a in kept):
+        surviving = []
+        for a in kept:
+            cont = _continuity_of(a)
+            if not cont.get("drop"):
+                surviving.append(a)
+                continue
+            repeats.append({
+                "hash": a.get("hash", ""),
+                "title": (a.get("title_kr") or a.get("title") or "")[:80],
+                "prior_title": cont.get("prior_title", ""),
+                "prior_date": cont.get("prior_date", ""),
+                "days_ago": cont.get("days_ago"),
+                "similarity": cont.get("similarity"),
+                "progression": cont.get("progression"),
+                "match_reasons": cont.get("match_reasons") or [],
+            })
+        kept = surviving
+
     below: list[dict] = []
     if floor:
         passing = []
@@ -901,6 +951,9 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
         "breakdowns": breakdowns,
         "cap": cap_detail,
         "candidate_count": len(items),
+        # 어제(또는 같은 날 다른 지역) 발송분과 같은 이슈인데 단계가 안 움직여
+        # 빠진 후보. 감점만 받고 살아남은 것들은 breakdown 의 continuity:* 로 남는다.
+        "dropped_repeat": repeats,
         "dropped_below_floor": below,
         "dropped_duplicates": [{"hash": d.get("hash", ""),
                                 "dup_of": d.get("dup_of", ""),

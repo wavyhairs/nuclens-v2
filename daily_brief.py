@@ -42,6 +42,7 @@ except (AttributeError, ValueError):
 
 from gemini_client import GeminiError, call_json, is_available
 from sources import credibility
+import issue_continuity
 import ranking
 
 ROOT = Path(__file__).parent
@@ -511,7 +512,8 @@ def empty_reason(diag: dict) -> str:
     return "오늘 새로 확인된 브리핑 이슈가 없습니다."
 
 
-def region_stats(diag: dict, selected: list[dict], pool: list[dict] | None = None) -> dict:
+def region_stats(diag: dict, selected: list[dict], pool: list[dict] | None = None,
+                 continuity: dict | None = None) -> dict:
     """그날 그 지역의 선정 통계.
 
     features 결손은 하한 판정에서 면제되므로(ranking.floor_verdict) 컷오프 수치만
@@ -529,6 +531,20 @@ def region_stats(diag: dict, selected: list[dict], pool: list[dict] | None = Non
     # 올릴지 max 를 올릴지 수집을 늘릴지 사후에 못 가른다.
     if diag.get("cap"):
         stats["cap"] = diag["cap"]
+    # 연속일 반복 판정. 감점만 받고 살아남은 건까지 남겨야 "게이트가 세긴 한데
+    # 아무것도 안 걸렀다"와 "판정 자체가 안 돌았다"를 사후에 가를 수 있다.
+    if continuity is not None:
+        verdicts = continuity.get("verdicts") or []
+        stats["continuity"] = {
+            "checked": continuity.get("checked", 0),
+            "matched": continuity.get("matched", 0),
+            "dropped": len(diag.get("dropped_repeat") or []),
+            "by_progression": {
+                key: sum(1 for v in verdicts if v.get("progression") == key)
+                for key in ("material", "minor", "none")
+            },
+            "samples": verdicts[:6],
+        }
     return stats
 
 
@@ -575,11 +591,29 @@ def plan_briefs(queue: list[dict],
     # 국내와 해외를 한 번에 보내지 않는 이유: 지역이 다른 기사가 한 사건으로 묶이면
     # 한쪽 브리핑이 통째로 비는 사고가 난다.
     from dedup import dedup_articles, editorial_dedup_articles
+
+    # 연속일 반복 게이트 — 선정 **전에** 어제 발송분과 대조한다. 그날 큐 안의
+    # 중복은 세 단계(제목·의미·편집)가 이미 잡지만, 어제와 대조하는 자리는
+    # 파이프라인에 없었다(웹은 발송 뒤에 잇는다).
+    continuity_cfg = issue_continuity.resolve_config(cfg)
+    recent_sent = issue_continuity.load_recent_sent(
+        int(continuity_cfg.get("lookback_days", 5)))
+    dom_cont = issue_continuity.annotate(dom_pool, recent_sent, cfg, today)
+
     dom, dom_diag = ranking.rank_and_select(
         dom_pool, DOMESTIC_CAP, cfg, now, ranking.resolve_floor(cfg, "domestic"),
         cap_spec=ranking.resolve_caps(cfg, "domestic"),
         semantic_dedup=dedup_articles,
         editorial_dedup=editorial_dedup_articles)
+
+    # 해외 풀은 **국내 선정 결과까지** 어제분에 얹어서 본다. 두 지역이 각자
+    # 풀에서 따로 랭킹되므로, 같은 이슈가 국내 1번과 해외 3번을 동시에 차지하는
+    # 일이 실제로 있었다(2026-08-16 테라파워 SMR 두 건). 규칙을 새로 만들지 않고
+    # 같은 장치에 오늘치 발송분을 넣는다.
+    forn_cont = issue_continuity.annotate(
+        forn_pool,
+        recent_sent + [issue_continuity.as_sent_record(a, today) for a in dom],
+        cfg, today)
     forn, forn_diag = ranking.rank_and_select(
         forn_pool, FOREIGN_CAP, cfg, now, ranking.resolve_floor(cfg, "overseas"),
         cap_spec=ranking.resolve_caps(cfg, "overseas"),
@@ -587,7 +621,9 @@ def plan_briefs(queue: list[dict],
         editorial_dedup=editorial_dedup_articles)
     print(f"[daily_brief] 국내 {len(dom)}건 / 해외 {len(forn)}건 선별 "
           f"(중복 제거 {len(dom_diag['dropped_duplicates']) + len(forn_diag['dropped_duplicates'])}건, "
-          f"하한 미달 {len(dom_diag['dropped_below_floor']) + len(forn_diag['dropped_below_floor'])}건)")
+          f"하한 미달 {len(dom_diag['dropped_below_floor']) + len(forn_diag['dropped_below_floor'])}건, "
+          f"연속일 반복 {len(dom_diag.get('dropped_repeat') or []) + len(forn_diag.get('dropped_repeat') or [])}건 제외 "
+          f"/ 감점 {dom_cont['matched'] + forn_cont['matched']}건 판정)")
 
     # 투자 보강 — 양쪽 선별분 한 번에 (무료 티어 호출 절감)
     allsel = dom + forn
@@ -704,8 +740,8 @@ def plan_briefs(queue: list[dict],
     return {**base, "status": "pending", "briefs": briefs, "items": out_items,
             "report_diag": report_diag,
             "selection_stats": {
-                "domestic": region_stats(dom_diag, dom, dom_pool),
-                "overseas": region_stats(forn_diag, forn, forn_pool),
+                "domestic": region_stats(dom_diag, dom, dom_pool, dom_cont),
+                "overseas": region_stats(forn_diag, forn, forn_pool, forn_cont),
             },
             "dropped_duplicates": dom_diag["dropped_duplicates"] + forn_diag["dropped_duplicates"],
             # 병합만 기록하면 진단 화면은 반쪽이다. "왜 붙었나"의 짝은 "왜 안 붙었나"인데,
