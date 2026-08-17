@@ -833,12 +833,24 @@ def plan_briefs(queue: list[dict],
                     for r in report_diag.get("recommended", []) if r.get("hash")}
 
     # delivery_log 용 항목 메타 (점수 내역 = '왜 이 기사가 올라왔나' 증거)
-    def _item_meta(a: dict, reg: str, diag: dict) -> dict:
+    def _item_meta(a: dict, reg: str, diag: dict, rank: int) -> dict:
         h = a.get("hash", "")
         meta = {
             "hash": h,
             "title_kr": (a.get("title_kr") or a.get("title") or "")[:100],
             "region": reg,
+            # 텔레그램 카드에 실제로 찍힌 번호(지역별 1부터). 오디오 브리핑이
+            # 기사를 설명하는 순서의 기준이다 — 웹의 이슈 정렬은 점수를 다시
+            # 줄 세우고 운영 콘솔의 승격·숨김까지 반영하므로 발송 순서와 다르다.
+            # 여기서 못 박지 않으면 그 순서를 사후에 복원할 방법이 없다.
+            "brief_rank": rank,
+            "brief_region": reg,
+            # 내일의 연속일 게이트가 읽을 재료. 제목만으로는 단계 판정이
+            # 얇아진다 — '협의'와 '본계약'이 요약에만 있는 날이 흔하다.
+            # (issue_continuity.load_recent_sent 가 이 줄을 그대로 읽는다.)
+            "summary": (a.get("summary") or "")[:200],
+            "tags": (a.get("tags") or [])[:6],
+            "event_date": a.get("event_date"),
             "section": a.get("section", ""),
             # LLM 판정 scope (없으면 region()이 휴리스틱으로 결정한 것 — 오분류 추적용)
             "scope": a.get("scope", ""),
@@ -899,8 +911,8 @@ def plan_briefs(queue: list[dict],
                                    "window_days", "repeat_streak", "penalty")}
         return meta
 
-    out_items = ([_item_meta(a, "국내", dom_diag) for a in dom]
-                 + [_item_meta(a, "해외", forn_diag) for a in forn])
+    out_items = ([_item_meta(a, "국내", dom_diag, i) for i, a in enumerate(dom, 1)]
+                 + [_item_meta(a, "해외", forn_diag, i) for i, a in enumerate(forn, 1)])
 
     # 큐 정리 대상: 선별본 + 선별본의 중복(후속보도) + noise/market.
     # 선별 안 된 항목은 큐에 남아 다음날 재경쟁 (시간 감쇠·3일 자동정리로 상한).
