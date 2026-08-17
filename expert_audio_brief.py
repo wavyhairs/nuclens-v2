@@ -48,6 +48,7 @@ from audio_brief import (
     evidence_contracts,
     evidence_specs,
     load_briefing,
+    queue_for_channel,
     send_telegram_audio,
     split_script,
     to_mp3,
@@ -1260,11 +1261,15 @@ def generate(force: bool = False, send: bool = True) -> bool:
             # 생성은 됐는데 발송만 실패한 날이 있다(429·네트워크 타임아웃). 그날 재실행이
             # 10분짜리 TTS 를 다시 부르지 않고 발송만 이어받게 한다 — 빠른 브리핑과 같은 계약.
             if not existing.get("telegram_sent_at"):
-                if send and send_telegram_audio(existing_path, {"date": date, **existing}):
-                    _mark_sent(date, EXPERT_VARIANT, existing)
+                result = (send_telegram_audio(existing_path, {"date": date, **existing})
+                          if send else None)
+                if result:
+                    _mark_sent(date, EXPERT_VARIANT, existing, result)
             else:
                 print(f"[expert-audio] {date} 전문가 브리핑 이미 생성·발송됨 "
                       f"({existing_path.name}) — 스킵")
+                # 빠른 브리핑과 같은 계약 — 적재는 멱등이라 다시 불러도 안전하다.
+                queue_for_channel(date, existing)
             return True
         if verdict == "stale_sent":
             print(f"[expert-audio] {date} 캐시가 현재 재료와 불일치 — "
@@ -1353,10 +1358,13 @@ def generate(force: bool = False, send: bool = True) -> bool:
             if old.name != current:
                 old.unlink(missing_ok=True)
     print(f"[expert-audio] {date} 완료 — {file_name} ({duration}초, {mp3_path.stat().st_size/1024:.0f} KB)")
-    # 기사 카드 → 빠른 브리핑 → 전문가 브리핑 순으로 같은 채널에 도착한다.
-    # 워크플로가 audio_brief 를 먼저 돌리므로 이 순서는 호출 순서가 보장한다.
-    if send and send_telegram_audio(mp3_path, meta):
-        _mark_sent(date, EXPERT_VARIANT, meta)
+    # 기사 카드 → 빠른 브리핑 → 전문가 브리핑 순으로 DM 에 도착하고, 구독 채널
+    # 배치도 같은 순서로 쌓인다. 워크플로가 audio_brief 를 먼저 돌리므로 이 순서는
+    # 호출 순서가 보장한다. 이 발송이 그날 배치의 **마지막 재료**다 —
+    # 워크플로는 바로 다음 스텝에서 배치를 채널로 공개한다.
+    result = send_telegram_audio(mp3_path, meta) if send else None
+    if result:
+        _mark_sent(date, EXPERT_VARIANT, meta, result)
     return True
 
 

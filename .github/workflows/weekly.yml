@@ -38,6 +38,9 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # 주간 판세는 일일 배치를 기다리지 않고 뜨는 즉시 그것 하나만 채널로
+          # 나간다 (channel_queue.publish_weekly).
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       # 주간 리포트를 웹이 쓸 수 있게 커밋. 발송이 실패해도 여기까지는 온다.
@@ -48,6 +51,9 @@ jobs:
           # (daily_leads.json 데드락과 같은 함정).
           [ -f weekly_reports.json ] || { echo "리포트 파일 없음 — 스킵"; exit 0; }
           git add weekly_reports.json
+          # 채널 공개 기록. 없으면 같은 주에 워크플로를 다시 돌릴 때 판세가
+          # 채널에 두 번 뜬다.
+          if [ -f channel_outbox.json ]; then git add channel_outbox.json; fi
           git diff --cached --quiet && { echo "변경 없음"; exit 0; }
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

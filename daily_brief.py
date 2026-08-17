@@ -1560,6 +1560,28 @@ def append_delivery_log(outbox: dict, path: Path | None = None) -> int:
 
 # ---- CLI 서브커맨드 ------------------------------------------------------------
 
+def _sync_channel_batch(outbox: dict) -> None:
+    """오늘 브리핑을 구독 채널 배치에 적재한다 (발송하지 않는다).
+
+    **plan 에서** 부른다. claim push 가 outbox 와 함께 channel_outbox.json 을
+    커밋하므로, 뒤 스텝들의 `git reset --hard origin/main` 이 지나가도 본문이
+    살아남는다. send 에서 적재하면 confirm push 가 실패한 날 텍스트가 통째로
+    지워지고 채널에는 오디오만 뜬다.
+
+    실패해도 계획·발송을 막지 않는다 — 다만 조용히 넘기면 '채널만 비는' 상태가
+    오래 사니 로그에 오류로 남긴다.
+    """
+    try:
+        import channel_queue
+        batch = channel_queue.sync_daily_batch(outbox)
+    except Exception as exc:  # noqa: BLE001 — 큐 적재 실패가 브리핑을 죽이면 안 된다
+        print(f"::error::채널 배치 적재 실패 — 오늘 구독 채널 공개가 비어 있을 수 있습니다: "
+              f"{type(exc).__name__}: {exc}")
+        return
+    if batch:
+        print(f"[daily_brief] 채널 배치 {batch['id']} — 항목 {len(batch['items'])}개")
+
+
 def cmd_plan() -> int:
     """선별→outbox(pending) 기록→큐 정리. 발송은 하지 않는다 (claim 단계).
 
@@ -1590,10 +1612,14 @@ def cmd_plan() -> int:
                 print(f"[daily_brief] plan 재사용 — 큐 정리 재적용 {len(queue)}→{len(pruned)}")
             else:
                 print("[daily_brief] plan 재사용 (오늘 outbox 이미 존재)")
+            # 재사용 경로에서도 적재한다 — claim 재시도의 reset 으로 큐 파일만
+            # 되돌아간 경우, 여기서 다시 채우지 않으면 채널이 통째로 빈다.
+            _sync_channel_batch(existing)
             return 0
         if (existing.get("status") in ("pending", "partial")
                 and _outbox_age_hours(existing) <= RESEND_WINDOW_H):
             print("[daily_brief] 직전 outbox 미발송분 있음 → 새 계획 생략, 재발송 대기")
+            _sync_channel_batch(existing)
             return 0
 
     queue = load_queue()
@@ -1602,6 +1628,7 @@ def cmd_plan() -> int:
     if outbox["status"] == "empty":
         print("[daily_brief] 큐 비어있음 → outbox=empty (발송 스킵)")
         return 0
+    _sync_channel_batch(outbox)
     pruned = prune_queue(queue, set(outbox["prune_hashes"]))
     save_queue(pruned)
     print(f"[daily_brief] plan 완료 — 브리핑 {len(outbox['briefs'])}개, "

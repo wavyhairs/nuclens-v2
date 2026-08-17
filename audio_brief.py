@@ -741,45 +741,64 @@ def _write_audio_variant(date: str, key: str, variant: dict, *, default: str = F
     return manifest
 
 
-def send_telegram_audio(mp3_path: Path, meta: dict) -> bool:
-    """오디오를 텔레그램 브리핑 채널로 발송. 실패해도 비치명 — 다음 실행이 재시도.
+def audio_message_fields(meta: dict) -> dict:
+    """캡션·제목 등 텔레그램 오디오 메시지의 표시 항목.
 
-    telegram_send.py 는 import 시점에 토큰이 없으면 sys.exit 하므로(모듈 상단
-    가드) 여기서는 sendAudio 를 직접 부른다. requests 는 이미 requirements 에
-    있다. 텔레그램 오디오 플레이어는 자체 배속(1/1.5/2×)을 제공한다.
+    DM 업로드와 구독 채널 재발송이 **같은 함수**에서 만들어야 한다. 채널 쪽이
+    따로 만들면 어느 날 캡션이 갈라지고, 구독자가 보는 쪽만 옛 문구로 남는다.
 
-    캡션·제목은 meta 의 label/description 에서 만든다. 빠른·전문가 두 변형이 같은
-    채널에 연달아 도착하는데, 예전처럼 '오디오 브리핑'을 박아 두면 3분짜리와
-    10분짜리가 같은 이름으로 나란히 앉아 어느 쪽이 무엇인지 알 수 없다.
+    v1 매니페스트에는 label/description 이 없다. 그 시절 meta 로 재발송이 돌아도
+    캡션에 'None' 이 찍히지 않게 받아 둔다.
     """
-    token = gemini_client._resolve("TELEGRAM_BOT_TOKEN")
-    chat_id = gemini_client._resolve("TELEGRAM_CHAT_ID")
-    if not token or not chat_id:
-        print("[audio] 텔레그램 미설정 — 발송 스킵")
-        return False
-    # v1 매니페스트에는 label/description 이 없다. 그 시절 meta 로 재발송이 돌아도
-    # 캡션에 'None' 이 찍히지 않게 받아 둔다.
     label = meta.get("label") or "오디오 브리핑"
     summary = meta.get("description") or "오늘의 핵심 원자력 뉴스"
     # 캡션의 링크는 실제 배포 대상을 따라간다 — v1 도메인이 하드코딩돼 있어
     # V2 로 옮긴 뒤에도 청취자를 옛 사이트로 보내고 있었다.
     site = (gemini_client._resolve("SITE_URL") or "https://nuclens-v2.pages.dev")
     site = site.split("://")[-1].rstrip("/")
-    minutes, seconds = divmod(int(meta.get("duration_sec") or 0), 60)
-    caption = (
-        f"🎧 {meta.get('date', '')} {label} ({minutes}분 {seconds:02d}초)\n"
-        f"{summary}\n{site}"
-    )
+    duration = int(meta.get("duration_sec") or 0)
+    minutes, seconds = divmod(duration, 60)
+    return {
+        "caption": (f"🎧 {meta.get('date', '')} {label} ({minutes}분 {seconds:02d}초)\n"
+                    f"{summary}\n{site}"),
+        "title": f"Nuclens {label} {meta.get('date', '')}",
+        "performer": "Nuclens",
+        "duration": duration,
+        "label": label,
+    }
+
+
+def send_telegram_audio(mp3_path: Path, meta: dict) -> dict | None:
+    """오디오를 봇 DM 으로 발송. 실패해도 비치명 — 다음 실행이 재시도.
+
+    성공하면 텔레그램이 준 file_id 를 담은 dict 를 돌려준다. **그 값이 구독 채널
+    공개의 재료다** — file_id 는 같은 봇이라면 다른 대화에서도 재사용되므로,
+    채널에는 8MB mp3 를 다시 올리지 않고 이 문자열 하나만 보낸다. mp3 가 git 이
+    아니라 Actions 캐시에만 사는 구조에서 이게 유일하게 값싼 경로다.
+
+    telegram_send 는 텍스트 전용이라 여기서는 sendAudio 를 직접 부른다. requests
+    는 이미 requirements 에 있다. 텔레그램 오디오 플레이어는 자체 배속을 준다.
+
+    캡션·제목은 audio_message_fields 가 만든다. 빠른·전문가 두 변형이 연달아
+    도착하는데, 예전처럼 '오디오 브리핑'을 박아 두면 3분짜리와 10분짜리가 같은
+    이름으로 나란히 앉아 어느 쪽이 무엇인지 알 수 없다.
+    """
+    token = gemini_client._resolve("TELEGRAM_BOT_TOKEN")
+    chat_id = gemini_client._resolve("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        print("[audio] 텔레그램 미설정 — 발송 스킵")
+        return None
+    fields = audio_message_fields(meta)
     import requests
     try:
         response = requests.post(
             f"https://api.telegram.org/bot{token}/sendAudio",
             data={
                 "chat_id": chat_id,
-                "caption": caption,
-                "title": f"Nuclens {label} {meta.get('date', '')}",
-                "performer": "Nuclens",
-                "duration": int(meta.get("duration_sec") or 0),
+                "caption": fields["caption"],
+                "title": fields["title"],
+                "performer": fields["performer"],
+                "duration": fields["duration"],
             },
             files={"audio": (mp3_path.name, mp3_path.read_bytes(), "audio/mpeg")},
             timeout=120,
@@ -788,17 +807,48 @@ def send_telegram_audio(mp3_path: Path, meta: dict) -> bool:
         if not (response.ok and payload.get("ok")):
             print(f"[audio] 텔레그램 발송 실패 — HTTP {response.status_code}: "
                   f"{str(payload)[:200]}")
-            return False
+            return None
     except Exception as exc:  # noqa: BLE001 — 발송은 부가 기능, 어떤 예외도 비치명
         print(f"[audio] 텔레그램 발송 실패 — {type(exc).__name__}: {exc}")
-        return False
+        return None
+    result = (payload.get("result") or {}) if isinstance(payload, dict) else {}
+    file_id = ((result.get("audio") or {}).get("file_id")
+               or (result.get("document") or {}).get("file_id") or "")
     print(f"[audio] 텔레그램 발송 완료 ({mp3_path.name})")
-    return True
+    return {"file_id": file_id, "message_id": result.get("message_id")}
 
 
-def _mark_sent(date: str, key: str, meta: dict) -> None:
+def queue_for_channel(date: str, meta: dict) -> None:
+    """DM 에 올린 오디오를 그날 구독 채널 배치에 적재한다 (발송은 안 한다).
+
+    발송이 아니라 적재다 — 채널에는 기사·오디오를 모아 마지막에 한 번에 올린다.
+    file_id 가 없으면(옛 매니페스트·발송 실패) 조용히 넘어가지 않고 남긴다.
+    """
+    file_id = meta.get("telegram_file_id")
+    if not file_id:
+        print(f"[audio] {meta.get('label') or meta.get('key')} — file_id 없음, "
+              f"채널 배치 적재 생략")
+        return
+    # date 는 매니페스트 최상위에 살고 variant 안에는 없을 수 있다(v1 캐시·재사용
+    # 경로). 캡션 첫 줄이 그날 날짜라 비면 '🎧  빠른 브리핑' 으로 나간다.
+    fields = audio_message_fields({"date": date, **meta})
+    try:
+        import channel_queue
+        channel_queue.record_audio(
+            date, name=fields["label"], file_id=file_id,
+            caption=fields["caption"], title=fields["title"],
+            performer=fields["performer"], duration=fields["duration"])
+    except Exception as exc:  # noqa: BLE001 — 적재 실패가 오디오를 죽이면 안 된다
+        print(f"::error::채널 배치 적재 실패({fields['label']}): "
+              f"{type(exc).__name__}: {exc}")
+
+
+def _mark_sent(date: str, key: str, meta: dict, result: dict | None = None) -> None:
     meta["telegram_sent_at"] = datetime.now(KST).isoformat()
+    if result and result.get("file_id"):
+        meta["telegram_file_id"] = result["file_id"]
     _write_audio_variant(date, key, meta)
+    queue_for_channel(date, meta)
 
 
 def generate(force: bool = False, send: bool = True) -> bool:
@@ -826,10 +876,15 @@ def generate(force: bool = False, send: bool = True) -> bool:
                                script_path=script_path, force=force)
         if verdict == "reuse":
             if not existing.get("telegram_sent_at"):
-                if send and send_telegram_audio(existing_path, {"date": date, **existing}):
-                    _mark_sent(date, FAST_VARIANT, existing)
+                result = (send_telegram_audio(existing_path, {"date": date, **existing})
+                          if send else None)
+                if result:
+                    _mark_sent(date, FAST_VARIANT, existing, result)
             else:
                 print(f"[audio] {date} 빠른 브리핑 이미 생성·발송됨 ({existing_path.name}) — 스킵")
+                # DM 은 이미 나갔어도 채널 배치는 비어 있을 수 있다(큐 파일 커밋
+                # 실패·재실행). 적재는 멱등이라 다시 불러도 항목이 늘지 않는다.
+                queue_for_channel(date, existing)
             return True
         if verdict == "stale_sent":
             # 재료·순서·게이트가 달라졌지만 이 회차는 이미 나갔다. 다시 만들어
@@ -901,8 +956,9 @@ def generate(force: bool = False, send: bool = True) -> bool:
             old.unlink(missing_ok=True)
     print(f"[audio] {date} 완료 — {file_name} "
           f"({mp3_path.stat().st_size / 1024:.0f} KB, {duration}초)")
-    if send and send_telegram_audio(mp3_path, meta):
-        _mark_sent(date, FAST_VARIANT, meta)
+    result = send_telegram_audio(mp3_path, meta) if send else None
+    if result:
+        _mark_sent(date, FAST_VARIANT, meta, result)
     return True
 
 
