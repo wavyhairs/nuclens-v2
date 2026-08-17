@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import re
 import sys
@@ -43,6 +44,7 @@ except (AttributeError, ValueError):
 from gemini_client import GeminiError, call_json, is_available
 from sources import credibility
 import issue_continuity
+import khnp_relevance
 import ranking
 
 ROOT = Path(__file__).parent
@@ -280,6 +282,159 @@ def enrich_investment(items: list[dict]) -> dict[int, dict]:
         if struct:
             out[idx] = struct
     return out
+
+
+# ---- 조건부 필수 항목 보완 (한수원 시사점) ------------------------------------
+#
+# 카드의 `🇰🇷 한수원 시사점` 은 수집 단계 큐레이션의 `implication` 이다. 그런데
+# 그쪽 프롬프트에서 이 필드의 이름은 "AI 해석 1문장"이고 한수원이라는 말이 어디에도
+# 없다 — 라벨과 생성기가 다른 것을 말하고 있었다. 게다가 뒤에서 세 개의 게이트가
+# 이 값을 비울 수 있는데(본문 없음·빈껍데기·실명 불일치), 비운 뒤 "이 기사라면
+# 있어야 하지 않나"를 되묻는 자리가 없었다.
+#
+# 여기가 그 자리다. **모든 기사를 채우지 않는다** — 채우면 지금 걷어내고 있는
+# 빈껍데기가 그대로 돌아온다. `khnp_relevance` 가 필요성을 판정하고, 필요성이
+# 높은데 비어 있는 것만 한 번 더 묻는다. 그래도 근거가 없으면 빈칸이 정답이다.
+
+IMPLICATION_SYSTEM_PROMPT = """당신은 한국수력원자력(한수원) 정책 부서에 에너지 뉴스를
+정리해 주는 분석관입니다.
+
+기사 N건을 받습니다. 각 기사마다 **한수원 시사점** 한 문장을 씁니다.
+한수원 시사점이란 이 뉴스가 한수원의 사업·정책 환경·경쟁 구도·공급망·전력시장에서의
+원전의 위치 중 **무엇을 어떻게 바꾸는가**입니다.
+
+⚠️ 출력은 정확히 JSON 하나. 설명·코드펜스 금지.
+{"items": [{"idx": 0, "implication": "..."}]}
+
+규칙:
+1. 90자 이내, 완결형 서술문 **한 문장**. 문자열을 자르지 말 것.
+2. **입력 BODY 에 있는 사실만 쓴다.** 없는 수치·기관·일정·인과를 만들지 말 것.
+3. **제목·요약을 바꿔 말하지 않는다.** 제목이 '무엇'이면 이 문장은
+   '그래서 한수원의 무엇이 달라지나'다. 다음 중 하나는 반드시 담을 것:
+   ①원전·무탄소 전원의 역할이 어떻게 달라지는가 ②전력시장·계통·수급 구조에서
+   무엇이 바뀌는가 ③한수원의 사업(건설·계속운전·수출·공급망)에 걸리는 것
+   ④경쟁·대체 전원과의 관계 변화. 근거가 되는 사실을 함께 적을 것.
+4. **한수원을 억지로 등장시키지 말 것.** 회사 이름을 붙였다고 시사점이 되지 않는다.
+   기사 사실과 한수원 사업 환경을 잇는 인과가 BODY 에서 확인되지 않으면 빈 문자열.
+5. 아래 어미로 끝내는 문장은 금지다 — 전부 정보량 0이다:
+   "…을 시사한다 / …을 보여준다 / …이 기대된다 / …이 전망된다 / …에 기여할 것이다 /
+    …이 중요하다 / …이 필요하다 / …을 주목할 필요가 있다".
+6. **쓸 사실이 없으면 빈 문자열 "" 로 둔다.** 빈칸이 빈껍데기보다 낫다 —
+   빈 문자열은 실패가 아니라 정상 응답이다.
+7. 예측·투자 권고 금지. 평서체(–다)로 끝낼 것.
+8. 모든 idx 가 정확히 한 번씩.
+
+나쁨: "정부의 에너지 정책 변화가 원자력 산업에 미칠 영향을 시사한다." (내용 0)
+좋음: "재생에너지 100GW 확대의 간헐성을 ESS 로 메우는 구도라, 무탄소 기저 전원으로서
+      원전의 역할 규정이 12차 전기본 논의의 쟁점이 된다."
+
+입력은 기사마다 `[idx]` 로 시작하는 블록이며 TITLE / SUMMARY / BODY 를 담습니다."""
+
+
+def _implication_acceptable(text: str, article: dict) -> tuple[bool, str]:
+    """생성된 시사점을 받을지 판정. (통과 여부, 사유).
+
+    기존 게이트를 그대로 재사용한다 — 여기서만 무르면 발송 경로에 다른 기준이
+    하나 더 생기고, 그 순간 "카드마다 문장 품질이 다른 이유"를 아무도 설명 못 한다.
+    """
+    from data_quality import IMPLICATION_LIMIT, clean_text, implication_is_hollow, is_complete_sentence
+
+    text = clean_text(text)
+    if not text:
+        return False, "empty"
+    if len(text) > IMPLICATION_LIMIT:
+        return False, "too_long"
+    if not is_complete_sentence(text):
+        return False, "incomplete"
+    if implication_is_hollow(text):
+        return False, "hollow"
+    # 제목 재진술 차단. 제목을 늘려 쓴 문장은 카드 두 번째 줄을 낭비한다.
+    title = (article.get("title_kr") or article.get("title") or "").strip()
+    if title and re.sub(r"\W", "", text)[:40] and \
+            difflib.SequenceMatcher(None, re.sub(r"\W", "", title),
+                                    re.sub(r"\W", "", text)).ratio() >= 0.72:
+        return False, "restates_title"
+    return True, "accepted"
+
+
+def complete_required_fields(items: list[dict]) -> dict:
+    """선정분 중 '한수원 시사점이 있어야 하는데 빈' 항목만 한 번 더 생성한다.
+
+    발송 직전이 이 일을 할 수 있는 유일한 자리다 — 수집 단계는 기사 하나만 보고
+    (그래서 프롬프트에 한수원 축이 없다), 웹 빌드는 발송 **뒤**다.
+
+    Returns:
+        진단 dict (candidates/filled/rejected/samples). 실패해도 발송은 계속한다.
+    """
+    from data_quality import clean_text
+
+    checks = [(i, khnp_relevance.implication_requirement(a)) for i, a in enumerate(items)]
+    for i, verdict in checks:
+        # 판정 자체는 로그·웹이 읽을 수 있게 항상 남긴다 — 생성 여부와 무관하게
+        # "이 기사에 시사점이 왜 없나"에 답할 수 있어야 한다.
+        items[i]["implication_requirement"] = verdict["level"]
+    targets = [(i, v) for i, v in checks if v["regenerate"]]
+    diag = {
+        "candidates": len(targets),
+        "filled": 0,
+        "rejected": [],
+        "required_without_body": sum(
+            1 for _i, v in checks
+            if v["level"] == "required" and not v["current"] and "no_body" in v["reasons"]),
+    }
+    if not targets:
+        return diag
+    if not is_available():
+        print(f"[daily_brief] GEMINI_API_KEY 없음 → 한수원 시사점 보완 {len(targets)}건 건너뜀")
+        diag["skipped"] = "no_api_key"
+        return diag
+
+    blocks = []
+    for order, (i, _v) in enumerate(targets):
+        art = items[i]
+        blocks.append("\n".join([
+            f"[{order}]",
+            f"TITLE: {(art.get('title_kr') or art.get('title') or '')[:150]}",
+            f"SUMMARY: {(art.get('summary') or '')[:200]}",
+            f"BODY: {(art.get('detail') or '')[:900]}",
+        ]))
+    try:
+        result = call_json(
+            IMPLICATION_SYSTEM_PROMPT, "\n\n---\n\n".join(blocks),
+            temperature=0.2, max_output_tokens=4096, timeout=120.0,
+            label="daily_brief_implication",
+        )
+    except GeminiError as e:
+        print(f"[daily_brief] 한수원 시사점 보완 실패 → 빈칸 유지: {e}")
+        diag["skipped"] = "gemini_error"
+        return diag
+
+    for row in result.get("items") or []:
+        if not isinstance(row, dict):
+            continue
+        order = row.get("idx")
+        if not isinstance(order, int) or not (0 <= order < len(targets)):
+            continue
+        i, _v = targets[order]
+        text = clean_text(row.get("implication"))
+        if not text:
+            continue                       # 빈 문자열은 정상 응답이다
+        ok, reason = _implication_acceptable(text, items[i])
+        if not ok:
+            diag["rejected"].append({
+                "title": (items[i].get("title_kr") or "")[:60], "reason": reason,
+                "text": text[:80]})
+            continue
+        items[i]["implication"] = text
+        # 어디서 온 문장인지 남긴다. 웹·아카이브가 수집 단계 해석과 구분해야
+        # "왜 어제 카드에는 없던 줄이 생겼나"를 되짚을 수 있다.
+        items[i]["implication_source"] = "khnp_backfill"
+        diag["filled"] += 1
+
+    unresolved = len(targets) - diag["filled"] - len(diag["rejected"])
+    print(f"[daily_brief] 한수원 시사점 보완: 대상 {len(targets)}건 → "
+          f"생성 {diag['filled']}건 / 반려 {len(diag['rejected'])}건 / 근거부족 {unresolved}건")
+    return diag
 
 
 # ---- 보고서 검토 추천 (Python 게이트 → 후보 있을 때만 LLM) --------------------
@@ -631,6 +786,11 @@ def plan_briefs(queue: list[dict],
     for i, art in enumerate(allsel):
         art["investment_struct"] = inv.get(i)  # 다양성·weekly 집계에서도 사용
 
+    # 조건부 필수 항목 보완 — '한수원 시사점이 있어야 하는데 빈' 카드만.
+    # 투자 보강 뒤에 두는 이유는 없다(서로 독립). 카드 조립 **앞**이어야 한다는
+    # 것만이 조건이다 — item_to_card 가 implication 을 읽어 카드를 만든다.
+    field_diag = complete_required_fields(allsel)
+
     dom_cards = [item_to_card(a, render_investment(a.get("investment_struct")))
                  for a in dom]
     forn_cards = [item_to_card(a, render_investment(a.get("investment_struct")))
@@ -724,6 +884,19 @@ def plan_briefs(queue: list[dict],
             meta["report_pick"] = pick["topic"]
             meta["report_pick_why"] = pick.get("why", "")
             meta["report_pick_angles"] = pick.get("angles", [])
+        # 조건부 필수 항목 판정과 그 결과. 빈 값도 남긴다 — "왜 이 카드에는
+        # 시사점이 없나"는 판정 등급을 봐야만 답할 수 있다.
+        meta["implication_requirement"] = a.get("implication_requirement", "")
+        if a.get("implication_source"):
+            meta["implication_source"] = a["implication_source"]
+        # 연속일 반복 판정이 붙은 기사는 그 근거를 남긴다. 감점을 받고도 살아남은
+        # 후속 보도가 '왜 살아남았나'(단계 진전)를 사후에 확인할 유일한 자리다.
+        if isinstance(a.get("continuity"), dict):
+            cont = a["continuity"]
+            meta["continuity"] = {k: cont.get(k) for k in
+                                  ("prior_title", "prior_date", "days_ago", "similarity",
+                                   "progression", "progression_kind", "progression_detail",
+                                   "window_days", "repeat_streak", "penalty")}
         return meta
 
     out_items = ([_item_meta(a, "국내", dom_diag) for a in dom]
@@ -739,6 +912,7 @@ def plan_briefs(queue: list[dict],
 
     return {**base, "status": "pending", "briefs": briefs, "items": out_items,
             "report_diag": report_diag,
+            "field_diag": field_diag,
             "selection_stats": {
                 "domestic": region_stats(dom_diag, dom, dom_pool, dom_cont),
                 "overseas": region_stats(forn_diag, forn, forn_pool, forn_cont),
@@ -862,6 +1036,32 @@ def append_selection_stats(outbox: dict, path: Path | None = None,
         "generated_at": now.astimezone(KST).isoformat(),
         "pipeline_status": "partial" if failed else "ok",
         **{k: v for k, v in stats.items()},
+    }
+    with path.open("a", encoding="utf-8") as fp:
+        fp.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    return True
+
+
+def append_field_audit(outbox: dict, path: Path | None = None,
+                       now: datetime | None = None) -> bool:
+    """조건부 필수 항목 보완 결과를 delivery_log.jsonl 에 한 줄 남긴다.
+
+    "이 기사에 한수원 시사점이 왜 없나"는 세 가지 다른 상태다 — 관련성이 낮아
+    애초에 안 물었다 / 물었는데 근거가 없어 모델이 빈 문자열을 냈다 / 만들었는데
+    빈껍데기라 반려했다. 셋을 구분해 남기지 않으면 프롬프트가 망가진 것과
+    '오늘은 그런 기사가 없었다'가 같은 모습으로 보인다.
+    """
+    diag = outbox.get("field_diag")
+    if not isinstance(diag, dict) or not diag.get("candidates"):
+        return False
+    path = path or DELIVERY_LOG_FILE
+    now = now or datetime.now(timezone.utc)
+    rec = {
+        "record_type": "field_completion",
+        "date": outbox.get("date", ""),
+        "generated_at": now.astimezone(KST).isoformat(),
+        "field": "implication",
+        **diag,
     }
     with path.open("a", encoding="utf-8") as fp:
         fp.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -1013,6 +1213,7 @@ def cmd_confirm() -> int:
     # 구분하려면 오늘 파이프라인이 돌았다는 사실 자체가 필요하다.
     append_selection_stats(outbox)
     append_story_audit(outbox)
+    append_field_audit(outbox)
     save_outbox(outbox)
     print(f"[daily_brief] confirm — 상태 {outbox.get('status')}, delivery_log +{n}건")
     return 0
@@ -1088,6 +1289,7 @@ def main() -> int:
     append_delivery_log(outbox)
     append_selection_stats(outbox)
     append_story_audit(outbox)
+    append_field_audit(outbox)
     if not args.from_curated and not args.keep_queue:
         pruned = prune_queue(queue, set(outbox["prune_hashes"]))
         save_queue(pruned)
