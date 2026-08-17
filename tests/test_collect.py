@@ -916,6 +916,43 @@ class TestEvidenceManifestRefresh(unittest.TestCase):
         )
         self.assertEqual(cached, manifest)
 
+    def test_stored_record_can_revalidate_its_own_manifest(self):
+        """캐시에 저장된 레코드만 받아도 manifest 결속이 다시 서야 한다.
+
+        manifest 는 기사 hash 에 묶여 있는데 큐레이션 결과 dict 에는 hash 가
+        없다 — 캐시의 **키**가 hash 다. 그 값을 함께 적어 두지 않으면 저장된
+        레코드만 읽는 소비자(오디오·주간 서사·백필)가 결속을 세우지 못해 멀쩡한
+        manifest 를 통째로 무효로 읽는다. 실측 2026-08-17: 재큐레이션된 80건이
+        전부 이 이유로 무효가 됐다.
+        """
+        from datetime import datetime, timezone
+        import article_quality_gate as gate
+
+        now = datetime(2026, 8, 17, 0, 0, tzinfo=timezone.utc)
+        article = {
+            "hash": "stable-url-hash",
+            "title": "TerraPower equipment contract",
+            "description": "TerraPower signed a 345 MW equipment contract.",
+            "pub": datetime(2026, 8, 16, 0, 0, tzinfo=timezone.utc),
+        }
+        manifest = nb.refresh_evidence_manifest(
+            article, {}, body="The NRC approved the project.", force=True, now=now)
+        components = gate.evidence_manifest_source_components(manifest)
+
+        # 수집이 저장하는 모양 그대로: 큐레이션 결과 + manifest + 결속 지문.
+        stored = {
+            "title": article["title"], "title_kr": "테라파워 기자재 계약",
+            "summary": "테라파워가 345MW급 기자재 계약을 체결했다.",
+            "verified_evidence": manifest,
+            "verified_source_components": components,
+        }
+        self.assertFalse(
+            gate.evidence_manifest_is_valid(manifest, article=stored),
+            "hash 가 없으면 결속을 세울 수 없다 — 이 전제가 깨지면 테스트가 무의미하다")
+
+        stored["hash"] = article["hash"]
+        self.assertTrue(gate.evidence_manifest_is_valid(manifest, article=stored))
+
 
 class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
     """크롤이 남기는 진단 기록이 커밋돼야 한다.

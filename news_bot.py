@@ -2974,6 +2974,12 @@ def main() -> None:
                 cur["verified_evidence"]
             )
         )
+        # manifest 는 기사 hash 에 묶여 있는데, 큐레이션 결과 dict 에는 hash 가
+        # 없다(캐시의 **키**가 hash 다). 그래서 저장된 레코드만 받은 소비자는
+        # 결속을 다시 세울 수 없고, 멀쩡한 manifest 가 통째로 무효로 읽힌다.
+        # 실측 2026-08-17: 재큐레이션 80건이 전부 그 이유로 무효가 됐다.
+        # 값 하나를 같이 적어 두면 manifest 가 레코드 안에서 자립한다.
+        cur["hash"] = h
         optional_source = {
             "article_hash": h,
             "title": article.get("title", ""),
