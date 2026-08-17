@@ -1362,8 +1362,10 @@ def append_quality_audit(outbox: dict, path: Path | None = None,
                          now: datetime | None = None) -> int:
     """자동 발송 보류·최종 카드 수정 결과를 관리자 알림 계약으로 남긴다."""
     diag = outbox.get("quality_diag")
-    if not isinstance(diag, dict):
+    gate_error = outbox.get("quality_gate_error")
+    if not isinstance(diag, dict) and not isinstance(gate_error, dict):
         return 0
+    diag = diag if isinstance(diag, dict) else {}
     held = [row for row in (diag.get("held_before_ranking") or [])
             if isinstance(row, dict)]
     cards = [row for row in (diag.get("final_cards") or []) if isinstance(row, dict)]
@@ -1372,6 +1374,33 @@ def append_quality_audit(outbox: dict, path: Path | None = None,
     generated_at = outbox.get("created_at") or now.astimezone(KST).isoformat()
 
     specs: list[dict] = []
+    if isinstance(gate_error, dict) and gate_error.get("code"):
+        # 여기까지 왔다는 것은 claim 이후에 봉인된 발송 payload 가 달라졌거나,
+        # 게이트 계약이 다른 outbox 를 보내려 했다는 뜻이다. 발송은 이미
+        # 막혔지만 그 사실이 로그 한 줄로 끝나면 아무도 모르고, 그날 브리핑은
+        # 조용히 통째로 빠진다. 재시도로 회복되지 않으므로 첫 관측에 알린다.
+        code = str(gate_error.get("code"))
+        specs.append({
+            "alert_key": f"outbox-quality-claim:{code}",
+            "title": "발송 직전 outbox 품질 claim 불일치로 브리핑 차단",
+            "detail": (
+                f"{code} — 저장 버전={gate_error.get('found_version')!r}, "
+                f"필요 버전={gate_error.get('required_version')}. "
+                "재시도로 회복되지 않으므로 새로 계획해야 그날 브리핑이 나갑니다."),
+            "severity": "critical", "min_occurrences": 1,
+            "items": [{
+                "date": outbox.get("date", ""),
+                "code": code,
+                "status": outbox.get("status", ""),
+                "blocked_briefs": [
+                    brief.get("name") for brief in outbox.get("briefs") or []
+                    if isinstance(brief, dict)
+                    and brief.get("failure_reason") == code
+                ],
+                **{key: value for key, value in gate_error.items()
+                   if key not in {"code"}},
+            }],
+        })
     fallback = [row for row in held if row.get("status") == "fallback"]
     integrity = [row for row in held if row.get("action") == "quarantine"]
     other_held = [row for row in held if row not in fallback and row not in integrity]

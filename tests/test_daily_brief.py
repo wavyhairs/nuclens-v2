@@ -381,6 +381,46 @@ class TestOutboxFlow(OutboxBase):
                                  "quality_payload_digest_mismatch")
                 self.assertEqual(outbox["status"], "quality_rejected")
 
+    def test_blocked_outbox_reaches_the_admin_as_a_quality_event(self):
+        """발송이 막힌 사실이 로그 한 줄로 끝나면 그날 브리핑이 조용히 빠진다."""
+        outbox = db._seal_quality_payload({
+            "schema_version": 1,
+            "quality_gate_version": db.QUALITY_GATE_VERSION,
+            "date": "2026-07-12",
+            "created_at": NOW.isoformat(),
+            "status": "pending",
+            "briefs": [{"name": "국내", "text": "검증된 본문", "status": "pending"}],
+            "items": [], "quality_diag": {},
+        })
+        outbox["briefs"][0]["text"] = "변조된 본문"
+        db.send_outbox(outbox, now=NOW)
+        self.assertEqual(fake_tg.sent_messages, [])
+
+        log = db.ROOT / "quality_event_blocked.jsonl"
+        self.addCleanup(log.unlink, True)
+        added = db.append_quality_audit(outbox, path=log, now=NOW)
+        self.assertEqual(added, 1)
+        row = json.loads(log.read_text(encoding="utf-8").splitlines()[-1])
+        self.assertEqual(row["record_type"], "quality_event")
+        self.assertEqual(row["severity"], "critical")
+        self.assertEqual(row["min_occurrences"], 1)  # 재시도로 회복되지 않는다
+        self.assertIn("quality_payload_digest_mismatch", row["alert_key"])
+        self.assertEqual(row["items"][0]["blocked_briefs"], ["국내"])
+
+    def test_quality_event_is_not_emitted_when_the_outbox_is_intact(self):
+        self.seed_queue(self._queue())
+        db.cmd_plan()
+        outbox = db.load_outbox()
+        db.send_outbox(outbox, now=NOW)
+        self.assertNotIn("quality_gate_error", outbox)
+        log = db.ROOT / "quality_event_intact.jsonl"
+        self.addCleanup(log.unlink, True)
+        db.append_quality_audit(outbox, path=log, now=NOW)
+        rows = [json.loads(line) for line in
+                log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
+        self.assertEqual(
+            [r for r in rows if "outbox-quality-claim" in str(r.get("alert_key"))], [])
+
     def test_social_cards_use_deterministic_final_fact_gate(self):
         cluster = {
             "title": "Canada opens new uranium mine",
