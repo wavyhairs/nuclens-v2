@@ -60,6 +60,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `curated.json` | 큐레이션 캐시 (14일) — weekly 의 입력 |
 | `digest_queue.json` | 발송 대기 큐 (발송분만 hash 단위 제거, 3일 자동 정리). 각 항목의 `raw_sources` 는 수집 단계에서 접힌 기사 — 삭제하지 않고 대표에 매단 근거 |
 | `outbox.json` | 오늘의 발송 계획·상태 (pending/sent/failed) — 중복 발송 방지 핵심 |
+| `channel_outbox.json` | 구독 채널 일괄 공개 배치 (7일 보존). 항목별 sent/failed 를 적어 같은 날 재실행이 이미 나간 자료를 다시 올리지 않게 한다 |
 | `delivery_log.jsonl` | 발송 이력 + 점수 내역 + 모든 선정 story의 fingerprint/보도매체/병합 근거 — 뉴스와 Nuclens의 공통 계약 |
 | `discovery_state.json` | 후속 발굴 쿼리별 성과·냉각 (60일 보존). 커밋 안 하면 헛도는 조합을 영영 못 재운다 |
 | `adaptive_state.json` | 신규 이슈 탐색의 임시 검색어·TTL·성과·폐기 이력. 커밋 안 하면 매 회차 같은 이름을 새로 '발견'하고 연장도 폐기도 안 일어난다 |
@@ -541,6 +542,61 @@ discovery 는 `entity_registry.json` 에 있는 대상만 묻는다. 그래서 �
 "발송했는데 상태 저장 실패 → 다음날 중복" 문제 제거. 같은 날 재실행하면 sent 브리핑은
 건너뛴다. 36시간 지난 pending 은 재발송하지 않는다(stale_skipped).
 
+## 구독 채널 일괄 공개 (`channel_queue.py`)
+
+구독자는 봇 개인 대화에 들어올 수 없다. 여러 명이 받으려면 채널이어야 하고,
+채널이 되는 순간 **도착이 흩어지는 것 자체가** 구독 경험이 된다. 파이프라인은
+기사 카드를 먼저 보내고 웹 빌드를 거쳐 십수 분 뒤 빠른 오디오, 다시 몇 분 뒤
+전문가 오디오를 보낸다 — 혼자 보는 DM 에서는 아무 문제가 아니던 그 간격이
+채널에서는 알림 다섯 번으로 울린다.
+
+그래서 **DM 발송은 그대로 둔다.** 그 자리가 리허설이자 오디오 `file_id` 를 얻는
+유일한 자리다. 나갈 자료는 배치로 모아 마지막 재료(전문가 오디오)가 준비된
+순간 순서대로 한 번에 채널에 싣는다.
+
+- **일일** `daily-<날짜>` — 보고서추천(있는 날만) → 국내 → 해외 → 빠른 → 전문가.
+  본문은 `plan` 단계에서 적재한다. claim push 가 `outbox.json` 과 함께 큐 파일을
+  커밋하므로 뒤 스텝의 `git reset --hard` 가 지나가도 살아남는다.
+- **주간** `weekly-<날짜>` — 판세 하나만 뜨는 즉시. 금요일 저녁 자료를 토요일 아침
+  배치까지 붙들면 '주간'이라는 말이 무색해진다.
+
+오디오는 **재업로드하지 않는다.** mp3 는 git 에 없고(Actions 캐시와 Pages 에만
+산다) 텔레그램 `file_id` 는 같은 봇이라면 다른 대화에서도 재사용되므로, 채널
+발송은 8MB 업로드가 아니라 문자열 하나를 보내는 일이 된다.
+
+계약 세 가지:
+
+| 규칙 | 이유 |
+|---|---|
+| 적재는 멱등 — 이미 `sent` 인 항목은 절대 `pending` 으로 되돌리지 않는다 | plan 은 claim 충돌 때 최대 5회 다시 돈다. 되돌림이 곧 중복 발송이다 |
+| 20시간(`STALE_H`) 넘긴 배치는 공개하지 않는다 | 어제 아침 자료가 오늘 아침 채널에 뜨는 건 지연이 아니라 오배송이다 |
+| 채널 ID 가 없으면 DM 으로 폴백하지 않는다 | '조용히 나 혼자만 받는' 상태는 발송 실패보다 알아채기 어렵다 |
+
+```bash
+python channel_queue.py --check-channel   # 닿는지만 확인 (메시지 안 보냄)
+python channel_queue.py --status          # 배치·항목별 상태
+python channel_queue.py --publish         # 대기 배치 공개 (워크플로가 부르는 명령)
+```
+
+채널이 안 뜰 때: 봇을 채널 **관리자**로 초대하고 '메시지 게시' 권한을 켰는지,
+비공개 채널이면 `@이름` 대신 `-100…` 숫자 ID 를 넣었는지 확인한다. 실패한 항목은
+`failed` 로 남아 다음 실행이 그것만 다시 보낸다.
+
+### 채널 ID 찾기
+
+공개 채널은 `@이름` 을 그대로 쓰면 된다. **비공개 채널은 숫자 ID 여야 하는데 그
+값은 화면 어디에도 안 보인다.** 봇을 관리자로 올린 **직후에**:
+
+```bash
+python channel_queue.py --find-channel
+```
+
+승격하는 행위 자체가 `my_chat_member` 업데이트를 남기고, 관리자가 된 뒤의 채널
+글은 `channel_post` 로 온다(봇은 privacy mode 라 일반 대화는 못 읽지만 이 둘은
+받는다). `getUpdates` 는 최근 24시간분만 주므로, 승격하고 하루가 지났으면 채널에
+글을 하나 올린 뒤 다시 돌린다. 나온 `-100…` 을 `TELEGRAM_CHANNEL_ID` 에 넣고
+`--check-channel` 로 확인한다.
+
 ## 랭킹 조정 (비개발자용)
 
 1. `ranking_config.json` 열기 — 모든 가중치에 한국어 설명 주석이 있다.
@@ -552,7 +608,8 @@ discovery 는 `entity_registry.json` 에 있는 대상만 묻는다. 그래서 �
 
 | 이름 | 필수 | 용도 |
 |---|---|---|
-| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | ✅ | 발송·피드백 수거 |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | ✅ | 봇 개인 대화 발송(리허설). 오디오 `file_id` 도 여기서 얻는다 |
+| `TELEGRAM_CHANNEL_ID` | ⭕ | 구독자용 채널. 미설정 시 채널 공개만 건너뛰고 자료는 큐에 남아 다음 실행이 재시도한다(DM 으로 폴백하지 않음). 닿는지 확인: `python channel_queue.py --check-channel` (메시지를 보내지 않는다) |
 | `TELEGRAM_ADMIN_CHAT_ID` | ⭕ | 수집원 장애·품질 이상 전용 관리자 알림. 미설정 시 Actions 로그만 남기며 공개 채널로 폴백하지 않음. 닿는지 확인: `python operational_alerts.py --check-admin-chat` (메시지를 보내지 않는다) |
 | `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` | ✅ | 국내 뉴스 검색 ([NAVER API HUB](https://www.ncloud.com/product/applicationService/naverApiHub) — developers.naver.com 아님) |
 | `GEMINI_API_KEY` | ⭕ | 없으면 신규 기사 큐레이션·투자관점 생략. 미검증 fallback은 자동 발송하지 않고 재검토 대기 |

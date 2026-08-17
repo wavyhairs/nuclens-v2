@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT))
 
 import article_quality_gate
 import audio_brief
+import channel_queue
 from gemini_client import GeminiError
 
 
@@ -76,6 +77,10 @@ class AudioBriefTestCase(unittest.TestCase):
         audio_brief.WEB_DATA = base / "data"
         audio_brief.AUDIO_DIR = base / "data" / "audio"
         audio_brief.WEB_DATA.mkdir(parents=True)
+        # 발송 성공은 채널 배치 적재로 이어진다 (queue_for_channel). 여기를 돌리지
+        # 않으면 테스트 픽스처가 저장소 루트의 진짜 channel_outbox.json 에 쌓인다.
+        self._orig_queue = channel_queue.QUEUE_FILE
+        channel_queue.QUEUE_FILE = base / "channel_outbox.json"
         self._orig_fns = (audio_brief.is_available, audio_brief.call_json,
                           audio_brief.call_tts, audio_brief.to_mp3,
                           audio_brief.send_telegram_audio)
@@ -95,13 +100,16 @@ class AudioBriefTestCase(unittest.TestCase):
 
     def _restore(self):
         audio_brief.WEB_DATA, audio_brief.AUDIO_DIR = self._orig
+        channel_queue.QUEUE_FILE = self._orig_queue
         (audio_brief.is_available, audio_brief.call_json,
          audio_brief.call_tts, audio_brief.to_mp3,
          audio_brief.send_telegram_audio) = self._orig_fns
 
     def _fake_send(self, mp3_path, meta):
+        # 실제 계약과 같은 모양으로 돌려준다 — 성공은 file_id 를 담은 dict, 실패는
+        # None. bool 을 돌려주면 _mark_sent 가 채널 배치에 실을 값을 못 찾는다.
         self.sent.append((mp3_path.name, dict(meta)))
-        return self.send_ok
+        return {"file_id": "tg-file-id", "message_id": 1} if self.send_ok else None
 
     def _fake_call(self, system_prompt, user_message, **kwargs):
         self.calls.append(user_message)

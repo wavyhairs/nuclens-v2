@@ -174,9 +174,9 @@ def telegram_sender_from_env() -> Callable[[str], object] | None:
         return None
 
     def send(message: str) -> object:
-        # Do not import telegram_send: its CHAT_ID is fixed to the public
-        # briefing channel at import time.  This small adapter cannot silently
-        # route an operational warning to subscribers.
+        # Deliberately not telegram_send: its default target is the public
+        # briefing chat.  This adapter takes no chat argument at all, so it
+        # cannot silently route an operational warning to subscribers.
         request = urllib.request.Request(
             f"https://api.telegram.org/bot{token}/sendMessage",
             data=urllib.parse.urlencode({

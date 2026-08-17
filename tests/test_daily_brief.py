@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import _fake_tg  # noqa: E402
 fake_tg = _fake_tg.installed
 
+import channel_queue  # noqa: E402
 import daily_brief as db  # noqa: E402
 import ranking  # noqa: E402
 
@@ -221,12 +222,16 @@ class OutboxBase(unittest.TestCase):
         self.tmp = TemporaryDirectory()
         p = Path(self.tmp.name)
         self._orig = (db.QUEUE_FILE, db.OUTBOX_FILE, db.OUTBOX_RESULT_FILE,
-                      db.DELIVERY_LOG_FILE, ranking.DELIVERY_LOG_FILE)
+                      db.DELIVERY_LOG_FILE, ranking.DELIVERY_LOG_FILE,
+                      channel_queue.QUEUE_FILE)
         db.QUEUE_FILE = p / "digest_queue.json"
         db.OUTBOX_FILE = p / "outbox.json"
         db.OUTBOX_RESULT_FILE = p / "outbox_result.json"
         db.DELIVERY_LOG_FILE = p / "delivery_log.jsonl"
         ranking.DELIVERY_LOG_FILE = p / "delivery_log.jsonl"
+        # cmd_plan 이 구독 채널 배치를 적재한다 — 돌리지 않으면 테스트 픽스처가
+        # 저장소 루트의 진짜 channel_outbox.json 에 쌓인다.
+        channel_queue.QUEUE_FILE = p / "channel_outbox.json"
         # Gemini 차단 (호출 0)
         self._avail = db.is_available
         db.is_available = lambda: False
@@ -235,7 +240,8 @@ class OutboxBase(unittest.TestCase):
 
     def tearDown(self):
         (db.QUEUE_FILE, db.OUTBOX_FILE, db.OUTBOX_RESULT_FILE,
-         db.DELIVERY_LOG_FILE, ranking.DELIVERY_LOG_FILE) = self._orig
+         db.DELIVERY_LOG_FILE, ranking.DELIVERY_LOG_FILE,
+         channel_queue.QUEUE_FILE) = self._orig
         db.is_available = self._avail
         self.tmp.cleanup()
 

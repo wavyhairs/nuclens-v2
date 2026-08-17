@@ -548,6 +548,15 @@ def main() -> None:
     ok = sum(1 for r in results if r.get("ok"))
     print(f"Weekly report sent ({ok}/{len(results)}).")
 
+    # 주간 판세는 뜨는 즉시 그것 하나만 채널로 — 일일 배치에 태우지 않는다.
+    # 금요일 저녁 자료를 토요일 아침까지 붙들면 '주간'이라는 말이 무색해진다.
+    # 발송 실패해도 리포트 커밋(웹 '주간 흐름' 탭 재료)까지는 가야 하므로 비치명.
+    try:
+        import channel_queue
+        channel_queue.publish_weekly(message)
+    except Exception as exc:  # noqa: BLE001
+        print(f"::warning::주간 판세 채널 공개 실패 — {type(exc).__name__}: {exc}")
+
 
 if __name__ == "__main__":
     main()

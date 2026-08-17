@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT))
 
 import article_quality_gate
 import audio_brief
+import channel_queue
 import expert_audio_brief as expert
 from gemini_client import GeminiError
 
@@ -502,6 +503,10 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
                            audio_brief.AUDIO_DIR, audio_brief.WEB_DATA)
         expert.AUDIO_DIR = audio_brief.AUDIO_DIR = audio_dir
         expert.WEB_DATA = audio_brief.WEB_DATA = base / "data"
+        # 발송 성공은 채널 배치 적재로 이어진다 — 저장소 루트의 진짜 큐 파일에
+        # 테스트 픽스처가 쌓이지 않게 여기도 함께 돌린다.
+        self._orig_queue = channel_queue.QUEUE_FILE
+        channel_queue.QUEUE_FILE = base / "channel_outbox.json"
         self._orig_fns = (expert.is_available, expert.load_briefing,
                           expert.selected_issues, expert.generate_expert_script,
                           expert.synthesize_expert, expert.to_mp3,
@@ -524,6 +529,7 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
     def _restore(self):
         (expert.AUDIO_DIR, expert.WEB_DATA,
          audio_brief.AUDIO_DIR, audio_brief.WEB_DATA) = self._orig_dirs
+        channel_queue.QUEUE_FILE = self._orig_queue
         (expert.is_available, expert.load_briefing,
          expert.selected_issues, expert.generate_expert_script,
          expert.synthesize_expert, expert.to_mp3,
@@ -542,8 +548,9 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
         path.write_bytes(b"mp3")
 
     def _fake_send(self, mp3_path, meta):
+        # 빠른 브리핑과 같은 계약 — 성공은 file_id dict, 실패는 None.
         self.sent.append((mp3_path.name, dict(meta)))
-        return self.send_ok
+        return {"file_id": "tg-expert-id", "message_id": 2} if self.send_ok else None
 
     def _manifest(self):
         return json.loads((expert.AUDIO_DIR / "audio.json").read_text(encoding="utf-8"))
