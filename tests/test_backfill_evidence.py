@@ -150,6 +150,50 @@ class EvidenceRuleTests(BackfillSandbox):
         self.assertTrue(gate.evidence_manifest_is_valid(
             row["verified_evidence"], article=row))
 
+    def test_a_still_binding_manifest_is_left_alone(self):
+        """수집은 본문까지 보고 manifest 를 만들지만 이 스크립트는 제목·발췌만 본다.
+
+        결속이 살아 있는데도 다시 만들면 본문 유래 사실이 조용히 사라진다
+        (실측 2026-08-17: queue 25건·curated 64건, 최악 73개 사실 → 5개).
+        """
+        self.run_backfill("--apply", "--samples", "0")
+        row = self.curated()["aaaa1111bbbb2222"]
+        rich = {**row["verified_evidence"]}
+        rich["entities"] = sorted({*rich.get("entities", []), "westinghouse"})
+        rich["manifest_fingerprint"] = gate._digest_payload(
+            {k: v for k, v in rich.items() if k != "manifest_fingerprint"})
+        row["verified_evidence"] = rich
+        row["verified_source_components"] = (
+            gate.evidence_manifest_source_components(rich))
+        self.write_curated({"aaaa1111bbbb2222": row})
+        self.assertTrue(gate.evidence_manifest_is_valid(rich, article=row))
+
+        self.run_backfill("--apply", "--samples", "0")
+        after = self.curated()["aaaa1111bbbb2222"]
+        self.assertEqual(after["verified_evidence"], rich)
+        self.assertIn("westinghouse", after["verified_evidence"]["entities"])
+
+    def test_a_broken_binding_is_repaired_and_reported(self):
+        """재큐레이션이 hash 만 지운 레코드도 복구된다.
+
+        사유를 남기지 않으면 report.changed 가 0 이라 파일이 아예 안 써진다 —
+        고쳐 놓고 저장하지 않는 것이 제일 나쁜 결말이다.
+        """
+        self.run_backfill("--apply", "--samples", "0")
+        row = self.curated()["aaaa1111bbbb2222"]
+        manifest = row["verified_evidence"]
+        row.pop("hash")
+        self.write_curated({"aaaa1111bbbb2222": row})
+        self.assertFalse(gate.evidence_manifest_is_valid(manifest, article=row))
+
+        self.run_backfill("--apply", "--samples", "0")
+        after = self.curated()["aaaa1111bbbb2222"]
+        self.assertEqual(after["hash"], "aaaa1111bbbb2222")
+        self.assertTrue(gate.evidence_manifest_is_valid(
+            after["verified_evidence"], article=after))
+        # 원래 manifest 를 그대로 되살렸는지 — 결속만 고치면 되는 일이다.
+        self.assertEqual(after["verified_evidence"], manifest)
+
     def test_manifest_does_not_claim_body_facts_it_never_saw(self):
         """본문을 저장하지 않았으므로 manifest 도 제목이 말한 것까지만 봉인한다."""
         self.run_backfill("--apply", "--samples", "0")

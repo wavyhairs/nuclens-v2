@@ -914,6 +914,24 @@ def audit_curation_integrity(article: dict, curation: dict, body: str = ""):
     )
 
 
+def evidence_binding(article: dict, *, now: datetime | None = None) -> dict:
+    """manifest 가 묶이는 네 값 — 저장 레코드와 manifest 가 갈라지지 않게 한 곳에서 만든다.
+
+    이 값들을 레코드에도 함께 적어야 나중에 **저장된 레코드만** 받은 소비자가
+    결속을 다시 세울 수 있다. 여기서 만든 것과 다른 값을 적으면 결속이 어긋나
+    멀쩡한 manifest 가 통째로 무효로 읽힌다 — 그래서 호출부가 각자 계산하지 않고
+    이 함수를 쓴다.
+    """
+    return {
+        "hash": clean_text(article.get("hash")),
+        "title": clean_text(article.get("title")),
+        "source_excerpt": clean_text(article.get("description", ""))[:600],
+        # 파싱 불가·미래 값은 빈 문자열이다. 지어내지 않는다 — 빈 값 자체가
+        # '출처가 쓸 수 있는 발행시각을 주지 않았다'는 기록이다.
+        "published_at": normalize_publication_timestamp(article.get("pub"), now=now),
+    }
+
+
 def refresh_evidence_manifest(article: dict, curation: dict, *, body: str = "",
                               force: bool = False,
                               now: datetime | None = None) -> dict:
@@ -925,14 +943,9 @@ def refresh_evidence_manifest(article: dict, curation: dict, *, body: str = "",
     source fingerprint, rebuilding without a body intentionally drops those old
     body-only facts instead of trusting them for a different article revision.
     """
-    published_at = normalize_publication_timestamp(article.get("pub"), now=now)
-    excerpt = clean_text(article.get("description", ""))[:600]
-    bound_article = {
-        "hash": clean_text(article.get("hash")),
-        "title": clean_text(article.get("title")),
-        "source_excerpt": excerpt,
-        "published_at": published_at,
-    }
+    bound_article = evidence_binding(article, now=now)
+    published_at = bound_article["published_at"]
+    excerpt = bound_article["source_excerpt"]
     source = {
         "article_hash": bound_article["hash"],
         "title": bound_article["title"],
@@ -2974,12 +2987,17 @@ def main() -> None:
                 cur["verified_evidence"]
             )
         )
-        # manifest 는 기사 hash 에 묶여 있는데, 큐레이션 결과 dict 에는 hash 가
-        # 없다(캐시의 **키**가 hash 다). 그래서 저장된 레코드만 받은 소비자는
-        # 결속을 다시 세울 수 없고, 멀쩡한 manifest 가 통째로 무효로 읽힌다.
-        # 실측 2026-08-17: 재큐레이션 80건이 전부 그 이유로 무효가 됐다.
-        # 값 하나를 같이 적어 두면 manifest 가 레코드 안에서 자립한다.
-        cur["hash"] = h
+        # 큐레이션 결과 dict 에는 hash 도 발행시각도 없다 — 캐시의 **키**가
+        # hash 이고, 발행시각은 기사 쪽 값이라 LLM 출력에 들어올 이유가 없다.
+        # 그래서 저장된 레코드만 받은 소비자는 결속을 다시 세울 수 없고, 멀쩡한
+        # manifest 가 통째로 무효로 읽힌다(실측 2026-08-17: 재큐레이션 80건 전부).
+        # manifest 가 묶인 그 값을 그대로 적어 둬야 레코드가 자립한다 — 그래서
+        # 여기서 다시 계산하지 않고 같은 evidence_binding 을 쓴다.
+        binding = evidence_binding(article, now=run_now)
+        cur["hash"] = binding["hash"] or h
+        # 빈 문자열도 적는다. '발행시각을 못 받았다'와 '아직 안 봤다'는 다르고,
+        # manifest 도 빈 값에 묶여 있어 키가 없으면 결속이 어긋난다.
+        cur["published_at"] = binding["published_at"]
         optional_source = {
             "article_hash": h,
             "title": article.get("title", ""),
