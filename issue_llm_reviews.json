@@ -285,10 +285,10 @@
     "0412d08712c9a60e--527a6bd0d4f4a288": {
       "embedding_similarity": 0.8467,
       "left_title": "한수원, 영덕군과 신규 원전 건설 관련 상생발전 협력 합의",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 발전소, 다른 사업",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원전 건설과 양수발전 착공",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "한수원, 포천양수발전소 본공사 착수…2033년 준공 목표",
       "same_event": false
     },
@@ -315,10 +315,10 @@
     "0412d08712c9a60e--7c527ed375648d8f": {
       "embedding_similarity": 0.8462,
       "left_title": "한수원, 영덕군과 신규 원전 건설 관련 상생발전 협력 합의",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 발전소, 다른 사업",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "영덕 원전과 포천양수발전 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "한수원, 1조 7,508억 원 규모 포천양수발전소 본공사 착수",
       "same_event": false
     },
@@ -1173,12 +1173,12 @@
       "same_event": false
     },
     "09465180cdc8f102--911526189a05bdad": {
-      "embedding_similarity": 0.8445,
+      "embedding_similarity": 0.8667,
       "left_title": "중국 타이핑링 2호기 원자력발전소 상업운전 개시",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "중국 원전 건설 및 운전 관련 다른 사건",
-      "reviewed_at": "2026-08-05T22:38:46.407670+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "상운전과 건설 승인은 다른 사안임",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "중국, 신규 원자로 8기 건설 승인",
       "same_event": false
     },
@@ -1195,12 +1195,12 @@
     "09465180cdc8f102--a4723d13eaa57660": {
       "embedding_similarity": 0.8628,
       "left_title": "중국 뤼펑 2호기 '슈퍼 모듈' 설치 완료, 원전 건설 이정표 달성",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "중국 원전 건설 승인 및 설치 완료",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "개별 모듈 설치와 신규 8기 승인은 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "중국, 신규 원자로 8기 건설 승인",
-      "same_event": true
+      "same_event": false
     },
     "09465180cdc8f102--c76e8785efc2694e": {
       "embedding_similarity": 0.8814,
@@ -2415,30 +2415,30 @@
     "0fe72c91dc24354b--9ff80dab9059f991": {
       "embedding_similarity": 0.8575,
       "left_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 SMR",
-      "reviewed_at": "2026-08-04T22:25:38.778650+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 기업의 협력 건",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "웨스팅하우스-아멘텀, APX SMR 플릿 배치 역량 확대를 위한 파트너십 체결",
       "same_event": false
     },
     "0fe72c91dc24354b--ca69ce47dc1e639d": {
       "embedding_similarity": 0.8806,
       "left_title": "ARC Clean Technology, Battelle Energy Alliance와 ARC-100 SMR 배치 지원 전략적 파트너십 체결",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 SMR",
-      "reviewed_at": "2026-08-04T22:25:38.778650+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 SMR 기업의 파트너십 체결임",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "웨스팅하우스-아멘텀, APX SMR 플릿 배치 역량 확대를 위한 파트너십 체결",
       "same_event": false
     },
     "0fe72c91dc24354b--cad8f7d2c2d3c640": {
       "embedding_similarity": 0.8585,
       "left_title": "삼성중공업, 미국 Sargent & Lundy와 부유식 SMR 플랫폼 개발 MOU 체결",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 SMR",
-      "reviewed_at": "2026-08-04T22:25:38.778650+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체결한 파트너십 대상이 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "웨스팅하우스-아멘텀, APX SMR 플릿 배치 역량 확대를 위한 파트너십 체결",
       "same_event": false
     },
@@ -5135,10 +5135,10 @@
     "27009ea4489faffc--5f508326eb5801f7": {
       "embedding_similarity": 0.8585,
       "left_title": "나노 뉴클리어, 미 공군으로부터 Kronos 원자로 개발 SBIR 계약 수주",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 원자로 프로젝트",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 기관과 원자로",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "LANL, ZiaCore 마이크로원자로 임계 도달 발표",
       "same_event": false
     },
@@ -6725,20 +6725,20 @@
     "34575730dc364184--3590184774ef2006": {
       "embedding_similarity": 0.8422,
       "left_title": "캐나다 정부, 마이크로 원자로 기술 개발에 450만 달러 지원",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "SMR 기술 지원과 연료 수입 의존은 다른 사건",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "마이크로 원자로 지원과 연료 수입은 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "캐나다 신규 SMR, 미국·프랑스·영국산 농축 우라늄 연료 수입 의존",
       "same_event": false
     },
     "34575730dc364184--5841f6b7706c0048": {
       "embedding_similarity": 0.8423,
       "left_title": "미국 에너지부, NASA 및 Radiant에 HALEU 연료 할당 결정",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "HALEU 연료 할당과 연료 수입 의존은 다른 사건",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "HALEU 할당과 캐나다 연료 수입은 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "캐나다 신규 SMR, 미국·프랑스·영국산 농축 우라늄 연료 수입 의존",
       "same_event": false
     },
@@ -6775,10 +6775,10 @@
     "34575730dc364184--f33f228a288946ee": {
       "embedding_similarity": 0.8524,
       "left_title": "미국 NRC, DOE 및 캐나다 CNSC, SMR 개발사들과 선진원자로 전망 논의",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "SMR 전망 논의와 연료 수입 의존은 다른 사건",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "규제기관 전망 논의와 연료 수입은 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "캐나다 신규 SMR, 미국·프랑스·영국산 농축 우라늄 연료 수입 의존",
       "same_event": false
     },
@@ -8963,12 +8963,12 @@
       "same_event": false
     },
     "431840aff0e21ddb--911526189a05bdad": {
-      "embedding_similarity": 0.859,
+      "embedding_similarity": 0.8763,
       "left_title": "중국, 신규 원자로 8기 건설 승인",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "중국 원전 건설 및 운전 관련 다른 사건",
-      "reviewed_at": "2026-08-05T22:38:46.407670+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "건설 승인과 상운전은 다른 사안임",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "중국 타이핑링 2호기 원자력발전소 상업운전 개시",
       "same_event": false
     },
@@ -8985,20 +8985,20 @@
     "431840aff0e21ddb--a4723d13eaa57660": {
       "embedding_similarity": 0.8679,
       "left_title": "중국 뤼펑 2호기 '슈퍼 모듈' 설치 완료, 원전 건설 이정표 달성",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "특정 원전 건설 vs 신규 원전 승인",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "설비 공정과 신규 승인 건",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "중국, 신규 원자로 8기 건설 승인",
       "same_event": false
     },
     "431840aff0e21ddb--c76e8785efc2694e": {
       "embedding_similarity": 0.8622,
       "left_title": "중국, 신규 원자로 8기 건설 승인",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "신규 원전 승인 vs 특정 원전 상업운전",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "건설 승인과 상운 개시 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "중국 창장 3호기 원전, 전력망 연결 및 상업 운전 개시",
       "same_event": false
     },
@@ -10115,10 +10115,10 @@
     "4e6a1d2c0301a4d0--a81dcba7d0fa007b": {
       "embedding_similarity": 0.8459,
       "left_title": "미국 NRC, 방사성 물질 운송 규정 현대화 제안 및 의견 수렴",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "방사성 물질 운송 규정 현대화와 원전 해체는 다른 사건",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "운송 규정과 원전 해체는 다른 사안임",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "홀텍, 오이스터 크릭 원전 해체 승인 및 걸프 사우스 진출 추진",
       "same_event": false
     },
@@ -10705,12 +10705,12 @@
     "538c53ac4627ea3f--911526189a05bdad": {
       "embedding_similarity": 0.8475,
       "left_title": "중국 정부, 신규 원전 8기 건설 승인하며 대규모 확장 지속",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "중국 신규 원전 건설 승인 및 개시",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "건설 승인과 상운전은 다른 사안임",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "중국 타이핑링 2호기 원자력발전소 상업운전 개시",
-      "same_event": true
+      "same_event": false
     },
     "538c53ac4627ea3f--9bff425a2d2c0a20": {
       "embedding_similarity": 0.8812,
@@ -10735,10 +10735,10 @@
     "538c53ac4627ea3f--c76e8785efc2694e": {
       "embedding_similarity": 0.8562,
       "left_title": "중국 정부, 신규 원전 8기 건설 승인하며 대규모 확장 지속",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "신규 원전 승인 vs 특정 원전 상업운전",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "신규 승인과 상운 개시 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "중국 창장 3호기 원전, 전력망 연결 및 상업 운전 개시",
       "same_event": false
     },
@@ -13055,10 +13055,10 @@
     "5f508326eb5801f7--e166e0749a04c6dd": {
       "embedding_similarity": 0.8533,
       "left_title": "미국 에너지부, 오클로(Oklo) 시험용 원자로 가동 승인",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 원자로 프로젝트",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 원자로와 기관",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "LANL, ZiaCore 마이크로원자로 임계 도달 발표",
       "same_event": false
     },
@@ -13745,10 +13745,10 @@
     "658e7fc2f563ff54--cc2e553cf2927ac5": {
       "embedding_similarity": 0.8414,
       "left_title": "미국 원자력 기업 웨스팅하우스, 기업공개(IPO) 신청",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "기업 재무 vs 사업 협력",
-      "reviewed_at": "2026-08-04T22:25:38.778650+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사건 내용이 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결",
       "same_event": false
     },
@@ -14055,10 +14055,10 @@
     "6833a35dd8fc11fe--9ff80dab9059f991": {
       "embedding_similarity": 0.8429,
       "left_title": "McDermott, 네덜란드 Rolls-Royce SMR 프로젝트 지원 협력 계약 체결",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 SMR 프로젝트",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 기업들의 SMR 협력",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
       "same_event": false
     },
@@ -14085,10 +14085,10 @@
     "6833a35dd8fc11fe--cc2e553cf2927ac5": {
       "embedding_similarity": 0.8542,
       "left_title": "McDermott, 네덜란드 Rolls-Royce SMR 프로젝트 지원 협력 계약 체결",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 SMR",
-      "reviewed_at": "2026-08-04T22:25:38.778650+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 기업의 계약 건",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결",
       "same_event": false
     },
@@ -14583,24 +14583,24 @@
       "same_event": true
     },
     "71301f3f0739bc0b--756c2e6e80bbd36e": {
-      "embedding_similarity": 0.8497,
+      "embedding_similarity": 0.8484,
       "left_title": "내년 원전 4기 계속운전 절차 미착수, 전력 수급 불안정 우려",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "고리 3·4호기 계속운전 심의 관련",
-      "reviewed_at": "2026-08-05T22:38:46.407670+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "계속운전 심사 지연 및 일정 관련 사안",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "고리 3·4호기 올해, 한빛 1·2호기 내년 계속운전 심사 상정 예정",
       "same_event": true
     },
     "71301f3f0739bc0b--8087dd0c3497cc5f": {
-      "embedding_similarity": 0.8424,
+      "embedding_similarity": 0.8461,
       "left_title": "내년 원전 4기 계속운전 절차 미착수, 전력 수급 불안정 우려",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "고리 3·4호기 계속운전 심의 관련",
-      "reviewed_at": "2026-08-05T22:38:46.407670+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "계속운전 절차 미착수 우려와 원안위 심의는 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원안위, 고리 3·4호기 계속운전 연내 결론 및 SMR 규제 가속화",
-      "same_event": true
+      "same_event": false
     },
     "71301f3f0739bc0b--80ab9984fd458758": {
       "embedding_similarity": 0.8527,
@@ -14635,12 +14635,12 @@
     "71301f3f0739bc0b--da9a4893cdd4761d": {
       "embedding_similarity": 0.8412,
       "left_title": "내년 원전 4기 계속운전 절차 미착수, 전력 수급 불안정 우려",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "A는 일반적 문제, B는 특정 심의",
-      "reviewed_at": "2026-08-04T18:05:26.705058+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "고리 3·4호기 계속운전 심의 관련",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원안위, 고리 3·4호기 계속운전 하반기 심의 예정",
-      "same_event": false
+      "same_event": true
     },
     "7160a03bddccd9ff--cb38eed27ac4ccd4": {
       "embedding_similarity": 0.8571,
@@ -16165,10 +16165,10 @@
     "8087dd0c3497cc5f--b3adbd243878a3c3": {
       "embedding_similarity": 0.8511,
       "left_title": "KEPIC, AIㆍSMR 시대 맞춰 기준체계 확장",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "KEPIC 기준체계 확장과 원안위 결정은 다른 사건",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "KEPIC 기준 체계와 원안위 심의는 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원안위, 고리 3·4호기 계속운전 연내 결론 및 SMR 규제 가속화",
       "same_event": false
     },
@@ -16235,10 +16235,10 @@
     "8087dd0c3497cc5f--e2e42584280401fc": {
       "embedding_similarity": 0.8639,
       "left_title": "원전 안전기준 최신화 추진: 안전등급·가동중검사·품질보증 규정 개정",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "안전기준 개정과 원안위 결정은 다른 사건",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "안전기준 개정과 계속운전 결론은 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원안위, 고리 3·4호기 계속운전 연내 결론 및 SMR 규제 가속화",
       "same_event": false
     },
@@ -16285,12 +16285,12 @@
     "8087dd0c3497cc5f--fd17939220b56c39": {
       "embedding_similarity": 0.8427,
       "left_title": "원전 9기 계속운전 심사 인력난으로 지연, 전력 공백 우려 제기",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "원전 계속운전 심사 지연과 원안위 결정",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "심사 인력난과 원안위 계속운전 결론은 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원안위, 고리 3·4호기 계속운전 연내 결론 및 SMR 규제 가속화",
-      "same_event": true
+      "same_event": false
     },
     "8087dd0c3497cc5f--ffdb243b18554e80": {
       "embedding_similarity": 0.8513,
@@ -16765,10 +16765,10 @@
     "89a559f17ff440e3--9ff80dab9059f991": {
       "embedding_similarity": 0.8459,
       "left_title": "롱비치 항만, 미 해양청(MARAD)과 해상 원자로 개발 협력 첫 파트너십 체결",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 주체, 다른 SMR 프로젝트",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "해상 원자로와 SMR 배치 협력",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
       "same_event": false
     },
@@ -18625,12 +18625,12 @@
     "9a7b23e4ae5be6f3--da9a4893cdd4761d": {
       "embedding_similarity": 0.8752,
       "left_title": "원전 계속운전 심사 가속화 및 사고 은폐 시 처벌 강화",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "A는 심사 정책, B는 특정 심의",
-      "reviewed_at": "2026-08-04T18:05:26.705058+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "계속운전 심사 가속화 및 하반기 심의 관련",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원안위, 고리 3·4호기 계속운전 하반기 심의 예정",
-      "same_event": false
+      "same_event": true
     },
     "9a7b23e4ae5be6f3--de7403f074cdc5b8": {
       "embedding_similarity": 0.8407,
@@ -18645,10 +18645,10 @@
     "9a7b23e4ae5be6f3--e2e42584280401fc": {
       "embedding_similarity": 0.8778,
       "left_title": "원전 안전기준 최신화 추진: 안전등급·가동중검사·품질보증 규정 개정",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 규정 개정 vs 일반 정책",
-      "reviewed_at": "2026-08-04T22:25:38.778650+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "안전기준 최신화와 계속운전 심사는 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원전 계속운전 심사 가속화 및 사고 은폐 시 처벌 강화",
       "same_event": false
     },
@@ -18665,10 +18665,10 @@
     "9a7b23e4ae5be6f3--fd17939220b56c39": {
       "embedding_similarity": 0.8591,
       "left_title": "원전 9기 계속운전 심사 인력난으로 지연, 전력 공백 우려 제기",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "일반적 지연 vs 일반 정책",
-      "reviewed_at": "2026-08-04T22:25:38.778650+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "계속운전 관련 다른 안건",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원전 계속운전 심사 가속화 및 사고 은폐 시 처벌 강화",
       "same_event": false
     },
@@ -18925,20 +18925,20 @@
     "9ff80dab9059f991--cad8f7d2c2d3c640": {
       "embedding_similarity": 0.8506,
       "left_title": "삼성중공업, 미국 Sargent & Lundy와 부유식 SMR 플랫폼 개발 MOU 체결",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 SMR 프로젝트",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 SMR 관련 협력",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
       "same_event": false
     },
     "9ff80dab9059f991--cc2e553cf2927ac5": {
       "embedding_similarity": 0.8822,
       "left_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 SMR",
-      "reviewed_at": "2026-08-04T22:25:38.778650+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "ARC 협력과 웨스팅하우스 계약은 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결",
       "same_event": false
     },
@@ -18955,10 +18955,10 @@
     "9ff80dab9059f991--f33f228a288946ee": {
       "embedding_similarity": 0.853,
       "left_title": "미국 NRC, DOE 및 캐나다 CNSC, SMR 개발사들과 선진원자로 전망 논의",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "규제기관 논의 vs 특정 SMR 협력",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "규제기관 논의와 개별 협력",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
       "same_event": false
     },
@@ -19095,10 +19095,10 @@
     "a4723d13eaa57660--c76e8785efc2694e": {
       "embedding_similarity": 0.8467,
       "left_title": "중국 뤼펑 2호기 '슈퍼 모듈' 설치 완료, 원전 건설 이정표 달성",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 원전, 다른 건설 단계",
-      "reviewed_at": "2026-08-04T02:05:14.754257+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 중국 원전 호기",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "중국 창장 3호기 원전, 전력망 연결 및 상업 운전 개시",
       "same_event": false
     },
@@ -20965,22 +20965,22 @@
     "beff8f802cca43be--d25bb2c522ec8e18": {
       "embedding_similarity": 0.8401,
       "left_title": "원자력안전위원회, 입법 및 행정예고 사항 공지",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "원안위 공지 및 고리 3·4호기 결정",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "입법 공지와 계속운전 하반기 결정은 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원안위, 고리 3·4호기 계속운전 올해 하반기 결정 및 처벌법 개정 추진",
-      "same_event": true
+      "same_event": false
     },
     "beff8f802cca43be--e2e42584280401fc": {
       "embedding_similarity": 0.854,
       "left_title": "원전 안전기준 최신화 추진: 안전등급·가동중검사·품질보증 규정 개정",
-      "model": "gemini-2.5-flash-lite",
-      "prompt_version": 1,
-      "reason": "안전기준 개정과 원안위 결정",
-      "reviewed_at": "2026-08-06T01:26:30.685534+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "안전기준 개정과 계속운전 결론은 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원안위, 고리 3·4호기 계속운전 올해 하반기 결정 및 처벌법 개정 추진",
-      "same_event": true
+      "same_event": false
     },
     "bf5ea0f3606646e1--d217422a62af77e2": {
       "embedding_similarity": 0.8865,
@@ -21445,10 +21445,10 @@
     "ca69ce47dc1e639d--cc2e553cf2927ac5": {
       "embedding_similarity": 0.8773,
       "left_title": "ARC Clean Technology, Battelle Energy Alliance와 ARC-100 SMR 배치 지원 전략적 파트너십 체결",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 SMR",
-      "reviewed_at": "2026-08-04T22:25:38.778650+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 기업 간의 파트너십 체결임",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결",
       "same_event": false
     },
@@ -21525,10 +21525,10 @@
     "cad8f7d2c2d3c640--cc2e553cf2927ac5": {
       "embedding_similarity": 0.8627,
       "left_title": "삼성중공업, 미국 Sargent & Lundy와 부유식 SMR 플랫폼 개발 MOU 체결",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "다른 회사, 다른 SMR",
-      "reviewed_at": "2026-08-04T22:25:38.778650+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 대상이 다름",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결",
       "same_event": false
     },
@@ -21805,10 +21805,10 @@
     "da9a4893cdd4761d--e2e42584280401fc": {
       "embedding_similarity": 0.8409,
       "left_title": "원전 안전기준 최신화 추진: 안전등급·가동중검사·품질보증 규정 개정",
-      "model": "gemini-2.5-flash",
-      "prompt_version": 1,
-      "reason": "A는 안전기준 개정, B는 특정 심의",
-      "reviewed_at": "2026-08-04T18:05:26.705058+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "기준 개정과 개별 심의 건",
+      "reviewed_at": "2026-08-17T15:34:10.587754+00:00",
       "right_title": "원안위, 고리 3·4호기 계속운전 하반기 심의 예정",
       "same_event": false
     },
