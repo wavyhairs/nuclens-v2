@@ -127,9 +127,22 @@
       <div id="keywordGroups" class="admin-list"></div>
     </section>
 
+    <!-- 학습된 검색어. 고정 키워드와 같은 칸에 두지 않는 이유는 **수명이 다르기**
+         때문이다 — 이 말들은 기사에서 자동으로 생겨 24~72시간만 살고 성과가 없으면
+         스스로 사라진다. 한 칸에 섞으면 관리자는 자기가 지운 적 없는 키워드가
+         며칠 뒤 사라져 있는 것을 보게 되고, 그때부터 이 화면을 못 믿는다. -->
+    <section class="admin-section" aria-labelledby="learnedConfigTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="learnedConfigTitle">학습된 검색어</h2></div>
+        <span class="data-note">신규 이슈 탐색이 기사에서 찾아낸 이름 · 24~72시간짜리 임시 검색어
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-learned-terms">쓰는 법</button></span>
+      </div>
+      <div id="learnedTerms" class="admin-list"></div>
+    </section>
+
     <section class="admin-section" aria-labelledby="antiConfigTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="antiConfigTitle">공통 제외어</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="antiConfigTitle">공통 제외어</h2></div>
         <span class="data-note">그룹과 무관하게 제목에 걸리면 버립니다
           · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-anti">쓰는 법</button></span>
       </div>
@@ -138,7 +151,7 @@
 
     <section class="admin-section" aria-labelledby="feedConfigTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="feedConfigTitle">수집원</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="feedConfigTitle">수집원</h2></div>
         <span class="data-note">news_bot.RSS_SOURCES · OFFICIAL_DIRECT_SOURCES · pubs_fetch
           · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-feeds">쓰는 법</button></span>
       </div>
@@ -148,7 +161,7 @@
 
     <section class="admin-section" aria-labelledby="tierConfigTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="tierConfigTitle">출처 등급</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">05</span><h2 id="tierConfigTitle">출처 등급</h2></div>
         <span class="data-note">sources.json · 선정 점수 가산과 근거 역할을 정합니다
           · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-tiers">쓰는 법</button></span>
       </div>
@@ -205,6 +218,7 @@
         <a href="#help-issue">날짜를 넘는 병합</a>
         <a href="#help-borderline">붙지 않은 경계선</a>
         <a href="#help-keywords">검색 키워드</a>
+        <a href="#help-learned-terms">학습된 검색어</a>
         <a href="#help-anti">공통 제외어</a>
         <a href="#help-feeds">수집원</a>
         <a href="#help-tiers">출처 등급</a>
@@ -342,6 +356,31 @@
             통과시킵니다.</dd></div>
           <div><dt>주의</dt><dd>검색어를 넓게 넣으면 수집량이 늘고 잡음도 같이 늘어납니다.
             효과는 다음 수집 로그와 '병합 진단'의 건수로 확인하세요.</dd></div>
+        </dl>
+      </article>
+
+      <article class="admin-help-card" id="help-learned-terms">
+        <h3>학습된 검색어</h3>
+        <p class="admin-help-lead">고정 키워드가 <strong>아는 말</strong>을 묻는다면, 이쪽은
+          기사에 처음 나타난 <strong>모르는 이름</strong>을 잠깐 쫓습니다. 사전(entity_registry)
+          에도 고정 키워드에도 없는 원전·기업·정책·노형 이름이 최근 기사에 충분한 무게로
+          등장하면 24~72시간짜리 임시 검색어가 자동으로 만들어집니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>스스로 사라집니다</dt><dd>기간이 끝나거나 신규 기사를 세 번 연속 못 물어
+            오면 폐기됩니다. 반대로 새 기사를 물어 오면 추적 기간이 하루씩 늘고, 성과가
+            여러 날 이어지면 <em>승격 후보</em>가 됩니다.</dd></div>
+          <div><dt>예산이 따로입니다</dt><dd>고정 키워드와 후속 발굴(discovery)의 검색 예산을
+            건드리지 않습니다. 하루 질의 수·새로 만들 말의 수·동시에 쫓는 말의 수에 각각
+            상한이 있어, 자동 생성이 조용히 불어나지 않습니다.</dd></div>
+          <div><dt>직접 넣기</dt><dd>입력란에 적으면 점수와 무관하게 바로 쫓습니다.
+            <strong>직접 넣은 말은 만료되지 않습니다</strong> — 넣은 사람이 뺍니다.</dd></div>
+          <div><dt>빼기</dt><dd>칩의 <em>×</em> 또는 <em>빼기</em>. 자동으로 다시 만들어지지
+            않습니다(자동 폐기와 다릅니다 — 그쪽은 기간이 지나면 다시 후보가 됩니다).</dd></div>
+          <div><dt>고정 키워드로</dt><dd>계속 값어치가 있다고 판단되면 그룹을 골라 올립니다.
+            그때부터 매 수집마다 검색에 나가고, 임시 검색어의 상한·자동 폐기에서 벗어납니다.</dd></div>
+          <div><dt>entity_registry 승격</dt><dd>초안만 보여 줍니다. 별칭과
+            <code>match_policy</code> 는 사람이 정해야 합니다 — 잘못 붙은 엔티티는 그 엔티티
+            페이지 전체의 신뢰를 깎기 때문입니다.</dd></div>
         </dl>
       </article>
 

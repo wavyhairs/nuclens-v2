@@ -1076,6 +1076,9 @@ class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
         다시 던지고, 헛도는 조합을 영영 못 재운다(zero_yield_streak 이 늘 0)."""
         yml = (self.ROOT / ".github" / "workflows" / "crawl.yml").read_text(encoding="utf-8")
         self.assertIn("discovery_state.json", yml)
+        # 신규 이슈 탐색도 같다 — 상태를 안 남기면 TTL·성과·폐기가 매 회차
+        # 0 에서 다시 시작하고, 그러면 임시 검색어가 영원히 임시가 아니게 된다.
+        self.assertIn("adaptive_state.json", yml)
 
     def test_every_workflow_that_builds_site_data_passes_the_gemini_key(self):
         """빌드가 데이터를 만드는 곳이면 이슈 병합 판정도 같이 돌아야 한다.

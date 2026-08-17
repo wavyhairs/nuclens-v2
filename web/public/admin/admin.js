@@ -87,6 +87,15 @@ const KIND_LABEL = {
   feed_add: "수집원 추가", feed_disable: "수집원 중지",
   official_disable: "기관 수집 중지",
   tier_upsert: "출처 등급 수정", tier_remove: "출처 등급 삭제",
+  learned_term_add: "학습 검색어 추가", learned_term_remove: "학습 검색어 삭제",
+  learned_term_keep: "학습 검색어 유지",
+};
+
+// 신규 이슈 탐색이 붙이는 유형. 화면에서 'plant' 를 그대로 보이면 관리자는
+// 이것이 무슨 축인지 알 수 없다.
+const LEARNED_TYPE_LABEL = {
+  plant: "원전", company: "기업", org: "기관",
+  project: "정책·사업", tech: "노형·기술", manual: "직접 입력",
 };
 
 const SOURCE_TYPES = [
@@ -856,6 +865,8 @@ function renderKeywords() {
       </details>
     </article>`).join("");
 
+  renderLearnedTerms();
+
   const anti = state.config?.anti_keywords || [];
   document.getElementById("antiKeywords").innerHTML = `<article class="admin-card">
     <div class="admin-card-head">
@@ -867,6 +878,130 @@ function renderKeywords() {
       baseValues: anti.filter(value => !entriesOf("anti_add").some(entry => entry.value === value)),
     })}</div>
     ${addForm("anti_add", "", "새 공통 제외어 (예: 체육대회)")}
+  </article>`;
+}
+
+// ── 학습된 검색어 ───────────────────────────────────────────────────────────
+//
+// 고정 키워드와 **다른 층**이라 같은 칸에 섞지 않는다. 고정 키워드는 사람이
+// 정하고 영원히 나가지만, 이 말들은 기사에서 자동으로 생겨 24~72시간만 살고
+// 성과가 없으면 스스로 사라진다. 한 목록으로 그리면 관리자는 자기가 지운 적
+// 없는 키워드가 며칠 뒤 사라져 있는 것을 보게 된다.
+//
+// 그래서 화면이 반드시 말해야 하는 것이 셋이다: **왜 생겼나**(근거 기사),
+// **언제 사라지나**(남은 시간), **뭘 물어 왔나**(성과). 이 셋이 없으면 목록은
+// 판단할 수 없는 목록이고, 판단할 수 없는 목록은 아무도 안 본다.
+function learnedTermRow(row) {
+  const life = row.pinned
+    ? '<span class="admin-badge">고정</span>'
+    : (typeof row.expires_in_hours === "number"
+      ? `${Math.max(0, Math.round(row.expires_in_hours))}시간`
+      // 승격 후보는 만료로 지우지 않는다 — 사람이 결정할 때까지 붙잡아 둔다.
+      : (row.status === "promote_candidate" ? "판단 대기" : "—"));
+  const evidence = (row.evidence || []).map(item =>
+    `<li>${esc(item.title || "제목 없음")}<small>${esc(item.domain || "매체 미상")}</small></li>`).join("");
+  return `<tr>
+    <td><strong>${esc(row.term)}</strong><small>${esc(row.query)}</small></td>
+    <td><span class="admin-badge">${esc(LEARNED_TYPE_LABEL[row.type] || row.type || "—")}</span></td>
+    <td><span class="admin-badge${row.status === "promote_candidate" ? " warn" : ""}">${
+      esc(row.status_label || "추적 중")}</span>${
+      row.origin === "console" ? '<small>직접 추가</small>' : ""}</td>
+    <td class="num">${esc(life)}</td>
+    <td class="num">${row.new_articles}건<small>검색 ${row.queries_run}회 · ${row.yield_days}일 성과</small></td>
+    <td>${evidence ? `<details class="admin-evidence"><summary>근거 ${
+      (row.evidence || []).length}건</summary><ul class="admin-titles">${evidence}</ul></details>` : "—"}</td>
+    <td>
+      <div class="admin-form-buttons">
+        ${row.pinned ? "" : `<button class="admin-mini" data-act="learned-keep"
+          data-value="${esc(row.term)}">계속 추적</button>`}
+        <button class="admin-mini" data-act="learned-promote"
+          data-id="${esc(row.id)}" data-query="${esc(row.query)}">고정 키워드로</button>
+        <button class="admin-mini danger" data-act="chip-remove"
+          data-kind="learned_term_remove" data-add-kind="learned_term_add"
+          data-group="" data-value="${esc(row.term)}">빼기</button>
+      </div>
+      <div class="admin-form-slot" data-slot="learned-${esc(row.id)}"></div>
+    </td>
+  </tr>`;
+}
+
+// 승격은 새 판정 종류가 아니라 `keyword_add` 다 — "이 말을 고정 목록에 넣는다"와
+// 같은 판단이기 때문이다. 그룹을 고르게 하는 이유는 그룹이 앵커·제외어를 함께
+// 갖는 한 벌이라, 어느 벌에 넣느냐가 곧 어떤 잡음 필터를 태우느냐이기 때문이다.
+function learnedPromoteForm(query) {
+  const groups = (state.config?.keywords?.groups || []).map(group => group.name);
+  return `<form class="admin-form" data-act="learned-promote-save">
+    <input type="hidden" name="value" value="${esc(query)}">
+    <p class="admin-hint">고정 키워드로 올리면 <strong>매 수집마다 검색에 나갑니다</strong>
+      — 임시 검색어의 예산 상한과 자동 폐기가 더 이상 적용되지 않습니다.</p>
+    <label class="admin-field"><span>넣을 그룹</span>
+      <select name="group">${groups.map(name =>
+        `<option value="${esc(name)}">${esc(name)}</option>`).join("")}</select></label>
+    <label class="admin-field"><span>사유</span>
+      <input name="note" type="text" maxlength="200" placeholder="예: 3일 연속 신규 기사"></label>
+    <div class="admin-form-buttons">
+      <button type="submit" class="admin-mini primary">고정 키워드로 올리기</button>
+      <button type="button" class="admin-mini" data-act="form-close">취소</button>
+    </div>
+  </form>`;
+}
+
+function renderLearnedTerms() {
+  const box = document.getElementById("learnedTerms");
+  if (!box) return;
+  const search = state.config?.search || {};
+  const rows = search.learned_terms || [];
+  const stats = search.learned_stats || {};
+  const retired = search.learned_retired || [];
+  const promote = rows.filter(row => row.status === "promote_candidate");
+
+  const drafts = promote.filter(row => row.registry_draft).map(row =>
+    `<li><strong>${esc(row.term)}</strong>
+      <code>${esc(row.registry_draft)}</code></li>`).join("");
+
+  box.innerHTML = `<article class="admin-card">
+    <div class="admin-card-head">
+      <div><h3>학습된 검색어</h3>
+        <p class="data-note">기사에서 처음 본 이름으로 자동 생성 · 24~72시간만 삽니다</p></div>
+      <p class="admin-card-scale">${rows.length}개<small>정원 ${stats.capacity ?? "—"}</small></p>
+    </div>
+    ${search.learned_error
+      ? `<div class="error-state"><strong>학습된 검색어를 읽지 못했습니다</strong>
+          <p>${esc(search.learned_error)}</p></div>`
+      : ""}
+    <div class="admin-stats">
+      ${stat("오늘 쓴 질의", `${stats.spent_today ?? 0}/${stats.daily_budget ?? 0}`,
+             "고정 키워드·후속 발굴 예산과 별도")}
+      ${stat("오늘 새로 만든 말", `${stats.minted_today ?? 0}/${stats.mint_cap ?? 0}`, "하루 상한")}
+      ${stat("승격 후보", `${stats.promote_candidates ?? 0}개`, "성과가 이어진 말")}
+      ${stat("폐기됨", `${stats.retired ?? 0}개`, "성과 없거나 기간 만료")}
+    </div>
+    <div class="admin-chip-block">
+      <h4>지금 쫓고 있는 말</h4>
+      <div class="topic-row">${editableChips(rows.map(row => row.term), {
+        addKind: "learned_term_add", removeKind: "learned_term_remove",
+        baseValues: rows.filter(row => row.origin !== "console").map(row => row.term),
+      })}</div>
+      ${addForm("learned_term_add", "", "임시 검색어 직접 추가 (예: 아보이티즈 파워)")}
+    </div>
+    ${rows.length ? `<div class="admin-table-scroll"><table class="admin-table">
+      <thead><tr><th>검색어</th><th>유형</th><th>상태</th><th class="num">남은 기간</th>
+        <th class="num">성과</th><th>왜 생겼나</th><th></th></tr></thead>
+      <tbody>${rows.map(learnedTermRow).join("")}</tbody>
+    </table></div>` : `<div class="empty-state"><strong>지금 쫓고 있는 말이 없습니다</strong>
+      <p>최근 기사에 사전에 없는 이름이 충분한 무게로 등장하면 여기 자동으로 쌓입니다.
+      직접 넣은 말은 만료되지 않습니다 — 넣은 사람이 뺍니다.</p></div>`}
+    ${drafts ? `<details class="admin-evidence"><summary>entity_registry 승격 초안 ${
+      promote.length}건 — 저장소에 넣을 항목</summary>
+      <p class="admin-hint">별칭과 <code>match_policy</code> 는 사람이 정해야 해서 화면에서
+        등재하지 않습니다. 잘못 붙은 엔티티는 그 엔티티 페이지 전체의 신뢰를 깎습니다 —
+        아래 초안을 <code>entity_registry.json</code> 에 넣고 별칭을 좁히세요.</p>
+      <ul class="admin-titles">${drafts}</ul></details>` : ""}
+    ${retired.length ? `<details class="admin-evidence"><summary>최근 폐기 ${
+      retired.length}건 — 왜 사라졌나</summary><ul class="admin-titles">${
+      retired.map(row => `<li>${esc(row.term)}<small>${esc(row.reason)} · 신규 ${
+        row.new_articles}건 · ${esc(String(row.retired_at || "").slice(0, 10))}</small></li>`)
+        .join("")}</ul></details>` : ""}
   </article>`;
 }
 
@@ -1234,6 +1369,21 @@ async function onClick(event) {
     return;
   }
 
+  if (act === "learned-keep") {
+    await submit({
+      op: "add",
+      entry: { kind: "learned_term_keep", value: data.value, note: "콘솔에서 계속 추적" },
+    }, `'${data.value}' 를 붙잡았습니다 — 만료로 사라지지 않습니다.`);
+    return;
+  }
+
+  if (act === "learned-promote") {
+    closeForms();
+    const slot = findSlot(`learned-${data.id}`);
+    if (slot) slot.innerHTML = learnedPromoteForm(data.query);
+    return;
+  }
+
   if (act === "feed-disable") {
     const added = entriesOf("feed_add").find(entry => entry.url === data.target);
     if (added) {
@@ -1317,6 +1467,27 @@ async function onSubmit(event) {
       entry: { kind: form.dataset.kind, group: form.dataset.group, value, note: "콘솔에서 추가" },
     }, `'${value}' 를 넣었습니다 — 다음 수집부터 검색에 나갑니다.`);
     if (ok) form.reset();
+    return;
+  }
+
+  // 승격 = 고정 키워드 추가. 임시 검색어 쪽 항목은 굳이 지우지 않는다 — 같은
+  // 질의가 고정 목록에 서면 adaptive 가 중복으로 보고 스스로 만들지 않고,
+  // 살아 있던 항목은 만료로 사라진다. 두 번 누르게 하지 않기 위해서다.
+  if (act === "learned-promote-save") {
+    const value = String(data.get("value") || "").trim();
+    const group = String(data.get("group") || "").trim();
+    if (!value || !group) {
+      toast("올릴 그룹을 고르세요.", "error");
+      return;
+    }
+    const ok = await submit({
+      op: "add",
+      entry: {
+        kind: "keyword_add", group, value,
+        note: String(data.get("note") || "").trim() || "학습된 검색어에서 승격",
+      },
+    }, `'${value}' 를 ${group} 고정 키워드로 올렸습니다.`);
+    if (ok) closeForms();
     return;
   }
 
