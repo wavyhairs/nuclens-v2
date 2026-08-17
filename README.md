@@ -553,7 +553,7 @@ discovery 는 `entity_registry.json` 에 있는 대상만 묻는다. 그래서 �
 | 이름 | 필수 | 용도 |
 |---|---|---|
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | ✅ | 발송·피드백 수거 |
-| `TELEGRAM_ADMIN_CHAT_ID` | ⭕ | 수집원 장애·품질 이상 전용 관리자 알림. 미설정 시 Actions 로그만 남기며 공개 채널로 폴백하지 않음 |
+| `TELEGRAM_ADMIN_CHAT_ID` | ⭕ | 수집원 장애·품질 이상 전용 관리자 알림. 미설정 시 Actions 로그만 남기며 공개 채널로 폴백하지 않음. 닿는지 확인: `python operational_alerts.py --check-admin-chat` (메시지를 보내지 않는다) |
 | `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` | ✅ | 국내 뉴스 검색 ([NAVER API HUB](https://www.ncloud.com/product/applicationService/naverApiHub) — developers.naver.com 아님) |
 | `GEMINI_API_KEY` | ⭕ | 없으면 신규 기사 큐레이션·투자관점 생략. 미검증 fallback은 자동 발송하지 않고 재검토 대기 |
 | `IMAP_USER` / `IMAP_PASSWORD` | ⭕ | ANS 뉴스레터 수집 (Gmail 앱 비밀번호, 공백 제거) |
@@ -598,6 +598,45 @@ python news_archive.py --migrate-quality --apply
 ```
 
 웹 빌드는 위 조건을 다시 검사하고 위반이 있으면 배포 전에 실패한다.
+
+## 관리자 알림이 안 올 때
+
+증상은 크롤 로그의 이 한 줄이다.
+
+```
+[ops-monitor] 관리자 알림 실패(비치명): ... HTTP 400: Bad Request: chat not found
+```
+
+알림은 **유실되지 않는다** — 발송에 성공할 때까지 pending 으로 남아 다음 회차에
+다시 시도한다. 다만 **설정 오류는 재시도로 낫지 않는다.** 그래서 로그가 둘을
+가른다: 일시 장애는 `::warning::`, 설정 오류는 `::error::` 로 찍고 무엇을
+확인해야 하는지 함께 적는다(값 자체는 로그에 남기지 않는다 — Actions 로그는
+협업자 누구나 읽고, 채팅 ID 는 그 자체로 대화 상대를 특정한다).
+
+메시지를 보내지 않고 닿는지만 확인:
+
+```bash
+TELEGRAM_BOT_TOKEN=... TELEGRAM_ADMIN_CHAT_ID=... python operational_alerts.py --check-admin-chat
+```
+
+흔한 원인 순서대로:
+
+| 값의 모양 | 원인 |
+|---|---|
+| 공백·따옴표가 섞임 | 시크릿을 붙여 넣을 때 생긴다. 화면에서는 안 보여 제일 오래 산다 |
+| `-123456…` (옛 그룹) | 그룹이 **슈퍼그룹으로 승격되면 ID 가 `-100…` 으로 바뀐다** |
+| `-100…` | 봇이 그 방에서 내보내졌다 |
+| 양수 (개인 대화) | 그 사람이 봇에게 먼저 `/start` 를 눌러야 봇이 말을 걸 수 있다 |
+| `@name` | 비공개 채널이면 username 으로 못 보낸다. 숫자 ID 를 쓴다 |
+
+운영 전용 그룹의 ID 를 찾는 법 — 그룹에 봇을 초대하기만 하면 된다(봇은 기본
+privacy mode 라 일반 메시지는 못 읽지만, **초대 자체가** `my_chat_member`
+업데이트를 남긴다):
+
+```bash
+curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/getUpdates" \
+  | python -c "import json,sys; [print(u.get('my_chat_member',u.get('message',{})).get('chat')) for u in json.load(sys.stdin)['result']]"
+```
 
 ## 롤백
 

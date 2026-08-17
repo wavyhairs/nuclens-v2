@@ -1,5 +1,6 @@
 """CLI adapter tests use injected senders only; no external notification."""
 
+import io
 import json
 import sys
 import tempfile
@@ -242,6 +243,59 @@ class OperationalAlertsCliTests(unittest.TestCase):
         payload = cli.urllib.parse.parse_qs(request.data.decode("utf-8"))
         self.assertEqual(["admin-channel"], payload["chat_id"])
         self.assertNotIn("public-channel", request.data.decode("utf-8"))
+
+    def test_a_misconfigured_admin_chat_says_what_to_fix(self):
+        """텔레그램이 주는 말은 `chat not found` 한 줄이고, 그 한 줄은 무엇을
+        고쳐야 하는지 아무것도 말하지 않는다.
+
+        실측(2026-08-17): 이 400 이 크롤마다 새로 찍히면서 며칠을 살았다.
+        경고가 원인을 안 말하면 결국 아무도 안 읽는다.
+        """
+        body = b'{"ok":false,"error_code":400,"description":"Bad Request: chat not found"}'
+        failure = cli.urllib.error.HTTPError(
+            "https://api.telegram.org/", 400, "Bad Request", {}, io.BytesIO(body))
+
+        with patch.dict("os.environ", {
+                "TELEGRAM_BOT_TOKEN": "token",
+                "TELEGRAM_ADMIN_CHAT_ID": "-1009999999999",
+                "TELEGRAM_CHAT_ID": "8592184447",
+        }, clear=True), patch.object(cli.urllib.request, "urlopen", side_effect=failure):
+            sender = cli.telegram_sender_from_env()
+            with self.assertRaises(RuntimeError) as caught:
+                sender("warning")
+        message = str(caught.exception)
+        self.assertIn("chat not found", message)
+        self.assertIn("TELEGRAM_ADMIN_CHAT_ID", message)
+        # 원인을 좁혀 줘야 한다 — 이 값은 슈퍼그룹 모양이다.
+        self.assertIn("슈퍼그룹", message)
+        # 값 자체는 절대 흘리지 않는다. Actions 로그는 협업자 누구나 읽고,
+        # 채팅 ID 는 그 자체로 대화 상대를 특정한다.
+        self.assertNotIn("-1009999999999", message)
+
+    def test_transient_failures_are_not_labelled_as_configuration_errors(self):
+        """고쳐야 낫는 것과 기다리면 낫는 것을 섞으면 둘 다 안 읽힌다."""
+        self.assertTrue(cli.is_permanent_chat_error("Bad Request: chat not found"))
+        self.assertTrue(cli.is_permanent_chat_error("Forbidden: bot was kicked from the group"))
+        self.assertFalse(cli.is_permanent_chat_error("Internal Server Error"))
+        self.assertFalse(cli.is_permanent_chat_error("Too Many Requests: retry after 30"))
+        self.assertFalse(cli.is_permanent_chat_error(""))
+
+    def test_the_shape_hint_never_echoes_the_value(self):
+        """진단은 값의 **모양**만 말한다."""
+        for value in ("", "  8592184447 ", '"123"', "@ops", "-1001234567890",
+                      "-123456789", "abc", "8592184447"):
+            with self.subTest(value=value):
+                hint = cli.describe_admin_chat_id(value, "9999")
+                self.assertTrue(hint)
+                stripped = value.strip().strip('"')
+                if stripped and stripped.lstrip("-@").isdigit():
+                    self.assertNotIn(stripped, hint)
+
+    def test_a_group_id_that_moved_to_supergroup_is_called_out(self):
+        """그룹이 슈퍼그룹으로 승격되면 ID 가 바뀐다 — 제일 놓치기 쉬운 원인이다."""
+        self.assertIn("슈퍼그룹", cli.describe_admin_chat_id("-123456789"))
+        self.assertIn("/start", cli.describe_admin_chat_id("8592184447"))
+        self.assertIn("따옴표", cli.describe_admin_chat_id(' "8592184447" '))
 
     def test_malformed_sent_file_is_not_overwritten(self):
         self.sent.write_text("{broken", encoding="utf-8")
