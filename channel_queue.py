@@ -36,6 +36,15 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+# 로그가 전부 한국어다. Windows 콘솔 기본 코드페이지(cp1252/949)로는 첫 print 에서
+# UnicodeEncodeError 로 죽는다 — 설정용 명령(--find-channel·--check-channel)은
+# 하필 그 환경에서 손으로 돌리는 것들이다 (daily_brief 와 같은 처방).
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
+    pass
+
 # tz 없는 today() 는 UTC 러너에서 하루 전 날짜를 준다 (synthesize.KST 와 같은 이유).
 KST = timezone(timedelta(hours=9))
 
@@ -398,6 +407,50 @@ def check_channel() -> int:
     return 0
 
 
+def find_channels() -> int:
+    """봇이 최근에 본 대화를 훑어 채널 후보의 숫자 ID 를 보여 준다.
+
+    비공개 채널은 `@이름` 으로 못 보내므로 `-100…` 이 필요한데, 그 값은 화면
+    어디에도 안 보인다. 봇을 관리자로 **승격하는 행위 자체가** my_chat_member
+    업데이트를 남기고, 관리자가 된 뒤의 채널 글은 channel_post 로 온다 — 봇은
+    privacy mode 라 일반 대화는 못 읽지만 이 둘은 받는다.
+
+    getUpdates 는 최근 24시간분만 준다. 승격하고 하루가 지났으면 채널에 글을
+    하나 더 올린 뒤 다시 부른다.
+    """
+    from telegram_send import resolve_setting
+    token = resolve_setting("TELEGRAM_BOT_TOKEN")
+    if not token:
+        print("TELEGRAM_BOT_TOKEN 이 없습니다.")
+        return 1
+    try:
+        with urllib.request.urlopen(
+                f"https://api.telegram.org/bot{token}/getUpdates", timeout=20) as resp:
+            payload = json.loads(resp.read())
+    except (urllib.error.URLError, OSError, json.JSONDecodeError) as exc:
+        print(f"조회 실패: {type(exc).__name__}: {exc}")
+        return 1
+
+    seen: dict[str, str] = {}
+    for update in payload.get("result") or []:
+        for key in ("my_chat_member", "channel_post", "message"):
+            chat = (update.get(key) or {}).get("chat") or {}
+            if chat.get("id") is not None:
+                seen[str(chat["id"])] = chat.get("type", "?")
+    if not seen:
+        print("최근 24시간 안에 본 대화가 없습니다 — 봇을 채널 관리자로 올린 뒤, "
+              "또는 채널에 글을 하나 올린 뒤 다시 실행하세요.")
+        return 1
+
+    # 채널명은 찍지 않는다 — 콘솔 인코딩에 걸리는 데다, 이 명령의 출력은 그대로
+    # 어딘가에 붙여지기 쉽다(README '관리자 알림이 안 올 때'와 같은 규칙).
+    print("최근에 본 대화 (TELEGRAM_CHANNEL_ID 에 넣을 값):")
+    for chat_id, kind in seen.items():
+        mark = " ← 채널" if kind in ("channel", "supergroup") else ""
+        print(f"  {chat_id}  [{kind}]{mark}")
+    return 0
+
+
 def show_status(path: Path | None = None) -> int:
     queue = load_queue(path)
     batches = queue.get("batches", [])
@@ -418,8 +471,12 @@ def main() -> int:
     parser.add_argument("--status", action="store_true", help="큐 상태 출력")
     parser.add_argument("--check-channel", action="store_true",
                         help="채널이 닿는지만 확인한다(메시지를 보내지 않음)")
+    parser.add_argument("--find-channel", action="store_true",
+                        help="봇이 최근 본 대화의 숫자 ID 를 보여 준다(설정용)")
     args = parser.parse_args()
 
+    if args.find_channel:
+        return find_channels()
     if args.check_channel:
         return check_channel()
     if args.status:

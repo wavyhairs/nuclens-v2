@@ -582,6 +582,21 @@ python channel_queue.py --publish         # 대기 배치 공개 (워크플로�
 비공개 채널이면 `@이름` 대신 `-100…` 숫자 ID 를 넣었는지 확인한다. 실패한 항목은
 `failed` 로 남아 다음 실행이 그것만 다시 보낸다.
 
+### 채널 ID 찾기
+
+공개 채널은 `@이름` 을 그대로 쓰면 된다. **비공개 채널은 숫자 ID 여야 하는데 그
+값은 화면 어디에도 안 보인다.** 봇을 관리자로 올린 **직후에**:
+
+```bash
+python channel_queue.py --find-channel
+```
+
+승격하는 행위 자체가 `my_chat_member` 업데이트를 남기고, 관리자가 된 뒤의 채널
+글은 `channel_post` 로 온다(봇은 privacy mode 라 일반 대화는 못 읽지만 이 둘은
+받는다). `getUpdates` 는 최근 24시간분만 주므로, 승격하고 하루가 지났으면 채널에
+글을 하나 올린 뒤 다시 돌린다. 나온 `-100…` 을 `TELEGRAM_CHANNEL_ID` 에 넣고
+`--check-channel` 로 확인한다.
+
 ## 랭킹 조정 (비개발자용)
 
 1. `ranking_config.json` 열기 — 모든 가중치에 한국어 설명 주석이 있다.
