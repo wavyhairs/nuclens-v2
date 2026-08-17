@@ -26,6 +26,7 @@ from pathlib import Path
 
 from ranking import cluster_duplicates
 import article_quality_gate
+import news_archive
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -224,7 +225,10 @@ def batch_synthesize(items: list[dict], agg: dict) -> dict:
     out["key_events"] = out["key_events"][:5]
     out["report_candidates"] = out["report_candidates"][:3]
     prune_evidence_hashes(out, items)
-    return out
+    # 지어낸 hash 를 걷어낸 **뒤에** 문장을 본다. 살아남은 hash 가 진짜 기사를
+    # 가리키는지와, 그 기사가 실제로 그 문장을 뒷받침하는지는 다른 질문이다.
+    # 텔레그램·웹·저장본이 같은 결과를 쓰도록 여기 한 곳에서 끝낸다.
+    return verify_synthesis(out, items)
 
 
 def prune_evidence_hashes(synthesis: dict, items: list[dict]) -> None:
@@ -248,6 +252,88 @@ def prune_evidence_hashes(synthesis: dict, items: list[dict]) -> None:
                 if short in known and short not in kept:
                     kept.append(short)
             row["evidence_hashes"] = kept[:2]
+
+
+# ---- 문장 단위 근거 검증 --------------------------------------------------------
+#
+# evidence_hashes 가 이번 주 목록에 있는 hash 인지만 보던 것으로는, 진짜 기사를
+# 가리키면서 그 기사와 다른 이야기를 하는 문장을 못 잡는다. 화면에는 살아 있는
+# 근거 칩이 붙어 있으니 오히려 더 믿음직해 보인다.
+#
+# 그래서 hash 로 지목된 **그 기사**와 문장을 대조한다. 기준은 오디오와 같은
+# EvidenceContract 이며, LLM 이 만든 다른 문장은 근거가 되지 않는다.
+
+
+def weekly_contracts(items: list[dict]) -> dict:
+    """hash8 → 그 기사 하나의 근거 계약."""
+    hashes = {str(item.get("hash") or "") for item in items if item.get("hash")}
+    manifests = news_archive.load_evidence_manifests(hashes)
+    specs = []
+    for item in items:
+        article_hash = str(item.get("hash") or "")
+        if not article_hash:
+            continue
+        manifest = manifests.get(article_hash)
+        specs.append({
+            "key": article_hash[:8],
+            "articles": [{**item, "hash": article_hash}],
+            "manifests": [manifest] if manifest else (),
+            "reference_date": item.get("published_at") or item.get("cached_at"),
+        })
+    return {c.key: c for c in article_quality_gate.build_evidence_contracts(specs)}
+
+
+def verify_synthesis(synthesis: dict, items: list[dict]) -> dict:
+    """근거와 어긋나는 항목만 덜어낸다 — 주간 브리핑 전체를 죽이지 않는다.
+
+    한 문장이 틀렸다고 그 주의 판세 보고를 통째로 실패시키면, 다음부터는
+    아무도 게이트를 켜 두지 않는다. 항목 단위로만 뺀다.
+    """
+    contracts = weekly_contracts(items)
+    everything = list(contracts.values())
+    dropped: dict[str, int] = {}
+
+    def prune(key: str, fact: tuple[str, ...], analysis: tuple[str, ...],
+              hash_field: str = "evidence_hashes",
+              require_evidence: bool = True) -> None:
+        rows = synthesis.get(key) or []
+        if not isinstance(rows, list):
+            synthesis[key] = []
+            return
+        kept, findings = article_quality_gate.audit_evidence_items(
+            rows, contracts, text_fields=fact, analysis_fields=analysis,
+            hash_field=hash_field, require_evidence=require_evidence,
+            fallback_contracts=everything,
+        )
+        if findings:
+            dropped[key] = len(findings)
+        synthesis[key] = kept
+
+    # 구체적인 사실을 말하는 항목은 근거 기사를 지목해야 한다. 각 쌍의 앞이
+    # '무슨 일이 있었는가', 뒤가 '그래서 무엇인가'라 검사 강도가 다르다.
+    prune("policy_shifts", ("what",), ("so_what",))
+    prune("theme_moves", ("theme",), ("why",))
+    prune("key_events", ("headline",), ("implication",), hash_field="hash")
+    # 보고서 후보·관찰 포인트는 다음 주를 보는 항목이라 개별 근거 기사를
+    # 요구하지 않는다. 다만 그 주 기사에 없는 기관·수치를 지어내는 것은 막는다.
+    prune("report_candidates", (), ("topic", "basis"), require_evidence=False)
+    watchpoints = synthesis.get("watchpoints")
+    if isinstance(watchpoints, list):
+        kept = [row for row in watchpoints
+                if not article_quality_gate.unsupported_facts(str(row or ""), everything)]
+        if len(kept) != len(watchpoints):
+            dropped["watchpoints"] = len(watchpoints) - len(kept)
+        synthesis["watchpoints"] = kept
+
+    for key in ("weekly_intro", "khnp_direct"):
+        text = str(synthesis.get(key) or "")
+        if text and article_quality_gate.unsupported_facts(text, everything):
+            synthesis[key] = ""
+            dropped[key] = 1
+    if dropped:
+        print(f"  ! weekly 근거 미확인 항목 제거: "
+              f"{json.dumps(dropped, ensure_ascii=False)}")
+    return synthesis
 
 
 def article_by_hash8(items: list[dict], h8: str) -> dict | None:

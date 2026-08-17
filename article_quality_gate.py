@@ -1852,6 +1852,14 @@ ALL_FACT_CHECKS = ("entities", "countries", "stages", "claims", "dates")
 # check, which guarantees the fact appeared in some verified article that day
 # and had no false positive on the same data.
 ATTRIBUTION_FACT_CHECKS = ("claims", "dates")
+# An analysis sentence ("심사 가속화 우려를 불식", "인허가 지연으로 난항") names a
+# project stage as the subject it reasons about, not as an event it claims
+# happened.  Replaying the stored weekly reports showed every stage finding on
+# such a field was a false positive, while the entity/number findings on the
+# same fields were real (a Philippines MOU attributed to an article about a
+# different one).  So analysis keeps the identifier and quantity checks and
+# gives up the stage check.
+ANALYSIS_FACT_CHECKS = ("entities", "countries", "claims", "dates")
 
 
 def unsupported_facts(
@@ -2009,6 +2017,7 @@ def audit_evidence_items(
     contracts_by_hash: Mapping[str, EvidenceContract],
     *,
     text_fields: Sequence[str],
+    analysis_fields: Sequence[str] = (),
     hash_field: str = "evidence_hashes",
     require_evidence: bool = True,
     fallback_contracts: Sequence[EvidenceContract] = (),
@@ -2021,6 +2030,9 @@ def audit_evidence_items(
     week — a valid hash paired with a sentence about a different event is the
     exact failure this closes.  Dropping is per row: one unsupported claim must
     not delete the entire weekly brief.
+
+    ``text_fields`` state what happened and face every check; ``analysis_fields``
+    interpret it and skip the stage check (see ANALYSIS_FACT_CHECKS).
     """
     kept: list[dict] = []
     findings: list[Finding] = []
@@ -2028,10 +2040,16 @@ def audit_evidence_items(
         if not isinstance(item, Mapping):
             continue
         row = dict(item)
-        text = " ".join(
-            clean_text(row.get(field)) for field in text_fields
-            if clean_text(row.get(field))
-        )
+        groups = [
+            (tuple(text_fields), ALL_FACT_CHECKS),
+            (tuple(analysis_fields), ANALYSIS_FACT_CHECKS),
+        ]
+        parts = [
+            (" ".join(clean_text(row.get(field)) for field in fields
+                      if clean_text(row.get(field))), rules)
+            for fields, rules in groups
+        ]
+        text = " ".join(part for part, _rules in parts if part)
         if not text:
             continue
         raw_hashes = row.get(hash_field)
@@ -2055,7 +2073,11 @@ def audit_evidence_items(
                 ))
                 continue
             cited = list(fallback_contracts)
-        problems = unsupported_facts(text, cited, reference_date=reference_date)
+        problems: dict[str, object] = {}
+        for part, rules in parts:
+            if part:
+                problems.update(unsupported_facts(
+                    part, cited, reference_date=reference_date, checks=rules))
         if problems:
             findings.append(Finding(
                 "weekly_item_unsupported", "sanitize", f"{index}",
