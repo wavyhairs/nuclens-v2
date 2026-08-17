@@ -83,6 +83,130 @@ class SourceHealthTests(unittest.TestCase):
                          {signal.key for signal in signals})
 
 
+class PartialSourceFailureTests(unittest.TestCase):
+    """실패도 0건도 아닌 조용한 부분 장애 — counts/kept 로는 보이지 않는다.
+
+    임계값은 실측에서 왔다(2026-08-02~17, 감시 대상 18개 출처). 발행 간격은
+    p50 3일 · p95 5일 · 최대 5일이라 stale 14일은 관측 상한의 약 3배이고 현재
+    0/18 이 걸린다. 그리고 counts>0·kept=0 은 그냥 조용한 날이라 신호가 아니다.
+    """
+
+    HEALTHY = {"entries": 10, "usable": 10,
+               "newest_pub": (T0 - timedelta(days=1)).isoformat()}
+
+    def health_after(self, diagnostics, runs=2, now=T0):
+        health = None
+        for index in range(runs):
+            health = monitor.update_source_health(
+                health,
+                monitor.source_observations(
+                    {"counts": {"WNN": 10}, "diagnostics": {"WNN": diagnostics}},
+                    {"WNN": "feed"}),
+                now + timedelta(hours=index))
+        return health
+
+    def keys(self, diagnostics, **kwargs):
+        health = self.health_after(diagnostics, **kwargs)
+        return {s.key for s in monitor.source_health_signals(health, now=T0)}
+
+    def test_healthy_feed_is_silent(self):
+        self.assertEqual(self.keys(self.HEALTHY), set())
+
+    def test_snapshot_without_diagnostics_stays_silent(self):
+        """옛 스냅샷에는 이 계기가 없다 — 없다고 장애로 읽으면 안 된다."""
+        health = monitor.update_source_health(
+            None, monitor.source_observations({"counts": {"WNN": 10}}, {"WNN": "feed"}),
+            T0)
+        self.assertEqual(monitor.source_health_signals(health, now=T0), [])
+        self.assertNotIn("last_newest_pub", health["sources"]["WNN"])
+
+    def test_bozo_with_partial_entries_is_reported(self):
+        """0건+bozo 는 이미 실패로 잡힌다. 일부만 건진 경우가 조용히 새던 쪽이다."""
+        self.assertEqual(
+            self.keys({**self.HEALTHY, "usable": 3, "bozo": True,
+                       "bozo_exception": "mismatched tag"}),
+            {"source:WNN:partial-parse"})
+
+    def test_a_single_bozo_run_is_not_an_alert(self):
+        self.assertEqual(
+            self.keys({**self.HEALTHY, "usable": 3, "bozo": True}, runs=1), set())
+
+    def test_full_page_with_nothing_usable_is_a_format_change(self):
+        self.assertEqual(self.keys({**self.HEALTHY, "entries": 12, "usable": 0}),
+                         {"source:WNN:unusable"})
+
+    def test_small_result_with_nothing_usable_is_not_an_alert(self):
+        """항목이 적으면 정상적으로도 전건이 걸러진다."""
+        self.assertEqual(self.keys({**self.HEALTHY, "entries": 3, "usable": 0}), set())
+
+    def test_stale_feed_is_reported(self):
+        self.assertEqual(
+            self.keys({**self.HEALTHY,
+                       "newest_pub": (T0 - timedelta(days=40)).isoformat()}),
+            {"source:WNN:stale"})
+
+    def test_normal_quiet_period_is_not_stale(self):
+        for days in (5, 13):
+            with self.subTest(days=days):
+                self.assertEqual(
+                    self.keys({**self.HEALTHY,
+                               "newest_pub": (T0 - timedelta(days=days)).isoformat()}),
+                    set())
+
+    def test_counts_without_kept_is_not_a_failure(self):
+        """게시판이 10건을 주고 전건이 신선도 컷에 떨어지는 것은 정상이다."""
+        health = None
+        for index in range(3):
+            health = monitor.update_source_health(
+                health,
+                monitor.source_observations(
+                    {"counts": {"WNN": 10}, "kept": {"WNN": 0},
+                     "diagnostics": {"WNN": self.HEALTHY}}, {"WNN": "feed"}),
+                T0 + timedelta(hours=index))
+        self.assertEqual(monitor.source_health_signals(health, now=T0), [])
+
+    def test_newest_pub_never_moves_backwards(self):
+        """한 실행이 일부만 읽어 와도 그 피드가 갑자기 오래된 것으로 보이면 안 된다."""
+        health = self.health_after(self.HEALTHY, runs=1)
+        health = monitor.update_source_health(
+            health,
+            monitor.source_observations(
+                {"counts": {"WNN": 1}, "diagnostics": {"WNN": {
+                    "entries": 1, "usable": 1,
+                    "newest_pub": (T0 - timedelta(days=200)).isoformat()}}},
+                {"WNN": "feed"}),
+            T0 + timedelta(hours=1))
+        self.assertEqual(health["sources"]["WNN"]["last_newest_pub"],
+                         self.HEALTHY["newest_pub"])
+        self.assertEqual(monitor.source_health_signals(health, now=T0), [])
+
+    def test_hard_failure_does_not_also_raise_partial_alerts(self):
+        """이미 실패로 알린 출처에 경보를 하나 더 붙이지 않는다."""
+        health = None
+        for index in range(2):
+            health = monitor.update_source_health(
+                health,
+                monitor.source_observations(
+                    {"counts": {"WNN": 0}, "errors": {"WNN": "HTTP 503"},
+                     "diagnostics": {"WNN": {"entries": 12, "usable": 0}}},
+                    {"WNN": "feed"}),
+                T0 + timedelta(hours=index))
+        self.assertEqual({s.key for s in monitor.source_health_signals(health, now=T0)},
+                         {"source:WNN:failure"})
+
+    def test_recovery_clears_the_partial_streaks(self):
+        health = self.health_after({**self.HEALTHY, "usable": 0, "entries": 12,
+                                    "bozo": True})
+        self.assertTrue(monitor.source_health_signals(health, now=T0))
+        health = monitor.update_source_health(
+            health,
+            monitor.source_observations(
+                {"counts": {"WNN": 10}, "diagnostics": {"WNN": self.HEALTHY}},
+                {"WNN": "feed"}),
+            T0 + timedelta(hours=5))
+        self.assertEqual(monitor.source_health_signals(health, now=T0), [])
+
+
 class QualitySignalTests(unittest.TestCase):
     def test_data_gate_builds_actionable_signals(self):
         record = {

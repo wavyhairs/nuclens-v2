@@ -53,11 +53,34 @@ def _parse_time(value: object) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
+# 피드가 한 페이지를 통째로 주고도 쓸 수 있는 항목이 0건이면 형식이 바뀐 것이다.
+# 항목 수가 적을 때는 정상적으로도 전건이 걸러질 수 있으므로 바닥을 둔다.
+UNUSABLE_ENTRY_FLOOR = 5
+# 실측 2026-08-02~17, 감시 대상 18개 출처의 발행 간격: p50 3일 · p95 5일 · 최대 5일.
+# 관측 상한의 약 3배로 잡아 현재 0/18 이 걸리게 한다. 관측 창이 15일이라 그보다
+# 긴 정상 공백은 확인할 수 없었다 — 낮추기 전에 더 긴 창으로 다시 재야 한다.
+STALE_FEED_DAYS = 14
+
+
 def _nonnegative_int(value: object) -> int:
     try:
         return max(0, int(value))
     except (TypeError, ValueError):
         return 0
+
+
+def _days_since(value: object, now: datetime) -> int | None:
+    """Whole days between an ISO timestamp and ``now``; ``None`` if unusable."""
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return max(0, (now - parsed).days)
 
 
 def _source_specs(expected_sources: object) -> dict[str, str]:
@@ -107,12 +130,16 @@ def source_observations(snapshot: Mapping | None,
     kept = snapshot.get("kept") if isinstance(snapshot.get("kept"), Mapping) else {}
     errors = snapshot.get("errors") if isinstance(snapshot.get("errors"), Mapping) else {}
     success = snapshot.get("success") if isinstance(snapshot.get("success"), Mapping) else {}
+    diagnostics = (snapshot.get("diagnostics")
+                   if isinstance(snapshot.get("diagnostics"), Mapping) else {})
     specs = _source_specs(expected_sources)
-    names = set(specs) | {str(k) for field in (counts, kept, errors, success) for k in field}
+    names = set(specs) | {str(k) for field in (counts, kept, errors, success, diagnostics)
+                          for k in field}
 
     observations = []
     for name in sorted(names):
-        present = any(name in field for field in (counts, kept, errors, success))
+        present = any(name in field
+                      for field in (counts, kept, errors, success, diagnostics))
         error = str(errors.get(name) or "").strip()
         explicitly_failed = success.get(name) is False
         ok = present and not error and not explicitly_failed
@@ -122,6 +149,8 @@ def source_observations(snapshot: Mapping | None,
             error = "source was not observed in this collection run"
         elif explicitly_failed and not error:
             error = "collector reported failure"
+        row = diagnostics.get(name)
+        row = row if isinstance(row, Mapping) else {}
         observations.append({
             "name": name,
             "kind": specs.get(name, "feed"),
@@ -129,6 +158,13 @@ def source_observations(snapshot: Mapping | None,
             "count": count,
             "kept": _nonnegative_int(kept.get(name)),
             "error": error[:240],
+            # 부분 장애 계기. 옛 스냅샷에는 없으므로 전부 선택 항목이다.
+            "bozo": bool(row.get("bozo")),
+            "bozo_exception": str(row.get("bozo_exception") or "")[:200],
+            "entries": _nonnegative_int(row.get("entries")),
+            "usable": _nonnegative_int(row.get("usable")),
+            "newest_pub": str(row.get("newest_pub") or "").strip(),
+            "has_diagnostics": bool(row),
         })
     return observations
 
@@ -170,6 +206,28 @@ def update_source_health(previous: Mapping | None,
             "last_kept_count": kept,
             "checks": _nonnegative_int(row.get("checks")) + 1,
         })
+
+        if observation.get("has_diagnostics"):
+            entries = _nonnegative_int(observation.get("entries"))
+            usable = _nonnegative_int(observation.get("usable"))
+            row.update({"last_entries": entries, "last_usable": usable})
+            newest = str(observation.get("newest_pub") or "").strip()
+            if newest:
+                # 뒤로 가지 않는다 — 어떤 실행이 일부만 읽어 와도 그 피드가
+                # 갑자기 오래된 것으로 보이면 안 된다.
+                row["last_newest_pub"] = max(newest, str(row.get("last_newest_pub") or ""))
+            if observation.get("bozo"):
+                row["consecutive_bozo"] = _nonnegative_int(row.get("consecutive_bozo")) + 1
+                row["last_bozo_exception"] = str(
+                    observation.get("bozo_exception") or "")[:200]
+            else:
+                row["consecutive_bozo"] = 0
+                row["last_bozo_exception"] = ""
+            if entries >= UNUSABLE_ENTRY_FLOOR and usable == 0 and status != "failed":
+                row["consecutive_unusable"] = _nonnegative_int(
+                    row.get("consecutive_unusable")) + 1
+            else:
+                row["consecutive_unusable"] = 0
 
         if status == "failed":
             row["consecutive_failures"] = _nonnegative_int(row.get("consecutive_failures")) + 1
@@ -244,11 +302,33 @@ class AlertSignal:
 
 def source_health_signals(health: Mapping | None, *,
                           failure_threshold: int = 2,
-                          empty_threshold: int = 3) -> list[AlertSignal]:
-    """Create distinct alerts for hard failures and repeated empty results."""
+                          empty_threshold: int = 3,
+                          bozo_threshold: int = 2,
+                          unusable_threshold: int = 2,
+                          stale_days: int = STALE_FEED_DAYS,
+                          now: datetime | None = None) -> list[AlertSignal]:
+    """Create distinct alerts for hard failures, empty runs and partial faults.
+
+    The partial-fault rules deliberately avoid the ``counts>0 / kept==0`` trap:
+    that combination is an ordinary quiet day (measured 2026-08-08 — four boards
+    returned 10/15/10/10 items and every one fell out at the freshness cutoff).
+    Each rule below keys on something a healthy feed never does:
+
+    * ``bozo`` — the parser reported a fault *and* we still took entries, so the
+      item list is silently partial;
+    * ``entries >= floor and usable == 0`` — the feed handed us a full page and
+      not one item had a usable link/title/date, which is a format change; and
+    * the feed's newest item being older than ``stale_days``.  Over the 18
+      monitored sources the largest normal gap between publications was 5 days
+      (p50 3, p95 5), so 14 sits about three times above the observed ceiling
+      and fires on none of them today.
+    """
     sources = health.get("sources") if isinstance(health, Mapping) else {}
     if not isinstance(sources, Mapping):
         return []
+    now = now or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
     out = []
     for name, raw in sorted(sources.items()):
         if not isinstance(raw, Mapping):
@@ -257,6 +337,43 @@ def source_health_signals(health: Mapping | None, *,
         empties = _nonnegative_int(raw.get("consecutive_empty"))
         observation_id = str(raw.get("last_checked_at") or "")
         kind_label = "공식기관" if raw.get("kind") == "official" else "RSS/피드"
+
+        # 부분 장애는 하드 실패와 별개로 본다 — 실패 중인 출처는 이미 위에서
+        # 알리므로 중복 경보를 만들지 않되, 정상으로 보이는 출처의 조용한
+        # 고장은 여기서만 잡힌다.
+        if failures < failure_threshold:
+            bozo = _nonnegative_int(raw.get("consecutive_bozo"))
+            unusable = _nonnegative_int(raw.get("consecutive_unusable"))
+            if bozo >= bozo_threshold:
+                out.append(AlertSignal(
+                    key=f"source:{name}:partial-parse", scope="source",
+                    severity="warning",
+                    title=f"{kind_label} 부분 파싱 실패: {name}",
+                    detail=(f"연속 {bozo}회 파서 경고와 함께 항목 일부만 받았습니다 "
+                            f"(최근 {raw.get('last_usable')}/{raw.get('last_entries')}건). "
+                            f"오류: {raw.get('last_bozo_exception') or '기록 없음'}"),
+                    observation_id=observation_id, min_occurrences=1,
+                ))
+            elif unusable >= unusable_threshold:
+                out.append(AlertSignal(
+                    key=f"source:{name}:unusable", scope="source", severity="warning",
+                    title=f"{kind_label} 항목을 하나도 읽지 못함: {name}",
+                    detail=(f"연속 {unusable}회 원문 {raw.get('last_entries')}건을 받고도 "
+                            "링크·제목·게시일을 갖춘 항목이 0건입니다. "
+                            "무소식이 아니라 피드 형식 변경일 가능성이 큽니다."),
+                    observation_id=observation_id, min_occurrences=1,
+                ))
+            quiet = _days_since(raw.get("last_newest_pub"), now)
+            if quiet is not None and quiet >= stale_days:
+                out.append(AlertSignal(
+                    key=f"source:{name}:stale", scope="source", severity="warning",
+                    title=f"{kind_label} 최신 항목이 오래됨: {name}",
+                    detail=(f"가장 최근 항목이 {quiet}일 전({raw.get('last_newest_pub')})입니다. "
+                            f"수집은 성공하고 있어 접속 문제는 아니며, 관측된 정상 "
+                            f"공백의 상한은 5일이었습니다."),
+                    observation_id=observation_id, min_occurrences=1,
+                ))
+
         if failures >= failure_threshold:
             severity = "critical" if raw.get("kind") == "official" and failures >= 3 else "warning"
             out.append(AlertSignal(

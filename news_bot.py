@@ -208,6 +208,30 @@ SOURCE_FETCH_ERRORS: dict[str, str] = {}
 # 구버전 테스트·도구가 이름을 참조해도 같은 저장소를 보게 한다.
 OFFICIAL_FETCH_ERRORS = SOURCE_FETCH_ERRORS
 
+# 실패(에러)와 무소식(0건) 사이에는 **조용한 부분 장애**가 있다. 피드가 200 을
+# 주고 항목도 몇 개 주는데 파서가 절반을 못 읽거나, 게시판이 3개월 전 항목을
+# 계속 돌려주는 경우다. 둘 다 counts>0 이라 기존 계기로는 정상으로 보인다.
+#
+# counts/kept 만으로는 갈라낼 수 없다 — counts>0·kept=0 은 그냥 새 기사가 없는
+# 날일 수도 있다(실측 2026-08-08 게시판 10·15·10·10 건 전건 cutoff 탈락).
+# 그래서 **피드가 스스로 말하는 것**을 적는다: 파서 경고(bozo), 원문 항목 수와
+# 그중 쓸 수 있었던 수, 그리고 가장 최근 항목의 게시시각.
+SOURCE_FETCH_DIAGNOSTICS: dict[str, dict] = {}
+
+
+def _record_source_diagnostics(name: str, *, entries: int, usable: int,
+                               newest_pub: object = None,
+                               bozo: bool = False, bozo_exception: object = None) -> None:
+    if not name:
+        return
+    row: dict[str, object] = {"entries": int(entries), "usable": int(usable)}
+    if bozo:
+        row["bozo"] = True
+        row["bozo_exception"] = str(bozo_exception or "")[:200]
+    if isinstance(newest_pub, datetime):
+        row["newest_pub"] = newest_pub.astimezone(timezone.utc).isoformat()
+    SOURCE_FETCH_DIAGNOSTICS[name] = row
+
 # ---- 해외 Tier 1 추가 (2026-07-31) ------------------------------------------
 # 사내 카톡방 7개월 큐레이션 분석(nuclear-news-web/research/)의 실측 빈도 상위 출처.
 # 전용 RSS가 검증된 곳은 직접, 없는 곳은 검증된 Google News site:+when: 패턴으로 우회.
@@ -2210,6 +2234,12 @@ def fetch_rss(url: str, source_name: str = "") -> list[dict]:
                 "publisher": pub_name,
                 "publisher_domain": pub_domain,
             })
+        # bozo 인데 항목을 건진 경우는 위에서 raise 하지 않고 여기까지 온다.
+        # 그 조용한 부분 실패가 계기에 남아야 파서·포맷 변경을 볼 수 있다.
+        _record_source_diagnostics(
+            source_name or url, entries=len(feed.entries), usable=len(out),
+            newest_pub=max((row["pub"] for row in out), default=None),
+            bozo=bool(feed.get("bozo")), bozo_exception=feed.get("bozo_exception"))
         return out
     except Exception as e:
         key = source_name or url
@@ -2306,6 +2336,17 @@ def parse_nssc_rows(rows: list[dict], *, publisher: str = "원자력안전위원
 
 def fetch_official_direct(src: dict) -> list[dict]:
     """국내 공식기관 게시판을 직접 읽는다. 한 기관 실패는 빈 목록으로 격리한다."""
+    items = _fetch_official_direct(src)
+    # 게시판은 개편돼도 200 을 준다. 가장 최근 글이 언제 것인지를 남겨야
+    # '조용한 기관'과 '멈춘 게시판'을 나중에 가를 수 있다.
+    _record_source_diagnostics(
+        src.get("name", ""), entries=len(items), usable=len(items),
+        newest_pub=max((row.get("pub") for row in items
+                        if isinstance(row.get("pub"), datetime)), default=None))
+    return items
+
+
+def _fetch_official_direct(src: dict) -> list[dict]:
     import requests
 
     try:
@@ -2512,6 +2553,9 @@ def collect_rss_articles(state: dict) -> list[dict]:
         "counts": counts,
         "kept": kept,
         "errors": dict(SOURCE_FETCH_ERRORS),
+        # 부분 장애용 계기. counts/kept 가 못 보는 것을 본다 — 파서 경고와
+        # '피드의 최신 항목이 언제 것인가'.
+        "diagnostics": dict(SOURCE_FETCH_DIAGNOSTICS),
     }
     dead = [src["name"] for src in OFFICIAL_DIRECT_SOURCES if not counts.get(src["name"])]
     if dead:
