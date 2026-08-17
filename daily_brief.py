@@ -533,6 +533,42 @@ REPORT_SYSTEM_PROMPT = """당신은 한국수력원자력 원자력정책실 정
 입력: 각 줄이 `[idx] 제목 | 왜중요 | 섹션`."""
 
 
+def verify_report_recs(reports: list[tuple[int, dict]],
+                       candidates: list[dict]) -> tuple[list[tuple[int, dict]], list[dict]]:
+    """추천 문구가 후보 기사에 없는 구체적 사실을 말하면 그 건만 뺀다.
+
+    이 섹션은 브리핑 맨 위에 붙고 부서가 실제 보고서를 착수하는 근거가 된다.
+    그런데 지금까지 검증은 '후보를 고르는 Python 게이트'까지였고, 그 뒤 LLM 이
+    쓴 topic·why·angles 는 아무도 대조하지 않았다.
+
+    판정 기준은 그날 후보 **전체**다. 추천은 여러 후보를 묶어 한 주제를 말할 수
+    있으므로 idx 하나에 묶어 보면 정상 추천이 대량으로 걸린다. 대신 그날 후보
+    어디에도 없는 기관·국가·수치·날짜는 통과시키지 않는다. 사업단계는 보지
+    않는다 — '보고서로 다룰 만한가'는 사건이 아니라 판단이다.
+    """
+    if not reports or not candidates:
+        return reports, []
+    contracts = article_quality_gate.build_evidence_contracts(
+        [{"key": str(article.get("hash") or "") or f"c{index}",
+          "articles": [article]}
+         for index, article in enumerate(candidates)])
+    kept: list[tuple[int, dict]] = []
+    dropped: list[dict] = []
+    for idx, report in reports:
+        angles = [str(x).strip() for x in (report.get("angles") or []) if str(x).strip()]
+        text = " ".join(filter(None, [
+            str(report.get("topic") or ""), str(report.get("why") or ""), *angles]))
+        problems = article_quality_gate.unsupported_facts(
+            text, contracts, checks=article_quality_gate.ANALYSIS_FACT_CHECKS)
+        if problems:
+            dropped.append({"topic": str(report.get("topic") or "")[:80],
+                            "hash": candidates[idx].get("hash", "")[:8],
+                            **problems})
+            continue
+        kept.append((idx, report))
+    return kept, dropped
+
+
 def build_report_recs(items: list[dict]) -> tuple[str, dict]:
     """보고서감 추천 메시지 + 판단 근거 diag. 후보 0건이면 LLM 호출 없이 빈 결과."""
     candidates = gate_report_candidates(items)
@@ -567,6 +603,10 @@ def build_report_recs(items: list[dict]) -> tuple[str, dict]:
             continue
         reports.append((idx, r))
     reports = reports[:REPORT_MAX_PER_DAY]  # 하루 0~2건 강제
+    reports, unsupported = verify_report_recs(reports, candidates)
+    if unsupported:
+        diag["unsupported"] = unsupported
+        print(f"[daily_brief] 보고서 추천 {len(unsupported)}건 제외 — 후보 기사에 없는 사실")
     if not reports:
         return "", diag
 
@@ -696,33 +736,15 @@ def verify_final_cards(articles: list[dict]) -> tuple[list[dict], list[dict], li
 
 
 def verify_social_cards(cards: list[dict]) -> tuple[list[dict], list[dict]]:
-    """수동 소셜 카드도 원문 cluster와 대조해 핵심 충돌을 발송 전에 막는다."""
-    safe: list[dict] = []
-    audits: list[dict] = []
-    for card in cards:
-        cluster = card.get("cluster") if isinstance(card.get("cluster"), dict) else {}
-        source = {
-            "title": cluster.get("title", ""),
-            "article_text": cluster.get("fulltext", ""),
-        }
-        article = {
-            "title": cluster.get("title", ""),
-            "title_kr": card.get("headline", ""),
-            "summary": card.get("what", ""),
-            "source_excerpt": str(cluster.get("fulltext") or "")[:600],
-            "verified_evidence": article_quality_gate.build_evidence_manifest(source),
-        }
-        result = article_quality_gate.validate_final_card(card, article, source=source)
-        audits.append({
-            "hash": "",
-            "title": str(card.get("headline") or cluster.get("title") or "")[:120],
-            "surface": "social",
-            "source_url": str(cluster.get("url") or "")[:300],
-            **result.as_dict(),
-        })
-        if result.eligible:
-            safe.append(result.value)
-    return safe, audits
+    """수동 소셜 카드도 원문 cluster와 대조해 핵심 충돌을 발송 전에 막는다.
+
+    구현은 카드를 만드는 자리(synthesize)로 옮겼다 — 같은 build_cards 결과를
+    send_research 가 검사 없이 보내던 경로가 있었고, 검사를 생성기 옆에 두면
+    새 소비자가 생겨도 우회가 기본값이 되지 않는다.
+    """
+    from synthesize import verify_cards
+
+    return verify_cards(cards)
 
 
 # (피드백 inline keyboard 기능은 2026-07-16 사용자 결정으로 완전 삭제 — 브리핑을

@@ -42,7 +42,7 @@ from telegram_send import send_long_text
 from dedup import dedup_clusters
 from scorer import score_clusters
 from sources import credibility_bonus
-from synthesize import build_cards, format_cards_message
+from synthesize import build_cards, format_cards_message, verify_cards
 
 # ---- 환경 설정 (Windows / Linux 양쪽 호환) -----------------------------------
 
@@ -567,6 +567,13 @@ def main() -> int:
         if cards is None:
             print("[카드] 합성 불가(키 없음/실패) → 기존 리스트 형식으로 폴백")
         else:
+            # 이 경로는 daily_brief 를 거치지 않는다. 검사를 붙이지 않으면 같은
+            # build_cards 결과가 한쪽에서는 검증되고 한쪽에서는 그대로 나간다.
+            cards, audits = verify_cards(cards)
+            blocked = sum(1 for row in audits if row.get("action") == "quarantine")
+            removed = sum(len(row.get("removed_fields") or []) for row in audits)
+            if blocked or removed:
+                print(f"[카드] 최종 검증: 격리 {blocked}장 / 선택 필드 {removed}개 제거")
             for card in cards:
                 cards_by_topic.setdefault(card["topic"], []).append(card)
             print(f"[카드] {len(cards)}장 생성, {len(cards_by_topic)}개 토픽")

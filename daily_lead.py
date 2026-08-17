@@ -27,6 +27,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import article_quality_gate
 from gemini_client import GeminiError, call_json, is_available
 
 try:
@@ -188,6 +189,35 @@ def is_substantive(lead: str, items: list[dict], summaries: dict) -> bool:
     return len(words & source_words) >= 2
 
 
+def lead_contracts(items: list[dict], summaries: dict[str, dict], date: str = ""):
+    """그날 발송된 기사만으로 만든 근거 계약.
+
+    `is_substantive` 는 낱말이 겹치는지만 본다 — 근거 제목의 낱말을 쓰면서
+    없는 기관·수치·날짜를 끼워 넣은 문장은 그 검사를 그대로 통과한다.
+    히어로 한 줄은 사이트에서 가장 눈에 띄는 문장이라 그게 그대로 사고다.
+    """
+    specs = []
+    for row in items:
+        record = summaries.get(row.get("hash") or "") or {}
+        specs.append({
+            "key": str(row.get("hash") or ""),
+            "rank": row.get("brief_rank") or 0,
+            "articles": [article for article in (record, row) if article],
+            "reference_date": record.get("pub") or date,
+        })
+    return article_quality_gate.build_evidence_contracts(specs, reference_date=date)
+
+
+def unsupported_lead_facts(lead: str, items: list[dict],
+                           summaries: dict[str, dict], date: str = "") -> dict:
+    """종합 문장이 그날 기사에 없는 구체적 사실을 말하는가."""
+    contracts = lead_contracts(items, summaries, date)
+    if not contracts:
+        return {}
+    return article_quality_gate.unsupported_facts(
+        lead, contracts, reference_date=date)
+
+
 def _clause_cut(text: str) -> str:
     """LEAD_LIMIT 초과 문장을 절 경계에서 자른다. 경계가 없으면 말줄임."""
     window = text[:LEAD_LIMIT]
@@ -293,6 +323,45 @@ def _call_lead(items: list[dict], summaries: dict[str, dict]) -> dict:
     return {"lead": _clause_cut(lead), "result": result, "truncated": True}
 
 
+def _verified_lead(lead: str, items: list[dict], summaries: dict[str, dict],
+                   date: str) -> str:
+    """저장 직전 문장을 그날 기사와 대조한다. 못 고치면 쓰지 않는다.
+
+    검사는 **저장될 그 문자열**에 건다. 재요청·압축·절단 사다리를 다 거친 뒤라
+    중간 단계에서 통과한 문장이 마지막 변환에서 달라져도 여기서 걸린다.
+
+    빈 문장은 실패가 아니다 — 웹 히어로는 lead 가 없으면 이슈 제목으로 돌아가고,
+    근거 없는 한 문장보다 그쪽이 낫다.
+    """
+    if not lead:
+        return ""
+    problems = unsupported_lead_facts(lead, items, summaries, date)
+    if not problems:
+        return lead
+
+    print(f"[lead] 근거에 없는 사실 — 재요청: {json.dumps(problems, ensure_ascii=False)[:160]}")
+    repair_message = (
+        f"{build_user_message(items, summaries)}\n\n"
+        f"[재요청] 방금 작성한 문장에 위 이슈 목록에 없는 내용이 들어갔습니다:\n"
+        f"{lead}\n지적: {json.dumps(problems, ensure_ascii=False)}\n"
+        "해당 기관·국가·수치·날짜를 빼거나 목록에 실제로 있는 것으로 바꿔 "
+        "한 문장으로 다시 쓰세요."
+    )
+    try:
+        retry = call_json(SYSTEM_PROMPT, repair_message, temperature=0.2,
+                          max_output_tokens=8192, label="daily_lead")
+    except GeminiError as exc:
+        print(f"[lead] 재요청 실패 — 문장 사용 안 함: {str(exc)[:120]}")
+        return ""
+    fixed = _finish(_normalize(retry.get("lead")))
+    if (fixed and len(fixed) <= LEAD_LIMIT
+            and is_substantive(fixed, items, summaries)
+            and not unsupported_lead_facts(fixed, items, summaries, date)):
+        return fixed
+    print("[lead] 재요청 후에도 근거를 못 맞춤 — 문장 사용 안 함")
+    return ""
+
+
 def generate() -> bool:
     leads = _load_leads()
     try:
@@ -312,10 +381,12 @@ def generate() -> bool:
             print(f"[lead] Gemini 실패 — 기존 leads 유지: {exc}")
             return False
 
-        lead = outcome["lead"]
+        lead = _verified_lead(outcome["lead"], items, summaries, date)
         if not lead:
             print(f"[lead] {date} 종합 문장 없음 (근거 부족) — 기존 leads 유지")
             return False
+        if lead != outcome["lead"]:
+            outcome = {**outcome, "truncated": False}
 
         result = outcome["result"]
         idxs = [i for i in (result.get("evidence_idx") or [])

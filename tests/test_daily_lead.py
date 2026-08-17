@@ -16,9 +16,12 @@ import daily_lead
 from gemini_client import GeminiError
 
 
+# 길이 사다리를 시험하는 문장이지 환각을 시험하는 문장이 아니다 — 등장하는
+# 기관·국가·수치는 아래 _TITLES 안에 실제로 있어야 한다. 그렇지 않으면 근거
+# 게이트가 먼저 잡아 길이 경로에 도달하지 못한다.
 LONG_LEAD = (
-    "국내에서는 고리 2호기 계속운전 심사가 재개되었으며, 해외에서는 프랑스 EDF의 "
-    "신규 원전 건설 계획과 미국 SMR 인허가 진전이 함께 진행되어 정책 환경 전반이 움직였습니다"
+    "국내에서는 한수원이 영덕군과 신규 원전 건설 협력에 합의했고, 해외에서는 헝가리 "
+    "원전이 가뭄으로 가동을 중단한 가운데 중국 정부가 신규 원전 8기 건설을 승인했습니다"
 )
 
 
@@ -148,7 +151,8 @@ class DailyLeadTestCase(unittest.TestCase):
         self.assertNotIn("truncated", entry)
 
     def test_overlength_twice_falls_back_to_clause_cut(self):
-        self.write_log([delivery_row(0)])
+        # 절단 결과가 어느 절에서 끊기든 근거가 남아 있도록 관련 기사를 모두 싣는다.
+        self.write_log([delivery_row(i) for i in range(4)])
         self.responses = [{"lead": LONG_LEAD, "evidence_idx": [0]},
                           {"lead": LONG_LEAD, "evidence_idx": [0]}]
         self.assertTrue(daily_lead.generate())
@@ -184,10 +188,55 @@ class DailyLeadTestCase(unittest.TestCase):
         self.assertFalse(daily_lead.generate())
         self.assertNotIn("2026-08-02", self.read_leads())
 
+    # ── 근거 밖 사실 차단 ────────────────────────────────────
+    #
+    # is_substantive 는 낱말이 겹치는지만 본다. 근거 제목의 낱말을 쓰면서 없는
+    # 기관·수치·날짜를 끼워 넣은 문장은 그 검사를 그대로 통과하고, 히어로 한 줄은
+    # 사이트에서 가장 눈에 띄는 자리라 그게 그대로 사고가 된다.
+
+    def test_lead_naming_an_absent_company_is_repaired(self):
+        self.write_log([delivery_row(0), delivery_row(2)])
+        bad = "한수원과 웨스팅하우스가 영덕군 신규 원전 건설에 합의했습니다"
+        good = "한수원이 영덕군과 신규 원전 건설에 합의했습니다"
+        self.responses = [{"lead": bad, "evidence_idx": [0]},
+                          {"lead": good, "evidence_idx": [0]}]
+        self.assertTrue(daily_lead.generate())
+        entry = self.read_leads()["2026-08-02"]
+        self.assertEqual(entry["lead"], good + ".")
+        self.assertNotIn("웨스팅하우스", entry["lead"])
+        self.assertEqual(len(self.calls), 2)
+
+    def test_lead_with_an_invented_number_is_not_saved_when_repair_fails(self):
+        """웹 히어로는 lead 가 없으면 이슈 제목으로 돌아간다 — 그쪽이 낫다."""
+        self.write_log([delivery_row(0)])
+        bad = "한수원이 영덕군에 신규 원전 12기 건설을 확정했습니다"
+        self.responses = [{"lead": bad, "evidence_idx": [0]},
+                          {"lead": bad, "evidence_idx": [0]}]
+        self.assertFalse(daily_lead.generate())
+        self.assertNotIn("2026-08-02", self.read_leads())
+
+    def test_facts_present_in_the_day_are_not_flagged(self):
+        items = [delivery_row(0), delivery_row(2)]
+        self.assertEqual(daily_lead.unsupported_lead_facts(
+            "한수원이 영덕군과 합의한 가운데 중국은 신규 원전 8기를 승인했습니다.",
+            items, {}, "2026-08-02"), {})
+
+    def test_repair_result_is_checked_again_before_saving(self):
+        """마지막 변환 뒤에 다시 본다 — 재요청 답이 새 사실을 넣을 수도 있다."""
+        self.write_log([delivery_row(0)])
+        self.responses = [
+            {"lead": "한수원과 웨스팅하우스가 영덕군 원전에 합의했습니다", "evidence_idx": [0]},
+            {"lead": "한수원이 영덕군에 원전 500MW 건설을 합의했습니다", "evidence_idx": [0]},
+        ]
+        self.assertFalse(daily_lead.generate())
+        self.assertNotIn("2026-08-02", self.read_leads())
+
     def test_clause_cut_prefers_boundary(self):
         cut = daily_lead._clause_cut(LONG_LEAD)
         self.assertLessEqual(len(cut), daily_lead.LEAD_LIMIT + 1)
-        self.assertIn("계속운전 심사가 재개", cut)
+        # 절 경계("…했고, ")에서 끊고, 뒤쪽 절은 통째로 버린다.
+        self.assertIn("영덕군과 신규 원전 건설 협력에 합의했고", cut)
+        self.assertNotIn("헝가리", cut)
 
     def test_clause_cut_without_boundary_uses_ellipsis(self):
         text = "가" * 120

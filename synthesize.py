@@ -295,6 +295,46 @@ def build_cards(pairs: list[tuple[str, dict]], *, self_check: bool = True) -> li
     return cards
 
 
+def verify_cards(cards: list[dict]) -> tuple[list[dict], list[dict]]:
+    """합성 카드를 원문 cluster 와 대조해 핵심 충돌을 발송 전에 막는다.
+
+    `_self_check` 는 같은 모델에게 자기 출력을 다시 묻는다 — 통과하는 날에도
+    그 판정의 근거는 모델의 두 번째 의견이다. 여기서는 LLM 을 부르지 않고
+    cluster 의 제목·본문에서 만든 근거로만 판정한다.
+
+    카드를 만든 자리에 검사도 둔다. 예전에는 이 검사가 daily_brief 에만 있어서
+    같은 build_cards 결과를 send_research 가 검사 없이 그대로 보냈다.
+    """
+    import article_quality_gate
+
+    safe: list[dict] = []
+    audits: list[dict] = []
+    for card in cards:
+        cluster = card.get("cluster") if isinstance(card.get("cluster"), dict) else {}
+        source = {
+            "title": cluster.get("title", ""),
+            "article_text": cluster.get("fulltext", ""),
+        }
+        article = {
+            "title": cluster.get("title", ""),
+            "title_kr": card.get("headline", ""),
+            "summary": card.get("what", ""),
+            "source_excerpt": str(cluster.get("fulltext") or "")[:600],
+            "verified_evidence": article_quality_gate.build_evidence_manifest(source),
+        }
+        result = article_quality_gate.validate_final_card(card, article, source=source)
+        audits.append({
+            "hash": "",
+            "title": str(card.get("headline") or cluster.get("title") or "")[:120],
+            "surface": "social",
+            "source_url": str(cluster.get("url") or "")[:300],
+            **result.as_dict(),
+        })
+        if result.eligible:
+            safe.append(result.value)
+    return safe, audits
+
+
 # ---- 텔레그램 메시지 포맷 (카드 + 링크 부록) ---------------------------------
 
 def format_cards_message(cards: list[dict], *, header: str = "오늘의 원자력 브리핑",
