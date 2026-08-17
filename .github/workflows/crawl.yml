@@ -22,7 +22,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: crawl
+  # sent.json(수집 이력+운영 알림 상태)을 함께 쓰는 daily-brief와 직렬화한다.
+  group: nuclens-state
   cancel-in-progress: false
 
 jobs:
@@ -60,7 +61,9 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - run: python news_bot.py
+      - name: Collect news
+        id: collect
+        run: python news_bot.py
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
@@ -70,6 +73,20 @@ jobs:
           # 이메일 뉴스레터 수집 (선택 — 미설정 시 자동 스킵)
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
+
+      # 수집 결과 0건과 실제 접속·파서 실패를 분리해 회차별 상태로 누적한다.
+      # news_bot이 source_yield를 쓰기 전에 죽어도 step outcome으로 즉시 감지한다.
+      # 관리자 전용 채팅만 사용하며 전송 실패는 pending으로 남아 다음 회차에 재시도된다.
+      - name: Update source health + notify administrator
+        if: always()
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+        run: >-
+          python operational_alerts.py --notify
+          --collect-outcome "${{ steps.collect.outcome }}"
+          --collection-observation-id "crawl:${{ github.run_id }}"
 
       # 수집 후보가 아니라 실제 최근 브리핑 기사 기준으로 21일 캐시를 백필한다.
       # API 장애 시 크롤 본체는 계속하고 웹은 로컬 후보 벡터로 안전하게 폴백한다.
@@ -130,6 +147,7 @@ jobs:
           fi
 
       - name: Commit state
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

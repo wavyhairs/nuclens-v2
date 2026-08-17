@@ -49,7 +49,7 @@ except (AttributeError, ValueError):
 
 ARCHIVE_DIR = Path(__file__).parent / "archive"
 REPAIRS_FILE = Path(__file__).parent / "archive_repairs.json"
-RECORD_VERSION = 2
+RECORD_VERSION = 3
 
 
 def _month_key(iso_ts: str) -> str:
@@ -154,6 +154,13 @@ def make_record(article: dict, cur: dict, archived_at: str) -> dict:
         title, publisher = split_title_publisher(title)
     profile = source_profile(domain, publisher)
     event_fields = normalize_event_date_fields(cur)
+    verified_evidence = cur.get("verified_evidence")
+    if not isinstance(verified_evidence, dict):
+        verified_evidence = {}
+    verified_source_components = cur.get("verified_source_components")
+    if not isinstance(verified_source_components, dict):
+        verified_source_components = {}
+
     record = {
         "v": RECORD_VERSION,
         "hash": article.get("hash", ""),
@@ -198,6 +205,12 @@ def make_record(article: dict, cur: dict, archived_at: str) -> dict:
         "countries": cur.get("countries") or [],
         "article_type": cur.get("article_type", ""),
         "features": cur.get("features"),
+        # 본문은 저장하지 않는다. 대신 수집 시점에 원문에서 만든 작은 사실 지문만
+        # 보존해 웹 빌드와 오디오가 텔레그램에서 제거된 근거 없는 문장을 다시
+        # 살리지 못하게 한다. article_quality_gate가 버전·출처 결속을 다시 검사한다.
+        "curation_status": cur.get("curation_status", ""),
+        "verified_evidence": verified_evidence,
+        "verified_source_components": verified_source_components,
     }
     record.update(event_fields)
     return record

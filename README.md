@@ -21,8 +21,10 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 |---|---|
 | `news_bot.py` | 수집·dedup·batch 큐레이션 (Gemini 1회/10건, feature 추출 포함) |
 | `data_quality.py` | URL·발행처·출처 역할·완결문·사건일 공통 품질 계약 |
+| `article_quality_gate.py` | 원문-큐레이션 제목·요약·사건일 무결성, fallback 발송 제한, 최종 카드 근거 검증 |
+| `operational_monitoring.py` + `operational_alerts.py` | 수집원 연속 장애·품질 이상 누적, 중복 억제·관리자 알림 |
 | `embedding_pipeline.py` | Gemini 임베딩 모델·35일 캐시·최근 21일 브리핑 백필 계약 |
-| `news_archive.py` | v2 아카이브 적재·중복 차단·품질 이관 |
+| `news_archive.py` | v3 아카이브 적재·중복 차단·검증 근거 지문 보존 |
 | `archive_repairs.json` | 과거 깨진 레코드의 고정 회귀 수선·제외 근거 |
 | `daily_brief.py` | 일일 브리핑: story dedup→랭킹→투자 관점→보고서 추천→발송/웹 story 계약 기록 |
 | `weekly_bot.py` | 주간 판세 리포트 (Gemini 주 1회 1호출) |
@@ -481,8 +483,9 @@ CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... python tools/sync_admin_overr
 | 이름 | 필수 | 용도 |
 |---|---|---|
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | ✅ | 발송·피드백 수거 |
+| `TELEGRAM_ADMIN_CHAT_ID` | ⭕ | 수집원 장애·품질 이상 전용 관리자 알림. 미설정 시 Actions 로그만 남기며 공개 채널로 폴백하지 않음 |
 | `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` | ✅ | 국내 뉴스 검색 ([NAVER API HUB](https://www.ncloud.com/product/applicationService/naverApiHub) — developers.naver.com 아님) |
-| `GEMINI_API_KEY` | ⭕ | 없으면 큐레이션·투자관점 생략(fallback 발송) |
+| `GEMINI_API_KEY` | ⭕ | 없으면 신규 기사 큐레이션·투자관점 생략. 미검증 fallback은 자동 발송하지 않고 재검토 대기 |
 | `IMAP_USER` / `IMAP_PASSWORD` | ⭕ | ANS 뉴스레터 수집 (Gmail 앱 비밀번호, 공백 제거) |
 
 ## Variables (GitHub Actions)

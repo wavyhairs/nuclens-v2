@@ -49,6 +49,18 @@ class TestMakeRecord(unittest.TestCase):
             "implication": "", "why_important": "중요", "tags": ["#NRC"],
             "topics": ["regulation"], "countries": ["US"], "article_type": "policy",
             "features": {"novelty": 2},
+            "curation_status": "reviewed",
+            "verified_evidence": {
+                "version": 2,
+                "source_fingerprint": "example",
+                "manifest_digest": "0" * 64,
+            },
+            "verified_source_components": {
+                "article_hash": "1" * 64,
+                "title": "2" * 64,
+                "source_excerpt": "3" * 64,
+                "published_at": "4" * 64,
+            },
         }
         r = news_archive.make_record(article, cur, "2026-07-30T04:00:00+00:00")
         self.assertEqual(r["v"], news_archive.RECORD_VERSION)
@@ -57,11 +69,25 @@ class TestMakeRecord(unittest.TestCase):
         self.assertEqual(r["topics"], ["regulation"])
         self.assertEqual(r["countries"], ["US"])
         self.assertEqual(r["article_type"], "policy")
+        self.assertEqual(r["curation_status"], "reviewed")
+        self.assertEqual(r["verified_evidence"], cur["verified_evidence"])
+        self.assertEqual(
+            r["verified_source_components"], cur["verified_source_components"]
+        )
         self.assertIn(r["source_tier"], (1, 2, 3))
         self.assertEqual(r["publisher"], "World Nuclear News")
         self.assertEqual(r["source_type"], "specialist_media")
         self.assertIsNone(r["event_date"])
         self.assertNotIn("description", r)  # 원문 본문 미저장 (저작권)
+
+    def test_invalid_manifest_shape_is_not_archived(self):
+        r = news_archive.make_record(
+            {"hash": "h1"},
+            {"verified_evidence": ["not", "a", "manifest"]},
+            _now_iso(),
+        )
+        self.assertEqual(r["verified_evidence"], {})
+        self.assertEqual(r["verified_source_components"], {})
 
     def test_open_question_reject_survives_into_the_archive(self):
         """게이트 사유는 아카이브 화이트리스트에 있어야 남는다.

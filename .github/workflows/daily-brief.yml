@@ -45,7 +45,8 @@ permissions:
   contents: write   # outbox/큐/delivery_log 커밋
 
 concurrency:
-  group: daily-brief
+  # crawl과 sent.json을 동시에 고치면 관리자 알림의 발송 완료 표식이 유실될 수 있다.
+  group: nuclens-state
   cancel-in-progress: false
 
 jobs:
@@ -118,6 +119,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Collect (브리핑 직전 최신 수집)
+        id: collect
         continue-on-error: true
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
@@ -127,6 +129,19 @@ jobs:
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
         run: python news_bot.py
+
+      # 공개 뉴스 채널과 운영 경고 채널을 분리한다. 관리자 채팅 ID가 없거나
+      # Telegram 전송이 실패해도 수집·브리핑은 계속되고 다음 회차에 재시도한다.
+      - name: Monitor source health + notify administrator
+        if: always()
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+        run: >-
+          python operational_alerts.py --notify
+          --collect-outcome "${{ steps.collect.outcome }}"
+          --collection-observation-id "daily-brief:${{ github.run_id }}"
 
       # 위 수집이 만든 상태를 **Plan 전에** 밀어 넣는다. Plan 뒤의 claim push 는
       # outbox·digest_queue 만 싣고, 충돌하면 `reset --hard origin/main` 을 하므로
@@ -203,6 +218,7 @@ jobs:
         run: python daily_brief.py --send
 
       - name: Confirm (결과 병합 + delivery log) — 충돌 시 재시도
+        id: confirm
         if: always() && steps.claim.conclusion == 'success'
         run: |
           git config user.name "github-actions[bot]"
@@ -219,6 +235,38 @@ jobs:
             sleep $((RANDOM % 8 + 4))
           done
           echo "!! confirm push 5회 실패 — 발송 상태 미기록. 36h 창 안 재실행 시 중복 발송 가능성 (수동 확인 권장)"
+          exit 1
+
+      # Plan/최종 카드 게이트가 confirm에서 남긴 품질 이벤트를 웹 배포와 독립적으로
+      # 관리자에게 보낸다. Cloudflare 미설정·웹 빌드 실패여도 기사 오류는 놓치지 않는다.
+      - name: Notify administrator after brief quality checks
+        if: always() && steps.confirm.conclusion == 'success'
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+        run: >-
+          python operational_alerts.py --notify
+          --collect-outcome "${{ steps.collect.outcome }}"
+          --collection-observation-id "daily-brief:${{ github.run_id }}"
+
+      # 알림 성공 표식을 바로 원격에 저장한다. 뒤 단계의 reset --hard 전에 밀어 넣어
+      # 재실행 시 같은 관리자 경고가 중복 발송될 가능성을 줄인다.
+      - name: Persist operational alert state
+        if: always() && steps.confirm.conclusion == 'success'
+        continue-on-error: true
+        run: |
+          git add sent.json
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: persist operational alert state"
+          for i in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git fetch origin main || exit 1
+            git rebase origin/main || { git rebase --abort; exit 1; }
+          done
+          echo "::warning::운영 알림 상태 push 실패 — 다음 실행에서 재시도"
           exit 1
 
       # 웹 트렌드 '흐름 해석' 생성 — 하루 1회, Gemini 호출 +1. 실패해도 브리핑엔 비치명.
@@ -257,9 +305,31 @@ jobs:
           sudo apt-get update -qq >/dev/null 2>&1 || true
           sudo apt-get install -y -qq ffmpeg >/dev/null 2>&1 || echo "ffmpeg 설치 실패 — 오디오 스킵 (비치명)"
 
+      # 웹 빌드·품질 기록·배포를 별도 step outcome으로 남긴다. 예전의 한 덩어리
+      # 스텝은 build_data가 먼저 죽으면 data_quality_gate 기록조차 만들지 못해,
+      # 뒤 운영 알림이 "이상 없음"으로 오인했다.
+      - name: Build web data
+        id: web-build
+        if: always() && steps.claim.conclusion == 'success'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+        run: |
+          git fetch origin main && git reset --hard origin/main
+          python web/build_data.py
+
+      # 임계값 미달은 여전히 배포를 막지 않는다. 다만 산출물 부재·기록 실패는
+      # non-zero outcome으로 남겨 운영 알림이 관측 실패 자체를 보고할 수 있게 한다.
+      - name: Record web data quality metrics
+        id: data-gate
+        if: always() && steps.claim.conclusion == 'success' && steps.web-build.outcome == 'success'
+        continue-on-error: true
+        run: python data_gate_metrics.py
+
       # 아침 브리핑·흐름 해석을 nuclens.pages.dev에 즉시 반영 (하루 1회 확정 배포)
       - name: Deploy web to Cloudflare Pages
-        if: always() && steps.claim.conclusion == 'success'
+        id: web-deploy
+        if: always() && steps.claim.conclusion == 'success' && steps.web-build.outcome == 'success'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -273,16 +343,6 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN 미설정 — 웹 배포 스킵"; exit 0; fi
-          git fetch origin main && git reset --hard origin/main
-          python web/build_data.py
-          # 데이터 품질 지표 계측 — **배포를 막지 않는다**(종료 코드가 늘 0).
-          # 추적률·주별 합계 비율은 뉴스가 한산하거나 한 주에 몰린 것만으로
-          # 흔들려서 배포 게이트로 못 쓴다(2026-08-03, 08-11 사고). 그래서
-          # deploy-web 에서 껐는데, 끄고 나니 crawl·daily-brief 는 웹 테스트를
-          # 아예 안 돌려 **아무 데서도 재지 않게 됐다**. 2026-08-15 에 흐름 탭
-          # 표와 그래프가 통째로 사라진 것을 화면에서 눈으로 발견한 이유다.
-          # 매일 한 번 재서 delivery_log 에 남긴다(아래 커밋 스텝이 싣는다).
-          python data_gate_metrics.py || echo "[data-gate] 계측 실패 — 비치명, 계속"
           # 오디오 브리핑 — build_data 산출물을 재료로 쓰므로 반드시 그 뒤,
           # 배포 전. 실패해도 배포는 계속한다 (오디오는 부가 기능).
           # 1차 실패 시 90초 뒤 한 번 더. build_data 가 방금 같은 무료 버킷을
@@ -322,6 +382,31 @@ jobs:
           # 에서 빠져도 배포는 조용히 성공하므로, 살아 있는 사이트에 직접 물어야 안다.
           bash web/tools/verify_admin_gate.sh "$base"
 
+      # 관리자 secret은 이 짧은 전용 프로세스에만 노출한다. Deploy/audio/wrangler는
+      # TELEGRAM_ADMIN_CHAT_ID를 상속하지 않는다. 미발송 경고는 익일에도 재시도된다.
+      - name: Notify administrator after web quality checks
+        if: always()
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+        run: |
+          pipeline_args=()
+          # claim 실패로 웹 경로 전체가 의도적으로 생략된 날은 평가하지 않는다.
+          # 웹 경로가 예정된 실행에서만 각 step의 raw outcome을 명시적으로 넘긴다.
+          if [ "${{ steps.claim.conclusion }}" = "success" ]; then
+            pipeline_args=(
+              --web-build-outcome "${{ steps.web-build.outcome }}"
+              --data-gate-outcome "${{ steps.data-gate.outcome }}"
+              --web-deploy-outcome "${{ steps.web-deploy.outcome }}"
+              --pipeline-observation-id "daily-brief:${{ github.run_id }}"
+            )
+          fi
+          python operational_alerts.py --notify \
+            --collect-outcome "${{ steps.collect.outcome }}" \
+            --collection-observation-id "daily-brief:${{ github.run_id }}" \
+            "${pipeline_args[@]}"
+
       # 오디오 산출물을 다음 배포(정기 crawl·deploy-web)가 복원할 수 있게 저장.
       # audio.json 이 있어야 저장한다 — 빈 디렉터리 저장은 경고만 남긴다.
       - name: Check audio cache
@@ -355,7 +440,7 @@ jobs:
           # 덧붙인다. 그 스텝은 git reset --hard 로 시작하므로 Confirm 이 커밋한
           # 뒤의 추가분이고, 여기서 싣지 않으면 러너와 함께 사라진다.
           # append-only 라 .gitattributes 의 merge=union 이 충돌을 받는다.
-          for f in issue_llm_reviews.json keei_llm_matches.json issue_insights.json delivery_log.jsonl; do
+          for f in issue_llm_reviews.json keei_llm_matches.json issue_insights.json delivery_log.jsonl sent.json; do
             if [ -f "$f" ]; then git add "$f"; fi
           done
           git diff --cached --quiet && exit 0

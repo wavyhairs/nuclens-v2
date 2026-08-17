@@ -25,6 +25,7 @@ import math
 import re
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 import event_stage
@@ -270,17 +271,56 @@ def _tracking_bonus(item: dict, cfg: dict) -> tuple[float, str]:
     return float(tracking.get("repeat", 0.5)), "tracking:repeat"
 
 
+def _parse_freshness_timestamp(value) -> datetime | None:
+    """큐의 ISO 시각을 읽되 이전/수동 데이터의 RFC 2822 값도 허용한다."""
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str) and value.strip():
+        raw = value.strip()
+        try:
+            parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        except ValueError:
+            try:
+                parsed = parsedate_to_datetime(raw)
+            except (TypeError, ValueError, OverflowError):
+                return None
+    else:
+        return None
+    try:
+        if parsed.tzinfo is None:
+            return parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+    except (OverflowError, ValueError):
+        return None
+
+
+def _freshness_timestamp(item: dict, now: datetime) -> datetime | None:
+    """실제 발행 시각 우선, 없거나 신뢰할 수 없으면 큐 등록 시각 폴백."""
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    else:
+        now = now.astimezone(timezone.utc)
+    published = _parse_freshness_timestamp(item.get("published_at"))
+    if published is not None and published <= now:
+        return published
+    queued = _parse_freshness_timestamp(item.get("queued_at"))
+    if queued is not None and queued <= now:
+        return queued
+    return None
+
+
 def _time_decay(item: dict, cfg: dict, now: datetime) -> float:
     td = cfg.get("time_decay") or {}
     per_12h = float(td.get("per_12h", 0.5))
     cap = float(td.get("max", 3.0))
-    try:
-        qt = datetime.fromisoformat(item.get("queued_at", ""))
-        if qt.tzinfo is None:
-            qt = qt.replace(tzinfo=timezone.utc)
-    except (ValueError, TypeError):
+    timestamp = _freshness_timestamp(item, now)
+    if timestamp is None:
         return 0.0
-    age_h = max(0.0, (now - qt).total_seconds() / 3600)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    else:
+        now = now.astimezone(timezone.utc)
+    age_h = max(0.0, (now - timestamp).total_seconds() / 3600)
     return min(cap, per_12h * (age_h / 12.0))
 
 
