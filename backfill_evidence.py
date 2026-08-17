@@ -32,6 +32,7 @@ import json
 import sys
 from collections import Counter
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 import article_quality_gate as gate
@@ -78,8 +79,38 @@ def load_archive_lines() -> list[tuple[Path, dict | None, str]]:
     return rows
 
 
-def archive_publication_times(rows) -> dict[str, str]:
-    """hash → 수집 당시 피드가 준 게시시각.
+def utc_iso(value: object, *, now: datetime | None = None) -> str:
+    """수집이 manifest 를 묶을 때 쓰는 것과 **같은 모양**의 UTC ISO 문자열.
+
+    아카이브는 `pub` 를 원래 시간대 그대로 남긴다("2026-08-07T06:50:00+09:00").
+    수집은 UTC 로 정규화한 값에 manifest 를 묶는다("2026-08-06T21:50:00+00:00").
+    같은 순간이지만 문자열이 달라, 원문 형태로 되살리면 결속이 어긋나 멀쩡한
+    manifest 가 통째로 다시 만들어진다 — 그러면 본문 유래 사실이 사라진다
+    (실측 2026-08-17: 그렇게 curated 근거 4,657 → 3,708 로 949개가 날아갔다).
+
+    news_bot.normalize_publication_timestamp 와 같은 계약이다. 그 모듈을
+    임포트하지 않는 이유는 수집 모듈이 토큰 없는 환경에서 종료하기 때문이고,
+    그래서 여기서는 같은 규칙을 stdlib 로만 다시 쓴다. 미래 값도 같이 버린다.
+    """
+    text = clean_text(value)
+    if not text:
+        return ""
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        try:
+            parsed = parsedate_to_datetime(text)
+        except (TypeError, ValueError, OverflowError):
+            return ""
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    parsed = parsed.astimezone(timezone.utc)
+    reference = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    return "" if parsed > reference else parsed.isoformat()
+
+
+def archive_publication_times(rows, *, now: datetime | None = None) -> dict[str, str]:
+    """hash → 수집 당시 피드가 준 게시시각 (UTC 정규화).
 
     이것이 이 백필의 유일한 '진짜' 발행시각 근거다. curated/queue 는 이 값을
     버렸지만 아카이브는 `pub` 에 남겨 두었다.
@@ -89,9 +120,9 @@ def archive_publication_times(rows) -> dict[str, str]:
         if record is None:
             continue
         article_hash = clean_text(record.get("hash"))
-        parsed = gate._parse_reference_date(record.get("pub"))
-        if article_hash and parsed and article_hash not in found:
-            found[article_hash] = clean_text(record.get("pub"))
+        published_at = utc_iso(record.get("pub"), now=now)
+        if article_hash and published_at and article_hash not in found:
+            found[article_hash] = published_at
     return found
 
 

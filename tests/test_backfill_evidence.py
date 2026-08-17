@@ -11,6 +11,7 @@ import json
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
@@ -172,6 +173,48 @@ class EvidenceRuleTests(BackfillSandbox):
         after = self.curated()["aaaa1111bbbb2222"]
         self.assertEqual(after["verified_evidence"], rich)
         self.assertIn("westinghouse", after["verified_evidence"]["entities"])
+
+    def test_recovered_publication_time_matches_the_manifest_binding(self):
+        """아카이브는 원래 시간대로, 수집은 UTC 로 묶는다 — 같은 순간, 다른 문자열.
+
+        원문 형태로 되살리면 결속이 어긋나 멀쩡한 manifest 가 통째로 다시 만들어지고
+        본문 유래 사실이 사라진다(실측 2026-08-17: curated 근거 4,657 → 3,708).
+        """
+        self.assertEqual(backfill.utc_iso("2026-08-07T06:50:00+09:00"),
+                         "2026-08-06T21:50:00+00:00")
+        self.assertEqual(backfill.utc_iso("2026-08-13T21:10:00+00:00"),
+                         "2026-08-13T21:10:00+00:00")
+        self.assertEqual(backfill.utc_iso("말이 안 되는 값"), "")
+        self.assertEqual(backfill.utc_iso(None), "")
+        # 미래 값은 수집과 같은 이유로 버린다.
+        self.assertEqual(
+            backfill.utc_iso("2027-01-01T00:00:00+00:00",
+                             now=datetime(2026, 8, 17, tzinfo=timezone.utc)), "")
+
+        # 수집이 UTC 로 묶어 둔 manifest 를, 아카이브의 +09:00 표기로 되살릴 때.
+        self.write_archive([{**ARCHIVE_ROW, "pub": "2026-08-07T06:50:00+09:00"}])
+        source = {"article_hash": "aaaa1111bbbb2222", "title": CURATED_ROW["title"],
+                  "description": "", "published_at": "2026-08-06T21:50:00+00:00"}
+        bound = {"hash": "aaaa1111bbbb2222", "title": CURATED_ROW["title"],
+                 "source_excerpt": "", "published_at": "2026-08-06T21:50:00+00:00"}
+        manifest = gate.build_evidence_manifest(source, article=bound)
+        rich = {**manifest, "entities": sorted({*manifest.get("entities", []),
+                                                "westinghouse"})}
+        rich["manifest_fingerprint"] = gate._digest_payload(
+            {k: v for k, v in rich.items() if k != "manifest_fingerprint"})
+        self.write_curated({"aaaa1111bbbb2222": {
+            **CURATED_ROW, "hash": "aaaa1111bbbb2222",
+            "verified_evidence": rich,
+            "verified_source_components":
+                gate.evidence_manifest_source_components(rich)}})
+
+        self.run_backfill("--apply", "--samples", "0")
+        row = self.curated()["aaaa1111bbbb2222"]
+        self.assertEqual(row["published_at"], "2026-08-06T21:50:00+00:00")
+        # 근거가 그대로 살아 있어야 한다 — 되살린 값이 결속과 맞기 때문이다.
+        self.assertEqual(row["verified_evidence"], rich)
+        self.assertIn("westinghouse", row["verified_evidence"]["entities"])
+        self.assertTrue(gate.evidence_manifest_is_valid(rich, article=row))
 
     def test_a_broken_binding_is_repaired_and_reported(self):
         """재큐레이션이 hash 만 지운 레코드도 복구된다.
