@@ -21,7 +21,7 @@ a warning; this is a guardrail, not a replacement for editorial review.
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass, field as dataclass_field, replace as dataclass_replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from email.utils import parsedate_to_datetime
@@ -39,6 +39,9 @@ import event_stage
 
 CURATION_STATUSES = frozenset({"reviewed", "fallback", "unreviewed", "quarantined"})
 EVIDENCE_MANIFEST_VERSION = 2
+# Bump whenever the narrative rules below change what they accept.  Cached audio
+# stores this number, so an older cache stops being trusted automatically.
+NARRATIVE_GATE_VERSION = 1
 
 # These fields are analysis, not the event itself.  Unsupported concrete facts
 # are removed field-by-field rather than causing the whole article to disappear.
@@ -1464,6 +1467,626 @@ def sanitize_curation_optional_fields(
         tuple(dict.fromkeys(removed)),
         tuple(findings),
     )
+
+
+# ---------------------------------------------------------------------------
+# Narrative gates (audio scripts, weekly synthesis)
+#
+# Everything below verifies *generated prose* against an evidence contract built
+# from verified articles.  Two rules make the difference from the card gates:
+#
+# * the contract is built only from article-side material (source title, the
+#   reviewed Korean title/summary/detail, and a sealed v2 evidence manifest).
+#   An LLM dossier or an earlier draft of the same script is never evidence —
+#   otherwise a hallucination that survived one stage certifies itself in the
+#   next one; and
+# * the audit runs on the *final* text, after every rewrite/reorder/frame step,
+#   because each of those steps can reintroduce a claim an earlier pass removed.
+# ---------------------------------------------------------------------------
+
+# Fields an article may contribute to its own evidence contract.  Analysis
+# fields (why_important/implication/open_question) are excluded on purpose: they
+# are interpretation, so letting them prove a later sentence would launder one
+# generated claim into evidence for the next.
+CONTRACT_ARTICLE_FIELDS = (
+    "title", "title_kr", "summary", "detail", "description", "source_excerpt",
+)
+
+_SPEAKER_LINE_RE = re.compile(r"^\s*([A-Za-z가-힣][A-Za-z가-힣0-9 _-]{0,29}):\s*(.+)$")
+_ANCHOR_TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9-]{2,}|[가-힣]{2,}")
+# Words that appear in almost every nuclear story.  As anchors they would make
+# every paragraph look like it belongs to every issue.
+_ANCHOR_STOPWORDS = frozenset({
+    "원자력", "원전", "원자로", "에너지", "전력", "발전", "정부", "발표", "추진",
+    "확대", "계획", "사업", "산업", "기업", "협력", "체결", "공급", "시장",
+    "국내", "해외", "한국", "미국", "지원", "투자", "기술", "관련", "이번",
+    "예정", "방침", "결정", "논의", "강화", "구축", "도입", "브리핑", "이슈",
+    "기사", "오늘", "이날", "지난", "위해", "따라", "대한", "있다", "했다",
+    "nuclear", "energy", "power", "korea", "korean", "the", "and", "for",
+    "with", "from", "that", "this", "will", "new", "plant", "project",
+})
+# Only unambiguous calendar dates count as a *stated* date.  A bare "15일" or a
+# numeric range ("2-3기") must never be read as a date on the claim side — that
+# was the main false-positive source when the card date rules were reused here.
+_SPOKEN_KO_DATE_RE = re.compile(
+    r"(?<!\d)(?P<month>0?[1-9]|1[0-2])\s*월\s*(?P<day>0?[1-9]|[12]\d|3[01])\s*일(?!\d)")
+# A read-aloud script spells capacity out ("1450메가와트") while the article says
+# "1450MW".  Both sides go through this before quantities are extracted, so the
+# same number is the same number regardless of which spelling reached the text.
+# Longest form first — 기가와트시 must not be consumed by 기가와트.
+_SPOKEN_UNIT_ALIASES = (
+    ("테라와트시", "TWh"), ("기가와트시", "GWh"), ("메가와트시", "MWh"),
+    ("킬로와트시", "kWh"), ("기가와트", "GW"), ("메가와트", "MW"),
+    ("킬로와트", "kW"),
+)
+# Headlines put a space or a particle after a quantity, so the shared quantity
+# rules treat a following Hangul syllable as "not a boundary".  Flowing speech
+# glues the copula straight on ("1450MW입니다", "9560억원으로") and the number
+# then goes unread — exactly where a fabricated figure would hide.  Restoring
+# the boundary here keeps the card rules untouched; the 기술 guard is repeated
+# so a technology word never becomes a unit count.
+_SPOKEN_UNIT_TAIL_RE = re.compile(
+    r"(?<=\d)\s*(?P<unit>%|퍼센트|MW|GW|kW|TWh|GWh|MWh|kWh|억\s*원|조\s*원|"
+    r"만\s*달러|억\s*달러|달러|유로|호기|기(?!술)|개월|개|건|명|년|월|일)"
+    r"(?=[가-힣])")
+
+
+def normalize_spoken_units(text: object) -> str:
+    """Rewrite spoken quantities into the shape the quantity rules understand.
+
+    Applied to both sides of every narrative comparison, so a script saying
+    "1450메가와트입니다" and an article saying "1450MW" are the same claim.
+    """
+    result = clean_text(text)
+    for spoken, symbol in _SPOKEN_UNIT_ALIASES:
+        if spoken in result:
+            result = result.replace(spoken, symbol)
+    return _SPOKEN_UNIT_TAIL_RE.sub(lambda m: m.group("unit") + " ", result)
+
+
+@dataclass(frozen=True)
+class EvidenceContract:
+    """Deterministic, article-only evidence for one card/issue.
+
+    ``key`` is the caller's identifier (issue id or article hash) and ``rank``
+    is the Telegram card number, so the same object also pins the order the
+    audio programme has to follow.
+    """
+
+    key: str
+    rank: int = 0
+    article_hashes: tuple[str, ...] = ()
+    entities: frozenset[str] = frozenset()
+    countries: frozenset[str] = frozenset()
+    topics: frozenset[str] = frozenset()
+    stages: frozenset[str] = frozenset()
+    claims: frozenset[str] = frozenset()
+    quantities: Mapping[str, frozenset[str]] = dataclass_field(default_factory=dict)
+    dates: frozenset[str] = frozenset()
+    anchors: frozenset[str] = frozenset()
+    text: str = ""
+    manifest_count: int = 0
+
+    def identity(self) -> dict:
+        """The part that decides whether a cached artefact is still valid.
+
+        The evidence text is fingerprinted, not just the article hashes: when a
+        later re-verification strips an unsupported sentence from an article the
+        hash stays the same while the facts an audio programme may state have
+        changed, and a cached MP3 built on the old text is no longer correct.
+        """
+        return {
+            "key": self.key,
+            "rank": self.rank,
+            "article_hashes": list(self.article_hashes),
+            "evidence_fingerprint": hashlib.sha256(
+                self.text.encode("utf-8")).hexdigest(),
+        }
+
+
+@dataclass(frozen=True)
+class ScriptAudit:
+    """Result of auditing a finished script/narrative against contracts."""
+
+    script: str
+    action: str = "allow"  # allow | sanitize | reject
+    removed: tuple[str, ...] = ()
+    findings: tuple[Finding, ...] = ()
+
+    @property
+    def ok(self) -> bool:
+        return self.action == "allow"
+
+    def as_dict(self) -> dict:
+        return {
+            "action": self.action,
+            "ok": self.ok,
+            "removed": list(self.removed),
+            "findings": [finding.as_dict() for finding in self.findings],
+        }
+
+
+def _speaker_body(line: object) -> str:
+    """Spoken text with the ``HOST:`` format label removed."""
+    text = str(line or "").strip()
+    match = _SPEAKER_LINE_RE.match(text)
+    return match.group(2).strip() if match else text
+
+
+def _stated_dates(text: str, reference: date | None) -> set[date]:
+    """Calendar dates a sentence actually states (no relative markers)."""
+    found: set[date] = set()
+
+    def add(year: object, month: object, day: object) -> None:
+        try:
+            found.add(date(int(year), int(month), int(day)))
+        except (TypeError, ValueError):
+            return
+
+    for regex in (_FULL_NUMERIC_DATE_RE, _COMPACT_DATE_RE):
+        for match in regex.finditer(text):
+            add(match.group("year"), match.group("month"), match.group("day"))
+    without_full = _FULL_NUMERIC_DATE_RE.sub(" ", _COMPACT_DATE_RE.sub(" ", text))
+    for match in _SPOKEN_KO_DATE_RE.finditer(without_full):
+        month, day = int(match.group("month")), int(match.group("day"))
+        if reference is None:
+            continue
+        parsed = _nearest_year_date(month, day, reference)
+        if parsed:
+            found.add(parsed)
+    for regex in (_EN_MONTH_DAY_RE, _EN_DAY_MONTH_RE):
+        for match in regex.finditer(without_full):
+            token = match.group("month").lower().rstrip(".")
+            month = _MONTH_NUMBERS.get(token) or _MONTH_NUMBERS.get(token[:3])
+            if not month:
+                continue
+            year = match.group("year")
+            if year:
+                add(year, month, match.group("day"))
+            elif reference is not None:
+                parsed = _nearest_year_date(month, int(match.group("day")), reference)
+                if parsed:
+                    found.add(parsed)
+    return found
+
+
+def _contract_dates(text: str, articles: Sequence[Mapping[str, object]],
+                    reference: date | None) -> frozenset[str]:
+    found: set[str] = set()
+    if reference is not None:
+        found.update(value.isoformat()
+                     for value in _explicit_evidence_dates(text, reference))
+    for article in articles:
+        for key in ("event_date", "article_date", "published_at", "pub", "date"):
+            parsed = _parse_reference_date(article.get(key))
+            if parsed:
+                found.add(parsed.isoformat())
+    return frozenset(found)
+
+
+def _anchor_tokens(values: Iterable[object]) -> set[str]:
+    tokens: set[str] = set()
+    for value in values:
+        for token in _ANCHOR_TOKEN_RE.findall(clean_text(value)):
+            lowered = token.casefold()
+            if lowered not in _ANCHOR_STOPWORDS:
+                tokens.add(lowered)
+    return tokens
+
+
+def _manifest_facts(manifests: Iterable[object]) -> dict[str, object]:
+    """Merge sealed v2 manifests.  An unsealed/tampered manifest is ignored."""
+    entities: set[str] = set()
+    countries: set[str] = set()
+    topics: set[str] = set()
+    stages: set[str] = set()
+    claims: set[str] = set()
+    quantities: dict[str, set[str]] = {}
+    used = 0
+    for manifest in manifests:
+        if not isinstance(manifest, Mapping):
+            continue
+        if not evidence_manifest_source_components(manifest):
+            # The seal check lives in evidence_manifest_source_components; a
+            # manifest that fails it contributes nothing at all.
+            continue
+        used += 1
+        for target, key in ((entities, "entities"), (countries, "countries"),
+                            (topics, "topics"), (stages, "stages"), (claims, "claims")):
+            values = manifest.get(key)
+            if isinstance(values, Sequence) and not isinstance(values, (str, bytes)):
+                target.update(clean_text(value) for value in values if clean_text(value))
+        raw = manifest.get("quantities")
+        if isinstance(raw, Mapping):
+            for unit, values in raw.items():
+                if not isinstance(values, Sequence) or isinstance(values, (str, bytes)):
+                    continue
+                unit_key = clean_text(unit).casefold()
+                if unit_key:
+                    quantities.setdefault(unit_key, set()).update(
+                        clean_text(value) for value in values if clean_text(value))
+    return {
+        "entities": entities, "countries": countries, "topics": topics,
+        "stages": stages, "claims": claims, "quantities": quantities,
+        "used": used,
+    }
+
+
+def build_evidence_contract(
+    key: object,
+    *,
+    rank: object = 0,
+    articles: Sequence[Mapping[str, object]] = (),
+    manifests: Iterable[object] = (),
+    extra_text: Iterable[object] = (),
+    reference_date: object = None,
+) -> EvidenceContract:
+    """Build one contract from verified articles only.
+
+    ``articles`` are final, already-gated records.  ``manifests`` are v2
+    evidence manifests (:func:`build_evidence_manifest`); they let body-only
+    facts count as evidence without retaining the body.  Generated narrative —
+    an LLM dossier, an earlier script draft, a verification report — must never
+    be passed in here.
+    """
+    rows = [row for row in articles if isinstance(row, Mapping)]
+    pieces: list[str] = []
+    for row in rows:
+        pieces.extend(clean_text(row.get(field)) for field in CONTRACT_ARTICLE_FIELDS)
+    pieces.extend(clean_text(value) for value in extra_text)
+    text = normalize_spoken_units(" ".join(piece for piece in pieces if piece))
+
+    facts = _manifest_facts(manifests)
+    reference = _parse_reference_date(reference_date)
+    quantities = {unit: set(values) for unit, values in _quantity_map(text).items()}
+    for unit, values in facts["quantities"].items():
+        quantities.setdefault(unit, set()).update(values)
+
+    hashes = tuple(dict.fromkeys(
+        clean_text(row.get("hash") or row.get("article_hash")) for row in rows
+        if clean_text(row.get("hash") or row.get("article_hash"))
+    ))
+    anchors = _anchor_tokens(
+        [row.get("title_kr") or row.get("title") for row in rows]
+        + [row.get("title") for row in rows]
+        + list(extra_text)
+    )
+    try:
+        rank_value = int(rank)
+    except (TypeError, ValueError):
+        rank_value = 0
+    return EvidenceContract(
+        key=clean_text(key),
+        rank=rank_value,
+        article_hashes=hashes,
+        entities=frozenset(_entities(text)) | frozenset(facts["entities"]),
+        countries=frozenset(_countries(text)) | frozenset(facts["countries"]),
+        topics=frozenset(_topics(text)) | frozenset(facts["topics"]),
+        stages=frozenset(_detect_stages(text)) | frozenset(facts["stages"]),
+        claims=frozenset(concrete_claims(text)) | frozenset(facts["claims"]),
+        quantities={unit: frozenset(values) for unit, values in quantities.items()},
+        dates=_contract_dates(text, rows, reference),
+        anchors=frozenset(anchors),
+        text=text,
+        manifest_count=int(facts["used"]),
+    )
+
+
+def build_evidence_contracts(
+    specs: Sequence[Mapping[str, object]], *, reference_date: object = None,
+) -> tuple[EvidenceContract, ...]:
+    """Build contracts and reduce each anchor set to what is unique to it.
+
+    Attribution is only meaningful with words that belong to a single story, so
+    a token shared by two contracts is dropped from both.  A contract that ends
+    up with no unique anchor simply never owns a paragraph — silence beats a
+    guess.
+    """
+    built = [
+        build_evidence_contract(
+            spec.get("key"),
+            rank=spec.get("rank", 0),
+            articles=spec.get("articles") or (),
+            manifests=spec.get("manifests") or (),
+            extra_text=spec.get("extra_text") or (),
+            reference_date=spec.get("reference_date", reference_date),
+        )
+        for spec in specs if isinstance(spec, Mapping)
+    ]
+    shared: dict[str, int] = {}
+    for contract in built:
+        for token in contract.anchors:
+            shared[token] = shared.get(token, 0) + 1
+    return tuple(
+        dataclass_replace(contract, anchors=frozenset(
+            token for token in contract.anchors if shared.get(token, 0) == 1))
+        for contract in built
+    )
+
+
+def evidence_digest(contracts: Sequence[EvidenceContract], *,
+                    extra: Mapping[str, object] | None = None) -> str:
+    """Canonical digest of the inputs a generated artefact was built from.
+
+    A cached MP3 is only reusable when the same articles, in the same card
+    order, were checked by the same gate version.  Anything else — a different
+    day, a reordered brief, a stricter gate — must invalidate it.
+    """
+    payload = {
+        "gate_version": NARRATIVE_GATE_VERSION,
+        "contracts": [contract.identity() for contract in contracts],
+        "extra": dict(extra or {}),
+    }
+    return _digest_payload(payload)
+
+
+def script_digest(script: object) -> str:
+    """Digest of the exact spoken text, so a rewritten script fails the cache."""
+    normalized = "\n".join(
+        line.strip() for line in str(script or "").splitlines() if line.strip())
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def _merged_contract_view(contracts: Sequence[EvidenceContract]) -> dict[str, object]:
+    quantities: dict[str, set[str]] = {}
+    for contract in contracts:
+        for unit, values in contract.quantities.items():
+            quantities.setdefault(unit, set()).update(values)
+    return {
+        "text": " ".join(contract.text for contract in contracts if contract.text),
+        "entities": set().union(*(c.entities for c in contracts)) if contracts else set(),
+        "countries": set().union(*(c.countries for c in contracts)) if contracts else set(),
+        "stages": set().union(*(c.stages for c in contracts)) if contracts else set(),
+        "claims": set().union(*(c.claims for c in contracts)) if contracts else set(),
+        "dates": set().union(*(c.dates for c in contracts)) if contracts else set(),
+        "quantities": quantities,
+    }
+
+
+ALL_FACT_CHECKS = ("entities", "countries", "stages", "claims", "dates")
+# Quantities and calendar dates are the only facts precise enough to attribute
+# to a single story.  Backtesting the 2026-08-14 expert programme showed why:
+# judging entities/countries/stages per paragraph removed 4 of 30 paragraphs,
+# every one of them legitimate (the operator of the plant under discussion, a
+# restart date described as *not yet* decided).  Those three stay on the global
+# check, which guarantees the fact appeared in some verified article that day
+# and had no false positive on the same data.
+ATTRIBUTION_FACT_CHECKS = ("claims", "dates")
+# An analysis sentence ("심사 가속화 우려를 불식", "인허가 지연으로 난항") names a
+# project stage as the subject it reasons about, not as an event it claims
+# happened.  Replaying the stored weekly reports showed every stage finding on
+# such a field was a false positive, while the entity/number findings on the
+# same fields were real (a Philippines MOU attributed to an article about a
+# different one).  So analysis keeps the identifier and quantity checks and
+# gives up the stage check.
+ANALYSIS_FACT_CHECKS = ("entities", "countries", "claims", "dates")
+
+
+def unsupported_facts(
+    text: object,
+    contracts: Sequence[EvidenceContract],
+    *,
+    reference_date: object = None,
+    checks: Sequence[str] = ALL_FACT_CHECKS,
+) -> dict[str, object]:
+    """Concrete facts in ``text`` that the given contracts do not support.
+
+    Returns an empty dict when the sentence is clean.  Countries and event
+    stages are only judged when the sentence actually asserts something
+    happened; comparative analysis may legitimately name a market or describe a
+    stage as a scenario, and blocking that produces noise rather than safety.
+    """
+    cleaned = normalize_spoken_units(text)
+    if not cleaned or not contracts:
+        return {}
+    view = _merged_contract_view(contracts)
+    wanted = set(checks)
+    problems: dict[str, object] = {}
+
+    if "entities" in wanted:
+        entities = set(_entities(cleaned)) - set(view["entities"])
+        if entities:
+            problems["entities"] = sorted(entities)
+
+    if {"countries", "stages"} & wanted and _asserts_fact(cleaned):
+        if "countries" in wanted:
+            countries = set(_countries(cleaned)) - set(view["countries"])
+            if countries:
+                problems["countries"] = sorted(countries)
+        if "stages" in wanted:
+            stages = set(_detect_stages(cleaned)) - set(view["stages"])
+            if stages:
+                problems["stages"] = sorted(stages)
+
+    if "claims" in wanted:
+        claims = _unsupported_claims(
+            cleaned, str(view["text"]),
+            {"claims": view["claims"], "quantities": view["quantities"]},
+        )
+        if claims:
+            problems["claims"] = sorted(claims)
+
+    if "dates" in wanted:
+        reference = _parse_reference_date(reference_date)
+        dates = {value.isoformat()
+                 for value in _stated_dates(cleaned, reference)} - set(view["dates"])
+        if dates:
+            problems["dates"] = sorted(dates)
+    return problems
+
+
+# A paragraph that explicitly looks back at an earlier story legitimately names
+# two of them, so it is never attributed to one owner.
+_BACKREFERENCE_RE = re.compile(
+    r"앞서|앞에서|앞의|먼저 본|먼저 말씀|말씀드린|언급한|언급했던|짚었던|살펴본")
+
+
+def _paragraph_owner(text: str, contracts: Sequence[EvidenceContract]) -> EvidenceContract | None:
+    """The single contract a paragraph is unambiguously about, if any.
+
+    Ownership needs a clear winner: the best anchor score must be at least twice
+    the runner-up.  Ties, back-references and round-up paragraphs that weigh two
+    stories equally get no owner, so cross-attribution is only judged where the
+    paragraph really is about one story.
+    """
+    lowered = text.casefold()
+    scores = sorted(
+        ((sum(1 for anchor in contract.anchors if anchor in lowered), contract)
+         for contract in contracts if contract.anchors),
+        key=lambda row: row[0], reverse=True,
+    )
+    scores = [row for row in scores if row[0] > 0]
+    if not scores:
+        return None
+    best = scores[0][0]
+    runner_up = scores[1][0] if len(scores) > 1 else 0
+    if runner_up and (best < 2 * runner_up or _BACKREFERENCE_RE.search(text)):
+        return None
+    return scores[0][1]
+
+
+def audit_spoken_script(
+    script: object,
+    contracts: Sequence[EvidenceContract],
+    *,
+    exempt: Iterable[object] = (),
+    reference_date: object = None,
+    min_lines: int = 0,
+) -> ScriptAudit:
+    """Fact-check a finished script line by line against article evidence.
+
+    A line that states something the day's articles do not support is removed
+    rather than rewritten, so the unsupported wording cannot survive into the
+    MP3, the saved transcript or the digest.  ``exempt`` holds system-generated
+    frame lines (opening, closing, block bridges) which carry no article claim.
+
+    With no contracts the script is returned untouched: absence of retained
+    evidence is not proof of a falsehood, and silently emptying a brief would be
+    a worse failure than the one this guards against.
+    """
+    if not contracts:
+        return ScriptAudit(str(script or ""), "allow", (), (
+            Finding("script_evidence_missing", "warning", "",
+                    "근거 계약이 없어 대본 사실검증을 생략했습니다."),
+        ))
+
+    exempt_keys = {_normalize_claim(_speaker_body(value))
+                   for value in exempt if clean_text(value)}
+    kept: list[str] = []
+    removed: list[str] = []
+    findings: list[Finding] = []
+    for raw in str(script or "").splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        body = _speaker_body(line)
+        if not body or _normalize_claim(body) in exempt_keys:
+            kept.append(line)
+            continue
+
+        problems = unsupported_facts(body, contracts, reference_date=reference_date)
+        code = "script_claim_unsupported"
+        if not problems:
+            owner = _paragraph_owner(body, contracts)
+            if owner is not None:
+                problems = unsupported_facts(
+                    body, [owner], reference_date=reference_date,
+                    checks=ATTRIBUTION_FACT_CHECKS)
+                code = "script_claim_cross_attributed"
+                if problems:
+                    problems = {**problems, "attributed_to": owner.key}
+        if not problems:
+            kept.append(line)
+            continue
+        removed.append(body)
+        findings.append(Finding(
+            code, "sanitize", "script",
+            "기사 근거에서 확인되지 않는 사실이라 해당 문단을 제외했습니다.",
+            {"line": body[:200], **problems},
+        ))
+
+    cleaned = "\n".join(kept)
+    if not removed:
+        return ScriptAudit(cleaned, "allow", (), ())
+    action = "reject" if len(kept) < min_lines else "sanitize"
+    return ScriptAudit(cleaned, action, tuple(removed), tuple(findings))
+
+
+def audit_evidence_items(
+    items: Sequence[Mapping[str, object]],
+    contracts_by_hash: Mapping[str, EvidenceContract],
+    *,
+    text_fields: Sequence[str],
+    analysis_fields: Sequence[str] = (),
+    hash_field: str = "evidence_hashes",
+    require_evidence: bool = True,
+    fallback_contracts: Sequence[EvidenceContract] = (),
+    reference_date: object = None,
+) -> tuple[list[dict], tuple[Finding, ...]]:
+    """Keep only narrative items whose sentences match their cited articles.
+
+    Used by the weekly report, where each row already names the articles it
+    rests on.  A row is checked against *those* articles, not against the whole
+    week — a valid hash paired with a sentence about a different event is the
+    exact failure this closes.  Dropping is per row: one unsupported claim must
+    not delete the entire weekly brief.
+
+    ``text_fields`` state what happened and face every check; ``analysis_fields``
+    interpret it and skip the stage check (see ANALYSIS_FACT_CHECKS).
+    """
+    kept: list[dict] = []
+    findings: list[Finding] = []
+    for index, item in enumerate(items):
+        if not isinstance(item, Mapping):
+            continue
+        row = dict(item)
+        groups = [
+            (tuple(text_fields), ALL_FACT_CHECKS),
+            (tuple(analysis_fields), ANALYSIS_FACT_CHECKS),
+        ]
+        parts = [
+            (" ".join(clean_text(row.get(field)) for field in fields
+                      if clean_text(row.get(field))), rules)
+            for fields, rules in groups
+        ]
+        text = " ".join(part for part, _rules in parts if part)
+        if not text:
+            continue
+        raw_hashes = row.get(hash_field)
+        if isinstance(raw_hashes, str):
+            raw_hashes = [raw_hashes]
+        hashes = [
+            clean_text(value)[:8] for value in (raw_hashes or [])
+            if clean_text(value)[:8] in contracts_by_hash
+        ]
+        cited = [contracts_by_hash[value] for value in dict.fromkeys(hashes)]
+
+        if not cited:
+            # Nothing to check against.  A sentence that asserts a concrete
+            # event without naming its source article is exactly what the
+            # weekly narrative kept smuggling through, so it goes.
+            if require_evidence and (_asserts_fact(text) or concrete_claims(text)):
+                findings.append(Finding(
+                    "weekly_item_unsourced", "sanitize", f"{index}",
+                    "근거 기사를 지목하지 못한 구체적 서술이라 항목을 제외했습니다.",
+                    {"text": text[:200]},
+                ))
+                continue
+            cited = list(fallback_contracts)
+        problems: dict[str, object] = {}
+        for part, rules in parts:
+            if part:
+                problems.update(unsupported_facts(
+                    part, cited, reference_date=reference_date, checks=rules))
+        if problems:
+            findings.append(Finding(
+                "weekly_item_unsupported", "sanitize", f"{index}",
+                "근거 기사와 일치하지 않는 서술이라 항목을 제외했습니다.",
+                {"text": text[:200], "evidence_hashes": hashes, **problems},
+            ))
+            continue
+        kept.append(row)
+    return kept, tuple(findings)
 
 
 def summarize_findings(results: Sequence[GateResult]) -> dict:

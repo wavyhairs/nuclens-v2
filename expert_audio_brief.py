@@ -25,6 +25,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import article_quality_gate
 import gemini_client
 from gemini_client import GeminiError, call_json, is_available
 from audio_brief import (
@@ -41,7 +42,11 @@ from audio_brief import (
     _script_models,
     _tts_models,
     _write_audio_variant,
+    audio_evidence_digest,
+    cache_verdict,
     call_tts,
+    evidence_contracts,
+    evidence_specs,
     load_briefing,
     send_telegram_audio,
     split_script,
@@ -962,7 +967,26 @@ def _block_bridge(block: str) -> str:
     return {"해외": "HOST: 국내 소식은 여기까지입니다. 이어서 해외 동향을 보겠습니다."}.get(block, "")
 
 
-def generate_expert_script(briefing: dict, issues: list[dict]) -> tuple[str, list[dict], dict, dict]:
+def final_evidence_audit(script: str, briefing: dict, contracts, *, min_lines: int = 0):
+    """완성된 프로그램을 **기사 근거**와 대조한다.
+
+    LLM 검증(VERIFY_SYSTEM)은 dossier 와 대조하는데, dossier 자체가 LLM 산출물이라
+    같은 모델이 만든 사실이 같은 사실의 근거가 되는 순환이 남는다. 여기서는
+    dossier 도 대본도 근거로 쓰지 않고, 그날 검증을 통과한 기사만 근거로 본다.
+
+    그리고 이 검사는 **맨 마지막**이다. 구간 수정(repair)과 순서 재배치(reorder)는
+    각각 대본을 다시 쓰므로, 그 앞에서 통과한 검증은 최종본을 보증하지 않는다.
+    """
+    exempt = [*expert_frame(briefing, {}),
+              *(_block_bridge(block) for block in REGION_ORDER)]
+    return article_quality_gate.audit_spoken_script(
+        script, contracts, exempt=[value for value in exempt if value],
+        reference_date=briefing.get("date"), min_lines=min_lines,
+    )
+
+
+def generate_expert_script(briefing: dict, issues: list[dict],
+                           contracts=None) -> tuple[str, list[dict], dict, dict]:
     """dossier → 시간배분 → plan → **구간·배치별 대본** → 구간별 검증.
 
     대본을 한 번에 부르지 않는 이유가 이 함수의 전부다. 실측(2026-08-14):
@@ -1101,7 +1125,21 @@ def generate_expert_script(briefing: dict, issues: list[dict]) -> tuple[str, lis
     if not verification_passed(report):
         claims = report.get("unsupported_critical_claims") or []
         raise ValueError(f"전문가 대본 검증 미통과 — critical={len(claims)}, scores={_score_summary(report)}")
-    return apply_expert_frame(script, briefing, plan), dossiers, plan, report
+
+    # 프레임까지 붙인 최종본을 기사 근거로 한 번 더 본다. 위의 LLM 검증은
+    # dossier 기준이라 dossier 자체의 오류를 잡지 못하고, 순서 재배치는 그
+    # 검증 뒤에 대본을 다시 썼다.
+    framed = apply_expert_frame(script, briefing, plan)
+    contracts = contracts if contracts is not None else evidence_contracts(briefing, issues)
+    audit = final_evidence_audit(framed, briefing, contracts,
+                                 min_lines=min_paragraphs(len(issues)))
+    report["evidence_audit"] = audit.as_dict()
+    if audit.action == "reject":
+        raise ValueError(
+            f"기사 근거 검증 후 남은 문단 부족 — 제외 {len(audit.removed)}건")
+    if audit.removed:
+        print(f"[expert-audio] 기사 근거 미확인 문단 {len(audit.removed)}건 제외")
+    return audit.script, dossiers, plan, report
 
 
 def _score_summary(report: dict) -> str:
@@ -1204,26 +1242,42 @@ def generate(force: bool = False, send: bool = True) -> bool:
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
     file_name = f"briefing-expert-{date}.mp3"
     mp3_path = AUDIO_DIR / file_name
-    manifest = _audio_manifest()
-    existing = ((manifest.get("variants") or {}).get(EXPERT_VARIANT) or {}) if manifest.get("date") == date else {}
-    if not force and existing.get("file") and (AUDIO_DIR / existing["file"]).exists():
-        existing_path = AUDIO_DIR / existing["file"]
-        # 생성은 됐는데 발송만 실패한 날이 있다(429·네트워크 타임아웃). 그날 재실행이
-        # 10분짜리 TTS 를 다시 부르지 않고 발송만 이어받게 한다 — 빠른 브리핑과 같은 계약.
-        if not existing.get("telegram_sent_at"):
-            if send and send_telegram_audio(existing_path, {"date": date, **existing}):
-                _mark_sent(date, EXPERT_VARIANT, existing)
-        else:
-            print(f"[expert-audio] {date} 전문가 브리핑 이미 생성·발송됨 "
-                  f"({existing_path.name}) — 스킵")
-        return True
-
     issues = selected_issues(briefing, by_id)
     if not issues:
         print("[expert-audio] 전문가 브리핑 대상 이슈 없음")
         return False
+    contracts = evidence_contracts(briefing, issues)
+    digest = audio_evidence_digest(briefing, contracts, EXPERT_VARIANT)
+    script_path = AUDIO_DIR / f"script-expert-{date}.txt"
+
+    manifest = _audio_manifest()
+    existing = ((manifest.get("variants") or {}).get(EXPERT_VARIANT) or {}) if manifest.get("date") == date else {}
+    if existing.get("file") and (AUDIO_DIR / existing["file"]).exists():
+        existing_path = AUDIO_DIR / existing["file"]
+        verdict = cache_verdict(existing, digest=digest,
+                               script_path=script_path, force=force)
+        if verdict == "reuse":
+            # 생성은 됐는데 발송만 실패한 날이 있다(429·네트워크 타임아웃). 그날 재실행이
+            # 10분짜리 TTS 를 다시 부르지 않고 발송만 이어받게 한다 — 빠른 브리핑과 같은 계약.
+            if not existing.get("telegram_sent_at"):
+                if send and send_telegram_audio(existing_path, {"date": date, **existing}):
+                    _mark_sent(date, EXPERT_VARIANT, existing)
+            else:
+                print(f"[expert-audio] {date} 전문가 브리핑 이미 생성·발송됨 "
+                      f"({existing_path.name}) — 스킵")
+            return True
+        if verdict == "stale_sent":
+            print(f"[expert-audio] {date} 캐시가 현재 재료와 불일치 — "
+                  f"이미 발송돼 재발송하지 않고 stale 로 표시")
+            _write_audio_variant(date, EXPERT_VARIANT, {
+                **existing, "cache_state": "stale_after_send",
+                "expected_evidence_digest": digest})
+            return True
+        print(f"[expert-audio] {date} 캐시 불일치 — 다시 생성")
+
     try:
-        script, dossiers, plan, verification = generate_expert_script(briefing, issues)
+        script, dossiers, plan, verification = generate_expert_script(
+            briefing, issues, contracts)
         pcm, rate, tts_models, warnings = synthesize_expert(script)
         to_mp3(pcm, rate, mp3_path, bitrate="128k")
     except (GeminiError, ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
@@ -1271,11 +1325,18 @@ def generate(force: bool = False, send: bool = True) -> bool:
              "title": str(i.get("title") or "")[:60]}
             for i in issues
         ],
+        # dossier 가 아니라 기사 근거로 본 최종 판정. LLM 검증과 나란히 남겨야
+        # 둘이 갈리는 날을 사후에 구분할 수 있다.
+        "evidence_audit": (verification.get("evidence_audit") or {}),
+        "evidence_digest": digest,
+        "script_digest": article_quality_gate.script_digest(script),
+        "gate_version": article_quality_gate.NARRATIVE_GATE_VERSION,
+        "evidence_issue_count": len(contracts),
         "tts_models": list(dict.fromkeys(tts_models)),
         "warnings": warnings,
     }
     _write_audio_variant(date, EXPERT_VARIANT, meta)
-    (AUDIO_DIR / f"script-expert-{date}.txt").write_text(script, encoding="utf-8")
+    script_path.write_text(script, encoding="utf-8")
     (AUDIO_DIR / f"verification-expert-{date}.json").write_text(
         json.dumps(verification, ensure_ascii=False, indent=2), encoding="utf-8"
     )

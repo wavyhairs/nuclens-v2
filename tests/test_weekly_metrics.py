@@ -371,6 +371,139 @@ class TestWeeklyReportStore(unittest.TestCase):
         self.assertIn("고정 문구", text)
 
 
+class TestWeeklySentenceEvidence(unittest.TestCase):
+    """근거 hash 가 진짜라는 것과 그 기사가 그 문장을 뒷받침한다는 것은 다르다."""
+
+    DOOSAN = {
+        "hash": "d0000000aaaa", "title": "Doosan signs 345 MW Natrium SMR contract",
+        "title_kr": "두산에너빌리티, 테라파워 345MW SMR 기자재 계약 체결",
+        "link": "https://example.com/a", "domain": "example.com", "feed": "",
+        "section": "international", "grade": "must_read",
+        "summary": "두산에너빌리티가 미국 테라파워의 345MW급 SMR 기자재를 공급한다.",
+        "tags": [], "features": None, "cached_at": NOW_ISO,
+    }
+    KHNP = {
+        "hash": "k0000000bbbb", "title": "KHNP wins Czech Dukovany contract",
+        "title_kr": "한국수력원자력, 체코 두코바니 원전 건설 계약 수주",
+        "link": "https://example.com/b", "domain": "example.com", "feed": "",
+        "section": "khnp", "grade": "must_read",
+        "summary": "한국수력원자력이 체코 두코바니 신규 원전 2기 건설 계약을 따냈다.",
+        "tags": [], "features": None, "cached_at": NOW_ISO,
+    }
+
+    def setUp(self):
+        self.items = [self.DOOSAN, self.KHNP]
+
+    def verify(self, **synthesis):
+        base = {"weekly_intro": "", "policy_shifts": [], "theme_moves": [],
+                "khnp_direct": "", "watchpoints": [], "report_candidates": [],
+                "key_events": []}
+        return weekly_bot.verify_synthesis({**base, **synthesis}, self.items)
+
+    def test_faithful_item_survives(self):
+        out = self.verify(policy_shifts=[{
+            "what": "한국수력원자력이 체코 두코바니 원전 건설 계약을 수주했다.",
+            "so_what": "유럽 신규 건설 시장의 진입 사례가 됐다.",
+            "evidence_hashes": ["k0000000"]}])
+        self.assertEqual(len(out["policy_shifts"]), 1)
+
+    def test_valid_hash_with_a_different_story_is_dropped(self):
+        """hash 는 이번 주 기사인데 문장은 그 기사와 다른 사건인 경우."""
+        out = self.verify(policy_shifts=[{
+            "what": "한국수력원자력이 로사톰과 우라늄 농축 계약을 체결했다.",
+            "so_what": "공급망 구조가 바뀐다.",
+            "evidence_hashes": ["k0000000"]}])
+        self.assertEqual(out["policy_shifts"], [])
+
+    def test_one_cited_article_cannot_carry_another_articles_number(self):
+        """여러 기사 중 하나만 지목하면서 다른 기사의 수치를 끼워 넣는 경우."""
+        out = self.verify(theme_moves=[{
+            "theme": "신규건설", "direction": "강화",
+            "why": "한국수력원자력의 체코 두코바니 계약은 345MW 규모다.",
+            "evidence_hashes": ["k0000000"]}])
+        self.assertEqual(out["theme_moves"], [])
+
+    def test_one_cited_article_cannot_carry_another_institution(self):
+        out = self.verify(theme_moves=[{
+            "theme": "수출", "direction": "강화",
+            "why": "두산에너빌리티도 같은 사업에 기자재를 공급하기로 했다.",
+            "evidence_hashes": ["k0000000"]}])
+        self.assertEqual(out["theme_moves"], [])
+
+    def test_concrete_item_without_any_evidence_is_dropped(self):
+        out = self.verify(theme_moves=[{
+            "theme": "핵융합", "direction": "강화",
+            "why": "독일이 2040년대 상업로 목표를 발표했다.",
+            "evidence_hashes": []}])
+        self.assertEqual(out["theme_moves"], [])
+
+    def test_one_bad_item_does_not_take_the_whole_report_down(self):
+        """항목 하나가 틀렸다고 그 주 판세 보고를 통째로 버리지 않는다."""
+        out = self.verify(
+            weekly_intro="이번 주는 신규 건설 계약이 이어졌다.",
+            policy_shifts=[
+                {"what": "한국수력원자력이 체코 두코바니 계약을 수주했다.",
+                 "so_what": "유럽 진입 사례다.", "evidence_hashes": ["k0000000"]},
+                {"what": "로사톰이 카자흐스탄 신규 원전을 착공했다.",
+                 "so_what": "경쟁 구도가 바뀐다.", "evidence_hashes": ["k0000000"]},
+            ],
+            key_events=[{"hash": "d0000000",
+                         "headline": "두산에너빌리티, 테라파워 345MW SMR 기자재 계약 체결",
+                         "implication": "국내 공급망의 수주 사례다."}])
+        self.assertEqual(len(out["policy_shifts"]), 1)
+        self.assertEqual(len(out["key_events"]), 1)
+        self.assertTrue(out["weekly_intro"])
+
+    def test_llm_sentences_are_not_evidence_for_each_other(self):
+        """다른 항목이 같은 이름을 썼다고 근거가 되지는 않는다."""
+        out = self.verify(
+            weekly_intro="로사톰이 이번 주 최대 수주자였다.",
+            policy_shifts=[{"what": "로사톰이 신규 원전을 수주했다.",
+                            "so_what": "시장이 재편된다.",
+                            "evidence_hashes": ["k0000000"]}])
+        self.assertEqual(out["policy_shifts"], [])
+        self.assertEqual(out["weekly_intro"], "")
+
+    def test_watchpoints_survive_without_per_item_evidence(self):
+        """다음 주 관찰 포인트는 사건이 아직 없다 — 근거 기사를 요구하지 않는다."""
+        out = self.verify(watchpoints=["체코 두코바니 후속 일정 확인",
+                                       "로사톰 카자흐스탄 착공 여부"])
+        self.assertEqual(out["watchpoints"], ["체코 두코바니 후속 일정 확인"])
+
+    def test_verification_survives_the_final_format_conversion(self):
+        """검증에서 뺀 문장이 텔레그램 렌더링에서 되살아나면 안 된다."""
+        out = self.verify(policy_shifts=[
+            {"what": "한국수력원자력이 체코 두코바니 계약을 수주했다.",
+             "so_what": "유럽 진입 사례다.", "evidence_hashes": ["k0000000"]},
+            {"what": "로사톰이 카자흐스탄 신규 원전을 착공했다.",
+             "so_what": "경쟁 구도가 바뀐다.", "evidence_hashes": ["k0000000"]},
+        ])
+        text = weekly_bot.format_weekly(self.items, out)
+        self.assertIn("두코바니", text)
+        self.assertNotIn("로사톰", text)
+        self.assertNotIn("카자흐스탄", text)
+
+    def test_saved_web_report_keeps_the_verified_synthesis(self):
+        out = self.verify(policy_shifts=[
+            {"what": "로사톰이 카자흐스탄 신규 원전을 착공했다.",
+             "so_what": "경쟁 구도가 바뀐다.", "evidence_hashes": ["k0000000"]}])
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "weekly_reports.json"
+            weekly_bot.save_weekly_report(
+                out, weekly_bot.build_aggregates(self.items), self.items, path=path)
+            saved = json.loads(path.read_text(encoding="utf-8"))
+        entry = next(iter(saved["reports"].values()))
+        self.assertEqual(entry["policy_shifts"], [])
+
+    def test_published_at_window_still_wins_over_cache_time(self):
+        """PR #27 의 published_at 기반 주간 창 계산은 그대로 남아 있어야 한다."""
+        old = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        curated = {"h" * 16: {"importance": "must_read", "title": "T", "link": "u",
+                              "cached_at": datetime.now(timezone.utc).isoformat(),
+                              "published_at": old}}
+        self.assertEqual(weekly_bot.get_week_articles(curated), [])
+
+
 class TestWeeklyWorkflow(unittest.TestCase):
     def test_workflow_can_commit_and_rebases_on_conflict(self):
         root = Path(__file__).parent.parent

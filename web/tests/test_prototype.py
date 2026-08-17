@@ -5156,6 +5156,75 @@ const issueMaterialPack = issue => '# ' + issue.title;
         self.assertIn("packButton.hidden = issues.length === 0", script)
 
 
+class ExplicitCurationStatusTests(unittest.TestCase):
+    """텔레그램에서 막힌 기사가 사이트·RSS 로 되살아나면 막은 의미가 없다.
+
+    사이트 빌드는 아카이브 레코드를 제목만으로 다시 판정한다. 발송 시점에는
+    있었던 근거(원문 발췌, 최종 카드 검증)가 아카이브에는 남지 않으므로 그때
+    격리된 기사를 여기서 다시 격리해 낼 수 없는 경우가 있다. 그래서 이미 적힌
+    상태를 먼저 존중한다.
+    """
+
+    RECORD = {
+        "hash": "h1", "title": "KHNP wins Czech Dukovany contract",
+        "title_kr": "한국수력원자력, 체코 두코바니 원전 건설 계약 수주",
+        "summary": "한국수력원자력이 체코 두코바니 원전 건설 계약을 수주했다.",
+        "url": "https://example.com/a", "domain": "example.com",
+        "pub": "2026-08-14T00:00:00+00:00",
+    }
+
+    def gate(self, **extra):
+        return build_data.apply_archive_integrity_gate([{**self.RECORD, **extra}])
+
+    def test_quarantined_record_never_reaches_the_site_or_rss(self):
+        visible, stats = self.gate(curation_status="quarantined")
+        self.assertEqual(visible, [])
+        self.assertEqual(stats["status_blocked"], 1)
+        self.assertEqual(stats["status_blocked_samples"][0]["codes"],
+                         ["status:quarantined"])
+
+    def test_fallback_stays_visible_but_its_analysis_does_not(self):
+        """사실은 원문이 받쳐 주지만, 검토받지 않은 해석은 받쳐 주는 것이 없다."""
+        visible, stats = self.gate(
+            curation_status="fallback", implication="한수원 수혜가 기대된다.",
+            why_important="국내 최초 사례다.")
+        self.assertEqual(len(visible), 1)
+        self.assertEqual(visible[0]["implication"], "")
+        self.assertEqual(visible[0]["why_important"], "")
+        self.assertEqual(visible[0]["title_kr"], self.RECORD["title_kr"])
+        self.assertEqual(stats["fallback_trimmed"], 1)
+
+    def test_reviewed_record_keeps_its_analysis(self):
+        visible, stats = self.gate(curation_status="reviewed",
+                                   implication="한수원 수혜가 기대된다.")
+        self.assertEqual(visible[0]["implication"], "한수원 수혜가 기대된다.")
+        self.assertEqual(stats["fallback_trimmed"], 0)
+
+    def test_legacy_record_without_a_status_is_not_hidden(self):
+        """없는 상태를 추론해 숨기면 정상 기사가 대량으로 사라진다."""
+        visible, stats = self.gate()
+        self.assertEqual(len(visible), 1)
+        self.assertEqual(stats["status_blocked"], 0)
+
+    def test_status_check_does_not_replace_the_integrity_gate(self):
+        visible, stats = self.gate(
+            curation_status="reviewed",
+            title="Cameco starts construction at a new Canadian uranium mine",
+            title_kr="스페인 알마라즈 원전 수명 연장 결정",
+            summary="스페인 정부가 알마라즈 원전의 가동 시한을 연장했다.")
+        self.assertEqual(visible, [])
+        self.assertEqual(stats["quarantined"], 1)
+
+    def test_real_archive_visibility_is_unchanged_by_the_status_gate(self):
+        """실데이터에서 이 게이트가 정상 기사를 추가로 숨기지 않아야 한다."""
+        records = build_data.load_archive()
+        visible, stats = build_data.apply_archive_integrity_gate(records)
+        self.assertEqual(len(visible), len(records) - stats["quarantined"]
+                         - stats["status_blocked"])
+        self.assertLessEqual(stats["status_blocked"] + stats["quarantined"],
+                             max(5, len(records) // 100))
+
+
 class SourceBackfillTests(unittest.TestCase):
     """자료 팩(정책 브리핑의 산출물)이 인용하는 줄이 인용답지 않았다.
 

@@ -39,6 +39,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from data_quality import (  # noqa: E402
+    clean_text,
     curation_errors,
     implication_is_hollow,
     display_publisher,
@@ -397,41 +398,75 @@ def load_archive() -> list[dict]:
     return records
 
 
+# 수집·발송 단계가 이미 판정해 기록한 상태. 사이트·RSS 는 그 판정을 다시
+# 뒤집지 않는다 — 텔레그램에서 막힌 기사가 웹에서 되살아나면 막은 의미가 없다.
+# 여기서 보는 것은 **명시적으로 적힌** 값뿐이다. 옛 레코드에는 이 필드가 없고,
+# 없는 것을 추론해 숨기면 정상 기사가 대량으로 사라진다.
+SITE_HIDDEN_STATUSES = frozenset({"quarantined"})
+# fallback 은 사실이 틀린 것이 아니라 검토를 못 받은 것이라 숨기지 않는다.
+# 다만 검토받지 않은 **해석**은 내보내지 않는다 — 사실은 원문이 받쳐 주지만
+# 해석은 받쳐 주는 것이 없다. assess_delivery_eligibility 의 limitations 와 같은 목록.
+FALLBACK_WITHHELD_FIELDS = ("implication", "why_important", "open_question",
+                            "watch_next")
+
+
 def apply_archive_integrity_gate(records: list[dict]) -> tuple[list[dict], dict]:
     """과거 아카이브도 사이트에 내보내기 직전 같은 원문-큐레이션 계약을 적용한다.
 
     아카이브에는 기사 본문을 저장하지 않으므로 없는 근거를 오류로 단정하지 않는다.
     원제목만으로도 확인되는 명백한 사건 전환·핵심 수치 충돌은 숨기고, 불가능한
     사건일은 날짜만 비운다. 원본 JSONL은 감사 이력을 위해 다시 쓰지 않는다.
+
+    여기서 다시 판정할 수 없는 것도 있다. 발송 시점에는 있었던 근거(원문 발췌,
+    최종 카드 검증)가 아카이브에는 남지 않으므로, 그때 격리된 기사를 제목만으로
+    다시 격리해 낼 수는 없다. 그래서 **적혀 있는 상태를 먼저 존중한다.**
     """
     visible: list[dict] = []
     quarantined: list[dict] = []
     sanitized: list[dict] = []
+    status_blocked: list[dict] = []
+    fallback_trimmed: list[dict] = []
     for record in records:
+        status = clean_text(record.get("curation_status")).lower()
+        sample = {
+            "hash": record.get("hash", ""),
+            "title": (record.get("title") or "")[:100],
+            "title_kr": (record.get("title_kr") or "")[:100],
+            "codes": [],
+        }
+        if status in SITE_HIDDEN_STATUSES:
+            status_blocked.append({**sample, "codes": [f"status:{status}"]})
+            continue
         result = article_quality_gate.audit_article_integrity(
             record,
             source={"title": record.get("title", ""),
                     "published_at": record.get("pub") or record.get("archived_at")},
             reference_date=record.get("pub") or record.get("archived_at"),
         )
-        sample = {
-            "hash": record.get("hash", ""),
-            "title": (record.get("title") or "")[:100],
-            "title_kr": (record.get("title_kr") or "")[:100],
-            "codes": [finding.code for finding in result.findings],
-        }
+        sample["codes"] = [finding.code for finding in result.findings]
         if not result.eligible:
             quarantined.append(sample)
             continue
+        value = result.value
+        if status == "fallback":
+            withheld = [field for field in FALLBACK_WITHHELD_FIELDS
+                        if clean_text(value.get(field))]
+            if withheld:
+                value = {**value, **{field: "" for field in withheld}}
+                fallback_trimmed.append({**sample, "codes": withheld})
         if result.action == "sanitize":
             sanitized.append(sample)
-        visible.append(result.value)
+        visible.append(value)
     return visible, {
         "checked": len(records),
         "quarantined": len(quarantined),
         "sanitized": len(sanitized),
+        "status_blocked": len(status_blocked),
+        "fallback_trimmed": len(fallback_trimmed),
         "quarantine_samples": quarantined[:20],
         "sanitize_samples": sanitized[:20],
+        "status_blocked_samples": status_blocked[:20],
+        "fallback_trimmed_samples": fallback_trimmed[:20],
     }
 
 

@@ -381,6 +381,87 @@ class TestOutboxFlow(OutboxBase):
                                  "quality_payload_digest_mismatch")
                 self.assertEqual(outbox["status"], "quality_rejected")
 
+    def test_blocked_outbox_reaches_the_admin_as_a_quality_event(self):
+        """발송이 막힌 사실이 로그 한 줄로 끝나면 그날 브리핑이 조용히 빠진다."""
+        outbox = db._seal_quality_payload({
+            "schema_version": 1,
+            "quality_gate_version": db.QUALITY_GATE_VERSION,
+            "date": "2026-07-12",
+            "created_at": NOW.isoformat(),
+            "status": "pending",
+            "briefs": [{"name": "국내", "text": "검증된 본문", "status": "pending"}],
+            "items": [], "quality_diag": {},
+        })
+        outbox["briefs"][0]["text"] = "변조된 본문"
+        db.send_outbox(outbox, now=NOW)
+        self.assertEqual(fake_tg.sent_messages, [])
+
+        log = db.ROOT / "quality_event_blocked.jsonl"
+        self.addCleanup(log.unlink, True)
+        added = db.append_quality_audit(outbox, path=log, now=NOW)
+        self.assertEqual(added, 1)
+        row = json.loads(log.read_text(encoding="utf-8").splitlines()[-1])
+        self.assertEqual(row["record_type"], "quality_event")
+        self.assertEqual(row["severity"], "critical")
+        self.assertEqual(row["min_occurrences"], 1)  # 재시도로 회복되지 않는다
+        self.assertIn("quality_payload_digest_mismatch", row["alert_key"])
+        self.assertEqual(row["items"][0]["blocked_briefs"], ["국내"])
+
+    def test_quality_event_is_not_emitted_when_the_outbox_is_intact(self):
+        self.seed_queue(self._queue())
+        db.cmd_plan()
+        outbox = db.load_outbox()
+        db.send_outbox(outbox, now=NOW)
+        self.assertNotIn("quality_gate_error", outbox)
+        log = db.ROOT / "quality_event_intact.jsonl"
+        self.addCleanup(log.unlink, True)
+        db.append_quality_audit(outbox, path=log, now=NOW)
+        rows = [json.loads(line) for line in
+                log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
+        self.assertEqual(
+            [r for r in rows if "outbox-quality-claim" in str(r.get("alert_key"))], [])
+
+    def test_report_recommendation_naming_an_absent_company_is_dropped(self):
+        """브리핑 맨 위에 붙고 부서가 실제로 착수하는 근거가 되는 문구다."""
+        candidates = [{
+            "hash": "h1",
+            "title": "KHNP wins Czech Dukovany reactor construction contract",
+            "title_kr": "한국수력원자력, 체코 두코바니 원전 건설 계약 수주",
+            "summary": "한국수력원자력이 체코 두코바니 신규 원전 건설 계약을 따냈다.",
+        }]
+        good = (0, {"topic": "체코 두코바니 수주의 국내 공급망 함의",
+                    "why": "한국수력원자력의 유럽 신규 건설 진입 사례다.",
+                    "angles": ["공급망 준비도"]})
+        bad = (0, {"topic": "웨스팅하우스 견제 전략 재점검",
+                   "why": "웨스팅하우스가 같은 사업에 참여했다.", "angles": []})
+        kept, dropped = db.verify_report_recs([good, bad], candidates)
+        self.assertEqual([r for _i, r in kept], [good[1]])
+        self.assertEqual(dropped[0]["entities"], ["westinghouse"])
+
+    def test_report_recommendation_inventing_a_number_is_dropped(self):
+        candidates = [{"hash": "h1", "title": "KHNP wins Czech Dukovany contract",
+                       "title_kr": "한국수력원자력, 체코 두코바니 원전 건설 계약 수주",
+                       "summary": "한국수력원자력이 체코 두코바니 계약을 따냈다."}]
+        kept, dropped = db.verify_report_recs(
+            [(0, {"topic": "24조원 규모 수주의 재무 영향", "angles": []})], candidates)
+        self.assertEqual(kept, [])
+        self.assertIn("24조원", dropped[0]["claims"])
+
+    def test_report_recommendation_may_span_several_candidates(self):
+        """추천은 여러 후보를 묶어 한 주제를 말할 수 있다 — 묶었다고 막지 않는다."""
+        candidates = [
+            {"hash": "h1", "title_kr": "한국수력원자력, 체코 두코바니 계약 수주",
+             "summary": "체코 신규 원전 계약을 따냈다."},
+            {"hash": "h2", "title_kr": "두산에너빌리티, 테라파워 기자재 계약",
+             "summary": "두산에너빌리티가 테라파워에 기자재를 공급한다."},
+        ]
+        kept, dropped = db.verify_report_recs(
+            [(0, {"topic": "한국수력원자력·두산에너빌리티 동시 수주의 공급망 함의",
+                  "why": "테라파워와 체코 사업이 같은 주에 겹쳤다.", "angles": []})],
+            candidates)
+        self.assertEqual(len(kept), 1)
+        self.assertEqual(dropped, [])
+
     def test_social_cards_use_deterministic_final_fact_gate(self):
         cluster = {
             "title": "Canada opens new uranium mine",
@@ -406,6 +487,26 @@ class TestOutboxFlow(OutboxBase):
         self.assertEqual(len(safe), 1)
         self.assertIsNone(safe[0]["kr_takeaway"])
         self.assertEqual(audits[0]["removed_fields"], ["kr_takeaway"])
+
+    def test_manual_research_path_uses_the_same_card_gate(self):
+        """send_research 는 daily_brief 를 거치지 않는다 — 같은 카드가 한쪽에서만
+        검증되면 우회 경로가 그대로 남는다."""
+        import send_research
+        import synthesize
+
+        self.assertIs(send_research.verify_cards, synthesize.verify_cards)
+        cluster = {
+            "title": "Canada opens new uranium mine",
+            "fulltext": "Canada opened a new uranium mine with annual output of 500 tonnes.",
+            "url": "https://example.com/canada-mine",
+        }
+        safe, audits = synthesize.verify_cards([{
+            "headline": "스페인 원전 수명연장 승인",
+            "what": "스페인 규제기관이 원전 수명연장을 승인했다.",
+            "cluster": cluster,
+        }])
+        self.assertEqual(safe, [])
+        self.assertEqual(audits[0]["action"], "quarantine")
 
     def test_final_card_sanitization_is_written_back_to_article(self):
         article = qitem(
@@ -586,8 +687,10 @@ class TestReportPickReachesTheWeb(OutboxBase):
     def _plan_with_recommendation(self):
         db.is_available = lambda: True
         orig_call = db.call_json
+        # 추천 문구는 후보 기사에 실제로 있는 것만 말해야 한다 — 그렇지 않으면
+        # verify_report_recs 가 뺀다. 픽스처도 그 계약을 따른다.
         db.call_json = lambda *a, **k: {"reports": [
-            {"idx": 0, "topic": "중국 신규 원전 8기 승인의 정책 함의", "why": "w",
+            {"idx": 0, "topic": "한수원 체코 본계약의 국내 공급망 함의", "why": "w",
              "angles": ["기술 자립도", "수출 경쟁력"]}]}
         try:
             self.seed_queue([
@@ -605,7 +708,7 @@ class TestReportPickReachesTheWeb(OutboxBase):
         self.assertEqual(outbox["briefs"][0]["name"], "보고서추천")
         picked = [item for item in outbox["items"] if item.get("report_pick")]
         self.assertEqual([item["hash"] for item in picked], [self.PICKED])
-        self.assertEqual(picked[0]["report_pick"], "중국 신규 원전 8기 승인의 정책 함의")
+        self.assertEqual(picked[0]["report_pick"], "한수원 체코 본계약의 국내 공급망 함의")
         # 하루 0~2건짜리 표식이다. 나머지 전 줄에 빈 값이 붙으면 로그가 그만큼
         # 읽기 어려워진다 — 키 자체가 없어야 한다.
         others = [item for item in outbox["items"] if item["hash"] != self.PICKED]
