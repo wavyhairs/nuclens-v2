@@ -16,8 +16,10 @@
 가 CI 어디에도 안 걸려 있어서 화면에서 눈으로 발견될 때까지 아무도 몰랐다.
 
 그래서 **조치를 발견에 맞춘다.** 배포를 막는 대신 매일 한 번 재서 delivery_log 에
-남긴다. 임계값 미달은 워크플로 경고(`::warning::`)로 뜨지만 **종료 코드는 늘 0**
-이다 — 이 파일은 게이트가 아니다.
+남긴다. 임계값 미달은 워크플로 경고(`::warning::`)로 뜨지만 종료 코드는 0이다.
+다만 빌드 산출물이 없어 **측정 기록 자체를 만들지 못한 경우**에는 1을 반환한다.
+워크플로가 이를 비치명 step outcome으로 받아 관리자에게 알리기 위한 신호이며,
+기사나 배포 품질의 임계값을 이유로 배포를 막는 게이트는 아니다.
 
 임계값은 테스트와 같은 값을 쓰되 통과/실패를 판정하지 않고 기록만 한다. 값을
 낮춰 '통과'시키는 유혹이 없도록, 애초에 통과라는 개념을 두지 않는다.
@@ -25,6 +27,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -121,12 +124,18 @@ def build_record(now: datetime | None = None) -> dict | None:
         print("[data-gate] 빌드 산출물 없음 — build_data.py 이후에 실행돼야 한다")
         return None
     now = now or datetime.now(timezone.utc)
+    workflow_run_id = str(os.environ.get("GITHUB_RUN_ID") or "").strip()
     return {
         "record_type": RECORD_TYPE,
         "date": now.astimezone(KST).date().isoformat(),
         "generated_at": now.astimezone(KST).isoformat(),
+        # 같은 workflow run을 재시도해도 하나의 관측으로 계산한다. 로컬 실행은
+        # generated_at을 쓰는 기존 동작으로 자연스럽게 돌아간다.
+        "observation_id": (f"github-run:{workflow_run_id}" if workflow_run_id
+                           else now.astimezone(KST).isoformat()),
         "tracking": measure_tracking(meta),
         "topic_weeks": measure_topic_weeks(catalog, briefings),
+        "archive_quality": meta.get("archive_quality") or {},
     }
 
 
@@ -140,6 +149,7 @@ def report(record: dict) -> None:
     """사람이 읽는 요약 + 미달 시 워크플로 경고. 종료 코드는 바꾸지 않는다."""
     tracking = record["tracking"]
     weeks = record["topic_weeks"]
+    archive_quality = record.get("archive_quality") or {}
     if tracking["applicable"]:
         print(f"[data-gate] 추적률 {tracking['rate']} "
               f"({tracking['tracked_issue_count']}/{tracking['issue_count']}, "
@@ -157,12 +167,20 @@ def report(record: dict) -> None:
         if not weeks[key]:
             print(f"::warning::{label}가 화면에서 숨는다 — 주별 모수가 기울었다 "
                   f"{weeks['totals']} (배포는 계속한다)")
+    if archive_quality.get("quarantined"):
+        print(f"::warning::원문과 다른 아카이브 기사 {archive_quality['quarantined']}건을 "
+              "웹 출력에서 격리했다 (배포는 계속한다)")
+    if archive_quality.get("sanitized"):
+        print(f"::warning::아카이브 기사 {archive_quality['sanitized']}건의 잘못된 사건일 등 "
+              "무결성 필드를 정제했다 (배포는 계속한다)")
 
 
 def main() -> int:
     record = build_record()
     if record is None:
-        return 0  # 게이트가 아니다 — 못 재도 배포를 막지 않는다
+        # 데이터 기준 미달이 아니라 계측 실행 실패다. GitHub step은
+        # continue-on-error로 배포를 계속하고, outcome은 운영 알림에 전달한다.
+        return 1
     append(record)
     report(record)
     return 0

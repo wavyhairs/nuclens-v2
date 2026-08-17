@@ -276,9 +276,189 @@ class TestOutboxFlow(OutboxBase):
     def test_empty_queue_plan(self):
         self.seed_queue([])
         db.cmd_plan()
-        self.assertEqual(db.load_outbox()["status"], "empty")
+        outbox = db.load_outbox()
+        self.assertEqual(outbox["status"], "empty")
+        self.assertEqual(outbox["quality_gate_version"], db.QUALITY_GATE_VERSION)
+        self.assertRegex(outbox["quality_payload_digest"], r"^[0-9a-f]{64}$")
         self.assertEqual(db.cmd_send(), 0)  # empty → 발송 스킵, 에러 아님
         self.assertEqual(fake_tg.sent_messages, [])
+
+    def test_legacy_pending_outbox_without_quality_version_is_not_sent(self):
+        """강화 전 저장된 pending claim 이 최종 품질 게이트를 우회하면 안 된다."""
+        self.seed_queue(self._queue())
+        db.cmd_plan()
+        outbox = db.load_outbox()
+        self.assertEqual(outbox["quality_gate_version"], db.QUALITY_GATE_VERSION)
+        outbox.pop("quality_gate_version")
+        db.save_outbox(outbox)
+
+        self.assertEqual(db.cmd_send(), 1)
+        self.assertEqual(fake_tg.sent_messages, [])
+        blocked = db.load_outbox()
+        self.assertEqual(blocked["quality_gate_error"]["code"],
+                         "quality_gate_version_mismatch")
+        self.assertTrue(all(b["status"] == "failed" for b in blocked["briefs"]))
+        self.assertTrue(all(b["failure_reason"] == "quality_gate_version_mismatch"
+                            for b in blocked["briefs"]))
+        results = json.loads(db.OUTBOX_RESULT_FILE.read_text(encoding="utf-8"))
+        self.assertTrue(all(r["status"] == "failed" for r in results))
+
+    def test_mismatched_or_non_integer_quality_version_is_not_sent(self):
+        template = {
+            "schema_version": 1,
+            "date": "2026-07-12",
+            "created_at": NOW.isoformat(),
+            "status": "pending",
+            "briefs": [{"name": "국내", "text": "x", "keyboard": None,
+                        "status": "pending"}],
+            "items": [],
+            "prune_hashes": [],
+        }
+        for found in (0, db.QUALITY_GATE_VERSION + 1, str(db.QUALITY_GATE_VERSION), True):
+            with self.subTest(found=found):
+                outbox = json.loads(json.dumps(template))
+                outbox["quality_gate_version"] = found
+                results = db.send_outbox(outbox, now=NOW)
+                self.assertEqual(fake_tg.sent_messages, [])
+                self.assertEqual(results[0]["status"], "failed")
+                self.assertEqual(results[0]["failure_reason"],
+                                 "quality_gate_version_mismatch")
+                self.assertEqual(outbox["briefs"][0]["status"], "failed")
+
+    def test_missing_or_malformed_quality_digest_is_not_sent(self):
+        template = db._seal_quality_payload({
+            "schema_version": 1,
+            "quality_gate_version": db.QUALITY_GATE_VERSION,
+            "date": "2026-07-12",
+            "created_at": NOW.isoformat(),
+            "status": "pending",
+            "briefs": [{"name": "국내", "text": "x", "status": "pending"}],
+            "items": [],
+            "quality_diag": {},
+        })
+        cases = (("missing", None), ("bool", True), ("number", 1),
+                 ("short", "0" * 63), ("uppercase", "A" * 64))
+        for label, found in cases:
+            with self.subTest(label=label):
+                outbox = json.loads(json.dumps(template))
+                if label == "missing":
+                    outbox.pop("quality_payload_digest")
+                else:
+                    outbox["quality_payload_digest"] = found
+                results = db.send_outbox(outbox, now=NOW)
+                self.assertEqual(fake_tg.sent_messages, [])
+                self.assertEqual(results[0]["status"], "failed")
+                self.assertIn(outbox["quality_gate_error"]["code"], {
+                    "quality_payload_digest_missing", "quality_payload_digest_invalid"})
+
+    def test_tampered_brief_or_validation_metadata_is_not_sent(self):
+        template = db._seal_quality_payload({
+            "schema_version": 1,
+            "quality_gate_version": db.QUALITY_GATE_VERSION,
+            "date": "2026-07-12",
+            "created_at": NOW.isoformat(),
+            "status": "pending",
+            "briefs": [{"name": "국내", "text": "검증된 본문", "status": "pending"}],
+            "items": [{"hash": "h1", "title_kr": "검증된 제목"}],
+            "quality_diag": {"final_cards": [{"hash": "h1", "action": "allow"}]},
+            "field_diag": {"attempted": 0},
+        })
+        mutations = {
+            "text": lambda outbox: outbox["briefs"][0].update(text="변조된 본문"),
+            "name": lambda outbox: outbox["briefs"][0].update(name="변조된 섹션"),
+            "item": lambda outbox: outbox["items"][0].update(title_kr="변조된 제목"),
+            "card_audit": lambda outbox: outbox["quality_diag"]["final_cards"][0].update(
+                action="quarantine"),
+            "field_audit": lambda outbox: outbox["field_diag"].update(attempted=1),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                outbox = json.loads(json.dumps(template))
+                mutate(outbox)
+                results = db.send_outbox(outbox, now=NOW)
+                self.assertEqual(fake_tg.sent_messages, [])
+                self.assertEqual(results[0]["failure_reason"],
+                                 "quality_payload_digest_mismatch")
+                self.assertEqual(outbox["status"], "quality_rejected")
+
+    def test_social_cards_use_deterministic_final_fact_gate(self):
+        cluster = {
+            "title": "Canada opens new uranium mine",
+            "fulltext": "Canada opened a new uranium mine with annual output of 500 tonnes.",
+            "url": "https://example.com/canada-mine",
+        }
+        wrong_core = {
+            "headline": "스페인 원전 수명연장 승인",
+            "what": "스페인 규제기관이 원전 수명연장을 승인했다.",
+            "cluster": cluster,
+        }
+        safe, audits = db.verify_social_cards([wrong_core])
+        self.assertEqual(safe, [])
+        self.assertEqual(audits[0]["action"], "quarantine")
+
+        unsupported_optional = {
+            "headline": "캐나다 신규 우라늄 광산 개장",
+            "what": "캐나다가 신규 우라늄 광산을 개장했다.",
+            "kr_takeaway": "한국수력원자력이 345MW 원자로 공급 계약을 체결했다.",
+            "cluster": cluster,
+        }
+        safe, audits = db.verify_social_cards([unsupported_optional])
+        self.assertEqual(len(safe), 1)
+        self.assertIsNone(safe[0]["kr_takeaway"])
+        self.assertEqual(audits[0]["removed_fields"], ["kr_takeaway"])
+
+    def test_final_card_sanitization_is_written_back_to_article(self):
+        article = qitem(
+            summary="검증된 사실입니다.",
+            why_important="근거 없는 중요성입니다.",
+            implication="근거 없는 시사점입니다.",
+            investment_struct={
+                "theme": "smr",
+                "mechanism": "근거 없는 투자 문장",
+                "beneficiary_type": "none",
+                "risk_side": "",
+                "time_horizon": "mid",
+                "confidence": 1,
+            },
+        )
+        cleaned = db.item_to_card(article, "근거 없는 투자 문장")
+        cleaned.update({"why": None, "investment": None, "kr_takeaway": None})
+        result = db.article_quality_gate.GateResult(
+            cleaned, "sanitize", ("why", "investment", "kr_takeaway"), ()
+        )
+        original = db.article_quality_gate.validate_final_card
+        db.article_quality_gate.validate_final_card = lambda *args, **kwargs: result
+        try:
+            safe, cards, _ = db.verify_final_cards([article])
+        finally:
+            db.article_quality_gate.validate_final_card = original
+
+        self.assertEqual(len(safe), 1)
+        self.assertEqual(cards[0]["what"], "검증된 사실입니다.")
+        self.assertEqual(article["why_important"], "")
+        self.assertEqual(article["implication"], "")
+        self.assertIsNone(article["investment_struct"])
+
+    def test_incompatible_pending_outbox_is_replanned_instead_of_deadlocking(self):
+        """구버전 claim 때문에 36시간 동안 새 계획까지 막히면 안 된다."""
+        legacy = {
+            "schema_version": 1,
+            "date": datetime.now(db.KST).date().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "status": "pending",
+            "briefs": [{"name": "국내", "text": "검증 전 문구", "keyboard": None,
+                        "status": "pending"}],
+            "items": [],
+            "prune_hashes": [],
+        }
+        db.save_outbox(legacy)
+        self.seed_queue(self._queue())
+
+        self.assertEqual(db.cmd_plan(), 0)
+        replacement = db.load_outbox()
+        self.assertEqual(replacement["quality_gate_version"], db.QUALITY_GATE_VERSION)
+        self.assertNotEqual(replacement["status"], "quality_rejected")
+        self.assertNotIn("검증 전 문구", [row["text"] for row in replacement["briefs"]])
 
     def test_send_then_rerun_no_duplicates(self):
         self.seed_queue(self._queue())
@@ -331,11 +511,13 @@ class TestOutboxFlow(OutboxBase):
     def test_yesterday_pending_blocks_new_plan(self):
         """직전 outbox 미발송(<36h) → 새 계획 생략 (재발송 우선)."""
         yesterday = {"schema_version": 1, "date": "2026-07-11",
+                     "quality_gate_version": db.QUALITY_GATE_VERSION,
                      "created_at": (datetime.now(timezone.utc) - timedelta(hours=20)).isoformat(),
                      "status": "pending",
                      "briefs": [{"name": "국내", "text": "x", "keyboard": None,
                                  "status": "pending"}],
                      "items": [], "prune_hashes": []}
+        db._seal_quality_payload(yesterday)
         db.save_outbox(yesterday)
         self.seed_queue(self._queue())
         db.cmd_plan()

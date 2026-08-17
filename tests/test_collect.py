@@ -71,6 +71,52 @@ class TestPublisherResolution(unittest.TestCase):
         self.assertEqual(nb.resolve_rss_domain(src, item), "khnp.co.kr")
 
 
+class TestSourceFailureDiagnostics(unittest.TestCase):
+    """공식 피드의 진짜 장애와 정상 0건이 source_yield에서 갈려야 한다."""
+
+    def tearDown(self):
+        nb.SOURCE_FETCH_ERRORS.clear()
+
+    def test_rss_http_failure_records_the_named_source(self):
+        import feedparser
+
+        nb.SOURCE_FETCH_ERRORS.clear()
+        with patch.object(feedparser, "parse", return_value={"status": 503, "entries": []}):
+            self.assertEqual(nb.fetch_rss("https://official.example/feed", "공식 피드"), [])
+
+        self.assertIn("공식 피드", nb.SOURCE_FETCH_ERRORS)
+        self.assertIn("HTTP 503", nb.SOURCE_FETCH_ERRORS["공식 피드"])
+
+    def test_collection_snapshot_keeps_failure_separate_from_empty(self):
+        source = {
+            "url": "https://official.example/feed", "name": "공식 피드",
+            "domain_label": "official.example", "source_kind": "official",
+        }
+
+        def failed(_url, source_name=""):
+            nb.SOURCE_FETCH_ERRORS[source_name] = "RuntimeError: parser changed"
+            return []
+
+        with patch.object(nb, "OFFICIAL_DIRECT_SOURCES", []), patch.object(
+            nb, "RSS_SOURCES", [source]
+        ), patch.object(nb, "fetch_rss", side_effect=failed):
+            failed_state = {"sent": {}}
+            nb.collect_rss_articles(failed_state)
+
+        snapshot = failed_state["source_yield"]
+        self.assertEqual(snapshot["counts"]["공식 피드"], 0)
+        self.assertIn("공식 피드", snapshot["errors"])
+
+        with patch.object(nb, "OFFICIAL_DIRECT_SOURCES", []), patch.object(
+            nb, "RSS_SOURCES", [source]
+        ), patch.object(nb, "fetch_rss", return_value=[]):
+            empty_state = {"sent": {}}
+            nb.collect_rss_articles(empty_state)
+
+        self.assertEqual(empty_state["source_yield"]["counts"]["공식 피드"], 0)
+        self.assertNotIn("공식 피드", empty_state["source_yield"]["errors"])
+
+
 class TestTier1Source(unittest.TestCase):
     def test_institution_domain_is_tier1_even_via_google_link(self):
         art = {"domain": "nssc.go.kr",
@@ -127,7 +173,7 @@ class TestCurationQualityGate(unittest.TestCase):
     def _article(self):
         return {
             "hash": "h1", "title": "정부가 신규 원전 계획을 발표",
-            "description": "정부가 신규 원전 계획을 발표했다.",
+            "description": "정부가 2026-08-01 신규 원전 계획을 발표했다.",
             "domain": "energy.gov", "publisher": "US DOE",
         }
 
@@ -187,10 +233,11 @@ class TestChunkLossIsRecoveredOrRecorded(unittest.TestCase):
 
     @staticmethod
     def _ok_items(user_message):
-        """프롬프트에 실린 [idx] 개수만큼 정상 항목을 만들어 응답한다."""
-        n = len(re.findall(r"^\[(\d+)\|", user_message, re.M))
+        """프롬프트의 idx와 안정 id를 그대로 돌려주는 정상 응답을 만든다."""
+        identities = re.findall(r"^\[(\d+)\|([^\]]+)\]", user_message, re.M)
         return {"items": [{
-            "idx": i, "importance": "nice_to_know", "section": "international",
+            "idx": int(idx), "id": tag,
+            "importance": "nice_to_know", "section": "international",
             "scope": "overseas", "category": "정책", "title_kr": f"신규 원전 계획 {i}",
             "summary": "정부가 신규 원전 계획을 발표했다.", "implication": "",
             "why_important": "", "tags": [], "topics": ["newbuild"],
@@ -198,7 +245,7 @@ class TestChunkLossIsRecoveredOrRecorded(unittest.TestCase):
             "event_date": "2026-08-01", "event_date_type": "announcement",
             "event_date_precision": "day", "event_date_source": "description",
             "related_reports": [], "features": {},
-        } for i in range(n)]}
+        } for i, (idx, tag) in enumerate(identities)]}
 
     def _run(self, failures, n=4, chunk=4, budget=6):
         """failures: 호출 순번(0-based) → 던질 예외. 나머지는 정상 응답."""
@@ -763,6 +810,113 @@ class TestFallbackCuration(unittest.TestCase):
         self.assertTrue(nb.needs_recuration(record))
 
 
+class TestDurableFallbackRetry(unittest.TestCase):
+    """수집 창에서 사라진 fallback도 캐시 원문으로 한 번 더 검토한다."""
+
+    @staticmethod
+    def _cached(*, attempts=1):
+        from datetime import datetime, timedelta, timezone
+
+        published = datetime.now(timezone.utc) - timedelta(days=3)
+        return {
+            "curation_status": "fallback",
+            "curation_source": "fallback",
+            "features_attempts": attempts,
+            "title": "한수원, 신규 원전 계약 체결",
+            "title_kr": "한수원, 신규 원전 계약 체결",
+            "summary": "한수원이 신규 원전 계약을 체결했다.",
+            "source_excerpt": "한수원이 신규 원전 계약을 체결했다.",
+            "link": "https://example.com/old-article",
+            "published_at": published.isoformat(),
+            "cached_at": datetime.now(timezone.utc).isoformat(),
+            "domain": "example.com",
+            "publisher": "예시뉴스",
+            "feed": "domestic",
+        }
+
+    def test_cached_fallback_outside_collection_window_is_rebuilt(self):
+        from datetime import datetime, timedelta, timezone
+
+        rows = nb.pending_fallback_articles({"oldhash": self._cached()})
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["hash"], "oldhash")
+        self.assertEqual(rows[0]["description"], "한수원이 신규 원전 계약을 체결했다.")
+        self.assertTrue(rows[0]["fallback_retry"])
+        self.assertLess(rows[0]["pub"], datetime.now(timezone.utc) - timedelta(hours=6))
+
+    def test_retry_limit_and_current_run_exclusion_are_respected(self):
+        at_limit = self._cached(attempts=nb.FEATURES_RETRY_LIMIT)
+        self.assertEqual(nb.pending_fallback_articles({"limited": at_limit}), [])
+
+        pending = self._cached(attempts=nb.FEATURES_RETRY_LIMIT - 1)
+        self.assertEqual(
+            nb.pending_fallback_articles({"already-found": pending}, {"already-found"}),
+            [],
+        )
+
+    def test_quality_event_writer_still_appends_after_retry_helper(self):
+        with TemporaryDirectory() as td:
+            path = Path(td) / "delivery.jsonl"
+            self.assertTrue(nb.append_quality_event(
+                "fallback-held", "미검증 기사 보류", "재검토 대기", path=path,
+            ))
+            record = json.loads(path.read_text(encoding="utf-8"))
+
+        self.assertEqual(record["record_type"], "quality_event")
+        self.assertEqual(record["alert_key"], "fallback-held")
+
+
+class TestEvidenceManifestRefresh(unittest.TestCase):
+    def test_stale_cache_manifest_is_rebuilt_without_old_body_claims(self):
+        from datetime import datetime, timezone
+
+        now = datetime(2026, 8, 17, 0, 0, tzinfo=timezone.utc)
+        article = {
+            "hash": "stable-url-hash",
+            "title": "TerraPower equipment contract",
+            "description": "TerraPower signed an equipment contract.",
+            "pub": datetime(2026, 8, 16, 0, 0, tzinfo=timezone.utc),
+        }
+        first = nb.refresh_evidence_manifest(
+            article, {}, body="EDF signed a 900 MW contract.", force=True, now=now,
+        )
+        self.assertIn("edf", first["entities"])
+        self.assertIn("900", first["quantities"]["mw"])
+        self.assertNotIn("EDF signed", json.dumps(first, ensure_ascii=False))
+
+        changed = {
+            **article,
+            "title": "TerraPower updates its equipment supply schedule",
+            "description": "TerraPower published a revised supply schedule.",
+        }
+        rebuilt = nb.refresh_evidence_manifest(
+            changed, {"verified_evidence": first}, body="", force=False, now=now,
+        )
+
+        self.assertNotEqual(first["source_fingerprint"], rebuilt["source_fingerprint"])
+        self.assertNotIn("edf", rebuilt["entities"])
+        self.assertNotIn("mw", rebuilt["quantities"])
+
+    def test_unchanged_cache_manifest_is_preserved(self):
+        from datetime import datetime, timezone
+
+        now = datetime(2026, 8, 17, 0, 0, tzinfo=timezone.utc)
+        article = {
+            "hash": "stable-url-hash",
+            "title": "TerraPower equipment contract",
+            "description": "TerraPower signed a 345 MW equipment contract.",
+            "pub": datetime(2026, 8, 16, 0, 0, tzinfo=timezone.utc),
+        }
+        manifest = nb.refresh_evidence_manifest(
+            article, {}, body="The NRC approved the project.", force=True, now=now,
+        )
+        cached = nb.refresh_evidence_manifest(
+            article, {"verified_evidence": manifest}, force=False, now=now,
+        )
+        self.assertEqual(cached, manifest)
+
+
 class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
     """크롤이 남기는 진단 기록이 커밋돼야 한다.
 
@@ -783,6 +937,25 @@ class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
         # 단순 push 는 daily-brief 와 겹치는 시각에 실패하고, 크롤은 이미 Gemini
         # 호출을 마친 뒤라 그 시각 수집이 통째로 사라진다.
         self.assertIn("git rebase origin/main", yml)
+
+    def test_operational_alerts_are_persisted_and_use_a_separate_admin_secret(self):
+        crawl = (self.ROOT / ".github" / "workflows" / "crawl.yml").read_text(
+            encoding="utf-8")
+        daily = (self.ROOT / ".github" / "workflows" / "daily-brief.yml").read_text(
+            encoding="utf-8")
+
+        # 두 workflow가 같은 sent.json의 source health/발송 완료 표식을 쓰므로
+        # 동시에 실행되면 안 된다.
+        self.assertIn("group: nuclens-state", crawl)
+        self.assertIn("group: nuclens-state", daily)
+        self.assertIn("python operational_alerts.py", crawl)
+        self.assertIn("python operational_alerts.py --notify", daily)
+        self.assertIn("TELEGRAM_ADMIN_CHAT_ID", daily)
+
+        # 관리자 chat id는 wrangler·오디오 등 긴 배포 프로세스에 넘기지 않는다.
+        deploy = daily.split("- name: Deploy web to Cloudflare Pages", 1)[1]
+        deploy_env = deploy.split("        run: |", 1)[0]
+        self.assertNotIn("TELEGRAM_ADMIN_CHAT_ID", deploy_env)
 
     def test_llm_caches_are_committed(self):
         """캐시가 커밋되지 않으면 같은 것을 매 빌드(하루 12회+)마다 다시 묻는다.
@@ -836,10 +1009,11 @@ class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
         """
         yml = (self.ROOT / ".github" / "workflows" / "daily-brief.yml").read_text(encoding="utf-8")
         self.assertIn("python data_gate_metrics.py", yml)
-        metrics_line = next(line for line in yml.splitlines()
-                            if "python data_gate_metrics.py" in line)
-        # 게이트가 아니다 — 실패가 배포를 죽이면 안 된다.
-        self.assertIn("||", metrics_line, f"계측이 배포를 죽일 수 있다: {metrics_line.strip()}")
+        metrics_step = yml.split("id: data-gate", 1)[1].split("- name:", 1)[0]
+        # 게이트가 아니다 — 실행 실패 outcome은 남기되 배포는 계속해야 한다.
+        self.assertIn("continue-on-error: true", metrics_step)
+        self.assertIn('--data-gate-outcome "${{ steps.data-gate.outcome }}"', yml,
+                      "계측 기록 실패를 관리자 모니터에 전달하지 않는다")
         commit_step = yml.split("Commit issue review cache")[1]
         self.assertIn("delivery_log.jsonl", commit_step,
                       "계측 기록을 커밋하지 않아 러너와 함께 사라진다")
@@ -1484,6 +1658,28 @@ class TestBatchIdentityIsNotPositional(unittest.TestCase):
         # idx 로 짝지으면 '원안위' 요약이 '지역 소식 묶음' 에 붙는다.
         self.assertNotIn("bbbbbbbb22", result)
         self.assertEqual(result["cccccccc33"]["title_kr"], "원안위, 계속운전 심의 착수")
+
+    def test_tagless_multi_response_is_never_attached_by_position(self):
+        articles = self._articles()
+        # 첫 기사는 정상 id가 있지만, 마지막 기사는 가운데 기사를 뺀 뒤 idx를
+        # 앞당긴 상태에서 id도 없다. idx=1을 믿으면 원안위 요약이 지역 기사에 붙는다.
+        tagged = self._item(
+            0, "aaaaaaaa", "정부, 신규 원전 계획 발표",
+            "정부가 신규 원전 계획을 발표했다.",
+        )
+        tagless = self._item(
+            1, "", "원안위, 계속운전 심의 착수",
+            "원자력안전위원회가 계속운전 심의에 착수했다.",
+        )
+        with patch.object(nb, "gemini_rest_available", return_value=True), patch.object(
+            nb, "gemini_call_json", return_value={"items": [tagged, tagless]}
+        ) as call:
+            result = nb.curate_batch(articles, [])
+
+        self.assertEqual(call.call_count, 2)  # id 누락분은 한 번 재생성한다.
+        self.assertIn("aaaaaaaa11", result)
+        self.assertNotIn("bbbbbbbb22", result)
+        self.assertNotIn("cccccccc33", result)
 
     def test_body_is_offered_to_the_model_when_available(self):
         articles = self._articles()

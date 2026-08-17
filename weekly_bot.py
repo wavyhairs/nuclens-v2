@@ -25,6 +25,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from ranking import cluster_duplicates
+import article_quality_gate
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -92,12 +93,28 @@ def get_week_articles(curated: dict) -> list[dict]:
     for h, data in curated.items():
         if not isinstance(data, dict):
             continue
-        if data.get("cached_at", "") < cutoff:
+        # 재수집·재큐레이션 시각이 아니라 실제 발행 시각으로 주간 창을 자른다.
+        # 옛 캐시에는 published_at이 없으므로 그 경우에만 cached_at으로 호환한다.
+        published_at = data.get("published_at") or data.get("cached_at", "")
+        if published_at < cutoff:
             continue
         if _grade(data) not in ("must_read", "nice_to_know"):
             continue
         if not data.get("title") or not data.get("link"):
             continue
+        # Daily에서 막은 미검증 fallback이 curated 캐시를 통해 주간 Telegram
+        # 서사로 우회하지 못하게 한다. 옛 정상 스키마(unreviewed)는 호환하되,
+        # 명시적/추론 fallback과 원제목이 다른 사건인 레코드는 제외한다.
+        status = article_quality_gate.infer_curation_status(data)
+        integrity = article_quality_gate.audit_article_integrity(
+            data,
+            source={"title": data.get("title", ""),
+                    "published_at": data.get("published_at") or data.get("cached_at")},
+            reference_date=data.get("published_at") or data.get("cached_at"),
+        )
+        if status in {"fallback", "quarantined"} or not integrity.eligible:
+            continue
+        data = integrity.value
         items.append({
             "hash": h,
             "title": data["title"],
@@ -110,9 +127,11 @@ def get_week_articles(curated: dict) -> list[dict]:
             "summary": data.get("summary", ""),
             "tags": data.get("tags", []),
             "features": data.get("features"),
+            "curation_status": status,
             "cached_at": data["cached_at"],
+            "published_at": data.get("published_at", ""),
         })
-    items.sort(key=lambda x: x["cached_at"])
+    items.sort(key=lambda x: x.get("published_at") or x["cached_at"])
     return items
 
 

@@ -58,6 +58,32 @@ class TestWeekly(unittest.TestCase):
             v["cached_at"] = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
         self.assertEqual(weekly_bot.get_week_articles(c), [])
 
+    def test_actual_publication_time_wins_over_recent_cache_time(self):
+        c = self._curated("importance")
+        first = next(iter(c.values()))
+        first["published_at"] = (
+            datetime.now(timezone.utc) - timedelta(days=10)
+        ).isoformat()
+        items = weekly_bot.get_week_articles(c)
+        self.assertNotIn(first["link"], {row["link"] for row in items})
+
+    def test_recent_publication_is_not_dropped_by_old_cache_time(self):
+        c = self._curated("importance")
+        first = next(iter(c.values()))
+        first["cached_at"] = (
+            datetime.now(timezone.utc) - timedelta(days=10)
+        ).isoformat()
+        first["published_at"] = datetime.now(timezone.utc).isoformat()
+        items = weekly_bot.get_week_articles(c)
+        self.assertIn(first["link"], {row["link"] for row in items})
+
+    def test_unverified_fallback_cannot_reenter_weekly_telegram(self):
+        c = self._curated("importance")
+        first = next(iter(c.values()))
+        first["curation_status"] = "fallback"
+        items = weekly_bot.get_week_articles(c)
+        self.assertNotIn(first["link"], {row["link"] for row in items})
+
     def test_aggregates(self):
         items = weekly_bot.get_week_articles(self._curated("importance"))
         agg = weekly_bot.build_aggregates(items)

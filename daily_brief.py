@@ -29,6 +29,8 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
+import hmac
 import json
 import re
 import sys
@@ -43,6 +45,7 @@ except (AttributeError, ValueError):
 
 from gemini_client import GeminiError, call_json, is_available
 from sources import credibility
+import article_quality_gate
 import issue_continuity
 import khnp_relevance
 import ranking
@@ -65,6 +68,12 @@ FOREIGN_CAP = 6
 # 발송 재시도 허용 창(시간). claim 후 발송 실패한 브리핑은 이 시간 안에만 재발송.
 # 넘기면 stale_skipped — 낡은 브리핑 재발송·중복 발송 방지.
 RESEND_WINDOW_H = 36
+
+# Outbox 는 claim 뒤 별도 workflow 단계에서 발송된다. 품질 게이트가 강화되기
+# 전에 만들어진 pending outbox 를 새 발송 코드가 그대로 보내면 최종 검증을
+# 우회하므로, 계획 시점의 게이트 계약을 명시하고 발송 시 정확히 일치시킨다.
+QUALITY_GATE_VERSION = 1
+QUALITY_PAYLOAD_DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
 
 _KR_HINTS = (".kr", "khnp", "nssc", "motie", "kaeri", "kins", "korad", "yna", "korea")
 
@@ -618,6 +627,104 @@ def item_to_card(art: dict, investment: str | None) -> dict:
     }
 
 
+def _quality_source(art: dict) -> dict:
+    """큐에 보존된 최소 원문 근거. 기사 본문은 저장하지 않는다."""
+    return {
+        "title": art.get("title", ""),
+        "description": art.get("source_excerpt", ""),
+        "published_at": art.get("published_at") or art.get("queued_at"),
+    }
+
+
+def screen_auto_delivery(items: list[dict]) -> tuple[list[dict], list[dict]]:
+    """랭킹 전에 잘못 연결된 기사와 미검증 fallback을 자동 발송 풀에서 뺀다."""
+    eligible: list[dict] = []
+    held: list[dict] = []
+    for art in items:
+        integrity = article_quality_gate.audit_article_integrity(
+            art, source=_quality_source(art),
+            reference_date=art.get("published_at") or art.get("queued_at"))
+        # 사건일만 비운 sanitize 결과는 원래 dict에도 반영한다. 선택되지 않아 큐에
+        # 남는 경우에도 다음날 같은 잘못된 날짜를 다시 쓰지 않게 하기 위해서다.
+        art.update(integrity.value)
+        decision = article_quality_gate.assess_delivery_eligibility(
+            art, integrity=integrity, legacy_compat=True,
+            allow_primary_fallback=False)
+        if decision.eligible:
+            eligible.append(art)
+            continue
+        held.append({
+            "hash": art.get("hash", ""),
+            "title": (art.get("title_kr") or art.get("title") or "")[:120],
+            "region": region(art),
+            "status": decision.status,
+            "action": decision.action,
+            "reasons": list(decision.reasons),
+            "findings": [finding.as_dict() for finding in integrity.findings],
+        })
+    return eligible, held
+
+
+def verify_final_cards(articles: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
+    """최종 Telegram 카드의 핵심 사실을 재검사하고 선택 필드만 보수적으로 제거한다."""
+    safe_articles: list[dict] = []
+    cards: list[dict] = []
+    audits: list[dict] = []
+    for art in articles:
+        card = item_to_card(art, render_investment(art.get("investment_struct")))
+        result = article_quality_gate.validate_final_card(
+            card, art, source=_quality_source(art))
+        audits.append({
+            "hash": art.get("hash", ""),
+            "title": (art.get("title_kr") or art.get("title") or "")[:120],
+            **result.as_dict(),
+        })
+        if not result.eligible:
+            continue
+        # 카드에서 근거 부족으로 지운 문장을 article 쪽에도 되돌려 쓴다. 이후
+        # delivery_log·사이트·전문가 오디오가 검증 전 값을 다시 읽어 부활시키면
+        # 텔레그램과 다른 사실이 노출된다.
+        cleaned_card = result.value
+        art["summary"] = cleaned_card.get("what") or ""
+        art["why_important"] = cleaned_card.get("why") or ""
+        art["implication"] = cleaned_card.get("kr_takeaway") or ""
+        if cleaned_card.get("investment") is None:
+            art["investment_struct"] = None
+        safe_articles.append(art)
+        cards.append(cleaned_card)
+    return safe_articles, cards, audits
+
+
+def verify_social_cards(cards: list[dict]) -> tuple[list[dict], list[dict]]:
+    """수동 소셜 카드도 원문 cluster와 대조해 핵심 충돌을 발송 전에 막는다."""
+    safe: list[dict] = []
+    audits: list[dict] = []
+    for card in cards:
+        cluster = card.get("cluster") if isinstance(card.get("cluster"), dict) else {}
+        source = {
+            "title": cluster.get("title", ""),
+            "article_text": cluster.get("fulltext", ""),
+        }
+        article = {
+            "title": cluster.get("title", ""),
+            "title_kr": card.get("headline", ""),
+            "summary": card.get("what", ""),
+            "source_excerpt": str(cluster.get("fulltext") or "")[:600],
+            "verified_evidence": article_quality_gate.build_evidence_manifest(source),
+        }
+        result = article_quality_gate.validate_final_card(card, article, source=source)
+        audits.append({
+            "hash": "",
+            "title": str(card.get("headline") or cluster.get("title") or "")[:120],
+            "surface": "social",
+            "source_url": str(cluster.get("url") or "")[:300],
+            **result.as_dict(),
+        })
+        if result.eligible:
+            safe.append(result.value)
+    return safe, audits
+
+
 # (피드백 inline keyboard 기능은 2026-07-16 사용자 결정으로 완전 삭제 — 브리핑을
 #  어지럽혔고 수집된 이벤트도 0건. 재도입 시 git 히스토리의 feedback_ingest.py 참조.)
 
@@ -720,6 +827,7 @@ def plan_briefs(queue: list[dict],
     today = datetime.now(KST).date().isoformat()
     base = {
         "schema_version": 1,
+        "quality_gate_version": QUALITY_GATE_VERSION,
         "date": today,
         "created_at": now.isoformat(),
     }
@@ -729,14 +837,23 @@ def plan_briefs(queue: list[dict],
         # '데이터 갱신 실패'와 구분할 수 있도록 0 통계를 남긴다.
         zero = {"candidate_count": 0, "selected_count": 0, "below_floor_count": 0,
                 "features_missing": 0}
-        return {**base, "status": "empty", "briefs": [], "items": [],
-                "selection_stats": {"domestic": dict(zero), "overseas": dict(zero)},
-                "prune_hashes": []}
+        return _seal_quality_payload({
+            **base, "status": "empty", "briefs": [], "items": [],
+            "selection_stats": {"domestic": dict(zero), "overseas": dict(zero)},
+            "prune_hashes": [],
+        })
 
     cfg = ranking.load_config()
     junk_hashes = [a.get("hash", "") for a in queue
                    if get_importance(a) in ("noise", "market")]
-    items = [a for a in queue if get_importance(a) not in ("noise", "market")]
+    candidates = [a for a in queue if get_importance(a) not in ("noise", "market")]
+    items, quality_held = screen_auto_delivery(candidates)
+    quality_held_hashes = {row.get("hash", "") for row in quality_held if row.get("hash")}
+    if quality_held:
+        fallbacks = sum(1 for row in quality_held if row.get("status") == "fallback")
+        quarantined = sum(1 for row in quality_held if row.get("action") == "quarantine")
+        print(f"[daily_brief] 자동 발송 전 품질 보류 {len(quality_held)}건 "
+              f"(fallback {fallbacks} / 무결성 격리 {quarantined})")
 
     dom_pool = [a for a in items if region(a) == "국내"]
     forn_pool = [a for a in items if region(a) == "해외"]
@@ -791,16 +908,27 @@ def plan_briefs(queue: list[dict],
     # 것만이 조건이다 — item_to_card 가 implication 을 읽어 카드를 만든다.
     field_diag = complete_required_fields(allsel)
 
-    dom_cards = [item_to_card(a, render_investment(a.get("investment_struct")))
-                 for a in dom]
-    forn_cards = [item_to_card(a, render_investment(a.get("investment_struct")))
-                  for a in forn]
-    n_omitted = sum(1 for a in allsel
-                    if render_investment(a.get("investment_struct")) is None)
+    # 투자·조건부 필수 항목까지 모두 조립된 **최종 카드**를 다시 원문 근거와 대조한다.
+    # 핵심 headline/what 충돌은 카드 전체를 빼고, 선택 해석 필드의 새 주장은 그 줄만 뺀다.
+    dom, dom_cards, dom_card_audits = verify_final_cards(dom)
+    forn, forn_cards, forn_card_audits = verify_final_cards(forn)
+    card_audits = dom_card_audits + forn_card_audits
+    final_quarantine_hashes = {
+        row.get("hash", "") for row in card_audits
+        if row.get("action") == "quarantine" and row.get("hash")
+    }
+    sanitized_fields = sum(len(row.get("removed_fields") or []) for row in card_audits
+                           if row.get("action") == "sanitize")
+    if final_quarantine_hashes or sanitized_fields:
+        print(f"[daily_brief] 최종 카드 사실검증: 카드 격리 {len(final_quarantine_hashes)}건 / "
+              f"근거 없는 선택 필드 {sanitized_fields}개 제거")
+    allsel = dom + forn
+    n_omitted = sum(1 for card in (dom_cards + forn_cards) if not card.get("investment"))
     if allsel:
         print(f"[daily_brief] 투자 관점: {len(allsel) - n_omitted}건 표기 / {n_omitted}건 근거 부족 생략")
 
     briefs: list[dict] = []
+    social_card_audits: list[dict] = []
     # 국내·해외 둘 다 항상 발송 — 사용자가 같은 시간에 둘 다 기대. 없으면 안내 메시지.
     if dom_cards:
         dom_msg = format_cards_message(dom_cards, header="🇰🇷 원자력 국내 브리핑")
@@ -812,7 +940,17 @@ def plan_briefs(queue: list[dict],
     forn_msg = (format_cards_message(forn_cards, header="🌐 원자력 해외 브리핑")
                 if forn_cards else "")
     if social_pairs:
-        social_cards = build_cards(social_pairs[:MAX_ITEMS], self_check=False) or []
+        # 소셜은 정규 기사 큐를 거치지 않으므로 synthesize의 2차 검사와 공통
+        # 최종 카드 게이트를 모두 통과한 카드만 수동 발송에 붙인다.
+        social_cards = build_cards(social_pairs[:MAX_ITEMS], self_check=True) or []
+        social_cards, social_card_audits = verify_social_cards(social_cards)
+        social_quarantined = sum(
+            1 for row in social_card_audits if row.get("action") == "quarantine")
+        social_removed = sum(
+            len(row.get("removed_fields") or []) for row in social_card_audits)
+        if social_quarantined or social_removed:
+            print(f"[daily_brief] 소셜 최종 카드 검증: 격리 {social_quarantined}건 / "
+                  f"선택 필드 {social_removed}개 제거")
         if social_cards:
             sec = format_cards_message(
                 social_cards, header="━━ 🔥 소셜 화제 (Reddit·X) ━━", show_header=False)
@@ -851,6 +989,8 @@ def plan_briefs(queue: list[dict],
             "summary": (a.get("summary") or "")[:200],
             "tags": (a.get("tags") or [])[:6],
             "event_date": a.get("event_date"),
+            "published_at": a.get("published_at", ""),
+            "curation_status": a.get("curation_status", ""),
             "section": a.get("section", ""),
             # LLM 판정 scope (없으면 region()이 휴리스틱으로 결정한 것 — 오분류 추적용)
             "scope": a.get("scope", ""),
@@ -920,25 +1060,44 @@ def plan_briefs(queue: list[dict],
     dup_hashes = [d["hash"] for d in
                   dom_diag["dropped_duplicates"] + forn_diag["dropped_duplicates"]
                   if d.get("dup_of") in selected_hashes]
-    prune = sorted((selected_hashes | set(dup_hashes) | set(junk_hashes)) - {""})
+    prune = sorted((selected_hashes | set(dup_hashes) | set(junk_hashes)
+                    | quality_held_hashes | final_quarantine_hashes) - {""})
 
-    return {**base, "status": "pending", "briefs": briefs, "items": out_items,
-            "report_diag": report_diag,
-            "field_diag": field_diag,
-            "selection_stats": {
-                "domestic": region_stats(dom_diag, dom, dom_pool, dom_cont),
-                "overseas": region_stats(forn_diag, forn, forn_pool, forn_cont),
-            },
-            "dropped_duplicates": dom_diag["dropped_duplicates"] + forn_diag["dropped_duplicates"],
-            # 병합만 기록하면 진단 화면은 반쪽이다. "왜 붙었나"의 짝은 "왜 안 붙었나"인데,
-            # 분리는 결과물에 아무 흔적을 남기지 않아 여기서 잡지 않으면 영영 안 보인다.
-            "story_audit": {
-                "stage_vetoes": (dom_diag.get("stage_vetoes") or [])
-                                + (forn_diag.get("stage_vetoes") or []),
-                "display_promotions": (dom_diag.get("display_promotions") or [])
-                                      + (forn_diag.get("display_promotions") or []),
-            },
-            "prune_hashes": prune}
+    quality_diag = {
+        "held_before_ranking": quality_held,
+        "final_cards": card_audits + social_card_audits,
+        "summary": {
+            "held": len(quality_held),
+            "fallback_held": sum(1 for row in quality_held if row.get("status") == "fallback"),
+            "integrity_quarantined": sum(
+                1 for row in quality_held if row.get("action") == "quarantine"),
+            "final_quarantined": len(final_quarantine_hashes) + sum(
+                1 for row in social_card_audits if row.get("action") == "quarantine"),
+            "final_fields_removed": sanitized_fields + sum(
+                len(row.get("removed_fields") or []) for row in social_card_audits),
+        },
+    }
+
+    return _seal_quality_payload({
+        **base, "status": "pending", "briefs": briefs, "items": out_items,
+        "report_diag": report_diag,
+        "field_diag": field_diag,
+        "quality_diag": quality_diag,
+        "selection_stats": {
+            "domestic": region_stats(dom_diag, dom, dom_pool, dom_cont),
+            "overseas": region_stats(forn_diag, forn, forn_pool, forn_cont),
+        },
+        "dropped_duplicates": dom_diag["dropped_duplicates"] + forn_diag["dropped_duplicates"],
+        # 병합만 기록하면 진단 화면은 반쪽이다. "왜 붙었나"의 짝은 "왜 안 붙었나"인데,
+        # 분리는 결과물에 아무 흔적을 남기지 않아 여기서 잡지 않으면 영영 안 보인다.
+        "story_audit": {
+            "stage_vetoes": (dom_diag.get("stage_vetoes") or [])
+                            + (forn_diag.get("stage_vetoes") or []),
+            "display_promotions": (dom_diag.get("display_promotions") or [])
+                                  + (forn_diag.get("display_promotions") or []),
+        },
+        "prune_hashes": prune,
+    })
 
 
 def prune_queue(queue: list[dict], prune_hashes: set[str]) -> list[dict]:
@@ -958,16 +1117,132 @@ def _outbox_age_hours(outbox: dict, now: datetime | None = None) -> float:
     return (now - created).total_seconds() / 3600
 
 
+def _quality_payload(outbox: dict) -> dict:
+    """발송 의미를 결정하는 불변 부분만 canonical digest 입력으로 만든다.
+
+    status/sent_at/failure_reason은 정상 재시도에서 변하므로 제외한다. 반면 실제
+    Telegram payload(name/text)와 그 검증 근거(items/quality_diag)는 통째로
+    묶어 claim 뒤 문구나 근거만 바뀌는 경우를 모두 잡는다.
+    """
+    briefs = outbox.get("briefs")
+    canonical_briefs = []
+    if isinstance(briefs, list):
+        canonical_briefs = [
+            {
+                "name": brief.get("name"),
+                "text": brief.get("text"),
+            }
+            if isinstance(brief, dict) else {"invalid": brief}
+            for brief in briefs
+        ]
+    else:
+        canonical_briefs = [{"invalid_briefs": briefs}]
+    return {
+        "schema_version": outbox.get("schema_version"),
+        "quality_gate_version": outbox.get("quality_gate_version"),
+        "date": outbox.get("date"),
+        "briefs": canonical_briefs,
+        "items": outbox.get("items"),
+        "quality_diag": outbox.get("quality_diag"),
+        "field_diag": outbox.get("field_diag"),
+    }
+
+
+def _quality_payload_digest(outbox: dict) -> str:
+    canonical = json.dumps(
+        _quality_payload(outbox), ensure_ascii=False, sort_keys=True,
+        separators=(",", ":"), allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def _seal_quality_payload(outbox: dict) -> dict:
+    outbox["quality_payload_digest"] = _quality_payload_digest(outbox)
+    return outbox
+
+
+def _reject_incompatible_quality_gate(outbox: dict, now: datetime) -> list[dict] | None:
+    """검증 계약이 다른 미발송 outbox 를 실패 처리하고 발송을 차단한다.
+
+    ``None`` 은 호환됨을 뜻한다. 빈 리스트와 구분해야, 호환 outbox 에 실제
+    pending 브리핑이 없을 때도 정상 발송 경로를 유지할 수 있다.
+    """
+    pending = [
+        (idx, brief)
+        for idx, brief in enumerate(outbox.get("briefs", []))
+        if brief.get("status") in ("pending", "failed")
+    ]
+    if not pending:
+        return None
+
+    found = outbox.get("quality_gate_version")
+    reason = ""
+    detail: dict = {}
+    if type(found) is not int or found != QUALITY_GATE_VERSION:  # bool(1) 은 버전이 아님
+        reason = "quality_gate_version_mismatch"
+        detail = {"found_version": found}
+    else:
+        stored_digest = outbox.get("quality_payload_digest")
+        if stored_digest is None:
+            reason = "quality_payload_digest_missing"
+        elif not isinstance(stored_digest, str) or not QUALITY_PAYLOAD_DIGEST_RE.fullmatch(
+                stored_digest):
+            reason = "quality_payload_digest_invalid"
+            detail = {"found_digest_type": type(stored_digest).__name__}
+        else:
+            try:
+                expected_digest = _quality_payload_digest(outbox)
+            except (TypeError, ValueError):
+                reason = "quality_payload_unserializable"
+            else:
+                if not hmac.compare_digest(stored_digest, expected_digest):
+                    reason = "quality_payload_digest_mismatch"
+    if not reason:
+        outbox.pop("quality_gate_error", None)
+        return None
+
+    outbox["quality_gate_error"] = {
+        "code": reason,
+        "required_version": QUALITY_GATE_VERSION,
+        "detected_at": now.isoformat(),
+        **detail,
+    }
+    results: list[dict] = []
+    for idx, brief in pending:
+        brief["status"] = "failed"
+        brief["failure_reason"] = reason
+        results.append({
+            "idx": idx,
+            "status": "failed",
+            "failure_reason": reason,
+            "required_quality_gate_version": QUALITY_GATE_VERSION,
+            "found_quality_gate_version": found,
+        })
+    _update_overall_status(outbox)
+    # failed 는 평소 Telegram 일시 장애 때 재시도하는 상태다. 버전 불일치는
+    # 재시도해도 절대 회복되지 않으므로 별도 종결 상태로 가른다. 그렇지 않으면
+    # cmd_plan 이 36시간 동안 이 outbox 만 붙들고 새 브리핑도 만들지 못한다.
+    outbox["status"] = "quality_rejected"
+    print("[daily_brief] 발송 차단 — outbox 품질 claim 불일치 "
+          f"({reason}, 저장 버전={found!r}, 필요 버전={QUALITY_GATE_VERSION}); "
+          "새로 계획해야 합니다")
+    return results
+
+
 def send_outbox(outbox: dict, now: datetime | None = None) -> list[dict]:
     """outbox 의 pending/failed 브리핑 발송. 결과 리스트 반환 + outbox 상태 갱신.
 
     - 이미 sent 인 브리핑은 건드리지 않음 → 같은 날 재실행해도 중복 발송 없음.
     - RESEND_WINDOW_H 를 넘긴 outbox 는 stale_skipped (낡은 브리핑 중복 방지).
     """
+    now = now or datetime.now(timezone.utc)
+    blocked = _reject_incompatible_quality_gate(outbox, now)
+    if blocked is not None:
+        return blocked
+
     import time
     from telegram_send import send_long_text  # lazy — plan 은 토큰 없이 동작
 
-    now = now or datetime.now(timezone.utc)
     stale = _outbox_age_hours(outbox, now) > RESEND_WINDOW_H
     results: list[dict] = []
     first_send = True
@@ -992,6 +1267,7 @@ def send_outbox(outbox: dict, now: datetime | None = None) -> list[dict]:
         brief["status"] = "sent" if success else "failed"
         if success:
             brief["sent_at"] = now.isoformat()
+            brief.pop("failure_reason", None)
         results.append({"idx": i, "status": brief["status"],
                         "sent_at": brief.get("sent_at")})
         print(f"[daily_brief] {brief.get('name')} 브리핑 발송 → {brief['status']}")
@@ -1020,6 +1296,8 @@ def apply_send_results(outbox: dict, results: list[dict]) -> dict:
             briefs[idx]["status"] = r.get("status", briefs[idx].get("status"))
             if r.get("sent_at"):
                 briefs[idx]["sent_at"] = r["sent_at"]
+            if r.get("failure_reason"):
+                briefs[idx]["failure_reason"] = r["failure_reason"]
     _update_overall_status(outbox)
     return outbox
 
@@ -1078,6 +1356,86 @@ def append_field_audit(outbox: dict, path: Path | None = None,
     with path.open("a", encoding="utf-8") as fp:
         fp.write(json.dumps(rec, ensure_ascii=False) + "\n")
     return True
+
+
+def append_quality_audit(outbox: dict, path: Path | None = None,
+                         now: datetime | None = None) -> int:
+    """자동 발송 보류·최종 카드 수정 결과를 관리자 알림 계약으로 남긴다."""
+    diag = outbox.get("quality_diag")
+    if not isinstance(diag, dict):
+        return 0
+    held = [row for row in (diag.get("held_before_ranking") or [])
+            if isinstance(row, dict)]
+    cards = [row for row in (diag.get("final_cards") or []) if isinstance(row, dict)]
+    path = path or DELIVERY_LOG_FILE
+    now = now or datetime.now(timezone.utc)
+    generated_at = outbox.get("created_at") or now.astimezone(KST).isoformat()
+
+    specs: list[dict] = []
+    fallback = [row for row in held if row.get("status") == "fallback"]
+    integrity = [row for row in held if row.get("action") == "quarantine"]
+    other_held = [row for row in held if row not in fallback and row not in integrity]
+    final_quarantine = [row for row in cards if row.get("action") == "quarantine"]
+    sanitized = [row for row in cards if row.get("action") == "sanitize"]
+
+    if fallback:
+        specs.append({
+            "alert_key": "unverified-fallback-held",
+            "title": "미검증 fallback 기사 자동 발송 보류",
+            "detail": f"발송 직전 게이트에서 {len(fallback)}건을 제외하고 큐에서도 격리했습니다.",
+            "severity": "warning", "min_occurrences": 1, "items": fallback,
+        })
+    if integrity:
+        specs.append({
+            "alert_key": "delivery-integrity-quarantine",
+            "title": "원문과 다른 제목·요약 기사 발송 차단",
+            "detail": f"랭킹 전에 명백한 원문 불일치 {len(integrity)}건을 차단했습니다.",
+            "severity": "critical", "min_occurrences": 1, "items": integrity,
+        })
+    if other_held:
+        specs.append({
+            "alert_key": "unreviewed-delivery-held",
+            "title": "검토 상태 불명 기사 자동 발송 보류",
+            "detail": f"필수 근거·검토 상태가 부족한 {len(other_held)}건을 보류했습니다.",
+            "severity": "warning", "min_occurrences": 2, "items": other_held,
+        })
+    if final_quarantine:
+        specs.append({
+            "alert_key": "final-card-quarantine",
+            "title": "텔레그램 최종 카드 사실 충돌 차단",
+            "detail": f"headline/what 핵심 사실이 근거와 충돌한 {len(final_quarantine)}개 카드를 제외했습니다.",
+            "severity": "critical", "min_occurrences": 1, "items": final_quarantine,
+        })
+    if sanitized:
+        removed = sum(len(row.get("removed_fields") or []) for row in sanitized)
+        specs.append({
+            "alert_key": "final-card-field-removed",
+            "title": "텔레그램 카드의 미확인 해석 필드 제거",
+            "detail": f"근거에서 확인되지 않은 선택 필드 {removed}개를 {len(sanitized)}개 카드에서 제거했습니다.",
+            "severity": "warning", "min_occurrences": 2, "items": sanitized,
+        })
+
+    if not specs:
+        return 0
+    added = 0
+    try:
+        with path.open("a", encoding="utf-8") as fp:
+            for spec in specs:
+                rec = {
+                    "record_type": "quality_event",
+                    "date": outbox.get("date") or now.astimezone(KST).date().isoformat(),
+                    # confirm 충돌 재시도에서도 같은 관측 ID를 써 streak가 두 번
+                    # 오르지 않게 한다.
+                    "generated_at": generated_at,
+                    **spec,
+                }
+                rec["items"] = rec["items"][:20]
+                fp.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                added += 1
+    except OSError as exc:
+        print(f"[daily_brief] 품질 감사 기록 실패(비치명): {exc}")
+        return 0
+    return added
 
 
 def append_story_audit(outbox: dict, path: Path | None = None,
@@ -1163,6 +1521,16 @@ def cmd_plan() -> int:
     today = datetime.now(KST).date().isoformat()
     existing = load_outbox()
     if existing:
+        # 강화 전 claim 이 남아 있으면 Send까지 끌고 가지 않는다. 여기서 종결하고
+        # 현재 큐로 새 계획을 만들어야 "버전 불일치 → failed → 36h 재시도" 교착이
+        # 생기지 않는다. 이미 sent 인 브리핑만 있는 outbox 는 아래 멱등 경로가 맡는다.
+        incompatible = _reject_incompatible_quality_gate(
+            existing, datetime.now(timezone.utc))
+        if incompatible is not None:
+            save_outbox(existing)
+            print("[daily_brief] 호환되지 않는 미발송 outbox 폐기 → 현재 큐로 재계획")
+            existing = None
+    if existing:
         if existing.get("date") == today and existing.get("status") != "empty":
             queue = load_queue()
             pruned = prune_queue(queue, set(existing.get("prune_hashes", [])))
@@ -1226,6 +1594,7 @@ def cmd_confirm() -> int:
     append_selection_stats(outbox)
     append_story_audit(outbox)
     append_field_audit(outbox)
+    append_quality_audit(outbox)
     save_outbox(outbox)
     print(f"[daily_brief] confirm — 상태 {outbox.get('status')}, delivery_log +{n}건")
     return 0
@@ -1302,6 +1671,7 @@ def main() -> int:
     append_selection_stats(outbox)
     append_story_audit(outbox)
     append_field_audit(outbox)
+    append_quality_audit(outbox)
     if not args.from_curated and not args.keep_queue:
         pruned = prune_queue(queue, set(outbox["prune_hashes"]))
         save_queue(pruned)

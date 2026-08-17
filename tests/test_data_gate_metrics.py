@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
@@ -106,17 +107,18 @@ class TrackingMeasurement(unittest.TestCase):
 
 
 class NeverBlocksTheDeploy(unittest.TestCase):
-    """이 파일은 게이트가 아니다 — 어떤 경우에도 종료 코드가 0 이어야 한다.
+    """품질 임계값은 배포 게이트가 아니지만 계측 실패는 outcome으로 남긴다.
 
     막는 쪽으로 돌리면 2026-08-03·08-11 사고(뉴스가 한산하거나 한 주에 몰린
-    것만으로 CSS 오타 수정까지 배포가 막힘)가 그대로 되돌아온다.
+    것만으로 CSS 오타 수정까지 배포가 막힘)가 그대로 되돌아온다. 산출물 자체가
+    없을 때의 1은 continue-on-error step에서 관리자 알림용으로만 사용한다.
     """
 
-    def test_missing_build_output_returns_zero(self):
+    def test_missing_build_output_returns_failure_outcome(self):
         original = gate.WEB_DATA
         gate.WEB_DATA = ROOT / "does-not-exist"
         try:
-            self.assertEqual(0, gate.main())
+            self.assertEqual(1, gate.main())
         finally:
             gate.WEB_DATA = original
 
@@ -143,6 +145,17 @@ class NeverBlocksTheDeploy(unittest.TestCase):
         # record_type 이 붙은 줄은 기존 리더가 전부 건너뛴다
         # (daily_lead.collect_today · metrics.load_data · build_data).
         self.assertEqual(gate.RECORD_TYPE, rows[0]["record_type"])
+
+    def test_github_run_id_is_a_retry_stable_observation_id(self):
+        now = gate.datetime(2026, 8, 17, 0, 0, tzinfo=gate.timezone.utc)
+        values = {
+            "meta.json": {}, "issues.json": [], "briefings.json": [],
+        }
+        with patch.object(gate, "_load", side_effect=lambda name: values[name]), \
+                patch.object(gate, "measure_topic_weeks", return_value={}), \
+                patch.dict("os.environ", {"GITHUB_RUN_ID": "98765"}):
+            record = gate.build_record(now)
+        self.assertEqual("github-run:98765", record["observation_id"])
 
 
 if __name__ == "__main__":

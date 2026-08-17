@@ -51,6 +51,7 @@ from data_quality import (  # noqa: E402
     title_key,
 )
 from embedding_pipeline import EMBEDDING_MODEL, cached_vector  # noqa: E402
+import article_quality_gate  # noqa: E402
 import issue_insight  # noqa: E402
 import issue_review  # noqa: E402
 import keei_match  # noqa: E402
@@ -394,6 +395,44 @@ def load_archive() -> list[dict]:
                 continue
             records.append(_normalize_archive_record(record))
     return records
+
+
+def apply_archive_integrity_gate(records: list[dict]) -> tuple[list[dict], dict]:
+    """과거 아카이브도 사이트에 내보내기 직전 같은 원문-큐레이션 계약을 적용한다.
+
+    아카이브에는 기사 본문을 저장하지 않으므로 없는 근거를 오류로 단정하지 않는다.
+    원제목만으로도 확인되는 명백한 사건 전환·핵심 수치 충돌은 숨기고, 불가능한
+    사건일은 날짜만 비운다. 원본 JSONL은 감사 이력을 위해 다시 쓰지 않는다.
+    """
+    visible: list[dict] = []
+    quarantined: list[dict] = []
+    sanitized: list[dict] = []
+    for record in records:
+        result = article_quality_gate.audit_article_integrity(
+            record,
+            source={"title": record.get("title", ""),
+                    "published_at": record.get("pub") or record.get("archived_at")},
+            reference_date=record.get("pub") or record.get("archived_at"),
+        )
+        sample = {
+            "hash": record.get("hash", ""),
+            "title": (record.get("title") or "")[:100],
+            "title_kr": (record.get("title_kr") or "")[:100],
+            "codes": [finding.code for finding in result.findings],
+        }
+        if not result.eligible:
+            quarantined.append(sample)
+            continue
+        if result.action == "sanitize":
+            sanitized.append(sample)
+        visible.append(result.value)
+    return visible, {
+        "checked": len(records),
+        "quarantined": len(quarantined),
+        "sanitized": len(sanitized),
+        "quarantine_samples": quarantined[:20],
+        "sanitize_samples": sanitized[:20],
+    }
 
 
 def brief_ranks_by_hash(path: Path | None = None) -> dict[str, int]:
@@ -4746,6 +4785,14 @@ def build_rss(briefings: list[dict], generated_at: datetime) -> bytes:
 
 def build() -> None:
     records = load_archive()
+    records, archive_quality = apply_archive_integrity_gate(records)
+    if archive_quality["quarantined"] or archive_quality["sanitized"]:
+        print(f"::warning::archive 무결성 게이트 — 기사 격리 "
+              f"{archive_quality['quarantined']}건 / 사건일 정리 "
+              f"{archive_quality['sanitized']}건")
+        for sample in archive_quality["quarantine_samples"][:5]:
+            print(f"  · 격리 {sample['hash']}: {sample['title'][:45]} → "
+                  f"{sample['title_kr'][:45]} ({','.join(sample['codes'])})")
     validate_archive_records(records)
     deliveries = load_deliveries()
     brief_ranks = brief_ranks_by_hash()
@@ -5168,6 +5215,7 @@ def build() -> None:
         "generation_id": generation_id,
         "generated_at": now.isoformat(),
         "archive_total": len(records),
+        "archive_quality": archive_quality,
         "visible_total": len(news_items),
         "briefing_total": len(briefings),
         "issue_catalog_total": len(issue_catalog),

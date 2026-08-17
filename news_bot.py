@@ -21,6 +21,7 @@ from gemini_client import (
 )
 from ranking import prior_coverage_count, sanitize_features
 import article_body
+import article_quality_gate
 import entity_match
 import news_archive
 from data_quality import (
@@ -127,6 +128,45 @@ DOMAIN_SCORE = {
 DEFAULT_SCORE = 4
 MIN_SCORE = 4
 
+
+def normalize_publication_timestamp(value, *, now: datetime | None = None) -> str:
+    """수집원 발행 시각을 큐에 넣을 UTC ISO 문자열로 정규화한다.
+
+    RSS·검색 API는 datetime, ISO 8601, RFC 2822를 섞어 줄 수 있다. 파싱할 수
+    없거나 미래인 값은 빈 문자열로 돌려 랭킹이 ``queued_at``을 쓰게 한다.
+    """
+    now = now or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    else:
+        now = now.astimezone(timezone.utc)
+
+    parsed: datetime | None = None
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str) and value.strip():
+        raw = value.strip()
+        try:
+            parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        except ValueError:
+            try:
+                parsed = parsedate_to_datetime(raw)
+            except (TypeError, ValueError, OverflowError):
+                return ""
+    else:
+        return ""
+
+    try:
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        else:
+            parsed = parsed.astimezone(timezone.utc)
+    except (OverflowError, ValueError):
+        return ""
+    if parsed > now:
+        return ""
+    return parsed.isoformat()
+
 # 공식 원문을 제공하는 정부·규제기관·국제기구·사업자.
 # 전문언론(WNN·NucNet·ANS)은 신뢰도는 높아도 원발표처가 아니므로 포함하지 않는다.
 TIER1_DOMAINS = {
@@ -140,7 +180,7 @@ TIER1_DOMAINS = {
 # 검색 RSS 쓸 땐 반드시 when: 연산자). 보도자료는 인덱싱이 늦을 수 있어 2d 버퍼.
 RSS_SOURCES = [
     {"url": "https://www.iaea.org/feeds/topnews", "name": "IAEA Top News",
-     "domain_label": "iaea.org"},
+     "domain_label": "iaea.org", "source_kind": "official"},
     {"url": "http://www.world-nuclear-news.org/rss", "name": "WNN",
      "domain_label": "world-nuclear-news.org"},
     {"url": "https://www.ans.org/news/feed/", "name": "ANS Nuclear Newswire",
@@ -164,7 +204,9 @@ OFFICIAL_DIRECT_SOURCES = [
 # 게시판 개편·차단·403 은 예외 없이 0건으로 조용히 지나간다. 실패 사유를 run 단위로
 # 들고 있다가 state 에 같이 적어야 "언제부터 죽었나"를 git 히스토리에서 되짚을 수
 # 있다 — stdout print 는 Actions 로그 보존기간이 끝나면 사라진다.
-OFFICIAL_FETCH_ERRORS: dict[str, str] = {}
+SOURCE_FETCH_ERRORS: dict[str, str] = {}
+# 구버전 테스트·도구가 이름을 참조해도 같은 저장소를 보게 한다.
+OFFICIAL_FETCH_ERRORS = SOURCE_FETCH_ERRORS
 
 # ---- 해외 Tier 1 추가 (2026-07-31) ------------------------------------------
 # 사내 카톡방 7개월 큐레이션 분석(nuclear-news-web/research/)의 실측 빈도 상위 출처.
@@ -179,7 +221,7 @@ RSS_SOURCES += [
      "domain_label": "sfen.org"},
     # 미 에너지부 공식 — 전 에너지원 피드라 비원자력 포함, 큐레이션 noise 필터가 거름
     {"url": "https://www.energy.gov/rss.xml", "name": "DOE",
-     "domain_label": "energy.gov"},
+     "domain_label": "energy.gov", "source_kind": "official"},
 ]
 # Reuters는 공개 RSS 폐지, La Tribune은 섹션 피드 없음 → Google News 우회 (실측 12~18건/일)
 _REUTERS_Q = quote_plus('site:reuters.com ("nuclear power" OR reactor OR SMR OR uranium) when:1d')
@@ -791,6 +833,10 @@ def fallback_curation(article: dict) -> dict | None:
         return None
     return {
         "importance": "nice_to_know",
+        # 원문 스니펫의 안전한 문장만 보존한 재시도용 캐시다. 정상 큐레이션
+        # 결과처럼 자동 발송되지 않도록 상태를 명시한다.
+        "curation_status": "fallback",
+        "curation_source": "fallback",
         "section": default_section(article.get("domain", ""), article.get("title", "")),
         "category": "정책",
         "title_kr": article.get("title", ""),
@@ -828,6 +874,53 @@ def needs_recuration(cached: dict) -> bool:
     if errors == ["features:missing"]:
         return int(cached.get("features_attempts") or 0) < FEATURES_RETRY_LIMIT
     return True
+
+
+def audit_curation_integrity(article: dict, curation: dict, body: str = ""):
+    """원문 기사와 큐레이션 결과의 짝·사건일을 공통 규칙으로 검사한다."""
+    return article_quality_gate.audit_article_integrity(
+        curation,
+        source={
+            "title": article.get("title", ""),
+            "description": article.get("description", ""),
+            "article_text": body or "",
+            "published_at": article.get("pub"),
+        },
+        reference_date=article.get("pub"),
+    )
+
+
+def refresh_evidence_manifest(article: dict, curation: dict, *, body: str = "",
+                              force: bool = False,
+                              now: datetime | None = None) -> dict:
+    """Return a source-bound manifest, rebuilding stale cache evidence safely.
+
+    The retained binding uses only hash/title/snippet/publication time. A fetched
+    body may contribute fact fingerprints during a fresh curation call, but the
+    body itself is never returned or persisted. If a cache hit belongs to an old
+    source fingerprint, rebuilding without a body intentionally drops those old
+    body-only facts instead of trusting them for a different article revision.
+    """
+    published_at = normalize_publication_timestamp(article.get("pub"), now=now)
+    excerpt = clean_text(article.get("description", ""))[:600]
+    bound_article = {
+        "hash": clean_text(article.get("hash")),
+        "title": clean_text(article.get("title")),
+        "source_excerpt": excerpt,
+        "published_at": published_at,
+    }
+    source = {
+        "article_hash": bound_article["hash"],
+        "title": bound_article["title"],
+        "description": excerpt,
+        "article_text": body or "",
+        "published_at": published_at,
+    }
+    existing = curation.get("verified_evidence")
+    if (not force and article_quality_gate.evidence_manifest_is_valid(
+            existing, article=bound_article, source=source)):
+        return dict(existing)
+    return article_quality_gate.build_evidence_manifest(source, article=bound_article)
 
 
 def load_queue() -> list:
@@ -1636,6 +1729,81 @@ def append_curation_failure(lost: dict[str, str], articles: list[dict],
     return True
 
 
+def append_quality_event(alert_key: str, title: str, detail: str, *,
+                         severity: str = "warning", min_occurrences: int = 2,
+                         items: list[dict] | None = None,
+                         path: Path | None = None,
+                         now: datetime | None = None) -> bool:
+    """관리자 알림기가 읽는 비치명 품질 이벤트를 append-only 로그에 남긴다."""
+    if not alert_key or not title:
+        return False
+    path = path or DELIVERY_LOG_FILE
+    now = now or datetime.now(timezone.utc)
+    rec = {
+        "record_type": "quality_event",
+        "date": now.astimezone(KST).date().isoformat(),
+        "generated_at": now.astimezone(KST).isoformat(),
+        "alert_key": alert_key,
+        "title": title[:120],
+        "detail": detail[:700],
+        "severity": severity if severity in {"info", "warning", "critical"} else "warning",
+        "min_occurrences": max(1, int(min_occurrences or 1)),
+        "items": (items or [])[:20],
+    }
+    try:
+        with path.open("a", encoding="utf-8") as fp:
+            fp.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except OSError as exc:
+        print(f"  ! 품질 이벤트 기록 실패(비치명): {exc}")
+        return False
+    return True
+
+
+def pending_fallback_articles(curated: dict, exclude_hashes: set[str] | None = None) -> list[dict]:
+    """Rebuild durable retry candidates from curated cache.
+
+    A first fallback may be discovered near the edge of the search lookback and
+    disappear before the next crawl. Keeping the minimal source snapshot in the
+    cache lets the second Gemini attempt happen without relying on rediscovery.
+    """
+    excluded = set(exclude_hashes or ())
+    pending: list[dict] = []
+    for h, cached in curated.items():
+        if h in excluded or not isinstance(cached, dict):
+            continue
+        if article_quality_gate.infer_curation_status(cached) != "fallback":
+            continue
+        if int(cached.get("features_attempts") or 0) >= FEATURES_RETRY_LIMIT:
+            continue
+        title = clean_text(cached.get("title"))
+        link = clean_text(cached.get("link"))
+        if not title or not link:
+            continue
+        raw_pub = cached.get("published_at") or cached.get("cached_at")
+        normalized_pub = normalize_publication_timestamp(raw_pub)
+        try:
+            pub = datetime.fromisoformat(normalized_pub) if normalized_pub else datetime.now(timezone.utc)
+        except ValueError:
+            pub = datetime.now(timezone.utc)
+        domain = clean_text(cached.get("domain")) or get_domain(link)
+        pending.append({
+            "hash": h,
+            "title": title,
+            "description": clean_text(cached.get("source_excerpt") or cached.get("summary")),
+            "link": link,
+            "raw_link": link,
+            "pub": pub,
+            "publisher": clean_text(cached.get("publisher")),
+            "domain": domain,
+            "score": source_score(domain, clean_text(cached.get("publisher"))),
+            "feed": clean_text(cached.get("feed")) or assign_feed_from_title(title),
+            "matched": clean_text(cached.get("matched")) or "fallback_retry",
+            "raw_sources": [],
+            "fallback_retry": True,
+        })
+    return sorted(pending, key=lambda row: row["pub"])
+
+
 def append_open_question_stats(verdicts: dict[str, dict],
                                path: Path | None = None,
                                now: datetime | None = None) -> bool:
@@ -1707,6 +1875,9 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
         return {}
 
     system_prompt = CURATION_SYSTEM_PROMPT + BATCH_SUFFIX
+    # 재생성 후에도 원문과 다른 사건을 가리킨 항목만 남긴다. 첫 출력의 일시적
+    # 오류는 여기 들어와도 재생성에서 정상화되면 관리자 경고 대상이 아니다.
+    final_integrity_quarantines: dict[str, dict] = {}
 
     def run_chunk(chunk: list[dict], error_notes: dict[str, list[str]] | None = None):
         blocks = []
@@ -1760,6 +1931,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
         valid: dict[str, dict] = {}
         failures: dict[str, list[str]] = {}
         seen_hashes: set[str] = set()
+        tagless_multi_response = False
         for item in items:
             if not isinstance(item, dict):
                 continue
@@ -1774,7 +1946,13 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 if art is None:
                     continue
             else:
-                # 표식이 아예 없는 응답(옛 모델·잘린 출력)은 예전처럼 위치로.
+                # 여러 기사 응답에서 위치(idx)는 신원이 아니다. 모델이 한 항목을
+                # 생략한 뒤 번호를 다시 매긴 실사고가 있어, id 없는 다건 응답을
+                # 위치로 붙이면 제목과 요약이 조용히 뒤섞인다. 단건 호출만 idx=0
+                # 호환을 유지한다(재생성·분할 호출과 옛 테스트 응답 지원).
+                if len(chunk) != 1:
+                    tagless_multi_response = True
+                    continue
                 idx = item.get("idx")
                 if not isinstance(idx, int) or not (0 <= idx < len(chunk)):
                     continue
@@ -1786,6 +1964,9 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
             seen_hashes.add(art["hash"])
             normalized = normalize_curation_item(
                 item, art, (bodies or {}).get(art.get("hash", "")) or "")
+            integrity = audit_curation_integrity(
+                art, normalized, (bodies or {}).get(art.get("hash", "")) or "")
+            normalized = integrity.value
             # open_question 게이트 계측. hash 로 덮어쓰므로 분할 재시도가 같은 기사를
             # 두 번 세지 않는다(마지막 판정이 남는다). 판정 자체는 바꾸지 않는다.
             if normalized.get("importance") == "must_read":
@@ -1802,14 +1983,22 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
             # 그 상태로 남으면 ranking 이 _legacy_score() 를 타 event_weights 도
             # feature 가중치도 반영되지 않는다. 근거: docs/AS_IS.md §2.
             errors = curation_errors(normalized, require_features=True)
+            if not integrity.eligible:
+                codes = [finding.code for finding in integrity.findings]
+                errors.append("integrity:" + ",".join(codes or ["mismatch"]))
             if errors:
                 failures[art["hash"]] = errors
             else:
+                normalized["curation_status"] = "reviewed"
+                normalized["curation_source"] = "gemini"
                 valid[art["hash"]] = normalized
 
         for art in chunk:
             if art["hash"] not in seen_hashes:
-                failures[art["hash"]] = ["response:idx_missing"]
+                failures[art["hash"]] = [
+                    "response:id_missing" if tagless_multi_response
+                    else "response:idx_missing"
+                ]
         return valid, failures
 
     out: dict[str, dict] = {}
@@ -1864,9 +2053,17 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
             out.update(repaired)
             for art in retryable:
                 if art["hash"] in remaining:
+                    reasons = remaining[art["hash"]]
+                    if any(reason.startswith("integrity:") for reason in reasons):
+                        final_integrity_quarantines[art["hash"]] = {
+                            "hash": art["hash"],
+                            "title": (art.get("title") or "")[:120],
+                            "link": art.get("link", ""),
+                            "reason": ", ".join(reasons)[:240],
+                        }
                     print(
                         f"  ! 큐레이션 격리 '{art['title'][:35]}': "
-                        + ", ".join(remaining[art["hash"]])
+                        + ", ".join(reasons)
                     )
 
     for start in range(0, len(articles), BATCH_CHUNK):
@@ -1881,6 +2078,16 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
         print(f"  ! 큐레이션 유실 {len(lost)}/{len(articles)}건 — "
               f"delivery_log.jsonl 에 기록 (fallback 큐레이션으로 넘어감)")
         append_curation_failure(lost, articles)
+
+    if final_integrity_quarantines:
+        append_quality_event(
+            "article-integrity-quarantine",
+            "제목·요약이 원문과 다른 기사 격리",
+            (f"재생성 후에도 {len(final_integrity_quarantines)}건이 다른 핵심 엔티티·수치·"
+             "사건을 가리켜 자동 큐·아카이브에서 제외했습니다."),
+            severity="critical", min_occurrences=1,
+            items=list(final_integrity_quarantines.values()),
+        )
 
     # 조용히 지우면 프롬프트가 망가진 것을 아무도 모른다. 실측 기준선: 옛 프롬프트에서
     # implication 의 48%(64건 중 31건)가 여기 걸렸다. 새 프롬프트로 이 비율이
@@ -1957,11 +2164,19 @@ def strip_title_suffix(title: str, publisher: str) -> str:
     return split_title_publisher(title, publisher)[0]
 
 
-def fetch_rss(url: str) -> list[dict]:
+def fetch_rss(url: str, source_name: str = "") -> list[dict]:
     import feedparser
 
     try:
         feed = feedparser.parse(url, agent="nuclear-news-bot/1.0")
+        status = int(feed.get("status") or 0)
+        if status >= 400:
+            raise RuntimeError(f"HTTP {status}")
+        # feedparser 는 XML 파싱·네트워크 오류를 예외 대신 bozo 로 돌려주는 일이
+        # 많다. 일부 엔트리를 건졌다면 사용하되, 0건+bozo 는 '조용한 날'이 아니라
+        # 장애로 기록해야 파서 변경을 감지할 수 있다.
+        if feed.get("bozo") and not feed.entries:
+            raise RuntimeError(f"feed parse failed: {feed.get('bozo_exception')}")
         out = []
         for entry in feed.entries:
             link = entry.get("link", "")
@@ -1997,6 +2212,8 @@ def fetch_rss(url: str) -> list[dict]:
             })
         return out
     except Exception as e:
+        key = source_name or url
+        SOURCE_FETCH_ERRORS[key] = f"{type(e).__name__}: {e}"[:240]
         print(f"  ! RSS fetch failed for {url}: {e}")
         return []
 
@@ -2127,7 +2344,7 @@ def fetch_official_direct(src: dict) -> list[dict]:
             return parse_kaeri_board(response.text, publisher=src["publisher"], domain=src["domain_label"])
         return []
     except Exception as exc:
-        OFFICIAL_FETCH_ERRORS[src.get("name", "?")] = f"{type(exc).__name__}: {exc}"[:160]
+        SOURCE_FETCH_ERRORS[src.get("name", "?")] = f"{type(exc).__name__}: {exc}"[:240]
         print(f"  ! 공식기관 직접 수집 실패 [{src.get('name')}]: {exc}")
         return []
 
@@ -2230,14 +2447,15 @@ def collect_rss_articles(state: dict) -> list[dict]:
     # 게 목적이고 P1 부착 창이 21일이라, 수집 창만 좁을 이유가 없다.
     official_cutoff = datetime.now(timezone.utc) - timedelta(days=OFFICIAL_LOOKBACK_DAYS)
     by_title: dict[str, dict] = {}
-    OFFICIAL_FETCH_ERRORS.clear()
+    SOURCE_FETCH_ERRORS.clear()
     counts: dict[str, int] = {}
     kept: dict[str, int] = {}
 
     # 공식기관을 먼저 넣는다. 같은 제목이 Google News 경유 피드에도 있으면 직접
     # 원문이 by_title 을 선점해 canonical URL과 primary 분류가 보존된다.
     for src in OFFICIAL_DIRECT_SOURCES + RSS_SOURCES:
-        items = fetch_official_direct(src) if src.get("kind") else fetch_rss(src["url"])
+        items = (fetch_official_direct(src) if src.get("kind")
+                 else fetch_rss(src["url"], source_name=src["name"]))
         channel = "OFFICIAL" if src.get("kind") else "RSS"
         # cutoff·중복 필터 이전 값이다. 게시판에 닿았느냐 자체가 신호라서,
         # 오늘 새 글이 없어서 0인 것과 파서가 죽어서 0인 것을 굳이 안 섞는다.
@@ -2293,7 +2511,7 @@ def collect_rss_articles(state: dict) -> list[dict]:
         "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "counts": counts,
         "kept": kept,
-        "errors": dict(OFFICIAL_FETCH_ERRORS),
+        "errors": dict(SOURCE_FETCH_ERRORS),
     }
     dead = [src["name"] for src in OFFICIAL_DIRECT_SOURCES if not counts.get(src["name"])]
     if dead:
@@ -2496,11 +2714,14 @@ def main() -> None:
     features_missing = 0
     skipped_quota = 0
     skipped_config = 0
+    fallback_held: list[dict] = []
+    integrity_held: list[dict] = []
     # 모듈 전역이라 한 프로세스에서 두 번 돌면 이전 실행의 판정이 남는다.
     global QUOTA_EXHAUSTED, CONFIG_ERROR
     QUOTA_EXHAUSTED = False
     CONFIG_ERROR = ""
-    now_iso = datetime.now(timezone.utc).isoformat()
+    run_now = datetime.now(timezone.utc)
+    now_iso = run_now.isoformat()
 
     all_candidates: list[dict] = []
 
@@ -2584,19 +2805,30 @@ def main() -> None:
               f"— 예: {stage_vetoes[0]['explanation']}")
 
     final_articles = sorted(semantically_unique, key=lambda x: x["pub"])
+    durable_retries = pending_fallback_articles(
+        curated, {article["hash"] for article in final_articles})
+    if durable_retries:
+        final_articles = sorted(final_articles + durable_retries, key=lambda x: x["pub"])
+        print(f"Batch curation: 수집 창 밖 fallback 재검토 {len(durable_retries)}건 복원")
 
     # ---- batch 큐레이션: 새 기사만 모아 N건 → 1회 호출 (무료 티어 quota 보호) ----
     # 기존: 기사당 judge 1회 + 큐레이션 1회 (+각 5초 대기) → 한도 소진이 실패의 근본 원인.
     # judge 의 노이즈 컷은 큐레이션의 importance=noise 로 흡수 (별도 호출 제거).
     new_articles = [
         article for article in final_articles
-        if article["hash"] not in curated or needs_recuration(curated[article["hash"]])
+        if (article["hash"] not in curated
+            or needs_recuration(curated[article["hash"]])
+            # 완결성 검사를 통과한 캐시라도 제목·요약이 현재 원문과 다른 사건이면
+            # 다시 묻는다. 잘못 붙은 cache hit가 그대로 큐로 가는 뒷문을 닫는다.
+            or not audit_curation_integrity(
+                article, curated[article["hash"]]).eligible)
     ]
     deferred = 0
     if len(new_articles) > MAX_CURATION_PER_RUN:
         deferred = len(new_articles) - MAX_CURATION_PER_RUN
         # pub 오름차순이므로 앞에서 자른다 — 오래된 것부터 처리(FIFO).
         new_articles = new_articles[:MAX_CURATION_PER_RUN]
+    curation_attempted_hashes = {article["hash"] for article in new_articles}
     if new_articles:
         n_calls = (len(new_articles) + BATCH_CHUNK - 1) // BATCH_CHUNK
         print(f"Batch curation: 새 기사 {len(new_articles)}건 → Gemini {n_calls}회 호출")
@@ -2630,12 +2862,21 @@ def main() -> None:
 
     for article in final_articles:
         h = article["hash"]
+        previous = curated.get(h) or {}
+        cached_integrity = (audit_curation_integrity(article, previous)
+                            if previous else None)
 
-        if h in curated and not needs_recuration(curated[h]):
-            cur = curated[h]
+        if (previous and not needs_recuration(previous)
+                and cached_integrity is not None and cached_integrity.eligible):
+            # 불가능하거나 근거 없는 사건일은 캐시 hit에서도 비우고 계속 쓴다.
+            cur = cached_integrity.value
+            curated[h] = cur
         else:
-            previous = curated.get(h) or {}
             cur = batch_results.get(h)
+            # 상한 때문에 이번 호출 대상에서 빠진 항목은 fallback 으로 만들지 않는다.
+            # 다음 회차에 FIFO로 정상 큐레이션할 수 있도록 sent 마킹 없이 둔다.
+            if cur is None and h not in curation_attempted_hashes:
+                continue
             if cur is None and (QUOTA_EXHAUSTED or CONFIG_ERROR):
                 # 한도 소진·설정 오류 중에는 fallback 으로 강등해 큐에 넣지 않는다.
                 # sent 마킹을 하지 않으므로 원인이 풀린 뒤 다음 크롤이 다시 수집해
@@ -2657,6 +2898,10 @@ def main() -> None:
             cur["feed"] = article["feed"]
             cur["domain"] = article["domain"]
             cur["matched"] = article["matched"]
+            if article_quality_gate.infer_curation_status(cur) == "fallback":
+                cur["source_excerpt"] = clean_text(article.get("description", ""))[:600]
+                cur["published_at"] = normalize_publication_timestamp(
+                    article.get("pub"), now=run_now)
             # features 를 끝내 못 받았으면 시도 횟수를 누적한다. needs_recuration()
             # 이 이 값으로 재질의를 멈춘다. 받아냈으면 카운터를 지운다 — 나중에 다른
             # 이유로 결손이 재발했을 때 상한에 이미 걸려 있으면 안 된다.
@@ -2666,11 +2911,81 @@ def main() -> None:
                 cur["features_attempts"] = int(previous.get("features_attempts") or 0) + 1
             curated[h] = cur
 
+        integrity = audit_curation_integrity(
+            article, cur, bodies.get(h, "") if h in curation_attempted_hashes else "")
+        cur = integrity.value
+        # 본문은 저장하지 않는다. 대신 최종 카드가 본문에서 확인된 구체적
+        # 엔티티·수치·단계를 나중에도 검증할 수 있도록 비가역 fingerprint만 남긴다.
+        # cache hit도 원문 지문이 달라졌다면 옛 manifest를 재사용하지 않는다.
+        # 이때 본문을 새로 받지 않았다면 title/snippet 근거만으로 축소 재생성한다.
+        cur["verified_evidence"] = refresh_evidence_manifest(
+            article,
+            cur,
+            body=bodies.get(h, "") if h in curation_attempted_hashes else "",
+            force=h in curation_attempted_hashes,
+            now=run_now,
+        )
+        cur["verified_source_components"] = (
+            article_quality_gate.evidence_manifest_source_components(
+                cur["verified_evidence"]
+            )
+        )
+        optional_source = {
+            "article_hash": h,
+            "title": article.get("title", ""),
+            "description": clean_text(article.get("description", ""))[:600],
+            "article_text": (
+                bodies.get(h, "") if h in curation_attempted_hashes else ""
+            ),
+            "published_at": normalize_publication_timestamp(
+                article.get("pub"), now=run_now
+            ),
+        }
+        optional_gate = article_quality_gate.sanitize_curation_optional_fields(
+            cur, article=article, source=optional_source,
+        )
+        cur = optional_gate.value
+        if optional_gate.removed_fields:
+            print(
+                "  ! 근거 없는 큐레이션 선택 필드 제거 "
+                f"({', '.join(optional_gate.removed_fields)}): {article['title'][:60]}"
+            )
+        curated[h] = cur
+        if not integrity.eligible:
+            integrity_held.append({
+                "hash": h,
+                "title": article.get("title", "")[:120],
+                "link": article.get("link", ""),
+                "reason": ",".join(f.code for f in integrity.findings)[:240],
+            })
+            continue
+
         importance = cur.get("importance", "nice_to_know")
 
         if importance == "noise":
             state["sent"][h] = now_iso
             dropped += 1
+            continue
+
+        status = article_quality_gate.infer_curation_status(cur)
+        if status == "fallback":
+            attempts = int(cur.get("features_attempts") or 0)
+            final_hold = attempts >= FEATURES_RETRY_LIMIT
+            if final_hold:
+                # 두 번 실패한 뒤에는 매 3시간 같은 URL을 다시 호출하지 않는다.
+                # 'sent'는 역사적 이름이고 여기서는 전송이 아니라 재수집 종료 표식이다.
+                state["sent"][h] = now_iso
+                cur["curation_status"] = "quarantined"
+                curated[h] = cur
+            fallback_held.append({
+                "hash": h,
+                "title": article.get("title", "")[:120],
+                "link": article.get("link", ""),
+                "reason": f"unverified_fallback_attempt_{attempts}",
+                "final": final_hold,
+            })
+            print(f"  ! 미검증 fallback 자동 발송 보류 ({attempts}/{FEATURES_RETRY_LIMIT}): "
+                  f"{article['title'][:60]}")
             continue
 
         if not isinstance(cur.get("features"), dict):
@@ -2692,6 +3007,7 @@ def main() -> None:
             "source_tier": profile["source_tier"],
             "feed": article["feed"],
             "matched": article["matched"],
+            "curation_status": status,
             "importance": importance,
             # 기본값을 domestic 으로 두면 큐레이션 실패 기사가 국내로 섞임 → 도메인·제목 추정
             "section": cur.get("section") or default_section(article["domain"], article["title"]),
@@ -2719,6 +3035,19 @@ def main() -> None:
             "event_date_type": cur.get("event_date_type", "unknown"),
             "event_date_precision": cur.get("event_date_precision", "unknown"),
             "event_date_source": cur.get("event_date_source", "unknown"),
+            # 최종 카드에서 새 엔티티·수치가 튀어나왔는지 확인할 최소 원문 근거.
+            # 본문은 저장하지 않고 RSS/검색 API가 이미 제공한 짧은 스니펫만 보존한다.
+            "source_excerpt": clean_text(article.get("description", ""))[:600],
+            # 원문 본문 자체 대신 검증에 필요한 사실 fingerprint만 전달한다.
+            "verified_evidence": cur.get("verified_evidence") or {},
+            # archive는 source_excerpt 원문을 보존하지 않는다. 본문·스니펫을
+            # 저장하지 않고도 같은 manifest의 출처 결속을 확인할 component hash.
+            "verified_source_components": cur.get("verified_source_components") or {},
+            # 큐 등록 시각과 기사 발행 시각은 서로 다른 사실이다. 늦게 발견한
+            # 오래된 기사가 새 기사처럼 점수를 받지 않도록 원 발행 시각을 보존한다.
+            # 깨졌거나 먼 미래인 출처 값은 빈 문자열로 남겨 ranking의 하위 호환
+            # 경로(queued_at 폴백)를 명시적으로 사용한다.
+            "published_at": normalize_publication_timestamp(article.get("pub"), now=run_now),
             "queued_at": now_iso,
             # 수집 단계에서 접힌 기사들. 예전에는 여기서 이미 삭제돼 있었고, 그래서
             # story 가 만들어질 때 매체 수·근거 수가 실제보다 작았다. 큐까지 들고
@@ -2738,6 +3067,24 @@ def main() -> None:
         state["sent"][h] = now_iso
         queued += 1
 
+    if fallback_held:
+        final_count = sum(1 for row in fallback_held if row.get("final"))
+        append_quality_event(
+            "unverified-fallback-held",
+            "미검증 fallback 기사 자동 발송 보류",
+            (f"큐레이션 근거가 없는 {len(fallback_held)}건을 큐에 넣지 않았습니다. "
+             f"이 중 재시도 상한 도달 {final_count}건은 자동 격리했습니다."),
+            severity="warning", min_occurrences=1 if final_count else 2,
+            items=fallback_held,
+        )
+    if integrity_held:
+        append_quality_event(
+            "article-integrity-quarantine",
+            "제목·요약이 원문과 다른 기사 격리",
+            f"원문 대조에서 명백한 사건·엔티티·핵심 수치 충돌 {len(integrity_held)}건을 제외했습니다.",
+            severity="critical", min_occurrences=1, items=integrity_held,
+        )
+
     # ---- 영구 아카이브 적재 (웹 확장용 — 실패해도 크롤·발송은 계속) ----------
     # curated.json 은 14일 만료라 트렌드 재료가 안 쌓임 → noise 포함 전부 별도 적재.
     try:
@@ -2746,7 +3093,10 @@ def main() -> None:
             news_archive.make_record(a, curated[a["hash"]], now_iso)
             for a in final_articles
             if a["hash"] in curated
-            and not curation_errors(curated[a["hash"]])
+            # fallback 은 완결 요약만 있어 옛 게이트를 통과했다. features 와 원문
+            # 무결성까지 확인된 결과만 장기 아카이브에 넣는다.
+            and not curation_errors(curated[a["hash"]], require_features=True)
+            and audit_curation_integrity(a, curated[a["hash"]]).eligible
             and a["hash"] not in identities["hashes"]
             and normalize_url(a.get("link")) not in identities["urls"]
             and title_key(a.get("title")) not in identities["titles"]

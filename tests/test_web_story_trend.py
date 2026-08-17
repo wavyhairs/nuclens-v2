@@ -85,5 +85,38 @@ class StoryTrendTests(unittest.TestCase):
         self.assertIn("assets", diag["shared"])
 
 
+class ArchiveIntegrityIntegrationTests(unittest.TestCase):
+    """사이트 산출 직전에도 수집 단계와 같은 무결성 계약이 적용돼야 한다."""
+
+    def test_corrupt_article_is_hidden_and_bad_date_is_sanitized(self):
+        corrupt = {
+            "hash": "corrupt",
+            "title": "캐나다, 우라늄 광산 착공…세계 공급 20% 생산",
+            "title_kr": "스페인 알마라즈 원전 수명 2030년까지 연장",
+            "summary": "스페인 정부가 알마라즈 원전 가동 시한을 연장하기로 결정했다.",
+            "pub": "2026-08-16T00:00:00+00:00",
+            "features": {},
+        }
+        bad_date = {
+            "hash": "bad-date",
+            "title": "정부, 신규 원전 정책 발표",
+            "title_kr": "정부, 신규 원전 정책 발표",
+            "summary": "정부가 신규 원전 정책을 발표했다.",
+            "pub": "2026-08-17T00:00:00+00:00",
+            "event_date": "2206-08-14",
+            "event_date_type": "scheduled",
+            "event_date_precision": "day",
+            "event_date_source": "article_text",
+            "features": {},
+        }
+        visible, diagnostics = build.apply_archive_integrity_gate([corrupt, bad_date])
+
+        self.assertEqual([row["hash"] for row in visible], ["bad-date"])
+        self.assertIsNone(visible[0]["event_date"])
+        self.assertEqual(diagnostics["checked"], 2)
+        self.assertEqual(diagnostics["quarantined"], 1)
+        self.assertEqual(diagnostics["sanitized"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()
