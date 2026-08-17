@@ -806,6 +806,192 @@ class FinalCardTests(unittest.TestCase):
         self.assertIn("investment", payload["removed_fields"])
 
 
+DOOSAN = {
+    "hash": "h-doosan",
+    "title": "Doosan Enerbility signs TerraPower contract for 345 MW Natrium SMR",
+    "title_kr": "두산에너빌리티, 테라파워 345MW 나트륨 SMR 기자재 계약 체결",
+    "summary": "두산에너빌리티가 미국 테라파워의 345MW급 SMR 기자재를 공급한다.",
+    "article_date": "2026-08-14",
+}
+KHNP = {
+    "hash": "h-khnp",
+    "title": "KHNP wins Czech Dukovany reactor construction contract",
+    "title_kr": "한국수력원자력, 체코 두코바니 원전 건설 계약 수주",
+    "summary": "한국수력원자력이 체코 두코바니 신규 원전 2기 건설 계약을 따냈다.",
+    "article_date": "2026-08-14",
+}
+
+
+def contracts_of(*articles, ranks=None):
+    ranks = ranks or list(range(1, len(articles) + 1))
+    return gate.build_evidence_contracts(
+        [{"key": article["hash"], "rank": rank, "articles": [article]}
+         for article, rank in zip(articles, ranks)],
+        reference_date="2026-08-14",
+    )
+
+
+class EvidenceContractTests(unittest.TestCase):
+    """근거 계약은 검증된 기사에서만 나온다 — LLM 출력은 근거가 아니다."""
+
+    def test_contract_collects_only_article_side_fields(self):
+        contract, = gate.build_evidence_contracts([{
+            "key": "i1", "rank": 3,
+            "articles": [{**DOOSAN, "why_important": "웨스팅하우스 견제 목적이다.",
+                          "implication": "카자흐스탄 진출 발판이 된다."}],
+        }], reference_date="2026-08-14")
+        self.assertIn("doosan", contract.entities)
+        self.assertEqual(contract.rank, 3)
+        self.assertEqual(contract.article_hashes, ("h-doosan",))
+        # 해석 필드가 근거로 들어오면 그 안의 이름이 사실이 되어 버린다.
+        self.assertNotIn("westinghouse", contract.entities)
+        self.assertNotIn("KZ", contract.countries)
+
+    def test_tampered_manifest_contributes_nothing(self):
+        manifest = gate.build_evidence_manifest(
+            {"title": DOOSAN["title"], "article_hash": "h-doosan",
+             "description": "Westinghouse also joined the 500 MW project."},
+            article={"hash": "h-doosan", "title": DOOSAN["title"]})
+        self.assertIn("westinghouse", manifest["entities"])
+        forged = {**manifest, "entities": [*manifest["entities"], "rosatom"]}
+        contract, = gate.build_evidence_contracts(
+            [{"key": "i1", "articles": [DOOSAN], "manifests": [forged]}])
+        self.assertNotIn("rosatom", contract.entities)
+        self.assertNotIn("westinghouse", contract.entities)
+
+    def test_valid_manifest_supplies_body_only_facts(self):
+        source = {"title": DOOSAN["title"], "article_hash": "h-doosan",
+                  "description": "Westinghouse also joined the project."}
+        article = {"hash": "h-doosan", "title": DOOSAN["title"]}
+        manifest = gate.build_evidence_manifest(source, article=article)
+        contract, = gate.build_evidence_contracts(
+            [{"key": "i1", "articles": [DOOSAN], "manifests": [manifest]}])
+        self.assertIn("westinghouse", contract.entities)
+        self.assertEqual(contract.manifest_count, 1)
+
+
+class SpokenScriptAuditTests(unittest.TestCase):
+    """오디오 대본은 마지막 변환까지 끝난 뒤 기사와 대조한다."""
+
+    def setUp(self):
+        self.contracts = contracts_of(DOOSAN, KHNP)
+
+    def audit(self, line, **kwargs):
+        return gate.audit_spoken_script(
+            f"HOST: {line}", self.contracts, reference_date="2026-08-14", **kwargs)
+
+    def problems(self, line):
+        audit = self.audit(line)
+        return {key: value for finding in audit.findings
+                for key, value in finding.details.items() if key != "line"}
+
+    def test_faithful_paragraph_passes(self):
+        audit = self.audit("두산에너빌리티가 테라파워의 345MW급 SMR 기자재를 공급하기로 했습니다.")
+        self.assertEqual(audit.action, "allow")
+        self.assertEqual(audit.removed, ())
+
+    def test_invented_institution_is_removed(self):
+        self.assertIn("westinghouse",
+                      self.problems("이번 계약에는 웨스팅하우스도 함께 참여해 기자재를 공급했습니다.")
+                      ["entities"])
+
+    def test_invented_country_is_removed(self):
+        self.assertIn("KZ", self.problems("이번 수주로 카자흐스탄 시장에도 진출했습니다.")["countries"])
+
+    def test_invented_quantity_is_removed(self):
+        self.assertIn("500mw", self.problems("설비 용량은 500MW로 확정됐습니다.")["claims"])
+
+    def test_spoken_unit_form_is_checked_too(self):
+        """낭독 대본은 '500메가와트입니다'로 읽는다 — 기호로만 보면 못 잡는다."""
+        self.assertIn("500mw", self.problems("설비 용량은 500메가와트입니다.")["claims"])
+
+    def test_invented_date_is_removed(self):
+        self.assertIn("2026-11-03",
+                      self.problems("11월 3일에 최종 승인이 발표됐습니다.")["dates"])
+
+    def test_invented_stage_is_removed(self):
+        self.assertIn("construction",
+                      self.problems("해당 부지는 이미 착공에 들어갔습니다.")["stages"])
+
+    def test_cross_attributed_quantity_is_removed(self):
+        """한 기사 이야기에 다른 기사의 수치를 끼워 넣는 경우."""
+        audit = self.audit(
+            "한국수력원자력이 수주한 체코 두코바니 건설 계약은 345MW 규모입니다.")
+        self.assertEqual(audit.action, "sanitize")
+        finding, = audit.findings
+        self.assertEqual(finding.code, "script_claim_cross_attributed")
+        self.assertEqual(finding.details["attributed_to"], "h-khnp")
+        self.assertEqual(finding.details["claims"], ["345mw"])
+
+    def test_system_frame_line_is_exempt(self):
+        """오프닝의 날짜는 시스템이 붙인 것이지 기사 주장이 아니다."""
+        frame = "8월 14일 금요일 Nuclens 전문가 브리핑입니다."
+        self.assertEqual(self.audit(frame).action, "sanitize")
+        self.assertEqual(self.audit(frame, exempt=[f"HOST: {frame}"]).action, "allow")
+
+    def test_reorder_that_adds_a_claim_is_caught_on_the_final_text(self):
+        """순서 재배치는 검증 뒤에 대본을 다시 쓴다 — 최종본을 봐야 잡는다."""
+        verified = ("HOST: 두산에너빌리티가 테라파워에 345MW급 기자재를 공급합니다.\n"
+                    "HOST: 한국수력원자력은 체코 두코바니 건설 계약을 수주했습니다.")
+        self.assertTrue(gate.audit_spoken_script(
+            verified, self.contracts, reference_date="2026-08-14").ok)
+        reordered = ("HOST: 한국수력원자력은 체코 두코바니 건설 계약을 수주했습니다.\n"
+                     "HOST: 두산에너빌리티는 로사톰과도 공급 계약을 체결했습니다.")
+        audit = gate.audit_spoken_script(
+            reordered, self.contracts, reference_date="2026-08-14")
+        self.assertEqual(audit.action, "sanitize")
+        self.assertIn("rosatom", audit.findings[0].details["entities"])
+
+    def test_below_minimum_lines_rejects_instead_of_shipping_a_stub(self):
+        audit = gate.audit_spoken_script(
+            "HOST: 로사톰이 카자흐스탄에서 500MW 설비를 수주했습니다.",
+            self.contracts, reference_date="2026-08-14", min_lines=3)
+        self.assertEqual(audit.action, "reject")
+
+    def test_no_contracts_leaves_the_script_untouched(self):
+        """근거가 없다는 것은 거짓이라는 증거가 아니다 — 브리핑을 비우지 않는다."""
+        audit = gate.audit_spoken_script("HOST: 아무 말.", [])
+        self.assertEqual(audit.action, "allow")
+        self.assertEqual(audit.findings[0].code, "script_evidence_missing")
+
+
+class NarrativeDigestTests(unittest.TestCase):
+    def test_same_inputs_give_the_same_digest(self):
+        self.assertEqual(gate.evidence_digest(contracts_of(DOOSAN, KHNP)),
+                         gate.evidence_digest(contracts_of(DOOSAN, KHNP)))
+
+    def test_card_order_changes_the_digest(self):
+        self.assertNotEqual(
+            gate.evidence_digest(contracts_of(DOOSAN, KHNP, ranks=[1, 2])),
+            gate.evidence_digest(contracts_of(DOOSAN, KHNP, ranks=[2, 1])))
+
+    def test_article_set_changes_the_digest(self):
+        self.assertNotEqual(gate.evidence_digest(contracts_of(DOOSAN, KHNP)),
+                            gate.evidence_digest(contracts_of(DOOSAN)))
+
+    def test_resanitized_article_text_changes_the_digest(self):
+        """hash 는 그대로인데 검증으로 문장이 빠진 경우도 다른 재료다."""
+        trimmed = {**DOOSAN, "summary": ""}
+        self.assertNotEqual(gate.evidence_digest(contracts_of(DOOSAN)),
+                            gate.evidence_digest(contracts_of(trimmed)))
+
+    def test_gate_version_is_part_of_the_digest(self):
+        contracts = contracts_of(DOOSAN)
+        before = gate.evidence_digest(contracts)
+        original = gate.NARRATIVE_GATE_VERSION
+        gate.NARRATIVE_GATE_VERSION = original + 1
+        try:
+            self.assertNotEqual(gate.evidence_digest(contracts), before)
+        finally:
+            gate.NARRATIVE_GATE_VERSION = original
+
+    def test_script_digest_ignores_formatting_only_changes(self):
+        self.assertEqual(gate.script_digest("HOST: 가.\nHOST: 나."),
+                         gate.script_digest("  HOST: 가.  \n\nHOST: 나.\n"))
+        self.assertNotEqual(gate.script_digest("HOST: 가."),
+                            gate.script_digest("HOST: 나."))
+
+
 class SummaryTests(unittest.TestCase):
     def test_aggregate_counts_actions_fields_and_codes(self):
         results = [

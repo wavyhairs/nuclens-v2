@@ -39,7 +39,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from gemini_client import GeminiError, call_json, is_available
+import article_quality_gate
 import gemini_client
+import news_archive
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -152,6 +154,106 @@ def _load_json(path: Path):
         return None
 
 
+# ---- 근거 계약 ----------------------------------------------------------------
+#
+# 오디오는 원문을 다시 볼 수 없다. 그래서 "무엇이 사실인가"를 그날 **검증을 통과한
+# 기사**에서만 만들어 두고, 완성된 대본을 그것과 대조한다. 대본이나 dossier 처럼
+# LLM 이 만든 글은 여기 들어오지 않는다 — 한 단계에서 살아남은 환각이 다음 단계의
+# 근거가 되면 검증이 스스로를 인증하는 셈이 된다.
+
+
+def issue_articles(issue: dict) -> list[dict]:
+    """이 이슈의 검증된 기사들. 없으면 이슈 자체를 한 건으로 본다."""
+    rows = [row for row in (issue.get("related_articles") or [])
+            if isinstance(row, dict)]
+    return rows or [issue]
+
+
+def evidence_specs(briefing: dict, issues: list[dict]) -> list[dict]:
+    """이슈별 근거 계약 입력. 순서·번호는 텔레그램 카드 순서를 그대로 쓴다."""
+    hashes = {
+        str(article.get("hash") or "")
+        for issue in issues for article in issue_articles(issue)
+        if article.get("hash")
+    }
+    manifests = news_archive.load_evidence_manifests(hashes)
+    specs = []
+    for issue in issues:
+        articles = issue_articles(issue)
+        rank = issue.get("brief_rank")
+        specs.append({
+            "key": str(issue.get("issue_id") or ""),
+            "rank": rank if isinstance(rank, int) and rank > 0 else 0,
+            "articles": articles,
+            # 원문 본문은 저장하지 않는다 — PR #27 의 근거 manifest 만 다시 쓴다.
+            "manifests": [manifests[h] for h in
+                          (str(a.get("hash") or "") for a in articles)
+                          if h in manifests],
+            # 이슈 레벨의 사실 필드. 해석 필드(implication·why_important)는
+            # 넣지 않는다 — 해석이 다음 문장의 근거가 되면 안 된다.
+            "extra_text": [issue.get("title"), issue.get("summary"),
+                           issue.get("detail"), issue.get("latest_change")],
+        })
+    return specs
+
+
+def evidence_contracts(briefing: dict, issues: list[dict]) -> tuple:
+    return article_quality_gate.build_evidence_contracts(
+        evidence_specs(briefing, issues),
+        reference_date=briefing.get("date"),
+    )
+
+
+def audio_evidence_digest(briefing: dict, contracts, variant: str) -> str:
+    """이 오디오가 무엇으로 만들어졌는지의 지문 — 캐시 신뢰의 근거."""
+    return article_quality_gate.evidence_digest(
+        contracts, extra={"date": str(briefing.get("date") or ""),
+                          "variant": variant})
+
+
+def cache_verdict(existing: dict, *, digest: str, script_path: Path,
+                  force: bool = False) -> str:
+    """기존 MP3 를 그대로 써도 되는가 — reuse | regenerate | stale_sent.
+
+    같은 날짜라는 것만으로는 부족하다. 기사 구성·카드 순서·게이트 버전·대본이
+    모두 같아야 그 음원이 오늘 보낼 물건이다. 지문이 없거나(옛 캐시) 다르면
+    신뢰하지 않는다.
+
+    다만 **이미 발송된 회차는 다시 보내지 않는다.** 재검증이 중복 발송 사고로
+    바뀌면 그게 더 큰 사고다. 그 경우 파일은 그대로 두고 stale 로 표시만 한다.
+    """
+    if force:
+        return "regenerate"
+    sent = bool(existing.get("telegram_sent_at"))
+    trusted = (
+        existing.get("evidence_digest") == digest
+        and existing.get("gate_version") == article_quality_gate.NARRATIVE_GATE_VERSION
+        and bool(existing.get("script_digest"))
+        and script_path.exists()
+        and article_quality_gate.script_digest(
+            script_path.read_text(encoding="utf-8")) == existing["script_digest"]
+    )
+    if trusted:
+        return "reuse"
+    return "stale_sent" if sent else "regenerate"
+
+
+def verify_script(script: str, contracts, briefing: dict, *,
+                  exempt: list[str] | None = None, min_lines: int = 0):
+    """마지막 변환까지 끝난 대본을 기사 근거와 대조한다.
+
+    **마지막**이 중요하다. 생성·수정·순서 재배치는 저마다 앞 단계가 지운 주장을
+    되살릴 수 있으므로, 프레임까지 붙은 최종 텍스트를 본다.
+    """
+    frame = list(frame_lines(briefing))
+    return article_quality_gate.audit_spoken_script(
+        script, contracts,
+        exempt=frame + list(exempt or []),
+        reference_date=briefing.get("date"),
+        min_lines=min_lines,
+    )
+
+
 def load_briefing(web_data: Path) -> tuple[dict, dict]:
     """최신 브리핑 행 + issue_id→이슈 사전. 없으면 ({}, {})."""
     briefings = _load_json(web_data / "briefings.json") or []
@@ -185,6 +287,16 @@ def _issue_ids(briefing: dict) -> tuple[list, list]:
     if not highlight_ids:
         highlight_ids = listed[:DEEP_LIMIT]
     return highlight_ids, [i for i in listed if i not in highlight_ids][:REST_LIMIT]
+
+
+def material_issues(briefing: dict, by_id: dict) -> list[dict]:
+    """대본 재료로 실제 들어가는 이슈들 — 근거 계약도 정확히 이 범위로 만든다.
+
+    브리핑 전체가 아니라 재료 범위로 맞추는 이유: 재료에 없던 이슈까지 근거로
+    인정하면, 모델이 오늘 다루지도 않은 기사의 수치를 끌어와도 통과한다.
+    """
+    highlight_ids, rest_ids = _issue_ids(briefing)
+    return [by_id[i] for i in [*highlight_ids, *rest_ids] if i in by_id]
 
 
 def build_material(briefing: dict, by_id: dict) -> str:
@@ -340,6 +452,50 @@ def generate_script(material: str) -> str:
     if spoken > MAX_SPOKEN:
         raise ValueError(f"재시도 후에도 {spoken}자 — 포기")
     return script
+
+
+def _problem_note(audit) -> str:
+    """검증 지적을 재요청 프롬프트에 넣을 한 덩어리로."""
+    lines = []
+    for finding in audit.findings[:6]:
+        details = {key: value for key, value in finding.details.items()
+                   if key not in {"line", "attributed_to"}}
+        lines.append(f"- \"{str(finding.details.get('line', ''))[:60]}\" → "
+                     f"{json.dumps(details, ensure_ascii=False)}")
+    return "\n".join(lines)
+
+
+def _verified_script(material: str, briefing: dict, contracts) -> str:
+    """대본을 만들고, **프레임까지 붙인 최종본**을 기사 근거와 대조한다.
+
+    순서가 중요하다. 프레임·수정 뒤에 검증해야 마지막 변환이 되살린 주장을 본다.
+    근거 없는 문단은 한 번 다시 쓰게 하고, 그래도 남으면 그 문단만 뺀다 —
+    브리핑 전체를 버리는 것보다 낫고, 근거 없는 문장이 나가는 것보다도 낫다.
+    """
+    script = apply_frame(generate_script(material), briefing)
+    audit = verify_script(script, contracts, briefing, min_lines=MIN_LINES)
+    if audit.ok:
+        return audit.script
+
+    print(f"[audio] 대본 사실검증 지적 {len(audit.removed)}건 — 재작성 1회")
+    try:
+        retry = apply_frame(generate_script(
+            f"{material}\n\n[재요청] 아래 문장은 재료에서 확인되지 않는 사실을 "
+            f"담고 있습니다.\n{_problem_note(audit)}\n"
+            "해당 내용을 빼거나 재료가 뒷받침하는 범위로 낮춰 원고 전체를 다시 쓰세요."
+        ), briefing)
+    except (GeminiError, ValueError) as exc:
+        print(f"[audio] 재작성 실패 — 지적 문단 제거로 진행: {str(exc)[:140]}")
+    else:
+        audit = verify_script(retry, contracts, briefing, min_lines=MIN_LINES)
+        if audit.ok:
+            return audit.script
+
+    if audit.action == "reject":
+        raise ValueError(
+            f"사실검증 후 남은 문단 부족 — 제외 {len(audit.removed)}건")
+    print(f"[audio] 근거 없는 문단 {len(audit.removed)}건 제외하고 진행")
+    return audit.script
 
 
 def split_script(script: str, limit: int = CHUNK_SPOKEN) -> list[str]:
@@ -657,16 +813,34 @@ def generate(force: bool = False, send: bool = True) -> bool:
     file_name = f"briefing-fast-{date}.mp3"
     mp3_path = AUDIO_DIR / file_name
 
+    issues = material_issues(briefing, by_id)
+    contracts = evidence_contracts(briefing, issues)
+    digest = audio_evidence_digest(briefing, contracts, FAST_VARIANT)
+    script_path = AUDIO_DIR / f"script-fast-{date}.txt"
+
     manifest = _audio_manifest()
     existing = (manifest.get("variants") or {}).get(FAST_VARIANT, {}) if manifest.get("date") == date else {}
-    if not force and existing.get("file") and (AUDIO_DIR / existing["file"]).exists():
+    if existing.get("file") and (AUDIO_DIR / existing["file"]).exists():
         existing_path = AUDIO_DIR / existing["file"]
-        if not existing.get("telegram_sent_at"):
-            if send and send_telegram_audio(existing_path, {"date": date, **existing}):
-                _mark_sent(date, FAST_VARIANT, existing)
-        else:
-            print(f"[audio] {date} 빠른 브리핑 이미 생성·발송됨 ({existing_path.name}) — 스킵")
-        return True
+        verdict = cache_verdict(existing, digest=digest,
+                               script_path=script_path, force=force)
+        if verdict == "reuse":
+            if not existing.get("telegram_sent_at"):
+                if send and send_telegram_audio(existing_path, {"date": date, **existing}):
+                    _mark_sent(date, FAST_VARIANT, existing)
+            else:
+                print(f"[audio] {date} 빠른 브리핑 이미 생성·발송됨 ({existing_path.name}) — 스킵")
+            return True
+        if verdict == "stale_sent":
+            # 재료·순서·게이트가 달라졌지만 이 회차는 이미 나갔다. 다시 만들어
+            # 보내면 같은 날 두 번 발송이 되고, 그게 더 큰 사고다. 표시만 남긴다.
+            print(f"[audio] {date} 빠른 브리핑 캐시가 현재 재료와 불일치 — "
+                  f"이미 발송돼 재발송하지 않고 stale 로 표시")
+            _write_audio_variant(date, FAST_VARIANT, {
+                **existing, "cache_state": "stale_after_send",
+                "expected_evidence_digest": digest})
+            return True
+        print(f"[audio] {date} 빠른 브리핑 캐시 불일치 — 다시 생성")
 
     material = build_material(briefing, by_id)
     if "제목:" not in material:
@@ -674,11 +848,10 @@ def generate(force: bool = False, send: bool = True) -> bool:
         return False
 
     try:
-        script = generate_script(material)
+        script = _verified_script(material, briefing, contracts)
     except (GeminiError, ValueError) as exc:
         print(f"[audio] 대본 실패 — 기존 오디오 유지: {exc}")
         return False
-    script = apply_frame(script, briefing)
 
     try:
         pcm, rate = synthesize(script)
@@ -705,11 +878,17 @@ def generate(force: bool = False, send: bool = True) -> bool:
         "script_chars": sum(len(line.split(":", 1)[1]) for line in script.splitlines()),
         "voices": VOICES,
         "format_version": 2,
+        # 캐시 신뢰의 근거. 기사 구성·카드 순서·게이트 버전이 바뀌면 지문이
+        # 달라지고, 지문이 없거나 다르면 다음 실행이 이 음원을 믿지 않는다.
+        "evidence_digest": digest,
+        "script_digest": article_quality_gate.script_digest(script),
+        "gate_version": article_quality_gate.NARRATIVE_GATE_VERSION,
+        "evidence_issue_count": len(contracts),
     }
     _write_audio_variant(date, FAST_VARIANT, meta)
     # 대본을 함께 남긴다 — 프롬프트 적중 여부를 라이브 산출물로 검증하는
     # 진단 요령(issue_audit.json 패턴). 화면은 이 파일을 쓰지 않는다.
-    (AUDIO_DIR / f"script-fast-{date}.txt").write_text(script, encoding="utf-8")
+    script_path.write_text(script, encoding="utf-8")
     # 옛 날짜 산출물 정리 — 캐시·배포에 실리는 것은 최신 1개면 충분하다
     for old in AUDIO_DIR.glob("briefing-fast-*.mp3"):
         if old.name != file_name:

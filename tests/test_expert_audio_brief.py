@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
+import article_quality_gate
 import audio_brief
 import expert_audio_brief as expert
 from gemini_client import GeminiError
@@ -528,7 +529,7 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
          expert.synthesize_expert, expert.to_mp3,
          expert.send_telegram_audio) = self._orig_fns
 
-    def _fake_script(self, brief, issues):
+    def _fake_script(self, brief, issues, contracts=None):
         self.script_calls += 1
         script = "\n".join(f"HOST: 문단 {i} 의 해설입니다." for i in range(1, 8))
         return script, dossiers_of(4000, 3), {"segments": []}, {"passed": True}
@@ -547,14 +548,29 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
     def _manifest(self):
         return json.loads((expert.AUDIO_DIR / "audio.json").read_text(encoding="utf-8"))
 
-    def _seed(self, **extra):
-        """이미 오늘치 전문가 mp3 가 있는 상태."""
+    def _cache_digest(self):
+        rows = expert.selected_issues(briefing(), {})
+        return expert.audio_evidence_digest(
+            briefing(), expert.evidence_contracts(briefing(), rows),
+            expert.EXPERT_VARIANT)
+
+    def _seed(self, *, trusted=True, script="HOST: 저장된 대본입니다.", **extra):
+        """이미 오늘치 전문가 mp3 가 있는 상태. trusted=False 면 지문 없는 옛 캐시."""
         (expert.AUDIO_DIR / "briefing-expert-2026-08-14.mp3").write_bytes(b"mp3")
-        audio_brief._write_audio_variant("2026-08-14", expert.EXPERT_VARIANT, {
+        meta = {
             "date": "2026-08-14", "key": expert.EXPERT_VARIANT,
             "label": "전문가 브리핑", "file": "briefing-expert-2026-08-14.mp3",
             "duration_sec": 600, **extra,
-        })
+        }
+        if trusted:
+            (expert.AUDIO_DIR / "script-expert-2026-08-14.txt").write_text(
+                script, encoding="utf-8")
+            meta.update({
+                "evidence_digest": self._cache_digest(),
+                "script_digest": article_quality_gate.script_digest(script),
+                "gate_version": article_quality_gate.NARRATIVE_GATE_VERSION,
+            })
+        audio_brief._write_audio_variant("2026-08-14", expert.EXPERT_VARIANT, meta)
 
     def test_generate_sends_expert_audio_and_marks_meta(self):
         self.assertTrue(expert.generate())
@@ -593,6 +609,31 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
         self.assertTrue(expert.generate())
         self.assertEqual([], self.sent)
         self.assertEqual(0, self.tts_calls)
+
+    def test_legacy_cache_without_digest_is_regenerated(self):
+        """지문 없는 캐시는 그 음원이 오늘 재료로 만들어졌다는 증거가 없다."""
+        self._seed(trusted=False)
+        self.assertTrue(expert.generate())
+        self.assertEqual(1, self.script_calls)   # 다시 만들었다
+        variant = self._manifest()["variants"][expert.EXPERT_VARIANT]
+        self.assertEqual(self._cache_digest(), variant["evidence_digest"])
+
+    def test_stale_cache_already_sent_is_not_resent(self):
+        """이미 나간 회차는 재검증 때문에 두 번 나가지 않는다."""
+        self._seed(trusted=False, telegram_sent_at="2026-08-14T07:30:00+09:00")
+        self.assertTrue(expert.generate())
+        self.assertEqual([], self.sent)
+        self.assertEqual(0, self.script_calls)
+        self.assertEqual(0, self.tts_calls)
+        variant = self._manifest()["variants"][expert.EXPERT_VARIANT]
+        self.assertEqual("stale_after_send", variant["cache_state"])
+
+    def test_different_issue_set_invalidates_cache(self):
+        """다른 기사 조합으로 만든 MP3 를 오늘 회차로 재사용하지 않는다."""
+        self._seed()
+        expert.selected_issues = lambda brief, by_id: [issue(i) for i in range(1, 6)]
+        self.assertTrue(expert.generate())
+        self.assertEqual(1, self.script_calls)
 
 
 class TelegramCaptionTests(unittest.TestCase):

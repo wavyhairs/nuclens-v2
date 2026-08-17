@@ -17,6 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
+import article_quality_gate
 import audio_brief
 from gemini_client import GeminiError
 
@@ -126,6 +127,30 @@ class AudioBriefTestCase(unittest.TestCase):
             issue("issue-1", "포천양수 착공"), issue("issue-2", "중국 원자로 승인")]
         (audio_brief.WEB_DATA / "issues.json").write_text(
             json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+
+    def cache_digest(self):
+        briefing, by_id = audio_brief.load_briefing(audio_brief.WEB_DATA)
+        contracts = audio_brief.evidence_contracts(
+            briefing, audio_brief.material_issues(briefing, by_id))
+        return audio_brief.audio_evidence_digest(
+            briefing, contracts, audio_brief.FAST_VARIANT)
+
+    def seed_cache(self, *, trusted=True, script="HOST: 저장된 대본입니다.", **extra):
+        """생성까지 끝난 캐시 상태. trusted=False 면 지문 없는 옛 캐시."""
+        audio_brief.AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+        (audio_brief.AUDIO_DIR / "briefing-fast-2026-08-04.mp3").write_bytes(b"mp3")
+        meta = {"date": "2026-08-04", "key": audio_brief.FAST_VARIANT,
+                "file": "briefing-fast-2026-08-04.mp3", "duration_sec": 170, **extra}
+        if trusted:
+            (audio_brief.AUDIO_DIR / "script-fast-2026-08-04.txt").write_text(
+                script, encoding="utf-8")
+            meta.update({
+                "evidence_digest": self.cache_digest(),
+                "script_digest": article_quality_gate.script_digest(script),
+                "gate_version": article_quality_gate.NARRATIVE_GATE_VERSION,
+            })
+        audio_brief._write_audio_variant("2026-08-04", audio_brief.FAST_VARIANT, meta)
+        return meta
 
     # ── 재료 조립 ─────────────────────────────────────────────
 
@@ -495,15 +520,84 @@ class AudioBriefTestCase(unittest.TestCase):
     def test_skip_path_recovers_unsent_audio(self):
         """생성은 됐는데 발송 전에 죽은 실행(429 등)을 다음 실행이 회수한다."""
         self.write_data()
-        audio_brief.AUDIO_DIR.mkdir(parents=True)
-        (audio_brief.AUDIO_DIR / "briefing-fast-2026-08-04.mp3").write_bytes(b"mp3")
-        audio_brief._write_meta({"date": "2026-08-04", "file": "briefing-fast-2026-08-04.mp3"})
+        self.seed_cache()
         self.assertTrue(audio_brief.generate())
         self.assertEqual(len(self.sent), 1)   # 발송만 재시도
         self.assertEqual(self.tts_calls, [])  # TTS 재호출 0
         meta = json.loads((audio_brief.AUDIO_DIR / "audio.json")
                           .read_text(encoding="utf-8"))
         self.assertIn("telegram_sent_at", meta)
+
+    # ── 캐시 신뢰 계약 ────────────────────────────────────────
+    #
+    # 같은 날짜라는 것만으로 MP3 를 재사용하면, 아침에 만든 음원이 그날 기사·순서가
+    # 바뀐 뒤에도 계속 나간다. 재료·순서·게이트 버전·대본의 지문이 전부 같을 때만
+    # 그 파일이 오늘 보낼 물건이다.
+
+    def test_legacy_cache_without_digest_is_not_trusted(self):
+        """지문이 없는 옛 캐시는 발송 전이면 믿지 않고 다시 만든다."""
+        self.write_data()
+        self.seed_cache(trusted=False)
+        self.responses = [{"script": GOOD_SCRIPT}]
+        self.assertTrue(audio_brief.generate())
+        self.assertTrue(self.tts_calls)       # 재생성했다
+        variant = self._variant()
+        self.assertEqual(variant["evidence_digest"], self.cache_digest())
+
+    def test_changed_articles_invalidate_cache(self):
+        """기사 구성이 달라지면 어제 만든 음원은 오늘 것이 아니다."""
+        self.write_data()
+        self.seed_cache()
+        stale = self._variant()["evidence_digest"]
+        self.write_data(issues=[issue("issue-1", "포천양수 착공"),
+                                issue("issue-2", "체코 두코바니 착공")])
+        self.responses = [{"script": GOOD_SCRIPT}]
+        self.assertTrue(audio_brief.generate())
+        self.assertTrue(self.tts_calls)
+        self.assertNotEqual(self._variant()["evidence_digest"], stale)
+
+    def test_changed_card_order_invalidates_cache(self):
+        """카드 번호가 바뀌면 설명 순서가 달라진다 — 같은 기사여도 다른 방송이다."""
+        self.write_data()
+        digest_before = self.cache_digest()
+        rows = [issue("issue-1", "포천양수 착공"), issue("issue-2", "중국 원자로 승인")]
+        rows[0]["brief_rank"], rows[1]["brief_rank"] = 2, 1
+        self.write_data(issues=rows)
+        self.assertNotEqual(self.cache_digest(), digest_before)
+
+    def test_edited_transcript_invalidates_cache(self):
+        """대본 파일이 손대졌으면 그 MP3 가 그 대본이라는 보장이 없다."""
+        self.write_data()
+        self.seed_cache()
+        (audio_brief.AUDIO_DIR / "script-fast-2026-08-04.txt").write_text(
+            "HOST: 몰래 바꾼 대본입니다.", encoding="utf-8")
+        self.responses = [{"script": GOOD_SCRIPT}]
+        self.assertTrue(audio_brief.generate())
+        self.assertTrue(self.tts_calls)
+
+    def test_stale_cache_already_sent_is_never_resent(self):
+        """재검증이 중복 발송 사고로 바뀌면 안 된다 — 표시만 남기고 멈춘다."""
+        self.write_data()
+        self.seed_cache(trusted=False,
+                        telegram_sent_at="2026-08-04T07:30:00+09:00")
+        self.assertTrue(audio_brief.generate())
+        self.assertEqual(self.sent, [])       # 재발송 0
+        self.assertEqual(self.tts_calls, [])  # 재생성 0
+        variant = self._variant()
+        self.assertEqual(variant["cache_state"], "stale_after_send")
+        self.assertEqual(variant["expected_evidence_digest"], self.cache_digest())
+
+    def test_force_regenerates_even_with_matching_digest(self):
+        self.write_data()
+        self.seed_cache()
+        self.responses = [{"script": GOOD_SCRIPT}]
+        self.assertTrue(audio_brief.generate(force=True))
+        self.assertTrue(self.tts_calls)
+
+    def _variant(self):
+        manifest = json.loads((audio_brief.AUDIO_DIR / "audio.json")
+                              .read_text(encoding="utf-8"))
+        return manifest["variants"][audio_brief.FAST_VARIANT]
 
     def test_send_failure_leaves_meta_unmarked(self):
         self.write_data()

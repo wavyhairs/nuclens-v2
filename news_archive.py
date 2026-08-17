@@ -138,6 +138,38 @@ def load_recent_titles(days: int = 21) -> list[str]:
     return titles
 
 
+def load_evidence_manifests(hashes: set[str] | None = None) -> dict[str, dict]:
+    """hash → 검인이 살아 있는 v2 근거 manifest.
+
+    본문을 저장하지 않고도 원문에 실제로 있던 기관·수치·날짜를 되찾는 유일한
+    경로다(PR #27). 오디오·주간 서사가 원문을 다시 볼 수 없으므로 여기서 읽어
+    간다. 검인(manifest_fingerprint)이나 출처 결속이 깨진 레코드는 아예 돌려주지
+    않는다 — 변조된 지문은 없는 것만 못하다.
+    """
+    import article_quality_gate
+
+    wanted = set(hashes) if hashes is not None else None
+    found: dict[str, dict] = {}
+    for path in sorted(ARCHIVE_DIR.glob("*.jsonl")):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            article_hash = record.get("hash")
+            if not article_hash or (wanted is not None and article_hash not in wanted):
+                continue
+            manifest = record.get("verified_evidence")
+            if not isinstance(manifest, dict) or not manifest:
+                continue
+            if article_quality_gate.evidence_manifest_is_valid(
+                    manifest, article=record):
+                found[article_hash] = manifest
+    return found
+
+
 def make_record(article: dict, cur: dict, archived_at: str) -> dict:
     """기사 원본(article) + 큐레이션 결과(cur) → 아카이브 레코드.
 
