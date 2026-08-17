@@ -125,7 +125,8 @@ assert.ok(!status.includes("불러오지 못했습니다"), `데이터 로드 �
 const required = [
   "adminStatus", "storyStats", "storyMerges", "storySplits",
   "issueStats", "mergeRules", "issueClusters", "borderline",
-  "keywordStats", "keywordGroups", "antiKeywords", "feedStats", "feedTables",
+  "keywordStats", "keywordGroups", "learnedTerms", "antiKeywords",
+  "feedStats", "feedTables",
   "tierTable", "learnedRules", "entryFilters", "entryList",
 ];
 for (const id of required) {
@@ -139,6 +140,18 @@ const keywords = written.get("keywordGroups");
 assert.ok(keywords.includes('data-act="chip-remove"'), "키워드 삭제 버튼이 없다");
 assert.ok(keywords.includes('data-act="value-add"'), "키워드 추가 폼이 없다");
 assert.ok(written.get("feedTables").includes('data-act="feed-add"'), "수집원 추가 폼이 없다");
+
+// 학습된 검색어. 자동으로 생기고 사라지는 말이라 **사람이 손댈 수 있는가**가
+// 이 칸의 존재 이유다 — 목록만 보이고 뺄 수 없으면 잘못 배운 말을 지켜보는
+// 것밖에 못 한다. 목록이 비어 있어도 추가 입구는 늘 있어야 한다.
+const learned = written.get("learnedTerms");
+assert.ok(learned.includes('data-act="value-add"'), "학습 검색어 추가 폼이 없다");
+assert.ok(learned.includes("learned_term_add"), "학습 검색어 판정 종류가 화면에 없다");
+if (!learned.includes("empty-state")) {
+  assert.ok(learned.includes('data-act="chip-remove"'), "학습 검색어를 뺄 버튼이 없다");
+  assert.ok(learned.includes('data-act="learned-promote"'), "고정 키워드 승격 입구가 없다");
+  assert.ok(learned.includes("왜 생겼나"), "근거를 안 보여 준다 — 판단할 수 없는 목록이다");
+}
 assert.ok(written.get("tierTable").includes('data-act="tier-open"'), "출처 등급 수정 버튼이 없다");
 
 // 분리 단위. 옛 회차는 hash↔제목 짝이 없어 물러나는 것이 정상이므로, 둘 중

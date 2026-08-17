@@ -58,6 +58,12 @@ KINDS = (
     "feed_add", "feed_disable",
     "official_disable",
     "tier_upsert", "tier_remove",
+    # ── 학습된 검색어(신규 이슈 탐색) ──
+    # 자동으로 생겼다 사라지는 임시 검색어를 사람이 넣고·빼고·붙잡는다.
+    # 고정 키워드로 올리는 것은 별도 종류가 아니라 `keyword_add` 다 — 승격은
+    # "이 말을 고정 목록에 넣는다"와 같은 판단이고, 통을 나누면 같은 말이 두
+    # 목록에 서로 다른 이름으로 남는다.
+    "learned_term_add", "learned_term_remove", "learned_term_keep",
 )
 
 _SPACE_RE = re.compile(r"\s+")
@@ -453,6 +459,51 @@ def anti_keywords(base: list[str], path: Path | None = None) -> list[str]:
         elif row.get("kind") == "anti_remove":
             out = [k for k in out if k != value]
     return out
+
+
+def learned_terms(path: Path | None = None) -> dict:
+    """학습된 검색어에 대한 사람 판정 — `adaptive_discovery` 가 읽는다.
+
+    반환:
+      * `added`   — 사람이 직접 넣은 임시 검색어. 점수 문턱을 거치지 않는다.
+      * `blocked` — 뺀 말. **다시 만들지 않는다.** 자동 폐기(냉각)와 다르다:
+        냉각은 기간이 지나면 풀리지만, 사람이 뺀 말은 판정을 지우기 전까지
+        영영 안 만든다. 안 그러면 관리자가 지운 말이 이틀 뒤에 되살아난다.
+      * `pinned`  — 붙잡은 말. 만료·성과 없음으로 자동 폐기되지 않는다.
+
+    같은 말을 넣었다 뺀 이력이 있으면 **나중 판단이 이긴다** — 항목에 순서가
+    있으므로 순차 적용한다(`keywords_config` 와 같은 규칙).
+    """
+    added: dict[str, dict] = {}
+    blocked: set[str] = set()
+    pinned: set[str] = set()
+    for row in load(path)["entries"]:
+        if not _enabled(row):
+            continue
+        kind = row.get("kind")
+        if kind not in ("learned_term_add", "learned_term_remove", "learned_term_keep"):
+            continue
+        value = _text(row.get("value") or row.get("term"), 60)
+        if not value:
+            continue
+        key = _compact(value)
+        if kind == "learned_term_add":
+            blocked.discard(key)
+            added[key] = {
+                "term": value,
+                "query": _text(row.get("query"), 80),
+                "type": _text(row.get("type"), 20),
+                "note": _text(row.get("note"), 300),
+                "id": _text(row.get("id"), 64),
+            }
+        elif kind == "learned_term_remove":
+            blocked.add(key)
+            added.pop(key, None)
+            pinned.discard(key)
+        else:
+            blocked.discard(key)
+            pinned.add(key)
+    return {"added": list(added.values()), "blocked": blocked, "pinned": pinned}
 
 
 def _feed_key(row: dict) -> str:

@@ -4721,10 +4721,29 @@ def build_admin_config(generated_at: datetime) -> dict:
         publication_orgs = []
 
     discovery = _read_json(BOT_DIR / "discovery_state.json", {})
+
+    # 학습된 검색어(신규 이슈 탐색). 숫자만 싣던 자리에 목록을 싣는다 — 관리자가
+    # 지울지 둘지 판단하려면 '몇 개인가'가 아니라 '무슨 말이고 왜 생겼나'가
+    # 필요하다. 모듈을 못 읽어도 화면 한 칸 때문에 빌드가 죽지 않는다.
+    learned_terms: list[dict] = []
+    learned_retired: list[dict] = []
+    learned_stats: dict = {}
+    learned_error = ""
+    try:
+        import adaptive_discovery as _ad  # noqa: PLC0415
+
+        adaptive_state = _ad.load_state()
+        learned_terms = _ad.console_view(adaptive_state, generated_at)
+        learned_retired = _ad.retired_view(adaptive_state)
+        learned_stats = _ad.summary(adaptive_state, generated_at)
+    except (Exception, SystemExit) as exc:  # noqa: BLE001 — 위 feeds 와 같은 이유
+        learned_error = f"{type(exc).__name__}: {exc}"[:200]
+
     config_kinds = (
         "keyword_add", "keyword_remove", "anchor_add", "anchor_remove",
         "negative_add", "negative_remove", "anti_add", "anti_remove",
         "feed_add", "feed_disable", "official_disable", "tier_upsert", "tier_remove",
+        "learned_term_add", "learned_term_remove", "learned_term_keep",
     )
     return {
         "generated_at": generated_at.isoformat(),
@@ -4763,9 +4782,15 @@ def build_admin_config(generated_at: datetime) -> dict:
         },
         "search": {
             "engines": ["naver"],
-            # discovery 가 성과를 보고 스스로 늘리고 줄이는 쿼리 풀이다.
-            # 고정 키워드와 다른 층이라 숫자만 밝히고 목록은 싣지 않는다.
+            # discovery 가 성과를 보고 스스로 늘리고 줄이는 쿼리 풀. 엔티티 ×
+            # 사건어 조합이라 목록으로 보여 줄 것이 없다 — 숫자만 밝힌다.
             "learned_query_count": len(discovery.get("queries") or {}),
+            # 신규 이슈 탐색이 만든 임시 검색어. 이쪽은 **말 하나하나가 판단
+            # 대상**이라 목록·근거·남은 시간을 전부 싣는다.
+            "learned_terms": learned_terms,
+            "learned_retired": learned_retired,
+            "learned_stats": learned_stats,
+            "learned_error": learned_error,
         },
         "source_tiers": {
             "tier1_bonus": sources_config.get("tier1_bonus"),

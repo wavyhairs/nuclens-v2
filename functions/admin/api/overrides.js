@@ -26,6 +26,7 @@ const KINDS = new Set([
   "negative_add", "negative_remove", "anti_add", "anti_remove",
   "feed_add", "feed_disable", "official_disable",
   "tier_upsert", "tier_remove",
+  "learned_term_add", "learned_term_remove", "learned_term_keep",
 ]);
 
 const TIERS = new Set([1, 2, 3]);
@@ -152,6 +153,23 @@ export function normalizeEntry(input) {
     entry.value = text(input?.value, 200);
     if (!entry.group) return { error: "키워드 그룹을 지정하세요." };
     if (!entry.value) return { error: "값이 비어 있습니다." };
+    return { entry };
+  }
+
+  // 학습된 검색어. 그룹이 없다 — 고정 키워드와 다른 층이고, 앵커·제외어를
+  // 함께 갖는 '한 벌'이 아니라 24~72시간짜리 임시 검색어이기 때문이다.
+  if (kind.startsWith("learned_term_")) {
+    entry.value = text(input?.value, 60);
+    if (!entry.value) return { error: "검색어가 비어 있습니다." };
+    // 한 글자짜리 검색어는 네이버에서 사실상 전체 검색이 된다. 임시 검색어는
+    // 예산을 나눠 쓰므로 그런 질의 하나가 그날 몫을 통째로 태운다.
+    if (entry.value.replace(/\s+/g, "").length < 2) {
+      return { error: "검색어는 두 글자 이상이어야 합니다." };
+    }
+    if (kind === "learned_term_add") {
+      entry.query = text(input?.query, 80);
+      entry.type = text(input?.type, 20);
+    }
     return { entry };
   }
 
@@ -313,6 +331,8 @@ export function sameJudgment(left, right) {
     anchor_add: ["group", "value"], anchor_remove: ["group", "value"],
     negative_add: ["group", "value"], negative_remove: ["group", "value"],
     anti_add: ["value"], anti_remove: ["value"],
+    learned_term_add: ["value"], learned_term_remove: ["value"],
+    learned_term_keep: ["value"],
     feed_add: ["url"], feed_disable: ["target"], official_disable: ["target"],
     tier_upsert: ["domain"], tier_remove: ["domain"],
     learned_rule: ["label"],

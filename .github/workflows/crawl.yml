@@ -161,6 +161,10 @@ jobs:
           # discovery 쿼리 상태(성과·냉각). 커밋 안 하면 매 시각 같은 쿼리를
           # 다시 던지고 헛도는 조합을 영영 못 재운다 — 캐시와 같은 함정이다.
           if [ -f discovery_state.json ]; then git add discovery_state.json; fi
+          # 신규 이슈 탐색 상태(임시 검색어·TTL·성과). 커밋 안 하면 매 회차마다
+          # 같은 이름을 새로 '발견'하고 TTL 도 성과 기록도 매번 0 에서 시작한다 —
+          # 연장도 폐기도 영영 일어나지 않는다.
+          if [ -f adaptive_state.json ]; then git add adaptive_state.json; fi
           # 콘솔 판정. 커밋해야 git 이 계속 DB 이고, 판정 하나하나가 이력에 남는다 —
           # KV 만 진실이면 "언제 누가 이 키워드를 지웠나"를 되짚을 곳이 없다.
           if [ -f admin_overrides.json ]; then git add admin_overrides.json; fi
