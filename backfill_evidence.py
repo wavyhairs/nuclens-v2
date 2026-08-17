@@ -281,9 +281,15 @@ def run_archive(rows, published, *, apply: bool, samples: int) -> Report:
 
 
 def _write_json(path: Path, payload) -> None:
-    """원자적 교체 — 중간에 죽어도 반쪽 파일이 남지 않는다."""
+    """원자적 교체 — 중간에 죽어도 반쪽 파일이 남지 않는다.
+
+    들여쓰기는 이 파일을 평소에 쓰는 쪽(news_bot.save_json ·
+    daily_brief.save_queue)과 같은 2 를 쓴다. 다르게 쓰면 백필이 파일 전체를
+    다시 포맷하고, 다음 크롤이 도로 되돌린다 — 'git 이 DB' 인 저장소에서
+    내용이 아닌 서식으로 매 회차 수만 줄짜리 커밋이 생긴다.
+    """
     tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=1) + "\n",
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2),
                    encoding="utf-8")
     tmp.replace(path)
 
