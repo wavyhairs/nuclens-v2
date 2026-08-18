@@ -4508,7 +4508,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-08-18T19:40:03+00:00",
+    "updated_at": "2026-08-18T19:59:40+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 15,
@@ -4517,7 +4517,7 @@
         "title": "공식기관 최신 항목이 오래됨: DOE",
         "detail": "가장 최근 항목이 2260일 전(2020-06-10T14:34:23+00:00)입니다. 수집은 성공하고 있어 접속 문제는 아니며, 관측된 정상 공백의 상한은 5일이었습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-08-18T19:40:03+00:00",
+        "last_seen_at": "2026-08-18T19:59:40+00:00",
         "last_observation_id": "2026-08-18T19:38:26+00:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T09:47:33+00:00",
@@ -4544,20 +4544,20 @@
         "resolved_at": "2026-08-18T06:49:21+00:00"
       },
       "quality:topic-weeks": {
-        "consecutive": 2,
+        "consecutive": 3,
         "scope": "data_gate",
         "active": true,
         "title": "웹 주제 흐름 지표 비노출",
-        "detail": "화면에서 주제 흐름(2.549)가 숨겨집니다. 주별 표본 [51, 56, 106, 130]; 기준 2.0",
+        "detail": "화면에서 주제 흐름(2.6275)가 숨겨집니다. 주별 표본 [51, 56, 106, 134]; 기준 2.0",
         "severity": "warning",
-        "last_seen_at": "2026-08-18T12:54:50+00:00",
-        "last_observation_id": "github-run:32061147376",
+        "last_seen_at": "2026-08-18T19:59:40+00:00",
+        "last_observation_id": "github-run:32177368308",
         "min_occurrences": 2,
         "first_seen_at": "2026-08-17T09:47:33+00:00",
         "pending_notification": false,
-        "last_notified_at": "2026-08-17T19:52:52+00:00",
+        "last_notified_at": "2026-08-18T19:59:40+00:00",
         "last_notified_severity": "warning",
-        "notifications": 1
+        "notifications": 2
       },
       "quality:features-missing": {
         "consecutive": 0,
@@ -4579,7 +4579,7 @@
         "title": "제목·요약이 원문과 다른 기사 격리",
         "detail": "재생성 후에도 12건이 다른 핵심 엔티티·수치·사건을 가리켜 자동 큐·아카이브에서 제외했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-08-18T19:40:03+00:00",
+        "last_seen_at": "2026-08-18T19:59:40+00:00",
         "last_observation_id": "2026-08-19T04:38:25.217342+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T09:47:33+00:00",
@@ -4595,7 +4595,7 @@
         "title": "미검증 fallback 기사 자동 발송 보류",
         "detail": "큐레이션 근거가 없는 1건을 큐에 넣지 않았습니다. 이 중 재시도 상한 도달 1건은 자동 격리했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-08-18T19:40:03+00:00",
+        "last_seen_at": "2026-08-18T19:59:40+00:00",
         "last_observation_id": "2026-08-19T04:38:25.995805+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-18T18:44:36+00:00",
@@ -4611,7 +4611,7 @@
         "title": "원문과 다른 제목·요약 기사 발송 차단",
         "detail": "랭킹 전에 명백한 원문 불일치 46건을 차단했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-08-18T19:40:03+00:00",
+        "last_seen_at": "2026-08-18T19:59:40+00:00",
         "last_observation_id": "2026-08-18T19:38:32.065971+00:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-18T19:40:03+00:00",
@@ -4634,20 +4634,20 @@
         "resolved_at": "2026-08-18T15:38:45+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 1,
+        "consecutive": 2,
         "scope": "data_gate",
         "active": true,
         "title": "아카이브 기사 날짜 무결성 정제",
-        "detail": "웹 빌드 무결성 검사 결과 격리 0건 · 사건일 등 정제 6건. 대상: 9fa7214d324b, 0b31010f0bdb, df53398090fb, 205e053d314f, 4b3f5fa71762",
+        "detail": "웹 빌드 무결성 검사 결과 격리 0건 · 사건일 등 정제 40건. 대상: 9fa7214d324b, 0b31010f0bdb, df53398090fb, 205e053d314f, 4b3f5fa71762",
         "severity": "warning",
-        "last_seen_at": "2026-08-18T12:54:50+00:00",
-        "last_observation_id": "github-run:32061147376",
+        "last_seen_at": "2026-08-18T19:59:40+00:00",
+        "last_observation_id": "github-run:32177368308",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
-        "last_notified_at": "2026-08-17T19:52:52+00:00",
+        "last_notified_at": "2026-08-18T19:59:40+00:00",
         "last_notified_severity": "warning",
-        "notifications": 1
+        "notifications": 2
       },
       "source:산업부 보도자료:failure": {
         "consecutive": 0,
