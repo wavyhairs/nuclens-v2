@@ -480,6 +480,14 @@
         <span class="data-note" id="wordCloudMeta"></span>
       </div>
       <div id="wordCloud" class="word-cloud"></div>
+      <!-- 색 범례. 비교할 직전 구간이 없는 기간에는 색이 아무 말도 하지 않으므로
+           app.js 가 통째로 내린다. 점이 아니라 낱말 견본으로 보이는 이유는
+           구름에서 실제로 보게 되는 것이 색 입은 낱말이기 때문이다. -->
+      <ul id="wordCloudLegend" class="word-cloud-legend" hidden>
+        <li><span class="word-cloud-swatch new" aria-hidden="true">신규</span>직전 구간에 없던 말 중 큰 것</li>
+        <li><span class="word-cloud-swatch up" aria-hidden="true">증가</span>더 많이 다뤄짐</li>
+        <li><span class="word-cloud-swatch down" aria-hidden="true">감소</span>덜 다뤄짐</li>
+      </ul>
       <p id="wordCloudInterpretation" class="chart-interpretation"></p>
     </section>
     <!-- 지난 브리핑 — 흐름 탭의 시간 축. 점·세로선 없이 얇은 괘선과 날짜 정렬만

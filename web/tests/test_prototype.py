@@ -6097,15 +6097,40 @@ class AudioSeekTests(unittest.TestCase):
         self.assertIn('audioSeek.addEventListener("change"', self.script)
         change = self.script[self.script.index('audioSeek.addEventListener("change"'):]
         change = change[:change.index("});")]
-        self.assertIn("currentTime = target", change)
+        self.assertIn("applyAudioSeek(target)", change)
         held = self.script[self.script.index('audioSeek.addEventListener("input"'):]
-        self.assertNotIn("currentTime =", held[:held.index("});")])
+        held = held[:held.index("});")]
+        self.assertNotIn("applyAudioSeek", held)
+        self.assertNotIn("currentTime =", held)
 
-    def test_position_survives_a_drag_before_playback(self):
-        """preload=none 이라 재생 전에는 duration 이 NaN 이다 — 그때 끈 위치가 사라지면 안 된다."""
-        self.assertIn("audioPendingSeek", self.script)
-        loaded = self.script[self.script.index('briefAudio.addEventListener("loadedmetadata"'):]
-        self.assertIn("audioPendingSeek", loaded[:loaded.index("});")])
+    def test_a_seek_is_never_silently_swallowed(self):
+        """아직 안 받은 지점으로는 못 옮긴다 — 조용히 제자리로 가면 고장으로 읽힌다.
+
+        실제 증상: 1.87MB 짜리 빠른 브리핑은 금세 다 받아져 잘 옮겨지는데,
+        8.85MB 짜리 전문가 브리핑만 커서가 원래 자리로 되돌아왔다.
+        """
+        apply_block = self.script[self.script.index("function applyAudioSeek("):]
+        apply_block = apply_block[:apply_block.index("\nfunction ")]
+        # seekable 을 실제로 본다 — duration 만 보면 '있다'와 '받았다'를 못 가른다.
+        self.assertIn("seekableCovers", apply_block)
+        self.assertIn("audioPendingSeek = target", apply_block)
+        self.assertIn('classList.add("waiting")', apply_block)
+        covers = self.script[self.script.index("function seekableCovers("):]
+        self.assertIn("audio.seekable", covers[:covers.index("\nfunction ")])
+
+    def test_a_held_seek_is_retried_as_the_file_arrives(self):
+        retry = self.script[self.script.index("const retryPendingSeek ="):]
+        retry = retry[:retry.index(".forEach(")]
+        self.assertIn("applyAudioSeek", retry)
+        for event in ("loadedmetadata", "durationchange", "progress", "canplay"):
+            self.assertIn(event, retry)
+
+    def test_the_bar_holds_the_requested_spot_while_waiting(self):
+        """재생 위치를 그리면 방금 옮긴 손잡이가 되돌아온 것처럼 보인다."""
+        sync = self.script[self.script.index("function syncAudioProgress("):]
+        sync = sync[:sync.index("\nfunction ")]
+        self.assertIn("audioPendingSeek", sync)
+        self.assertIn(".audio-seek.waiting", self.style)
 
     def test_bar_knows_its_length_before_the_file_loads(self):
         body = self.script[self.script.index("function audioDuration()"):]
@@ -6128,6 +6153,47 @@ class AudioSeekTests(unittest.TestCase):
         self.assertIn(".audio-seek:focus-visible", self.style)
 
 
+class AudioRangeFunctionTests(unittest.TestCase):
+    """오디오에 Range 를 붙여 주는 엣지 창구.
+
+    Cloudflare Pages 의 정적 자산은 Range 를 무시하고 200 에 전체 본문을 준다
+    (실측 2026-08-19: 8.85MB mp3 에 bytes=100000-100999 를 요청해도 8,846,253
+    바이트가 왔다). 그러면 아직 받지 않은 지점으로 재생 위치를 옮길 수 없다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.path = ROOT.parent / "functions" / "data" / "audio" / "_middleware.js"
+        cls.source = cls.path.read_text(encoding="utf-8")
+
+    def test_it_lives_on_the_audio_path_only(self):
+        self.assertTrue(self.path.exists())
+        # /admin 자물쇠와 겹치지 않는다 — 서로 다른 경로의 서로 다른 창구다.
+        self.assertNotIn("admin", self.source)
+
+    def test_it_advertises_and_serves_ranges(self):
+        self.assertIn('headers.set("Accept-Ranges", "bytes")', self.source)
+        self.assertIn("206", self.source)
+        self.assertIn("Content-Range", self.source)
+        # 만족할 수 없는 구간은 416 이다 — 200 으로 눙치면 브라우저가 오해한다.
+        self.assertIn("416", self.source)
+
+    def test_it_only_touches_audio(self):
+        """같은 폴더의 audio.json·script-*.txt 는 그대로 지나가야 한다."""
+        self.assertIn('startsWith("audio/")', self.source)
+
+    def test_head_is_not_buffered(self):
+        """본문 없는 응답을 버퍼링하면 Content-Length 를 0 으로 덮어쓴다."""
+        self.assertIn('request.method === "HEAD"', self.source)
+
+    def test_a_size_ceiling_guards_worker_memory(self):
+        self.assertIn("MAX_BUFFER_BYTES", self.source)
+
+    def test_stale_content_encoding_is_dropped(self):
+        """arrayBuffer() 가 이미 압축을 풀었으므로 원래 인코딩 표시는 거짓이 된다."""
+        self.assertIn('headers.delete("Content-Encoding")', self.source)
+
+
 class WordCloudTests(unittest.TestCase):
     """흐름 탭의 워드 클라우드 — 기간 토글을 따르는 그림 한 장."""
 
@@ -6137,8 +6203,13 @@ class WordCloudTests(unittest.TestCase):
         cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
         cls.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
 
-    def body(self):
-        block = self.script[self.script.index("function renderWordCloud()"):]
+    def region(self):
+        """워드 클라우드가 사는 구역 전체 — 여러 함수로 나뉘어 있다."""
+        block = self.script[self.script.index("// \u2500\u2500 \uc6cc\ub4dc \ud074\ub77c\uc6b0\ub4dc"):]
+        return block[:block.index("function renderTrend() {")]
+
+    def func(self, name):
+        block = self.script[self.script.index(f"function {name}("):]
         return block[:block.index("\nfunction ")]
 
     def test_sits_between_the_charts_and_the_briefing_timeline(self):
@@ -6152,14 +6223,10 @@ class WordCloudTests(unittest.TestCase):
 
     def test_follows_the_period_toggle_by_sharing_the_table_data(self):
         """제 손으로 집계하면 같은 화면에서 표와 다른 수가 나온다."""
-        self.assertIn("wordCloudRows()", self.body())
-        # 재료는 빌드가 낸 것(tag_cloud)이고, 없으면 표와 같은 재료로 내려앉는다.
-        source = self.script[self.script.index("function wordCloudRows()"):]
-        source = source[:source.index("\nfunction ")]
+        source = self.func("wordCloudRows")
         self.assertIn("tag_cloud", source)
         self.assertIn("keywordRows()", source)
         self.assertIn("periodData()", source)
-        # 기간 토글은 renderTrend 를 다시 부르고, 거기서 구름도 다시 그려진다.
         trend = self.script[self.script.index("function renderTrend()"):]
         trend = trend[:trend.index("\n}")]
         self.assertIn("renderWordCloud()", trend)
@@ -6171,24 +6238,87 @@ class WordCloudTests(unittest.TestCase):
         self.assertLess(trend.index("renderWordCloud()"), trend.index('renumberSections("view-trend")'))
 
     def test_hides_itself_when_there_is_not_enough_to_show(self):
-        body = self.body()
+        body = self.func("renderWordCloud")
         self.assertIn("trend_ready", body)
         self.assertIn("WORD_CLOUD_MIN_WORDS", body)
 
     def test_words_open_the_archive_search(self):
-        self.assertIn("data-keyword=", self.body())
+        self.assertIn("data-keyword=", self.func("paintWordCloud"))
 
     def test_size_is_compressed_so_one_word_cannot_own_the_panel(self):
-        self.assertIn("Math.sqrt", self.body())
+        self.assertIn("Math.sqrt", self.func("wordCloudSizer"))
 
     def test_layout_has_no_randomness(self):
         """새로고침마다 자리가 바뀌면 '어제와 뭐가 달라졌나'를 못 읽는다."""
-        self.assertNotIn("Math.random", self.body())
+        self.assertNotIn("Math.random", self.region())
 
-    def test_change_is_carried_by_colour_not_a_second_size_axis(self):
+    def test_ties_break_deterministically(self):
+        """언급 수가 같은 낱말이 매 렌더 자리를 바꾸면 같은 데이터가 다른 그림이 된다."""
+        self.assertIn("localeCompare", self.func("renderWordCloud"))
+
+    def test_words_are_actually_packed_not_just_wrapped(self):
+        """흘려 놓으면 큰 낱말과 작은 낱말이 한 줄에 끼어 태그 목록으로 읽힌다."""
+        spot = self.func("wordCloudSpot")
+        self.assertIn("Math.cos", spot)
+        self.assertIn("Math.sin", spot)
+        pack = self.func("packWordCloud")
+        # 겹침 검사가 있어야 '쌌다'고 할 수 있다.
+        self.assertIn("offsetWidth", pack)
+        self.assertIn("is-packed", pack)
+
+    def test_flow_layout_survives_as_the_fallback(self):
+        """숨은 탭에서는 폭을 잴 수 없다 — 그때도 읽히는 상태가 남아야 한다."""
+        self.assertIn(".word-cloud {", self.style)
+        self.assertIn("flex-wrap: wrap", self.style[self.style.index(".word-cloud {"):][:400])
+        self.assertIn(".word-cloud.is-packed", self.style)
+
+    def test_relayouts_when_the_panel_finally_has_a_width(self):
+        """숨은 탭의 clientWidth 는 0 이라 첫 렌더가 아무것도 못 잰다."""
+        self.assertIn("ResizeObserver", self.script)
+        observer = self.script[self.script.index("new ResizeObserver("):]
+        observer = observer[:observer.index(".observe(")]
+        self.assertIn("paintWordCloud", observer)
+        # 자기 높이 변화를 되받아 무한 루프가 되면 안 된다.
+        self.assertIn("lastCloudWidth", observer)
+
+    def test_word_count_and_type_size_follow_the_panel_width(self):
+        fit = self.func("wordCloudFit")
+        self.assertIn("limit", fit)
+        self.assertIn("480", fit)
+
+    def test_change_is_carried_by_colour_with_a_legend(self):
         self.assertIn("function wordCloudTone", self.script)
         for tone in (".word-cloud-item.new", ".word-cloud-item.up", ".word-cloud-item.down"):
             self.assertIn(tone, self.style)
+        self.assertIn('id="wordCloudLegend"', self.html)
+        # 비교할 직전 구간이 없으면 색이 아무 말도 안 하므로 범례도 내린다.
+        self.assertIn("wordCloudLegend", self.func("renderWordCloud"))
+
+    def test_each_word_says_its_numbers_to_a_screen_reader(self):
+        """크기와 색이 말하는 것을 글자로도 준다 — 그림만으로는 안 들린다."""
+        self.assertIn("aria-label=", self.func("paintWordCloud"))
+
+    def test_the_accent_colour_stays_rare(self):
+        """2건짜리 새 말까지 칠하면 40개 중 14개가 강조색이 된다(실측 최근 7일).
+
+        그러면 강조가 배경이 되어 크게 새로 올라온 말이 오히려 묻힌다.
+        """
+        self.assertIn("WORD_CLOUD_NEW_SHARE", self.region())
+        tone = self.func("wordCloudTone")
+        self.assertIn("newFloor", tone)
+        # 해석 문장도 같은 문턱을 써야 그림과 글이 같은 말을 한다.
+        self.assertIn("newFloor", self.func("renderWordCloud"))
+
+    def test_the_spiral_follows_the_panel_shape(self):
+        """고정 비율로 감으면 1240px 판에서 가운데 730px 만 차고 양옆이 빈다."""
+        aspect = self.func("wordCloudAspect")
+        self.assertIn("WORD_CLOUD_ASPECT_MIN", aspect)
+        self.assertIn("WORD_CLOUD_ASPECT_MAX", aspect)
+        self.assertIn("width", aspect)
+
+    def test_hover_isolates_one_word(self):
+        self.assertIn(".word-cloud:hover .word-cloud-item", self.style)
+        self.assertIn(".word-cloud-item:focus-visible", self.style)
 
 
 class AdminPendingChipTests(unittest.TestCase):

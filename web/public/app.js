@@ -1712,10 +1712,49 @@ function ensureAudioMetadata() {
   audio.load();
 }
 
+// 아직 받지 않은 구간으로는 옮길 수 없다. seekable 은 **받아 둔 만큼**만 덮으므로
+// 그 밖으로 옮기면 미디어 요소가 탐색을 물리고 제자리로 돌려놓는다. 조용히
+// 돌아가면 사용자는 막대가 고장 난 것으로 읽는다 — 실제로 그렇게 보고됐다
+// (전문가 브리핑 8.85MB, 빠른 브리핑 1.87MB 는 금세 다 받아져 티가 안 났다).
+// 서버가 Range 를 주면 이 경로는 거의 타지 않는다(functions/data/audio).
+function seekableCovers(audio, target) {
+  const ranges = audio.seekable;
+  for (let index = 0; index < ranges.length; index += 1) {
+    if (target >= ranges.start(index) - 0.25 && target <= ranges.end(index) + 0.25) return true;
+  }
+  return false;
+}
+
+// 옮길 수 있으면 옮기고, 없으면 목표를 붙잡아 둔다. 붙잡은 동안 막대는 목표
+// 자리에 서 있고(waiting), 그 지점이 받아지는 순간 실제로 건너뛴다.
+function applyAudioSeek(target) {
+  const audio = document.getElementById("audioEl");
+  const seek = document.getElementById("audioSeek");
+  if (!audio) return false;
+  const ready = Number.isFinite(audio.duration) && audio.duration > 0
+    && seekableCovers(audio, target);
+  if (ready) {
+    try {
+      audio.currentTime = target;
+      audioPendingSeek = null;
+      seek?.classList.remove("waiting");
+      return true;
+    } catch {
+      // 아래로 떨어져 보류로 처리한다.
+    }
+  }
+  audioPendingSeek = target;
+  seek?.classList.add("waiting");
+  return false;
+}
+
 function syncAudioProgress(current) {
   const audio = document.getElementById("audioEl");
   if (!audio) return;
-  const at = Number.isFinite(current) ? current : audio.currentTime;
+  // 보류 중이면 목표를 보인다. 재생 위치를 그리면 방금 옮긴 손잡이가 되돌아온
+  // 것처럼 보여, 실제로는 곧 건너뛸 상황을 고장으로 읽게 된다.
+  const at = Number.isFinite(current) ? current
+    : (audioPendingSeek != null ? audioPendingSeek : audio.currentTime);
   const total = audioDuration();
   const seek = document.getElementById("audioSeek");
   if (seek) {
@@ -1758,6 +1797,7 @@ function renderAudioBrief(briefing) {
     // 다른 회차로 갈아탔다 — 앞 회차에서 끌던 위치를 새 음원에 얹으면 안 된다.
     audioSeekHeld = false;
     audioPendingSeek = null;
+    document.getElementById("audioSeek")?.classList.remove("waiting");
     syncAudioProgress(0);
   }
   const desc = document.getElementById("audioDescription");
@@ -3062,19 +3102,56 @@ function renumberSections(viewId) {
 
 // ── 워드 클라우드 ────────────────────────────────────────────────────────
 //
-// 기간 토글을 따르는 그림 한 장. 재료는 키워드 표와 **같은** keywordRows() 다 —
-// 두 곳이 각자 집계하면 같은 화면에서 다른 수가 나온다.
+// 기간 토글을 따르는 그림 한 장. 재료는 키워드 표와 **같은** 집계다 — 두 곳이
+// 각자 세면 같은 화면에서 다른 수가 나온다.
 //
 // 크기는 언급 수, 색은 변화. 두 축을 같이 얹는 이유는 표가 이미 순위를 주기
 // 때문이다: 순위를 그림으로 한 번 더 그리면 자리만 먹고 새로 아는 것이 없다.
-const WORD_CLOUD_MAX = 32;
-const WORD_CLOUD_MIN_PX = 13;
-const WORD_CLOUD_MAX_PX = 40;
+//
+// 자리잡기
+// --------
+// 처음에는 flex-wrap 으로 흘려 놓았다. 그러면 낱말이 줄글처럼 서서 큰 것과 작은
+// 것이 같은 줄에 끼고, 오른쪽 끝이 들쭉날쭉해 '구름'이 아니라 태그 목록으로
+// 읽힌다. 그래서 실제로 **싼다**: 큰 낱말부터 가운데에 놓고 아르키메데스 나선을
+// 따라 밖으로 감으면서 겹치지 않는 첫 자리에 세운다.
+//
+// 무작위는 쓰지 않는다. 같은 데이터면 같은 그림이 나와야 새로고침 전후를 비교할
+// 수 있다 — 흔한 구름들이 매번 달라 보이는 이유가 난수이고, 그건 볼거리이지
+// 읽을거리가 아니다.
+const WORD_CLOUD_MAX = 40;
 // 셋 미만은 구름이 아니라 낱말이다. 표가 이미 그 말을 하고 있다.
 const WORD_CLOUD_MIN_WORDS = 3;
+const WORD_CLOUD_GAP = 9;             // 낱말 사이 최소 간격(px)
+// 나선을 눕히는 비율의 한계. 실제 값은 판 모양에서 뽑는다(wordCloudAspect) —
+// 고정값으로 감으면 넓은 판에서 가운데만 차고 양옆이 빈다(실측 1240px 판에서
+// 낱말이 가운데 730px 안에만 섰다). 반대로 좁은 판에서는 세워야 낱말이 덜 빠진다.
+const WORD_CLOUD_ASPECT_MIN = 1.1;
+const WORD_CLOUD_ASPECT_MAX = 4;
+const WORD_CLOUD_ASPECT_UNIT = 320;
+const WORD_CLOUD_STEP_ANGLE = 0.2;
+const WORD_CLOUD_STEP_RADIUS = 0.8;
+const WORD_CLOUD_MAX_RADIUS = 1200;
+// 판이 세로로 무한정 자라지 않게 잡는 선. 넘으면 작은 낱말부터 뺀다.
+const WORD_CLOUD_MAX_HEIGHT = 420;
+const WORD_CLOUD_MIN_HEIGHT = 150;
 
-function wordCloudTone(row) {
-  if (row.isNew) return "new";
+// 이 판이 지금 무엇을 그리고 있는지. 크기를 바꾸면 글자 크기와 낱말 수가 함께
+// 달라져야 하므로, 다시 그릴 재료를 들고 있는다.
+let wordCloudState = { rows: [], prevLabel: "", nowLabel: "" };
+
+// '신규'에 강조색을 붙이는 문턱. 2건짜리 새 말은 새로 생긴 잡음이지 신호가
+// 아니고, 그런 것까지 칠하면 40개 중 14개가 강조색이 된다(실측 최근 7일).
+// 그러면 강조가 배경이 되어 정작 크게 새로 올라온 말이 묻힌다.
+const WORD_CLOUD_NEW_SHARE = 0.12;
+const WORD_CLOUD_NEW_MIN = 3;
+
+function wordCloudNewFloor(rows) {
+  const top = Math.max(...rows.map(row => row.now));
+  return Math.max(WORD_CLOUD_NEW_MIN, Math.ceil(top * WORD_CLOUD_NEW_SHARE));
+}
+
+function wordCloudTone(row, newFloor = WORD_CLOUD_NEW_MIN) {
+  if (row.isNew && row.now >= newFloor) return "new";
   if ((row.delta || 0) > 0) return "up";
   if ((row.delta || 0) < 0) return "down";
   return "flat";
@@ -3092,48 +3169,170 @@ function wordCloudRows() {
   }));
 }
 
-function renderWordCloud() {
-  const section = document.getElementById("trendWordCloud");
-  if (!section) return;
-  const rows = wordCloudRows().filter(row => row.now > 0)
-    .sort((a, b) => b.now - a.now).slice(0, WORD_CLOUD_MAX);
-  section.hidden = !state.meta?.trend_ready || rows.length < WORD_CLOUD_MIN_WORDS;
-  if (section.hidden) return;
+// 글자 크기와 낱말 수는 판 너비가 정한다. 고정값으로 두면 좁은 화면에서 40개가
+// 열 줄로 무너지고, 넓은 화면에서는 가운데에 작게 뭉친다.
+function wordCloudFit(width) {
+  const max = Math.max(20, Math.min(44, Math.round(width / 13)));
+  return {
+    max,
+    min: Math.max(11, Math.round(max * 0.34)),
+    limit: width < 480 ? 20 : width < 760 ? 28 : WORD_CLOUD_MAX,
+  };
+}
 
-  // 제곱근으로 민다. 선형이면 1위가 나머지를 눌러 화면이 낱말 하나가 된다.
+// 제곱근으로 민다. 선형이면 1위가 나머지를 눌러 화면이 낱말 하나가 된다.
+function wordCloudSizer(rows, fit) {
   const counts = rows.map(row => row.now);
   const top = Math.sqrt(Math.max(...counts));
   const floor = Math.sqrt(Math.min(...counts));
   const span = top - floor;
-  const sizeOf = count => span <= 0
-    ? (WORD_CLOUD_MIN_PX + WORD_CLOUD_MAX_PX) / 2
-    : WORD_CLOUD_MIN_PX + ((Math.sqrt(count) - floor) / span) * (WORD_CLOUD_MAX_PX - WORD_CLOUD_MIN_PX);
+  return count => (span <= 0
+    ? (fit.min + fit.max) / 2
+    : fit.min + ((Math.sqrt(count) - floor) / span) * (fit.max - fit.min));
+}
 
-  // 큰 낱말이 가운데 서도록 좌우로 번갈아 놓는다. 무작위로 흩으면 새로고침마다
-  // 배치가 바뀌어 '어제와 뭐가 달라졌나'를 못 읽는다 — 자리는 데이터로만 정한다.
+function wordCloudAspect(width) {
+  return Math.max(WORD_CLOUD_ASPECT_MIN,
+    Math.min(WORD_CLOUD_ASPECT_MAX, width / WORD_CLOUD_ASPECT_UNIT));
+}
+
+// 겹치지 않는 첫 자리를 나선에서 찾는다. 못 찾으면 null — 그 낱말은 빠진다.
+function wordCloudSpot(item, placed, aspect) {
+  const hits = rect => placed.some(other =>
+    rect.x < other.x + other.w && rect.x + rect.w > other.x
+    && rect.y < other.y + other.h && rect.y + rect.h > other.y);
+  let angle = 0;
+  let radius = 0;
+  while (radius < WORD_CLOUD_MAX_RADIUS) {
+    const rect = {
+      x: Math.cos(angle) * radius * aspect - item.w / 2,
+      y: Math.sin(angle) * radius - item.h / 2,
+      w: item.w, h: item.h,
+    };
+    if (!hits(rect)) return rect;
+    angle += WORD_CLOUD_STEP_ANGLE;
+    radius += WORD_CLOUD_STEP_RADIUS;
+  }
+  return null;
+}
+
+// 재기와 놓기를 각각 한 번씩만 한다. 번갈아 하면 낱말마다 리플로가 난다.
+function packWordCloud(box) {
+  const nodes = [...box.querySelectorAll(".word-cloud-item")];
+  if (!nodes.length) return false;
+  const width = box.clientWidth;
+  if (!width) return false;
+
+  const items = nodes.map(node => ({
+    node,
+    w: node.offsetWidth + WORD_CLOUD_GAP,
+    h: node.offsetHeight + WORD_CLOUD_GAP,
+  }));
+
+  const aspect = wordCloudAspect(width);
+  const placed = [];
   const laid = [];
-  rows.forEach((row, index) => (index % 2 ? laid.unshift(row) : laid.push(row)));
+  for (const item of items) {
+    const spot = wordCloudSpot(item, placed, aspect);
+    if (!spot) { item.node.hidden = true; continue; }
+    placed.push(spot);
+    laid.push({ node: item.node, spot });
+  }
+  if (!laid.length) return false;
 
-  const prevLabel = previousPeriodLabel();
-  document.getElementById("wordCloud").innerHTML = laid.map(row => {
-    const detail = row.prev == null ? "" : ` · ${prevLabel} ${row.prev}건`;
-    return `<button type="button" class="word-cloud-item ${wordCloudTone(row)}"
+  // 판 밖으로 나가거나 너무 높아진 낱말은 뺀다. 큰 것부터 놓았으므로 뒤에서부터
+  // 지우면 언제나 덜 중요한 쪽이 빠진다.
+  const half = width / 2;
+  let kept = laid.filter(({ spot }) => spot.x >= -half && spot.x + spot.w <= half);
+  while (kept.length > WORD_CLOUD_MIN_WORDS) {
+    const top = Math.min(...kept.map(({ spot }) => spot.y));
+    const bottom = Math.max(...kept.map(({ spot }) => spot.y + spot.h));
+    if (bottom - top <= WORD_CLOUD_MAX_HEIGHT) break;
+    kept.pop();
+  }
+  const visible = new Set(kept.map(({ node }) => node));
+  for (const { node } of laid) node.hidden = !visible.has(node);
+  if (!kept.length) return false;
+
+  const top = Math.min(...kept.map(({ spot }) => spot.y));
+  const bottom = Math.max(...kept.map(({ spot }) => spot.y + spot.h));
+  const height = Math.max(WORD_CLOUD_MIN_HEIGHT, Math.ceil(bottom - top));
+  for (const { node, spot } of kept) {
+    node.style.left = `${(half + spot.x + WORD_CLOUD_GAP / 2).toFixed(1)}px`;
+    node.style.top = `${(spot.y - top + WORD_CLOUD_GAP / 2).toFixed(1)}px`;
+  }
+  box.style.height = `${height}px`;
+  box.classList.add("is-packed");
+  return true;
+}
+
+// 재료는 그대로 두고 판만 다시 그린다. 창 크기가 바뀌거나, 숨어 있던 흐름 탭이
+// 처음 화면에 설 때(그때까지 clientWidth 는 0 이다) 다시 불린다.
+function paintWordCloud() {
+  const box = document.getElementById("wordCloud");
+  const section = document.getElementById("trendWordCloud");
+  if (!box || !section || section.hidden) return;
+  const width = box.clientWidth;
+  if (!width) return;
+
+  const fit = wordCloudFit(width);
+  const rows = wordCloudState.rows.slice(0, fit.limit);
+  if (rows.length < WORD_CLOUD_MIN_WORDS) return;
+  const sizeOf = wordCloudSizer(rows, fit);
+  const newFloor = wordCloudNewFloor(rows);
+  const prevLabel = wordCloudState.prevLabel;
+
+  box.classList.remove("is-packed");
+  box.style.height = "";
+  box.innerHTML = rows.map(row => {
+    const change = row.prev == null ? ""
+      : row.isNew ? ` · ${prevLabel}에는 없던 말`
+        : ` · ${prevLabel} ${row.prev}건`;
+    // 이름은 그림이 아니라 말로 준다 — 크기와 색이 말하는 것을 그대로 적는다.
+    return `<button type="button" class="word-cloud-item ${wordCloudTone(row, newFloor)}"
       data-keyword="${esc(row.tag)}" style="font-size:${sizeOf(row.now).toFixed(1)}px"
-      title="${esc(row.tag)} · ${row.now}건${esc(detail)}"
-      >${esc(row.tag)}<span class="word-cloud-count">${row.now}</span></button>`;
+      title="${esc(row.tag)} · ${row.now}건${esc(change)}"
+      aria-label="${esc(row.tag)} ${row.now}건${esc(change)} — 근거 보기"
+      ><span class="word-cloud-word">${esc(row.tag)}</span><span class="word-cloud-count">${row.now}</span></button>`;
   }).join("");
+  packWordCloud(box);
+}
+
+function renderWordCloud() {
+  const section = document.getElementById("trendWordCloud");
+  if (!section) return;
+  const rows = wordCloudRows().filter(row => row.now > 0)
+    .sort((a, b) => b.now - a.now || a.tag.localeCompare(b.tag))
+    .slice(0, WORD_CLOUD_MAX);
+  section.hidden = !state.meta?.trend_ready || rows.length < WORD_CLOUD_MIN_WORDS;
+  if (section.hidden) return;
+
+  wordCloudState = {
+    rows,
+    prevLabel: previousPeriodLabel(),
+    nowLabel: periodLabel(),
+  };
 
   const comparable = rows.some(row => row.prev != null);
   document.getElementById("wordCloudMeta").textContent = comparable
-    ? `${periodLabel()} 상위 ${rows.length}개 · 크기는 언급 수, 색은 ${prevLabel} 대비 변화`
-    : `${periodLabel()} 상위 ${rows.length}개 · 크기는 언급 수`;
+    ? `${periodLabel()} · 크기는 언급 수, 색은 ${previousPeriodLabel()} 대비 변화`
+    : `${periodLabel()} · 크기는 언급 수`;
+  // 범례는 색이 무슨 말인지 아는 사람에게만 그림이 되지 않게 한다. 비교 구간이
+  // 없는 기간에는 색이 아무 말도 하지 않으므로 범례도 내린다.
+  const legend = document.getElementById("wordCloudLegend");
+  if (legend) legend.hidden = !comparable;
 
   // 해석 문장. 그림만 두면 "그래서 무엇을 봐야 하나"가 안 남는다.
   const biggest = rows[0];
-  const fresh = rows.filter(row => row.isNew).slice(0, 3).map(row => row.tag);
+  const newFloor = wordCloudNewFloor(rows);
+  const fresh = rows.filter(row => row.isNew && row.now >= newFloor)
+    .slice(0, 3).map(row => row.tag);
   document.getElementById("wordCloudInterpretation").textContent = fresh.length
-    ? `${periodLabel()}에는 ${biggest.tag}가 ${biggest.now}건으로 가장 컸고, ${fresh.join(" · ")}가 새로 올라왔습니다.`
-    : `${periodLabel()}에는 ${biggest.tag}가 ${biggest.now}건으로 가장 컸습니다.`;
+    ? `${periodLabel()}에는 '${biggest.tag}' 언급이 ${biggest.now}건으로 가장 많았고, `
+      + `새로 올라온 말은 ${fresh.join(" · ")}입니다.`
+    : `${periodLabel()}에는 '${biggest.tag}' 언급이 ${biggest.now}건으로 가장 많았습니다.`;
+
+  paintWordCloud();
 }
 
 function renderTrend() {
@@ -3817,14 +4016,19 @@ function bind() {
   briefAudio.addEventListener("timeupdate", () => syncAudioProgress());
   // duration 은 메타데이터가 붙어야 정확해진다. 그 전까지 막대는 manifest 의
   // duration_sec 로 서 있다가 여기서 실측값으로 바뀐다.
-  briefAudio.addEventListener("loadedmetadata", () => {
-    if (audioPendingSeek != null) {
-      briefAudio.currentTime = audioPendingSeek;
-      audioPendingSeek = null;
-    }
+  // 버퍼가 늘거나 길이를 새로 알게 될 때마다 보류된 목표를 다시 시도한다.
+  // Range 가 서 있으면 첫 번째(loadedmetadata)에서 바로 끝난다.
+  const retryPendingSeek = () => {
+    if (audioPendingSeek != null) applyAudioSeek(audioPendingSeek);
+    syncAudioProgress();
+  };
+  ["loadedmetadata", "durationchange", "progress", "canplay", "canplaythrough"]
+    .forEach(name => briefAudio.addEventListener(name, retryPendingSeek));
+  briefAudio.addEventListener("seeked", () => {
+    audioPendingSeek = null;
+    document.getElementById("audioSeek")?.classList.remove("waiting");
     syncAudioProgress();
   });
-  briefAudio.addEventListener("seeked", () => syncAudioProgress());
 
   const audioSeek = document.getElementById("audioSeek");
   // input = 끄는 중(값만 따라간다), change = 손을 뗀 순간(그때 실제로 옮긴다).
@@ -3838,16 +4042,7 @@ function bind() {
     const target = Number(audioSeek.value);
     audioSeekHeld = false;
     ensureAudioMetadata();
-    // 아직 음원을 안 읽었으면 지금 옮길 수 없다 — 메타데이터가 붙는 순간으로 넘긴다.
-    if (Number.isFinite(briefAudio.duration) && briefAudio.duration > 0) {
-      try {
-        briefAudio.currentTime = target;
-      } catch {
-        audioPendingSeek = target;
-      }
-    } else {
-      audioPendingSeek = target;
-    }
+    applyAudioSeek(target);
     syncAudioProgress(target);
   });
   // 캐시 유실 등으로 한 variant의 mp3가 404여도 다른 브리핑까지 숨기지 않는다.
@@ -3907,6 +4102,24 @@ function bind() {
   });
   document.getElementById("archiveClear").addEventListener("click", clearArchiveFilters);
   document.getElementById("archiveMore").addEventListener("click", () => { state.archiveLimit += 20; renderArchiveSearch(); });
+
+  // 워드 클라우드는 실제 글자 폭을 재서 싸므로 판이 화면에 서 있어야 한다.
+  // 숨은 탭에서는 clientWidth 가 0 이라 첫 렌더가 아무것도 못 재고, 창 크기가
+  // 바뀌면 글자 크기·낱말 수까지 다시 정해야 한다. 둘 다 여기서 받는다.
+  const cloudBox = document.getElementById("wordCloud");
+  if (cloudBox && typeof ResizeObserver === "function") {
+    let repackTimer = 0;
+    let lastCloudWidth = 0;
+    new ResizeObserver(() => {
+      const width = cloudBox.clientWidth;
+      // 자기 자신이 높이를 바꾸는 것까지 되받으면 무한히 다시 싼다 — 너비가
+      // 실제로 달라졌을 때만 움직인다.
+      if (!width || width === lastCloudWidth) return;
+      lastCloudWidth = width;
+      clearTimeout(repackTimer);
+      repackTimer = setTimeout(paintWordCloud, 120);
+    }).observe(cloudBox);
+  }
 
   document.getElementById("periodTabs").addEventListener("click", event => {
     const button = event.target.closest("[data-period]");
