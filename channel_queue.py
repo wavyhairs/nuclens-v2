@@ -205,6 +205,19 @@ def record_audio(date: str, name: str, file_id: str, caption: str = "",
         "caption": caption, "title": title, "performer": performer,
         "duration": int(duration or 0),
     })
+    # 배치 상태를 다시 계산한다. ensure_batch 는 기존 배치의 status 를 일부러
+    # 건드리지 않는데(그게 맞다 — 재적재가 발송 완료를 되돌리면 안 된다), 그
+    # 결과로 **이미 sent 인 배치에 붙인 새 오디오가 영영 안 나가는** 구멍이 생긴다.
+    # publish() 는 pending/partial/failed 배치만 훑기 때문이다.
+    #
+    # 2026-08-20 실사고에서 정확히 이 경우가 났다. 텍스트 3건이 먼저 공개돼
+    # 배치가 sent 로 닫힌 뒤, 다음 회차가 오디오를 만들어 붙였다 — 상태를
+    # 되계산하지 않으면 그 오디오는 큐에 앉은 채 STALE_H 를 넘겨 사라진다.
+    #
+    # _batch_status 는 sent 와 pending 이 섞이면 partial 을 준다. 이미 sent 인
+    # 항목은 publish 가 건너뛰므로 텍스트 재발송 위험은 없다.
+    if added:
+        batch["status"] = _batch_status(batch)
     prune(queue, now=now)
     save_queue(queue, path)
     return added
