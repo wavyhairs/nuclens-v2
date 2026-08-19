@@ -174,6 +174,47 @@ class OrderReportTests(unittest.TestCase):
         self.assertFalse(report["ok"])
         self.assertIn("d1", report["duplicated"])
 
+    def test_duplication_only_leaves_expected_and_observed_identical(self):
+        """중복만 어긋난 경우 기대/관측 두 목록은 **완전히 같다**.
+
+        observed 는 각 이슈의 첫 등장만 담는 중복 제거 목록이기 때문이다. 그래서
+        최종 경고가 이 두 목록만 찍으면, 글자까지 같은 두 줄 뒤에 "미통과"만
+        붙어 나온다 — 2026-08-20 회차가 정확히 그 모습이었고(13개 항목 동일),
+        매일 뜨는 그 경고는 늑대소년으로 읽혀 무시된다.
+
+        이 테스트는 그 함정을 못으로 박아 둔다. 경고문이 무엇을 찍어야 하는지는
+        아래 test_final_order_warning_names_the_actual_fault 가 지킨다.
+        """
+        script = self.script(
+            "영덕 신규 원전 부지 선정입니다.",
+            "두산에너빌리티와 테라파워 공급계약입니다.",
+            "디아블로캐년 지원입니다.",
+            "다시 영덕 부지 이야기로 돌아오겠습니다.",
+        )
+        report = expert.script_order_report(script, self.issues)
+        self.assertFalse(report["ok"])
+        self.assertEqual(report["duplicated"], ["d1"])
+        self.assertFalse(report["out_of_order"])
+        self.assertEqual(report["missing"], [])
+        self.assertEqual(report["expected"], report["observed"],
+                         "이 함정이 사라졌다면 경고문 규칙을 다시 볼 때다")
+
+    def test_final_order_warning_names_the_actual_fault(self):
+        """최종 경고는 무엇이 틀렸는지(뒤바뀜·누락·중복)를 말해야 한다.
+
+        기대/관측 목록은 순서가 실제로 뒤바뀐 때만 쓸모가 있다 — 그때만 두
+        목록이 서로 다르다.
+        """
+        source = (ROOT / "expert_audio_brief.py").read_text(encoding="utf-8")
+        head, _, tail = source.partition("최종 순서 점검 미통과")
+        self.assertTrue(tail, "최종 순서 경고문이 사라졌다")
+        warning = tail[:400]
+        for field in ("out_of_order", "missing", "duplicated"):
+            self.assertIn(field, warning,
+                          f"경고가 {field} 을 말하지 않는다 — 원인을 못 읽는다")
+        self.assertIn('if final["out_of_order"]', warning,
+                      "기대/관측 목록은 순서가 뒤바뀐 때만 찍어야 한다")
+
     def test_adjacent_paragraphs_are_one_explanation(self):
         script = self.script(
             "영덕 신규 원전 부지 선정입니다.",
