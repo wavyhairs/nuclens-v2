@@ -1124,8 +1124,22 @@ def generate_expert_script(briefing: dict, issues: list[dict],
         **script_order_report(script, issues),
     }
     if not report["order"]["ok"]:
+        final = report["order"]
+        # 무엇이 틀렸는지를 **먼저** 적는다. 예전엔 기대/관측 두 목록만 찍었는데,
+        # observed 는 각 이슈의 첫 등장만 담는 중복 제거 목록이라 위반이 '중복
+        # 설명'일 때 두 목록이 완전히 똑같이 찍힌다. 2026-08-20 회차가 정확히
+        # 그랬다 — 13개 항목이 글자까지 같은 두 줄 뒤에 "미통과"만 붙어 있으니,
+        # 매일 뜨는 그 경고는 늑대소년으로 읽혀 무시된다. 정작 그날 구간 경고는
+        # `중복=1` 이라고 제대로 말하고 있었다.
         print(f"[expert-audio] ⚠ 최종 순서 점검 미통과 — "
-              f"기대 {report['order']['expected']} / 관측 {report['order']['observed']}")
+              f"뒤바뀜={final['out_of_order']} "
+              f"누락={final['missing'] or '없음'} "
+              f"중복={final['duplicated'] or '없음'}")
+        # 기대/관측은 순서가 실제로 뒤바뀐 때만 쓸모가 있다 — 그때만 두 목록이
+        # 서로 다르다.
+        if final["out_of_order"]:
+            print(f"[expert-audio]   기대 {final['expected']}")
+            print(f"[expert-audio]   관측 {final['observed']}")
     if not verification_passed(report):
         claims = report.get("unsupported_critical_claims") or []
         raise ValueError(f"전문가 대본 검증 미통과 — critical={len(claims)}, scores={_score_summary(report)}")
