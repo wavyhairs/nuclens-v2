@@ -53,6 +53,8 @@ from audio_brief import (
     send_telegram_audio,
     split_script,
     to_mp3,
+    FFMPEG_MISSING,
+    ffmpeg_available,
     trim_silence,
 )
 
@@ -1284,6 +1286,12 @@ def generate(force: bool = False, send: bool = True) -> bool:
                 "expected_evidence_digest": digest})
             return True
         print(f"[expert-audio] {date} 캐시 불일치 — 다시 생성")
+
+    # 빠른 브리핑과 같은 계약 — 유료 구간(대본→TTS) 앞에서 막는다.
+    # 캐시 재사용 경로 뒤라, 만들어 둔 mp3 를 보내기만 하는 회차는 영향이 없다.
+    if not ffmpeg_available():
+        print(f"[expert-audio] {FFMPEG_MISSING} — 생성 전 스킵 (TTS 호출 안 함)")
+        return False
 
     try:
         script, dossiers, plan, verification = generate_expert_script(

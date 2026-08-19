@@ -728,6 +728,18 @@ def synthesize(script: str) -> tuple[bytes, int]:
     raise last_err or GeminiError("TTS 모델 전부 실패")
 
 
+FFMPEG_MISSING = "ffmpeg 없음 — mp3 변환 불가"
+
+
+def ffmpeg_available() -> bool:
+    """PATH 에 ffmpeg 이 있나. **생성을 시작하기 전에** 물어야 하는 질문이다.
+
+    to_mp3 의 같은 검사는 파이프라인 맨 끝에 있어서, 거기까지 가면 대본과 TTS
+    비용은 이미 다 치른 뒤다 — generate() 들이 시작점에서 이걸 먼저 부른다.
+    """
+    return shutil.which("ffmpeg") is not None
+
+
 def to_mp3(pcm: bytes, rate: int, out_path: Path, bitrate: str = "96k") -> None:
     """PCM s16le mono → MP3. 빠른 브리핑 기본 96k, 전문가형은 128k. ffmpeg 는 GitHub 러너·로컬 모두 존재.
 
@@ -739,8 +751,8 @@ def to_mp3(pcm: bytes, rate: int, out_path: Path, bitrate: str = "96k") -> None:
     트루피크를 -1.5 dBTP 로 눌러 준다. dynaudnorm 만 걸면 날마다 기준이
     떠다니고 피크가 -1.1 dBFS 까지 붙어 mp3 인코딩에서 클리핑 여지가 남는다.
     """
-    if not shutil.which("ffmpeg"):
-        raise RuntimeError("ffmpeg 없음 — mp3 변환 불가")
+    if not ffmpeg_available():
+        raise RuntimeError(FFMPEG_MISSING)
     raw = out_path.with_suffix(".pcm")
     raw.write_bytes(pcm)
     try:
@@ -957,6 +969,22 @@ def generate(force: bool = False, send: bool = True) -> bool:
                 "expected_evidence_digest": digest})
             return True
         print(f"[audio] {date} 빠른 브리핑 캐시 불일치 — 다시 생성")
+
+    # 여기부터가 유료 구간이다 (대본 → TTS). 결과물이 나올 수 없는 게 확실하면
+    # 시작하지 않는다.
+    #
+    # 2026-08-20 실사고: 러너에 ffmpeg 가 없던 날, 대본과 TTS 를 전부 만들고 나서
+    # 맨 끝 mp3 변환에서야 부재를 알아차렸다. 그 회차는 fast·expert 가 각각 1회씩
+    # 재시도까지 해서 TTS 를 **네 번** 만들어 통째로 버렸고(그만큼의 유료 할당량),
+    # 스텝은 15분 상한에 걸려 죽었다. 워크플로 주석은 예전부터 "audio_brief 가
+    # ffmpeg 부재를 감지하고 스스로 스킵한다"고 적혀 있었는데, 실제로는 값을
+    # 다 치른 뒤에야 감지했다. 이 검사가 그 주석을 사실로 만든다.
+    #
+    # 캐시 재사용(reuse/stale_sent) 경로보다 뒤에 둔다 — 이미 만들어 둔 mp3 를
+    # 보내기만 하는 회차는 ffmpeg 이 없어도 정상으로 끝나야 한다.
+    if not ffmpeg_available():
+        print(f"[audio] {FFMPEG_MISSING} — 생성 전 스킵 (TTS 호출 안 함)")
+        return False
 
     material = build_material(briefing, by_id)
     if "제목:" not in material:

@@ -84,6 +84,7 @@ class AudioBriefTestCase(unittest.TestCase):
         self._orig_fns = (audio_brief.is_available, audio_brief.call_json,
                           audio_brief.call_tts, audio_brief.to_mp3,
                           audio_brief.send_telegram_audio)
+        self._orig_ffmpeg = audio_brief.ffmpeg_available
         self.addCleanup(self._restore)
         self.calls = []
         self.call_kwargs = []
@@ -97,6 +98,10 @@ class AudioBriefTestCase(unittest.TestCase):
         audio_brief.call_tts = self._fake_tts
         audio_brief.to_mp3 = self._fake_mp3
         audio_brief.send_telegram_audio = self._fake_send
+        # to_mp3 를 가짜로 바꾼 이상 이 스위트는 호스트의 진짜 ffmpeg 과 무관해야
+        # 한다. generate() 가 시작 전에 ffmpeg 을 확인하므로, 여기서 켜 두지 않으면
+        # ffmpeg 이 없는 기계에서 스위트 전체가 "생성 전 스킵"으로 넘어간다.
+        audio_brief.ffmpeg_available = lambda: True
 
     def _restore(self):
         audio_brief.WEB_DATA, audio_brief.AUDIO_DIR = self._orig
@@ -104,6 +109,7 @@ class AudioBriefTestCase(unittest.TestCase):
         (audio_brief.is_available, audio_brief.call_json,
          audio_brief.call_tts, audio_brief.to_mp3,
          audio_brief.send_telegram_audio) = self._orig_fns
+        audio_brief.ffmpeg_available = self._orig_ffmpeg
 
     def _fake_send(self, mp3_path, meta):
         # 실제 계약과 같은 모양으로 돌려준다 — 성공은 file_id 를 담은 dict, 실패는
@@ -662,6 +668,40 @@ class AudioBriefTestCase(unittest.TestCase):
         meta = json.loads((audio_brief.AUDIO_DIR / "audio.json")
                           .read_text(encoding="utf-8"))
         self.assertEqual(meta["date"], "2026-08-03")
+
+    def test_generate_skips_before_paying_for_tts_when_ffmpeg_missing(self):
+        """ffmpeg 이 없으면 대본·TTS 를 **한 번도** 부르지 않고 빠져나온다.
+
+        2026-08-20 회귀: mp3 변환 직전까지 다 만들고 나서야 부재를 알아차려,
+        재시도까지 TTS 를 네 번 만들어 통째로 버리고 스텝이 15분 상한에 걸렸다.
+        """
+        self.write_data()
+        self.responses = [{"script": GOOD_SCRIPT}]
+        audio_brief.ffmpeg_available = lambda: False
+
+        self.assertFalse(audio_brief.generate())
+        self.assertEqual(self.tts_calls, [], "TTS 를 불렀다 — 유료 구간에 들어갔다")
+        self.assertEqual(self.calls, [], "대본 생성을 불렀다 — 유료 구간에 들어갔다")
+        self.assertFalse((audio_brief.AUDIO_DIR / "briefing-fast-2026-08-04.mp3").exists())
+
+    def test_ffmpeg_missing_still_sends_already_generated_mp3(self):
+        """이미 만들어 둔 mp3 를 보내기만 하는 회차는 ffmpeg 없이도 끝나야 한다.
+
+        차단은 캐시 재사용 경로 **뒤**에 있다 — 앞에 두면 '생성은 됐는데 발송만
+        실패한 날'의 이어받기가 ffmpeg 부재로 같이 막힌다.
+        """
+        self.write_data()
+        self.responses = [{"script": GOOD_SCRIPT}]
+        self.send_ok = False
+        self.assertTrue(audio_brief.generate())        # 생성 성공, 발송 실패
+        self.assertEqual(len(self.sent), 1)
+
+        audio_brief.ffmpeg_available = lambda: False   # 이어받기 회차
+        self.send_ok = True
+        tts_before = len(self.tts_calls)
+        self.assertTrue(audio_brief.generate())
+        self.assertEqual(len(self.tts_calls), tts_before, "이어받기가 TTS 를 다시 불렀다")
+        self.assertEqual(len(self.sent), 2, "이어받기 발송이 안 나갔다")
 
     def test_generate_without_briefings_is_noop(self):
         self.assertFalse(audio_brief.generate())

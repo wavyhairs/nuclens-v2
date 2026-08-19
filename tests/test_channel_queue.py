@@ -139,6 +139,32 @@ class ChannelQueueTest(unittest.TestCase):
         channel_queue.publish(path=self.path, now=NOW, sender=second, gap_sec=0)
         self.assertEqual(second.sent, [])
 
+    def test_audio_added_after_the_texts_went_out_still_publishes(self):
+        """텍스트가 먼저 나가 배치가 닫힌 뒤 붙인 오디오도 반드시 나가야 한다.
+
+        2026-08-20 실사고 회귀: ffmpeg 부재로 오디오만 실패해 텍스트 3건이 sent 로
+        배치를 닫았고, 복구 회차가 오디오를 만들어 붙였다. ensure_batch 는 기존
+        배치의 status 를 건드리지 않으므로 배치는 sent 인 채였고, publish 는
+        pending/partial/failed 만 훑으니 그 오디오는 큐에 앉은 채 사라질 참이었다.
+        """
+        date = "2026-08-17"
+        channel_queue.sync_daily_batch(_outbox(date), path=self.path, now=NOW)
+        first = RecordingSender()
+        channel_queue.publish(path=self.path, now=NOW, sender=first, gap_sec=0)
+        self.assertEqual([n for _, n in first.sent], ["보고서추천", "국내", "해외"])
+        self.assertEqual(self._load()["batches"][0]["status"], "sent")
+
+        # 뒤늦게 도착한 오디오
+        channel_queue.record_audio(date, name="빠른 브리핑", file_id="fast-id",
+                                   duration=170, path=self.path, now=NOW)
+        self.assertEqual(self._load()["batches"][0]["status"], "partial",
+                         "sent 로 닫힌 배치가 새 오디오로 다시 열리지 않았다")
+
+        second = RecordingSender()
+        channel_queue.publish(path=self.path, now=NOW, sender=second, gap_sec=0)
+        self.assertEqual([n for _, n in second.sent], ["fast-id"],
+                         "오디오만 나가야 한다 — 텍스트 재발송은 중복이다")
+
     # ---- 실패·경계 -----------------------------------------------------------
 
     def test_one_failed_item_does_not_block_the_rest(self):

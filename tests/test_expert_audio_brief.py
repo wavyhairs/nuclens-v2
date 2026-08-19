@@ -524,6 +524,10 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
         expert.generate_expert_script = self._fake_script
         expert.synthesize_expert = self._fake_tts
         expert.to_mp3 = self._fake_mp3
+        # 빠른 브리핑 스위트와 같은 이유 — 호스트의 진짜 ffmpeg 에 기대지 않는다.
+        self._orig_ffmpeg = expert.ffmpeg_available
+        self.addCleanup(setattr, expert, "ffmpeg_available", self._orig_ffmpeg)
+        expert.ffmpeg_available = lambda: True
         expert.send_telegram_audio = self._fake_send
 
     def _restore(self):
