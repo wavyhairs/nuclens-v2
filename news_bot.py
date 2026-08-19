@@ -243,8 +243,16 @@ RSS_SOURCES += [
     # 프랑스 원자력학회 — EPR2·SMR·프랑스 정책 (프랑스어 → Gemini가 한국어 요약)
     {"url": "https://www.sfen.org/feed/", "name": "SFEN",
      "domain_label": "sfen.org"},
-    # 미 에너지부 공식 — 전 에너지원 피드라 비원자력 포함, 큐레이션 noise 필터가 거름
-    {"url": "https://www.energy.gov/rss.xml", "name": "DOE",
+    # 미 에너지부 공식 — 전 에너지원 피드라 비원자력 포함, 큐레이션 noise 필터가 거름.
+    # `/rss.xml` 은 쓰지 않는다. 그 경로는 200 에 파싱 가능한 XML 을 돌려주지만 내용이
+    # 정적 히스토리 페이지 목록이고 최신 항목이 2020-06-10 에서 멈춰 있다(실측
+    # 2026-08-19). 접속이 성공하니 실패 카운터는 오르지 않고 stale 경고만 21회 쌓였다
+    # — 죽은 피드가 살아 있는 척하는 모양이라 응답으로는 못 가리고 URL 로만 갈린다.
+    {"url": "https://www.energy.gov/newsroom/rss.xml", "name": "DOE",
+     "domain_label": "energy.gov", "source_kind": "official"},
+    # 같은 부처의 원자력국 전용 피드. 월 4~5건으로 뜸하지만 Civil Nuclear Credit 지급·
+    # HALEU 배분·신형로 임계처럼 뉴스룸이 싣지 않는 1차 발표가 여기로만 나온다.
+    {"url": "https://www.energy.gov/ne/rss.xml", "name": "DOE 원자력국",
      "domain_label": "energy.gov", "source_kind": "official"},
 ]
 # Reuters는 공개 RSS 폐지, La Tribune은 섹션 피드 없음 → Google News 우회 (실측 12~18건/일)

@@ -6068,5 +6068,172 @@ class AdminConsoleTests(unittest.TestCase):
         self.assertGreater(scanned, 100, f"HTML 보간을 {scanned}개밖에 못 찾았다 — 스캐너가 깨졌다")
 
 
+class AudioSeekTests(unittest.TestCase):
+    """브리핑 듣기의 재생 위치 막대.
+
+    10분짜리 전문가 브리핑에 진행 바가 없어서 중간으로 되돌아갈 방법이 아예
+    없었다(사용자 지적). 막대는 있으면 되는 것이 아니라, 키보드로도 움직여야 하고
+    재생 전에도 제 길이를 알고 있어야 한다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        cls.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+
+    def test_seek_bar_is_a_native_range_inside_the_player(self):
+        self.assertIn('id="audioSeek"', self.html)
+        # 직접 그린 막대는 키보드·스크린리더를 다시 만들어야 하고, 대개 안 만든다.
+        self.assertIn('type="range"', self.html)
+        self.assertIn('aria-label="재생 위치"', self.html)
+        # 플레이어 안에 있어야 audioBrief 가 숨을 때 같이 숨는다.
+        self.assertLess(self.html.index('id="audioBrief"'), self.html.index('id="audioSeek"'))
+        self.assertLess(self.html.index('id="audioSeek"'), self.html.index('id="audioEl"'))
+
+    def test_drag_moves_only_on_release(self):
+        """끄는 내내 currentTime 을 바꾸면 브라우저가 매 프레임 탐색을 건다."""
+        self.assertIn('audioSeek.addEventListener("input"', self.script)
+        self.assertIn('audioSeek.addEventListener("change"', self.script)
+        change = self.script[self.script.index('audioSeek.addEventListener("change"'):]
+        change = change[:change.index("});")]
+        self.assertIn("currentTime = target", change)
+        held = self.script[self.script.index('audioSeek.addEventListener("input"'):]
+        self.assertNotIn("currentTime =", held[:held.index("});")])
+
+    def test_position_survives_a_drag_before_playback(self):
+        """preload=none 이라 재생 전에는 duration 이 NaN 이다 — 그때 끈 위치가 사라지면 안 된다."""
+        self.assertIn("audioPendingSeek", self.script)
+        loaded = self.script[self.script.index('briefAudio.addEventListener("loadedmetadata"'):]
+        self.assertIn("audioPendingSeek", loaded[:loaded.index("});")])
+
+    def test_bar_knows_its_length_before_the_file_loads(self):
+        body = self.script[self.script.index("function audioDuration()"):]
+        body = body[:body.index("\n}")]
+        self.assertIn("duration_sec", body)
+
+    def test_default_stays_preload_none(self):
+        """첫 화면에 서는 플레이어다 — 아무도 안 듣는 날에도 받아 오면 그만큼 낭비다."""
+        self.assertIn('preload="none"', self.html)
+        self.assertIn("function ensureAudioMetadata()", self.script)
+
+    def test_switching_variant_clears_the_old_position(self):
+        block = self.script[self.script.index("function renderAudioBrief"):]
+        block = block[:block.index("\nfunction ")]
+        self.assertIn("audioPendingSeek = null", block)
+        self.assertIn("syncAudioProgress(0)", block)
+
+    def test_bar_is_styled_and_focusable(self):
+        self.assertIn(".audio-seek", self.style)
+        self.assertIn(".audio-seek:focus-visible", self.style)
+
+
+class WordCloudTests(unittest.TestCase):
+    """흐름 탭의 워드 클라우드 — 기간 토글을 따르는 그림 한 장."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        cls.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+
+    def body(self):
+        block = self.script[self.script.index("function renderWordCloud()"):]
+        return block[:block.index("\nfunction ")]
+
+    def test_sits_between_the_charts_and_the_briefing_timeline(self):
+        self.assertIn('id="trendWordCloud"', self.html)
+        self.assertLess(self.html.index('id="trendData"'), self.html.index('id="trendWordCloud"'))
+        self.assertLess(self.html.index('id="trendWordCloud"'), self.html.index('id="briefingTimeline"'))
+
+    def test_it_is_a_numbered_section(self):
+        section = self.html[self.html.index('id="trendWordCloud"'):]
+        self.assertIn("sec-no", section[:section.index("</section>")])
+
+    def test_follows_the_period_toggle_by_sharing_the_table_data(self):
+        """제 손으로 집계하면 같은 화면에서 표와 다른 수가 나온다."""
+        self.assertIn("wordCloudRows()", self.body())
+        # 재료는 빌드가 낸 것(tag_cloud)이고, 없으면 표와 같은 재료로 내려앉는다.
+        source = self.script[self.script.index("function wordCloudRows()"):]
+        source = source[:source.index("\nfunction ")]
+        self.assertIn("tag_cloud", source)
+        self.assertIn("keywordRows()", source)
+        self.assertIn("periodData()", source)
+        # 기간 토글은 renderTrend 를 다시 부르고, 거기서 구름도 다시 그려진다.
+        trend = self.script[self.script.index("function renderTrend()"):]
+        trend = trend[:trend.index("\n}")]
+        self.assertIn("renderWordCloud()", trend)
+
+    def test_hidden_state_is_decided_before_sections_are_renumbered(self):
+        """숨은 구역이 번호를 한 칸 먹으면 흐름 탭이 02 부터 시작한다."""
+        trend = self.script[self.script.index("function renderTrend()"):]
+        trend = trend[:trend.index("\n}")]
+        self.assertLess(trend.index("renderWordCloud()"), trend.index('renumberSections("view-trend")'))
+
+    def test_hides_itself_when_there_is_not_enough_to_show(self):
+        body = self.body()
+        self.assertIn("trend_ready", body)
+        self.assertIn("WORD_CLOUD_MIN_WORDS", body)
+
+    def test_words_open_the_archive_search(self):
+        self.assertIn("data-keyword=", self.body())
+
+    def test_size_is_compressed_so_one_word_cannot_own_the_panel(self):
+        self.assertIn("Math.sqrt", self.body())
+
+    def test_layout_has_no_randomness(self):
+        """새로고침마다 자리가 바뀌면 '어제와 뭐가 달라졌나'를 못 읽는다."""
+        self.assertNotIn("Math.random", self.body())
+
+    def test_change_is_carried_by_colour_not_a_second_size_axis(self):
+        self.assertIn("function wordCloudTone", self.script)
+        for tone in (".word-cloud-item.new", ".word-cloud-item.up", ".word-cloud-item.down"):
+            self.assertIn(tone, self.style)
+
+
+class AdminPendingChipTests(unittest.TestCase):
+    """콘솔에서 더한 검색어는 **키워드 칸에** 나타나야 한다.
+
+    예전에는 config 스냅샷만 그렸다. 그 스냅샷은 다음 수집이 돌 때까지 갱신되지
+    않으므로, 방금 추가한 키워드가 '내 판정'에만 뜨고 정작 키워드 칸에는 없었다 —
+    관리자는 추가가 실패한 줄 알고 같은 말을 다시 넣었다(사용자 지적).
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.script = (ROOT / "public" / "admin" / "admin.js").read_text(encoding="utf-8")
+        cls.style = (ROOT / "public" / "admin" / "admin.css").read_text(encoding="utf-8")
+
+    def chip_states(self):
+        block = self.script[self.script.index("function chipStates("):]
+        return block[:block.index("\nfunction ")]
+
+    def test_pending_additions_are_merged_into_the_chip_list(self):
+        body = self.chip_states()
+        self.assertIn("entriesOf(addKind)", body)
+        self.assertIn('"pending"', body)
+
+    def test_pending_removals_are_shown_as_still_present(self):
+        self.assertIn('"removing"', self.chip_states())
+        self.assertIn("entriesOf(removeKind)", self.chip_states())
+
+    def test_each_state_has_its_own_colour(self):
+        for rule in (".admin-chip.added", ".admin-chip.pending", ".admin-chip.removing"):
+            self.assertIn(rule, self.style)
+
+    def test_a_pending_removal_undoes_instead_of_stacking(self):
+        """같은 × 를 두면 삭제 판정이 두 벌 쌓인다."""
+        self.assertIn('"chip-restore"', self.script)
+        handler = self.script[self.script.index('if (act === "chip-restore")'):]
+        handler = handler[:handler.index("\n  }")]
+        self.assertIn('op: "delete"', handler)
+
+    def test_counts_follow_what_is_on_screen(self):
+        self.assertIn("function chipCount(", self.script)
+        keywords = self.script[self.script.index("function renderKeywords()"):]
+        keywords = keywords[:keywords.index("renderLearnedTerms()")]
+        self.assertNotIn("group.keywords.length", keywords)
+
+
 if __name__ == "__main__":
     unittest.main()

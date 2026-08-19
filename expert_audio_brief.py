@@ -49,6 +49,7 @@ from audio_brief import (
     evidence_specs,
     load_briefing,
     queue_for_channel,
+    report_script_audit,
     send_telegram_audio,
     split_script,
     to_mp3,
@@ -1135,6 +1136,10 @@ def generate_expert_script(briefing: dict, issues: list[dict],
     audit = final_evidence_audit(framed, briefing, contracts,
                                  min_lines=min_paragraphs(len(issues)))
     report["evidence_audit"] = audit.as_dict()
+    # 이 결과가 관리자에게 닿는 유일한 경로다. 여기서 안 올리면 삭제된 문단도,
+    # 근거 계약이 없어 검증을 통째로 건너뛴 회차도 아무 데도 안 남는다.
+    report_script_audit(audit, variant=EXPERT_VARIANT, date=briefing.get("date"),
+                        contract_count=len(contracts or ()))
     if audit.action == "reject":
         raise ValueError(
             f"기사 근거 검증 후 남은 문단 부족 — 제외 {len(audit.removed)}건")

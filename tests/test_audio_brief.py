@@ -668,6 +668,64 @@ class AudioBriefTestCase(unittest.TestCase):
         self.assertEqual(self.calls, [])
 
 
+class ScriptAuditReportTests(unittest.TestCase):
+    """오디오 품질 결과가 관리자 알림 창구에 닿는가.
+
+    이 배선이 없어서 생긴 일이 있다(2026-08-18): 전문가 대본이 `1050억 달러(약
+    149조 원)` 를 `1050조 원` 으로 옮겨 방송했는데 파이프라인에는 아무 기록도
+    남지 않았고, 사람이 귀로 듣고 알려 줄 때까지 아무도 몰랐다.
+    """
+
+    def setUp(self):
+        self.events = []
+        import news_bot
+        self._orig = news_bot.append_quality_event
+        news_bot.append_quality_event = lambda *a, **kw: (
+            self.events.append((a, kw)) or True)
+        self.addCleanup(setattr, news_bot, "append_quality_event", self._orig)
+
+    def report(self, audit, variant="expert", contracts=0):
+        return audio_brief.report_script_audit(
+            audit, variant=variant, date="2026-08-18", contract_count=contracts)
+
+    def test_clean_audit_says_nothing(self):
+        self.report(article_quality_gate.ScriptAudit("HOST: 본문", "allow"))
+        self.assertEqual(self.events, [])
+
+    def test_skipped_verification_is_critical(self):
+        """근거 계약이 없으면 대본은 그대로 통과한다 — 통과가 아니라 미검증이다."""
+        audit = article_quality_gate.audit_spoken_script("HOST: 본문", [])
+        self.report(audit)
+        (key, _title, detail), kwargs = self.events[0]
+        self.assertEqual(key, "audio-script-unverified")
+        self.assertEqual(kwargs["severity"], "critical")
+        self.assertIn("검증되지 않은", detail)
+
+    def test_removed_paragraph_is_reported_with_its_finding(self):
+        finding = article_quality_gate.Finding(
+            "script_claim_unsupported", "sanitize", "script", "확인되지 않음",
+            {"line": "최대 1050조 원을 보증합니다.", "claims": ["1050조원"]})
+        self.report(article_quality_gate.ScriptAudit(
+            "HOST: 남은 문단", "sanitize", ("최대 1050조 원을 보증합니다.",), (finding,)))
+        (key, _title, _detail), kwargs = self.events[0]
+        self.assertEqual(key, "audio-script-claim-removed")
+        self.assertEqual(kwargs["severity"], "warning")
+        self.assertEqual(kwargs["items"][0]["claims"], ["1050조원"])
+        self.assertEqual(kwargs["items"][0]["variant"], "expert")
+
+    def test_rejected_script_is_critical(self):
+        self.report(article_quality_gate.ScriptAudit("", "reject", ("문단",), ()))
+        _args, kwargs = self.events[0]
+        self.assertEqual(kwargs["severity"], "critical")
+        self.assertEqual(kwargs["min_occurrences"], 1)
+
+    def test_reporter_never_raises_into_audio_generation(self):
+        import news_bot
+        news_bot.append_quality_event = lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("nope"))
+        self.assertFalse(self.report(
+            article_quality_gate.ScriptAudit("", "sanitize", ("문단",), ())))
+
+
 class ExitCodeContractTests(unittest.TestCase):
     """실패는 종료 코드로 나가야 한다.
 

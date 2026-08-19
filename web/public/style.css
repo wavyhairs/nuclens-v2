@@ -2103,6 +2103,46 @@ dialog[open] { animation: dialog-in var(--mo-2) var(--mo-ease-out); }
 .keyword-head { color: var(--c-text-muted); font-weight: 600; }
 .keyword-row .positive { color: var(--c-positive); font-weight: 700; }
 .keyword-row .negative { color: var(--c-critical); font-weight: 700; }
+
+/* ── 워드 클라우드 ────────────────────────────────────────────────────────
+ *
+ * 위 키워드 표와 같은 재료(keywordRows)를 다르게 읽는 자리다. 표는 순위와 증감을
+ * 숫자로 주고, 여기는 그 기간의 무게 분포를 한눈에 준다. 크기 = 언급 수,
+ * 색 = 변화. 배치에 무작위는 없다 — 새로고침마다 자리가 바뀌면 비교가 안 된다.
+ */
+.word-cloud-panel { margin: var(--sp-5) 0 var(--sp-6); }
+.word-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px 16px;
+  padding: var(--sp-4) var(--sp-3);
+  border-top: var(--bd-2) solid var(--c-border-strong);
+  border-bottom: var(--bd-1) solid var(--c-border);
+}
+.word-cloud-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-text-muted);
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.word-cloud-item:hover { text-decoration: underline; text-underline-offset: 3px; }
+.word-cloud-item:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+/* 강조색은 '신규' 하나에만 쓴다. 이 화면에서 가장 새로운 사실이고, 색을 두 군데
+   이상 쓰면 강조가 배경이 된다(--c-accent 는 "변화" 전용 · 화면당 3회 이하). */
+.word-cloud-item.new { color: var(--c-accent-text); }
+.word-cloud-item.up { color: var(--c-text); }
+.word-cloud-item.down,
+.word-cloud-item.flat { color: var(--c-text-muted); }
+/* 건수는 낱말 크기를 따라가지 않는다 — 같은 축을 두 번 쓰면 크기가 뜻을 잃는다. */
+.word-cloud-count { color: var(--c-text-muted); font-size: var(--t-min); font-weight: 500; font-variant-numeric: tabular-nums; }
 .bar-row { display: grid; grid-template-columns: minmax(90px, .8fr) minmax(80px, 1.5fr) 28px; align-items: center; gap: 8px; min-height: 31px; font-size: var(--t-min); }
 .bar-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bar-track { height: 8px; overflow: hidden; border-radius: var(--r-1); background: var(--c-surface-sunken); }
@@ -2501,6 +2541,60 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   font-weight: 650;
 }
 .audio-control-row > #audioToggle:hover { border-bottom-color: var(--c-text); }
+
+/* ── 재생 위치 막대 ────────────────────────────────────────────────────────
+ *
+ * 10분짜리 전문가 브리핑에 진행 바가 없어서 중간으로 돌아갈 방법이 없었다
+ * (사용자 지적). input[type=range] 를 쓰는 이유는 키보드 화살표·Home/End·
+ * 스크린리더가 공짜로 따라오기 때문이다 — 직접 그린 막대는 그걸 다시 만들어야
+ * 하고, 대개 안 만든다. 그래서 트랙만 이 저장소의 괘선 어법으로 갈아입힌다.
+ */
+.audio-seek-row { flex-basis: 100%; margin-top: -2px; }
+.audio-seek {
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.audio-seek:disabled { cursor: default; opacity: 0.5; }
+/* 지나온 구간은 채우고 남은 구간은 괘선으로 둔다. --audio-progress 는 app.js 가 준다. */
+.audio-seek::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 0;
+  background: linear-gradient(to right,
+    var(--c-text) 0 var(--audio-progress, 0%), var(--c-border) var(--audio-progress, 0%) 100%);
+}
+.audio-seek::-moz-range-track { height: 3px; border-radius: 0; background: var(--c-border); }
+.audio-seek::-moz-range-progress { height: 3px; border-radius: 0; background: var(--c-text); }
+.audio-seek::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  margin-top: -4.5px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--c-text);
+  appearance: none;
+  -webkit-appearance: none;
+}
+.audio-seek::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--c-text);
+}
+.audio-seek:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 3px; }
+/* 손가락으로 끄는 화면에서는 12px 손잡이가 너무 작다. */
+@media (pointer: coarse) {
+  .audio-seek { height: 28px; }
+  .audio-seek::-webkit-slider-thumb { width: 16px; height: 16px; margin-top: -6.5px; }
+  .audio-seek::-moz-range-thumb { width: 16px; height: 16px; }
+}
+
 .audio-description { flex-basis: 100%; max-width: 680px; margin: -4px 0 0; color: var(--c-text-muted); font-size: var(--t-min); line-height: 1.5; }
 
 /* ── 장기 흐름: 7일/30일/분기/반기/연간 story timeline ── */

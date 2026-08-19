@@ -295,6 +295,31 @@
 }
 /* 콘솔에서 더한 말. 기본 파일에서 온 것과 구분해야 무엇을 되돌리는지 알고 누른다. */
 .admin-chip.added { border-color: var(--c-secondary); color: var(--c-secondary); }
+/* 방금 더해 **아직 수집에 안 나간** 말. added 와도 달라야 한다 — 저쪽은 이미
+   검색에 나가고 있고 이쪽은 다음 회차를 기다린다. 채움을 줘서 목록 안에서 눈에
+   먼저 들어오게 한다: 추가한 직후 관리자가 찾는 것이 바로 이 칩이다. */
+.admin-chip.pending {
+  border-color: var(--c-accent);
+  border-style: dashed;
+  background: color-mix(in srgb, var(--c-accent) 10%, transparent);
+  color: var(--c-accent-text);
+}
+/* 빼기로 했지만 아직 안 빠진 말. 글자에 줄을 그어 '있지만 곧 없어진다'를 말한다. */
+.admin-chip.removing {
+  border-style: dashed;
+  color: var(--c-text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--c-critical);
+}
+.admin-chip.removing .admin-chip-note { text-decoration: none; }
+/* 처지 라벨. 칩보다 작고 흐리게 — 읽는 것은 낱말이고 이건 각주다. */
+.admin-chip-note {
+  margin-left: 4px;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+}
+.admin-chip-empty { color: var(--c-text-muted); font-size: var(--t-min); }
 .admin-chip-x {
   display: inline-flex;
   align-items: center;
