@@ -426,6 +426,80 @@ class ArticleIntegrityTests(unittest.TestCase):
                       [row.code for row in result.findings])
 
 
+class CurrencyQuantityTests(unittest.TestCase):
+    """달러 금액도 수치다 — 예전에는 이 축이 통째로 안 보였다.
+
+    `_NUMBER_UNIT_RE` 의 단위 목록에 `억 달러` 가 없어서 숫자와 `달러` 사이의 '억'
+    이 매칭을 끊었다. 그래서 달러 금액은 문자열이 글자 그대로 같을 때만 검증됐고,
+    대본이 표현만 바꿔 금액을 틀려도 수치 규칙은 아무 말을 하지 않았다.
+    """
+
+    def test_korean_multiplier_units_are_read_as_money(self):
+        self.assertEqual(gate._quantity_map("1050억 달러"), {"달러": {"105000000000"}})
+        self.assertEqual(gate._quantity_map("3조 달러"), {"달러": {"3000000000000"}})
+        self.assertEqual(gate._quantity_map("500만 달러"), {"달러": {"5000000"}})
+
+    def test_same_amount_in_either_language_is_one_value(self):
+        """`1050억 달러` 와 `$105 billion` 은 같은 금액이다."""
+        for text in ("1050억 달러", "1,050억달러", "$105 billion", "105 billion dollars"):
+            self.assertEqual(gate._quantity_map(text), {"달러": {"105000000000"}}, text)
+
+    def test_non_currency_scale_words_are_not_money(self):
+        """`5 million tonnes` 가 달러가 되면 없는 충돌이 생긴다."""
+        self.assertEqual(gate._quantity_map("5 million tonnes of uranium"), {})
+
+    def test_wrong_dollar_amount_now_conflicts(self):
+        source = "엔비디아가 데이터센터에 최대 1050억 달러를 보증한다."
+        self.assertEqual(gate._critical_quantity_conflicts(source, "최대 1050억 달러를 보증합니다."), {})
+        conflict = gate._critical_quantity_conflicts(source, "최대 10500억 달러를 보증합니다.")
+        self.assertEqual(conflict["달러"]["unsupported_output"], ["1050000000000"])
+
+    def test_dollars_and_won_stay_separate_units(self):
+        """환율 환산은 하지 않는다 — 그래야 억 달러를 조 원으로 옮긴 실수가 걸린다.
+
+        실제 사고(2026-08-18): 기사의 `1050억 달러(약 149조 원)` 가 전문가 대본에서
+        `1050조 원` 이 되어 방송됐다. 숫자만 옮기고 단위를 갈아 끼운 형태다.
+        """
+        source = "최대 1050억 달러(약 149조 원)의 금융 보증을 제공한다."
+        self.assertEqual(gate._quantity_map(source),
+                         {"달러": {"105000000000"}, "조원": {"149"}})
+        conflict = gate._critical_quantity_conflicts(source, "최대 1050조 원을 보증합니다.")
+        self.assertEqual(conflict["조원"]["unsupported_output"], ["1050"])
+
+
+class DirectionalAdditionTests(unittest.TestCase):
+    """요약에만 있는 이름과 요약에만 있는 국가는 같은 무게가 아니다.
+
+    본문이 '오하이오주'·'NRC' 라고만 써도 올바른 한국어 요약은 '미국'이라고 쓴다.
+    그 승격을 환각으로 세면 정상 기사가 격리된다 — 실측 2026-08-18 의 발송 직전
+    격리 20건 중 9건(45%)이 이 사유 하나뿐이었다.
+    """
+
+    def signals(self, **overrides):
+        base = {
+            "entity_conflict": False, "country_conflict": False,
+            "topic_conflict": False, "stage_conflict": False,
+            "entity_replacement": False, "country_replacement": False,
+            "topic_replacement": False, "quantity_conflicts": {},
+            "introduced_entities": [], "introduced_countries": [],
+        }
+        return {**base, **overrides}
+
+    def test_lone_introduced_country_is_not_a_hard_block(self):
+        self.assertFalse(gate._gross_mismatch(
+            self.signals(introduced_countries=["US"]), directional_is_hard=True))
+
+    def test_lone_introduced_entity_still_blocks(self):
+        self.assertTrue(gate._gross_mismatch(
+            self.signals(introduced_entities=["holtec"]), directional_is_hard=True))
+
+    def test_country_replacement_still_blocks(self):
+        """국가가 **바뀐** 것은 여전히 차단이다 — 추가와 교체를 가른다."""
+        self.assertTrue(gate._gross_mismatch(self.signals(
+            country_replacement=True, introduced_countries=["ES"],
+            topic_conflict=True), directional_is_hard=True))
+
+
 class EligibilityTests(unittest.TestCase):
     BASE = {
         "title": "한수원, 원전 계약 체결",

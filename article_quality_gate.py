@@ -201,16 +201,42 @@ _QUANTITY_RE = re.compile(
     re.IGNORECASE,
 )
 _MODEL_ID_RE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z]{2,8}[- ]?\d{2,4}(?![A-Za-z0-9])")
+# 배수가 붙은 화폐 단위(억 달러·조 달러)는 반드시 맨 단위(달러)보다 **앞에** 선다.
+# 교대는 먼저 맞는 것을 가져가므로 순서가 곧 우선순위다.
+#
+# 이 목록에 `억 달러` 가 없어서 생긴 사고가 있다(실측 2026-08-18): 숫자와 `달러`
+# 사이의 '억' 이 매칭을 끊어 `1050억 달러` 가 통째로 수치로 안 잡혔고, 그래서 달러
+# 금액은 문자열이 글자 그대로 같을 때만 검증됐다. 아래 _SPOKEN_UNIT_TAIL_RE 는
+# 처음부터 `억\s*달러` 를 알고 있었으므로 이쪽이 빠진 것이 맞다.
 _NUMBER_UNIT_RE = re.compile(
     r"(?P<number>(?:\d{1,3}(?:[ ,]\d{3})+|\d+(?:[.,]\d+)?))"
     r"[-\s]*"
-    r"(?P<unit>%|퍼센트|mw|gw|kw|twh|mwh|억원|억 원|조원|조 원|달러|유로|기|호기|개|건|명|년|개월|월|일)",
+    r"(?P<unit>%|퍼센트|mw|gw|kw|twh|mwh|억원|억 원|조원|조 원|"
+    r"만\s*달러|억\s*달러|조\s*달러|달러|만\s*유로|억\s*유로|유로|"
+    r"기|호기|개|건|명|년|개월|월|일)",
     re.IGNORECASE,
 )
 _UNIT_LIST_RE = re.compile(
     r"(?P<numbers>\d{1,2}(?:\s*[,·ㆍ･]\s*\d{1,2})+)\s*(?P<unit>호기|기)")
+# 영문 금액. `$105 billion` 과 `105 billion dollars` 두 어순만 받는다 — 통화 표시가
+# 붙은 자리에서만 잡아야 "5 million tonnes" 같은 비화폐 수량이 달러로 둔갑하지 않는다.
+_MONEY_EN_RE = re.compile(
+    r"(?:\$|\busd\b\s*)\s*(?P<pre_number>\d{1,3}(?:,\d{3})*(?:\.\d+)?)"
+    r"\s*(?P<pre_scale>million|billion|trillion)?"
+    r"|(?P<post_number>\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*"
+    r"(?P<post_scale>million|billion|trillion)\s+(?:us\s+)?(?:dollars?|usd)",
+    re.IGNORECASE,
+)
+_MONEY_EN_SCALES: Mapping[str, Decimal] = {
+    "": Decimal(1), "million": Decimal(10) ** 6,
+    "billion": Decimal(10) ** 9, "trillion": Decimal(10) ** 12,
+}
 _CRITICAL_UNITS = frozenset({"%", "퍼센트", "mw", "gw", "kw", "twh", "mwh", "억원", "억 원", "조원", "조 원", "달러", "유로", "기", "호기"})
 _EXACT_QUANTITY_UNITS = frozenset({"기", "호기", "개", "건", "명", "년", "개월", "월", "일"})
+# 화폐는 원화 배수(억원·조원)와 달리 **한 단위로 접는다**. `1050억 달러` 와
+# `$105 billion` 은 같은 금액이고, 대본은 둘 중 어느 표기로도 말할 수 있다.
+# 환율 환산은 하지 않는다 — 달러와 원은 끝까지 다른 단위로 남는다. 그래야
+# `1050억 달러(약 149조 원)` 를 `1050조 원` 으로 옮긴 실수가 원화 축에서 걸린다.
 _CANONICAL_UNITS: Mapping[str, tuple[str, Decimal]] = {
     "kw": ("mw", Decimal("0.001")),
     "mw": ("mw", Decimal("1")),
@@ -219,6 +245,16 @@ _CANONICAL_UNITS: Mapping[str, tuple[str, Decimal]] = {
     "twh": ("mwh", Decimal("1000000")),
     "억 원": ("억원", Decimal("1")),
     "조 원": ("조원", Decimal("1")),
+    "만 달러": ("달러", Decimal(10) ** 4),
+    "만달러": ("달러", Decimal(10) ** 4),
+    "억 달러": ("달러", Decimal(10) ** 8),
+    "억달러": ("달러", Decimal(10) ** 8),
+    "조 달러": ("달러", Decimal(10) ** 12),
+    "조달러": ("달러", Decimal(10) ** 12),
+    "만 유로": ("유로", Decimal(10) ** 4),
+    "만유로": ("유로", Decimal(10) ** 4),
+    "억 유로": ("유로", Decimal(10) ** 8),
+    "억유로": ("유로", Decimal(10) ** 8),
 }
 _EN_COUNT_RE = re.compile(
     r"\b(?P<number>\d+|one|two|three|four|five|six|seven|eight|nine|ten|"
@@ -423,18 +459,23 @@ def concrete_claims(text: object) -> tuple[str, ...]:
     return tuple(claims)
 
 
+def _render_quantity(value: Decimal) -> str:
+    """One deterministic spelling per magnitude, so set membership can compare."""
+    rendered = format(value, "f")
+    if "." in rendered:
+        rendered = rendered.rstrip("0").rstrip(".")
+    return rendered or "0"
+
+
 def _canonical_quantity(unit: str, number: str) -> tuple[str, str]:
-    """Compare equivalent power/energy units in one deterministic scale."""
+    """Compare equivalent power/energy/currency units in one deterministic scale."""
     canonical_unit, multiplier = _CANONICAL_UNITS.get(
         unit, (unit, Decimal("1")))
     try:
         value = Decimal(number) * multiplier
     except (InvalidOperation, ValueError):
         return canonical_unit, number
-    rendered = format(value, "f")
-    if "." in rendered:
-        rendered = rendered.rstrip("0").rstrip(".")
-    return canonical_unit, rendered or "0"
+    return canonical_unit, _render_quantity(value)
 
 
 def _quantity_map(text: object) -> dict[str, set[str]]:
@@ -454,6 +495,14 @@ def _quantity_map(text: object) -> dict[str, set[str]]:
             number = number.replace(",", "")
         unit, number = _canonical_quantity(unit, number)
         result.setdefault(unit, set()).add(number)
+    for match in _MONEY_EN_RE.finditer(compact):
+        number = match.group("pre_number") or match.group("post_number") or ""
+        scale = (match.group("pre_scale") or match.group("post_scale") or "").lower()
+        try:
+            value = Decimal(number.replace(",", "")) * _MONEY_EN_SCALES[scale]
+        except (InvalidOperation, ValueError, KeyError):
+            continue
+        result.setdefault("달러", set()).add(_render_quantity(value))
     for match in _EN_COUNT_RE.finditer(compact):
         number = match.group("number").lower()
         result.setdefault("기", set()).add(_EN_NUMBERS.get(number, number))
@@ -635,12 +684,22 @@ def _gross_mismatch(signals: Mapping[str, object], *, quantity_is_hard: bool = T
     country_topic_switch = bool(signals.get("country_conflict")) and bool(
         signals.get("topic_conflict")
     )
-    # With retained description/body evidence, an output-only named entity or
-    # country is itself directional evidence of invention. On old title-only
-    # archives we keep the conservative corroboration rule to avoid hiding a
-    # legitimate body-only counterparty.
+    # With retained description/body evidence, an output-only *named entity* is
+    # itself directional evidence of invention. On old title-only archives we keep
+    # the conservative corroboration rule to avoid hiding a legitimate body-only
+    # counterparty.
+    #
+    # A country is deliberately not in this list, and that asymmetry is the whole
+    # point of the docstring above. A body writes "오하이오주" or "NRC" and a correct
+    # summary writes "미국" — that promotion is normal Korean summarisation, not
+    # invention, so `introduced_countries` fires on healthy output. Measured
+    # 2026-08-18: of the 20 delivery quarantines retained in delivery_log.jsonl,
+    # 9 (45%) had no entity/topic/quantity conflict at all and were blocked on a
+    # lone introduced country. A country still blocks when it *replaces* another
+    # one (country_replacement) or contradicts outright (country_conflict) —
+    # those are below and unchanged.
     directional_addition = directional_is_hard and bool(
-        signals.get("introduced_entities") or signals.get("introduced_countries")
+        signals.get("introduced_entities")
     )
     identifier_replacement = bool(signals.get("entity_replacement")) and corroboration
     country_replacement = bool(signals.get("country_replacement")) and any(

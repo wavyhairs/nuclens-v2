@@ -1684,6 +1684,53 @@ function updateAudioToggle(playing) {
   button.textContent = playing ? "⏸ 일시정지" : `▶ ${label} 듣기`;
 }
 
+// ── 재생 위치 ────────────────────────────────────────────────────────────
+//
+// 손잡이를 끄는 동안에는 timeupdate 가 값을 되돌리지 않는다. 그러지 않으면
+// 드래그가 매 프레임 제자리로 튕긴다.
+let audioSeekHeld = false;
+// preload="none" 이라 재생을 시작하기 전에는 duration 이 NaN 이다. 그 사이에 끈
+// 위치는 메타데이터가 붙은 뒤에 얹는다 — 안 그러면 첫 드래그가 조용히 사라진다.
+let audioPendingSeek = null;
+
+// 길이는 두 곳에서 온다. 실제 음원이 우선이고, 아직 안 읽었으면 manifest 의
+// duration_sec 를 쓴다 — 재생 전에도 막대가 제 길이를 갖고 있어야 끌 수 있다.
+function audioDuration() {
+  const audio = document.getElementById("audioEl");
+  if (audio && Number.isFinite(audio.duration) && audio.duration > 0) return audio.duration;
+  const declared = Number(activeAudioVariant()?.duration_sec);
+  return Number.isFinite(declared) && declared > 0 ? declared : 0;
+}
+
+// 첫 조작에서만 메타데이터를 당긴다. 기본은 preload="none" 그대로 둔다 — 첫
+// 화면에 서는 플레이어라 아무도 안 듣는 날에도 받아 오면 그만큼이 낭비다.
+function ensureAudioMetadata() {
+  const audio = document.getElementById("audioEl");
+  if (!audio || audio.preload !== "none") return;
+  if (Number.isFinite(audio.duration) && audio.duration > 0) return;
+  audio.preload = "metadata";
+  audio.load();
+}
+
+function syncAudioProgress(current) {
+  const audio = document.getElementById("audioEl");
+  if (!audio) return;
+  const at = Number.isFinite(current) ? current : audio.currentTime;
+  const total = audioDuration();
+  const seek = document.getElementById("audioSeek");
+  if (seek) {
+    seek.max = total || 0;
+    seek.disabled = !total;
+    if (!audioSeekHeld) seek.value = total ? Math.min(at, total) : 0;
+    // range 는 숫자를 읽는다 — 초 단위 실수 대신 시계를 읽어 주게 한다.
+    seek.setAttribute("aria-valuetext", `${fmtClock(at)} / ${fmtClock(total)}`);
+    // 채워진 구간을 CSS 가 그릴 수 있게 비율을 넘긴다.
+    seek.style.setProperty("--audio-progress", total ? `${(at / total) * 100}%` : "0%");
+  }
+  const clock = document.getElementById("audioTime");
+  if (clock) clock.textContent = `${fmtClock(at)} / ${fmtClock(total)}`;
+}
+
 function renderAudioBrief(briefing) {
   const box = document.getElementById("audioBrief");
   if (!box) return;
@@ -1708,7 +1755,10 @@ function renderAudioBrief(briefing) {
     audio.src = src;
     updateAudioToggle(false);
     box.classList.remove("started");
-    document.getElementById("audioTime").textContent = `0:00 / ${fmtClock(variant.duration_sec)}`;
+    // 다른 회차로 갈아탔다 — 앞 회차에서 끌던 위치를 새 음원에 얹으면 안 된다.
+    audioSeekHeld = false;
+    audioPendingSeek = null;
+    syncAudioProgress(0);
   }
   const desc = document.getElementById("audioDescription");
   if (desc) desc.textContent = variant.description || (state.audioMode === "expert"
@@ -3010,6 +3060,82 @@ function renumberSections(viewId) {
   }
 }
 
+// ── 워드 클라우드 ────────────────────────────────────────────────────────
+//
+// 기간 토글을 따르는 그림 한 장. 재료는 키워드 표와 **같은** keywordRows() 다 —
+// 두 곳이 각자 집계하면 같은 화면에서 다른 수가 나온다.
+//
+// 크기는 언급 수, 색은 변화. 두 축을 같이 얹는 이유는 표가 이미 순위를 주기
+// 때문이다: 순위를 그림으로 한 번 더 그리면 자리만 먹고 새로 아는 것이 없다.
+const WORD_CLOUD_MAX = 32;
+const WORD_CLOUD_MIN_PX = 13;
+const WORD_CLOUD_MAX_PX = 40;
+// 셋 미만은 구름이 아니라 낱말이다. 표가 이미 그 말을 하고 있다.
+const WORD_CLOUD_MIN_WORDS = 3;
+
+function wordCloudTone(row) {
+  if (row.isNew) return "new";
+  if ((row.delta || 0) > 0) return "up";
+  if ((row.delta || 0) < 0) return "down";
+  return "flat";
+}
+
+// 구름은 표보다 넓게 본다. 빌드가 tag_cloud(40개)를 따로 내주지만, 그 키가 없는
+// 옛 trend.json 에서는 표와 같은 재료로 내려앉는다 — 12개짜리 성긴 구름이라도
+// 빈 화면보다는 낫고, 다음 빌드에서 저절로 넓어진다.
+function wordCloudRows() {
+  const cloud = periodData()?.tag_cloud;
+  if (!Array.isArray(cloud) || !cloud.length) return keywordRows();
+  return cloud.map(row => ({
+    tag: row.tag, now: row.count || 0, prev: row.previous_count,
+    delta: row.delta, isNew: Boolean(row.new),
+  }));
+}
+
+function renderWordCloud() {
+  const section = document.getElementById("trendWordCloud");
+  if (!section) return;
+  const rows = wordCloudRows().filter(row => row.now > 0)
+    .sort((a, b) => b.now - a.now).slice(0, WORD_CLOUD_MAX);
+  section.hidden = !state.meta?.trend_ready || rows.length < WORD_CLOUD_MIN_WORDS;
+  if (section.hidden) return;
+
+  // 제곱근으로 민다. 선형이면 1위가 나머지를 눌러 화면이 낱말 하나가 된다.
+  const counts = rows.map(row => row.now);
+  const top = Math.sqrt(Math.max(...counts));
+  const floor = Math.sqrt(Math.min(...counts));
+  const span = top - floor;
+  const sizeOf = count => span <= 0
+    ? (WORD_CLOUD_MIN_PX + WORD_CLOUD_MAX_PX) / 2
+    : WORD_CLOUD_MIN_PX + ((Math.sqrt(count) - floor) / span) * (WORD_CLOUD_MAX_PX - WORD_CLOUD_MIN_PX);
+
+  // 큰 낱말이 가운데 서도록 좌우로 번갈아 놓는다. 무작위로 흩으면 새로고침마다
+  // 배치가 바뀌어 '어제와 뭐가 달라졌나'를 못 읽는다 — 자리는 데이터로만 정한다.
+  const laid = [];
+  rows.forEach((row, index) => (index % 2 ? laid.unshift(row) : laid.push(row)));
+
+  const prevLabel = previousPeriodLabel();
+  document.getElementById("wordCloud").innerHTML = laid.map(row => {
+    const detail = row.prev == null ? "" : ` · ${prevLabel} ${row.prev}건`;
+    return `<button type="button" class="word-cloud-item ${wordCloudTone(row)}"
+      data-keyword="${esc(row.tag)}" style="font-size:${sizeOf(row.now).toFixed(1)}px"
+      title="${esc(row.tag)} · ${row.now}건${esc(detail)}"
+      >${esc(row.tag)}<span class="word-cloud-count">${row.now}</span></button>`;
+  }).join("");
+
+  const comparable = rows.some(row => row.prev != null);
+  document.getElementById("wordCloudMeta").textContent = comparable
+    ? `${periodLabel()} 상위 ${rows.length}개 · 크기는 언급 수, 색은 ${prevLabel} 대비 변화`
+    : `${periodLabel()} 상위 ${rows.length}개 · 크기는 언급 수`;
+
+  // 해석 문장. 그림만 두면 "그래서 무엇을 봐야 하나"가 안 남는다.
+  const biggest = rows[0];
+  const fresh = rows.filter(row => row.isNew).slice(0, 3).map(row => row.tag);
+  document.getElementById("wordCloudInterpretation").textContent = fresh.length
+    ? `${periodLabel()}에는 ${biggest.tag}가 ${biggest.now}건으로 가장 컸고, ${fresh.join(" · ")}가 새로 올라왔습니다.`
+    : `${periodLabel()}에는 ${biggest.tag}가 ${biggest.now}건으로 가장 컸습니다.`;
+}
+
 function renderTrend() {
   renderTrendTopicFlow();
   renderWeeklyReport();
@@ -3018,6 +3144,9 @@ function renderTrend() {
   renderPeriodTimeline();
   // 지난 브리핑은 트렌드 집계 준비 여부와 무관하다 — 이른 return 앞에서 그린다.
   renderBriefingTimeline();
+  // 워드 클라우드는 번호가 붙은 구역이라 renumberSections 앞에서 hidden 이 정해져야
+  // 한다. 그러지 않으면 숨은 구역이 번호를 한 칸 먹는다.
+  renderWordCloud();
   // 번호가 붙은 구역은 전부 위에서 결정됐다 — 아래 정량 블록에는 sec-no 가 없으므로
   // trend_ready 조기 return 앞에서 매긴다.
   renumberSections("view-trend");
@@ -3685,11 +3814,41 @@ function bind() {
   });
   briefAudio.addEventListener("pause", () => updateAudioToggle(false));
   briefAudio.addEventListener("ended", () => updateAudioToggle(false));
-  briefAudio.addEventListener("timeupdate", () => {
-    const total = Number.isFinite(briefAudio.duration) && briefAudio.duration > 0
-      ? briefAudio.duration : activeAudioVariant()?.duration_sec;
-    document.getElementById("audioTime").textContent =
-      `${fmtClock(briefAudio.currentTime)} / ${fmtClock(total)}`;
+  briefAudio.addEventListener("timeupdate", () => syncAudioProgress());
+  // duration 은 메타데이터가 붙어야 정확해진다. 그 전까지 막대는 manifest 의
+  // duration_sec 로 서 있다가 여기서 실측값으로 바뀐다.
+  briefAudio.addEventListener("loadedmetadata", () => {
+    if (audioPendingSeek != null) {
+      briefAudio.currentTime = audioPendingSeek;
+      audioPendingSeek = null;
+    }
+    syncAudioProgress();
+  });
+  briefAudio.addEventListener("seeked", () => syncAudioProgress());
+
+  const audioSeek = document.getElementById("audioSeek");
+  // input = 끄는 중(값만 따라간다), change = 손을 뗀 순간(그때 실제로 옮긴다).
+  // 끄는 내내 currentTime 을 바꾸면 브라우저가 매 프레임 탐색을 걸어 버벅인다.
+  audioSeek.addEventListener("input", () => {
+    audioSeekHeld = true;
+    ensureAudioMetadata();
+    syncAudioProgress(Number(audioSeek.value));
+  });
+  audioSeek.addEventListener("change", () => {
+    const target = Number(audioSeek.value);
+    audioSeekHeld = false;
+    ensureAudioMetadata();
+    // 아직 음원을 안 읽었으면 지금 옮길 수 없다 — 메타데이터가 붙는 순간으로 넘긴다.
+    if (Number.isFinite(briefAudio.duration) && briefAudio.duration > 0) {
+      try {
+        briefAudio.currentTime = target;
+      } catch {
+        audioPendingSeek = target;
+      }
+    } else {
+      audioPendingSeek = target;
+    }
+    syncAudioProgress(target);
   });
   // 캐시 유실 등으로 한 variant의 mp3가 404여도 다른 브리핑까지 숨기지 않는다.
   // 날짜+모드 단위로 실패를 기억하고 즉시 다른 variant로 fallback한다.

@@ -79,6 +79,10 @@ NEWS_WINDOW_DAYS = 60
 # delivery_log의 이미 중복 제거된 briefing story를 경량 집계해 별도로 만든다.
 LONG_TREND_WINDOW_DAYS = 365
 TREND_PERIOD_DAYS = (7, 30, 90, 180, 365)
+# 워드 클라우드가 쓰는 태그 수. 표는 12개(순위)면 되지만 구름은 분포를 보이는
+# 그림이라 그 정도로는 낱말 사이가 비어 아무 말도 하지 않는다. 40개면 화면 한
+# 폭을 채우면서도 페이로드가 기간당 몇 KB 늘어나는 선에서 멈춘다.
+TAG_CLOUD_LIMIT = 40
 ISSUE_WINDOW_DAYS = 21
 
 # 추적률을 재는 회차 수. **하루치로 재면 안 된다** — 한 회차의 분모가 이슈 8개
@@ -4199,17 +4203,26 @@ def build_period_trends(all_items: list[dict], end_date: str) -> dict[str, dict]
                 ],
             })
 
-        tag_comparison = []
-        for tag in sorted(set(tags) | set(prev_tags), key=lambda key: tags.get(key, 0), reverse=True)[:12]:
-            now_count = int(tags.get(tag, 0))
-            prev_count = int(prev_tags.get(tag, 0))
-            tag_comparison.append({
-                "tag": tag,
-                "count": now_count,
-                "previous_count": prev_count if previous_complete else None,
-                "delta": (now_count - prev_count) if previous_complete else None,
-                "new": bool(previous_complete and now_count > 0 and prev_count == 0),
-            })
+        def _tag_rows(limit):
+            rows_out = []
+            for tag in sorted(set(tags) | set(prev_tags),
+                              key=lambda key: tags.get(key, 0), reverse=True)[:limit]:
+                now_count = int(tags.get(tag, 0))
+                prev_count = int(prev_tags.get(tag, 0))
+                rows_out.append({
+                    "tag": tag,
+                    "count": now_count,
+                    "previous_count": prev_count if previous_complete else None,
+                    "delta": (now_count - prev_count) if previous_complete else None,
+                    "new": bool(previous_complete and now_count > 0 and prev_count == 0),
+                })
+            return rows_out
+
+        tag_comparison = _tag_rows(12)
+        # 워드 클라우드는 표보다 넓게 본다 — 12개는 순위이지 분포가 아니고, 그
+        # 12개로 구름을 그리면 낱말 사이가 비어 그림이 아무 말도 하지 않는다.
+        # 표의 계약(tag_comparison)은 건드리지 않고 별도 키로 낸다.
+        tag_cloud = _tag_rows(TAG_CLOUD_LIMIT)
 
         complete_period = bool(selected_with_dates) and earliest <= requested_start
         periods[str(days)] = {
@@ -4234,6 +4247,7 @@ def build_period_trends(all_items: list[dict], end_date: str) -> dict[str, dict]
             "previous_top_tags": ([{"tag": k, "count": v} for k, v in prev_tags.most_common(12)]
                                   if previous_complete else []),
             "tag_comparison": tag_comparison,
+            "tag_cloud": tag_cloud,
             "previous_period_complete": previous_complete,
             "top_topics": [{"topic": k, "count": v} for k, v in topics.most_common(12)],
             "countries": [{"country": k, "count": v} for k, v in countries.most_common(12)],

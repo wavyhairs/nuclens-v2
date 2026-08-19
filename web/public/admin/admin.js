@@ -806,15 +806,58 @@ function renderIssues() {
 
 // 지울 수 있는 칩. 기본 파일에서 온 말과 콘솔에서 더한 말을 구분해 표시한다 —
 // 어느 쪽이든 지울 수 있지만, 무엇을 되돌리는 것인지는 알고 눌러야 한다.
-function editableChips(values, { group, addKind, removeKind, baseValues }) {
+// 칩 한 알의 네 가지 처지. 기본 파일에서 온 것 / 콘솔이 더해 이미 수집에 나가는 것
+// / 방금 더해 아직 안 나가는 것 / 빼기로 했는데 아직 안 빠진 것.
+const CHIP_STATE = {
+  base: { cls: "", note: "" },
+  added: { cls: "added", note: "" },
+  pending: { cls: "pending", note: "다음 수집부터" },
+  removing: { cls: "removing", note: "삭제 대기" },
+};
+
+// 화면에 실제로 설 칩 목록. **판정을 얹어서** 만든다.
+//
+// 예전에는 config 스냅샷(`group.keywords`)만 그렸다. 그런데 그 스냅샷은 다음
+// 수집이 돌아 admin_overrides.json 이 커밋될 때까지 갱신되지 않는다 — 그래서
+// 방금 추가한 키워드가 '내 판정'에는 뜨는데 정작 키워드 칸에는 없었고, 관리자는
+// 추가가 실패한 줄 알고 같은 말을 다시 넣었다(사용자 지적). 판정은 이미 손에
+// 있으므로 여기서 겹쳐 그리면 된다. 색으로 처지를 갈라 두면 '아직 안 나간다'는
+// 사실도 같이 읽힌다.
+function chipStates(values, { group, addKind, removeKind, baseValues }) {
+  const mine = entry => (entry.group || "") === (group || "");
+  const pendingRemoved = new Set(entriesOf(removeKind).filter(mine).map(entry => entry.value));
   const base = new Set(baseValues || values);
-  return (values || []).map(value => {
-    const added = !base.has(value);
-    return `<span class="admin-chip ${added ? "added" : ""}">
-      ${esc(value)}
-      <button class="admin-chip-x" data-act="chip-remove" data-kind="${esc(removeKind)}"
+  const live = values || [];
+  const rows = live.map(value => ({
+    value,
+    state: pendingRemoved.has(value) ? "removing" : (base.has(value) ? "base" : "added"),
+  }));
+  // 스냅샷에 아직 없는 추가는 뒤에 세운다. 사이에 끼워 넣으면 어제 보던 목록의
+  // 자리가 매일 흔들린다.
+  const known = new Set(live);
+  for (const entry of entriesOf(addKind).filter(mine)) {
+    if (known.has(entry.value)) continue;
+    known.add(entry.value);
+    rows.push({ value: entry.value, state: "pending" });
+  }
+  return rows;
+}
+
+function editableChips(values, options) {
+  const { group, addKind, removeKind } = options;
+  const rows = chipStates(values, options);
+  if (!rows.length) return '<span class="admin-chip-empty">아직 없습니다</span>';
+  return rows.map(({ value, state }) => {
+    const meta = CHIP_STATE[state] || CHIP_STATE.base;
+    // 빼기로 한 칩의 버튼은 '한 번 더 빼기'가 아니라 되돌리기다. 같은 ×를 두면
+    // 삭제 판정이 두 벌 쌓인다.
+    const undo = state === "removing";
+    return `<span class="admin-chip ${meta.cls}">
+      ${esc(value)}${meta.note ? `<small class="admin-chip-note">${esc(meta.note)}</small>` : ""}
+      <button class="admin-chip-x" data-act="${undo ? "chip-restore" : "chip-remove"}"
+        data-kind="${esc(removeKind)}"
         data-add-kind="${esc(addKind)}" data-group="${esc(group || "")}" data-value="${esc(value)}"
-        aria-label="${esc(value)} 삭제">×</button></span>`;
+        aria-label="${esc(value)} ${undo ? "삭제 취소" : "삭제"}">${undo ? "↺" : "×"}</button></span>`;
   }).join("");
 }
 
@@ -826,44 +869,65 @@ function addForm(kind, group, placeholder) {
   </form>`;
 }
 
+// 화면에 실제로 서는 칩 수. 머리줄 숫자가 칩 개수와 다르면 둘 중 어느 쪽이 맞는
+// 말인지 알 길이 없다 — 대기 중인 추가는 세고, 대기 중인 삭제는 뺀다.
+function chipCount(values, options) {
+  return chipStates(values, options).filter(row => row.state !== "removing").length;
+}
+
 function renderKeywords() {
   const keywords = state.config?.keywords;
   if (!keywords) return;
   const totals = keywords.totals || {};
+  const groups = keywords.groups || [];
+  const optionsFor = (group, axis) => ({
+    group: group.name,
+    addKind: `${axis}_add`,
+    removeKind: `${axis}_remove`,
+    baseValues: axis === "keyword" ? group.base_keywords
+      : axis === "anchor" ? group.base_anchors : group.negative_list,
+  });
+  const keywordTotal = groups.reduce(
+    (sum, group) => sum + chipCount(group.keywords, optionsFor(group, "keyword")), 0);
+  const anchorTotal = groups.reduce(
+    (sum, group) => sum + chipCount(group.anchors, optionsFor(group, "anchor")), 0);
+  // 스냅샷과 다르면 그 차이를 말한다. 숫자만 조용히 바뀌면 관리자는 자기가 더한
+  // 것이 반영된 것인지 집계가 틀린 것인지 구분하지 못한다.
+  const pendingNote = count => count > 0 ? ` · 대기 ${count}개` : "";
   document.getElementById("keywordStats").innerHTML = [
     stat("키워드 그룹", `${totals.groups || 0}개`, "검색 쿼리 묶음"),
-    stat("검색 키워드", `${totals.keywords || 0}개`, "그대로 검색에 나갑니다"),
-    stat("앵커", `${totals.anchors || 0}개`, "원자력 문맥 확인용"),
+    stat("검색 키워드", `${keywordTotal}개`,
+      `그대로 검색에 나갑니다${pendingNote(keywordTotal - (totals.keywords || 0))}`),
+    stat("앵커", `${anchorTotal}개`,
+      `원자력 문맥 확인용${pendingNote(anchorTotal - (totals.anchors || 0))}`),
     stat("학습 쿼리", `${state.config?.search?.learned_query_count ?? 0}개`, "discovery 가 스스로 늘린 것"),
   ].join("");
-  document.getElementById("keywordGroups").innerHTML = (keywords.groups || []).map(group =>
-    `<article class="admin-card">
+  document.getElementById("keywordGroups").innerHTML = groups.map(group => {
+    const keywordOptions = optionsFor(group, "keyword");
+    const negativeOptions = optionsFor(group, "negative");
+    const anchorOptions = optionsFor(group, "anchor");
+    return `<article class="admin-card">
       <div class="admin-card-head">
         <div><h3>${esc(group.name)}</h3></div>
-        <p class="admin-card-scale">키워드 ${group.keywords.length}개<small>앵커 ${group.anchors.length}개</small></p>
+        <p class="admin-card-scale">키워드 ${chipCount(group.keywords, keywordOptions)}개<small>앵커 ${chipCount(group.anchors, anchorOptions)}개</small></p>
       </div>
       <div class="admin-chip-block">
         <h4>검색 키워드</h4>
-        <div class="topic-row">${editableChips(group.keywords, {
-          group: group.name, addKind: "keyword_add", removeKind: "keyword_remove",
-          baseValues: group.base_keywords })}</div>
+        <div class="topic-row">${editableChips(group.keywords, keywordOptions)}</div>
         ${addForm("keyword_add", group.name, "새 검색 키워드")}
       </div>
       <div class="admin-chip-block">
         <h4>제외어 <small>제목에 걸리면 버립니다 (쿼리에는 붙지 않습니다)</small></h4>
-        <div class="topic-row">${editableChips(group.negative_list || [], {
-          group: group.name, addKind: "negative_add", removeKind: "negative_remove",
-          baseValues: group.negative_list })}</div>
+        <div class="topic-row">${editableChips(group.negative_list || [], negativeOptions)}</div>
         ${addForm("negative_add", group.name, "새 제외어 (예: 공모주)")}
       </div>
       <details class="admin-evidence">
-        <summary>앵커 ${group.anchors.length}개 — 결과가 원자력 문맥인지 확인하는 말</summary>
-        <div class="topic-row">${editableChips(group.anchors, {
-          group: group.name, addKind: "anchor_add", removeKind: "anchor_remove",
-          baseValues: group.base_anchors })}</div>
+        <summary>앵커 ${chipCount(group.anchors, anchorOptions)}개 — 결과가 원자력 문맥인지 확인하는 말</summary>
+        <div class="topic-row">${editableChips(group.anchors, anchorOptions)}</div>
         ${addForm("anchor_add", group.name, "새 앵커")}
       </details>
-    </article>`).join("");
+    </article>`;
+  }).join("");
 
   renderLearnedTerms();
 
@@ -1350,6 +1414,19 @@ async function onClick(event) {
   if (act === "entry-filter") {
     state.entryFilter = data.kind;
     renderJudgments();
+    return;
+  }
+
+  if (act === "chip-restore") {
+    // 아직 파이프라인에 안 간 삭제를 물린다. 판정 자체를 지우므로 목록에
+    // '삭제했다가 되살렸다'는 이력이 남지 않는다.
+    const removed = entriesOf(data.kind).find(entry =>
+      entry.value === data.value && (entry.group || "") === (data.group || ""));
+    if (removed) {
+      await submit({ op: "delete", id: removed.id }, `'${data.value}' 삭제를 되돌렸습니다.`);
+      return;
+    }
+    renderAll();
     return;
   }
 

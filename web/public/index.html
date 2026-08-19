@@ -142,6 +142,14 @@
                 <button type="button" data-rate="2" aria-pressed="false">2×</button>
               </div>
             </div>
+            <!-- 진행 바. 없으면 10분짜리 전문가 브리핑에서 앞 3분을 다시 들을
+                 방법이 없다(사용자 지적). range 로 두는 이유는 키보드·스크린리더가
+                 그냥 되기 때문이다 — 직접 그린 막대는 그 둘을 다시 만들어야 한다.
+                 max 는 재생 시작 전에도 duration_sec 로 채워 둔다. -->
+            <div class="audio-seek-row">
+              <input id="audioSeek" class="audio-seek" type="range" min="0" max="0" step="0.1" value="0"
+                aria-label="재생 위치" aria-valuetext="0:00">
+            </div>
             <p class="audio-description" id="audioDescription"></p>
             <audio id="audioEl" preload="none"></audio>
           </div>
@@ -462,11 +470,23 @@
         </div>
       </div>
     </section>
+    <!-- 워드 클라우드 — 위 기간 토글(7·30·90·180·365일)을 **그대로** 따른다.
+         같은 keywordRows() 를 쓰므로 위의 키워드 표와 어긋날 수 없다.
+         표와 역할이 다르다: 표는 12개를 순위·증감으로 읽는 자리고, 이 그림은
+         그 기간의 무게 분포를 한눈에 보는 자리다. 크기는 언급 수, 색은 변화. -->
+    <section id="trendWordCloud" class="word-cloud-panel" aria-labelledby="wordCloudHeading" hidden>
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="wordCloudHeading">무엇이 크게 있었나</h2></div>
+        <span class="data-note" id="wordCloudMeta"></span>
+      </div>
+      <div id="wordCloud" class="word-cloud"></div>
+      <p id="wordCloudInterpretation" class="chart-interpretation"></p>
+    </section>
     <!-- 지난 브리핑 — 흐름 탭의 시간 축. 점·세로선 없이 얇은 괘선과 날짜 정렬만
          쓴다(이 저장소의 괘선 어법). 행 클릭 = 그 날짜의 오늘 화면. -->
     <section id="briefingTimeline" class="briefing-timeline" aria-labelledby="briefingTimelineTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="briefingTimelineTitle">지난 브리핑</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">05</span><h2 id="briefingTimelineTitle">지난 브리핑</h2></div>
         <span class="data-note">날짜를 누르면 그날 브리핑으로 이동합니다</span>
       </div>
       <ol id="briefingTimelineList"></ol>

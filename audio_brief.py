@@ -254,6 +254,65 @@ def verify_script(script: str, contracts, briefing: dict, *,
     )
 
 
+# ── 오디오 품질을 관리자에게 알리는 창구 ───────────────────────────────────
+#
+# 수집·카드 경로는 append_quality_event 로 텔레그램까지 올라가는데 오디오만 그
+# 창구가 없었다. 그래서 생긴 일이 있다(실측 2026-08-18): 전문가 대본이
+# `1050억 달러(약 149조 원)` 를 `1050조 원` 으로 옮겨 방송했는데 파이프라인
+# 어디에도 기록이 남지 않았고, 사람이 귀로 듣고 알려 줄 때까지 아무도 몰랐다.
+# 같은 날 다른 회차에서는 문단이 조용히 삭제되기도 했다(evidence_audit.removed).
+#
+# 특히 **검증 생략**은 반드시 올린다. audit_spoken_script 는 근거 계약이 없으면
+# 대본을 그대로 통과시키는데, 그것은 '문제 없음'이 아니라 '보지 않았음'이다.
+AUDIO_VARIANT_LABEL = {FAST_VARIANT: "빠른 브리핑", "expert": "전문가 브리핑"}
+
+
+def report_script_audit(audit, *, variant: str, date: object,
+                        contract_count: int = 0) -> bool:
+    """대본 사실검증 결과를 품질 이벤트로 남긴다. 절대 예외를 올리지 않는다."""
+    label = AUDIO_VARIANT_LABEL.get(variant, str(variant))
+    day = str(date or "")
+    try:
+        import news_bot
+    except Exception as exc:  # 알림 배선이 오디오 생성을 죽이지 않는다
+        print(f"[audio] 품질 이벤트 기록 건너뜀({label}): {str(exc)[:140]}")
+        return False
+    try:
+        codes = {finding.code for finding in (audit.findings or ())}
+        if "script_evidence_missing" in codes:
+            return news_bot.append_quality_event(
+                "audio-script-unverified",
+                f"오디오 대본 사실검증 생략: {label}",
+                (f"{day} {label} 대본을 기사 근거와 대조하지 못했습니다 — 근거 계약 "
+                 f"{contract_count}건. 이 회차의 수치·기관·일정은 검증되지 않은 채로 "
+                 "음원과 대본에 남았습니다."),
+                severity="critical", min_occurrences=1,
+                items=[{"variant": variant, "date": day, "contracts": contract_count}],
+            )
+        removed = list(audit.removed or ())
+        if not removed:
+            return False
+        rejected = audit.action == "reject"
+        items = []
+        for finding in (audit.findings or ()):
+            details = dict(finding.details or {})
+            items.append({"variant": variant, "date": day,
+                          "line": str(details.pop("line", ""))[:200], **details})
+        return news_bot.append_quality_event(
+            "audio-script-claim-removed",
+            f"오디오 대본의 미확인 문단 제외: {label}",
+            (f"{day} {label} 대본에서 기사 근거로 확인되지 않는 문단 {len(removed)}건을 "
+             + ("제외한 결과 남은 분량이 모자라 이 회차를 만들지 못했습니다."
+                if rejected else "빼고 내보냈습니다.")),
+            severity="critical" if rejected else "warning",
+            min_occurrences=1 if rejected else 2,
+            items=items or [{"variant": variant, "date": day, "removed": len(removed)}],
+        )
+    except Exception as exc:
+        print(f"[audio] 품질 이벤트 기록 실패(비치명): {str(exc)[:140]}")
+        return False
+
+
 def load_briefing(web_data: Path) -> tuple[dict, dict]:
     """최신 브리핑 행 + issue_id→이슈 사전. 없으면 ({}, {})."""
     briefings = _load_json(web_data / "briefings.json") or []
@@ -474,23 +533,25 @@ def _verified_script(material: str, briefing: dict, contracts) -> str:
     """
     script = apply_frame(generate_script(material), briefing)
     audit = verify_script(script, contracts, briefing, min_lines=MIN_LINES)
+    if not audit.ok:
+        print(f"[audio] 대본 사실검증 지적 {len(audit.removed)}건 — 재작성 1회")
+        try:
+            retry = apply_frame(generate_script(
+                f"{material}\n\n[재요청] 아래 문장은 재료에서 확인되지 않는 사실을 "
+                f"담고 있습니다.\n{_problem_note(audit)}\n"
+                "해당 내용을 빼거나 재료가 뒷받침하는 범위로 낮춰 원고 전체를 다시 쓰세요."
+            ), briefing)
+        except (GeminiError, ValueError) as exc:
+            print(f"[audio] 재작성 실패 — 지적 문단 제거로 진행: {str(exc)[:140]}")
+        else:
+            audit = verify_script(retry, contracts, briefing, min_lines=MIN_LINES)
+
+    # 재작성까지 끝난 **최종** 판정만 알린다. 중간 판정을 올리면 스스로 고쳐 낸
+    # 회차까지 경고가 되어, 정작 봐야 할 회차가 묻힌다.
+    report_script_audit(audit, variant=FAST_VARIANT, date=briefing.get("date"),
+                        contract_count=len(contracts or ()))
     if audit.ok:
         return audit.script
-
-    print(f"[audio] 대본 사실검증 지적 {len(audit.removed)}건 — 재작성 1회")
-    try:
-        retry = apply_frame(generate_script(
-            f"{material}\n\n[재요청] 아래 문장은 재료에서 확인되지 않는 사실을 "
-            f"담고 있습니다.\n{_problem_note(audit)}\n"
-            "해당 내용을 빼거나 재료가 뒷받침하는 범위로 낮춰 원고 전체를 다시 쓰세요."
-        ), briefing)
-    except (GeminiError, ValueError) as exc:
-        print(f"[audio] 재작성 실패 — 지적 문단 제거로 진행: {str(exc)[:140]}")
-    else:
-        audit = verify_script(retry, contracts, briefing, min_lines=MIN_LINES)
-        if audit.ok:
-            return audit.script
-
     if audit.action == "reject":
         raise ValueError(
             f"사실검증 후 남은 문단 부족 — 제외 {len(audit.removed)}건")
