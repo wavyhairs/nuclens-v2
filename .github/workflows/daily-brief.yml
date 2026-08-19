@@ -63,7 +63,15 @@ jobs:
     # 2026-08-03 정기 실행이 15분 벽에 걸려 취소됐다 — 스텝은 전부 성공한 뒤
     # 마지막 스모크가 끝나는 순간(15분 09초)이었다. Plan·trend·배포(TTS 포함)가
     # 각각 3~7분이라 15분은 여유가 없다.
-    timeout-minutes: 40
+    #
+    # 2026-08-20: 40 → 50. 늘린 이유는 잡이 느려서가 아니다. 정상일은 25분 30초로
+    # 끝난다(08-18 실측). 아래 긴 스텝마다 timeout-minutes 상한을 걸었는데, 그
+    # 상한들이 전부 최악으로 터져도 **구독 채널 공개가 반드시 실행될 여유**를
+    # 남겨야 한다. 긴 스텝 상한 합이 37분이라 40분으로는 공개·배포 자리가 없다.
+    #
+    # 잡 상한은 이제 최후의 방어선일 뿐이다. 개별 스텝 상한이 먼저 걸리므로,
+    # 한 스텝이 멈춰도 잡이 통째로 죽는 대신 그 스텝만 잃고 발송은 이어진다.
+    timeout-minutes: 50
 
     steps:
       - name: Checkout repo
@@ -121,6 +129,7 @@ jobs:
       - name: Collect (브리핑 직전 최신 수집)
         id: collect
         continue-on-error: true
+        timeout-minutes: 6   # 실측 3분 37초
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
@@ -180,6 +189,7 @@ jobs:
         run: python embedding_pipeline.py --window-days 21 --max-new 150 --require-nonzero
 
       - name: Plan (선별 → outbox 작성 → 큐 정리)
+        timeout-minutes: 5   # 실측 1분 21초
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
@@ -304,11 +314,45 @@ jobs:
       # GitHub ubuntu 러너에 ffmpeg 가 없다 (2026-08-04 실측 — 로컬엔 있어서
       # 로컬 검증이 못 잡았다). 오디오 mp3 변환 전용. 실패해도 비치명 —
       # audio_brief 가 ffmpeg 부재를 감지하고 스스로 스킵한다.
+      #
+      # 2026-08-20 실사고: 이 스텝이 40분을 통째로 먹고 SIGTERM(143) 으로 죽었다.
+      # 잡이 거기서 끝나 오디오 생성도, **구독 채널 공개도** 실행되지 못했다 —
+      # 그날 구독자는 아무것도 못 받았다. 비치명 스텝이 잡 예산을 다 쓸 수 있다는
+      # 게 진짜 결함이었다. 성공한 날에도 4분(19:40:21→19:44:20)이 걸렸다.
+      #
+      # 그래서 셋을 건다:
+      #  ① timeout-minutes — 무슨 일이 있어도 잡 예산을 먹지 못하게 하는 최종 방어선.
+      #  ② apt 잠금 대기 상한 — 러너의 unattended-upgrades 와 겹치면 apt 는 기본적으로
+      #     잠금을 **무한정** 기다린다. 이번 40분의 가장 유력한 정체다.
+      #  ③ update 를 happy path 에서 뺐다 — ffmpeg 는 이미 색인된 base 저장소에 있다.
+      #     느리고 잘 흔들리는 건 install 이 아니라 update 쪽이라, 먼저 그냥 install 을
+      #     해 보고 그게 실패할 때만 update 후 한 번 더 시도한다.
+      #
+      # 출력을 더는 /dev/null 로 통째로 버리지 않는다. 지난번 40분이 어디서 멈춘
+      # 건지 로그가 한 줄도 남지 않아 사후 판독이 불가능했다.
       - name: Install ffmpeg (오디오 브리핑용)
         if: always() && steps.claim.conclusion == 'success'
+        timeout-minutes: 5
         run: |
-          sudo apt-get update -qq >/dev/null 2>&1 || true
-          sudo apt-get install -y -qq ffmpeg >/dev/null 2>&1 || echo "ffmpeg 설치 실패 — 오디오 스킵 (비치명)"
+          if command -v ffmpeg >/dev/null 2>&1; then
+            echo "ffmpeg 이미 설치됨 — apt 생략 ($(ffmpeg -version 2>&1 | head -1))"
+            exit 0
+          fi
+          APT_OPTS="-y -qq -o DPkg::Lock::Timeout=60"
+          install_ffmpeg() { sudo timeout "$1" apt-get install $APT_OPTS ffmpeg; }
+          if install_ffmpeg 120; then
+            echo "ffmpeg 설치 완료 (update 생략)"
+            exit 0
+          fi
+          echo "install 1차 실패 — apt-get update 후 재시도"
+          sudo timeout 120 apt-get update -qq -o DPkg::Lock::Timeout=60 || echo "update 실패/시간초과 — 그래도 install 재시도"
+          if install_ffmpeg 120; then
+            echo "ffmpeg 설치 완료 (update 후)"
+            exit 0
+          fi
+          # 비치명이다. audio_brief 가 ffmpeg 부재를 감지하고 스스로 스킵하고,
+          # 뒤의 채널 공개는 그대로 나가야 한다.
+          echo "::warning::ffmpeg 설치 실패 — 오디오 스킵 (비치명, 텍스트 공개는 계속)"
 
       # 웹 빌드·품질 기록·배포를 별도 step outcome으로 남긴다. 예전의 한 덩어리
       # 스텝은 build_data가 먼저 죽으면 data_quality_gate 기록조차 만들지 못해,
@@ -316,6 +360,7 @@ jobs:
       - name: Build web data
         id: web-build
         if: always() && steps.claim.conclusion == 'success'
+        timeout-minutes: 6   # 실측 2분 04초
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
@@ -341,6 +386,10 @@ jobs:
       - name: Generate audio briefings (빠른 → 전문가)
         id: audio
         if: always() && steps.claim.conclusion == 'success' && steps.web-build.outcome == 'success'
+        # 실측 12분 27초 — 이 잡에서 가장 비싼 스텝이고, 그래서 상한도 가장 크다.
+        # 15분을 넘겼다는 건 TTS 가 응답을 멈췄다는 뜻이다. 그때는 오디오를 포기하고
+        # 다음 스텝(구독 채널 공개)으로 넘어가는 편이 낫다 — 텍스트라도 나가야 한다.
+        timeout-minutes: 15
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
