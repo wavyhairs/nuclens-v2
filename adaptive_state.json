@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-08-20"
   },
   "retired": {
@@ -14,9 +14,58 @@
     }
   },
   "spent": {
-    "count": 1,
+    "count": 2,
     "date": "2026-08-20"
   },
-  "terms": {},
+  "terms": {
+    "전문위원회": {
+      "articles": 3,
+      "created_at": "2026-08-20T12:53:24.603115+00:00",
+      "domains": [
+        "asiae.co.kr",
+        "newsis.com",
+        "energy-news.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "asiae.co.kr",
+          "hash": "087fcc78bc93bfef",
+          "importance": "nice_to_know",
+          "title": "고준위 방사성폐기물 관리 위원회, 분야별 전문위 가동"
+        },
+        {
+          "domain": "newsis.com",
+          "hash": "aa221d1a4aeed024",
+          "importance": "nice_to_know",
+          "title": "고준위 방사성폐기물 관리 전문위원회 35명 위촉 및 본격 가동"
+        },
+        {
+          "domain": "energy-news.co.kr",
+          "hash": "fe3d0953adb542a2",
+          "importance": "nice_to_know",
+          "title": "고준위 방사성폐기물 관리 전문위원회 4개 분과 가동"
+        }
+      ],
+      "expires_at": "2026-08-21T12:53:25.950854+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 16,
+      "last_run": "2026-08-20T12:53:25.950854+00:00",
+      "new_articles": 16,
+      "origin": "auto",
+      "planned_at": "2026-08-20T12:53:24.603115+00:00",
+      "queries_run": 1,
+      "query": "전문위원회 원자력",
+      "score": 3.7,
+      "status": "extended",
+      "term": "전문위원회",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [
+        "2026-08-20"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    }
+  },
   "version": 1
 }
