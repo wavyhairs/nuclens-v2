@@ -5030,7 +5030,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-08-20T19:43:24+00:00",
+    "updated_at": "2026-08-20T19:44:27+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -5102,7 +5102,7 @@
         "title": "제목·요약이 원문과 다른 기사 격리",
         "detail": "재생성 후에도 4건이 다른 핵심 엔티티·수치·사건을 가리켜 자동 큐·아카이브에서 제외했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-08-20T19:43:24+00:00",
+        "last_seen_at": "2026-08-20T19:44:27+00:00",
         "last_observation_id": "2026-08-21T04:43:21.089775+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T09:47:33+00:00",
@@ -5118,7 +5118,7 @@
         "title": "미검증 fallback 기사 자동 발송 보류",
         "detail": "큐레이션 근거가 없는 5건을 큐에 넣지 않았습니다. 이 중 재시도 상한 도달 1건은 자동 격리했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-08-20T19:43:24+00:00",
+        "last_seen_at": "2026-08-20T19:44:27+00:00",
         "last_observation_id": "2026-08-21T03:44:14.810529+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-18T18:44:36+00:00",
@@ -5128,34 +5128,32 @@
         "notifications": 4
       },
       "quality-event:delivery-integrity-quarantine": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "quality_event",
-        "active": false,
+        "active": true,
         "title": "원문과 다른 제목·요약 기사 발송 차단",
-        "detail": "랭킹 전에 명백한 원문 불일치 19건을 차단했습니다.",
+        "detail": "랭킹 전에 명백한 원문 불일치 30건을 차단했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-08-20T12:58:32+00:00",
-        "last_observation_id": "2026-08-19T19:36:59.336212+00:00",
+        "last_seen_at": "2026-08-20T19:44:27+00:00",
+        "last_observation_id": "2026-08-20T19:43:29.808272+00:00",
         "min_occurrences": 1,
-        "first_seen_at": "2026-08-19T19:38:01+00:00",
+        "first_seen_at": "2026-08-20T19:44:27+00:00",
         "pending_notification": false,
         "last_notified_at": "2026-08-19T21:31:05+00:00",
         "last_notified_severity": "critical",
-        "notifications": 3,
-        "resolved_at": "2026-08-20T15:40:12+00:00"
+        "notifications": 3
       },
       "quality-event:final-card-field-removed": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "quality_event",
-        "active": false,
+        "active": true,
         "title": "텔레그램 카드의 미확인 해석 필드 제거",
         "detail": "근거에서 확인되지 않은 선택 필드 2개를 2개 카드에서 제거했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-08-20T12:58:32+00:00",
-        "last_observation_id": "2026-08-19T19:36:59.336212+00:00",
+        "last_seen_at": "2026-08-20T19:44:27+00:00",
+        "last_observation_id": "2026-08-20T19:43:29.808272+00:00",
         "min_occurrences": 2,
-        "first_seen_at": "2026-08-19T19:38:01+00:00",
-        "resolved_at": "2026-08-20T15:40:12+00:00"
+        "first_seen_at": "2026-08-20T19:44:27+00:00"
       },
       "quality:archive-integrity": {
         "consecutive": 4,
@@ -5248,7 +5246,7 @@
         "title": "기사 큐레이션 유실 발생",
         "detail": "오늘 1회 기록에서 총 28건 유실 · other 28건",
         "severity": "critical",
-        "last_seen_at": "2026-08-20T19:43:24+00:00",
+        "last_seen_at": "2026-08-20T19:44:27+00:00",
         "last_observation_id": "2026-08-21:2026-08-21T03:44:14.520791+09:00:28",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-20T18:44:15+00:00",
