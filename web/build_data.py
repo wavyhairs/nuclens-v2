@@ -56,6 +56,7 @@ import article_quality_gate  # noqa: E402
 import issue_insight  # noqa: E402
 import issue_review  # noqa: E402
 import keei_match  # noqa: E402
+import story_fingerprint  # noqa: E402
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -108,7 +109,9 @@ TITLE_TAGS_MATCH_RATIO = 0.55
 FINGERPRINT_MATCH_SIMILARITY = 0.78
 FINGERPRINT_MATCH_MIN_COMPARED = 3
 FINGERPRINT_MATCH_MIN_SHARED_AXES = 2
-FINGERPRINT_MATCH_AXES = ("actors", "assets", "event", "action")
+# 지문에서 **신원**을 말하는 축(story_fingerprint.IDENTITY_AXES). 나라와
+# event_family 는 닫힌 어휘라 여기 없다 — 자세한 실측은 그 모듈 주석에 있다.
+FINGERPRINT_MATCH_AXES = story_fingerprint.IDENTITY_AXES
 
 # 화면이 읽는 규칙표. id 는 diagnostics["method"] 값과 1:1 이다.
 MERGE_RULES = (
@@ -122,7 +125,8 @@ MERGE_RULES = (
     {"id": "story_fingerprint", "label": "사건 지문",
      "detail": f"지문 유사도 {FINGERPRINT_MATCH_SIMILARITY} 이상 · "
                f"{FINGERPRINT_MATCH_MIN_COMPARED}축 이상 비교 · "
-               f"행위자/대상/사건 중 {FINGERPRINT_MATCH_MIN_SHARED_AXES}축 이상 일치"},
+               f"행위자/대상/원인/행위 중 {FINGERPRINT_MATCH_MIN_SHARED_AXES}축 이상 "
+               f"일치하고 어긋난 축이 없음"},
     {"id": "embedding", "label": "임베딩",
      "detail": f"코사인 유사도 {ISSUE_EMBEDDING_THRESHOLD} 이상"},
     {"id": "manual_approved", "label": "사람 승인",
@@ -131,6 +135,9 @@ MERGE_RULES = (
      "detail": "회색지대(0.84~0.92)를 LLM 검수가 같은 사건으로 판정"},
     {"id": "blocked", "label": "차단",
      "detail": "국가 또는 설비가 충돌해 병합하지 않음"},
+    {"id": "fingerprint_chain_blocked", "label": "지문 연쇄 차단",
+     "detail": "지문만으로 붙는 자리인데 묶음의 다른 기사와 "
+               "행위자/대상/원인/행위가 어긋나 잇지 않음"},
 )
 MATCH_OVERRIDES_FILE = BOT_DIR / "issue_match_overrides.json"
 SITE_URL = os.environ.get("SITE_URL", "https://nuclens-v2.pages.dev").rstrip("/")
@@ -1465,6 +1472,39 @@ def _cluster_facility_conflict(article: dict, members: list[dict]) -> bool:
     return any(_facility_conflict(article, member) for member in members)
 
 
+def _cluster_fingerprint_conflict(article: dict, members: list[dict]) -> bool:
+    """이 기사가 묶음의 **누군가와** 신원 축에서 어긋나는가.
+
+    아래 매칭에서 이것을 보는 것은 **지문 경로 하나뿐**이다. 나머지 경로
+    (제목·태그·임베딩)에는 걸지 않는다 — 실측이 그러지 말라고 했다.
+
+    2026-08-19 데이터로 '모든 합류'에 이 거부권을 걸어 봤더니, 멀쩡한 이슈가
+    조각났다. 테라파워 국내 협력 12건짜리 묶음이 5개로, 체르나보다 저수위
+    묶음이 2개로, 산업용 전기요금 차등제 묶음이 2개로 갈렸다. 이유는 분명하다 —
+    **하나의 긴 사건 안에서 원인·대상 축은 원래 움직인다**(같은 테라파워
+    이슈가 어떤 날은 `SMR commercialization`, 어떤 날은 `AI data center` 를
+    원인으로 적는다). 제목과 태그가 강하게 붙여 놓은 것을 지문의 표현 차이로
+    떼면 안 된다.
+
+    거꾸로, 제목도 태그도 아무 말을 못 해서 **지문만으로** 붙는 자리에서는
+    같은 모순이 결정적이다(그 경로의 실측 정밀도는 11쌍 중 1쌍이었다). 그래서
+    범위를 그 경로로 좁힌다: 약한 근거는 연쇄하지 못한다.
+
+    같은 이슈에 지문이 아예 없는 멤버가 섞여 있으면 그 멤버는 판단에서 빠진다
+    (`compare` 가 빈 결과를 돌려준다) — 없는 것은 모순이 아니다.
+    """
+    fingerprint = article.get("story_fingerprint")
+    if not isinstance(fingerprint, dict) or not fingerprint:
+        return False
+    identity = set(FINGERPRINT_MATCH_AXES)
+    return any(
+        identity & set(
+            story_fingerprint.compare(fingerprint, member.get("story_fingerprint")).contested
+        )
+        for member in members
+    )
+
+
 # 같은 **설비·프로젝트**를 다루는 쌍은 후속 보도일 가능성이 높다. 기관·기업까지
 # 넣으면 신호가 죽는다 — 실측(2026-08-05, 판정 완료 185쌍):
 #
@@ -1559,11 +1599,30 @@ def issue_similarity(
         elif tag_shared >= 1 and title_ratio >= TITLE_TAGS_MATCH_RATIO:
             matched, method = True, "title_tags"
         # Daily Brief의 story fingerprint를 웹 issue 연결에도 사용한다. 다만 자유형
-        # LLM 필드라 단독 느슨 매칭은 금지하고, 최소 3축을 비교해 actor/asset/event
-        # 가운데 두 축 이상이 겹치는 강한 경우만 자동 연결한다.
+        # LLM 필드라 단독 느슨 매칭은 금지한다. 이 경로는 제목·태그가 전부 실패한
+        # 뒤에 오는 **마지막 수단**이므로, 지문 스스로가 두 가지를 만족해야 한다.
+        #
+        # ① 신원 축이 둘 이상 겹칠 것. 나라와 event_family 는 못 센다 — 닫힌
+        #    어휘라 '같은 값'이 같은 사건을 뜻하지 않는다(실측 71건에서
+        #    event_family 는 15종뿐이고 policy_decision 하나가 45%).
+        # ② 신원 축 가운데 **어긋난 것이 없을 것**. 어긋남은 희석이 아니라
+        #    반대 증거다 — `_country_conflict`·`_facility_conflict` 가 이미
+        #    같은 원리로 서 있다.
+        #
+        # 왜 이 두 조건인지 (2026-08-19 라이브 빌드에서 지문만으로 붙은 11쌍 전수):
+        #
+        #     오병합 10건 — 전부 원인 축이 어긋나 있었다. 겹친 것은 나라·부처·
+        #                   policy_decision 뿐. 예: 『12차 전기본 재정비』가
+        #                   『산업부 장관 대미투자 방미』에 붙었다(제목 유사도
+        #                   0.16, 공통 태그 0). 사용자가 타임라인에서 본 것이 이것이다.
+        #     정상  1건 — 『대미 전략투자 1호 막판 조율』↔『대미투자 방미』.
+        #                 여기만 원인 축(`investment`)을 공유했다.
+        #
+        # 두 조건 다 ①의 신원 축 정의에 기대므로 정의는 story_fingerprint 모듈에 있다.
         elif (
             fingerprint_similarity >= FINGERPRINT_MATCH_SIMILARITY
             and fingerprint_diag.get("compared", 0) >= FINGERPRINT_MATCH_MIN_COMPARED
+            and not (set(fingerprint_diag.get("contested") or []) & set(FINGERPRINT_MATCH_AXES))
             and len(set(fingerprint_diag.get("shared") or []) & set(FINGERPRINT_MATCH_AXES))
             >= FINGERPRINT_MATCH_MIN_SHARED_AXES
         ):
@@ -1601,6 +1660,9 @@ def issue_similarity(
         "story_fingerprint_similarity": round(fingerprint_similarity, 4),
         "story_fingerprint_shared": fingerprint_diag.get("shared") or [],
         "story_fingerprint_compared": fingerprint_diag.get("compared") or 0,
+        # 비교했는데 하나도 안 겹친 축. 운영 콘솔이 "왜 안 붙었나"를 말하려면
+        # 겹친 축만으로는 부족하다 — 막은 것은 이쪽이다.
+        "story_fingerprint_contested": fingerprint_diag.get("contested") or [],
         "method": method,
         "blocked_by": blocked_by,
         "shared_facility_entities": shared_facility_entities,
@@ -1960,6 +2022,9 @@ def cluster_selected_articles(
             if _cluster_country_conflict(article, issue["members"]) or \
                     _cluster_facility_conflict(article, issue["members"]):
                 continue
+            # 지문 경로만 묶음 전체와 대조한다 — 약한 근거는 연쇄하지 못한다.
+            # (왜 이 경로만인지는 _cluster_fingerprint_conflict 주석에 실측이 있다.)
+            fingerprint_chain_blocked = _cluster_fingerprint_conflict(article, issue["members"])
             # 대표 기사 한 건만 보면 표현이 단계적으로 바뀌는 A→B→C 후속 보도가
             # 끊길 수 있다. 최근 기사 3건 중 가장 가까운 연결을 사용한다.
             for reference in issue["members"][-3:]:
@@ -1967,6 +2032,15 @@ def cluster_selected_articles(
                 matched, score, diag = issue_similarity(
                     article, reference, embeddings, local_embeddings, facility_entities
                 )
+                # 승인 override 보다 위에 있어도 사람 판정을 뒤집지 않는다:
+                # 이 게이트는 blocked_by 를 건드리지 않으므로 아래 승인 분기가
+                # 그대로 matched 를 되살린다. 그리고 판정이 뒤집힌 쌍은
+                # `elif not matched` 로 흘러 검수 큐에 남는다 — 정말 같은
+                # 사건이면 사람이 다시 이을 자리가 있어야 한다.
+                if matched and diag.get("method") == "story_fingerprint" and (
+                        fingerprint_chain_blocked):
+                    matched = False
+                    diag = {**diag, "method": "fingerprint_chain_blocked"}
                 if pair_id in veto_pairs:
                     continue
                 if pair_id in overrides.get("approved", set()) and not diag.get("blocked_by"):
@@ -2090,12 +2164,24 @@ def attach_evidence_articles(
             if _cluster_country_conflict(article, card_members) or \
                     _cluster_facility_conflict(article, card_members):
                 continue
+            # 지문 경로만 묶음 전체와 대조한다 — 약한 근거는 연쇄하지 못한다.
+            # (왜 이 경로만인지는 _cluster_fingerprint_conflict 주석에 실측이 있다.)
+            fingerprint_chain_blocked = _cluster_fingerprint_conflict(article, card_members)
             # 근거끼리 chaining 되지 않도록 카드 멤버만 앵커로 사용한다.
             for reference in card_members[-3:]:
                 pair_id = _pair_id(article["hash"], reference["hash"])
                 matched, score, diag = issue_similarity(
                     article, reference, embeddings, local_embeddings, facility_entities
                 )
+                # 승인 override 보다 위에 있어도 사람 판정을 뒤집지 않는다:
+                # 이 게이트는 blocked_by 를 건드리지 않으므로 아래 승인 분기가
+                # 그대로 matched 를 되살린다. 그리고 판정이 뒤집힌 쌍은
+                # `elif not matched` 로 흘러 검수 큐에 남는다 — 정말 같은
+                # 사건이면 사람이 다시 이을 자리가 있어야 한다.
+                if matched and diag.get("method") == "story_fingerprint" and (
+                        fingerprint_chain_blocked):
+                    matched = False
+                    diag = {**diag, "method": "fingerprint_chain_blocked"}
                 if pair_id in veto_pairs:
                     continue
                 if pair_id in overrides.get("approved", set()) and not diag.get("blocked_by"):
@@ -2288,54 +2374,25 @@ def _story_contract(article: dict) -> dict:
     }
 
 
-def _fingerprint_tokens(value: object) -> set[str]:
-    if isinstance(value, list):
-        values = value
-    elif value in (None, ""):
-        values = []
-    else:
-        values = [value]
-    out = set()
-    for item in values:
-        text = re.sub(r"\s+", " ", str(item or "").strip().lower())
-        if text:
-            out.add(text)
-    return out
-
-
 def story_fingerprint_similarity(left: dict, right: dict) -> tuple[float, dict]:
     """선정 단계 fingerprint가 두 날짜의 issue 연결을 얼마나 지지하는지 계산한다.
 
-    fingerprint는 Gemini가 만든 보조 증거이므로 단독으로 느슨하게 합치지 않는다.
-    구체적인 actor/asset/event 축이 충분히 겹치는 경우만 강한 신호로 사용한다.
+    축 정의와 대조는 ``story_fingerprint`` 모듈 하나에 있다. 예전에는 이 함수와
+    ``issue_continuity.fingerprint_similarity`` 가 각자 별칭표를 들고 있다가
+    어긋났고, 이쪽 표만 프롬프트가 실제로 쓰는 ``drivers`` 를 빠뜨려 **원인 축을
+    한 번도 읽지 못했다**(그 모듈 첫머리에 실측이 있다).
+
+    겹친 축뿐 아니라 **어긋난 축(contested)** 도 함께 돌려준다 — 판정은 겹침만
+    세는 것이 아니라 어긋남을 거부권으로 쓴다.
     """
-    lf = left.get("story_fingerprint") if isinstance(left.get("story_fingerprint"), dict) else {}
-    rf = right.get("story_fingerprint") if isinstance(right.get("story_fingerprint"), dict) else {}
-    if not lf or not rf:
-        return 0.0, {"shared": [], "compared": 0}
-    aliases = {
-        "countries": ("countries", "country"),
-        "actors": ("actors", "actor", "operator", "organization"),
-        "assets": ("assets", "asset", "facility", "project", "plant"),
-        "event": ("event_family", "event_type", "event"),
-        "action": ("action", "decision", "stage"),
-        "cause": ("cause", "driver"),
+    comparison = story_fingerprint.compare(
+        left.get("story_fingerprint"), right.get("story_fingerprint")
+    )
+    return comparison.similarity, {
+        "shared": comparison.shared,
+        "compared": comparison.compared,
+        "contested": comparison.contested,
     }
-    shared=[]
-    compared=0
-    weights={"countries":1.0,"actors":1.4,"assets":1.8,"event":1.5,"action":1.3,"cause":0.8}
-    hit=0.0; total=0.0
-    for label, keys in aliases.items():
-        lv=set(); rv=set()
-        for key in keys:
-            lv |= _fingerprint_tokens(lf.get(key)); rv |= _fingerprint_tokens(rf.get(key))
-        if not lv or not rv:
-            continue
-        compared += 1
-        total += weights[label]
-        if lv & rv:
-            shared.append(label); hit += weights[label]
-    return (hit / total if total else 0.0), {"shared": shared, "compared": compared}
 
 
 def _article_view(article: dict, member_role: str = "card") -> dict:
