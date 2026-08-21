@@ -294,9 +294,10 @@ class QualitySignalTests(unittest.TestCase):
                          [signal.key for signal in signals])
         self.assertEqual(["critical", "warning"], [signal.severity for signal in signals])
         self.assertTrue(all(signal.scope == "data_gate" for signal in signals))
-        # 하루치 후보 분포는 그날 수집량을 따라 흔들린다 — 한 회차만 보고 부르면
-        # 뉴스가 한산한 날마다 울린다.
-        self.assertTrue(all(signal.min_occurrences == 2 for signal in signals))
+        # 이 기록은 **하루 한 번**만 생긴다(data_gate_metrics 는 daily-brief 전용).
+        # 그래서 부르는 속도를 심각도로 가른다: 이미 병합을 놓치고 있는 critical 은
+        # 즉시, 여유가 줄었다는 warning 은 이틀 연속일 때.
+        self.assertEqual([1, 2], [signal.min_occurrences for signal in signals])
 
     def test_a_quiet_candidate_run_sends_nothing(self):
         signals = monitor.data_gate_signals({
@@ -317,6 +318,18 @@ class QualitySignalTests(unittest.TestCase):
             ]},
         })
         self.assertEqual(1, signals[0].min_occurrences)
+
+    def test_a_warning_waits_one_more_day_before_paging(self):
+        """여유가 줄었다는 신호는 하루 흔들림일 수 있다. 이틀 연속일 때 부른다."""
+        signals = monitor.data_gate_signals({
+            "observation_id": "github-run:203",
+            "tracking": {"applicable": False}, "topic_weeks": {},
+            "issue_candidates": {"applicable": True, "guards": [
+                {"id": "issue-candidate:preselect-headroom", "severity": "warning",
+                 "title": "어휘 예선 컷 20 의 여유가 줄었다 (evidence)", "detail": "p99 15위"},
+            ]},
+        })
+        self.assertEqual(2, signals[0].min_occurrences)
 
     def test_a_record_from_before_the_diagnostics_existed_is_ignored(self):
         """delivery_log 에 이미 쌓인 옛 기록에는 이 칸이 없다. 그것이 알림이 되면

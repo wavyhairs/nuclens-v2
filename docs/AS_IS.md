@@ -546,6 +546,16 @@ gh run download <run-id> -n issue-audit-full     # daily-brief 가 하루 한 �
 p99 로 본다. 표본이 50건 미만이면 아예 판단하지 않는다 — 뉴스가 한산한 날의
 분모 문제는 추적률 게이트에서 이미 겪었다.
 
+두 갈래로 나간다. **워크플로 주석은 매 빌드**(crawl 하루 8회 + deploy-web +
+daily-brief)에 회차 안의 사실 두 가지를 찍고, **텔레그램 관리자 알림은 하루 한 번**
+— 표류는 어제와 비교해야 하고 그 기록(`delivery_log.jsonl` 의 `data_quality_gate`)을
+만드는 `data_gate_metrics.py` 가 daily-brief 에서만 돌기 때문이다.
+
+기록이 하루 한 벌이므로 `min_occurrences=2` 는 '내일'이 아니라 **이틀 뒤**를 뜻한다.
+그래서 부르는 속도를 심각도로 가른다 — `critical`(컷이 지금 병합을 놓치고 있다)은
+즉시, `warning`(여유가 줄었다)은 이틀 연속일 때. 같은 원리가
+`quality:curation-failure` 에 이미 있다(유실 10건 이상이면 즉시).
+
 임계값은 `issue_candidate_stats.GUARD_LIMITS` 한 곳에만 있다. 알림 키(`id`)는
 중복 억제 키라 바꾸면 쿨다운이 끊긴다.
 
