@@ -537,7 +537,7 @@ gh run download <run-id> -n issue-audit-full     # daily-brief 가 하루 한 �
 
 | 감시 | 언제 우는가 | 상수 |
 |---|---|---|
-| `issue-candidate:preselect-headroom` | 어휘 예선 컷(20) 밖으로 밀린 정답이 1%↑ (3%↑면 critical). 그 전에 p99 가 14위에 닿으면 warning | `GUARD_LIMITS` |
+| `issue-candidate:preselect-headroom` | **evidence 경로에서** 어휘 예선 컷(20) 밖으로 밀린 정답이 1%↑ (3%↑면 critical). 그 전에 p99 가 14위에 닿으면 warning | `GUARD_LIMITS` |
 | `issue-candidate:topn-retention` | 기사당 Top-10 이 `llm_approved` 병합을 하나라도 놓칠 때 | 〃 |
 | `issue-candidate:*-drift` | 카드 병합률·부착률·evidence 비중이 최근 7회차 **중앙값** 대비 ±30%(비중은 ±15%) 벗어날 때 | 〃 |
 
@@ -545,6 +545,15 @@ gh run download <run-id> -n issue-audit-full     # daily-brief 가 하루 한 �
 진짜일 때도 안 읽힌다. 그래서 "컷 밖으로 실제로 밀린 비율"(`beyond_cut_share`)과
 p99 로 본다. 표본이 50건 미만이면 아예 판단하지 않는다 — 뉴스가 한산한 날의
 분모 문제는 추적률 게이트에서 이미 겪었다.
+
+예선 컷 감시는 **그 컷을 걸 계획인 경로에만** 건다(`preselect_guarded_paths`,
+현재 `evidence` 뿐). 카드 경로도 계속 재지만 알리지는 않는다 — 적용하지도 않을
+컷을 두고 우는 것도 같은 배경 소음이다. 2026-08-21 러너 전수 실측:
+
+    evidence  정답 순위 p99  8위 · 컷 20 밖 1/423 (0.2%)   표본 423건
+    card      정답 순위 p99 24위 · 컷 20 밖 2/123 (1.6%)   표본 123건
+
+카드 경로의 예선이 훨씬 약하다는 것 자체가 "카드는 건드리지 말자"의 근거다.
 
 두 갈래로 나간다. **워크플로 주석은 매 빌드**(crawl 하루 8회 + deploy-web +
 daily-brief)에 회차 안의 사실 두 가지를 찍고, **텔레그램 관리자 알림은 하루 한 번**
