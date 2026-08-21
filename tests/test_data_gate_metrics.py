@@ -150,12 +150,79 @@ class NeverBlocksTheDeploy(unittest.TestCase):
         now = gate.datetime(2026, 8, 17, 0, 0, tzinfo=gate.timezone.utc)
         values = {
             "meta.json": {}, "issues.json": [], "briefings.json": [],
+            "issue_audit.json": {},
         }
         with patch.object(gate, "_load", side_effect=lambda name: values[name]), \
                 patch.object(gate, "measure_topic_weeks", return_value={}), \
                 patch.dict("os.environ", {"GITHUB_RUN_ID": "98765"}):
             record = gate.build_record(now)
         self.assertEqual("github-run:98765", record["observation_id"])
+
+
+def _candidates(**rest):
+    base = {"merge_rate": 0.17, "evidence_attach_rate": 0.19, "evidence_share": 0.70,
+            "applicable": True}
+    base.update(rest)
+    return base
+
+
+class IssueCandidateMeasurement(unittest.TestCase):
+    """후보 생성이 평소와 같은가 — 회차 **사이**의 변화를 보는 자리.
+
+    build_data 는 회차 안의 사실만 볼 수 있다. 병합률이 어제와 크게 다른 것은
+    하루치 안에서는 원리상 안 보이고, 그게 여기 있는 이유다.
+    """
+
+    def test_the_baseline_is_a_median_not_an_average(self):
+        """한 회차의 사고가 기준선을 끌고 가면 다음 회차에 그 사고가 정상이 된다."""
+        history = [_candidates(merge_rate=value) for value in (0.17, 0.16, 0.18, 0.02)]
+        self.assertEqual(gate.candidate_baseline(history)["merge_rate"], 0.165)
+
+    def test_too_few_records_means_no_baseline(self):
+        """이틀치로 표류를 말하면 매일 운다. 표류는 '평소'가 있어야 말할 수 있다."""
+        self.assertEqual(gate.candidate_baseline([_candidates(), _candidates()]), {})
+
+    def test_only_applicable_records_feed_the_baseline(self):
+        log = Path(tempfile.mkdtemp()) / "delivery_log.jsonl"
+        rows = [
+            {"record_type": "data_quality_gate",
+             "issue_candidates": _candidates(merge_rate=0.17)},
+            {"record_type": "data_quality_gate",
+             "issue_candidates": {"applicable": False, "reason": "없음"}},
+            {"record_type": "briefing", "issue_candidates": _candidates(merge_rate=9.9)},
+        ]
+        log.write_text("\n".join(json.dumps(row, ensure_ascii=False) for row in rows),
+                       encoding="utf-8")
+        history = gate.previous_candidate_records(log)
+        self.assertEqual([row["merge_rate"] for row in history], [0.17])
+
+    def test_a_build_without_diagnostics_is_not_judged(self):
+        measured = gate.measure_issue_candidates({}, [])
+        self.assertFalse(measured["applicable"])
+        self.assertNotIn("guards", measured)
+
+    def test_drift_is_reported_against_the_recent_median(self):
+        audit = {"candidate_diagnostics": {
+            "bands": {"total": 32416, "review_band_count": 845, "evidence_share": 0.70},
+            "search_space": [], "top_n_retention": {},
+            "merge_rate": 0.30, "evidence_attach_rate": 0.19, "evidence_share": 0.70,
+        }}
+        history = [_candidates(merge_rate=value) for value in (0.17, 0.16, 0.18)]
+        measured = gate.measure_issue_candidates(audit, history)
+        self.assertTrue(measured["applicable"])
+        self.assertEqual(measured["candidate_total"], 32416)
+        self.assertEqual([row["id"] for row in measured["guards"]],
+                         ["issue-candidate:merge-rate-drift"])
+
+    def test_a_steady_run_produces_no_guards(self):
+        """평소엔 조용해야 한다 — 이 테스트가 깨지면 알림이 배경 소음이 된다."""
+        audit = {"candidate_diagnostics": {
+            "bands": {"total": 32416, "review_band_count": 845, "evidence_share": 0.70},
+            "search_space": [], "top_n_retention": {},
+            "merge_rate": 0.17, "evidence_attach_rate": 0.19, "evidence_share": 0.70,
+        }}
+        history = [_candidates() for _ in range(5)]
+        self.assertEqual(gate.measure_issue_candidates(audit, history)["guards"], [])
 
 
 if __name__ == "__main__":

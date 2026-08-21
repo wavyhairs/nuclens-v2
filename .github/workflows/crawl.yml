@@ -243,19 +243,6 @@ jobs:
           sleep 15
           bash web/tools/verify_admin_gate.sh "$SITE_URL"
 
-      # 배포가 깨졌을 때만 전수 audit 을 건져 둔다. 러너가 사라지면 그 회차의
-      # 진단 재료도 같이 사라지는데, 하필 그때가 재료가 가장 필요한 때다
-      # (2026-08-16 · 2026-08-21 둘 다 그렇게 조사할 것이 없었다).
-      # 정상 회차의 전수는 daily-brief 가 하루 한 벌 남긴다.
-      - name: Upload full issue audit (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: issue-audit-full-${{ github.run_id }}
-          path: web/_audit/issue_audit.full.json
-          retention-days: 14
-          if-no-files-found: ignore
-
       # 이슈 병합 회색지대 LLM 판정 캐시. 커밋하지 않으면 빌드마다(하루 8회+)
       # 같은 쌍을 다시 물어보게 되고, 판정이 흔들리면 이슈 묶음도 같이 흔들린다.
       # 배포 스텝 뒤라 앞의 "Commit state" 에 실을 수 없어 별도 스텝으로 둔다.
@@ -331,3 +318,21 @@ jobs:
               print("::error::스모크 실패 — " + " | ".join(fails)); sys.exit(1)
           print(f"스모크 OK — 기사 {len(data['news.json'])}건, 최신 브리핑 {m.get('latest_briefing_date')}, JSON 6종 정상")
           EOF
+
+      # 배포가 깨졌을 때만 전수 audit 을 건져 둔다. 러너가 사라지면 그 회차의
+      # 진단 재료도 같이 사라지는데, 하필 그때가 재료가 가장 필요한 때다
+      # (2026-08-16 · 2026-08-21 둘 다 그렇게 조사할 것이 없었다).
+      # 정상 회차의 전수는 daily-brief 가 하루 한 벌 남긴다.
+      #
+      # **잡의 맨 끝이어야 한다.** `failure()` 는 그 시점까지의 잡 상태를 보므로,
+      # 앞에 두면 뒤에 오는 스모크가 깨진 회차에서 이미 스킵된 뒤다 — 그런데
+      # "데이터는 올라갔는데 화면이 죽는" 바로 그 경우가 이 스텝의 목적이다.
+      # 처음 넣을 때(#42) 이 순서를 놓쳤다.
+      - name: Upload full issue audit (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-audit-full-${{ github.run_id }}
+          path: web/_audit/issue_audit.full.json
+          retention-days: 14
+          if-no-files-found: ignore

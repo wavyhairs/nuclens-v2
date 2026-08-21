@@ -53,6 +53,7 @@ from data_quality import (  # noqa: E402
 )
 from embedding_pipeline import EMBEDDING_MODEL, cached_vector  # noqa: E402
 import article_quality_gate  # noqa: E402
+import issue_candidate_stats  # noqa: E402
 import issue_insight  # noqa: E402
 import issue_review  # noqa: E402
 import keei_match  # noqa: E402
@@ -1296,6 +1297,91 @@ def shipped_issue_audit(audit: dict) -> dict:
     return shipped
 
 
+def report_candidate_diagnostics(diagnostics: dict) -> None:
+    """후보 진단을 로그 한 덩어리로. **평소엔 조용하고 위험할 때만 크게 말한다.**
+
+    수치는 늘 두 줄로 요약하고, 컷의 여유가 사라졌을 때만 `::warning::` /
+    `::error::` 를 얹는다. 사람이 매번 아티팩트를 열어 보게 하면 결국 아무도
+    안 보기 때문이다 — 알림이 왔을 때만 열면 되게 만든다.
+
+    종료 코드는 바꾸지 않는다. 배포를 막는 게이트가 아니다(data_gate_metrics
+    머리말의 원칙과 같다). 운영 알림으로 밀어 넣는 것은 data_gate_metrics 다.
+    """
+    bands = diagnostics.get("bands") or {}
+    total = bands.get("total") or 0
+    if not total:
+        return
+    band_rows = bands.get("review_band_count") or 0
+    print(f"[issue_audit] 검수 후보 {total}건 "
+          f"(evidence {bands.get('evidence_share', 0):.1%}) → "
+          f"LLM 밴드 {issue_review.REVIEW_BAND_LOW}~{issue_review.REVIEW_BAND_HIGH} "
+          f"안은 {band_rows}건 ({band_rows / total:.1%})")
+    for row in bands.get("by_band") or []:
+        print(f"    {row['band']:>18}  {row['count']:>6}건 ({row['share']:>6.2%})  "
+              f"evidence {row['evidence']:>5} / card {row['card']:>5}")
+    for space in diagnostics.get("search_space") or []:
+        rank = space.get("preselect_rank") or {}
+        print(f"    [{space.get('path')}] 이슈방문 {space.get('issue_visits'):,} → "
+              f"클러스터비교 {space.get('clusters_compared'):,} → "
+              f"쌍채점 {space.get('pairs_scored'):,} | "
+              f"기사당 비교 평균 {(space.get('clusters_per_article') or {}).get('mean')} "
+              f"(최대 {(space.get('clusters_per_article') or {}).get('max')}) | "
+              f"어휘예선 정답 순위 중앙 {rank.get('median')} · p99 {rank.get('p99')} · "
+              f"최대 {rank.get('max')} (표본 {rank.get('landed')})")
+    for guard in diagnostics.get("guards") or []:
+        level = "error" if guard.get("severity") == "critical" else "warning"
+        print(f"::{level}::[{guard.get('id')}] {guard.get('title')} — {guard.get('detail')}")
+
+
+def artifact_ready_block(shipped: dict, full_path: Path,
+                         diagnostics: dict | None = None) -> str:
+    """전수 덤프가 실제로 만들어졌는지를 **로그 한 곳**에서 확인할 수 있게 한다.
+
+    워크플로의 업로드 스텝은 `if-no-files-found: ignore` 라 파일이 없어도 조용히
+    지나간다. 그 침묵 때문에 PR #42 병합 뒤 며칠이 지나도록 아티팩트가 한 번도
+    안 만들어진 것을 아무도 몰랐다. 그래서 개수·크기·경로를 한 블록으로 찍는다.
+
+    `full_path` 는 **워크플로의 `path:` 와 대조할 수 있는 값**이어야 한다 —
+    다르면 업로드가 빈손으로 끝난다. 아티팩트 안에서는 이 파일이 최상위에
+    놓인다(upload-artifact 가 공통 조상을 루트로 잡는다).
+    """
+    diagnostics = diagnostics or {}
+    bands = diagnostics.get("bands") or {}
+    try:
+        relative = full_path.resolve().relative_to(ROOT_DIR).as_posix()
+    except (ValueError, OSError):
+        relative = full_path.as_posix()
+    size = full_path.stat().st_size if full_path.exists() else 0
+    lines = [
+        "[issue_audit] artifact-ready",
+        f"full_candidates={shipped.get('review_candidate_total', 0)}",
+        f"shipped_candidates={len(shipped.get('review_candidates') or [])}",
+        f"full_size={size / 1024 / 1024:.1f}MiB",
+        f"truncated={str(bool(shipped.get('review_candidates_truncated'))).lower()}",
+        f"full_path={relative}",
+        f"band_{issue_review.REVIEW_BAND_LOW}_{issue_review.REVIEW_BAND_HIGH}="
+        f"{bands.get('review_band_count', 0)}",
+        f"evidence_share={bands.get('evidence_share', 0)}",
+        f"guards={len(diagnostics.get('guards') or [])}",
+    ]
+    return "\n".join(lines)
+
+
+def publish_artifact_ready(shipped: dict, full_path: Path,
+                           diagnostics: dict | None = None) -> str:
+    """위 블록을 빌드 로그와 (있으면) GitHub 실행 요약 양쪽에 남긴다."""
+    block = artifact_ready_block(shipped, full_path, diagnostics)
+    print(block)
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary_path:
+        try:
+            with open(summary_path, "a", encoding="utf-8") as handle:
+                handle.write(f"\n```\n{block}\n```\n")
+        except OSError as exc:  # 요약 기록 실패가 빌드를 죽이면 안 된다
+            print(f"[issue_audit] 실행 요약 기록 실패: {exc}")
+    return block
+
+
 def write_full_issue_audit(audit: dict) -> Path:
     """전수 후보 덤프를 배포 경로 **밖**에 쓴다. 아티팩트로 올라갈 파일이다.
 
@@ -1754,6 +1840,23 @@ def issue_similarity(
     }
 
 
+def has_review_context(diagnostics: dict) -> bool:
+    """코사인을 보기 **전에** 통과해야 하는 최소 맥락.
+
+    `is_review_candidate` 안에 있던 식을 이름만 붙여 꺼냈다 — 값도 순서도
+    그대로다. 꺼낸 이유는 계측이다: 이 게이트에서 떨어진 쌍과 코사인에서
+    떨어진 쌍은 **완전히 다른 이야기**인데, 안에 묻혀 있으면 둘 다 그냥
+    '후보 아님'으로 보인다(실측 evidence 경로에서 전자가 162,194쌍).
+    """
+    return bool(
+        diagnostics.get("tag_shared")
+        or diagnostics.get("topic_shared")
+        or float(diagnostics.get("title_ratio") or 0) >= 0.28
+        or float(diagnostics.get("token_ratio") or 0) >= 0.16
+        or float(diagnostics.get("story_fingerprint_similarity") or 0) >= 0.55
+    )
+
+
 def is_review_candidate(diagnostics: dict) -> tuple[bool, str, float]:
     """자동 병합 아래 구간을 사람 확인 큐로 보낸다."""
     if diagnostics.get("blocked_by"):
@@ -1762,14 +1865,7 @@ def is_review_candidate(diagnostics: dict) -> tuple[bool, str, float]:
     local = diagnostics.get("local_embedding_similarity")
     title_ratio = float(diagnostics.get("title_ratio") or 0)
     token_ratio = float(diagnostics.get("token_ratio") or 0)
-    contextual = bool(
-        diagnostics.get("tag_shared")
-        or diagnostics.get("topic_shared")
-        or title_ratio >= 0.28
-        or token_ratio >= 0.16
-        or float(diagnostics.get("story_fingerprint_similarity") or 0) >= 0.55
-    )
-    if not contextual:
+    if not has_review_context(diagnostics):
         return False, "", 0.0
     if remote is not None and remote >= ISSUE_EMBEDDING_CANDIDATE_THRESHOLD:
         return True, "gemini_candidate", float(remote)
@@ -1787,6 +1883,40 @@ def is_review_candidate(diagnostics: dict) -> tuple[bool, str, float]:
     ):
         return True, "local_candidate", float(local)
     return False, "", 0.0
+
+
+def _pair_outcome(matched: bool, diagnostics: dict, recorded: bool) -> str:
+    """채점한 쌍 하나의 결말을 한 낱말로. **계측 전용 — 판정에 쓰이지 않는다.**
+
+    '후보가 아니다'가 네 가지 서로 다른 사실을 덮고 있었다: 붙었다 / 국가·설비가
+    막았다 / 맥락이 없었다 / 맥락은 있는데 코사인이 모자랐다. 마지막 둘의 비율이
+    임계값을 올릴지 비교를 줄일지를 가른다.
+    """
+    if matched:
+        return f"matched:{diagnostics.get('method') or '?'}"
+    if diagnostics.get("blocked_by"):
+        return "blocked"
+    if recorded:
+        return "candidate"
+    if not has_review_context(diagnostics):
+        return "no_context"
+    return "below_threshold"
+
+
+def _lexical_score(diagnostics: dict) -> float:
+    """`issue_similarity` 의 어휘 점수를 이미 계산된 진단값으로 다시 조립한다.
+
+    **계측 전용.** 같은 식이 issue_similarity 안에 있고 그쪽이 원본이다 —
+    여기서 다시 재는 것은 "임베딩을 조회하기 **전에** 묶음을 줄 세웠다면 정답이
+    몇 위였을까"를 그림자로 재기 위해서다. 값이 두 곳에 있으므로 식을 고칠 때는
+    둘 다 고쳐야 한다(web/tests 가 두 값이 같은지 대조한다).
+
+    진단값이 이미 소수 넷째 자리에서 반올림돼 있어 원본과 최대 1e-4 어긋난다.
+    순위를 매기는 용도라 무해하다 — 정확한 점수가 필요하면 원본을 쓸 것.
+    """
+    return (0.55 * float(diagnostics.get("title_ratio") or 0)
+            + 0.25 * float(diagnostics.get("token_ratio") or 0)
+            + 0.20 * float(diagnostics.get("tag_ratio") or 0))
 
 
 def _parse_day(value: str) -> date | None:
@@ -2048,11 +2178,16 @@ def cluster_selected_articles(
     match_overrides: dict[str, set[str]] | None = None,
     review_candidates: list[dict] | None = None,
     facility_entities: dict[str, set[str]] | None = None,
+    telemetry: issue_candidate_stats.SearchTelemetry | None = None,
 ) -> list[dict]:
     """발송된 기사들을 최근 이슈 묶음으로 연결한다.
 
     issue_id는 최초 기사 hash에서 만들어 안정적으로 유지한다. 대표 기사는 더 좋은
     출처나 중요 기사로 바뀔 수 있지만 issue_id는 바뀌지 않는다.
+
+    `telemetry` 는 **계수기일 뿐이다** — 넘기든 안 넘기든 반환값이 같아야 하고,
+    `None` 이면 계측 호출 자체를 하지 않는다(web/tests 가 두 경로의 산출물이
+    바이트 단위로 같은지 잠근다).
     """
     selected = [item for item in news_items if item.get("briefing_date")]
     selected.sort(key=lambda item: (item["briefing_date"], item["article_date"], item["hash"]))
@@ -2070,8 +2205,12 @@ def cluster_selected_articles(
         best_diag = None
 
         for issue in issues:
+            if telemetry is not None:
+                telemetry.visit()
             last_day = _parse_day(issue["last_seen"])
             if article_day and last_day and (article_day - last_day).days > ISSUE_WINDOW_DAYS:
+                if telemetry is not None:
+                    telemetry.skip("window")
                 continue
             # 클러스터 전체 거부권 — 쌍 단위 판정은 전이적이지 않다.
             #
@@ -2098,13 +2237,22 @@ def cluster_selected_articles(
                 _pair_id(article["hash"], member["hash"]) in veto_pairs
                 for member in issue["members"]
             ):
+                if telemetry is not None:
+                    telemetry.skip("veto")
                 continue
             # 국가·설비 충돌에도 같은 전체 거부권을 준다. 아래 매칭은 최근 3건만
             # 보므로 blocked_by 는 그 3건에 대해서만 계산된다 — 더 오래된 멤버와
             # 나라가 어긋나도 통과한다(_cluster_country_conflict 주석의 실측 사고).
-            if _cluster_country_conflict(article, issue["members"]) or \
-                    _cluster_facility_conflict(article, issue["members"]):
+            if _cluster_country_conflict(article, issue["members"]):
+                if telemetry is not None:
+                    telemetry.skip("country_conflict")
                 continue
+            if _cluster_facility_conflict(article, issue["members"]):
+                if telemetry is not None:
+                    telemetry.skip("facility_conflict")
+                continue
+            if telemetry is not None:
+                telemetry.compare(article["hash"])
             # 지문 경로만 묶음 전체와 대조한다 — 약한 근거는 연쇄하지 못한다.
             # (왜 이 경로만인지는 _cluster_fingerprint_conflict 주석에 실측이 있다.)
             fingerprint_chain_blocked = _cluster_fingerprint_conflict(article, issue["members"])
@@ -2112,6 +2260,7 @@ def cluster_selected_articles(
             # 끊길 수 있다. 최근 기사 3건 중 가장 가까운 연결을 사용한다.
             for reference in issue["members"][-3:]:
                 pair_id = _pair_id(article["hash"], reference["hash"])
+                recorded = False
                 matched, score, diag = issue_similarity(
                     article, reference, embeddings, local_embeddings, facility_entities
                 )
@@ -2124,7 +2273,12 @@ def cluster_selected_articles(
                         fingerprint_chain_blocked):
                     matched = False
                     diag = {**diag, "method": "fingerprint_chain_blocked"}
+                    if telemetry is not None:
+                        telemetry.fingerprint_chain_demoted()
                 if pair_id in veto_pairs:
+                    if telemetry is not None:
+                        telemetry.pair(article["hash"], "veto",
+                                       issue["issue_id"], _lexical_score(diag))
                     continue
                 if pair_id in overrides.get("approved", set()) and not diag.get("blocked_by"):
                     matched, score = True, max(score, 1.0)
@@ -2139,6 +2293,7 @@ def cluster_selected_articles(
                     is_candidate, candidate_method, candidate_score = is_review_candidate(diag)
                     if is_candidate and pair_id not in seen_candidates:
                         seen_candidates.add(pair_id)
+                        recorded = True
                         candidate_rows.append({
                             "candidate_id": pair_id,
                             "left_hash": reference["hash"],
@@ -2157,10 +2312,15 @@ def cluster_selected_articles(
                             "diagnostics": diag,
                             "review_state": "pending",
                         })
+                if telemetry is not None:
+                    telemetry.pair(article["hash"], _pair_outcome(matched, diag, recorded),
+                                   issue["issue_id"], _lexical_score(diag))
                 if matched and score > best_score:
                     best_issue, best_score = issue, score
                     best_diag = {**diag, "reference_hash": reference["hash"]}
 
+        if telemetry is not None:
+            telemetry.settle((best_issue or {}).get("issue_id"))
         if best_issue is None:
             issues.append({
                 "issue_id": f"issue-{article['hash']}",
@@ -2193,11 +2353,16 @@ def attach_evidence_articles(
     match_overrides: dict[str, set[str]] | None = None,
     review_candidates: list[dict] | None = None,
     facility_entities: dict[str, set[str]] | None = None,
+    telemetry: issue_candidate_stats.SearchTelemetry | None = None,
 ) -> int:
     """미발송 기사를 이미 고정된 카드 이슈에 근거로만 부착한다.
 
     근거 기사는 새 이슈를 만들지 않고 다른 근거 기사의 연결 기준도 되지 않는다.
     따라서 수집 분모를 넓혀도 카드 소속·대표 제목·정렬이 바뀌지 않는다.
+
+    후보의 대부분이 여기서 난다 — 이 루프는 기사 하나마다 **이슈 전부**를 돈다
+    (실측 2026-08-21: 미발송 1,950건 × 이슈 270개 = 526,500 방문). `telemetry`
+    는 그 폭을 세기만 하고 반환값을 바꾸지 않는다.
     """
     if not issues:
         return 0
@@ -2227,6 +2392,8 @@ def attach_evidence_articles(
         best_score = -1.0
         best_diag = None
         for issue in issues:
+            if telemetry is not None:
+                telemetry.visit()
             card_members = issue["members"]
             card_days = [
                 _parse_day(member.get("article_date") or member.get("briefing_date") or "")
@@ -2236,23 +2403,35 @@ def attach_evidence_articles(
                 card_day and abs((article_day - card_day).days) > ISSUE_WINDOW_DAYS
                 for card_day in card_days
             ):
+                if telemetry is not None:
+                    telemetry.skip("window")
                 continue
             if veto_pairs and any(
                 _pair_id(article["hash"], member["hash"]) in veto_pairs
                 for member in card_members
             ):
+                if telemetry is not None:
+                    telemetry.skip("veto")
                 continue
             # 카드 묶음과 같은 전체 거부권 — 근거 기사도 묶음 멤버로 화면에 실리고
             # 데이터 게이트의 검사 대상이라, 여기서 빠지면 같은 구멍이 남는다.
-            if _cluster_country_conflict(article, card_members) or \
-                    _cluster_facility_conflict(article, card_members):
+            if _cluster_country_conflict(article, card_members):
+                if telemetry is not None:
+                    telemetry.skip("country_conflict")
                 continue
+            if _cluster_facility_conflict(article, card_members):
+                if telemetry is not None:
+                    telemetry.skip("facility_conflict")
+                continue
+            if telemetry is not None:
+                telemetry.compare(article["hash"])
             # 지문 경로만 묶음 전체와 대조한다 — 약한 근거는 연쇄하지 못한다.
             # (왜 이 경로만인지는 _cluster_fingerprint_conflict 주석에 실측이 있다.)
             fingerprint_chain_blocked = _cluster_fingerprint_conflict(article, card_members)
             # 근거끼리 chaining 되지 않도록 카드 멤버만 앵커로 사용한다.
             for reference in card_members[-3:]:
                 pair_id = _pair_id(article["hash"], reference["hash"])
+                recorded = False
                 matched, score, diag = issue_similarity(
                     article, reference, embeddings, local_embeddings, facility_entities
                 )
@@ -2265,7 +2444,12 @@ def attach_evidence_articles(
                         fingerprint_chain_blocked):
                     matched = False
                     diag = {**diag, "method": "fingerprint_chain_blocked"}
+                    if telemetry is not None:
+                        telemetry.fingerprint_chain_demoted()
                 if pair_id in veto_pairs:
+                    if telemetry is not None:
+                        telemetry.pair(article["hash"], "veto",
+                                       issue["issue_id"], _lexical_score(diag))
                     continue
                 if pair_id in overrides.get("approved", set()) and not diag.get("blocked_by"):
                     matched, score = True, max(score, 1.0)
@@ -2277,6 +2461,7 @@ def attach_evidence_articles(
                     is_candidate, candidate_method, candidate_score = is_review_candidate(diag)
                     if is_candidate and pair_id not in seen_candidates:
                         seen_candidates.add(pair_id)
+                        recorded = True
                         candidate_rows.append({
                             "candidate_id": pair_id,
                             "left_hash": reference["hash"],
@@ -2292,9 +2477,14 @@ def attach_evidence_articles(
                             "review_state": "pending",
                             "member_role": "evidence",
                         })
+                if telemetry is not None:
+                    telemetry.pair(article["hash"], _pair_outcome(matched, diag, recorded),
+                                   issue["issue_id"], _lexical_score(diag))
                 if matched and score > best_score:
                     best_issue, best_score = issue, score
                     best_diag = {**diag, "reference_hash": reference["hash"]}
+        if telemetry is not None:
+            telemetry.settle((best_issue or {}).get("issue_id"))
         if best_issue is None:
             continue
         best_issue.setdefault("evidence_members", []).append(article)
@@ -5133,6 +5323,10 @@ def build() -> None:
         news_items, facility_alias_entries(entity_registry)
     )
     review_candidates: list[dict] = []
+    # 후보 계수기. 후보가 어느 경로에서 몇 개 나는지 세기만 한다 — 판정에는
+    # 관여하지 않는다(issue_candidate_stats 머리말). 2차 패스에서 새로 만든다.
+    card_telemetry = issue_candidate_stats.SearchTelemetry("card")
+    evidence_telemetry = issue_candidate_stats.SearchTelemetry("evidence")
     issues = cluster_selected_articles(
         news_items,
         embeddings,
@@ -5140,6 +5334,7 @@ def build() -> None:
         match_overrides,
         review_candidates,
         facility_entities,
+        telemetry=card_telemetry,
     )
     p0_card_snapshot = card_cluster_snapshot(issues)
     evidence_attached = attach_evidence_articles(
@@ -5150,6 +5345,7 @@ def build() -> None:
         match_overrides,
         review_candidates,
         facility_entities,
+        telemetry=evidence_telemetry,
     )
     p1_regression = assert_card_clusters_unchanged(p0_card_snapshot, issues)
 
@@ -5169,6 +5365,10 @@ def build() -> None:
             "llm_rejected": llm_rejected,
         }
         review_candidates = []
+        # 계수기도 같이 비운다. 안 그러면 1차와 2차가 겹쳐 세어져 방문 수가
+        # 두 배로 보이고, 예선 순위 히스토그램에는 이미 없어진 쌍이 섞인다.
+        card_telemetry = issue_candidate_stats.SearchTelemetry("card")
+        evidence_telemetry = issue_candidate_stats.SearchTelemetry("evidence")
         issues = cluster_selected_articles(
             news_items,
             embeddings,
@@ -5176,6 +5376,7 @@ def build() -> None:
             match_overrides,
             review_candidates,
             facility_entities,
+            telemetry=card_telemetry,
         )
         p0_card_snapshot = card_cluster_snapshot(issues)
         evidence_attached = attach_evidence_articles(
@@ -5186,6 +5387,7 @@ def build() -> None:
             match_overrides,
             review_candidates,
             facility_entities,
+            telemetry=evidence_telemetry,
         )
         p1_regression = assert_card_clusters_unchanged(p0_card_snapshot, issues)
     print(f"[build_data] 이슈 병합 LLM 검수: 후보 {llm_stats['candidates']}쌍 "
@@ -5497,6 +5699,26 @@ def build() -> None:
         insights = {"generated_at": "", "items": []}
     insights = prepare_insights(insights, news_items)
 
+    # 후보 진단. **자르기 전 전수**로 센다 — 배포본은 상위 5,000건만 싣고 그
+    # 절단선이 코사인 0.8153 이라(2026-08-21 실측), 배포본만 보면 후보의 84.6%가
+    # 안 보인다. 여기서 세면 그 구간이 채워진다.
+    #
+    # 정답지는 `match_diagnostics` 다 — 실제로 채택된 병합 전량이라, 어떤
+    # 사전차단·상한이 **무엇을 잃는지**를 이 목록으로 잰다. 표본이 아니라 전수다.
+    merge_records = [diag for issue in issues
+                     for diag in issue.get("match_diagnostics", [])]
+    try:
+        candidate_diagnostics = issue_candidate_stats.summarize(
+            review_candidates, merge_records,
+            [card_telemetry, evidence_telemetry],
+            selected_count=len(selected_items),
+        )
+    except Exception as exc:  # 계측이 빌드를 죽이면 안 된다
+        print(f"::warning::후보 진단 집계 실패 — {exc} (빌드는 계속한다)")
+        candidate_diagnostics = {"definition_version": "candidate-telemetry-v1",
+                                 "error": str(exc), "guards": []}
+    report_candidate_diagnostics(candidate_diagnostics)
+
     issue_audit = {
         "generated_at": now.isoformat(),
         "matching_version": "hybrid-review-v4",
@@ -5512,6 +5734,9 @@ def build() -> None:
         "llm_approved": sorted(llm_approved),
         # 기각도 남긴다 — 거부권이 실제로 걸렸는지 audit 만 보고 확인할 수 있어야 한다.
         "llm_rejected": sorted(llm_rejected),
+        # 후보가 어디서 몇 개 났는지. **크기가 O(1)** 이라 배포본에도 그대로 간다 —
+        # 잘린 목록만 보는 사람도 전수 기준 분포는 볼 수 있어야 한다.
+        "candidate_diagnostics": candidate_diagnostics,
         "review_candidates": review_candidates,
         "overrides": {
             "approved": sorted(match_overrides["approved"]),
@@ -5555,6 +5780,7 @@ def build() -> None:
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ADMIN_OUT_DIR.mkdir(parents=True, exist_ok=True)
+    shipped_audit = shipped_issue_audit(issue_audit)
     outputs = (
         ("news.json", news_items),
         ("briefings.json", briefings),
@@ -5565,7 +5791,7 @@ def build() -> None:
         ("publications.json", publications),
         ("entities.json", entities_view),
         # 원본이 아니라 사본을 싣는다 — 아래 admin_outputs 는 전수를 봐야 한다.
-        ("issue_audit.json", shipped_issue_audit(issue_audit)),
+        ("issue_audit.json", shipped_audit),
         ("manifest.json", manifest),
         ("status.json", status),
     )
@@ -5579,7 +5805,8 @@ def build() -> None:
             json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
             encoding="utf-8",
         )
-    write_full_issue_audit(issue_audit)
+    full_audit_path = write_full_issue_audit(issue_audit)
+    publish_artifact_ready(shipped_audit, full_audit_path, candidate_diagnostics)
     for name, payload in admin_outputs:
         (ADMIN_OUT_DIR / name).write_text(
             json.dumps(payload, ensure_ascii=False, separators=(",", ":")),

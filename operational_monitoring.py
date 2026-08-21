@@ -440,6 +440,30 @@ def data_gate_signals(record: Mapping | None) -> list[AlertSignal]:
             observation_id=observation_id, min_occurrences=2,
         ))
 
+    # 이슈 병합 후보 감시. 판정은 issue_candidate_stats.guardrails 가 이미 했고
+    # 여기서는 **전달만** 한다 — 임계값이 두 곳에 있으면 반드시 어긋난다.
+    #
+    # min_occurrences=2 인 이유: 하루치 후보 분포는 그날 수집량을 따라 흔들린다.
+    # 한 회차만 보고 부르면 뉴스가 한산한 날마다 울리고, 매일 우는 알림은
+    # 아무도 안 본다(추적률 게이트에서 이미 치른 대가다). 다만 계측 자체가
+    # 어긋난 경우(telemetry-desync)는 수치 전체를 못 믿으므로 즉시 부른다.
+    candidates = record.get("issue_candidates")
+    if isinstance(candidates, Mapping) and candidates.get("applicable"):
+        for guard in candidates.get("guards") or []:
+            if not isinstance(guard, Mapping):
+                continue
+            key = str(guard.get("id") or "").strip()
+            if not key:
+                continue
+            severity = str(guard.get("severity") or "warning")
+            out.append(AlertSignal(
+                key=key, scope="data_gate", severity=severity,
+                title=str(guard.get("title") or "이슈 병합 후보 감시"),
+                detail=str(guard.get("detail") or ""),
+                observation_id=observation_id,
+                min_occurrences=1 if key.endswith("telemetry-desync") else 2,
+            ))
+
     weeks = record.get("topic_weeks")
     if isinstance(weeks, Mapping):
         hidden = []

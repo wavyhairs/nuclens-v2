@@ -27,7 +27,9 @@ except (OSError, KeyError, json.JSONDecodeError):
     DATA_DIR = DATA_ROOT
 
 import build_data  # noqa: E402
+import issue_candidate_stats  # noqa: E402
 import issue_continuity  # noqa: E402
+import issue_review  # noqa: E402
 import story_fingerprint  # noqa: E402
 for _key in ("NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
     os.environ.setdefault(_key, "test")
@@ -1324,6 +1326,192 @@ class IssueSimilarityTests(unittest.TestCase):
         self.assertEqual(sum(len(issue.get("evidence_members") or []) for issue in issues), 1)
 
 
+class CandidateTelemetryTests(unittest.TestCase):
+    """후보 계측이 **판정을 바꾸지 않는가**.
+
+    계측을 병합 루프 안에 넣는 순간 위험이 하나 생긴다: 세는 코드가 조용히
+    판정을 건드리는 것. 그러면 진단을 켠 회차와 끈 회차의 이슈 묶음이 달라지고,
+    "진단만 넣었다"는 말이 거짓이 된다. 그래서 같은 입력을 두 번 돌려 산출물이
+    **바이트 단위로 같은지** 본다 — 이 클래스의 첫 테스트가 그 잠금장치다.
+    """
+
+    def _cards(self):
+        return [
+            {"hash": "c1", "briefing_date": "2026-08-01", "article_date": "2026-08-01",
+             "title_kr": "한빛 3호기 계속운전 심사 착수", "summary": "원안위가 심사를 시작했다",
+             "tags": ["#한빛", "#계속운전"], "topics": ["safety"], "countries": ["KR"]},
+            {"hash": "c2", "briefing_date": "2026-08-02", "article_date": "2026-08-02",
+             "title_kr": "한빛 3호기 계속운전 심사 본격 진행", "summary": "심사가 이어진다",
+             "tags": ["#한빛", "#계속운전"], "topics": ["safety"], "countries": ["KR"]},
+            {"hash": "c3", "briefing_date": "2026-08-03", "article_date": "2026-08-03",
+             "title_kr": "체코 두코바니 신규 원전 계약 발효", "summary": "계약이 발효됐다",
+             "tags": ["#두코바니", "#수출"], "topics": ["export"], "countries": ["CZ"]},
+        ]
+
+    def _evidence(self):
+        return [
+            {"hash": "e1", "article_date": "2026-08-04", "importance": "nice_to_know",
+             "title_kr": "한빛 3호기 계속운전 심사 일정 공개", "summary": "일정이 나왔다",
+             "tags": ["#한빛", "#계속운전"], "topics": ["safety"], "countries": ["KR"]},
+            {"hash": "e2", "article_date": "2026-08-05", "importance": "nice_to_know",
+             "title_kr": "두코바니 현지 인허가 절차 진행", "summary": "절차가 진행된다",
+             "tags": ["#두코바니", "#수출"], "topics": ["export"], "countries": ["CZ"]},
+        ]
+
+    def _run(self, telemetry_on):
+        news = self._cards() + self._evidence()
+        rows = []
+        card = issue_candidate_stats.SearchTelemetry("card") if telemetry_on else None
+        evidence = issue_candidate_stats.SearchTelemetry("evidence") if telemetry_on else None
+        issues = build_data.cluster_selected_articles(
+            news, None, None, None, rows, None, telemetry=card)
+        snapshot = build_data.card_cluster_snapshot(issues)
+        attached = build_data.attach_evidence_articles(
+            news, issues, None, None, None, rows, None, telemetry=evidence)
+        build_data.assert_card_clusters_unchanged(snapshot, issues)
+        signature = json.dumps(
+            {
+                "issues": [
+                    {"id": issue["issue_id"],
+                     "members": [member["hash"] for member in issue["members"]],
+                     "evidence": [member["hash"]
+                                  for member in issue.get("evidence_members") or []],
+                     "matches": issue.get("match_diagnostics")}
+                    for issue in issues
+                ],
+                "attached": attached,
+                "candidates": rows,
+            },
+            ensure_ascii=False, sort_keys=True, default=str)
+        return signature, issues, rows, [card, evidence]
+
+    def test_telemetry_does_not_change_a_single_byte_of_the_output(self):
+        plain, _, _, _ = self._run(False)
+        instrumented, _, rows, _ = self._run(True)
+        self.assertTrue(rows or True)
+        self.assertEqual(plain, instrumented,
+                         "계측을 켜자 이슈 묶음이나 후보 목록이 달라졌다 — "
+                         "진단 PR 이 판정을 건드렸다는 뜻이다")
+
+    def test_every_scored_pair_is_counted_exactly_once(self):
+        """센 것과 실제로 돈 것이 어긋나면 이 진단 전체를 믿을 수 없다."""
+        _, _, _, (card, evidence) = self._run(True)
+        for telemetry in (card, evidence):
+            summary = telemetry.summary()
+            self.assertEqual(summary["pairs_scored"],
+                             sum(summary["pair_outcomes"].values()), summary["path"])
+            self.assertEqual(
+                summary["issue_visits"],
+                summary["clusters_compared"] + sum(summary["skipped"].values()),
+                f"{summary['path']}: 방문 = 비교 + 건너뜀 이어야 한다")
+
+    def test_the_landing_cluster_is_always_in_the_preselect_table(self):
+        """붙은 묶음이 예선 표에 없으면 순위 통계가 통째로 거짓이다."""
+        _, _, _, telemetries = self._run(True)
+        for telemetry in telemetries:
+            self.assertEqual(telemetry.summary()["preselect_rank"]["not_in_table"], 0)
+
+    def test_the_lexical_shadow_score_matches_the_matcher(self):
+        """예선 점수는 issue_similarity 의 어휘 점수와 같은 식이어야 한다.
+
+        같은 식이 두 곳에 있으므로 한쪽만 고치면 예선 순위가 조용히 다른 것을
+        재게 된다 — 그러면 컷을 그 수치로 정한 다음 PR 이 틀린 값을 쓴다.
+        """
+        left, right = self._cards()[0], self._cards()[1]
+        matched, score, diag = build_data.issue_similarity(left, right)
+        self.assertTrue(matched, "픽스처가 병합되지 않으면 이 대조가 의미 없다")
+        # matched 경로는 score 를 지문·임베딩으로 끌어올릴 수 있으므로 식으로 비교한다.
+        expected = round(
+            0.55 * diag["title_ratio"] + 0.25 * diag["token_ratio"] + 0.20 * diag["tag_ratio"], 6)
+        self.assertEqual(round(build_data._lexical_score(diag), 6), expected)
+        # 안 붙은 쌍에서는 issue_similarity 의 score 와 같아야 한다. 다만 진단값이
+        # 이미 소수 넷째 자리에서 반올림돼 있어 최대 1e-4 만큼 어긋날 수 있다 —
+        # 순위를 매기는 데는 무해하지만 '완전히 같다'고 적으면 거짓이 된다.
+        _, other_score, other = build_data.issue_similarity(self._cards()[0], self._cards()[2])
+        self.assertAlmostEqual(build_data._lexical_score(other), other_score, delta=2e-4)
+
+    def test_context_gate_keeps_its_original_triggers(self):
+        """`has_review_context` 는 is_review_candidate 안에 있던 식을 이름만 붙여
+        꺼낸 것이다. 값이 바뀌면 후보 수가 바뀐다 — 트리거를 하나씩 잠근다."""
+        self.assertFalse(build_data.has_review_context({}))
+        for field in ({"tag_shared": 1}, {"topic_shared": 1}, {"title_ratio": 0.28},
+                      {"token_ratio": 0.16}, {"story_fingerprint_similarity": 0.55}):
+            self.assertTrue(build_data.has_review_context(field), field)
+        for field in ({"title_ratio": 0.279}, {"token_ratio": 0.159},
+                      {"story_fingerprint_similarity": 0.549}):
+            self.assertFalse(build_data.has_review_context(field), field)
+
+    def test_pair_outcome_separates_the_four_ways_a_pair_can_fail(self):
+        """'후보가 아니다'가 네 가지 사실을 덮고 있었다. 그 넷을 가르는 것이
+        임계값을 올릴지 비교를 줄일지를 정하는 재료다."""
+        self.assertEqual(
+            build_data._pair_outcome(True, {"method": "tags"}, False), "matched:tags")
+        self.assertEqual(
+            build_data._pair_outcome(False, {"blocked_by": ["country_conflict"]}, False),
+            "blocked")
+        self.assertEqual(build_data._pair_outcome(False, {"tag_shared": 1}, True), "candidate")
+        self.assertEqual(build_data._pair_outcome(False, {}, False), "no_context")
+        self.assertEqual(
+            build_data._pair_outcome(False, {"tag_shared": 1}, False), "below_threshold")
+
+    def test_the_artifact_ready_block_keeps_its_field_names(self):
+        """이 블록은 사람이 grep 하는 자리다. 이름이나 순서가 바뀌면 조용히
+        안 잡히고, 그러면 아티팩트가 또 한 번 '없는 줄도 모르는' 상태가 된다."""
+        shipped = {
+            "review_candidate_total": 32416,
+            "review_candidates": [{}] * 5000,
+            "review_candidates_truncated": True,
+        }
+        diagnostics = {"bands": {"review_band_count": 845, "evidence_share": 0.701},
+                       "guards": []}
+        block = build_data.artifact_ready_block(
+            shipped, build_data.AUDIT_FULL_DIR / build_data.AUDIT_FULL_NAME, diagnostics)
+        lines = block.splitlines()
+        self.assertEqual(lines[0], "[issue_audit] artifact-ready")
+        self.assertEqual([line.split("=")[0] for line in lines[1:]],
+                         ["full_candidates", "shipped_candidates", "full_size", "truncated",
+                          "full_path", "band_0.84_0.92", "evidence_share", "guards"])
+        self.assertIn("full_candidates=32416", lines)
+        self.assertIn("shipped_candidates=5000", lines)
+        self.assertIn("truncated=true", lines)
+        self.assertIn("band_0.84_0.92=845", lines)
+        # 워크플로의 `path:` 와 **문자 그대로** 대조할 수 있어야 한다.
+        self.assertIn("full_path=web/_audit/issue_audit.full.json", lines)
+
+    def test_the_full_path_matches_what_the_workflows_upload(self):
+        """블록이 적는 경로와 워크플로가 올리는 경로가 어긋나면 업로드는
+        빈손으로 끝나고 `if-no-files-found: ignore` 가 그것을 삼킨다."""
+        block = build_data.artifact_ready_block(
+            {"review_candidate_total": 0, "review_candidates": []},
+            build_data.AUDIT_FULL_DIR / build_data.AUDIT_FULL_NAME, {})
+        declared = [line[len("full_path="):] for line in block.splitlines()
+                    if line.startswith("full_path=")][0]
+        workflows = Path(build_data.ROOT_DIR) / ".github" / "workflows"
+        uploaders = 0
+        for name in ("daily-brief.yml", "crawl.yml", "deploy-web.yml"):
+            lines = (workflows / name).read_text(encoding="utf-8").splitlines()
+            for index, line in enumerate(lines):
+                if "name: issue-audit-full" not in line:
+                    continue
+                uploaders += 1
+                block = "\n".join(lines[index:index + 5])
+                self.assertIn(f"path: {declared}", block, name)
+        self.assertEqual(uploaders, 3, "전수 audit 을 올리는 워크플로가 셋이어야 한다")
+
+    def test_the_failure_uploader_is_the_last_step_of_its_job(self):
+        """`failure()` 는 **그 시점까지의** 잡 상태를 본다. 업로드가 스모크보다
+        앞에 있으면, 배포는 됐는데 화면이 죽은 회차 — 이 스텝을 만든 바로 그
+        경우 — 에서 이미 스킵된 뒤다. #42 에서 실제로 그렇게 들어갔다.
+        """
+        workflows = Path(build_data.ROOT_DIR) / ".github" / "workflows"
+        for name in ("crawl.yml", "deploy-web.yml"):
+            steps = re.findall(r"^      - name: (.+)$",
+                               (workflows / name).read_text(encoding="utf-8"), re.M)
+            self.assertEqual(steps[-1], "Upload full issue audit (on failure)",
+                             f"{name}: 실패 시 업로드가 잡의 마지막 스텝이 아니다 — "
+                             f"뒤 스텝이 깨진 회차에서는 안 걸린다")
+
+
 class DeployablePayloadTests(unittest.TestCase):
     """배포 산출물이 Cloudflare Pages 의 한계 안에 있는가.
 
@@ -2289,6 +2477,47 @@ class GeneratedDataTests(unittest.TestCase):
         if atlas["node_rates"]["related_articles"] < build_data.ATLAS_MIN_RELATED_RATE:
             expected.append("related_articles")
         self.assertEqual(atlas["blocking_nodes"], expected)
+
+    def test_candidate_diagnostics_ride_along_with_the_shipped_audit(self):
+        """잘린 목록만 보는 사람도 **전수 기준 분포**는 볼 수 있어야 한다.
+
+        배포본은 점수 상위 5,000건만 싣고 그 절단선이 코사인 0.8153 이라
+        (2026-08-21 실측), 목록만 보면 후보의 84.6% 가 안 보인다. 진단은 자르기
+        전에 세므로 여기 실린 합계는 `review_candidate_total` 과 같아야 한다.
+        """
+        diagnostics = self.issue_audit.get("candidate_diagnostics")
+        self.assertIsInstance(diagnostics, dict, "candidate_diagnostics 가 없다")
+        self.assertEqual(diagnostics["definition_version"], "candidate-telemetry-v1")
+        bands = diagnostics["bands"]
+        total = self.issue_audit["review_candidate_total"]
+        self.assertEqual(bands["total"], total, "진단이 자른 뒤의 수를 세고 있다")
+        self.assertEqual(sum(row["count"] for row in bands["by_band"]), total)
+        self.assertEqual(sum(bands["by_origin"].values()), total)
+        # 검수 밴드는 issue_review 가 실제로 집어 드는 구간과 같아야 한다.
+        self.assertEqual(bands["review_band"],
+                         [issue_review.REVIEW_BAND_LOW, issue_review.REVIEW_BAND_HIGH])
+        self.assertLessEqual(bands["review_band_count"], total)
+
+    def test_search_space_counters_add_up(self):
+        """방문 = 비교 + 건너뜀. 어긋나면 어느 게이트가 얼마나 걷는지를 말하는
+        표 전체가 거짓이 된다."""
+        for space in self.issue_audit["candidate_diagnostics"]["search_space"]:
+            self.assertEqual(
+                space["issue_visits"],
+                space["clusters_compared"] + sum(space["skipped"].values()),
+                space["path"])
+            self.assertEqual(space["pairs_scored"], sum(space["pair_outcomes"].values()),
+                             space["path"])
+            self.assertEqual(space["preselect_rank"]["not_in_table"], 0,
+                             f"{space['path']}: 붙은 묶음이 예선 표에 없다 — 계측이 어긋났다")
+
+    def test_the_diagnostics_block_stays_small_enough_to_ship(self):
+        """이 블록은 배포본에 실린다. `review_candidates` 와 달리 O(1) 이어야
+        하고, 아니면 #41 에서 겪은 25 MiB 벽이 다른 이름으로 돌아온다."""
+        encoded = json.dumps(self.issue_audit["candidate_diagnostics"],
+                             ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        self.assertLess(len(encoded), 64 * 1024,
+                        f"candidate_diagnostics 가 {len(encoded)} B — 목록이 섞여 들어갔는지 볼 것")
 
     def test_manual_merge_overrides_are_auditable(self):
         approved = set(self.issue_audit["overrides"]["approved"])
