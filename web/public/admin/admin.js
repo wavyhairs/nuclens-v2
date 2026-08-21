@@ -57,6 +57,12 @@ function ratio(value) {
   return typeof value === "number" ? value.toFixed(2) : "—";
 }
 
+// 29305 는 사람이 못 읽는다. 이 화면에는 만 단위가 실제로 나오므로(채점된 쌍)
+// 자릿점을 찍는다.
+function num(value) {
+  return Number(value || 0).toLocaleString("ko-KR");
+}
+
 function stat(label, value, note) {
   return `<div class="admin-stat"><span>${esc(label)}</span><strong>${esc(value)}</strong>${
     note ? `<small>${esc(note)}</small>` : ""}</div>`;
@@ -286,10 +292,16 @@ function renderRoundNav() {
   // 건수는 템플릿 **밖에서** 센다. 안에서 더하면 `row.stage` 가 HTML 보간 안에
   // 서서 이스케이프 검사(test_the_console_escapes_everything_it_renders)에 걸린다 —
   // 값은 숫자라 안전하지만, 규칙에 예외를 파는 것보다 계산을 빼는 편이 낫다.
+  //
+  // **판단과 후보를 한 숫자로 뭉치지 않는다.** 앞의 셋은 그 회차가 내린 판단이고
+  // 경계선은 붙지 않은 쌍의 더미다 — 더하면 더미가 판단을 덮는다(라이브에서
+  // 8월 22일이 29,305건으로 보였다).
   const options = dates.map(row => {
-    const total = row.story + row.stage + row.issue + row.borderline;
+    const judged = row.story + row.stage + row.issue;
+    const near = row.borderline;
     return `<option value="${esc(row.date)}"${
-      row.date === state.round ? " selected" : ""}>${esc(roundLabel(row.date))} · ${total}건</option>`;
+      row.date === state.round ? " selected" : ""}>${esc(roundLabel(row.date))} · 판단 ${
+      num(judged)}건${near ? ` · 경계선 ${num(near)}쌍` : ""}</option>`;
   }).join("");
   const where = state.round === latest ? "최신 회차"
     : state.round === build ? "이번 빌드 회차"
@@ -322,13 +334,17 @@ function renderRoundStats() {
   const box = document.getElementById("roundStats");
   if (!box) return;
   const row = roundOf(state.round)
-    || { story: 0, stage: 0, issue: 0, borderline: 0, borderline_shown: 0 };
+    || { story: 0, stage: 0, issue: 0, borderline: 0, borderline_shown: 0, scored: 0 };
   box.innerHTML = [
-    stat("같은 날 병합", `${row.story}건`, "story 로 접은 판단"),
-    stat("붙이지 않은 판단", `${row.stage}건`, "단계 충돌 · 대표 교체"),
-    stat("날짜 넘는 병합", `${row.issue}개`, "이 회차에 기사가 합류한 이슈"),
-    stat("경계선 후보", `${row.borderline}쌍`, row.borderline > row.borderline_shown
-      ? `상위 ${row.borderline_shown}쌍 표시` : "전부 표시"),
+    stat("같은 날 병합", `${num(row.story)}건`, "story 로 접은 판단"),
+    stat("붙이지 않은 판단", `${num(row.stage)}건`, "단계 충돌 · 대표 교체"),
+    stat("날짜 넘는 병합", `${num(row.issue)}개`, "이 회차에 기사가 합류한 이슈"),
+    stat("경계선 후보", `${num(row.borderline)}쌍`, row.borderline > row.borderline_shown
+      ? `상위 ${num(row.borderline_shown)}쌍 표시` : "전부 표시"),
+    // 채점된 쌍은 **경계선이 아니다.** 기록 문턱(0.70) 위를 전부 담아 만 단위로
+    // 나오는데, 그중 병합 문턱 근처는 실측 2.6% 뿐이다. 두 숫자를 한 칸에 두면
+    // "경계선 29,305쌍"이 되고 그건 거짓이다 — 그래서 칸을 나눠 각자 이름을 준다.
+    stat("채점된 쌍", `${num(row.scored)}쌍`, "기록 문턱 위 전부 · 대부분 문턱에서 멀다"),
   ].join("");
 }
 
@@ -404,6 +420,16 @@ const MERGE_FOLDS = [
     count: () => roundBorderline().length, render: renderBorderline },
 ];
 
+// 칸을 찾을 때는 **details 로 좁힌다.** '먼저 확인할 것'의 [해당 칸 열기] 버튼도
+// 같은 data-fold 를 들고 있고, 그 버튼이 문서에서 더 앞에 선다(회차 칸이 01 위에
+// 있으므로). 속성만으로 찾으면 querySelector 가 버튼을 돌려주고, 버튼에 open 을
+// 넣는 것은 그냥 임의의 속성 하나를 만드는 일이라 아무 일도 일어나지 않는다 —
+// 2026-08-22 라이브에서 우선 확인에 걸린 칸 셋(story·issue·borderline)이 통째로
+// 안 그려졌다. 요약 줄에 '건수를 세는 중'이 남은 것이 그 증상이었다.
+function foldBox(name) {
+  return document.querySelector(`details[data-fold="${name}"]`);
+}
+
 function foldSummary(fold, count, open) {
   const row = roundOf(state.round);
   // 회차마다 상위 몇 건만 싣는 칸. "10건"만 적으면 상한이 화면에서 사라진다.
@@ -420,7 +446,7 @@ function foldSummary(fold, count, open) {
 }
 
 function paintFold(fold, open) {
-  const box = document.querySelector(`[data-fold="${fold.name}"]`);
+  const box = foldBox(fold.name);
   if (!box) return;
   const count = fold.count();
   box.querySelector('[data-role="count"]').textContent = foldSummary(fold, count, open);
@@ -441,7 +467,7 @@ function renderMerges() {
   renderPriority(items);
   const flagged = new Set(items.map(item => item.fold));
   for (const fold of MERGE_FOLDS) {
-    const box = document.querySelector(`[data-fold="${fold.name}"]`);
+    const box = foldBox(fold.name);
     if (!box) continue;
     const count = fold.count();
     // 열림 규칙: 사람이 직접 만진 칸은 그 뜻을 따르고, 아니면 '먼저 확인할 것'이
@@ -1105,8 +1131,13 @@ function renderBorderline() {
          <p>콘솔은 회차마다 경로별 상위 몇 쌍씩, 합쳐서 상한까지만 싣습니다 — 오래된
          회차는 그 상한 밖으로 밀립니다. 전수는 빌드
          아티팩트(<code>issue_audit.full.json</code>)에 있습니다.</p></div>`
-      : `<div class="empty-state"><strong>이 회차에 경계선 후보가 없습니다</strong>
-         <p>이 회차에 평가된 쌍 가운데 문턱 바로 아래 구간에 남은 것이 없습니다.</p></div>`;
+      : row?.scored
+        ? `<div class="empty-state"><strong>이 회차에 문턱 근처까지 온 쌍이 없습니다</strong>
+           <p>채점된 ${num(row.scored)}쌍은 전부 병합 문턱에서 멀리 있습니다 — 기록은 남지만
+           "조금만 내리면 붙는" 구간이 아닙니다. 전수는 빌드
+           아티팩트(<code>issue_audit.full.json</code>)에 있습니다.</p></div>`
+        : `<div class="empty-state"><strong>이 회차에 채점된 쌍이 없습니다</strong>
+           <p>이 회차에 이슈 연결을 시도한 기사가 없습니다.</p></div>`;
 }
 
 // ── 수집 설정 ──────────────────────────────────────────────────────────────
@@ -1732,7 +1763,7 @@ async function onClick(event) {
   // '먼저 확인할 것' 에서 해당 칸으로. 여는 것까지 해야 의미가 있다 — 접힌 칸으로
   // 데려다 놓기만 하면 운영자는 거기서 한 번 더 눌러야 한다.
   if (act === "fold-jump") {
-    const box = document.querySelector(`[data-fold="${data.fold}"]`);
+    const box = foldBox(data.fold);
     if (!box) return;
     state.folds[data.fold] = true;
     box.open = true;                       // toggle 이 발생해 본문이 그려진다

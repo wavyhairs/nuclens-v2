@@ -121,7 +121,13 @@ node web/tests/render_smoke.mjs
 ```bash
 node web/tests/admin_gate.mjs     # 자물쇠·쓰기 입력 검증 계약
 node web/tests/admin_render.mjs   # 실제 산출물로 화면 렌더 (build_data 이후)
+node web/tests/admin_dom.mjs      # 진짜 브라우저로 한 번 그려 본다 (크롬/엣지 필요)
 ```
+
+흉내 DOM 은 **내가 아는 것만** 흉내 낸다. 선택자가 모호한지, `details` 가 정말
+그렇게 움직이는지는 진짜 문서에만 있어서 `admin_dom.mjs` 가 따로 있다 — 2026-08-22
+배포에서 우선 확인에 걸린 칸 셋이 통째로 안 그려졌는데 `admin_render.mjs` 는
+초록불이었다.
 
 ## localStorage 키
 
