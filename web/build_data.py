@@ -180,7 +180,9 @@ AUDIT_REVIEW_CANDIDATE_LIMIT = 5000
 # 경계선 1건"은 **숫자가 거짓말을 하는 것**이다(운영자는 29쌍을 못 본 줄도 모른다).
 #
 # 그래서 회차마다 상위 몇 건을 싣는다. 전수는 그대로 아티팩트에 있고, 화면에는
-# 회차별 **전수 건수**를 따로 실어 "N건 중 M건"이라고 적는다.
+# 회차별 **전수 건수**를 따로 실어 "N건 중 M건"이라고 적는다. 여기서 말하는 전수는
+# 병합 문턱 바로 아래 구간(_near_merge_threshold)이고, 기록 문턱 위 전부는
+# 회차 색인의 `scored` 로 따로 싣는다.
 #
 # 창은 회차 안에서 **경로마다** 따로 준다(발송 기사 · 미발송 근거). 근거 쪽이
 # 압도적으로 많아서 — 실측 2026-08-22 빌드 회차 2,053쌍 대 0쌍 — 한 창에 세우면
@@ -4781,6 +4783,34 @@ def build_admin_judgments(news_items: list[dict], generated_at: datetime) -> dic
 # 진단이 이걸 놓쳤다"로 읽지만 그날의 진단은 이 쌍을 본 적조차 없다.
 
 
+def _near_merge_threshold(diagnostics: dict) -> bool:
+    """이 쌍이 화면에 설 만큼 병합 문턱에 가까운가.
+
+    콘솔의 '붙지 않은 경계선'은 **문턱 바로 아래**를 뜻한다. 그런데 audit 의
+    review_candidates 는 문턱이 아니라 **기록 문턱**(0.70) 위를 전부 담는다 —
+    2026-08-22 라이브 실측 29,305쌍. 그걸 그대로 세면 화면이 "조금만 내리면
+    붙습니다"라고 적어 놓고 0.71 짜리 쌍까지 세는 셈이라 숫자가 뜻을 잃는다
+    (AS_IS § 0.70과 0.84는 다른 일을 하는 두 개의 선).
+
+    그래서 LLM 이 판정하는 구간(`issue_review.REVIEW_BAND_LOW` ~ `REVIEW_BAND_HIGH`)
+    으로 좁힌다. 문턱은 **거기 한 곳에만** 있다 — 여기 숫자를 다시 박으면 매칭부와
+    갈라진다.
+
+    `issue_review.in_review_band` 를 그대로 쓰지 않는 이유는 하나다. 그쪽은
+    'LLM 에게 물을 것인가'를 정하는 자리라 **차단된 쌍을 뺀다.** 이 화면에서는
+    차단이야말로 봐야 할 것이다 — "차단이 과했나"를 여기서 눈으로 고르고, 표에
+    차단 열이 있는 것도 그래서다.
+    """
+    similarity = diagnostics.get("embedding_similarity")
+    if similarity is None:
+        return False
+    try:
+        similarity = float(similarity)
+    except (TypeError, ValueError):
+        return False
+    return issue_review.REVIEW_BAND_LOW <= similarity < issue_review.REVIEW_BAND_HIGH
+
+
 def _top_per_round(rows: list[dict], per_round: int, total: int) -> list[dict]:
     """회차별 상위 몇 건씩, 최신 회차부터 채운다.
 
@@ -4960,11 +4990,17 @@ def build_admin_merges(
     # 근거 2,053건에서만 역전이 난다. 그래서 경로를 갈라 귀속한다.
     borderline_rows = []
     borderline_totals: Counter = Counter()
+    scored_totals: Counter = Counter()
     for row in (issue_audit.get("review_candidates") or []):
         role = str(row.get("member_role") or "card")
         # 근거 경로에는 briefing 회차가 없다 — 이번 빌드가 내린 판단이므로
         # 빌드 회차에 싣는다. 보도일에 실으면 그날 진단이 이 쌍을 봤다는 거짓이 된다.
         day = build_round if role == "evidence" else str(row.get("right_date") or "")
+        # 채점된 쌍 전수. 화면에 세우지는 않지만 **숨기지도 않는다** — 배경 규모를
+        # 지우면 "경계선 11쌍"이 이 회차에 벌어진 일의 전부인 것처럼 읽힌다.
+        scored_totals[day] += 1
+        if not _near_merge_threshold(row.get("diagnostics") or {}):
+            continue
         borderline_totals[day] += 1
         borderline_rows.append({
             "candidate_id": row.get("candidate_id", ""),
@@ -5042,7 +5078,8 @@ def build_admin_merges(
                 issue_rounds[day] += 1
     stage_totals = veto_totals + promo_totals
     days = {day for day in (
-        set(story_rounds) | set(issue_rounds) | set(stage_totals) | set(borderline_totals)
+        set(story_rounds) | set(issue_rounds) | set(stage_totals)
+        | set(borderline_totals) | set(scored_totals)
     ) if day}
     # 빌드 회차는 아무 일이 없어도 목록에 남긴다 — 없으면 "오늘"로 들어갈 자리가
     # 사라지고, 화면은 어제를 오늘처럼 연다.
@@ -5055,6 +5092,9 @@ def build_admin_merges(
             "issue": issue_rounds.get(day, 0),
             "borderline": borderline_totals.get(day, 0),
             "borderline_shown": shown_counts.get(day, 0),
+            # 그 회차에 채점된 쌍 전수(기록 문턱 위 전부). 경계선은 이 가운데
+            # 병합 문턱 바로 아래 구간만이다 — 실측 2026-08-21 전체의 2.6%.
+            "scored": scored_totals.get(day, 0),
         }
         for day in sorted(days, reverse=True)
     ]

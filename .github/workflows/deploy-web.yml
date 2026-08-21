@@ -135,6 +135,18 @@ jobs:
       - name: Admin console renders
         run: node web/tests/admin_render.mjs
 
+      # 흉내 DOM 이 못 보는 자리. 흉내는 **내가 아는 것만** 흉내 내므로 내가 틀리게
+      # 아는 것은 그대로 통과한다 — 2026-08-22 배포가 그 값을 치렀다. '먼저 확인할
+      # 것'의 버튼도 data-fold 를 들고 문서에서 앞에 서는 바람에 칸을 찾는
+      # querySelector 가 버튼을 돌려줬고, 우선 확인에 걸린 칸 셋이 통째로 안 그려진
+      # 채 라이브에 올라갔다(요약 줄에 '건수를 세는 중'이 그대로 남았다). 흉내
+      # DOM 은 그때도 초록불이었다.
+      #
+      # 러너 이미지에 있는 크롬을 --dump-dom 으로 부른다 — playwright 를 쓰면
+      # 브라우저 내려받기 2분이 매 배포에 붙는다.
+      - name: Admin console renders in a real browser
+        run: node web/tests/admin_dom.mjs
+
       # 데이터 지표 게이트는 끈다. 추적률은 "오늘 뉴스가 어떻게 묶였나"의 결과지
       # 화면 코드의 성질이 아니다 — 켜 두면 뉴스가 한산한 날 CSS 오타 수정도
       # 배포가 막힌다(2026-08-03 실측: 추적률 0.125 로 이 워크플로 첫 실행이 실패).

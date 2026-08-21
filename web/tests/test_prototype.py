@@ -6380,15 +6380,30 @@ class AdminConsoleTests(unittest.TestCase):
     # 그리고 **회차가 이슈를 자르지 않을 것**(회차는 진입 필터일 뿐이다).
 
     @staticmethod
-    def _candidate(day, score, role="card", index=0):
-        """경계선 후보 한 줄. 회차 귀속만 보는 자리라 나머지는 최소로 채운다."""
+    def _in_band(fraction):
+        """LLM 검수 밴드 안의 값 하나(0=바닥, 1=천장).
+
+        숫자를 박지 않는 이유: 밴드가 움직이면 이 픽스처만 조용히 밴드 밖으로
+        나가고, 그러면 테스트가 통과하면서 아무것도 안 지킨다.
+        """
+        low, high = issue_review.REVIEW_BAND_LOW, issue_review.REVIEW_BAND_HIGH
+        return low + (high - low) * fraction
+
+    @staticmethod
+    def _candidate(day, similarity, role="card", index=0):
+        """경계선 후보 한 줄. 회차 귀속만 보는 자리라 나머지는 최소로 채운다.
+
+        점수는 **원격 임베딩 유사도**로 넣는다 — 콘솔은 그 값으로 이 쌍이 병합
+        문턱 근처인지를 가른다(`_near_merge_threshold`).
+        """
         return {
             "candidate_id": f"{day}-{role}-{index}",
             "left_hash": f"L{day}{role}{index}", "right_hash": f"R{day}{role}{index}",
             "left_title": "왼쪽 기사", "right_title": "오른쪽 기사",
             "left_date": day, "right_date": day,
-            "candidate_score": score, "candidate_method": "title",
-            "review_state": "", "diagnostics": {}, "member_role": role,
+            "candidate_score": similarity, "candidate_method": "embedding",
+            "review_state": "", "member_role": role,
+            "diagnostics": {"embedding_similarity": similarity, "blocked_by": []},
         }
 
     def test_every_shipped_judgment_stands_on_a_round_the_screen_can_open(self):
@@ -6436,6 +6451,9 @@ class AdminConsoleTests(unittest.TestCase):
         for row in rounds["dates"]:
             self.assertEqual(shipped.get(row["date"], 0), row["borderline_shown"], row["date"])
             self.assertLessEqual(row["borderline_shown"], row["borderline"], row["date"])
+            # 경계선은 채점된 쌍의 부분집합이다. 뒤집히면 둘 중 하나가 다른 모수를
+            # 세고 있다는 뜻이고, 화면은 그걸 구분하지 못한다.
+            self.assertLessEqual(row["borderline"], row["scored"], row["date"])
             # 상한에 안 걸렸으면 하나도 자르지 않는다 — 자르면 '전부 표시'가 거짓이다.
             if row["borderline"] <= per_round:
                 self.assertEqual(row["borderline_shown"], row["borderline"], row["date"])
@@ -6470,6 +6488,52 @@ class AdminConsoleTests(unittest.TestCase):
             known.add(origin.get("last_seen", ""))
             self.assertLessEqual(set(cluster["diagnosis_rounds"]), known, cluster["issue_id"])
 
+    def test_only_pairs_near_the_merge_threshold_reach_the_screen(self):
+        """'문턱 바로 아래'라고 적어 놓고 0.75 짜리까지 세면 숫자가 뜻을 잃는다.
+
+        `review_candidates` 는 병합 문턱(0.92)이 아니라 **기록 문턱**(0.70) 위를
+        전부 담는다. 2026-08-22 라이브 실측: 채점 34,263쌍 중 밴드 안은 922쌍
+        (2.7%). 화면이 전부를 세는 바람에 8월 22일 회차가 **29,305건**으로 보였고,
+        운영자가 그 숫자를 보고 물었다 — 그게 이 테스트가 생긴 이유다.
+        """
+        now = datetime(2026, 8, 22, 7, 0, tzinfo=timezone(timedelta(hours=9)))
+        near = [self._candidate("2026-08-20", self._in_band(0.5), index=i) for i in range(3)]
+        far = [self._candidate("2026-08-20", issue_review.REVIEW_BAND_LOW - 0.09, index=100 + i)
+               for i in range(40)]
+        # 이미 붙은 구간(문턱 위). 경계선이 아니라 '병합'이다.
+        merged = [self._candidate("2026-08-20", issue_review.REVIEW_BAND_HIGH + 0.03, index=200)]
+        # 원격 임베딩이 없는 쌍. 문턱 근처인지 알 수 없으니 세우지 않는다.
+        blind = [{**self._candidate("2026-08-20", self._in_band(0.5), index=300),
+                  "diagnostics": {}}]
+        merges = build_data.build_admin_merges(
+            [], [], {"clusters": [], "review_candidates": near + far + merged + blind}, now)
+        index = {row["date"]: row for row in merges["rounds"]["dates"]}
+        self.assertEqual(index["2026-08-20"]["borderline"], 3)
+        self.assertEqual(len(merges["issue"]["borderline"]), 3)
+        # 나머지도 **숨기지 않는다** — 배경 규모를 지우면 경계선 3쌍이 그 회차에
+        # 벌어진 일의 전부인 것처럼 읽힌다.
+        self.assertEqual(index["2026-08-20"]["scored"], 45)
+
+    def test_a_blocked_pair_still_shows_up_on_the_borderline(self):
+        """차단이야말로 이 화면에서 볼 것이다 — '차단이 과했나'를 여기서 고른다.
+
+        `issue_review.in_review_band` 는 차단된 쌍을 뺀다(LLM 에게 물을지를 정하는
+        자리라서). 콘솔이 그 판정을 그대로 물려받으면 표의 <차단> 열이 영원히
+        비고, 과한 거부권을 아무도 못 잡는다.
+        """
+        now = datetime(2026, 8, 22, 7, 0, tzinfo=timezone(timedelta(hours=9)))
+        similarity = self._in_band(0.5)
+        blocked = {**self._candidate("2026-08-19", similarity),
+                   "diagnostics": {"embedding_similarity": similarity,
+                                   "blocked_by": ["country_conflict"]}}
+        self.assertFalse(issue_review.in_review_band(blocked["diagnostics"]),
+                         "픽스처가 차단을 안 걸었다 — 이 테스트가 아무것도 안 지킨다")
+        merges = build_data.build_admin_merges(
+            [], [], {"clusters": [], "review_candidates": [blocked]}, now)
+        self.assertEqual(len(merges["issue"]["borderline"]), 1, "차단된 쌍이 화면에서 사라졌다")
+        self.assertEqual(merges["issue"]["borderline"][0]["diagnostics"]["blocked_by"],
+                         ["country_conflict"])
+
     def test_a_busy_round_never_swallows_another_rounds_window(self):
         """전역 상위 N건으로 자르면 최신 회차가 창을 독점한다.
 
@@ -6479,8 +6543,10 @@ class AdminConsoleTests(unittest.TestCase):
         """
         now = datetime(2026, 8, 22, 7, 0, tzinfo=timezone(timedelta(hours=9)))
         per_round = build_data.CONSOLE_BORDERLINE_PER_ROUND
-        loud = [self._candidate("2026-08-21", 0.90 - i / 10_000, index=i) for i in range(200)]
-        quiet = [self._candidate("2026-08-18", 0.50 - i / 10_000, index=i) for i in range(30)]
+        loud = [self._candidate("2026-08-21", self._in_band(0.9) - i / 10_000, index=i)
+                for i in range(200)]
+        quiet = [self._candidate("2026-08-18", self._in_band(0.2) - i / 10_000, index=i)
+                 for i in range(30)]
         merges = build_data.build_admin_merges(
             [], [], {"clusters": [], "review_candidates": loud + quiet}, now)
         shipped = Counter(row["diagnosis_rounds"][0] for row in merges["issue"]["borderline"])
@@ -6499,7 +6565,8 @@ class AdminConsoleTests(unittest.TestCase):
         now = datetime(2026, 8, 22, 7, 0, tzinfo=timezone(timedelta(hours=9)))
         merges = build_data.build_admin_merges(
             [], [], {"clusters": [],
-                     "review_candidates": [self._candidate("2026-08-12", 0.7, role="evidence")]},
+                     "review_candidates": [
+                         self._candidate("2026-08-12", self._in_band(0.5), role="evidence")]},
             now)
         pair = merges["issue"]["borderline"][0]
         self.assertEqual(merges["rounds"]["build_round"], "2026-08-22")
@@ -6519,9 +6586,10 @@ class AdminConsoleTests(unittest.TestCase):
         """
         now = datetime(2026, 8, 22, 7, 0, tzinfo=timezone(timedelta(hours=9)))
         per_round = build_data.CONSOLE_BORDERLINE_PER_ROUND
-        evidence = [self._candidate("2026-08-22", 0.95 - i / 10_000, role="evidence", index=i)
-                    for i in range(50)]
-        card = [self._candidate("2026-08-22", 0.40 - i / 10_000, index=i) for i in range(5)]
+        evidence = [self._candidate("2026-08-22", self._in_band(0.8) - i / 10_000,
+                                    role="evidence", index=i) for i in range(50)]
+        card = [self._candidate("2026-08-22", self._in_band(0.1) - i / 10_000, index=i)
+                for i in range(5)]
         merges = build_data.build_admin_merges(
             [], [], {"clusters": [], "review_candidates": evidence + card}, now)
         roles = Counter(row["member_role"] for row in merges["issue"]["borderline"])
