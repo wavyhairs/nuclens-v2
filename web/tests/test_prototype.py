@@ -1325,7 +1325,7 @@ class IssueSimilarityTests(unittest.TestCase):
 
 
 class DeployablePayloadTests(unittest.TestCase):
-    """배포 산출물이 Cloudflare Pages 의 파일 상한 안에 있는가.
+    """배포 산출물이 Cloudflare Pages 의 한계 안에 있는가.
 
     Pages 는 **파일 하나가 25 MiB** 를 넘으면 배포 전체를 거부한다. 부분 실패가
     아니라 전부 실패다 — 화면도 데이터도 옛것으로 굳고, 라이브만 보면 아무 일도
@@ -1333,24 +1333,71 @@ class DeployablePayloadTests(unittest.TestCase):
     라이브가 멈춰 있었고, 원인(`issue_audit.json` 27 MiB)은 워크플로 로그를
     열어야만 보였다.
 
-    넘긴 파일이 하필 **아무도 안 읽는** 진단 덤프였다는 게 이 게이트의 이유다.
-    화면(app.js)도 콘솔(admin.js)도 issue_audit.json 을 읽지 않는다. 크기가
-    제품 가치와 무관하게 자라는 파일이 배포를 세우는 구조라, 자라는 쪽이 아니라
-    **배포되는 쪽**에 상한을 둔다.
+    검사 범위를 `data/*.json` 이 아니라 **`web/public` 전체**로 두는 이유:
+    wrangler 는 그 디렉터리를 통째로 올린다. `admin/data` 도 그 안이라
+    엣지에서 가려질 뿐 업로드는 된다(라이브에서 /admin/data/merges.json 이
+    404 가 아니라 401 인 것이 그 증거). 오디오 mp3 와 폰트도 같은 배에 탄다.
     """
 
-    # Cloudflare Pages 의 실제 상한. 여유는 아래 WARN 비율로 따로 본다.
+    # Cloudflare Pages 의 실제 한계.
     PAGES_FILE_LIMIT = 25 * 1024 * 1024
+    PAGES_FILE_COUNT_LIMIT = 20000
+    # 상한에 닿기 전에 말해 주는 선. 80% 를 넘긴 파일은 다음 분기에 넘긴다고 본다.
+    WARN_RATIO = 0.8
 
-    def test_no_generated_file_exceeds_the_pages_limit(self):
-        oversized = [
-            (path.name, path.stat().st_size)
-            for path in sorted(DATA_DIR.glob("*.json"))
-            if path.stat().st_size > self.PAGES_FILE_LIMIT
-        ]
+    @classmethod
+    def _deployed_files(cls):
+        root = DATA_DIR.parent if DATA_DIR.name == "data" else DATA_DIR
+        return [path for path in root.rglob("*") if path.is_file()]
+
+    def test_no_deployed_file_exceeds_the_pages_limit(self):
+        """`data/*.json` 만 보면 mp3·폰트·admin 데이터가 사각지대로 남는다."""
+        files = self._deployed_files()
+        self.assertTrue(files, "배포 대상이 비어 있다 — 빌드가 안 돌았나")
+        oversized = sorted(
+            ((path.stat().st_size, path) for path in files
+             if path.stat().st_size > self.PAGES_FILE_LIMIT),
+            reverse=True,
+        )
         self.assertEqual(oversized, [], (
             "Cloudflare Pages 파일 상한 25 MiB 초과 — 배포가 통째로 거부된다: "
-            + ", ".join(f"{name} {size / 1024 / 1024:.1f} MiB" for name, size in oversized)))
+            + ", ".join(f"{path.name} {size / 1024 / 1024:.1f} MiB"
+                        for size, path in oversized)))
+
+    def test_deployed_files_are_not_approaching_the_limit(self):
+        """상한에 부딪힌 뒤에 아는 것과 다가가는 중에 아는 것은 다르다.
+
+        2026-08-21 이 전자였다. 실패 메시지는 wrangler 로그 안에만 있었고,
+        `issue_audit.json` 이 몇 주에 걸쳐 자라는 동안 아무도 몰랐다.
+        """
+        warn_at = int(self.PAGES_FILE_LIMIT * self.WARN_RATIO)
+        approaching = sorted(
+            ((path.stat().st_size, path) for path in self._deployed_files()
+             if path.stat().st_size > warn_at),
+            reverse=True,
+        )
+        self.assertEqual(approaching, [], (
+            f"Cloudflare 상한 25 MiB 의 {self.WARN_RATIO:.0%} 를 넘겼다 — "
+            "지금 줄이지 않으면 곧 배포가 막힌다: "
+            + ", ".join(f"{path.name} {size / 1024 / 1024:.1f} MiB"
+                        for size, path in approaching)))
+
+    def test_deployed_file_count_is_within_the_pages_limit(self):
+        """이슈 상세는 이슈 하나당 파일 하나다 — 파일 수도 자라는 축이다."""
+        count = len(self._deployed_files())
+        self.assertLess(count, self.PAGES_FILE_COUNT_LIMIT,
+                        f"배포 파일 {count}개 — Pages 한 배포 상한 20,000개")
+
+    def test_the_full_audit_dump_is_outside_the_deploy_root(self):
+        """전수 덤프가 배포 경로 안으로 들어오면 상한 문제가 그대로 돌아온다.
+
+        `admin/data` 로 옮기는 것도 답이 아니다 — 그것도 `web/public` 안이라
+        wrangler 가 올린다. 경로를 문자열로 비교하지 않고 **포함 관계**로 잠근다.
+        """
+        deploy_root = (DATA_DIR.parent if DATA_DIR.name == "data" else DATA_DIR).resolve()
+        full_dir = build_data.AUDIT_FULL_DIR.resolve()
+        self.assertNotIn(deploy_root, [full_dir, *full_dir.parents],
+                         f"전수 audit({full_dir}) 이 배포 경로({deploy_root}) 안에 있다")
 
     def test_audit_review_candidates_are_capped(self):
         """상한이 실제로 걸려 있는가. 목록은 점수 내림차순이라 앞이 상위다."""
@@ -1362,6 +1409,27 @@ class DeployablePayloadTests(unittest.TestCase):
         total = audit.get("review_candidate_total")
         self.assertIsNotNone(total, "review_candidate_total 이 없다")
         self.assertGreaterEqual(total, len(rows))
+        # 잘렸다면 나머지가 어디 있는지도 배포본이 말해야 한다. 안 그러면
+        # '잘랐다'와 '버렸다'를 배포본만 보고 구분할 수 없다.
+        if audit.get("review_candidates_truncated"):
+            self.assertEqual(audit.get("review_candidates_full_artifact"),
+                             build_data.AUDIT_FULL_NAME)
+
+    def test_the_full_dump_keeps_every_candidate(self):
+        """상한은 배포본에만 건다 — 전수 파일에는 하나도 빠지면 안 된다."""
+        full_path = build_data.AUDIT_FULL_DIR / build_data.AUDIT_FULL_NAME
+        if not full_path.exists():
+            self.skipTest("전수 덤프가 없다 — build_data 를 돌리지 않은 환경")
+        full = json.loads(full_path.read_text(encoding="utf-8"))
+        shipped = json.loads((DATA_DIR / "issue_audit.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(full.get("review_candidates") or []),
+                         shipped["review_candidate_total"])
+        self.assertGreaterEqual(len(full.get("review_candidates") or []),
+                                len(shipped.get("review_candidates") or []))
+        # 배포본은 전수의 **앞부분**이어야 한다(점수 내림차순 상위).
+        head = [row["candidate_id"] for row in (full["review_candidates"] or [])
+                ][:len(shipped.get("review_candidates") or [])]
+        self.assertEqual([row["candidate_id"] for row in shipped["review_candidates"]], head)
 
     def test_the_console_window_survives_the_cap(self):
         """콘솔이 보는 '경계선' 40건은 상한과 무관하게 그대로여야 한다.

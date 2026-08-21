@@ -363,6 +363,23 @@ jobs:
           git fetch origin main && git reset --hard origin/main
           python web/build_data.py
 
+      # 이슈 병합 전수 후보 덤프(web/_audit/). 배포 경로 밖이라 Cloudflare 로는
+      # 안 올라간다 — 25 MiB 상한에 걸리는 것이 바로 이 데이터다
+      # (build_data.AUDIT_FULL_DIR 주석). 임계값 실험은 이걸 내려받아서 한다:
+      #   gh run download <run-id> -n issue-audit-full
+      #
+      # **하루 한 벌만** 남긴다. 비공개 저장소라 아티팩트가 계정 용량을 먹는데,
+      # 크롤은 3시간마다 돌아 하루 8벌이 되고 그 여덟은 사실상 같은 데이터다.
+      # 나머지 회차는 배포가 깨졌을 때만 올린다(그때가 실제로 필요한 때다).
+      - name: Upload full issue audit
+        if: always() && steps.web-build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-audit-full
+          path: web/_audit/issue_audit.full.json
+          retention-days: 7
+          if-no-files-found: ignore
+
       # 임계값 미달은 여전히 배포를 막지 않는다. 다만 산출물 부재·기록 실패는
       # non-zero outcome으로 남겨 운영 알림이 관측 실패 자체를 보고할 수 있게 한다.
       - name: Record web data quality metrics

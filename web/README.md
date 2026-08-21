@@ -38,9 +38,18 @@
 섞여 있었다. 한 빌드에서 새로 묻는 쌍은 `MAX_NEW_PAIRS_PER_RUN` 으로 묶여 있고,
 미룬 몫은 `llm_review.deferred` 로 audit 에 남는다.
 
-사람 검토가 필요한 쌍은 `public/data/issue_audit.json` 의 `review_candidates` 에
-남는다. 판단한 쌍은 `issue_match_overrides.json` 의 `approved`/`rejected` 에 두
-해시와 근거를 기록하면 다음 빌드부터 재현된다.
+사람 검토가 필요한 쌍은 `review_candidates` 에 남는다. **두 곳에 있다** —
+`public/data/issue_audit.json` 에는 점수 상위 5,000쌍만, 전수는 배포되지 않는
+`web/_audit/issue_audit.full.json` 에 있다. 전자는 Cloudflare Pages 의 파일당
+25 MiB 상한 때문이고(실측 전수 31,679쌍 = 28.8 MiB, 2026-08-21 에 배포가 이걸로
+막혔다), 후자는 워크플로가 아티팩트로 올린다:
+
+```
+gh run download <run-id> -n issue-audit-full     # daily-brief 가 하루 한 벌
+```
+
+판단한 쌍은 `issue_match_overrides.json` 의 `approved`/`rejected` 에 두 해시와
+근거를 기록하면 다음 빌드부터 재현된다.
 
 같은 판단을 운영 콘솔(`/admin`)의 '병합 진단'에서 버튼으로도 내릴 수 있다. 콘솔
 판정은 KV → `admin_overrides.json` 을 거쳐 `load_match_overrides()` 가 저장소 파일과

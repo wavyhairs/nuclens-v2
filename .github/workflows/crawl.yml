@@ -243,6 +243,19 @@ jobs:
           sleep 15
           bash web/tools/verify_admin_gate.sh "$SITE_URL"
 
+      # 배포가 깨졌을 때만 전수 audit 을 건져 둔다. 러너가 사라지면 그 회차의
+      # 진단 재료도 같이 사라지는데, 하필 그때가 재료가 가장 필요한 때다
+      # (2026-08-16 · 2026-08-21 둘 다 그렇게 조사할 것이 없었다).
+      # 정상 회차의 전수는 daily-brief 가 하루 한 벌 남긴다.
+      - name: Upload full issue audit (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-audit-full-${{ github.run_id }}
+          path: web/_audit/issue_audit.full.json
+          retention-days: 14
+          if-no-files-found: ignore
+
       # 이슈 병합 회색지대 LLM 판정 캐시. 커밋하지 않으면 빌드마다(하루 8회+)
       # 같은 쌍을 다시 물어보게 되고, 판정이 흔들리면 이슈 묶음도 같이 흔들린다.
       # 배포 스텝 뒤라 앞의 "Commit state" 에 실을 수 없어 별도 스텝으로 둔다.
