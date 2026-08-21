@@ -1620,12 +1620,14 @@ class DeployablePayloadTests(unittest.TestCase):
         self.assertEqual([row["candidate_id"] for row in shipped["review_candidates"]], head)
 
     def test_the_console_window_survives_the_cap(self):
-        """콘솔이 보는 '경계선' 40건은 상한과 무관하게 그대로여야 한다.
+        """콘솔이 보는 '경계선' 창은 상한과 무관하게 그대로여야 한다.
 
-        merges.json 은 점수 상위 40건만 싣는다. 상한(5,000)이 그보다 훨씬 크므로
+        merges.json 은 회차마다 상위 몇 쌍씩, 합쳐서 최대
+        `CONSOLE_BORDERLINE_TOTAL` 쌍만 싣는다. 상한(5,000)이 그보다 훨씬 크므로
         자르기가 콘솔 화면을 바꿔서는 안 된다 — 바뀌면 상한이 너무 낮은 것이다.
         """
-        self.assertGreater(build_data.AUDIT_REVIEW_CANDIDATE_LIMIT, 40 * 10)
+        self.assertGreater(build_data.AUDIT_REVIEW_CANDIDATE_LIMIT,
+                           build_data.CONSOLE_BORDERLINE_TOTAL * 10)
         audit = json.loads((DATA_DIR / "issue_audit.json").read_text(encoding="utf-8"))
         full = {**audit, "review_candidates": list(audit.get("review_candidates") or [])}
         capped = build_data.shipped_issue_audit(full)
@@ -6370,6 +6372,164 @@ class AdminConsoleTests(unittest.TestCase):
                 self.assertIn("blocked_by", match)
         self.assertIn("rules", self.merges["issue"])
         self.assertIn("borderline", self.merges["issue"])
+
+    # ── 진단 회차 ─────────────────────────────────────────────────────────
+    #
+    # 콘솔은 이제 "전부"가 아니라 회차 하나를 연다. 그 화면에서 지켜야 하는 것은
+    # 둘이다 — **숫자가 거짓말하지 않을 것**(실린 수가 아니라 전수를 적을 것),
+    # 그리고 **회차가 이슈를 자르지 않을 것**(회차는 진입 필터일 뿐이다).
+
+    @staticmethod
+    def _candidate(day, score, role="card", index=0):
+        """경계선 후보 한 줄. 회차 귀속만 보는 자리라 나머지는 최소로 채운다."""
+        return {
+            "candidate_id": f"{day}-{role}-{index}",
+            "left_hash": f"L{day}{role}{index}", "right_hash": f"R{day}{role}{index}",
+            "left_title": "왼쪽 기사", "right_title": "오른쪽 기사",
+            "left_date": day, "right_date": day,
+            "candidate_score": score, "candidate_method": "title",
+            "review_state": "", "diagnostics": {}, "member_role": role,
+        }
+
+    def test_every_shipped_judgment_stands_on_a_round_the_screen_can_open(self):
+        """열 수 없는 회차에 실린 판단은 어느 화면에도 안 선다 — 조용한 누락이다."""
+        rounds = self.merges["rounds"]
+        dates = {row["date"] for row in rounds["dates"]}
+        # 오늘 자리는 아무 일이 없어도 남는다 — 없으면 화면이 어제를 오늘처럼 연다.
+        self.assertIn(rounds["build_round"], dates)
+        self.assertIn(rounds["latest"], dates)
+        order = [row["date"] for row in rounds["dates"]]
+        self.assertEqual(order, sorted(order, reverse=True), "화면의 이전·다음이 최신순에 기댄다")
+        shipped = (
+            [("story", row) for row in self.merges["story"]["merges"]]
+            + [("stage_veto", row) for row in self.merges["story"]["stage_vetoes"]]
+            + [("promotion", row) for row in self.merges["story"]["display_promotions"]]
+            + [("issue", row) for row in self.merges["issue"]["clusters"]]
+            + [("borderline", row) for row in self.merges["issue"]["borderline"]]
+        )
+        for layer, row in shipped:
+            self.assertTrue(row.get("diagnosis_rounds"), f"{layer}: 회차 없는 항목")
+            for day in row["diagnosis_rounds"]:
+                self.assertIn(day, dates, f"{layer}: 색인에 없는 회차 {day}")
+            # 회차를 고르려고 붙인 정렬 키가 배포본까지 따라 나가면 안 된다.
+            self.assertEqual([key for key in row if key.startswith("_")], [], layer)
+        # 기본으로 여는 회차에는 볼 것이 있어야 한다. 빌드가 그날 브리핑보다 먼저
+        # 돌면 빌드 회차에는 미발송 근거만 있다 — 그때 빈 화면을 열면 안 된다.
+        if any(row["story"] or row["stage"] or row["issue"] for row in rounds["dates"]):
+            latest = next(row for row in rounds["dates"] if row["date"] == rounds["latest"])
+            self.assertTrue(latest["story"] or latest["stage"] or latest["issue"],
+                            f"기본 회차가 비었다: {latest}")
+
+    def test_the_round_index_counts_what_happened_not_what_was_shipped(self):
+        """상한이 화면에서 사라지면 운영자는 못 본 것을 못 본 줄도 모른다."""
+        rounds = self.merges["rounds"]
+        per_round = rounds["borderline_per_round"]
+        shipped: Counter = Counter()
+        paths: Counter = Counter()
+        for row in self.merges["issue"]["borderline"]:
+            shipped[row["diagnosis_rounds"][0]] += 1
+            paths[(row["diagnosis_rounds"][0], row["member_role"])] += 1
+        # 경로(발송 기사·미발송 근거)마다 창이 따로다 — 한 줄로 세우면 근거가
+        # 창을 통째로 가져간다. 그래도 창은 경로마다 상한을 넘지 않는다.
+        for key, count in paths.items():
+            self.assertLessEqual(count, per_round, key)
+        for row in rounds["dates"]:
+            self.assertEqual(shipped.get(row["date"], 0), row["borderline_shown"], row["date"])
+            self.assertLessEqual(row["borderline_shown"], row["borderline"], row["date"])
+            # 상한에 안 걸렸으면 하나도 자르지 않는다 — 자르면 '전부 표시'가 거짓이다.
+            if row["borderline"] <= per_round:
+                self.assertEqual(row["borderline_shown"], row["borderline"], row["date"])
+        # story 는 자르지 않는다. 두 집계가 갈라지면 요약과 목록이 다른 말을 한다.
+        by_date = {row["date"]: row["count"] for row in self.merges["story"]["by_date"]}
+        for row in rounds["dates"]:
+            self.assertEqual(row["story"], by_date.get(row["date"], 0), row["date"])
+        # totals 는 회차와 무관한 전수다 — 실린 목록보다 작아질 수 없다.
+        totals = self.merges["story"]["totals"]
+        self.assertGreaterEqual(totals["stage_vetoes"], len(self.merges["story"]["stage_vetoes"]))
+        self.assertGreaterEqual(totals["display_promotions"],
+                                len(self.merges["story"]["display_promotions"]))
+
+    def test_a_round_filters_the_screen_but_never_cuts_an_issue(self):
+        """며칠에 걸친 이슈를 날짜 조각으로 쪼개면 그 이슈가 무엇인지 못 읽는다.
+
+        회차는 "어느 카드를 화면에 세울까"에만 쓴다. 카드를 열면 전체 멤버와
+        전체 연결 근거가 예전 그대로 있어야 한다.
+        """
+        audit = json.loads((DATA_DIR / "issue_audit.json").read_text(encoding="utf-8"))
+        source = {row["issue_id"]: row for row in (audit.get("clusters") or [])}
+        for cluster in self.merges["issue"]["clusters"]:
+            origin = source[cluster["issue_id"]]
+            self.assertEqual(len(cluster["members"]), len(origin.get("members") or []),
+                             cluster["issue_id"])
+            self.assertEqual(cluster["member_count"], len(origin.get("members") or []))
+            self.assertEqual(len(cluster["matches"]), len(origin.get("matches") or []))
+            # 회차는 합류한 기사의 발송일에서 온다. 하나도 못 찾으면 마지막
+            # 등장일로 물러난다 — 조용히 사라지느니 한 회차에 서는 편이 낫다.
+            known = {str(member.get("briefing_date") or "")
+                     for member in (origin.get("members") or [])}
+            known.add(origin.get("last_seen", ""))
+            self.assertLessEqual(set(cluster["diagnosis_rounds"]), known, cluster["issue_id"])
+
+    def test_a_busy_round_never_swallows_another_rounds_window(self):
+        """전역 상위 N건으로 자르면 최신 회차가 창을 독점한다.
+
+        실측 2026-08-21: 8월 18일 회차의 후보는 30쌍인데 전역 상위 40건 안에는
+        1쌍뿐이었다. 그 화면의 '8월 18일 경계선 1건'은 숫자가 거짓말을 하는 것이다 —
+        운영자는 나머지 29쌍을 못 본 줄도 모른다.
+        """
+        now = datetime(2026, 8, 22, 7, 0, tzinfo=timezone(timedelta(hours=9)))
+        per_round = build_data.CONSOLE_BORDERLINE_PER_ROUND
+        loud = [self._candidate("2026-08-21", 0.90 - i / 10_000, index=i) for i in range(200)]
+        quiet = [self._candidate("2026-08-18", 0.50 - i / 10_000, index=i) for i in range(30)]
+        merges = build_data.build_admin_merges(
+            [], [], {"clusters": [], "review_candidates": loud + quiet}, now)
+        shipped = Counter(row["diagnosis_rounds"][0] for row in merges["issue"]["borderline"])
+        self.assertEqual(shipped["2026-08-18"], per_round, "조용한 회차가 창 밖으로 밀렸다")
+        self.assertEqual(shipped["2026-08-21"], per_round)
+        index = {row["date"]: row for row in merges["rounds"]["dates"]}
+        self.assertEqual(index["2026-08-18"]["borderline"], 30, "건수는 전수를 적는다")
+        self.assertEqual(index["2026-08-18"]["borderline_shown"], per_round)
+
+    def test_unsent_evidence_stands_on_the_build_round_not_the_report_date(self):
+        """미발송 근거가 붙을 뻔한 판단에는 발송 회차가 없다 — 이번 빌드가 내렸다.
+
+        보도일에 실으면 "8월 12일 진단이 이걸 놓쳤다"는 없는 사실이 생긴다.
+        그날의 진단은 이 쌍을 본 적조차 없다.
+        """
+        now = datetime(2026, 8, 22, 7, 0, tzinfo=timezone(timedelta(hours=9)))
+        merges = build_data.build_admin_merges(
+            [], [], {"clusters": [],
+                     "review_candidates": [self._candidate("2026-08-12", 0.7, role="evidence")]},
+            now)
+        pair = merges["issue"]["borderline"][0]
+        self.assertEqual(merges["rounds"]["build_round"], "2026-08-22")
+        self.assertEqual(pair["diagnosis_rounds"], ["2026-08-22"])
+        # 화면이 '미발송 근거' 배지를 달 수 있어야 한다 — 그 배지가 없으면 오늘
+        # 회차에 몰려 있는 이유를 아무도 설명할 수 없다.
+        self.assertEqual(pair["member_role"], "evidence")
+        index = {row["date"]: row for row in merges["rounds"]["dates"]}
+        self.assertNotIn("2026-08-12", index)
+
+    def test_the_evidence_path_cannot_crowd_out_the_sent_articles(self):
+        """두 경로를 한 창에 세우면 근거가 통째로 가져간다.
+
+        실측 2026-08-22 빌드 회차: 근거 2,053쌍 대 발송 기사 0쌍. 두 경로가 같은
+        회차에 서는 날(빌드가 그날 브리핑 뒤에 돌면 그렇다) 발송 기사 쪽이
+        화면에서 사라지면, 오늘 실제로 붙을 뻔한 카드를 아무도 못 본다.
+        """
+        now = datetime(2026, 8, 22, 7, 0, tzinfo=timezone(timedelta(hours=9)))
+        per_round = build_data.CONSOLE_BORDERLINE_PER_ROUND
+        evidence = [self._candidate("2026-08-22", 0.95 - i / 10_000, role="evidence", index=i)
+                    for i in range(50)]
+        card = [self._candidate("2026-08-22", 0.40 - i / 10_000, index=i) for i in range(5)]
+        merges = build_data.build_admin_merges(
+            [], [], {"clusters": [], "review_candidates": evidence + card}, now)
+        roles = Counter(row["member_role"] for row in merges["issue"]["borderline"])
+        self.assertEqual(roles["card"], 5, "발송 기사 경로가 근거에 밀려 사라졌다")
+        self.assertEqual(roles["evidence"], per_round)
+        index = {row["date"]: row for row in merges["rounds"]["dates"]}
+        self.assertEqual(index["2026-08-22"]["borderline"], 55)
+        self.assertEqual(index["2026-08-22"]["borderline_shown"], per_round + 5)
 
     def test_config_reads_the_real_files_not_hand_written_numbers(self):
         """설정이 바뀌어도 화면이 옛날을 말하면 이 화면을 볼 이유가 없다."""

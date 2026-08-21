@@ -22,6 +22,11 @@ const state = {
   overrides: { rev: 0, entries: [], updated_at: "" },
   panel: "merges",
   entryFilter: "all",
+  // 병합 진단이 보고 있는 진단 회차. 이 화면은 이제 "전부"가 아니라 하루를 연다.
+  round: "",
+  // 칸마다 사람이 직접 열고 닫은 상태. 회차를 옮기면 비운다 — 그때는 다시
+  // '우선 확인이 걸린 칸만 열림'으로 돌아가는 편이 낫다.
+  folds: {},
 };
 
 function esc(value) {
@@ -203,6 +208,254 @@ function renderPendingBanner() {
 }
 
 // ── 병합 진단 ──────────────────────────────────────────────────────────────
+
+// 회차 하나를 연다 — 왜 목록 전체가 아닌가
+// ---------------------------------------------------------------------------
+// 이 화면은 네 계층(같은 날 병합 · 붙이지 않은 판단 · 날짜 넘는 병합 · 경계선)을
+// 한 페이지에 이어 붙여 그렸다. 실측 2026-08-21 라이브: 카드 183장이 한 번에
+// DOM 에 섰고, 그중 운영자가 오늘 새로 봐야 할 것은 스무 장 남짓이었다. 기사와
+// 이슈가 늘수록 이 화면은 "훑어서 이상한 것을 고르는" 도구이기를 멈춘다.
+//
+// 그래서 진입 단위를 **진단 회차**로 바꾼다. 회차는 기사가 보도된 날이 아니라
+// 그 판단이 내려진 회차다 — 어떻게 역산하는지는 build_data.build_admin_merges 의
+// '진단 회차' 머리말에 실측과 함께 적어 두었다. 화면은 그 결과(diagnosis_rounds)만
+// 읽는다. 계층마다 다른 날짜 필드를 여기서 다시 고르게 두면 한 화면 안에서
+// 날짜의 뜻이 갈라지고, 그러면 건수가 조용히 거짓말을 한다.
+//
+// **회차는 진입 필터일 뿐이다.** 카드를 열면 이슈의 전체 맥락(최초·최근 등장일,
+// 전체 멤버, 전체 연결 근거)은 예전 그대로다. 며칠에 걸친 이슈를 날짜 조각으로
+// 쪼개면 그 이슈가 무엇인지 아무 화면에서도 못 읽게 된다.
+
+function roundDates() {
+  return state.merges?.rounds?.dates || [];
+}
+
+function roundOf(date) {
+  return roundDates().find(row => row.date === date) || null;
+}
+
+function roundLabel(value) {
+  return String(value || "").replace(/-/g, ".");
+}
+
+function inRound(row) {
+  return (row?.diagnosis_rounds || []).includes(state.round);
+}
+
+function roundStory() { return (state.merges?.story?.merges || []).filter(inRound); }
+function roundVetoes() { return (state.merges?.story?.stage_vetoes || []).filter(inRound); }
+function roundPromotions() { return (state.merges?.story?.display_promotions || []).filter(inRound); }
+function roundClusters() { return (state.merges?.issue?.clusters || []).filter(inRound); }
+function roundBorderline() { return (state.merges?.issue?.borderline || []).filter(inRound); }
+
+// 주소에 남긴다 — 새로고침해도, 링크를 받아도 같은 날이 열려야 한다. 최신 회차일
+// 때는 지운다(showPanel 이 기본 탭에서 하는 것과 같은 규칙): 기본값이 주소에 박히면
+// 즐겨찾기가 그날에 못 박혀, 한 달 뒤에 열어도 그 옛날이 나온다.
+function seedRound(date) {
+  const dates = roundDates().map(row => row.date);
+  const latest = state.merges?.rounds?.latest || dates[0] || "";
+  state.round = dates.includes(date) ? date : latest;
+  // 회차가 바뀌면 칸의 열림도 처음으로 돌린다 — 어제 펼쳐 둔 자리가 오늘도
+  // 펼쳐져 있으면 '먼저 확인할 것' 이 가리키는 칸이 묻힌다.
+  state.folds = {};
+  const url = new URL(location.href);
+  if (state.round && state.round !== latest) url.searchParams.set("date", state.round);
+  else url.searchParams.delete("date");
+  history.replaceState(history.state, "", url);
+}
+
+function selectRound(date) {
+  seedRound(date);
+  renderMerges();
+}
+
+function renderRoundNav() {
+  const box = document.getElementById("roundNav");
+  if (!box) return;
+  const dates = roundDates();
+  if (!dates.length) {
+    box.innerHTML = '<p class="admin-hint">진단 회차가 없습니다 — 아직 빌드되지 않았습니다.</p>';
+    return;
+  }
+  const index = dates.findIndex(row => row.date === state.round);
+  // 목록은 최신순이다 — '이전'(과거)은 뒤쪽, '다음'(미래)은 앞쪽이다.
+  const older = dates[index + 1];
+  const newer = dates[index - 1];
+  const latest = state.merges?.rounds?.latest || "";
+  const build = state.merges?.rounds?.build_round || "";
+  // 건수는 템플릿 **밖에서** 센다. 안에서 더하면 `row.stage` 가 HTML 보간 안에
+  // 서서 이스케이프 검사(test_the_console_escapes_everything_it_renders)에 걸린다 —
+  // 값은 숫자라 안전하지만, 규칙에 예외를 파는 것보다 계산을 빼는 편이 낫다.
+  const options = dates.map(row => {
+    const total = row.story + row.stage + row.issue + row.borderline;
+    return `<option value="${esc(row.date)}"${
+      row.date === state.round ? " selected" : ""}>${esc(roundLabel(row.date))} · ${total}건</option>`;
+  }).join("");
+  const where = state.round === latest ? "최신 회차"
+    : state.round === build ? "이번 빌드 회차"
+    : "지난 회차";
+  // 과거 회차에서 오늘의 판정 상태를 그날의 판정으로 읽으면 안 된다. 배지는
+  // 데이터가 아니라 **지금 켜져 있는 판정**을 그린다 — 그 사실을 화면에 적는다.
+  const note = state.round === latest ? ""
+    : state.round === build
+      ? `<p class="admin-round-note">이번 빌드가 새로 본 판단만 있는 회차입니다 —
+         발송 회차가 없는 <strong>미발송 근거</strong>가 여기 섭니다.</p>`
+      : `<p class="admin-round-note">지난 회차를 보고 있습니다. 카드의
+         <strong>갈라 둠 · 붙임 · 분리됨</strong> 배지는 <strong>오늘 기준</strong>의 판정
+         상태이지 그날 내린 판정이 아닙니다 — 판정이 기록된 날짜는
+         <strong>내 판정</strong> 탭에 있습니다.</p>`;
+  box.innerHTML = `<div class="admin-round-bar">
+      <button class="admin-round-step" data-act="round-go" data-to="${esc(older?.date || "")}"${
+        older ? "" : " disabled"}>‹ 이전</button>
+      <div class="admin-round-current">
+        <select class="admin-round-pick" data-act="round-pick" aria-label="진단 회차 고르기">${options}</select>
+        <small>${esc(where)}</small>
+      </div>
+      <button class="admin-round-step" data-act="round-go" data-to="${esc(newer?.date || "")}"${
+        newer ? "" : " disabled"}>다음 ›</button>
+    </div>${note}`;
+}
+
+// 이 회차의 요약. 숫자는 **전수**다 — 화면에 실은 행 수가 아니다. 상한이 화면에서
+// 사라지면 운영자는 못 본 것을 못 본 줄도 모른다.
+function renderRoundStats() {
+  const box = document.getElementById("roundStats");
+  if (!box) return;
+  const row = roundOf(state.round)
+    || { story: 0, stage: 0, issue: 0, borderline: 0, borderline_shown: 0 };
+  box.innerHTML = [
+    stat("같은 날 병합", `${row.story}건`, "story 로 접은 판단"),
+    stat("붙이지 않은 판단", `${row.stage}건`, "단계 충돌 · 대표 교체"),
+    stat("날짜 넘는 병합", `${row.issue}개`, "이 회차에 기사가 합류한 이슈"),
+    stat("경계선 후보", `${row.borderline}쌍`, row.borderline > row.borderline_shown
+      ? `상위 ${row.borderline_shown}쌍 표시` : "전부 표시"),
+  ].join("");
+}
+
+const FOLD_TITLE = {
+  story: "01 같은 날 병합", stage: "02 붙이지 않은 판단",
+  issue: "03 날짜를 넘는 병합", borderline: "04 붙지 않은 경계선",
+};
+
+// 먼저 볼 것. **새 위험도 알고리즘을 만들지 않는다** — 이미 빌드가 계산해 둔 값
+// (method · score · weakest_score · member_count · article_count)에서 그 회차의
+// 끝단만 고른다. 문턱을 새로 정하지 않는 이유는 문턱이 곧 또 하나의 판정이고,
+// 그것이 틀리면 이 목록이 조용히 잘못된 것을 가리키기 때문이다.
+function priorityItems() {
+  const items = [];
+  const push = (fold, label, why) => {
+    if (label && !items.some(item => item.label === label)) items.push({ fold, label, why });
+  };
+  const clusters = roundClusters();
+  const border = roundBorderline();
+
+  // ① 규칙이 아니라 사람·LLM 판정으로 붙은 연결. 규칙을 고쳐도 안 풀린다 —
+  //    판정을 되짚어야 풀리는 자리라 가장 위에 둔다.
+  for (const cluster of clusters.filter(row => (row.methods || []).some(
+      method => method === "manual_approved" || method === "llm_approved")).slice(0, 2)) {
+    push("issue", cluster.title || cluster.issue_id, "규칙이 아니라 판정으로 붙었습니다");
+  }
+  // ② 붙을 뻔한 경계선. 목록은 이미 점수 내림차순이라 앞이 곧 상위다.
+  for (const row of border.slice(0, 2)) {
+    push("borderline", `${row.left_title} ↔ ${row.right_title}`,
+      `문턱 바로 아래 ${ratio(row.score)}${row.member_role === "evidence" ? " · 미발송 근거" : ""}`);
+  }
+  // ③ 가장 약한 연결. 점수가 빠듯한 병합이 곧 의심스러운 병합이다.
+  for (const cluster of clusters.filter(row => typeof row.weakest_score === "number")
+      .sort((left, right) => left.weakest_score - right.weakest_score).slice(0, 2)) {
+    push("issue", cluster.title || cluster.issue_id, `가장 약한 연결 ${ratio(cluster.weakest_score)}`);
+  }
+  // ④ 유난히 큰 묶음. 하나가 잘못 들어와도 티가 안 나는 크기다.
+  const big = clusters.filter(row => row.member_count >= 6)
+    .sort((left, right) => right.member_count - left.member_count)[0];
+  if (big) push("issue", big.title || big.issue_id, `${big.member_count}건이 한 이슈로 묶였습니다`);
+  // ⑤ 크게 접은 story. 오병합이면 그만큼 넓게 틀린다.
+  const folded = roundStory().filter(row => row.article_count >= 10)
+    .sort((left, right) => right.article_count - left.article_count)[0];
+  if (folded) push("story", folded.title, `기사 ${folded.article_count}건을 한 카드로 접었습니다`);
+
+  return items.slice(0, 5);
+}
+
+function renderPriority(items) {
+  const box = document.getElementById("roundPriority");
+  if (!box) return;
+  box.innerHTML = items.length
+    ? `<p class="admin-priority-title">먼저 확인할 것 ${items.length}건</p>
+      <ul class="admin-priority-list">${items.map(item => `<li>
+        <div><strong>${esc(item.label)}</strong><small>${esc(item.why)}</small></div>
+        <button class="admin-mini" data-act="fold-jump" data-fold="${esc(item.fold)}">${
+          esc(FOLD_TITLE[item.fold] || "해당 칸")} 열기</button>
+      </li>`).join("")}</ul>`
+    : `<p class="admin-hint">이 회차에는 끝단으로 걸린 항목이 없습니다 —
+       아래 칸을 펼쳐 직접 훑으세요.</p>`;
+}
+
+// 칸 넷. bodies 는 닫을 때 비울 자리다 — details 는 닫혀도 자식을 DOM 에 그대로
+// 들고 있어서, 접기만으로는 카드 수가 하나도 줄지 않는다.
+const MERGE_FOLDS = [
+  { name: "story", label: "같은 날 병합", bodies: ["storyStats", "storyMerges"],
+    count: () => roundStory().length, render: renderStory },
+  { name: "stage", label: "붙이지 않은 판단", bodies: ["storySplits"],
+    count: () => roundVetoes().length + roundPromotions().length, render: renderStorySplits },
+  { name: "issue", label: "날짜를 넘는 병합", bodies: ["issueStats", "mergeRules", "issueClusters"],
+    count: () => roundClusters().length, render: renderIssues },
+  { name: "borderline", label: "붙지 않은 경계선", bodies: ["borderline"],
+    count: () => roundBorderline().length, render: renderBorderline },
+];
+
+function foldSummary(fold, count, open) {
+  const row = roundOf(state.round);
+  // 회차마다 상위 몇 건만 싣는 칸. "10건"만 적으면 상한이 화면에서 사라진다.
+  const whole = fold.name === "borderline" ? row?.borderline
+    : fold.name === "stage" ? row?.stage : count;
+  const head = whole > count ? `${whole}건 중 ${count}건` : `${count}건`;
+  // 창은 합계 상한도 있어서(CONSOLE_*_TOTAL) 아주 오래된 회차는 한 건도 못 실을
+  // 수 있다. 그때 '없음'이라고 적으면 바로 옆의 "N건 중 0건" 과 정면으로 어긋난다 —
+  // 없는 것이 아니라 창 밖이다.
+  const tail = count ? (open ? "접기" : "펼쳐보기")
+    : whole ? "전부 콘솔 창 밖 — 전수는 빌드 아티팩트에"
+    : "이 회차에는 없음";
+  return `${fold.label} ${head} · ${tail}`;
+}
+
+function paintFold(fold, open) {
+  const box = document.querySelector(`[data-fold="${fold.name}"]`);
+  if (!box) return;
+  const count = fold.count();
+  box.querySelector('[data-role="count"]').textContent = foldSummary(fold, count, open);
+  if (open) {
+    fold.render();
+    return;
+  }
+  for (const id of fold.bodies) {
+    const body = document.getElementById(id);
+    if (body) body.innerHTML = "";
+  }
+}
+
+function renderMerges() {
+  renderRoundNav();
+  renderRoundStats();
+  const items = priorityItems();
+  renderPriority(items);
+  const flagged = new Set(items.map(item => item.fold));
+  for (const fold of MERGE_FOLDS) {
+    const box = document.querySelector(`[data-fold="${fold.name}"]`);
+    if (!box) continue;
+    const count = fold.count();
+    // 열림 규칙: 사람이 직접 만진 칸은 그 뜻을 따르고, 아니면 '먼저 확인할 것'이
+    // 걸린 칸만 연다. 빈 칸은 열어도 빈 화면이라 닫아 둔다.
+    const open = fold.name in state.folds
+      ? Boolean(state.folds[fold.name]) && count > 0
+      : count > 0 && flagged.has(fold.name);
+    // 열림이 바뀌면 toggle 이 뒤따라 그린다 — 여기서 또 그리면 같은 카드를 두 번
+    // 만든다. 안 바뀌었을 때만 직접 그린다.
+    const moved = box.open !== open;
+    box.open = open;
+    if (!moved) paintFold(fold, open);
+  }
+}
 
 // story 병합은 LLM 이 판단하고 이유를 문장으로 남긴다. 그 문장이 이 화면의
 // 핵심이다 — 점수만 있으면 "왜"를 못 읽고, 결국 아무도 검토하지 않는다.
@@ -429,35 +682,44 @@ function updateReach(form) {
 }
 
 function renderStory() {
-  const story = state.merges?.story;
   const box = document.getElementById("storyMerges");
   const stats = document.getElementById("storyStats");
-  if (!story) return;
-  const totals = story.totals || {};
+  if (!box || !stats) return;
+  const rows = roundStory();
+  // 통계도 **이 회차 기준**이다. 전체 합계를 회차 화면에 두면 위의 요약과 아래
+  // 목록이 서로 다른 숫자를 말하고, 그러면 어느 쪽이 오늘인지 알 수 없다.
+  const counts = { merge: 0, duplicate: 0, collected: 0 };
+  let folded = 0;
+  let collectFolded = 0;
+  for (const row of rows) {
+    counts[row.relation] = (counts[row.relation] || 0) + 1;
+    folded += Math.max(0, (row.article_count || 1) - 1);
+    collectFolded += row.raw_source_count || 0;
+  }
   stats.innerHTML = [
-    stat("병합", `${totals.merge || 0}건`, "서로 다른 기사를 한 사건으로"),
-    stat("중복", `${totals.duplicate || 0}건`, "같은 기사의 재게재"),
-    stat("수집 병합", `${totals.collected || 0}건`, "수집 단계에서 접은 것"),
-    stat("접힌 기사", `${totals.folded_articles || 0}건`, "카드 뒤로 들어간 원문 수"),
+    stat("병합", `${counts.merge}건`, "서로 다른 기사를 한 사건으로"),
+    stat("중복", `${counts.duplicate}건`, "같은 기사의 재게재"),
+    stat("수집 병합", `${counts.collected}건`, "수집 단계에서 접은 것"),
+    stat("접힌 기사", `${folded}건`, "카드 뒤로 들어간 원문 수"),
     // 예전에는 이 숫자만큼이 story 가 만들어지기 전에 사라졌다. 지금은 근거로 남는다.
-    stat("수집 근거 보존", `${totals.collect_folded_articles || 0}건`, "예전에는 삭제되던 수"),
-    stat("사람 분리", `${entriesOf("story_split").length}건`, "관리자가 갈라 둔 조합"),
+    stat("수집 근거 보존", `${collectFolded}건`, "예전에는 삭제되던 수"),
+    // 판정은 회차에 매이지 않는다 — 오늘 내린 판정이 과거 회차 화면에서 그날의
+    // 판정처럼 읽히면 안 되므로, 이 칸만 '전체 기록'이라고 못 박는다.
+    stat("사람 분리", `${entriesOf("story_split").length}건`, "전체 기록 · 회차와 무관"),
   ].join("");
-  const rows = story.merges || [];
   box.innerHTML = rows.length
     ? rows.map(storyRow).join("")
-    : `<div class="empty-state"><strong>이 구간에 병합된 사건이 없습니다</strong>
+    : `<div class="empty-state"><strong>이 회차에 병합된 사건이 없습니다</strong>
        <p>story 병합은 daily_brief 가 회차를 만들 때 기록합니다. 아직 story 계약이
        붙지 않은 과거 회차는 전부 단독으로 나옵니다.</p></div>`;
-  renderStorySplits(story);
 }
 
 // "왜 붙었나"의 짝은 "왜 안 붙었나"다. 분리는 결과물에 아무 흔적을 남기지 않아서,
 // 이 화면이 없으면 거부권이 과하게 작동해도 아무도 모른다 — 그저 비슷한 카드가
 // 두 칸을 차지할 뿐이고, 그게 왜인지는 어디에도 안 적혀 있다.
-function renderStorySplits(story) {
-  const vetoes = story.stage_vetoes || [];
-  const promotions = story.display_promotions || [];
+function renderStorySplits() {
+  const vetoes = roundVetoes();
+  const promotions = roundPromotions();
   const box = document.getElementById("storySplits");
   if (!box) return;
   const vetoRows = vetoes.map(veto => {
@@ -495,12 +757,18 @@ function renderStorySplits(story) {
     <ul class="admin-titles"><li>이전 대표<small>${esc(promo.from_title)}</small></li></ul>
   </article>`).join("");
 
+  const whole = roundOf(state.round)?.stage || 0;
   box.innerHTML = (vetoRows || promoRows)
     ? vetoRows + promoRows
-    : `<div class="empty-state"><strong>단계 충돌로 갈라 둔 쌍이 없습니다</strong>
-       <p>제목이 닮았는데 심사↔승인·정지↔재가동처럼 사건 단계가 넘어간 조합만 여기
-       올라옵니다. 이 기록은 발송 회차(<code>delivery_log</code>)에서 옵니다 —
-       아직 회차가 없으면 비어 있는 것이 정상입니다.</p></div>`;
+    : whole
+      ? `<div class="empty-state"><strong>이 회차의 판단 ${whole}건이 콘솔 창 밖입니다</strong>
+         <p>콘솔은 회차마다 상위 몇 건씩, 합쳐서 상한까지만 싣습니다 — 오래된 회차는
+         그 상한 밖으로 밀립니다. 전수는 발송 회차 기록(<code>delivery_log</code>)에
+         있습니다.</p></div>`
+      : `<div class="empty-state"><strong>이 회차에 단계 충돌로 갈라 둔 쌍이 없습니다</strong>
+         <p>제목이 닮았는데 심사↔승인·정지↔재가동처럼 사건 단계가 넘어간 조합만 여기
+         올라옵니다. 이 기록은 발송 회차(<code>delivery_log</code>)에서 옵니다 —
+         아직 회차가 없으면 비어 있는 것이 정상입니다.</p></div>`;
 }
 
 // 이슈 병합은 규칙이 판단한다. 어느 규칙이 걸렸는지(method)와 얼마나 빠듯했는지
@@ -509,8 +777,10 @@ function clusterRow(cluster) {
   const splittable = (cluster.members || []).filter(member => member.hash).length >= 2;
   const members = (cluster.members || []).map(member => {
     const separated = splitSeparates(cluster, member.hash);
+    const joinedNow = member.briefing_date === state.round;
     return `<li><time>${esc(dateLabel(member.article_date))}</time>
-      <span>${esc(member.title)}</span>
+      <span>${esc(member.title)}${joinedNow
+        ? ' <span class="admin-badge">이 회차 합류</span>' : ""}</span>
       <small>${esc((member.countries || []).join(" · ") || "국가 미분류")}${
         (member.facilities || []).length ? ` · ${esc(member.facilities.join(" · "))}` : ""}</small>
       ${!splittable || !member.hash ? ""
@@ -526,9 +796,10 @@ function clusterRow(cluster) {
   }).join("");
   const matches = (cluster.matches || []).map(match => {
     const rule = (state.merges?.issue?.rules || []).find(item => item.id === match.method);
-    return `<tr>
+    return `<tr class="${match.round && match.round === state.round ? "admin-row-now" : ""}">
       <td><span class="admin-badge ${match.blocked_by?.length ? "warn" : ""}">${
         esc(rule?.label || match.method)}</span></td>
+      <td>${match.round ? esc(dateLabel(match.round)) : '<span class="admin-badge muted">미발송 근거</span>'}</td>
       <td class="num">${ratio(match.score)}</td>
       <td class="num">${ratio(match.title_ratio)}</td>
       <td class="num">${match.tag_shared ?? "—"}</td>
@@ -546,7 +817,8 @@ function clusterRow(cluster) {
         <h3>${esc(cluster.title || cluster.issue_id)}</h3>
       </div>
       <p class="admin-card-scale">${cluster.member_count}건 연결<small>가장 약한 연결 ${
-        ratio(cluster.weakest_score)} · ${(cluster.briefing_dates || []).length}회차</small></p>
+        ratio(cluster.weakest_score)} · ${(cluster.briefing_dates || []).length}회차${
+        cluster.evidence_match_count ? ` · 미발송 근거 ${cluster.evidence_match_count}건` : ""}</small></p>
     </div>
     <details class="admin-evidence" open>
       <summary>묶인 기사 ${cluster.member_count}건 — 잘못 묶였으면 나눕니다</summary>
@@ -563,7 +835,7 @@ function clusterRow(cluster) {
     ${matches ? `<details class="admin-evidence">
       <summary>연결 근거 ${(cluster.matches || []).length}쌍</summary>
       <div class="admin-table-scroll"><table class="admin-table">
-        <thead><tr><th>규칙</th><th class="num">점수</th><th class="num">제목</th><th class="num">공통태그</th><th class="num">임베딩</th><th>지문 일치</th><th>차단</th></tr></thead>
+        <thead><tr><th>규칙</th><th>회차</th><th class="num">점수</th><th class="num">제목</th><th class="num">공통태그</th><th class="num">임베딩</th><th>지문 일치</th><th>차단</th></tr></thead>
         <tbody>${matches}</tbody>
       </table></div>
     </details>` : ""}
@@ -762,44 +1034,79 @@ function renderIssues() {
   const issue = state.merges?.issue;
   if (!issue) return;
   const totals = issue.totals || {};
+  const clusters = roundClusters();
+  const row = roundOf(state.round);
   document.getElementById("issueStats").innerHTML = [
-    stat("연결된 이슈", `${totals.clusters || 0}개`, "기사 2건 이상이 묶인 것"),
-    stat("검토 대기", `${totals.review_candidates || 0}쌍`, "자동 병합 아래 구간"),
-    stat("사람 승인", `${totals.manual_approved || 0}건`, `기각 ${totals.manual_rejected || 0}건`),
+    stat("이 회차 이슈", `${clusters.length}개`, "이 회차에 기사가 합류한 것"),
+    stat("전체 연결 이슈", `${totals.clusters || 0}개`, "창 안에서 기사 2건 이상이 묶인 것"),
+    stat("이 회차 경계선", `${row?.borderline ?? 0}쌍`, "자동 병합 아래 구간"),
+    stat("사람 승인", `${totals.manual_approved || 0}건`, `기각 ${totals.manual_rejected || 0}건 · 전체 기록`),
     stat("연결 창", `${issue.window_days ?? "—"}일`, issue.matching_version || ""),
   ].join("");
   document.getElementById("mergeRules").innerHTML = (issue.rules || []).map(rule =>
     `<div class="admin-rule"><span class="admin-badge">${esc(rule.label)}</span>
       <p>${esc(rule.detail)}</p>
       <small>${issue.method_counts?.[rule.id] ? `이번 빌드에서 ${issue.method_counts[rule.id]}쌍` : "이번 빌드에서 사용 안 됨"}</small></div>`).join("");
-  const clusters = issue.clusters || [];
   document.getElementById("issueClusters").innerHTML = clusters.length
     ? clusters.map(clusterRow).join("")
-    : '<div class="empty-state"><strong>날짜를 넘어 연결된 이슈가 없습니다</strong><p>모든 이슈가 단일 회차입니다.</p></div>';
+    : `<div class="empty-state"><strong>이 회차에 새로 연결된 이슈가 없습니다</strong>
+       <p>이 회차에 발송된 기사 중 기존 이슈에 합류한 것이 없습니다. 다른 회차로
+       옮기거나, 이슈 자체를 찾으려면 <a href="/issues">이슈 목록</a>을 여세요.</p></div>`;
+}
 
-  const borderline = issue.borderline || [];
-  document.getElementById("borderline").innerHTML = borderline.length
-    ? `<div class="admin-table-scroll"><table class="admin-table borderline">
+// 경계선은 회차마다 상위 몇 쌍만 싣는다. 전역 상위 N건으로 자르면 최신 회차가
+// 창을 독점하고 과거 회차는 건수 자체가 거짓이 된다(build_data 의 실측 주석).
+// 그래서 여기서는 **전수와 실린 수를 같이** 적는다.
+function renderBorderline() {
+  const box = document.getElementById("borderline");
+  if (!box) return;
+  const borderline = roundBorderline();
+  const row = roundOf(state.round);
+  // 창은 회차 안에서 **경로마다** 따로다. 두 경로를 한 줄로 세우면 근거 쪽이
+  // 통째로 가져가기 때문인데(실측 2026-08-22 빌드 회차: 근거 2,053쌍 대 발송
+  // 기사 0쌍), 그러면 "점수 상위 M쌍"이라고만 적는 것이 거짓이 된다 — 실제로는
+  // 경로마다 상위 K쌍이다. 무엇의 상위인지까지 적어야 숫자가 말이 된다.
+  const perRound = state.merges?.rounds?.borderline_per_round || 0;
+  const evidence = borderline.filter(pair => pair.member_role === "evidence").length;
+  const windowNote = evidence && evidence < borderline.length
+    ? `발송 기사·미발송 근거 <strong>경로마다</strong> 점수 상위 ${perRound}쌍`
+    : `점수 상위 ${perRound}쌍`;
+  const capped = row && row.borderline > borderline.length
+    ? `<p class="admin-hint">이 회차의 후보 ${row.borderline}쌍 가운데 ${
+        borderline.length}쌍입니다 — ${windowNote}. 전수는 빌드
+        아티팩트(<code>issue_audit.full.json</code>)에 있습니다.</p>`
+    : "";
+  box.innerHTML = borderline.length
+    ? capped + `<div class="admin-table-scroll"><table class="admin-table borderline">
         <thead><tr><th class="num">점수</th><th>한쪽</th><th>다른 쪽</th><th class="num">제목 유사</th><th class="num">공통태그</th><th>차단</th><th></th></tr></thead>
-        <tbody>${borderline.map(row => {
+        <tbody>${borderline.map(pair => {
           const joined = entriesOf("issue_join").some(entry =>
             [entry.left_hash, entry.right_hash].sort().join("|")
-              === [row.left_hash, row.right_hash].sort().join("|"));
+              === [pair.left_hash, pair.right_hash].sort().join("|"));
           return `<tr>
-          <td class="num">${ratio(row.score)}</td>
-          <td><strong>${esc(row.left_title)}</strong><small>${esc(dateLabel(row.left_date))}</small></td>
-          <td><strong>${esc(row.right_title)}</strong><small>${esc(dateLabel(row.right_date))}</small></td>
-          <td class="num">${ratio(row.diagnostics?.title_ratio)}</td>
-          <td class="num">${row.diagnostics?.tag_shared ?? "—"}</td>
-          <td>${esc((row.diagnostics?.blocked_by || []).join(" · ") || "—")}</td>
-          <td>${!row.left_hash || !row.right_hash ? "—"
+          <td class="num">${ratio(pair.score)}${pair.member_role === "evidence"
+            ? '<small><span class="admin-badge muted">미발송 근거</span></small>' : ""}</td>
+          <td><strong>${esc(pair.left_title)}</strong><small>${esc(dateLabel(pair.left_date))}</small></td>
+          <td><strong>${esc(pair.right_title)}</strong><small>${esc(dateLabel(pair.right_date))}</small></td>
+          <td class="num">${ratio(pair.diagnostics?.title_ratio)}</td>
+          <td class="num">${pair.diagnostics?.tag_shared ?? "—"}</td>
+          <td>${esc((pair.diagnostics?.blocked_by || []).join(" · ") || "—")}</td>
+          <td>${!pair.left_hash || !pair.right_hash ? "—"
             : joined ? '<span class="admin-badge">붙임</span>'
             : `<button class="admin-mini" data-act="issue-join"
-                 data-left="${esc(row.left_hash)}" data-right="${esc(row.right_hash)}"
-                 data-left-title="${esc(row.left_title)}" data-right-title="${esc(row.right_title)}">붙이기</button>`}</td>
+                 data-left="${esc(pair.left_hash)}" data-right="${esc(pair.right_hash)}"
+                 data-left-title="${esc(pair.left_title)}" data-right-title="${esc(pair.right_title)}">붙이기</button>`}</td>
         </tr>`; }).join("")}</tbody>
       </table></div>`
-    : '<div class="empty-state"><strong>경계선 후보가 없습니다</strong><p>문턱 아래 구간에 남은 쌍이 없습니다.</p></div>';
+    : row?.borderline
+      // 없는 것과 창 밖은 다르다. 후보가 있는데 '없습니다'라고 적으면 위의 요약이
+      // 말한 N쌍이 화면에서 통째로 증발한다.
+      ? `<div class="empty-state"><strong>이 회차의 후보 ${row.borderline}쌍이 콘솔 창 밖입니다</strong>
+         <p>콘솔은 회차마다 경로별 상위 몇 쌍씩, 합쳐서 상한까지만 싣습니다 — 오래된
+         회차는 그 상한 밖으로 밀립니다. 전수는 빌드
+         아티팩트(<code>issue_audit.full.json</code>)에 있습니다.</p></div>`
+      : `<div class="empty-state"><strong>이 회차에 경계선 후보가 없습니다</strong>
+         <p>이 회차에 평가된 쌍 가운데 문턱 바로 아래 구간에 남은 것이 없습니다.</p></div>`;
 }
 
 // ── 수집 설정 ──────────────────────────────────────────────────────────────
@@ -1417,6 +1724,22 @@ async function onClick(event) {
     return;
   }
 
+  if (act === "round-go") {
+    if (data.to) selectRound(data.to);
+    return;
+  }
+
+  // '먼저 확인할 것' 에서 해당 칸으로. 여는 것까지 해야 의미가 있다 — 접힌 칸으로
+  // 데려다 놓기만 하면 운영자는 거기서 한 번 더 눌러야 한다.
+  if (act === "fold-jump") {
+    const box = document.querySelector(`[data-fold="${data.fold}"]`);
+    if (!box) return;
+    state.folds[data.fold] = true;
+    box.open = true;                       // toggle 이 발생해 본문이 그려진다
+    box.scrollIntoView?.({ block: "start" });
+    return;
+  }
+
   if (act === "chip-restore") {
     // 아직 파이프라인에 안 간 삭제를 물린다. 판정 자체를 지우므로 목록에
     // '삭제했다가 되살렸다'는 이력이 남지 않는다.
@@ -1718,8 +2041,7 @@ function showPanel(panel) {
 }
 
 function renderAll() {
-  renderStory();
-  renderIssues();
+  renderMerges();
   renderKeywords();
   renderFeeds();
   renderTiers();
@@ -1756,6 +2078,10 @@ async function start() {
   // 하므로 실패를 치명으로 보지 않는다 — 편집만 못 하고 읽기는 그대로 된다.
   const writable = await pullOverrides();
 
+  // 회차를 먼저 정한다 — 아래 renderAll 이 이 값으로 화면을 세운다. 주소에
+  // ?date= 가 있으면 그날을, 없으면 최신 회차를 연다.
+  seedRound(new URLSearchParams(location.search).get("date") || "");
+
   const totals = state.merges?.story?.totals || {};
   const clusters = state.merges?.issue?.totals?.clusters || 0;
   status.className = "readiness-panel ready";
@@ -1764,6 +2090,22 @@ async function start() {
       writable ? "" : " <strong>판정 저장은 지금 쓸 수 없습니다</strong> — KV 연결을 확인하세요."}</p></div>`;
   document.getElementById("adminGenerated").textContent =
     `생성 ${String(state.merges?.generated_at || "").slice(0, 16).replace("T", " ")}`;
+
+  // 칸을 펼칠 때 비로소 그린다. toggle 은 버블링하지 않아 캡처로 받는다.
+  // 안쪽 <details>(근거·규칙)도 같은 이벤트를 내므로 자기 자신일 때만 처리한다.
+  //
+  // **renderAll 보다 먼저 붙인다.** 첫 그림에서 이미 칸이 열린다(우선 확인이 걸린
+  // 칸). 그때 듣는 이가 없으면 그 칸은 열린 채로 비어 있고, 운영자는 그것을
+  // '오늘은 아무 판단도 없었다'로 읽는다. 브라우저가 toggle 을 비동기로 큐에 넣어
+  // 지금까지 우연히 맞아떨어졌을 뿐이다 — 그 순서에 기대지 않는다.
+  document.addEventListener("toggle", event => {
+    const box = event.target;
+    if (!box.dataset?.fold) return;
+    const fold = MERGE_FOLDS.find(item => item.name === box.dataset.fold);
+    if (!fold) return;
+    state.folds[fold.name] = box.open;
+    paintFold(fold, box.open);
+  }, true);
 
   renderAll();
 
@@ -1775,6 +2117,10 @@ async function start() {
   document.addEventListener("submit", onSubmit);
   // 판별축 칩을 누를 때마다 '얼마나 넓은가'를 다시 센다 — 저장한 뒤에 알면 늦다.
   document.addEventListener("change", event => {
+    if (event.target.matches?.('[data-act="round-pick"]')) {
+      selectRound(event.target.value);
+      return;
+    }
     const form = event.target.closest('form[data-act="split-save"]');
     if (form) updateReach(form);
     // 사건군이 바뀌면 갈라질 쌍도 축 후보도 달라진다. 저장 버튼이 무엇을 저장할지는

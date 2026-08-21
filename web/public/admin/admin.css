@@ -540,6 +540,102 @@
 }
 .admin-filter.active { border-color: var(--c-secondary); color: var(--c-secondary); font-weight: 650; }
 
+/* ── 진단 회차 ──────────────────────────────────────────────────────────────
+   병합 진단은 회차 하나만 연다. 이 줄이 그 문이라 화면 맨 위에 서고, 좁은 화면
+   에서도 '이전 / 지금 보는 날 / 다음' 셋이 한눈에 들어와야 한다. */
+.admin-round-nav { display: grid; gap: var(--sp-2); }
+.admin-round-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--bd-1) solid var(--c-border);
+  background: var(--c-surface);
+}
+.admin-round-step {
+  min-height: 40px;
+  padding: 0 var(--sp-3);
+  border: var(--bd-1) solid var(--c-border);
+  background: transparent;
+  color: var(--c-text);
+  font-size: var(--t-min);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.admin-round-step:hover:not([disabled]) { border-color: var(--c-secondary); color: var(--c-secondary); }
+/* 미래는 없다 — 끝에 닿으면 눌러도 아무 일이 없다는 것이 보여야 한다. */
+.admin-round-step[disabled] { color: var(--c-text-muted); cursor: default; opacity: 0.5; }
+.admin-round-step:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.admin-round-current { display: grid; justify-items: center; gap: 1px; min-width: 0; text-align: center; }
+.admin-round-current small { color: var(--c-text-muted); font-size: var(--t-min); }
+.admin-round-pick {
+  max-width: 100%;
+  min-height: 36px;
+  padding: 0 var(--sp-2);
+  border: var(--bd-1) solid var(--c-border);
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-size: var(--t-caption);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+.admin-round-pick:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 1px; }
+.admin-round-note {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-left: var(--bd-2) solid var(--c-border);
+  color: var(--c-text-secondary);
+  font-size: var(--t-min);
+  line-height: 1.6;
+}
+
+/* 먼저 확인할 것. 운영자가 콘솔에 들어오는 이유는 정상 병합을 다 읽기 위해서가
+   아니라 "오늘 잘못 판단했을 만한 것"을 찾기 위해서다 — 그 줄이 맨 위에 선다. */
+.admin-priority { display: grid; gap: var(--sp-2); }
+.admin-priority-title { margin: 0; font-size: var(--t-caption); font-weight: 700; }
+.admin-priority-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.admin-priority-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: var(--bd-1) solid var(--c-border);
+}
+.admin-priority-list div { display: grid; gap: 1px; min-width: 0; }
+.admin-priority-list strong { font-size: var(--t-caption); font-weight: 650; line-height: 1.4; }
+.admin-priority-list small { color: var(--c-text-muted); font-size: var(--t-min); }
+
+/* 칸 접기. 회차로 걸러도 한 회차에 수십 장이 나올 수 있다. */
+.admin-fold > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 40px;
+  padding: var(--sp-1) 0;
+  color: var(--c-text-secondary);
+  font-size: var(--t-caption);
+  font-weight: 650;
+  cursor: pointer;
+  list-style: none;
+}
+.admin-fold > summary::-webkit-details-marker { display: none; }
+.admin-fold > summary::before {
+  content: "+";
+  flex: none;
+  width: 18px;
+  color: var(--c-text-muted);
+  font-weight: 700;
+  text-align: center;
+}
+.admin-fold[open] > summary::before { content: "−"; }
+.admin-fold > summary:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.admin-fold[open] { display: grid; gap: var(--sp-4); }
+/* 이 회차에 붙은 연결 한 줄. 12건짜리 이슈에서 오늘 달라진 곳을 눈으로 찾게
+   두면 아무도 안 찾는다. */
+.admin-row-now td { background: var(--c-surface); }
+
 /* 저장 결과. 화면 어디서 눌렀든 한 자리에서 말한다 — 버튼 옆에 두면 목록을
    다시 그릴 때 메시지도 같이 사라져 "저장이 됐나?"가 남는다. */
 .admin-toast {
@@ -597,4 +693,13 @@
   .admin-members li { grid-template-columns: minmax(0, 1fr); }
   .admin-members small { grid-column: 1; }
   .admin-table.borderline td { max-width: 200px; }
+  /* 회차 줄. 390px 에서 '‹ 이전 / 2026.08.21 / 다음 ›' 셋을 한 줄에 남긴다 —
+     날짜 칸만 줄여서 버튼이 잘리지 않게 한다. 접으면 '다음'이 화면 밖으로 나가고,
+     그러면 최신 회차로 돌아올 길이 사라진다. */
+  .admin-round-bar { gap: var(--sp-2); padding: var(--sp-2); }
+  .admin-round-step { padding: 0 var(--sp-2); }
+  .admin-round-pick { font-size: var(--t-min); }
+  /* 우선 확인 줄은 접는다 — 제목과 버튼을 한 줄에 두면 제목이 두 글자씩 끊긴다. */
+  .admin-priority-list li { display: grid; gap: var(--sp-2); }
+  .admin-priority-list .admin-mini { justify-self: start; }
 }
