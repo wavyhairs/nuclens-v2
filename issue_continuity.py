@@ -101,6 +101,7 @@ from pathlib import Path
 
 import admin_overrides
 import event_stage
+import story_fingerprint
 
 ROOT = Path(__file__).parent
 DELIVERY_LOG_FILE = ROOT / "delivery_log.jsonl"
@@ -534,44 +535,17 @@ def progression(prior: dict, candidate: dict, *,
 
 # ---- 같은 이슈 판정 -------------------------------------------------------------
 
-def _fingerprint_tokens(value: object) -> set[str]:
-    values = value if isinstance(value, list) else ([] if value in (None, "") else [value])
-    return {_SPACE_RE.sub(" ", str(v or "").strip().lower())
-            for v in values if str(v or "").strip()}
-
-
-_FINGERPRINT_AXES = {
-    "countries": (("countries", "country"), 1.0),
-    "actors": (("actors", "actor", "operator", "organization"), 1.4),
-    "assets": (("assets", "asset", "facility", "project", "plant"), 1.8),
-    "event": (("event_family", "event_type", "event"), 1.5),
-    "cause": (("drivers", "driver", "cause"), 0.8),
-}
-
-
 def fingerprint_similarity(left: dict, right: dict) -> tuple[float, int, list[str]]:
-    """(유사도, 비교한 축 수, 겹친 축). build_data 와 같은 축·같은 가중치."""
-    lf = left.get("story_fingerprint")
-    rf = right.get("story_fingerprint")
-    if not isinstance(lf, dict) or not isinstance(rf, dict) or not lf or not rf:
-        return 0.0, 0, []
-    hit = total = 0.0
-    compared = 0
-    shared: list[str] = []
-    for label, (keys, weight) in _FINGERPRINT_AXES.items():
-        lv: set[str] = set()
-        rv: set[str] = set()
-        for key in keys:
-            lv |= _fingerprint_tokens(lf.get(key))
-            rv |= _fingerprint_tokens(rf.get(key))
-        if not lv or not rv:
-            continue
-        compared += 1
-        total += weight
-        if lv & rv:
-            shared.append(label)
-            hit += weight
-    return (round(hit / total, 3) if total else 0.0), compared, shared
+    """(유사도, 비교한 축 수, 겹친 축). 축 표는 `story_fingerprint` 하나뿐이다.
+
+    예전에는 이 파일과 `web/build_data` 가 표를 하나씩 들고 "같은 축·같은
+    가중치"라고 적어 두었는데, 실제로는 어긋나 있었다(저쪽만 `drivers` 를
+    빠뜨렸다). 주석으로 맞추는 것은 안 맞는다 — 표를 하나로 옮겼다.
+    """
+    comparison = story_fingerprint.compare(
+        left.get("story_fingerprint"), right.get("story_fingerprint")
+    )
+    return round(comparison.similarity, 3), comparison.compared, comparison.shared
 
 
 def _facilities(row: dict) -> frozenset[str]:

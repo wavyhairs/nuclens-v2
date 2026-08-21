@@ -27,6 +27,8 @@ except (OSError, KeyError, json.JSONDecodeError):
     DATA_DIR = DATA_ROOT
 
 import build_data  # noqa: E402
+import issue_continuity  # noqa: E402
+import story_fingerprint  # noqa: E402
 for _key in ("NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
     os.environ.setdefault(_key, "test")
 import news_bot  # noqa: E402
@@ -1320,6 +1322,213 @@ class IssueSimilarityTests(unittest.TestCase):
         self.assertEqual(len(issues), 2)
         self.assertEqual(sorted(len(issue["members"]) for issue in issues), [1, 1])
         self.assertEqual(sum(len(issue.get("evidence_members") or []) for issue in issues), 1)
+
+
+class StoryFingerprintMatchTests(unittest.TestCase):
+    """지문(story fingerprint)만으로 이슈를 잇는 경로의 계약.
+
+    이 경로는 제목도 태그도 아무 말을 못 했을 때 마지막으로 오는 **가장 약한
+    근거**다. 지문은 `dedup.ARTICLE_STORY_PROMPT` 가 story 묶음마다 받아 오는
+    자유형 LLM 필드이고, 그것도 '그날 같은 사건인가'를 물어서 받은 것이지
+    '2주 전 그 사건의 후속인가'를 물어 받은 것이 아니다.
+
+    2026-08-19 라이브 빌드 실측 — 지문만으로 붙은 11쌍 중 **10쌍이 오병합**:
+
+        『12차 전기본 재정비』 ↔ 『산업부 장관 대미투자 방미』   (제목 0.16, 공통 태그 0)
+        『원전 세액공제』 ↔ 『NIETC 지정 중단』 ↔ 『청정에너지 자금』 ↔ 『ORNL 핵융합』
+        『산업용 전기요금 차등제』 ↔ 『ESS·무탄소 인프라 전략』
+
+    겹친 것은 예외 없이 나라·기관·`event_family` 셋뿐이었다. 그 셋이 왜 근거가
+    못 되는지는 같은 데이터가 말한다 — `event_family` 는 값이 15종뿐이고
+    `policy_decision` 하나가 45%, `countries` 는 `south korea` 48%·`usa` 45%.
+
+    그런데도 유사도는 **1.0** 이었다. 유사도를 '양쪽 다 값이 있는 축'에 대해서만
+    평균 내는데, `web/build_data` 쪽 별칭표만 프롬프트가 쓰는 복수형 `drivers` 를
+    빠뜨려(`("cause", "driver")`) 유일하게 어긋나 있던 원인 축을 한 번도 읽지
+    못했기 때문이다. 구체적인 축이 **없을수록 점수가 높아지는** 상태였다.
+
+    그래서 계약은 셋이다.
+      ① 축 표는 `story_fingerprint` 한 곳에만 있다(두 매칭기가 같은 것을 본다).
+      ② 범위 축(나라·event_family)은 병합을 **끌고 갈 수 없다**. 신원 축
+         (행위자·대상·행위·원인) 둘 이상이 겹쳐야 한다.
+      ③ 신원 축이 어긋나면 붙지 않는다 — 어긋남은 희석이 아니라 반대 증거다.
+    """
+
+    @staticmethod
+    def _fingerprint(actors=(), assets=(), drivers=(),
+                     event="policy_decision", countries=("South Korea",)):
+        return {"countries": list(countries), "actors": list(actors),
+                "assets": list(assets), "event_family": event,
+                "drivers": list(drivers)}
+
+    def _article(self, article_hash, day, title, tags, fingerprint, countries=("KR",)):
+        return {"hash": article_hash, "briefing_date": day, "article_date": day,
+                "title_kr": title, "tags": list(tags), "countries": list(countries),
+                "story_fingerprint": fingerprint}
+
+    # ---- ① 축 표가 하나인가 -----------------------------------------------------
+
+    def test_both_matchers_read_the_same_axis_table(self):
+        """표를 둘로 두면 또 어긋난다 — 실제로 어긋났던 자리다."""
+        left = {"story_fingerprint": self._fingerprint(["X"], ["Y"], ["alpha"])}
+        right = {"story_fingerprint": self._fingerprint(["X"], ["Y"], ["beta"])}
+        web_similarity, web_diagnostics = build_data.story_fingerprint_similarity(left, right)
+        brief_similarity, brief_compared, brief_shared = \
+            issue_continuity.fingerprint_similarity(left, right)
+        self.assertAlmostEqual(web_similarity, brief_similarity, places=2)
+        self.assertEqual(web_diagnostics["compared"], brief_compared)
+        self.assertEqual(web_diagnostics["shared"], brief_shared)
+
+    def test_the_prompt_field_name_is_the_first_alias(self):
+        """별칭만 적고 본명을 빠뜨린 것이 원래 사고다. 본명이 맨 앞이어야 한다."""
+        for axis, (keys, _weight) in story_fingerprint.AXES.items():
+            self.assertTrue(keys, f"{axis} 축에 키가 없다")
+        self.assertEqual(story_fingerprint.AXES["cause"][0][0], "drivers")
+
+    def test_drivers_is_actually_compared(self):
+        """복수형을 못 읽으면 이 축이 통째로 분모에서 빠져 유사도가 1.0 이 된다."""
+        left = {"story_fingerprint": self._fingerprint(["X"], [], ["alpha"])}
+        right = {"story_fingerprint": self._fingerprint(["X"], [], ["beta"])}
+        similarity, diagnostics = build_data.story_fingerprint_similarity(left, right)
+        self.assertIn("cause", diagnostics["contested"])
+        self.assertLess(similarity, 1.0)
+
+    # ---- ② 범위 축은 병합을 끌고 갈 수 없다 --------------------------------------
+
+    def test_country_and_event_family_alone_do_not_merge(self):
+        """나라 + 기관 + policy_decision. 실측 오병합 10건이 전부 이 모양이었다."""
+        left = self._article(
+            "l", "2026-08-01", "정부, 전력망 확충 종합대책 이달 중 발표", ["#전력망"],
+            self._fingerprint(["Ministry of Energy"], [], []))
+        right = self._article(
+            "r", "2026-08-02", "산업부, 반도체 클러스터 용수 공급 방안 검토", ["#반도체"],
+            self._fingerprint(["Ministry of Energy"], [], []))
+        matched, _score, diagnostics = build_data.issue_similarity(left, right)
+        self.assertEqual(diagnostics["story_fingerprint_similarity"], 1.0,
+                         "재현 전제가 깨졌다 — 겹치는 축만 비교되어 유사도가 1.0 이어야 한다")
+        self.assertFalse(
+            matched,
+            f"기관 하나만 겹쳤는데 붙었다: shared={diagnostics['story_fingerprint_shared']}")
+
+    def test_contested_identity_axis_blocks_the_merge(self):
+        """원인이 정면으로 다르면 나머지가 다 같아도 다른 사건이다."""
+        left = self._article(
+            "l", "2026-08-01", "정부, 전력망 확충 종합대책 이달 중 발표", ["#전력망"],
+            self._fingerprint(["Ministry of Energy"], ["Power grid"], ["aging grid"]))
+        right = self._article(
+            "r", "2026-08-02", "산업부, 반도체 클러스터 용수 공급 방안 검토", ["#반도체"],
+            self._fingerprint(["Ministry of Energy"], ["Power grid"], ["semiconductor demand"]))
+        matched, _score, diagnostics = build_data.issue_similarity(left, right)
+        self.assertEqual(diagnostics["story_fingerprint_contested"], ["cause"])
+        self.assertFalse(matched, "어긋난 축이 있는데 붙었다")
+
+    # ---- 과교정 방지 -------------------------------------------------------------
+
+    def test_the_same_project_follow_up_still_merges(self):
+        """엄격해진 대가로 진짜 후속까지 끊기면 안 된다.
+
+        실측 11쌍 가운데 하나뿐이던 정상 병합(『대미 전략투자 1호 막판 조율』↔
+        『대미투자 방미』)의 모양이다 — 제목이 안 닮았고 원인 축을 공유했다.
+        """
+        left = self._article(
+            "l", "2026-08-01", "정부, 해외 전략투자 1호 사업 최종 조율 착수", ["#해외투자"],
+            self._fingerprint(["Ministry of Energy"], ["Strategic Fund"], ["investment"]))
+        right = self._article(
+            "r", "2026-08-03", "장관, 전략투자 협상 위해 이번 주 출국", ["#통상협상"],
+            self._fingerprint(["Ministry of Energy"], ["Strategic Fund"],
+                              ["investment", "tariff"]))
+        matched, _score, diagnostics = build_data.issue_similarity(left, right)
+        self.assertLess(diagnostics["title_ratio"], build_data.TITLE_MATCH_RATIO,
+                        "재현 전제가 깨졌다 — 제목으로는 안 붙는 쌍이어야 한다")
+        self.assertTrue(matched, "같은 사업의 후속이 끊겼다")
+        self.assertEqual(diagnostics["method"], "story_fingerprint")
+
+    # ---- ③ 약한 근거는 연쇄하지 못한다 -------------------------------------------
+
+    def _bridge_articles(self):
+        """A-B 는 대상을, B-C 는 원인을 공유하지만 A 와 C 는 둘 다 어긋난다.
+
+        가운데 B 가 양쪽 값을 함께 들고 있어 다리가 된다. 국가 충돌
+        (`_cluster_country_conflict`)·기각 쌍과 같은 모양의 전이 구멍이다.
+        """
+        return [
+            self._article(
+                "A", "2026-08-01", "정부, 노후 송전선 교체 사업 예산 배정 확정", ["#송전"],
+                self._fingerprint(["Ministry of Energy"], ["Transmission line"],
+                                  ["aging grid"])),
+            self._article(
+                "B", "2026-08-02", "에너지부, 송전 설비와 저장장치 통합 운영 계획 공개", ["#ESS"],
+                self._fingerprint(["Ministry of Energy"], ["Transmission line", "Storage"],
+                                  ["aging grid", "output control"])),
+            self._article(
+                "C", "2026-08-03", "정부, 재생에너지 출력제어 완화 위한 저장장치 보급 확대",
+                ["#재생에너지"],
+                self._fingerprint(["Ministry of Energy"], ["Storage"], ["output control"])),
+        ]
+
+    def test_weak_evidence_does_not_chain_through_a_bridge(self):
+        """A-B 와 B-C 가 각각 붙어도, A 와 C 가 다르면 셋을 한 이슈로 만들지 않는다."""
+        articles = self._bridge_articles()
+        by_hash = {article["hash"]: article for article in articles}
+        for left, right in (("A", "B"), ("B", "C")):
+            matched, _score, _diag = build_data.issue_similarity(by_hash[left], by_hash[right])
+            self.assertTrue(matched, f"재현 전제가 깨졌다 — {left}-{right} 는 붙어야 한다")
+        matched_ac, _score, diagnostics = build_data.issue_similarity(by_hash["A"], by_hash["C"])
+        self.assertFalse(matched_ac)
+        self.assertTrue(diagnostics["story_fingerprint_contested"],
+                        "재현 전제가 깨졌다 — A 와 C 는 어긋난 축이 있어야 한다")
+
+        issues = build_data.cluster_selected_articles(articles)
+        together = [
+            [member["hash"] for member in issue["members"]]
+            for issue in issues
+            if {"A", "C"} <= {member["hash"] for member in issue["members"]}
+        ]
+        self.assertEqual(together, [], f"A 와 C 가 B 를 경유해 한 이슈가 됐다: {issues}")
+
+    def test_a_strong_match_still_chains(self):
+        """과교정 방지 — 제목·태그로 붙는 A→B→C 후속 연쇄는 그대로 살아 있어야 한다.
+
+        지문 모순을 **모든 경로**에 거부권으로 걸어 보고 되돌렸다(2026-08-19 실측):
+        테라파워 국내 협력 12건이 5개로, 체르나보다 저수위 묶음이 2개로 갈렸다.
+        하나의 긴 사건 안에서 원인·대상 축은 원래 움직인다.
+        """
+        articles = [
+            self._article(
+                "a", "2026-07-01", "월성2호기 계속운전 지역지원 체계 검토",
+                ["#월성2호기", "#지역지원"],
+                self._fingerprint(["KHNP"], ["Wolsong 2"], ["license renewal"])),
+            self._article(
+                "b", "2026-07-02", "월성2호기 지역지원 제도와 주민수용성 논의",
+                ["#월성2호기", "#지역지원", "#주민수용성"],
+                self._fingerprint(["KHNP"], ["Wolsong 2"], ["public acceptance"])),
+            self._article(
+                "c", "2026-07-03", "월성2호기 주민수용성 확보 위한 상생기금 협의",
+                ["#월성2호기", "#주민수용성"],
+                self._fingerprint(["KHNP"], ["Wolsong 2"], ["community fund"])),
+        ]
+        issues = build_data.cluster_selected_articles(articles)
+        self.assertEqual(len(issues), 1, f"지문 표현 차이로 정상 후속이 갈렸다: {issues}")
+        self.assertEqual([member["hash"] for member in issues[0]["members"]], ["a", "b", "c"])
+
+    def test_manual_approval_beats_the_chain_gate(self):
+        """운영 콘솔의 [잇기]는 자동 게이트보다 위다 — 그러라고 만든 파일이다."""
+        articles = self._bridge_articles()
+        pair = build_data._pair_id
+        overrides = {
+            "approved": {pair("A", "C"), pair("B", "C")},
+            "rejected": set(), "llm_approved": set(), "llm_rejected": set(),
+        }
+        issues = build_data.cluster_selected_articles(articles, None, None, overrides, [])
+        self.assertEqual(len(issues), 1, f"사람이 이으라고 눌렀는데 갈렸다: {issues}")
+
+    def test_a_member_without_a_fingerprint_is_not_a_contradiction(self):
+        """지문이 없는 멤버가 섞여 있다고 해서 합류가 막히면 안 된다(없음 ≠ 모순)."""
+        article = self._article(
+            "x", "2026-08-03", "정부, 저장장치 보급 확대 방안 발표", ["#ESS"],
+            self._fingerprint(["Ministry of Energy"], ["Storage"], ["output control"]))
+        members = [{"hash": "y", "title_kr": "다른 기사", "tags": [], "countries": ["KR"]}]
+        self.assertFalse(build_data._cluster_fingerprint_conflict(article, members))
 
 
 class RenderSmokeContractTests(unittest.TestCase):
