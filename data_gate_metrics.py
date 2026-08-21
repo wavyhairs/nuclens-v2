@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import os
+import statistics
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -39,6 +40,7 @@ KST = timezone(timedelta(hours=9))
 
 sys.path.insert(0, str(ROOT / "web"))
 import build_data  # noqa: E402  — 주별 집계 규칙을 재구현하지 않고 그대로 쓴다
+import issue_candidate_stats  # noqa: E402  — 임계값을 재구현하지 않고 그대로 쓴다
 
 # 아래 셋은 web/public/app.js 의 같은 이름 상수를 옮긴 것이다. 여기서 재는 것은
 # "데이터가 나쁜가"가 아니라 **"화면이 입을 다무는가"** 라서, 값이 어긋나면
@@ -52,6 +54,12 @@ TOPIC_FLOW_MAX_WEEKS = 4
 TRACKING_RATE_TARGET = 0.20
 
 RECORD_TYPE = "data_quality_gate"
+# 병합률 표류를 재는 기준선 창. 하루치와 비교하면 뉴스가 한산한 날마다 울린다 —
+# 추적률 게이트가 TRACKING_WINDOW_BRIEFINGS 로 이미 배운 함정이다. 중앙값을
+# 쓰는 것도 같은 이유다(한 회차가 튀어도 기준선이 따라가지 않는다).
+CANDIDATE_BASELINE_RECORDS = 7
+CANDIDATE_BASELINE_MIN = 3
+CANDIDATE_DRIFT_KEYS = ("merge_rate", "evidence_attach_rate", "evidence_share")
 
 
 def _load(name: str):
@@ -116,6 +124,80 @@ def measure_topic_weeks(catalog: list[dict], briefings: list[dict]) -> dict:
     }
 
 
+def previous_candidate_records(path: Path | None = None,
+                               limit: int = CANDIDATE_BASELINE_RECORDS) -> list[dict]:
+    """앞선 회차의 후보 지표. 표류를 재려면 **어제의 나**가 필요하다.
+
+    delivery_log 는 이미 하루 한 줄씩 이 레코드를 쌓고 있다. 별도 상태 파일을
+    새로 만들지 않는 이유는, 파일이 늘면 커밋 경로도 늘고 그 경로가 깨졌을 때
+    조용히 기준선이 사라지기 때문이다.
+    """
+    path = path or DELIVERY_LOG
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeError):
+        return []
+    out: list[dict] = []
+    for line in reversed(lines):
+        if '"data_quality_gate"' not in line:
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        candidates = record.get("issue_candidates") if isinstance(record, dict) else None
+        if isinstance(candidates, dict) and candidates.get("applicable"):
+            out.append(candidates)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def candidate_baseline(history: list[dict]) -> dict:
+    """기준선은 **중앙값**이다. 평균을 쓰면 한 회차의 사고가 기준선을 끌고 간다."""
+    baseline: dict = {}
+    for key in CANDIDATE_DRIFT_KEYS:
+        values = [float(row[key]) for row in history
+                  if isinstance(row.get(key), (int, float))]
+        if len(values) >= CANDIDATE_BASELINE_MIN:
+            baseline[key] = round(statistics.median(values), 4)
+    return baseline
+
+
+def measure_issue_candidates(audit: dict | None, history: list[dict]) -> dict:
+    """후보 생성이 평소와 같은가. **판정 임계값은 issue_candidate_stats 가 갖는다.**
+
+    build_data 는 회차 안의 사실(컷 여유·Top-N 보존)만 보고 경고했다. 여기서
+    하나 더 볼 수 있는 것이 **회차 사이의 변화**다 — 병합률이 어제와 크게
+    다르면 수집·임베딩·병합 중 무엇이 움직인 것이고, 그건 하루치 안에서는
+    보이지 않는다.
+    """
+    diagnostics = (audit or {}).get("candidate_diagnostics")
+    if not isinstance(diagnostics, dict) or not diagnostics.get("bands"):
+        return {"applicable": False, "reason": "candidate_diagnostics 없음"}
+    baseline = candidate_baseline(history)
+    bands = diagnostics.get("bands") or {}
+    guards = issue_candidate_stats.guardrails(diagnostics, baseline=baseline)
+    return {
+        "applicable": True,
+        "candidate_total": bands.get("total") or 0,
+        "review_band_total": bands.get("review_band_count") or 0,
+        "evidence_share": diagnostics.get("evidence_share"),
+        "merge_rate": diagnostics.get("merge_rate"),
+        "evidence_attach_rate": diagnostics.get("evidence_attach_rate"),
+        "baseline": baseline,
+        "baseline_records": len(history),
+        "preselect": [
+            {"path": space.get("path"), **(space.get("preselect_rank") or {})}
+            for space in diagnostics.get("search_space") or []
+        ],
+        "top_n_retention": (diagnostics.get("top_n_retention") or {}).get("levels") or [],
+        # build_data 가 회차 안에서 찾은 것 + 여기서 표류로 찾은 것. 운영 알림은
+        # 이 목록 하나만 읽는다(operational_monitoring.data_gate_signals).
+        "guards": guards,
+    }
+
+
 def build_record(now: datetime | None = None) -> dict | None:
     meta = _load("meta.json")
     catalog = _load("issues.json")
@@ -136,6 +218,8 @@ def build_record(now: datetime | None = None) -> dict | None:
         "tracking": measure_tracking(meta),
         "topic_weeks": measure_topic_weeks(catalog, briefings),
         "archive_quality": meta.get("archive_quality") or {},
+        "issue_candidates": measure_issue_candidates(
+            _load("issue_audit.json"), previous_candidate_records()),
     }
 
 
@@ -173,6 +257,28 @@ def report(record: dict) -> None:
     if archive_quality.get("sanitized"):
         print(f"::warning::아카이브 기사 {archive_quality['sanitized']}건의 잘못된 사건일 등 "
               "무결성 필드를 정제했다 (배포는 계속한다)")
+
+    candidates = record.get("issue_candidates") or {}
+    if not candidates.get("applicable"):
+        print("[data-gate] 후보 진단 측정 대상 아님 — "
+              f"{candidates.get('reason') or '이 회차 기록에 후보 진단이 없다'}")
+        return
+    ranks = " / ".join(
+        f"{row.get('path')} p99 {row.get('p99')}위·컷밖 {row.get('beyond_cut')}건"
+        for row in candidates.get("preselect") or []
+    )
+    print(f"[data-gate] 검수 후보 {candidates['candidate_total']}건 "
+          f"(밴드 {candidates['review_band_total']}건 · evidence {candidates['evidence_share']}) "
+          f"· 카드 병합률 {candidates['merge_rate']} "
+          f"· 부착률 {candidates['evidence_attach_rate']} "
+          f"· 기준선 {candidates['baseline'] or '없음'}({candidates['baseline_records']}회차)")
+    if ranks:
+        print(f"[data-gate] 어휘 예선 정답 순위 — {ranks}")
+    # 여기서도 종료 코드는 바꾸지 않는다. 알림은 operational_alerts 가 보낸다.
+    for guard in candidates.get("guards") or []:
+        level = "error" if guard.get("severity") == "critical" else "warning"
+        print(f"::{level}::[{guard.get('id')}] {guard.get('title')} — "
+              f"{guard.get('detail')} (배포는 계속한다)")
 
 
 def main() -> int:

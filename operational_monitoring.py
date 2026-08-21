@@ -440,6 +440,38 @@ def data_gate_signals(record: Mapping | None) -> list[AlertSignal]:
             observation_id=observation_id, min_occurrences=2,
         ))
 
+    # 이슈 병합 후보 감시. 판정은 issue_candidate_stats.guardrails 가 이미 했고
+    # 여기서는 **전달만** 한다 — 임계값이 두 곳에 있으면 반드시 어긋난다.
+    #
+    # 부르는 속도를 심각도로 가른다 — 이 기록은 **하루 한 번**만 생긴다
+    # (data_gate_metrics 는 daily-brief 에서만 돈다). 그래서 min_occurrences=2 는
+    # '내일 다시 보고'가 아니라 **이틀 뒤**라는 뜻이다.
+    #
+    #   warning  — 아직 잃은 것은 없고 여유가 줄었다는 신호다. 하루치 후보 분포는
+    #              그날 수집량을 따라 흔들리므로 한 회차만 보고 부르면 한산한 날마다
+    #              울린다(추적률 게이트에서 이미 치른 대가다). 이틀 연속일 때 부른다.
+    #   critical — 계획한 컷이 **지금 실제로 병합을 놓치고 있다**. 표본 하한(50건)과
+    #              비율 판정을 이미 통과한 값이라 그날 수집량 문제가 아니다.
+    #              하루를 더 기다리면 그 하루치 병합을 그냥 잃는다.
+    #
+    # 같은 원리가 quality:curation-failure 에 이미 있다(유실 10건 이상이면 즉시).
+    candidates = record.get("issue_candidates")
+    if isinstance(candidates, Mapping) and candidates.get("applicable"):
+        for guard in candidates.get("guards") or []:
+            if not isinstance(guard, Mapping):
+                continue
+            key = str(guard.get("id") or "").strip()
+            if not key:
+                continue
+            severity = str(guard.get("severity") or "warning")
+            out.append(AlertSignal(
+                key=key, scope="data_gate", severity=severity,
+                title=str(guard.get("title") or "이슈 병합 후보 감시"),
+                detail=str(guard.get("detail") or ""),
+                observation_id=observation_id,
+                min_occurrences=1 if severity == "critical" else 2,
+            ))
+
     weeks = record.get("topic_weeks")
     if isinstance(weeks, Mapping):
         hidden = []

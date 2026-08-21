@@ -48,6 +48,17 @@
 gh run download <run-id> -n issue-audit-full     # daily-brief 가 하루 한 벌
 ```
 
+아티팩트 **안에서는 파일이 최상위**다(`issue_audit.full.json`) — `web/_audit/`
+경로로 찾으면 없다. 아티팩트를 열기 전에 빌드 로그의
+`[issue_audit] artifact-ready` 블록에서 개수·크기·경로를 먼저 본다.
+
+**후보 수와 검수 대상은 다른 수다.** 후보 기록은 코사인 0.70 부터이고 LLM 이
+판정하는 것은 0.84~0.92 뿐이다 — 2026-08-21 실측 32,416건 중 밴드 안은 845건
+(2.6%)이었다. 그래서 "후보가 많다"는 이유만으로 0.70 을 올리지 않는다. 어디서
+몇 개가 나는지는 `issue_audit.json` 의 `candidate_diagnostics` 에 **자르기 전
+전수 기준**으로 들어 있고, 컷의 여유가 사라지면 `guards` 가 워크플로 경고와
+운영 알림으로 올라온다(자세한 것은 `docs/AS_IS.md` §진단 요령).
+
 판단한 쌍은 `issue_match_overrides.json` 의 `approved`/`rejected` 에 두 해시와
 근거를 기록하면 다음 빌드부터 재현된다.
 

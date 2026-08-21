@@ -271,6 +271,74 @@ class QualitySignalTests(unittest.TestCase):
         self.assertIn("격리 2건", signals[0].detail)
         self.assertIn("정제 3건", signals[0].detail)
 
+    def test_issue_candidate_guards_reach_the_administrator(self):
+        """후보 감시는 **판정을 여기서 다시 하지 않는다.** issue_candidate_stats 가
+        이미 내린 결론을 전달만 한다 — 임계값이 두 곳에 있으면 반드시 어긋난다.
+        """
+        signals = monitor.data_gate_signals({
+            "observation_id": "github-run:200",
+            "tracking": {"applicable": False}, "topic_weeks": {},
+            "issue_candidates": {
+                "applicable": True,
+                "guards": [
+                    {"id": "issue-candidate:preselect-headroom", "severity": "critical",
+                     "title": "어휘 예선 컷 20 이 실제 병합을 놓친다 (evidence)",
+                     "detail": "컷 밖으로 밀린 병합 16건 / 400건"},
+                    {"id": "issue-candidate:merge-rate-drift", "severity": "warning",
+                     "title": "카드 병합률이 최근 회차와 크게 다르다", "detail": "-47%"},
+                ],
+            },
+        })
+        self.assertEqual(["issue-candidate:preselect-headroom",
+                          "issue-candidate:merge-rate-drift"],
+                         [signal.key for signal in signals])
+        self.assertEqual(["critical", "warning"], [signal.severity for signal in signals])
+        self.assertTrue(all(signal.scope == "data_gate" for signal in signals))
+        # 이 기록은 **하루 한 번**만 생긴다(data_gate_metrics 는 daily-brief 전용).
+        # 그래서 부르는 속도를 심각도로 가른다: 이미 병합을 놓치고 있는 critical 은
+        # 즉시, 여유가 줄었다는 warning 은 이틀 연속일 때.
+        self.assertEqual([1, 2], [signal.min_occurrences for signal in signals])
+
+    def test_a_quiet_candidate_run_sends_nothing(self):
+        signals = monitor.data_gate_signals({
+            "observation_id": "github-run:201",
+            "tracking": {"applicable": False}, "topic_weeks": {},
+            "issue_candidates": {"applicable": True, "guards": []},
+        })
+        self.assertEqual([], signals)
+
+    def test_a_desynced_telemetry_pages_on_the_first_run(self):
+        """계측이 루프와 어긋나면 그 회차 수치 전체를 못 믿는다 — 하루 기다릴 일이 아니다."""
+        signals = monitor.data_gate_signals({
+            "observation_id": "github-run:202",
+            "tracking": {"applicable": False}, "topic_weeks": {},
+            "issue_candidates": {"applicable": True, "guards": [
+                {"id": "issue-candidate:telemetry-desync", "severity": "critical",
+                 "title": "후보 계측이 루프와 어긋났다", "detail": "4건"},
+            ]},
+        })
+        self.assertEqual(1, signals[0].min_occurrences)
+
+    def test_a_warning_waits_one_more_day_before_paging(self):
+        """여유가 줄었다는 신호는 하루 흔들림일 수 있다. 이틀 연속일 때 부른다."""
+        signals = monitor.data_gate_signals({
+            "observation_id": "github-run:203",
+            "tracking": {"applicable": False}, "topic_weeks": {},
+            "issue_candidates": {"applicable": True, "guards": [
+                {"id": "issue-candidate:preselect-headroom", "severity": "warning",
+                 "title": "어휘 예선 컷 20 의 여유가 줄었다 (evidence)", "detail": "p99 15위"},
+            ]},
+        })
+        self.assertEqual(2, signals[0].min_occurrences)
+
+    def test_a_record_from_before_the_diagnostics_existed_is_ignored(self):
+        """delivery_log 에 이미 쌓인 옛 기록에는 이 칸이 없다. 그것이 알림이 되면
+        도입 첫날 과거 회차 전부가 한꺼번에 운다."""
+        signals = monitor.data_gate_signals({
+            "observation_id": "old", "tracking": {"applicable": False}, "topic_weeks": {},
+        })
+        self.assertEqual([], signals)
+
     def test_insufficient_topic_window_does_not_alert(self):
         signals = monitor.data_gate_signals({
             "generated_at": "x", "tracking": {"applicable": False},

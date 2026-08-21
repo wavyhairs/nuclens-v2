@@ -495,7 +495,71 @@ gh run download <run-id> -n issue-audit-full     # daily-brief 가 하루 한 �
 ```
 
 배포본에 `review_candidates_truncated: true`가 있으면 잘린 것이고, 전수 개수는
-`review_candidate_total`에 있다.
+`review_candidate_total`에 있다. 아티팩트 **안에서는 파일이 최상위**다
+(`issue_audit.full.json`) — `web/_audit/` 경로로 찾으면 없다.
+
+### 0.70과 0.84는 다른 일을 하는 두 개의 선이다
+
+이 둘을 섞으면 "후보가 많으니 0.70을 올리자"가 반복해서 나온다. 하는 일이 다르다.
+
+| 선 | 상수 | 하는 일 | 넘으면 |
+|---|---|---|---|
+| 0.70 | `ISSUE_EMBEDDING_CANDIDATE_THRESHOLD` | 후보를 **기록**한다 | audit 에 줄이 하나 생긴다 |
+| 0.84 | `issue_review.REVIEW_BAND_LOW` | LLM 이 **판정**한다 | 같은 사건인지 물어본다 |
+| 0.92 | `ISSUE_EMBEDDING_THRESHOLD` | **자동 병합**한다 | 후보가 되지 않고 붙는다 |
+
+2026-08-21 실측: 후보 32,416건 중 밴드 `[0.84, 0.92)` 안은 **845건(2.6%)** 뿐이고
+나머지 31,571건은 LLM 도 콘솔(`merges.json` 상위 40건)도 집어 들지 않는다. 즉
+**후보 수가 늘어나는 것과 검수할 것이 늘어나는 것은 다른 이야기다.**
+
+0.82~0.84 를 밴드에 넣자는 제안은 두 번 실측으로 기각됐다(2026-08-03 · 08-06,
+`issue_review.py` 모듈 docstring). 그 아래 구간은 더 그렇다.
+
+### 후보가 어디서 나는지 — `candidate_diagnostics`
+
+`issue_audit.json` 의 `candidate_diagnostics` 가 **자르기 전 전수 기준**으로
+경로·점수대·비교 폭을 담는다(크기 O(1) 이라 배포본에도 그대로 실린다).
+
+* `bands` — 요청한 구간별 후보 수와 evidence/card 분해
+* `search_space` — 경로별 `이슈방문 → 클러스터비교 → 쌍채점`, 어느 게이트가 얼마나 걷는지,
+  그리고 **어휘 예선에서 정답 묶음이 몇 위였나**(`preselect_rank`)
+* `prefilter_shadow` — 사전차단을 걸었다면 후보가 몇 건 줄고 **실제 병합을 몇 건 잃는지**
+* `top_n_retention` — 기사당 Top-N 이 `llm_approved` 병합을 몇 % 지키는지
+* `guards` — 아래 감시가 찾은 것. 평소엔 빈 배열이다
+
+빌드 로그의 `[issue_audit] artifact-ready` 블록에 개수·크기·경로가 한 덩어리로
+찍히므로, 아티팩트를 열기 전에 거기서 먼저 확인한다.
+
+### 감시 — 평소엔 조용하고, 여유가 사라졌을 때만 말한다
+
+이 수치를 매 회차 사람이 열어 보게 하면 결국 아무도 안 본다. 그래서 세 가지만
+`::warning::`/`::error::` 와 운영 알림(텔레그램 관리자 채팅)으로 올린다.
+
+| 감시 | 언제 우는가 | 상수 |
+|---|---|---|
+| `issue-candidate:preselect-headroom` | 어휘 예선 컷(20) 밖으로 밀린 정답이 1%↑ (3%↑면 critical). 그 전에 p99 가 14위에 닿으면 warning | `GUARD_LIMITS` |
+| `issue-candidate:topn-retention` | 기사당 Top-10 이 `llm_approved` 병합을 하나라도 놓칠 때 | 〃 |
+| `issue-candidate:*-drift` | 카드 병합률·부착률·evidence 비중이 최근 7회차 **중앙값** 대비 ±30%(비중은 ±15%) 벗어날 때 | 〃 |
+
+**`max` 로 걸지 않는다.** 표본 하나가 튀면 매 회차 울고, 매 회차 우는 알림은
+진짜일 때도 안 읽힌다. 그래서 "컷 밖으로 실제로 밀린 비율"(`beyond_cut_share`)과
+p99 로 본다. 표본이 50건 미만이면 아예 판단하지 않는다 — 뉴스가 한산한 날의
+분모 문제는 추적률 게이트에서 이미 겪었다.
+
+두 갈래로 나간다. **워크플로 주석은 매 빌드**(crawl 하루 8회 + deploy-web +
+daily-brief)에 회차 안의 사실 두 가지를 찍고, **텔레그램 관리자 알림은 하루 한 번**
+— 표류는 어제와 비교해야 하고 그 기록(`delivery_log.jsonl` 의 `data_quality_gate`)을
+만드는 `data_gate_metrics.py` 가 daily-brief 에서만 돌기 때문이다.
+
+기록이 하루 한 벌이므로 `min_occurrences=2` 는 '내일'이 아니라 **이틀 뒤**를 뜻한다.
+그래서 부르는 속도를 심각도로 가른다 — `critical`(컷이 지금 병합을 놓치고 있다)은
+즉시, `warning`(여유가 줄었다)은 이틀 연속일 때. 같은 원리가
+`quality:curation-failure` 에 이미 있다(유실 10건 이상이면 즉시).
+
+임계값은 `issue_candidate_stats.GUARD_LIMITS` 한 곳에만 있다. 알림 키(`id`)는
+중복 억제 키라 바꾸면 쿨다운이 끊긴다.
+
+**종료 코드는 바꾸지 않는다.** 배포를 막는 게이트가 아니라 계측이다.
 
 ---
 

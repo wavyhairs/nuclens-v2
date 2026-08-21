@@ -371,6 +371,11 @@ jobs:
       # **하루 한 벌만** 남긴다. 비공개 저장소라 아티팩트가 계정 용량을 먹는데,
       # 크롤은 3시간마다 돌아 하루 8벌이 되고 그 여덟은 사실상 같은 데이터다.
       # 나머지 회차는 배포가 깨졌을 때만 올린다(그때가 실제로 필요한 때다).
+      #
+      # 아티팩트 **안에서는 파일이 최상위**다. upload-artifact 가 매칭 파일들의
+      # 공통 조상을 루트로 잡으므로 `web/_audit/` 경로는 남지 않는다 — 받아서
+      # 그 경로로 찾으면 없다. 앞 스텝의 `[issue_audit] artifact-ready` 블록에
+      # 개수·크기·경로가 찍히니 아티팩트를 열기 전에 거기서 먼저 확인할 것.
       - name: Upload full issue audit
         if: always() && steps.web-build.outcome == 'success'
         uses: actions/upload-artifact@v4
