@@ -78,6 +78,11 @@ class BandTableTests(unittest.TestCase):
 
 
 class TopNRetentionTests(unittest.TestCase):
+    def test_the_measured_levels_cover_the_gap_between_ten_and_twenty(self):
+        """"승인 병합 100% 를 지키는 가장 작은 N" 을 고르려면 그 사이가 있어야 한다 —
+        러너 실측에서 Top-10 이 165건 중 1건을 놓쳤으니 답은 10 과 20 사이다."""
+        self.assertEqual(stats.TOP_N_CHOICES, (3, 5, 10, 12, 15, 20))
+
     def test_retention_never_falls_as_n_grows(self):
         rows = [candidate(0.9 - i / 100, article="a1") for i in range(12)]
         rows += [candidate(0.86, article="a2")]
@@ -136,6 +141,36 @@ class PreselectRankTests(unittest.TestCase):
 
 class GuardrailTests(unittest.TestCase):
     """평소엔 빈 리스트가 정상이다. 여기서 잠그는 것은 '언제 우는가'다."""
+
+    def test_only_the_paths_we_plan_to_cut_are_guarded(self):
+        """적용하지도 않을 컷을 두고 우는 알림은 배경 소음이 된다.
+
+        2026-08-21 러너 첫 회차에서 실제로 그랬다 — card 경로가 컷 20 에서
+        1.6% 를 잃는다고 경고했는데, 계획은 evidence 경로만 자르는 것이다.
+        값은 계속 재되(`preselect_rank` 에 남는다) 알림은 안 건다.
+        """
+        breach = stats.preselect_rank_summary(Counter({0: 100, 25: 40}), Counter())
+        diag = {
+            "search_space": [{"path": "card", "preselect_rank": breach},
+                             {"path": "evidence", "preselect_rank": breach}],
+            "top_n_retention": {"llm_approved_total": 0, "levels": []},
+        }
+        found = stats.guardrails(diag)
+        self.assertEqual([row["id"] for row in found],
+                         ["issue-candidate:preselect-headroom"])
+        self.assertIn("(evidence)", found[0]["title"])
+        self.assertNotIn("card", found[0]["title"])
+
+    def test_desync_is_reported_on_any_path(self):
+        """계측 무결성은 컷 계획과 무관하다 — 어느 경로든 수치를 못 믿게 만든다."""
+        broken = stats.preselect_rank_summary(Counter({0: 100}), Counter())
+        broken["not_in_table"] = 3
+        found = stats.guardrails({
+            "search_space": [{"path": "card", "preselect_rank": broken}],
+            "top_n_retention": {"llm_approved_total": 0, "levels": []},
+        })
+        self.assertEqual([row["id"] for row in found],
+                         ["issue-candidate:telemetry-desync"])
 
     @staticmethod
     def diagnostics(ranks, *, path="evidence", landed_extra=None, **rest):

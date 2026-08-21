@@ -48,7 +48,15 @@ BANDS: tuple[tuple[float, float], ...] = (
 REVIEW_BAND = (0.84, 0.92)
 # 기사당 몇 건까지 남길지 실험할 값들. 여기서 고르는 것이 아니라 **보존율을
 # 재는 것**이 목적이다 — 자르는 것은 다음 PR 이 데이터를 보고 정한다.
-TOP_N_CHOICES: tuple[int, ...] = (3, 5, 10, 20)
+#
+# 12·15 는 "승인 병합 100% 를 지키는 가장 작은 N" 을 고르려고 넣었다. 5 와 10
+# 사이가 아니라 10 과 20 사이가 비어 있었는데, 러너 실측에서 Top-10 이 165건 중
+# 1건을 놓쳤다(99.4%) — 답이 그 사이에 있다는 뜻이다.
+#
+# **이 계산은 빌드 안에서 해야 한다.** 아티팩트를 받아 나중에 재면 정답지가
+# 모자란다: 배포본·전수 덤프의 `clusters` 는 카드 멤버 2건 이상인 이슈만 담아
+# 실측 546건 중 385건만 보인다. 빌드 안에서는 `match_diagnostics` 전량을 본다.
+TOP_N_CHOICES: tuple[int, ...] = (3, 5, 10, 12, 15, 20)
 
 
 class SearchTelemetry:
@@ -462,10 +470,25 @@ def candidate_breadth(rows: list[dict]) -> dict:
 # ("측정은 배포를 막지 않는다")을 그대로 따른다.
 #
 # 컷 값은 다음 PR 이 실제로 쓸 값이다. 여기서는 **그 값이 아직 안전한지**만 잰다.
-GUARD_LIMITS: dict[str, float] = {
+GUARD_LIMITS: dict[str, object] = {
     # 어휘 예선에서 몇 개 묶음까지 남길 계획인가. 2026-08-21 실측 최대 순위는
     # 14위였고, 20 은 그 위에 6칸 여유를 둔 값이다.
     "preselect_cut": 20,
+    # **어느 경로에 그 컷을 걸 계획인가.** 여기 없는 경로는 재기만 하고 알리지
+    # 않는다 — 적용하지도 않을 컷을 두고 우는 알림은 배경 소음이 되고, 그러면
+    # 진짜일 때도 안 읽힌다.
+    #
+    # evidence 뿐인 이유: 근거 부착은 설계상 카드 묶음을 바꾸지 못하고
+    # (`assert_card_clusters_unchanged` 가 빌드 게이트로 잠가 뒀다) 쌍 채점의
+    # 93% 를 차지한다. 카드 경로는 독자가 보는 묶음을 만드는 자리이고 전체의
+    # 6.9% 라 얻는 것도 적다.
+    #
+    # 실측이 그 분리를 지지한다(2026-08-21 러너, 전수):
+    #     evidence  정답 순위 p99  8위 · 표본 423건 → 컷 20 에 여유가 있다
+    #     card      정답 순위 p99 24위 · 표본 123건 → 같은 컷이면 1.6% 를 잃는다
+    # 카드 경로의 예선이 훨씬 약하다는 것 자체가 "카드는 건드리지 말자"의 근거다.
+    # 값은 계속 `search_space[].preselect_rank` 에 남으므로 언제든 다시 볼 수 있다.
+    "preselect_guarded_paths": ("evidence",),
     # 컷의 70%(=14위)를 **p99 가** 건드리면 여유가 사실상 없다. 그때 알린다 —
     # 컷을 넘긴 뒤에 알리면 이미 병합을 놓친 회차다.
     "preselect_headroom_ratio": 0.70,
@@ -511,6 +534,10 @@ def guardrails(diagnostics: dict, *, baseline: dict | None = None,
                 f"이 회차의 예선 순위 수치를 믿으면 안 된다.",
             ))
         landed = int(rank.get("landed") or 0)
+        # 계측 무결성(desync)은 경로를 가리지 않는다 — 위에서 이미 봤다.
+        # 컷 여유는 **그 컷을 걸 경로에서만** 묻는다.
+        if path not in tuple(limits["preselect_guarded_paths"] or ()):
+            continue
         if landed < int(limits["preselect_min_sample"]):
             continue
         loss = float(rank.get("beyond_cut_share") or 0)
