@@ -1324,6 +1324,72 @@ class IssueSimilarityTests(unittest.TestCase):
         self.assertEqual(sum(len(issue.get("evidence_members") or []) for issue in issues), 1)
 
 
+class DeployablePayloadTests(unittest.TestCase):
+    """배포 산출물이 Cloudflare Pages 의 파일 상한 안에 있는가.
+
+    Pages 는 **파일 하나가 25 MiB** 를 넘으면 배포 전체를 거부한다. 부분 실패가
+    아니라 전부 실패다 — 화면도 데이터도 옛것으로 굳고, 라이브만 보면 아무 일도
+    없었던 것처럼 보인다. 2026-08-21 06:48 UTC 크롤이 여기 걸려 그날 오후까지
+    라이브가 멈춰 있었고, 원인(`issue_audit.json` 27 MiB)은 워크플로 로그를
+    열어야만 보였다.
+
+    넘긴 파일이 하필 **아무도 안 읽는** 진단 덤프였다는 게 이 게이트의 이유다.
+    화면(app.js)도 콘솔(admin.js)도 issue_audit.json 을 읽지 않는다. 크기가
+    제품 가치와 무관하게 자라는 파일이 배포를 세우는 구조라, 자라는 쪽이 아니라
+    **배포되는 쪽**에 상한을 둔다.
+    """
+
+    # Cloudflare Pages 의 실제 상한. 여유는 아래 WARN 비율로 따로 본다.
+    PAGES_FILE_LIMIT = 25 * 1024 * 1024
+
+    def test_no_generated_file_exceeds_the_pages_limit(self):
+        oversized = [
+            (path.name, path.stat().st_size)
+            for path in sorted(DATA_DIR.glob("*.json"))
+            if path.stat().st_size > self.PAGES_FILE_LIMIT
+        ]
+        self.assertEqual(oversized, [], (
+            "Cloudflare Pages 파일 상한 25 MiB 초과 — 배포가 통째로 거부된다: "
+            + ", ".join(f"{name} {size / 1024 / 1024:.1f} MiB" for name, size in oversized)))
+
+    def test_audit_review_candidates_are_capped(self):
+        """상한이 실제로 걸려 있는가. 목록은 점수 내림차순이라 앞이 상위다."""
+        audit = json.loads((DATA_DIR / "issue_audit.json").read_text(encoding="utf-8"))
+        rows = audit.get("review_candidates") or []
+        self.assertLessEqual(len(rows), build_data.AUDIT_REVIEW_CANDIDATE_LIMIT)
+        # 자른 뒤에도 '몇 건이었나'는 남아야 한다 — 개수가 조용히 줄면 다음 사람이
+        # 후보가 마른 줄 알고 엉뚱한 곳을 판다.
+        total = audit.get("review_candidate_total")
+        self.assertIsNotNone(total, "review_candidate_total 이 없다")
+        self.assertGreaterEqual(total, len(rows))
+
+    def test_the_console_window_survives_the_cap(self):
+        """콘솔이 보는 '경계선' 40건은 상한과 무관하게 그대로여야 한다.
+
+        merges.json 은 점수 상위 40건만 싣는다. 상한(5,000)이 그보다 훨씬 크므로
+        자르기가 콘솔 화면을 바꿔서는 안 된다 — 바뀌면 상한이 너무 낮은 것이다.
+        """
+        self.assertGreater(build_data.AUDIT_REVIEW_CANDIDATE_LIMIT, 40 * 10)
+        audit = json.loads((DATA_DIR / "issue_audit.json").read_text(encoding="utf-8"))
+        full = {**audit, "review_candidates": list(audit.get("review_candidates") or [])}
+        capped = build_data.shipped_issue_audit(full)
+        now = datetime.now(timezone(timedelta(hours=9)))
+        news = json.loads((DATA_DIR / "news.json").read_text(encoding="utf-8"))
+        issues = json.loads((DATA_DIR / "issues.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            build_data.build_admin_merges(news, issues, capped, now)["issue"]["borderline"],
+            build_data.build_admin_merges(news, issues, full, now)["issue"]["borderline"])
+
+    def test_trimming_does_not_touch_the_original(self):
+        """전수는 meta·콘솔 totals 가 세야 한다 — 원본을 깎으면 그 숫자가 거짓말한다."""
+        original = {"review_candidates": [{"candidate_score": 1.0}] * 6000, "clusters": []}
+        shipped = build_data.shipped_issue_audit(original)
+        self.assertEqual(len(original["review_candidates"]), 6000)
+        self.assertEqual(len(shipped["review_candidates"]),
+                         build_data.AUDIT_REVIEW_CANDIDATE_LIMIT)
+        self.assertEqual(shipped["review_candidate_total"], 6000)
+
+
 class StoryFingerprintMatchTests(unittest.TestCase):
     """지문(story fingerprint)만으로 이슈를 잇는 경로의 계약.
 
