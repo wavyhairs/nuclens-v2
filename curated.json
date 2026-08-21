@@ -366186,5 +366186,680 @@
     },
     "hash": "41bcb744a605e31e",
     "published_at": ""
+  },
+  "04b05906e2b59c52": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "프랑스, 대기업 법인세 추가 과세 연장 검토",
+    "summary": "프랑스 정부가 2027년 예산안의 일환으로 대기업 대상 법인세 추가 과세 조치를 연장하는 방안을 검토 중이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-21T19:32:24.985224+00:00",
+    "title": "Budget 2027 : la surtaxe sur les bénéfices des grandes entreprises pourrait être prolongée",
+    "link": "https://news.google.com/rss/articles/CBMi9wFBVV95cUxOUVBoXzluMV9UMjg2eXNzbnJkVDZNODRyYk54c2dYdEo0aU94NHFJV2F4TjdMMW5wWDZQQmdQZWx6elNMelA0aUVsYlViV2JNd0hFM3hYOW1ubkFDZWNXZHU1U1VwMjZMVzNpMl9jejR5TDlWUnJodTkyV09yYVJ3Mkh5OGtTMDUycWhQLXhHb19iQnA3Z1laNzNYVWVJcnN2cWNnUDZpeXQ1dzVlazZMSWU0bDMyc29CRXBtcnJjNVJmT0ROV3I4LWR3SzhQTzVISFVJN01qRFpEdldrM2xGVWxEUWRBd01nTGN4bk1qT3Rhdk1xdU1z?oc=5",
+    "feed": "정책",
+    "domain": "latribune.fr",
+    "matched": "La Tribune 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "04b05906e2b59c52",
+      "source_components": {
+        "article_hash": "04b05906e2b59c52",
+        "title": "13378fc8ef72faae938f61be512c57b1538dac9793400312a983dec8711f751b",
+        "source_excerpt": "781585b7f4b7d9decf75e7d49628c9e7a3bc78c7a1a9b8efe49d30e644277179",
+        "published_at": "744ff703631cb2e6fd17d7ed30b7d893ec853501228f82fe106d11f4166ca009"
+      },
+      "source_fingerprint": "06bfb380d635e8f0ce70b032ca905d6163bf1d6083d7d1f76dbd4fd12fbc8983",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "budget2027"
+      ],
+      "quantities": {},
+      "manifest_fingerprint": "5550d2bfea6c4331ecb48839a5b2f882bed683e6a1fae1051cfe766debee1025"
+    },
+    "verified_source_components": {
+      "article_hash": "04b05906e2b59c52",
+      "title": "13378fc8ef72faae938f61be512c57b1538dac9793400312a983dec8711f751b",
+      "source_excerpt": "781585b7f4b7d9decf75e7d49628c9e7a3bc78c7a1a9b8efe49d30e644277179",
+      "published_at": "744ff703631cb2e6fd17d7ed30b7d893ec853501228f82fe106d11f4166ca009"
+    },
+    "hash": "04b05906e2b59c52",
+    "published_at": "2026-08-21T11:14:13+00:00"
+  },
+  "ca3992537f3681e5": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 1,
+      "market_materiality": 3,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "analysis",
+    "title_kr": "빅테크 AI 인프라 투자 확대, 자체 칩 및 데이터센터 통제 경쟁 가속",
+    "summary": "마이크로소프트가 2026년 설비투자로 1900억 달러를 제시하며, 빅테크 기업들이 엔비디아 의존도를 낮추고 자체 칩과 데이터센터 운영 능력을 강화하는 흐름이 뚜렷해졌다.",
+    "detail": "마이크로소프트는 FY26 3분기 설비투자 319억 달러 중 약 3분의 2를 GPU와 CPU 등 단기 자산에 투입했다. 엔비디아의 데이터센터 매출은 여전히 압도적이나, 마이크로소프트의 마이아 200, 아마존의 그래비톤·트레이니엄 등 자체 실리콘 개발이 가속화되고 있다. 이는 범용 GPU 대체보다는 특정 워크로드 최적화와 공급망 통제력 확보를 위한 전략으로 풀이된다.",
+    "implication": "빅테크의 자체 칩 전환은 엔비디아 수요의 즉각적 축소보다는 대형 고객사의 인프라 통제권 강화와 비용 효율화 전략의 일환으로 해석된다.",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#AI인프라",
+      "#빅테크",
+      "#데이터센터"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-21T19:32:24.985224+00:00",
+    "title": "1900억달러 AI 투자, 자체 칩 경쟁도 가동됐다",
+    "link": "https://www.tokenpost.kr/news/cryptocurrency/395186",
+    "feed": "정책",
+    "domain": "tokenpost.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "ca3992537f3681e5",
+      "source_components": {
+        "article_hash": "ca3992537f3681e5",
+        "title": "2431eca1faa71fe36103836e15ce89e31da17ad9c6d3873a6799e233acd731ba",
+        "source_excerpt": "69e896a9c993f60c3664b1499b3b67aeac0b21cd5292a6146351646a68b8f125",
+        "published_at": "a03c2c64303a6475521757174c509a64e3d8e2ecd48332d8aa0e94bf9e2f16e2"
+      },
+      "source_fingerprint": "f5271fbad37e4f396e8a7f3a42702a94bf9096daeac8fc308cc4659becba4ad6",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "fuel_supply",
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [
+        "1900억달러",
+        "2026년",
+        "265조원",
+        "319억달러",
+        "5000억원",
+        "7월",
+        "29일",
+        "900억달러",
+        "6000억원",
+        "406억달러",
+        "358억달러",
+        "9000억원",
+        "43%",
+        "6월",
+        "75%",
+        "4600억달러",
+        "7000억원",
+        "200억달러",
+        "681억달러",
+        "95조원",
+        "2159억달러",
+        "2000억원",
+        "623억달러",
+        "1937억달러",
+        "fy26",
+        "maia200",
+        "fy2026"
+      ],
+      "quantities": {
+        "%": [
+          "43",
+          "75"
+        ],
+        "년": [
+          "2026"
+        ],
+        "달러": [
+          "190000000000",
+          "193700000000",
+          "20000000000",
+          "215900000000",
+          "31900000000",
+          "35800000000",
+          "40600000000",
+          "460000000000",
+          "62300000000",
+          "68100000000",
+          "90000000000"
+        ],
+        "억원": [
+          "2000",
+          "5000",
+          "6000",
+          "7000",
+          "9000"
+        ],
+        "월": [
+          "6",
+          "7"
+        ],
+        "일": [
+          "29"
+        ],
+        "조원": [
+          "265",
+          "95"
+        ]
+      },
+      "manifest_fingerprint": "04d7708773429166a956e72d15526bf5c7d14669f53447a531336becff51c7cc"
+    },
+    "verified_source_components": {
+      "article_hash": "ca3992537f3681e5",
+      "title": "2431eca1faa71fe36103836e15ce89e31da17ad9c6d3873a6799e233acd731ba",
+      "source_excerpt": "69e896a9c993f60c3664b1499b3b67aeac0b21cd5292a6146351646a68b8f125",
+      "published_at": "a03c2c64303a6475521757174c509a64e3d8e2ecd48332d8aa0e94bf9e2f16e2"
+    },
+    "hash": "ca3992537f3681e5",
+    "published_at": "2026-08-21T14:36:00+00:00"
+  },
+  "8073f5896eba63be": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 2
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "smr",
+      "finance"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "policy",
+    "title_kr": "정부, 반도체 추가세수로 100조 규모 미래대응기금 신설",
+    "summary": "정부가 반도체 호황에 따른 추가 세수를 활용해 AI·SMR 등 7대 미래 기술에 투자할 100조 원 규모의 미래대응기금을 신설한다.",
+    "detail": "기획예산처는 지방교육재정교부금 산정 방식을 개편하고, 반도체발 초과 세수를 별도 기금으로 관리하기로 했다. 박홍근 기획처 장관은 해당 재원을 AI 3대 메가프로젝트와 SMR, 핵융합, 재생에너지 등 7대 미래 기술(SEED) 분야에 집중 투입하겠다고 밝혔다.",
+    "implication": "",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#미래대응기금",
+      "#SMR",
+      "#재정정책"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-21T19:32:24.985224+00:00",
+    "title": "반도체 추가세수로 100조 미래기금 “AI·첨단기술 실탄”",
+    "link": "https://www.joongang.co.kr/article/25455261",
+    "feed": "SMR",
+    "domain": "joongang.co.kr",
+    "matched": "SMR",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "8073f5896eba63be",
+      "source_components": {
+        "article_hash": "8073f5896eba63be",
+        "title": "648a1460d42afca670cad78b989906ce26290810991809b51c3cc9da87f0f5a5",
+        "source_excerpt": "181852eb518eefcc2b5c46cb55224cfa4e8fab98a89344918b069594eb69ea60",
+        "published_at": "c6322b522bfe11f4cfede9673e76eb49cdbee136c88151eebd5c6d8dcf47ebab"
+      },
+      "source_fingerprint": "b3a57aa4132e0ab0bce9ef9eadc8577898a897511e997430c7fe4c236079b125",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "fusion",
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [
+        "21일",
+        "20.79%",
+        "54년",
+        "100조원",
+        "30%",
+        "1972년",
+        "3년",
+        "17개"
+      ],
+      "quantities": {
+        "%": [
+          "20.79",
+          "30"
+        ],
+        "개": [
+          "17"
+        ],
+        "년": [
+          "10",
+          "1972",
+          "3",
+          "54"
+        ],
+        "일": [
+          "21"
+        ],
+        "조원": [
+          "100"
+        ]
+      },
+      "manifest_fingerprint": "52b30178a026c469967dd83062faba7aa959f4647c40fb62312162a220c9a381"
+    },
+    "verified_source_components": {
+      "article_hash": "8073f5896eba63be",
+      "title": "648a1460d42afca670cad78b989906ce26290810991809b51c3cc9da87f0f5a5",
+      "source_excerpt": "181852eb518eefcc2b5c46cb55224cfa4e8fab98a89344918b069594eb69ea60",
+      "published_at": "c6322b522bfe11f4cfede9673e76eb49cdbee136c88151eebd5c6d8dcf47ebab"
+    },
+    "hash": "8073f5896eba63be",
+    "published_at": "2026-08-21T16:42:00+00:00"
+  },
+  "5bd4090b74327348": {
+    "features": {
+      "event_type": "project_milestone",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "smr",
+    "scope": "overseas",
+    "category": "기술",
+    "topics": [
+      "smr"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "칼레이도스(Kaleidos), 아이다호 시험 시설로 이전",
+    "summary": "칼레이도스(Kaleidos)가 아이다호 시험 시설로 이전했다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-21T19:32:24.985224+00:00",
+    "title": "Kaleidos moves to Idaho test facility",
+    "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE9FOTl6RGowTGVTSzhQRzRpUjc5T0JpaWlpcnpNN3dmVXlIUnNnM1E4blpRbERyVU1uejVUX1luRDVKOElSczBkeGFnYzdiMnJYOUNPZDI0V3MydkFyMmg5ODM2LU9IQ1JqZEtfS3RvdmVEUXhGMFB1RmVVVQ?oc=5",
+    "feed": "정책",
+    "domain": "neimagazine.com",
+    "matched": "Nuclear Engineering International",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "5bd4090b74327348",
+      "source_components": {
+        "article_hash": "5bd4090b74327348",
+        "title": "b500e4001c2ae525fcef572090bbcd44b27de2f49867e002fe69bd5b20da0319",
+        "source_excerpt": "727f65564eb1050ed70b36961a370c16e29cb406e1689366ea6886edf04e314f",
+        "published_at": "f450a7957af858c9ba520c8efacf28ce3e38f4ad61796ee4780b74130f8eea04"
+      },
+      "source_fingerprint": "5e85f40c749cce21799e522b094c540e1ec4b8d2965f4ec4aa33bc9dbed864a5",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "fdff72410bb0e282813b2286b87de9bd061822f27bd6bc80bc0762436384f798"
+    },
+    "verified_source_components": {
+      "article_hash": "5bd4090b74327348",
+      "title": "b500e4001c2ae525fcef572090bbcd44b27de2f49867e002fe69bd5b20da0319",
+      "source_excerpt": "727f65564eb1050ed70b36961a370c16e29cb406e1689366ea6886edf04e314f",
+      "published_at": "f450a7957af858c9ba520c8efacf28ce3e38f4ad61796ee4780b74130f8eea04"
+    },
+    "hash": "5bd4090b74327348",
+    "published_at": "2026-08-21T17:08:06+00:00"
+  },
+  "c111882645e067bf": {
+    "features": {
+      "event_type": "project_milestone",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "기술",
+    "topics": [],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "오크리지 원자로 철거 절차 진행",
+    "summary": "오크리지 원자로가 철거 절차를 밟고 있다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-21T19:32:24.985224+00:00",
+    "title": "Oak Ridge reactor moves toward demolition",
+    "link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxPTi01MFRNUHViaVFfU2dqaFFMT2NjRHpRRGpyOE9PU2Z4cGptMVZydzdla3dORFdmUVBTa00tMUVjY1ZYUjRLUUFDajZWNWVrU0JqeF9SWXBHcmU5bjFfeW9iZ2VPOUdLb2hqUXB3aFNMUTduYlFVNV9uM0RkTkMzbg?oc=5",
+    "feed": "정책",
+    "domain": "neimagazine.com",
+    "matched": "Nuclear Engineering International",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "c111882645e067bf",
+      "source_components": {
+        "article_hash": "c111882645e067bf",
+        "title": "3eaaa68411874bef4bbc75d07b3cfc673767c7967d9da575c6ad03bbe748f3f5",
+        "source_excerpt": "591ae461e6f66e304e3ebbb6bf7178b3b6214833c2ab2d05cbeae9054a587280",
+        "published_at": "f450a7957af858c9ba520c8efacf28ce3e38f4ad61796ee4780b74130f8eea04"
+      },
+      "source_fingerprint": "92ee7a44473a6ff5b506638ea406ff27f7367aac232738039224368a7d037eb9",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "da8ca97e2420436dbe7ccc291b2d8e54f7703c675d9e052a0562ad04b08ce78e"
+    },
+    "verified_source_components": {
+      "article_hash": "c111882645e067bf",
+      "title": "3eaaa68411874bef4bbc75d07b3cfc673767c7967d9da575c6ad03bbe748f3f5",
+      "source_excerpt": "591ae461e6f66e304e3ebbb6bf7178b3b6214833c2ab2d05cbeae9054a587280",
+      "published_at": "f450a7957af858c9ba520c8efacf28ce3e38f4ad61796ee4780b74130f8eea04"
+    },
+    "hash": "c111882645e067bf",
+    "published_at": "2026-08-21T17:08:06+00:00"
+  },
+  "22929ac234e02a43": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "US"
+    ],
+    "article_type": "corporate",
+    "title_kr": "반도체 소재 기업 큐니티(Qnity), 10월 1일 신임 CFO 선임",
+    "summary": "반도체 소재 기업 큐니티가 켄 리즈비를 신임 CFO로 선임하며 10월 1일부터 정식 재무 체제로 전환한다.",
+    "detail": "큐니티는 듀폰에서 분사된 반도체 소재 기업으로, 이번 인사를 통해 독립 상장사로서의 재무 조직을 강화한다. 리즈비는 시냅틱스 출신으로, 이번 선임은 AI 인프라 관련주 전반의 조정 국면 속에서 기업의 재무 규율을 확립하기 위한 조치로 풀이된다.",
+    "implication": "",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": "2026-10-01",
+    "event_date_type": "effective",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-21T19:32:24.985224+00:00",
+    "title": "큐니티, 10월 1일 정식 CFO 체제로 전환",
+    "link": "https://www.tokenpost.kr/news/market/395345",
+    "feed": "정책",
+    "domain": "tokenpost.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "22929ac234e02a43",
+      "source_components": {
+        "article_hash": "22929ac234e02a43",
+        "title": "8356205f14b4fe12c1bd265aa21ef0f5dfd7ad0bf89ee91f357bd860f726817e",
+        "source_excerpt": "06f7c6fdaf625e49d3dcd7b8fccc0524cc3c41139ef490078577112c1d8eb0fd",
+        "published_at": "7655c8841678ae972d016b0d5f4f1585a9ff5074821e267c8a152d141f870faf"
+      },
+      "source_fingerprint": "e78f150567807ab4fd9a41ebfd96627b39e406d7c246cb85ed06060fb8d07434",
+      "entities": [],
+      "countries": [
+        "US"
+      ],
+      "topics": [],
+      "stages": [
+        "approval"
+      ],
+      "claims": [
+        "10월",
+        "1일",
+        "21일",
+        "2024년",
+        "7월",
+        "60만달러",
+        "90%",
+        "1000만달러",
+        "140억원",
+        "550만달러",
+        "77억원",
+        "2026년",
+        "2025년",
+        "11월",
+        "8월",
+        "4일",
+        "14억달러",
+        "9530억원",
+        "22%",
+        "3%",
+        "9%"
+      ],
+      "quantities": {
+        "%": [
+          "22",
+          "3",
+          "9",
+          "90"
+        ],
+        "년": [
+          "2024",
+          "2025",
+          "2026"
+        ],
+        "달러": [
+          "10000000",
+          "1400000000",
+          "5500000",
+          "600000"
+        ],
+        "억원": [
+          "140",
+          "77",
+          "9530"
+        ],
+        "월": [
+          "10",
+          "11",
+          "7",
+          "8"
+        ],
+        "일": [
+          "1",
+          "21",
+          "4"
+        ]
+      },
+      "manifest_fingerprint": "dc854eceb5c50a08efec61a40071299bb3280c280cd9179b188ad8edef1b798e"
+    },
+    "verified_source_components": {
+      "article_hash": "22929ac234e02a43",
+      "title": "8356205f14b4fe12c1bd265aa21ef0f5dfd7ad0bf89ee91f357bd860f726817e",
+      "source_excerpt": "06f7c6fdaf625e49d3dcd7b8fccc0524cc3c41139ef490078577112c1d8eb0fd",
+      "published_at": "7655c8841678ae972d016b0d5f4f1585a9ff5074821e267c8a152d141f870faf"
+    },
+    "hash": "22929ac234e02a43",
+    "published_at": "2026-08-21T19:04:00+00:00"
+  },
+  "013b0007d6fc3eb1": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 2,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "기술",
+    "topics": [
+      "fuel_cycle",
+      "security_trade"
+    ],
+    "countries": [
+      "GLOBAL"
+    ],
+    "article_type": "analysis",
+    "title_kr": "미래 원전과 AI 산업의 핵심, 우라늄 농축 역량 확보",
+    "summary": "AI 산업 성장과 미래 원전 확대를 뒷받침하기 위해 우라늄 농축 역량 확보가 필수적인 과제로 부상했다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#우라늄농축",
+      "#핵연료주기",
+      "#에너지안보"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-21T19:32:24.985224+00:00",
+    "title": "미래 원전과 AI 산업 이끌 핵심 열쇠, 우라늄 농축에 달렸다",
+    "link": "https://news.google.com/rss/articles/CBMiZEFVX3lxTFB6ODJXMXJiMEEtQ2c1ZktWZ29ZejZ1OUpWZ2dGSUZrNjBVcXVIVTBtd3RVWEYwM3J3dnRURHZvVm53elE2N3NKdktQS3dCaVFPeEMybVEwQk1wdDVDUGNrdzVPT0I?oc=5",
+    "feed": "정책",
+    "domain": "esnews.kr",
+    "matched": "국내 원자력 보도",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "013b0007d6fc3eb1",
+      "source_components": {
+        "article_hash": "013b0007d6fc3eb1",
+        "title": "036cc11f4fe9bf0ee51f078beac9ddad3ba4c2323acc1cd8c7cd8bc2bd4d61d2",
+        "source_excerpt": "a5ab6f53c4d30ca31da42ac857d20b21244c4dec58c7d5d418c8ae90f1d98bb9",
+        "published_at": "4c44444d264d0a7f672212e2a12959968c42e21fd392a7423080abb6e06dfde6"
+      },
+      "source_fingerprint": "fc9cfac23094b16030409a731500f6781086499c74c3de821ef912c03e6c0445",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "fuel_supply",
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "2d5f15f67c98a3c1896604bd00fe67f8a0a222a5424705073cf41a04029ec9df"
+    },
+    "verified_source_components": {
+      "article_hash": "013b0007d6fc3eb1",
+      "title": "036cc11f4fe9bf0ee51f078beac9ddad3ba4c2323acc1cd8c7cd8bc2bd4d61d2",
+      "source_excerpt": "a5ab6f53c4d30ca31da42ac857d20b21244c4dec58c7d5d418c8ae90f1d98bb9",
+      "published_at": "4c44444d264d0a7f672212e2a12959968c42e21fd392a7423080abb6e06dfde6"
+    },
+    "hash": "013b0007d6fc3eb1",
+    "published_at": "2026-08-21T19:22:09+00:00"
   }
 }
