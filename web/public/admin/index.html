@@ -63,14 +63,32 @@
   <section id="panel-merges" class="admin-panel">
     <div id="mergePending" class="admin-pending" hidden></div>
 
+    <!-- 회차 하나를 고르는 문. 예전에는 이 칸이 없어서 네 계층이 전부 한 페이지에
+         쌓였고(실측 2026-08-21: 카드 183장), 데이터가 늘수록 "오늘 무엇을 새로
+         묶었나"를 훑는 일이 불가능해졌다. 회차는 **진입 필터일 뿐**이다 — 카드를
+         열면 이슈의 전체 맥락(최초·최근 등장일, 전체 멤버)은 그대로 있다. -->
+    <section class="admin-section" aria-labelledby="roundTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">00</span><h2 id="roundTitle">진단 회차</h2></div>
+        <span class="data-note">회차를 고르면 아래 네 칸이 함께 그 회차로 갑니다 · 이슈 자체는 잘리지 않습니다
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-rounds">쓰는 법</button></span>
+      </div>
+      <div id="roundNav" class="admin-round-nav"></div>
+      <div id="roundStats" class="admin-stats"></div>
+      <div id="roundPriority" class="admin-priority"></div>
+    </section>
+
     <section class="admin-section" aria-labelledby="storyMergeTitle">
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="storyMergeTitle">같은 날 병합 — story</h2></div>
         <span class="data-note">같은 날 여러 매체가 쓴 같은 사건을 하나로 접은 판단입니다
           · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-story">쓰는 법</button></span>
       </div>
-      <div id="storyStats" class="admin-stats"></div>
-      <div id="storyMerges" class="admin-list"></div>
+      <details class="admin-fold" data-fold="story">
+        <summary><span data-role="count">건수를 세는 중</span></summary>
+        <div id="storyStats" class="admin-stats"></div>
+        <div id="storyMerges" class="admin-list"></div>
+      </details>
     </section>
 
     <!-- 병합만 보여 주면 진단은 반쪽이다. 두 기사가 끝내 안 붙었다는 사실은
@@ -82,7 +100,10 @@
         <span class="data-note">심사↔승인·정지↔재가동처럼 상태가 넘어가면 제목이 닮아도 별도 사건입니다
           · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-stage">쓰는 법</button></span>
       </div>
-      <div id="storySplits" class="admin-list"></div>
+      <details class="admin-fold" data-fold="stage">
+        <summary><span data-role="count">건수를 세는 중</span></summary>
+        <div id="storySplits" class="admin-list"></div>
+      </details>
     </section>
 
     <section class="admin-section" aria-labelledby="issueMergeTitle">
@@ -91,12 +112,15 @@
         <span class="data-note">약한 연결부터 세웁니다 · 점수가 빠듯한 병합이 곧 의심스러운 병합입니다 · 잘못 묶였으면 <strong>두 사건으로 나눕니다</strong>
           · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-issue">쓰는 법</button></span>
       </div>
-      <div id="issueStats" class="admin-stats"></div>
-      <details class="admin-rules">
-        <summary>자동 병합 규칙</summary>
-        <div id="mergeRules" class="admin-rule-list"></div>
+      <details class="admin-fold" data-fold="issue">
+        <summary><span data-role="count">건수를 세는 중</span></summary>
+        <div id="issueStats" class="admin-stats"></div>
+        <details class="admin-rules">
+          <summary>자동 병합 규칙</summary>
+          <div id="mergeRules" class="admin-rule-list"></div>
+        </details>
+        <div id="issueClusters" class="admin-list"></div>
       </details>
-      <div id="issueClusters" class="admin-list"></div>
     </section>
 
     <section class="admin-section" aria-labelledby="borderlineTitle">
@@ -105,7 +129,10 @@
         <span class="data-note">문턱 바로 아래라 조금만 내리면 붙습니다 · 붙었어야 했는지 여기서 고릅니다
           · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-borderline">쓰는 법</button></span>
       </div>
-      <div id="borderline" class="admin-list"></div>
+      <details class="admin-fold" data-fold="borderline">
+        <summary><span data-role="count">건수를 세는 중</span></summary>
+        <div id="borderline" class="admin-list"></div>
+      </details>
     </section>
   </section>
 
@@ -213,6 +240,7 @@
       </div>
       <nav class="admin-help-toc" aria-label="도움말 목차">
         <a href="#help-basics">먼저 알아 둘 것</a>
+        <a href="#help-rounds">진단 회차</a>
         <a href="#help-story">같은 날 병합</a>
         <a href="#help-stage">붙이지 않은 판단</a>
         <a href="#help-issue">날짜를 넘는 병합</a>
@@ -255,6 +283,36 @@
         <div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="helpMergeTitle">병합 진단</h2></div>
         <span class="data-note">이 서비스에서 더 위험한 실패는 누락이 아니라 오병합입니다</span>
       </div>
+
+      <article class="admin-help-card" id="help-rounds">
+        <h3>진단 회차 — 화면이 하루씩 열리는 이유</h3>
+        <p class="admin-help-lead">병합 진단은 한 번에 <strong>회차 하나</strong>만 보여 줍니다.
+          기본은 최신 회차이고, 이전·다음으로 옮기거나 목록에서 직접 고릅니다.
+          주소에 <code>?date=</code> 로 남아서 새로고침해도 같은 날이 열리고, 그대로 붙여
+          보낼 수 있습니다.</p>
+        <dl class="admin-help-steps">
+          <div><dt>기사 날짜가 아니라 판단 날짜</dt><dd>여기서 말하는 회차는 기사가
+            <strong>보도된 날</strong>이 아니라 그 판단이 <strong>내려진 회차</strong>입니다.
+            8월 18일 기사가 8월 21일 회차에 이슈로 합류했다면 그 판단은 8월 21일에 섭니다.</dd></div>
+          <div><dt>이슈는 잘리지 않습니다</dt><dd>회차는 <em>어느 카드를 화면에 세울까</em> 에만
+            씁니다. 카드를 열면 최초 등장일·최근 등장일·전체 멤버·전체 연결 근거가 예전 그대로
+            있습니다. 며칠에 걸친 이슈를 날짜별 조각으로 쪼개지 않습니다.</dd></div>
+          <div><dt>미발송 근거는 오늘에 섭니다</dt><dd>아직 발송되지 않은 기사가 근거로 붙을
+            뻔한 판단에는 회차가 없습니다 — 그 판단은 <strong>이번 빌드</strong>가 내린 것이고
+            다음 빌드에도 다시 내립니다. 그래서 보도일이 아니라 빌드 회차에 싣고
+            <em>미발송 근거</em> 배지를 답니다. 보도일에 실으면 "그날 진단이 이걸 놓쳤다"는
+            없는 사실이 생깁니다.</dd></div>
+          <div><dt>N건 중 M건</dt><dd>경계선처럼 회차마다 상위 몇 건만 싣는 칸이 있습니다.
+            건수는 항상 <strong>전수</strong>를 적고 실린 수를 함께 적습니다 — 상한이 화면에서
+            사라지면 못 본 것을 못 본 줄도 모르게 됩니다. 경계선의 창은 회차 안에서
+            <strong>경로마다</strong> 따로입니다(발송 기사 · 미발송 근거). 한 창에 세우면
+            수가 압도적인 근거 쪽이 통째로 가져가고, 그날 실제로 붙을 뻔한 카드가
+            화면에서 사라집니다.</dd></div>
+          <div><dt>과거 회차를 볼 때</dt><dd>카드의 <em>갈라 둠·붙임·분리됨</em> 배지는
+            <strong>오늘 기준</strong>의 판정 상태입니다. 그날 내린 판정이 아닙니다 —
+            판정이 언제 기록됐는지는 <strong>내 판정</strong> 탭이 날짜와 함께 보여 줍니다.</dd></div>
+        </dl>
+      </article>
 
       <article class="admin-help-card" id="help-story">
         <h3>같은 날 병합 — story</h3>

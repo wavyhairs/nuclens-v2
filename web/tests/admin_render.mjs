@@ -61,11 +61,47 @@ function byId(id) {
   return elements.get(id);
 }
 
+// ── 접히는 칸 ──────────────────────────────────────────────────────────────
+//
+// 병합 진단은 네 칸을 <details> 로 접어 두고 **펼칠 때** 비로소 그린다(toggle).
+// 그래서 흉내 DOM 도 open 이 바뀌면 toggle 을 내야 한다 — 안 내면 화면은 열린
+// 채로 비어 있고, 그게 정확히 이 스모크가 잡으려는 실패다. 진짜 details 처럼
+// **값이 실제로 바뀔 때만** 낸다(안 그러면 다시 그리기가 두 배로 돈다).
+const docListeners = new Map();     // type → handler
+const folds = new Map();
+
+function makeFold(name) {
+  const summary = { textContent: "" };
+  let open = false;
+  const box = {
+    dataset: { fold: name },
+    summary,
+    querySelector: selector =>
+      (selector.includes('data-role="count"') ? summary : null),
+    querySelectorAll: () => [],
+    scrollIntoView() {},
+    get open() { return open; },
+    set open(value) {
+      const next = Boolean(value);
+      if (next === open) return;
+      open = next;
+      docListeners.get("toggle")?.({ target: box });
+    },
+  };
+  return box;
+}
+for (const name of ["story", "stage", "issue", "borderline"]) {
+  folds.set(name, makeFold(name));
+}
+
 const document = {
   getElementById: byId,
-  querySelector: () => null,
+  querySelector: selector => {
+    const fold = /\[data-fold="([^"]+)"\]/.exec(String(selector));
+    return fold ? folds.get(fold[1]) || null : null;
+  },
   querySelectorAll: () => [],
-  addEventListener() {},
+  addEventListener(type, handler) { docListeners.set(type, handler); },
 };
 
 const responses = {
@@ -76,6 +112,7 @@ const responses = {
 };
 
 const requested = [];
+const replaced = [];
 async function fakeFetch(input) {
   const url = new URL(String(input), "https://console.test");
   requested.push(url.pathname);
@@ -94,7 +131,9 @@ const sandbox = {
   setTimeout,
   clearTimeout,
   location: { href: "https://console.test/admin/", search: "" },
-  history: { state: null, replaceState() {} },
+  // 회차는 주소에 남아야 한다 — 새로고침해도, 링크를 받아도 같은 날이 열려야
+  // 하기 때문이다. 무엇을 남겼는지 아래에서 그대로 확인한다.
+  history: { state: null, replaceState(state, title, url) { replaced.push(String(url)); } },
   confirm: () => true,
   prompt: () => "테스트 사유",
 };
@@ -122,9 +161,10 @@ assert.ok(!status.includes("불러오지 못했습니다"), `데이터 로드 �
 
 // 화면 셋이 전부 무언가를 그려야 한다. 조용히 빈 칸이 되는 것이 이 콘솔의 대표
 // 실패 방식이라(예외 하나면 그 아래가 통째로 안 그려진다) 칸마다 확인한다.
+//
+// 병합 진단의 네 칸은 접혀 있을 수 있어 여기 없다 — 아래 '접히는 칸'에서 따로 본다.
 const required = [
-  "adminStatus", "storyStats", "storyMerges", "storySplits",
-  "issueStats", "mergeRules", "issueClusters", "borderline",
+  "adminStatus", "roundNav", "roundStats", "roundPriority",
   "keywordStats", "keywordGroups", "learnedTerms", "antiKeywords",
   "feedStats", "feedTables",
   "tierTable", "learnedRules", "entryFilters", "entryList",
@@ -134,6 +174,123 @@ for (const id of required) {
   assert.ok(html !== undefined, `#${id} 을 아예 안 그렸다 — 그 위에서 예외가 났을 것`);
   assert.ok(html.length > 0, `#${id} 이 비었다`);
 }
+
+// ── 진단 회차 ──────────────────────────────────────────────────────────────
+//
+// 이 화면은 이제 "전부"가 아니라 회차 하나를 연다. 그래서 확인할 것이 셋이다 —
+// 기본이 최신 회차인가, 화면의 숫자가 **전수**인가(실린 행 수가 아니라),
+// 회차를 옮기면 네 칸이 함께 따라가는가.
+// 스크립트 최상단의 `const state` 와 함수들은 realm 의 전역 렉시컬 환경에 있어
+// 같은 컨텍스트에서 돌린 코드로 닿는다(sandbox 객체의 속성으로는 안 보인다).
+const state = vm.runInContext("state", sandbox);
+const esc = vm.runInContext("esc", sandbox);
+const rounds = state.merges?.rounds;
+assert.ok(rounds?.dates?.length, "회차 색인이 없다 — 빌드가 rounds 를 안 실었다");
+assert.equal(state.round, rounds.latest, "기본은 최신 회차여야 한다");
+const nav = written.get("roundNav");
+assert.ok(nav.includes('data-act="round-pick"'), "회차를 고르는 자리가 없다");
+assert.ok(nav.includes('data-act="round-go"'), "이전·다음으로 옮길 자리가 없다");
+assert.ok(nav.includes(`value="${state.round}"`), "지금 회차가 목록에 없다");
+// 기본값은 주소에 박지 않는다 — 박으면 즐겨찾기가 그날에 못 박힌다.
+assert.ok(!String(replaced.at(-1) || "").includes("date="),
+  `최신 회차인데 주소에 날짜가 남았다: ${replaced.at(-1)}`);
+
+const rowOf = date => rounds.dates.find(row => row.date === date);
+function assertStatsAreTotals(date) {
+  const row = rowOf(date);
+  const stats = written.get("roundStats");
+  for (const [label, value] of [["같은 날 병합", `${row.story}건`],
+    ["붙이지 않은 판단", `${row.stage}건`], ["날짜 넘는 병합", `${row.issue}개`],
+    ["경계선 후보", `${row.borderline}쌍`]]) {
+    assert.ok(stats.includes(value),
+      `${date} 요약의 '${label}' 이 전수(${value})와 다르다 — 실린 행 수를 세고 있다`);
+  }
+}
+assertStatsAreTotals(state.round);
+
+// ── 접히는 칸 ──────────────────────────────────────────────────────────────
+//
+// 접기는 화면을 **줄이려고** 넣었다. details 는 닫혀도 자식을 DOM 에 들고 있어서
+// 접기만으로는 카드가 하나도 안 줄어든다 — 그래서 닫을 때 비우는지까지 본다.
+const FOLD_BODIES = {
+  story: ["storyStats", "storyMerges"],
+  stage: ["storySplits"],
+  issue: ["issueStats", "mergeRules", "issueClusters"],
+  borderline: ["borderline"],
+};
+for (const [name, bodies] of Object.entries(FOLD_BODIES)) {
+  const box = folds.get(name);
+  box.open = true;
+  for (const id of bodies) {
+    assert.ok((written.get(id) || "").length > 0, `#${id} 이 펼쳤는데도 비었다`);
+  }
+  assert.ok(box.summary.textContent.includes("건"),
+    `${name} 칸이 건수를 안 적었다: ${box.summary.textContent}`);
+  box.open = false;
+  for (const id of bodies) {
+    assert.equal(written.get(id), "", `#${id} 이 접었는데도 DOM 에 남아 있다`);
+  }
+  box.open = true;                       // 아래 검사는 펼친 화면을 본다
+}
+
+// 회차는 **진입 필터일 뿐**이다. 카드를 열면 이슈의 전체 맥락이 그대로 있어야
+// 한다 — 며칠에 걸친 이슈를 날짜 조각으로 쪼개면 그 이슈가 무엇인지 아무
+// 화면에서도 못 읽는다.
+const roundClusters = vm.runInContext("roundClusters", sandbox);
+const spanning = roundClusters().find(cluster =>
+  new Set((cluster.members || []).map(member => member.article_date)).size > 1);
+if (spanning) {
+  const html = written.get("issueClusters");
+  for (const member of spanning.members) {
+    assert.ok(html.includes(esc(member.title)),
+      `회차 밖 멤버가 카드에서 잘렸다: ${member.article_date} ${member.title}`);
+  }
+  assert.ok(html.includes(`${spanning.member_count}건 연결`),
+    "카드가 전체 연결 수를 안 적는다 — 회차만큼만 묶인 것처럼 읽힌다");
+}
+
+// ── 회차 옮기기 ────────────────────────────────────────────────────────────
+const selectRound = vm.runInContext("selectRound", sandbox);
+const roundStory = vm.runInContext("roundStory", sandbox);
+const older = rounds.dates.find(row =>
+  row.date !== state.round && (row.story || row.stage || row.issue));
+assert.ok(older, "지난 회차가 하나도 없다 — 회차 이동을 확인할 수 없다");
+selectRound(older.date);
+assert.equal(state.round, older.date, "회차가 안 옮겨졌다");
+assert.ok(String(replaced.at(-1) || "").includes(`date=${older.date}`),
+  `옮긴 회차가 주소에 안 남았다: ${replaced.at(-1)}`);
+assertStatsAreTotals(older.date);
+
+// 네 칸이 **함께** 따라가야 한다. 하나라도 옛 회차에 남으면 한 화면 안에서
+// 날짜의 뜻이 갈라지고, 그때부터 건수가 조용히 거짓말을 한다.
+//
+// 센 수를 화면의 필터로 다시 세면 아무것도 검증하지 못한다(필터가 통째로 깨져도
+// 양쪽이 같이 틀린다). 기대값은 **빌드가 만든 회차 색인**에서 가져온다.
+folds.get("story").open = true;
+const drawn = (written.get("storyMerges").match(/class="admin-card"/g) || []).length;
+assert.equal(drawn, older.story,
+  `${older.date} 회차에 story 카드 ${drawn}장이 섰다 — 색인이 말하는 판단은 ${older.story}건이다`);
+assert.equal(roundStory().length, older.story, "화면이 세는 건수가 색인과 다르다");
+
+// ── 창 밖으로 밀린 회차 ────────────────────────────────────────────────────
+//
+// 창에는 회차별 상한 말고 **합계 상한**도 있어서(CONSOLE_*_TOTAL) 아주 오래된
+// 회차는 한 건도 못 실을 수 있다. 그때 화면이 '이 회차에는 없습니다'라고 적으면
+// 바로 위 요약이 말한 N쌍이 통째로 증발한다 — 없는 것과 창 밖은 다르다.
+const ghost = { date: "2026-01-01", story: 0, stage: 0, issue: 0, borderline: 7, borderline_shown: 0 };
+rounds.dates.push(ghost);              // 목록은 최신순이라 맨 뒤가 가장 오래된 회차다
+selectRound(ghost.date);
+folds.get("borderline").open = true;
+const outside = written.get("borderline");
+assert.ok(outside.includes("창 밖"), `밀린 회차를 '없음'이라고 적는다: ${outside.slice(0, 120)}`);
+assert.ok(outside.includes("7쌍"), "밀린 건수를 안 적는다 — 못 본 것을 못 본 줄도 모르게 된다");
+assert.ok(folds.get("borderline").summary.textContent.includes("7건 중 0건"),
+  `요약 줄이 전수를 안 적는다: ${folds.get("borderline").summary.textContent}`);
+rounds.dates.pop();
+
+// 아래 검사들은 화면 전체를 본다 — 최신 회차로 돌아가 네 칸을 다 펼쳐 둔다.
+selectRound(rounds.latest);
+for (const box of folds.values()) box.open = true;
 
 // 편집 컨트롤이 실제로 붙었는지. 이게 없으면 '고칠 수 있는 콘솔'이 아니다.
 const keywords = written.get("keywordGroups");
@@ -177,10 +334,6 @@ if (!clusters.includes("empty-state")) {
 // (대표 기사) 눌린 즉시 저장했고, 화면은 그 상대를 끝까지 보여 주지 않았다.
 // 그래서 검사하는 것은 "무엇을 저장할지 화면이 말하는가"다 — 폼이 세운 두
 // 사건군과, 저장될 쌍 목록이 정확히 맞아떨어져야 한다.
-//
-// 스크립트 최상단의 `const state` 는 realm 의 전역 렉시컬 환경에 있어 같은
-// 컨텍스트에서 돌린 코드로 닿는다(sandbox 객체의 속성으로는 안 보인다).
-const state = vm.runInContext("state", sandbox);
 const groupSplitForm = vm.runInContext("groupSplitForm", sandbox);
 const groupSides = vm.runInContext("groupSides", sandbox);
 const groupSplitPreview = vm.runInContext("groupSplitPreview", sandbox);
@@ -245,7 +398,9 @@ assert.equal(axis.left.filter(word => axis.right.includes(word)).length, 0,
   "양쪽에 같은 낱말이 올라왔다 — 그 축으로는 영원히 안 갈린다");
 
 console.log(
-  `admin render: 화면 ${required.length}칸 렌더 통과` +
-  ` (수동 분리 ${splittable ? "가능" : "단위 없음 — 사유 표시"}` +
+  `admin render: 화면 ${required.length}칸 + 접히는 칸 ${Object.keys(FOLD_BODIES).length}개 렌더 통과` +
+  ` (회차 ${rounds.dates.length}개 · 기본 ${rounds.latest} → ${older.date} 이동 확인` +
+  `${spanning ? `, 회차 밖 멤버 ${spanning.member_count}건 유지` : ""}` +
+  `, 수동 분리 ${splittable ? "가능" : "단위 없음 — 사유 표시"}` +
   `, 사건 나누기 ${left.length}↔${right.length} 미리보기 확인)`,
 );

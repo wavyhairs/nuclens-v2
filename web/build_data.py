@@ -168,9 +168,31 @@ MERGE_RULES = (
 # 보던 절차(docs/AS_IS.md)를 끊지 않기 위해서다. 목록은 이미 점수 내림차순이라
 # 앞에서 자르면 그대로 상위이고, 전수는 아티팩트에 그대로 있으므로 **잃는 것이 없다.**
 #
-# 5,000 은 콘솔이 보는 경계선 창(merges.json 상위 40건)의 125배이고, 한 회차 LLM
+# 5,000 은 콘솔이 보는 경계선 창(CONSOLE_BORDERLINE_TOTAL)의 20배이고, 한 회차 LLM
 # 검수 밴드 전체(실측 2,244쌍)를 담고도 두 배 남는다. 러너 기준 약 4.5 MiB.
 AUDIT_REVIEW_CANDIDATE_LIMIT = 5000
+
+# ---- 콘솔이 회차 단위로 보는 창 ---------------------------------------------------
+#
+# 예전에는 경계선을 **점수 상위 40건**만 실었다. 전역 정렬이라 회차별로 갈라 보면
+# 최신 회차가 거의 다 가져가고 과거 회차는 1건씩 남는다 — 실측 2026-08-21: 8월 18일
+# 회차의 후보는 30쌍인데 전역 상위 40건 안에는 1쌍뿐이었다. 그 화면에서 "8월 18일
+# 경계선 1건"은 **숫자가 거짓말을 하는 것**이다(운영자는 29쌍을 못 본 줄도 모른다).
+#
+# 그래서 회차마다 상위 몇 건을 싣는다. 전수는 그대로 아티팩트에 있고, 화면에는
+# 회차별 **전수 건수**를 따로 실어 "N건 중 M건"이라고 적는다.
+#
+# 창은 회차 안에서 **경로마다** 따로 준다(발송 기사 · 미발송 근거). 근거 쪽이
+# 압도적으로 많아서 — 실측 2026-08-22 빌드 회차 2,053쌍 대 0쌍 — 한 창에 세우면
+# 점수 높은 근거가 창을 통째로 가져가고, 그날 실제로 붙을 뻔한 카드가 화면에서
+# 사라진다. 화면도 "경로마다 상위 몇 쌍"이라고 적는다(renderBorderline).
+CONSOLE_BORDERLINE_PER_ROUND = 10
+CONSOLE_BORDERLINE_TOTAL = 240
+# 대표 교체도 같은 이유로 회차별로 자른다(예전에는 전역 최신 60건이었다).
+CONSOLE_PROMOTION_PER_ROUND = 24
+CONSOLE_PROMOTION_TOTAL = 240
+CONSOLE_VETO_PER_ROUND = 24
+CONSOLE_VETO_TOTAL = 240
 
 # 전수 덤프가 사는 곳. **web/public 밖이어야 한다** — 그 안이면 admin/data 처럼
 # 엣지에서 가려도 wrangler 가 업로드하고, 그러면 25 MiB 벽이 그대로다
@@ -4736,6 +4758,52 @@ def build_admin_judgments(news_items: list[dict], generated_at: datetime) -> dic
     }
 
 
+# ---- 진단 회차 ---------------------------------------------------------------------
+#
+# 콘솔은 이제 "전부"가 아니라 **한 회차**를 본다. 그러려면 판단마다 "이 판단은 어느
+# 회차에서 났는가"가 있어야 하는데, 저장된 것은 그 회차의 스냅숏이 아니다 —
+# 병합은 빌드마다 전량 재계산된다(cluster_selected_articles 는 기사를 briefing_date
+# 오름차순으로 훑으며 매번 처음부터 다시 묶는다).
+#
+# 그래서 회차는 **역산한다.** 다행히 역산이 정확한 자리가 있다.
+#
+#   같은 날 병합    briefing_date 그 자체(발송 전 수집분은 보도일로 물러난다)
+#   붙이지 않은 판단 delivery_log 의 story_audit.date = 발송 회차
+#   날짜 넘는 병합   합류한 기사의 briefing_date. matches[].hash 가 그 기사이고
+#                    members 에 briefing_date 가 있다(실측: 카드 match 전량이 members 안)
+#   경계선          카드 경로는 right_date 가 곧 합류를 시도한 기사의 briefing_date다
+#                    (실측 전수 301건 중 left_date > right_date 인 행 0건)
+#
+# 역산이 **불가능한** 자리가 하나 있고, 거기서 거짓말하지 않는 것이 이 함수의 요지다:
+# 미발송 근거 기사(member_role="evidence")는 briefing 회차가 아예 없다. 그 판단은
+# 과거 어느 날이 아니라 **이번 빌드**가 내린 것이고(다음 빌드에도 다시 내린다),
+# 그래서 보도일이 아니라 빌드 회차에 싣는다. 보도일에 실으면 운영자는 "8월 12일
+# 진단이 이걸 놓쳤다"로 읽지만 그날의 진단은 이 쌍을 본 적조차 없다.
+
+
+def _top_per_round(rows: list[dict], per_round: int, total: int) -> list[dict]:
+    """회차별 상위 몇 건씩, 최신 회차부터 채운다.
+
+    전역 상위 N건으로 자르면 최신 회차가 창을 독점하고 과거 회차는 건수 자체가
+    거짓이 된다. 행은 이미 각자의 정렬 순서(점수 내림차순 등)로 들어온다 —
+    여기서는 자르기만 한다.
+
+    가르는 단위는 회차와 `_bucket` 이다. 한 회차 안에서도 서로 다른 경로가
+    같은 창을 두고 다투면 수가 많은 쪽이 통째로 가져가기 때문이다(경계선의
+    미발송 근거 ↔ 발송 기사). `_bucket` 이 없는 계층은 회차로만 갈린다.
+    """
+    buckets: dict[tuple[str, str], list[dict]] = {}
+    for row in rows:
+        key = (row["_round"], row.get("_bucket", ""))
+        buckets.setdefault(key, []).append(row)
+    picked: list[dict] = []
+    for key in sorted(buckets, reverse=True):
+        if len(picked) >= total:
+            break
+        picked.extend(buckets[key][:max(0, min(per_round, total - len(picked)))])
+    return picked
+
+
 def build_admin_merges(
     news_items: list[dict],
     issue_catalog: list[dict],
@@ -4743,7 +4811,15 @@ def build_admin_merges(
     generated_at: datetime,
     story_audits: list[dict] | None = None,
 ) -> dict:
-    """병합 판단을 사람이 되짚을 수 있는 형태로 모은다."""
+    """병합 판단을 사람이 되짚을 수 있는 형태로 모은다.
+
+    산출물은 **회차 단위로 읽을 수 있게** 정리한다. 항목마다 `diagnosis_rounds`
+    (그 판단이 난 회차)를 싣고, `rounds` 색인이 회차 목록과 회차별 건수를 낸다.
+    회차를 어떻게 역산하는지는 이 파일 위의 '진단 회차' 머리말에 있다.
+    """
+    # 이번 빌드가 내린 판단이 실릴 회차. 미발송 근거 기사처럼 briefing 회차가
+    # 없는 판단이 여기로 온다.
+    build_round = generated_at.date().isoformat()
     issue_of_hash: dict[str, dict] = {}
     for issue in issue_catalog:
         for article in issue.get("related_articles") or []:
@@ -4803,6 +4879,9 @@ def build_admin_merges(
             "display_swapped_from": item.get("story_display_swapped_from") or "",
             "display_swapped_from_title": item.get("story_display_swapped_from_title") or "",
             "issue_id": (owner or {}).get("issue_id", ""),
+            # 이 판단이 난 회차. 발송 전 수집분은 briefing_date 가 아직 비어 있어
+            # 보도일로 물러난다 — 아래 story_by_date 와 같은 규칙이다.
+            "diagnosis_rounds": [item.get("briefing_date") or item.get("article_date") or ""],
         })
     # 접은 기사가 많은 순 = 되짚을 값이 큰 순. 같으면 최신부터.
     story_rows.sort(key=lambda row: (row["article_count"], row["briefing_date"]), reverse=True)
@@ -4817,6 +4896,13 @@ def build_admin_merges(
     titles = {issue["issue_id"]: issue.get("title", "") for issue in issue_catalog}
     clusters = []
     for cluster in issue_audit.get("clusters") or []:
+        # 합류한 기사의 회차. matches[].hash 가 그 기사이고, 카드 멤버는 전부
+        # briefing_date 를 들고 있다. 근거 기사(member_role="evidence")는 여기에
+        # 없다 — 발송된 적이 없어 회차 자체가 없기 때문이다.
+        member_round = {
+            str(member.get("hash") or ""): str(member.get("briefing_date") or "")
+            for member in (cluster.get("members") or [])
+        }
         matches = [
             {
                 "hash": match.get("hash", ""),
@@ -4834,10 +4920,14 @@ def build_admin_merges(
                 "shared_facility_entities": match.get("shared_facility_entities") or [],
                 "blocked_by": match.get("blocked_by") or [],
                 "member_role": match.get("member_role") or "card",
+                # 이 연결이 만들어진 회차. 근거 기사 경로는 빈 문자열이다.
+                "round": ("" if (match.get("member_role") or "card") == "evidence"
+                          else member_round.get(str(match.get("hash") or ""), "")),
             }
             for match in (cluster.get("matches") or [])
         ]
         scores = [float(m["score"]) for m in matches if isinstance(m.get("score"), (int, float))]
+        rounds = sorted({m["round"] for m in matches if m["round"]})
         clusters.append({
             "issue_id": cluster.get("issue_id", ""),
             "title": titles.get(cluster.get("issue_id", ""), ""),
@@ -4849,33 +4939,62 @@ def build_admin_merges(
             "matches": matches,
             "weakest_score": min(scores) if scores else None,
             "methods": sorted({m["method"] for m in matches if m["method"] != "none"}),
+            # 이슈를 **자르지 않는다**(§ 이슈 연속성). 이 목록은 "어느 회차 화면에
+            # 이 카드를 세울까"에만 쓰이고, 카드를 열면 전체 멤버가 그대로 있다.
+            # 회차를 하나도 못 찾으면(옛 audit) 마지막 등장일로 물러난다 — 조용히
+            # 사라지는 것보다 한 회차에 서 있는 편이 낫다.
+            "diagnosis_rounds": rounds or [cluster.get("last_seen", "")],
+            # 미발송 근거로 붙은 연결 수. 회차에 귀속되지 않지만 카드 안에서는 보인다.
+            "evidence_match_count": sum(1 for m in matches if m["member_role"] == "evidence"),
         })
     clusters.sort(key=lambda row: (row["weakest_score"] is None, row["weakest_score"] or 0))
 
     # ③ 붙지 않은 경계선. 자동 병합 바로 아래 구간이라 문턱을 조금만 내리면 붙는다 —
     # "안 붙어서 다행인가, 붙었어야 했나"를 여기서 눈으로 고른다.
+    #
+    # 회차 귀속이 여기서 가장 미묘하다. left_date·right_date 는 **판정일이 아니라
+    # 두 기사의 날짜**고, 두 생성 경로가 서로 다른 날짜를 넣는다:
+    #   카드 경로   right_date = 합류를 시도한 발송 기사의 briefing_date → 회차 그 자체
+    #   근거 경로   right_date = 미발송 기사의 article_date → 회차가 아니다
+    # 실측(2026-08-21 전수): 카드 301건은 left_date <= right_date 가 100% 성립하고,
+    # 근거 2,053건에서만 역전이 난다. 그래서 경로를 갈라 귀속한다.
+    borderline_rows = []
+    borderline_totals: Counter = Counter()
+    for row in (issue_audit.get("review_candidates") or []):
+        role = str(row.get("member_role") or "card")
+        # 근거 경로에는 briefing 회차가 없다 — 이번 빌드가 내린 판단이므로
+        # 빌드 회차에 싣는다. 보도일에 실으면 그날 진단이 이 쌍을 봤다는 거짓이 된다.
+        day = build_round if role == "evidence" else str(row.get("right_date") or "")
+        borderline_totals[day] += 1
+        borderline_rows.append({
+            "candidate_id": row.get("candidate_id", ""),
+            # 콘솔의 '붙이기'가 승인 쌍을 쓰려면 hash 가 필요하다 — 제목은
+            # 사람이 읽는 이름이지 판정이 재현되는 열쇠가 아니다.
+            "left_hash": row.get("left_hash", ""),
+            "right_hash": row.get("right_hash", ""),
+            "left_title": row.get("left_title", ""),
+            "right_title": row.get("right_title", ""),
+            "left_date": row.get("left_date", ""),
+            "right_date": row.get("right_date", ""),
+            "score": row.get("candidate_score"),
+            "method": row.get("candidate_method", ""),
+            "review_state": row.get("review_state", ""),
+            "diagnostics": row.get("diagnostics") or {},
+            # 화면이 "미발송 근거"라고 적을 수 있어야 한다. 그 배지가 없으면
+            # 오늘 회차에 몰려 있는 이유를 아무도 설명할 수 없다.
+            "member_role": role,
+            "diagnosis_rounds": [day],
+            "_round": day,
+            "_bucket": role,
+        })
+    borderline_rows.sort(key=lambda row: float(row["score"] or 0), reverse=True)
     borderline = sorted(
-        (
-            {
-                "candidate_id": row.get("candidate_id", ""),
-                # 콘솔의 '붙이기'가 승인 쌍을 쓰려면 hash 가 필요하다 — 제목은
-                # 사람이 읽는 이름이지 판정이 재현되는 열쇠가 아니다.
-                "left_hash": row.get("left_hash", ""),
-                "right_hash": row.get("right_hash", ""),
-                "left_title": row.get("left_title", ""),
-                "right_title": row.get("right_title", ""),
-                "left_date": row.get("left_date", ""),
-                "right_date": row.get("right_date", ""),
-                "score": row.get("candidate_score"),
-                "method": row.get("candidate_method", ""),
-                "review_state": row.get("review_state", ""),
-                "diagnostics": row.get("diagnostics") or {},
-            }
-            for row in (issue_audit.get("review_candidates") or [])
-        ),
+        ({key: value for key, value in row.items() if not key.startswith("_")}
+         for row in _top_per_round(borderline_rows, CONSOLE_BORDERLINE_PER_ROUND,
+                                   CONSOLE_BORDERLINE_TOTAL)),
         key=lambda row: float(row["score"] or 0),
         reverse=True,
-    )[:40]
+    )
 
     method_counts: Counter = Counter()
     for cluster in clusters:
@@ -4884,19 +5003,78 @@ def build_admin_merges(
 
     # ④ 붙지 않은 story — 사건 단계가 달라 일부러 갈라 둔 쌍과, story 완성 뒤에
     #    화면 대표를 바꾼 판단. 둘 다 결과물에 흔적이 없어 로그에서만 온다.
-    stage_vetoes: list[dict] = []
-    display_promotions: list[dict] = []
+    #    여기는 회차가 그대로 적혀 있다 — delivery_log 의 story_audit.date 가 발송 회차다.
+    veto_rows: list[dict] = []
+    promo_rows: list[dict] = []
+    veto_totals: Counter = Counter()
+    promo_totals: Counter = Counter()
     for audit in (story_audits or []):
         day = str(audit.get("date") or "")
         for veto in (audit.get("stage_vetoes") or []):
             if isinstance(veto, dict):
-                stage_vetoes.append({**veto, "date": day})
+                veto_totals[day] += 1
+                veto_rows.append({**veto, "date": day, "diagnosis_rounds": [day], "_round": day})
         for promo in (audit.get("display_promotions") or []):
             if isinstance(promo, dict):
-                display_promotions.append({**promo, "date": day})
+                promo_totals[day] += 1
+                promo_rows.append({**promo, "date": day, "diagnosis_rounds": [day], "_round": day})
+
+    def _shipped(rows: list[dict], per_round: int, total: int) -> list[dict]:
+        return [{k: v for k, v in row.items() if not k.startswith("_")}
+                for row in _top_per_round(rows, per_round, total)]
+
+    stage_vetoes = _shipped(veto_rows, CONSOLE_VETO_PER_ROUND, CONSOLE_VETO_TOTAL)
+    display_promotions = _shipped(promo_rows, CONSOLE_PROMOTION_PER_ROUND,
+                                  CONSOLE_PROMOTION_TOTAL)
+
+    # ⑤ 회차 색인. 화면이 "무슨 날이 있고 그날 무엇이 몇 건인가"를 여기서만 읽는다.
+    #
+    # 건수는 **전수**다(실린 행 수가 아니라). 회차별로 자른 목록만 세면 "10건"이
+    # 상한이라는 사실이 화면에서 사라지고, 운영자는 나머지 20건을 못 본 줄도 모른다.
+    shown_counts: Counter = Counter()
+    for row in borderline:
+        shown_counts[row["diagnosis_rounds"][0]] += 1
+    story_rounds: Counter = Counter(story_by_date)
+    issue_rounds: Counter = Counter()
+    for cluster in clusters:
+        for day in cluster["diagnosis_rounds"]:
+            if day:
+                issue_rounds[day] += 1
+    stage_totals = veto_totals + promo_totals
+    days = {day for day in (
+        set(story_rounds) | set(issue_rounds) | set(stage_totals) | set(borderline_totals)
+    ) if day}
+    # 빌드 회차는 아무 일이 없어도 목록에 남긴다 — 없으면 "오늘"로 들어갈 자리가
+    # 사라지고, 화면은 어제를 오늘처럼 연다.
+    days.add(build_round)
+    round_rows = [
+        {
+            "date": day,
+            "story": story_rounds.get(day, 0),
+            "stage": stage_totals.get(day, 0),
+            "issue": issue_rounds.get(day, 0),
+            "borderline": borderline_totals.get(day, 0),
+            "borderline_shown": shown_counts.get(day, 0),
+        }
+        for day in sorted(days, reverse=True)
+    ]
+    # 기본으로 열 회차. 빌드가 그날 브리핑보다 먼저 돌면 빌드 회차에는 미발송 근거만
+    # 있고 진짜 진단은 하루 전에 있다 — 그때 빈 화면을 기본으로 열면 안 된다.
+    latest_round = next(
+        (row["date"] for row in round_rows if row["story"] or row["stage"] or row["issue"]),
+        round_rows[0]["date"] if round_rows else build_round,
+    )
 
     return {
         "generated_at": generated_at.isoformat(),
+        # 화면이 여는 문. 회차를 고르면 아래 네 계층이 **함께** 그 회차로 간다.
+        "rounds": {
+            "latest": latest_round,
+            # 미발송 근거처럼 briefing 회차가 없는 판단이 실린 회차.
+            "build_round": build_round,
+            "dates": round_rows,
+            "borderline_per_round": CONSOLE_BORDERLINE_PER_ROUND,
+        },
         # 사람이 내린 판정과 그 판정의 넓이. 병합 진단과 같은 파일에 두는 이유는
         # "무엇이 붙었나"와 "내가 무엇을 갈라 뒀나"를 한 화면에서 대조해야 하기 때문이다.
         "judgments": build_admin_judgments(news_items, generated_at),
@@ -4911,16 +5089,18 @@ def build_admin_merges(
                 # 수집 단계에서 접힌 기사 수. 예전 파이프라인에서는 이 숫자만큼이
                 # story 가 만들어지기 전에 삭제됐다.
                 "collect_folded_articles": collect_folded,
-                "stage_vetoes": len(stage_vetoes),
-                "display_promotions": len(display_promotions),
+                # 전수를 센다 — 회차별로 자른 목록 길이를 세면 화면의 숫자가
+                # "실린 것"이지 "일어난 것"이 아니게 된다.
+                "stage_vetoes": len(veto_rows),
+                "display_promotions": len(promo_rows),
             },
             "by_date": [
                 {"date": day, "count": count}
                 for day, count in sorted(story_by_date.items(), reverse=True)
             ],
             "merges": story_rows,
-            "stage_vetoes": stage_vetoes[:120],
-            "display_promotions": display_promotions[:60],
+            "stage_vetoes": stage_vetoes,
+            "display_promotions": display_promotions,
         },
         "issue": {
             "matching_version": issue_audit.get("matching_version", ""),
