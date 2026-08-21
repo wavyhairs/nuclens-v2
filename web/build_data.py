@@ -139,6 +139,26 @@ MERGE_RULES = (
      "detail": "지문만으로 붙는 자리인데 묶음의 다른 기사와 "
                "행위자/대상/원인/행위가 어긋나 잇지 않음"},
 )
+# issue_audit.json 에 싣는 검수 후보 상한.
+#
+# Cloudflare Pages 는 **파일 하나에 25 MiB** 를 넘기면 배포 전체를 거부한다.
+# 2026-08-21 06:48 UTC 크롤이 거기 걸려 라이브가 그대로 굳었다(27 MiB → 이후
+# 28.3 MiB). 파일의 93% 가 이 목록이고, 목록은 원격 임베딩 커버리지를 따라
+# 자란다 — 후보 판정이 코사인 0.70 부터라 임베딩이 캐시에 쌓일수록 쌍이
+# 늘어난다(실측: 로컬 캐시 41건 → 후보 2,089 / 러너 3,352건 → 약 32,000).
+# 커버리지를 올리는 것이 로드맵이므로 이 파일은 **가만두면 반드시 다시 넘는다.**
+#
+# 잘라도 잃는 것이 없다:
+#   · 화면(app.js)도 콘솔(admin.js)도 이 파일을 읽지 않는다.
+#   · 콘솔의 '경계선' 목록은 merges.json 이 점수 상위 40건만 싣는다.
+#   · LLM 검수는 이 목록을 **메모리에서** 받는다(파일을 되읽지 않는다).
+# 남는 용도는 사람이 나중에 "왜 안 붙었나"를 캐는 것뿐이고, 그때 값진 것은
+# 점수가 높은 쪽이다. 목록은 이미 점수 내림차순이라 앞에서 자르면 그대로 상위다.
+#
+# 5,000 은 러너 기준 약 4.5 MiB. 한 회차의 LLM 검수 밴드 전체(실측 2,244쌍)가
+# 들어가고도 두 배 남으며, 행이 지금의 두 배로 뚱뚱해져도 상한의 절반이다.
+AUDIT_REVIEW_CANDIDATE_LIMIT = 5000
+
 MATCH_OVERRIDES_FILE = BOT_DIR / "issue_match_overrides.json"
 SITE_URL = os.environ.get("SITE_URL", "https://nuclens-v2.pages.dev").rstrip("/")
 KST = timezone(timedelta(hours=9))
@@ -1227,6 +1247,26 @@ def build_local_embeddings(articles: list[dict]) -> dict[str, list[float]]:
         if norm:
             embeddings[article_hash] = [value / norm for value in vector]
     return embeddings
+
+
+def shipped_issue_audit(audit: dict) -> dict:
+    """배포용 issue_audit. 검수 후보만 상위 N 건으로 줄인 **사본**이다.
+
+    원본은 그대로 둔다 — `build_admin_merges` 와 `meta` 가 전수를 세야 한다.
+    자른 사실은 `review_candidate_total` 로 남긴다(개수가 조용히 줄면 다음 사람이
+    "후보가 왜 이것뿐이지"를 잘못된 곳에서 찾게 된다).
+    """
+    rows = audit.get("review_candidates") or []
+    if len(rows) <= AUDIT_REVIEW_CANDIDATE_LIMIT:
+        return {**audit, "review_candidate_total": len(rows)}
+    print(f"[build_data] issue_audit 검수 후보 {len(rows)}건 → 상위 "
+          f"{AUDIT_REVIEW_CANDIDATE_LIMIT}건만 배포 (Cloudflare 파일 상한 25 MiB). "
+          f"전수는 meta.issue_review_candidate_count 와 콘솔 totals 에 남는다.")
+    return {
+        **audit,
+        "review_candidates": rows[:AUDIT_REVIEW_CANDIDATE_LIMIT],
+        "review_candidate_total": len(rows),
+    }
 
 
 def _pair_id(left_hash: object, right_hash: object) -> str:
@@ -5481,7 +5521,8 @@ def build() -> None:
         ("insights.json", insights),
         ("publications.json", publications),
         ("entities.json", entities_view),
-        ("issue_audit.json", issue_audit),
+        # 원본이 아니라 사본을 싣는다 — 아래 admin_outputs 는 전수를 봐야 한다.
+        ("issue_audit.json", shipped_issue_audit(issue_audit)),
         ("manifest.json", manifest),
         ("status.json", status),
     )
