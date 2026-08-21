@@ -43,3 +43,7 @@ Thumbs.db
 
 # Claude Code — 개인 권한 설정. settings.json(팀 공유)은 추적한다.
 .claude/settings.local.json
+
+# 이슈 병합 전수 후보 덤프. **배포 경로 밖**이라 wrangler 가 안 올린다
+# (build_data.AUDIT_FULL_DIR 주석 참고). 워크플로가 아티팩트로 보존한다.
+web/_audit/

@@ -158,6 +158,19 @@ jobs:
 
       # "데이터는 올라갔는데 화면이 죽는" 사고 재발 감지. curl 만으로는 부족하다는
       # 것이 실측됐지만(변형별 엣지 캐시), SPA 폴백 재발은 이걸로 잡힌다.
+      # 배포가 깨졌을 때만 전수 audit 을 건져 둔다. 러너가 사라지면 그 회차의
+      # 진단 재료도 같이 사라지는데, 하필 그때가 재료가 가장 필요한 때다
+      # (2026-08-16 · 2026-08-21 둘 다 그렇게 조사할 것이 없었다).
+      # 정상 회차의 전수는 daily-brief 가 하루 한 벌 남긴다.
+      - name: Upload full issue audit (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-audit-full-${{ github.run_id }}
+          path: web/_audit/issue_audit.full.json
+          retention-days: 14
+          if-no-files-found: ignore
+
       - name: Smoke test live site
         run: |
           sleep 15

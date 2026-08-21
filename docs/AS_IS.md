@@ -481,10 +481,21 @@ sort_score, article_count)` 내림차순 — **1순위가 날짜라 아카이브
 
 ### 진단 요령
 
-`https://nuclens-v2.pages.dev/data/issue_audit.json`이 공개돼 있어 모든 병합 쌍의 코사인·제목
+`https://nuclens-v2.pages.dev/data/issue_audit.json`이 공개돼 있어 병합 쌍의 코사인·제목
 유사도·태그 공유·method가 그대로 들어 있다. `embeddings.json`이 git에 없어 로컬 재빌드가
 불가능하므로, 임계값 실험은 이 파일을 받아 `issue_similarity()`에 코사인을 주입하는 방식으로
 한다(실측 64/64 재현).
+
+다만 그 URL은 **점수 상위 5,000쌍**만 담는다. Cloudflare Pages가 파일당 25 MiB를 넘기면
+배포 전체를 거부하는데 전수가 그 선을 넘었다(2026-08-21 실측 31,679쌍 = 28.8 MiB, 그날
+06:48 UTC부터 오후까지 라이브가 굳었다). 전수가 필요한 실험은 아티팩트를 받는다:
+
+```
+gh run download <run-id> -n issue-audit-full     # daily-brief 가 하루 한 벌 남긴다
+```
+
+배포본에 `review_candidates_truncated: true`가 있으면 잘린 것이고, 전수 개수는
+`review_candidate_total`에 있다.
 
 ---
 

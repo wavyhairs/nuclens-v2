@@ -139,25 +139,42 @@ MERGE_RULES = (
      "detail": "지문만으로 붙는 자리인데 묶음의 다른 기사와 "
                "행위자/대상/원인/행위가 어긋나 잇지 않음"},
 )
-# issue_audit.json 에 싣는 검수 후보 상한.
+# ---- issue_audit 의 두 층 ---------------------------------------------------------
 #
-# Cloudflare Pages 는 **파일 하나에 25 MiB** 를 넘기면 배포 전체를 거부한다.
-# 2026-08-21 06:48 UTC 크롤이 거기 걸려 라이브가 그대로 굳었다(27 MiB → 이후
-# 28.3 MiB). 파일의 93% 가 이 목록이고, 목록은 원격 임베딩 커버리지를 따라
-# 자란다 — 후보 판정이 코사인 0.70 부터라 임베딩이 캐시에 쌓일수록 쌍이
-# 늘어난다(실측: 로컬 캐시 41건 → 후보 2,089 / 러너 3,352건 → 약 32,000).
-# 커버리지를 올리는 것이 로드맵이므로 이 파일은 **가만두면 반드시 다시 넘는다.**
+# 이 파일은 배포 산출물 가운데 **혼자만 O(쌍)** 이다. 나머지(news·briefings·
+# issues)는 60일 창 안의 기사 수에 비례해 선형으로 자라는데, 여기 실리는
+# `review_candidates` 는 `기사 × 클러스터 × 최근멤버3` 으로 생긴다. 실측
+# 2026-08-21 라이브: 31,679쌍 × 952 B = **28.8 MiB**, 파일의 93.9%. 나머지 전부를
+# 합쳐도 0.3 MiB 다. 게다가 후보 판정이 코사인 0.70 부터라 임베딩 캐시가 찰수록
+# (41건 → 3,352건) 더 많은 쌍이 점수를 받는다. 기사량이 2배면 후보는 약 4배다.
 #
-# 잘라도 잃는 것이 없다:
-#   · 화면(app.js)도 콘솔(admin.js)도 이 파일을 읽지 않는다.
-#   · 콘솔의 '경계선' 목록은 merges.json 이 점수 상위 40건만 싣는다.
-#   · LLM 검수는 이 목록을 **메모리에서** 받는다(파일을 되읽지 않는다).
-# 남는 용도는 사람이 나중에 "왜 안 붙었나"를 캐는 것뿐이고, 그때 값진 것은
-# 점수가 높은 쪽이다. 목록은 이미 점수 내림차순이라 앞에서 자르면 그대로 상위다.
+# 그래서 2026-08-21 06:48 UTC 크롤부터 Cloudflare Pages 의 **파일당 25 MiB** 상한에
+# 걸려 배포가 통째로 거부됐고, 라이브가 그날 오후까지 굳어 있었다.
 #
-# 5,000 은 러너 기준 약 4.5 MiB. 한 회차의 LLM 검수 밴드 전체(실측 2,244쌍)가
-# 들어가고도 두 배 남으며, 행이 지금의 두 배로 뚱뚱해져도 상한의 절반이다.
+# 두 층은 크기 법칙이 다르다. 그래서 가른다.
+#
+#   판정 기록  clusters·matches·overrides·llm 판정·통계·entity_matches
+#              → O(이슈 수). 창에 갇혀 있어 유한하다. **배포한다**
+#              (data/issue_audit.json). 화면은 안 읽지만 테스트의 데이터 게이트가
+#              읽고, 사람이 "왜 붙었나"를 물을 때 필요한 것이 전부 여기 있다.
+#
+#   후보 덤프  review_candidates 전수
+#              → O(기사 × 클러스터). **배포하지 않는다.** web/_audit/ 에 따로 쓰고
+#              워크플로가 아티팩트로 올린다. 임계값 실험처럼 전수가 필요한 일은
+#              브라우저가 아니라 내려받아서 하는 일이다.
+#
+# 배포본에도 점수 상위 일부는 남긴다 — 공개 URL 하나로 "지금 경계선에 뭐가 있나"를
+# 보던 절차(docs/AS_IS.md)를 끊지 않기 위해서다. 목록은 이미 점수 내림차순이라
+# 앞에서 자르면 그대로 상위이고, 전수는 아티팩트에 그대로 있으므로 **잃는 것이 없다.**
+#
+# 5,000 은 콘솔이 보는 경계선 창(merges.json 상위 40건)의 125배이고, 한 회차 LLM
+# 검수 밴드 전체(실측 2,244쌍)를 담고도 두 배 남는다. 러너 기준 약 4.5 MiB.
 AUDIT_REVIEW_CANDIDATE_LIMIT = 5000
+
+# 전수 덤프가 사는 곳. **web/public 밖이어야 한다** — 그 안이면 admin/data 처럼
+# 엣지에서 가려도 wrangler 가 업로드하고, 그러면 25 MiB 벽이 그대로다
+# (라이브에서 /admin/data/merges.json 이 404 가 아니라 401 인 것이 그 증거).
+AUDIT_FULL_DIR = Path(os.environ.get("AUDIT_OUTPUT_DIR", SITE_DIR / "_audit"))
 
 MATCH_OVERRIDES_FILE = BOT_DIR / "issue_match_overrides.json"
 SITE_URL = os.environ.get("SITE_URL", "https://nuclens-v2.pages.dev").rstrip("/")
@@ -1249,24 +1266,50 @@ def build_local_embeddings(articles: list[dict]) -> dict[str, list[float]]:
     return embeddings
 
 
+AUDIT_FULL_NAME = "issue_audit.full.json"
+
+
 def shipped_issue_audit(audit: dict) -> dict:
     """배포용 issue_audit. 검수 후보만 상위 N 건으로 줄인 **사본**이다.
 
-    원본은 그대로 둔다 — `build_admin_merges` 와 `meta` 가 전수를 세야 한다.
-    자른 사실은 `review_candidate_total` 로 남긴다(개수가 조용히 줄면 다음 사람이
-    "후보가 왜 이것뿐이지"를 잘못된 곳에서 찾게 된다).
+    원본은 건드리지 않는다 — `build_admin_merges` 와 `meta` 가 전수를 세야 하고,
+    `write_full_issue_audit` 이 전수를 그대로 파일로 남긴다.
+
+    자른 사실은 숫자로 남긴다. 개수가 조용히 줄면 다음 사람이 "후보가 왜
+    이것뿐이지"를 잘못된 곳에서 찾게 된다.
     """
     rows = audit.get("review_candidates") or []
-    if len(rows) <= AUDIT_REVIEW_CANDIDATE_LIMIT:
-        return {**audit, "review_candidate_total": len(rows)}
-    print(f"[build_data] issue_audit 검수 후보 {len(rows)}건 → 상위 "
-          f"{AUDIT_REVIEW_CANDIDATE_LIMIT}건만 배포 (Cloudflare 파일 상한 25 MiB). "
-          f"전수는 meta.issue_review_candidate_count 와 콘솔 totals 에 남는다.")
-    return {
+    trimmed = len(rows) > AUDIT_REVIEW_CANDIDATE_LIMIT
+    shipped = {
         **audit,
-        "review_candidates": rows[:AUDIT_REVIEW_CANDIDATE_LIMIT],
+        "review_candidates": rows[:AUDIT_REVIEW_CANDIDATE_LIMIT] if trimmed else rows,
         "review_candidate_total": len(rows),
+        # 배포본만 보고 있는 사람에게 나머지가 어디 있는지 알려 준다.
+        "review_candidates_truncated": trimmed,
+        "review_candidates_full_artifact": AUDIT_FULL_NAME if trimmed else "",
     }
+    if trimmed:
+        print(f"[build_data] issue_audit 검수 후보 {len(rows)}건 → 배포본에는 상위 "
+              f"{AUDIT_REVIEW_CANDIDATE_LIMIT}건 (Cloudflare 파일 상한 25 MiB). "
+              f"전수는 {AUDIT_FULL_DIR / AUDIT_FULL_NAME} 에 있고 워크플로가 "
+              f"아티팩트로 올린다.")
+    return shipped
+
+
+def write_full_issue_audit(audit: dict) -> Path:
+    """전수 후보 덤프를 배포 경로 **밖**에 쓴다. 아티팩트로 올라갈 파일이다.
+
+    배포본에서 잘려 나간 것이 여기 그대로 있어야 '잘랐다'가 '버렸다'가 되지 않는다.
+    """
+    AUDIT_FULL_DIR.mkdir(parents=True, exist_ok=True)
+    path = AUDIT_FULL_DIR / AUDIT_FULL_NAME
+    path.write_text(
+        json.dumps(audit, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    print(f"[build_data] issue_audit 전수 {len(audit.get('review_candidates') or [])}건 "
+          f"→ {path} ({path.stat().st_size / 1024 / 1024:.1f} MiB, 배포 대상 아님)")
+    return path
 
 
 def _pair_id(left_hash: object, right_hash: object) -> str:
@@ -5536,6 +5579,7 @@ def build() -> None:
             json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
             encoding="utf-8",
         )
+    write_full_issue_audit(issue_audit)
     for name, payload in admin_outputs:
         (ADMIN_OUT_DIR / name).write_text(
             json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
