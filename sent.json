@@ -5117,7 +5117,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-08-21T19:35:09+00:00",
+    "updated_at": "2026-08-21T19:36:12+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -5189,7 +5189,7 @@
         "title": "제목·요약이 원문과 다른 기사 격리",
         "detail": "재생성 후에도 4건이 다른 핵심 엔티티·수치·사건을 가리켜 자동 큐·아카이브에서 제외했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-08-21T19:35:09+00:00",
+        "last_seen_at": "2026-08-21T19:36:12+00:00",
         "last_observation_id": "2026-08-22T04:35:06.801380+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T09:47:33+00:00",
@@ -5216,34 +5216,32 @@
         "resolved_at": "2026-08-21T15:41:18+00:00"
       },
       "quality-event:delivery-integrity-quarantine": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "quality_event",
-        "active": false,
+        "active": true,
         "title": "원문과 다른 제목·요약 기사 발송 차단",
-        "detail": "랭킹 전에 명백한 원문 불일치 30건을 차단했습니다.",
+        "detail": "랭킹 전에 명백한 원문 불일치 33건을 차단했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-08-21T12:55:22+00:00",
-        "last_observation_id": "2026-08-20T19:43:29.808272+00:00",
+        "last_seen_at": "2026-08-21T19:36:12+00:00",
+        "last_observation_id": "2026-08-21T19:35:17.100808+00:00",
         "min_occurrences": 1,
-        "first_seen_at": "2026-08-20T19:44:27+00:00",
+        "first_seen_at": "2026-08-21T19:36:12+00:00",
         "pending_notification": false,
         "last_notified_at": "2026-08-20T21:33:39+00:00",
         "last_notified_severity": "critical",
-        "notifications": 4,
-        "resolved_at": "2026-08-21T15:41:18+00:00"
+        "notifications": 4
       },
       "quality-event:final-card-field-removed": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "quality_event",
-        "active": false,
+        "active": true,
         "title": "텔레그램 카드의 미확인 해석 필드 제거",
-        "detail": "근거에서 확인되지 않은 선택 필드 2개를 2개 카드에서 제거했습니다.",
+        "detail": "근거에서 확인되지 않은 선택 필드 1개를 1개 카드에서 제거했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-08-21T12:55:22+00:00",
-        "last_observation_id": "2026-08-20T19:43:29.808272+00:00",
+        "last_seen_at": "2026-08-21T19:36:12+00:00",
+        "last_observation_id": "2026-08-21T19:35:17.100808+00:00",
         "min_occurrences": 2,
-        "first_seen_at": "2026-08-20T19:44:27+00:00",
-        "resolved_at": "2026-08-21T15:41:18+00:00"
+        "first_seen_at": "2026-08-21T19:36:12+00:00"
       },
       "quality:archive-integrity": {
         "consecutive": 5,
@@ -5369,7 +5367,7 @@
         "title": "RSS/피드 최신 항목이 오래됨: SFEN",
         "detail": "가장 최근 항목이 14일 전(2026-08-07T12:14:35+00:00)입니다. 수집은 성공하고 있어 접속 문제는 아니며, 관측된 정상 공백의 상한은 5일이었습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-08-21T19:35:09+00:00",
+        "last_seen_at": "2026-08-21T19:36:12+00:00",
         "last_observation_id": "2026-08-21T19:35:09+00:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-21T12:55:22+00:00",
