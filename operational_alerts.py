@@ -265,7 +265,10 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
 
     notification = {"sent": False, "count": len(due), "error": ""}
     if due:
+        # 운영자 문장과 기술 로그를 둘 다 남긴다. 실행 로그는 디버깅용이므로
+        # 해시·예외·지문이 사라지면 안 되고, 운영자 메시지에는 그것이 없어야 한다.
         print(monitor.format_admin_alerts(due))
+        print(monitor.format_technical_log(due))
         active_sender = sender or (telegram_sender_from_env() if notify else None)
         if active_sender is None:
             reason = "Telegram 환경변수 없음" if notify else "--notify 미지정"

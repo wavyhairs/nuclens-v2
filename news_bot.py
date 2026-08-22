@@ -24,6 +24,8 @@ import article_body
 import article_quality_gate
 import entity_match
 import news_archive
+# 반복 알림 억제 규칙을 여기서 다시 쓰지 않는다 — 규칙이 두 곳에 있으면 어긋난다.
+import operational_monitoring
 from data_quality import (
     clean_text,
     curation_errors,
@@ -1777,9 +1779,21 @@ def append_curation_failure(lost: dict[str, str], articles: list[dict],
 def append_quality_event(alert_key: str, title: str, detail: str, *,
                          severity: str = "warning", min_occurrences: int = 2,
                          items: list[dict] | None = None,
+                         impact: str = "", action: str = "",
+                         technical: str = "", level: str = "",
+                         fingerprint: str = "",
                          path: Path | None = None,
                          now: datetime | None = None) -> bool:
-    """관리자 알림기가 읽는 비치명 품질 이벤트를 append-only 로그에 남긴다."""
+    """관리자 알림기가 읽는 비치명 품질 이벤트를 append-only 로그에 남긴다.
+
+    ``impact``/``action``/``technical``/``level`` 은 운영자가 5초 안에 읽어야 하는
+    네 가지다 — 무슨 일이(title·detail), 서비스에 영향이 있는지, 내가 할 일이
+    있는지, 그리고 마지막에 기술 상세. 무슨 일인지 아는 곳이 그 문장을 쓴다.
+    비워 두면 알림기가 제목·상세만 렌더링한다(옛 동작).
+
+    ``fingerprint`` 는 상태 동일성 지문이다. 같은 값이면 이미 알린 것과 같은
+    상황이라 다시 부르지 않는다(``operational_monitoring.evaluate_alerts``).
+    """
     if not alert_key or not title:
         return False
     path = path or DELIVERY_LOG_FILE
@@ -1792,6 +1806,11 @@ def append_quality_event(alert_key: str, title: str, detail: str, *,
         "title": title[:120],
         "detail": detail[:700],
         "severity": severity if severity in {"info", "warning", "critical"} else "warning",
+        "level": level,
+        "impact": impact[:300],
+        "action": action[:300],
+        "technical": technical[:700],
+        "fingerprint": fingerprint[:200],
         "min_occurrences": max(1, int(min_occurrences or 1)),
         "items": (items or [])[:20],
     }
@@ -2125,12 +2144,20 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
         append_curation_failure(lost, articles)
 
     if final_integrity_quarantines:
+        count = len(final_integrity_quarantines)
         append_quality_event(
             "article-integrity-quarantine",
-            "제목·요약이 원문과 다른 기사 격리",
-            (f"재생성 후에도 {len(final_integrity_quarantines)}건이 다른 핵심 엔티티·수치·"
-             "사건을 가리켜 자동 큐·아카이브에서 제외했습니다."),
+            "원문과 다른 기사를 자동으로 제외했습니다",
+            (f"요약이 원문과 다르게 만들어진 기사 {count}건을 브리핑 후보와 "
+             "아카이브에서 뺐습니다. 다시 만들어 봐도 같아서 내보내지 않았습니다."),
             severity="critical", min_occurrences=1,
+            level="attention",
+            impact="없음 — 제외된 기사만 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
+            action="필요 없음 — 자동으로 걸러졌습니다. 건수가 계속 늘면 확인해 주세요.",
+            technical=(f"stage=curation-regen quarantined={count} "
+                       + "; ".join(str(row.get("reason") or "")[:80]
+                                   for row in list(final_integrity_quarantines.values())[:3])),
+            fingerprint=operational_monitoring.count_fingerprint("regen", count),
             items=list(final_integrity_quarantines.values()),
         )
 
@@ -3232,18 +3259,32 @@ def main() -> None:
         final_count = sum(1 for row in fallback_held if row.get("final"))
         append_quality_event(
             "unverified-fallback-held",
-            "미검증 fallback 기사 자동 발송 보류",
-            (f"큐레이션 근거가 없는 {len(fallback_held)}건을 큐에 넣지 않았습니다. "
-             f"이 중 재시도 상한 도달 {final_count}건은 자동 격리했습니다."),
+            "검증이 끝나지 않은 기사를 자동 보류했습니다",
+            (f"요약 근거가 확인되지 않은 기사 {len(fallback_held)}건을 발송 대기열에 "
+             f"넣지 않았습니다. 그중 {final_count}건은 재시도 상한에 닿아 제외했습니다."),
             severity="warning", min_occurrences=1 if final_count else 2,
+            level="attention",
+            impact="없음 — 보류된 기사만 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
+            action="필요 없음 — 다음 회차에 자동으로 다시 시도합니다.",
+            technical=f"held={len(fallback_held)} final_quarantine={final_count}",
+            fingerprint=operational_monitoring.count_fingerprint(
+                f"held-final-{bool(final_count)}", len(fallback_held)),
             items=fallback_held,
         )
     if integrity_held:
         append_quality_event(
             "article-integrity-quarantine",
-            "제목·요약이 원문과 다른 기사 격리",
-            f"원문 대조에서 명백한 사건·엔티티·핵심 수치 충돌 {len(integrity_held)}건을 제외했습니다.",
-            severity="critical", min_occurrences=1, items=integrity_held,
+            "원문과 다른 기사를 자동으로 제외했습니다",
+            (f"요약이 원문과 다르게 만들어진 기사 {len(integrity_held)}건을 수집 "
+             "단계에서 뺐습니다."),
+            severity="critical", min_occurrences=1,
+            level="attention",
+            impact="없음 — 제외된 기사만 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
+            action="필요 없음 — 자동으로 걸러졌습니다. 건수가 계속 늘면 확인해 주세요.",
+            technical=f"stage=collect quarantined={len(integrity_held)}",
+            fingerprint=operational_monitoring.count_fingerprint(
+                "collect", len(integrity_held)),
+            items=integrity_held,
         )
 
     # ---- 영구 아카이브 적재 (웹 확장용 — 실패해도 크롤·발송은 계속) ----------

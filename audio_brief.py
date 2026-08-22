@@ -282,11 +282,19 @@ def report_script_audit(audit, *, variant: str, date: object,
         if "script_evidence_missing" in codes:
             return news_bot.append_quality_event(
                 "audio-script-unverified",
-                f"오디오 대본 사실검증 생략: {label}",
-                (f"{day} {label} 대본을 기사 근거와 대조하지 못했습니다 — 근거 계약 "
-                 f"{contract_count}건. 이 회차의 수치·기관·일정은 검증되지 않은 채로 "
-                 "음원과 대본에 남았습니다."),
+                f"{label} 음원을 사실 확인 없이 내보냈습니다",
+                (f"{day} {label} 대본을 기사 근거와 대조하지 못했습니다. "
+                 "'문제 없음'이 아니라 '확인하지 못했음'입니다."),
                 severity="critical", min_occurrences=1,
+                # 서비스는 정상이지만 사람이 한 번 들어봐야 한다 — 조치가 있는
+                # '확인 필요'다. 발송 실패(🚨)와는 성격이 다르다.
+                level="attention",
+                impact=("음원과 대본은 정상 발송됐습니다. 다만 그 안의 수치·기관·일정은 "
+                        "확인되지 않은 상태입니다."),
+                action="이 회차 음원 내용을 한 번 들어봐 주세요.",
+                technical=(f"variant={variant} date={day} contracts={contract_count} "
+                           "code=script_evidence_missing"),
+                fingerprint=f"unverified:{day}:{variant}",
                 items=[{"variant": variant, "date": day, "contracts": contract_count}],
             )
         removed = list(audit.removed or ())
@@ -300,12 +308,22 @@ def report_script_audit(audit, *, variant: str, date: object,
                           "line": str(details.pop("line", ""))[:200], **details})
         return news_bot.append_quality_event(
             "audio-script-claim-removed",
-            f"오디오 대본의 미확인 문단 제외: {label}",
+            (f"{label} 음원을 만들지 못했습니다" if rejected else
+             f"{label} 대본에서 근거 없는 문단을 뺐습니다"),
             (f"{day} {label} 대본에서 기사 근거로 확인되지 않는 문단 {len(removed)}건을 "
-             + ("제외한 결과 남은 분량이 모자라 이 회차를 만들지 못했습니다."
+             + ("제외했더니 남은 분량이 모자라 이 회차를 만들지 못했습니다."
                 if rejected else "빼고 내보냈습니다.")),
             severity="critical" if rejected else "warning",
             min_occurrences=1 if rejected else 2,
+            level="action" if rejected else "attention",
+            impact=(f"오늘 {label} 음원이 나가지 않습니다. 텍스트 브리핑과 사이트는 정상입니다."
+                    if rejected else
+                    "없음 — 음원은 정상 발송됐고, 뺀 문단 외의 내용은 그대로입니다."),
+            action=("대본 근거가 왜 모자랐는지 확인해 주세요."
+                    if rejected else "필요 없음 — 자동으로 정리됐습니다."),
+            technical=(f"variant={variant} date={day} removed={len(removed)} "
+                       f"action={audit.action}"),
+            fingerprint=f"removed:{day}:{variant}:{len(removed)}:{audit.action}",
             items=items or [{"variant": variant, "date": day, "removed": len(removed)}],
         )
     except Exception as exc:

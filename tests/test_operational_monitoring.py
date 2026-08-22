@@ -258,7 +258,11 @@ class QualitySignalTests(unittest.TestCase):
         self.assertEqual("warning", signals[0].severity)
         self.assertEqual("github-run:123", signals[0].observation_id)
         self.assertEqual(1, signals[0].min_occurrences)
-        self.assertIn("정제 1건", signals[0].detail)
+        self.assertIn("1건", signals[0].detail)
+        # 자동 정정은 사고가 아니다 — 운영자 등급은 '확인 필요'여야 한다.
+        self.assertEqual(monitor.LEVEL_ATTENTION, signals[0].level)
+        self.assertIn("없음", signals[0].impact)
+        self.assertIn("sanitized=1", signals[0].technical)
 
     def test_archive_quarantine_and_sanitize_share_one_escalating_signal(self):
         signals = monitor.data_gate_signals({
@@ -268,8 +272,12 @@ class QualitySignalTests(unittest.TestCase):
         })
         self.assertEqual(1, len(signals))
         self.assertEqual("critical", signals[0].severity)
-        self.assertIn("격리 2건", signals[0].detail)
-        self.assertIn("정제 3건", signals[0].detail)
+        self.assertEqual(monitor.LEVEL_ATTENTION, signals[0].level)
+        self.assertIn("2건", signals[0].detail)
+        self.assertIn("3건", signals[0].detail)
+        # 해시·집계는 기술 상세로 내려간다.
+        self.assertIn("quarantined=2", signals[0].technical)
+        self.assertIn("sanitized=3", signals[0].technical)
 
     def test_issue_candidate_guards_reach_the_administrator(self):
         """후보 감시는 **판정을 여기서 다시 하지 않는다.** issue_candidate_stats 가
@@ -364,16 +372,21 @@ class WebPipelineSignalTests(unittest.TestCase):
         self.assertEqual(1, len(signals))
         self.assertEqual("quality:web-pipeline-failure", signals[0].key)
         self.assertEqual("daily-brief:1", signals[0].observation_id)
-        self.assertIn("웹 데이터 빌드=failure", signals[0].detail)
-        self.assertNotIn("Cloudflare", signals[0].detail)
+        # step 이름과 outcome 은 기술 상세다. 운영자 문장은 서비스 영향을 말한다.
+        self.assertIn("웹 데이터 빌드=failure", signals[0].technical)
+        self.assertNotIn("Cloudflare", signals[0].technical)
+        self.assertEqual(monitor.LEVEL_ACTION, signals[0].level)
+        self.assertIn("사이트", signals[0].impact)
 
     def test_metrics_and_deploy_failures_can_be_reported_together(self):
         signals = monitor.web_pipeline_signals({
             "web_build": "success", "data_gate": "failure", "web_deploy": "failure",
         }, observation_id="daily-brief:2")
         self.assertEqual(1, len(signals))
-        self.assertIn("데이터 품질 기록=failure", signals[0].detail)
-        self.assertIn("Cloudflare 배포·스모크=failure", signals[0].detail)
+        self.assertIn("데이터 품질 기록=failure", signals[0].technical)
+        self.assertIn("Cloudflare 배포·스모크=failure", signals[0].technical)
+        # 배포가 죽은 회차다 — 지표만 빈 것과 같은 등급으로 부르면 안 된다.
+        self.assertEqual(monitor.LEVEL_ACTION, signals[0].level)
 
     def test_all_success_has_no_failure_signal(self):
         self.assertEqual([], monitor.web_pipeline_signals({
@@ -429,10 +442,16 @@ class AlertLifecycleTests(unittest.TestCase):
         self.assertEqual(1, len(due))
         state = monitor.mark_notified(state, due, T0 + timedelta(hours=26))
 
+        # 사라진 문제는 **해결 통지 한 건**으로 닫는다. 닫혔다는 말을 듣지 못하면
+        # 어제 받은 경고가 아직 살아 있는지 알 수 없다.
         state, due = monitor.evaluate_alerts([], state, evaluated_scopes={"quality"},
                                              now=T0 + timedelta(hours=27))
-        self.assertEqual([], due)
+        self.assertEqual([monitor.LEVEL_RESOLVED], [row.level for row in due])
         self.assertFalse(state["items"]["quality:test"]["active"])
+        state = monitor.mark_notified(state, due, T0 + timedelta(hours=27))
+        _, again = monitor.evaluate_alerts([], state, evaluated_scopes={"quality"},
+                                           now=T0 + timedelta(hours=27, minutes=5))
+        self.assertEqual([], again)
         state, due = monitor.evaluate_alerts([self.signal("r5")], state,
                                              evaluated_scopes={"quality"}, now=T0 + timedelta(hours=28))
         self.assertEqual([], due)
@@ -471,7 +490,7 @@ class AlertLifecycleTests(unittest.TestCase):
                                              now=T0)
         self.assertTrue(result["sent"])
         self.assertIn("last_notified_at", sent["items"]["x"])
-        self.assertIn("Nuclens+ 운영 품질 알림", messages[0])
+        self.assertIn("Nuclens+ 운영 알림", messages[0])
 
     def test_unsent_alert_survives_recovery_and_next_day(self):
         signal = monitor.AlertSignal(
