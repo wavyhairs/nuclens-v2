@@ -1175,6 +1175,87 @@ class TestWeeklySections(unittest.TestCase):
         self.assertNotIn("겹치는 사건이다.", message)
 
 
+class TestWeeklyUpcomingDisabled(unittest.TestCase):
+    """예정 코너 비활성화 — **끈 것이지 지운 것이 아니다** (2026-08-22).
+
+    여기서 잠그는 것은 네 가지다.
+      ① 일정은 여전히 잡힌다 — 안 보이는 이유가 '못 찾아서'가 아니다.
+      ② 저장본에는 계속 실린다 — Event Calendar 를 설계할 때 대조할 재료다.
+      ③ 텔레그램에는 안 나간다.  ④ 웹 페이로드에도 안 실린다.
+    그리고 다섯째로, flag 하나를 켜면 ③이 되돌아온다. 되돌릴 수 있어야
+    비활성화이고, 그 스위치가 하나여야 다시 켤 때 빠뜨릴 곳이 없다.
+    (④의 웹 쪽 짝은 web/tests/test_prototype.py·weekly_sections.mjs 에 있다 —
+     페이로드를 짓는 코드와 그리는 코드가 그쪽에 있기 때문이다.)
+    """
+
+    NOW = datetime.fromisoformat(NOW_ISO).astimezone(weekly_bot.KST)
+    EMPTY_SYNTHESIS = {"weekly_intro": "", "policy_shifts": [], "theme_moves": [],
+                       "khnp_direct": "", "watchpoints": [], "report_candidates": [],
+                       "key_events": []}
+
+    def _items(self):
+        """예정 줄이 실제로 잡히는 재료 — 다른 코너에는 서지 않는 기사 하나."""
+        return [TestWeeklySections._article(
+            "u9", "한수원, 한빛원전 건식저장시설 주민 설명회 개최",
+            "한수원이 한빛원전 사용후핵연료 건식저장시설 주민 설명회를 연다.",
+            domain="u9.com", grade="nice_to_know", section="khnp", topics=["waste"],
+            detail="한수원은 7월 25일 홍농읍에서 주민 설명회를 개최할 예정이다.")]
+
+    def _sections(self, items):
+        sections = weekly_bot.build_week_sections(items, self.NOW)
+        # 이 검사들의 전제 — 재료가 안 잡혔으면 아래 '안 나온다'는 아무 말도 아니다.
+        self.assertEqual([row["date"] for row in sections["upcoming"]], ["2026-07-25"])
+        return sections
+
+    def test_the_flag_is_off(self):
+        self.assertFalse(weekly_sections.SHOW_WEEKLY_UPCOMING)
+
+    def test_schedules_are_still_extracted_and_saved(self):
+        """화면에서 껐다고 재료까지 버리지 않는다."""
+        items = self._items()
+        sections = self._sections(items)
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "weekly_reports.json"
+            weekly_bot.save_weekly_report(dict(self.EMPTY_SYNTHESIS), {"total": 1},
+                                          items, now=self.NOW, path=path,
+                                          sections=sections)
+            entry = json.loads(path.read_text(encoding="utf-8"))["reports"]
+        entry = entry[weekly_bot.week_id(self.NOW)]
+        self.assertEqual([row["date"] for row in entry["upcoming"]], ["2026-07-25"])
+
+    def test_telegram_does_not_print_the_upcoming_corner(self):
+        items = self._items()
+        message = weekly_bot.format_weekly(items, dict(self.EMPTY_SYNTHESIS),
+                                           self._sections(items), now=self.NOW)
+        self.assertNotIn("🗓", message)
+        self.assertNotIn("예정</b>", message)
+        # 머리말만 지우고 줄이 남는 일이 없어야 한다 — 제목과 날짜 둘 다 본다.
+        self.assertNotIn("건식저장시설 주민 설명회", message)
+        self.assertNotIn("7월 25일", message)
+
+    def test_other_corners_are_untouched(self):
+        """예정만 끈다 — 핵심사건·국가별 단신·발간물은 그대로 나간다."""
+        items = [TestWeeklySections._article(
+            "t9", "스페인 정부, 알마라스 원전 계속운전 승인",
+            "스페인 정부가 알마라스 원전의 계속운전을 승인했다.",
+            domain="t9.com", grade="nice_to_know", countries=["ES"])]
+        sections = weekly_bot.build_week_sections(items, self.NOW)
+        message = weekly_bot.format_weekly(items, dict(self.EMPTY_SYNTHESIS),
+                                           sections, now=self.NOW)
+        self.assertIn("국가별 단신", message)
+        self.assertIn("<b>스페인</b> — ", message)
+
+    def test_flipping_the_flag_back_on_restores_the_corner(self):
+        """스위치가 하나인지 본다 — 다시 켤 때 고칠 곳이 여기저기면 못 켠다."""
+        items = self._items()
+        sections = self._sections(items)
+        with patch.object(weekly_sections, "SHOW_WEEKLY_UPCOMING", True):
+            message = weekly_bot.format_weekly(items, dict(self.EMPTY_SYNTHESIS),
+                                               sections, now=self.NOW)
+        self.assertIn("🗓 예정", message)
+        self.assertIn("7월 25일", message)
+
+
 class TestWeeklyWorkflow(unittest.TestCase):
     def test_workflow_can_commit_and_rebases_on_conflict(self):
         root = Path(__file__).parent.parent
