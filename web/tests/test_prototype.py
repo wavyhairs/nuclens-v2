@@ -4301,31 +4301,67 @@ class WeeklyRenderTests(unittest.TestCase):
         self.assertIn('id="todayAgendaTitle">주간 3분<', self.html)
         self.assertNotIn("오늘 3분</strong>", self.html)
 
-    def test_weekly_report_only_owns_the_two_week_corners(self):
+    def test_weekly_report_does_not_repeat_what_today_already_says(self):
         """주간 판세는 오늘 화면이 담당하는 문장을 다시 내지 않는다.
 
-        고정 코너는 다섯이었다. '이번 주 판을 바꾼 것'(weekly_intro +
-        policy_shifts)과 '다음 주 하나만 본다면'(watchpoints)은 오늘 화면의
-        '핵심 결론'·'이번 주 해설'·'지금 확인할 것'과 같은 재료다 — 실측
-        2026-08-08: 흐름 첫 화면 산문 여섯 문단 중 일곱 문장이 오늘 탭과 글자
-        그대로 동일했다. 탭을 옮겼는데 같은 글이 다시 나오면 깊이가 아니라 반복이다.
-        '아직 결론 나지 않은 것'(open_questions)도 같은 이유로 뺐다 — 같은 문장이
-        선두 카드의 '다음 확인' 칸과 상세 모달에 이미 나오고, 채움률은 6/168 이다.
-        남는 것은 테마 강약과 한수원 직접 영향 둘뿐이다.
+        '이번 주 판을 바꾼 것'(weekly_intro + policy_shifts)과 '다음 주 하나만
+        본다면'(watchpoints)은 오늘 화면의 '핵심 결론'·'이번 주 해설'·'지금
+        확인할 것'과 같은 재료다 — 실측 2026-08-08: 흐름 첫 화면 산문 여섯 문단
+        중 일곱 문장이 오늘 탭과 글자 그대로 동일했다. 탭을 옮겼는데 같은 글이
+        다시 나오면 깊이가 아니라 반복이다. '아직 결론 나지 않은 것'
+        (open_questions)도 같은 이유로 빠졌다.
+
+        코너는 여섯이다. 넷은 **오늘 화면에 없던 결정적 재료**이고(핵심사건·
+        국가별 단신·발간물·예정 — 전부 weekly_bot 이 사건 묶음과 근거 계약에서
+        골라 저장본에 실어 둔 것), 나머지 둘이 원래의 해석 코너다. 새 코너가
+        오늘 화면의 문장을 다시 쓰는 것이 아니므로 위 금지는 그대로다.
         """
         weekly = self.script.split("function renderWeeklyReport(", 1)[1].split("\nfunction ", 1)[0]
         # 왜 뺐는지는 주석에 남아 있어야 한다. 검사 대상은 실행되는 코드뿐이다.
         code = "\n".join(re.sub(r"//.*$", "", line) for line in weekly.splitlines())
-        for title in ("조용하지만 놓치면 안 되는 것", "한수원에 직접 닿는 변화"):
+        corners = ("이번 주", "국가별 단신", "이번 주 발간물", "예정",
+                   "조용하지만 놓치면 안 되는 것", "한수원에 직접 닿는 변화")
+        for title in corners:
             self.assertIn(f'weeklySection("{title}"', code)
-        self.assertEqual(code.count("weeklySection("), 2,
-                         "주간 판세 고정 코너는 둘이다")
+        self.assertEqual(code.count("weeklySection("), len(corners),
+                         "주간 판세 고정 코너는 여섯이다")
         for title in ("이번 주 판을 바꾼 것", "다음 주 하나만 본다면",
                       "아직 결론 나지 않은 것"):
             self.assertNotIn(f'weeklySection("{title}"', code,
                              f"'{title}' 이 오늘 화면과 겹친 채로 돌아왔다")
         for field in ("weekly_intro", "policy_shifts", "watchpoints", "open_questions"):
             self.assertNotIn(field, code, f"{field} 은 오늘 화면 소유다")
+
+    def test_weekly_corners_all_speak_for_the_same_week(self):
+        """한 화면 안에서 기간이 섞이면 독자가 읽은 '이번 주'가 어느 주인지 모른다.
+
+        참고 구현에서 실제로 그랬다 — 머리말은 8/15~21 인데 바로 아래 블록은
+        8/16~22 였다. 코너 넷이 전부 **같은 리포트 레코드**에서 나오면 그런 일이
+        구조적으로 안 생긴다. '예정'만 그 구간의 뒤를 본다.
+        """
+        weekly = self.script.split("function renderWeeklyReport(", 1)[1].split("\nfunction ", 1)[0]
+        code = "\n".join(re.sub(r"//.*$", "", line) for line in weekly.splitlines())
+        for field in ("report.top_stories", "report.country_briefs",
+                      "report.publications", "report.upcoming"):
+            self.assertIn(field, code, f"{field} 은 저장본에서 와야 한다")
+        self.assertIn("report.week_start", code)
+        self.assertIn("report.week_end", code)
+        # 오늘 날짜로 기간을 다시 만들면 리포트가 말하는 주와 어긋난다.
+        self.assertNotIn("new Date()", code)
+
+    def test_weekly_corner_labels_stay_in_their_own_column(self):
+        """국가명·날짜가 제목에 바로 붙으면 '한국정부'처럼 한 낱말로 읽힌다."""
+        self.assertIn(".weekly-brief {", self.style)
+        self.assertIn(".weekly-brief-country", self.style)
+        self.assertIn("weekly-brief-country", self.script)
+        grid = self.style.split(".weekly-brief {", 1)[1].split("}", 1)[0]
+        self.assertIn("grid-template-columns", grid)
+        # 좁은 화면에서는 라벨 열이 본문을 반으로 자르므로 윗줄로 올린다 —
+        # 테마 강약이 이미 쓰는 규칙과 같은 자리에 있어야 같이 유지된다.
+        mobile = self.style.split("@media", 1)[-1]
+        self.assertIn(".weekly-brief { grid-template-columns: minmax(0, 1fr)",
+                      self.style)
+        self.assertTrue(mobile)
 
     def test_flow_tab_opens_with_indicators_not_prose(self):
         """설명문을 읽기 전에 방향과 크기를 알아볼 수 있어야 한다."""

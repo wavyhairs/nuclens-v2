@@ -1998,6 +1998,31 @@ dialog[open] { animation: dialog-in var(--mo-2) var(--mo-ease-out); }
 .theme-name.up { color: var(--c-positive); }
 .theme-name.down { color: var(--c-critical); }
 .theme-body p { margin: 0 0 6px; }
+/* 결정적 코너. 핵심사건은 문단, 국가별·예정은 라벨 열 — 라벨 열 격자는 테마
+   강약이 쓰는 것과 같은 값이라 모바일 스택 규칙도 같이 탄다. */
+.weekly-story { padding: var(--sp-3) 0; border-top: var(--bd-1) solid var(--c-border); }
+.weekly-story:first-of-type { padding-top: 0; border-top: 0; }
+.weekly-story-head { margin: 0 0 4px; }
+.weekly-story-head strong { color: var(--c-text); font-weight: 700; }
+.weekly-story-link {
+  padding: 0; border: 0; background: none; color: var(--c-text);
+  font: inherit; font-weight: 700; text-align: left; cursor: pointer;
+}
+.weekly-story-link:hover { text-decoration: underline; }
+.weekly-spread { margin: 4px 0 0; color: var(--c-text-secondary); font-size: var(--t-min); }
+.weekly-brief {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-top: var(--bd-1) solid var(--c-border);
+}
+.weekly-brief:first-of-type { border-top: 0; }
+.weekly-brief-country { margin: 0; color: var(--c-text-secondary); font-weight: 700; white-space: nowrap; }
+.weekly-brief-body p { margin: 0; color: var(--c-text-secondary); }
+.weekly-pub { padding: var(--sp-2) 0; }
+.weekly-pub-org { display: block; color: var(--c-text-secondary); font-size: var(--t-min); }
+.weekly-pub a { color: var(--c-text); font-weight: 700; }
 .weekly-list { margin: 6px 0 0; padding-left: 18px; color: var(--c-text-secondary); }
 .weekly-list li { margin-bottom: 4px; }
 .weekly-evidence { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
@@ -3031,6 +3056,7 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   .topic-direction { justify-self: end; }
   /* 132px 라벨 열은 좁은 화면에서 본문을 반으로 자른다 — 테마명을 윗줄로 올린다. */
   .theme-move { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
+  .weekly-brief { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
   #homeWeeklyStoryBody { grid-template-columns: 1fr; }
   .home-weekly-intro { grid-column: 1; }
   .mobile-tabs small { position: absolute; top: 6px; right: calc(50% - 25px); min-width: 17px; border-radius: var(--r-1); background: var(--c-signal); color: var(--c-signal-ink); font-size: var(--t-min); font-weight: 700; }

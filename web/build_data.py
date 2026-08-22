@@ -3733,6 +3733,43 @@ def _enrich_weekly_report(raw: dict, issue_rows: list[dict],
     report["key_events"] = [r for r in (report.get("key_events") or [])
                             if isinstance(r, dict)]
     report["watchpoints"] = [str(w) for w in (report.get("watchpoints") or []) if w]
+
+    # 결정적 코너(핵심사건·국가별 단신·발간물·예정)는 weekly_bot 이 이미 골라
+    # 저장했다. 여기서 다시 고르지 않는다 — 텔레그램과 웹이 다른 목록을 내면
+    # 그것이 곧 두 표면의 불일치다. 웹이 더하는 것은 두 가지뿐이다.
+    #   · 사건 → 이슈 상세 링크 (웹에만 있는 병합 결과)
+    #   · 기관 표기 정규화 (발간물 탭과 같은 규칙)
+    # 핵심사건에 이미 선 이슈는 아래 코너에서 뺀다. 봇은 사건(clusterer) 단위로
+    # 겹침을 걷어내지만, 웹에는 그보다 넓은 이슈 병합 결과가 있어 서로 다른
+    # 사건 둘이 같은 상세 페이지를 가리킬 수 있다 (실측 W34: 두산 기자재
+    # 공급계약과 SK이노 사업 공조가 한 이슈). 두 줄이 같은 곳으로 가면 독자에게
+    # 그것은 두 사건이 아니라 반복이다.
+    taken: set[str] = set()
+    for key in ("top_stories", "country_briefs", "upcoming"):
+        rows = []
+        for raw_row in report.get(key) or []:
+            if not isinstance(raw_row, dict):
+                continue
+            row = dict(raw_row)
+            issue = by_short.get(str(row.get("key") or "")[:8])
+            if issue:
+                if key != "top_stories" and issue["issue_id"] in taken:
+                    continue
+                row["issue_id"] = issue["issue_id"]
+                taken.add(issue["issue_id"])
+            rows.append(row)
+        report[key] = rows
+    pubs = []
+    for raw_pub in report.get("publications") or []:
+        if not isinstance(raw_pub, dict):
+            continue
+        row = dict(raw_pub)
+        org = PUBLICATION_ORG_ALIASES.get(str(row.get("org") or "").strip(),
+                                          str(row.get("org") or "").strip())
+        row["org"] = org
+        row["title"] = strip_org_prefix(str(row.get("title") or ""), org)
+        pubs.append(row)
+    report["publications"] = pubs
     # 이슈 수는 여기서 다시 센다. 봇은 제목 정규화로 어림잡을 수밖에 없지만
     # (임베딩·LLM 병합 결과가 없다) 웹에는 실제 병합 결과가 있다.
     merged = merged_issue_count(issue_rows, report.get("week_start"), report.get("week_end"))

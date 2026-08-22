@@ -111,3 +111,4 @@ jobs:
           node --check web/public/app.js
           node web/tests/date_window.mjs
           node web/tests/weekly_selector.mjs
+          node web/tests/weekly_sections.mjs

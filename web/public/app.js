@@ -3010,6 +3010,58 @@ function weeklySection(title, note, body) {
     + (note ? `<p class="data-note">${esc(note)}</p>` : "") + body + `</section>`;
 }
 
+// 결정적 코너 — 재료는 weekly_bot 이 고르고 저장한 것 그대로다. 화면은 순서와
+// 표기만 정한다. 사건에 이슈가 붙어 있으면 제목이 그 상세로 가는 버튼이 된다.
+function weeklyStoryTitle(row) {
+  const label = esc(row.title || "");
+  if (!label) return "";
+  return row.issue_id
+    ? `<button type="button" class="weekly-story-link" data-issue-id="${esc(row.issue_id)}">${label}</button>`
+    : `<strong>${label}</strong>`;
+}
+
+function weeklyTopStories(rows) {
+  if (!rows.length) return "";
+  return rows.map(row => {
+    // 보도 폭은 '몇 곳이 따로 확인했나'라서 숫자가 정보다. 한 건뿐이면 안 쓴다 —
+    // 모든 줄에 붙는 표시는 신호가 아니라 배경이 된다.
+    const spread = row.articles > 1
+      ? `<p class="weekly-spread">이어지는 이슈 · ${row.articles}건 · 매체 ${row.outlets}곳</p>` : "";
+    return `<div class="weekly-item weekly-story"><p class="weekly-story-head">${weeklyStoryTitle(row)}</p>`
+      + (row.summary ? `<p>${esc(row.summary)}</p>` : "") + spread + `</div>`;
+  }).join("");
+}
+
+function weeklyCountryBriefs(rows) {
+  if (!rows.length) return "";
+  // 국가명은 제목과 **다른 칸**에 둔다. 한 줄로 이으면 '한국정부'처럼 한 낱말로
+  // 읽힌다 — 라벨 열은 테마 강약이 쓰는 것과 같은 격자다.
+  return rows.map(row =>
+    `<div class="weekly-brief"><p class="weekly-brief-country">${esc(row.country_kr || row.country || "")}</p>`
+    + `<div class="weekly-brief-body"><p>${weeklyStoryTitle(row)}</p></div></div>`).join("");
+}
+
+function weeklyPublications(rows) {
+  if (!rows.length) return "";
+  return rows.map(row => {
+    const org = row.org ? `<span class="weekly-pub-org">${esc(row.org)}</span>` : "";
+    return `<div class="weekly-item weekly-pub">${org}`
+      + `<p><a href="${esc(row.url)}" target="_blank" rel="noopener">${esc(row.title)}</a></p>`
+      + (row.gist ? `<p class="data-note">${esc(row.gist)}</p>` : "") + `</div>`;
+  }).join("");
+}
+
+function weeklyUpcoming(rows) {
+  if (!rows.length) return "";
+  return rows.map(row => {
+    // 정밀도가 '월'이면 날짜를 지어내지 않는다 — 저장본이 말하는 만큼만 쓴다.
+    const [, month, day] = (row.date || "").split("-");
+    const when = row.precision === "month" ? `${Number(month)}월` : `${Number(month)}월 ${Number(day)}일`;
+    return `<div class="weekly-brief"><p class="weekly-brief-country">${esc(when)}</p>`
+      + `<div class="weekly-brief-body"><p>${weeklyStoryTitle(row)}</p></div></div>`;
+  }).join("");
+}
+
 // 흐름 탭의 첫 블록 — 설명문보다 방향과 크기가 먼저 온다.
 //
 // theme_moves 의 해설을 각 행에 접어 붙이려다 말았다. 테마는 LLM 자유 서술이고
@@ -3053,7 +3105,17 @@ function renderWeeklyReport() {
   // 해설'이 같은 문장을 이미 낸다 — 실측 2026-08-08: 흐름 첫 화면 산문 여섯
   // 문단 중 일곱 문장이 오늘 탭과 글자 그대로 동일. 탭을 옮겼는데 같은 글이
   // 다시 나오면 그건 깊이가 아니라 반복이다.
+  // 코너 순서는 "무슨 일이 있었나 → 어디서 → 무엇을 읽나 → 다음은 언제" 다음에
+  // 해석이 온다. 재료는 전부 같은 리포트(같은 기간)에서 나오므로 화면 안에서
+  // 기간이 섞이지 않는다 — '예정'만 그 기간의 **뒤**를 본다.
+  const weekLabel = `${dateLabel(report.week_start)}–${dateLabel(report.week_end)}`;
   document.getElementById("weeklyReportBody").innerHTML = [
+    weeklySection("이번 주", `${weekLabel} · 주요 사건`,
+      weeklyTopStories(report.top_stories || [])),
+    weeklySection("국가별 단신", "", weeklyCountryBriefs(report.country_briefs || [])),
+    weeklySection("이번 주 발간물", "", weeklyPublications(report.publications || [])),
+    weeklySection("예정", `${dateLabel(report.week_end)} 이후 · 원문에서 확인된 일정만`,
+      weeklyUpcoming(report.upcoming || [])),
     // 테마명을 라벨 열로 뗀다. 화살표·테마·설명이 한 문장으로 이어져 있으면
     // 훑는 눈이 걸릴 데가 없다 — 카드의 세 칸과 같은 원칙이다.
     // 라벨을 '투자 테마 강약'에서 중화했다(2026-08-11 사용자 결정). 한수원
