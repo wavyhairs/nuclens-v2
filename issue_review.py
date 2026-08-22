@@ -69,6 +69,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
+import issue_candidate_stats
 import llm_cache
 
 try:  # gemini_client 없이도 import 가능해야 한다 (테스트는 대역 클라이언트를 넣는다)
@@ -208,11 +209,27 @@ def in_review_band(diagnostics: dict,
 
 def select_pairs(review_candidates: list[dict],
                  low: float = REVIEW_BAND_LOW,
-                 high: float = REVIEW_BAND_HIGH) -> list[dict]:
-    """검토 후보 중 회색지대만 골라낸다. candidate_id 기준으로 중복 제거."""
+                 high: float = REVIEW_BAND_HIGH,
+                 top_n: int = issue_candidate_stats.ISSUE_CANDIDATE_TOP_N,
+                 ) -> list[dict]:
+    """검토 후보 중 회색지대만 골라낸다. candidate_id 기준으로 중복 제거.
+
+    후보 목록을 **반드시 통과해야 하는 경로는 이 LLM 검수 하나뿐**이다(제목·
+    태그·임베딩·지문 병합은 `issue_similarity` 안에서 끝난다). 그래서 기사당
+    상위 `top_n` 위 밖을 버리는 자리도 여기다 — 최종 JSON 만 잘라 보이게 하는
+    것이 아니라 실제로 다음 단계로 넘어가지 않게 한다.
+
+    자르는 순서가 중요하다. 순위는 **회색지대로 좁히기 전, 그 기사의 후보 전체**
+    안에서 매긴다 — `topn_retention` 이 보존율을 그렇게 쟀기 때문이다. 밴드만
+    남기고 그 안에서 상위 12를 고르면 더 느슨한 다른 규칙이 되고, 실측한 100%
+    보존이 그대로 옮겨 오지 않는다.
+
+    `review_candidates` 원본은 건드리지 않는다 — 진단이 전수 분포를 그대로 봐야
+    Top-15·20 의 여유가 계속 보인다.
+    """
     picked: list[dict] = []
     seen: set[str] = set()
-    for row in review_candidates or []:
+    for row in issue_candidate_stats.within_article_top_n(review_candidates, top_n):
         if not isinstance(row, dict):
             continue
         pair_id = row.get("candidate_id")

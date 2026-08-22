@@ -58,6 +58,16 @@ REVIEW_BAND = (0.84, 0.92)
 # 실측 546건 중 385건만 보인다. 빌드 안에서는 `match_diagnostics` 전량을 본다.
 TOP_N_CHOICES: tuple[int, ...] = (3, 5, 10, 12, 15, 20)
 
+# 실제로 거는 기사당 후보 상한. **하나뿐인 출처**다 — 아래 `GUARD_LIMITS["top_n"]`
+# 도 이 값을 읽고, `issue_review.select_pairs` 가 LLM 검수로 넘길 때 이 값으로
+# 자른다. 계측 levels 는 그대로 3~20 을 유지한다(15·20 은 여유 확인용).
+#
+# 12 인 이유는 실측이다. 2026-08-22 러너 전수(후보 33,991건 · LLM 승인 병합
+# 170건)에서 승인 병합 보존율이 처음으로 100% 가 되는 최소값이 12였다:
+#     N=3  166/170 (97.65%)   N=5  169/170 (99.41%)   N=10 169/170 (99.41%)
+#     N=12 170/170 (100%)     N=15 170/170            N=20 170/170
+ISSUE_CANDIDATE_TOP_N = 12
+
 
 class SearchTelemetry:
     """후보 생성 루프의 계수기. 세는 것 말고는 아무것도 하지 않는다.
@@ -386,6 +396,38 @@ def _count_hits(records: list[dict], predicate, diag_of) -> int:
                if predicate(diag_of(record), _facilities_of(record)))
 
 
+def within_article_top_n(rows: list[dict],
+                        top_n: int = ISSUE_CANDIDATE_TOP_N) -> list[dict]:
+    """기사(`right_hash`)별 후보를 점수 상위 `top_n` 위까지로 좁힌다.
+
+    순위 정의가 아래 `topn_retention` 과 **글자 그대로 같아야 한다**. 계측은
+    "상위 N 안에 남았나"로 보존율을 재고 이 함수는 그 판정을 실제로 집행하므로,
+    둘이 어긋나면 100% 라고 측정해 놓고 실제로는 병합을 잃는다. 그래서 같은
+    자리에 붙여 두고 테스트가 둘의 일치를 잠근다.
+
+    동점은 **관대하게** 둔다 — 점수가 같으면 순위도 같아서 경계에 걸친 동점은
+    다 남는다(실측 33,991건에서 22건, 0.06%). 정렬해서 정확히 N개를 자르면
+    같은 점수 중 무엇이 남는지가 목록 순서에 좌우되고, 계측이 보장한 100% 가
+    그대로 옮겨 오지 않는다. 이 함수는 입력 순서와 무관한 순수 함수다.
+
+    입력은 변형하지 않는다(모듈 머리말의 가드레일).
+    """
+    if not top_n or top_n <= 0:
+        return [row for row in rows or [] if isinstance(row, dict)]
+    scores: dict[str, list[float]] = defaultdict(list)
+    kept_rows = [row for row in rows or [] if isinstance(row, dict)]
+    for row in kept_rows:
+        scores[str(row.get("right_hash") or "")].append(
+            float(row.get("candidate_score") or 0))
+    out: list[dict] = []
+    for row in kept_rows:
+        score = float(row.get("candidate_score") or 0)
+        peers = scores[str(row.get("right_hash") or "")]
+        if sum(1 for other in peers if other > score) < top_n:
+            out.append(row)
+    return out
+
+
 def topn_retention(rows: list[dict], merges: list[dict],
                    choices: tuple[int, ...] = TOP_N_CHOICES) -> dict:
     """B안(기사당 Top-N)이 무엇을 지키고 무엇을 버리는지.
@@ -499,8 +541,10 @@ GUARD_LIMITS: dict[str, object] = {
     # 표본이 이보다 적으면 순위 통계를 신뢰하지 않는다(뉴스가 한산한 날의
     # 분모 문제 — TRACKING_WINDOW_BRIEFINGS 주석과 같은 함정이다).
     "preselect_min_sample": 50,
-    # 기사당 남길 후보 수 계획값.
-    "top_n": 10,
+    # 기사당 남길 후보 수 — **계획값이 아니라 실제로 걸린 상한**이다
+    # (`issue_review.select_pairs`). 그래서 가드도 이 값에서 운다: Top-12 가
+    # 승인 병합을 하나라도 놓치면 그 회차에 바로 알아야 한다.
+    "top_n": ISSUE_CANDIDATE_TOP_N,
     # `llm_approved` 는 후보 목록을 반드시 거치는 유일한 병합 경로다.
     # 하나라도 못 지키면 그 컷은 쓸 수 없다.
     "top_n_min_retention": 1.0,

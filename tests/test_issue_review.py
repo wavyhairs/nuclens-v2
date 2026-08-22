@@ -93,6 +93,63 @@ class BandTests(unittest.TestCase):
         self.assertEqual([row["candidate_id"] for row in picked], ["in1"])
 
 
+class SelectPairsTopNTests(unittest.TestCase):
+    """후보 목록을 반드시 거치는 경로는 LLM 검수 하나뿐이라, 상한도 여기서 는다."""
+
+    def rows(self, count, article="a1", start=0.919):
+        # 전부 회색지대(0.84~0.92) 안에 둔다 — 상한만 시험한다.
+        return [{"candidate_id": f"{article}-{i}", "right_hash": article,
+                 "candidate_score": round(start - i * 0.001, 4),
+                 "diagnostics": {"embedding_similarity": round(start - i * 0.001, 4),
+                                 "blocked_by": []}}
+                for i in range(count)]
+
+    def test_twelve_or_fewer_are_all_reviewed(self):
+        picked = issue_review.select_pairs(self.rows(12))
+        self.assertEqual(len(picked), 12)
+
+    def test_beyond_twelve_only_the_top_twelve_are_reviewed(self):
+        picked = issue_review.select_pairs(self.rows(30))
+        self.assertEqual(len(picked), 12)
+        self.assertEqual([row["candidate_id"] for row in picked],
+                         [f"a1-{i}" for i in range(12)])
+
+    def test_the_cap_counts_per_article(self):
+        rows = self.rows(30, "a1") + self.rows(4, "a2")
+        picked = issue_review.select_pairs(rows)
+        seen = {}
+        for row in picked:
+            seen[row["right_hash"]] = seen.get(row["right_hash"], 0) + 1
+        self.assertEqual(seen, {"a1": 12, "a2": 4})
+
+    def test_rank_is_taken_before_the_band_filter(self):
+        """순위는 그 기사의 **후보 전체** 안에서 매긴다.
+
+        밴드로 좁힌 뒤 상위 12를 고르면 더 느슨한 다른 규칙이 되고, 실측한
+        100% 보존이 그대로 옮겨 오지 않는다. 밴드 밖 고득점 후보가 자리를
+        차지하는 것이 계측이 잰 그림이다.
+        """
+        # 밴드 위(0.92 이상) 후보 12개가 순위를 먼저 채운다.
+        above = [{"candidate_id": f"hi-{i}", "right_hash": "a1",
+                  "candidate_score": 0.99 - i * 0.001,
+                  "diagnostics": {"embedding_similarity": 0.99, "blocked_by": []}}
+                 for i in range(12)]
+        picked = issue_review.select_pairs(above + self.rows(3))
+        self.assertEqual(picked, [])
+
+    def test_the_band_boundaries_are_untouched(self):
+        self.assertEqual((issue_review.REVIEW_BAND_LOW,
+                          issue_review.REVIEW_BAND_HIGH), (0.84, 0.92))
+        rows = [candidate("low", 0.839), candidate("in", 0.84),
+                candidate("high", 0.92), candidate("in2", 0.9199)]
+        picked = issue_review.select_pairs(rows)
+        self.assertEqual([row["candidate_id"] for row in picked], ["in", "in2"])
+
+    def test_an_explicit_zero_keeps_every_candidate(self):
+        """수정 전 동작을 재현할 수 있어야 backtest 가 성립한다."""
+        self.assertEqual(len(issue_review.select_pairs(self.rows(30), top_n=0)), 30)
+
+
 class ReviewTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

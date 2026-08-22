@@ -108,6 +108,103 @@ class TopNRetentionTests(unittest.TestCase):
         self.assertEqual(levels[10]["llm_approved_kept"], 1)
 
 
+class WithinArticleTopNTests(unittest.TestCase):
+    """실제로 거는 상한. 계측이 잰 그 순위를 그대로 집행해야 한다."""
+
+    def test_the_cap_is_the_measured_hundred_percent_line(self):
+        """12 는 감이 아니라 실측 최소값이다 — 가드도 같은 값에서 운다."""
+        self.assertEqual(stats.ISSUE_CANDIDATE_TOP_N, 12)
+        self.assertEqual(stats.GUARD_LIMITS["top_n"], 12)
+        self.assertEqual(stats.GUARD_LIMITS["top_n_min_retention"], 1.0)
+
+    def test_twelve_or_fewer_candidates_pass_through_untouched(self):
+        rows = [candidate(0.9 - i / 100, article="a1") for i in range(12)]
+        kept = stats.within_article_top_n(rows)
+        self.assertEqual(len(kept), 12)
+        self.assertEqual([r["candidate_id"] for r in kept],
+                         [r["candidate_id"] for r in rows])
+
+    def test_only_the_top_twelve_go_on(self):
+        rows = [candidate(0.99 - i / 100, article="a1") for i in range(20)]
+        kept = stats.within_article_top_n(rows)
+        self.assertEqual(len(kept), 12)
+        # 남은 것은 점수 상위 12개다.
+        self.assertEqual({r["candidate_score"] for r in kept},
+                         {r["candidate_score"] for r in rows[:12]})
+
+    def test_the_cap_is_per_article_not_global(self):
+        rows = ([candidate(0.99 - i / 100, article="a1") for i in range(20)]
+                + [candidate(0.5 - i / 100, article="a2") for i in range(3)])
+        kept = stats.within_article_top_n(rows)
+        by_article = Counter(r["right_hash"] for r in kept)
+        self.assertEqual(by_article, Counter({"a1": 12, "a2": 3}))
+
+    def test_ties_do_not_depend_on_input_order(self):
+        """동점이 경계에 걸려도 결과가 목록 순서로 흔들리면 안 된다."""
+        rows = ([candidate(0.9, article="a1")] * 0
+                + [candidate(0.9 - i / 100, article="a1") for i in range(11)]
+                + [candidate(0.5, article="a1"), candidate(0.5, article="a1")])
+        forward = {id(r) for r in stats.within_article_top_n(rows)}
+        backward = {id(r) for r in stats.within_article_top_n(list(reversed(rows)))}
+        self.assertEqual(forward, backward)
+        # 동점은 관대하게 남긴다 — 계측이 보장한 보존율을 그대로 옮기기 위해서다.
+        self.assertEqual(len(forward), 13)
+
+    def test_enforcement_agrees_with_the_retention_measurement(self):
+        """집행과 계측이 어긋나면 100% 라고 재 놓고 실제로는 병합을 잃는다."""
+        rows = [candidate(0.99 - i / 100, article="a1") for i in range(20)]
+        rows += [candidate(0.88 - i / 100, article="a2") for i in range(5)]
+        kept = {r["candidate_id"] for r in stats.within_article_top_n(rows)}
+        scores = {}
+        for row in rows:
+            scores.setdefault(row["right_hash"], []).append(row["candidate_score"])
+        measured = {
+            row["candidate_id"] for row in rows
+            if sum(1 for o in scores[row["right_hash"]]
+                   if o > row["candidate_score"]) < stats.ISSUE_CANDIDATE_TOP_N
+        }
+        self.assertEqual(kept, measured)
+
+    def test_zero_disables_the_cap(self):
+        rows = [candidate(0.99 - i / 100, article="a1") for i in range(20)]
+        self.assertEqual(len(stats.within_article_top_n(rows, 0)), 20)
+
+    def test_the_measured_levels_still_span_past_the_cap(self):
+        """15·20 은 여유 확인용으로 남는다 — 데이터가 변하면 여기서 먼저 보인다."""
+        self.assertIn(stats.ISSUE_CANDIDATE_TOP_N, stats.TOP_N_CHOICES)
+        self.assertTrue([n for n in stats.TOP_N_CHOICES
+                         if n > stats.ISSUE_CANDIDATE_TOP_N])
+
+
+class TopNGuardTests(unittest.TestCase):
+    """상한이 승인 병합을 놓치면 그 회차에 바로 울어야 한다."""
+
+    def retention(self, kept, total=170, n=12):
+        return {"top_n_retention": {
+            "llm_approved_total": total,
+            "levels": [{"n": n, "llm_approved_kept": kept,
+                        "llm_approved_share": kept / total}],
+        }}
+
+    def test_full_retention_is_silent(self):
+        self.assertEqual(stats.guardrails(self.retention(170)), [])
+
+    def test_losing_one_approved_merge_warns(self):
+        found = stats.guardrails(self.retention(169))
+        self.assertEqual([row["id"] for row in found],
+                         ["issue-candidate:topn-retention"])
+        self.assertIn("Top-12", found[0]["title"])
+
+    def test_the_guard_now_watches_twelve_not_ten(self):
+        """운영 상한이 12 이므로 10 에서 울면 적용하지 않는 컷을 두고 우는 것이다."""
+        at_ten = {"top_n_retention": {
+            "llm_approved_total": 170,
+            "levels": [{"n": 10, "llm_approved_kept": 169, "llm_approved_share": 0.9941},
+                       {"n": 12, "llm_approved_kept": 170, "llm_approved_share": 1.0}],
+        }}
+        self.assertEqual(stats.guardrails(at_ten), [])
+
+
 class PrefilterShadowTests(unittest.TestCase):
     def test_a_filter_reports_what_it_would_have_killed(self):
         """줄어드는 수만 세면 그 표는 대가를 숨긴다. 실제 병합 손실이 같이
@@ -216,11 +313,14 @@ class GuardrailTests(unittest.TestCase):
         self.assertIn("여유가 줄었다", found[0]["title"])
 
     def test_topn_retention_below_one_pages(self):
+        # 감시하는 N 은 **실제로 거는 상한**이다(2026-08-22 부터 12). 여기 숫자를
+        # 손으로 적으면 상한을 옮길 때 이 테스트만 조용히 어긋난다.
         diag = {
             "search_space": [],
             "top_n_retention": {
                 "llm_approved_total": 132,
-                "levels": [{"n": 10, "llm_approved_kept": 129, "llm_approved_share": 0.977}],
+                "levels": [{"n": stats.ISSUE_CANDIDATE_TOP_N,
+                            "llm_approved_kept": 129, "llm_approved_share": 0.977}],
             },
         }
         found = stats.guardrails(diag)
