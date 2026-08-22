@@ -1,4 +1,4 @@
-// 주간 3분이 어느 리포트를 붙이는가 — 토요일마다 화면이 비던 회귀의 방지선.
+// '한 주의 원자력' 블록이 어느 리포트를 붙이는가 — 토요일마다 화면이 비던 회귀의 방지선.
 // 실행: node web/tests/weekly_selector.mjs  (의존성 없음)
 //
 // 규칙은 하나다: **선택한 날짜까지 이미 끝난 리포트 중 가장 최근 것**.
@@ -94,17 +94,137 @@ eq("weekly_reports 자체가 없음", build({ trend: {} }).weeklyReportFor("2026
 eq("빈 날짜", pick(""), null);
 eq("깨진 날짜", pick("2026-8-2"), null);
 
-// ── 7. 오늘 화면의 Weekly 블록은 전부 같은 selector 를 지난다.
-//        renderTodayAgenda(주간 3분)와 renderHomeIntelligence(이번 주 해설)가
-//        각자 다른 규칙으로 고르면 한 화면이 두 주를 말한다.
+// ── 7. 오늘 화면의 Weekly 블록은 **하나**이고, 그 하나가 selector 를 지난다.
+//        2026-08-22 이전에는 renderTodayAgenda(주간 3분)와
+//        renderHomeIntelligence(이번 주 해설) 둘이었다. 같은 리포트를 각자
+//        고르는 구조라 규칙이 갈라지면 한 화면이 두 주를 말할 수 있었고, 실제로
+//        읽는 사람에게는 별개 기능 둘로 보였다. 통합으로 그 위험 자체를 없앴다 —
+//        이제 검사할 것은 '남은 하나가 selector 를 지나는가'와 '두 번째 블록이
+//        돌아오지 않았는가' 둘이다.
 const agendaCall = source.slice(source.indexOf("function renderTodayAgenda("))
   .slice(0, 900);
-const homeCall = source.slice(source.indexOf("function renderHomeIntelligence("))
-  .slice(0, 1600);
-eq("주간 3분이 selector 사용", /weeklyReportFor\(briefing\.date\)/.test(agendaCall), true);
-eq("이번 주 해설이 같은 selector 사용", /weeklyReportFor\(briefing\.date\)/.test(homeCall), true);
-eq("두 블록 모두 briefingWeek 를 다시 계산하지 않는다",
+const homeBody = source.slice(source.indexOf("function renderHomeIntelligence("))
+  .slice(0, 1600).replace(/\/\/.*/g, "");   // 주석은 뺀다 — 실행되는 코드만 본다
+eq("한 주의 원자력이 selector 사용", /weeklyReportFor\(briefing\.date\)/.test(agendaCall), true);
+eq("두 번째 Weekly 블록이 돌아오지 않았다", /weeklyReportFor|weekly_intro|so_what/.test(homeBody), false);
+eq("블록이 briefingWeek 를 다시 계산하지 않는다",
   /briefingWeek/.test(source), false);
+
+// ── 7-1. 네 영역의 순서가 곧 읽는 순서다: 무엇이 바뀌었나 → 이번 주 흐름 →
+//        그래서 어떤 의미 → 다음에 볼 것. DOM 순서가 이 논리를 뒤집으면
+//        통합의 목적(한 자리에서 논리적으로 읽힌다)이 사라진다.
+const agendaFull = source.slice(source.indexOf("function renderTodayAgenda("))
+  .slice(0, 3200);
+const order = ["agendaConclusions", "agendaNarrative", "agendaSoWhat", "agendaWatch"]
+  .map(id => agendaFull.indexOf(id));
+eq("네 영역이 전부 렌더된다", order.every(at => at >= 0), true);
+eq("순서: 한눈에 보기 → 한 주 해설 → 왜 중요한가 → 지금 확인할 것",
+  order.every((at, i) => i === 0 || at > order[i - 1]), true);
+
+const markup = readFileSync(
+  fileURLToPath(new URL("../public/index.html", import.meta.url)), "utf8")
+  .replace(/<!--[\s\S]*?-->/g, "");
+const domOrder = ['id="agendaConclusions"', 'id="agendaNarrative"',
+  'id="agendaSoWhat"', 'id="agendaWatch"'].map(id => markup.indexOf(id));
+eq("DOM 순서도 같다", domOrder.every((at, i) => at >= 0 && (i === 0 || at > domOrder[i - 1])), true);
+// 합친 블록이 둘로 다시 갈라지지 않았는가 — 04 섹션은 제거됐다.
+eq("04 '3분이면 이해되는 한 주의 원자력' 이 없다", /homeWeeklyStory/.test(markup), false);
+
+// ── 7-2. 실제로 한 번 그려 본다 — 네 재료가 네 자리에 가는가.
+//
+//        source 검사만으로는 '순서가 맞다'까지밖에 못 본다. what 과 so_what 은
+//        같은 policy_shifts 행에서 나오므로 둘을 맞바꿔 넣어도 정규식은 통과한다.
+//        흉내 DOM 으로 충분한 이유: 여기 조회는 전부 getElementById 라 실제
+//        문서에서만 생기는 선택자 모호함(admin_dom.mjs 주석 참조)이 없다.
+const renderWith = (report, briefing) => {
+  const nodes = new Map();
+  const node = () => ({ hidden: false, innerHTML: "", textContent: "" });
+  const doc = {
+    getElementById(id) {
+      if (!nodes.has(id)) nodes.set(id, node());
+      return nodes.get(id);
+    },
+  };
+  const run = new Function("state", "document", `
+    ${extractConst("ISO_DATE_RE")}
+    ${extract("shiftDate")}
+    ${extract("dateLabel")}
+    ${extract("esc")}
+    ${extract("weeklyReportEnd")}
+    ${extract("weeklyReportFor")}
+    ${extract("weekRangeLabel")}
+    ${extract("issueChangeText")}
+    ${extract("dropTextsAlreadyOnCards")}
+    ${extract("renderTodayAgenda")}
+    return renderTodayAgenda;
+  `);
+  run({ trend: { weekly_reports: report ? { [report.week_start]: report } : {} } }, doc)(briefing);
+  return nodes;
+};
+
+const full = {
+  week_start: "2026-08-15", week_end: "2026-08-21",
+  weekly_intro: "이번 주는 계속운전 심사와 SMR 계약이 같은 방향을 가리켰다.",
+  policy_shifts: [
+    { what: "원안위가 고리 3호기 계속운전을 승인했다", so_what: "후속 6기 심사 일정이 앞당겨진다" },
+    { what: "산업부가 12차 전기본 초안을 냈다", so_what: "신규 노형 물량이 확정 국면에 든다" },
+  ],
+  watchpoints: ["12차 전기본 공청회 일정"],
+};
+const drawn = renderWith(full, { date: "2026-08-22", issues: [] });
+const html = id => drawn.get(id).innerHTML;
+
+eq("제목 = 한 주의 원자력 · 고른 리포트의 구간",
+  drawn.get("todayAgendaTitle").textContent, "한 주의 원자력 · 8월 15일–21일");
+eq("한눈에 보기 ← policy_shifts[].what",
+  /고리 3호기 계속운전을 승인/.test(html("agendaConclusionList")), true);
+eq("한 주 해설 ← weekly_intro",
+  /같은 방향을 가리켰다/.test(html("agendaNarrativeBody")), true);
+eq("왜 중요한가 ← policy_shifts[].so_what",
+  /후속 6기 심사 일정/.test(html("agendaSoWhatList")), true);
+eq("지금 확인할 것 ← watchpoints",
+  /공청회 일정/.test(html("agendaWatchList")), true);
+// what 과 so_what 이 뒤바뀌면 위 넷은 다 통과한다 — 서로의 자리를 침범하지
+// 않는지까지 봐야 그 실수가 잡힌다.
+eq("what 이 '왜 중요한가'로 새지 않는다",
+  /계속운전을 승인/.test(html("agendaSoWhatList")), false);
+eq("so_what 이 '한눈에 보기'로 새지 않는다",
+  /후속 6기/.test(html("agendaConclusionList")), false);
+eq("해설은 산문 클래스로 나간다",
+  /class="agenda-narrative"/.test(html("agendaNarrativeBody")), true);
+eq("네 영역 전부 열려 있다",
+  ["agendaConclusions", "agendaNarrative", "agendaSoWhat", "agendaWatch"]
+    .every(id => drawn.get(id).hidden === false), true);
+eq("리포트가 있으면 '집계 중'은 안 뜬다", drawn.get("agendaPending").hidden, true);
+eq("블록 자체는 보인다", drawn.get("todayAgenda").hidden, false);
+
+// 내용이 없는 영역은 라벨만 남기지 않고 통째로 접는다.
+const partial = renderWith({
+  week_start: "2026-08-15", week_end: "2026-08-21",
+  policy_shifts: [{ what: "결론만 있는 주" }], watchpoints: [],
+}, { date: "2026-08-22", issues: [] });
+eq("해설이 없으면 그 영역을 접는다", partial.get("agendaNarrative").hidden, true);
+eq("so_what 이 없으면 그 영역을 접는다", partial.get("agendaSoWhat").hidden, true);
+eq("watchpoints 가 없으면 그 영역을 접는다", partial.get("agendaWatch").hidden, true);
+eq("남은 영역은 그대로 뜬다", partial.get("agendaConclusions").hidden, false);
+eq("한 영역이라도 있으면 블록은 보인다", partial.get("todayAgenda").hidden, false);
+
+// 리포트 자체가 없는 날 — 기존 '집계 중' 처리는 그대로다.
+const none = renderWith(null, { date: "2026-08-22", issues: [] });
+eq("리포트가 없으면 사유를 말한다", none.get("agendaPending").hidden, false);
+eq("네 영역은 전부 접힌다",
+  ["agendaConclusions", "agendaNarrative", "agendaSoWhat", "agendaWatch"]
+    .every(id => none.get(id).hidden === true), true);
+
+// 카드가 이미 낸 문장은 여기서 다시 내지 않는다 — 통합해도 그 철학은 그대로다.
+const deduped = renderWith(full, {
+  date: "2026-08-22",
+  issues: [{ title: "원안위가 고리 3호기 계속운전을 승인했다" }],
+});
+eq("카드에 있는 문장은 한눈에 보기에서 빠진다",
+  /고리 3호기 계속운전을 승인/.test(deduped.get("agendaConclusionList").innerHTML), false);
+eq("남은 결론은 그대로 있다",
+  /12차 전기본 초안/.test(deduped.get("agendaConclusionList").innerHTML), true);
 
 // ── 8. 제목의 날짜 = 고른 리포트의 week_start/week_end.
 eq("라벨은 리포트가 말한다", api.weekRangeLabel(api.weeklyReportFor("2026-08-22")),

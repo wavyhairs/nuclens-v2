@@ -497,7 +497,10 @@ class TodayAgendaContractTests(unittest.TestCase):
         self.assertIn("watchpoints", agenda)
         # 카드에 이미 있는 문장은 걸러서 낸다.
         self.assertIn("dropTextsAlreadyOnCards", agenda)
-        for element_id in ("agendaConclusions", "agendaConclusionList", "agendaWatch", "agendaWatchList"):
+        for element_id in ("agendaConclusions", "agendaConclusionList",
+                           "agendaNarrative", "agendaNarrativeBody",
+                           "agendaSoWhat", "agendaSoWhatList",
+                           "agendaWatch", "agendaWatchList"):
             self.assertIn(f'id="{element_id}"', html)
 
     def test_standard_card_title_is_two_lines_on_desktop(self):
@@ -4292,15 +4295,26 @@ class WeeklyRenderTests(unittest.TestCase):
         날짜에 매인 블록은 weeklyReportFor(date) 로만 재료를 얻어야 한다.
         트렌드 탭의 독립 패널(renderWeeklyReport)은 선택 날짜와 무관하고 기간을
         스스로 표시하므로 최신 하나를 계속 써도 된다 — 그래서 예외로 둔다.
+
+        2026-08-22 부터 그 블록은 **하나뿐**이다(renderTodayAgenda). 두 블록이
+        각자 고르던 시절의 위험이 통합으로 사라졌으므로, 여기서는 남은 하나가
+        selector 를 지나는지와 renderHomeIntelligence 가 주간 리포트를 아예 안
+        건드리는지를 함께 본다.
         """
-        for name in ("renderTodayAgenda", "renderHomeIntelligence"):
-            match = re.search(rf"function {name}\(.*?\n\}}", self.script, re.S)
-            self.assertIsNotNone(match, f"{name} 을 찾지 못했다")
-            body = match.group(0)
-            self.assertIn("weeklyReportFor(briefing.date)", body,
-                          f"{name} 이 선택 날짜의 주차 리포트를 고르지 않는다")
-            self.assertNotIn("state.trend?.weekly_report;", body,
-                             f"{name} 이 아직 최신 한 주를 읽는다")
+        match = re.search(r"function renderTodayAgenda\(.*?\n\}", self.script, re.S)
+        self.assertIsNotNone(match, "renderTodayAgenda 를 찾지 못했다")
+        body = match.group(0)
+        self.assertIn("weeklyReportFor(briefing.date)", body,
+                      "renderTodayAgenda 가 선택 날짜의 주차 리포트를 고르지 않는다")
+        self.assertNotIn("state.trend?.weekly_report;", body,
+                         "renderTodayAgenda 가 아직 최신 한 주를 읽는다")
+        home = re.search(r"function renderHomeIntelligence\(.*?\n\}", self.script, re.S)
+        self.assertIsNotNone(home, "renderHomeIntelligence 를 찾지 못했다")
+        # 왜 안 내는지는 주석이 설명한다 — 검사 대상은 실행되는 코드뿐이다.
+        home_code = re.sub(r"//.*", "", home.group(0))
+        for token in ("weeklyReportFor", "weekly_report", "weekly_intro", "so_what"):
+            self.assertNotIn(token, home_code,
+                             f"주간 리포트가 두 번째 블록으로 돌아왔다 ({token})")
 
     def test_future_weeks_are_never_backfilled_into_an_older_briefing(self):
         """미래 리포트를 당겨 쓰지 않는다 — 원래 사고의 방향이 이쪽이었다.
@@ -4332,11 +4346,20 @@ class WeeklyRenderTests(unittest.TestCase):
         # 계산하면 8/22 화면이 "8월 22일–28일"이라 적고 8/15~21 내용을 보여준다.
         self.assertIn("weekRangeLabel(report)", body)
         self.assertNotIn("weekRangeLabel(briefing.date)", body)
-        self.assertIn("주간 3분", body)
+        self.assertIn("한 주의 원자력 · ${label}", body)
         # index.html 의 기본 문구도 '오늘'이 아니어야 한다 — 렌더 전 한 프레임 동안
         # 보이고, brief/<date>/ 정적 페이지의 초기 제목이기도 하다.
-        self.assertIn('id="todayAgendaTitle">주간 3분<', self.html)
+        self.assertIn('id="todayAgendaTitle">한 주의 원자력<', self.html)
         self.assertNotIn("오늘 3분</strong>", self.html)
+        # '3분'은 두 블록을 별개 기능처럼 보이게 하던 이름이다. 통합했으므로 화면에
+        # 뜨는 문구에서는 사라진다. (오디오 브리핑의 '약 3분'은 재생 길이라 남는다 —
+        # 검사 대상은 주간 블록의 제목뿐이다.)
+        # 왜 합쳤는지는 주석에 남아 있어야 하므로 주석을 걷어낸 뒤 본다 —
+        # 검사 대상은 화면에 뜨는 문구뿐이다.
+        markup = re.sub(r"<!--.*?-->", "", self.html, flags=re.S)
+        self.assertNotIn("3분", markup.split('id="todayAgenda"', 1)[1])
+        self.assertNotIn("3분이면 이해되는 한 주의 원자력", markup)
+        self.assertNotIn("주간 3분", re.sub(r"//.*", "", body))
 
     def test_weekly_report_does_not_repeat_what_today_already_says(self):
         """주간 판세는 오늘 화면이 담당하는 문장을 다시 내지 않는다.
@@ -4418,6 +4441,59 @@ class WeeklyRenderTests(unittest.TestCase):
         code = "\n".join(re.sub(r"//.*$", "", line) for line in weekly.splitlines())
         self.assertNotIn('weeklySection("예정"', code)
         self.assertNotIn("weeklyUpcoming(", code)
+
+    def test_one_weekly_block_holds_the_whole_report(self):
+        """한 주간 리포트는 오늘 화면에서 **한 자리**에 선다 (2026-08-22 통합).
+
+        그전에는 같은 금요일 리포트가 둘로 갈라져 있었다 — 맨 위 '주간 3분'에
+        what·watchpoints, 한참 아래 04 "3분이면 이해되는 한 주의 원자력"에
+        weekly_intro·so_what. 둘 다 '3분'이라 별개 기능처럼 보였고, 무엇이
+        바뀌었나(what)와 그래서 무슨 의미인가(so_what)를 이어 읽으려면 화면을
+        오르내려야 했다. 네 영역을 위쪽 블록으로 모으고 04 는 없앴다.
+
+        순서가 곧 논리다 — 무엇이 바뀌었나 → 이번 주 흐름 → 그래서 어떤 의미 →
+        다음에 볼 것. 이 순서가 뒤집히면 통합의 목적이 사라지므로 여기서 잠근다.
+        (재료가 실제로 네 자리에 가는지는 web/tests/weekly_selector.mjs 가
+         renderTodayAgenda 를 한 번 그려 보고 확인한다.)
+        """
+        markup = re.sub(r"<!--.*?-->", "", self.html, flags=re.S)
+        labels = ["한눈에 보기", "한 주 해설", "왜 중요한가", "지금 확인할 것"]
+        at = [markup.find(f'class="agenda-label">{label}<') for label in labels]
+        self.assertNotIn(-1, at, f"네 영역 라벨이 다 있지 않다: {dict(zip(labels, at))}")
+        self.assertEqual(at, sorted(at), "네 영역의 순서가 읽는 순서와 다르다")
+        # 04 는 DOM 에서 사라졌다 — 죽은 렌더 경로가 남으면 언젠가 다시 그려진다.
+        # 무엇을 왜 없앴는지는 주석이 설명하므로 주석은 걷어내고 본다.
+        script = re.sub(r"//.*", "", self.script)
+        style = re.sub(r"/\*.*?\*/", "", self.style, flags=re.S)
+        for dead in ("homeWeeklyStory", "homeWeeklyStoryBody", "homeWeeklyStoryTitle"):
+            self.assertNotIn(dead, markup, f"{dead} 이 아직 문서에 있다")
+            self.assertNotIn(dead, script, f"{dead} 을 아직 스크립트가 부른다")
+            self.assertNotIn(dead, style, f"{dead} 규칙이 아직 남아 있다")
+        self.assertNotIn("home-weekly-intro", style)
+        # .home-intelligence 자체는 남는다 — 흐름 탭의 #trendTopicFlow 가 쓴다.
+        self.assertIn(".home-intelligence", self.style)
+        self.assertIn('id="trendTopicFlow" class="home-intelligence"', self.html)
+        # 목차이던 시절의 nav 랜드마크는 산문이 들어온 지금 거짓말이 된다.
+        self.assertIn('<section id="todayAgenda"', self.html)
+        self.assertNotIn('<nav id="todayAgenda"', self.html)
+
+    def test_the_four_areas_stack_vertically_on_a_narrow_screen(self):
+        """84px 라벨 열은 산문이 들어온 뒤로 좁은 화면에서 본문을 자른다.
+
+        테마 강약·국가별 단신이 이미 쓰는 규칙과 **같은 자리, 같은 형태**로 둔다 —
+        따로 두면 한쪽만 고쳐지는 날이 오고, 그날 모바일에서 한 주 해설만 반 폭이
+        된다. 라벨이 윗줄로 올라가면 네 영역이 라벨→내용 순으로 그냥 세로로 이어져
+        읽는 순서와 화면 순서가 같아진다.
+        """
+        self.assertIn(".agenda-block {", self.style)
+        desktop = self.style.split(".agenda-block {", 1)[1].split("}", 1)[0]
+        self.assertIn("grid-template-columns", desktop)
+        mobile = self.style.split("@media", 1)[-1]
+        self.assertIn(".agenda-block { grid-template-columns: minmax(0, 1fr)", self.style)
+        self.assertTrue(mobile)
+        # 한 주 해설만 산문이다 — 목록 사이에서 읽는 속도가 바뀌는 자리.
+        self.assertIn(".agenda-narrative", self.style)
+        self.assertIn('class="agenda-narrative"', self.script)
 
     def test_weekly_corner_labels_stay_in_their_own_column(self):
         """국가명·날짜가 제목에 바로 붙으면 '한국정부'처럼 한 낱말로 읽힌다."""
