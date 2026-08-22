@@ -640,12 +640,18 @@ node web/tests/date_window.mjs         # 날짜 산술 (app.js, 의존성 0)
 node web/tests/weekly_selector.mjs     # 주간 3분이 고르는 리포트
 ```
 
-같은 것을 CI 가 PR 에서 자동으로 돈다 — `.github/workflows/python-tests.yml`.
-파이썬 파일·`tests/`·코드가 읽는 설정 JSON 이 바뀐 PR 에서만 뜨고, 크롤이 시간당
-밀어넣는 수집 데이터(`curated.json`·`sent.json`·`archive/**` …)만 바뀐 커밋에는
-뜨지 않는다. 기본 CI 는 **외부 호출이 0** 이다(Gemini·Telegram·TTS·네이버·RSS
-전부 목/픽스처). 실제 모델 품질 평가가 필요하면 이 워크플로가 아니라 별도 eval 로
-분리한다.
+PR 에서 자동으로 도는 것은 `.github/workflows/python-tests.yml` — **루트 테스트와
+`app.js` 검사**다. 파이썬 파일·`tests/`·코드가 읽는 설정 JSON 이 바뀐 PR 에서만
+뜨고, 크롤이 시간당 밀어넣는 수집 데이터(`curated.json`·`sent.json`·`archive/**`
+…)만 바뀐 커밋에는 뜨지 않는다. 기본 CI 는 **외부 호출이 0** 이다
+(Gemini·Telegram·TTS·네이버·RSS 전부 목/픽스처). 실제 모델 품질 평가가 필요하면
+이 워크플로가 아니라 별도 eval 로 분리한다.
+
+`web/tests/` 는 거기 없다. 대부분 빌드 산출물(`web/public/data/*.json`, gitignore)
+을 읽는데 그걸 지으려면 `build_data.py` 가 `GEMINI_API_KEY` 를 부르기 때문이다 —
+키 없이 지으면 이슈 병합이 '병합 안 함'으로 떨어져 실제와 다른 데이터를 검사한다.
+그래서 화면 파이썬은 데이터를 진짜로 짓는 `deploy-web.yml` 이 맡는다. 로컬에서는
+위 명령으로 언제든 돌릴 수 있다.
 
 ## 데이터 품질 게이트
 

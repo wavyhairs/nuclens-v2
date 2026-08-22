@@ -92,19 +92,20 @@ jobs:
       - name: Root tests
         run: python -m unittest discover -s tests
 
-      # 화면 쪽 파이썬(build_data 의 집계·엔티티)도 같이 본다. deploy-web.yml 은
-      # main 에 들어온 뒤에야 돌아서 PR 에서는 아무도 안 본다.
+      # web/tests/ 는 여기서 안 돈다.
       #
-      # 데이터 지표 게이트는 끈다 — 추적률·주간 표본은 "그날 뉴스가 어떻게 묶였나"의
-      # 결과지 코드의 성질이 아니다. 켜 두면 뉴스가 한산한 날 파이썬 오타 수정도
-      # PR 이 빨개진다(deploy-web.yml 이 같은 이유로 같은 스위치를 쓴다).
-      - name: Web tests
-        env:
-          NUCLENS_SKIP_DATA_GATES: "1"
-        run: cd web && python -m unittest discover -s tests
-
-      # app.js 는 파이썬이 못 본다. 날짜 산술과 주간 리포트 선택은 화면 로직인데
-      # 회귀가 나면 '집계 중'만 뜨는 조용한 실패라 눈으로는 안 잡힌다.
+      # 그쪽 검사는 대부분 **빌드 산출물**(web/public/data/*.json)을 읽는데 그건
+      # .gitignore:20 이라 체크아웃에 없다. 만들려면 build_data.py 를 돌려야 하고,
+      # build_data 의 이슈 병합 회색지대 판정은 GEMINI_API_KEY 를 부른다 — 키 없이
+      # 지으면 '병합 안 함'으로 떨어져 실제와 다른 데이터를 검사하게 된다
+      # (deploy-web.yml 의 Build site data 주석에 2026-08-16 실측이 있다).
+      # 외부 호출 0 이라는 이 워크플로의 전제와 정면으로 부딪힌다.
+      #
+      # 그래서 화면 파이썬은 데이터를 진짜로 짓는 deploy-web.yml 이 계속 맡는다.
+      # 처음엔 여기서도 돌렸다가 PR #52 에서 FileNotFoundError 5건으로 드러났다.
+      #
+      # app.js 검사는 반대로 여기 있어야 한다 — 데이터를 안 읽고, 회귀가 나면
+      # '집계 중'만 뜨는 조용한 실패라 눈으로는 안 잡힌다.
       - name: Front-end date/selector tests
         run: |
           node --check web/public/app.js
