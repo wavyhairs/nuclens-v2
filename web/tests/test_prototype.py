@@ -4097,6 +4097,43 @@ class WeeklyReportTests(unittest.TestCase):
             self.assertIn("evidence_hashes",
                           raw["reports"]["2026-W31"]["policy_shifts"][0])
 
+    def test_upcoming_rows_are_kept_out_of_the_public_payload(self):
+        """예정 코너가 꺼져 있는 동안에는 화면 데이터에 실리지 않는다.
+
+        저장본(weekly_reports.json)에는 계속 남는다 — 일정 추출은 그대로 돌고,
+        Event Calendar 를 설계할 때 지난 주차로 대조할 재료가 그것뿐이다.
+        여기서 막는 것은 **브라우저까지 나가는 것**이다: 안 그리기로 한 코너를
+        페이로드에 실어 두면 언젠가 누가 그걸 그린다.
+
+        키는 남긴다(빈 목록). 스키마를 흔들면 flag 와 무관한 코드가 같이 깨진다.
+        """
+        upcoming = [{"key": "aaaaaaaa1111", "title": "한수원 주민 설명회",
+                     "date": "2026-09-01", "precision": "day"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)
+            self._store(path, upcoming=upcoming)
+            report = self._load(path)
+            raw = json.loads((path / "weekly_reports.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["upcoming"], [])
+        # 저장본은 그대로다 — 화면에서 껐다고 재료까지 지우지 않는다.
+        self.assertEqual(raw["reports"]["2026-W31"]["upcoming"], upcoming)
+
+    def test_the_other_corners_are_not_touched_by_the_upcoming_flag(self):
+        """예정만 끈다 — 핵심사건·국가별 단신은 이슈 링크까지 그대로 붙는다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)
+            self._store(
+                path,
+                top_stories=[{"key": "aaaaaaaa1111", "title": "체코 두코바니 본계약"}],
+                country_briefs=[{"key": "bbbbbbbb2222", "country": "US",
+                                 "country_kr": "미국", "title": "미국 NRC 규정 개정"}],
+                upcoming=[{"key": "cccccccc3333", "title": "지난달 이슈",
+                           "date": "2026-09-01", "precision": "day"}])
+            report = self._load(path)
+        self.assertEqual(report["top_stories"][0]["issue_id"], "issue-1")
+        self.assertEqual(report["country_briefs"][0]["issue_id"], "issue-2")
+        self.assertEqual(report["upcoming"], [])
+
     def test_corrupt_file_does_not_break_the_build(self):
         with tempfile.TemporaryDirectory() as tmp:
             (Path(tmp) / "weekly_reports.json").write_text("{ 깨진", encoding="utf-8")
@@ -4311,20 +4348,24 @@ class WeeklyRenderTests(unittest.TestCase):
         다시 나오면 깊이가 아니라 반복이다. '아직 결론 나지 않은 것'
         (open_questions)도 같은 이유로 빠졌다.
 
-        코너는 여섯이다. 넷은 **오늘 화면에 없던 결정적 재료**이고(핵심사건·
-        국가별 단신·발간물·예정 — 전부 weekly_bot 이 사건 묶음과 근거 계약에서
-        골라 저장본에 실어 둔 것), 나머지 둘이 원래의 해석 코너다. 새 코너가
-        오늘 화면의 문장을 다시 쓰는 것이 아니므로 위 금지는 그대로다.
+        코너는 다섯이다. 셋은 **오늘 화면에 없던 결정적 재료**이고(핵심사건·
+        국가별 단신·발간물 — 전부 weekly_bot 이 사건 묶음과 근거 계약에서 골라
+        저장본에 실어 둔 것), 나머지 둘이 원래의 해석 코너다. 새 코너가 오늘
+        화면의 문장을 다시 쓰는 것이 아니므로 위 금지는 그대로다.
+
+        넷째 결정적 재료였던 '예정'은 SHOW_WEEKLY_UPCOMING 으로 꺼 뒀다
+        (2026-08-22). 지운 게 아니라 끈 것이라 렌더러에는 자리가 남아 있고,
+        그 자리가 flag 뒤에 있는지는 test_upcoming_corner_is_behind_a_flag 가 본다.
         """
         weekly = self.script.split("function renderWeeklyReport(", 1)[1].split("\nfunction ", 1)[0]
         # 왜 뺐는지는 주석에 남아 있어야 한다. 검사 대상은 실행되는 코드뿐이다.
         code = "\n".join(re.sub(r"//.*$", "", line) for line in weekly.splitlines())
-        corners = ("이번 주", "국가별 단신", "이번 주 발간물", "예정",
+        corners = ("이번 주", "국가별 단신", "이번 주 발간물",
                    "조용하지만 놓치면 안 되는 것", "한수원에 직접 닿는 변화")
         for title in corners:
             self.assertIn(f'weeklySection("{title}"', code)
         self.assertEqual(code.count("weeklySection("), len(corners),
-                         "주간 판세 고정 코너는 여섯이다")
+                         "주간 판세에 직접 서는 고정 코너는 다섯이다")
         for title in ("이번 주 판을 바꾼 것", "다음 주 하나만 본다면",
                       "아직 결론 나지 않은 것"):
             self.assertNotIn(f'weeklySection("{title}"', code,
@@ -4337,17 +4378,46 @@ class WeeklyRenderTests(unittest.TestCase):
 
         참고 구현에서 실제로 그랬다 — 머리말은 8/15~21 인데 바로 아래 블록은
         8/16~22 였다. 코너 넷이 전부 **같은 리포트 레코드**에서 나오면 그런 일이
-        구조적으로 안 생긴다. '예정'만 그 구간의 뒤를 본다.
+        구조적으로 안 생긴다. ('예정'만 그 구간의 뒤를 봤는데, 그 코너는
+        지금 꺼져 있다 — SHOW_WEEKLY_UPCOMING.)
         """
         weekly = self.script.split("function renderWeeklyReport(", 1)[1].split("\nfunction ", 1)[0]
         code = "\n".join(re.sub(r"//.*$", "", line) for line in weekly.splitlines())
         for field in ("report.top_stories", "report.country_briefs",
-                      "report.publications", "report.upcoming"):
+                      "report.publications"):
             self.assertIn(field, code, f"{field} 은 저장본에서 와야 한다")
+        # 예정도 저장본에서 온다 — 다만 flag 를 진 함수를 거친다.
+        self.assertIn("weeklyUpcomingSection(report)", code)
         self.assertIn("report.week_start", code)
         self.assertIn("report.week_end", code)
         # 오늘 날짜로 기간을 다시 만들면 리포트가 말하는 주와 어긋난다.
         self.assertNotIn("new Date()", code)
+
+    def test_upcoming_corner_is_behind_a_flag(self):
+        """예정 코너는 **끈 것이지 지운 것이 아니다** (2026-08-22).
+
+        Event Calendar 를 따로 설계하기로 해서 그때까지 화면에서 내린다. 지우지
+        않는 이유는 재료 때문이다 — 일정 추출(weekly_sections.upcoming)은 계속
+        돌고 저장본에도 남는다. 화면 코드도 그리는 법을 그대로 갖고 있어야
+        다시 켤 때 되살릴 것이 아니라 **뒤집을 것**만 남는다.
+
+        스위치는 하나다: app.js 의 SHOW_WEEKLY_UPCOMING (파이썬 쪽 짝은
+        weekly_sections.SHOW_WEEKLY_UPCOMING — 상수가 브라우저까지 가지 않아
+        두 벌이다). 렌더러가 flag 를 건너뛰고 직접 그리면 그 스위치가 거짓말이
+        되므로, 여기서 보는 것은 '꺼져 있다'와 '렌더러가 우회하지 않는다' 둘이다.
+        """
+        self.assertIn("const SHOW_WEEKLY_UPCOMING = false;", self.script)
+        # 그리는 법은 남아 있어야 한다 — 지운 게 아니다.
+        self.assertIn("function weeklyUpcoming(rows)", self.script)
+        gate = self.script.split("function weeklyUpcomingSection(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("if (!SHOW_WEEKLY_UPCOMING) return \"\";", gate)
+        self.assertIn('weeklySection("예정"', gate)
+        # 렌더러는 flag 를 진 함수만 부른다 — 예정 코너를 직접 짓는 자리가 있으면
+        # flag 를 꺼도 화면에 남는다.
+        weekly = self.script.split("function renderWeeklyReport(", 1)[1].split("\nfunction ", 1)[0]
+        code = "\n".join(re.sub(r"//.*$", "", line) for line in weekly.splitlines())
+        self.assertNotIn('weeklySection("예정"', code)
+        self.assertNotIn("weeklyUpcoming(", code)
 
     def test_weekly_corner_labels_stay_in_their_own_column(self):
         """국가명·날짜가 제목에 바로 붙으면 '한국정부'처럼 한 낱말로 읽힌다."""

@@ -3051,6 +3051,15 @@ function weeklyPublications(rows) {
   }).join("");
 }
 
+// 예정 코너를 화면에 낼지 (2026-08-22 부터 false).
+//
+// 파이썬 쪽 weekly_sections.SHOW_WEEKLY_UPCOMING 과 같은 뜻이고 같이 뒤집는다.
+// 상수가 두 벌인 이유는 하나다 — 파이썬 값은 브라우저까지 오지 않는다.
+// 빌드가 이미 페이로드에서 예정 줄을 비우지만(build_data), 여기서 한 번 더
+// 막는다: 이미 배포된 data/*.json 이나 캐시에는 옛 upcoming 이 그대로 남아
+// 있고, 그 파일을 읽는 것은 새 app.js 다.
+const SHOW_WEEKLY_UPCOMING = false;
+
 function weeklyUpcoming(rows) {
   if (!rows.length) return "";
   return rows.map(row => {
@@ -3060,6 +3069,14 @@ function weeklyUpcoming(rows) {
     return `<div class="weekly-brief"><p class="weekly-brief-country">${esc(when)}</p>`
       + `<div class="weekly-brief-body"><p>${weeklyStoryTitle(row)}</p></div></div>`;
   }).join("");
+}
+
+// 예정 코너 한 덩어리. flag 가 꺼져 있으면 저장본에 줄이 남아 있어도 빈 문자열이다
+// — 코너를 지운 게 아니라 끈 것이라, 다시 켤 때 고칠 곳은 위 상수 하나다.
+function weeklyUpcomingSection(report) {
+  if (!SHOW_WEEKLY_UPCOMING) return "";
+  return weeklySection("예정", `${dateLabel(report.week_end)} 이후 · 원문에서 확인된 일정만`,
+    weeklyUpcoming(report.upcoming || []));
 }
 
 // 흐름 탭의 첫 블록 — 설명문보다 방향과 크기가 먼저 온다.
@@ -3108,14 +3125,15 @@ function renderWeeklyReport() {
   // 코너 순서는 "무슨 일이 있었나 → 어디서 → 무엇을 읽나 → 다음은 언제" 다음에
   // 해석이 온다. 재료는 전부 같은 리포트(같은 기간)에서 나오므로 화면 안에서
   // 기간이 섞이지 않는다 — '예정'만 그 기간의 **뒤**를 본다.
+  // 그 '다음은 언제'(예정)는 지금 꺼져 있다 — SHOW_WEEKLY_UPCOMING 참조.
+  // 자리는 남겨 둔다: 다시 켤 때 코너가 어디로 들어가야 하는지가 순서다.
   const weekLabel = `${dateLabel(report.week_start)}–${dateLabel(report.week_end)}`;
   document.getElementById("weeklyReportBody").innerHTML = [
     weeklySection("이번 주", `${weekLabel} · 주요 사건`,
       weeklyTopStories(report.top_stories || [])),
     weeklySection("국가별 단신", "", weeklyCountryBriefs(report.country_briefs || [])),
     weeklySection("이번 주 발간물", "", weeklyPublications(report.publications || [])),
-    weeklySection("예정", `${dateLabel(report.week_end)} 이후 · 원문에서 확인된 일정만`,
-      weeklyUpcoming(report.upcoming || [])),
+    weeklyUpcomingSection(report),
     // 테마명을 라벨 열로 뗀다. 화살표·테마·설명이 한 문장으로 이어져 있으면
     // 훑는 눈이 걸릴 데가 없다 — 카드의 세 칸과 같은 원칙이다.
     // 라벨을 '투자 테마 강약'에서 중화했다(2026-08-11 사용자 결정). 한수원

@@ -58,6 +58,7 @@ import issue_insight  # noqa: E402
 import issue_review  # noqa: E402
 import keei_match  # noqa: E402
 import story_fingerprint  # noqa: E402
+import weekly_sections  # noqa: E402
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -3746,6 +3747,13 @@ def _enrich_weekly_report(raw: dict, issue_rows: list[dict],
     # 그것은 두 사건이 아니라 반복이다.
     taken: set[str] = set()
     for key in ("top_stories", "country_briefs", "upcoming"):
+        # 예정 코너는 화면에서 꺼져 있다(weekly_sections.SHOW_WEEKLY_UPCOMING).
+        # 저장본에는 남아 있지만 공개 페이로드에는 싣지 않는다 — 내보내지 않는
+        # 코너를 브라우저까지 보내 두면 언젠가 누가 그걸 그린다. 키 자체는 남겨
+        # 스키마를 흔들지 않는다.
+        if key == "upcoming" and not weekly_sections.SHOW_WEEKLY_UPCOMING:
+            report[key] = []
+            continue
         rows = []
         for raw_row in report.get(key) or []:
             if not isinstance(raw_row, dict):

@@ -1069,7 +1069,10 @@ def format_weekly(items: list[dict], synthesis: dict | None = None,
             parts.append(f"  🔗 {row['url']}")
         parts.append("")
 
-    if sections.get("upcoming"):
+    # 예정 코너는 flag 로 꺼 둔다(weekly_sections.SHOW_WEEKLY_UPCOMING).
+    # 저장본에는 계속 실리므로 sections["upcoming"] 은 비어 있지 않을 수 있다 —
+    # 여기서 막는 것은 독자에게 나가는 문장뿐이다.
+    if weekly_sections.SHOW_WEEKLY_UPCOMING and sections.get("upcoming"):
         parts.append("━━ <b>🗓 예정</b> ━━")
         for row in sections["upcoming"]:
             when = row["date"]

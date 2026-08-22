@@ -1,10 +1,12 @@
 // 주간 판세의 결정적 코너가 화면에서 어떻게 서는가 — 핵심사건·국가별 단신·
 // 발간물·예정. 실행: node web/tests/weekly_sections.mjs  (의존성 없음)
 //
-// 여기서 잠그는 것은 두 가지다.
+// 여기서 잠그는 것은 세 가지다.
 //   ① 재료를 다시 고르지 않는다 — 저장본에 있는 줄만, 있는 순서대로 낸다.
 //   ② 국가명·날짜는 제목과 **다른 칸**에 선다. 한 줄로 이으면 '한국정부'처럼
 //      한 낱말로 읽힌다(참고 구현에서 실제로 그렇게 나갔다).
+//   ③ 예정 코너는 SHOW_WEEKLY_UPCOMING 뒤에 있고 지금은 꺼져 있다 — 저장본에
+//      줄이 남아 있어도 화면에는 안 나고, 상수를 뒤집으면 그대로 돌아온다.
 //
 // app.js 는 모듈이 아니라 최상위에서 DOM 을 건드리는 평범한 스크립트라 import 가
 // 안 된다. weekly_selector.mjs 와 같은 방식으로 함수 블록만 잘라 평가한다.
@@ -25,7 +27,13 @@ function extract(name) {
   throw new Error(`${name}() 블록이 안 닫힌다`);
 }
 
+// flag 선언은 app.js 에서 **그대로** 가져온다. 여기에 값을 다시 적으면 검사가
+// 자기가 쓴 값을 확인하게 되고, app.js 가 켜져도 통과한다.
+const flagDecl = /const SHOW_WEEKLY_UPCOMING = [^;]+;/.exec(source);
+if (!flagDecl) throw new Error("app.js 에 SHOW_WEEKLY_UPCOMING 선언이 없다");
+
 const api = new Function(`
+  ${flagDecl[0]}
   ${extract("esc")}
   ${extract("weeklySection")}
   ${extract("weeklyStoryTitle")}
@@ -33,8 +41,11 @@ const api = new Function(`
   ${extract("weeklyCountryBriefs")}
   ${extract("weeklyPublications")}
   ${extract("weeklyUpcoming")}
-  return { weeklySection, weeklyTopStories, weeklyCountryBriefs,
-           weeklyPublications, weeklyUpcoming };
+  ${extract("weeklyUpcomingSection")}
+  const dateLabel = value => String(value);
+  return { SHOW_WEEKLY_UPCOMING, weeklySection, weeklyTopStories,
+           weeklyCountryBriefs, weeklyPublications, weeklyUpcoming,
+           weeklyUpcomingSection };
 `)();
 
 const cases = [];
@@ -86,7 +97,9 @@ has("새 탭으로", pubs, 'rel="noopener"');
 check("기관이 없으면 바이라인을 만들지 않는다",
   (pubs.match(/weekly-pub-org/g) || []).length === 1);
 
-// ── 4. 예정 — 날짜 칸. 정밀도가 '월'이면 날짜를 지어내지 않는다.
+// ── 4. 예정 — 화면에서는 꺼져 있다. 그래도 그리는 법은 살려 둔다
+// (지운 게 아니라 끈 것) — 여기서는 그 보존된 표기 규칙을 잠그고,
+// 이어지는 5 가 '그래도 화면에는 안 난다'를 잠근다.
 const upcoming = api.weeklyUpcoming([
   { key: "eeee5555", title: "한수원, 건식저장시설 주민 설명회", date: "2026-09-01",
     precision: "day", issue_id: "issue-3" },
@@ -98,14 +111,44 @@ has("월 정밀도는 월까지만", upcoming, ">10월<");
 hasnt("월 정밀도에 1일을 붙이지 않는다", upcoming, "10월 1일");
 hasnt("날짜와 제목이 붙지 않는다", upcoming, "9월 1일한수원");
 
-// ── 5. 코너는 리포트 하나에서 나온다 — 렌더러가 기간을 따로 계산하지 않는다.
+// ── 5. 예정 코너는 flag 뒤에 있다 — 저장본에 줄이 있어도 안 난다.
+const upcomingReport = { week_end: "2026-08-21", upcoming: [
+  { key: "eeee5555", title: "한수원, 건식저장시설 주민 설명회", date: "2026-09-01",
+    precision: "day", issue_id: "issue-3" },
+] };
+check("SHOW_WEEKLY_UPCOMING 은 꺼져 있다", api.SHOW_WEEKLY_UPCOMING === false,
+  `값: ${api.SHOW_WEEKLY_UPCOMING}`);
+check("flag 가 꺼져 있으면 예정 코너 HTML 이 아예 안 난다",
+  api.weeklyUpcomingSection(upcomingReport) === "",
+  `난 것: ${api.weeklyUpcomingSection(upcomingReport)}`);
+// 지운 게 아니라 끈 것이다 — 상수 하나를 뒤집으면 그대로 돌아와야 한다.
+const reenabled = new Function(`
+  const SHOW_WEEKLY_UPCOMING = true;
+  ${extract("esc")}
+  ${extract("weeklySection")}
+  ${extract("weeklyStoryTitle")}
+  ${extract("weeklyUpcoming")}
+  ${extract("weeklyUpcomingSection")}
+  const dateLabel = value => String(value);
+  return weeklyUpcomingSection;
+`)()(upcomingReport);
+check("flag 를 켜면 코너가 그대로 돌아온다",
+  reenabled.includes("<h3>예정</h3>") && reenabled.includes("9월 1일"),
+  `난 것: ${reenabled}`);
+
+// ── 6. 코너는 리포트 하나에서 나온다 — 렌더러가 기간을 따로 계산하지 않는다.
 const render = source.slice(source.indexOf("function renderWeeklyReport("))
   .slice(0, 2600);
 check("코너가 리포트의 week_start/week_end 로 라벨을 만든다",
   /report\.week_start/.test(render) && /report\.week_end/.test(render));
-check("코너 넷이 전부 리포트에서 온다",
-  ["report.top_stories", "report.country_briefs", "report.publications",
-    "report.upcoming"].every(name => render.includes(name)));
+check("보이는 코너 셋이 전부 리포트에서 온다",
+  ["report.top_stories", "report.country_briefs", "report.publications"]
+    .every(name => render.includes(name)));
+// 예정은 렌더러가 직접 그리지 않고 flag 를 진 함수에 맡긴다. 자리는
+// 남겨 둔다 — 다시 켜면 어느 순서로 들어가는지가 그 자리다.
+check("예정은 flag 를 진 함수로 들어간다",
+  render.includes("weeklyUpcomingSection(report)")
+  && !/weeklySection\("예정"/.test(render));
 check("렌더러가 오늘 날짜로 기간을 다시 만들지 않는다",
   !/new Date\(\)/.test(render));
 

@@ -34,6 +34,21 @@ import article_quality_gate
 ROOT = Path(__file__).parent
 PUBLICATIONS_FILE = ROOT / "publications.json"
 
+# 예정 코너를 독자 화면에 낼지 (2026-08-22 부터 False).
+#
+# 끈 것이지 지운 것이 아니다. 아래 일정 추출 — 선언된 event_date 되짚기와 원문
+# 문장 직접 추출 — 은 그대로 돌고, `build_sections` 도 `upcoming` 을 계속 채워
+# 저장본에 남긴다. 재료를 계속 쌓아 두어야 나중에 Event Calendar 를 설계할 때
+# 지난 주차로 대조해 볼 수 있고, 저장 필드가 비면 그 대조할 것이 사라진다.
+#
+# 무엇을 끄는가: **읽는 사람에게 보이는 두 표면뿐**이다.
+#   · 텔레그램 주간 브리핑 — `weekly_bot.format_weekly`
+#   · 웹 흐름 탭의 주간 판세 — `web/build_data.py` 의 화면 페이로드,
+#     그리고 그 데이터를 그리는 `web/public/app.js` (같은 이름의 상수)
+# 다시 켤 때는 이 값을 True 로 두고 app.js 의 SHOW_WEEKLY_UPCOMING 도 같이
+# 뒤집으면 된다 — 파이썬 상수가 브라우저까지 가지는 않기 때문이다.
+SHOW_WEEKLY_UPCOMING = False
+
 # 코너별 노출 상한. 하한은 없다 — 근거가 모자라면 그만큼만 낸다.
 TOP_STORY_LIMIT = 3
 COUNTRY_BRIEF_LIMIT = 6
