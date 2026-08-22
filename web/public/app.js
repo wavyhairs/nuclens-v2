@@ -1282,31 +1282,48 @@ function weekRange(date) {
   return { start: shiftDate(date, -6), end: date };
 }
 
-// 주간 리포트의 구간은 **토~금**이다. weekly_bot 이 금요일에 돌면서 직전 7일을
-// 묶기 때문이고(week_start = 실행일 -6), 저장된 값도 8/1~8/7 · 8/8~8/14 로 그렇다.
-// ISO 주차(월~일)로 계산하면 하루씩 어긋나 매칭이 통째로 빈다.
-function briefingWeek(date) {
-  const parsed = new Date(`${date}T00:00:00Z`);
-  if (Number.isNaN(parsed.getTime())) return { start: "", end: "" };
-  const toFriday = (5 - parsed.getUTCDay() + 7) % 7;   // 0=일 … 5=금 … 6=토
-  const end = shiftDate(date, toFriday);
-  return { start: shiftDate(end, -6), end };
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// 리포트가 덮는 구간의 끝. 저장된 값에 week_end 가 있으면 그것이 정답이고,
+// 없는 옛 레코드만 토~금(7일) 규칙으로 메운다.
+function weeklyReportEnd(report, start) {
+  const end = String(report?.week_end || "");
+  return ISO_DATE_RE.test(end) ? end : shiftDate(start, 6);
 }
 
-// 그 주 리포트가 없으면 null 이다. **직전 주로 대체하지 않는다** — 지난주 결론이
-// 오늘 분석인 것처럼 붙는 것이 원래 문제였다(2026-08-16: 7월 브리핑에도 8/8~14
-// 결론이 떴다).
+// **선택한 날짜까지 이미 완성된 가장 최근 리포트**를 고른다. 하나뿐인 selector 다 —
+// 오늘 화면의 주간 블록(주간 3분 · 이번 주 해설)이 전부 여기를 지난다.
+//
+// 예전에는 '선택 날짜가 속한 토~금 주차' 리포트만 찾았다. 그런데 리포트는 그 주
+// **금요일 오후**에야 생긴다. 토요일 0시에 새 주차가 시작되므로 토·일·월·화·수·목
+// 엿새 동안 그 주차 키는 비어 있고, 화면은 내내 '집계 중'이었다 — 바로 옆에 완성된
+// 지난주 리포트를 들고서. (2026-08-22 토요일: 8/15~21 리포트가 있는데도 안 떴다.)
+//
+// 미래 리포트는 여전히 절대 고르지 않는다(week_end <= 선택일). 7월 브리핑에 8/8~14
+// 결론이 붙던 2026-08-16 의 문제는 '직전으로 대체'가 아니라 '미래를 당겨 쓴 것'이
+// 원인이었고, 그 문은 아래 부등호가 계속 닫아 둔다.
 function weeklyReportFor(date) {
-  const { start } = briefingWeek(date);
   const reports = state.trend?.weekly_reports;
-  if (!start || !reports || typeof reports !== "object") return null;
-  return reports[start] || null;
+  if (!ISO_DATE_RE.test(String(date || "")) || !reports || typeof reports !== "object") return null;
+  let best = null;
+  let bestEnd = "";
+  for (const [start, report] of Object.entries(reports)) {
+    if (!report || typeof report !== "object" || !ISO_DATE_RE.test(start)) continue;
+    const end = weeklyReportEnd(report, start);
+    if (!end || end > date) continue;      // 아직 끝나지 않은 주 = 아직 없는 리포트
+    if (!best || end > bestEnd) { best = report; bestEnd = end; }
+  }
+  return best;
 }
 
-// "8월 8일–14일" — 같은 달이면 뒤쪽 달 이름을 뺀다.
-function weekRangeLabel(date) {
-  const { start, end } = briefingWeek(date);
-  if (!start || !end) return "";
+// "8월 15일–21일" — 같은 달이면 뒤쪽 달 이름을 뺀다.
+//
+// 기간을 **고른 리포트가 말한다**. 화면이 선택 날짜에서 주차를 계산하면 8/22 에
+// "8월 22일–28일 주간 3분"이라 적어 놓고 8/15~21 내용을 보여주게 된다.
+function weekRangeLabel(report) {
+  const start = String(report?.week_start || "");
+  const end = String(report?.week_end || "");
+  if (!ISO_DATE_RE.test(start) || !ISO_DATE_RE.test(end)) return "";
   const tail = start.slice(0, 7) === end.slice(0, 7)
     ? `${Number(end.slice(8, 10))}일` : dateLabel(end);
   return `${dateLabel(start)}–${tail}`;
@@ -1397,13 +1414,13 @@ function renderHomeIntelligence(briefing) {
 
 
   // 이번 주 해설이 담당하는 것은 '카드에 없는 연결·원인·파급'뿐이다.
-  //   · policy_shifts[].what  → 주간 3분의 '이번 주 결론' 소유 (여기서 다시 안 낸다)
+  //   · policy_shifts[].what  → 주간 3분의 '핵심 결론' 소유 (여기서 다시 안 낸다)
   //   · theme_moves           → 바로 위 '주제 변화' 소유 (4주 방향)
   //   · 남는 것 = weekly_intro(사건 간 연결) + so_what(파급효과)
   // 셋을 다 내던 예전 구성은 한 화면에서 같은 문장을 세 번 보게 만들었다.
   //
-  // 주간 3분과 **같은 주차 리포트**를 본다. 여기만 최신 리포트를 쓰면 한 화면의
-  // 두 블록이 서로 다른 주를 말하게 된다.
+  // 주간 3분과 **같은 selector**(weeklyReportFor)를 지난다. 여기만 다른 규칙으로
+  // 고르면 한 화면의 두 블록이 서로 다른 주를 말하게 된다.
   const report = weeklyReportFor(briefing.date);
   const story = document.getElementById("homeWeeklyStory");
   const intro = dropTextsAlreadyOnCards([report?.weekly_intro], briefing);
@@ -1441,22 +1458,22 @@ function dropTextsAlreadyOnCards(lines, briefing) {
 // '오늘 3분'이라 매일 새 분석이 붙는 것처럼 읽혔고, 실제로는 어느 날짜를 열든
 // 저장된 마지막 한 주가 붙어 있었다 — 7월 브리핑에도 8/8~14 결론이 떴다.
 //
-// 그래서 두 가지를 바꾼다. ① 선택한 날짜가 속한 주차 리포트를 고른다.
-// ② 제목에 그 구간을 적는다 — 며칠간 내용이 같은 이유가 화면에서 설명된다.
-// 그 주 리포트가 아직 없으면 **직전 주로 대신 채우지 않고** 집계 중이라고 말한다.
+// 그래서 두 가지를 지킨다. ① 선택한 날짜까지 **완성된** 가장 최근 리포트를 고른다
+// (weeklyReportFor — 미래 리포트는 안 고른다). ② 제목에 그 리포트가 말하는 구간을
+// 그대로 적는다 — 며칠간 내용이 같은 이유가 화면에서 설명된다.
 function renderTodayAgenda(briefing) {
   const agenda = document.getElementById("todayAgenda");
   const report = weeklyReportFor(briefing.date);
-  const label = weekRangeLabel(briefing.date);
+  const label = weekRangeLabel(report);
   document.getElementById("todayAgendaTitle").textContent =
     label ? `${label} 주간 3분` : "주간 3분";
 
-  // 이번 주 결론 = 판이 바뀐 것. theme_moves 는 4주 방향이라 '주제 변화'의 몫이고,
+  // 핵심 결론 = 판이 바뀐 것. theme_moves 는 4주 방향이라 '주제 변화'의 몫이고,
   // 여기서 같이 내면 두 섹션이 같은 답을 한다.
   const conclusions = dropTextsAlreadyOnCards(
     (report?.policy_shifts || []).map(row => row?.what), briefing
   ).slice(0, 3);
-  // 다음 확인은 카드의 open_question 이 사실상 비어 있어(실측 19건 중 0건) 주간
+  // '지금 확인할 것'은 카드의 open_question 이 사실상 비어 있어(실측 19건 중 0건) 주간
   // watchpoints 가 화면에서 이 질문에 답하는 유일한 자리다.
   const watch = dropTextsAlreadyOnCards(report?.watchpoints || [], briefing).slice(0, 3);
 
@@ -1474,9 +1491,9 @@ function renderTodayAgenda(briefing) {
   // 가른다. 앞은 조용히 접고, 뒤는 왜 비었는지 말한다.
   const pending = document.getElementById("agendaPending");
   const empty = conclusions.length === 0 && watch.length === 0;
-  pending.hidden = !!report || !label;
+  pending.hidden = !!report;
   pending.textContent = pending.hidden ? ""
-    : "이 주 리포트는 아직 집계 중입니다 — 주간 리포트는 금요일 오후에 만들어집니다.";
+    : "아직 완성된 주간 리포트가 없습니다 — 주간 리포트는 금요일 오후에 만들어집니다.";
   agenda.hidden = empty && pending.hidden;
   document.getElementById("todayAgendaMeta").textContent =
     empty ? "" : `결론 ${conclusions.length} · 확인 ${watch.length}`;
@@ -1489,7 +1506,7 @@ function renderTodayAgenda(briefing) {
 //   375×812   700px / 1,105px  ← 1.36 화면
 // 모바일만 이상치다. 글이 좁은 폭에서 접히며 블록이 두 배 넘게 불어 첫 화면이
 // 통째로 '이번 주' 요약이 된다 — 그런데 탭 이름은 '오늘'이고, 안쪽 라벨은
-// 요일과 무관하게 매일 `이번 주 결론`이다(8/5·8/7 동일).
+// 요일과 무관하게 매일 `이번 주 결론`이었다(8/5·8/7 동일 — 지금은 `핵심 결론`).
 //
 // 내용은 하나도 안 숨긴다. 주간 watchpoints 는 카드의 open_question 이 실측
 // 19건 중 0건이라 화면에서 그 질문에 답하는 유일한 자리다 — 접으면 모바일
@@ -3032,7 +3049,7 @@ function renderWeeklyReport() {
   const DIRECTION_TONE = { "강화": "up", "약화": "down", "유지": "flat" };
 
   // '이번 주 판을 바꾼 것'(weekly_intro + policy_shifts)과 '다음 주 하나만
-  // 본다면'(watchpoints)은 뺐다. 오늘 화면의 '이번 주 결론'·'다음 확인'·'이번 주
+  // 본다면'(watchpoints)은 뺐다. 오늘 화면의 '핵심 결론'·'지금 확인할 것'·'이번 주
   // 해설'이 같은 문장을 이미 낸다 — 실측 2026-08-08: 흐름 첫 화면 산문 여섯
   // 문단 중 일곱 문장이 오늘 탭과 글자 그대로 동일. 탭을 옮겼는데 같은 글이
   // 다시 나오면 그건 깊이가 아니라 반복이다.

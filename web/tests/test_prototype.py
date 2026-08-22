@@ -4265,19 +4265,23 @@ class WeeklyRenderTests(unittest.TestCase):
             self.assertNotIn("state.trend?.weekly_report;", body,
                              f"{name} 이 아직 최신 한 주를 읽는다")
 
-    def test_missing_week_is_stated_not_backfilled(self):
-        """그 주 리포트가 없으면 직전 주로 대신 채우지 않는다.
+    def test_future_weeks_are_never_backfilled_into_an_older_briefing(self):
+        """미래 리포트를 당겨 쓰지 않는다 — 원래 사고의 방향이 이쪽이었다.
 
-        대체하면 '지난주 결론이 오늘 분석처럼 붙는' 원래 문제가 그대로 남는다.
-        비었다는 사실을 화면이 말하고, 본문은 내지 않는다.
+        실측(2026-08-16): 7월 브리핑에 8/8~14 결론이 떴다. 원인은 '최신 하나'를
+        읽은 것이지 '직전 것을 골랐다'가 아니다. 그래서 막을 것은 week_end 가
+        선택 날짜보다 뒤인 리포트뿐이고, 그 부등호가 코드에 실제로 있어야 한다.
+
+        반대로 **끝난 주를 계속 보여주는 것은 정상 동작**이다. 리포트는 금요일
+        오후에야 생기므로 그 주 것만 찾으면 토~목 엿새가 통째로 '집계 중'이 된다
+        (2026-08-22 토요일에 8/15~21 리포트를 두고도 비어 있었다). 날짜별 판정은
+        web/tests/weekly_selector.mjs 가 픽스처로 검사한다.
         """
         match = re.search(r"function weeklyReportFor\(.*?\n\}", self.script, re.S)
         self.assertIsNotNone(match)
         body = match.group(0)
-        # 폴백 흔적: 최신 키를 집거나 정렬해서 앞뒤를 집는 코드가 있으면 안 된다.
-        for banned in ("Object.keys", "sort(", "at(-1)", "weekly_report;"):
-            self.assertNotIn(banned, body, f"weeklyReportFor 에 폴백 흔적: {banned}")
-        self.assertIn("return reports[start] || null", body)
+        self.assertNotIn("weekly_report;", body, "weeklyReportFor 가 최신 하나를 읽는다")
+        self.assertIn("end > date", body, "미래 리포트를 걸러내는 부등호가 없다")
         # 빈 상태를 말하는 자리가 실제로 있는가.
         self.assertIn('id="agendaPending"', self.html)
         self.assertIn("agendaPending", self.script)
@@ -4287,7 +4291,10 @@ class WeeklyRenderTests(unittest.TestCase):
         """며칠간 같은 내용인 이유가 화면에서 설명돼야 한다."""
         match = re.search(r"function renderTodayAgenda\(.*?\n\}", self.script, re.S)
         body = match.group(0)
-        self.assertIn("weekRangeLabel(briefing.date)", body)
+        # 라벨의 근거는 선택 날짜가 아니라 **고른 리포트**다. 날짜에서 주차를
+        # 계산하면 8/22 화면이 "8월 22일–28일"이라 적고 8/15~21 내용을 보여준다.
+        self.assertIn("weekRangeLabel(report)", body)
+        self.assertNotIn("weekRangeLabel(briefing.date)", body)
         self.assertIn("주간 3분", body)
         # index.html 의 기본 문구도 '오늘'이 아니어야 한다 — 렌더 전 한 프레임 동안
         # 보이고, brief/<date>/ 정적 페이지의 초기 제목이기도 하다.
@@ -4299,7 +4306,7 @@ class WeeklyRenderTests(unittest.TestCase):
 
         고정 코너는 다섯이었다. '이번 주 판을 바꾼 것'(weekly_intro +
         policy_shifts)과 '다음 주 하나만 본다면'(watchpoints)은 오늘 화면의
-        '이번 주 결론'·'이번 주 해설'·'다음 확인'과 같은 재료다 — 실측
+        '핵심 결론'·'이번 주 해설'·'지금 확인할 것'과 같은 재료다 — 실측
         2026-08-08: 흐름 첫 화면 산문 여섯 문단 중 일곱 문장이 오늘 탭과 글자
         그대로 동일했다. 탭을 옮겼는데 같은 글이 다시 나오면 깊이가 아니라 반복이다.
         '아직 결론 나지 않은 것'(open_questions)도 같은 이유로 뺐다 — 같은 문장이
@@ -6142,8 +6149,8 @@ class TodayAgendaPlacementTests(unittest.TestCase):
 
     실측(2026-08-11) 블록 높이 / 선두 이슈 위치 — 1440×900 은 296px/733px 인데
     375×812 은 700px/1,105px(1.36 화면)이다. 글이 좁은 폭에서 접히며 블록이 두 배
-    넘게 불어 첫 화면이 통째로 '이번 주' 요약이 됐다. 탭 이름은 '오늘'이고 안쪽
-    라벨은 요일과 무관하게 매일 `이번 주 결론` 이다.
+    넘게 불어 첫 화면이 통째로 '이번 주' 요약이 됐다. 탭 이름은 '오늘'인데 안쪽은
+    한 주를 말한다 — 그래서 라벨에서 상대 표현을 뺐다(`핵심 결론`).
     """
 
     def setUp(self):

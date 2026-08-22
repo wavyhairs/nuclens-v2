@@ -635,7 +635,17 @@ python daily_brief.py --dry-run        # 발송 없이 브리핑+점수 내역 �
 python embedding_pipeline.py --window-days 21 --max-new 150  # 이슈 매칭 캐시 백필
 python -m unittest discover tests -v   # 테스트 (외부 호출 0)
 python metrics.py                      # 품질 지표
+cd web && python -m unittest discover -s tests   # 화면 빌드·집계 테스트
+node web/tests/date_window.mjs         # 날짜 산술 (app.js, 의존성 0)
+node web/tests/weekly_selector.mjs     # 주간 3분이 고르는 리포트
 ```
+
+같은 것을 CI 가 PR 에서 자동으로 돈다 — `.github/workflows/python-tests.yml`.
+파이썬 파일·`tests/`·코드가 읽는 설정 JSON 이 바뀐 PR 에서만 뜨고, 크롤이 시간당
+밀어넣는 수집 데이터(`curated.json`·`sent.json`·`archive/**` …)만 바뀐 커밋에는
+뜨지 않는다. 기본 CI 는 **외부 호출이 0** 이다(Gemini·Telegram·TTS·네이버·RSS
+전부 목/픽스처). 실제 모델 품질 평가가 필요하면 이 워크플로가 아니라 별도 eval 로
+분리한다.
 
 ## 데이터 품질 게이트
 
