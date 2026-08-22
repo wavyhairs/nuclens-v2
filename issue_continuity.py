@@ -42,6 +42,39 @@
 어느 척도에서든 칸이 올라갔으면 material — 감점을 거의 면제한다. 척도는 못
 넘었지만 새 수치가 붙었으면 minor — 절반만 깎는다. 둘 다 아니면 none — 전액.
 
+어휘가 못 넘는 벽 — 근거 교집합 (2026-08-22)
+--------------------------------------------
+위 판정은 전부 **글자**를 본다(제목 유사도·척도 어휘표·앵커). 그래서 같은 사건을
+다른 매체가 다른 낱말로 쓰면 두 축이 함께 흔들린다.
+
+    8/21 국내 1위  국회, 국가기간 전력망 확충 특별법 등 민생법안 70건 처리
+    8/22 국내 3위  국회 본회의, 「국가기간 전력망 확충 특별법」 등 73건 의안 처리
+
+8/20 국회 본회의 **한 건**이다. 70건과 73건은 사건이 진전된 것이 아니라 집계 범위
+차이다. `same_issue` 는 정확히 붙였는데(제목 0.776 · 지문 0.723) 그 다음이 어긋났다:
+어제 요약이 "통과", 오늘 요약이 "의결"이라 `certainty` 척도가 -1 → 1 로 갈렸고
+규칙 ④ 가 걸려 minor(감점 절반)가 됐다. 그리고 hard_drop 은 제목 유사도 0.85 를
+요구하는데 0.776 이라 닿지 않았다 — **다른 매체가 다른 표현으로 쓴 동일 사건은
+정의상 그 문턱을 못 넘는다.** 진전 판정만 고쳐 none 이 나왔더라도 감점 5.0
+(→22.94점)에 그쳐 그날 국내 최하 선정 점수 20.31 위에 그대로 남았다.
+
+어휘를 안 타는 재료가 이미 파이프라인 안에 있었다. 그날 8/22 카드의
+`story_members` 14건 **안에 전날 카드 자신이 들어 있었고**(수집 단계 임베딩 dedup 이
+접었다) 두 카드의 근거 교집합은 12건이었다. 수집은 같은 사건이라고 판정해 놓았고,
+그 판정이 이 게이트까지 오는 배선만 없었다.
+
+그래서 `story_cluster.evidence_overlap` 을 세 번째 재료로 쓴다. 다만 **겹침의 절대
+건수로는 못 가른다** — 실측에서 8/17→18 테라파워(공급계약 → SK 공조 합의, 진짜
+후속)도 3건을 공유했고 서로의 근거 목록에 상대 카드를 들고 있었다. 가르는 것은
+비율이고(0.188 ↔ 0.857), 그 사이가 비어 있다. 확정 강도일 때만 두 곳에서 쓴다:
+
+    · `progression` 의 ④~⑥ 유보를 걷는다 (①~③ 의 실제 단계 이동은 그대로 이긴다)
+    · `hard_drop` 의 '사실상 동일' 을 제목 **또는** 근거로 말할 수 있게 한다
+
+읽는 시점이 중요하다 — story 는 `ranking.rank_and_select` **안에서** 조립되므로,
+선정 앞에서 한 번만 판정하면 이 재료가 아직 없다. `ranking` 이 story 를 다 접은
+뒤 `continuity_recheck` 로 이 모듈을 한 번 더 부른다.
+
 감점은 얼마나 오래 가는가 — 근거의 세기가 창의 폭을 정한다
 ------------------------------------------------------------
 처음에는 창이 하나였다(5일, 하루 20%씩 감쇠). 그러면 사흘 전 반복이 이미 40%로
@@ -101,6 +134,7 @@ from pathlib import Path
 
 import admin_overrides
 import event_stage
+import story_cluster
 import story_fingerprint
 
 ROOT = Path(__file__).parent
@@ -124,6 +158,16 @@ DEFAULT_CONFIG = {
     "fingerprint_min_axes": 2,
     # 태그·고유명사 보조 매칭 — 제목 표기가 갈린 경우(알마라즈/알마라스)를 잡는다.
     "anchor_min_shared": 2,
+    # 근거 교집합 — 오늘 카드가 어제 카드의 근거 기사를 그대로 다시 쓰고 있는가.
+    # 위 세 경로가 전부 어휘를 타는 데 반해 이것은 hash 비교라 표기·번역·매체와
+    # 무관하다(`story_cluster.evidence_overlap` 주석에 실측이 있다).
+    #
+    # 두 조건을 **함께** 요구한다. 건수만 보면 진짜 후속을 죽인다 — 실측
+    # 2026-08-17→18 테라파워(공급계약 → SK 공조 합의)가 3건을 공유했다. 비율만
+    # 보면 근거가 한둘뿐인 작은 story 가 1.0 으로 튄다. 실측에서 갈린 자리는
+    # 0.188(후속) 과 0.857(같은 사건) 사이이고, 그 구간이 비어 있다.
+    "evidence_confirm_shared": 3,
+    "evidence_confirm_ratio": 0.6,
     # 단계가 안 움직인 반복의 감점. 국내 하한 14.0 · 상위권 20~29점 분포에서
     # 5.0 은 '한 계단 밀린다'에 해당한다(지우지 않는다).
     "repeat_penalty": 5.0,
@@ -454,7 +498,8 @@ def _quantities(row: dict) -> set[str]:
 
 
 def progression(prior: dict, candidate: dict, *,
-                restatement_similarity: float = 0.85) -> dict:
+                restatement_similarity: float = 0.85,
+                evidence_confirmed: bool = False) -> dict:
     """전일 기사 대비 오늘 기사가 실제로 나아갔는가.
 
     판정을 세 등급으로 나누는 이유는 **모르는 경우가 실제로 많기 때문**이다.
@@ -462,6 +507,14 @@ def progression(prior: dict, candidate: dict, *,
     표현만 없었다'를 가를 방법이 없다. 그런 경우를 material 로 두면 표현만 바꾼
     재탕이 전부 면제되고(실측 알마라즈 연장 ↔ 연장 승인), none 으로 두면 진짜
     진전이 감점된다. 그래서 절반만 인정하는 칸을 둔다.
+
+    Args:
+        evidence_confirmed: 두 story 가 근거 기사를 압도적으로 공유한다
+            (`story_cluster.evidence_overlap`). 참이면 아래 ④~⑥ 의 **유보를 쓰지
+            않는다** — 그 세 규칙은 전부 "모르겠으니 절반만 인정하자"는 뜻인데,
+            같은 기사 뭉치를 근거로 들고 있다는 것은 모르는 상태가 아니다.
+            ①~③(척도 이동·규모 확대·상태 전환)은 그대로 위에 남는다: 근거가
+            겹쳐도 단계가 실제로 넘어갔으면 그것은 진전이다.
 
     Returns:
         {"verdict": "material"|"minor"|"none", "kind": str, "detail": str}
@@ -501,6 +554,19 @@ def progression(prior: dict, candidate: dict, *,
         if flips:
             return {"verdict": "material", "kind": "stage_flip",
                     "detail": event_stage.describe(flips)}
+
+    # ── 여기부터는 전부 '모르겠다'에 대한 유보다. 근거가 겹치면 쓰지 않는다. ──
+    #
+    # 실측 2026-08-22 국회 본회의. 어제 요약은 "…민생법안이 **통과**됨", 오늘
+    # 요약은 "…안건을 **의결**했다". `PROGRESSION_SCALES` 에서 `의결` 은
+    # `certainty:확정` 칸에 있고 `통과` 는 `permit:승인` 칸에만 있어서, 어제
+    # certainty 가 -1 · 오늘이 1 로 갈렸고 아래 ④ 가 걸려 minor(감점 절반)가 됐다.
+    # **같은 사실을 두 매체가 다른 동사로 썼다는 것 말고는 아무 일도 없었다.**
+    #
+    # ④~⑥ 이 약한 것은 결함이 아니라 설계다(위 docstring). 문제는 그 유보를
+    # 걷어 줄 재료가 그때까지 없었다는 것이다. 근거 교집합이 그 재료다.
+    if evidence_confirmed:
+        return {"verdict": "none", "kind": "", "detail": ""}
 
     # ④ 어제는 척도에 표식이 없었는데 오늘은 실질 단계에 도달했다. 진전일
     #    가능성이 높지만 같은 사실을 다른 낱말로 쓴 것일 수도 있다 — 절반.
@@ -698,8 +764,17 @@ def same_issue(candidate: dict, prior: dict, cfg: dict,
     sim = title_similarity(candidate, prior)
     fp_sim, fp_axes, fp_shared = fingerprint_similarity(candidate, prior)
     named = (named_anchors(candidate) & named_anchors(prior)) - generic
+    overlap = story_cluster.evidence_overlap(candidate, prior)
+    # 확정 강도일 때만 매칭 근거로 센다. 그 아래는 아예 참여시키지 않는다 —
+    # 약하게 걸어 두면 정상 후속(테라파워 3건 공유)이 `anchor_only` 를 잃고
+    # 감점 창이 하루에서 이레로 늘어난다. 실측 근거가 있는 구간에서만 움직인다.
+    evidence_confirmed = bool(
+        overlap.shared >= int(cfg.get("evidence_confirm_shared", 3))
+        and overlap.ratio >= float(cfg.get("evidence_confirm_ratio", 0.6)))
 
     reasons: list[str] = []
+    if evidence_confirmed:
+        reasons.append(f"evidence:{overlap.shared}/{overlap.candidate_total}")
     if sim >= float(cfg.get("title_similarity", 0.62)):
         reasons.append(f"title:{sim}")
     if (fp_axes >= int(cfg.get("fingerprint_min_axes", 2))
@@ -722,7 +797,10 @@ def same_issue(candidate: dict, prior: dict, cfg: dict,
     if fac_a and fac_b and (fac_a & fac_b):
         reasons.append(f"facility:{','.join(sorted(fac_a & fac_b))}")
     return {"similarity": sim, "fingerprint_similarity": fp_sim,
-            "reasons": reasons, "anchor_only": anchor_only}
+            "reasons": reasons, "anchor_only": anchor_only,
+            "evidence_shared": overlap.shared,
+            "evidence_ratio": overlap.ratio,
+            "evidence_confirmed": evidence_confirmed}
 
 
 # ---- 발송 이력 ------------------------------------------------------------------
@@ -775,6 +853,11 @@ def as_sent_record(item: dict, briefing_date: str) -> dict:
         "tags": item.get("tags") or [],
         "region": item.get("region") or "",
         "story_fingerprint": item.get("story_fingerprint") or {},
+        # 근거 교집합이 같은 날 다른 지역에도 서야 한다. 국내 1번과 해외 3번이
+        # 같은 사건이었던 2026-08-16 테라파워가 이 레코드로 잡혔는데, 근거를
+        # 안 실으면 그 경로만 눈이 없다.
+        "story_members": item.get("story_members") or [],
+        "story_article_hashes": item.get("story_article_hashes") or [],
     }
 
 
@@ -803,7 +886,7 @@ def _days_between(later: str, earlier: str) -> int:
 
 
 def penalty_window(verdict: str, similarity: float, anchor_only: bool,
-                   cfg: dict) -> int:
+                   cfg: dict, *, evidence_confirmed: bool = False) -> int:
     """감점이 **만액으로 유지되는** 날수. 근거가 셀수록 길다.
 
     사다리의 순서가 곧 판단이다. 위에서 걸리는 것이 이긴다.
@@ -830,7 +913,10 @@ def penalty_window(verdict: str, similarity: float, anchor_only: bool,
         return int(cfg.get("anchor_only_window_days", 1))
     if verdict == "minor":
         return int(cfg.get("minor_window_days", 3))
-    if similarity >= float(cfg.get("restatement_similarity", 0.85)):
+    # 근거를 압도적으로 공유한 반복은 제목이 안 닮았어도 재전송과 같은 세기다 —
+    # 같은 기사 뭉치를 근거로 다시 쓴 것이라 어휘가 달라진 것뿐이다. 그래서 ④와
+    # 같은 창을 준다(hard_drop 이 꺼져 있어도 감점만은 여기까지 간다).
+    if evidence_confirmed or similarity >= float(cfg.get("restatement_similarity", 0.85)):
         return int(cfg.get("restatement_window_days", 14))
     return int(cfg.get("repeat_window_days", 7))
 
@@ -867,9 +953,11 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
 
     stamp, prior, match = best
     days_ago = _days_between(today, stamp)
+    evidence_confirmed = bool(match.get("evidence_confirmed"))
     prog = progression(prior, candidate,
                        restatement_similarity=float(
-                           cfg.get("restatement_similarity", 0.85)))
+                           cfg.get("restatement_similarity", 0.85)),
+                       evidence_confirmed=evidence_confirmed)
 
     ratio = {"material": float(cfg.get("progression_penalty", 0.5))
              / max(1e-9, float(cfg.get("repeat_penalty", 5.0))),
@@ -877,7 +965,8 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
              "none": 1.0}[prog["verdict"]]
     base = float(cfg.get("repeat_penalty", 5.0))
     window = penalty_window(prog["verdict"], match["similarity"],
-                            bool(match.get("anchor_only")), cfg)
+                            bool(match.get("anchor_only")), cfg,
+                            evidence_confirmed=evidence_confirmed)
     # 창 안은 만액, 창 밖은 하루마다 감쇠. 예전에는 창이 없어 발송 당일부터
     # 식었고, 그래서 3~4일 전 반복이 이미 40% 로 통과했다.
     decay = max(0.0, 1.0 - float(cfg.get("penalty_decay_per_day", 0.25))
@@ -910,10 +999,20 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
     need = float(hard.get("similarity", 0.85))
     if days_ago > int(hard.get("extended_after_days", 7)):
         need = max(need, float(hard.get("extended_similarity", 0.95)))
+    # '사실상 동일'을 말하는 길이 둘이다 — 제목이 같거나, 근거가 같거나.
+    #
+    # 예전에는 제목뿐이었고 그것이 이 게이트의 구멍이었다: 다른 매체가 다른
+    # 표현으로 쓴 동일 사건은 **정의상 0.85 를 못 넘는다.** 실측 2026-08-22
+    # 국회 본회의 두 건이 0.776 이라, 진전 판정을 옳게 고쳐 none 이 나왔더라도
+    # 감점 5.0(→22.94점)에 그쳐 국내 하한 14.0 위에 그대로 남았다(그날 최하
+    # 선정 점수 20.31). 어휘를 안 타는 두 번째 길이 필요한 이유다.
+    #
+    # `progression == "none"` 은 그대로 **필수**다. 근거가 겹쳐도 단계가 넘어갔으면
+    # 위 ①~③ 이 material 을 내고 여기 오지 않는다.
     drop = bool(
         hard.get("enabled")
         and prog["verdict"] == "none"
-        and match["similarity"] >= need
+        and (evidence_confirmed or match["similarity"] >= need)
         and days_ago <= int(hard.get("max_days", 14))
     )
 
@@ -925,6 +1024,13 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
         "prior_region": str(prior.get("region") or ""),
         "days_ago": days_ago,
         "similarity": match["similarity"],
+        "evidence_shared": match.get("evidence_shared", 0),
+        "evidence_ratio": match.get("evidence_ratio", 0.0),
+        # 겹친 건수와 **문턱을 넘었는가**는 다른 사실이다. 근거가 한 건 겹치는
+        # 일은 흔하고(실측 8/22 후보 풀에서 5건 중 4건이 1~2건 겹침) 그 넷은
+        # 판정에 아무 영향이 없었다. 이 플래그가 없으면 진단이 둘을 못 가르고,
+        # 문턱을 읽으라고 안내한 숫자가 정작 문턱과 무관해진다.
+        "evidence_confirmed": bool(match.get("evidence_confirmed")),
         "match_reasons": match["reasons"],
         "progression": prog["verdict"],
         "progression_kind": prog["kind"],
@@ -947,7 +1053,8 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
 
 
 def annotate(items: list[dict], recent: list[dict], cfg: dict | None = None,
-             today: str | None = None) -> dict:
+             today: str | None = None,
+             generic: frozenset[str] | None = None) -> dict:
     """후보들에 `continuity` 판정을 붙인다 (제자리 수정). 요약 진단을 돌려준다.
 
     `ranking.score_item` 이 이 키를 읽어 점수에 반영하고, `rank_and_select` 가
@@ -955,6 +1062,14 @@ def annotate(items: list[dict], recent: list[dict], cfg: dict | None = None,
     쓰는 채로 남아야 하고(테스트가 네트워크·파일 없이 돈다), 판정 재료는
     delivery_log 라는 외부 파일이다. news_bot 이 `prior_coverage` 를 주입하는
     것과 같은 구조다.
+
+    Args:
+        generic: 흔한 말 집합을 **밖에서** 정해 준다. story 가 조립된 뒤에 이
+            함수를 한 번 더 부를 때(ranking 의 `continuity_recheck`) 두 번째
+            입력은 이미 걸러진 소수라, 안에서 다시 세면 `generic_anchors` 의
+            문턱이 최소값 6 으로 떨어져 **같은 하루 안에서 흔한 말의 정의가
+            바뀐다**. 처음 풀에서 한 번 세고 그대로 물려주면 두 번의 판정이
+            같은 기준 위에 선다. None 이면 예전처럼 안에서 센다.
     """
     conf = resolve_config(cfg)
     today = today or datetime.now(KST).date().isoformat()
@@ -965,7 +1080,8 @@ def annotate(items: list[dict], recent: list[dict], cfg: dict | None = None,
         return {"checked": len(items), "matched": 0, "verdicts": []}
 
     # 흔한 말은 비교 풀에서 **세어서** 정한다 (generic_anchors 주석 참조).
-    generic = generic_anchors(list(items) + list(recent))
+    if generic is None:
+        generic = generic_anchors(list(items) + list(recent))
     matched = 0
     for item in items:
         verdict = verdict_for(item, recent, conf, today, generic)
@@ -978,7 +1094,8 @@ def annotate(items: list[dict], recent: list[dict], cfg: dict | None = None,
             "hash": item.get("hash", ""),
             "title": (item.get("title_kr") or item.get("title") or "")[:80],
             **{k: verdict[k] for k in ("prior_title", "prior_date", "days_ago",
-                                       "similarity", "progression",
+                                       "similarity", "evidence_shared",
+                                       "evidence_confirmed", "progression",
                                        "progression_kind", "window_days",
                                        "repeat_streak", "penalty", "drop")},
         })

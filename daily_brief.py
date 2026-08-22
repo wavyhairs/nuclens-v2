@@ -829,6 +829,29 @@ def region_stats(diag: dict, selected: list[dict], pool: list[dict] | None = Non
             },
             "samples": verdicts[:6],
         }
+        # story 가 접힌 뒤의 재판정. 삭제를 실제로 정한 것은 이쪽이므로 위 숫자와
+        # 따로 남긴다 — 둘이 갈리면 "근거 교집합이 판정을 뒤집었다"는 뜻이고,
+        # 그 사실은 첫 판정만 봐서는 보이지 않는다.
+        recheck = continuity.get("recheck")
+        if isinstance(recheck, dict):
+            again = recheck.get("verdicts") or []
+            stats["continuity"]["recheck"] = {
+                "checked": recheck.get("checked", 0),
+                "matched": recheck.get("matched", 0),
+                "by_progression": {
+                    key: sum(1 for v in again if v.get("progression") == key)
+                    for key in ("material", "minor", "none")
+                },
+                # 문턱을 **넘은** 건수와 그냥 겹친 건수를 따로 센다. 둘의 간격이
+                # 곧 "문턱이 제자리인가"에 대한 답이다 — 실측 2026-08-22 국내
+                # 풀에서 겹침은 5건인데 확정은 1건이었고, 나머지 넷은 1~2건짜리
+                # 우연한 겹침이라 판정을 전혀 건드리지 않았다. 겹침만 세면
+                # 게이트가 실제보다 다섯 배 활발해 보인다.
+                "evidence_confirmed": sum(1 for v in again
+                                          if v.get("evidence_confirmed")),
+                "evidence_overlapping": sum(1 for v in again
+                                            if v.get("evidence_shared")),
+            }
     return stats
 
 
@@ -892,27 +915,51 @@ def plan_briefs(queue: list[dict],
     continuity_cfg = issue_continuity.resolve_config(cfg)
     recent_sent = issue_continuity.load_recent_sent(
         int(continuity_cfg.get("lookback_days", 5)))
-    dom_cont = issue_continuity.annotate(dom_pool, recent_sent, cfg, today)
+
+    # 판정을 두 번 받는다. 처음은 여기(점수에 감점을 싣는다), 두 번째는
+    # rank_and_select 안에서 story 가 다 접힌 뒤다 — 재료 하나(근거 교집합)가
+    # 거기서야 생기기 때문이다. 두 번 다 같은 판정기·같은 발송 이력을 쓴다.
+    #
+    # 흔한 말 집합은 **처음 풀에서 한 번만** 센다. 두 번째 입력은 이미 걸러진
+    # 소수라 안에서 다시 세면 generic_anchors 의 문턱이 최소값으로 떨어져,
+    # 같은 하루 안에서 '흔한 말'의 정의가 바뀐다.
+    dom_generic = issue_continuity.generic_anchors(list(dom_pool) + recent_sent)
+    dom_cont = issue_continuity.annotate(dom_pool, recent_sent, cfg, today,
+                                         generic=dom_generic)
+
+    def dom_recheck(rows: list[dict]) -> None:
+        # 두 번째 판정은 **덮어쓰지 않고 따로** 남긴다. 첫 판정의 checked/matched 는
+        # '그날 후보 풀 전체에서 몇 건이 반복이었나'라는 별개의 사실이고, 그것을
+        # 접힌 뒤의 수로 바꿔 버리면 회차 간 비교가 끊긴다.
+        dom_cont["recheck"] = issue_continuity.annotate(
+            rows, recent_sent, cfg, today, generic=dom_generic)
 
     dom, dom_diag = ranking.rank_and_select(
         dom_pool, DOMESTIC_CAP, cfg, now, ranking.resolve_floor(cfg, "domestic"),
         cap_spec=ranking.resolve_caps(cfg, "domestic"),
         semantic_dedup=dedup_articles,
-        editorial_dedup=editorial_dedup_articles)
+        editorial_dedup=editorial_dedup_articles,
+        continuity_recheck=dom_recheck)
 
     # 해외 풀은 **국내 선정 결과까지** 어제분에 얹어서 본다. 두 지역이 각자
     # 풀에서 따로 랭킹되므로, 같은 이슈가 국내 1번과 해외 3번을 동시에 차지하는
     # 일이 실제로 있었다(2026-08-16 테라파워 SMR 두 건). 규칙을 새로 만들지 않고
     # 같은 장치에 오늘치 발송분을 넣는다.
-    forn_cont = issue_continuity.annotate(
-        forn_pool,
-        recent_sent + [issue_continuity.as_sent_record(a, today) for a in dom],
-        cfg, today)
+    forn_recent = recent_sent + [issue_continuity.as_sent_record(a, today) for a in dom]
+    forn_generic = issue_continuity.generic_anchors(list(forn_pool) + forn_recent)
+    forn_cont = issue_continuity.annotate(forn_pool, forn_recent, cfg, today,
+                                          generic=forn_generic)
+
+    def forn_recheck(rows: list[dict]) -> None:
+        forn_cont["recheck"] = issue_continuity.annotate(
+            rows, forn_recent, cfg, today, generic=forn_generic)
+
     forn, forn_diag = ranking.rank_and_select(
         forn_pool, FOREIGN_CAP, cfg, now, ranking.resolve_floor(cfg, "overseas"),
         cap_spec=ranking.resolve_caps(cfg, "overseas"),
         semantic_dedup=dedup_articles,
-        editorial_dedup=editorial_dedup_articles)
+        editorial_dedup=editorial_dedup_articles,
+        continuity_recheck=forn_recheck)
     print(f"[daily_brief] 국내 {len(dom)}건 / 해외 {len(forn)}건 선별 "
           f"(중복 제거 {len(dom_diag['dropped_duplicates']) + len(forn_diag['dropped_duplicates'])}건, "
           f"하한 미달 {len(dom_diag['dropped_below_floor']) + len(forn_diag['dropped_below_floor'])}건, "

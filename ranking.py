@@ -854,8 +854,9 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
                     editorial_dedup: Callable[
                         [list[dict], dict[str, float]],
                         tuple[list[dict], list[dict]]] | None = None,
+                    continuity_recheck: Callable[[list[dict]], None] | None = None,
                     ) -> tuple[list[dict], dict]:
-    """점수화 → 중복 클러스터 → (의미 dedup) → (하한) → 다양성 top-k.
+    """점수화 → 중복 클러스터 → (의미 dedup) → (연속일 재판정) → (하한) → 다양성 top-k.
 
     하한은 **다양성 선별 앞에서** 건다. 뒤에 걸면 같은 topic 이 겹쳐 받은 페널티가
     하한 판정에 섞여 들어가 '중요도가 낮아서'가 아니라 '주제가 겹쳐서' 잘린다.
@@ -868,6 +869,19 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
             네트워크 없이 돈다. None 이면 이 단계를 건너뛴다.
         editorial_dedup: 최종 상위 후보에 대한 2차 편집 중복검사. 여기서 제거된 자리는
             남은 후보로 다시 채우므로 '중복 후보가 슬롯을 먹는' 문제가 생기지 않는다.
+        continuity_recheck: story 가 조립된 **뒤에** 연속일 판정을 다시 붙이는
+            콜러블(제자리 수정). 호출부가 `issue_continuity.annotate` 를 감아
+            넣는다 — 이 모듈은 delivery_log 를 모른 채로 남아야 하므로
+            semantic_dedup·editorial_dedup 과 같은 주입식이다.
+
+            왜 다시 부르는가: 판정 재료 하나(근거 교집합)가 **이 함수 안에서**
+            만들어진다. 선정 앞에서 한 번만 판정하면 그때 후보는 아직 낱개
+            기사라, "오늘 story 가 어제 카드를 근거로 들고 있다"는 사실이
+            존재하지 않는다. cluster_duplicates 와 semantic_dedup 이 story 를
+            접은 **뒤**가 그 사실이 처음 생기는 자리다.
+
+            None 이면 이 단계를 건너뛴다 — 첫 판정이 그대로 남으므로 예전과
+            같이 동작한다.
 
     Returns:
         (선정 리스트, 진단 dict: scores/breakdowns/dropped_duplicates/
@@ -913,10 +927,18 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
         dropped = dropped + head_dropped
         refresh_scores(kept)
 
+    # story 가 다 접힌 자리 — 연속일 판정을 여기서 한 번 더 받는다. 위 두 단계가
+    # 만들어 낸 근거 목록(story_members)이 판정 재료의 하나이기 때문이다.
+    # 아래 삭제 분기 **앞**이어야 한다: 여기서 뒤집힌 판정이 그 분기의 입력이다.
+    if continuity_recheck is not None and kept:
+        continuity_recheck(kept)
+        refresh_scores(kept)
+
     # 연속일 반복 중 **삭제까지 가는** 조합. 감점(score_delta)은 위 score_item 이
-    # 이미 반영했고, 여기서 빠지는 것은 "제목까지 거의 같은데 단계가 하나도 안
-    # 움직인" 어제분뿐이다(issue_continuity.hard_drop). 하한 앞에 두는 이유는
-    # 하한과 캡이 세는 적격 수에서 이것들이 빠져야 하기 때문이다 — 남겨 두면
+    # 이미 반영했고, 여기서 빠지는 것은 "제목까지 거의 같거나 근거를 그대로 다시
+    # 쓰는데 단계가 하나도 안 움직인" 어제분뿐이다(issue_continuity.hard_drop).
+    # 하한 앞에 두는 이유는 하한과 캡이 세는 적격 수에서 이것들이 빠져야 하기
+    # 때문이다 — 남겨 두면
     # 어차피 못 나갈 후보가 캡을 부풀린다.
     repeats: list[dict] = []
     if any(_continuity_of(a).get("drop") for a in kept):
@@ -933,6 +955,12 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
                 "prior_date": cont.get("prior_date", ""),
                 "days_ago": cont.get("days_ago"),
                 "similarity": cont.get("similarity"),
+                "evidence_shared": cont.get("evidence_shared"),
+                # 삭제가 제목으로 결정됐는지 근거로 결정됐는지 — 실측 2026-08-22
+                # '전력망 3법' 은 제목 유사도 0.333 으로 지워졌다. 이 플래그 없이
+                # 로그를 보면 그 숫자가 문턱(0.85)보다 한참 아래라 삭제가 버그로
+                # 보인다.
+                "evidence_confirmed": cont.get("evidence_confirmed"),
                 "progression": cont.get("progression"),
                 "match_reasons": cont.get("match_reasons") or [],
             })

@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import dedup
 import ranking
+import story_cluster
 
 NOW = datetime(2026, 8, 14, 0, 0, tzinfo=timezone.utc)
 CFG = ranking.load_config()
@@ -139,6 +140,64 @@ class TestEditorialBackfill(unittest.TestCase):
         self.assertNotIn("b", hashes)
         self.assertIn("d", hashes)  # the duplicate did not consume a final briefing slot
         self.assertIn("b", {x["hash"] for x in diag["dropped_duplicates"]})
+
+
+def _story(own, member_hashes, *, article_hashes=None):
+    """story 메타를 단 기사 하나. hash 만 중요하다."""
+    row = {"hash": own, "title_kr": own, "story_members": [
+        {"hash": h, "title": h, "publisher": "x", "fold_stage": "collect_fold"}
+        for h in member_hashes]}
+    if article_hashes is not None:
+        row["story_article_hashes"] = list(article_hashes)
+    return row
+
+
+class TestEvidenceOverlap(unittest.TestCase):
+    """근거 교집합 — 어휘를 안 타는 '같은 사건' 판정 재료."""
+
+    def test_member_hashes_do_not_rely_on_story_article_hashes(self):
+        """실측 2026-08-22 — 두 목록이 어긋났고 빠진 쪽에 전날 카드가 있었다.
+
+        `_article_hashes()` 는 이미 `story_article_hashes` 를 가진 멤버의 자기
+        hash 를 다시 넣지 않는다. 그래서 그날 8/22 카드의 story_article_hashes 는
+        12건, story_members 는 14건이었고 **빠진 2건 중 하나가 전날 카드**였다.
+        근거를 세는 곳은 members 여야 한다.
+        """
+        row = _story("today", ["today", "yesterday", "e1"], article_hashes=["today", "e1"])
+        self.assertIn("yesterday", story_cluster.member_hashes(row))
+
+    def test_old_records_without_members_still_count(self):
+        row = {"hash": "a", "story_article_hashes": ["a", "e1", "e2"]}
+        self.assertEqual(story_cluster.member_hashes(row), frozenset({"a", "e1", "e2"}))
+
+    def test_ratio_separates_a_repeat_from_a_follow_up(self):
+        """실측에서 갈린 자리 — 0.188(진짜 후속) 과 0.857(같은 사건) 사이가 비어 있다."""
+        prior = _story("p", ["p"] + [f"e{i}" for i in range(1, 12)]
+                       + ["y1", "y2", "y3", "y4"])
+        repeat = _story("c", ["c", "p"] + [f"e{i}" for i in range(1, 13)])
+        follow_up = _story("f", ["f", "p", "e1", "e2"] + [f"z{i}" for i in range(1, 13)])
+
+        wide = story_cluster.evidence_overlap(repeat, prior)
+        self.assertEqual(wide.shared, 12)
+        self.assertEqual(wide.candidate_total, 14)
+        self.assertGreaterEqual(wide.ratio, 0.85)
+
+        thin = story_cluster.evidence_overlap(follow_up, prior)
+        self.assertEqual(thin.shared, 3)
+        self.assertLessEqual(thin.ratio, 0.2)
+        # 둘 다 상대 카드를 근거로 들고 있다 — cross_cited 단독으로는 못 가른다.
+        self.assertTrue(wide.cross_cited)
+        self.assertTrue(thin.cross_cited)
+
+    def test_ratio_is_measured_against_todays_evidence(self):
+        """분모는 오늘 근거 수다. 어제 story 가 컸다고 재탕이 덜 재탕이 되지 않는다."""
+        prior = _story("p", ["p"] + [f"e{i}" for i in range(1, 40)])
+        today = _story("c", ["c", "e1", "e2", "e3"])
+        self.assertEqual(story_cluster.evidence_overlap(today, prior).ratio, 0.75)
+
+    def test_empty_story_is_not_an_overlap(self):
+        self.assertEqual(
+            story_cluster.evidence_overlap({}, _story("p", ["p", "e1"])).shared, 0)
 
 
 if __name__ == "__main__":

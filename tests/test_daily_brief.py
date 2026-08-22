@@ -15,6 +15,7 @@ fake_tg = _fake_tg.installed
 
 import channel_queue  # noqa: E402
 import daily_brief as db  # noqa: E402
+import issue_continuity  # noqa: E402
 import ranking  # noqa: E402
 
 NOW = datetime(2026, 7, 12, 22, 0, tzinfo=timezone.utc)
@@ -223,12 +224,17 @@ class OutboxBase(unittest.TestCase):
         p = Path(self.tmp.name)
         self._orig = (db.QUEUE_FILE, db.OUTBOX_FILE, db.OUTBOX_RESULT_FILE,
                       db.DELIVERY_LOG_FILE, ranking.DELIVERY_LOG_FILE,
+                      issue_continuity.DELIVERY_LOG_FILE,
                       channel_queue.QUEUE_FILE)
         db.QUEUE_FILE = p / "digest_queue.json"
         db.OUTBOX_FILE = p / "outbox.json"
         db.OUTBOX_RESULT_FILE = p / "outbox_result.json"
         db.DELIVERY_LOG_FILE = p / "delivery_log.jsonl"
         ranking.DELIVERY_LOG_FILE = p / "delivery_log.jsonl"
+        # 연속일 게이트도 같은 tmpdir 을 봐야 한다. 안 돌리면 저장소 루트의 **진짜**
+        # 발송 이력을 읽어서, 픽스처 제목이 우연히 지난 회차와 닮은 날 테스트가
+        # 조용히 달라진다(이력은 계속 늘어난다).
+        issue_continuity.DELIVERY_LOG_FILE = p / "delivery_log.jsonl"
         # cmd_plan 이 구독 채널 배치를 적재한다 — 돌리지 않으면 테스트 픽스처가
         # 저장소 루트의 진짜 channel_outbox.json 에 쌓인다.
         channel_queue.QUEUE_FILE = p / "channel_outbox.json"
@@ -241,6 +247,7 @@ class OutboxBase(unittest.TestCase):
     def tearDown(self):
         (db.QUEUE_FILE, db.OUTBOX_FILE, db.OUTBOX_RESULT_FILE,
          db.DELIVERY_LOG_FILE, ranking.DELIVERY_LOG_FILE,
+         issue_continuity.DELIVERY_LOG_FILE,
          channel_queue.QUEUE_FILE) = self._orig
         db.is_available = self._avail
         self.tmp.cleanup()
@@ -731,6 +738,47 @@ class TestReportPickReachesTheWeb(OutboxBase):
                   in db.DELIVERY_LOG_FILE.read_text(encoding="utf-8").splitlines() if line.strip()]
         picked = [row for row in logged if row.get("report_pick")]
         self.assertEqual([row["hash"] for row in picked], [self.PICKED])
+
+
+class TestContinuityStats(unittest.TestCase):
+    """연속일 판정은 두 번 돈다 — 통계가 둘을 섞으면 회차 비교가 끊긴다."""
+
+    DIAG = {"candidate_count": 302, "dropped_below_floor": [],
+            "dropped_repeat": [{"hash": "r1"}]}
+
+    def test_pool_numbers_survive_the_recheck(self):
+        cont = {
+            "checked": 302, "matched": 76,
+            "verdicts": [{"progression": "minor"}, {"progression": "none"}],
+            "recheck": {
+                "checked": 24, "matched": 3,
+                "verdicts": [
+                    {"progression": "none", "evidence_shared": 12,
+                     "evidence_confirmed": True},
+                    # 한 건 겹쳤을 뿐 문턱을 못 넘었다 — 판정에 아무 영향이 없다.
+                    {"progression": "none", "evidence_shared": 1,
+                     "evidence_confirmed": False},
+                    {"progression": "material", "evidence_shared": 0,
+                     "evidence_confirmed": False}],
+            },
+        }
+        stats = db.region_stats(self.DIAG, [], [], cont)["continuity"]
+        # 풀 전체 기준의 사실은 그대로 남는다.
+        self.assertEqual((stats["checked"], stats["matched"]), (302, 76))
+        self.assertEqual(stats["dropped"], 1)
+        # 삭제를 실제로 정한 것은 접힌 뒤의 재판정이다.
+        self.assertEqual(stats["recheck"]["checked"], 24)
+        self.assertEqual(stats["recheck"]["by_progression"],
+                         {"material": 1, "minor": 0, "none": 2})
+        # 겹친 것은 둘, 문턱을 넘은 것은 하나. 둘을 한 숫자로 섞으면 게이트가
+        # 실제보다 활발해 보이고, 문턱 조정의 근거가 사라진다.
+        self.assertEqual(stats["recheck"]["evidence_confirmed"], 1)
+        self.assertEqual(stats["recheck"]["evidence_overlapping"], 2)
+
+    def test_missing_recheck_keeps_the_old_shape(self):
+        cont = {"checked": 10, "matched": 1, "verdicts": []}
+        stats = db.region_stats(self.DIAG, [], [], cont)["continuity"]
+        self.assertNotIn("recheck", stats)
 
 
 if __name__ == "__main__":
