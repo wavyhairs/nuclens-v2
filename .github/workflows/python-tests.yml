@@ -1,0 +1,113 @@
+name: Python tests (파이썬 코드 변경 시 회귀 검사)
+
+# 왜 있는가
+#
+# 파이썬 본체(news_bot·ranking·daily_brief·story_cluster·issue_continuity·
+# article_quality_gate …)를 고쳐도 **병합 전에 도는 검사가 없었다.** 기존
+# 워크플로 넷은 전부 성격이 다르다:
+#
+#   crawl.yml        스케줄 수집. 테스트를 안 돈다.
+#   daily-brief.yml  스케줄 발송. 테스트를 안 돈다.
+#   weekly.yml       스케줄 주간 리포트. 테스트를 안 돈다.
+#   deploy-web.yml   `web/**` 가 **main 에 들어온 뒤** 화면 테스트만 돈다.
+#
+# 그래서 루트 tests/ 1,100여 건은 로컬에서 기억해 돌릴 때만 돌았고, 회귀는
+# 스케줄 잡이 실패하고 나서야 — 즉 발송이 한 번 나간 뒤에야 — 드러났다.
+# 이 워크플로는 그 자리를 메운다: PR 에서 먼저 돈다.
+
+on:
+  pull_request:
+    paths:
+      - "**.py"
+      - "tests/**"
+      - "web/tests/**"
+      - "requirements.txt"
+      # 코드가 읽는 설정. 여기가 바뀌면 판정이 바뀐다.
+      - "ranking_config.json"
+      - "sources.json"
+      - "keywords.json"
+      - "entity_registry.json"
+      - "issue_match_overrides.json"
+      - "selection_overrides.json"
+      - "social_topics.json"
+      - ".github/workflows/python-tests.yml"
+  push:
+    branches: [main]
+    # 앵커(&python_paths)로 묶고 싶지만 Actions 파서가 YAML 앵커를 받지
+    # 않는다 — 위 목록과 **함께** 고쳐야 한다.
+    paths:
+      - "**.py"
+      - "tests/**"
+      - "web/tests/**"
+      - "requirements.txt"
+      # 코드가 읽는 설정. 여기가 바뀌면 판정이 바뀐다.
+      - "ranking_config.json"
+      - "sources.json"
+      - "keywords.json"
+      - "entity_registry.json"
+      - "issue_match_overrides.json"
+      - "selection_overrides.json"
+      - "social_topics.json"
+      - ".github/workflows/python-tests.yml"
+  workflow_dispatch:
+
+# 자동 수집물(curated.json·sent.json·delivery_log.jsonl·discovery_state.json·
+# archive/** · web/public/data/**)만 바뀐 커밋은 위 목록에 하나도 안 걸려 이
+# 워크플로가 아예 안 뜬다. 크롤은 시간당 한 번 그런 커밋을 밀어넣으므로 —
+# 하루 24회, 코드 변화 0 — 걸러내지 않으면 이 검사가 전체 실행 시간의 대부분을
+# 의미 없이 차지한다.
+
+permissions:
+  contents: read
+
+concurrency:
+  # 같은 브랜치에 커밋을 연달아 밀면 앞 실행은 이미 낡은 코드를 검사하는 중이다.
+  # 취소하고 최신 것만 남긴다. main 은 브랜치명이 하나뿐이라 자연히 직렬화된다.
+  group: python-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # 기본 회귀 검사는 **외부 호출 없이** 돈다. 키를 빈 값으로 못 박아 두면
+      # gemini_client.enabled() 가 False 라, 어쩌다 목이 빠진 경로가 생겨도
+      # 네트워크로 새지 않고 그 자리에서 드러난다. 실제 모델 품질 평가가 필요하면
+      # 이 워크플로가 아니라 별도 eval 잡으로 둔다(Telegram·TTS·네이버·RSS 도 같다).
+      GEMINI_API_KEY: ""
+      TELEGRAM_BOT_TOKEN: ""
+      TELEGRAM_CHAT_ID: ""
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"      # crawl.yml·daily-brief.yml 과 같은 버전
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # 루트 회귀 검사. 게이트·랭킹·story/issue·운영 알림까지 전부 여기 있다.
+      - name: Root tests
+        run: python -m unittest discover -s tests
+
+      # web/tests/ 는 여기서 안 돈다.
+      #
+      # 그쪽 검사는 대부분 **빌드 산출물**(web/public/data/*.json)을 읽는데 그건
+      # .gitignore:20 이라 체크아웃에 없다. 만들려면 build_data.py 를 돌려야 하고,
+      # build_data 의 이슈 병합 회색지대 판정은 GEMINI_API_KEY 를 부른다 — 키 없이
+      # 지으면 '병합 안 함'으로 떨어져 실제와 다른 데이터를 검사하게 된다
+      # (deploy-web.yml 의 Build site data 주석에 2026-08-16 실측이 있다).
+      # 외부 호출 0 이라는 이 워크플로의 전제와 정면으로 부딪힌다.
+      #
+      # 그래서 화면 파이썬은 데이터를 진짜로 짓는 deploy-web.yml 이 계속 맡는다.
+      # 처음엔 여기서도 돌렸다가 PR #52 에서 FileNotFoundError 5건으로 드러났다.
+      #
+      # app.js 검사는 반대로 여기 있어야 한다 — 데이터를 안 읽고, 회귀가 나면
+      # '집계 중'만 뜨는 조용한 실패라 눈으로는 안 잡힌다.
+      - name: Front-end date/selector tests
+        run: |
+          node --check web/public/app.js
+          node web/tests/date_window.mjs
+          node web/tests/weekly_selector.mjs

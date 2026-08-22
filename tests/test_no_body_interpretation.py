@@ -11,6 +11,7 @@ implication 408건 · why_important 63건이 채워져 있었다.
 """
 import os
 import sys
+import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -68,6 +69,23 @@ def test_해석이_원래_비어있으면_기록하지_않는다():
     item = dict(ITEM, implication="", why_important="")
     news_bot.normalize_curation_item(item, ARTICLE)
     assert news_bot.NO_BODY_INTERPRETATION_DROPS == []
+
+
+def _reset() -> None:
+    news_bot.HOLLOW_IMPLICATION_DROPS.clear()
+
+
+# `python -m unittest discover -s tests` 도 이 파일을 집게 한다.
+#
+# 이 모듈은 pytest 형식(모듈 수준 test_ 함수)이라 unittest 의 기본 수집에서
+# 통째로 빠진다. 아래 __main__ 러너가 있어서 로컬에서는 돌지만, CI 는 unittest 로
+# 도는데(.github/workflows/python-tests.yml) 하필 **제목·요약의 사실성 가드**가
+# 검사 없이 병합되는 구멍이었다. load_tests 프로토콜로 같은 함수를 그대로 싣는다.
+def load_tests(loader, tests, pattern):
+    for name, fn in sorted(globals().items()):
+        if name.startswith("test_") and callable(fn):
+            tests.addTest(unittest.FunctionTestCase(fn, setUp=_reset, description=name))
+    return tests
 
 
 if __name__ == "__main__":
