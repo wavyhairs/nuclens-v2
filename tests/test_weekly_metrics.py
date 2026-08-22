@@ -710,6 +710,53 @@ class TestWeeklyStoryEvidence(unittest.TestCase):
             "evidence_hashes": [items[0]["hash"][:8]]}])
         self.assertEqual(out["policy_shifts"], [])
 
+    # ---- '진전' 어휘 — 두 번 난 공백이라 세 번째는 테스트가 막는다 ----
+
+    def test_administrative_progress_counts_as_a_development(self):
+        """제도·계획이 실제로 움직인 표시는 계약·수주만이 아니다.
+
+        회귀: 2026-08-21 "원자력안전법 개정안 국회 통과", 2026-08-22
+        "제12차 전기본 2040년 최대전력 165GW로 상향" 이 각각 '진전'으로 세어지지
+        않아 근거 있는 강약 판단이 조용히 삭제됐다.
+        """
+        for text in (
+            "원자력안전법 개정안이 국회 본회의를 통과했다.",
+            "정부가 2040년 최대전력 전망치를 165GW로 상향했다.",
+            "2040년 최대 전력수요가 165GW로 상향 조정되었다.",
+            "제12차 전력수급기본계획 전망치를 재산정했다.",
+            "목표 전망치를 하향했다.",
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(weekly_bot.is_development(text))
+
+    def test_an_intended_or_planned_step_is_not_a_development(self):
+        """넓힌 어휘가 '아직 안 한 일'을 사건으로 만들면 안 된다.
+
+        W34 실측에서 나온 반례들이다 — 여기 걸리는 표현 때문에 수립·공개·개정·
+        개편은 아예 넣지 않았고, 남긴 세 낱말도 꼬리 검사로 한 번 더 거른다.
+        """
+        for text in (
+            "정부가 전망치를 상향할 예정이다.",
+            "수요 전망을 재산정하겠다고 밝혔다.",
+            "국회 통과 가능성이 거론된다.",
+            "전망치 상향이 검토되고 있다.",
+            "연내 전망치 상향 계획을 세웠다.",
+            "SMR 시장이 2035년까지 확대될 전망이다.",
+            "국가 차원의 조달 전략 재수립이 요구된다.",
+            "제12차 전력수급기본계획 수립을 위한 정책토론회를 연다.",
+            "기후부가 산업용 지역요금제를 내주 공개할 방침이다.",
+            "포항시가 원자력 특별회계 조례 재개정을 추진한다.",
+        ):
+            with self.subTest(text=text):
+                self.assertFalse(weekly_bot.is_development(text))
+
+    def test_a_completed_act_is_not_laundered_by_a_later_hedge(self):
+        """기존 안전장치 유지 — 문장 뒤쪽 전망 한 마디가 앞의 사실을 세탁하지 못한다."""
+        self.assertTrue(weekly_bot.is_development(
+            "전력망 3법이 국회를 통과해 민간 참여가 늘어날 전망이다."))
+        self.assertTrue(weekly_bot.is_development(
+            "정부가 전망치를 상향했으나 추가 조정 가능성도 있다."))
+
     # ---- 입력·집계 ----
 
     def test_weekly_input_collapses_repeat_coverage_but_keeps_the_titles(self):
