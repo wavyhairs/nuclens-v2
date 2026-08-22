@@ -504,6 +504,261 @@ class TestWeeklySentenceEvidence(unittest.TestCase):
         self.assertEqual(weekly_bot.get_week_articles(curated), [])
 
 
+class TestWeeklyStoryEvidence(unittest.TestCase):
+    """주간의 분석 단위는 기사가 아니라 사건이다.
+
+    같은 발표를 여러 매체가 나눠 쓰면 수치는 A 매체에, 기관명은 B 매체에 있다.
+    기사 하나로 좁혀 대조하면 그 주에 분명히 있었던 사실이 '근거 없음'이 되고,
+    반대로 사건 수를 세지 않으면 한 발표의 반복 보도가 '강한 흐름'이 된다.
+    """
+
+    @staticmethod
+    def _article(hash_prefix, title_kr, summary, *, domain="a.com",
+                 grade="must_read", section="smr"):
+        return {"hash": f"{hash_prefix}{'0' * (12 - len(hash_prefix))}",
+                "title": title_kr, "title_kr": title_kr, "link": f"https://{domain}/x",
+                "domain": domain, "feed": "", "section": section, "grade": grade,
+                "summary": summary, "tags": [], "features": None,
+                "curation_status": "reviewed", "cached_at": NOW_ISO,
+                "published_at": NOW_ISO}
+
+    def _verify(self, items, **synthesis):
+        base = {"weekly_intro": "", "policy_shifts": [], "theme_moves": [],
+                "khnp_direct": "", "watchpoints": [], "report_candidates": [],
+                "key_events": []}
+        return weekly_bot.verify_synthesis({**base, **synthesis}, items)
+
+    # ---- Case 1 · 6 — 서로 다른 사건이 같은 방향이면 종합 판단은 살아야 한다 ----
+
+    SMR_WEEK = None
+
+    def _smr_week(self):
+        return [
+            self._article("aa1", "정부, 혁신형 SMR 국가전략기술 지정 고시",
+                          "정부가 혁신형 SMR 을 국가전략기술로 지정하는 고시를 시행했다.",
+                          domain="policy.com"),
+            self._article("bb2", "두산에너빌리티, 뉴스케일 SMR 주기기 공급계약 체결",
+                          "두산에너빌리티가 뉴스케일파워와 SMR 주기기 공급계약을 체결했다.",
+                          domain="ind.com"),
+            self._article("cc3", "SK, 테라파워 SMR 사업 지분 투자 결정",
+                          "SK 가 테라파워의 SMR 사업에 지분을 투자하기로 결정했다.",
+                          domain="fin.com"),
+            self._article("dd4", "원안위, 혁신형 SMR 표준설계 인가 심사 착수",
+                          "원자력안전위원회가 혁신형 SMR 표준설계 인가 심사에 착수했다.",
+                          domain="reg.com"),
+        ]
+
+    def test_four_independent_stories_keep_a_strengthening_theme(self):
+        """Case 1 — 정책·투자·공급계약·인허가가 각각 다른 사건이면 'SMR 강화'는 정상."""
+        items = self._smr_week()
+        out = self._verify(items, theme_moves=[{
+            "theme": "SMR", "direction": "강화",
+            "why": "서로 다른 네 갈래에서 같은 방향의 진전이 이어졌다.",
+            "evidence_hashes": [a["hash"][:8] for a in items]}])
+        self.assertEqual(len(out["theme_moves"]), 1)
+
+    def test_synthesis_no_single_article_states_is_kept(self):
+        """Case 6 — 어느 기사에도 '테마가 강화됐다'는 문장은 없다. 그래도 종합은 판단이다."""
+        items = self._smr_week()
+        out = self._verify(items, theme_moves=[{
+            "theme": "SMR", "direction": "강화",
+            "why": "한 주 동안 축적된 사건들이 사업화 단계로의 이동을 가리킨다.",
+            "evidence_hashes": [items[0]["hash"][:8], items[1]["hash"][:8],
+                                items[2]["hash"][:8]]}])
+        self.assertEqual(len(out["theme_moves"]), 1)
+
+    # ---- Case 2 — 같은 사건의 반복 보도는 근거 1건 ----
+
+    def test_one_event_reported_by_eight_outlets_is_not_a_strengthening(self):
+        """Case 2 — 기사 8건이라는 이유만으로 '강화'가 되면 안 된다."""
+        wordings = [
+            "두산에너빌리티, 뉴스케일 SMR 주기기 공급계약 체결",
+            "두산에너빌리티 뉴스케일 SMR 주기기 공급계약 체결",
+            "두산에너빌리티, 뉴스케일과 SMR 주기기 공급계약 체결",
+            "두산에너빌리티, 뉴스케일 SMR 주기기 공급계약을 체결",
+            "두산에너빌리티, 뉴스케일 SMR 주기기 공급 계약 체결",
+            "두산에너빌리티, 뉴스케일 SMR 주기기 공급계약 체결했다",
+            "두산에너빌리티, 뉴스케일 SMR 주기기 공급계약 체결 발표",
+            "두산에너빌리티, 뉴스케일 SMR 주기기 공급계약 체결 소식",
+        ]
+        items = [
+            self._article(f"e{i}", text,
+                          "두산에너빌리티가 뉴스케일파워와 SMR 주기기 공급계약을 체결했다.",
+                          domain=f"news{i}.com")
+            for i, text in enumerate(wordings)
+        ]
+        self.assertEqual(len(weekly_bot.weekly_stories(items)), 1,
+                         "같은 발표의 반복 보도는 사건 하나로 묶여야 한다")
+        out = self._verify(items, theme_moves=[{
+            "theme": "SMR", "direction": "강화",
+            "why": "공급계약 체결로 사업이 진전됐다.",
+            "evidence_hashes": [a["hash"][:8] for a in items[:5]]}])
+        self.assertEqual(out["theme_moves"], [])
+
+    # ---- Case 3 — 실제 진전 없이 전망 기사만 ----
+
+    def test_outlook_only_coverage_cannot_strengthen_a_theme(self):
+        """Case 3 — 전망·필요성 기사만 모아 놓고 '강화'라고 쓸 수 없다."""
+        items = [
+            self._article("f1", "SMR 시장, 2035년까지 확대될 전망",
+                          "SMR 시장이 2035년까지 확대될 것으로 전망된다.",
+                          domain="v1.com"),
+            self._article("f2", "전문가 \"SMR 경쟁력 확보 필요\"",
+                          "전문가들은 SMR 경쟁력 확보가 필요하다고 본다.",
+                          domain="v2.com"),
+        ]
+        out = self._verify(items, theme_moves=[{
+            "theme": "SMR", "direction": "강화",
+            "why": "시장 기대가 커지고 있다.",
+            "evidence_hashes": [a["hash"][:8] for a in items]}])
+        self.assertEqual(out["theme_moves"], [])
+
+    def test_the_same_outlook_week_can_still_be_reported_as_holding(self):
+        """'유지'는 방향을 주장하지 않으므로 같은 근거에서 살아남는다."""
+        items = [
+            self._article("f1", "SMR 시장, 2035년까지 확대될 전망",
+                          "SMR 시장이 2035년까지 확대될 것으로 전망된다.",
+                          domain="v1.com"),
+            self._article("f2", "전문가 \"SMR 경쟁력 확보 필요\"",
+                          "전문가들은 SMR 경쟁력 확보가 필요하다고 본다.",
+                          domain="v2.com"),
+        ]
+        out = self._verify(items, theme_moves=[{
+            "theme": "SMR", "direction": "유지",
+            "why": "새 사건 없이 논의만 이어졌다.",
+            "evidence_hashes": [a["hash"][:8] for a in items]}])
+        self.assertEqual(len(out["theme_moves"]), 1)
+
+    # ---- Case 4 · 5 — 수치와 사건 단계는 사건 단위로도 그대로 막는다 ----
+
+    def test_a_number_the_evidence_does_not_carry_is_blocked(self):
+        """Case 4 — 근거는 4기인데 문장은 8기."""
+        items = [self._article("g1", "정부, 신규 원전 4기 건설 계획 확정",
+                               "정부가 신규 원전 4기 건설 계획을 확정했다.",
+                               domain="p.com", section="domestic")]
+        out = self._verify(items, policy_shifts=[{
+            "what": "정부가 신규 원전 8기 건설 계획을 확정했다.",
+            "so_what": "설비 계획이 크게 늘어난다.",
+            "evidence_hashes": [items[0]["hash"][:8]]}])
+        self.assertEqual(out["policy_shifts"], [])
+
+    def test_an_event_stage_the_evidence_does_not_carry_is_blocked(self):
+        """Case 5 — 근거는 심사 착수인데 문장은 최종 승인."""
+        items = [self._article("h1", "원안위, 고리 2호기 계속운전 심사 착수",
+                               "원자력안전위원회가 고리 2호기 계속운전 심사에 착수했다.",
+                               domain="p.com", section="domestic")]
+        out = self._verify(items, policy_shifts=[{
+            "what": "원자력안전위원회가 고리 2호기 계속운전을 최종 승인했다.",
+            "so_what": "계속운전 절차가 마무리됐다.",
+            "evidence_hashes": [items[0]["hash"][:8]]}])
+        self.assertEqual(out["policy_shifts"], [])
+
+    # ---- Case 7 — 주제와 무관한 근거 ----
+
+    def test_evidence_about_another_topic_cannot_carry_a_theme(self):
+        """Case 7 — SMR 테마인데 근거가 전력망 기사."""
+        items = [
+            self._article("i1", "국가기간 전력망 확충 특별법 국회 통과",
+                          "국가기간 전력망 확충 특별법이 국회 본회의를 통과했다.",
+                          domain="g1.com", section="domestic"),
+            self._article("i2", "민간 송전망 건설 참여 허용",
+                          "송전망 건설에 민간 참여가 허용된다.",
+                          domain="g2.com", section="domestic"),
+        ]
+        out = self._verify(items, theme_moves=[{
+            "theme": "SMR", "direction": "강화",
+            "why": "제도적 동력이 확보됐다.",
+            "evidence_hashes": [a["hash"][:8] for a in items]}])
+        self.assertEqual(out["theme_moves"], [])
+
+    # ---- 사건 단위 근거가 실제로 무엇을 되살리는가 ----
+
+    def test_a_fact_split_across_outlets_of_one_event_is_supported(self):
+        """한 발표를 두 매체가 나눠 쓰면 수치는 한쪽에만 있다.
+
+        회귀 (2026-08-21 실측): '원전 19기 분량'이 같은 주 6개 기사에 있는데도,
+        지목한 기사 하나에 그 수치가 없다는 이유로 정책 변화가 통째로 삭제됐다.
+        """
+        items = [
+            self._article("j1", "제12차 전기본, 2040년 최대전력 상향",
+                          "정부가 2040년 최대전력 전망치를 상향했다.",
+                          domain="k1.com", section="domestic"),
+            self._article("j2", "제12차 전기본 2040년 최대전력 상향 조정",
+                          "상향분은 대형 원전 19기 규모에 해당한다.",
+                          domain="k2.com", section="domestic"),
+        ]
+        self.assertEqual(len(weekly_bot.weekly_stories(items)), 1)
+        out = self._verify(items, policy_shifts=[{
+            "what": "정부가 2040년 최대전력 전망치를 원전 19기 규모만큼 상향했다.",
+            "so_what": "신규 설비 논의가 불가피해진다.",
+            "evidence_hashes": [items[0]["hash"][:8]]}])
+        self.assertEqual(len(out["policy_shifts"]), 1)
+
+    def test_a_number_no_outlet_of_the_event_carries_is_still_blocked(self):
+        """사건으로 넓힌 것이 '아무 수치나 통과'가 되면 안 된다."""
+        items = [
+            self._article("j1", "제12차 전기본, 2040년 최대전력 상향",
+                          "정부가 2040년 최대전력 전망치를 상향했다.",
+                          domain="k1.com", section="domestic"),
+            self._article("j2", "제12차 전기본 2040년 최대전력 상향 조정",
+                          "상향분은 대형 원전 19기 규모에 해당한다.",
+                          domain="k2.com", section="domestic"),
+        ]
+        out = self._verify(items, policy_shifts=[{
+            "what": "정부가 2040년 최대전력 전망치를 원전 40기 규모만큼 상향했다.",
+            "so_what": "신규 설비 논의가 불가피해진다.",
+            "evidence_hashes": [items[0]["hash"][:8]]}])
+        self.assertEqual(out["policy_shifts"], [])
+
+    # ---- 입력·집계 ----
+
+    def test_weekly_input_collapses_repeat_coverage_but_keeps_the_titles(self):
+        """대표 하나만 남기고 버리지 않는다 — 접힌 보도의 제목은 입력에 남는다."""
+        items = [
+            self._article("m1", "두산에너빌리티, 뉴스케일 SMR 주기기 공급계약 체결",
+                          "공급계약을 체결했다.", domain="n1.com"),
+            self._article("m2", "두산에너빌리티 뉴스케일 SMR 주기기 공급계약 체결",
+                          "공급계약을 체결했다.", domain="n2.com"),
+        ]
+        stories = weekly_bot.weekly_stories(items)
+        self.assertEqual(len(stories), 1)
+        lines = "\n".join(weekly_bot.story_lines(stories))
+        self.assertIn("같은 사건 보도 2건", lines)
+        self.assertIn("매체 2곳", lines)
+
+    def test_grouping_does_not_mutate_the_caller_items(self):
+        items = self._smr_week()
+        before = copy.deepcopy(items)
+        weekly_bot.weekly_stories(items)
+        weekly_bot.weekly_contracts(items)
+        self.assertEqual(items, before)
+
+    def test_theme_signals_count_events_not_articles(self):
+        """반복 보도가 주제 신호를 부풀리면 프롬프트가 잘못된 축을 권한다."""
+        items = [
+            self._article(f"p{i}", f"두산에너빌리티, 뉴스케일 SMR 주기기 공급계약 체결{'.' * i}",
+                          "두산에너빌리티가 뉴스케일파워와 SMR 주기기 공급계약을 체결했다.",
+                          domain=f"q{i}.com")
+            for i in range(6)
+        ] + [
+            self._article("r1", "원안위, 혁신형 SMR 표준설계 인가 심사 착수",
+                          "원자력안전위원회가 혁신형 SMR 표준설계 인가 심사에 착수했다.",
+                          domain="reg.com"),
+        ]
+        signals = {row["theme"]: row for row in
+                   weekly_bot.weekly_theme_signals(weekly_bot.weekly_stories(items))}
+        self.assertEqual(signals["SMR"]["사건"], 2)
+
+    def test_evidence_hashes_keep_more_than_two_events(self):
+        """한 판세 문장이 여러 독립 사건을 종합하는 것이 주간의 일이다."""
+        items = self._smr_week()
+        synthesis = {"policy_shifts": [], "theme_moves": [{
+            "theme": "SMR", "direction": "강화", "why": "진전이 이어졌다.",
+            "evidence_hashes": [a["hash"][:8] for a in items]}]}
+        weekly_bot.prune_evidence_hashes(synthesis, items)
+        self.assertEqual(len(synthesis["theme_moves"][0]["evidence_hashes"]), 4)
+
+
 class TestWeeklyWorkflow(unittest.TestCase):
     def test_workflow_can_commit_and_rebases_on_conflict(self):
         root = Path(__file__).parent.parent
