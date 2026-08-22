@@ -1971,6 +1971,15 @@ ATTRIBUTION_FACT_CHECKS = ("claims", "dates")
 ANALYSIS_FACT_CHECKS = ("entities", "countries", "claims", "dates")
 
 
+def asserts_fact(text: object) -> bool:
+    """True when the text states that something happened, not that it may.
+
+    Same judgement :func:`unsupported_facts` already uses internally; exposed so
+    a caller can ask it of evidence text rather than of generated text.
+    """
+    return _asserts_fact(clean_text(text))
+
+
 def unsupported_facts(
     text: object,
     contracts: Sequence[EvidenceContract],
