@@ -26,6 +26,7 @@ preserving the other outlets/titles/evidence as metadata instead of silently dis
 
 from __future__ import annotations
 
+from typing import NamedTuple
 from urllib.parse import urlparse
 
 # 대표 하나에 매달 수 있는 수집 단계 근거의 상한. 큐(JSON)에 그대로 실려 나가므로
@@ -404,6 +405,99 @@ def consolidate_story_metadata(
         representative["story_fingerprint"] = fingerprint
     representative["story_raw_source_count"] = len(raw_sources_of(representative))
     return representative
+
+
+# ---- 근거 교집합 (story evidence overlap) --------------------------------------
+#
+# "두 카드가 같은 기사들을 근거로 들고 있다" 는 **표기·번역·매체와 무관한 사실**이다.
+# 제목 유사도·지문·앵커가 전부 어휘를 타는 것과 달리 이것은 hash 비교라 흔들리지
+# 않는다. 그런데 그 사실이 선정 게이트까지 전달되지 않고 있었다.
+#
+# 실측 2026-08-22 — 그날 국내 3번 카드(`27690c…`, breaknews)의 story_members 14건
+# **안에 전날 국내 1번 카드(`8d4e…`, straightnews)가 들어 있었다**(collect_embedding
+# 단계에서 접힘). 두 카드의 멤버 교집합은 12건. 8/20 국회 본회의 한 사건이 이틀
+# 연속 나간 그날, 파이프라인은 두 기사가 같은 사건이라는 것을 이미 알고 있었다.
+#
+# 왜 `story_article_hashes` 가 아니라 `story_members` 인가
+# -------------------------------------------------------
+# `_article_hashes()` 는 이미 `story_article_hashes` 를 가진 멤버의 자기 hash 를
+# 다시 넣지 않는다. 그래서 두 목록이 어긋난다 — 같은 8/22 카드에서
+# story_article_hashes 는 12건인데 story_members 는 14건이고, **빠진 2건 중 하나가
+# 하필 전날 카드였다.** 근거를 세는 곳은 members 여야 한다. (hashes 도 합집합에
+# 넣는다 — story_members 가 없던 옛 레코드의 유일한 재료다.)
+#
+# 무엇을 세지 **않는가** — 겹침의 절대 건수만으로는 못 가른다
+# ----------------------------------------------------------
+# 실측 2026-08-16~22, story_members 를 가진 발송 93건 전수 대조에서 7일 이내
+# 다른 날 조합 중 멤버를 공유한 쌍은 6개였고, 그중 둘이 정반대 성격이었다:
+#
+#   국회 본회의   8/21 → 8/22   공유 12 / 오늘 멤버 14  (비율 0.857)  같은 사건
+#   테라파워      8/17 → 8/18   공유  3 / 오늘 멤버 16  (비율 0.188)  진짜 후속
+#                 (두산-테라파워 공급계약 체결 → SK이노베이션-테라파워 공조 합의)
+#
+# **둘 다 상대 카드의 hash 를 서로의 근거 목록에 들고 있다.** 그러니 '상대 카드가
+# 내 근거에 있다'(cross_cited)는 단독으로 쓸 수 없다 — 그것으로 접었으면 8/18
+# 테라파워 후속(점수 27.2, 정상 선정)이 죽었다. 가르는 것은 **비율**이고, 실측에서
+# 0.188 과 0.857 사이가 비어 있다.
+#
+# 비율의 분모를 '오늘 멤버 수'로 두는 것은 질문이 비대칭이기 때문이다. 알고 싶은
+# 것은 "오늘 카드가 어제 카드의 근거를 다시 쓰고 있는가"이지 두 집합이 얼마나
+# 닮았는가가 아니다. 어제 story 가 훨씬 컸다고 해서 오늘의 재탕이 덜 재탕이 되지는
+# 않는다.
+
+
+class EvidenceOverlap(NamedTuple):
+    """두 story 가 공유하는 근거 기사.
+
+    shared          — 겹친 기사 수.
+    candidate_total — 오늘 story 의 근거 수(비율의 분모).
+    ratio           — shared / candidate_total. 오늘 근거 중 어제에도 있던 몫.
+    cross_cited     — 한쪽 카드 자신이 다른 쪽의 근거 목록에 있다. **단독 근거로
+                      쓰지 말 것** (위 테라파워 실측).
+    """
+
+    shared: int
+    candidate_total: int
+    ratio: float
+    cross_cited: bool
+
+
+def member_hashes(article: dict) -> frozenset[str]:
+    """이 story 가 근거로 들고 있는 기사 hash 전부 (대표 자신 포함)."""
+    if not isinstance(article, dict):
+        return frozenset()
+    out: set[str] = set()
+    own = str(article.get("hash") or "")
+    if own:
+        out.add(own)
+    for member in article.get("story_members") or []:
+        if isinstance(member, dict) and str(member.get("hash") or ""):
+            out.add(str(member["hash"]))
+    for value in article.get("story_article_hashes") or []:
+        if str(value or ""):
+            out.add(str(value))
+    for raw in raw_sources_of(article):
+        if str(raw.get("hash") or ""):
+            out.add(str(raw["hash"]))
+    return frozenset(out)
+
+
+def evidence_overlap(candidate: dict, prior: dict) -> EvidenceOverlap:
+    """오늘 story 와 어제 story 가 근거를 얼마나 공유하는가."""
+    cand = member_hashes(candidate)
+    old = member_hashes(prior)
+    if not cand or not old:
+        return EvidenceOverlap(0, len(cand), 0.0, False)
+    shared = cand & old
+    cand_hash = str(candidate.get("hash") or "")
+    prior_hash = str(prior.get("hash") or "")
+    cross = bool((prior_hash and prior_hash in cand) or (cand_hash and cand_hash in old))
+    return EvidenceOverlap(
+        shared=len(shared),
+        candidate_total=len(cand),
+        ratio=round(len(shared) / len(cand), 3),
+        cross_cited=cross,
+    )
 
 
 # ---- 화면용 대표 선정 (story 가 완성된 뒤) --------------------------------------

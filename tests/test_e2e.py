@@ -19,6 +19,7 @@ fake_tg = _fake_tg.installed
 
 import channel_queue  # noqa: E402
 import daily_brief as db  # noqa: E402
+import issue_continuity  # noqa: E402
 import ranking  # noqa: E402
 import weekly_bot  # noqa: E402
 
@@ -161,12 +162,15 @@ class TestE2E(unittest.TestCase):
         self._orig = (db.QUEUE_FILE, db.OUTBOX_FILE, db.OUTBOX_RESULT_FILE,
                       db.DELIVERY_LOG_FILE,
                       ranking.DELIVERY_LOG_FILE, db.call_json, db.is_available,
+                      issue_continuity.DELIVERY_LOG_FILE,
                       channel_queue.QUEUE_FILE)
         db.QUEUE_FILE = p / "digest_queue.json"
         db.OUTBOX_FILE = p / "outbox.json"
         db.OUTBOX_RESULT_FILE = p / "outbox_result.json"
         db.DELIVERY_LOG_FILE = p / "delivery_log.jsonl"
         ranking.DELIVERY_LOG_FILE = p / "delivery_log.jsonl"
+        # 연속일 게이트도 tmpdir 을 본다 (test_daily_brief.OutboxBase 와 같은 이유).
+        issue_continuity.DELIVERY_LOG_FILE = p / "delivery_log.jsonl"
         channel_queue.QUEUE_FILE = p / "channel_outbox.json"
         db.call_json = mock_call_json
         db.is_available = lambda: True
@@ -175,6 +179,7 @@ class TestE2E(unittest.TestCase):
     def tearDown(self):
         (db.QUEUE_FILE, db.OUTBOX_FILE, db.OUTBOX_RESULT_FILE, db.DELIVERY_LOG_FILE,
          ranking.DELIVERY_LOG_FILE, db.call_json, db.is_available,
+         issue_continuity.DELIVERY_LOG_FILE,
          channel_queue.QUEUE_FILE) = self._orig
         self.tmp.cleanup()
 

@@ -41,10 +41,25 @@ def article(title, *, h="c1", summary="", fingerprint=None, tags=None,
 
 
 def sent(title, *, h="p1", date=YESTERDAY, summary="", fingerprint=None,
-         tags=None, region="국내"):
-    return {"date": date, "hash": h, "title_kr": title, "title": title,
-            "summary": summary, "region": region, "tags": tags or [],
-            "story_fingerprint": fingerprint or {}}
+         tags=None, region="국내", members=None):
+    row = {"date": date, "hash": h, "title_kr": title, "title": title,
+           "summary": summary, "region": region, "tags": tags or [],
+           "story_fingerprint": fingerprint or {}}
+    if members is not None:
+        row["story_members"] = _members(h, members)
+    return row
+
+
+def _members(own, hashes):
+    """story_members 모양의 근거 목록. hash 만 중요하다."""
+    return [{"hash": h, "title": f"근거 {h}", "publisher": "x", "fold_stage": "collect_fold"}
+            for h in [own, *hashes]]
+
+
+def with_members(row, hashes):
+    """후보 기사에 근거 목록을 달아 준다 (story 가 접힌 뒤의 모습)."""
+    row["story_members"] = _members(row["hash"], hashes)
+    return row
 
 
 def feat(**kw):
@@ -581,6 +596,166 @@ class RecentSentTests(unittest.TestCase):
         continuity.annotate([overseas], [record], CFG, TODAY)
         self.assertIn("continuity", overseas)
         self.assertEqual(overseas["continuity"]["days_ago"], 0)
+
+    def test_sent_record_carries_the_evidence_list(self):
+        """같은 날 다른 지역 경로에도 근거 교집합이 서야 한다."""
+        domestic = with_members(article("한수원, 체코 두코바니 원전 본계약 체결", h="d1"),
+                                ["e1", "e2"])
+        record = continuity.as_sent_record(domestic, TODAY)
+        self.assertEqual({m["hash"] for m in record["story_members"]},
+                         {"d1", "e1", "e2"})
+
+
+# ---- ⑤ 근거 교집합 --------------------------------------------------------------
+#
+# 실측 2026-08-22. 8/20 국회 본회의 한 건이 이틀 연속 나갔다. 제목·척도 어휘가
+# 전부 흔들렸지만(제목 0.776 < hard_drop 0.85, 요약의 '통과' ↔ '의결' 때문에
+# minor), 두 카드의 근거 목록은 14건 중 12건이 같았다.
+
+class EvidenceOverlapTests(unittest.TestCase):
+    EVIDENCE = [f"e{i}" for i in range(1, 13)]
+
+    def prior(self, title, **kw):
+        return sent(title, h="p1",
+                    members=["e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8",
+                             "e9", "e10", "e11", "y1", "y2", "y3", "y4"], **kw)
+
+    def repeat(self, title, **kw):
+        """오늘 근거 14건 중 12건이 어제와 같다 (실측 비율 0.857)."""
+        return with_members(article(title, h="c1", **kw),
+                            ["p1"] + [f"e{i}" for i in range(1, 13)])
+
+    def test_reworded_repeat_is_dropped_even_below_the_title_threshold(self):
+        """사용자 지목 사례. 제목이 0.85 에 못 미쳐도 근거가 같으면 재전송이다."""
+        prior = self.prior("국회, 국가기간 전력망 확충 특별법 등 민생법안 70건 처리",
+                           summary="국회 본회의에서 특별법 등 70건의 민생법안이 통과됨.")
+        cand = self.repeat("국회 본회의, 「국가기간 전력망 확충 특별법」 등 73건 의안 처리",
+                           summary="국회는 20일 본회의를 열고 특별법 개정안 등 73건의 안건을 의결했다.")
+        match = continuity.same_issue(cand, prior, CFG)
+        self.assertTrue(match["evidence_confirmed"])
+        self.assertLess(match["similarity"], 0.85)
+        self.assertIn("evidence:12/14", match["reasons"])
+
+        continuity.annotate([cand], [prior], CFG, TODAY)
+        verdict = cand["continuity"]
+        # 요약의 '통과' ↔ '의결' 만으로 서던 minor 가 사라진다.
+        self.assertEqual(verdict["progression"], "none")
+        self.assertTrue(verdict["drop"])
+        self.assertEqual(verdict["evidence_shared"], 12)
+        # 진단이 '겹쳤다'와 '문턱을 넘었다'를 가를 수 있어야 한다.
+        self.assertTrue(verdict["evidence_confirmed"])
+
+    def test_shared_evidence_never_beats_a_real_advance(self):
+        """근거가 겹쳐도 단계가 넘어갔으면 진전이다 — ①~③ 이 위에 남는다."""
+        prior = self.prior("한수원, 필리핀 원전 협력 양해각서 체결")
+        cand = self.repeat("한수원, 필리핀 원전 본계약 체결")
+        continuity.annotate([cand], [prior], CFG, TODAY)
+        self.assertEqual(cand["continuity"]["progression"], "material")
+        self.assertFalse(cand["continuity"]["drop"])
+
+    def test_thin_overlap_leaves_a_follow_up_untouched(self):
+        """실측 테라파워 8/17→8/18 — 3건을 공유하지만 진짜 후속이다.
+
+        두 카드가 서로의 근거 목록에 상대를 들고 있으므로(cross_cited) 그것만
+        보고 접었으면 이 후속이 죽었다. 비율이 가른다.
+        """
+        prior = sent("두산에너빌리티, 美 테라파워 SMR 핵심 기자재 공급 계약 체결",
+                     h="p1", members=["e1", "e2"] + [f"w{i}" for i in range(1, 13)],
+                     fingerprint={"actors": ["TerraPower"]})
+        cand = with_members(
+            article("SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+                    h="c1", fingerprint={"actors": ["TerraPower"]}),
+            ["p1", "e1", "e2"] + [f"z{i}" for i in range(1, 13)])
+        overlap = continuity.story_cluster.evidence_overlap(cand, prior)
+        self.assertTrue(overlap.cross_cited)
+        match = continuity.same_issue(cand, prior, CFG)
+        self.assertFalse(match["evidence_confirmed"])
+        # 근거가 매칭 사유에 끼지 않으므로 앵커 경로의 좁은 창이 그대로 유지된다.
+        self.assertNotIn("evidence:3/16", match["reasons"])
+
+    def test_evidence_path_needs_count_and_ratio_together(self):
+        """근거가 한둘뿐인 작은 story 는 비율이 1.0 이어도 확정이 아니다."""
+        prior = sent("한수원, 체코 두코바니 원전 본계약 체결", h="p1", members=["c1"])
+        cand = with_members(article("체코 두코바니 원전, 한수원과 본계약 체결", h="c1"),
+                            ["p1"])
+        overlap = continuity.story_cluster.evidence_overlap(cand, prior)
+        self.assertEqual(overlap.ratio, 1.0)
+        self.assertFalse(continuity.same_issue(cand, prior, CFG)["evidence_confirmed"])
+
+    def test_incidental_overlap_is_reported_but_not_confirmed(self):
+        """근거 한 건이 겹치는 일은 흔하다 — 판정에는 닿지 않아야 한다.
+
+        실측 2026-08-22 국내 후보 풀에서 겹침 5건 중 넷이 1~2건짜리였고 전부
+        판정에 영향이 없었다. 진단은 그 넷을 확정과 같은 칸에 세면 안 된다.
+        """
+        prior = sent("미국 내 AI 데이터센터 건설 반대 여론 확산 및 선거 쟁점화",
+                     h="p1", members=["e1"] + [f"w{i}" for i in range(1, 10)])
+        cand = with_members(
+            article("AI 데이터센터 건립 수용성 조사, 국가 필요성 대비 지역 반대 뚜렷",
+                    h="c1"),
+            ["e1"] + [f"z{i}" for i in range(1, 10)])
+        self.assertEqual(
+            continuity.story_cluster.evidence_overlap(cand, prior).shared, 1)
+        continuity.annotate([cand], [prior], CFG, TODAY)
+        verdict = cand.get("continuity")
+        if verdict:
+            self.assertEqual(verdict["evidence_shared"], 1)
+            self.assertFalse(verdict["evidence_confirmed"])
+
+    def test_stories_without_evidence_behave_as_before(self):
+        """근거 목록이 없으면(옛 레코드·수집 직후) 판정이 예전 그대로다."""
+        prior = sent("스페인, 알마라즈 원전 운영 기한 2030년까지 연장", h="p1")
+        cand = article("스페인 정부, 알마라스(Almaraz) 원전 운영 연장 승인", h="c1")
+        continuity.annotate([cand], [prior], CFG, TODAY)
+        self.assertEqual(cand["continuity"]["progression"], "minor")
+
+
+# ---- ⑥ story 가 접힌 뒤 다시 판정하는가 -------------------------------------------
+
+class ContinuityRecheckTests(unittest.TestCase):
+    """판정 재료 하나(근거 교집합)가 rank_and_select **안에서** 만들어진다."""
+
+    def test_recheck_runs_after_folding_and_its_verdict_decides(self):
+        late = article("국회 본회의, 전력망 특별법 등 73건 의안 처리",
+                       h="late", features=feat(), importance="must_read")
+        fresh = article("원안위, 새울 3호기 운영허가 심사 결과 의결",
+                        h="fresh", features=feat(event_type="regulatory_action"))
+        seen = {}
+
+        def recheck(rows):
+            # ranking 이 story 를 다 접은 뒤에 부른다 — 그 자리에서야 근거가 생긴다.
+            seen["hashes"] = [r["hash"] for r in rows]
+            for row in rows:
+                if row["hash"] == "late":
+                    row["continuity"] = {"drop": True, "penalty": 5.0,
+                                         "score_delta": -5.0, "progression": "none",
+                                         "similarity": 0.776, "evidence_shared": 12,
+                                         "prior_title": "국회, 전력망 특별법 등 70건 처리",
+                                         "prior_date": YESTERDAY, "days_ago": 1,
+                                         "match_reasons": ["evidence:12/14"]}
+
+        selected, diag = ranking.rank_and_select(
+            [late, fresh], 5, CFG, NOW, continuity_recheck=recheck)
+        self.assertEqual(sorted(seen["hashes"]), ["fresh", "late"])
+        self.assertEqual([a["hash"] for a in selected], ["fresh"])
+        self.assertEqual(len(diag["dropped_repeat"]), 1)
+        self.assertEqual(diag["dropped_repeat"][0]["evidence_shared"], 12)
+
+    def test_without_the_hook_nothing_changes(self):
+        late = article("국회 본회의, 전력망 특별법 등 73건 의안 처리",
+                       h="late", features=feat(), importance="must_read")
+        selected, diag = ranking.rank_and_select([late], 5, CFG, NOW)
+        self.assertEqual([a["hash"] for a in selected], ["late"])
+        self.assertEqual(diag["dropped_repeat"], [])
+
+    def test_generic_anchors_can_be_pinned_across_both_passes(self):
+        """두 번째 판정에서 '흔한 말'의 정의가 바뀌면 같은 하루가 두 기준을 쓴다."""
+        pool = [article(f"데이터센터 전력 수요 관련 기사 {i}", h=f"a{i}")
+                for i in range(40)]
+        pinned = continuity.generic_anchors(pool)
+        diag = continuity.annotate(pool[:2], [sent("데이터센터 전력 수요 급증")],
+                                   CFG, TODAY, generic=pinned)
+        self.assertEqual(diag["checked"], 2)
 
 
 if __name__ == "__main__":
