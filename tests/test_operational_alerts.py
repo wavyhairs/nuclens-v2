@@ -63,10 +63,11 @@ class OperationalAlertsCliTests(unittest.TestCase):
                       expected_sources={"IAEA": "feed"}, now=NOW)
         self.assertTrue(out["sent"])
         self.assertEqual(1, len(messages))
-        self.assertIn("큐레이션 유실", messages[0])
+        self.assertIn("정리하지 못하고", messages[0])
+        self.assertIn("조치:", messages[0])
         # Topic-weeks needs a second distinct daily observation, so it is not
         # part of this first notification batch.
-        self.assertNotIn("주제 흐름 지표", messages[0])
+        self.assertNotIn("추세 지표", messages[0])
 
         again = cli.run(sent_path=self.sent, log_path=self.log, notify=True,
                         sender=lambda text: messages.append(text) or {"ok": True},
@@ -96,6 +97,8 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertTrue(next_day["sent"])
         self.assertEqual(1, len(messages))
         self.assertIn("카드 격리", messages[0])
+        # 운영자 문장을 적지 않은 옛 계약도 그대로 렌더링된다.
+        self.assertIn("핵심 사실 충돌", messages[0])
 
     def test_pipeline_failure_is_idempotent_and_resolves_on_success(self):
         self.write_sent()
@@ -111,6 +114,9 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertTrue(first["sent"])
         self.assertEqual(1, len(messages))
         self.assertIn("데이터 품질 기록=failure", messages[0])
+        # 지표 기록만 실패한 회차다. 배포·수집은 정상이므로 '조치 필요'가 아니다.
+        self.assertIn("확인 필요", messages[0])
+        self.assertNotIn("조치 필요", messages[0])
 
         retry = cli.run(
             sent_path=self.sent, log_path=self.log, notify=True,
@@ -120,13 +126,15 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertFalse(retry["sent"])
         self.assertEqual(1, len(messages))
 
+        # 복구는 **소식이다.** 알렸던 문제가 닫혔다는 말을 한 번 해 준다.
         recovered = cli.run(
             sent_path=self.sent, log_path=self.log, notify=True,
             sender=lambda text: messages.append(text) or {"ok": True},
             expected_sources={}, pipeline_outcomes={
                 "web_build": "success", "data_gate": "success", "web_deploy": "success",
             }, pipeline_observation_id="daily-brief:101", now=NOW + timedelta(hours=1))
-        self.assertFalse(recovered["sent"])
+        self.assertTrue(recovered["sent"])
+        self.assertIn("해결됨", messages[-1])
         state = json.loads(self.sent.read_text(encoding="utf-8"))
         self.assertFalse(state["operational_alerts"]["items"]
                          ["quality:web-pipeline-failure"]["active"])
@@ -170,7 +178,9 @@ class OperationalAlertsCliTests(unittest.TestCase):
             collection_observation_id="crawl:300", now=NOW)
         self.assertTrue(failed["sent"])
         self.assertFalse(failed["source_processed"])
-        self.assertIn("뉴스 수집 파이프라인 실행 실패", messages[0])
+        self.assertIn("뉴스 수집", messages[0])
+        self.assertIn("조치 필요", messages[0])
+        self.assertIn("news_bot step outcome=failure", messages[0])
         state = json.loads(self.sent.read_text(encoding="utf-8"))
         self.assertEqual({}, state["source_health"]["sources"])
 

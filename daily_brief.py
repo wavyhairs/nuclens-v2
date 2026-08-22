@@ -47,6 +47,8 @@ from gemini_client import GeminiError, call_json, is_available
 from sources import credibility
 import article_quality_gate
 import issue_continuity
+# 반복 알림 억제 규칙을 여기서 다시 쓰지 않는다 — 규칙이 두 곳에 있으면 어긋난다.
+import operational_monitoring
 import khnp_relevance
 import ranking
 
@@ -1451,11 +1453,15 @@ def append_quality_audit(outbox: dict, path: Path | None = None,
         code = str(gate_error.get("code"))
         specs.append({
             "alert_key": f"outbox-quality-claim:{code}",
-            "title": "발송 직전 outbox 품질 claim 불일치로 브리핑 차단",
-            "detail": (
+            "title": "오늘 브리핑 발송이 차단됐습니다",
+            "detail": "발송 직전 안전 점검에서 준비된 브리핑이 계약과 달라 멈췄습니다.",
+            "impact": "오늘 텔레그램 브리핑이 나가지 않았습니다. 사이트는 그대로 유지됩니다.",
+            "action": ("워크플로를 다시 실행해 브리핑을 새로 계획해야 합니다 — "
+                       "재시도만으로는 회복되지 않습니다."),
+            "technical": (
                 f"{code} — 저장 버전={gate_error.get('found_version')!r}, "
-                f"필요 버전={gate_error.get('required_version')}. "
-                "재시도로 회복되지 않으므로 새로 계획해야 그날 브리핑이 나갑니다."),
+                f"필요 버전={gate_error.get('required_version')}"),
+            "level": "action",
             "severity": "critical", "min_occurrences": 1,
             "items": [{
                 "date": outbox.get("date", ""),
@@ -1476,41 +1482,72 @@ def append_quality_audit(outbox: dict, path: Path | None = None,
     final_quarantine = [row for row in cards if row.get("action") == "quarantine"]
     sanitized = [row for row in cards if row.get("action") == "sanitize"]
 
+    # 아래 넷은 전부 **안전장치가 제대로 작동한 결과**다. 문제 데이터를 빼고
+    # 나머지는 정상 발송했다는 뜻이므로 장애로 표시하지 않는다. severity 는
+    # 내부 에스컬레이션 계약이라 그대로 두고, 운영자 등급만 '확인 필요'로 둔다.
     if fallback:
         specs.append({
             "alert_key": "unverified-fallback-held",
-            "title": "미검증 fallback 기사 자동 발송 보류",
-            "detail": f"발송 직전 게이트에서 {len(fallback)}건을 제외하고 큐에서도 격리했습니다.",
+            "title": "검증이 끝나지 않은 기사를 발송에서 뺐습니다",
+            "detail": f"요약 근거가 확인되지 않은 기사 {len(fallback)}건을 오늘 브리핑에서 제외했습니다.",
+            "impact": "없음 — 나머지 기사와 서비스는 정상 발송됐습니다.",
+            "action": "필요 없음 — 자동으로 보류됐습니다.",
+            "technical": f"held_before_ranking status=fallback count={len(fallback)}",
+            "level": "attention",
             "severity": "warning", "min_occurrences": 1, "items": fallback,
+            "fingerprint": operational_monitoring.count_fingerprint("fallback", len(fallback)),
         })
     if integrity:
         specs.append({
             "alert_key": "delivery-integrity-quarantine",
-            "title": "원문과 다른 제목·요약 기사 발송 차단",
-            "detail": f"랭킹 전에 명백한 원문 불일치 {len(integrity)}건을 차단했습니다.",
+            "title": "원문과 다른 기사를 발송 전에 걸렀습니다",
+            "detail": f"요약이 원문과 다르게 만들어진 기사 {len(integrity)}건을 발송 대상에서 뺐습니다.",
+            "impact": "없음 — 제외된 기사만 빠지고, 나머지 기사와 서비스는 정상입니다.",
+            "action": "필요 없음 — 자동으로 차단됐습니다. 건수가 계속 늘면 확인해 주세요.",
+            "technical": f"held_before_ranking action=quarantine count={len(integrity)}",
+            "level": "attention",
             "severity": "critical", "min_occurrences": 1, "items": integrity,
+            "fingerprint": operational_monitoring.count_fingerprint("integrity", len(integrity)),
         })
     if other_held:
         specs.append({
             "alert_key": "unreviewed-delivery-held",
-            "title": "검토 상태 불명 기사 자동 발송 보류",
-            "detail": f"필수 근거·검토 상태가 부족한 {len(other_held)}건을 보류했습니다.",
+            "title": "검토 상태를 확인하지 못한 기사를 보류했습니다",
+            "detail": f"필수 근거나 검토 기록이 없는 기사 {len(other_held)}건을 발송하지 않았습니다.",
+            "impact": "없음 — 나머지 기사와 서비스는 정상 발송됐습니다.",
+            "action": "필요 없음 — 다음 회차에 자동으로 다시 확인합니다.",
+            "technical": f"held_before_ranking reason=unreviewed count={len(other_held)}",
+            "level": "attention",
             "severity": "warning", "min_occurrences": 2, "items": other_held,
+            "fingerprint": operational_monitoring.count_fingerprint("unreviewed", len(other_held)),
         })
     if final_quarantine:
         specs.append({
             "alert_key": "final-card-quarantine",
-            "title": "텔레그램 최종 카드 사실 충돌 차단",
-            "detail": f"headline/what 핵심 사실이 근거와 충돌한 {len(final_quarantine)}개 카드를 제외했습니다.",
+            "title": "사실이 어긋난 카드를 발송에서 뺐습니다",
+            "detail": (f"제목·핵심 문장이 기사 근거와 맞지 않는 카드 "
+                       f"{len(final_quarantine)}개를 오늘 브리핑에서 제외했습니다."),
+            "impact": "없음 — 제외된 카드만 빠지고, 나머지 브리핑은 정상 발송됐습니다.",
+            "action": "필요 없음 — 자동으로 차단됐습니다. 건수가 계속 늘면 확인해 주세요.",
+            "technical": f"final_cards action=quarantine count={len(final_quarantine)}",
+            "level": "attention",
             "severity": "critical", "min_occurrences": 1, "items": final_quarantine,
+            "fingerprint": operational_monitoring.count_fingerprint("cards", len(final_quarantine)),
         })
     if sanitized:
         removed = sum(len(row.get("removed_fields") or []) for row in sanitized)
         specs.append({
             "alert_key": "final-card-field-removed",
-            "title": "텔레그램 카드의 미확인 해석 필드 제거",
-            "detail": f"근거에서 확인되지 않은 선택 필드 {removed}개를 {len(sanitized)}개 카드에서 제거했습니다.",
+            "title": "근거가 없는 해석 문장을 카드에서 지웠습니다",
+            "detail": (f"기사 근거로 확인되지 않는 항목 {removed}개를 카드 "
+                       f"{len(sanitized)}개에서 빼고 발송했습니다."),
+            "impact": "없음 — 사실 정보는 그대로이고, 브리핑은 정상 발송됐습니다.",
+            "action": "필요 없음 — 자동으로 정리됐습니다.",
+            "technical": f"final_cards action=sanitize fields={removed} cards={len(sanitized)}",
+            "level": "attention",
             "severity": "warning", "min_occurrences": 2, "items": sanitized,
+            "fingerprint": operational_monitoring.count_fingerprint(
+                "card-fields", removed),
         })
 
     if not specs:

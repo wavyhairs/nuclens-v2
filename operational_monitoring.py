@@ -14,6 +14,17 @@ Two distinctions are deliberate:
 * Detecting an alert and recording a successful notification are separate.
   If Telegram fails, ``last_notified_at`` is not advanced and the next run can
   retry instead of silently losing the warning.
+
+운영자에게 나가는 문장은 네 조각으로 나뉜다 — 무슨 일이 있었나(``title`` ·
+``detail``), 서비스 영향(``impact``), 내가 할 일(``action``), 그리고 마지막에
+기술 상세(``technical``).  표시 등급(``level``)은 심각도(``severity``)와 다른
+축이다: severity 는 얼마나 급한가를, level 은 **사람이 손을 대야 하는가**를
+말한다.  자동으로 걸러진 품질 관리가 ``critical`` 로 찍혀 수집이 죽은 것과 같은
+모양으로 나가던 것이 이 분리의 이유다.
+
+같은 상태를 회차마다 다시 알리지 않도록 ``fingerprint`` 를 둔다.  값이 있으면
+쿨다운이 지나도 **지문이 달라졌을 때만** 다시 부른다.  지문은 반복을 줄이기만
+하며, 지문이 달라졌다고 쿨다운을 건너뛰지는 않는다.
 """
 
 from __future__ import annotations
@@ -28,6 +39,46 @@ from typing import Callable, Iterable, Mapping, Sequence
 STATE_VERSION = 1
 DEFAULT_ALERT_COOLDOWN = timedelta(hours=24)
 _SEVERITY_RANK = {"info": 0, "warning": 1, "critical": 2}
+
+
+# ── 운영자 등급 ─────────────────────────────────────────────────────────────
+#
+# ``severity`` 는 그대로 둔다 — 중복 억제·에스컬레이션이 쓰는 **내부** 순위이고
+# 상태 파일에 이미 쌓여 있다. 문제는 그 값이 운영자 화면에도 그대로 나왔다는
+# 것이다. 자동으로 잘 걸러진 품질 관리(아카이브 격리)가 ``critical`` 로 찍혀
+# 수집이 죽은 것과 같은 모양이 됐다(실측 2026-08-22 sent.json).
+#
+# 운영자가 5초 안에 얻어야 하는 답은 심각도가 아니라 **내가 할 일이 있나** 다.
+# 그래서 표시 등급을 따로 둔다. severity 는 얼마나 급한가, level 은 누가 손을
+# 대야 하는가를 말한다 — 둘은 같은 축이 아니다.
+LEVEL_ACTION = "action"        # 🚨 조치 필요 — 자동 복구되지 않은 실제 실패
+LEVEL_ATTENTION = "attention"  # ⚠️ 확인 필요 — 자동 처리됨, 서비스는 정상
+LEVEL_INFO = "info"            # ℹ️ 정보
+LEVEL_RESOLVED = "resolved"    # ✅ 해결됨 — 스스로 정상으로 돌아왔다
+
+_LEVEL_LABELS = {
+    LEVEL_ACTION: ("🚨", "조치 필요"),
+    LEVEL_ATTENTION: ("⚠️", "확인 필요"),
+    LEVEL_INFO: ("ℹ️", "정보"),
+    LEVEL_RESOLVED: ("✅", "해결됨"),
+}
+# 읽는 순서 = 급한 순서. 조치할 것이 첫 화면에 있어야 스크롤이 필요 없다.
+_LEVEL_ORDER = (LEVEL_ACTION, LEVEL_ATTENTION, LEVEL_INFO, LEVEL_RESOLVED)
+
+# 같은 뜻을 열 군데에서 다르게 쓰면 운영자는 매번 다시 읽는다. 자주 쓰는 문장만
+# 여기 모은다 — 상황별 문장은 그 상황을 아는 곳에서 쓰는 편이 정확하다.
+IMPACT_NONE = "없음 — 뉴스 수집과 서비스는 정상입니다."
+ACTION_NONE = "필요 없음 — 자동으로 처리됐습니다."
+ACTION_WATCH = "필요 없음 — 같은 알림이 계속 늘어나면 확인해 주세요."
+
+
+def default_level(severity: str) -> str:
+    """등급을 적지 않은 알림의 기본값. 옛 호출부는 이 규칙으로 그대로 산다."""
+    if severity == "critical":
+        return LEVEL_ACTION
+    if severity == "info":
+        return LEVEL_INFO
+    return LEVEL_ATTENTION
 
 
 def _utc_now(now: datetime | None = None) -> datetime:
@@ -280,6 +331,14 @@ def ingest_source_snapshot(previous: Mapping | None, snapshot: Mapping | None,
 
 @dataclass(frozen=True)
 class AlertSignal:
+    """운영자 한 명이 읽는 한 건의 알림.
+
+    필드 순서는 **의미 순서**다 — 무슨 일이(title/detail), 서비스에 영향이
+    있는지(impact), 내가 할 일이 있는지(action), 그리고 마지막에 기술
+    상세(technical). 새 필드는 전부 뒤에 붙였으므로 위치 인자로 만드는 기존
+    호출부는 그대로 동작한다.
+    """
+
     key: str
     scope: str
     title: str
@@ -287,16 +346,31 @@ class AlertSignal:
     severity: str = "warning"
     observation_id: str = ""
     min_occurrences: int = 2
+    # 아래 넷이 운영자 문장이다. 비워 두면 옛 동작(제목+상세만)으로 렌더링된다.
+    impact: str = ""
+    action: str = ""
+    technical: str = ""
+    level: str = ""
+    # 상태 동일성 지문. 이 값이 있으면 **내용이 달라졌을 때만** 다시 알린다.
+    # 비어 있으면 예전처럼 쿨다운마다 다시 알린다(진행 중인 장애의 기본값).
+    fingerprint: str = ""
 
     def normalized(self) -> "AlertSignal":
+        severity = self.severity if self.severity in _SEVERITY_RANK else "warning"
+        level = self.level if self.level in _LEVEL_LABELS else default_level(severity)
         return AlertSignal(
             key=str(self.key).strip(),
             scope=str(self.scope or "quality").strip(),
             title=str(self.title).strip()[:120],
             detail=str(self.detail).strip()[:700],
-            severity=self.severity if self.severity in _SEVERITY_RANK else "warning",
+            severity=severity,
             observation_id=str(self.observation_id).strip(),
             min_occurrences=max(1, int(self.min_occurrences or 1)),
+            impact=str(self.impact or "").strip()[:300],
+            action=str(self.action or "").strip()[:300],
+            technical=str(self.technical or "").strip()[:700],
+            level=level,
+            fingerprint=str(self.fingerprint or "").strip()[:200],
         )
 
 
@@ -347,30 +421,47 @@ def source_health_signals(health: Mapping | None, *,
             if bozo >= bozo_threshold:
                 out.append(AlertSignal(
                     key=f"source:{name}:partial-parse", scope="source",
-                    severity="warning",
-                    title=f"{kind_label} 부분 파싱 실패: {name}",
-                    detail=(f"연속 {bozo}회 파서 경고와 함께 항목 일부만 받았습니다 "
-                            f"(최근 {raw.get('last_usable')}/{raw.get('last_entries')}건). "
-                            f"오류: {raw.get('last_bozo_exception') or '기록 없음'}"),
+                    severity="warning", level=LEVEL_ATTENTION,
+                    title=f"{name} 기사 목록을 일부만 읽었습니다",
+                    detail=(f"{kind_label} 목록을 읽는 중 오류가 나서 항목 일부만 "
+                            f"받았습니다. 연속 {bozo}회째입니다."),
+                    impact="이 출처의 일부 기사가 빠질 수 있습니다. 다른 출처와 서비스는 정상입니다.",
+                    action="반복되면 해당 사이트 형식이 바뀐 것입니다 — 수집 설정을 확인해 주세요.",
+                    technical=(f"consecutive_bozo={bozo} "
+                               f"usable={raw.get('last_usable')}/{raw.get('last_entries')} "
+                               f"exception={raw.get('last_bozo_exception') or 'n/a'}"),
                     observation_id=observation_id, min_occurrences=1,
                 ))
             elif unusable >= unusable_threshold:
                 out.append(AlertSignal(
                     key=f"source:{name}:unusable", scope="source", severity="warning",
-                    title=f"{kind_label} 항목을 하나도 읽지 못함: {name}",
-                    detail=(f"연속 {unusable}회 원문 {raw.get('last_entries')}건을 받고도 "
-                            "링크·제목·게시일을 갖춘 항목이 0건입니다. "
-                            "무소식이 아니라 피드 형식 변경일 가능성이 큽니다."),
+                    level=LEVEL_ATTENTION,
+                    title=f"{name} 기사 목록을 읽지 못했습니다",
+                    detail=(f"{kind_label} 목록은 받았는데 쓸 수 있는 기사가 하나도 "
+                            f"없습니다. 연속 {unusable}회째로, 사이트 형식이 바뀌었을 "
+                            "가능성이 큽니다."),
+                    impact="이 출처의 기사가 수집되지 않습니다. 다른 출처와 서비스는 정상입니다.",
+                    action="해당 사이트 형식이 바뀌었는지 확인해 주세요.",
+                    technical=(f"consecutive_unusable={unusable} "
+                               f"usable=0/{raw.get('last_entries')}"),
                     observation_id=observation_id, min_occurrences=1,
                 ))
             quiet = _days_since(raw.get("last_newest_pub"), now)
             if quiet is not None and quiet >= stale_days:
                 out.append(AlertSignal(
                     key=f"source:{name}:stale", scope="source", severity="warning",
-                    title=f"{kind_label} 최신 항목이 오래됨: {name}",
-                    detail=(f"가장 최근 항목이 {quiet}일 전({raw.get('last_newest_pub')})입니다. "
-                            f"수집은 성공하고 있어 접속 문제는 아니며, 관측된 정상 "
-                            f"공백의 상한은 5일이었습니다."),
+                    level=LEVEL_ATTENTION,
+                    title=f"{name}에 새 기사가 {quiet}일째 없습니다",
+                    detail=("수집 자체는 성공하고 있습니다. 그 사이트에 새 글이 "
+                            "올라오지 않았거나, 새 글을 목록에서 못 찾고 있습니다."),
+                    impact=IMPACT_NONE + " 이 출처의 새 기사만 없습니다.",
+                    action="해당 사이트에 실제로 새 글이 있는지 한 번만 확인해 주세요.",
+                    technical=(f"newest_pub={raw.get('last_newest_pub')} quiet_days={quiet} "
+                               f"threshold={stale_days} observed_normal_gap_max=5"),
+                    # 하루가 지나도 같은 '무소식'이다. 날짜가 아니라 **마지막 기사**를
+                    # 지문으로 쓴다 — 새 글이 올라오면 알림 자체가 사라지고, 그때까지는
+                    # 같은 사실을 매일 다시 말하지 않는다.
+                    fingerprint=f"newest={raw.get('last_newest_pub')}",
                     observation_id=observation_id, min_occurrences=1,
                 ))
 
@@ -378,65 +469,168 @@ def source_health_signals(health: Mapping | None, *,
             severity = "critical" if raw.get("kind") == "official" and failures >= 3 else "warning"
             out.append(AlertSignal(
                 key=f"source:{name}:failure", scope="source", severity=severity,
-                title=f"{kind_label} 수집 실패: {name}",
-                detail=(f"연속 {failures}회 실패 · 마지막 오류: "
-                        f"{raw.get('last_error') or '원인 기록 없음'}"),
+                # 이것은 자동으로 낫지 않는다 — 한 출처의 기사가 실제로 빠지고 있다.
+                level=LEVEL_ACTION if severity == "critical" else LEVEL_ATTENTION,
+                title=f"{name} 기사를 가져오지 못하고 있습니다",
+                detail=f"{kind_label} 접속이 연속 {failures}회 실패했습니다.",
+                impact="이 출처의 기사만 브리핑·사이트에서 빠집니다. 다른 출처는 정상 수집됩니다.",
+                action=("해당 사이트가 열리는지 확인해 주세요. 사이트 쪽 장애라면 "
+                        "복구되는 대로 자동으로 다시 수집합니다."
+                        if severity == "critical" else
+                        "다음 회차에 자동 재시도합니다. 계속되면 확인해 주세요."),
+                technical=(f"consecutive_failures={failures} "
+                           f"last_error={raw.get('last_error') or 'n/a'}"),
                 observation_id=observation_id, min_occurrences=1,
             ))
         elif empties >= empty_threshold:
             out.append(AlertSignal(
                 key=f"source:{name}:empty", scope="source", severity="warning",
-                title=f"{kind_label} 수집 결과 0건: {name}",
-                detail=(f"접속 오류는 없지만 연속 {empties}회 원문 항목이 0건입니다. "
-                        "실제 무소식인지 피드·파서 변경인지 확인이 필요합니다."),
+                level=LEVEL_ATTENTION,
+                title=f"{name} 수집 결과가 계속 0건입니다",
+                detail=(f"접속은 되는데 연속 {empties}회 기사가 하나도 없었습니다. "
+                        "실제 무소식일 수도, 목록 형식이 바뀐 것일 수도 있습니다."),
+                impact=IMPACT_NONE + " 이 출처의 새 기사만 없습니다.",
+                action="해당 사이트에 새 글이 있는지 확인해 주세요.",
+                technical=f"consecutive_empty={empties} last_count=0",
                 observation_id=observation_id, min_occurrences=1,
             ))
     return out
 
 
-def data_gate_signals(record: Mapping | None) -> list[AlertSignal]:
-    """Translate one ``data_quality_gate`` record into actionable signals."""
+def _sample_hashes(rows: object) -> set[str]:
+    if not isinstance(rows, Iterable) or isinstance(rows, (str, bytes)):
+        return set()
+    return {str(row.get("hash"))[:12] for row in rows
+            if isinstance(row, Mapping) and row.get("hash")}
+
+
+def count_fingerprint(label: str, count: object) -> str:
+    """건수가 흔들리는 알림의 지문. **자릿수**만 본다.
+
+    자동 처리되는 품질 이벤트는 회차마다 건수가 조금씩 다르다(실측 2026-08-22
+    하루: 2 · 4 · 5건). 건수를 그대로 지문에 넣으면 사실상 회차마다 다시 알리는
+    것과 같아진다. 반대로 건수를 아예 빼면 2건이 500건이 돼도 조용하다.
+
+    그래서 크기의 **자릿수**를 쓴다. 임계값을 새로 정하지 않으면서 "평소와 같은
+    규모"와 "규모가 달라졌다"를 가른다. 심각도가 오르는 경우는 지문과 무관하게
+    에스컬레이션이 이미 즉시 알린다.
+    """
+    try:
+        value = max(0, int(count))
+    except (TypeError, ValueError):
+        value = 0
+    return f"{label}~{len(str(value))}"
+
+
+def _digest(values: Iterable[str]) -> str:
+    """지문에 넣을 짧은 요약. **해시 목록을 그대로 이어 붙이면 안 된다** —
+    지문은 200자에서 잘리므로, 잘린 뒤쪽에서 바뀐 항목이 조용히 묻힌다."""
+    payload = "|".join(sorted(values))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def archive_quarantine_split(current: Mapping | None,
+                             previous: Mapping | None) -> tuple[int, int]:
+    """격리 건수를 **이번에 새로 생긴 것**과 **이전부터 유지되는 것**으로 나눈다.
+
+    무결성 게이트는 매 빌드마다 아카이브 **전체**를 다시 훑는다
+    (``build_data.apply_archive_integrity_gate``). 그래서 "격리 21건"은 오늘 21건이
+    새로 생겼다는 뜻이 아니라 같은 21건이 계속 걸러지고 있다는 뜻인데, 알림은 그
+    둘을 구분하지 못해 매번 새 사고처럼 보였다(실측 2026-08-20~22: 같은 21건에
+    5회 통지).
+
+    표본 해시는 20건까지만 남으므로 해시 비교만으로는 모자란다. 증가분과 표본에서
+    새로 보인 해시 수 중 **큰 쪽**을 새로 생긴 것으로 본다 — 새 문제를 조용히
+    넘기는 쪽으로는 틀리지 않는다.
+    """
+    total = _nonnegative_int((current or {}).get("quarantined"))
+    if not isinstance(previous, Mapping):
+        return total, 0
+    before = _nonnegative_int(previous.get("quarantined"))
+    fresh_hashes = _sample_hashes((current or {}).get("quarantine_samples"))
+    old_hashes = _sample_hashes(previous.get("quarantine_samples"))
+    # 앞 회차에 표본이 아예 없으면 해시 비교는 **전부 새것**이라고 말한다 —
+    # 그건 비교가 아니라 정보 부재다. 그때는 건수 차이만 믿는다.
+    by_hash = len(fresh_hashes - old_hashes) if old_hashes else 0
+    new_count = max(total - before, by_hash)
+    new_count = max(0, min(total, new_count))
+    return new_count, total - new_count
+
+
+def data_gate_signals(record: Mapping | None,
+                      previous: Mapping | None = None) -> list[AlertSignal]:
+    """Translate one ``data_quality_gate`` record into actionable signals.
+
+    ``previous`` is the preceding gate record when one exists.  It only tells a
+    *new* problem from one that is already known and still handled
+    automatically; judgement thresholds stay in the modules that own them.
+    """
     if not isinstance(record, Mapping):
         return []
     observation_id = str(record.get("observation_id") or
                          record.get("generated_at") or record.get("date") or "")
     out = []
     archive_quality = record.get("archive_quality")
-    quarantined = (_nonnegative_int(archive_quality.get("quarantined"))
-                   if isinstance(archive_quality, Mapping) else 0)
-    sanitized = (_nonnegative_int(archive_quality.get("sanitized"))
-                 if isinstance(archive_quality, Mapping) else 0)
+    archive_quality = archive_quality if isinstance(archive_quality, Mapping) else {}
+    quarantined = _nonnegative_int(archive_quality.get("quarantined"))
+    sanitized = _nonnegative_int(archive_quality.get("sanitized"))
     if quarantined or sanitized:
-        quarantine_samples = archive_quality.get("quarantine_samples") or []
-        sanitize_samples = archive_quality.get("sanitize_samples") or []
-        samples = list(quarantine_samples) + list(sanitize_samples)
-        hashes = ", ".join(
-            str(row.get("hash") or "")[:12] for row in samples[:5]
-            if isinstance(row, Mapping) and row.get("hash"))
-        if quarantined and sanitized:
-            title = "아카이브 기사 무결성 격리·정제"
-        elif quarantined:
-            title = "원문과 다른 아카이브 기사 격리"
+        previous_archive = (previous.get("archive_quality")
+                            if isinstance(previous, Mapping) else None)
+        previous_archive = (previous_archive
+                            if isinstance(previous_archive, Mapping) else None)
+        new_quarantine, kept_quarantine = archive_quarantine_split(
+            archive_quality, previous_archive)
+        samples = (list(archive_quality.get("quarantine_samples") or []) +
+                   list(archive_quality.get("sanitize_samples") or []))
+        hashes = ", ".join(sorted(_sample_hashes(samples))[:5])
+        if quarantined:
+            title = "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다"
+            counted = (f"제외 {quarantined}건" if previous_archive is None else
+                       f"새로 제외 {new_quarantine}건 · 기존 제외 유지 {kept_quarantine}건")
+            detail = f"원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — {counted}."
+            if sanitized:
+                detail += f" 사건일이 잘못된 기사 {sanitized}건은 날짜만 자동 정정했습니다."
         else:
-            title = "아카이브 기사 날짜 무결성 정제"
+            title = "아카이브 기사 날짜를 자동으로 정정했습니다"
+            detail = (f"사건일이 잘못 적힌 기사 {sanitized}건의 날짜만 비우고 "
+                      "나머지 내용은 그대로 내보냈습니다.")
         out.append(AlertSignal(
             # 격리와 정제는 같은 무결성 사고의 강도 차이다. 키를 하나로
             # 유지하면 정제 경고 뒤 격리가 생겼을 때 severity escalation은
             # 즉시 알리면서, 워크플로 재시도는 같은 사고로 중복 발송하지 않는다.
             key="quality:archive-integrity", scope="data_gate",
             severity="critical" if quarantined else "warning",
-            title=title,
-            detail=(f"웹 빌드 무결성 검사 결과 격리 {quarantined}건 · "
-                    f"사건일 등 정제 {sanitized}건. 대상: {hashes or '로그 참조'}"),
+            # 사고가 아니라 **품질 관리가 제대로 돈 결과**다. severity 는 내부
+            # 에스컬레이션 계약이라 그대로 두고, 운영자에게 보이는 등급만 나눈다.
+            level=LEVEL_ATTENTION,
+            title=title, detail=detail,
+            impact="없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
+            action=ACTION_NONE + " 매 빌드에서 다시 검사합니다.",
+            technical=(f"checked={_nonnegative_int(archive_quality.get('checked'))} "
+                       f"quarantined={quarantined} sanitized={sanitized} "
+                       f"samples={hashes or 'see build log'}"),
+            # **정제 건수는 지문에 넣지 않는다.** 아카이브가 커지면 날짜 정정은
+            # 매일 늘어난다(실측 6→40→72→100→142). 그것까지 지문에 넣으면 새로
+            # 생긴 것이 없는 날에도 같은 알림이 매일 다시 나간다.
+            fingerprint=(f"q={quarantined}:"
+                         + _digest(_sample_hashes(
+                             archive_quality.get("quarantine_samples")))),
             observation_id=observation_id, min_occurrences=1,
         ))
     tracking = record.get("tracking")
     if isinstance(tracking, Mapping) and tracking.get("applicable") and tracking.get("below_target"):
         out.append(AlertSignal(
-            key="quality:tracking-rate", scope="data_gate",
-            title="이슈 추적률 기준 미달",
-            detail=(f"최근 {tracking.get('window_briefings') or '?'}회 브리핑 추적률 "
-                    f"{tracking.get('rate')} (기준 {tracking.get('target')})"),
+            key="quality:tracking-rate", scope="data_gate", level=LEVEL_ATTENTION,
+            title="이슈 추적률이 기준을 밑돕니다",
+            detail=("같은 이슈로 이어 붙는 기사 비율이 목표보다 낮습니다. "
+                    "뉴스가 한산한 기간에도 나타나는 값입니다."),
+            impact=IMPACT_NONE + " 사이트의 이슈 묶음이 평소보다 잘게 나뉠 수 있습니다.",
+            action=ACTION_WATCH,
+            technical=(f"rate={tracking.get('rate')} target={tracking.get('target')} "
+                       f"window_briefings={tracking.get('window_briefings')}"),
+            # 값은 회차마다 흔들리지만 '기준 미달'이라는 사실은 그대로다.
+            fingerprint="below-target",
             observation_id=observation_id, min_occurrences=2,
         ))
 
@@ -455,6 +649,10 @@ def data_gate_signals(record: Mapping | None) -> list[AlertSignal]:
     #              하루를 더 기다리면 그 하루치 병합을 그냥 잃는다.
     #
     # 같은 원리가 quality:curation-failure 에 이미 있다(유실 10건 이상이면 즉시).
+    #
+    # 문구만 여기서 감싼다. guardrails 의 제목·상세는 컷 값과 보존율로 쓰인
+    # **개발자 문장**이라("컷을 올려야 한다") 운영자가 그것으로 할 수 있는 일이
+    # 없다. 조치할 수 없는 알림이 섞이면 결국 전체가 안 읽힌다.
     candidates = record.get("issue_candidates")
     if isinstance(candidates, Mapping) and candidates.get("applicable"):
         for guard in candidates.get("guards") or []:
@@ -465,9 +663,17 @@ def data_gate_signals(record: Mapping | None) -> list[AlertSignal]:
                 continue
             severity = str(guard.get("severity") or "warning")
             out.append(AlertSignal(
-                key=key, scope="data_gate", severity=severity,
-                title=str(guard.get("title") or "이슈 병합 후보 감시"),
-                detail=str(guard.get("detail") or ""),
+                key=key, scope="data_gate", severity=severity, level=LEVEL_ATTENTION,
+                title="이슈 묶음 정확도 점검 항목이 있습니다",
+                detail=str(guard.get("title") or "이슈 병합 후보 감시"),
+                impact=IMPACT_NONE + " 이슈를 묶는 정확도만 영향을 받습니다.",
+                action=("개발자 확인이 필요합니다 — 서비스 중단은 아닙니다."
+                        if severity == "critical" else
+                        "운영 조치는 필요 없습니다 — 개발자 확인 항목입니다."),
+                technical=f"[{key}] {guard.get('detail') or ''}",
+                # 보존율·컷 여유는 회차마다 소수점이 움직인다. 같은 항목이 같은
+                # 심각도로 계속 걸려 있는 것은 새 소식이 아니다.
+                fingerprint=f"guard:{severity}",
                 observation_id=observation_id,
                 min_occurrences=1 if severity == "critical" else 2,
             ))
@@ -478,24 +684,59 @@ def data_gate_signals(record: Mapping | None) -> list[AlertSignal]:
         # A missing ratio means there is not enough data to judge; it is not an
         # operational defect and should not page an administrator.
         if weeks.get("flow_ratio") is not None and not weeks.get("flow_visible", True):
-            hidden.append(f"주제 흐름({weeks.get('flow_ratio')})")
+            hidden.append("주제 흐름 표")
         if weeks.get("slope_ratio") is not None and not weeks.get("slope_visible", True):
-            hidden.append(f"슬로프({weeks.get('slope_ratio')})")
+            hidden.append("슬로프 그래프")
         if hidden:
             out.append(AlertSignal(
-                key="quality:topic-weeks", scope="data_gate",
-                title="웹 주제 흐름 지표 비노출",
-                detail=(f"화면에서 {', '.join(hidden)}가 숨겨집니다. "
-                        f"주별 표본 {weeks.get('totals')}; 기준 {weeks.get('limit')}"),
+                key="quality:topic-weeks", scope="data_gate", level=LEVEL_ATTENTION,
+                title="신뢰하기 어려운 추세 지표를 자동으로 숨겼습니다",
+                detail=(f"주별 수집량 차이가 커서 {' · '.join(hidden)}를 화면에서 "
+                        "자동으로 내렸습니다. 잘못된 추세를 보여 주지 않으려는 "
+                        "안전장치가 작동한 것입니다."),
+                impact=IMPACT_NONE + " 사이트의 다른 화면은 그대로 보입니다.",
+                action="필요 없음 — 주별 수집량이 고르게 쌓이면 자동으로 다시 표시됩니다.",
+                technical=(f"flow_ratio={weeks.get('flow_ratio')} "
+                           f"slope_ratio={weeks.get('slope_ratio')} "
+                           f"threshold={weeks.get('limit')} totals={weeks.get('totals')}"),
+                # 비율은 매일 조금씩 움직인다(실측 2.5098→2.549→2.8163→2.5536). 그
+                # 숫자를 지문에 넣으면 **숨은 지표가 그대로인데도** 매일 다시 알린다.
+                # 실제로 달라지는 것은 '무엇이 숨었나' 뿐이다.
+                fingerprint="hidden=" + ",".join(hidden),
                 observation_id=observation_id, min_occurrences=2,
             ))
     return out
 
 
+# 실패한 step 하나가 서비스에 무엇을 하는지는 step 마다 다르다. 셋을 한 문장으로
+# 묶으면("웹 품질 파이프라인 실행 실패") 운영자는 사이트가 멈춘 것인지 지표만
+# 빈 것인지 알 수 없다 — 그 판단이 이 알림의 존재 이유다.
 _WEB_PIPELINE_LABELS = {
     "web_build": "웹 데이터 빌드",
     "data_gate": "데이터 품질 기록",
     "web_deploy": "Cloudflare 배포·스모크",
+}
+_WEB_PIPELINE_STAGES = {
+    "web_build": {
+        "title": "사이트에 올릴 데이터를 만들지 못했습니다",
+        "impact": ("사이트가 이전 데이터 그대로 남습니다. 텔레그램 브리핑 발송은 "
+                   "영향받지 않습니다."),
+        "action": "워크플로 로그를 확인해 주세요. 다음 예약 실행에서 자동 재시도합니다.",
+        "serving": True,
+    },
+    "web_deploy": {
+        "title": "사이트 배포가 실패했습니다",
+        "impact": ("새 데이터가 사이트에 반영되지 않았습니다. 텔레그램 브리핑은 "
+                   "정상 발송됩니다."),
+        "action": "배포 로그와 사이트 접속을 확인해 주세요.",
+        "serving": True,
+    },
+    "data_gate": {
+        "title": "오늘치 품질 기록을 남기지 못했습니다",
+        "impact": "없음 — 수집·발송·사이트는 정상입니다. 품질 지표만 오늘치가 비어 있습니다.",
+        "action": ACTION_WATCH,
+        "serving": False,
+    },
 }
 
 
@@ -528,13 +769,25 @@ def web_pipeline_signals(outcomes: Mapping | None, *,
     if not failed:
         return []
 
+    # 제목·영향은 **서비스에 닿는** step 을 먼저 말한다. 지표 기록만 실패한 날에
+    # "배포 실패"라고 부르면 다음에 진짜 배포가 죽었을 때 안 읽힌다.
+    lead = next((stage for stage in ("web_build", "web_deploy", "data_gate")
+                 if stage in failed), failed[0])
+    spec = _WEB_PIPELINE_STAGES[lead]
+    serving = any(_WEB_PIPELINE_STAGES[stage]["serving"] for stage in failed)
     detail = " · ".join(
         f"{_WEB_PIPELINE_LABELS[stage]}={normalized[stage]}" for stage in failed)
     return [AlertSignal(
         key="quality:web-pipeline-failure", scope="web_pipeline",
-        severity="critical", title="웹 품질 파이프라인 실행 실패",
-        detail=(f"{detail}. data_quality_gate 기록이 없을 수 있으므로 "
-                "워크플로 로그와 배포 상태를 확인해 주세요."),
+        severity="critical" if serving else "warning",
+        level=LEVEL_ACTION if serving else LEVEL_ATTENTION,
+        title=spec["title"],
+        detail=("자동 실행이 도중에 멈췄습니다."
+                if serving else "자동 실행 중 한 단계가 끝나지 못했습니다."),
+        impact=spec["impact"],
+        action=spec["action"],
+        technical=(f"{detail}. data_quality_gate 기록이 없을 수 있으므로 "
+                   "워크플로 로그와 배포 상태를 확인해 주세요."),
         observation_id=str(observation_id).strip(), min_occurrences=1,
     )]
 
@@ -547,9 +800,14 @@ def collection_pipeline_signals(outcome: str | None, *,
     normalized = str(outcome).strip().lower() or "missing"
     return [AlertSignal(
         key="source:collection-pipeline-failure", scope="collection_pipeline",
-        severity="critical", title="뉴스 수집 파이프라인 실행 실패",
-        detail=(f"news_bot step outcome={normalized}. source_yield가 갱신되지 않았을 수 있어 "
-                "이전 수집 상태를 정상 관측으로 사용하지 않습니다."),
+        severity="critical", level=LEVEL_ACTION,
+        title="뉴스 수집 작업이 끝까지 실행되지 못했습니다",
+        detail="이번 회차 수집이 도중에 멈췄습니다.",
+        impact=("이번 회차에 들어왔어야 할 새 기사가 빠집니다. 이미 발행된 브리핑과 "
+                "사이트는 그대로 유지됩니다."),
+        action="워크플로 로그를 확인해 주세요. 다음 예약 회차에 자동으로 다시 수집합니다.",
+        technical=(f"news_bot step outcome={normalized}. source_yield가 갱신되지 않았을 수 있어 "
+                   "이전 수집 상태를 정상 관측으로 사용하지 않습니다."),
         observation_id=str(observation_id).strip(), min_occurrences=1,
     )]
 
@@ -567,6 +825,34 @@ def latest_data_gate_record(records: Iterable[Mapping]) -> Mapping | None:
     return latest
 
 
+def previous_data_gate_record(records: Iterable[Mapping],
+                              current: Mapping | None) -> Mapping | None:
+    """``current`` 바로 앞 회차의 게이트 기록. 없으면 ``None``.
+
+    "새로 생긴 문제"와 "이전부터 자동 처리 중인 문제"를 가르려면 어제의 나가
+    필요하다. delivery_log 는 이미 회차마다 이 줄을 쌓고 있으므로 상태 파일을
+    새로 만들지 않는다 (data_gate_metrics.previous_candidate_records 와 같은 이유).
+    """
+    if not isinstance(current, Mapping):
+        return None
+    current_key = str(current.get("generated_at") or current.get("date") or "")
+    current_observation = str(current.get("observation_id") or "")
+    best = None
+    best_key = ""
+    for row in records:
+        if not isinstance(row, Mapping) or row.get("record_type") != "data_quality_gate":
+            continue
+        key = str(row.get("generated_at") or row.get("date") or "")
+        if key >= current_key:
+            continue
+        # 같은 workflow run 의 재시도는 '앞 회차'가 아니다 — 같은 회차다.
+        if current_observation and str(row.get("observation_id") or "") == current_observation:
+            continue
+        if best is None or key > best_key:
+            best, best_key = row, key
+    return best
+
+
 def daily_quality_signals(records: Iterable[Mapping], date: str) -> tuple[list[AlertSignal], set[str]]:
     """Aggregate the day's persisted quality events into alert signals.
 
@@ -575,6 +861,7 @@ def daily_quality_signals(records: Iterable[Mapping], date: str) -> tuple[list[A
     if no failures were logged before that point, yesterday's failure alert can
     safely resolve.
     """
+    records = list(records)
     rows = [row for row in records
             if isinstance(row, Mapping) and str(row.get("date") or "") == date]
     signals: list[AlertSignal] = []
@@ -583,7 +870,8 @@ def daily_quality_signals(records: Iterable[Mapping], date: str) -> tuple[list[A
     gates = [row for row in rows if row.get("record_type") == "data_quality_gate"]
     if gates:
         latest = latest_data_gate_record(gates)
-        signals.extend(data_gate_signals(latest))
+        signals.extend(data_gate_signals(
+            latest, previous_data_gate_record(records, latest)))
         scopes.update({"data_gate", "curation"})
 
     failures = [row for row in rows if row.get("record_type") == "curation_failure"]
@@ -599,15 +887,22 @@ def daily_quality_signals(records: Iterable[Mapping], date: str) -> tuple[list[A
                 reasons[str(reason)] = reasons.get(str(reason), 0) + _nonnegative_int(count)
         reason_text = ", ".join(f"{key} {value}건" for key, value in sorted(reasons.items())) or "원인 미분류"
         latest_id = max(str(row.get("generated_at") or "") for row in failures)
+        heavy = lost >= 10
         signals.append(AlertSignal(
             key="quality:curation-failure", scope="curation",
-            severity="critical" if lost >= 10 else "warning",
-            title="기사 큐레이션 유실 발생",
-            detail=f"오늘 {len(failures)}회 기록에서 총 {lost}건 유실 · {reason_text}",
+            severity="critical" if heavy else "warning",
+            level=LEVEL_ACTION if heavy else LEVEL_ATTENTION,
+            title="일부 기사를 정리하지 못하고 넘겼습니다",
+            detail=(f"오늘 {lost}건이 요약·분류 단계에서 처리되지 못했습니다."),
+            impact=("해당 기사는 오늘 브리핑과 사이트에 나오지 않습니다. 나머지 "
+                    "기사와 서비스는 정상입니다."),
+            action=("외부 API 한도·키 상태를 확인해 주세요."
+                    if heavy else ACTION_WATCH),
+            technical=f"records={len(failures)} lost={lost} reasons={reason_text}",
             observation_id=f"{date}:{latest_id}:{lost}",
             # A large loss is actionable immediately; a small transient loss
             # must recur on another day before paging an administrator.
-            min_occurrences=1 if lost >= 10 else 2,
+            min_occurrences=1 if heavy else 2,
         ))
 
     selection_rows = [row for row in rows if row.get("record_type") == "selection_stats"]
@@ -620,31 +915,54 @@ def daily_quality_signals(records: Iterable[Mapping], date: str) -> tuple[list[A
         missing = sum(_nonnegative_int(row.get("features_missing")) for row in regions)
         candidates = sum(_nonnegative_int(row.get("candidate_count")) for row in regions)
         selected = sum(_nonnegative_int(row.get("selected_count")) for row in regions)
-        if latest.get("pipeline_status") not in (None, "ok"):
+        status = latest.get("pipeline_status")
+        if status not in (None, "ok"):
+            # ``partial`` 은 daily_brief 가 '브리핑 중 하나 이상이 발송에 실패했다'는
+            # 뜻으로만 쓴다. 그 사실을 그대로 말해야 운영자가 무엇을 볼지 안다.
+            partial_send = str(status) == "partial"
             signals.append(AlertSignal(
                 key="quality:brief-partial", scope="selection", severity="critical",
-                title="일일 브리핑 일부 처리 실패",
-                detail=(f"상태 {latest.get('pipeline_status')} · 후보 {candidates}건 중 "
-                        f"{selected}건 선정"),
+                level=LEVEL_ACTION,
+                title=("일부 브리핑이 발송되지 못했습니다" if partial_send else
+                       "일일 브리핑이 끝까지 처리되지 않았습니다"),
+                detail=("오늘 준비된 브리핑 중 일부가 텔레그램으로 나가지 못했습니다."
+                        if partial_send else "브리핑 처리가 도중에 멈췄습니다."),
+                impact=("그 브리핑은 구독자에게 가지 않았습니다. 사이트와 나머지 "
+                        "브리핑은 정상입니다."),
+                action=("발송 결과를 확인하고 필요하면 워크플로를 다시 실행해 주세요 "
+                        "— 재발송 창은 제한돼 있습니다."),
+                technical=(f"pipeline_status={status} "
+                           f"candidates={candidates} selected={selected}"),
                 observation_id=observation_id, min_occurrences=1,
             ))
         if missing:
             signals.append(AlertSignal(
                 key="quality:features-missing", scope="selection",
-                title="랭킹 분석값 누락",
-                detail=f"선정 통계에서 features 누락 {missing}건이 확인됐습니다.",
+                level=LEVEL_ATTENTION,
+                title="일부 기사에서 랭킹 분석값이 비었습니다",
+                detail=f"기사 {missing}건이 분석값 없이 순위 계산에 들어갔습니다.",
+                impact=IMPACT_NONE + " 순위 정확도만 조금 낮아집니다.",
+                action=ACTION_WATCH,
+                technical=f"features_missing={missing}",
+                fingerprint=count_fingerprint("features-missing", missing),
                 observation_id=observation_id, min_occurrences=2,
             ))
         if candidates and not selected:
             signals.append(AlertSignal(
                 key="quality:empty-selection", scope="selection", severity="critical",
-                title="후보는 있으나 브리핑 선정 0건",
+                level=LEVEL_ACTION,
+                title="후보 기사는 있는데 브리핑 선정이 0건입니다",
                 detail=f"후보 {candidates}건이 있었지만 최종 선정이 비었습니다.",
+                impact="오늘 브리핑이 비어 나갔을 수 있습니다.",
+                action="즉시 확인이 필요합니다 — 선정 단계 로그를 봐 주세요.",
+                technical=f"candidates={candidates} selected=0",
                 observation_id=observation_id, min_occurrences=1,
             ))
 
     # Extension contract for quality gates owned by other modules.  They can
     # append a record without coupling this monitor to their internal schema.
+    # 운영자 문장(impact/action/technical/level)도 같은 계약으로 실어 보낸다 —
+    # 무슨 일인지 아는 곳이 그 문장을 쓰는 것이 맞다.
     explicit = [row for row in rows if row.get("record_type") == "quality_event"]
     if explicit:
         scopes.add("quality_event")
@@ -656,6 +974,9 @@ def daily_quality_signals(records: Iterable[Mapping], date: str) -> tuple[list[A
         signals.append(AlertSignal(
             key=f"quality-event:{key}", scope="quality_event", title=title,
             detail=str(row.get("detail") or ""), severity=str(row.get("severity") or "warning"),
+            impact=str(row.get("impact") or ""), action=str(row.get("action") or ""),
+            technical=str(row.get("technical") or ""), level=str(row.get("level") or ""),
+            fingerprint=str(row.get("fingerprint") or ""),
             observation_id=str(row.get("generated_at") or date),
             min_occurrences=max(1, _nonnegative_int(row.get("min_occurrences")) or 2),
         ))
@@ -667,6 +988,42 @@ def _empty_alert_state() -> dict:
     return {"version": STATE_VERSION, "items": {}}
 
 
+def _signal_from_row(key: str, row: Mapping) -> AlertSignal:
+    """저장된 항목을 다시 알림으로 되살린다(미발송 재시도·해결 통지 공용)."""
+    return AlertSignal(
+        key=key,
+        scope=str(row.get("scope") or "quality"),
+        title=str(row.get("title") or key),
+        detail=str(row.get("detail") or ""),
+        severity=str(row.get("severity") or "warning"),
+        observation_id=str(row.get("last_observation_id") or ""),
+        min_occurrences=max(1, _nonnegative_int(row.get("min_occurrences")) or 1),
+        impact=str(row.get("impact") or ""),
+        action=str(row.get("action") or ""),
+        technical=str(row.get("technical") or ""),
+        level=str(row.get("level") or ""),
+        fingerprint=str(row.get("fingerprint") or ""),
+    ).normalized()
+
+
+def _resolution_signal(key: str, row: Mapping) -> AlertSignal:
+    """이미 알린 문제가 스스로 사라졌다는 통지.
+
+    없으면 운영자는 어제 받은 🚨 가 아직 살아 있는지 알 수 없다. 상태가 닫혔다는
+    말을 듣지 못하면 알림 하나가 끝없이 열린 채로 남는다.
+    """
+    base = _signal_from_row(key, row)
+    return AlertSignal(
+        key=key, scope=base.scope, title=base.title,
+        detail="이전에 알린 문제가 사라졌습니다. 자동으로 정상으로 돌아왔습니다.",
+        severity="info", level=LEVEL_RESOLVED,
+        impact=IMPACT_NONE, action="필요 없음.",
+        technical=f"resolved_at={row.get('resolved_at') or ''} was={base.severity}",
+        observation_id=str(row.get("resolved_at") or base.observation_id),
+        min_occurrences=1,
+    ).normalized()
+
+
 def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
                     *, evaluated_scopes: set[str] | None = None,
                     now: datetime | None = None,
@@ -675,6 +1032,13 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
 
     The same ``observation_id`` never advances a streak twice, which matters
     when a workflow is retried against the same metrics record.
+
+    반복 통지 규칙은 둘로 갈린다.  ``fingerprint`` 가 없는 알림(진행 중인 장애)은
+    예전처럼 쿨다운마다 다시 부른다 — 아직 살아 있다는 사실 자체가 소식이다.
+    ``fingerprint`` 가 있는 알림은 **그 값이 달라졌을 때만** 다시 부른다.  매
+    빌드마다 아카이브 전체를 다시 검사하는 무결성 게이트처럼, 같은 상태가 계속
+    관측되는 것이 정상인 알림이 있기 때문이다(실측: 같은 격리 21건이 회차마다
+    새 critical 로 5회 통지됐다).
     """
     now_dt = _utc_now(now)
     now_iso = _iso(now_dt)
@@ -694,12 +1058,18 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
             row["active"] = False
             row["consecutive"] = 0
             row["resolved_at"] = now_iso
+            # 알린 적 없는 문제의 '해결'은 소식이 아니다. 미발송분이 남아 있으면
+            # 그 원본이 먼저 나가야 하므로 해결 통지를 만들지 않는다.
+            if row.get("last_notified_at") and not row.get("pending_notification"):
+                row["pending_resolution"] = True
 
     due: list[AlertSignal] = []
     for key, signal in by_key.items():
         row = dict(items.get(key) or {})
         same_observation = bool(signal.observation_id) and signal.observation_id == row.get("last_observation_id")
         was_active = bool(row.get("active"))
+        # 해결됐던 문제가 다시 났다면 그것은 새 사고다 — 쿨다운을 기다리지 않는다.
+        recurred = bool(row.get("resolved_at")) and not was_active
         if not same_observation:
             row["consecutive"] = (_nonnegative_int(row.get("consecutive")) + 1) if was_active else 1
         row.update({
@@ -708,20 +1078,38 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
             "title": signal.title,
             "detail": signal.detail,
             "severity": signal.severity,
+            "level": signal.level,
+            "impact": signal.impact,
+            "action": signal.action,
+            "technical": signal.technical,
+            "fingerprint": signal.fingerprint,
             "last_seen_at": now_iso,
             "last_observation_id": signal.observation_id,
             "min_occurrences": signal.min_occurrences,
         })
+        # 다시 살아난 문제는 새 사고다 — 아직 못 보낸 해결 통지는 의미를 잃는다.
+        row.pop("pending_resolution", None)
         if not was_active:
             row["first_seen_at"] = now_iso
             row.pop("resolved_at", None)
+            # 재발이면 지문이 같아도 다시 알린다. 그러지 않으면 한 번 해결된
+            # 문제는 두 번 다시 통지되지 않는다.
+            row.pop("last_notified_fingerprint", None)
 
         last_notified = _parse_time(row.get("last_notified_at"))
-        cooldown_elapsed = last_notified is None or now_dt - last_notified >= cooldown
         escalated = (_SEVERITY_RANK.get(signal.severity, 1) >
                      _SEVERITY_RANK.get(str(row.get("last_notified_severity") or "info"), 0))
-        if _nonnegative_int(row.get("consecutive")) >= signal.min_occurrences and (
-                last_notified is None or cooldown_elapsed or escalated):
+        if last_notified is None or escalated or recurred:
+            repeatable = True
+        else:
+            cooldown_elapsed = now_dt - last_notified >= cooldown
+            # 지문은 **줄이기만 한다.** 쿨다운이 지났어도 상태가 그대로면 같은 말을
+            # 다시 하지 않는다. 반대로 지문이 달라졌다고 쿨다운을 건너뛰지도 않는다
+            # — 그러면 회차마다 건수만 흔들리는 알림이 3시간마다 울린다.
+            repeatable = cooldown_elapsed and (
+                not signal.fingerprint or
+                signal.fingerprint != str(row.get("last_notified_fingerprint") or ""))
+        if _nonnegative_int(row.get("consecutive")) >= signal.min_occurrences and repeatable:
             due.append(signal)
             # Keep the payload retryable even if the underlying condition
             # recovers before an administrator channel becomes available.
@@ -732,15 +1120,13 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
     for key, row in items.items():
         if key in due_keys or not row.get("pending_notification"):
             continue
-        due.append(AlertSignal(
-            key=key,
-            scope=str(row.get("scope") or "quality"),
-            title=str(row.get("title") or key),
-            detail=str(row.get("detail") or ""),
-            severity=str(row.get("severity") or "warning"),
-            observation_id=str(row.get("last_observation_id") or ""),
-            min_occurrences=max(1, _nonnegative_int(row.get("min_occurrences")) or 1),
-        ).normalized())
+        due.append(_signal_from_row(key, row))
+        due_keys.add(key)
+
+    for key, row in items.items():
+        if key in due_keys or not row.get("pending_resolution"):
+            continue
+        due.append(_resolution_signal(key, row))
 
     return {"version": STATE_VERSION, "updated_at": now_iso, "items": items}, due
 
@@ -758,24 +1144,69 @@ def mark_notified(state: Mapping, alerts: Sequence[AlertSignal],
         row = result["items"].get(signal.key)
         if row is None:
             continue
+        if signal.level == LEVEL_RESOLVED:
+            # 해결 통지는 '알림을 보냈다'가 아니라 '닫혔다'는 기록이다.
+            # last_notified_* 를 건드리면 다음 재발의 에스컬레이션 판정이 흐려진다.
+            row.pop("pending_resolution", None)
+            row["resolution_notified_at"] = sent_at
+            continue
         row["last_notified_at"] = sent_at
         row["last_notified_severity"] = signal.severity
+        row["last_notified_fingerprint"] = signal.fingerprint
         row["notifications"] = _nonnegative_int(row.get("notifications")) + 1
         row["pending_notification"] = False
     return result
 
 
+def _level_of(signal: AlertSignal) -> str:
+    return signal.level if signal.level in _LEVEL_LABELS else default_level(signal.severity)
+
+
 def format_admin_alerts(alerts: Sequence[AlertSignal], *, max_chars: int = 3500) -> str:
-    """Build one plain-text Telegram-ready message for all due alerts."""
-    lines = [f"⚠️ Nuclens+ 운영 품질 알림 ({len(alerts)}건)"]
-    for signal in sorted(alerts, key=lambda row: -_SEVERITY_RANK.get(row.severity, 1)):
-        icon = "🚨" if signal.severity == "critical" else "•"
-        block = f"\n{icon} {signal.title}\n  {signal.detail}"
-        if len("\n".join(lines)) + len(block) > max_chars:
-            lines.append("\n• 나머지 경고는 실행 로그에서 확인해 주세요.")
-            break
-        lines.append(block)
+    """운영자 한 명이 5초 안에 읽는 한 통의 메시지.
+
+    순서는 의미 순서다 — ① 무슨 일이 있었나 ② 서비스 영향 ③ 내가 할 일
+    ④ 기술 상세.  조치가 필요한 것이 항상 맨 위에 오고, 자동 처리된 것과
+    해결된 것이 그 아래에 붙는다.  해시·비율·예외 이름은 마지막 줄에만 나온다.
+    """
+    grouped: dict[str, list[AlertSignal]] = {level: [] for level in _LEVEL_ORDER}
+    for signal in alerts:
+        grouped[_level_of(signal)].append(signal)
+
+    counts = [f"{_LEVEL_LABELS[level][1]} {len(grouped[level])}건"
+              for level in _LEVEL_ORDER if grouped[level]]
+    lead = next((level for level in _LEVEL_ORDER if grouped[level]), LEVEL_INFO)
+    lines = [f"{_LEVEL_LABELS[lead][0]} Nuclens+ 운영 알림 · " + " · ".join(counts)]
+
+    for level in _LEVEL_ORDER:
+        icon, label = _LEVEL_LABELS[level]
+        for signal in sorted(grouped[level],
+                             key=lambda row: -_SEVERITY_RANK.get(row.severity, 1)):
+            block = [f"\n{icon} {label} · {signal.title}"]
+            if signal.detail:
+                block.append(f"  {signal.detail}")
+            if signal.impact:
+                block.append(f"  서비스 영향: {signal.impact}")
+            if signal.action:
+                block.append(f"  조치: {signal.action}")
+            if signal.technical:
+                block.append(f"  상세: {signal.technical}")
+            text = "\n".join(block)
+            if len("\n".join(lines)) + len(text) > max_chars:
+                lines.append("\n• 나머지 알림은 실행 로그에서 확인해 주세요.")
+                return "\n".join(lines)[:max_chars]
+            lines.append(text)
     return "\n".join(lines)[:max_chars]
+
+
+def format_technical_log(alerts: Sequence[AlertSignal]) -> str:
+    """실행 로그용 한 줄씩. 운영자 문장에서 뺀 값은 여기서 전부 보존한다."""
+    return "\n".join(
+        f"[ops-monitor] alert key={signal.key} level={_level_of(signal)} "
+        f"severity={signal.severity} scope={signal.scope} "
+        f"observation={signal.observation_id or 'n/a'} "
+        f"fingerprint={signal.fingerprint or 'n/a'} :: {signal.technical or signal.detail}"
+        for signal in alerts)
 
 
 def notify_alerts(state: Mapping, alerts: Sequence[AlertSignal],

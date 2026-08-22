@@ -739,7 +739,11 @@ class ScriptAuditReportTests(unittest.TestCase):
         (key, _title, detail), kwargs = self.events[0]
         self.assertEqual(key, "audio-script-unverified")
         self.assertEqual(kwargs["severity"], "critical")
-        self.assertIn("검증되지 않은", detail)
+        self.assertIn("확인하지 못했음", detail)
+        # 서비스는 정상이고 사람이 들어봐야 한다 — 조치가 있는 '확인 필요'다.
+        self.assertEqual(kwargs["level"], "attention")
+        self.assertIn("들어봐", kwargs["action"])
+        self.assertIn("정상 발송", kwargs["impact"])
 
     def test_removed_paragraph_is_reported_with_its_finding(self):
         finding = article_quality_gate.Finding(
@@ -758,6 +762,18 @@ class ScriptAuditReportTests(unittest.TestCase):
         _args, kwargs = self.events[0]
         self.assertEqual(kwargs["severity"], "critical")
         self.assertEqual(kwargs["min_occurrences"], 1)
+        # 회차를 못 만든 것은 실제 실패다 — 자동 정리와 같은 등급이면 안 된다.
+        self.assertEqual(kwargs["level"], "action")
+        self.assertIn("나가지 않습니다", kwargs["impact"])
+
+    def test_a_trimmed_script_is_not_shown_as_an_outage(self):
+        """문단 하나를 뺐을 뿐 음원은 정상 발송됐다."""
+        self.report(article_quality_gate.ScriptAudit(
+            "HOST: 남은 문단", "sanitize", ("뺀 문단",), ()))
+        _args, kwargs = self.events[0]
+        self.assertEqual(kwargs["level"], "attention")
+        self.assertTrue(kwargs["impact"].startswith("없음"))
+        self.assertIn("필요 없음", kwargs["action"])
 
     def test_reporter_never_raises_into_audio_generation(self):
         import news_bot

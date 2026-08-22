@@ -22,7 +22,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `news_bot.py` | 수집·dedup·batch 큐레이션 (Gemini 1회/10건, feature 추출 포함) |
 | `data_quality.py` | URL·발행처·출처 역할·완결문·사건일 공통 품질 계약 |
 | `article_quality_gate.py` | 원문-큐레이션 제목·요약·사건일 무결성, fallback 발송 제한, 최종 카드 근거 검증 |
-| `operational_monitoring.py` + `operational_alerts.py` | 수집원 연속 장애·품질 이상 누적, 중복 억제·관리자 알림 |
+| `operational_monitoring.py` + `operational_alerts.py` | 수집원 연속 장애·품질 이상 누적, 중복 억제·관리자 알림. 운영자 메시지는 **무슨 일 → 서비스 영향 → 조치 → 기술 상세** 순서이며, 표시 등급(🚨 조치 필요 / ⚠️ 확인 필요 / ✅ 해결됨)은 내부 severity 와 별개다 |
 | `embedding_pipeline.py` | Gemini 임베딩 모델·35일 캐시·최근 21일 브리핑 백필 계약 |
 | `news_archive.py` | v3 아카이브 적재·중복 차단·검증 근거 지문 보존 |
 | `archive_repairs.json` | 과거 깨진 레코드의 고정 회귀 수선·제외 근거 |
