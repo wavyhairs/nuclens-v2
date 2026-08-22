@@ -467,6 +467,228 @@ class CurrencyQuantityTests(unittest.TestCase):
         self.assertEqual(conflict["조원"]["unsupported_output"], ["1050"])
 
 
+class DeliveryManifestEvidenceTests(unittest.TestCase):
+    """발송 직전 게이트도 큐레이션이 봉인한 근거를 읽는다.
+
+    큐레이션 호출은 받아 온 **본문**을 보고 `verified_evidence` 를 만든다. 발송
+    직전에는 본문이 없고(저작권상 보존하지 않는다) 큐에 남은 것은 제목과 짧은
+    `source_excerpt` 뿐이다. 그 excerpt 는 대개 제목을 다시 쓴 한 줄이라 본문에만
+    있던 사실을 담지 못한다.
+
+    그런데 excerpt 가 **비어 있지 않다**는 사실 자체가 `quantity_is_hard` ·
+    `directional_is_hard` 를 켠다. 그 두 스위치는 "진짜 본문 근거를 들고 있다"는
+    뜻으로 설계된 것인데, 실제로 들고 있는 것은 제목 한 줄이다. 그래서 본문에서
+    비롯한 정상 요약이 '지어낸 사실'로 분류됐다.
+
+    실측 2026-08-18~22 발송 직전 격리 82건(보존된 판정 신호 전수)에서 74건
+    (90.2%)이 **이미 manifest 안에 있던 사실** 때문에 차단됐다.
+    """
+
+    BOUND = {
+        "hash": "delivery-manifest-1",
+        "title": "김성환 장관 “전력, 산업 보조수단 아닌 국가 안보자산”",
+        # 실제 큐 값의 모양 — 제목을 다시 쓰고 매체명을 붙인 한 줄이다.
+        "source_excerpt": "김성환 장관 “전력, 산업 보조수단 아닌 국가 안보자산” 인사이트N파워",
+        "published_at": "2026-08-22T09:00:00+09:00",
+        "features": {},
+    }
+
+    def manifest_for(self, body):
+        return gate.build_evidence_manifest(
+            {"title": self.BOUND["title"],
+             "description": self.BOUND["source_excerpt"],
+             "article_text": body,
+             "published_at": self.BOUND["published_at"]},
+            article=self.BOUND,
+        )
+
+    def source(self, article):
+        """daily_brief._quality_source 와 같은 모양 — 본문은 없다."""
+        return {"title": article.get("title", ""),
+                "description": article.get("source_excerpt", ""),
+                "published_at": article.get("published_at")}
+
+    def test_body_only_fact_missing_from_the_excerpt_is_not_a_mismatch(self):
+        """실측 d60c75d7877511ce — 제목에 없는 '전기본'이 본문에는 있었다."""
+        body = ("김성환 기후에너지환경부 장관은 제12차 전력수급기본계획에서 "
+                "수요 전망을 재산정하겠다고 밝혔다.")
+        article = {
+            **self.BOUND,
+            "verified_evidence": self.manifest_for(body),
+            "title_kr": "김성환 기후에너지환경부 장관, 전력을 국가 안보자산으로 규정",
+            "summary": ("김성환 장관은 전력을 국가 안보자산으로 격상하고, 제12차 "
+                        "전력수급기본계획에서 수요 전망을 재산정하겠다고 밝혔다."),
+        }
+        result = gate.audit_article_integrity(
+            article, source=self.source(article),
+            reference_date=article["published_at"])
+        self.assertNotEqual(result.action, "quarantine", result.findings)
+
+    def test_the_same_article_without_a_manifest_still_blocks(self):
+        """근거가 없으면 통과가 아니다 — 판단 불가와 사실 일치는 다르다."""
+        article = {
+            **self.BOUND,
+            "title_kr": "김성환 기후에너지환경부 장관, 전력을 국가 안보자산으로 규정",
+            "summary": ("김성환 장관은 제12차 전력수급기본계획에서 수요 전망을 "
+                        "재산정하겠다고 밝혔다."),
+        }
+        result = gate.audit_article_integrity(
+            article, source=self.source(article),
+            reference_date=article["published_at"])
+        self.assertEqual(result.action, "quarantine")
+
+    def test_a_manifest_bound_to_another_article_grants_nothing(self):
+        """결속이 어긋난 manifest 는 무효다 — 남의 근거로 통과시키지 않는다."""
+        stolen = self.manifest_for(
+            "김성환 장관이 제12차 전력수급기본계획을 언급했다.")
+        article = {
+            **self.BOUND,
+            "hash": "a-different-article",
+            "verified_evidence": stolen,
+            "title_kr": "김성환 기후에너지환경부 장관, 전력을 국가 안보자산으로 규정",
+            "summary": ("김성환 장관은 제12차 전력수급기본계획에서 수요 전망을 "
+                        "재산정하겠다고 밝혔다."),
+        }
+        result = gate.audit_article_integrity(
+            article, source=self.source(article),
+            reference_date=article["published_at"])
+        self.assertEqual(result.action, "quarantine")
+
+    def test_manifest_never_licenses_a_fact_the_body_did_not_have(self):
+        """본문에 없던 수치는 manifest 가 있어도 그대로 막힌다."""
+        article = {
+            **self.BOUND,
+            "verified_evidence": self.manifest_for(
+                "김성환 장관이 전력 수요 대응을 강조했다."),
+            "title_kr": "김성환 장관, 전력 국가 안보자산 규정",
+            "summary": "김성환 장관은 원전 비중을 47.2%로 높이겠다고 밝혔다.",
+        }
+        result = gate.audit_article_integrity(
+            article, source=self.source(article),
+            reference_date=article["published_at"])
+        self.assertEqual(result.action, "quarantine")
+
+    def test_entity_replacement_is_not_excused_by_a_manifest(self):
+        """A사 → B사 교체는 계속 차단된다 — manifest 에 B 가 없기 때문이다."""
+        article = {
+            "hash": "swap-1",
+            "title": "Doosan Enerbility signs a TerraPower equipment contract",
+            "source_excerpt": "Doosan Enerbility signs a TerraPower contract Reuters",
+            "published_at": "2026-08-22T09:00:00+09:00",
+            "features": {},
+            "title_kr": "웨스팅하우스, 홀텍과 기자재 계약 체결",
+            "summary": "웨스팅하우스가 홀텍과 SMR 기자재 공급 계약을 체결했다.",
+        }
+        article["verified_evidence"] = gate.build_evidence_manifest(
+            {"title": article["title"], "description": article["source_excerpt"],
+             "article_text": "Doosan Enerbility signed the TerraPower contract.",
+             "published_at": article["published_at"]},
+            article=article)
+        result = gate.audit_article_integrity(
+            article, source=self.source(article),
+            reference_date=article["published_at"])
+        self.assertEqual(result.action, "quarantine")
+
+    def test_country_switch_is_not_excused_by_a_manifest(self):
+        """미국 사건 → 캐나다 사건도 그대로 차단된다."""
+        article = {
+            "hash": "swap-2",
+            "title": "Cameco starts construction at a new Canadian uranium mine",
+            "source_excerpt": "Cameco starts a Canadian uranium mine World Nuclear News",
+            "published_at": "2026-08-22T09:00:00+09:00",
+            "features": {},
+            "title_kr": "스페인 알마라즈 원전 수명 연장 결정",
+            "summary": "스페인 정부가 알마라즈 원전의 가동 시한을 연장했다.",
+        }
+        article["verified_evidence"] = gate.build_evidence_manifest(
+            {"title": article["title"], "description": article["source_excerpt"],
+             "article_text": "Cameco began construction in Saskatchewan, Canada.",
+             "published_at": article["published_at"]},
+            article=article)
+        result = gate.audit_article_integrity(
+            article, source=self.source(article),
+            reference_date=article["published_at"])
+        self.assertEqual(result.action, "quarantine")
+
+    def test_real_quantity_conflict_still_blocks(self):
+        """원문이 **다른 값**을 말하면 계속 차단이다 ($50M → 3억 5천만 달러).
+
+        한국어 복합 수사(`3억 5,000만`)는 뒤 자리만 읽히는 별개의 파서 한계가
+        있어서, 이 테스트는 그 한계에 기대지 않는 표기를 쓴다.
+        """
+        article = {
+            "hash": "money-1",
+            "title": "Groq raises $50 million in a new funding round",
+            "source_excerpt": "Groq raises $50 million Bloomberg",
+            "published_at": "2026-08-22T09:00:00+09:00",
+            "features": {},
+            "title_kr": "그록, 3억 5000만 달러 투자 유치",
+            "summary": "AI 추론 기업 그록이 350000000달러 규모의 투자를 유치했다.",
+        }
+        article["verified_evidence"] = gate.build_evidence_manifest(
+            {"title": article["title"], "description": article["source_excerpt"],
+             "article_text": "Groq raised $50 million.",
+             "published_at": article["published_at"]},
+            article=article)
+        result = gate.audit_article_integrity(
+            article, source=self.source(article),
+            reference_date=article["published_at"])
+        self.assertEqual(result.action, "quarantine")
+
+
+class AbbreviatedMoneyScaleTests(unittest.TestCase):
+    """`$20bn` 을 못 읽으면 매치가 실패하는 것이 아니라 **금액이 틀리게 읽힌다**.
+
+    자릿수 그룹이 선택적이라 `bn` 을 모르면 `$20` 만 잡히고 값은 20 이 된다.
+    한국어 `200억 달러` 는 20,000,000,000 이므로 같은 금액이 충돌로 잡힌다.
+    실측 2026-08-20 캐나다 관세 기사가 이 경로로 차단됐다.
+    """
+
+    def test_abbreviated_scales_match_the_full_words(self):
+        for text in ("$20bn", "$20 billion", "20 billion dollars"):
+            self.assertEqual(gate._quantity_map(text), {"달러": {"20000000000"}}, text)
+        self.assertEqual(gate._quantity_map("$800m"), {"달러": {"800000000"}})
+        self.assertEqual(gate._quantity_map("$1.2bn"), {"달러": {"1200000000"}})
+        self.assertEqual(gate._quantity_map("$600B"), {"달러": {"600000000000"}})
+        self.assertEqual(gate._quantity_map("250mn dollars"), {"달러": {"250000000"}})
+
+    def test_observed_canada_tariff_false_positive_is_gone(self):
+        source = "Canada makes final attempt to avoid US tariffs on $20bn of goods"
+        summary = "캐나다 정부가 200억 달러 규모의 자국 상품에 부과될 관세를 피하려 한다."
+        self.assertEqual(gate._critical_quantity_conflicts(source, summary), {})
+
+    def test_french_milliard_is_a_billion(self):
+        """실측 2026-08-20 — 원문이 불어라 금액 축이 통째로 안 보였다."""
+        self.assertEqual(gate._quantity_map("105 milliards de dollars"),
+                         {"달러": {"105000000000"}})
+        self.assertEqual(
+            gate._critical_quantity_conflicts(
+                "Nvidia garantit 105 milliards de dollars",
+                "엔비디아가 1,050억 달러 규모의 자금 조달을 보증했다."),
+            {})
+
+    def test_hanja_dollar_sign_is_money(self):
+        """`弗` 은 달러의 한자 표기다 — 실측 '3500억弗 대미투자'."""
+        self.assertEqual(gate._quantity_map("3500억弗"), {"달러": {"350000000000"}})
+        self.assertEqual(
+            gate._critical_quantity_conflicts(
+                '구윤철 "3500억弗 대미투자, 에너지 관심 높아"',
+                "구윤철 부총리는 3500억 달러 투자를 언급했다."),
+            {})
+
+    def test_a_wrong_abbreviated_amount_still_conflicts(self):
+        """축약 표기를 읽게 됐다고 금액 검증이 느슨해지지는 않는다."""
+        conflict = gate._critical_quantity_conflicts(
+            "Canada faces US tariffs on $20bn of goods",
+            "캐나다가 2000억 달러 규모 관세에 직면했다.")
+        self.assertEqual(conflict["달러"]["unsupported_output"], ["200000000000"])
+
+    def test_non_currency_scale_words_are_still_not_money(self):
+        for text in ("5 million tonnes of uranium", "20 million people",
+                     "300MW SMR", "the 20m reactor vessel"):
+            self.assertEqual(gate._quantity_map(text).get("달러"), None, text)
+
+
 class DirectionalAdditionTests(unittest.TestCase):
     """요약에만 있는 이름과 요약에만 있는 국가는 같은 무게가 아니다.
 
