@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-08-22"
   },
   "retired": {
@@ -14,10 +14,56 @@
     }
   },
   "spent": {
-    "count": 2,
+    "count": 3,
     "date": "2026-08-22"
   },
   "terms": {
+    "urenco": {
+      "articles": 3,
+      "created_at": "2026-08-22T06:43:09.238639+00:00",
+      "domains": [
+        "nucnet.org",
+        "ans.org",
+        "neimagazine.com"
+      ],
+      "evidence": [
+        {
+          "domain": "nucnet.org",
+          "hash": "37c707e08b4b8f0a",
+          "importance": "nice_to_know",
+          "title": "유렌코(Urenco) USA, 뉴멕시코 우라늄 농축 시설 확장 기공식"
+        },
+        {
+          "domain": "ans.org",
+          "hash": "42f42a4a7723032b",
+          "importance": "nice_to_know",
+          "title": "미국 원자력학회, 지속 가능한 핵연료 주기 구축 논의"
+        },
+        {
+          "domain": "neimagazine.com",
+          "hash": "b8ffb05eb3e85a2f",
+          "importance": "nice_to_know",
+          "title": "유렌코(Urenco), 우라늄 농축 용량 확대"
+        }
+      ],
+      "expires_at": "2026-08-24T06:43:09.238639+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-08-22T06:43:10.666522+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-08-22T06:43:09.238639+00:00",
+      "queries_run": 1,
+      "query": "Urenco 원자력",
+      "score": 4.6,
+      "status": "tracking",
+      "term": "Urenco",
+      "ttl_hours": 48,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "전문위원회": {
       "articles": 3,
       "created_at": "2026-08-20T12:53:24.603115+00:00",
