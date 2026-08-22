@@ -213,6 +213,7 @@ _NUMBER_UNIT_RE = re.compile(
     r"[-\s]*"
     r"(?P<unit>%|퍼센트|mw|gw|kw|twh|mwh|억원|억 원|조원|조 원|"
     r"만\s*달러|억\s*달러|조\s*달러|달러|만\s*유로|억\s*유로|유로|"
+    r"만\s*弗|억\s*弗|조\s*弗|弗|"
     r"기|호기|개|건|명|년|개월|월|일)",
     re.IGNORECASE,
 )
@@ -220,16 +221,38 @@ _UNIT_LIST_RE = re.compile(
     r"(?P<numbers>\d{1,2}(?:\s*[,·ㆍ･]\s*\d{1,2})+)\s*(?P<unit>호기|기)")
 # 영문 금액. `$105 billion` 과 `105 billion dollars` 두 어순만 받는다 — 통화 표시가
 # 붙은 자리에서만 잡아야 "5 million tonnes" 같은 비화폐 수량이 달러로 둔갑하지 않는다.
+#
+# 축약 자릿수(bn·mn·tn·m·b)를 함께 받는 이유는 **누락이 곧 오판이기 때문**이다.
+# 자릿수를 못 읽으면 매치가 실패하는 것이 아니라 `pre_scale` 이 빈 값으로 잡혀
+# 금액이 배수 없이 통과한다. 실측 2026-08-20 —
+#     원문   Canada makes final attempt to avoid US tariffs on $20bn of goods
+#     한국어  캐나다, 200억 달러 규모 상품에 대한 미국 관세 회피 시도
+# 원문이 20, 한국어가 20,000,000,000 으로 읽혀 **같은 금액**이 충돌로 잡혔다.
+#
+# 말뭉치에 실제로 있는 표기만 넣는다(전수 검색 결과: $1bn·$2bn·$1.2bn·$800m·
+# $1B·$600B·250mn). `$` 나 `usd` 가 앞에 붙은 자리에서만 읽으므로 한 글자 m·b 가
+# 미터·바이트로 오독될 자리가 없다.
+#
+# `milliard`(불어)도 같은 종류의 구멍이고 실측 오차단을 냈다 — 2026-08-20
+# "Nvidia garantit 105 milliards de dollars" 가 source 에서 아예 안 읽혀
+# 1,050억 달러가 근거 없는 수치로 몰렸다. milliard 는 10^9 다(영어 trillion 이 아니다).
 _MONEY_EN_RE = re.compile(
     r"(?:\$|\busd\b\s*)\s*(?P<pre_number>\d{1,3}(?:,\d{3})*(?:\.\d+)?)"
-    r"\s*(?P<pre_scale>million|billion|trillion)?"
+    r"\s*(?P<pre_scale>millions?|billions?|trillions?|milliards?|bn|mn|tn|m|b)?\b"
     r"|(?P<post_number>\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*"
-    r"(?P<post_scale>million|billion|trillion)\s+(?:us\s+)?(?:dollars?|usd)",
+    r"(?P<post_scale>millions?|billions?|trillions?|milliards?|bn|mn|tn)\s+"
+    r"(?:de\s+)?(?:us\s+)?(?:dollars?|usd)",
     re.IGNORECASE,
 )
 _MONEY_EN_SCALES: Mapping[str, Decimal] = {
-    "": Decimal(1), "million": Decimal(10) ** 6,
-    "billion": Decimal(10) ** 9, "trillion": Decimal(10) ** 12,
+    "": Decimal(1),
+    "million": Decimal(10) ** 6, "millions": Decimal(10) ** 6,
+    "mn": Decimal(10) ** 6, "m": Decimal(10) ** 6,
+    "billion": Decimal(10) ** 9, "billions": Decimal(10) ** 9,
+    "milliard": Decimal(10) ** 9, "milliards": Decimal(10) ** 9,
+    "bn": Decimal(10) ** 9, "b": Decimal(10) ** 9,
+    "trillion": Decimal(10) ** 12, "trillions": Decimal(10) ** 12,
+    "tn": Decimal(10) ** 12,
 }
 _CRITICAL_UNITS = frozenset({"%", "퍼센트", "mw", "gw", "kw", "twh", "mwh", "억원", "억 원", "조원", "조 원", "달러", "유로", "기", "호기"})
 _EXACT_QUANTITY_UNITS = frozenset({"기", "호기", "개", "건", "명", "년", "개월", "월", "일"})
@@ -251,6 +274,16 @@ _CANONICAL_UNITS: Mapping[str, tuple[str, Decimal]] = {
     "억달러": ("달러", Decimal(10) ** 8),
     "조 달러": ("달러", Decimal(10) ** 12),
     "조달러": ("달러", Decimal(10) ** 12),
+    # 弗 는 달러의 한자 표기다. 통신사 제목이 자릿수를 아껴 쓴다 —
+    # 실측 "구윤철 3500억弗 대미투자". 달러 축으로 접어야 한국어
+    # 요약의 `3500억 달러` 와 같은 값으로 비교된다.
+    "弗": ("달러", Decimal("1")),
+    "만 弗": ("달러", Decimal(10) ** 4),
+    "만弗": ("달러", Decimal(10) ** 4),
+    "억 弗": ("달러", Decimal(10) ** 8),
+    "억弗": ("달러", Decimal(10) ** 8),
+    "조 弗": ("달러", Decimal(10) ** 12),
+    "조弗": ("달러", Decimal(10) ** 12),
     "만 유로": ("유로", Decimal(10) ** 4),
     "만유로": ("유로", Decimal(10) ** 4),
     "억 유로": ("유로", Decimal(10) ** 8),
@@ -892,9 +925,25 @@ def audit_article_integrity(
     parts = _source_parts(article, source)
     source_title = " ".join(filter(None, parts.values()))
     output_title = clean_text(article.get("title_kr"))
+    # The curation call saw the fetched body; this one cannot.  ``verified_evidence``
+    # is the sealed record of what that body actually said, and ``_evidence_manifest``
+    # returns it only when version, article binding and content seal all verify —
+    # an absent or broken manifest yields {} and leaves every signal untouched, so
+    # the fail-closed default is unchanged.
+    #
+    # Without this the gate re-derives its source from title + a short excerpt and
+    # then, because that excerpt is non-empty, switches on the strict rules that
+    # exist to mean "real body evidence was retained".  Measured 2026-08-18..22 on
+    # the 99 retained quarantine records: the manifest held entities the title did
+    # not for 52 queue articles, countries for 136 and quantities for 261, and 74 of
+    # 82 replayed blocks came from facts the manifest already had.  This is the same
+    # regression PR #30/#31 fixed elsewhere; ``validate_final_card`` has always
+    # applied the manifest here and this gate simply never did.
+    manifest = _evidence_manifest(article, source)
 
     if source_title and output_title and _normalize_claim(parts["title"]) != _normalize_claim(output_title):
-        signals = _mismatch_signals(source_title, output_title)
+        signals = _signals_with_manifest_support(
+            _mismatch_signals(source_title, output_title), manifest)
         if _gross_mismatch(
             signals,
             directional_is_hard=bool(parts["description"] or parts["article_text"]),
@@ -910,7 +959,8 @@ def audit_article_integrity(
     # source part.  No source text means no deterministic summary verdict.
     source_all = " ".join(filter(None, (*parts.values(), output_title)))
     if source_all and summary:
-        signals = _mismatch_signals(source_all, summary)
+        signals = _signals_with_manifest_support(
+            _mismatch_signals(source_all, summary), manifest)
         if _gross_mismatch(
             signals,
             # A summary may legitimately add a second body metric. At delivery
