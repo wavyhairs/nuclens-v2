@@ -2397,11 +2397,17 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   background: none;
   color: var(--c-text-secondary);
 }
-/* 기사 요지는 해석이 아니라 원문 내용이다 — 사용자가 원문(대개 영문)에 들어가지
+/* 세 자식의 열을 **전부 명시**한다. <small> 하나만 2열로 잠가 두면 자동 배치가
+   본문 <p> 를 다음 줄 1열 — 128px 라벨 열 — 로 흘려보낸다(명시 배치가 먼저
+   놓이고 남은 자동 항목이 빈 칸을 순서대로 채운다). 출처 표기가 붙는 이슈에서만
+   나던 증상이라 오래 안 보였다: 2026-08-22 라이브의 『제12차 전력수급기본계획』
+   상세에서 본문이 128px 폭으로 세로로 길게 흘렀다.
+   기사 요지는 해석이 아니라 원문 내용이다 — 사용자가 원문(대개 영문)에 들어가지
    않으려고 읽는 문단이므로 본문 색·본문 크기로 세운다. 옆 라벨 열은 그대로 두어
    같은 어법을 유지한다. */
-.dialog-detail > p { margin: 0; color: var(--c-text); font-size: var(--t-body); line-height: 1.75; }
+.dialog-detail > strong { grid-column: 1; }
 .dialog-detail > small { grid-column: 2; color: var(--c-text-muted); font-size: var(--t-min); }
+.dialog-detail > p { grid-column: 2; margin: 0; color: var(--c-text); font-size: var(--t-body); line-height: 1.75; }
 .dialog-change strong,
 .dialog-detail strong,
 .dialog-open strong,
@@ -2424,7 +2430,11 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   .dialog-detail strong,
   .dialog-meaning strong,
   .dialog-open strong { line-height: 1.5; }
-  .dialog-detail > small { grid-column: 1; }
+  /* 한 칸짜리 격자다 — 데스크톱에서 잠근 2열을 여기서 풀지 않으면 없는 열이
+     암묵적으로 생겨 라벨과 본문이 화면 밖으로 밀린다. 셋 다 1열로 되돌린다. */
+  .dialog-detail > strong,
+  .dialog-detail > small,
+  .dialog-detail > p { grid-column: 1; }
   /* 제목과 곁말이 한 줄을 다투면 곁말이 잘린다(390px 실측: '브리핑에 선정된 2건'
      이 '브리핑에 선정'으로 끊겼다). 건수가 든 말이라 반쯤 잘리면 거짓이 된다 —
      줄을 내준다. */

@@ -2035,6 +2035,33 @@ class GeneratedDataTests(unittest.TestCase):
         self.assertFalse(set(evidence_hashes) & set(delivered_hashes))
         self.assertEqual(len(evidence_hashes), len(set(evidence_hashes)))
 
+    def test_no_issue_detail_comes_from_an_evidence_article(self):
+        """실제 빌드에서도 '관련 기사 내용'이 근거 기사 본문이면 안 된다.
+
+        단위 테스트는 호출부 하나를 잠그고, 이 검사는 결과물을 잠근다 — 2026-08-22
+        라이브 사고(『제12차 전력수급기본계획』 상세에 『산업용 전기요금 지역별
+        차등제』 본문)는 데이터에서만 보이는 조합이었다.
+        """
+        for issue in self.issue_catalog:
+            detail = str(issue.get("detail") or "").strip()
+            source = str(issue.get("detail_source") or "").strip()
+            if not detail:
+                self.assertEqual(source, "", f"{issue['issue_id']}: 본문 없이 출처만 있다")
+                continue
+            cards = [a for a in issue["related_articles"]
+                     if a.get("member_role") != "evidence"]
+            evidence = [a for a in issue["related_articles"]
+                        if a.get("member_role") == "evidence"]
+            self.assertIn(
+                detail, [str(a.get("detail") or "").strip() for a in cards],
+                f"{issue['issue_id']}: 요지가 카드 멤버의 것이 아니다 (출처 {source!r})",
+            )
+            if source:
+                self.assertNotIn(
+                    source, [str(a.get("title_kr") or "") for a in evidence],
+                    f"{issue['issue_id']}: 요지 출처가 근거 기사다 — {source!r}",
+                )
+
     def test_p1_keeps_the_p0_latest_briefing_and_weekly_order(self):
         baseline = json.loads((ROOT / "tests" / "p0_baseline_2026-08-08.json").read_text(encoding="utf-8"))
         # 날짜별 파일은 사람이 검토한 P0 감사 기록이다. 자동 회귀 가드는 매 빌드에서
@@ -5582,6 +5609,146 @@ class ArticleDetailSurfacesTests(unittest.TestCase):
         # 타임라인 각 기사도 자기 요지를 펼칠 수 있어야 한다.
         self.assertIn("timeline-detail", app)
         self.assertIn(".timeline-detail", css)
+
+
+class IssueDetailIsCardScopedTests(unittest.TestCase):
+    """이슈 대표 설명('관련 기사 내용')은 **카드 멤버**에서만 온다.
+
+    2026-08-22 라이브: 『제12차 전력수급기본계획, 원전 비중 확대 시험대』 상세의
+    '관련 기사 내용'이 근거 기사 『산업용 전기요금 지역별 차등제, 남부권 통합안
+    실효성 논란』의 본문이었다. 대표 기사에 요지가 없자 `pick_detail` 이
+    `card_timeline + evidence_timeline` 전체에서 가장 최신 요지를 골랐고, 그날
+    요지를 가진 유일한 최신 멤버가 그 근거 기사였다.
+
+    근거 기사는 브리핑에 **선정되지 않은** 보도다. 화면에서도 '추가 근거 원문'
+    이라는 접힌 칸에만 산다. 그 본문이 이슈 결론 자리로 올라오면 제목과 본문이
+    서로 다른 사건을 말하게 된다 — 요지가 아예 없는 것보다 나쁘다.
+    """
+
+    @staticmethod
+    def member(hash_, article_date, briefing_date, title, detail=""):
+        return {
+            "hash": hash_, "article_date": article_date, "briefing_date": briefing_date,
+            "title_kr": title, "title": title, "summary": f"{title} 요약",
+            "detail": detail, "topics": [], "canonical_tags": [],
+            "importance": "nice_to_know", "selection_score": 1.0,
+            "url": f"https://example.com/{hash_}", "domain": "example.com",
+        }
+
+    def catalog_row(self, members, evidence_members):
+        rows = build_data.build_issue_catalog(
+            [{"issue_id": "issue-x", "members": members,
+              "evidence_members": evidence_members}],
+            "2026-08-21", "2026-08-21T00:00:00+09:00",
+        )
+        return rows[0]
+
+    # 요지는 제 기사 제목과 겹쳐야 통과한다(usable_detail) — 픽스처도 실제
+    # 기사처럼 제목의 어휘를 본문에 담는다.
+    TARIFF = ("산업용 전기요금 지역별 차등제, 남부권 통합안 실효성 논란",
+              "산업용 전기요금 지역별 차등제의 남부권 통합안을 두고 실효성 논란이 인다.")
+    PLAN = ("정부, 제12차 전력수급기본계획 재정비",
+            "정부는 제12차 전력수급기본계획 재정비를 위한 토론회를 20일 연다.")
+
+    def test_evidence_detail_never_becomes_the_issue_detail(self):
+        """근거만 요지를 가진 이슈는 요지 블록을 통째로 비운다."""
+        row = self.catalog_row(
+            [self.member("c1", "2026-08-20", "2026-08-21",
+                         "제12차 전력수급기본계획, 원전 비중 확대 시험대")],
+            [self.member("e1", "2026-08-17", None, *self.TARIFF)],
+        )
+        self.assertEqual(row["detail"], "")
+        self.assertEqual(row["detail_source"], "")
+        # 근거 자체는 그대로 남는다 — 관련기사 목록과 검증의 재료다.
+        self.assertEqual(row["evidence_article_count"], 1)
+        self.assertIn("e1", [a["hash"] for a in row["related_articles"]])
+
+    def test_another_card_member_is_the_fallback(self):
+        """대표에 요지가 없으면 같은 이슈의 **카드** 요지로 물러난다."""
+        row = self.catalog_row(
+            [self.member("c1", "2026-08-20", "2026-08-21",
+                         "제12차 전력수급기본계획, 원전 비중 확대 시험대"),
+             self.member("c2", "2026-08-17", "2026-08-18", *self.PLAN)],
+            [self.member("e1", "2026-08-19", None, *self.TARIFF)],
+        )
+        self.assertEqual(row["detail"], self.PLAN[1])
+        self.assertEqual(row["detail_source"], self.PLAN[0])
+
+    def test_the_representative_detail_still_wins_without_a_source_line(self):
+        """대표 기사면 그 제목이 바로 위 h2 다 — 출처를 두 번 쓰지 않는다."""
+        title = "제12차 전력수급기본계획, 원전 비중 확대 시험대"
+        detail = "제12차 전력수급기본계획에서 원전 비중 확대가 시험대에 올랐다."
+        row = self.catalog_row(
+            [self.member("c1", "2026-08-20", "2026-08-21", title, detail),
+             self.member("c2", "2026-08-17", "2026-08-18", *self.PLAN)],
+            [self.member("e1", "2026-08-19", None, *self.TARIFF)],
+        )
+        self.assertEqual(row["detail"], detail)
+        self.assertEqual(row["detail_source"], "")
+
+    def test_the_call_site_stays_card_scoped(self):
+        """`all_timeline` 으로 되돌아가면 같은 사고가 그대로 재발한다."""
+        source = (ROOT / "build_data.py").read_text(encoding="utf-8")
+        self.assertIn("pick_detail(card_timeline, representative)", source)
+        self.assertNotIn("pick_detail(all_timeline", source)
+
+
+class IssueDetailGridTests(unittest.TestCase):
+    """긴 본문이 128px 라벨 열로 흘러 세로로 길어지던 자리.
+
+    `.dialog-detail` 은 `128px minmax(0, 1fr)` 2열 격자이고 자식은 순서대로
+    <strong>(라벨) · <small>(출처, 선택) · <p>(본문)다. <small> 에만
+    `grid-column: 2` 가 걸려 있어서 명시 배치가 1행 2열을 먼저 차지했고, 남은
+    자동 항목인 <p> 가 다음 줄 1열 — 라벨 열 — 로 밀렸다. 출처 표기가 붙는
+    이슈에서만 나는 증상이라 오래 안 보였다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+        # 720px 미디어 블록은 파일에 여럿이다 — 이 격자를 정의한 자리에서 이어지는
+        # 블록만 잘라 온다.
+        grid = cls.style.index(".dialog-change,\n.dialog-detail,")
+        media = cls.style.index("@media (max-width: 720px)", grid)
+        cls.desktop = cls.style[grid:media]
+        cls.mobile = cls.style[media:cls.style.index("\n}\n", media)]
+
+    def test_desktop_pins_every_child_to_its_column(self):
+        for selector, column in ((".dialog-detail > strong", 1),
+                                 (".dialog-detail > small", 2),
+                                 (".dialog-detail > p", 2)):
+            index = self.desktop.index(selector + " {")
+            rule = self.desktop[index:self.desktop.index("}", index)]
+            self.assertIn(f"grid-column: {column};", rule,
+                          f"{selector} 가 {column}열에 고정돼 있지 않다: {rule!r}")
+
+    def test_the_body_shares_the_content_column_with_the_source_line(self):
+        """본문이 라벨 열로 흐르면 폭이 128px 로 좁아진다 — 그 조합을 금지한다.
+
+        출처 <small> 이 있든 없든 본문은 같은 열에 서야 한다. 둘이 갈리는 순간이
+        정확히 2026-08-22 의 그 화면이다.
+        """
+        columns = {}
+        for child in ("small", "p"):
+            index = self.desktop.index(f".dialog-detail > {child} {{")
+            rule = self.desktop[index:self.desktop.index("}", index)]
+            columns[child] = re.search(r"grid-column:\s*(\d+)", rule).group(1)
+        self.assertEqual(columns["p"], columns["small"])
+        self.assertNotEqual(columns["p"], "1")
+        # 라벨 열의 폭이 128px 라는 것이 이 검사의 전제다.
+        self.assertIn("grid-template-columns: 128px minmax(0, 1fr);", self.desktop)
+
+    def test_mobile_returns_all_three_to_one_column(self):
+        """모바일은 한 칸짜리 격자다 — 2열을 풀지 않으면 없는 열이 생긴다."""
+        self.assertIn("grid-template-columns: minmax(0, 1fr)", self.mobile)
+        index = self.mobile.index(".dialog-detail > strong,")
+        rule = self.mobile[index:self.mobile.index("}", index)]
+        for selector in (".dialog-detail > strong", ".dialog-detail > small",
+                         ".dialog-detail > p"):
+            self.assertIn(selector, rule)
+        self.assertIn("grid-column: 1;", rule)
+        # 데스크톱의 2열 고정이 모바일까지 새면 없는 열이 암묵 생성된다.
+        self.assertNotIn("grid-column: 2", self.mobile)
 
 
 class CollectionTimestampTests(unittest.TestCase):
