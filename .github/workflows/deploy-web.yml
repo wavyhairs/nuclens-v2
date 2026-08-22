@@ -130,6 +130,13 @@ jobs:
       - name: Weekly report selector (app.js)
         run: node web/tests/weekly_selector.mjs
 
+      # 주간 판세의 결정적 코너(핵심사건·국가별 단신·발간물·예정). 재료는
+      # weekly_bot 이 고르고 저장한 것이고 화면은 순서·표기만 정하는데, 그
+      # 표기가 무너지면 국가명과 제목이 '한국정부'로 붙어 나간다. 데이터를
+      # 안 읽는 순수 렌더 검사라 여기서 3초면 끝난다.
+      - name: Weekly sections render (app.js)
+        run: node web/tests/weekly_sections.mjs
+
       # 운영 콘솔 자물쇠는 엣지에서 도는 JS 이고 해시·세션·비밀번호 규칙이 전부
       # 그 안에 있다. 여기가 어긋나면 맞는 비밀번호로도 못 들어가거나 반대로
       # 아무거나 통과하는데, 어느 쪽이든 배포 뒤에야 알게 된다.

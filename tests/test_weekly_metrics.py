@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import gemini_client
 import metrics
 import weekly_bot
+import weekly_sections
 
 NOW_ISO = "2026-07-12T22:00:00+00:00"
 
@@ -804,6 +805,374 @@ class TestWeeklyStoryEvidence(unittest.TestCase):
             "evidence_hashes": [a["hash"][:8] for a in items]}]}
         weekly_bot.prune_evidence_hashes(synthesis, items)
         self.assertEqual(len(synthesis["theme_moves"][0]["evidence_hashes"]), 4)
+
+
+class TestWeeklyThemeIndependence(unittest.TestCase):
+    """축이 둘인가, 같은 축을 두 번 부른 것인가.
+
+    전력수요와 전력망은 정책 질문이 다르므로 각자 독립 사건이 있으면 따로
+    서야 한다(합치면 그 주의 쟁점이 이름을 잃는다). 반대로 표현만 다른 두
+    이름이 같은 사건들만 지목한다면 그것은 축이 아니라 중복이다.
+    """
+
+    _article = staticmethod(TestWeeklyStoryEvidence._article)
+
+    def _verify(self, items, rows):
+        base = {"weekly_intro": "", "policy_shifts": [], "theme_moves": rows,
+                "khnp_direct": "", "watchpoints": [], "report_candidates": [],
+                "key_events": []}
+        return weekly_bot.verify_synthesis(base, items)
+
+    def _two_axis_week(self):
+        return [
+            self._article("g1", "제12차 전기본, 2040년 최대전력 165GW로 상향",
+                          "정부가 제12차 전력수급기본계획의 2040년 최대전력 전망을 165GW로 상향했다.",
+                          domain="d1.com", section="domestic"),
+            self._article("g2", "산업부, 전력수요 전망 재산정 결과 확정",
+                          "산업통상자원부가 전력수요 전망 재산정 결과를 확정했다.",
+                          domain="d2.com", section="domestic"),
+            self._article("g3", "국회, 국가기간 전력망 확충 특별법 통과",
+                          "국회가 국가기간 전력망 확충 특별법을 통과시켰다.",
+                          domain="d3.com", section="domestic"),
+            self._article("g4", "한전, 동서울변전소 계통접속 공사 착공",
+                          "한국전력이 동서울변전소 계통접속 공사를 착공했다.",
+                          domain="d4.com", section="domestic"),
+        ]
+
+    def test_demand_and_grid_stay_separate_axes(self):
+        """Case 9 — 서로 독립 사건이 충분하면 두 축은 각각 살아남는다."""
+        items = self._two_axis_week()
+        out = self._verify(items, [
+            {"theme": "전력수요", "direction": "강화",
+             "why": "수급계획의 수요 전망 자체가 상향됐다.",
+             "evidence_hashes": [items[0]["hash"][:8], items[1]["hash"][:8]]},
+            {"theme": "전력망", "direction": "강화",
+             "why": "확충 근거법과 계통접속 공사가 같은 주에 진전됐다.",
+             "evidence_hashes": [items[2]["hash"][:8], items[3]["hash"][:8]]},
+        ])
+        self.assertEqual([row["theme"] for row in out["theme_moves"]],
+                         ["전력수요", "전력망"])
+
+    def test_two_names_for_the_same_stories_collapse_to_one(self):
+        """Case 10 — 같은 사건들만 지목하는 두 축은 하나로 줄인다."""
+        items = self._two_axis_week()
+        cited = [items[2]["hash"][:8], items[3]["hash"][:8]]
+        out = self._verify(items, [
+            {"theme": "전력망", "direction": "강화",
+             "why": "확충 근거법과 계통접속 공사가 진전됐다.",
+             "evidence_hashes": cited},
+            {"theme": "송전망", "direction": "강화",
+             "why": "같은 사건을 다른 이름으로 부른 것뿐이다.",
+             "evidence_hashes": list(cited)},
+        ])
+        self.assertEqual([row["theme"] for row in out["theme_moves"]], ["전력망"])
+
+    def test_restart_after_an_outage_is_not_a_lifetime_extension(self):
+        """계획예방정비 뒤 재가동은 운영 사건이지 계속운전 사건이 아니다.
+
+        '재가동' 한 낱말이 계속운전 어휘에 있던 동안 그 축의 크기가 실제
+        수명연장 사건보다 세 배로 잡혔다 — 축의 크기를 잘못 말하면 방향도
+        잘못 말하게 된다.
+        """
+        restart = "원안위, 새울 1호기 정기검사 완료 및 재가동 승인"
+        self.assertFalse(weekly_bot.theme_supported_by("계속운전", restart))
+        self.assertTrue(weekly_bot.theme_supported_by("원전운영", restart))
+        self.assertTrue(weekly_bot.theme_supported_by(
+            "계속운전", "스페인 정부, 알마라스 원전 수명연장 승인"))
+
+    def test_quiet_but_real_axis_still_reaches_the_prompt(self):
+        """must_read 가 없는 축도 후보 목록에는 서 있어야 '유지'를 쓸 수 있다."""
+        items = [
+            self._article("h1", "스페인 정부, 알마라스 원전 계속운전 승인",
+                          "스페인 정부가 알마라스 원전의 계속운전을 승인했다.",
+                          domain="e1.com", grade="nice_to_know"),
+            self._article("h2", "정부, 2030년 수명 만료 원전 9기 계속운전 추진",
+                          "정부가 2030년 수명이 만료되는 원전 9기의 계속운전을 추진한다.",
+                          domain="e2.com", grade="nice_to_know"),
+        ] + TestWeeklyStoryEvidence()._smr_week()
+        stories = weekly_bot.weekly_stories(items)
+        signals = weekly_bot.weekly_theme_signals(stories)
+        self.assertIn("계속운전", {row["theme"] for row in signals})
+        lines = "\n".join(weekly_bot.theme_signal_lines(stories, signals))
+        self.assertIn("계속운전", lines)
+        self.assertIn("알마라스", lines)
+
+
+class TestWeeklySections(unittest.TestCase):
+    """결정적 코너 — 핵심사건·국가별 단신·발간물·예정.
+
+    이 코너들은 LLM 을 타지 않으므로 재현되어야 한다. 그리고 재현되는 것보다
+    중요한 것은 **모르면 침묵한다**는 것이다: 확인되지 않은 국가·일정·문서는
+    자리를 비워 둔다.
+    """
+
+    WEEK_END = "2026-07-12"
+
+    @staticmethod
+    def _article(hash_prefix, title_kr, summary, *, domain="a.com",
+                 grade="must_read", section="smr", countries=(), topics=(),
+                 detail="", event=None, published=NOW_ISO):
+        row = {"hash": f"{hash_prefix}{'0' * (12 - len(hash_prefix))}",
+               "title": title_kr, "title_kr": title_kr,
+               "link": f"https://{domain}/x", "domain": domain, "feed": "",
+               "section": section, "grade": grade, "summary": summary,
+               "tags": [], "features": None, "curation_status": "reviewed",
+               "cached_at": published, "published_at": published,
+               "detail": detail, "topics": list(topics),
+               "countries": list(countries), "event_date": None,
+               "event_date_type": "unknown", "event_date_precision": "unknown"}
+        if event:
+            row.update(event)
+        return row
+
+    def _sections(self, items, week_start="2026-07-06", publications=None):
+        stories = weekly_bot.weekly_stories(items)
+        return weekly_sections.build_sections(
+            stories, weekly_bot.weekly_contracts(items),
+            is_development=weekly_bot.is_development,
+            week_start=week_start, week_end=self.WEEK_END,
+            publications=publications or [])
+
+    # ---- 핵심사건 ----
+
+    def test_top_stories_prefer_substance_over_coverage_volume(self):
+        """같은 발표를 여러 매체가 썼다는 이유로 최상위 사건이 되지 않는다."""
+        loud = [self._article(f"v{i}", f"국내 SMR 포럼 개최{'.' * i}",
+                              "국내 SMR 포럼이 개최됐다.", domain=f"v{i}.com")
+                for i in range(8)]
+        substantive = self._article(
+            "w1", "두산에너빌리티, 뉴스케일 SMR 주기기 공급계약 체결",
+            "두산에너빌리티가 뉴스케일파워와 SMR 주기기 공급계약을 체결했다.",
+            domain="w1.com")
+        substantive["features"] = {"policy_materiality": 3, "market_materiality": 3,
+                                   "korea_relevance": 3, "report_worthiness": 3}
+        rows = self._sections(loud + [substantive])["top_stories"]
+        self.assertEqual(rows[0]["title"], substantive["title_kr"])
+
+    def test_top_stories_are_not_padded_to_the_limit(self):
+        """근거가 없으면 자리를 비운다 — 세 칸을 채우려고 전망 기사를 올리지 않는다."""
+        items = [self._article("x1", "SMR 시장, 2035년까지 확대될 전망",
+                               "SMR 시장이 2035년까지 확대될 것으로 전망된다.",
+                               domain="x1.com")]
+        self.assertEqual(self._sections(items)["top_stories"], [])
+
+    def test_a_story_on_the_front_page_is_not_repeated_by_country(self):
+        items = [self._article(
+            "y1", "두산에너빌리티, 미국 뉴스케일 SMR 주기기 공급계약 체결",
+            "두산에너빌리티가 미국 뉴스케일파워와 SMR 주기기 공급계약을 체결했다.",
+            domain="y1.com", countries=["US"])]
+        sections = self._sections(items)
+        self.assertEqual(len(sections["top_stories"]), 1)
+        self.assertEqual(sections["country_briefs"], [])
+
+    # ---- 국가별 단신 ----
+
+    def test_country_is_dropped_when_the_source_does_not_carry_it(self):
+        """큐레이션 태그만으로는 국가를 말하지 않는다 — 원문에서 확인돼야 한다."""
+        items = [self._article("z1", "신규 원전 건설 계약 체결",
+                               "사업자가 신규 원전 건설 계약을 체결했다.",
+                               domain="z1.com", grade="nice_to_know",
+                               countries=["RO"])]
+        self.assertEqual(self._sections(items)["country_briefs"], [])
+
+    def test_one_brief_per_country(self):
+        items = [
+            self._article("c1", "스페인 정부, 알마라스 원전 계속운전 승인",
+                          "스페인 정부가 알마라스 원전의 계속운전을 승인했다.",
+                          domain="c1.com", grade="nice_to_know", countries=["ES"]),
+            self._article("c2", "스페인 규제기관, 코프렌테스 원전 운영허가 갱신 승인",
+                          "스페인 규제기관이 코프렌테스 원전 운영허가 갱신을 승인했다.",
+                          domain="c2.com", grade="nice_to_know", countries=["ES"]),
+            self._article("c3", "프랑스 EDF, 플라망빌 3호기 출력 상승 착수",
+                          "프랑스 EDF가 플라망빌 3호기 출력 상승 시험에 착수했다.",
+                          domain="c3.com", grade="nice_to_know", countries=["FR"]),
+        ]
+        rows = self._sections(items)["country_briefs"]
+        self.assertEqual([row["country"] for row in rows], ["ES", "FR"])
+        self.assertEqual(rows[0]["country_kr"], "스페인")
+
+    # ---- 발간물 ----
+
+    def test_only_documents_reach_the_publication_corner(self):
+        pubs = [
+            {"kind": "publication", "title": "Nuclear Energy Outlook 2026",
+             "title_kr": "원자력 전망 2026", "url": "https://iaea.org/a",
+             "org_kr": "국제원자력기구(IAEA)", "date": "2026-07-09",
+             "fetched_at": "2026-07-10"},
+            {"kind": "news_or_report", "title": "Agency welcomes new director",
+             "url": "https://iaea.org/b", "org": "IAEA", "date": "2026-07-09",
+             "fetched_at": "2026-07-10"},
+            {"kind": "publication", "title": "Off topic doc", "url": "https://x/c",
+             "org": "IAEA", "date": "2026-07-09", "fetched_at": "2026-07-10",
+             "off_topic": True},
+            {"kind": "publication", "title": "Last month's report", "url": "https://x/d",
+             "org": "IAEA", "date": "2026-05-01", "fetched_at": "2026-05-02"},
+        ]
+        rows = self._sections([], publications=pubs)["publications"]
+        self.assertEqual([row["title"] for row in rows], ["원자력 전망 2026"])
+
+    def test_a_document_first_seen_this_week_counts_as_this_week(self):
+        """격주간지는 발행일이 며칠 앞선다 — 발행일만 보면 어느 주에도 안 뜬다."""
+        pubs = [{"kind": "keei_insight", "title": "세계 원전시장 인사이트",
+                 "url": "https://keei.re.kr/a", "org_kr": "에너지경제연구원(KEEI)",
+                 "date": "2026-07-04", "fetched_at": "2026-07-07"}]
+        rows = self._sections([], publications=pubs)["publications"]
+        self.assertEqual(len(rows), 1)
+
+    # ---- 예정 ----
+
+    def test_a_date_written_in_the_source_is_kept(self):
+        items = [self._article(
+            "u1", "한수원, 한빛원전 건식저장시설 주민 설명회 개최",
+            "한수원이 한빛원전 사용후핵연료 건식저장시설 주민 설명회를 연다.",
+            domain="u1.com", grade="nice_to_know", section="khnp", topics=["waste"],
+            detail="한수원은 7월 25일 홍농읍에서 주민 설명회를 개최할 예정이다.")]
+        rows = self._sections(items)["upcoming"]
+        self.assertEqual([row["date"] for row in rows], ["2026-07-25"])
+
+    def test_a_relative_phrase_never_becomes_a_calendar_date(self):
+        """'다음 주'는 날짜가 아니다 — 코너가 날짜를 지어내면 안 된다."""
+        items = [self._article(
+            "u2", "원안위, 신한울 3호기 운영허가 심사 계속",
+            "원자력안전위원회가 신한울 3호기 운영허가 심사를 이어간다.",
+            domain="u2.com", grade="nice_to_know", section="khnp", topics=["newbuild"],
+            detail="원안위는 다음 주 중 심사 결과를 발표할 예정이다.")]
+        self.assertEqual(self._sections(items)["upcoming"], [])
+
+    def test_a_declared_date_the_source_contradicts_is_dropped(self):
+        """event_date 값을 그대로 믿지 않는다 — 원문이 다른 날을 말하면 버린다."""
+        items = [self._article(
+            "u3", "산업부, 제12차 전기본 공청회 개최",
+            "산업통상자원부가 제12차 전력수급기본계획 공청회를 연다.",
+            domain="u3.com", grade="nice_to_know", section="smr", topics=["newbuild"],
+            detail="공청회는 7월 25일 서울에서 열린다.",
+            event={"event_date": "2026-07-30", "event_date_type": "scheduled",
+                   "event_date_precision": "day"})]
+        rows = self._sections(items)["upcoming"]
+        self.assertNotIn("2026-07-30", [row["date"] for row in rows])
+
+    def test_a_past_date_is_not_upcoming(self):
+        items = [self._article(
+            "u4", "원안위, 새울 1호기 재가동 승인",
+            "원자력안전위원회가 새울 1호기 재가동을 승인했다.",
+            domain="u4.com", grade="nice_to_know", section="khnp",
+            topics=["restart_lto"],
+            detail="원안위는 7월 5일 재가동을 승인할 예정이었다.")]
+        self.assertEqual(self._sections(items)["upcoming"], [])
+
+    def test_one_schedule_reported_twice_is_folded_into_one_row(self):
+        items = [
+            self._article("u5", "한수원, 한빛원전 건식저장시설 주민 설명회 개최",
+                          "한수원이 한빛원전 건식저장시설 주민 설명회를 연다.",
+                          domain="u5.com", grade="nice_to_know", section="khnp",
+                          topics=["waste"],
+                          detail="설명회는 7월 25일 홍농읍에서 열릴 예정이다."),
+            self._article("u6", "한빛원전 건식저장시설 주민 설명회, 한수원 개최",
+                          "한수원이 한빛원전 건식저장시설 설명회를 개최한다.",
+                          domain="u6.com", grade="nice_to_know", section="khnp",
+                          topics=["waste"],
+                          detail="한수원은 7월 25일 설명회를 열 예정이다."),
+        ]
+        self.assertEqual(len(self._sections(items)["upcoming"]), 1)
+
+    # ---- 기간 ----
+
+    def test_report_period_matches_the_articles_it_was_built_from(self):
+        """리포트가 말하는 구간과 기사 수집 구간이 어긋나면 안 된다."""
+        now = datetime(2026, 7, 12, 20, 0, tzinfo=weekly_bot.KST)
+        since, until = weekly_bot.week_window(now)
+        self.assertEqual(since.date().isoformat(), "2026-07-06")
+        self.assertEqual(until, now)
+        def record(link, published, cached):
+            return {"importance": "must_read", "curation_status": "reviewed",
+                    "title": f"주간 창 검사 {link}", "title_kr": f"주간 창 검사 {link}",
+                    "link": link, "summary": "주간 창 경계를 확인하는 기사다.",
+                    "published_at": published, "cached_at": cached}
+
+        curated = {
+            "in" + "0" * 14: record("https://a.com/in", "2026-07-06T09:00:00+09:00",
+                                    "2026-07-06T00:00:00+00:00"),
+            "out" + "0" * 13: record("https://a.com/out", "2026-07-05T20:00:00+09:00",
+                                     "2026-07-05T11:00:00+00:00"),
+        }
+        links = {row["link"] for row in weekly_bot.get_week_articles(curated, now=now)}
+        self.assertIn("https://a.com/in", links)
+        self.assertNotIn("https://a.com/out", links)
+
+    def test_saved_report_carries_the_corners(self):
+        items = [self._article(
+            "s1", "두산에너빌리티, 미국 뉴스케일 SMR 주기기 공급계약 체결",
+            "두산에너빌리티가 미국 뉴스케일파워와 SMR 주기기 공급계약을 체결했다.",
+            domain="s1.com", countries=["US"])]
+        now = datetime.fromisoformat(NOW_ISO).astimezone(weekly_bot.KST)
+        sections = weekly_bot.build_week_sections(items, now)
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "weekly_reports.json"
+            weekly_bot.save_weekly_report(
+                {"weekly_intro": "", "policy_shifts": [], "theme_moves": [],
+                 "khnp_direct": "", "watchpoints": [], "report_candidates": [],
+                 "key_events": []},
+                {"total": 1}, items, now=now, path=path, sections=sections)
+            entry = json.loads(path.read_text(encoding="utf-8"))["reports"]
+            entry = entry[weekly_bot.week_id(now)]
+        self.assertEqual(entry["week_start"],
+                         weekly_bot.week_window(now)[0].date().isoformat())
+        self.assertEqual(entry["week_end"], now.date().isoformat())
+        self.assertEqual(len(entry["top_stories"]), 1)
+        for key in ("country_briefs", "publications", "upcoming"):
+            self.assertIsInstance(entry[key], list)
+
+    def test_telegram_message_shows_the_corners_with_a_separated_country_label(self):
+        items = [self._article(
+            "t1", "스페인 정부, 알마라스 원전 계속운전 승인",
+            "스페인 정부가 알마라스 원전의 계속운전을 승인했다.",
+            domain="t1.com", grade="nice_to_know", countries=["ES"])]
+        now = datetime.fromisoformat(NOW_ISO).astimezone(weekly_bot.KST)
+        sections = weekly_bot.build_week_sections(items, now)
+        message = weekly_bot.format_weekly(
+            items,
+            {"weekly_intro": "", "policy_shifts": [], "theme_moves": [],
+             "khnp_direct": "", "watchpoints": [], "report_candidates": [],
+             "key_events": []},
+            sections, now=now)
+        self.assertIn("국가별 단신", message)
+        # 국가명이 제목에 바로 붙으면 '스페인스페인'처럼 한 낱말로 읽힌다.
+        self.assertIn("<b>스페인</b> — ", message)
+
+    def test_a_headline_shown_in_a_corner_is_not_repeated_below(self):
+        """결정적 코너와 LLM key_events 는 같은 사건을 고르는 것이 정상이다.
+
+        겹친 채로 두면 한 메시지에서 같은 헤드라인을 두 번 읽는다. 남길 것은
+        그 사건이 못 실은 **해석**이 붙은 나머지다.
+        """
+        items = [
+            self._article("k1", "두산에너빌리티, 미국 뉴스케일 SMR 주기기 공급계약 체결",
+                          "두산에너빌리티가 미국 뉴스케일파워와 SMR 주기기 공급계약을 체결했다.",
+                          domain="k1.com", countries=["US"]),
+            self._article("k2", "원안위, 신한울 3호기 운영허가 심사 착수",
+                          "원자력안전위원회가 신한울 3호기 운영허가 심사에 착수했다.",
+                          domain="k2.com", grade="nice_to_know"),
+        ]
+        now = datetime.fromisoformat(NOW_ISO).astimezone(weekly_bot.KST)
+        sections = weekly_bot.build_week_sections(items, now)
+        shown = {row["title"] for row in sections["top_stories"]}
+        self.assertIn(items[0]["title_kr"], shown)
+        message = weekly_bot.format_weekly(
+            items,
+            {"weekly_intro": "", "policy_shifts": [], "theme_moves": [],
+             "khnp_direct": "", "watchpoints": [], "report_candidates": [],
+             "key_events": [
+                 {"hash": items[0]["hash"][:8], "headline": items[0]["title_kr"],
+                  "implication": "겹치는 사건이다."},
+                 {"hash": items[1]["hash"][:8], "headline": items[1]["title_kr"],
+                  "implication": "겹치지 않는 사건이다."}]},
+            sections, now=now)
+        # 제목은 코너에서 한 번만. (요약에도 회사 이름이 나오므로 헤드라인
+        # 줄 자체를 센다.)
+        headline = f"• <b>{items[0]['title_kr']}</b>"
+        self.assertEqual(message.count(headline), 1)
+        self.assertIn("겹치지 않는 사건이다.", message)
+        self.assertNotIn("겹치는 사건이다.", message)
 
 
 class TestWeeklyWorkflow(unittest.TestCase):

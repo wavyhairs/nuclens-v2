@@ -140,6 +140,13 @@ _COUNTRY_TERMS: Mapping[str, tuple[str, ...]] = {
     "KZ": ("카자흐스탄", "kazakhstan", "kazakh"),
 }
 
+# Display names for the codes this module can actually detect.  Callers that
+# print a country must not keep a second table: a duplicate drifts and the day
+# it drifts the raw code goes on screen.
+COUNTRY_NAMES: Mapping[str, str] = {
+    code: terms[0] for code, terms in _COUNTRY_TERMS.items()
+}
+
 
 # Broad families, intentionally.  "SMR supply contract" and "SMR project"
 # should both be reactor news, while a uranium mine and a lifetime extension are
@@ -878,6 +885,35 @@ def _date_evidence_problem(expected: date, precision: object,
     if years and expected.year not in years:
         return "source_conflict"
     return "source_unsubstantiated"
+
+
+def explicit_dates(text: object, reference: object) -> tuple[date, ...]:
+    """Calendar days the text actually spells out, resolved against ``reference``.
+
+    Same extractor the card date check uses.  It never invents a day from a
+    relative phrase — "next week" yields nothing — so a caller can treat what
+    comes back as written in the source.
+    """
+    anchor = _parse_reference_date(reference)
+    if anchor is None:
+        return ()
+    return tuple(sorted(_explicit_evidence_dates(clean_text(text), anchor)))
+
+
+def date_evidence_problem(expected: object, precision: object,
+                          evidence: object, reference: object) -> str:
+    """Public wrapper: does the evidence text actually state this date?
+
+    Same judge the card gate uses, exposed so other surfaces (the weekly
+    "what is scheduled next" corner) verify a declared date against the source
+    instead of trusting the value.  Returns "" when the date is substantiated.
+    """
+    expected_date = _parse_reference_date(expected)
+    reference_date = _parse_reference_date(reference)
+    if expected_date is None or reference_date is None:
+        return "source_unsubstantiated"
+    return _date_evidence_problem(expected_date, precision,
+                                  clean_text(evidence), reference_date)
 
 
 def _declared_date_evidence(

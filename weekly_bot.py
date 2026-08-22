@@ -31,12 +31,13 @@ import os
 import re
 import sys
 from collections import Counter
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
 
 from ranking import cluster_duplicates
 import article_quality_gate
 import news_archive
+import weekly_sections
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -64,6 +65,7 @@ WEEKLY_PROMPT = """당신은 한국수력원자력 전략경영단 정책개발�
 ⑤ 다음 주에 무엇을 확인해야 하는가
 
 [출력 형식] - 반드시 JSON 한 객체만. 다른 텍스트·펜스 금지. 문자열 값 안 줄바꿈 금지.
+모든 문장은 격식체(~다)로 끝낸다. 존댓말(~습니다) 금지.
 {
   "weekly_intro": "이번 주 핵심 흐름 3~4문장 (400자 이내, 분석관 보고 톤)",
   "policy_shifts": [{"what": "정책 변화 1문장", "so_what": "함의 1문장", "evidence_hashes": ["hash8"]}],
@@ -75,19 +77,37 @@ WEEKLY_PROMPT = """당신은 한국수력원자력 전략경영단 정책개발�
 }
 
 [판세 판단]
-- policy_shifts 2~4개, theme_moves 3~5개, report_candidates 0~3개.
-  근거가 될 독립 사건이 없으면 항목을 만들지 마라 — 억지로 채우지 말 것.
+- policy_shifts 2~4개, report_candidates 0~3개.
+- theme_moves 는 **개수를 정해 두지 않는다(0~5개)**. 근거가 되는 독립 사건이
+  있는 축은 빠뜨리지 말고, 없는 축은 만들지 마라. 넷을 채우려고 근거가 얇은
+  축을 넣는 것과, 세 개만 쓰고 근거가 뚜렷한 축을 버리는 것은 똑같이 틀렸다.
 - theme_moves 의 direction 은 이번 주에 **새로 발생한 독립 사건**으로 정한다.
   · 강화 — 서로 다른 사건이 같은 방향으로 여러 건 (정책 결정·계약·투자·인허가 진전 등)
   · 약화 — 지연·취소·반대·규제 강화 같은 후퇴 사건이 여러 건
-  · 유지 — 흐름은 이어지나 새 사건이 한 건이거나 방향이 갈린다
+  · 유지 — 사건은 여러 건 있으나 방향이 한쪽으로 기울지 않았다
+- **'유지'는 정상적인 결과다.** 판을 바꾸지 않았을 뿐 그 주에도 계속 움직인
+  구조적 축은 '유지'로 남겨라. 방향이 센 축만 쓰면, 매주 조금씩 진행되는
+  계속운전·방폐·규제 같은 축이 화면에서 통째로 사라진다. 다만 이번 주 사건이
+  없는 주제를 '유지'로 채우지는 마라.
 - **같은 사건의 반복 보도는 근거 1건이다.** 보도 매체가 많다는 것은 강화가 아니다.
-- 한 주의 서로 다른 축을 덮어라. 한 사건을 테마 두 개로 쪼개지 말 것.
-- [주제별 독립 사건 수]는 어떤 축이 후보인지 보여 준다. **핵심진전**이 큰 주제부터
-  살펴보되, 목록을 그대로 옮기지 말고 사건을 읽고 방향을 직접 판단하라.
+- 한 사건을 테마 두 개로 쪼개지 말 것. 두 테마가 같은 사건만 지목하고 있다면
+  하나로 합쳐라 — 표현만 다른 축은 축이 아니다.
+- 반대로 **정책 질문이 다르면 다른 축이다.** 특히 아래 셋은 서로 겹쳐 보이지만
+  각자 독립 사건이 있으면 따로 써라.
+  · AI·데이터센터 — 왜, 얼마나 수요가 느는가 (입지·전력계약·수요 전망 상향)
+  · 전력망 — 그 수요를 어디로 어떻게 보내는가 (송전망·계통접속·입지 갈등)
+  · 전력수요 — 수급계획 자체의 수치·구성이 어떻게 바뀌는가
+- policy_shifts 와 theme_moves 는 **다른 질문에 답한다.** 앞은 "이번 주에 무슨
+  일이 있었는가", 뒤는 "그 축이 어디로 기울었는가"다. 어떤 사건을 policy_shifts
+  에 썼다는 이유로 그 축을 theme_moves 에서 빼지 마라 — 규제·법 개정이 여러 건
+  있었다면 그것은 '규제' 축의 방향을 말해 주는 근거다.
+- [주제별 후보 축]은 어떤 축이 후보인지와 그 축의 사건 몇 건을 보여 준다.
+  **핵심진전이 2 이상인 축은 전부 한 번씩 검토하라.** 검토한 뒤 방향을 말할
+  근거가 없으면 빼는 것이 맞고, 방향이 한쪽으로 기울지 않았을 뿐이면 '유지'다.
+  목록을 그대로 옮기지 말고 사건을 읽고 방향을 직접 판단하라.
   핵심진전이 0 인 주제를 '강화'라고 쓰지 마라.
-- theme 은 우라늄/SMR/수출/계속운전/핵연료/방폐/규제/공급망/신규건설/전력수요/전력망 등
-  주제어로. 이번 주 사건이 실제로 그 주제인 것만.
+- theme 은 우라늄/SMR/수출/계속운전/핵연료/방폐/규제/공급망/신규건설/전력수요/
+  전력망/AI·데이터센터/원전운영 등 주제어로. 이번 주 사건이 실제로 그 주제인 것만.
 
 [근거 규칙]
 - **evidence_hashes**: 입력 목록에 **실제로 있는 hash 만**. 지어내지 말 것.
@@ -96,6 +116,10 @@ WEEKLY_PROMPT = """당신은 한국수력원자력 전략경영단 정책개발�
 - theme_moves — 강화·약화는 **서로 다른 사건 2건 이상**을 지목해야 한다(최대 5).
   지목한 사건이 그 주제와 무관하면 그 항목은 버려진다.
 - key_events 는 **최대 5건** — 주간 판세를 대표하는 사건만. 일일 브리핑 재탕 금지.
+- khnp_direct 는 [한수원이 직접 당사자인 사건] 목록을 근거로 쓴다. 그 목록에
+  없는 일을 한수원 이야기로 옮기지 마라 — 국내 기업의 해외 SMR 참여는 한수원의
+  사업기회가 **아니다**. 산업 차원의 간접 영향까지 말해야 한다면 직접 영향을
+  먼저 쓰고, 간접이라는 것을 문장에서 밝혀라.
 - 원문·집계에 없는 정보 추가 금지 (환각 금지). 격식체(~다) 분석관 톤."""
 
 # 판세 문장 하나가 지목할 수 있는 근거 사건 수. 한 문장이 여러 독립 사건을
@@ -128,16 +152,43 @@ def _grade(data: dict) -> str:
     return "nice_to_know"
 
 
-def get_week_articles(curated: dict) -> list[dict]:
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=WEEK_DAYS)).isoformat()
+def parse_moment(value: object) -> datetime | None:
+    """curated 의 시각 문자열 → aware datetime.
+
+    published_at 은 KST 오프셋(+09:00), cached_at 은 UTC 로 저장된다. 문자열로
+    비교하면 두 표기가 섞여 경계가 어긋나므로 실제로 해석해서 비교한다.
+    오프셋이 없는 옛 값은 KST 로 본다 (수집기가 KST 로 돌았다).
+    """
+    try:
+        parsed = datetime.fromisoformat(str(value or ""))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=KST)
+
+
+def week_window(now: datetime | None = None) -> tuple[datetime, datetime]:
+    """리포트가 말하는 구간 — KST 달력으로 `WEEK_DAYS` 일(양끝 포함).
+
+    라벨과 수집 구간이 어긋나 있었다: 저장본은 KST 로 `now-6일 ~ now` 라고
+    적으면서 기사는 UTC 문자열로 `now-7일` 이후를 담아, 화면의 '8/15~8/21'
+    안에 8/14 저녁 기사가 섞였다. 판세도 코너도 이 창 하나만 쓴다 — 한 화면에
+    두 기간이 섞이면 독자가 읽은 '이번 주'가 어느 주인지 알 수 없다.
+    """
+    now = (now or datetime.now(KST)).astimezone(KST)
+    first = (now - timedelta(days=WEEK_DAYS - 1)).date()
+    return datetime.combine(first, time.min, tzinfo=KST), now
+
+
+def get_week_articles(curated: dict, now: datetime | None = None) -> list[dict]:
+    since, until = week_window(now)
     items: list[dict] = []
     for h, data in curated.items():
         if not isinstance(data, dict):
             continue
         # 재수집·재큐레이션 시각이 아니라 실제 발행 시각으로 주간 창을 자른다.
         # 옛 캐시에는 published_at이 없으므로 그 경우에만 cached_at으로 호환한다.
-        published_at = data.get("published_at") or data.get("cached_at", "")
-        if published_at < cutoff:
+        moment = parse_moment(data.get("published_at") or data.get("cached_at"))
+        if moment is None or not (since <= moment <= until):
             continue
         if _grade(data) not in ("must_read", "nice_to_know"):
             continue
@@ -171,6 +222,15 @@ def get_week_articles(curated: dict) -> list[dict]:
             "curation_status": status,
             "cached_at": data["cached_at"],
             "published_at": data.get("published_at", ""),
+            # 아래는 결정적 코너(`weekly_sections`)가 쓰는 구조화 값이다.
+            # 판세 문장의 근거 계약에는 들어가지 않는다 — detail 은
+            # `weekly_contracts` 가 명시적으로 뺀다(검증 범위 유지).
+            "detail": data.get("detail", ""),
+            "topics": data.get("topics", []),
+            "countries": data.get("countries", []),
+            "event_date": data.get("event_date"),
+            "event_date_type": data.get("event_date_type", "unknown"),
+            "event_date_precision": data.get("event_date_precision", "unknown"),
         })
     items.sort(key=lambda x: x.get("published_at") or x["cached_at"])
     return items
@@ -343,10 +403,23 @@ _THEME_PATTERNS: dict[str, tuple[str, ...]] = {
     "신규건설": ("신규원전", "신규원자로", "신규건설", "신규노형", "원전건설",
                  "원전추가", "착공", "건설허가", "부지선정", "newbuild",
                  "newreactor"),
+    # '재가동'은 여기 없다. 계획예방정비를 마친 호기의 재가동은 수명연장이
+    # 아니라 운영 사건인데(실측 W34: 한울 4호기 자동정지·새울 1호기 정기검사가
+    # 계속운전 사건으로 세어졌다), 그 낱말 하나 때문에 '계속운전 18건'이
+    # 실제 수명연장 사건 6건 위에 얹혀 축의 크기를 잘못 말했다. 운영 사건은
+    # 아래 '원전운영'이 이미 센다.
     "계속운전": ("계속운전", "수명연장", "운영연장", "운영허가갱신", "설계수명",
-                 "재가동", "lifetimeextension", "lifeextension"),
+                 "노후원전", "lifetimeextension", "lifeextension"),
     "전력수요": ("전력수요", "전력수급", "수요전망", "최대전력", "전력소비",
                  "전기본", "powerdemand", "데이터센터전력"),
+    # 'AI·데이터센터'를 여기 별도 축으로 두려다 되돌렸다. 실측 W34: 어떤
+    # 어휘 조합으로 재도 그 주 741 사건 중 150~330 건이 걸리고(45%), 대표
+    # 사건으로 뽑히는 것은 전력망 3법·지역별 차등제처럼 다른 축이 이미 가진
+    # 사건이었다. 이 코퍼스에서 'AI·데이터센터'는 축이 아니라 배경어라서,
+    # 후보로 세워 두면 다른 축을 밀어내면서 같은 사건을 두 번 쓰게 만든다.
+    # 축의 분리는 어휘표가 아니라 프롬프트의 정책 질문 구분이 맡는다 — 생성기가
+    # 그 이름을 쓰면 여기 없는 주제어로 취급돼 사건 대조·독립 사건 요건으로만
+    # 걸러진다(모르면 침묵).
     "전력망": ("전력망", "송전", "배전", "계통", "변전", "grid", "transmission",
                "전력계통"),
     "수출": ("수출", "수주", "해외진출", "해외사업", "export", "mou", "업무협약",
@@ -507,8 +580,47 @@ def weekly_theme_signals(stories: list[dict]) -> list[dict]:
             "핵심진전": sum(1 for is_event, grade in matched
                             if is_event and grade == "must_read"),
         })
+    # 상한을 10 으로 두었더니 must_read 가 없는 축이 잘려 나갔다 (실측 W34:
+    # 계속운전 — 스페인 알마라즈 연장 승인·정부 수명만료 9기 방침 등 서로 다른
+    # 사건 12건이 있는데도 후보 목록에 없어, 생성기가 그 축을 볼 방법이 없었다).
+    # '유지'가 정상적인 판세 결과라면 조용한 축도 후보에는 서 있어야 한다.
+    # 어차피 요건(`THEME_MOVE_MIN_STORIES`)을 통과한 주제어만 남으므로 열몇 줄이다.
     signals.sort(key=lambda row: (-row["핵심진전"], -row["진전"], row["theme"]))
-    return signals[:10]
+    return signals
+
+
+# 후보 축마다 **그 축의 사건 몇 건**을 이름으로 보여 준다.
+#
+# 왜 필요한가: 수만 주면 생성기는 그 수를 확인할 방법이 없다. 사건 목록은
+# 발행순 700여 줄이라 어느 축의 사건이 어디 있는지 훑어서는 안 보이고,
+# 결과적으로 눈에 띄는 두셋만 쓰고 끝난다(실측 W34: 후보 축은 규제 8·SMR 4·
+# 전력수요 3·전력망 3·원전운영 3·계속운전 2 였는데 theme_moves 는 3개, 규제·
+# 원전운영·계속운전은 아예 언급되지 않았다 — 검증에서 떨어진 것이 아니라
+# 애초에 쓰이지 않았다).
+#
+# 판단을 대신해 주는 것이 아니다. 여기 실리는 것은 Python 이 결정적으로 고른
+# **후보**이고, 방향과 근거는 여전히 생성기가 쓰며 그 뒤 사건 대조를 지난다.
+THEME_DIGEST_STORIES = 4
+
+
+def theme_signal_lines(stories: list[dict], signals: list[dict]) -> list[str]:
+    """후보 축 + 그 축의 대표 사건 몇 줄."""
+    rows = [(story, story_text(story)) for story in stories]
+    lines: list[str] = []
+    for signal in signals:
+        theme = signal["theme"]
+        lines.append(f"{theme} | 사건 {signal['사건']} · 진전 {signal['진전']}"
+                     f" · 핵심진전 {signal['핵심진전']}")
+        matched = [(story, text) for story, text in rows
+                   if theme_supported_by(theme, text) and is_development(text)]
+        # must_read 를 앞에 둔다 — 축의 방향은 거기서 갈린다.
+        matched.sort(key=lambda row: 0 if row[0]["articles"][0].get("grade")
+                     == "must_read" else 1)
+        for story, _text in matched[:THEME_DIGEST_STORIES]:
+            rep = story["articles"][0]
+            title = (rep.get("title_kr") or rep.get("title") or "")[:70]
+            lines.append(f"    · hash:{story['key']} {title}")
+    return lines
 
 
 # ---- 합성 + 포맷 ---------------------------------------------------------------
@@ -523,12 +635,25 @@ def batch_synthesize(items: list[dict], agg: dict) -> dict:
     stories = weekly_stories(items)
     lines = story_lines(stories)
     signals = weekly_theme_signals(stories)
+    khnp = weekly_sections.khnp_stories(stories)
+    khnp_block = ""
+    if khnp:
+        khnp_block = ("[한수원이 직접 당사자인 사건 — khnp_direct 의 근거]\n"
+                      + "\n".join(f"    · hash:{row['key']} {row['title'][:70]}"
+                                  for row in khnp) + "\n\n")
+    # 후보 축을 **맨 뒤**에 둔다. 앞에 두면 사건 목록 700여 줄이 그 사이에
+    # 끼어, 정작 축을 고를 때 목록의 눈에 띄는 사건만 남는다 (실측 W34: 앞에
+    # 두었을 때 핵심진전 8인 '규제' 축이 세 번 연속 언급되지 않았다).
     user_text = (f"[시스템 집계]\n{json.dumps(agg, ensure_ascii=False)}\n\n"
-                 f"[주제별 독립 사건 수 — 사건=서로 다른 사건, 진전=실제로 "
-                 f"일어난 일, 핵심진전=그중 must_read]\n"
-                 f"{json.dumps(signals, ensure_ascii=False)}\n\n"
-                 f"[지난 7일 사건 {len(stories)}건 (기사 {len(items)}건 병합)]\n"
-                 + "\n".join(lines))
+                 + f"[지난 7일 사건 {len(stories)}건 (기사 {len(items)}건 병합)]\n"
+                 + "\n".join(lines) + "\n\n"
+                 + khnp_block
+                 + f"[주제별 후보 축 — 사건=서로 다른 사건, 진전=실제로 일어난 일, "
+                 f"핵심진전=그중 must_read. 들여쓴 줄은 그 축의 사건 예시]\n"
+                 + "\n".join(theme_signal_lines(stories, signals)) + "\n\n"
+                 + "theme_moves 는 위 후보 축을 **위에서부터 차례로** 검토해 쓴다. "
+                 "핵심진전이 2 이상인 축은 하나도 건너뛰지 말고 판단하라 — "
+                 "쓸지 말지는 그 축의 사건을 읽고 정한다.")
 
     try:
         from gemini_client import call_json
@@ -599,20 +724,34 @@ def prune_evidence_hashes(synthesis: dict, items: list[dict]) -> None:
 # `audit_theme_moves` 의 독립 사건 요건이 새로 붙는다.
 
 
+_CONTRACT_CACHE: tuple[list[dict], dict] | None = None
+
+
 def weekly_contracts(items: list[dict]) -> dict:
     """hash8 → 그 기사가 속한 **사건 하나**의 근거 계약.
 
     사건에 접힌 모든 기사(+ 그 기사들의 검인된 manifest)가 한 계약을 이룬다.
     어느 매체의 hash 를 지목하든 같은 사건의 근거 전체와 대조된다.
+
+    검증과 결정적 코너가 같은 계약을 봐야 하므로 한 번 지어 재사용한다 —
+    manifest 로딩이 붙어 있어 두 번 지으면 그만큼 디스크를 다시 읽는다.
     """
+    global _CONTRACT_CACHE
     stories = weekly_stories(items)
+    # 캐시가 그 목록을 붙들고 있으므로 동일성 비교가 안전하다 (id 재사용 없음).
+    if _CONTRACT_CACHE is not None and _CONTRACT_CACHE[0] is stories:
+        return _CONTRACT_CACHE[1]
     hashes = {str(article.get("hash") or "")
               for story in stories for article in story["articles"]
               if article.get("hash")}
     manifests = news_archive.load_evidence_manifests(hashes)
     specs = []
     for story in stories:
-        articles = [{**article, "hash": str(article["hash"])}
+        # `detail` 은 코너용으로만 들고 다닌다. 계약 본문에 넣으면 판세 문장이
+        # 대조되는 근거의 범위가 조용히 넓어진다 — 이번 변경은 코너를 더하는
+        # 것이지 검증을 느슨하게 하는 것이 아니다.
+        articles = [{**{k: v for k, v in article.items() if k != "detail"},
+                     "hash": str(article["hash"])}
                     for article in story["articles"] if article.get("hash")]
         if not articles:
             continue
@@ -637,6 +776,9 @@ def weekly_contracts(items: list[dict]) -> dict:
             short = str(article.get("hash") or "")[:8]
             if short:
                 index[short] = contract
+    # 사건 키(`story["key"]`)는 대표 기사의 hash8 이라 위 색인에 이미 들어 있다 —
+    # 코너가 사건 키로 찾아도 같은 계약이 나온다.
+    _CONTRACT_CACHE = (stories, index)
     return index
 
 
@@ -652,11 +794,14 @@ def audit_theme_moves(rows: list, contracts: dict) -> tuple[list[dict], list[dic
       이상이 '일어난 일'(계약·승인·착공·투자…)을 말해야 한다. 같은 발표의 반복
       보도는 사건 1건이므로 여기서 걸린다. 전망 기사만 모은 '강화'도 걸린다.
     · 유지 — 방향을 주장하지 않으므로 관련 사건 1건이면 된다.
+    · 두 축이 **같은 사건들만** 지목하면 뒤엣것을 뺀다. 표현만 다른 축은 축이
+      아니고, 화면에서는 같은 근거 칩이 두 줄에 붙어 폭이 두 배로 보인다.
 
     완화가 아니라 추가 검사다. 문장 대조를 통과한 항목만 여기 온다.
     """
     kept: list[dict] = []
     dropped: list[dict] = []
+    seen_sets: list[tuple[str, frozenset[str]]] = []
     for row in rows:
         if not isinstance(row, dict):
             continue
@@ -679,6 +824,14 @@ def audit_theme_moves(rows: list, contracts: dict) -> tuple[list[dict], list[dic
             dropped.append({"theme": theme, "direction": direction,
                             "stories": len(relevant), "events": len(events)})
             continue
+        basis = frozenset(contract.key for contract in relevant)
+        echo = next((name for name, other in seen_sets if other == basis), "")
+        if echo:
+            dropped.append({"theme": theme, "direction": direction,
+                            "stories": len(relevant), "events": len(events),
+                            "same_stories_as": echo})
+            continue
+        seen_sets.append((theme, basis))
         kept.append(row)
     return kept, dropped
 
@@ -779,9 +932,23 @@ def load_weekly_reports(path: Path | None = None) -> dict:
             "reports": reports if isinstance(reports, dict) else {}}
 
 
+def build_week_sections(items: list[dict], now: datetime | None = None) -> dict:
+    """결정적 코너 네 개 — 판세 합성과 **같은** 사건 묶음·근거 계약 위에서 만든다.
+
+    LLM 을 타지 않으므로 '주 1회 1호출' 계약이 그대로다. 기간도 판세와 같은
+    `week_window` 하나를 쓴다 — '예정'만 그 창의 끝 이후를 본다.
+    """
+    start, end = week_window(now)
+    return weekly_sections.build_sections(
+        weekly_stories(items), weekly_contracts(items),
+        is_development=is_development,
+        week_start=start.date().isoformat(), week_end=end.date().isoformat())
+
+
 def save_weekly_report(synthesis: dict, agg: dict, items: list[dict],
                        now: datetime | None = None,
-                       path: Path | None = None) -> bool:
+                       path: Path | None = None,
+                       sections: dict | None = None) -> bool:
     """이번 주 리포트를 저장. 저장했으면 True.
 
     저장 여부를 len(reports) 증가로 판정하면 안 된다 — 같은 주차 덮어쓰기는
@@ -791,11 +958,14 @@ def save_weekly_report(synthesis: dict, agg: dict, items: list[dict],
     path = path or WEEKLY_REPORTS_FILE
     store = load_weekly_reports(path)
     key = week_id(now)
-    start = now - timedelta(days=6)
+    # 라벨과 수집 구간을 한 함수에서 낸다 — 둘이 갈리면 화면의 '이번 주'가
+    # 실제로 담긴 기사의 주와 하루 어긋난다.
+    start, end = week_window(now)
+    sections = sections if sections is not None else build_week_sections(items, now)
     entry = {
         "week_id": key,
         "week_start": start.date().isoformat(),
-        "week_end": now.date().isoformat(),
+        "week_end": end.date().isoformat(),
         "generated_at": now.isoformat(),
         "timezone": "Asia/Seoul",
         "schema_version": 1,
@@ -806,6 +976,9 @@ def save_weekly_report(synthesis: dict, agg: dict, items: list[dict],
         **{key_name: synthesis.get(key_name) for key_name in (
             "weekly_intro", "policy_shifts", "theme_moves", "khnp_direct",
             "watchpoints", "report_candidates", "key_events")},
+        # 결정적 코너. 저장본이 유일한 원본이라 텔레그램·웹이 같은 값을 쓴다.
+        **{key_name: sections.get(key_name) or [] for key_name in (
+            "top_stories", "country_briefs", "publications", "upcoming")},
     }
     # 내용 비교에서 generated_at 은 뺀다 — 매 실행마다 달라지므로 포함하면
     # dirty 가 항상 참이 되고 같은 리포트를 무한히 다시 쓴다.
@@ -844,11 +1017,13 @@ def count_unique_issues(items: list[dict]) -> int:
     return len(weekly_stories(items))
 
 
-def format_weekly(items: list[dict], synthesis: dict | None = None) -> str:
-    today = datetime.now(KST)
-    start = today - timedelta(days=6)
+def format_weekly(items: list[dict], synthesis: dict | None = None,
+                  sections: dict | None = None,
+                  now: datetime | None = None) -> str:
+    start, today = week_window(now)
     agg = build_aggregates(items)
     synthesis = synthesis if synthesis is not None else batch_synthesize(items, agg)
+    sections = sections if sections is not None else build_week_sections(items, now)
 
     parts: list[str] = []
     parts.append(f"📅 <b>{start.month}/{start.day}-{today.month}/{today.day} "
@@ -859,6 +1034,49 @@ def format_weekly(items: list[dict], synthesis: dict | None = None) -> str:
     if synthesis["weekly_intro"]:
         parts.append("<b>이번 주 핵심</b>")
         parts.append(html.escape(synthesis["weekly_intro"]))
+        parts.append("")
+
+    # 결정적 코너가 먼저 온다. "무슨 일이 있었나"를 읽은 다음에 "그래서 판이
+    # 어디로 기울었나"를 읽는 순서가 판세 보고의 순서다.
+    if sections.get("top_stories"):
+        parts.append(f"━━ <b>📌 이번 주</b> ({start.month}월 {start.day}일–"
+                     f"{today.month}월 {today.day}일 · 주요 사건) ━━")
+        for row in sections["top_stories"]:
+            parts.append(f"• <b>{html.escape(row['title'])}</b>")
+            if row.get("summary"):
+                parts.append(f"  {html.escape(row['summary'])}")
+            if row.get("articles", 1) > 1:
+                parts.append(f"  이어지는 이슈 · {row['articles']}건"
+                             f" · 매체 {row['outlets']}곳")
+            if row.get("link"):
+                parts.append(f"  🔗 {row['link']}")
+        parts.append("")
+
+    if sections.get("country_briefs"):
+        parts.append("━━ <b>🌍 국가별 단신</b> ━━")
+        for row in sections["country_briefs"]:
+            # 국가명과 제목 사이에 구분자를 둔다. 붙여 쓰면 '한국정부'처럼
+            # 한 낱말로 읽힌다.
+            parts.append(f"• <b>{html.escape(row['country_kr'])}</b> — "
+                         f"{html.escape(row['title'])}")
+        parts.append("")
+
+    if sections.get("publications"):
+        parts.append("━━ <b>📚 이번 주 발간물</b> ━━")
+        for row in sections["publications"]:
+            head = f"{html.escape(row['org'])} · " if row.get("org") else ""
+            parts.append(f"• {head}<b>{html.escape(row['title'])}</b>")
+            parts.append(f"  🔗 {row['url']}")
+        parts.append("")
+
+    if sections.get("upcoming"):
+        parts.append("━━ <b>🗓 예정</b> ━━")
+        for row in sections["upcoming"]:
+            when = row["date"]
+            # 정밀도가 '월'이면 날짜를 지어내지 않는다 — 저장본이 말하는 만큼만.
+            label = (f"{int(when[5:7])}월" if row.get("precision") == "month"
+                     else f"{int(when[5:7])}월 {int(when[8:10])}일")
+            parts.append(f"• <b>{label}</b> — {html.escape(row['title'])}")
         parts.append("")
 
     if synthesis["policy_shifts"]:
@@ -894,7 +1112,14 @@ def format_weekly(items: list[dict], synthesis: dict | None = None) -> str:
         parts.append("")
 
     if synthesis["key_events"]:
-        parts.append("━━ <b>📌 핵심 사건</b> (최대 5) ━━")
+        # 위 '이번 주'·'국가별 단신'이 이미 낸 사건은 여기서 다시 내지 않는다.
+        # 두 코너가 각각 결정적 선정과 LLM 선정이라 겹치는 것이 정상인데,
+        # 겹친 채로 두면 한 메시지 안에서 같은 헤드라인을 두 번 읽게 된다.
+        # 남는 것은 그 사건들이 못 실은 **해석**이 붙은 나머지다.
+        shown = [weekly_sections.title_tokens(row["title"])
+                 for key in ("top_stories", "country_briefs")
+                 for row in sections.get(key) or []]
+        lines: list[str] = []
         for ev in synthesis["key_events"][:5]:  # 렌더링에서도 방어 (LLM 초과 응답 컷)
             if not isinstance(ev, dict):
                 continue
@@ -902,12 +1127,19 @@ def format_weekly(items: list[dict], synthesis: dict | None = None) -> str:
             headline = ev.get("headline") or (art["title"] if art else "")
             if not headline:
                 continue
-            parts.append(f"• <b>{html.escape(str(headline))}</b>")
+            tokens = weekly_sections.title_tokens(headline)
+            if weekly_sections.echoes(tokens, shown):
+                continue
+            shown.append(tokens)
+            lines.append(f"• <b>{html.escape(str(headline))}</b>")
             if ev.get("implication"):
-                parts.append(f"  → {html.escape(str(ev['implication']))}")
+                lines.append(f"  → {html.escape(str(ev['implication']))}")
             if art and art.get("link"):
-                parts.append(f"  🔗 {art['link']}")
-        parts.append("")
+                lines.append(f"  🔗 {art['link']}")
+        if lines:
+            parts.append("━━ <b>📌 그 밖에 짚어 둘 사건</b> ━━")
+            parts.extend(lines)
+            parts.append("")
 
     if synthesis["report_candidates"]:
         parts.append("━━ <b>📝 보고서 검토 후보</b> ━━")
@@ -946,10 +1178,12 @@ def main() -> None:
 
     print(f"Weekly report: {len(items)} articles from past {WEEK_DAYS} days")
     # 합성을 한 번만 돌려 텔레그램과 웹이 같은 결과를 쓴다 (Gemini 호출 +0).
+    # 코너도 한 번만 만든다 — 두 번 만들면 같은 주에 다른 목록이 나갈 수 있다.
     agg = build_aggregates(items)
     synthesis = batch_synthesize(items, agg)
-    message = format_weekly(items, synthesis)
-    save_weekly_report(synthesis, agg, items)
+    sections = build_week_sections(items)
+    message = format_weekly(items, synthesis, sections)
+    save_weekly_report(synthesis, agg, items, sections=sections)
 
     from telegram_send import send_long_text  # lazy — 토큰 없는 로컬 테스트 대비
     results = send_long_text(message, parse_mode="HTML", disable_preview=True)

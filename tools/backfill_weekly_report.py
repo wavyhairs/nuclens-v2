@@ -51,18 +51,9 @@ def _window(start: str, end: str) -> tuple[datetime, datetime]:
             datetime.combine(last.date(), time.max, tzinfo=KST))
 
 
-def _moment(value: object) -> datetime | None:
-    """curated 의 시각 문자열 → aware datetime.
-
-    published_at 은 KST 오프셋(+09:00), cached_at 은 UTC 로 저장된다. 정기 경로는
-    문자열 비교로 어림잡지만(그쪽 동작은 건드리지 않는다), 고정 기간을 자를 때는
-    오프셋을 실제로 해석해야 8/15 새벽과 8/21 밤이 경계에서 새지 않는다.
-    """
-    try:
-        parsed = datetime.fromisoformat(str(value or ""))
-    except ValueError:
-        return None
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=KST)
+# 시각 해석은 정기 경로와 같은 함수를 쓴다. 여기 사본을 두었더니 정기 경로가
+# 문자열 비교에서 실제 해석으로 옮겨 갈 때 두 벌이 서로 다른 경계를 갖게 됐다.
+_moment = weekly_bot.parse_moment
 
 
 def window_articles(curated: dict, since: datetime, until: datetime) -> list[dict]:
@@ -134,24 +125,28 @@ def report_audit(raw: dict, final: dict, items: list[dict]) -> None:
         for row in before:
             if str(row.get(field) or "") in kept_ids:
                 continue
-            reason = "문장이 지목한 근거와 어긋남"
-            if key == "theme_moves":
+            _kept, findings = article_quality_gate.audit_evidence_items(
+                [row], contracts, text_fields=(field,),
+                analysis_fields=tuple(k for k in row if k not in
+                                      {field, "evidence_hashes", "hash"}),
+                hash_field="hash" if key == "key_events" else "evidence_hashes",
+                require_evidence=key != "report_candidates",
+                fallback_contracts=everything)
+            if findings:
+                detail = {k: v for k, v in findings[0].details.items()
+                          if k != "text"}
+                reason = f"{findings[0].code} {json.dumps(detail, ensure_ascii=False)}"
+            elif key == "theme_moves":
+                # 문장 대조는 통과했다 — 남은 사유는 독립 사건 요건이거나,
+                # 한 줄만 봐서는 안 걸리는 '같은 사건을 다른 이름으로' 중복이다.
                 _kept, thin = weekly_bot.audit_theme_moves([row], contracts)
                 if thin:
                     reason = (f"독립 사건 부족 (관련 사건 {thin[0]['stories']}건 · "
                               f"실제 진전 {thin[0]['events']}건)")
+                else:
+                    reason = "같은 사건들만 지목하는 다른 축과 중복"
             else:
-                _kept, findings = article_quality_gate.audit_evidence_items(
-                    [row], contracts, text_fields=(field,),
-                    analysis_fields=tuple(k for k in row if k not in
-                                          {field, "evidence_hashes", "hash"}),
-                    hash_field="hash" if key == "key_events" else "evidence_hashes",
-                    require_evidence=key != "report_candidates",
-                    fallback_contracts=everything)
-                if findings:
-                    detail = {k: v for k, v in findings[0].details.items()
-                              if k != "text"}
-                    reason = f"{findings[0].code} {json.dumps(detail, ensure_ascii=False)}"
+                reason = "문장이 지목한 근거와 어긋남"
             print(f"  - 제외: {str(row.get(field) or '')[:60]}")
             print(f"      사유: {reason}")
         for row in after:
