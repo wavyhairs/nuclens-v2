@@ -2974,6 +2974,10 @@ def pick_detail(members: list[dict], representative: dict) -> tuple[str, str]:
     Reuters·FT 는 봇 차단으로 0%) 대표 기사에만 요지가 없는 경우가 흔하다.
     **가장 최신 기사부터** 찾는다. 오래된 멤버의 요지를 쓰면 제목은 새 사건인데
     본문은 옛 상태인 조합이 나온다 — 사용자가 지적한 그 모순이다.
+
+    `members` 는 **카드 멤버만** 넣는다. 근거 기사(`evidence_members`)는 관련기사
+    목록과 검증에만 쓰이고 대표 설명으로 승격되지 않는다 — 범위는 호출부가 정하고
+    `build_issue_catalog` 주석에 실측이 있다.
     """
     # 출처 표기는 **대표 기사가 아닐 때만** 의미가 있다. 대표 기사면 그 제목이
     # 바로 위 h2 라서 같은 문장을 두 번 쓰는 꼴이 된다("대다수가 다는 표시는
@@ -4165,7 +4169,22 @@ def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_a
             if entity_evidence_out is not None:
                 for record in entity_evidence:
                     entity_evidence_out.append({"issue_id": issue["issue_id"], **record})
-        archive_detail, archive_detail_source = pick_detail(all_timeline, representative)
+        # 요지는 **카드 멤버 안에서만** 고른다. `evidence_members` 는 브리핑에
+        # 선정되지 않은 채 뒤에 매칭으로 붙은 보도이고, 화면에서도 '추가 근거'라는
+        # 접힌 칸에만 산다 — 그 본문이 이슈 대표 설명("관련 기사 내용")으로 올라오면
+        # 근거가 결론 자리를 차지한다.
+        #
+        # 2026-08-22 라이브: 『제12차 전력수급기본계획, 원전 비중 확대 시험대』의
+        # '관련 기사 내용'이 근거 기사 『산업용 전기요금 지역별 차등제, 남부권
+        # 통합안 실효성 논란』의 본문이었다. 그 근거는 같은 이슈의 다른 **카드**
+        # (『김성환 장관, 산업용 지역요금제 초안 다음 주 공개』)에 정상적으로 붙은
+        # 것이라 매칭은 틀리지 않았다 — 틀린 것은 승격 범위였다.
+        #
+        # 카드에도 요지가 없으면 블록을 통째로 비운다. 근거에서 끌어오면 제목과
+        # 본문이 다른 사건을 말하는 조합이 되고, 그것은 요지가 없는 것보다 나쁘다.
+        # (`verification`·`article_count` 는 그대로 all_timeline 을 센다 — 검증은
+        # 근거를 함께 세는 것이 맞다.)
+        archive_detail, archive_detail_source = pick_detail(card_timeline, representative)
         report_topic, report_why, report_angles = pick_report_metadata(card_timeline)
         rows.append({
             "issue_id": issue["issue_id"],
