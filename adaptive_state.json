@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-08-26"
   },
   "retired": {
@@ -38,7 +38,7 @@
     }
   },
   "spent": {
-    "count": 2,
+    "count": 5,
     "date": "2026-08-26"
   },
   "terms": {
@@ -153,14 +153,14 @@
           "title": "영덕군, 신규 원전 명칭 공모 실시"
         }
       ],
-      "expires_at": "2026-08-26T12:51:00.754434+00:00",
+      "expires_at": "2026-08-26T21:31:33.041749+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 13,
-      "last_run": "2026-08-25T12:51:00.754434+00:00",
-      "new_articles": 13,
+      "last_result_count": 1,
+      "last_run": "2026-08-25T21:31:33.041749+00:00",
+      "new_articles": 14,
       "origin": "auto",
-      "planned_at": "2026-08-25T12:50:58.242383+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-08-25T21:31:29.632182+00:00",
+      "queries_run": 2,
       "query": "영덕군이 원전",
       "score": 3.9,
       "status": "extended",
@@ -168,9 +168,10 @@
       "ttl_hours": 24,
       "type": "plant",
       "yield_days": [
-        "2026-08-25"
+        "2026-08-25",
+        "2026-08-26"
       ],
-      "yields": 1,
+      "yields": 2,
       "zero_streak": 0
     },
     "한국발전공사": {
@@ -203,14 +204,14 @@
           "title": "안호영 의원, 5개 발전공기업 통합 ‘한국발전공사법안’ 발의"
         }
       ],
-      "expires_at": "2026-08-26T12:51:00.754434+00:00",
+      "expires_at": "2026-08-26T21:31:33.041749+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 10,
-      "last_run": "2026-08-25T12:51:00.754434+00:00",
-      "new_articles": 18,
+      "last_result_count": 1,
+      "last_run": "2026-08-25T21:31:33.041749+00:00",
+      "new_articles": 19,
       "origin": "auto",
-      "planned_at": "2026-08-25T12:50:58.242383+00:00",
-      "queries_run": 5,
+      "planned_at": "2026-08-25T21:31:29.632182+00:00",
+      "queries_run": 6,
       "query": "한국발전공사 원자력",
       "score": 3.58,
       "status": "promote_candidate",
@@ -219,10 +220,50 @@
       "type": "org",
       "yield_days": [
         "2026-08-24",
-        "2026-08-25"
+        "2026-08-25",
+        "2026-08-26"
       ],
-      "yields": 3,
+      "yields": 4,
       "zero_streak": 0
+    },
+    "해사청": {
+      "articles": 2,
+      "created_at": "2026-08-25T21:31:29.632182+00:00",
+      "domains": [
+        "ans.org",
+        "g-enews.com"
+      ],
+      "evidence": [
+        {
+          "domain": "ans.org",
+          "hash": "39d2da80812a25d1",
+          "importance": "must_read",
+          "title": "미 해사청(MARAD), 코퍼스 크리스티 항만과 SMR 개발 협력 MOU 체결"
+        },
+        {
+          "domain": "g-enews.com",
+          "hash": "c31b7d647122cdbd",
+          "importance": "nice_to_know",
+          "title": "미국 해사청, 코어파워와 원자력 상선 상용화 경로 검증 협약 체결"
+        }
+      ],
+      "expires_at": "2026-08-26T21:31:29.632182+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-08-25T21:31:33.041749+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-08-25T21:31:29.632182+00:00",
+      "queries_run": 1,
+      "query": "해사청 원자력",
+      "score": 3.7,
+      "status": "tracking",
+      "term": "해사청",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     }
   },
   "version": 1
