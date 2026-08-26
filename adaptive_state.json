@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 2,
+    "count": 4,
     "date": "2026-08-26"
   },
   "retired": {
@@ -38,7 +38,7 @@
     }
   },
   "spent": {
-    "count": 10,
+    "count": 12,
     "date": "2026-08-26"
   },
   "terms": {
@@ -88,6 +88,53 @@
       "yield_days": [],
       "yields": 0,
       "zero_streak": 2
+    },
+    "epri": {
+      "articles": 4,
+      "created_at": "2026-08-26T06:53:35.721490+00:00",
+      "domains": [
+        "energydaily.co.kr",
+        "electimes.com",
+        "energy-news.co.kr",
+        "epj.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "energydaily.co.kr",
+          "hash": "e28a309fc4201a4c",
+          "importance": "nice_to_know",
+          "title": "한국전력, 미국 EPRI와 동적송전용량(DLR) 기술 고도화 협력"
+        },
+        {
+          "domain": "electimes.com",
+          "hash": "06290c111b7ac058",
+          "importance": "nice_to_know",
+          "title": "한전-미국 EPRI, 재생에너지 계통 수용성 제고 위한 DLR 기술 공동연구"
+        },
+        {
+          "domain": "energy-news.co.kr",
+          "hash": "eafc5927ea29b522",
+          "importance": "nice_to_know",
+          "title": "한전, 자체 개발 DLR 센서 미국 EPRI 시험장서 실증"
+        }
+      ],
+      "expires_at": "2026-08-27T06:53:35.721490+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-08-26T06:53:38.235951+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-08-26T06:53:35.721490+00:00",
+      "queries_run": 1,
+      "query": "EPRI 원자력",
+      "score": 3.18,
+      "status": "tracking",
+      "term": "EPRI",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     },
     "marad": {
       "articles": 1,
@@ -172,6 +219,56 @@
         "2026-08-26"
       ],
       "yields": 3,
+      "zero_streak": 0
+    },
+    "전력연구원": {
+      "articles": 5,
+      "created_at": "2026-08-26T06:53:35.721490+00:00",
+      "domains": [
+        "energydaily.co.kr",
+        "electimes.com",
+        "energy-news.co.kr",
+        "e-platform.net",
+        "epj.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "energydaily.co.kr",
+          "hash": "e28a309fc4201a4c",
+          "importance": "nice_to_know",
+          "title": "한국전력, 미국 EPRI와 동적송전용량(DLR) 기술 고도화 협력"
+        },
+        {
+          "domain": "electimes.com",
+          "hash": "06290c111b7ac058",
+          "importance": "nice_to_know",
+          "title": "한전-미국 EPRI, 재생에너지 계통 수용성 제고 위한 DLR 기술 공동연구"
+        },
+        {
+          "domain": "energy-news.co.kr",
+          "hash": "eafc5927ea29b522",
+          "importance": "nice_to_know",
+          "title": "한전, 자체 개발 DLR 센서 미국 EPRI 시험장서 실증"
+        }
+      ],
+      "expires_at": "2026-08-27T06:53:38.235951+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 6,
+      "last_run": "2026-08-26T06:53:38.235951+00:00",
+      "new_articles": 6,
+      "origin": "auto",
+      "planned_at": "2026-08-26T06:53:35.721490+00:00",
+      "queries_run": 1,
+      "query": "전력연구원 원자력",
+      "score": 3.58,
+      "status": "extended",
+      "term": "전력연구원",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [
+        "2026-08-26"
+      ],
+      "yields": 1,
       "zero_streak": 0
     },
     "한국발전공사": {
