@@ -142,6 +142,44 @@ class TestEditorialBackfill(unittest.TestCase):
         self.assertIn("b", {x["hash"] for x in diag["dropped_duplicates"]})
 
 
+class TestRepresentativeOwnership(unittest.TestCase):
+    def test_one_article_cannot_represent_two_surviving_stories(self):
+        shared = item("shared", "공유된 고품질 대표 기사", publisher="Reuters",
+                      domain="reuters.com", source_tier=1)
+        left = item("left", "서로 다른 사건 A", source_tier=3)
+        right = item("right", "서로 다른 사건 B", source_tier=3)
+        left["story_article_hashes"] = ["left", "shared"]
+        right["story_article_hashes"] = ["right", "shared"]
+        left["story_members"] = [{"hash": "left"}, {"hash": "shared"}]
+        right["story_members"] = [{"hash": "right"}, {"hash": "shared"}]
+
+        conflicts = []
+        picked, _ = ranking._pick_display_representatives(
+            [left, right], [left, right, shared],
+            {"left": 10.0, "right": 9.0, "shared": 20.0}, [], conflicts)
+
+        self.assertEqual(len({row["hash"] for row in picked}), 2)
+        self.assertEqual(len(conflicts), 1)
+        self.assertEqual(conflicts[0]["article_hash"], "shared")
+        owners = [row for row in (left, right)
+                  if "shared" in (row.get("story_article_hashes") or [])]
+        self.assertEqual(len(owners), 1)
+
+    def test_duplicate_story_id_is_rejected_and_next_story_backfills(self):
+        rows = [
+            item("a", "사건 A"),
+            item("b", "사건 A의 다른 대표"),
+            item("c", "사건 C"),
+        ]
+        rows[0]["story_id"] = rows[1]["story_id"] = "story-one"
+        rows[2]["story_id"] = "story-three"
+        selected, violations = ranking._select_with_identity_invariants(
+            rows, {"a": 30.0, "b": 20.0, "c": 10.0}, 2, CFG)
+        self.assertEqual([row["hash"] for row in selected], ["a", "c"])
+        self.assertEqual(violations[0]["kind"], "story_id")
+        self.assertEqual(violations[0]["resolution"], "backfill_next_distinct_story")
+
+
 def _story(own, member_hashes, *, article_hashes=None):
     """story 메타를 단 기사 하나. hash 만 중요하다."""
     row = {"hash": own, "title_kr": own, "story_members": [

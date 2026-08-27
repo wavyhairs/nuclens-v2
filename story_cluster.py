@@ -33,10 +33,34 @@ from urllib.parse import urlparse
 # 무한정 쌓으면 digest_queue.json 이 부푼다. 실측상 한 사건의 국내 재전재는 많아야
 # 10여 건이라 24 면 잘리는 일이 거의 없고, 잘려도 카운트는 별도로 누적된다.
 RAW_SOURCE_LIMIT = 24
+STORY_ID_PREFIX = "story-"
 
 
 def _clean(value) -> str:
     return " ".join(str(value or "").replace("\n", " ").split()).strip()
+
+
+def fallback_story_id(article: dict) -> str:
+    """Return the stable-id fallback used by old records and new single stories.
+
+    Old delivery rows have no story identity.  Their representative article hash is the only
+    durable seed available, so lazy migration deliberately uses it instead of rewriting history.
+    Once continuity links a later article, that inherited id wins over this fallback.
+    """
+    current = _clean(article.get("story_id"))
+    if current:
+        return current
+    seed = _clean(article.get("hash"))
+    return f"{STORY_ID_PREFIX}{seed}" if seed else ""
+
+
+def ensure_story_id(article: dict, *, source: str = "generated") -> str:
+    """Add an optional stable story id without changing old-input compatibility."""
+    story_id = fallback_story_id(article)
+    if story_id:
+        article["story_id"] = story_id
+        article.setdefault("story_id_source", source)
+    return story_id
 
 
 def source_identity(article: dict) -> str:
@@ -291,6 +315,19 @@ def consolidate_story_metadata(
     title-dedup -> semantic-dedup -> final editorial-dedup.
     """
     all_members = [representative] + [m for m in members if m is not representative]
+
+    # A history-linked id is stronger than a per-article fallback.  This keeps the identity
+    # stable when a later source becomes the display representative.  With no history yet, the
+    # representative hash is the backward-compatible lazy-migration seed.
+    inherited_ids = [
+        (_clean(art.get("story_id")), _clean(art.get("story_id_source")))
+        for art in all_members if _clean(art.get("story_id"))
+    ]
+    history_ids = [story_id for story_id, source in inherited_ids if source == "history"]
+    chosen_story_id = history_ids[0] if history_ids else fallback_story_id(representative)
+    if chosen_story_id:
+        representative["story_id"] = chosen_story_id
+        representative["story_id_source"] = "history" if history_ids else "generated"
 
     sources_by_id: dict[str, dict] = {}
     hashes: list[str] = []
@@ -598,10 +635,12 @@ def promote_representative(old: dict, new: dict, *, reason: str = "") -> dict:
     old 의 집계에 new 가 들어 있다. 여기서 재집계하면 같은 기사를 두 번 세게 된다.
     """
     carried = {k: v for k, v in old.items()
-               if k.startswith("story_") or k.startswith("raw_source")}
+               if k.startswith("story_") or k.startswith("raw_source")
+               or k == "continuity"}
     # 거부권 기록은 양쪽 것을 합친다 — 진단은 지워질 이유가 없다.
     vetoes = [v for v in (new.get("story_stage_vetoes") or []) if isinstance(v, dict)]
-    for key in [k for k in new if k.startswith("story_") or k.startswith("raw_source")]:
+    for key in [k for k in new if k.startswith("story_") or k.startswith("raw_source")
+                or k == "continuity"]:
         new.pop(key, None)
     new.update(carried)
     if vetoes:

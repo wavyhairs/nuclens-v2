@@ -34,8 +34,11 @@ from sources import credibility
 from story_cluster import (
     choose_display_representative,
     consolidate_story_metadata,
+    ensure_story_id,
     mark_display_representative,
+    member_hashes,
     promote_representative,
+    raw_sources_of,
 )
 
 ROOT = Path(__file__).parent
@@ -786,11 +789,73 @@ SEMANTIC_HEAD_MULTIPLIER = 3
 SEMANTIC_HEAD_MIN = 12
 
 
+def _enforce_article_ownership(
+    stories: list[dict], scores: dict[str, float]
+) -> tuple[dict[str, dict], list[dict]]:
+    """Assign every article hash to one canonical story before representative selection.
+
+    Exact membership overlap is stronger than any display-quality preference.  The article's
+    own top-level story wins first; otherwise the higher-ranked story wins deterministically.
+    Losing stories keep their other evidence and can still occupy a distinct briefing slot.
+    """
+    claims: dict[str, list[dict]] = {}
+    for story in stories:
+        ensure_story_id(story)
+        for article_hash in member_hashes(story):
+            claims.setdefault(article_hash, []).append(story)
+
+    owners: dict[str, dict] = {}
+    conflicts: list[dict] = []
+    for article_hash, claimants in claims.items():
+        owner = max(
+            claimants,
+            key=lambda story: (
+                str(story.get("hash") or "") == article_hash,
+                float(scores.get(str(story.get("hash") or ""), 0.0)),
+                str(story.get("hash") or ""),
+            ),
+        )
+        owners[article_hash] = owner
+        if len(claimants) > 1:
+            conflicts.append({
+                "article_hash": article_hash,
+                "owner_story_id": ensure_story_id(owner),
+                "owner_hash": str(owner.get("hash") or ""),
+                "claimant_story_ids": [ensure_story_id(row) for row in claimants],
+                "claimant_hashes": [str(row.get("hash") or "") for row in claimants],
+                "resolution": "representative_ownership",
+            })
+
+    # Remove canonical membership from losing stories.  Titles and source labels remain as
+    # non-owning context, but every hash-bearing membership collection obeys one-owner semantics.
+    for story in stories:
+        owned = {article_hash for article_hash in member_hashes(story)
+                 if owners.get(article_hash) is story}
+        hashes = story.get("story_article_hashes")
+        if isinstance(hashes, list):
+            story["story_article_hashes"] = [h for h in hashes if str(h) in owned]
+        members = story.get("story_members")
+        if isinstance(members, list):
+            story["story_members"] = [
+                row for row in members
+                if isinstance(row, dict) and str(row.get("hash") or "") in owned
+            ]
+        raw = raw_sources_of(story)
+        if raw:
+            story["raw_sources"] = [
+                row for row in raw if str(row.get("hash") or "") in owned
+            ]
+            story["story_raw_source_count"] = len(story["raw_sources"])
+        story["story_article_count"] = max(1, len(owned))
+    return owners, conflicts
+
+
 def _pick_display_representatives(
     kept: list[dict],
     pool: list[dict],
     scores: dict[str, float],
     dropped: list[dict],
+    ownership_conflicts: list[dict] | None = None,
 ) -> tuple[list[dict], list[dict]]:
     """story 별로 화면에 세울 기사 한 건을 최종 확정한다.
 
@@ -802,12 +867,18 @@ def _pick_display_representatives(
     후보로 올라온다.
     """
     by_hash = {str(a.get("hash") or ""): a for a in pool if a.get("hash")}
+    owners, conflicts = _enforce_article_ownership(kept, scores)
+    if ownership_conflicts is not None:
+        ownership_conflicts.extend(conflicts)
     out: list[dict] = []
     promotions: list[dict] = []
     for rep in kept:
         hashes = rep.get("story_article_hashes")
         hashes = hashes if isinstance(hashes, list) else []
-        candidates = [by_hash[h] for h in hashes if h in by_hash]
+        candidates = [by_hash[h] for h in hashes
+                      if h in by_hash and owners.get(str(h)) is rep]
+        if rep not in candidates:
+            candidates.insert(0, rep)
         # 자기 자신만 남는 story 는 고를 것이 없다 — 그래도 '한 건 중 한 건'이라는
         # 사실은 남긴다(진단 화면이 single 과 구분해서 읽는다).
         if len(candidates) <= 1:
@@ -841,6 +912,73 @@ def _pick_display_representatives(
         })
         out.append(winner)
     return out, promotions
+
+
+def _select_with_identity_invariants(
+    items: list[dict], scores: dict[str, float], k: int, cfg: dict
+) -> tuple[list[dict], list[dict]]:
+    """Select and backfill while enforcing final representative/story uniqueness."""
+    ordered = select_diverse(items, scores, len(items), cfg)
+    selected: list[dict] = []
+    seen_hashes: dict[str, dict] = {}
+    seen_stories: dict[str, dict] = {}
+    violations: list[dict] = []
+    for item in ordered:
+        article_hash = str(item.get("hash") or "")
+        story_id = ensure_story_id(item)
+        conflict = seen_hashes.get(article_hash) if article_hash else None
+        kind = "representative_hash" if conflict is not None else ""
+        if conflict is None and story_id:
+            conflict = seen_stories.get(story_id)
+            kind = "story_id" if conflict is not None else ""
+        if conflict is not None:
+            violations.append({
+                "kind": kind,
+                "value": article_hash if kind == "representative_hash" else story_id,
+                "kept_hash": str(conflict.get("hash") or ""),
+                "rejected_hash": article_hash,
+                "kept_story_id": ensure_story_id(conflict),
+                "rejected_story_id": story_id,
+                "resolution": "backfill_next_distinct_story",
+            })
+            continue
+        selected.append(item)
+        if article_hash:
+            seen_hashes[article_hash] = item
+        if story_id:
+            seen_stories[story_id] = item
+        if len(selected) >= k:
+            break
+    return selected, violations
+
+
+def _remove_continuity_repeats(items: list[dict], repeats: list[dict]) -> list[dict]:
+    """Remove exact no-progression repeats and preserve a complete audit record."""
+    surviving: list[dict] = []
+    already_repeated = {str(row.get("hash") or "") for row in repeats}
+    for item in items:
+        cont = _continuity_of(item)
+        if not cont.get("drop"):
+            surviving.append(item)
+            continue
+        if str(item.get("hash") or "") in already_repeated:
+            continue
+        repeats.append({
+            "hash": item.get("hash", ""),
+            "story_id": item.get("story_id", ""),
+            "title": (item.get("title_kr") or item.get("title") or "")[:80],
+            "prior_title": cont.get("prior_title", ""),
+            "prior_date": cont.get("prior_date", ""),
+            "days_ago": cont.get("days_ago"),
+            "similarity": cont.get("similarity"),
+            "evidence_shared": cont.get("evidence_shared"),
+            "evidence_confirmed": cont.get("evidence_confirmed"),
+            "identity_confirmed": cont.get("identity_confirmed"),
+            "identity_method": cont.get("identity_method"),
+            "progression": cont.get("progression"),
+            "match_reasons": cont.get("match_reasons") or [],
+        })
+    return surviving
 
 
 def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
@@ -927,67 +1065,9 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
         dropped = dropped + head_dropped
         refresh_scores(kept)
 
-    # story 가 다 접힌 자리 — 연속일 판정을 여기서 한 번 더 받는다. 위 두 단계가
-    # 만들어 낸 근거 목록(story_members)이 판정 재료의 하나이기 때문이다.
-    # 아래 삭제 분기 **앞**이어야 한다: 여기서 뒤집힌 판정이 그 분기의 입력이다.
-    if continuity_recheck is not None and kept:
-        continuity_recheck(kept)
-        refresh_scores(kept)
-
-    # 연속일 반복 중 **삭제까지 가는** 조합. 감점(score_delta)은 위 score_item 이
-    # 이미 반영했고, 여기서 빠지는 것은 "제목까지 거의 같거나 근거를 그대로 다시
-    # 쓰는데 단계가 하나도 안 움직인" 어제분뿐이다(issue_continuity.hard_drop).
-    # 하한 앞에 두는 이유는 하한과 캡이 세는 적격 수에서 이것들이 빠져야 하기
-    # 때문이다 — 남겨 두면
-    # 어차피 못 나갈 후보가 캡을 부풀린다.
     repeats: list[dict] = []
-    if any(_continuity_of(a).get("drop") for a in kept):
-        surviving = []
-        for a in kept:
-            cont = _continuity_of(a)
-            if not cont.get("drop"):
-                surviving.append(a)
-                continue
-            repeats.append({
-                "hash": a.get("hash", ""),
-                "title": (a.get("title_kr") or a.get("title") or "")[:80],
-                "prior_title": cont.get("prior_title", ""),
-                "prior_date": cont.get("prior_date", ""),
-                "days_ago": cont.get("days_ago"),
-                "similarity": cont.get("similarity"),
-                "evidence_shared": cont.get("evidence_shared"),
-                # 삭제가 제목으로 결정됐는지 근거로 결정됐는지 — 실측 2026-08-22
-                # '전력망 3법' 은 제목 유사도 0.333 으로 지워졌다. 이 플래그 없이
-                # 로그를 보면 그 숫자가 문턱(0.85)보다 한참 아래라 삭제가 버그로
-                # 보인다.
-                "evidence_confirmed": cont.get("evidence_confirmed"),
-                "progression": cont.get("progression"),
-                "match_reasons": cont.get("match_reasons") or [],
-            })
-        kept = surviving
-
-    below: list[dict] = []
-    if floor:
-        passing = []
-        for a in kept:
-            ok, _reason = floor_verdict(a, scores, floor)
-            if ok:
-                passing.append(a)
-            else:
-                below.append({
-                    "hash": a.get("hash", ""),
-                    "grade": _get_importance(a),
-                    "score": round(scores.get(a.get("hash", ""), 0.0), 2),
-                    "title": (a.get("title_kr") or a.get("title") or "")[:80],
-                })
-        kept = passing
-
-    # 캡은 **하한 통과 뒤** 결정한다. 앞에서 정하면 하한에 걸려 사라질 후보까지
-    # 세어 캡이 부풀고, 정작 내보낼 것이 없는 날에 자리만 비운다.
-    cap_detail = None
-    if cap_spec:
-        must_read = sum(1 for a in kept if _get_importance(a) == "must_read")
-        k, cap_detail = decide_cap(cap_spec, len(kept), must_read, surge_bonus)
+    if continuity_recheck is None:
+        kept = _remove_continuity_repeats(kept, repeats)
 
     # 최종 화면에 올라올 가능성이 있는 후보를 한 번 더 전체 맥락으로 본다. 제거 뒤에
     # select_diverse를 다시 실행하므로 중복이 차지했던 자리는 다음 중요 뉴스가 자동 보충된다.
@@ -1005,13 +1085,48 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
     # story 가 완성된 **뒤에야** 화면용 대표 한 건을 고른다. 이 자리 전까지 대표는
     # 각 단계의 점수 1위였을 뿐이고, 그 점수는 story 가 아직 반쪽이던 시점의 값이다.
     # 이제는 매체 등급·근거 역할·본문 유무가 전부 확정돼 있으므로 다시 고를 수 있다.
-    kept, promotions = _pick_display_representatives(kept, items, scores, dropped)
+    ownership_conflicts: list[dict] = []
+    kept, promotions = _pick_display_representatives(
+        kept, items, scores, dropped, ownership_conflicts)
     if promotions:
         refresh_scores(kept)
 
-    selected = select_diverse(kept, scores, k, cfg)
+    # Editorial dedup is the last place a fingerprint/story id can be created, and display
+    # promotion used to discard the representative's continuity annotation.  Recheck the actual
+    # final story objects, then remove exact repeats before filling the slate.
+    if continuity_recheck is not None and kept:
+        continuity_recheck(kept)
+        refresh_scores(kept)
+        kept = _remove_continuity_repeats(kept, repeats)
+
+    below: list[dict] = []
+    if floor:
+        passing = []
+        for a in kept:
+            ok, _reason = floor_verdict(a, scores, floor)
+            if ok:
+                passing.append(a)
+            else:
+                below.append({
+                    "hash": a.get("hash", ""),
+                    "grade": _get_importance(a),
+                    "score": round(scores.get(a.get("hash", ""), 0.0), 2),
+                    "title": (a.get("title_kr") or a.get("title") or "")[:80],
+                })
+        kept = passing
+
+    # Count the adaptive cap only after final dedup, continuity, and floor decisions.
+    cap_detail = None
+    if cap_spec:
+        must_read = sum(1 for a in kept if _get_importance(a) == "must_read")
+        k, cap_detail = decide_cap(cap_spec, len(kept), must_read, surge_bonus)
+
+    selected, invariant_violations = _select_with_identity_invariants(
+        kept, scores, k, cfg)
     diag = {
         "display_promotions": promotions,
+        "story_ownership_conflicts": ownership_conflicts,
+        "selection_invariant_violations": invariant_violations,
         "stage_vetoes": stage_vetoes + [
             v for a in kept for v in (a.get("story_stage_vetoes") or [])
         ],

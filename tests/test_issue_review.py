@@ -360,6 +360,20 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(stats["calls"], 2)
         self.assertEqual(stats["asked"], 25)
 
+    def test_default_budget_reviews_all_qualified_pairs(self):
+        rows = []
+        for index in range(45):
+            row = candidate(f"p{index}")
+            row["right_hash"] = f"article-{index}"
+            rows.append(row)
+        client = FakeClient([
+            verdict_response(20), verdict_response(20), verdict_response(5)
+        ])
+        _verdicts, stats = self.review(rows, client, batch_size=20)
+        self.assertEqual(stats["asked"], 45)
+        self.assertEqual(stats["deferred"], 0)
+        self.assertEqual(stats["calls"], 3)
+
     def test_no_candidates_short_circuits(self):
         client = FakeClient()
         verdicts, stats = self.review([candidate("p1", similarity=0.5)], client)

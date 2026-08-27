@@ -99,6 +99,34 @@ class SearchTelemetry:
         """(기사 × 이슈) 방문 하나. 증가 법칙 O(기사 × 이슈)를 재는 분모다."""
         self.clusters["visits"] += 1
 
+    def prefilter(self, article_hash: object, issue_id: object, lexical: float) -> None:
+        """Record one cheap evidence prefilter scan and its global lexical rank."""
+        self.clusters["prefilter_scanned"] += 1
+        key = str(issue_id or "")
+        if key and lexical > self._article_lexical.get(key, -1.0):
+            self._article_lexical[key] = lexical
+
+    def retrieve(self, issue_total: int, candidate_count: int) -> None:
+        """Record indexed retrieval breadth without counting a precise issue visit."""
+        self.clusters["index_queries"] += 1
+        self.clusters["index_corpus_total"] += max(0, int(issue_total or 0))
+        self.clusters["index_candidates"] += max(0, int(candidate_count or 0))
+        self.clusters["index_candidate_max"] = max(
+            self.clusters["index_candidate_max"], max(0, int(candidate_count or 0))
+        )
+
+    def retrieval_canary(self, checked: int, auto_missed: int, review_missed: int) -> None:
+        """Record fixed-sample exhaustive recall checks for indexed retrieval."""
+        self.clusters["canary_articles"] += 1
+        self.clusters["canary_excluded_checked"] += max(0, int(checked or 0))
+        self.clusters["canary_auto_missed"] += max(0, int(auto_missed or 0))
+        self.clusters["canary_review_missed"] += max(0, int(review_missed or 0))
+
+    def shortlist(self, count: int, mandatory_count: int = 0) -> None:
+        """Record how many issues proceed to the precise matcher."""
+        self.clusters["shortlisted"] += max(0, int(count or 0))
+        self.clusters["mandatory_shortlisted"] += max(0, int(mandatory_count or 0))
+
     def skip(self, reason: str) -> None:
         """묶음 전체를 건너뛴 이유. 지금 규칙이 이미 얼마나 걷는지 보여 준다."""
         self.clusters[f"skip_{reason}"] += 1
@@ -157,6 +185,19 @@ class SearchTelemetry:
         return {
             "path": self.path,
             "issue_visits": self.clusters["visits"],
+            "prefilter_scanned": self.clusters["prefilter_scanned"],
+            "index_queries": self.clusters["index_queries"],
+            "index_corpus_total": self.clusters["index_corpus_total"],
+            "index_candidates": self.clusters["index_candidates"],
+            "index_candidate_max": self.clusters["index_candidate_max"],
+            "retrieval_canary": {
+                "articles": self.clusters["canary_articles"],
+                "excluded_checked": self.clusters["canary_excluded_checked"],
+                "auto_missed": self.clusters["canary_auto_missed"],
+                "review_missed": self.clusters["canary_review_missed"],
+            },
+            "shortlisted": self.clusters["shortlisted"],
+            "mandatory_shortlisted": self.clusters["mandatory_shortlisted"],
             "clusters_compared": self.clusters["compared"],
             "pairs_scored": sum(self.pairs.values()),
             "skipped": {key[5:]: value for key, value in sorted(self.clusters.items())
@@ -570,6 +611,21 @@ def guardrails(diagnostics: dict, *, baseline: dict | None = None,
     for space in diagnostics.get("search_space") or []:
         rank = space.get("preselect_rank") or {}
         path = space.get("path") or "?"
+        canary = space.get("retrieval_canary") or {}
+        if int(canary.get("auto_missed") or 0):
+            out.append(_finding(
+                "issue-candidate:index-auto-recall", "critical",
+                f"역색인이 자동 병합 후보를 놓쳤다 ({path})",
+                f"고정 전수 표본에서 {canary['auto_missed']}개 이슈를 canary가 구조했다. "
+                "배포 전 검색 키·posting 상한을 조정해야 한다.",
+            ))
+        if int(canary.get("review_missed") or 0):
+            out.append(_finding(
+                "issue-candidate:index-review-recall", "warning",
+                f"역색인이 LLM 검수 후보를 놓쳤다 ({path})",
+                f"고정 전수 표본에서 {canary['review_missed']}개 회색지대 이슈를 구조했다. "
+                "Gemini 호출을 줄이는 대신 필요한 판단까지 숨기고 있지 않은지 확인해야 한다.",
+            ))
         if rank.get("not_in_table"):
             out.append(_finding(
                 "issue-candidate:telemetry-desync", "critical",

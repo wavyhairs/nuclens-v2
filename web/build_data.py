@@ -57,6 +57,7 @@ import issue_candidate_stats  # noqa: E402
 import issue_insight  # noqa: E402
 import issue_review  # noqa: E402
 import keei_match  # noqa: E402
+import story_cluster  # noqa: E402
 import story_fingerprint  # noqa: E402
 import weekly_sections  # noqa: E402
 
@@ -114,9 +115,19 @@ FINGERPRINT_MATCH_MIN_SHARED_AXES = 2
 # 지문에서 **신원**을 말하는 축(story_fingerprint.IDENTITY_AXES). 나라와
 # event_family 는 닫힌 어휘라 여기 없다 — 자세한 실측은 그 모듈 주석에 있다.
 FINGERPRINT_MATCH_AXES = story_fingerprint.IDENTITY_AXES
+EVIDENCE_PRESELECT_TOP_N = 50
+EVIDENCE_RETRIEVAL_POOL = 240
+EVIDENCE_VECTOR_TOP_N = 80
+EVIDENCE_RETRIEVAL_TERMS = 12
+EVIDENCE_RETRIEVAL_MAX_POSTINGS = 240
+EVIDENCE_RETRIEVAL_CANARY = 12
+EVIDENCE_LSH_BANDS = 6
+EVIDENCE_LSH_BITS_PER_BAND = 6
 
 # 화면이 읽는 규칙표. id 는 diagnostics["method"] 값과 1:1 이다.
 MERGE_RULES = (
+    {"id": "story_id", "label": "사건 식별자",
+     "detail": "발송 연속성에서 이어진 동일 story_id (국가·설비 충돌은 계속 차단)"},
     {"id": "title", "label": "제목 유사도",
      "detail": f"제목 유사도 {TITLE_MATCH_RATIO} 이상"},
     {"id": "tags", "label": "공통 태그",
@@ -1346,13 +1357,19 @@ def report_candidate_diagnostics(diagnostics: dict) -> None:
               f"evidence {row['evidence']:>5} / card {row['card']:>5}")
     for space in diagnostics.get("search_space") or []:
         rank = space.get("preselect_rank") or {}
+        canary = space.get("retrieval_canary") or {}
         print(f"    [{space.get('path')}] 이슈방문 {space.get('issue_visits'):,} → "
               f"클러스터비교 {space.get('clusters_compared'):,} → "
               f"쌍채점 {space.get('pairs_scored'):,} | "
+              f"색인후보 {space.get('index_candidates') or 0:,}/"
+              f"전체 {space.get('index_corpus_total') or 0:,} "
+              f"(최대 {space.get('index_candidate_max') or 0}) | "
               f"기사당 비교 평균 {(space.get('clusters_per_article') or {}).get('mean')} "
               f"(최대 {(space.get('clusters_per_article') or {}).get('max')}) | "
               f"어휘예선 정답 순위 중앙 {rank.get('median')} · p99 {rank.get('p99')} · "
-              f"최대 {rank.get('max')} (표본 {rank.get('landed')})")
+              f"최대 {rank.get('max')} (표본 {rank.get('landed')}) | "
+              f"canary 누락 자동 {canary.get('auto_missed') or 0} · "
+              f"LLM {canary.get('review_missed') or 0}")
     for guard in diagnostics.get("guards") or []:
         level = "error" if guard.get("severity") == "critical" else "warning"
         print(f"::{level}::[{guard.get('id')}] {guard.get('title')} — {guard.get('detail')}")
@@ -1781,7 +1798,11 @@ def issue_similarity(
     method = "none"
     matched = False
     if not blocked_by:
-        if title_ratio >= TITLE_MATCH_RATIO:
+        left_story_id = str(left.get("story_id") or "").strip()
+        right_story_id = str(right.get("story_id") or "").strip()
+        if left_story_id and left_story_id == right_story_id:
+            matched, method, score = True, "story_id", max(score, 1.0)
+        elif title_ratio >= TITLE_MATCH_RATIO:
             matched, method = True, "title"
         elif tag_shared >= TAGS_MATCH_MIN_SHARED and (
             title_ratio >= TAGS_MATCH_TITLE_RATIO or token_ratio >= TAGS_MATCH_TOKEN_RATIO
@@ -2347,8 +2368,11 @@ def cluster_selected_articles(
         if telemetry is not None:
             telemetry.settle((best_issue or {}).get("issue_id"))
         if best_issue is None:
+            stable_story_id = str(article.get("story_id") or "").strip()
+            if article.get("story_id_source") == "legacy_hash":
+                stable_story_id = ""
             issues.append({
-                "issue_id": f"issue-{article['hash']}",
+                "issue_id": stable_story_id or f"issue-{article['hash']}",
                 "first_seen": article["briefing_date"],
                 "last_seen": article["briefing_date"],
                 "representative": article,
@@ -2370,6 +2394,300 @@ def cluster_selected_articles(
     return issues
 
 
+def _cheap_issue_score(left: dict, right: dict) -> float:
+    """Lexical score used only to order evidence candidates."""
+    left_title, right_title = _title_norm(left), _title_norm(right)
+    title_ratio = (
+        difflib.SequenceMatcher(None, left_title, right_title).ratio()
+        if left_title and right_title else 0.0
+    )
+    return (
+        0.55 * title_ratio
+        + 0.25 * _jaccard(_tokens(left), _tokens(right))
+        + 0.20 * _jaccard(_strong_tags(left), _strong_tags(right))
+    )
+
+
+def _title_grams(article: dict, width: int = 3) -> set[str]:
+    title = _title_norm(article)
+    if len(title) < width:
+        return {title} if title else set()
+    return {title[index:index + width] for index in range(len(title) - width + 1)}
+
+
+def _embedding_bands(vector: list[float] | None) -> tuple[tuple[int, int], ...]:
+    """Sparse random-hyperplane LSH bands for bounded cosine candidate retrieval."""
+    if not vector:
+        return ()
+    dimension = len(vector)
+    total_bits = EVIDENCE_LSH_BANDS * EVIDENCE_LSH_BITS_PER_BAND
+    bits: list[int] = []
+    for bit in range(total_bits):
+        state = (dimension * 2654435761 + bit * 2246822519 + 3266489917) & 0xFFFFFFFF
+        projection = 0.0
+        for _ in range(16):
+            state = (1664525 * state + 1013904223) & 0xFFFFFFFF
+            index = state % dimension
+            sign = 1.0 if state & 0x80000000 else -1.0
+            projection += float(vector[index]) * sign
+        bits.append(1 if projection >= 0 else 0)
+    out = []
+    width = EVIDENCE_LSH_BITS_PER_BAND
+    for band in range(EVIDENCE_LSH_BANDS):
+        value = 0
+        for flag in bits[band * width:(band + 1) * width]:
+            value = (value << 1) | flag
+        out.append((band, value))
+    return tuple(out)
+
+
+def _build_evidence_issue_index(
+    issues: list[dict],
+    facility_entities: dict[str, set[str]] | None,
+    embeddings: dict[str, list[float]] | None,
+    local_embeddings: dict[str, list[float]] | None,
+) -> dict:
+    """Build linear-size inverted indexes once; queries never scan every issue."""
+    index = {
+        "issues": {}, "order": {}, "members": defaultdict(set),
+        "story": defaultdict(set), "facility": defaultdict(set),
+        "tags": defaultdict(set), "tokens": defaultdict(set), "grams": defaultdict(set),
+        "fingerprint": {axis: defaultdict(set) for axis in FINGERPRINT_MATCH_AXES},
+        "remote_lsh": defaultdict(set), "local_lsh": defaultdict(set),
+    }
+    for order, issue in enumerate(issues):
+        issue_id = str(issue.get("issue_id") or f"@{order}")
+        index["issues"][issue_id] = issue
+        index["order"][issue_id] = order
+        members = issue.get("members") or []
+        recent = members[-3:]
+        for member in members:
+            member_hash = str(member.get("hash") or "")
+            if member_hash:
+                index["members"][member_hash].add(issue_id)
+                for facility in (facility_entities or {}).get(member_hash, set()):
+                    index["facility"][facility].add(issue_id)
+            story_id = str(member.get("story_id") or "").strip()
+            if story_id:
+                index["story"][story_id].add(issue_id)
+        for member in recent:
+            for tag in _strong_tags(member):
+                index["tags"][tag].add(issue_id)
+            for token in _tokens(member):
+                index["tokens"][token].add(issue_id)
+            for gram in _title_grams(member):
+                index["grams"][gram].add(issue_id)
+            fingerprint = member.get("story_fingerprint") or {}
+            for axis in FINGERPRINT_MATCH_AXES:
+                for value in story_fingerprint.axis_values(fingerprint, axis):
+                    index["fingerprint"][axis][value].add(issue_id)
+            member_hash = str(member.get("hash") or "")
+            for band in _embedding_bands((embeddings or {}).get(member_hash)):
+                index["remote_lsh"][band].add(issue_id)
+            for band in _embedding_bands((local_embeddings or {}).get(member_hash)):
+                index["local_lsh"][band].add(issue_id)
+    return index
+
+
+def _rare_postings(mapping: dict, keys: set[str]) -> list[tuple[str, set[str]]]:
+    rows = [(key, mapping.get(key, set())) for key in keys if mapping.get(key)]
+    rows = [row for row in rows if len(row[1]) <= EVIDENCE_RETRIEVAL_MAX_POSTINGS]
+    return sorted(rows, key=lambda row: (len(row[1]), row[0]))[:EVIDENCE_RETRIEVAL_TERMS]
+
+
+def _lsh_candidates(mapping: dict, vector: list[float] | None) -> set[str]:
+    out: set[str] = set()
+    width = EVIDENCE_LSH_BITS_PER_BAND
+    for band, value in _embedding_bands(vector):
+        out.update(mapping.get((band, value), set()))
+        for bit in range(width):
+            out.update(mapping.get((band, value ^ (1 << bit)), set()))
+    return out
+
+
+def _preselect_evidence_issues(
+    article: dict,
+    issue_index: dict,
+    overrides: dict[str, set[str]],
+    facility_entities: dict[str, set[str]] | None,
+    embeddings: dict[str, list[float]] | None,
+    local_embeddings: dict[str, list[float]] | None,
+    telemetry: issue_candidate_stats.SearchTelemetry | None,
+) -> list[dict]:
+    """Retrieve bounded candidates, then return lexical/vector heads plus identity lanes."""
+    article_day = _parse_day(article.get("article_date", ""))
+    article_hash = str(article.get("hash") or "")
+    article_story_id = str(article.get("story_id") or "").strip()
+    article_facilities = (facility_entities or {}).get(article_hash, set())
+    approvals = (
+        set(overrides.get("approved") or ())
+        | set(overrides.get("llm_approved") or ())
+    )
+    mandatory_ids: set[str] = set(issue_index["story"].get(article_story_id, set()))
+    for facility in article_facilities:
+        mandatory_ids.update(issue_index["facility"].get(facility, set()))
+    for pair_id in approvals:
+        left, separator, right = str(pair_id).partition("--")
+        if not separator:
+            continue
+        other = right if left == article_hash else left if right == article_hash else ""
+        if other:
+            mandatory_ids.update(issue_index["members"].get(other, set()))
+
+    # Fingerprint identity is an intersection of at least two concrete axes.  Common actors
+    # alone therefore cannot fan out the query, while actor+asset/action remains lossless.
+    axis_hits: list[set[str]] = []
+    fingerprint = article.get("story_fingerprint") or {}
+    for axis in FINGERPRINT_MATCH_AXES:
+        matches: set[str] = set()
+        for value in story_fingerprint.axis_values(fingerprint, axis):
+            matches.update(issue_index["fingerprint"][axis].get(value, set()))
+        if matches:
+            axis_hits.append(matches)
+    identity_counts: Counter = Counter()
+    for matches in axis_hits:
+        identity_counts.update(matches)
+    mandatory_ids.update(issue_id for issue_id, count in identity_counts.items() if count >= 2)
+
+    retrieval_scores: Counter = Counter()
+    for _key, postings in _rare_postings(issue_index["tags"], _strong_tags(article)):
+        retrieval_scores.update({issue_id: 8 for issue_id in postings})
+    for _key, postings in _rare_postings(issue_index["tokens"], _tokens(article)):
+        retrieval_scores.update({issue_id: 3 for issue_id in postings})
+    for _key, postings in _rare_postings(issue_index["grams"], _title_grams(article)):
+        retrieval_scores.update(postings)
+    retrieval_ids = {
+        issue_id for issue_id, _score in sorted(
+            retrieval_scores.items(),
+            key=lambda row: (-row[1], issue_index["order"].get(row[0], 0), row[0]),
+        )[:EVIDENCE_RETRIEVAL_POOL]
+    }
+
+    remote_vector = (embeddings or {}).get(article_hash)
+    local_vector = (local_embeddings or {}).get(article_hash)
+    vector_ids = (
+        _lsh_candidates(issue_index["remote_lsh"], remote_vector)
+        | _lsh_candidates(issue_index["local_lsh"], local_vector)
+    )
+    vector_scores: list[tuple[float, str]] = []
+    for issue_id in vector_ids:
+        issue = issue_index["issues"].get(issue_id) or {}
+        best = 0.0
+        for member in (issue.get("members") or [])[-3:]:
+            member_hash = str(member.get("hash") or "")
+            for left_vector, vector_table in (
+                (remote_vector, embeddings or {}), (local_vector, local_embeddings or {})
+            ):
+                similarity = cosine_similarity(left_vector, vector_table.get(member_hash))
+                if similarity is not None:
+                    best = max(best, similarity)
+        vector_scores.append((best, issue_id))
+    vector_head = {
+        issue_id for _score, issue_id in sorted(
+            vector_scores, key=lambda row: (-row[0], row[1])
+        )[:EVIDENCE_VECTOR_TOP_N]
+    }
+
+    candidate_ids = retrieval_ids | vector_head | mandatory_ids
+    scored: list[tuple[float, str, dict]] = []
+    for issue_id in candidate_ids:
+        issue = issue_index["issues"].get(issue_id)
+        if issue is None:
+            continue
+        members = issue.get("members") or []
+        card_days = [
+            _parse_day(member.get("article_date") or member.get("briefing_date") or "")
+            for member in members
+        ]
+        if article_day and card_days and all(
+            card_day and abs((article_day - card_day).days) > ISSUE_WINDOW_DAYS
+            for card_day in card_days
+        ):
+            continue
+        recent = members[-3:]
+        lexical = max((_cheap_issue_score(article, member) for member in recent), default=0.0)
+        scored.append((lexical, issue_id, issue))
+        if telemetry is not None:
+            telemetry.prefilter(article_hash, issue_id, lexical)
+
+    ranked = sorted(scored, key=lambda row: (-row[0], row[1]))
+    selected_ids = {issue_id for _, issue_id, _ in ranked[:EVIDENCE_PRESELECT_TOP_N]}
+    selected_ids.update(vector_head)
+    selected_ids.update(mandatory_ids)
+    shortlisted = [
+        issue_index["issues"][issue_id]
+        for issue_id in sorted(selected_ids, key=lambda key: issue_index["order"].get(key, 0))
+        if issue_id in issue_index["issues"]
+    ]
+    if telemetry is not None:
+        telemetry.retrieve(len(issue_index["issues"]), len(candidate_ids))
+        telemetry.shortlist(len(shortlisted), len(mandatory_ids))
+    return shortlisted
+
+
+def _evidence_retrieval_canary(
+    article: dict,
+    issues: list[dict],
+    shortlisted: list[dict],
+    embeddings: dict[str, list[float]] | None,
+    local_embeddings: dict[str, list[float]] | None,
+    overrides: dict[str, set[str]],
+    facility_entities: dict[str, set[str]] | None,
+) -> tuple[list[dict], int, int, int]:
+    """Exhaustively audit a fixed sample and rescue any indexed-retrieval miss."""
+    selected = {str(issue.get("issue_id") or "") for issue in shortlisted}
+    veto_pairs = set(overrides.get("rejected") or ()) | set(
+        overrides.get("llm_rejected") or ())
+    approvals = set(overrides.get("approved") or ()) | set(
+        overrides.get("llm_approved") or ())
+    article_day = _parse_day(article.get("article_date", ""))
+    rescued: list[dict] = []
+    auto_missed = review_missed = excluded_checked = 0
+    for issue in issues:
+        issue_id = str(issue.get("issue_id") or "")
+        if issue_id in selected:
+            continue
+        members = issue.get("members") or []
+        card_days = [
+            _parse_day(member.get("article_date") or member.get("briefing_date") or "")
+            for member in members
+        ]
+        if article_day and card_days and all(
+            card_day and abs((article_day - card_day).days) > ISSUE_WINDOW_DAYS
+            for card_day in card_days
+        ):
+            continue
+        if veto_pairs and any(
+            _pair_id(article.get("hash"), member.get("hash")) in veto_pairs
+            for member in members
+        ):
+            continue
+        if (_cluster_country_conflict(article, members)
+                or _cluster_facility_conflict(article, members)):
+            continue
+        excluded_checked += 1
+        fingerprint_chain_blocked = _cluster_fingerprint_conflict(article, members)
+        found_auto = found_review = False
+        for reference in members[-3:]:
+            pair_id = _pair_id(article.get("hash"), reference.get("hash"))
+            matched, _score, diag = issue_similarity(
+                article, reference, embeddings, local_embeddings, facility_entities
+            )
+            if (matched and diag.get("method") == "story_fingerprint"
+                    and fingerprint_chain_blocked):
+                matched = False
+            if pair_id in approvals and not diag.get("blocked_by"):
+                matched = True
+            found_auto = found_auto or matched
+            found_review = found_review or issue_review.in_review_band(diag)
+        if found_auto or found_review:
+            rescued.append(issue)
+            selected.add(issue_id)
+            auto_missed += int(found_auto)
+            review_missed += int(found_review and not found_auto)
+    return rescued, auto_missed, review_missed, excluded_checked
+
+
 def attach_evidence_articles(
     news_items: list[dict],
     issues: list[dict],
@@ -2385,9 +2703,10 @@ def attach_evidence_articles(
     근거 기사는 새 이슈를 만들지 않고 다른 근거 기사의 연결 기준도 되지 않는다.
     따라서 수집 분모를 넓혀도 카드 소속·대표 제목·정렬이 바뀌지 않는다.
 
-    후보의 대부분이 여기서 난다 — 이 루프는 기사 하나마다 **이슈 전부**를 돈다
-    (실측 2026-08-21: 미발송 1,950건 × 이슈 270개 = 526,500 방문). `telemetry`
-    는 그 폭을 세기만 하고 반환값을 바꾸지 않는다.
+    이슈 전체는 한 번만 역색인한다. 기사별 쿼리는 희소 어휘·문자 n-gram·지문 축과
+    임베딩 LSH 버킷에서 제한된 후보를 찾고, 수동/LLM 승인·story_id·설비는 필수
+    경로로 합친다. 따라서 정밀 비교량은 기사×전체 이슈가 아니라 기사×후보 상한으로
+    증가한다.
     """
     if not issues:
         return 0
@@ -2409,6 +2728,15 @@ def attach_evidence_articles(
     veto_pairs = set(overrides.get("rejected") or ()) | set(overrides.get("llm_rejected") or ())
     candidate_rows = review_candidates if review_candidates is not None else []
     seen_candidates = {_pair_id(row.get("left_hash"), row.get("right_hash")) for row in candidate_rows}
+    issue_index = _build_evidence_issue_index(
+        issues, facility_entities, embeddings, local_embeddings
+    )
+    canary_hashes = {
+        str(item.get("hash") or "")
+        for item in sorted(evidence, key=lambda row: str(row.get("hash") or ""))[
+            :EVIDENCE_RETRIEVAL_CANARY
+        ]
+    }
     attached = 0
 
     for article in evidence:
@@ -2416,7 +2744,19 @@ def attach_evidence_articles(
         best_issue = None
         best_score = -1.0
         best_diag = None
-        for issue in issues:
+        shortlisted = _preselect_evidence_issues(
+            article, issue_index, overrides, facility_entities,
+            embeddings, local_embeddings, telemetry
+        )
+        if str(article.get("hash") or "") in canary_hashes:
+            rescued, auto_missed, review_missed, checked = _evidence_retrieval_canary(
+                article, issues, shortlisted, embeddings, local_embeddings,
+                overrides, facility_entities
+            )
+            shortlisted.extend(rescued)
+            if telemetry is not None:
+                telemetry.retrieval_canary(checked, auto_missed, review_missed)
+        for issue in shortlisted:
             if telemetry is not None:
                 telemetry.visit()
             card_members = issue["members"]
@@ -2654,6 +2994,8 @@ def _story_contract(article: dict) -> dict:
     if not isinstance(members, list):
         members = []
     return {
+        "story_id": str(article.get("story_id") or story_cluster.fallback_story_id(article)),
+        "story_id_source": str(article.get("story_id_source") or "legacy_hash"),
         "story_contract_available": bool(article.get("story_contract_available", False)),
         "story_article_count": article_count,
         "story_outlet_count": outlet_count,
@@ -5505,6 +5847,9 @@ def build() -> None:
         ))
         visible.append({
             "hash": record.get("hash", ""),
+            "story_id": str((delivery or {}).get("story_id")
+                            or story_cluster.fallback_story_id(record)),
+            "story_id_source": str((delivery or {}).get("story_id_source") or "legacy_hash"),
             "date": article_date,
             "article_date": article_date,
             "briefing_date": delivery.get("date") if delivery else None,

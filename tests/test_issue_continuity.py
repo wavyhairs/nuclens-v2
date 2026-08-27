@@ -73,6 +73,38 @@ def feat(**kw):
 # ---- ① 같은 이슈인가 -----------------------------------------------------------
 
 class SameIssueTests(unittest.TestCase):
+    def test_legacy_fingerprint_bridges_the_same_terrapower_event_after_seven_days(self):
+        prior = sent(
+            "현대건설·테라파워, SMR 사업 협력 계약 체결", h="old",
+            date="2026-08-10",
+            fingerprint={"countries": ["South Korea", "USA"],
+                         "actors": ["Hyundai E&C", "TerraPower", "Export-Import Bank"],
+                         "assets": ["SMR"], "event_family": "contract_award"})
+        cand = article(
+            "테라파워와 현대건설의 차세대 원자로 협력 본격화", h="new",
+            fingerprint={"countries": ["South Korea", "USA"],
+                         "actors": ["Hyundai E&C", "TerraPower"],
+                         "assets": ["SMR"], "event_family": "contract_award"},
+            features=feat())
+
+        verdict = continuity.verdict_for(
+            cand, [prior], continuity.DEFAULT_CONFIG, TODAY)
+
+        self.assertTrue(verdict["identity_confirmed"])
+        self.assertEqual(verdict["identity_method"], "fingerprint_anchors")
+        self.assertEqual(verdict["progression"], "none")
+        self.assertTrue(verdict["drop"])
+
+    def test_country_and_event_family_alone_never_bridge_unrelated_events(self):
+        prior = sent(
+            "프랑스 정부 신규 원전 금융 계획 발표",
+            fingerprint={"countries": ["France"], "event_family": "policy_decision"})
+        cand = article(
+            "EDF 원전 정비 일정 변경",
+            fingerprint={"countries": ["France"], "event_family": "policy_decision"})
+        self.assertIsNone(
+            continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
     def test_title_variation_matches(self):
         """실측 2026-08-15/16 — 표기가 갈려도(알마라즈/알마라스) 같은 이슈다."""
         prior = sent("스페인, 알마라즈 원전 운영 기한 2030년까지 연장")

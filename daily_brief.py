@@ -51,6 +51,7 @@ import issue_continuity
 import operational_monitoring
 import khnp_relevance
 import ranking
+import story_cluster
 
 ROOT = Path(__file__).parent
 QUEUE_FILE = ROOT / "digest_queue.json"
@@ -1082,6 +1083,8 @@ def plan_briefs(queue: list[dict],
         meta["story_reason"] = a.get("story_reason", "")
         meta["story_dedup_stage"] = a.get("story_dedup_stage", "")
         meta["story_fingerprint"] = a.get("story_fingerprint", {})
+        meta["story_id"] = story_cluster.ensure_story_id(a)
+        meta["story_id_source"] = a.get("story_id_source", "generated")
         meta["story_article_hashes"] = (a.get("story_article_hashes") or [])[:12]
         meta["story_related_titles"] = (a.get("story_related_titles") or [])[:12]
         # 접힌 기사의 hash↔제목 짝. 운영 콘솔의 수동 분리가 이것 없이는 "어느
@@ -1119,7 +1122,8 @@ def plan_briefs(queue: list[dict],
             meta["continuity"] = {k: cont.get(k) for k in
                                   ("prior_title", "prior_date", "days_ago", "similarity",
                                    "progression", "progression_kind", "progression_detail",
-                                   "window_days", "repeat_streak", "penalty")}
+                                   "window_days", "repeat_streak", "penalty", "story_id",
+                                   "identity_confirmed", "identity_method")}
         return meta
 
     out_items = ([_item_meta(a, "국내", dom_diag, i) for i, a in enumerate(dom, 1)]
@@ -1131,8 +1135,15 @@ def plan_briefs(queue: list[dict],
     dup_hashes = [d["hash"] for d in
                   dom_diag["dropped_duplicates"] + forn_diag["dropped_duplicates"]
                   if d.get("dup_of") in selected_hashes]
+    # A confirmed cross-day repeat has already been incorporated into the prior canonical story.
+    # Leaving it in the queue makes the same source compete again until the three-day sweeper.
+    repeat_hashes = {
+        str(row.get("hash") or "")
+        for row in (dom_diag.get("dropped_repeat") or [])
+                   + (forn_diag.get("dropped_repeat") or [])
+    }
     prune = sorted((selected_hashes | set(dup_hashes) | set(junk_hashes)
-                    | quality_held_hashes | final_quarantine_hashes) - {""})
+                    | repeat_hashes | quality_held_hashes | final_quarantine_hashes) - {""})
 
     quality_diag = {
         "held_before_ranking": quality_held,
@@ -1166,6 +1177,10 @@ def plan_briefs(queue: list[dict],
                             + (forn_diag.get("stage_vetoes") or []),
             "display_promotions": (dom_diag.get("display_promotions") or [])
                                   + (forn_diag.get("display_promotions") or []),
+            "ownership_conflicts": (dom_diag.get("story_ownership_conflicts") or [])
+                                   + (forn_diag.get("story_ownership_conflicts") or []),
+            "invariant_violations": (dom_diag.get("selection_invariant_violations") or [])
+                                    + (forn_diag.get("selection_invariant_violations") or []),
         },
         "prune_hashes": prune,
     })
@@ -1587,7 +1602,9 @@ def append_story_audit(outbox: dict, path: Path | None = None,
         return False
     vetoes = audit.get("stage_vetoes") or []
     promotions = audit.get("display_promotions") or []
-    if not vetoes and not promotions:
+    ownership = audit.get("ownership_conflicts") or []
+    invariants = audit.get("invariant_violations") or []
+    if not vetoes and not promotions and not ownership and not invariants:
         return False
     path = path or DELIVERY_LOG_FILE
     now = now or datetime.now(timezone.utc)
@@ -1598,8 +1615,12 @@ def append_story_audit(outbox: dict, path: Path | None = None,
         # 상한을 둔다 — 이 줄은 매일 붙고 로그는 지우지 않는다.
         "stage_vetoes": vetoes[:60],
         "display_promotions": promotions[:40],
+        "ownership_conflicts": ownership[:60],
+        "invariant_violations": invariants[:40],
         "stage_veto_count": len(vetoes),
         "display_promotion_count": len(promotions),
+        "ownership_conflict_count": len(ownership),
+        "invariant_violation_count": len(invariants),
     }
     with path.open("a", encoding="utf-8") as fp:
         fp.write(json.dumps(rec, ensure_ascii=False) + "\n")
