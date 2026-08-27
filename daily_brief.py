@@ -283,8 +283,12 @@ def enrich_investment(items: list[dict]) -> dict[int, dict]:
         print(f"[daily_brief] 투자 보강 실패 → 투자 줄 없이 발송: {e}")
         return {}
 
+    if not isinstance(result, dict) or not isinstance(result.get("investments"), list):
+        print("[daily_brief] 투자 보강 응답 형식 오류 → 투자 줄 없이 발송")
+        return {}
+
     out: dict[int, dict] = {}
-    for it in result.get("investments") or []:
+    for it in result["investments"]:
         if not isinstance(it, dict):
             continue
         idx = it.get("idx")
@@ -421,7 +425,23 @@ def complete_required_fields(items: list[dict]) -> dict:
         diag["skipped"] = "gemini_error"
         return diag
 
-    for row in result.get("items") or []:
+    # Gemini JSON 모드는 보통 객체를 돌려주지만, 2026-08-27 실운영에서 최상위
+    # 배열이 한 번 반환됐다. 외부 응답의 모양 때문에 Plan 전체를 죽이면 claim과
+    # 발송이 모두 생략된다. 보강 필드는 선택 사항이므로 잘못된 모양은 빈 응답으로
+    # 취급하고 원래 기사로 계속 진행한다.
+    if not isinstance(result, dict):
+        print(f"[daily_brief] 한수원 시사점 보완 응답 형식 오류 "
+              f"({type(result).__name__}) → 빈칸 유지")
+        diag["skipped"] = "invalid_response"
+        return diag
+
+    rows = result.get("items")
+    if not isinstance(rows, list):
+        print("[daily_brief] 한수원 시사점 보완 items 형식 오류 → 빈칸 유지")
+        diag["skipped"] = "invalid_response"
+        return diag
+
+    for row in rows:
         if not isinstance(row, dict):
             continue
         order = row.get("idx")
@@ -597,8 +617,13 @@ def build_report_recs(items: list[dict]) -> tuple[str, dict]:
         print(f"[daily_brief] 보고서 추천 실패 → 섹션 생략: {e}")
         return "", diag
 
+    if not isinstance(result, dict) or not isinstance(result.get("reports"), list):
+        print("[daily_brief] 보고서 추천 응답 형식 오류 → 섹션 생략")
+        diag["skipped"] = "invalid_response"
+        return "", diag
+
     reports = []
-    for r in (result.get("reports") or []):
+    for r in result["reports"]:
         if not isinstance(r, dict) or not r.get("topic"):
             continue
         idx = r.get("idx")

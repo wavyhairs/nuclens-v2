@@ -138,6 +138,48 @@ class TestInvestment(unittest.TestCase):
         finally:
             db.call_json, db.is_available = orig_call, orig_avail
 
+    def test_enrich_malformed_response_returns_empty(self):
+        orig_call, orig_avail = db.call_json, db.is_available
+        db.is_available = lambda: True
+        db.call_json = lambda *a, **k: [{"idx": 0}]
+        try:
+            self.assertEqual(db.enrich_investment([qitem()]), {})
+        finally:
+            db.call_json, db.is_available = orig_call, orig_avail
+
+
+class TestRequiredFieldBackfill(unittest.TestCase):
+    def _run_with_response(self, response):
+        item = qitem(implication="", detail="근거가 있는 기사 본문")
+        orig_call = db.call_json
+        orig_avail = db.is_available
+        orig_requirement = db.khnp_relevance.implication_requirement
+        db.is_available = lambda: True
+        db.call_json = lambda *a, **k: response
+        db.khnp_relevance.implication_requirement = lambda _item: {
+            "level": "required",
+            "regenerate": True,
+            "current": "",
+            "reasons": [],
+        }
+        try:
+            return item, db.complete_required_fields([item])
+        finally:
+            db.call_json = orig_call
+            db.is_available = orig_avail
+            db.khnp_relevance.implication_requirement = orig_requirement
+
+    def test_top_level_list_response_is_nonfatal(self):
+        """실운영 회귀: Gemini가 객체 대신 배열을 반환해도 Plan은 계속한다."""
+        item, diag = self._run_with_response([{"idx": 0, "implication": "문장"}])
+        self.assertEqual(diag["skipped"], "invalid_response")
+        self.assertEqual(item["implication"], "")
+
+    def test_non_list_items_response_is_nonfatal(self):
+        item, diag = self._run_with_response({"items": {"idx": 0}})
+        self.assertEqual(diag["skipped"], "invalid_response")
+        self.assertEqual(item["implication"], "")
+
 
 class TestReportGate(unittest.TestCase):
     def feat(self, **kw):
@@ -160,6 +202,21 @@ class TestReportGate(unittest.TestCase):
         self.assertEqual(msg, "")
         self.assertEqual(diag["candidates"], [])
         self.assertEqual(called, [])  # 후보 0건이면 Gemini 호출 자체가 없다
+
+    def test_malformed_response_is_nonfatal(self):
+        item = qitem(
+            importance="must_read",
+            features=self.feat(report_worthiness=3, policy_materiality=3),
+        )
+        orig_call, orig_avail = db.call_json, db.is_available
+        db.is_available = lambda: True
+        db.call_json = lambda *a, **k: [{"idx": 0, "topic": "잘못된 최상위 배열"}]
+        try:
+            message, diag = db.build_report_recs([item])
+        finally:
+            db.call_json, db.is_available = orig_call, orig_avail
+        self.assertEqual(message, "")
+        self.assertEqual(diag["skipped"], "invalid_response")
 
     def test_gate_requires_strong_signal(self):
         weak = qitem(h="a", features=self.feat(report_worthiness=3))  # 이벤트·정책·등급 없음
