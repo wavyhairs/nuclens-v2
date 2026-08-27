@@ -1414,6 +1414,82 @@ class CandidateTelemetryTests(unittest.TestCase):
         for telemetry in telemetries:
             self.assertEqual(telemetry.summary()["preselect_rank"]["not_in_table"], 0)
 
+    def test_evidence_precise_search_is_bounded_but_story_identity_is_mandatory(self):
+        issues = []
+        for index in range(1200):
+            member = {
+                "hash": f"card-{index}", "article_date": "2026-08-20",
+                "briefing_date": "2026-08-20", "title_kr": f"일반 원전 소식 {index}",
+                "tags": [], "topics": [], "countries": [],
+                "story_id": f"story-{index}",
+            }
+            issues.append({
+                "issue_id": f"story-{index}", "first_seen": "2026-08-20",
+                "last_seen": "2026-08-20", "representative": member,
+                "members": [member], "match_diagnostics": [],
+            })
+        evidence = {
+            "hash": "weak-wording", "article_date": "2026-08-21",
+            "title_kr": "표현상 전혀 다른 후속 보도", "importance": "standard",
+            "tags": [], "topics": [], "countries": [], "story_id": "story-1199",
+        }
+        telemetry = issue_candidate_stats.SearchTelemetry("evidence")
+        attached = build_data.attach_evidence_articles(
+            [evidence], issues, telemetry=telemetry)
+        summary = telemetry.summary()
+
+        self.assertEqual(attached, 1)
+        self.assertEqual(issues[1199]["evidence_members"][0]["hash"], "weak-wording")
+        self.assertEqual(summary["index_corpus_total"], 1200)
+        self.assertLessEqual(summary["prefilter_scanned"], build_data.EVIDENCE_RETRIEVAL_POOL + 1)
+        self.assertLessEqual(summary["issue_visits"], build_data.EVIDENCE_PRESELECT_TOP_N + 1)
+        self.assertGreaterEqual(summary["mandatory_shortlisted"], 1)
+
+    def test_stable_story_id_links_weakly_worded_cards_and_legacy_urls_stay_compatible(self):
+        cards = [
+            {"hash": "old", "briefing_date": "2026-08-10", "article_date": "2026-08-10",
+             "title_kr": "현대건설과 테라파워 협력 계약", "story_id": "story-canonical",
+             "story_id_source": "history", "tags": [], "topics": [], "countries": []},
+            {"hash": "new", "briefing_date": "2026-08-17", "article_date": "2026-08-17",
+             "title_kr": "차세대 원자로 사업의 후속 소식", "story_id": "story-canonical",
+             "story_id_source": "history", "tags": [], "topics": [], "countries": []},
+        ]
+        issues = build_data.cluster_selected_articles(cards)
+        self.assertEqual(len(issues), 1)
+        self.assertEqual(issues[0]["issue_id"], "story-canonical")
+        self.assertEqual(issues[0]["match_diagnostics"][0]["method"], "story_id")
+
+        legacy = dict(cards[0], hash="legacy", story_id="story-legacy",
+                      story_id_source="legacy_hash")
+        legacy_issue = build_data.cluster_selected_articles([legacy])[0]
+        self.assertEqual(legacy_issue["issue_id"], "issue-legacy")
+
+    def test_fixed_canary_rescues_and_alerts_when_index_recall_regresses(self):
+        issues = []
+        for index in range(build_data.EVIDENCE_RETRIEVAL_MAX_POSTINGS + 20):
+            member = {
+                "hash": f"same-{index}", "article_date": "2026-08-20",
+                "briefing_date": "2026-08-20", "title_kr": "완전히 동일한 원전 제목",
+                "tags": [], "topics": [], "countries": [],
+            }
+            issues.append({
+                "issue_id": f"issue-{index}", "last_seen": "2026-08-20",
+                "representative": member, "members": [member], "match_diagnostics": [],
+            })
+        evidence = {
+            "hash": "canary-evidence", "article_date": "2026-08-21",
+            "title_kr": "완전히 동일한 원전 제목", "importance": "standard",
+            "tags": [], "topics": [], "countries": [],
+        }
+        telemetry = issue_candidate_stats.SearchTelemetry("evidence")
+        attached = build_data.attach_evidence_articles([evidence], issues, telemetry=telemetry)
+        summary = telemetry.summary()
+        guards = issue_candidate_stats.guardrails({"search_space": [summary]})
+
+        self.assertEqual(attached, 1)
+        self.assertGreater(summary["retrieval_canary"]["auto_missed"], 0)
+        self.assertIn("issue-candidate:index-auto-recall", {row["id"] for row in guards})
+
     def test_the_lexical_shadow_score_matches_the_matcher(self):
         """예선 점수는 issue_similarity 의 어휘 점수와 같은 식이어야 한다.
 

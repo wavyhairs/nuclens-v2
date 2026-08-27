@@ -761,10 +761,29 @@ def same_issue(candidate: dict, prior: dict, cfg: dict,
     if admin_overrides.merge_blocked(candidate, prior):
         return None
 
+    candidate_story_id = str(candidate.get("story_id") or "")
+    prior_story_id = str(prior.get("story_id") or "")
+    direct_story_id = bool(candidate_story_id and prior_story_id
+                           and candidate_story_id == prior_story_id)
+
     sim = title_similarity(candidate, prior)
     fp_sim, fp_axes, fp_shared = fingerprint_similarity(candidate, prior)
     named = (named_anchors(candidate) & named_anchors(prior)) - generic
     overlap = story_cluster.evidence_overlap(candidate, prior)
+    fp_comparison = story_fingerprint.compare(
+        candidate.get("story_fingerprint"), prior.get("story_fingerprint"))
+    shared_identity_axes = sorted(
+        set(fp_comparison.shared) & set(story_fingerprint.IDENTITY_AXES))
+    contested_identity_axes = sorted(
+        set(fp_comparison.contested) & set(story_fingerprint.IDENTITY_AXES))
+    named_count = distinct_names(named, alias_groups(candidate) + alias_groups(prior))
+    # This is the bridge from legacy history to a stable id.  It is deliberately stronger than
+    # the ordinary fingerprint penalty path: two concrete identity axes, two distinct named
+    # actors, and no contradictory identity axis.  Country/event-family alone can never qualify.
+    fingerprint_identity = bool(
+        len(shared_identity_axes) >= 2
+        and named_count >= int(cfg.get("anchor_min_shared", 2))
+        and not contested_identity_axes)
     # 확정 강도일 때만 매칭 근거로 센다. 그 아래는 아예 참여시키지 않는다 —
     # 약하게 걸어 두면 정상 후속(테라파워 3건 공유)이 `anchor_only` 를 잃고
     # 감점 창이 하루에서 이레로 늘어난다. 실측 근거가 있는 구간에서만 움직인다.
@@ -773,12 +792,16 @@ def same_issue(candidate: dict, prior: dict, cfg: dict,
         and overlap.ratio >= float(cfg.get("evidence_confirm_ratio", 0.6)))
 
     reasons: list[str] = []
+    if direct_story_id:
+        reasons.append(f"story_id:{candidate_story_id}")
     if evidence_confirmed:
         reasons.append(f"evidence:{overlap.shared}/{overlap.candidate_total}")
     if sim >= float(cfg.get("title_similarity", 0.62)):
         reasons.append(f"title:{sim}")
     if (fp_axes >= int(cfg.get("fingerprint_min_axes", 2))
-            and fp_sim >= float(cfg.get("fingerprint_similarity", 0.55))):
+            and fp_sim >= float(cfg.get("fingerprint_similarity", 0.55))
+            and shared_identity_axes
+            and not contested_identity_axes):
         reasons.append(f"fingerprint:{fp_sim}({'+'.join(fp_shared)})")
     # 앵커 경로는 **이름 둘**을 요구한다. 하나로는 못 가른다 — 실측 2026-08-17
     # 큐에서 이름 하나만 요구했을 때 붙은 196쌍을 전부 읽어 보면, 맞은 쌍
@@ -786,8 +809,7 @@ def same_issue(candidate: dict, prior: dict, cfg: dict,
     # 틀린 쌍은 예외 없이 하나였다(`데이터센터` 하나로 25쌍, `게이츠와` 하나로 4쌍).
     # 제목 유사도로는 안 갈린다: 맞은 쌍과 틀린 쌍이 0.41~0.58 구간에 섞여 있다.
     # 세는 것은 낱말이 아니라 **대상**이다 — `원자력안전위원회(NSSC)` 는 하나다.
-    if distinct_names(named, alias_groups(candidate) + alias_groups(prior)) \
-            >= int(cfg.get("anchor_min_shared", 2)):
+    if named_count >= int(cfg.get("anchor_min_shared", 2)):
         reasons.append(f"anchors:{','.join(sorted(named)[:3])}")
     if not reasons:
         return None
@@ -800,7 +822,13 @@ def same_issue(candidate: dict, prior: dict, cfg: dict,
             "reasons": reasons, "anchor_only": anchor_only,
             "evidence_shared": overlap.shared,
             "evidence_ratio": overlap.ratio,
-            "evidence_confirmed": evidence_confirmed}
+            "evidence_confirmed": evidence_confirmed,
+            "identity_confirmed": bool(direct_story_id or fingerprint_identity),
+            "identity_method": "story_id" if direct_story_id else (
+                "fingerprint_anchors" if fingerprint_identity else ""),
+            "story_id": prior_story_id or story_cluster.fallback_story_id(prior),
+            "fingerprint_identity_shared": shared_identity_axes,
+            "fingerprint_identity_contested": contested_identity_axes}
 
 
 # ---- 발송 이력 ------------------------------------------------------------------
@@ -833,6 +861,7 @@ def load_recent_sent(days: int = 14, *, path: Path | None = None,
         stamp = str(row.get("date") or "")
         if not stamp or stamp < cutoff:
             continue
+        story_cluster.ensure_story_id(row, source="legacy_delivery")
         rows.append(row)
     return rows
 
@@ -844,6 +873,7 @@ def as_sent_record(item: dict, briefing_date: str) -> dict:
     3번을 동시에 차지하는 일이 실제로 있었다(2026-08-16 테라파워). 어제와 대조하는
     바로 그 장치로 **같은 날 다른 지역**도 대조한다 — 새 규칙을 만들 이유가 없다.
     """
+    story_id = story_cluster.ensure_story_id(item)
     return {
         "date": briefing_date,
         "hash": item.get("hash", ""),
@@ -858,6 +888,8 @@ def as_sent_record(item: dict, briefing_date: str) -> dict:
         # 안 실으면 그 경로만 눈이 없다.
         "story_members": item.get("story_members") or [],
         "story_article_hashes": item.get("story_article_hashes") or [],
+        "story_id": story_id,
+        "story_id_source": item.get("story_id_source") or "generated",
     }
 
 
@@ -1012,7 +1044,8 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
     drop = bool(
         hard.get("enabled")
         and prog["verdict"] == "none"
-        and (evidence_confirmed or match["similarity"] >= need)
+        and (evidence_confirmed or match.get("identity_confirmed")
+             or match["similarity"] >= need)
         and days_ago <= int(hard.get("max_days", 14))
     )
 
@@ -1031,6 +1064,9 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
         # 판정에 아무 영향이 없었다. 이 플래그가 없으면 진단이 둘을 못 가르고,
         # 문턱을 읽으라고 안내한 숫자가 정작 문턱과 무관해진다.
         "evidence_confirmed": bool(match.get("evidence_confirmed")),
+        "identity_confirmed": bool(match.get("identity_confirmed")),
+        "identity_method": str(match.get("identity_method") or ""),
+        "story_id": str(match.get("story_id") or ""),
         "match_reasons": match["reasons"],
         "progression": prog["verdict"],
         "progression_kind": prog["kind"],
@@ -1084,11 +1120,15 @@ def annotate(items: list[dict], recent: list[dict], cfg: dict | None = None,
         generic = generic_anchors(list(items) + list(recent))
     matched = 0
     for item in items:
+        story_cluster.ensure_story_id(item)
         verdict = verdict_for(item, recent, conf, today, generic)
         if verdict is None:
             item.pop("continuity", None)
             continue
         item["continuity"] = verdict
+        if verdict.get("story_id"):
+            item["story_id"] = verdict["story_id"]
+            item["story_id_source"] = "history"
         matched += 1
         rows.append({
             "hash": item.get("hash", ""),

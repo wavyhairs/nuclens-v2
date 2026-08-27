@@ -139,11 +139,11 @@ MAX_OUTPUT_TOKENS = 16384
 SPLIT_BUDGET = 4
 MIN_SPLIT_SIZE = 2
 
-# 한 빌드에서 **새로** 묻는 쌍의 상한. 하한을 0.84 로 내린 첫 빌드에는 밀려 있던
-# 후보가 146건(실측) 한꺼번에 들어온다. 그걸 한 번에 물으면 8회 호출이 한 빌드에
-# 몰리는데, 웹 빌드는 하루 12회 이상 돌고 같은 키를 크롤·브리핑이 나눠 쓴다.
-# 판정은 캐시되므로 밀린 것은 몇 회차에 걸쳐 저절로 빠진다 — 급할 이유가 없다.
-MAX_NEW_PAIRS_PER_RUN = 40
+# 전역 호출 수를 품질 규칙으로 쓰지 않는다. 회색지대·맥락 게이트·기사당 후보
+# 순위를 통과한 쌍은 필요한 판단이므로 그 회차에 모두 묻고, 재실행은 캐시가 막는다.
+# 운영자가 일시적인 API 예산을 걸어야 할 때만 review_pairs(max_new_pairs=N)으로
+# 명시적으로 제한한다. 제한된 쌍은 기각하지 않고 다음 회차로 미룬다.
+MAX_NEW_PAIRS_PER_RUN = None
 
 # 무료 티어 쿼터는 **모델별 버킷**이다. 기본 2.5-flash 버킷은 크롤 큐레이션(매시간)
 # ·트렌드·리드가 나눠 쓰기 때문에 체인 끝에 붙은 이 호출만 굶는다.
@@ -406,7 +406,7 @@ def review_pairs(review_candidates: list[dict], *,
                  cache_path: Path = CACHE_FILE,
                  client=None,
                  batch_size: int = BATCH_SIZE,
-                 max_new_pairs: int = MAX_NEW_PAIRS_PER_RUN,
+                 max_new_pairs: int | None = MAX_NEW_PAIRS_PER_RUN,
                  low: float = REVIEW_BAND_LOW,
                  high: float = REVIEW_BAND_HIGH) -> tuple[dict[str, bool], dict]:
     """회색지대 쌍을 판정한다.
