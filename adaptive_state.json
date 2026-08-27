@@ -12,6 +12,14 @@
       "type": "company",
       "until": "2026-09-09T16:20:49.804704+00:00"
     },
+    "epri": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-08-27T13:54:41.533218+00:00",
+      "term": "EPRI",
+      "type": "company",
+      "until": "2026-09-10T13:54:41.533218+00:00"
+    },
     "marad": {
       "new_articles": 4,
       "reason": "기간 만료",
@@ -70,57 +78,10 @@
     }
   },
   "spent": {
-    "count": 9,
+    "count": 12,
     "date": "2026-08-27"
   },
   "terms": {
-    "epri": {
-      "articles": 4,
-      "created_at": "2026-08-26T06:53:35.721490+00:00",
-      "domains": [
-        "energydaily.co.kr",
-        "electimes.com",
-        "energy-news.co.kr",
-        "epj.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "energydaily.co.kr",
-          "hash": "e28a309fc4201a4c",
-          "importance": "nice_to_know",
-          "title": "한국전력, 미국 EPRI와 동적송전용량(DLR) 기술 고도화 협력"
-        },
-        {
-          "domain": "electimes.com",
-          "hash": "06290c111b7ac058",
-          "importance": "nice_to_know",
-          "title": "한전-미국 EPRI, 재생에너지 계통 수용성 제고 위한 DLR 기술 공동연구"
-        },
-        {
-          "domain": "energy-news.co.kr",
-          "hash": "eafc5927ea29b522",
-          "importance": "nice_to_know",
-          "title": "한전, 자체 개발 DLR 센서 미국 EPRI 시험장서 실증"
-        }
-      ],
-      "expires_at": "2026-08-27T06:53:35.721490+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-08-27T00:35:20.483445+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-08-27T00:35:12.540421+00:00",
-      "queries_run": 2,
-      "query": "EPRI 원자력",
-      "score": 3.18,
-      "status": "tracking",
-      "term": "EPRI",
-      "ttl_hours": 24,
-      "type": "company",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
     "영덕군이": {
       "articles": 4,
       "created_at": "2026-08-25T12:50:58.242383+00:00",
@@ -199,14 +160,14 @@
           "title": "경북도의회, 원자력특별위원회 등 5대 특위 구성 및 본격 가동"
         }
       ],
-      "expires_at": "2026-08-27T16:20:49.804589+00:00",
+      "expires_at": "2026-08-28T13:54:44.987446+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 1,
-      "last_run": "2026-08-26T16:20:49.804589+00:00",
-      "new_articles": 1,
+      "last_result_count": 6,
+      "last_run": "2026-08-27T13:54:44.987446+00:00",
+      "new_articles": 7,
       "origin": "auto",
-      "planned_at": "2026-08-26T16:20:45.746050+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-08-27T13:54:41.533218+00:00",
+      "queries_run": 2,
       "query": "원자력특별위원회",
       "score": 3.7,
       "status": "extended",
@@ -216,7 +177,7 @@
       "yield_days": [
         "2026-08-27"
       ],
-      "yields": 1,
+      "yields": 2,
       "zero_streak": 0
     },
     "자문위원회": {
@@ -247,14 +208,14 @@
           "title": "한수원, 제2차 안전혁신 자문위원회 개최 및 안전관리 체계 고도화"
         }
       ],
-      "expires_at": "2026-08-27T16:20:49.804589+00:00",
+      "expires_at": "2026-08-28T13:54:44.987446+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 3,
-      "last_run": "2026-08-26T16:20:49.804589+00:00",
-      "new_articles": 3,
+      "last_result_count": 1,
+      "last_run": "2026-08-27T13:54:44.987446+00:00",
+      "new_articles": 4,
       "origin": "auto",
-      "planned_at": "2026-08-26T16:20:45.746050+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-08-27T13:54:41.533218+00:00",
+      "queries_run": 2,
       "query": "자문위원회 원자력",
       "score": 3.7,
       "status": "extended",
@@ -264,7 +225,7 @@
       "yield_days": [
         "2026-08-27"
       ],
-      "yields": 1,
+      "yields": 2,
       "zero_streak": 0
     },
     "전력연구원": {
@@ -348,12 +309,12 @@
       ],
       "expires_at": "2026-08-28T19:51:40.695217+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 2,
-      "last_run": "2026-08-26T19:51:44.544609+00:00",
-      "new_articles": 2,
+      "last_result_count": 17,
+      "last_run": "2026-08-27T13:54:44.987446+00:00",
+      "new_articles": 19,
       "origin": "auto",
-      "planned_at": "2026-08-26T19:51:40.695217+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-08-27T13:54:41.533218+00:00",
+      "queries_run": 2,
       "query": "제작한 원전",
       "score": 4.6,
       "status": "extended",
@@ -363,7 +324,7 @@
       "yield_days": [
         "2026-08-27"
       ],
-      "yields": 1,
+      "yields": 2,
       "zero_streak": 0
     }
   },
