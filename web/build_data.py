@@ -26,6 +26,7 @@ import os
 import re
 import shutil
 import sys
+import time
 from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta, timezone
 from email.utils import format_datetime
@@ -62,7 +63,12 @@ import story_fingerprint  # noqa: E402
 import weekly_sections  # noqa: E402
 
 try:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    # Actions 파이프에서는 stdout이 블록 버퍼링된다. 타임아웃으로 죽은 8/26
+    # 실행은 6분 동안 내부 진행 로그가 한 줄도 보이지 않아 느린 계산과 정지를
+    # 구분할 수 없었다. 모든 단계 로그를 즉시 내보낸다.
+    sys.stdout.reconfigure(
+        encoding="utf-8", errors="replace", line_buffering=True, write_through=True
+    )
 except (AttributeError, ValueError):
     pass
 
@@ -2739,7 +2745,13 @@ def attach_evidence_articles(
     }
     attached = 0
 
-    for article in evidence:
+    for evidence_index, article in enumerate(evidence, 1):
+        if evidence_index == 1 or evidence_index % 100 == 0:
+            print(
+                f"[build_data:progress] evidence {evidence_index}/{len(evidence)} "
+                f"attached={attached}",
+                flush=True,
+            )
         article_day = _parse_day(article.get("article_date", ""))
         best_issue = None
         best_score = -1.0
@@ -5814,6 +5826,18 @@ def build_rss(briefings: list[dict], generated_at: datetime) -> bytes:
 
 
 def build() -> None:
+    build_started = time.monotonic()
+
+    def progress(phase: str, **counts: object) -> None:
+        detail = " ".join(f"{key}={value}" for key, value in counts.items())
+        suffix = f" {detail}" if detail else ""
+        print(
+            f"[build_data:progress] phase={phase} "
+            f"elapsed={time.monotonic() - build_started:.1f}s{suffix}",
+            flush=True,
+        )
+
+    progress("load_archive:start")
     records = load_archive()
     records, archive_quality = apply_archive_integrity_gate(records)
     if archive_quality["quarantined"] or archive_quality["sanitized"]:
@@ -5943,6 +5967,7 @@ def build() -> None:
 
     visible.sort(key=lambda item: (item["article_date"], item.get("briefing_date") or ""), reverse=True)
     news_items = [item for item in visible if item["article_date"] >= cutoff_news]
+    progress("prepare_news:done", records=len(records), news_items=len(news_items))
 
     embeddings = load_embeddings_cache()
     local_embeddings = build_local_embeddings(news_items)
@@ -5965,6 +5990,7 @@ def build() -> None:
         facility_entities,
         telemetry=card_telemetry,
     )
+    progress("cluster_cards:done", issues=len(issues), candidates=len(review_candidates))
     p0_card_snapshot = card_cluster_snapshot(issues)
     evidence_attached = attach_evidence_articles(
         news_items,
@@ -5976,12 +6002,24 @@ def build() -> None:
         facility_entities,
         telemetry=evidence_telemetry,
     )
+    progress(
+        "attach_evidence:done",
+        issues=len(issues),
+        attached=evidence_attached,
+        candidates=len(review_candidates),
+    )
     p1_regression = assert_card_clusters_unchanged(p0_card_snapshot, issues)
 
     # 1차 묶음에서 나온 회색지대 쌍을 LLM 에 한 번 물어보고, 같은 사건으로
     # 판정된 것만 오버라이드로 넣어 다시 묶는다. 클러스터링은 순수 계산이라
     # 두 번 돌려도 비용이 없다. 판정이 0건이면 2차 실행 자체를 건너뛴다.
+    progress("llm_review:start", candidates=len(review_candidates))
     llm_verdicts, llm_stats = issue_review.review_pairs(review_candidates)
+    progress(
+        "llm_review:done",
+        asked=llm_stats.get("asked", 0),
+        failed=llm_stats.get("failed", 0),
+    )
     llm_approved = {pair_id for pair_id, same in llm_verdicts.items() if same}
     # 기각도 2차 묶음에 반영한다. 승인만 넘기면 "다른 사건"이라는 판정이 버려져,
     # 유사도만으로 붙는 경로가 그대로 살아 과병합이 난다(위 거부권 주석 참고).

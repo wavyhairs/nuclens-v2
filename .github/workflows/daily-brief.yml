@@ -33,6 +33,12 @@ on:
   # 20시대에 시작해도 21:00 UTC 크롤 전에 끝난다.
   schedule:
     - cron: '5 19 * * *'
+  # GitHub가 특정 cron 이벤트를 누락해도, 다음 정상 크롤 완료가 아침 브리핑을
+  # 복구한다. preflight가 04:00~12:00 KST와 오늘 sent 여부를 확인하므로 정상일의
+  # 중복 발송은 만들지 않는다.
+  workflow_run:
+    workflows: ["Nuclear news crawl"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       force_audio:
@@ -50,28 +56,43 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.gate.outputs.should_run }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Decide whether to run the full brief
+        id: gate
+        env:
+          TRIGGER_WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: python tools/daily_brief_trigger_gate.py
+
   brief:
     # 스위치가 둘이다. AUTOMATION_ENABLED 는 전체 정지용 마스터고, BRIEFING_ENABLED
     # 는 '발송'만 따로 잠근다 — 수집·웹 갱신은 돌리면서 텔레그램 발송은 내용을
     # 검토한 뒤에 켜고 싶은 구간이 있기 때문이다. 그 구간에 스위치가 하나뿐이면
     # 수집을 켜는 순간 발송도 같이 나간다.
     # workflow_dispatch 는 둘 다 우회한다 — 검토용 수동 실행이 그 목적이다.
+    needs: preflight
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (vars.AUTOMATION_ENABLED == 'true' && vars.BRIEFING_ENABLED == 'true')
+      needs.preflight.outputs.should_run == 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (vars.AUTOMATION_ENABLED == 'true' && vars.BRIEFING_ENABLED == 'true'))
     runs-on: ubuntu-latest
-    # 2026-08-03 정기 실행이 15분 벽에 걸려 취소됐다 — 스텝은 전부 성공한 뒤
-    # 마지막 스모크가 끝나는 순간(15분 09초)이었다. Plan·trend·배포(TTS 포함)가
-    # 각각 3~7분이라 15분은 여유가 없다.
-    #
-    # 2026-08-20: 40 → 50. 늘린 이유는 잡이 느려서가 아니다. 정상일은 25분 30초로
-    # 끝난다(08-18 실측). 아래 긴 스텝마다 timeout-minutes 상한을 걸었는데, 그
-    # 상한들이 전부 최악으로 터져도 **구독 채널 공개가 반드시 실행될 여유**를
-    # 남겨야 한다. 긴 스텝 상한 합이 37분이라 40분으로는 공개·배포 자리가 없다.
-    #
-    # 잡 상한은 이제 최후의 방어선일 뿐이다. 개별 스텝 상한이 먼저 걸리므로,
-    # 한 스텝이 멈춰도 잡이 통째로 죽는 대신 그 스텝만 잃고 발송은 이어진다.
-    timeout-minutes: 50
+    # 정상 계산을 벽시계 시간으로 실패 처리하지 않는다. 2026-08-26 웹 데이터
+    # 빌드는 누적 데이터가 커지며 6분을 넘겼지만, 같은 입력이 별도 배포 잡에서는
+    # 약 19분 뒤 정상 완료됐다. 단계·잡 timeout-minutes 를 두면 느린 성공을 장애로
+    # 바꾸고 뒤의 오디오·배포까지 연쇄 생략한다. 외부 요청별 connect/read timeout은
+    # 각 Python 모듈이 따로 가지므로, 응답 없는 서버 하나를 영구 대기하지는 않는다.
+    # 명시적 잡 제한을 두지 않아 GitHub Actions 기본 최대 실행시간을 사용한다.
 
     steps:
       - name: Checkout repo
@@ -129,7 +150,6 @@ jobs:
       - name: Collect (브리핑 직전 최신 수집)
         id: collect
         continue-on-error: true
-        timeout-minutes: 6   # 실측 3분 37초
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
@@ -189,7 +209,6 @@ jobs:
         run: python embedding_pipeline.py --window-days 21 --max-new 150 --require-nonzero
 
       - name: Plan (선별 → outbox 작성 → 큐 정리)
-        timeout-minutes: 5   # 실측 1분 21초
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
@@ -328,7 +347,6 @@ jobs:
       # 찾는다 — 파이썬 코드는 손댈 필요가 없다.
       - name: Install ffmpeg (오디오 브리핑용)
         if: always() && steps.claim.conclusion == 'success'
-        timeout-minutes: 5
         run: |
           if command -v ffmpeg >/dev/null 2>&1; then
             echo "ffmpeg 이미 설치됨 — $(ffmpeg -version 2>&1 | head -1)"
@@ -355,13 +373,16 @@ jobs:
       - name: Build web data
         id: web-build
         if: always() && steps.claim.conclusion == 'success'
-        timeout-minutes: 6   # 실측 2분 04초
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
         run: |
           git fetch origin main && git reset --hard origin/main
-          python web/build_data.py
+          python tools/run_with_heartbeat.py \
+            --label "Build web data" \
+            --heartbeat-seconds 60 \
+            --stall-warning-seconds 300 \
+            -- python -u web/build_data.py
 
       # 이슈 병합 전수 후보 덤프(web/_audit/). 배포 경로 밖이라 Cloudflare 로는
       # 안 올라간다 — 25 MiB 상한에 걸리는 것이 바로 이 데이터다
@@ -403,10 +424,6 @@ jobs:
       - name: Generate audio briefings (빠른 → 전문가)
         id: audio
         if: always() && steps.claim.conclusion == 'success' && steps.web-build.outcome == 'success'
-        # 실측 12분 27초 — 이 잡에서 가장 비싼 스텝이고, 그래서 상한도 가장 크다.
-        # 15분을 넘겼다는 건 TTS 가 응답을 멈췄다는 뜻이다. 그때는 오디오를 포기하고
-        # 다음 스텝(구독 채널 공개)으로 넘어가는 편이 낫다 — 텍스트라도 나가야 한다.
-        timeout-minutes: 15
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
