@@ -9,8 +9,68 @@
     "issue_group_split 은 쌍이 아니라 선이다. left_hashes × right_hashes 를 가로지르는 쌍 전부로 펼쳐진다 — 쌍 하나만 막으면 다른 멤버를 통해 도로 합쳐진다."
   ],
   "version": 1,
-  "updated_at": "",
-  "synced_at": "",
-  "source": "repo",
-  "entries": []
+  "updated_at": "2026-08-20T22:05:35.102Z",
+  "synced_at": "2026-08-28T23:31:01+00:00",
+  "source": "kv",
+  "entries": [
+    {
+      "kind": "issue_group_split",
+      "note": "한쪽은 계속운전, 다른 쪽은 원전 수출",
+      "created_at": "2026-08-16T13:01:27.314Z",
+      "left_hashes": [
+        "da9a4893cdd4761d",
+        "8087dd0c3497cc5f",
+        "beff8f802cca43be",
+        "756c2e6e80bbd36e"
+      ],
+      "right_hashes": [
+        "c60046634052feca",
+        "25357b78fc8779ae"
+      ],
+      "left_titles": [
+        "원안위, 고리 3·4호기 계속운전 하반기 심의 예정",
+        "원안위, 고리 3·4호기 계속운전 연내 결론 및 SMR 규제 가속화",
+        "원안위, 고리 3·4호기 계속운전 올해 하반기 결정 및 처벌법 개정 추진",
+        "고리 3·4호기 올해, 한빛 1·2호기 내년 계속운전 심사 상정 예정"
+      ],
+      "right_titles": [
+        "산업부·원안위, 원전 수출 위한 규제체계 협력 업무협약 체결",
+        "산업부·원안위, 한국형 원전 해외 진출 위한 업무협약 체결"
+      ],
+      "issue_id": "issue-da9a4893cdd4761d",
+      "id": "issue-fbf90641-127"
+    },
+    {
+      "kind": "keyword_add",
+      "note": "콘솔에서 추가",
+      "created_at": "2026-08-17T13:57:33.965Z",
+      "group": "정책",
+      "value": "석탄 퇴출",
+      "id": "keyword-f2672d5a-f67"
+    },
+    {
+      "kind": "keyword_add",
+      "note": "콘솔에서 추가",
+      "created_at": "2026-08-17T14:01:44.634Z",
+      "group": "정책",
+      "value": "탈석탄",
+      "id": "keyword-f282ce0d-ffe"
+    },
+    {
+      "kind": "keyword_add",
+      "note": "콘솔에서 추가",
+      "created_at": "2026-08-19T14:41:30.439Z",
+      "group": "정책",
+      "value": "이집트 원전",
+      "id": "keyword-a5862f82-038"
+    },
+    {
+      "kind": "keyword_add",
+      "note": "콘솔에서 추가",
+      "created_at": "2026-08-20T22:05:35.102Z",
+      "group": "정책",
+      "value": "토론회",
+      "id": "keyword-5b065976-8f5"
+    }
+  ]
 }
