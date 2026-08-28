@@ -63,6 +63,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          # queued schedule/recovery runs must see the claim committed by the run
+          # that finished first; event SHA can be stale for workflow_run.
+          ref: main
 
       - name: Setup Python 3.12
         uses: actions/setup-python@v5
@@ -97,6 +101,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Setup Python 3.12
         uses: actions/setup-python@v5

@@ -1256,15 +1256,112 @@ class TestWeeklyUpcomingDisabled(unittest.TestCase):
         self.assertIn("7월 25일", message)
 
 
+class TestPreviousWeekCoreEventFilter(unittest.TestCase):
+    """W34→W35 실제 전력망 3법 반복과 progress 예외를 고정한다."""
+
+    @classmethod
+    def setUpClass(cls):
+        root = Path(__file__).parent.parent
+        cls.curated = json.loads((root / "curated.json").read_text(encoding="utf-8"))
+        reports = json.loads((root / "weekly_reports.json").read_text(encoding="utf-8"))
+        cls.w34 = reports["reports"]["2026-W34"]
+
+    def _article(self, hash_value):
+        return {**self.curated[hash_value], "hash": hash_value}
+
+    def test_w34_grid_law_restatements_are_removed_from_w35(self):
+        # W34 핵심사건 e9013dd5와 같은 8/23~25 단순 후속보도 실데이터.
+        hashes = ["21996721ab200ef4", "fefb4895dcf7f49c", "d70dfe635c2bb671"]
+        current = [self._article(h) for h in hashes]
+        filtered, audit = weekly_bot.filter_previous_week_repeats(
+            current, curated=self.curated, previous_report=self.w34,
+            now=datetime.fromisoformat("2026-08-28T17:00:00+09:00"))
+        self.assertEqual(filtered, [])
+        self.assertTrue(audit["excluded"])
+        self.assertFalse(audit["material_progress"])
+
+    def test_same_grid_law_with_promulgation_is_kept(self):
+        prior_hash = next(h for h in self.curated if h.startswith("e9013dd5"))
+        progressed = {
+            **self.curated[prior_hash],
+            "hash": "progress-grid-law",
+            "title_kr": ("국회, '전력망 3법' 통과…민간 자본 송전망 건설 참여 "
+                         "길 열려, 정부 공포·시행"),
+            "title": ("국회, '전력망 3법' 통과…민간 자본 송전망 건설 참여 "
+                      "길 열려, 정부 공포·시행"),
+            "summary": "국회 통과를 마친 전력망 3법이 공포되어 이날 시행됐다.",
+            "published_at": "2026-08-28T08:00:00+00:00",
+        }
+        filtered, audit = weekly_bot.filter_previous_week_repeats(
+            [progressed], curated=self.curated, previous_report=self.w34,
+            now=datetime.fromisoformat("2026-08-28T17:00:00+09:00"))
+        self.assertEqual([row["hash"] for row in filtered], ["progress-grid-law"])
+        self.assertEqual(audit["material_progress"][0]["progression_kind"],
+                         "scale_advance")
+
+
+class TestWeeklyDeliveryClaim(unittest.TestCase):
+    NOW = datetime.fromisoformat("2026-08-28T17:10:00+09:00")
+
+    def test_schedule_then_recovery_sends_dm_only_once(self):
+        import channel_queue
+
+        with TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            reports = base / "weekly_reports.json"
+            result = base / "weekly_result.json"
+            log = base / "delivery_log.jsonl"
+            channel = base / "channel_outbox.json"
+            reports.write_text(json.dumps({"schema_version": 1, "reports": {
+                "2026-W35": {
+                    "week_id": "2026-W35", "week_end": "2026-08-28",
+                    "_automation": {
+                        "created_at": self.NOW.isoformat(),
+                        "message_html": "<b>W35</b>",
+                        "telegram": {"status": "pending"},
+                    },
+                }
+            }}), encoding="utf-8")
+            channel.write_text(json.dumps({"schema_version": 1, "batches": [{
+                "id": "weekly-2026-W35", "kind": "weekly", "date": "2026-W35",
+                "created_at": self.NOW.isoformat(), "status": "sent",
+                "items": [{"kind": "text", "name": "주간판세",
+                           "text": "<b>W35</b>", "status": "sent"}],
+            }]}), encoding="utf-8")
+
+            with (patch.object(weekly_bot, "WEEKLY_REPORTS_FILE", reports),
+                  patch.object(weekly_bot, "WEEKLY_RESULT_FILE", result),
+                  patch.object(weekly_bot, "DELIVERY_LOG_FILE", log),
+                  patch.object(channel_queue, "QUEUE_FILE", channel),
+                  patch("telegram_send.send_long_text", return_value=[{"ok": True}]) as send):
+                self.assertEqual(weekly_bot.cmd_send(self.NOW), 0)
+                self.assertEqual(weekly_bot.cmd_confirm(self.NOW), 0)
+                self.assertEqual(weekly_bot.cmd_plan(self.NOW), 0)
+                self.assertEqual(weekly_bot.cmd_send(self.NOW), 0)
+                self.assertEqual(weekly_bot.cmd_confirm(self.NOW), 0)
+                self.assertEqual(send.call_count, 1)
+
+
 class TestWeeklyWorkflow(unittest.TestCase):
-    def test_workflow_can_commit_and_rebases_on_conflict(self):
+    def test_workflow_claims_before_send_and_recovers_on_conflict(self):
         root = Path(__file__).parent.parent
         yml = (root / ".github" / "workflows" / "weekly.yml").read_text(encoding="utf-8")
         self.assertIn("contents: write", yml)
-        # 파일별 가드 — 없는 파일 하나가 스텝 전체를 죽이면 안 된다
-        self.assertIn("[ -f weekly_reports.json ]", yml)
-        # 단순 push 반복은 다른 워크플로가 먼저 커밋했으면 3번 다 실패한다
-        self.assertIn("git rebase origin/main", yml)
+        self.assertLess(yml.index("Push Weekly claim before delivery"),
+                        yml.index("Send unconfirmed Weekly destinations"))
+        self.assertIn("git reset --hard origin/main", yml)
+        self.assertIn("python weekly_bot.py --confirm", yml)
+        self.assertIn('workflows: ["Nuclear news crawl"]', yml)
+
+    def test_workflow_deploys_the_committed_weekly_report(self):
+        root = Path(__file__).parent.parent
+        weekly = (root / ".github" / "workflows" / "weekly.yml").read_text(encoding="utf-8")
+        deploy = (root / ".github" / "workflows" / "deploy-web.yml").read_text(
+            encoding="utf-8")
+        self.assertIn("uses: ./.github/workflows/deploy-web.yml", weekly)
+        self.assertIn("ref: ${{ needs.weekly.outputs.report_ref }}", weekly)
+        self.assertIn("workflow_call:", deploy)
+        self.assertIn('ref: ${{ inputs.ref || github.sha }}', deploy)
 
 
 if __name__ == "__main__":

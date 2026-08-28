@@ -44,6 +44,29 @@ def decide(*, event_name: str, workflow_conclusion: str, now: datetime,
     return True, f"missed primary schedule fallback: {today}"
 
 
+def classify_state(*, event_name: str, should_run: bool, now: datetime,
+                   outbox_path: Path) -> str:
+    if event_name == "schedule":
+        return "schedule_trigger_created"
+    if event_name == "workflow_dispatch":
+        return "manual_trigger"
+    if event_name != "workflow_run":
+        return "unsupported_trigger"
+    if not should_run:
+        return "recovery_not_needed"
+    outbox = {}
+    try:
+        outbox = json.loads(outbox_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        pass
+    today = now.astimezone(KST).date().isoformat()
+    if outbox.get("date") != today:
+        return "schedule_missing_recovery"
+    if outbox.get("status") in {"failed", "partial"}:
+        return "delivery_failed_recovery"
+    return "workflow_unconfirmed_recovery"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", ""))
@@ -65,12 +88,20 @@ def main() -> int:
         fallback_start_hour=args.fallback_start_hour,
         fallback_end_hour=args.fallback_end_hour,
     )
+    state = classify_state(
+        event_name=args.event_name, should_run=should_run, now=now,
+        outbox_path=args.outbox)
     value = str(should_run).lower()
-    print(f"[daily-brief-gate] should_run={value} — {reason}")
+    print(f"[daily-brief-gate] should_run={value} state={state} — {reason}")
     output_path = os.environ.get("GITHUB_OUTPUT")
     if output_path:
         with Path(output_path).open("a", encoding="utf-8") as handle:
-            handle.write(f"should_run={value}\n")
+            handle.write(f"should_run={value}\ntrigger_state={state}\n")
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary_path:
+        with Path(summary_path).open("a", encoding="utf-8") as handle:
+            handle.write("### Daily automation status\n\n")
+            handle.write(f"- trigger: `{state}`\n- decision: `{reason}`\n")
     return 0
 
 

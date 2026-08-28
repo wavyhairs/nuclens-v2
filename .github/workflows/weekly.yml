@@ -1,31 +1,59 @@
 name: Weekly report
 
-env:
-  SITE_URL: ${{ vars.SITE_URL || 'https://nuclens-v2.pages.dev' }}
-  CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT || 'nuclens-v2' }}
-
 on:
   schedule:
-    - cron: "0 8 * * 5"  # UTC 08:00 Friday = KST 17:00 Friday
+    - cron: "7 8 * * 5"  # UTC 08:07 Friday = KST 17:07 Friday; :00 혼잡 회피
+  # Friday schedule 자체가 없어져도 다음 성공 crawl이 같은 ISO 주차의 미발송
+  # 상태를 확인해 복구한다. 금요일 저녁~일요일 오전만 열어 낡은 발송을 막는다.
+  workflow_run:
+    workflows: ["Nuclear news crawl"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
-  contents: write   # weekly_reports.json 커밋 (웹 '주간 흐름' 탭 재료)
+  contents: write
 
 concurrency:
   group: weekly
   cancel-in-progress: false
 
 jobs:
-  weekly:
-    # daily-brief 와 같은 규칙 — 이쪽도 텔레그램으로 나간다. 발송 계열은 한
-    # 스위치로 묶어야 '주간만 몰래 나가는' 상태가 안 생긴다.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (vars.AUTOMATION_ENABLED == 'true' && vars.BRIEFING_ENABLED == 'true')
+  preflight:
     runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.gate.outputs.should_run }}
+      trigger_state: ${{ steps.gate.outputs.trigger_state }}
+    steps:
+      # event SHA가 아니라 실행 시점의 최신 main을 읽어야, schedule과 recovery가
+      # 함께 대기한 경우 먼저 끝난 run의 sent claim을 두 번째 run이 볼 수 있다.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Decide whether Weekly needs recovery
+        id: gate
+        env:
+          TRIGGER_WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          CHANNEL_REQUIRED: ${{ secrets.TELEGRAM_CHANNEL_ID != '' }}
+        run: python tools/weekly_trigger_gate.py
+
+  weekly:
+    needs: preflight
+    if: >-
+      needs.preflight.outputs.should_run == 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (vars.AUTOMATION_ENABLED == 'true' && vars.BRIEFING_ENABLED == 'true'))
+    runs-on: ubuntu-latest
+    outputs:
+      report_ref: ${{ steps.report-ref.outputs.ref }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - uses: actions/setup-python@v5
         with:
@@ -34,35 +62,96 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python weekly_bot.py
+      - name: Plan Weekly report and delivery claim
+        run: python weekly_bot.py --plan
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Push Weekly claim before delivery
+        id: claim
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for i in 1 2 3 4 5; do
+            git add weekly_reports.json channel_outbox.json
+            if git diff --cached --quiet; then
+              echo "기존 claim 재사용 — 변경 없음"
+              exit 0
+            fi
+            git commit -m "chore: weekly report claim"
+            if git push origin HEAD:main; then
+              echo "weekly claim push 성공"
+              exit 0
+            fi
+            echo "claim 충돌 — 최신 main에서 재계획 $i/5"
+            git fetch origin main
+            git reset --hard origin/main
+            python weekly_bot.py --plan
+          done
+          echo "::error::weekly claim push 5회 실패 — 발송하지 않음"
+          exit 1
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Send unconfirmed Weekly destinations
+        id: send
+        if: steps.claim.outcome == 'success'
+        run: python weekly_bot.py --send
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          # 주간 판세는 일일 배치를 기다리지 않고 뜨는 즉시 그것 하나만 채널로
-          # 나간다 (channel_queue.publish_weekly).
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      # 주간 리포트를 웹이 쓸 수 있게 커밋. 발송이 실패해도 여기까지는 온다.
-      - name: Commit weekly report
+      - name: Confirm Weekly delivery and push result
+        id: confirm
+        if: always() && steps.claim.outcome == 'success'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for i in 1 2 3 4 5; do
+            python weekly_bot.py --confirm
+            git add weekly_reports.json channel_outbox.json delivery_log.jsonl
+            if git diff --cached --quiet; then
+              echo "확정할 변경 없음"
+              exit 0
+            fi
+            git commit -m "chore: weekly report confirm"
+            if git push origin HEAD:main; then
+              echo "weekly confirm push 성공"
+              exit 0
+            fi
+            echo "confirm 충돌 — 발송 결과 보존 후 재병합 $i/5"
+            git fetch origin main
+            git reset --hard origin/main
+          done
+          echo "::error::weekly confirm push 5회 실패 — GitHub run 확인 필요"
+          exit 1
+        env:
+          AUTOMATION_TRIGGER_STATE: ${{ needs.preflight.outputs.trigger_state }}
+
+      - name: Publish automation status in run summary
         if: always()
         run: |
-          # 파일별 가드 — 한 파일이 없어서 git add 가 실패하면 스텝 전체가 죽는다
-          # (daily_leads.json 데드락과 같은 함정).
-          [ -f weekly_reports.json ] || { echo "리포트 파일 없음 — 스킵"; exit 0; }
-          git add weekly_reports.json
-          # 채널 공개 기록. 없으면 같은 주에 워크플로를 다시 돌릴 때 판세가
-          # 채널에 두 번 뜬다.
-          if [ -f channel_outbox.json ]; then git add channel_outbox.json; fi
-          git diff --cached --quiet && { echo "변경 없음"; exit 0; }
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: weekly report"
-          # 단순 push 반복은 다른 워크플로가 먼저 커밋했으면 3번 다 실패한다.
-          # fetch + rebase 로 위에 얹은 뒤 다시 민다.
-          for i in 1 2 3; do
-            git push origin HEAD:main && exit 0
-            git fetch origin main || exit 0
-            git rebase origin/main || { git rebase --abort || true; exit 0; }
-          done
-          echo "리포트 push 실패 — 비치명, 다음 주 재시도"
+          echo "### Weekly result" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- trigger: \`${{ needs.preflight.outputs.trigger_state }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- claim: \`${{ steps.claim.outcome }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- delivery: \`${{ steps.send.outcome }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- confirm: \`${{ steps.confirm.outcome }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Resolve committed report ref
+        id: report-ref
+        if: always() && steps.claim.outcome == 'success'
+        run: |
+          git fetch origin main
+          echo "ref=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
+
+  # GITHUB_TOKEN으로 push한 commit은 push workflow를 재귀 실행하지 않는다.
+  # 확정된 weekly_reports.json의 SHA를 재사용 가능한 기존 배포 workflow에 넘긴다.
+  deploy:
+    needs: weekly
+    if: always() && needs.weekly.outputs.report_ref != ''
+    uses: ./.github/workflows/deploy-web.yml
+    with:
+      ref: ${{ needs.weekly.outputs.report_ref }}
+    secrets: inherit

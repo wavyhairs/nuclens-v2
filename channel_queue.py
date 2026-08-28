@@ -353,13 +353,13 @@ def _batch_status(batch: dict) -> str:
     return "pending" if all(s == "pending" for s in statuses) else "failed"
 
 
-def publish_weekly(text: str, date: str | None = None, path: Path | None = None,
-                   now: datetime | None = None, sender: object | None = None,
-                   gap_sec: float = SEND_GAP_SEC) -> list[dict]:
-    """주간 판세를 그것 하나만 즉시 채널에 올린다.
+def queue_weekly(text: str, date: str | None = None, path: Path | None = None,
+                 now: datetime | None = None) -> dict:
+    """주간 판세를 채널 큐에 claim 하되 아직 발송하지 않는다.
 
-    일일 배치와 섞지 않는다 — 금요일 저녁에 뜨는 자료를 토요일 아침 배치까지
-    붙들고 있으면 '주간'이라는 말이 무색해진다.
+    ``date`` 에 ISO 주차(``2026-W35``)를 넘기면 금요일 schedule 과 토요일 복구
+    trigger가 같은 배치를 공유한다. 달력 날짜를 키로 쓰면 자정을 넘긴 복구가 새
+    배치를 만들어 같은 주간판세를 다시 보내므로, weekly_bot 은 항상 주차를 넘긴다.
     """
     date = date or datetime.now(KST).date().isoformat()
     queue = load_queue(path)
@@ -368,6 +368,19 @@ def publish_weekly(text: str, date: str | None = None, path: Path | None = None,
                      "disable_preview": True})
     prune(queue, now=now)
     save_queue(queue, path)
+    return batch
+
+
+def publish_weekly(text: str, date: str | None = None, path: Path | None = None,
+                   now: datetime | None = None, sender: object | None = None,
+                   gap_sec: float = SEND_GAP_SEC) -> list[dict]:
+    """주간 판세를 claim 한 뒤 그것 하나만 즉시 채널에 올린다.
+
+    일일 배치와 섞지 않는다 — 금요일 저녁에 뜨는 자료를 토요일 아침 배치까지
+    붙들고 있으면 '주간'이라는 말이 무색해진다. 워크플로는 원자성을 위해
+    ``queue_weekly`` 를 먼저 commit/push 한 뒤 ``publish`` 를 직접 호출한다.
+    """
+    batch = queue_weekly(text, date=date, path=path, now=now)
     return publish(path=path, now=now, sender=sender, batch_id=batch["id"],
                    gap_sec=gap_sec)
 

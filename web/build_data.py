@@ -4067,6 +4067,10 @@ def _enrich_weekly_report(raw: dict, issue_rows: list[dict],
     어떤 근거가 어느 문장 것인지 알 수 없어 모든 문장에 같은 칩이 붙는다.
     """
     report = dict(raw)
+    # 발송 claim/confirm 상태와 Telegram API 응답은 운영 메타데이터다. 저장 파일은
+    # GitHub Actions의 durable state로 함께 쓰지만 공개 웹 payload로는 절대 내보내지
+    # 않는다(chat id/message id 등이 응답에 포함될 수 있다).
+    report.pop("_automation", None)
 
     def chips(short_hashes) -> list[dict]:
         # 매핑 실패는 칩만 비우고 넘어간다 — 화면 전체가 깨지면 안 된다.

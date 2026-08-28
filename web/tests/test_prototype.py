@@ -4116,6 +4116,16 @@ class WeeklyReportTests(unittest.TestCase):
             self.assertEqual(report["policy_shifts"][0]["evidence"], [])
             self.assertEqual(report["policy_shifts"][0]["what"], "변화")
 
+    def test_delivery_claim_metadata_is_not_exported_publicly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._store(Path(tmp), _automation={
+                "message_html": "private durable claim",
+                "telegram": {"status": "sent", "chat_id": "must-not-leak"},
+            })
+            report = self._load(Path(tmp))
+            self.assertNotIn("_automation", report)
+            self.assertNotIn("must-not-leak", json.dumps(report, ensure_ascii=False))
+
     def test_issue_count_recomputed_from_real_merges(self):
         """봇은 제목 정규화로 어림잡을 수밖에 없지만 웹에는 실제 병합 결과가 있다."""
         with tempfile.TemporaryDirectory() as tmp:

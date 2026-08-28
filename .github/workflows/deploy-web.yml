@@ -24,6 +24,12 @@ env:
 #   이 파일     화면 코드가 바뀌었다 → 병합 즉시
 
 on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "배포할 commit SHA (자동 생성 데이터 commit 포함)"
+        required: false
+        type: string
   push:
     branches: [main]
     paths:
@@ -31,6 +37,10 @@ on:
       # 엔티티 사전은 web/ 밖(저장소 루트)이지만 화면 데이터(entities.json)의
       # 원료다 — 여기 안 넣으면 사전 수정이 다음 크롤(최대 105분)까지 미배포.
       - "entity_registry.json"
+      # 사람이 갱신한 주간 리포트도 즉시 반영한다. Actions가 GITHUB_TOKEN으로
+      # 만든 commit은 push workflow를 재귀 실행하지 않으므로 weekly.yml은 아래
+      # workflow_call 경로도 함께 사용한다.
+      - "weekly_reports.json"
       # Pages Function 도 web/ 밖에 있고, 이 배포가 함께 올린다(wrangler 가
       # **실행 디렉터리 기준**으로 functions/ 를 찾는다 — verify_admin_gate.sh 주석).
       # 여기 안 넣으면 엣지 코드만 고친 커밋이 다음 크롤까지 안 올라가고, 그 사이
@@ -55,6 +65,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - uses: actions/setup-python@v5
         with:
