@@ -90,7 +90,13 @@ def _naver_auth() -> tuple[str, str]:
 GEMINI_API_KEY = gemini_client._resolve("GEMINI_API_KEY", "") or ""
 
 KST = timezone(timedelta(hours=9))
-LOOKBACK_HOURS = 6
+# 정상 회차는 6시간 그대로다. 독립 watchdog이 여러 schedule 누락 뒤 복구할 때만
+# workflow input으로 창을 넓힌다. 상한은 24시간, Gemini 큐레이션은 기존
+# MAX_CURATION_PER_RUN 상한을 그대로 받아 한 회차 사용량이 폭증하지 않는다.
+try:
+    LOOKBACK_HOURS = max(6, min(24, int(os.environ.get("CRAWL_LOOKBACK_HOURS", "6"))))
+except ValueError:
+    LOOKBACK_HOURS = 6
 # 공식기관 게시판 전용 수집 창. 날짜만 있는 출처라 24시간 창으로는 당일 게시물만
 # 잡힌다(OFFICIAL_DIRECT_SOURCES 주석 참조). article_seen 이 중복을 막으므로 창을
 # 넓혀도 첫 실행 이후 하루 유입은 0~3건이다.
@@ -105,6 +111,15 @@ DIGEST_QUEUE_FILE = Path("digest_queue.json")
 # 브리핑 발송 기록과 같은 파일을 쓴다. 크롤 단계의 큐레이션 유실도 결국 '그날 무엇이
 # 브리핑에 못 올라갔나'의 일부라 같은 타임라인에 있어야 대조가 된다.
 DELIVERY_LOG_FILE = Path("delivery_log.jsonl")
+
+
+def write_github_output(name: str, value: object) -> None:
+    """Expose crawl facts without making local execution depend on Actions."""
+    path = os.environ.get("GITHUB_OUTPUT")
+    if not path:
+        return
+    with Path(path).open("a", encoding="utf-8") as handle:
+        handle.write(f"{name}={value}\n")
 
 # 네이버 검색 API 는 2026-06-25 NAVER API HUB(네이버 클라우드 플랫폼)로 옮겨졌다.
 # 구 주소 openapi.naver.com/v1/search/news.json 은 같은 자격증명에 401
@@ -3329,6 +3344,9 @@ def main() -> None:
     save_state(state)
     save_curated(curated)
     save_queue(queue)
+    # 'workflow 성공'과 '실제로 새 후보가 0건'을 운영 상태에서 분리한다. 실패는
+    # step outcome으로, 0건은 이 값으로 crawl_trigger_gate가 확정한다.
+    write_github_output("new_article_count", len(new_articles))
     rate = f"{features_missing / queued * 100:.1f}%" if queued else "—"
     print(f"Done. immediate={sent_immediate} queued={queued} dropped={dropped} "
           f"features_missing={features_missing} ({rate})")
