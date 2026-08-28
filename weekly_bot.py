@@ -25,6 +25,7 @@
 
 from __future__ import annotations
 
+import argparse
 import html
 import json
 import os
@@ -36,6 +37,7 @@ from pathlib import Path
 
 from ranking import cluster_duplicates
 import article_quality_gate
+import issue_continuity
 import news_archive
 import weekly_sections
 
@@ -50,6 +52,7 @@ ROOT = Path(__file__).parent
 CURATED_CACHE_FILE = ROOT / "curated.json"
 SOURCES_FILE = ROOT / "sources.json"
 DELIVERY_LOG_FILE = ROOT / "delivery_log.jsonl"
+WEEKLY_RESULT_FILE = ROOT / "weekly_result.json"
 WEEK_DAYS = 7
 
 _GRADES = {"must_read", "nice_to_know", "market", "noise"}
@@ -231,6 +234,15 @@ def get_week_articles(curated: dict, now: datetime | None = None) -> list[dict]:
             "event_date": data.get("event_date"),
             "event_date_type": data.get("event_date_type", "unknown"),
             "event_date_precision": data.get("event_date_precision", "unknown"),
+            # 전주 핵심사건 대조도 Daily와 같은 story identity/evidence/progress
+            # 판정기를 쓴다. 여기서 버리면 제목 유사도 하나만 남아 동일 사건과
+            # 실질 진전을 안정적으로 가를 수 없다.
+            "region": data.get("region", ""),
+            "story_id": data.get("story_id", ""),
+            "story_id_source": data.get("story_id_source", ""),
+            "story_fingerprint": data.get("story_fingerprint") or {},
+            "story_members": data.get("story_members") or [],
+            "story_article_hashes": data.get("story_article_hashes") or [],
         })
     items.sort(key=lambda x: x.get("published_at") or x["cached_at"])
     return items
@@ -932,6 +944,123 @@ def load_weekly_reports(path: Path | None = None) -> dict:
             "reports": reports if isinstance(reports, dict) else {}}
 
 
+def _previous_week_core_hashes(report: dict) -> set[str]:
+    """전주 리포트가 실제 핵심 코너에 올린 근거 hash만 모은다."""
+    hashes: set[str] = set()
+    for row in report.get("policy_shifts") or []:
+        if isinstance(row, dict):
+            hashes.update(str(h) for h in (row.get("evidence_hashes") or []) if h)
+    for key in ("key_events", "top_stories"):
+        for row in report.get(key) or []:
+            if not isinstance(row, dict):
+                continue
+            value = row.get("hash") or row.get("key")
+            if value:
+                hashes.add(str(value))
+    return hashes
+
+
+def _curated_articles_by_prefix(curated: dict, hashes: set[str]) -> list[dict]:
+    rows: list[dict] = []
+    used: set[str] = set()
+    for short in hashes:
+        for full, raw in curated.items():
+            if full in used or not str(full).startswith(short) or not isinstance(raw, dict):
+                continue
+            rows.append({**raw, "hash": full})
+            used.add(full)
+            break
+    return rows
+
+
+def filter_previous_week_repeats(
+        items: list[dict], *, curated: dict | None = None,
+        reports_path: Path | None = None, now: datetime | None = None,
+        previous_report: dict | None = None) -> tuple[list[dict], dict]:
+    """전주 핵심사건의 단순 재보도를 빼고 실질 진전은 남긴다.
+
+    새 Weekly 전용 identity 규칙을 만들지 않는다. Daily가 이미 쓰는
+    ``same_issue``(story id/fingerprint/evidence/title)와 ``progression``을 그대로
+    적용하며, ``material``만 새 사건으로 인정한다. ``minor``는 표현 차이인지 실제
+    진전인지 확인되지 않은 상태라 핵심사건 재노출에는 충분하지 않다.
+    """
+    now = (now or datetime.now(KST)).astimezone(KST)
+    if previous_report is None:
+        previous_key = week_id(now - timedelta(days=7))
+        previous_report = load_weekly_reports(reports_path)["reports"].get(previous_key)
+    if not isinstance(previous_report, dict):
+        return items, {"previous_week": "", "excluded": [], "material_progress": []}
+
+    curated = curated if curated is not None else load_curated()
+    prior = _curated_articles_by_prefix(
+        curated, _previous_week_core_hashes(previous_report))
+    if not prior:
+        return items, {"previous_week": previous_report.get("week_id", ""),
+                       "excluded": [], "material_progress": []}
+
+    cfg = issue_continuity.resolve_config(None)
+    generic = issue_continuity.generic_anchors(items + prior)
+    keep_hashes: set[str] = set()
+    excluded: list[dict] = []
+    progressed: list[dict] = []
+
+    for story in weekly_stories(items):
+        matches: list[tuple[dict, dict, dict]] = []
+        for candidate in story.get("articles") or []:
+            for old in prior:
+                match = issue_continuity.same_issue(candidate, old, cfg, generic)
+                if not match:
+                    continue
+                # Daily는 이름 두 개뿐인 anchor-only 매칭에 하루짜리 약한 감점만
+                # 준다. Weekly 핵심사건에서 그것을 삭제 근거로 승격하면 전력시장·
+                # 전력망처럼 넓은 태그가 같은 전혀 다른 사건까지 한 주 통째로 지운다.
+                # stable identity/evidence가 없는 anchor-only는 같은 보수성으로 제외한다.
+                if (match.get("anchor_only")
+                        and not match.get("identity_confirmed")
+                        and not match.get("evidence_confirmed")):
+                    continue
+                progress = issue_continuity.progression(
+                    old, candidate,
+                    evidence_confirmed=bool(match.get("evidence_confirmed")))
+                matches.append((candidate, old, progress))
+
+        material = next((row for row in matches
+                         if row[2].get("verdict") == "material"), None)
+        if material:
+            candidate, old, progress = material
+            progressed.append({
+                "hash": str(candidate.get("hash") or "")[:16],
+                "title": str(candidate.get("title_kr") or candidate.get("title") or "")[:160],
+                "prior_hash": str(old.get("hash") or "")[:16],
+                "progression_kind": progress.get("kind", ""),
+                "progression_detail": progress.get("detail", ""),
+            })
+        elif matches:
+            candidate, old, progress = matches[0]
+            excluded.append({
+                "hash": str(candidate.get("hash") or "")[:16],
+                "title": str(candidate.get("title_kr") or candidate.get("title") or "")[:160],
+                "prior_hash": str(old.get("hash") or "")[:16],
+                "progression": progress.get("verdict", "none"),
+            })
+            continue
+
+        keep_hashes.update(str(row.get("hash") or "")
+                           for row in story.get("articles") or [])
+
+    filtered = [row for row in items if str(row.get("hash") or "") in keep_hashes]
+    audit = {
+        "previous_week": previous_report.get("week_id", ""),
+        "excluded": excluded,
+        "material_progress": progressed,
+    }
+    if excluded:
+        print(f"[weekly] 전주 핵심사건 단순 재보도 {len(excluded)}건 제외")
+    if progressed:
+        print(f"[weekly] 동일 사건의 실질 진전 {len(progressed)}건 유지")
+    return filtered, audit
+
+
 def build_week_sections(items: list[dict], now: datetime | None = None) -> dict:
     """결정적 코너 네 개 — 판세 합성과 **같은** 사건 묶음·근거 계약 위에서 만든다.
 
@@ -948,7 +1077,9 @@ def build_week_sections(items: list[dict], now: datetime | None = None) -> dict:
 def save_weekly_report(synthesis: dict, agg: dict, items: list[dict],
                        now: datetime | None = None,
                        path: Path | None = None,
-                       sections: dict | None = None) -> bool:
+                       sections: dict | None = None,
+                       repeat_filter: dict | None = None,
+                       automation: dict | None = None) -> bool:
     """이번 주 리포트를 저장. 저장했으면 True.
 
     저장 여부를 len(reports) 증가로 판정하면 안 된다 — 같은 주차 덮어쓰기는
@@ -980,6 +1111,10 @@ def save_weekly_report(synthesis: dict, agg: dict, items: list[dict],
         **{key_name: sections.get(key_name) or [] for key_name in (
             "top_stories", "country_briefs", "publications", "upcoming")},
     }
+    if repeat_filter is not None:
+        entry["repeat_filter"] = repeat_filter
+    if automation is not None:
+        entry["_automation"] = automation
     # 내용 비교에서 generated_at 은 뺀다 — 매 실행마다 달라지므로 포함하면
     # dirty 가 항상 참이 되고 같은 리포트를 무한히 다시 쓴다.
     def content(row: dict | None) -> dict:
@@ -1172,36 +1307,228 @@ def format_weekly(items: list[dict], synthesis: dict | None = None,
     return "\n".join(parts).strip()
 
 
-def main() -> None:
-    curated = load_curated()
-    items = get_week_articles(curated)
-    if not items:
-        print("No articles in past week. Skipping weekly report.")
-        return
+def _current_report(now: datetime | None = None,
+                    path: Path | None = None) -> tuple[str, dict | None, dict]:
+    now = (now or datetime.now(KST)).astimezone(KST)
+    store = load_weekly_reports(path)
+    key = week_id(now)
+    row = store["reports"].get(key)
+    return key, row if isinstance(row, dict) else None, store
 
-    print(f"Weekly report: {len(items)} articles from past {WEEK_DAYS} days")
-    # 합성을 한 번만 돌려 텔레그램과 웹이 같은 결과를 쓴다 (Gemini 호출 +0).
-    # 코너도 한 번만 만든다 — 두 번 만들면 같은 주에 다른 목록이 나갈 수 있다.
-    agg = build_aggregates(items)
-    synthesis = batch_synthesize(items, agg)
-    sections = build_week_sections(items)
-    message = format_weekly(items, synthesis, sections)
-    save_weekly_report(synthesis, agg, items, sections=sections)
 
-    from telegram_send import send_long_text  # lazy — 토큰 없는 로컬 테스트 대비
-    results = send_long_text(message, parse_mode="HTML", disable_preview=True)
-    ok = sum(1 for r in results if r.get("ok"))
-    print(f"Weekly report sent ({ok}/{len(results)}).")
+def cmd_plan(now: datetime | None = None) -> int:
+    """리포트와 두 Telegram 목적지를 claim한다. 이 단계에서는 발송하지 않는다."""
+    now = (now or datetime.now(KST)).astimezone(KST)
+    key, existing, _store = _current_report(now)
+    automation = (existing or {}).get("_automation") or {}
+    message = str(automation.get("message_html") or "")
+    if message:
+        print(f"[weekly] {key} 발송 plan 재사용 — Gemini 재호출 없음")
+    else:
+        curated = load_curated()
+        raw_items = get_week_articles(curated, now)
+        if not raw_items:
+            print("No articles in past week. Skipping weekly report.")
+            return 0
 
-    # 주간 판세는 뜨는 즉시 그것 하나만 채널로 — 일일 배치에 태우지 않는다.
-    # 금요일 저녁 자료를 토요일 아침까지 붙들면 '주간'이라는 말이 무색해진다.
-    # 발송 실패해도 리포트 커밋(웹 '주간 흐름' 탭 재료)까지는 가야 하므로 비치명.
+        items, repeat_audit = filter_previous_week_repeats(
+            raw_items, curated=curated, now=now)
+        print(f"Weekly report: {len(items)} stories/articles after previous-week filter "
+              f"({len(raw_items)} raw)")
+        agg = build_aggregates(items)
+        synthesis = batch_synthesize(items, agg)
+        sections = build_week_sections(items, now)
+        message = format_weekly(items, synthesis, sections, now=now)
+        automation = {
+            "created_at": now.isoformat(),
+            "message_html": message,
+            "telegram": {"status": "pending"},
+        }
+        save_weekly_report(
+            synthesis, agg, items, now=now, sections=sections,
+            repeat_filter=repeat_audit, automation=automation)
+
+    # 채널도 발송 전 상태 파일에 먼저 앉힌다. workflow가 이 파일과 리포트를
+    # push한 뒤에만 --send를 부르므로 schedule/recovery 경합에서도 한 claim이다.
     try:
         import channel_queue
-        channel_queue.publish_weekly(message)
+        channel_queue.queue_weekly(message, date=key, now=now)
+    except Exception as exc:  # noqa: BLE001
+        print(f"::error::주간 판세 채널 claim 실패: {type(exc).__name__}: {exc}")
+        return 1
+    return 0
+
+
+def cmd_send(now: datetime | None = None) -> int:
+    """claim된 주간판세의 미발송 목적지만 전송하고 임시 결과를 남긴다."""
+    now = (now or datetime.now(KST)).astimezone(KST)
+    key, report, _store = _current_report(now)
+    automation = (report or {}).get("_automation") or {}
+    message = str(automation.get("message_html") or "")
+    if not report or not message:
+        print("::error::주간 발송 claim이 없습니다")
+        return 1
+
+    telegram_status = str((automation.get("telegram") or {}).get("status") or "pending")
+    telegram_results: list[dict] = []
+    if telegram_status == "sent":
+        print(f"[weekly] {key} Telegram DM 이미 발송 — 건너뜀")
+    else:
+        try:
+            from telegram_send import send_long_text
+            telegram_results = send_long_text(
+                message, parse_mode="HTML", disable_preview=True)
+            telegram_status = "sent" if (telegram_results and
+                                          all(r.get("ok") for r in telegram_results)) else "failed"
+        except Exception as exc:  # noqa: BLE001 — 실패도 confirm 가능한 결과로 남긴다
+            telegram_status = "failed"
+            telegram_results = [{"ok": False, "error": f"{type(exc).__name__}: {exc}"[:300]}]
+        print(f"Weekly report DM → {telegram_status} "
+              f"({sum(1 for r in telegram_results if r.get('ok'))}/{len(telegram_results)})")
+
+    channel_results: list[dict] = []
+    try:
+        import channel_queue
+        channel_results = channel_queue.publish(
+            now=now, batch_id=f"weekly-{key}")
+        channel_status = "missing"
+        for batch in channel_queue.load_queue().get("batches") or []:
+            if batch.get("id") == f"weekly-{key}":
+                channel_status = str(batch.get("status") or "missing")
+                break
     except Exception as exc:  # noqa: BLE001
         print(f"::warning::주간 판세 채널 공개 실패 — {type(exc).__name__}: {exc}")
+        channel_results = [{"status": "failed", "error": str(exc)[:200]}]
+        channel_status = "failed"
+
+    result = {
+        "week_id": key,
+        "attempt_id": os.environ.get("GITHUB_RUN_ID") or now.isoformat(),
+        "confirmed_at": now.isoformat(),
+        "telegram": {"status": telegram_status, "results": telegram_results},
+        "channel": {"status": channel_status, "results": channel_results},
+    }
+    WEEKLY_RESULT_FILE.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    failed = telegram_status == "failed" or any(
+        r.get("status") == "failed" for r in channel_results)
+    return 1 if failed else 0
 
 
+def _append_weekly_delivery(result: dict, report: dict,
+                            path: Path | None = None) -> bool:
+    path = path or DELIVERY_LOG_FILE
+    attempt = str(result.get("attempt_id") or "")
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                old = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if (old.get("record_type") == "automation_run"
+                    and old.get("automation") == "weekly"
+                    and str(old.get("attempt_id") or "") == attempt):
+                return False
+    row = {
+        "record_type": "automation_run",
+        "automation": "weekly",
+        "date": report.get("week_end", ""),
+        "period": report.get("week_id", ""),
+        "generated_at": result.get("confirmed_at", ""),
+        "attempt_id": attempt,
+        "event_name": os.environ.get("GITHUB_EVENT_NAME", "local"),
+        "trigger_state": os.environ.get("AUTOMATION_TRIGGER_STATE", "unknown"),
+        "workflow_state": "completed",
+        "delivery_state": (result.get("telegram") or {}).get("status", "unknown"),
+        "channel_delivery_state": (result.get("channel") or {}).get("status", "unknown"),
+    }
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    return True
+
+
+def cmd_confirm(now: datetime | None = None) -> int:
+    """임시 발송 결과를 저장본에 멱등 병합하고 운영 delivery log를 남긴다."""
+    try:
+        result = json.loads(WEEKLY_RESULT_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        print("::error::weekly_result.json이 없어 발송 결과를 확정할 수 없습니다")
+        return 1
+
+    key = str(result.get("week_id") or "")
+    store = load_weekly_reports()
+    report = store["reports"].get(key)
+    if not isinstance(report, dict):
+        print(f"::error::{key} 리포트가 없어 발송 결과를 확정할 수 없습니다")
+        return 1
+    automation = report.setdefault("_automation", {})
+    # Telegram 응답에는 chat/message id가 들어갈 수 있다. durable state에는
+    # 중복방지에 필요한 상태와 시각만 남기고 원응답은 untracked result에서 끝낸다.
+    telegram_result = result.get("telegram") or {}
+    channel_result = result.get("channel") or {}
+    automation["telegram"] = {
+        "status": telegram_result.get("status", "failed"),
+        "confirmed_at": result.get("confirmed_at"),
+    }
+    automation["channel"] = {
+        "status": channel_result.get("status", "unknown"),
+        "confirmed_at": result.get("confirmed_at"),
+    }
+    automation["confirmed_at"] = result.get("confirmed_at")
+    WEEKLY_REPORTS_FILE.write_text(
+        json.dumps(store, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    # confirm push 충돌 후 reset되면 channel_outbox는 claim(pending)으로 돌아간다.
+    # untracked result의 항목별 결과를 다시 입혀야 다음 recovery가 채널을 재발송하지
+    # 않는다 (Daily의 outbox_result 재병합과 같은 역할).
+    try:
+        import channel_queue
+        queue = channel_queue.load_queue()
+        for batch in queue.get("batches") or []:
+            if batch.get("id") != f"weekly-{key}":
+                continue
+            by_name = {str(row.get("name") or ""): row
+                       for row in (channel_result.get("results") or [])
+                       if isinstance(row, dict)}
+            for item in batch.get("items") or []:
+                sent = by_name.get(str(item.get("name") or ""))
+                if not sent:
+                    continue
+                item["status"] = sent.get("status", item.get("status"))
+                if item["status"] == "sent":
+                    item["sent_at"] = result.get("confirmed_at")
+            batch["status"] = channel_queue._batch_status(batch)
+            break
+        channel_queue.save_queue(queue)
+    except Exception as exc:  # noqa: BLE001
+        print(f"::warning::weekly 채널 결과 재병합 실패: {type(exc).__name__}: {exc}")
+
+    _append_weekly_delivery(result, report)
+    print(f"[weekly] {key} 발송 결과 확정 — DM "
+          f"{automation['telegram'].get('status')} / 채널 {automation['channel'].get('status')}")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    phases = parser.add_mutually_exclusive_group()
+    phases.add_argument("--plan", action="store_true")
+    phases.add_argument("--send", action="store_true")
+    phases.add_argument("--confirm", action="store_true")
+    args = parser.parse_args()
+    if args.plan:
+        return cmd_plan()
+    if args.send:
+        return cmd_send()
+    if args.confirm:
+        return cmd_confirm()
+
+    # 로컬 하위 호환. 운영 workflow는 반드시 plan→claim push→send→confirm을 쓴다.
+    planned = cmd_plan()
+    if planned:
+        return planned
+    sent = cmd_send()
+    confirmed = cmd_confirm()
+    return sent or confirmed
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
