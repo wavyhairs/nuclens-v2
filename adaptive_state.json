@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-08-28"
   },
   "retired": {
@@ -44,6 +44,22 @@
       "type": "company",
       "until": "2026-09-05T21:25:00.366862+00:00"
     },
+    "영덕군이": {
+      "new_articles": 17,
+      "reason": "성과 없음",
+      "retired_at": "2026-08-28T14:56:02.554160+00:00",
+      "term": "영덕군이",
+      "type": "plant",
+      "until": "2026-09-11T14:56:02.554160+00:00"
+    },
+    "원자력특별위원회": {
+      "new_articles": 7,
+      "reason": "기간 만료",
+      "retired_at": "2026-08-28T14:55:58.745146+00:00",
+      "term": "원자력특별위원회",
+      "type": "org",
+      "until": "2026-09-11T14:55:58.745146+00:00"
+    },
     "유역물관리위원회": {
       "new_articles": 2,
       "reason": "성과 없음",
@@ -51,6 +67,22 @@
       "term": "유역물관리위원회",
       "type": "org",
       "until": "2026-09-08T03:51:37.717274+00:00"
+    },
+    "자문위원회": {
+      "new_articles": 4,
+      "reason": "기간 만료",
+      "retired_at": "2026-08-28T14:55:58.745146+00:00",
+      "term": "자문위원회",
+      "type": "org",
+      "until": "2026-09-11T14:55:58.745146+00:00"
+    },
+    "전력연구원": {
+      "new_articles": 12,
+      "reason": "기간 만료",
+      "retired_at": "2026-08-28T14:55:58.745146+00:00",
+      "term": "전력연구원",
+      "type": "org",
+      "until": "2026-09-11T14:55:58.745146+00:00"
     },
     "전문위원회": {
       "new_articles": 27,
@@ -78,205 +110,55 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 6,
     "date": "2026-08-28"
   },
   "terms": {
-    "영덕군이": {
+    "장관을": {
       "articles": 4,
-      "created_at": "2026-08-25T12:50:58.242383+00:00",
+      "created_at": "2026-08-28T14:55:58.745146+00:00",
       "domains": [
-        "yeongnam.com",
-        "kmib.co.kr",
-        "news1.kr",
-        "newspim.com"
+        "fnnews.com",
+        "g-enews.com",
+        "donga.com",
+        "ferrotimes.com"
       ],
       "evidence": [
         {
-          "domain": "yeongnam.com",
-          "hash": "4529b4548a50557a",
+          "domain": "fnnews.com",
+          "hash": "6a358337a373464b",
           "importance": "nice_to_know",
-          "title": "영덕군, 신규 원전 명칭 공모 실시…군민 참여 확대"
+          "title": "대우건설, 베트남 산업통상부 장관 면담…원전 사업 참여 의지 전달"
         },
         {
-          "domain": "kmib.co.kr",
-          "hash": "457dc42509e7e877",
+          "domain": "g-enews.com",
+          "hash": "8a7e33ccbd4a3cc6",
           "importance": "nice_to_know",
-          "title": "영덕군, 신규 원전 명칭 공모…10월 최종 결과 발표"
+          "title": "대우건설, 베트남 원전 및 LNG 터미널 사업 참여 의지 표명"
         },
         {
-          "domain": "news1.kr",
-          "hash": "cb98e9d57d62e93c",
+          "domain": "donga.com",
+          "hash": "4b93b189c65bbf08",
           "importance": "nice_to_know",
-          "title": "영덕군, 신규 원전 명칭 공모 실시"
+          "title": "대우건설, 베트남 산업통상부 장관과 원전·LNG 사업 협력 논의"
         }
       ],
-      "expires_at": "2026-08-27T03:56:41.408717+00:00",
+      "expires_at": "2026-08-29T14:55:58.745146+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-08-28T00:18:56.017598+00:00",
-      "new_articles": 17,
+      "last_run": "2026-08-28T14:56:02.554064+00:00",
+      "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-08-28T00:18:52.096864+00:00",
-      "queries_run": 5,
-      "query": "영덕군이 원전",
+      "planned_at": "2026-08-28T14:55:58.745146+00:00",
+      "queries_run": 1,
+      "query": "장관을 원전",
       "score": 3.9,
-      "status": "promote_candidate",
-      "term": "영덕군이",
+      "status": "tracking",
+      "term": "장관을",
       "ttl_hours": 24,
       "type": "plant",
-      "yield_days": [
-        "2026-08-25",
-        "2026-08-26"
-      ],
-      "yields": 3,
-      "zero_streak": 2
-    },
-    "원자력특별위원회": {
-      "articles": 3,
-      "created_at": "2026-08-26T16:20:45.746050+00:00",
-      "domains": [
-        "seoul.co.kr",
-        "newspim.com",
-        "inews24.com"
-      ],
-      "evidence": [
-        {
-          "domain": "seoul.co.kr",
-          "hash": "f0df400054111aee",
-          "importance": "nice_to_know",
-          "title": "경북도의회, 원자력특별위원회 구성 및 정책 발굴 추진"
-        },
-        {
-          "domain": "newspim.com",
-          "hash": "3a4c6bb32078ce0f",
-          "importance": "nice_to_know",
-          "title": "경북도의회, 원자력특별위원회 구성 및 김재준 위원장 선임"
-        },
-        {
-          "domain": "inews24.com",
-          "hash": "daf813b54857ff72",
-          "importance": "nice_to_know",
-          "title": "경북도의회, 원자력특별위원회 등 5대 특위 구성 및 본격 가동"
-        }
-      ],
-      "expires_at": "2026-08-28T13:54:44.987446+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 6,
-      "last_run": "2026-08-27T13:54:44.987446+00:00",
-      "new_articles": 7,
-      "origin": "auto",
-      "planned_at": "2026-08-27T13:54:41.533218+00:00",
-      "queries_run": 2,
-      "query": "원자력특별위원회",
-      "score": 3.7,
-      "status": "extended",
-      "term": "원자력특별위원회",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [
-        "2026-08-27"
-      ],
-      "yields": 2,
-      "zero_streak": 0
-    },
-    "자문위원회": {
-      "articles": 3,
-      "created_at": "2026-08-26T16:20:45.746050+00:00",
-      "domains": [
-        "newsis.com",
-        "khnp.co.kr",
-        "popcornnews.net"
-      ],
-      "evidence": [
-        {
-          "domain": "newsis.com",
-          "hash": "50609ed24aa93447",
-          "importance": "nice_to_know",
-          "title": "한수원, 제2차 안전혁신 자문위원회 개최…현장 안전관리체계 고도화 논의"
-        },
-        {
-          "domain": "khnp.co.kr",
-          "hash": "ba7e35e0e2e54120",
-          "importance": "nice_to_know",
-          "title": "한수원, 제2차 안전혁신 자문위원회 개최"
-        },
-        {
-          "domain": "popcornnews.net",
-          "hash": "c392b54a8d1c7a0a",
-          "importance": "nice_to_know",
-          "title": "한수원, 제2차 안전혁신 자문위원회 개최 및 안전관리 체계 고도화"
-        }
-      ],
-      "expires_at": "2026-08-28T13:54:44.987446+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 1,
-      "last_run": "2026-08-27T13:54:44.987446+00:00",
-      "new_articles": 4,
-      "origin": "auto",
-      "planned_at": "2026-08-27T13:54:41.533218+00:00",
-      "queries_run": 2,
-      "query": "자문위원회 원자력",
-      "score": 3.7,
-      "status": "extended",
-      "term": "자문위원회",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [
-        "2026-08-27"
-      ],
-      "yields": 2,
-      "zero_streak": 0
-    },
-    "전력연구원": {
-      "articles": 5,
-      "created_at": "2026-08-26T06:53:35.721490+00:00",
-      "domains": [
-        "energydaily.co.kr",
-        "electimes.com",
-        "energy-news.co.kr",
-        "e-platform.net",
-        "epj.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "energydaily.co.kr",
-          "hash": "e28a309fc4201a4c",
-          "importance": "nice_to_know",
-          "title": "한국전력, 미국 EPRI와 동적송전용량(DLR) 기술 고도화 협력"
-        },
-        {
-          "domain": "electimes.com",
-          "hash": "06290c111b7ac058",
-          "importance": "nice_to_know",
-          "title": "한전-미국 EPRI, 재생에너지 계통 수용성 제고 위한 DLR 기술 공동연구"
-        },
-        {
-          "domain": "energy-news.co.kr",
-          "hash": "eafc5927ea29b522",
-          "importance": "nice_to_know",
-          "title": "한전, 자체 개발 DLR 센서 미국 EPRI 시험장서 실증"
-        }
-      ],
-      "expires_at": "2026-08-28T00:35:20.483445+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-08-28T00:18:56.017598+00:00",
-      "new_articles": 12,
-      "origin": "auto",
-      "planned_at": "2026-08-28T00:18:52.096864+00:00",
-      "queries_run": 3,
-      "query": "전력연구원 원자력",
-      "score": 3.58,
-      "status": "extended",
-      "term": "전력연구원",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [
-        "2026-08-26",
-        "2026-08-27"
-      ],
-      "yields": 2,
+      "yield_days": [],
+      "yields": 0,
       "zero_streak": 1
     },
     "제작한": {
@@ -307,14 +189,14 @@
           "title": "한수원, 3D 프린팅 원전 부품 새울 1호기서 18개월 무결함 운전 성공"
         }
       ],
-      "expires_at": "2026-08-29T00:18:56.017598+00:00",
+      "expires_at": "2026-08-29T14:56:02.554064+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 5,
-      "last_run": "2026-08-28T00:18:56.017598+00:00",
-      "new_articles": 24,
+      "last_result_count": 3,
+      "last_run": "2026-08-28T14:56:02.554064+00:00",
+      "new_articles": 27,
       "origin": "auto",
-      "planned_at": "2026-08-28T00:18:52.096864+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-08-28T14:55:58.745146+00:00",
+      "queries_run": 4,
       "query": "제작한 원전",
       "score": 4.6,
       "status": "promote_candidate",
@@ -325,7 +207,7 @@
         "2026-08-27",
         "2026-08-28"
       ],
-      "yields": 3,
+      "yields": 4,
       "zero_streak": 0
     }
   },
