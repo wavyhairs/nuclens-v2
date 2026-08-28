@@ -1,6 +1,52 @@
 {
  "items": [
   {
+   "id": "f17f0aec4d86",
+   "org": "KEEI",
+   "org_kr": "에너지경제연구원(KEEI)",
+   "kind": "keei_insight",
+   "title": "[격주간] 세계 원전시장 인사이트(2026.08.28.)",
+   "url": "https://www.keei.re.kr/board.es?act=view&bid=0002&list_no=128090&mid=a10102050000",
+   "date": "2026-08-28",
+   "fetched_at": "2026-08-29",
+   "pdf_url": "https://www.keei.re.kr/boardDownload.es?bid=0002&list_no=128090&seq=1",
+   "toc": {
+    "issue_title": "2025년 미국 · EU 우라늄 시장 동향(EIA·ESA 보고서)",
+    "briefs": [
+     "미 에너지부, Diablo Canyon 1호기 계속운전에 약 3,800억 원 지급",
+     "미 에너지부, X-energy의 Texas 사업에 최대 1조 4,000억 원 추가 지원",
+     "미국 Duke Energy, 2026 Carolinas 자원계획에 신규 원전 약 4.5GW 반영",
+     "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+     "미국 Urenco USA, New Mexico 우라늄 농축시설 증설사업 기공식 개최",
+     "스페인 정부, Almaraz 원전 운영허가 2030년까지 갱신",
+     "폴란드 대통령, 원전 인허가 간소화 법 개정안 서명",
+     "루마니아 SNN·헝가리 정부, 다뉴브강 저수위 대응조치 시행",
+     "헝가리 정부, Paks Ⅱ 원전 사업 전반 재검토",
+     "슬로바키아 정부, ČEZ 보유 JESS 지분 49% 9월 인수 추진",
+     "인도 원자력에너지부, 민간 원전 투자 허용 위한 세부 규정 초안 공개",
+     "대만 입법원, 탈원전 정책 폐지 여부 결정을 위한 국민투표 시행안 가결",
+     "일본 도쿄전력·JAPC, 다른 발전사에 자사 중간저장시설 반입 의사 타진",
+     "일본 간사이전력, 자재비·인건비 상승으로 기업용 전기요금 10~15% 인상",
+     "일본 JBIC, 대미 투자 2차 사업에 6.3조 원 융자…SMR은 보류"
+    ]
+   }
+  },
+  {
+   "id": "c5f1ac255d40",
+   "org": "EIA",
+   "org_kr": "미국 에너지정보청(EIA)",
+   "kind": "analysis",
+   "title": "U.S. uranium production more than tripled in 2025 and was the highest since 2017",
+   "url": "https://www.eia.gov/todayinenergy/detail.php?id=68044",
+   "date": "2026-08-28",
+   "fetched_at": "2026-08-29",
+   "title_kr": "2025년 미국 우라늄 생산량 3배 이상 증가, 2017년 이후 최고치 기록",
+   "gist": "미국 내 우라늄 생산 현황 및 연도별 추이 통계",
+   "off_topic": false,
+   "relevance": "market",
+   "translated_version": 3
+  },
+  {
    "id": "9c394bd8af5c",
    "org": "OECD-NEA",
    "org_kr": "OECD 원자력기구(NEA)",
@@ -678,44 +724,44 @@
  ],
  "state": {
   "nea_max_id": 121326,
-  "keei_max_list_no": 127999,
+  "keei_max_list_no": 128090,
   "keei_pending_toc": []
  },
  "last_checked": {
   "iaea_publications": {
-   "at": "2026-08-28T09:23:02+09:00",
+   "at": "2026-08-29T00:12:41+09:00",
    "ok": true,
    "new": 0,
    "parsed": 15
   },
   "eia_today": {
-   "at": "2026-08-28T09:23:02+09:00",
+   "at": "2026-08-29T00:12:41+09:00",
    "ok": true,
-   "new": 0,
-   "parsed": 0
+   "new": 1,
+   "parsed": 1
   },
   "eia_press": {
-   "at": "2026-08-28T09:23:02+09:00",
+   "at": "2026-08-29T00:12:41+09:00",
    "ok": true,
    "new": 0,
    "parsed": 0
   },
   "nea_news": {
-   "at": "2026-08-28T09:23:02+09:00",
+   "at": "2026-08-29T00:12:41+09:00",
    "ok": true,
-   "new": 1,
-   "parsed": 1
+   "new": 0,
+   "parsed": 0
   },
   "iea_reports": {
-   "at": "2026-08-28T09:23:02+09:00",
+   "at": "2026-08-29T00:12:41+09:00",
    "ok": false,
    "error": "HTTPError: 403 Client Error: Forbidden for url: https://www.iea.org/analysis?type=report"
   },
   "keei_insight": {
-   "at": "2026-08-28T09:23:02+09:00",
+   "at": "2026-08-29T00:12:41+09:00",
    "ok": true,
-   "new": 0,
-   "parsed": 0
+   "new": 1,
+   "parsed": 1
   }
  }
 }
