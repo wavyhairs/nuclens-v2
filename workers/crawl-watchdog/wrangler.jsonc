@@ -1,0 +1,22 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "nuclens-crawl-watchdog",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-08-28",
+  "workers_dev": false,
+  "triggers": {
+    "crons": ["7,22,37,52 * * * *"]
+  },
+  "vars": {
+    "GITHUB_OWNER": "wavyhairs",
+    "GITHUB_REPO": "nuclens-v2",
+    "GITHUB_WORKFLOW": "crawl.yml",
+    "BACKUP_GRACE_MINUTES": "25"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "secrets": {
+    "required": ["GITHUB_TOKEN"]
+  }
+}
