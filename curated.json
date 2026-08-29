@@ -429800,31 +429800,52 @@
     "published_at": "2026-08-29T18:18:00+00:00"
   },
   "1cf145bb5dab6923": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "美 신규 전력설비 재생에너지로 쏠린다…1년간 83GW 증가",
-    "summary": "같은 기간 천연가스 발전량은 1.8%, 원자력은 1.7% 증가하는 데 그쳤다.",
-    "implication": "",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "power_market"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "미국, 향후 1년간 재생에너지 설비 83GW 추가 전망",
+    "summary": "미국 에너지정보청(EIA)은 2027년 6월까지 재생에너지 및 배터리 설비가 약 82.9GW 추가되어 천연가스 설비를 추월할 것으로 전망했다.",
+    "detail": "미국 에너지정보청(EIA)의 전력 월간 보고서에 따르면, 2027년 6월 말까지 대규모 재생에너지와 배터리 저장장치 76.9GW가 신규 추가될 예정이다. 소규모 태양광 증가분 6GW를 포함하면 총 82.9GW가 늘어난다. 반면 화석연료 설비는 3.1GW 순감소하고 신규 원전 설비는 추가되지 않을 것으로 보인다. 2027년 7월 초 미국의 전체 재생에너지 설비 용량은 약 546GW에 달해 천연가스 설비(518GW)를 넘어설 것으로 예상된다.",
+    "implication": "미국 내 재생에너지의 급격한 설비 확충은 전력망의 변동성을 높여, 기저부하를 담당하는 원자력의 역할과 계통 안정화 정책에 대한 논의를 가속화할 것이다.",
     "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#전력시장",
+      "#재생에너지"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-08-29T21:37:35.137621+00:00",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-29T21:54:44.776321+00:00",
     "title": "美 신규 전력설비 재생에너지로 쏠린다…1년간 83GW 증가",
     "link": "https://www.g-enews.com/view.php?ud=2026082920032754559a1f309431_1",
     "feed": "정책",
     "domain": "g-enews.com",
     "matched": "원자력 정책",
-    "source_excerpt": "에너지 정책 분석단체 선데이 캠페인은 최근 5년 동안 소규모 태양광이 연평균 약 6400MW 증가했다는... 같은 기간 천연가스 발전량은 1.8%, 원자력은 1.7% 증가하는 데 그쳤다. 석탄 발전량은 11.3% 감소했다. 풍력과...",
-    "published_at": "2026-08-29T19:00:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "1cf145bb5dab6923",
@@ -429943,7 +429964,8 @@
       "source_excerpt": "92ca5310eff59117beceeb11d0c466f1124ad9936b562f3bf5214b1d7aece861",
       "published_at": "4ab69ed7f358cf6f29ded59428825b95f806cb5cc91c21c07f886c1d80a1499f"
     },
-    "hash": "1cf145bb5dab6923"
+    "hash": "1cf145bb5dab6923",
+    "published_at": "2026-08-29T19:00:00+00:00"
   },
   "d2e5a99a76e910e9": {
     "features": {
@@ -431619,5 +431641,480 @@
     },
     "hash": "742c43e9aa3d49dd",
     "published_at": "2026-08-29T21:36:00+00:00"
+  },
+  "9d094afc2b0d3749": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "아르카나(ARN.TO) 주가 및 최신 뉴스 동향",
+    "summary": "아르카나(ARN.TO)의 주가 및 관련 최신 뉴스 정보입니다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-29T21:54:44.776321+00:00",
+    "title": "(ARN.TO) | Stock Price & Latest News",
+    "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE0tSFF6dlFWbEJRMTYzVXdBZV9CTXczOGNuZnFWSmlaaGZDeTdQcVVsQm54aVZNVEp1M1ZRc3hlT0M0WTZndlBlRVFIbWhwdG1ZeDhIUkQwdXlXckwxLS1sbGhRanR3a2hi?oc=5",
+    "feed": "정책",
+    "domain": "reuters.com",
+    "matched": "Reuters 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "9d094afc2b0d3749",
+      "source_components": {
+        "article_hash": "9d094afc2b0d3749",
+        "title": "d94b1dad5379c4147fe40a2416f22283b79b395f5df02691866cc7ebadd78d82",
+        "source_excerpt": "72543dcda266ae0b4ad7460c4efd5bff688a0f4a93958120b2f58864a3830e93",
+        "published_at": "abe7f938c174170ffa48761a5a580860c7d1e27ac7aad281ad6aaa39e1564099"
+      },
+      "source_fingerprint": "bfbc0a0af62bfc1f66a68c0efa496be2bce10053e83e82199a6b3f77f99ee7c6",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "83468ae8e3b476f7b102896b6861b357e049f8e44e440c189057fd9122b2a880"
+    },
+    "verified_source_components": {
+      "article_hash": "9d094afc2b0d3749",
+      "title": "d94b1dad5379c4147fe40a2416f22283b79b395f5df02691866cc7ebadd78d82",
+      "source_excerpt": "72543dcda266ae0b4ad7460c4efd5bff688a0f4a93958120b2f58864a3830e93",
+      "published_at": "abe7f938c174170ffa48761a5a580860c7d1e27ac7aad281ad6aaa39e1564099"
+    },
+    "hash": "9d094afc2b0d3749",
+    "published_at": "2026-08-29T01:33:41+00:00"
+  },
+  "c2611ead169487f5": {
+    "features": {
+      "event_type": "incident_safety",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 3
+    },
+    "importance": "must_read",
+    "section": "international",
+    "scope": "overseas",
+    "category": "규제",
+    "topics": [
+      "regulation",
+      "security_trade"
+    ],
+    "countries": [
+      "UA"
+    ],
+    "article_type": "news",
+    "title_kr": "IAEA, 자포리자 원전 외부 전력 차단 장기화에 따른 블랙아웃 경고",
+    "summary": "자포리자 원전이 외부 전력선 단절로 비상 디젤 발전기에 의존 중이며, 연료 부족으로 10일 내 블랙아웃 위기에 처했다.",
+    "detail": "자포리자 원전은 지난 20일 외부 전력선 연결이 끊긴 이후 비상 디젤 발전기를 가동하고 있다. IAEA 현장 점검 결과, 23일 기준 규제상 최소 요구치인 10일 분량의 디젤 연료만 남아있는 상태다. 연료 공급망은 교전으로 인해 차단되었으며, 2025년 3월부터는 연료 저장소 접근도 제한되고 있다. 최근 원전 부지 내 드론 공격이 잇따르는 등 물리적 위협도 고조되고 있다.",
+    "implication": "군사적 충돌로 인한 원전 안전 설비의 외부 전력 상실은 중대 사고 위험을 직접적으로 높이며, IAEA의 국지적 휴전 구역 설정 협상 결과가 안전 확보의 관건이다.",
+    "why_important": "원전의 외부 전력 상실은 노심 용융 등 중대 사고로 직결될 수 있는 핵심 안전 이슈로, 국제 원자력 안전 규제 및 안보 측면에서 즉각적인 모니터링이 필요하다.",
+    "open_question": "외부 전력 복구 및 추가 디젤 연료 반입 시점은 미정이다.",
+    "open_question_source": "article_text",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#원전안전",
+      "#에너지안보"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-29T21:54:44.776321+00:00",
+    "title": "IAEA “자포리자 원전 외부 전력 일주일째 끊겨…열흘내 블랙아웃”",
+    "link": "https://news.kbs.co.kr/news/pc/view/view.do?ncd=8649692",
+    "feed": "정책",
+    "domain": "kbs.co.kr",
+    "matched": "사용후핵연료",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "c2611ead169487f5",
+      "source_components": {
+        "article_hash": "c2611ead169487f5",
+        "title": "58a7b0c1b672ab155e8f532ba4c85ef87d42002b56e64aea8cc40ee5dafac5fb",
+        "source_excerpt": "eb7b754626ba6f179a6b1724b266f646fa5f769a37a7771c65e82d5beacd3ae0",
+        "published_at": "77f55f03c23f73ddc94d953651e1f81921a75d4b71ea9fc34f519f21c932f9ef"
+      },
+      "source_fingerprint": "1d506c3464c2dabb14a4f40f2fd97526a7cb04a77bea6032ebd6970fb32e41a2",
+      "entities": [
+        "chernobyl",
+        "iaea",
+        "zaporizhzhia"
+      ],
+      "countries": [
+        "UA"
+      ],
+      "topics": [
+        "fuel_supply",
+        "reactor_operation",
+        "reactor_project",
+        "waste"
+      ],
+      "stages": [
+        "cancellation"
+      ],
+      "claims": [
+        "6기",
+        "29일",
+        "20일",
+        "23일",
+        "10일",
+        "3월",
+        "5월",
+        "2025년",
+        "25일",
+        "2명",
+        "26일"
+      ],
+      "quantities": {
+        "기": [
+          "6"
+        ],
+        "년": [
+          "2025"
+        ],
+        "명": [
+          "2"
+        ],
+        "월": [
+          "3",
+          "5"
+        ],
+        "일": [
+          "10",
+          "20",
+          "23",
+          "25",
+          "26",
+          "29"
+        ]
+      },
+      "manifest_fingerprint": "5a02ccdbe28a745056deb08c21418d24394afa3e544bbb20a06b8215c6dd9c64"
+    },
+    "verified_source_components": {
+      "article_hash": "c2611ead169487f5",
+      "title": "58a7b0c1b672ab155e8f532ba4c85ef87d42002b56e64aea8cc40ee5dafac5fb",
+      "source_excerpt": "eb7b754626ba6f179a6b1724b266f646fa5f769a37a7771c65e82d5beacd3ae0",
+      "published_at": "77f55f03c23f73ddc94d953651e1f81921a75d4b71ea9fc34f519f21c932f9ef"
+    },
+    "hash": "c2611ead169487f5",
+    "published_at": "2026-08-29T19:08:00+00:00"
+  },
+  "80acdb65aec09133": {
+    "features": {
+      "event_type": "research_report",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "GLOBAL"
+    ],
+    "article_type": "report",
+    "title_kr": "글로벌 데이터센터 냉각수 소비량, 2030년 6,440억 리터로 3배 급증 전망",
+    "summary": "리스타드에너지는 AI 데이터센터 확산으로 2025년 2,220억 리터인 직접 냉각수 소비량이 2030년 6,440억 리터로 3배 가까이 증가할 것으로 전망했다.",
+    "detail": "리스타드에너지는 28일 발표한 보고서에서 데이터센터의 냉각수 소비가 5년 내 4,220억 리터 증가할 것으로 분석했다. 공격적인 절감 기술을 도입할 경우 소비량을 3,880억 리터로 억제할 수 있으나, 건식 냉각 도입 시 전력 소비가 증가하는 상충 관계가 존재한다. 미국 데이터센터는 전력 생산 단계의 간접 용수 소비량이 현장 직접 냉각수의 2배를 상회하기도 한다. 수자원 제약이 데이터센터 확장의 핵심 변수로 부상하며 고효율 냉각 장비 시장의 구조 변화가 가속화되고 있다.",
+    "implication": "데이터센터 입지 선정 시 전력망뿐만 아니라 용수 집약도와 수자원 규제 대응력이 핵심 경쟁력으로 부상하고 있다.",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#데이터센터",
+      "#수자원",
+      "#냉각기술"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-29T21:54:44.776321+00:00",
+    "title": "AI발 데이터센터, 냉각수 3배 급증 경고에 글로벌 수자원 규제 확산",
+    "link": "https://www.g-enews.com/view.php?ud=202608291729063935fbbec65dfb_1",
+    "feed": "정책",
+    "domain": "g-enews.com",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "80acdb65aec09133",
+      "source_components": {
+        "article_hash": "80acdb65aec09133",
+        "title": "806898f3beee3e8caf8cd8fa3220917376a95ccc38e3efcd9d7ec032b5c2cefd",
+        "source_excerpt": "9163c8257cc4793334f6bc0a6be3da5535730f1a517f0bed77419480b38b2296",
+        "published_at": "40cff209ae3c7420c3dd6d76fdcb4ecc95b5692d5046035e47f7a5656d0e4f8a"
+      },
+      "source_fingerprint": "4ea427af8f5772b411b04372795dea2833e5fd46968eb7e055e8d1c930dc7d94",
+      "entities": [],
+      "countries": [
+        "KR",
+        "US"
+      ],
+      "topics": [
+        "grid",
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [
+        "2025년",
+        "2030년",
+        "40일",
+        "28일",
+        "5년"
+      ],
+      "quantities": {
+        "mw": [
+          "0.00074",
+          "0.001"
+        ],
+        "년": [
+          "2025",
+          "2030",
+          "5"
+        ],
+        "일": [
+          "28",
+          "40"
+        ]
+      },
+      "manifest_fingerprint": "3009644dcf72abb554123a7f1df1fc89923bb426099a2d8dd9791a005075de40"
+    },
+    "verified_source_components": {
+      "article_hash": "80acdb65aec09133",
+      "title": "806898f3beee3e8caf8cd8fa3220917376a95ccc38e3efcd9d7ec032b5c2cefd",
+      "source_excerpt": "9163c8257cc4793334f6bc0a6be3da5535730f1a517f0bed77419480b38b2296",
+      "published_at": "40cff209ae3c7420c3dd6d76fdcb4ecc95b5692d5046035e47f7a5656d0e4f8a"
+    },
+    "hash": "80acdb65aec09133",
+    "published_at": "2026-08-29T19:16:00+00:00"
+  },
+  "4e1bbcf5fe2a6b99": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 2
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "smr",
+      "security_trade"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "대미 투자 협상 난항, 전략자산 활용한 상업성 확보 과제",
+    "summary": "한국의 대미 투자 사업이 미국의 요구와 상업성 사이에서 협상 난항을 겪고 있으며, 원전·SMR 등 전략자산을 지렛대로 활용하는 전략이 요구된다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#한미협력",
+      "#SMR"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-08-29T21:54:44.776321+00:00",
+    "title": "대미투자 1호사업, 9월 발표도 '가시밭길'…美 요구에 韓 상업성 셈법 충...",
+    "link": "https://www.news1.kr/economy/trend/6273434",
+    "feed": "SMR",
+    "domain": "news1.kr",
+    "matched": "SMR",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "4e1bbcf5fe2a6b99",
+      "source_components": {
+        "article_hash": "4e1bbcf5fe2a6b99",
+        "title": "04602ff213cf309d8371dcbe73b25579354a7e5f4c5546f9809470c26b56df84",
+        "source_excerpt": "4e8fb9ddf0c32323d350ca67982cac7d9816c7970c73df7711d6d93fb0e7cde2",
+        "published_at": "35a83de98f4aa78796c8f88742e21632d72e5be8b75efe985a6be0dd1eb4bdcc"
+      },
+      "source_fingerprint": "30480aeb18f5b707cafbfb73a3882b544aed9de3cd8325ebffc32f67ba906528",
+      "entities": [],
+      "countries": [
+        "KR",
+        "US"
+      ],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [
+        "9월"
+      ],
+      "quantities": {
+        "월": [
+          "9"
+        ]
+      },
+      "manifest_fingerprint": "4279057d1a66a31abedac449e6725845476c7a39fe4a8a13071ff9a9cca5ca2a"
+    },
+    "verified_source_components": {
+      "article_hash": "4e1bbcf5fe2a6b99",
+      "title": "04602ff213cf309d8371dcbe73b25579354a7e5f4c5546f9809470c26b56df84",
+      "source_excerpt": "4e8fb9ddf0c32323d350ca67982cac7d9816c7970c73df7711d6d93fb0e7cde2",
+      "published_at": "35a83de98f4aa78796c8f88742e21632d72e5be8b75efe985a6be0dd1eb4bdcc"
+    },
+    "hash": "4e1bbcf5fe2a6b99",
+    "published_at": "2026-08-29T21:46:00+00:00"
+  },
+  "36fccaf703c29264": {
+    "importance": "nice_to_know",
+    "curation_status": "fallback",
+    "curation_source": "fallback",
+    "section": "domestic",
+    "category": "정책",
+    "title_kr": "美 스타트업 초소형 원자로 실증…누스케일 PPA가 반등 가른다",
+    "summary": "회사는 이번 시험을 거쳐 미국 원자력규제위원회(NRC) 인허가 획득에 필요한 제어·안전 통합 데이터를 확보할 계획이다.",
+    "implication": "",
+    "why_important": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "cached_at": "2026-08-29T21:54:44.776321+00:00",
+    "title": "美 스타트업 초소형 원자로 실증…누스케일 PPA가 반등 가른다",
+    "link": "https://www.g-enews.com/view.php?ud=202608300642563955fbbec65dfb_1",
+    "feed": "정책",
+    "domain": "g-enews.com",
+    "matched": "원자력안전위원회",
+    "source_excerpt": "회사는 이번 시험을 거쳐 미국 원자력규제위원회(NRC) 인허가 획득에 필요한 제어·안전 통합 데이터를 확보할 계획이다. 이어 해양 지원선 운영사인 혼벡오프쇼어와 협력해 해상 실증을 추진할 예정이다. 토드 혼벡...",
+    "published_at": "2026-08-29T21:46:00+00:00",
+    "features_attempts": 1,
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "36fccaf703c29264",
+      "source_components": {
+        "article_hash": "36fccaf703c29264",
+        "title": "569d6d0673d8166a793f37d31108e21fd092522b06037176ea6a5e61c2a43a0b",
+        "source_excerpt": "db7beec199708985133439177ee667ccada28f9c2642ec93739df09b04fc1441",
+        "published_at": "35a83de98f4aa78796c8f88742e21632d72e5be8b75efe985a6be0dd1eb4bdcc"
+      },
+      "source_fingerprint": "a0575ba6c9e25f07e70ec0165f0caa3d34e01183a216f8f90a65956a6bc4159f",
+      "entities": [
+        "inl",
+        "nrc",
+        "oklo"
+      ],
+      "countries": [
+        "CN",
+        "KR",
+        "RU",
+        "US"
+      ],
+      "topics": [
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [
+        "approval",
+        "construction",
+        "contract"
+      ],
+      "claims": [
+        "155일",
+        "40%",
+        "28일",
+        "2026년",
+        "29일",
+        "9월",
+        "6기",
+        "75%"
+      ],
+      "quantities": {
+        "%": [
+          "40",
+          "75"
+        ],
+        "기": [
+          "6"
+        ],
+        "년": [
+          "2026"
+        ],
+        "월": [
+          "9"
+        ],
+        "일": [
+          "155",
+          "28",
+          "29"
+        ]
+      },
+      "manifest_fingerprint": "309a3d025456b76429905bfd06d0ada0f950077b4af031e9389c249d702da443"
+    },
+    "verified_source_components": {
+      "article_hash": "36fccaf703c29264",
+      "title": "569d6d0673d8166a793f37d31108e21fd092522b06037176ea6a5e61c2a43a0b",
+      "source_excerpt": "db7beec199708985133439177ee667ccada28f9c2642ec93739df09b04fc1441",
+      "published_at": "35a83de98f4aa78796c8f88742e21632d72e5be8b75efe985a6be0dd1eb4bdcc"
+    },
+    "hash": "36fccaf703c29264"
   }
 }
