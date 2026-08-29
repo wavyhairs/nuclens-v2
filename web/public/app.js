@@ -3252,6 +3252,34 @@ function calendarChip(entry) {
     + `</button></li>`;
 }
 
+// 같은 일정의 다른 표현. 칩이 폭에 져서 점만 남는 자리(좁은 화면)에서 이름을
+// 대신 세운다. 칩과 달리 말줄임이 없다 — 이 줄이 이름의 마지막 자리다.
+function calendarUpcomingRow(event) {
+  const kind = CAL_KIND_LABELS[event.kind] || "예정";
+  return `<li><button type="button" class="cal-up-row" data-cal-event="${esc(event.id)}">`
+    + `<span class="cal-up-when">${esc(calendarWhen(event))}</span>`
+    + `<span class="cal-up-kind"><i class="cal-dot is-${esc(event.kind)}" aria-hidden="true"></i>`
+    + `${esc(kind)}</span>`
+    + `<span class="cal-up-label">${esc(event.label)}</span>`
+    + `</button></li>`;
+}
+
+// 목록도 격자처럼 재료가 늘면 길어진다 — 창을 30일로 넓힌 뒤 실측 22건, 그중
+// 태반이 하순에 몰렸다. 전부 펴면 이 구역이 화면의 절반을 넘어가 아래 지난
+// 브리핑까지 밀어낸다. timelineList() 와 같은 접기(앞 N건 + <details>)를 쓴다 —
+// 이 파일에 이미 있는 '더 보기' 어법이라 새 패턴을 안 들인다.
+const CAL_UPCOMING_HEAD = 8;
+
+function calendarUpcomingList(events) {
+  const head = events.slice(0, CAL_UPCOMING_HEAD);
+  const rest = events.slice(CAL_UPCOMING_HEAD);
+  return `${head.map(calendarUpcomingRow).join("")}`
+    + (rest.length
+      ? `<li><details class="cal-up-more"><summary>${rest.length}건 더 보기</summary>`
+        + `<ul>${rest.map(calendarUpcomingRow).join("")}</ul></details></li>`
+      : "");
+}
+
 function calendarCell(day, calendar, entries) {
   const [, month, date] = day.split("-");
   const weekday = calWeekday(day);
@@ -3320,6 +3348,20 @@ function renderEventCalendar() {
     cells.push('<div class="cal-cell is-blank" aria-hidden="true"></div>');
   }
   document.getElementById("eventCalendarGrid").innerHTML = head + cells.join("");
+
+  // 좁은 화면 전용 이름 목록. 격자와 같은 자료를 날짜순으로 편다 — 칩이 점으로
+  // 줄어도 '무엇'이 화면에 남게 하는 자리다. 넓은 화면에서는 칩이 이미 이름을
+  // 달고 있으므로 CSS 가 통째로 내린다(.cal-upcoming 기본값 display:none).
+  // byDay 가 아니라 events 를 쓴다 — 기간이 양끝으로 두 번 서는 것은 격자의
+  // 사정이고, 목록에서 같은 일정이 두 줄이면 건수가 거짓말을 한다.
+  const dated = (calendar.events || []).slice()
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const upcoming = document.getElementById("eventCalendarUpcoming");
+  upcoming.hidden = dated.length === 0;
+  if (!upcoming.hidden) {
+    document.getElementById("eventCalendarUpcomingList").innerHTML =
+      calendarUpcomingList(dated);
+  }
 
   const notes = calendar.month_notes || [];
   const strip = document.getElementById("eventCalendarMonths");

@@ -2050,6 +2050,48 @@ dialog[open] { animation: dialog-in var(--mo-2) var(--mo-ease-out); }
 .cal-pop-label { margin: 0 0 6px; font-size: var(--t-body); font-weight: 700; }
 .cal-pop-clause { margin: 0 0 6px; color: var(--c-text-secondary); font-size: var(--t-caption); line-height: 1.55; }
 .cal-pop-source { margin: 0; color: var(--c-text-muted); font-size: var(--t-min); }
+/* 다가오는 일정 — 좁은 화면에서만 선다. 격자가 잃은 이름을 폭이 있는 곳에서
+   되찾는 자리라, 칩이 이름을 달고 있는 넓은 화면에는 있을 이유가 없다. */
+.cal-upcoming { display: none; margin-top: var(--sp-6); }
+.cal-upcoming h3 { margin: 0 0 var(--sp-2); font-size: var(--t-body); }
+.cal-upcoming ul { margin: 0; padding: 0; list-style: none; }
+.cal-up-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px var(--sp-3);
+  align-items: baseline;
+  width: 100%;
+  padding: var(--sp-2) 0;
+  border: 0;
+  border-top: var(--bd-1) solid var(--c-border);
+  background: none;
+  color: var(--c-text);
+  font-family: var(--ff-base);
+  text-align: left;
+  cursor: pointer;
+}
+.cal-up-when {
+  color: var(--c-text-muted);
+  font-family: var(--ff-mono);
+  font-size: var(--t-min);
+  font-variant-numeric: tabular-nums;
+}
+.cal-up-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--c-text-muted);
+  font-size: var(--t-min);
+}
+/* 이름은 두 열을 다 쓰고 줄바꿈도 허용한다 — 이 화면에서 이름이 온전히 서는
+   유일한 자리이므로, 여기서까지 말줄임을 걸면 목록을 만든 뜻이 없어진다. */
+.cal-up-label { grid-column: 1 / -1; font-size: var(--t-caption); }
+/* 8건을 넘는 나머지. timeline-more 와 같은 손잡이 어법 — 세로선이 없는
+   목록이라 왼쪽 테두리는 빌리지 않는다. 안쪽 행은 .cal-up-row 의 border-top 을
+   그대로 물려받으므로 여기서 다시 긋지 않는다. */
+.cal-up-more { border-top: var(--bd-1) solid var(--c-border); }
+.cal-up-more > summary { padding: var(--sp-2) 0; color: var(--c-secondary); font-size: var(--t-caption); cursor: pointer; }
+.cal-up-more > ul { margin: 0; padding: 0; list-style: none; }
 .cal-months { margin-top: var(--sp-6); }
 .cal-months h3 { margin: 0 0 var(--sp-2); font-size: var(--t-body); }
 .cal-months ul { margin: 0; padding: 0; list-style: none; }
@@ -2972,6 +3014,10 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   }
   .cal-more { padding: 2px; }
   .cal-legend { flex-wrap: wrap; gap: var(--sp-3); }
+  /* :not([hidden]) 이 필요하다 — 작성자 스타일의 display 는 UA 의
+     [hidden]{display:none} 을 특정도와 무관하게 이긴다. 그냥 block 으로 두면
+     일정 0건이라 JS 가 내린 절이 좁은 화면에서만 되살아나 빈 제목이 선다. */
+  .cal-upcoming:not([hidden]) { display: block; }
   .cal-months li { grid-template-columns: 62px minmax(0, 1fr); row-gap: 2px; }
   .cal-months a { grid-column: 2; }
   .cal-popover { width: calc(100% - 8px); }
