@@ -378,6 +378,39 @@ RSS_SOURCES.append({
     "resolve_publisher": True,
 })
 
+# ---- 국내 원자력 기관·학계 (2026-08-29) --------------------------------------
+# 부서 지정 목록. 규제·연구·사업자 4곳(원안위·산업부·한수원·원자력연구원)은 이미
+# OFFICIAL_DIRECT_SOURCES 로 게시판 원문을 직접 읽는다. 여기 넣는 7곳은 게시판
+# 구조가 제각각(학회 SPA·협회 목록·사업단 워드프레스)이라 전용 파서를 새로 쓰는
+# 대신 Google News site: 로 우회한다.
+#
+#   when:3d      기관 공지는 언론 기사보다 색인이 늦다. 1d 로 좁히면 색인되기
+#                전에 창이 닫혀 매번 0건이 된다.
+#   검색어 없음   도메인 자체가 원자력 기관이라 site: 만으로 주제가 좁혀진다.
+#   게이트 없음   같은 이유 — Euractiv 처럼 비원자력이 섞이는 곳이 아니다.
+#
+# 주의: 이 도메인들은 언론사가 아니라 기관 사이트라 Google News 색인이 얇다.
+# 며칠씩 0건이어도 '실패'가 아니라 '무소식'으로 뜬다(operational_monitoring 의
+# empty/failed 구분). 몇 주째 계속 0건이면 색인 자체가 없다는 뜻이므로, 그때는
+# 전용 파서를 붙여 OFFICIAL_DIRECT_SOURCES 로 옮기는 것이 맞다.
+KR_NUCLEAR_ORG_FEEDS = (
+    ("서울대 원자력미래기술정책연구소", "niftep.snu.ac.kr"),
+    ("한국원자력학회", "kns.org"),
+    ("한국원자력산업협회", "kaif.or.kr"),
+    ("한국원자력환경공단", "korad.or.kr"),
+    ("한국원자력통제기술원", "kinac.re.kr"),
+    ("한전원자력연료", "knfc.co.kr"),
+    ("혁신형 SMR 기술개발사업단", "ismr.or.kr"),
+)
+for _org_name, _org_domain in KR_NUCLEAR_ORG_FEEDS:
+    _org_q = quote_plus(f"site:{_org_domain} when:3d")
+    RSS_SOURCES.append({
+        "url": f"https://news.google.com/rss/search?q={_org_q}&hl=ko&gl=KR&ceid=KR:ko",
+        # resolve_publisher 를 쓰지 않으므로 domain_label 이 곧 기사 도메인이 된다
+        # — sources.json 의 같은 도메인 항목이 그대로 등급·근거 역할로 붙는다.
+        "name": _org_name, "domain_label": _org_domain,
+    })
+
 SMR_HINTS = ("smr", "small modular", "i-smr", "advanced reactor")
 
 ANTI_TITLE_PATTERNS = [

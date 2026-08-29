@@ -397,10 +397,69 @@ assert.ok(axis.right.some(word => ["업무협약", "수출", "산업부"].includ
 assert.equal(axis.left.filter(word => axis.right.includes(word)).length, 0,
   "양쪽에 같은 낱말이 올라왔다 — 그 축으로는 영원히 안 갈린다");
 
+// ── 방금 저장한 것 ─────────────────────────────────────────────────────────
+//
+// 이 표들이 읽는 config.json 은 **빌드 산출물**이고 콘솔 편집은 KV 로 바로 간다.
+// 그래서 막 넣은 수집원·등급은 다음 빌드까지 목록에 없었다 — 관리자는 저장이
+// 먹었는지 알 방법이 없어 같은 것을 두 번 넣었고, 두 번째는 409 로 막혔다.
+// 여기서 보는 것은 둘이다: 안 간 판정이 **보이는가**, 그리고 이미 간 판정이
+// 빌드 줄과 겹쳐 **두 번 서지 않는가**.
+const renderFeeds = vm.runInContext("renderFeeds", sandbox);
+const renderTiers = vm.runInContext("renderTiers", sandbox);
+
+state.overrides.entries = [
+  {
+    kind: "feed_add", id: "feed-pending", name: "한국원자력학회",
+    url: "https://news.google.com/rss/search?q=site%3Akns.org+when%3A3d&hl=ko",
+    domain_label: "kns.org", require_keywords: [],
+  },
+  {
+    kind: "tier_upsert", id: "tier-pending", domain: "kns.org", name: "한국원자력학회",
+    tier: 2, source_type: "official", evidence_role: "primary", aliases: [],
+  },
+];
+renderFeeds();
+renderTiers();
+const feedHtml = written.get("feedTables");
+assert.ok(feedHtml.includes("한국원자력학회"), "방금 넣은 수집원이 표에 없다 — 저장이 먹었는지 알 수 없다");
+assert.ok(feedHtml.includes("다음 수집부터"), "안 간 수집원이 이미 걷고 있는 것처럼 보인다");
+const tierHtml = written.get("tierTable");
+assert.ok(tierHtml.includes("kns.org"), "방금 올린 등급이 표에 없다");
+assert.ok(tierHtml.includes("다음 수집부터"), "안 간 등급이 이미 적용된 것처럼 보인다");
+// 표에 섰으면 거기서 고칠 수도 있어야 한다 — 수정 버튼이 빌드 목록만 보면
+// 방금 올린 줄은 눌러도 빈 폼이 열린다.
+const tierOpen = vm.runInContext("effectiveTierRows", sandbox)()
+  .find(row => row.domain === "kns.org");
+assert.equal(tierOpen?.tier, 2, "방금 올린 등급을 수정 폼이 못 찾는다");
+
+// 이미 빌드를 탄 판정. config.overrides.entries 에 id 가 있으면 파이프라인이
+// 듣고 있는 것이고, 그 수집원은 config.feeds.rss 에도 이미 들어 있다.
+const built = state.config.feeds.rss[0];
+state.overrides.entries = [{
+  kind: "feed_add", id: "feed-live", name: built.name, url: built.url,
+  domain_label: built.domain, require_keywords: [],
+}];
+state.config.overrides.entries.push({ kind: "feed_add", id: "feed-live" });
+renderFeeds();
+const target = `data-target="${esc(built.url)}"`;
+assert.equal(written.get("feedTables").split(target).length - 1, 1,
+  `이미 반영된 수집원이 표에 두 번 섰다: ${built.name}`);
+
+// 중지도 같은 규칙이다. 아직 안 간 중지는 줄을 지우지 않고 '중지 예정'으로
+// 세워야 한다 — 지워 버리면 되돌릴 자리가 화면에서 사라진다.
+state.config.overrides.entries.pop();
+state.overrides.entries = [{ kind: "feed_disable", id: "feed-stopping",
+  target: built.url, label: built.name }];
+renderFeeds();
+const stopping = written.get("feedTables");
+assert.ok(stopping.includes("중지 예정"), "안 간 중지가 표에 안 보인다");
+assert.ok(stopping.includes('data-act="feed-restore"'), "중지를 되돌릴 자리가 없다");
+
 console.log(
   `admin render: 화면 ${required.length}칸 + 접히는 칸 ${Object.keys(FOLD_BODIES).length}개 렌더 통과` +
   ` (회차 ${rounds.dates.length}개 · 기본 ${rounds.latest} → ${older.date} 이동 확인` +
   `${spanning ? `, 회차 밖 멤버 ${spanning.member_count}건 유지` : ""}` +
   `, 수동 분리 ${splittable ? "가능" : "단위 없음 — 사유 표시"}` +
-  `, 사건 나누기 ${left.length}↔${right.length} 미리보기 확인)`,
+  `, 사건 나누기 ${left.length}↔${right.length} 미리보기 확인` +
+  ", 저장 직후 수집원·등급 표시 확인)",
 );

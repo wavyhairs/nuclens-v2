@@ -1420,18 +1420,72 @@ function feedTable(title, note, rows, columns) {
   </section>`;
 }
 
+// 이 표가 읽는 config.json 은 **빌드 산출물**이고, 콘솔 편집은 KV 로 바로 간다.
+// 그래서 방금 넣은 수집원은 다음 빌드까지 표에 나타나지 않았고, 관리자는 저장이
+// 먹었는지 알 방법이 없어 같은 것을 두 번 넣었다(그리고 두 번째는 409 를 받는다).
+// 표를 그리기 전에 KV 의 판정을 얹는다 — 파이프라인이 admin_overrides.rss_sources
+// 로 하는 것과 같은 덧칠이라, 화면과 다음 수집이 같은 목록을 본다.
+function effectiveFeedRows(baseRows, addKind, disableKind) {
+  const live = liveEntryIds();
+  const stopped = new Set();          // 이미 파이프라인이 뺀 것 — 빌드도 이미 뺐다
+  const stopping = new Set();         // 아직 안 간 것 — 표에 남기되 '중지 예정'
+  for (const entry of entriesOf(disableKind)) {
+    if (entry.enabled === false) continue;
+    (live.has(entry.id) ? stopped : stopping).add(entry.target);
+  }
+
+  const rows = [];
+  const seen = new Set();
+  for (const row of baseRows) {
+    const key = row.url || row.name;
+    if (stopped.has(key)) continue;
+    seen.add(key);
+    rows.push({ ...row, stopping: stopping.has(key) });
+  }
+  // 아직 빌드를 안 탄 추가분. 빌드가 이미 실은 것은 위에서 걸러진다(같은 url).
+  // 기관 직접 수집은 전용 파서가 필요해 화면에서 더할 수 없다 — addKind 가 없다.
+  for (const entry of (addKind ? entriesOf(addKind) : [])) {
+    if (entry.enabled === false) continue;
+    const key = entry.url || entry.name;
+    if (!key || seen.has(key) || stopped.has(key)) continue;
+    seen.add(key);
+    rows.push({
+      name: entry.name || entry.url || "",
+      domain: entry.domain_label || "",
+      url: entry.url || "",
+      via: String(entry.url || "").includes("news.google.com") ? "google_news" : "direct",
+      require_keywords: (entry.require_keywords || []).length > 0,
+      pending: !live.has(entry.id),
+      stopping: stopping.has(key),
+    });
+  }
+  return rows;
+}
+
+// 수집원·등급 표가 함께 쓰는 상태 칸. '방금 눌렀다'와 '실제로 걷고 있다'가 한
+// 줄에서 구분되지 않으면 관리자는 둘을 같은 것으로 읽는다.
+function overlayStatusCell(row) {
+  if (row.stopping) return '<span class="admin-badge warn">중지 예정</span>';
+  if (row.pending) return '<span class="admin-badge warn">다음 수집부터</span>';
+  return '<span class="admin-badge">적용됨</span>';
+}
+
 function renderFeeds() {
   const feeds = state.config?.feeds;
   if (!feeds) return;
-  const rss = feeds.rss || [];
-  const official = feeds.official || [];
+  const rss = effectiveFeedRows(feeds.rss || [], "feed_add", "feed_disable");
+  const official = effectiveFeedRows(feeds.official || [], "", "official_disable");
   const viaDirect = rss.filter(row => row.via === "direct").length;
+  const pending = [...rss, ...official].filter(row => row.pending || row.stopping).length;
   document.getElementById("feedStats").innerHTML = [
     stat("RSS 피드", `${rss.length}곳`, `직접 ${viaDirect} · 우회 ${rss.length - viaDirect}`),
     stat("기관 직접 수집", `${official.length}곳`, "보도자료 페이지를 직접 읽습니다"),
     stat("검색 엔진", (state.config?.search?.engines || []).join(" · ") || "—", "국내 기사 발굴"),
     stat("발간물", `${(state.config?.publications?.orgs || []).length}개 기관`, "보고서·분석 자료"),
-  ].join("");
+    // 있을 때만 세운다 — 늘 0 으로 서 있으면 아무도 안 읽고, 그러면 실제로 대기가
+    // 생긴 날에도 눈에 안 들어온다.
+    pending ? stat("반영 대기", `${pending}곳`, "다음 수집에서 반영됩니다") : "",
+  ].filter(Boolean).join("");
 
   const linkCell = row => {
     const url = safeUrl(row.url);
@@ -1440,8 +1494,15 @@ function renderFeeds() {
   };
   const stopCell = (kind) => row => {
     const target = row.url || row.name;
+    const label = row.name || row.publisher || target;
+    // 아직 안 간 중지는 되돌릴 자리가 여기 있어야 한다. 없으면 '내 판정' 탭에서
+    // 판정을 찾아 지우는 것이 유일한 길이고, 다시 [중지]를 누르면 409 만 받는다.
+    if (row.stopping) {
+      return `<button class="admin-mini" data-act="feed-restore" data-kind="${esc(kind)}"
+        data-target="${esc(target)}" data-label="${esc(label)}">중지 취소</button>`;
+    }
     return `<button class="admin-mini danger" data-act="feed-disable" data-kind="${esc(kind)}"
-      data-target="${esc(target)}" data-label="${esc(row.name || row.publisher || target)}">중지</button>`;
+      data-target="${esc(target)}" data-label="${esc(label)}">중지</button>`;
   };
   document.getElementById("feedTables").innerHTML = [
     feeds.error
@@ -1456,6 +1517,7 @@ function renderFeeds() {
         ? '<span class="admin-badge warn">Google News 우회</span>'
         : '<span class="admin-badge">직접 피드</span>' },
       { label: "키워드 필수", cell: row => row.require_keywords ? "예" : "—" },
+      { label: "상태", cell: overlayStatusCell },
       { label: "", cell: stopCell("feed_disable") },
     ]),
     feedAddCard(),
@@ -1464,6 +1526,7 @@ function renderFeeds() {
       { label: "게시판", cell: row => esc(row.name) },
       { label: "도메인", cell: linkCell },
       { label: "수집 방식", cell: row => `<code>${esc(row.kind)}</code>` },
+      { label: "상태", cell: overlayStatusCell },
       { label: "", cell: stopCell("official_disable") },
     ]),
     // 기관 직접 수집은 게시판마다 전용 파서(kind)가 코드에 있어야 읽힌다. 화면에서
@@ -1524,21 +1587,60 @@ function feedAddCard() {
   </section>`;
 }
 
+// 수집원 표와 같은 이유의 덧칠(effectiveFeedRows 주석 참조). 이쪽은 도메인이
+// 열쇠라 새로 넣은 것뿐 아니라 **등급을 옮긴 것**도 표에 즉시 보여야 한다 —
+// 안 그러면 방금 tier1 로 올린 매체가 화면에서는 계속 tier3 로 서 있다.
+function effectiveTierRows() {
+  const live = liveEntryIds();
+  const rows = (state.config?.source_tiers?.rows || []).map(row => ({ ...row }));
+  const at = domain => rows.findIndex(row => row.domain === domain);
+
+  // 판정은 기록 순서대로 얹는다 — 같은 도메인을 두 번 고쳤으면 나중 것이 이긴다.
+  // admin_overrides.sources_config 가 하는 것과 같은 순서다.
+  for (const entry of (state.overrides.entries || [])) {
+    if (entry.enabled === false) continue;
+    if (entry.kind !== "tier_upsert" && entry.kind !== "tier_remove") continue;
+    const index = at(entry.domain);
+    if (entry.kind === "tier_remove") {
+      if (index < 0) continue;
+      if (live.has(entry.id)) rows.splice(index, 1);   // 빌드가 이미 뺐다
+      else rows[index] = { ...rows[index], stopping: true };
+      continue;
+    }
+    const previous = index < 0 ? {} : rows[index];
+    const next = {
+      ...previous,
+      domain: entry.domain,
+      name: entry.name || previous.name || entry.domain,
+      tier: entry.tier || previous.tier || 3,
+      source_type: entry.source_type || previous.source_type || "unknown",
+      evidence_role: entry.evidence_role || previous.evidence_role || "unknown",
+      aliases: (entry.aliases || []).length ? entry.aliases : (previous.aliases || []),
+      pending: !live.has(entry.id),
+      stopping: false,
+    };
+    if (index < 0) rows.push(next);
+    else rows[index] = next;
+  }
+  return rows;
+}
+
 function renderTiers() {
   const tiers = state.config?.source_tiers;
   if (!tiers) return;
-  const rows = tiers.rows || [];
+  const rows = effectiveTierRows();
   document.getElementById("tierTable").innerHTML = `
     <p class="data-note">tier1 선정 가산 +${esc(tiers.tier1_bonus ?? "—")} · tier2 +${esc(tiers.tier2_bonus ?? "—")} · tier3 가산 없음.
       등급은 선정 점수를, 근거 역할은 화면의 검증 배지를 정합니다.</p>
     <div class="admin-table-scroll"><table class="admin-table">
-      <thead><tr><th>등급</th><th>이름</th><th>도메인</th><th>매체 성격</th><th>근거 역할</th><th></th></tr></thead>
+      <thead><tr><th>등급</th><th>이름</th><th>도메인</th><th>매체 성격</th><th>근거 역할</th><th>상태</th><th></th></tr></thead>
       <tbody>${rows.map(row => `<tr>
         <td><span class="admin-badge${row.tier === 1 ? "" : " muted"}">tier ${esc(row.tier)}</span></td>
         <td>${esc(row.name)}</td>
         <td>${esc(row.domain)}</td>
         <td>${esc(labelOf(SOURCE_TYPES, row.source_type))}</td>
         <td>${esc(labelOf(EVIDENCE_ROLES, row.evidence_role))}</td>
+        <td>${overlayStatusCell(row)}</td>
         <td><button class="admin-mini" data-act="tier-open" data-domain="${esc(row.domain)}">수정</button></td>
       </tr>`).join("")}</tbody>
     </table></div>
@@ -1742,8 +1844,8 @@ async function onClick(event) {
 
   if (act === "tier-open") {
     closeForms();
-    const row = (state.config?.source_tiers?.rows || [])
-      .find(item => item.domain === data.domain) || {};
+    // 표와 같은 목록을 본다 — 아직 빌드를 안 탄 등급도 여기서 고칠 수 있어야 한다.
+    const row = effectiveTierRows().find(item => item.domain === data.domain) || {};
     const slot = findSlot("tier");
     if (slot) slot.innerHTML = tierForm(row);
     return;
@@ -1829,6 +1931,15 @@ async function onClick(event) {
     return;
   }
 
+  // 아직 수집에 안 간 중지를 물린다. 판정 자체를 지우므로 '중지했다가 되살렸다'는
+  // 이력이 목록에 남지 않는다 — 칩 되돌리기(chip-restore)와 같은 규칙이다.
+  if (act === "feed-restore") {
+    const stop = entriesOf(data.kind).find(entry => entry.target === data.target);
+    if (!stop) return;
+    await submit({ op: "delete", id: stop.id }, `'${data.label}' 중지를 되돌렸습니다.`);
+    return;
+  }
+
   if (act === "group-split-open") {
     closeForms();
     const slot = findSlot(`issue-${data.issue}`);
@@ -1854,6 +1965,14 @@ async function onClick(event) {
   }
 
   if (act === "tier-remove") {
+    // 콘솔이 **방금 더한** 등급을 뺄 때는 반대 판정을 새로 만들지 않고 그 판정
+    // 자체를 지운다(칩 되돌리기와 같은 규칙). 그러지 않으면 아직 수집에 가지도
+    // 않은 '추가'와 '삭제'가 목록에 나란히 남는다.
+    const added = entriesOf("tier_upsert").find(entry => entry.domain === data.domain);
+    if (added && !liveEntryIds().has(added.id)) {
+      await submit({ op: "delete", id: added.id }, `${data.domain} 등급 추가를 되돌렸습니다.`);
+      return;
+    }
     if (!confirm(`${data.domain} 을 등급 목록에서 뺍니다. 선정 가산이 사라집니다.`)) return;
     await submit({
       op: "add",
@@ -2031,11 +2150,24 @@ async function onSubmit(event) {
   if (act === "tier-save") {
     const aliases = String(data.get("aliases") || "")
       .split(",").map(value => value.trim()).filter(Boolean);
+    // 쓰기 창구는 같은 도메인의 등급 판정을 하나만 받는다(409). 갈아 끼우지 않으면
+    // 방금 넣은 등급을 다시 고칠 방법이 화면에 없다 — 저장이 조용히 막힌다.
+    const domain = String(data.get("domain") || "").trim().toLowerCase().replace(/^www\./, "");
+    const previous = (state.overrides.entries || []).find(entry =>
+      (entry.kind === "tier_upsert" || entry.kind === "tier_remove") && entry.domain === domain);
+    if (previous) {
+      try {
+        await api({ op: "delete", id: previous.id });
+      } catch (error) {
+        toast(String(error.message || error), "error");
+        return;
+      }
+    }
     await submit({
       op: "add",
       entry: {
         kind: "tier_upsert",
-        domain: String(data.get("domain") || "").trim(),
+        domain,
         name: String(data.get("name") || "").trim(),
         tier: Number(data.get("tier")),
         source_type: String(data.get("source_type") || ""),
