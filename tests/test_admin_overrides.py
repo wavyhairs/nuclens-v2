@@ -178,6 +178,57 @@ class FeedOverlayTests(unittest.TestCase):
         ])
         self.assertEqual([row["name"] for row in admin_overrides.rss_sources(base, path)], ["B"])
 
+    def test_a_console_add_that_repeats_a_built_in_feed_is_dropped(self):
+        """콘솔에서 이미 있는 피드를 다시 넣어도 두 줄이 되지 않는다.
+
+        인코딩만 다른 같은 주소가 실제로 그렇게 섰다 — 코드는 quote_plus 라
+        공백이 `+`, 콘솔에 붙여 넣은 것은 `%20` 이었고, 둘이 따로 서서 서울대
+        NIFTEP 피드를 매 수집마다 두 번 걸었다(2026-08-29).
+        """
+        base = [{"url": "https://news.google.com/rss/search?q=site%3Ax.kr+when%3A3d",
+                 "name": "엑스", "domain_label": "x.kr"}]
+        path = write_overrides([{
+            "id": "f9", "kind": "feed_add",
+            "url": "https://news.google.com/rss/search?q=site%3Ax.kr%20when%3A3d",
+            "name": "엑스(콘솔)", "domain_label": "x.kr",
+        }])
+        feeds = admin_overrides.rss_sources(base, path)
+        self.assertEqual([row["name"] for row in feeds], ["엑스"])
+
+    def test_the_same_domain_may_carry_two_different_feeds(self):
+        """중복 판정은 도메인이 아니라 **주소**로 한다.
+
+        energy.gov 에는 DOE 뉴스룸과 DOE 원자력국이 서로 다른 RSS 로 있다.
+        도메인으로 묶으면 멀쩡한 둘째 피드가 막힌다.
+        """
+        base = [{"url": "https://www.energy.gov/newsroom/rss.xml",
+                 "name": "DOE", "domain_label": "energy.gov"}]
+        path = write_overrides([{
+            "id": "f10", "kind": "feed_add", "url": "https://www.energy.gov/ne/rss.xml",
+            "name": "DOE 원자력국", "domain_label": "energy.gov",
+        }])
+        feeds = admin_overrides.rss_sources(base, path)
+        self.assertEqual([row["name"] for row in feeds], ["DOE", "DOE 원자력국"])
+
+    def test_two_identical_console_adds_land_once(self):
+        """같은 판단을 두 번 눌러도 수집이 두 배가 되지 않는다."""
+        path = write_overrides([
+            {"id": "f11", "kind": "feed_add", "url": "https://ex.com/feed?a=1&b=2",
+             "name": "첫 번째", "domain_label": "ex.com"},
+            # 질의 순서만 다른 같은 요청.
+            {"id": "f12", "kind": "feed_add", "url": "https://ex.com/feed?b=2&a=1",
+             "name": "두 번째", "domain_label": "ex.com"},
+        ])
+        feeds = admin_overrides.rss_sources([], path)
+        self.assertEqual([row["name"] for row in feeds], ["첫 번째"])
+
+    def test_a_broken_url_still_does_not_raise(self):
+        """이 모듈은 예외를 올리지 않는다 — 죽으면 수집이 통째로 선다."""
+        path = write_overrides([{
+            "id": "f13", "kind": "feed_add", "url": "https://[oops/feed", "name": "깨짐",
+        }])
+        self.assertIsInstance(admin_overrides.rss_sources([], path), list)
+
     def test_official_sources_can_only_be_disabled(self):
         """기관 게시판은 전용 파서가 코드에 있어야 읽힌다 — 화면 추가를 허용하지 않는다."""
         base = [{"url": "https://khnp/x", "name": "한수원", "kind": "khnp_html"}]

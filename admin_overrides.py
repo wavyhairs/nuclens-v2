@@ -35,6 +35,7 @@ import json
 import os
 import re
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 OVERRIDES_FILE = Path(
     os.environ.get("ADMIN_OVERRIDES_FILE") or Path(__file__).with_name("admin_overrides.json")
@@ -511,6 +512,33 @@ def _feed_key(row: dict) -> str:
     return _text(row.get("url"), 400) or _text(row.get("name"), 120)
 
 
+def _same_feed_key(url: str) -> str:
+    """중복 판정용으로 URL 을 고른다.
+
+    같은 질의가 **인코딩만 달라** 두 줄로 서는 것을 막는다. 코드가 지은 주소는
+    quote_plus 라 공백이 `+` 인데(news_bot.KR_NUCLEAR_ORG_FEEDS), 콘솔에 붙여
+    넣은 주소는 브라우저를 거쳐 `%20` 으로 온다. 질의 문자열에서 둘은 같은
+    글자다 — 실제로 서울대 NIFTEP 피드가 그렇게 두 줄로 서서 매 수집마다 같은
+    피드를 두 번 걸었다(2026-08-29).
+
+    도메인으로 묶지 않는 이유: 같은 도메인에 다른 피드가 정당하게 둘 있다
+    (energy.gov 의 DOE 뉴스룸과 DOE 원자력국은 서로 다른 RSS 다). 여기서
+    막아야 하는 것은 '같은 도메인'이 아니라 '같은 주소'다.
+
+    질의 순서까지 고르는 것은, 콘솔에서 손으로 옮겨 적으며 순서가 바뀌어도
+    같은 요청이기 때문이다. 주소를 못 읽으면 원문을 그대로 열쇠로 쓴다 —
+    이 모듈은 예외를 올리지 않는다(머리말 가드레일).
+    """
+    try:
+        parts = urlsplit(url)
+        query = urlencode(sorted(parse_qsl(parts.query, keep_blank_values=True)))
+        return urlunsplit((
+            parts.scheme.lower(), parts.netloc.lower(), parts.path, query, "",
+        ))
+    except ValueError:
+        return url
+
+
 def rss_sources(base: list[dict], path: Path | None = None) -> list[dict]:
     """RSS 수집원 목록에 콘솔 추가분을 붙이고 중지분을 뺀다."""
     rows = load(path)["entries"]
@@ -521,12 +549,18 @@ def rss_sources(base: list[dict], path: Path | None = None) -> list[dict]:
         for row in rows if row.get("kind") == "feed_disable" and _enabled(row)
     }
     out = [row for row in (base or []) if _feed_key(row) not in disabled]
+    # 이미 서 있는 주소. 콘솔 추가분이 여기 겹치면 붙이지 않는다 — 내장 피드를
+    # 모르는 사람이 같은 것을 한 번 더 넣어도 수집이 두 배가 되지 않게.
+    seen = {_same_feed_key(_text(row.get("url"), 400)) for row in out}
     for row in rows:
         if row.get("kind") != "feed_add" or not _enabled(row):
             continue
         url = _text(row.get("url"), 400)
         if not url.startswith(("http://", "https://")) or _feed_key(row) in disabled:
             continue
+        if _same_feed_key(url) in seen:
+            continue
+        seen.add(_same_feed_key(url))
         feed = {
             "url": url,
             "name": _text(row.get("name"), 120) or url,
