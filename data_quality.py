@@ -56,6 +56,43 @@ def clean_text(value: object) -> str:
     return _SPACE_RE.sub(" ", html.unescape(value)).strip()
 
 
+# 기사 본문에서 딸려오는 이메일 주소. 한국 기사는 바이라인에 기자 메일을 그대로
+# 적는 일이 잦다 — 실측(2026-08-29): "한국정경신문 정아람 기자 <메일> [한국정경신문=…"
+# 이런 줄이 description 을 타고 source_excerpt 에 그대로 저장돼 있었다.
+#
+# 이것은 우리 자격증명이 아니라 **제3자의 개인정보**다. 저장소를 공개로 돌리면
+# 수집 데이터가 통째로 검색 가능해지고, 신문사 지면에 한 번 실린 것과 아카이브에
+# 영구히 색인되는 것은 노출의 성격이 다르다. 그래서 저장 전에 지운다.
+#
+# 왜 `clean_text` 에 넣지 않는가 — 그 함수는 `normalize_url` 을 비롯해 180곳에서
+# 쓰인다. URL·식별자에까지 이 규칙이 닿으면 엉뚱한 자리가 조용히 바뀐다.
+# 지울 자리를 아는 쪽(수집 단계의 제목·요약·본문)에서만 명시적으로 부른다.
+_EMAIL_RE = re.compile(
+    r"(?:mailto:)?[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
+# 주소를 들어낸 자리에 남는 빈 괄호·따옴표. "(<메일>)" 이 "()" 로 남으면 그것대로
+# 원문에 없던 모양이다.
+_EMPTY_WRAP_RE = re.compile(r"[(\[<{（][\s,·/|-]*[)\]>}）]")
+
+
+def strip_emails(value: object) -> str:
+    """기사에서 딸려온 이메일 주소만 지운다. 나머지 글자는 건드리지 않는다.
+
+    **뜻을 바꾸지 않는 것이 조건이다.** 큐레이션·랭킹·중복판정은 전부 이 텍스트를
+    읽으므로, 주소 하나를 빼는 것 말고는 아무것도 하지 않는다. 문장을 자르지도,
+    다시 쓰지도 않는다 — `clean_text` 의 약속과 같다.
+
+    >>> strip_emails("정아람 기자 kim@example.com [한국정경신문=정아람 기자]")
+    '정아람 기자 [한국정경신문=정아람 기자]'
+    """
+    if not isinstance(value, str) or "@" not in value:
+        return value if isinstance(value, str) else ""
+    text = _EMAIL_RE.sub(" ", value)
+    text = _EMPTY_WRAP_RE.sub(" ", text)
+    # 주소 앞뒤에 있던 공백이 둘로 겹친다. 문장 부호 앞의 빈칸도 함께 정리한다.
+    text = _SPACE_RE.sub(" ", text)
+    return re.sub(r"\s+([,.;:!?])", r"\1", text).strip()
+
+
 def normalize_url(url: str | None) -> str:
     """추적 파라미터만 제거한 안정적인 기사 URL을 반환한다.
 
