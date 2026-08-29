@@ -326,7 +326,12 @@ def call_json(
     if thinking_budget is not None:
         generation_config["thinkingConfig"] = {"thinkingBudget": thinking_budget}
 
-    url = _ENDPOINT.format(model=model or MODEL) + f"?key={API_KEY}"
+    # 키는 **헤더로** 보낸다. 쿼리스트링(`?key=…`)에 실으면 그 URL 이 닿는 곳마다
+    # 키가 함께 간다 — 예외 메시지, 리다이렉트 로그, 중간 프록시 기록. 지금 코드가
+    # URL 을 찍지 않는다는 것은 오늘의 사실이지 계약이 아니고, 저장소를 공개로
+    # 돌리면 Actions 로그도 함께 공개된다. Google 이 공식 지원하는 헤더 방식으로
+    # 옮겨 애초에 실릴 자리를 없앤다.
+    url = _ENDPOINT.format(model=model or MODEL)
     body = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": [{"role": "user", "parts": [{"text": user_message}]}],
@@ -342,7 +347,8 @@ def call_json(
             req = urllib.request.Request(
                 url,
                 data=json.dumps(body).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
+                headers={"Content-Type": "application/json",
+                         "x-goog-api-key": API_KEY},
             )
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 payload = json.loads(resp.read())
