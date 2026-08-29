@@ -532,6 +532,19 @@
         <span><i class="cal-dot is-range"></i>기간</span>
       </div>
       <div id="eventCalendarGrid" class="cal-grid"></div>
+      <!-- 좁은 화면에서 격자 칩은 점으로 줄어 이름을 잃는다. 이름을 되살리려
+           글씨를 줄이는 길은 막혀 있다 — 칩에 남는 폭이 29px 인데 실측 일정
+           이름의 최단이 12자, 중앙값이 32자다. 게다가 3~5자로 자르면 22건 중
+           10건이 '2026 ', '에너지 산' 으로 겹쳐, 확대해도 어느 것인지 모른다.
+           (핀치 확대가 못 살리는 이유는 따로 있다: ellipsis 는 레이아웃 때
+           잘리므로 배율만 바뀌는 확대로는 글자가 돌아오지 않는다.)
+           그래서 폭이 있는 곳에 이름을 세운다. 격자는 '언제·얼마나'를, 이
+           목록은 '무엇'을 답한다 — 달 단위 일정을 격자 밖에 세우는 바로 아래
+           cal-months 와 같은 어법이다. -->
+      <section id="eventCalendarUpcoming" class="cal-upcoming" aria-labelledby="eventCalendarUpcomingTitle" hidden>
+        <h3 id="eventCalendarUpcomingTitle">다가오는 일정</h3>
+        <ul id="eventCalendarUpcomingList"></ul>
+      </section>
       <!-- '9월 중'처럼 달까지만 적힌 일정. 날짜 칸에 넣으면 그 달 1일 일정이
            되므로(실제로 그렇게 틀렸다) 격자 밖에 따로 세운다. -->
       <section id="eventCalendarMonths" class="cal-months" aria-labelledby="eventCalendarMonthsTitle" hidden>
