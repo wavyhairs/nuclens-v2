@@ -5261,7 +5261,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-08-28T23:43:39+00:00",
+    "updated_at": "2026-08-29T00:11:13+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -5298,9 +5298,9 @@
         "resolved_at": "2026-08-18T06:49:21+00:00"
       },
       "quality:topic-weeks": {
-        "consecutive": 11,
+        "consecutive": 0,
         "scope": "data_gate",
-        "active": true,
+        "active": false,
         "title": "신뢰하기 어려운 추세 지표를 자동으로 숨겼습니다",
         "detail": "주별 수집량 차이가 커서 주제 흐름 표를 화면에서 자동으로 내렸습니다. 잘못된 추세를 보여 주지 않으려는 안전장치가 작동한 것입니다.",
         "severity": "warning",
@@ -5317,7 +5317,9 @@
         "action": "필요 없음 — 주별 수집량이 고르게 쌓이면 자동으로 다시 표시됩니다.",
         "technical": "flow_ratio=2.6727 slope_ratio=1.0068 threshold=2.0 totals=[50, 55, 112, 146, 147]",
         "fingerprint": "hidden=주제 흐름 표",
-        "last_notified_fingerprint": "hidden=주제 흐름 표"
+        "last_notified_fingerprint": "hidden=주제 흐름 표",
+        "resolved_at": "2026-08-29T00:11:13+00:00",
+        "resolution_notified_at": "2026-08-29T00:11:13+00:00"
       },
       "quality:features-missing": {
         "consecutive": 0,
@@ -5339,7 +5341,7 @@
         "title": "원문과 다른 기사를 자동으로 제외했습니다",
         "detail": "요약이 원문과 다르게 만들어진 기사 4건을 브리핑 후보와 아카이브에서 뺐습니다. 다시 만들어 봐도 같아서 내보내지 않았습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-08-28T23:43:39+00:00",
+        "last_seen_at": "2026-08-29T00:11:13+00:00",
         "last_observation_id": "2026-08-29T08:42:00.203413+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T09:47:33+00:00",
@@ -5361,7 +5363,7 @@
         "title": "검증이 끝나지 않은 기사를 자동 보류했습니다",
         "detail": "요약 근거가 확인되지 않은 기사 1건을 발송 대기열에 넣지 않았습니다. 그중 0건은 재시도 상한에 닿아 제외했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-08-28T23:43:39+00:00",
+        "last_seen_at": "2026-08-29T00:11:13+00:00",
         "last_observation_id": "2026-08-29T00:12:30.003050+09:00",
         "min_occurrences": 2,
         "first_seen_at": "2026-08-27T00:39:35+00:00",
@@ -5419,26 +5421,26 @@
         "resolved_at": "2026-08-28T15:12:31+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 10,
+        "consecutive": 11,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
-        "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 12건. 사건일이 잘못된 기사 339건은 날짜만 자동 정정했습니다.",
+        "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 1건 · 기존 제외 유지 12건. 사건일이 잘못된 기사 363건은 날짜만 자동 정정했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-08-28T14:59:33+00:00",
-        "last_observation_id": "github-run:33121232489",
+        "last_seen_at": "2026-08-29T00:11:13+00:00",
+        "last_observation_id": "github-run:33220935285",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
-        "last_notified_at": "2026-08-24T19:57:26+00:00",
+        "last_notified_at": "2026-08-29T00:11:13+00:00",
         "last_notified_severity": "critical",
-        "notifications": 7,
+        "notifications": 8,
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=7555 quarantined=12 sanitized=339 samples=0b31010f0bdb, 205e053d314f, 2107047860d5, 253448653217, 30b76c01887d",
-        "fingerprint": "q=12:7a76502381a22e1c",
-        "last_notified_fingerprint": "q=12:7a76502381a22e1c"
+        "technical": "checked=7812 quarantined=13 sanitized=363 samples=0b31010f0bdb, 205e053d314f, 2107047860d5, 253448653217, 30b76c01887d",
+        "fingerprint": "q=13:1c9db3f535087188",
+        "last_notified_fingerprint": "q=13:1c9db3f535087188"
       },
       "source:산업부 보도자료:failure": {
         "consecutive": 1,
@@ -5447,7 +5449,7 @@
         "title": "산업부 보도자료 기사를 가져오지 못하고 있습니다",
         "detail": "공식기관 접속이 연속 2회 실패했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-08-28T23:43:39+00:00",
+        "last_seen_at": "2026-08-29T00:11:13+00:00",
         "last_observation_id": "2026-08-28T23:42:03+00:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-28T23:42:03+00:00",
@@ -5470,7 +5472,7 @@
         "title": "원안위 보도자료 기사를 가져오지 못하고 있습니다",
         "detail": "공식기관 접속이 연속 2회 실패했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-08-28T23:43:39+00:00",
+        "last_seen_at": "2026-08-29T00:11:13+00:00",
         "last_observation_id": "2026-08-28T23:42:03+00:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-28T23:42:03+00:00",
@@ -5487,16 +5489,16 @@
         "last_notified_fingerprint": ""
       },
       "quality-event:audio-script-claim-removed": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "quality_event",
-        "active": false,
+        "active": true,
         "title": "전문가 브리핑 대본에서 근거 없는 문단을 뺐습니다",
-        "detail": "2026-08-28 전문가 브리핑 대본에서 기사 근거로 확인되지 않는 문단 1건을 빼고 내보냈습니다.",
+        "detail": "2026-08-29 전문가 브리핑 대본에서 기사 근거로 확인되지 않는 문단 2건을 빼고 내보냈습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-08-28T14:59:33+00:00",
-        "last_observation_id": "2026-08-28T07:40:57.518172+09:00",
+        "last_seen_at": "2026-08-29T00:11:13+00:00",
+        "last_observation_id": "2026-08-29T09:02:06.573788+09:00",
         "min_occurrences": 2,
-        "first_seen_at": "2026-08-27T22:49:37+00:00",
+        "first_seen_at": "2026-08-29T00:11:13+00:00",
         "pending_notification": false,
         "last_notified_at": "2026-08-19T23:01:47+00:00",
         "last_notified_severity": "warning",
@@ -5504,10 +5506,9 @@
         "level": "attention",
         "impact": "없음 — 음원은 정상 발송됐고, 뺀 문단 외의 내용은 그대로입니다.",
         "action": "필요 없음 — 자동으로 정리됐습니다.",
-        "technical": "variant=expert date=2026-08-28 removed=1 action=sanitize",
-        "fingerprint": "removed:2026-08-28:expert:1:sanitize",
-        "resolution_notified_at": "2026-08-28T15:12:31+00:00",
-        "resolved_at": "2026-08-28T15:12:31+00:00"
+        "technical": "variant=expert date=2026-08-29 removed=2 action=sanitize",
+        "fingerprint": "removed:2026-08-29:expert:2:sanitize",
+        "resolution_notified_at": "2026-08-28T15:12:31+00:00"
       },
       "source:DOE:partial-parse": {
         "consecutive": 0,
@@ -5689,7 +5690,7 @@
         "resolution_notified_at": "2026-08-27T22:49:37+00:00"
       },
       "issue-candidate:preselect-headroom": {
-        "consecutive": 1,
+        "consecutive": 2,
         "scope": "data_gate",
         "active": true,
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
@@ -5698,12 +5699,17 @@
         "level": "attention",
         "impact": "없음 — 뉴스 수집과 서비스는 정상입니다. 이슈를 묶는 정확도만 영향을 받습니다.",
         "action": "운영 조치는 필요 없습니다 — 개발자 확인 항목입니다.",
-        "technical": "[issue-candidate:preselect-headroom] 정답 묶음의 p99 가 경고선 14위에 닿았다(컷 밖으로 밀린 것은 아직 7건 / 713건). p99 16위 · 중앙 0위 · 최대 44위 · 표본 713건",
+        "technical": "[issue-candidate:preselect-headroom] 정답 묶음의 p99 가 경고선 14위에 닿았다(컷 밖으로 밀린 것은 아직 6건 / 736건). p99 17위 · 중앙 0위 · 최대 45위 · 표본 736건",
         "fingerprint": "guard:warning",
-        "last_seen_at": "2026-08-28T14:59:33+00:00",
-        "last_observation_id": "github-run:33121232489",
+        "last_seen_at": "2026-08-29T00:11:13+00:00",
+        "last_observation_id": "github-run:33220935285",
         "min_occurrences": 2,
-        "first_seen_at": "2026-08-27T22:49:37+00:00"
+        "first_seen_at": "2026-08-27T22:49:37+00:00",
+        "pending_notification": false,
+        "last_notified_at": "2026-08-29T00:11:13+00:00",
+        "last_notified_severity": "warning",
+        "last_notified_fingerprint": "guard:warning",
+        "notifications": 1
       },
       "source:DOE 원자력국:stale": {
         "consecutive": 9,
@@ -5717,7 +5723,7 @@
         "action": "해당 사이트에 실제로 새 글이 있는지 한 번만 확인해 주세요.",
         "technical": "newest_pub=2026-08-14T14:30:39+00:00 quiet_days=14 threshold=14 observed_normal_gap_max=5",
         "fingerprint": "newest=2026-08-14T14:30:39+00:00",
-        "last_seen_at": "2026-08-28T23:43:39+00:00",
+        "last_seen_at": "2026-08-29T00:11:13+00:00",
         "last_observation_id": "2026-08-28T23:42:03+00:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-28T14:59:33+00:00",
