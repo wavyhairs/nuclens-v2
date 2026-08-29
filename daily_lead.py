@@ -28,7 +28,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import article_quality_gate
-from gemini_client import GeminiError, call_json, is_available
+from gemini_client import GeminiError, call_json, is_available, synthesis_model
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -269,7 +269,7 @@ def _call_lead(items: list[dict], summaries: dict[str, dict]) -> dict:
     user_message = build_user_message(items, summaries)
     result = call_json(SYSTEM_PROMPT, user_message,
                        temperature=0.2, max_output_tokens=8192,
-        label="daily_lead",
+        model=synthesis_model(), label="daily_lead",
     )
     lead = _normalize(result.get("lead"))
 
@@ -286,7 +286,7 @@ def _call_lead(items: list[dict], summaries: dict[str, dict]) -> dict:
         try:
             retry = call_json(SYSTEM_PROMPT, vague_message,
                               temperature=0.2, max_output_tokens=8192,
-                label="daily_lead",
+                model=synthesis_model(), label="daily_lead",
             )
             better = _normalize(retry.get("lead"))
             if better and is_substantive(better, items, summaries):
@@ -310,7 +310,7 @@ def _call_lead(items: list[dict], summaries: dict[str, dict]) -> dict:
     try:
         retry = call_json(SYSTEM_PROMPT, retry_message,
                           temperature=0.2, max_output_tokens=8192,
-            label="daily_lead",
+            model=synthesis_model(), label="daily_lead",
         )
         short = _normalize(retry.get("lead"))
         if short and len(short) <= LEAD_LIMIT:
@@ -349,7 +349,8 @@ def _verified_lead(lead: str, items: list[dict], summaries: dict[str, dict],
     )
     try:
         retry = call_json(SYSTEM_PROMPT, repair_message, temperature=0.2,
-                          max_output_tokens=8192, label="daily_lead")
+                          max_output_tokens=8192, model=synthesis_model(),
+                          label="daily_lead")
     except GeminiError as exc:
         print(f"[lead] 재요청 실패 — 문장 사용 안 함: {str(exc)[:120]}")
         return ""

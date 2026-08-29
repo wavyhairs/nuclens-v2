@@ -120,3 +120,74 @@ class TestQuotaVerdictIsLogged(unittest.TestCase):
         source = inspect.getsource(gemini_client.call_json)
         self.assertIn("일일 한도 판정", source)
         self.assertIn("분당 한도", source)
+
+
+class TestSynthesisModelResolution(unittest.TestCase):
+    """issue_review·issue_insight·audio 대본과 같은 패턴 — env 우선, 기본값 3.5."""
+
+    def test_defaults_to_flash_lite_35(self):
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("GEMINI_SYNTHESIS_MODEL", None)
+            self.assertEqual(gemini_client.synthesis_model(), "gemini-3.5-flash-lite")
+
+    def test_env_var_overrides_default(self):
+        with patch.dict(os.environ, {"GEMINI_SYNTHESIS_MODEL": "gemini-test-synth"}):
+            self.assertEqual(gemini_client.synthesis_model(), "gemini-test-synth")
+
+
+class TestRpmPacing(unittest.TestCase):
+    """15 RPM 무료 한도를 스치기 전에 자동으로 늦춘다 (429 를 맞은 *뒤* 자는
+    Retry-After 백오프와는 반대 방향 — 맞기 *전에* 스스로 늦춘다).
+    """
+
+    def setUp(self):
+        gemini_client.reset_call_log()
+        self._orig_env = os.environ.get("GEMINI_RPM_CAP")
+
+    def tearDown(self):
+        gemini_client.reset_call_log()
+        if self._orig_env is not None:
+            os.environ["GEMINI_RPM_CAP"] = self._orig_env
+        else:
+            os.environ.pop("GEMINI_RPM_CAP", None)
+
+    def test_under_cap_does_not_sleep(self):
+        os.environ["GEMINI_RPM_CAP"] = "12"
+        for _ in range(5):
+            gemini_client._record_call("m", "x")
+        with patch.object(gemini_client.time, "sleep") as fake_sleep:
+            gemini_client._pace("m")
+        fake_sleep.assert_not_called()
+
+    def test_at_cap_sleeps_until_the_oldest_call_ages_out(self):
+        os.environ["GEMINI_RPM_CAP"] = "3"
+        now = gemini_client.time.monotonic()
+        # 최근 60초 안에 상한(3)만큼 이미 불렀다 — 가장 오래된 것이 55초 전.
+        gemini_client._CALL_LOG.extend([
+            (now - 55.0, "m", "x"), (now - 30.0, "m", "x"), (now - 5.0, "m", "x"),
+        ])
+        with patch.object(gemini_client.time, "sleep") as fake_sleep:
+            gemini_client._pace("m")
+        fake_sleep.assert_called_once()
+        waited = fake_sleep.call_args[0][0]
+        # 55초 된 호출이 60초를 채우려면 약 5초가 더 필요하다.
+        self.assertAlmostEqual(waited, 5.1, delta=0.5)
+
+    def test_pacing_is_per_model_not_global(self):
+        """3.1 버킷이 바쁘다고 3.5 호출까지 늦추면 안 된다 — 버킷은 분리돼 있다."""
+        os.environ["GEMINI_RPM_CAP"] = "2"
+        now = gemini_client.time.monotonic()
+        gemini_client._CALL_LOG.extend([
+            (now - 1.0, "gemini-3.1-flash-lite", "x"),
+            (now - 1.0, "gemini-3.1-flash-lite", "x"),
+        ])
+        with patch.object(gemini_client.time, "sleep") as fake_sleep:
+            gemini_client._pace("gemini-3.5-flash-lite")
+        fake_sleep.assert_not_called()
+
+    def test_pacing_cap_is_configurable(self):
+        os.environ["GEMINI_RPM_CAP"] = "1"
+        gemini_client._record_call("m", "x")
+        with patch.object(gemini_client.time, "sleep") as fake_sleep:
+            gemini_client._pace("m")
+        fake_sleep.assert_called_once()

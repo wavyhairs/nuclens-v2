@@ -41,7 +41,7 @@ try:
 except (AttributeError, ValueError):
     pass
 
-from gemini_client import GeminiError, call_json, is_available
+from gemini_client import GeminiError, call_json, is_available, synthesis_model
 from sources import credibility
 
 # 본문은 길어서 토큰 절감 위해 잘라 보냄 (wnn.py 와 동일 한도)
@@ -159,6 +159,7 @@ def _synthesize(clusters: list[dict]) -> dict[int, dict]:
             temperature=0.2,
             max_output_tokens=4096,
             timeout=120.0,
+            model=synthesis_model(),
             label="synthesize",
         )
     except GeminiError as e:

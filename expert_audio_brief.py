@@ -39,7 +39,6 @@ from audio_brief import (
     _audio_manifest,
     _check_not_truncated,
     _mark_sent,
-    _script_models,
     _tts_models,
     _write_audio_variant,
     audio_evidence_digest,
@@ -168,16 +167,34 @@ REPAIR_SYSTEM = """당신은 검증 지시만 반영하는 원자력 오디오 �
 검증에 문제없는 정보는 가능한 유지하십시오. 한 명의 HOST만 사용하고 JSON만 반환하십시오."""
 
 
-def _call_structured(system: str, message: str, *, label: str, temperature: float = 0.2,
-                     max_output_tokens: int = 8192) -> dict:
-    """기존 nuclear-news-main의 Gemini 사다리를 그대로 이용한다."""
+def _model_ladder(primary: str) -> list[str]:
+    """primary 버킷을 우선하고, 실패하면 반대 버킷으로 폴백하는 사다리.
+
+    'curation' = gemini_client.MODEL(대량·저난도 버킷, 기본 3.1-flash-lite).
+    'synthesis' = gemini_client.synthesis_model()(종합·작성 버킷, 기본
+    3.5-flash-lite). 이걸 호출자(스테이지)마다 나누는 이유는 dossier·verify는
+    호출 수가 많은 대조·추출이고 plan·script·repair·reorder는 호출 수는
+    적지만 문장 품질이 그대로 청취자에게 들리기 때문이다 — 한 사다리를 같이
+    쓰면 후자의 품질이 전자의 물량에 맞춰 낮아진다.
+    """
+    curation = gemini_client.MODEL
+    synthesis = gemini_client.synthesis_model()
+    order = (curation, synthesis) if primary == "curation" else (synthesis, curation)
     models: list[str] = []
-    # 분석/검증은 공용 큐레이션 모델을 우선한다. 없으면 audio script 사다리를 쓴다.
-    if gemini_client.MODEL:
-        models.append(gemini_client.MODEL)
-    for model in _script_models():
-        if model not in models:
-            models.append(model)
+    for candidate in order:
+        if candidate and candidate not in models:
+            models.append(candidate)
+    return models
+
+
+def _call_structured(system: str, message: str, *, label: str, temperature: float = 0.2,
+                     max_output_tokens: int = 8192, primary: str = "curation") -> dict:
+    """단계별 우선 모델(primary) + 반대 버킷 폴백.
+
+    폴백은 primary 모델이 재시도(4회)까지 전부 실패했을 때만 한 번 더 부르는
+    최후 수단이다 — 흔치 않은 경로라 반대 버킷을 갑자기 고갈시키지 않는다.
+    """
+    models = _model_ladder(primary)
     last: Exception | None = None
     for model in models:
         try:
@@ -925,6 +942,7 @@ def _batch_script(briefing: dict, dossiers: list[dict], plan: dict,
     draft = _call_structured(
         SCRIPT_SYSTEM, prompt,
         label=f"expert_script_{block}_{part[0]}", temperature=0.35, max_output_tokens=12000,
+        primary="synthesis",
     )
     # 1차 원고의 형식 미달은 아직 예외가 아니다. 짧은 원고는 문단도 적어서 두
     # 실패가 늘 같이 오는데, 여기서 raise 하면 아래 재시도가 **필요한 순간에
@@ -941,7 +959,7 @@ def _batch_script(briefing: dict, dossiers: list[dict], plan: dict,
             prompt + f"\n\n[재요청] {note}. 문단 {min_paragraphs(n)}개 이상,"
                      f" 본문 {low:,}~{high:,}자를 반드시 지켜 전체를 다시 쓰십시오.",
             label=f"expert_script_retry_{block}_{part[0]}",
-            temperature=0.3, max_output_tokens=12000,
+            temperature=0.3, max_output_tokens=12000, primary="synthesis",
         )
         script, spoken = normalize_script(retry.get("script"), n)
     return script, spoken
@@ -1013,6 +1031,7 @@ def generate_expert_script(briefing: dict, issues: list[dict],
         payload = _call_structured(
             DOSSIER_SYSTEM, dossier_prompt(briefing, batch),
             label=f"expert_dossiers_{index}", temperature=0.1, max_output_tokens=20000,
+            primary="curation",
         )
         dossiers.extend(normalize_dossiers(payload, batch, date))
     by_issue = {str(row.get("issue_id") or ""): row for row in dossiers}
@@ -1026,6 +1045,7 @@ def generate_expert_script(briefing: dict, issues: list[dict],
         # 실측(2026-08-16): 이슈당 약 550 토큰. 이슈 수를 따라 올린다 — 상수로
         # 두면 뉴스가 많은 날 MAX_TOKENS 로 잘린다.
         temperature=0.2, max_output_tokens=min(20000, 2000 + 800 * len(issues)),
+        primary="synthesis",
     )
 
     drafted: list[tuple[str, list[dict], list[dict], str]] = []
@@ -1068,16 +1088,19 @@ def generate_expert_script(briefing: dict, issues: list[dict],
         report = _call_structured(
             VERIFY_SYSTEM, verification_prompt(briefing, block_dossiers, block_script),
             label=f"expert_verify_{block}", temperature=0.0, max_output_tokens=6000,
+            primary="curation",
         )
         if not verification_passed(report):
             repaired = _call_structured(
                 REPAIR_SYSTEM, repair_prompt(block_dossiers, block_script, report),
                 label=f"expert_repair_{block}", temperature=0.15, max_output_tokens=12000,
+                primary="synthesis",
             )
             block_script, _ = normalize_script(repaired.get("script"), len(rows))
             report = _call_structured(
                 VERIFY_SYSTEM, verification_prompt(briefing, block_dossiers, block_script),
                 label=f"expert_verify_after_repair_{block}", temperature=0.0, max_output_tokens=6000,
+                primary="curation",
             )
         reports.append(report)
 
@@ -1095,7 +1118,7 @@ def generate_expert_script(briefing: dict, issues: list[dict],
                     REPAIR_SYSTEM,
                     order_repair_prompt(block_dossiers, block_script, order, titles),
                     label=f"expert_reorder_{block}", temperature=0.1,
-                    max_output_tokens=12000)
+                    max_output_tokens=12000, primary="synthesis")
                 candidate, _ = normalize_script(fixed.get("script"), len(rows))
                 recheck = script_order_report(candidate, rows)
                 # 재배치가 더 나쁘면 원본을 쓴다. 순서 때문에 사실이 검증된
@@ -1404,4 +1427,11 @@ if __name__ == "__main__":
         import traceback
         traceback.print_exc()
         print(f"[expert-audio] 예상 밖 실패 — 비치명: {exc}")
+    # dossier·verify(curation)와 plan·script·repair·reorder(synthesis)가 실제로
+    # 어느 버킷·몇 회로 나갔는지는 이 프로세스가 끝나야 전체를 안다 — build_data.py
+    # 가 이미 같은 자리에서 찍는 것과 같은 이유(news_bot.py 3397번 줄 참고).
+    try:
+        print(gemini_client.format_call_stats())
+    except Exception as exc:  # 계측이 본 작업을 죽이면 안 된다
+        print(f"[gemini] 호출 통계 실패: {exc}")
     sys.exit(0 if ok else 1)

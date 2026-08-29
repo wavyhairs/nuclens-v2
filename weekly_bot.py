@@ -668,10 +668,10 @@ def batch_synthesize(items: list[dict], agg: dict) -> dict:
                  "쓸지 말지는 그 축의 사건을 읽고 정한다.")
 
     try:
-        from gemini_client import call_json
+        from gemini_client import call_json, synthesis_model
         result = call_json(WEEKLY_PROMPT, user_text,
                            temperature=0.3, max_output_tokens=10000, timeout=120.0,
-            label="weekly_bot",
+            model=synthesis_model(), label="weekly_bot",
         )
     except Exception as e:  # noqa: BLE001
         print(f"  ! weekly synthesis failed: {type(e).__name__}: {e}")

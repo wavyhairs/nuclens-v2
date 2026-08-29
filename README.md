@@ -632,7 +632,12 @@ python channel_queue.py --find-channel
 |---|---|---|
 | `AUTOMATION_ENABLED` | 없음(=정지) | 마스터 스위치. `true` 여야 정기 실행이 돈다 |
 | `BRIEFING_ENABLED` | 없음(=발송 안 함) | 발송 계열(daily-brief·weekly) 전용. **둘 다 `true`** 여야 텔레그램으로 나간다 |
-| `GEMINI_MODEL` | `gemini-3.1-flash-lite` | 큐레이션 모델 |
+| `GEMINI_MODEL` | `gemini-3.1-flash-lite` | 큐레이션 모델(대량·저난도 호출 버킷) |
+| `GEMINI_REVIEW_MODEL` | `gemini-3.5-flash-lite` | issue_review(사건 병합 판정) 전용 버킷 |
+| `GEMINI_INSIGHT_MODEL` | `gemini-3.5-flash-lite` | issue_insight(이슈 해석 문장) 전용 버킷 |
+| `GEMINI_SCRIPT_MODEL` | `gemini-3.5-flash-lite` | 오디오 대본 전용 버킷 |
+| `GEMINI_SYNTHESIS_MODEL` | `gemini-3.5-flash-lite` | daily_lead·trend_insights·주간 synthesis·한수원 시사점·보고서 추천·전문가 오디오 plan/repair/reorder 공유 버킷 |
+| `GEMINI_RPM_CAP` | `12` | 모델별 분당 호출 페이싱 상한 — 무료 티어 15 RPM 을 스치기 전에 자동 대기 |
 | `SITE_URL` / `CLOUDFLARE_PAGES_PROJECT` | 워크플로 기본값 | 배포·스모크 대상 |
 
 스위치를 둘로 나눈 이유: 수집·웹 갱신은 돌리면서 발송은 내용을 검토한 뒤에

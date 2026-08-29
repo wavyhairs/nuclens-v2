@@ -31,6 +31,23 @@ connect-ai의 `_quickLLMCall` 패턴을 차용 — 단일 system+user 메시지,
                        없고 — 죽은 모델도 generateContent 를 달고 목록에 남는다 —
                        한도는 429 응답 본문에만 실려 온다.
 
+    GEMINI_REVIEW_MODEL    — issue_review 전용 버킷 (기본 gemini-3.5-flash-lite)
+    GEMINI_INSIGHT_MODEL   — issue_insight 전용 버킷 (기본 gemini-3.5-flash-lite)
+    GEMINI_SCRIPT_MODEL    — 오디오 대본 전용 버킷 (기본 gemini-3.5-flash-lite)
+    GEMINI_SYNTHESIS_MODEL — daily_lead·trend_insights·주간 synthesis·한수원
+                             시사점·보고서 추천·전문가 오디오 plan/repair/reorder가
+                             공유하는 버킷 (기본 gemini-3.5-flash-lite). 위 셋처럼
+                             전용 변수를 두기엔 호출량이 하루 1회 안팎으로 작은
+                             기능들을 모아 둔 것 — 실제 Google 쿼터는 모델
+                             문자열로 갈리므로 REVIEW/INSIGHT/SCRIPT 와 값이
+                             같으면 같은 버킷을 그대로 공유한다.
+    GEMINI_RPM_CAP         — 모델별 페이싱 상한 (기본 12). 15 RPM 바로 밑까지
+                             안 쓰고 여유를 둔다 — call_json 이 같은 모델로
+                             최근 60초에 이 값만큼 불렀으면 다음 호출 전에
+                             자동으로 잠깐 대기한다(429 를 맞기 전에 스스로
+                             늦추는 것으로, 429 이후의 Retry-After 대기와는
+                             별개 메커니즘).
+
 사용법:
     from gemini_client import call_json
     data = call_json(SYSTEM_PROMPT, user_payload, schema_hint={"groups": [[0,1]]})
@@ -47,6 +64,18 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+# Windows 콘솔 UTF-8 강제 (dedup.py 등 다른 모듈과 동일 패턴). 이 모듈의 429/재시도
+# 로그 문구는 "—" 를 쓰는데, 콘솔이 cp1252 로 남아 있으면 UnicodeEncodeError 로
+# call_json 자체가 죽는다 — 로그가 안 남는 정도가 아니라 **호출이 실패로 끝난다**
+# (실측: 이 모듈만 단독 임포트한 프로세스, 예컨대 즉석 스모크 스크립트에서 재현됨).
+# 다른 엔트리 스크립트(news_bot.py 등)가 먼저 reconfigure 를 하면 가려지므로
+# 지금까지 정식 워크플로에서는 드러나지 않았을 뿐이다.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
+    pass
 
 # .env 로딩 (telegram_send.py와 동일 규칙)
 _ENV_PATH = Path(__file__).parent / ".env"
@@ -89,6 +118,20 @@ def _resolve(key: str, default: str | None = None) -> str | None:
 
 API_KEY = _resolve("GEMINI_API_KEY")
 MODEL = _resolve("GEMINI_MODEL", "gemini-3.1-flash-lite")
+
+# 종합·해석·작성처럼 품질 체감이 크지만 호출량은 하루 1회 안팎인 기능들의 공유
+# 버킷 — daily_lead·trend_insights·주간 synthesis·한수원 시사점·보고서 추천·
+# 전문가 오디오 plan/repair/reorder가 이 값을 같이 쓴다. issue_review·
+# issue_insight·audio 대본처럼 전용 버킷(각자 GEMINI_REVIEW_MODEL 등)을 둘
+# 만큼 호출량이 크지 않은 기능마다 모델 문자열을 새로 박지 않기 위해서다 —
+# 실제 Google 쿼터 버킷은 모델 문자열로 갈리므로, 이 기능들을 한 값으로
+# 묶어도 issue_review·issue_insight·audio 대본과 같은 gemini-3.5-flash-lite
+# 버킷을 그대로 공유한다(별도 버킷이 새로 생기는 것이 아니다).
+SYNTHESIS_MODEL_DEFAULT = "gemini-3.5-flash-lite"
+
+
+def synthesis_model() -> str:
+    return _resolve("GEMINI_SYNTHESIS_MODEL", SYNTHESIS_MODEL_DEFAULT)
 
 # Gemini REST 엔드포인트 — SDK 안 쓰고 stdlib urllib만 사용 (의존성 0)
 _ENDPOINT = (
@@ -192,6 +235,50 @@ def call_stats() -> dict:
         peak[model] = best
     return {"total": len(_CALL_LOG), "per_model": per_model,
             "per_label": per_label, "peak_per_minute": peak}
+
+
+# 15 RPM 상한까지 밀어붙이지 않는다. 버스트가 상한을 스치기만 해도 429가 뜨고,
+# 그 429가 서버 백오프(20~75초, RETRY_DELAY_MAX)를 부른다 — 페이싱으로 미리
+# 몇 초 늦추는 쪽이 429를 맞고 수십 초 자는 쪽보다 싸다. 상한을 하나로 두는
+# 이유는 모델마다 관측 피크가 다르기 때문이다: 3.1(실측 피크 ~5)엔 사실상
+# 발동하지 않고, 여유가 좁은 3.5(실측 피크 ~11)에서만 실제로 작동한다.
+RPM_PACING_CAP_DEFAULT = 12
+RPM_PACING_WINDOW = 60.0
+
+
+def _pacing_cap() -> int:
+    raw = _resolve("GEMINI_RPM_CAP", str(RPM_PACING_CAP_DEFAULT))
+    try:
+        value = int(raw)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return RPM_PACING_CAP_DEFAULT
+    return value if value > 0 else RPM_PACING_CAP_DEFAULT
+
+
+def _pace(model: str) -> None:
+    """이 모델로 호출하기 **전에** 최근 60초 호출 수를 보고 상한 밑으로 늦춘다.
+
+    429 Retry-After 처리(`_retry_delay_seconds`)와는 반대 방향이다 — 그건 한도를
+    맞은 *뒤* 서버가 요구한 시간만큼 잔다. 이건 맞기 *전에* 스스로 속도를 늦춰
+    애초에 그 자리를 덜 만든다. 서로 다른 신호(호출 이력 vs 서버 응답)로
+    움직이므로 겹치지 않는다 — 페이싱을 거치고도 429를 맞으면 기존 백오프가
+    그대로 이어받는다.
+
+    `_CALL_LOG`(계측용)를 그대로 읽어 쓴다 — 계측이 이미 '이 모델로 최근에
+    몇 번 불렀는가'를 들고 있으므로 별도 카운터를 안 둔다.
+    """
+    cap = _pacing_cap()
+    now = time.monotonic()
+    window_start = now - RPM_PACING_WINDOW
+    recent = sorted(stamp for stamp, m, _label in _CALL_LOG
+                     if m == model and stamp > window_start)
+    if len(recent) < cap:
+        return
+    wait = recent[0] + RPM_PACING_WINDOW - now + 0.1
+    if wait > 0:
+        print(f"[gemini] {model} 분당 {cap}회 페이싱 — {wait:.1f}초 대기 "
+              f"(최근 60초 {len(recent)}건)")
+        time.sleep(wait)
 
 
 def format_call_stats() -> str:
@@ -342,6 +429,7 @@ def call_json(
     for attempt in range(retries + 1):
         # 재시도도 한 번의 호출이고 한도를 그만큼 깎는다. attempt 를 라벨에 실어야
         # "chunk 4회"가 실제로는 12회였다는 것이 보인다.
+        _pace(model or MODEL)
         _record_call(model or MODEL, label if attempt == 0 else f"{label}:retry")
         try:
             req = urllib.request.Request(

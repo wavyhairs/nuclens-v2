@@ -1084,4 +1084,8 @@ if __name__ == "__main__":
         import traceback
         traceback.print_exc()
         print(f"[audio] 예상 밖 실패 — 비치명 처리: {exc}")
+    try:
+        print(gemini_client.format_call_stats())
+    except Exception as exc:  # 계측이 본 작업을 죽이면 안 된다
+        print(f"[gemini] 호출 통계 실패: {exc}")
     sys.exit(0 if ok else 1)

@@ -43,7 +43,7 @@ try:
 except (AttributeError, ValueError):
     pass
 
-from gemini_client import GeminiError, call_json, is_available
+from gemini_client import GeminiError, call_json, is_available, synthesis_model
 from sources import credibility
 import article_quality_gate
 import issue_continuity
@@ -418,7 +418,7 @@ def complete_required_fields(items: list[dict]) -> dict:
         result = call_json(
             IMPLICATION_SYSTEM_PROMPT, "\n\n---\n\n".join(blocks),
             temperature=0.2, max_output_tokens=4096, timeout=120.0,
-            label="daily_brief_implication",
+            model=synthesis_model(), label="daily_brief_implication",
         )
     except GeminiError as e:
         print(f"[daily_brief] 한수원 시사점 보완 실패 → 빈칸 유지: {e}")
@@ -611,7 +611,7 @@ def build_report_recs(items: list[dict]) -> tuple[str, dict]:
     try:
         result = call_json(REPORT_SYSTEM_PROMPT, "\n".join(lines),
                            temperature=0.2, max_output_tokens=4096, timeout=90.0,
-            label="daily_brief",
+            model=synthesis_model(), label="daily_brief_report",
         )
     except GeminiError as e:
         print(f"[daily_brief] 보고서 추천 실패 → 섹션 생략: {e}")

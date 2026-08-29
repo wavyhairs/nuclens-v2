@@ -8,6 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
+import os
+
 import article_quality_gate
 import audio_brief
 import channel_queue
@@ -705,6 +707,83 @@ class TelegramCaptionTests(unittest.TestCase):
         payload = self._capture({"date": "2026-08-14", "duration_sec": 165})
         self.assertNotIn("None", payload["caption"])
         self.assertIn("오디오 브리핑", payload["caption"])
+
+
+class ModelBucketRoutingTests(unittest.TestCase):
+    """단계별 모델 배치 회귀 방지 (2026-08 재배치).
+
+    dossier·verify는 호출 수가 많은 대조·추출이라 'curation'(기본 3.1) 을
+    우선하고, plan·script·repair·reorder는 문장 품질이 청취자에게 그대로
+    들리는 소수 호출이라 'synthesis'(기본 3.5) 를 우선한다. 재배치 전에는
+    `_call_structured` 전체가 curation 을 우선했다 — 폴백 사다리가 있어서
+    기능은 그대로 돌아가지만, 전문가 오디오 대본까지 3.1 로 나가면서
+    issue_review·issue_insight 만 3.5 였다. 이 테스트가 없으면 다음 리팩터가
+    `primary=` 인자를 빼먹어도 조용히 통과한다.
+    """
+
+    def setUp(self):
+        self._orig_model = expert.gemini_client.MODEL
+        expert.gemini_client.MODEL = "curation-model"
+        self._orig_env = os.environ.get("GEMINI_SYNTHESIS_MODEL")
+        os.environ.pop("GEMINI_SYNTHESIS_MODEL", None)
+
+    def tearDown(self):
+        expert.gemini_client.MODEL = self._orig_model
+        if self._orig_env is not None:
+            os.environ["GEMINI_SYNTHESIS_MODEL"] = self._orig_env
+        else:
+            os.environ.pop("GEMINI_SYNTHESIS_MODEL", None)
+
+    def test_model_ladder_orders_by_primary_bucket(self):
+        self.assertEqual(expert._model_ladder("curation"),
+                         ["curation-model", "gemini-3.5-flash-lite"])
+        self.assertEqual(expert._model_ladder("synthesis"),
+                         ["gemini-3.5-flash-lite", "curation-model"])
+
+    def test_generate_expert_script_sends_each_stage_to_its_bucket(self):
+        seen: dict[str, str] = {}
+        prefixes = ("expert_dossiers", "expert_plan", "expert_script_retry",
+                    "expert_script", "expert_verify_after_repair",
+                    "expert_verify", "expert_repair", "expert_reorder")
+
+        def fake_call_json(system, message, **kw):
+            label = kw["label"]
+            prefix = next((p for p in prefixes if label.startswith(p)), label)
+            seen[prefix] = kw["model"]
+            if prefix == "expert_dossiers":
+                import re as _re
+                ids = _re.findall(r'"issue_id": "(i\d+)"', message)
+                return {"dossiers": [{"issue_id": i, "title": f"이슈 {i[1:]}",
+                                      "body": "가" * 400} for i in dict.fromkeys(ids)]}
+            if prefix == "expert_plan":
+                return {"segments": []}
+            if prefix.startswith("expert_script"):
+                return {"script": "\n".join(f"HOST: {'가' * 150}" for _ in range(12))}
+            if prefix.startswith("expert_verify"):
+                return {"passed": True, "coverage_score": 99, "factual_support_score": 99,
+                        "stage_precision_score": 99, "expert_depth_score": 99,
+                        "single_speaker_score": 100, "unsupported_critical_claims": []}
+            return {}
+
+        original = expert.call_json
+        expert.call_json = fake_call_json
+        try:
+            expert.generate_expert_script(briefing(), [issue(i) for i in range(1, 7)])
+        finally:
+            expert.call_json = original
+
+        # 항상 도는 스테이지 — curation 대량 버킷
+        self.assertEqual(seen["expert_dossiers"], "curation-model")
+        self.assertEqual(seen["expert_verify"], "curation-model")
+        # 항상 도는 스테이지 — synthesis 품질 버킷
+        self.assertEqual(seen["expert_plan"], "gemini-3.5-flash-lite")
+        self.assertEqual(seen["expert_script"], "gemini-3.5-flash-lite")
+        # 조건부 스테이지 — 이번 실행에서 돌았다면 마찬가지로 검증
+        for optional in ("expert_script_retry", "expert_repair", "expert_reorder"):
+            if optional in seen:
+                self.assertEqual(seen[optional], "gemini-3.5-flash-lite", optional)
+        if "expert_verify_after_repair" in seen:
+            self.assertEqual(seen["expert_verify_after_repair"], "curation-model")
 
 
 if __name__ == "__main__":
