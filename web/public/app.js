@@ -3159,6 +3159,297 @@ function renderWeeklyReport() {
 
 // 지난 브리핑 — 흐름 탭의 시간 축. briefings.json 은 이미 클라이언트에 있다
 // (빌드 변경 0). 빈 날의 사유는 데이터가 말할 때만 쓴다 — 추정 금지.
+// ── 앞으로 30일 달력 ──────────────────────────────────────────────────────
+//
+// 흐름 탭은 뒤를 보는 화면이다. 그 끝에 앞을 보는 칸 하나를 둔다.
+//
+// 무엇이 칸에 서는가
+// ------------------
+// 기사 제목이 아니라 **그 날짜가 적힌 문장에서 뽑은 일정 이름**이다. 지난
+// '예정' 코너(SHOW_WEEKLY_UPCOMING, 2026-08-22 부터 꺼져 있다)는 날짜는 절에서,
+// 이름은 제목에서 따로 가져와 붙였다. 그래서 "9월 1일 · 한빛원전 …주민 설명회"
+// 가 떴는데 그 설명회는 8월 25일 일이었고, 9월 1일에 잡힌 것은 토론회였다.
+// 짝을 맺는 일은 파이썬이 하고(event_calendar.py) 화면은 그 결과를 그린다.
+//
+// 왜 세 단으로 읽히는가
+// ---------------------
+// 칸은 좁고 근거는 길다. 이름만 놓으면 못 믿고, 문장을 다 놓으면 못 읽는다.
+//   상시   이름          — 훑는 눈이 "무엇이 있나"에 답한다
+//   마우스 근거 문장 원문 — "정말 그 날짜인가"에 답한다
+//   클릭   출처·다른 보도 — "누가 그렇게 썼나"에 답한다
+// 터치에는 hover 가 없으므로 탭은 곧바로 셋째 단으로 간다.
+//
+// 왜 빈 칸이 많은가
+// -----------------
+// 재료가 원래 드물다(실측 2026-08-29: 31칸 중 9칸에만 일정이 선다). 채우려고
+// 정밀도를 낮추면 그것이 지난번의 오류가 된다 — '9월 중'을 9월 1일로 적는
+// 순간 한 칸에 다섯 건이 몰렸고 그중 어느 것도 그날 일정이 아니었다.
+// 빈 칸은 고장이 아니라 사실이다. 달까지만 나온 일정은 격자 밖 목록으로 간다.
+const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+// 한 칸에 세우는 칩. 넘치면 "+N" 으로 접는다. 파이썬은 창 안의 일정을 전부
+// 실어 보내고(event_calendar.build), 몇 개까지 보일지는 칸 크기를 아는 여기서
+// 정한다 — 상한을 양쪽에 두면 한쪽만 바뀌는 날 페이로드가 조용히 잘린다.
+const CAL_MAX_CHIPS = 3;
+const CAL_KIND_LABELS = { point: "예정", deadline: "마감", range: "기간" };
+
+function calendarData() {
+  return state.trend?.event_calendar || null;
+}
+
+// 요일은 UTC 자정 위에서 센다 — shiftDate 와 같은 이유다(그 함수 머리말).
+function calWeekday(date) {
+  return new Date(`${date}T00:00:00Z`).getUTCDay();
+}
+
+function calendarEventById(id) {
+  return (calendarData()?.events || []).find(row => row.id === id) || null;
+}
+
+// 일정을 칸에 앉힌다.
+//
+// 기간은 **양끝에 선다** — 시작하는 날과 끝나는 날. 처음에는 지나가는 칸을
+// 물들여 막대를 대신했는데, 실데이터에서 그게 무너졌다(2026-08-29: 입법예고
+// 하나가 9/2~10/13 이라 격자 31칸 중 27칸이 물들었다). 긴 기간은 '언제'가
+// 아니라 상태라서, 칸을 칠하면 달력이 통째로 배경색이 된다.
+// 반대로 끝만 찍으면 그날 시작하는 행사로 읽히고(지난 코너의 ②번 오류),
+// 시작만 찍으면 마감일이 격자에서 사라진다. 그래서 둘 다 세우고, 각 칩이
+// 자기가 어느 끝인지를 말한다. 누르면 둘 다 같은 일정 하나로 열린다.
+//
+// 이미 시작한 기간의 앞끝은 **창의 첫날**로 당긴다 — 시작일이 화면 밖이라고
+// 빼면 진행 중인 일정이 통째로 사라진다(포항 집회 8/23~9/20).
+function calendarLayout(calendar) {
+  const byDay = new Map();
+  const put = (day, event, role) => {
+    if (day < calendar.start || day > calendar.end) return;
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day).push({ event, role });
+  };
+  for (const event of calendar.events || []) {
+    const anchor = event.date < calendar.start ? calendar.start : event.date;
+    put(anchor, event, event.kind === "range"
+      ? (event.date < calendar.start ? "running" : "start") : "point");
+    if (event.kind === "range" && event.end_date > anchor) put(event.end_date, event, "end");
+  }
+  return { byDay };
+}
+
+// 기간 칩이 자기가 어느 끝인지 말하는 말. 날짜 칸이 이미 '언제'를 말하므로
+// 여기서는 '이 날짜가 그 일정의 무엇인가'만 짧게 얹는다.
+const CAL_ROLE_TAILS = { start: "시작", running: "진행 중", end: "종료" };
+
+function calendarChip(entry) {
+  const event = entry.event ? entry.event : entry;
+  const role = entry.role || "point";
+  const kind = CAL_KIND_LABELS[event.kind] || "예정";
+  const tail = CAL_ROLE_TAILS[role]
+    ? `<span class="cal-until">${esc(CAL_ROLE_TAILS[role])}</span>` : "";
+  // 화면에는 점과 이름만 남기고 종류·기간은 읽어 주는 쪽에만 붙인다 — 칸이
+  // 좁아 글자를 늘릴 수 없지만, 소리로 듣는 사람에게 '9월 1일 예정'은 필요하다.
+  return `<li><button type="button" class="cal-chip is-${esc(event.kind)}" data-cal-event="${esc(event.id)}">`
+    + `<i class="cal-dot is-${esc(event.kind)}" aria-hidden="true"></i>`
+    + `<span class="cal-chip-label">${esc(event.label)}</span>${tail}`
+    + `<span class="sr-only"> · ${esc(kind)} · ${esc(calendarWhen(event))}</span>`
+    + `</button></li>`;
+}
+
+function calendarCell(day, calendar, entries) {
+  const [, month, date] = day.split("-");
+  const weekday = calWeekday(day);
+  const shown = entries.slice(0, CAL_MAX_CHIPS);
+  const folded = entries.length - shown.length;
+  const classes = ["cal-cell"];
+  if (day === calendar.start) classes.push("is-today");
+  if (weekday === 0) classes.push("is-sun");
+  if (weekday === 6) classes.push("is-sat");
+  if (!entries.length) classes.push("is-quiet");
+  // 창이 달을 넘으므로 1일과 첫날에는 달을 함께 적는다. 매 칸에 '9/'를 붙이면
+  // 숫자가 두 배가 되고, 아예 안 붙이면 31 다음의 1 이 어느 달인지 사라진다.
+  const stamp = (date === "01" || day === calendar.start)
+    ? `${Number(month)}/${Number(date)}` : String(Number(date));
+  // 일정이 있는 칸은 칸 전체가 그날 목록을 연다. 좁은 화면에서 칩이 점으로
+  // 줄어 손가락보다 작아지기 때문인데, 넓은 화면에서도 칩 옆 빈자리를 눌러
+  // 같은 곳으로 가는 것이 어긋나지 않는다 — 칩 클릭이 언제나 먼저 걸린다.
+  const open = entries.length ? ` data-cal-day="${esc(day)}"` : "";
+  return `<div class="${classes.join(" ")}"${open}>`
+    + `<span class="cal-daynum">${esc(stamp)}`
+    + `${day === calendar.start ? '<i class="cal-today">오늘</i>' : ""}</span>`
+    + (entries.length
+      ? `<ul class="cal-chips">${shown.map(calendarChip).join("")}`
+        + (folded > 0
+          ? `<li><button type="button" class="cal-more" data-cal-day="${esc(day)}">+${folded}</button></li>`
+          : "")
+        + `</ul>`
+      : "")
+    + `</div>`;
+}
+
+function calendarMonthLabel(month) {
+  const [, part] = String(month || "").split("-");
+  return `${Number(part)}월 중`;
+}
+
+function renderEventCalendar() {
+  const section = document.getElementById("eventCalendar");
+  if (!section) return;
+  const calendar = calendarData();
+  // 한 건도 없으면 통째로 내린다. 빈 격자 31칸은 '앞으로 아무 일도 없다'가
+  // 아니라 고장으로 읽힌다 — 이 화면은 원문에 날짜가 적힌 것만 세우므로
+  // 비는 날이 정상이지만, **전부** 비는 것은 재료가 끊긴 날의 모습이다.
+  const hasRows = !!calendar
+    && ((calendar.events || []).length || (calendar.month_notes || []).length);
+  section.hidden = !calendar || !calendar.start || !calendar.end || !hasRows;
+  if (section.hidden) return;
+
+  const { byDay } = calendarLayout(calendar);
+  const total = (calendar.events || []).length;
+  document.getElementById("eventCalendarMeta").textContent =
+    `${dateLabel(calendar.start)}–${dateLabel(calendar.end)} · 일정 ${total}건`;
+
+  const head = CAL_WEEKDAYS.map((name, index) =>
+    `<div class="cal-head${index === 0 ? " is-sun" : index === 6 ? " is-sat" : ""}">${name}</div>`).join("");
+  const cells = [];
+  for (let blank = 0; blank < calWeekday(calendar.start); blank += 1) {
+    cells.push('<div class="cal-cell is-blank" aria-hidden="true"></div>');
+  }
+  let count = 0;
+  for (let day = calendar.start; day <= calendar.end && count < 400; day = shiftDate(day, 1)) {
+    cells.push(calendarCell(day, calendar, byDay.get(day) || []));
+    count += 1;
+  }
+  while ((cells.length % 7) !== 0) {
+    cells.push('<div class="cal-cell is-blank" aria-hidden="true"></div>');
+  }
+  document.getElementById("eventCalendarGrid").innerHTML = head + cells.join("");
+
+  const notes = calendar.month_notes || [];
+  const strip = document.getElementById("eventCalendarMonths");
+  strip.hidden = notes.length === 0;
+  if (!strip.hidden) {
+    document.getElementById("eventCalendarMonthList").innerHTML = notes.map(note =>
+      `<li><span class="cal-month-when">${esc(calendarMonthLabel(note.month))}</span>`
+      + `<span class="cal-month-label">${esc(note.label)}</span>`
+      + (safeUrl(note.url)
+        ? `<a href="${esc(safeUrl(note.url))}" target="_blank" rel="noopener">${esc(note.publisher || "출처")}</a>`
+        : "")
+      + `</li>`).join("");
+  }
+  hideCalendarPopover();
+}
+
+// ── 마우스를 올렸을 때: 근거 문장 ────────────────────────────────────────
+//
+// 팝오버는 하나만 만들어 옮겨 쓴다. 칩마다 만들면 칸 수만큼 노드가 늘고,
+// 격자를 다시 그릴 때 떠 있던 조각이 남는다.
+function calendarPopover() {
+  let node = document.getElementById("calPopover");
+  if (!node) {
+    node = document.createElement("div");
+    node.id = "calPopover";
+    node.className = "cal-popover";
+    node.setAttribute("role", "tooltip");
+    node.hidden = true;
+    document.getElementById("eventCalendar").appendChild(node);
+  }
+  return node;
+}
+
+function calendarWhen(event) {
+  return event.kind === "range"
+    ? `${dateLabel(event.date)} ~ ${dateLabel(event.end_date)}`
+    : dateLabel(event.date);
+}
+
+function showCalendarPopover(button) {
+  const event = calendarEventById(button.dataset.calEvent);
+  if (!event) return;
+  const node = calendarPopover();
+  // 같은 칩이면 그대로 둔다 — 칩 안에서 마우스가 움직일 때마다 다시 그리면
+  // 자리를 다시 재느라 팝오버가 떤다.
+  if (!node.hidden && node.dataset.for === button.dataset.calEvent) return;
+  node.dataset.for = button.dataset.calEvent;
+  node.innerHTML = `<p class="cal-pop-when">${esc(calendarWhen(event))}`
+    + `<span>${esc(CAL_KIND_LABELS[event.kind] || "예정")}</span></p>`
+    + `<p class="cal-pop-label">${esc(event.label)}</p>`
+    + `<p class="cal-pop-clause">${esc(event.clause)}</p>`
+    + `<p class="cal-pop-source">${esc(event.publisher || "")}`
+    + `${event.source_count > 1 ? ` · 보도 ${event.source_count}건` : ""}`
+    + ` · 눌러서 출처 보기</p>`;
+  node.hidden = false;
+  const section = document.getElementById("eventCalendar");
+  const base = section.getBoundingClientRect();
+  const chip = button.getBoundingClientRect();
+  const left = Math.min(Math.max(chip.left - base.left, 0),
+                        Math.max(base.width - node.offsetWidth, 0));
+  node.style.left = `${left}px`;
+  // 아래에 자리가 없으면 칩 위로 올린다 — 마지막 주 칸에서 잘리지 않게.
+  const below = chip.bottom - base.top + 6;
+  const above = chip.top - base.top - node.offsetHeight - 6;
+  const overflows = chip.bottom + node.offsetHeight + 12 > window.innerHeight;
+  node.style.top = `${overflows && above > 0 ? above : below}px`;
+}
+
+function hideCalendarPopover() {
+  const node = document.getElementById("calPopover");
+  if (node) node.hidden = true;
+}
+
+// ── 눌렀을 때: 출처까지 ──────────────────────────────────────────────────
+//
+// 이슈 다이얼로그를 쓰지 않는다. 일정을 말하는 기사는 대개 브리핑에 선정되지
+// 않은 공지·예고 기사라 열 이슈가 없다(실측 2026-08-29: 27건 중 4건만 이슈로
+// 묶였다). 그래서 이 창은 스스로 근거를 갖고, 이슈가 있을 때만 그리로 건넨다.
+function calendarEventBlock(event) {
+  const sources = (event.sources || []).filter(row => safeUrl(row.url));
+  return `<article class="cal-detail">
+    <p class="cal-detail-when">${esc(calendarWhen(event))}<span>${esc(CAL_KIND_LABELS[event.kind] || "예정")}</span></p>
+    <h3>${esc(event.label)}</h3>
+    <p class="cal-detail-clause">${esc(event.clause)}</p>
+    <p class="cal-detail-note">기사에 적힌 문장 그대로입니다. 날짜는 이 문장에서 다시 확인했습니다.</p>
+    ${sources.length ? `<ul class="cal-detail-sources">${sources.map(row =>
+      `<li><a href="${esc(safeUrl(row.url))}" target="_blank" rel="noopener">${esc(row.title)}</a>`
+      + `<small>${esc(row.publisher || "")}</small></li>`).join("")}</ul>` : ""}
+    ${event.issue_id ? `<p class="cal-detail-issue"><button type="button" data-cal-issue="${esc(event.issue_id)}">이 사건의 이슈 상세 보기</button></p>` : ""}
+  </article>`;
+}
+
+function openCalendarDialog(events, heading) {
+  if (!events.length) return;
+  const dialog = document.getElementById("calendarDialog");
+  document.getElementById("calendarDialogContent").innerHTML =
+    `<h2 id="calendarDialogTitle" class="cal-dialog-title">${esc(heading)}</h2>`
+    + events.map(calendarEventBlock).join("");
+  hideCalendarPopover();
+  if (!dialog.open) dialog.showModal();
+}
+
+function handleCalendarAction(event) {
+  const issue = event.target.closest("[data-cal-issue]");
+  if (issue) {
+    document.getElementById("calendarDialog").close();
+    openIssueDialog(issue.dataset.calIssue);
+    return;
+  }
+  const chip = event.target.closest("[data-cal-event]");
+  if (chip) {
+    const row = calendarEventById(chip.dataset.calEvent);
+    if (row) openCalendarDialog([row], calendarWhen(row));
+    return;
+  }
+  const more = event.target.closest("[data-cal-day]");
+  if (more) {
+    const calendar = calendarData();
+    if (!calendar) return;
+    const entries = calendarLayout(calendar).byDay.get(more.dataset.calDay) || [];
+    // 같은 기간의 양끝이 한 칸에 설 일은 없지만(끝이 앞끝과 다를 때만 세운다)
+    // 목록을 만들 때 한 번 더 접는다 — 같은 일정이 두 줄로 서면 창이 거짓말한다.
+    const rows = [];
+    for (const entry of entries) {
+      if (!rows.some(row => row.id === entry.event.id)) rows.push(entry.event);
+    }
+    openCalendarDialog(rows, `${dateLabel(more.dataset.calDay)} 일정 ${rows.length}건`);
+  }
+}
+
 function renderBriefingTimeline() {
   const list = document.getElementById("briefingTimelineList");
   if (!list) return;
@@ -3445,6 +3736,9 @@ function renderTrend() {
   // 워드 클라우드는 번호가 붙은 구역이라 renumberSections 앞에서 hidden 이 정해져야
   // 한다. 그러지 않으면 숨은 구역이 번호를 한 칸 먹는다.
   renderWordCloud();
+  // 달력도 번호가 붙은 구역이다. 재료가 없으면 스스로 내려가고, 그때 '지난
+  // 브리핑'이 05 로 당겨진다 — 빈 번호가 남지 않게 하는 것이 renumberSections.
+  renderEventCalendar();
   // 번호가 붙은 구역은 전부 위에서 결정됐다 — 아래 정량 블록에는 sec-no 가 없으므로
   // trend_ready 조기 return 앞에서 매긴다.
   renumberSections("view-trend");
@@ -4293,6 +4587,41 @@ function bind() {
   });
   document.getElementById("headerStatus").addEventListener("click", () => document.getElementById("statusDialog").showModal());
   document.getElementById("statusDialogClose").addEventListener("click", () => document.getElementById("statusDialog").close());
+  // 달력 — 세 단(이름·문장·출처)이 각각 어디에 걸리는지가 여기 다 있다.
+  const calendarSection = document.getElementById("eventCalendar");
+  if (calendarSection) {
+    calendarSection.addEventListener("click", handleCalendarAction);
+    // hover 는 마우스에만. 터치로 들어온 것까지 받으면 탭 한 번에 팝오버와
+    // 다이얼로그가 같이 뜨고, 팝오버가 손가락 밑에 남는다.
+    //
+    // pointerenter 가 아니라 pointerover 를 듣는다 — enter 는 버블하지 않아
+    // 칩 안의 점과 이름을 오갈 때마다 나가고 들어온 것으로 잡히고, 팝오버가
+    // 깜빡인다. over 는 버블하므로 한 자리에서 받고, 같은 칩이면 다시 그리지
+    // 않는 것으로 그 깜빡임을 막는다.
+    calendarSection.addEventListener("pointerover", event => {
+      if (event.pointerType !== "mouse") return;
+      const chip = event.target.closest?.("[data-cal-event]");
+      if (chip) showCalendarPopover(chip);
+      else hideCalendarPopover();
+    });
+    calendarSection.addEventListener("pointerleave", hideCalendarPopover);
+    // 키보드로 훑는 사람도 근거 문장을 본다 — 포커스가 hover 를 대신한다.
+    calendarSection.addEventListener("focusin", event => {
+      const chip = event.target.closest("[data-cal-event]");
+      if (chip) showCalendarPopover(chip);
+    });
+    calendarSection.addEventListener("focusout", hideCalendarPopover);
+    // 스크롤하면 칩은 움직이고 팝오버는 제자리에 남는다 — 그 순간 어느 칩의
+    // 근거인지가 사라지므로 띄워 두지 않는다.
+    window.addEventListener("scroll", hideCalendarPopover, { passive: true });
+    window.addEventListener("resize", hideCalendarPopover);
+  }
+  document.getElementById("calendarDialog")?.addEventListener("click", event => {
+    if (event.target === event.currentTarget) event.currentTarget.close();
+    else handleCalendarAction(event);
+  });
+  document.getElementById("calendarDialogClose")?.addEventListener(
+    "click", () => document.getElementById("calendarDialog").close());
   document.getElementById("issueDialogClose").addEventListener("click", () => closeIssueDialog());
   document.getElementById("issueDialog").addEventListener("cancel", event => { event.preventDefault(); closeIssueDialog(); });
   document.getElementById("issueDialog").addEventListener("click", event => { if (event.target === event.currentTarget) closeIssueDialog(); });

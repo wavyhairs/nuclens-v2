@@ -28,6 +28,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `archive_repairs.json` | 과거 깨진 레코드의 고정 회귀 수선·제외 근거 |
 | `daily_brief.py` | 일일 브리핑: story dedup→랭킹→투자 관점→보고서 추천→발송/웹 story 계약 기록 |
 | `weekly_bot.py` | 주간 판세 리포트 (Gemini 주 1회 1호출) |
+| `event_calendar.py` | 앞으로 30일 달력 — 날짜와 일정 이름을 **같은 절에서** 뽑아 원문으로 되짚는다 (LLM 0회). 달 정밀도('9월 중')는 날짜 칸에 넣지 않고 따로 낸다 |
 | `ranking.py` + `ranking_config.json` | 설명 가능한 점수식 — **가중치는 JSON 만 편집** |
 | `metrics.py` | 오프라인 품질 지표 (`python metrics.py`) — 표본 부족 시 insufficient_data |
 | `gemini_client.py` | Gemini REST wrapper (429 백오프) |

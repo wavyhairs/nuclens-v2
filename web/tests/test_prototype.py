@@ -7607,5 +7607,111 @@ class AdminPendingChipTests(unittest.TestCase):
         self.assertNotIn("group.keywords.length", keywords)
 
 
+class EventCalendarSectionTests(unittest.TestCase):
+    """흐름 탭의 '앞으로 무엇이 있나' — 뒤를 본 화면 끝에 붙는 앞날 한 칸.
+
+    날짜와 이름을 맺는 일은 event_calendar.py 가 하고 그 검사는
+    tests/test_event_calendar.py 에 있다. 여기서 보는 것은 **화면 계약**이다 —
+    구역이 어디에 서는가, 페이로드가 실리는가, 근거가 칩과 함께 가는가.
+    격자 산술은 파이썬이 못 보므로 web/tests/event_calendar.mjs 가 맡는다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        cls.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+
+    def test_it_sits_after_the_word_cloud_and_before_the_timeline(self):
+        """뒤를 보는 구역들 다음, 지난 브리핑 앞. 순서가 곧 '뒤 → 앞'이다."""
+        self.assertLess(self.html.index('id="trendWordCloud"'),
+                        self.html.index('id="eventCalendar"'))
+        self.assertLess(self.html.index('id="eventCalendar"'),
+                        self.html.index('id="briefingTimeline"'))
+
+    def test_it_is_a_numbered_section(self):
+        section = self.html[self.html.index('id="eventCalendar"'):]
+        self.assertIn("sec-no", section[:section.index("</section>")])
+
+    def test_the_build_ships_the_payload(self):
+        """빌드가 달력을 실어야 화면이 그린다 — 키 이름이 계약이다."""
+        source = (ROOT.parent / "web" / "build_data.py").read_text(encoding="utf-8")
+        self.assertIn('"event_calendar": calendar,', source)
+        self.assertIn("event_calendar.build(news_items, now.date())", source)
+
+    def test_a_broken_calendar_does_not_take_the_site_down(self):
+        """이 구역은 화면 한 칸이지 파이프라인이 아니다.
+
+        여기서 예외가 올라가면 그날의 브리핑·이슈·흐름이 통째로 배포되지 않는다.
+        재료가 없을 때 화면이 스스로 내려가도록 이미 만들어 뒀으므로, 빌드는
+        빈 달력을 싣고 경고만 남기면 된다.
+        """
+        source = (ROOT.parent / "web" / "build_data.py").read_text(encoding="utf-8")
+        block = source[source.index("    try:\n        calendar = event_calendar.build("):]
+        block = block[:block.index("\n    trend = {")]
+        self.assertIn("except Exception", block)
+        self.assertIn("::warning::", block)
+        self.assertIn('"events": []', block)
+
+    def test_month_precision_never_reaches_the_grid(self):
+        """'9월 중'을 9월 1일 칸에 넣던 것이 지난 코너를 끄게 만든 오류다.
+
+        파이썬이 그 줄을 month_notes 로 갈라 보내고, 화면은 격자가 아니라
+        따로 선 목록에 세운다. 두 자리가 같은 배열을 읽으면 그 분리가 무의미
+        해지므로 여기서 못박는다.
+        """
+        block = self.script[self.script.index("function renderEventCalendar("):]
+        block = block[:block.index("\nfunction ")]
+        self.assertIn("calendar.month_notes", block)
+        self.assertIn("eventCalendarMonthList", block)
+        # 칸을 짓는 두 함수는 events 만 읽는다. 한쪽이라도 month_notes 를 보면
+        # 그 줄이 날짜 칸으로 돌아올 길이 생긴다. (renderEventCalendar 자체는
+        # 구역을 내릴지 정할 때 두 배열을 다 세므로 여기서 빼고 본다 —
+        # 일정이 하나도 없고 '이 달 중'만 있는 날에도 구역은 서야 한다.)
+        for name in ("calendarLayout", "calendarCell", "calendarChip"):
+            source = self.script[self.script.index(f"function {name}("):]
+            self.assertNotIn("month_notes", source[:source.index("\nfunction ")],
+                             f"{name} 이 월 정밀도 줄을 본다")
+
+    def test_the_chip_carries_its_evidence(self):
+        """근거 문장이 칩과 같이 다닌다 — 이름만 남으면 믿을 근거가 없다."""
+        for name in ("showCalendarPopover", "calendarEventBlock"):
+            block = self.script[self.script.index(f"function {name}("):]
+            block = block[:block.index("\nfunction ")]
+            self.assertIn("event.clause", block, f"{name} 이 근거 문장을 안 싣는다")
+
+    def test_reading_it_aloud_still_says_when(self):
+        """칸이 좁아 날짜를 못 적는다 — 소리로 듣는 사람에게는 적어야 한다."""
+        block = self.script[self.script.index("function calendarChip("):]
+        block = block[:block.index("\nfunction ")]
+        self.assertIn("sr-only", block)
+        self.assertIn("calendarWhen(event)", block)
+
+    def test_the_dialog_stands_on_its_own(self):
+        """일정 기사는 대개 이슈로 안 묶인다(실측 27건 중 4건). 이슈 다이얼로그에
+        기대면 나머지 23건은 눌러도 열리는 것이 없다."""
+        self.assertIn('id="calendarDialog"', self.html)
+        block = self.script[self.script.index("function calendarEventBlock("):]
+        block = block[:block.index("\nfunction ")]
+        self.assertIn("cal-detail-sources", block)
+        # 이슈로 건너가는 문은 있을 때만 선다.
+        self.assertIn("event.issue_id ?", block)
+
+    def test_touch_does_not_get_a_hover_layer(self):
+        """터치에는 hover 가 없다 — 받아 두면 탭 한 번에 둘이 같이 뜬다."""
+        bind = self.script[self.script.index('const calendarSection = document.getElementById("eventCalendar")'):]
+        bind = bind[:bind.index('document.getElementById("issueDialogClose")')]
+        self.assertIn('event.pointerType !== "mouse"', bind)
+        self.assertIn("focusin", bind, "키보드로 훑는 사람도 근거를 봐야 한다")
+
+    def test_the_calendar_text_meets_the_type_floor(self):
+        """이 구역이 --t-min 아래로 내려가면 브랜드 검사가 잡지만, 그 검사는
+        렌더된 값만 본다. 여기서는 선언 자체를 본다 — 새 규칙을 만들지 않고
+        토큰을 쓰는지가 요점이다."""
+        block = self.style[self.style.index("/* ── 앞으로 30일 달력"):]
+        block = block[:block.index(".briefing-timeline {")]
+        self.assertNotRegex(block, r"font-size:\s*(?:[0-9]|1[0-2])(?:\.\d+)?px")
+
+
 if __name__ == "__main__":
     unittest.main()

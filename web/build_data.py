@@ -54,6 +54,7 @@ from data_quality import (  # noqa: E402
 )
 from embedding_pipeline import EMBEDDING_MODEL, cached_vector  # noqa: E402
 import article_quality_gate  # noqa: E402
+import event_calendar  # noqa: E402
 import issue_candidate_stats  # noqa: E402
 import issue_insight  # noqa: E402
 import issue_review  # noqa: E402
@@ -4059,6 +4060,35 @@ def _short_hash_index(issue_rows: list[dict]) -> dict[str, dict]:
     return by_short
 
 
+def attach_calendar_issues(calendar: dict, issue_rows: list[dict]) -> int:
+    """달력의 근거 기사가 이슈로 묶여 있으면 그 이슈를 가리키게 한다.
+
+    대부분은 안 걸린다 — 실측 2026-08-29: 일정 기사 27건 중 이슈로 연결되는
+    것은 4건이다. 일정을 말하는 기사는 대개 브리핑에 선정되지 않은 공지·예고
+    기사이기 때문이다. 그래서 달력의 상세는 이슈 다이얼로그에 기대지 않고
+    **스스로 근거를 갖는다**(문장·제목·출처). 이슈 링크는 있을 때만 얹는
+    덤이고, 없다고 칩이 못 서는 일은 없다.
+    """
+    by_hash: dict[str, str] = {}
+    for row in issue_rows:
+        for article in ([row.get("representative_article") or {}]
+                        + list(row.get("related_articles") or [])):
+            article_hash = str(article.get("hash") or "")
+            if article_hash:
+                by_hash.setdefault(article_hash, str(row.get("issue_id") or ""))
+    linked = 0
+    for event in calendar.get("events") or []:
+        for source in event.get("sources") or []:
+            issue_id = by_hash.get(source.get("hash") or "")
+            if issue_id:
+                source["issue_id"] = issue_id
+                # 빈 문자열이 이미 실려 있으므로 setdefault 로는 안 채워진다.
+                if not event.get("issue_id"):
+                    event["issue_id"] = issue_id
+                linked += 1
+    return linked
+
+
 def _enrich_weekly_report(raw: dict, issue_rows: list[dict],
                           by_short: dict[str, dict]) -> dict:
     """저장된 주간 리포트 → 화면용.
@@ -6183,6 +6213,26 @@ def build() -> None:
     # 사용한다. 상세 원문을 1년치 브라우저에 보내지 않고도 분기·반기·연 추세를 본다.
     period_trends = build_period_trends(visible, now.date().isoformat())
 
+    # 앞으로 30일 달력. 재료는 60일 창의 노출 기사(news_items)이고, 날짜와 이름을
+    # **같은 절에서** 뽑아 다시 확인한다(event_calendar 머리말). 3시간마다 도는
+    # 이 빌드가 창을 한 칸씩 밀므로 지난 일정은 저절로 빠진다 — 상태 파일이 없다.
+    #
+    # 달력이 터져도 사이트는 나가야 한다. 이 구역은 화면 한 칸이지 파이프라인이
+    # 아니고, 재료가 없으면 화면이 스스로 내려가도록 이미 만들어 뒀다 —
+    # 여기서 예외를 올리면 그 하루치 브리핑·이슈·흐름이 통째로 배포되지 않는다.
+    # (후보 진단 집계가 같은 이유로 같은 모양을 하고 있다.)
+    try:
+        calendar = event_calendar.build(news_items, now.date())
+        attach_calendar_issues(calendar, issue_catalog)
+    except Exception as exc:
+        print(f"::warning::앞으로 30일 달력 생성 실패 — {exc} (빌드는 계속한다)")
+        calendar = {"start": "", "end": "", "days": event_calendar.HORIZON_DAYS,
+                    "events": [], "month_notes": [], "dropped": {"build_error": 1}}
+    dropped = calendar.get("dropped") or {}
+    print(f"[build_data] 앞으로 30일 달력: 일정 {len(calendar['events'])}건 · "
+          f"이 달 중 {len(calendar['month_notes'])}건"
+          + (f" · 근거 부족으로 버림 {dropped}" if dropped else ""))
+
     trend = {
         # 금요일 주간 판세 리포트. 없으면 None → 프론트가 기존 정량 트렌드만 그린다
         # (목요일에 빈 탭이 되지 않게 하는 폴백). 트렌드 탭의 독립 패널 전용 —
@@ -6213,6 +6263,10 @@ def build() -> None:
         # 단위를 데이터가 말한다 — 화면 문구가 집계와 갈라지면 이슈 총수보다 큰
         # '건수'가 다시 뜬다.
         "topic_series_unit": "issue",
+        # 앞으로 30일 달력(흐름 탭). 빈 칸이 많은 것은 정상이고, 한 건도 없으면
+        # 화면이 구역째 내린다 — 빈 격자 31칸은 '일정이 없다'가 아니라 고장으로
+        # 읽힌다. 못 찾은 것과 근거가 없어 버린 것은 위 빌드 로그가 구분한다.
+        "event_calendar": calendar,
     }
 
     # 분류율은 **큐레이션을 받은 기사**에 대해서만 잰다.
