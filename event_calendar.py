@@ -47,6 +47,29 @@
 칸에 상한을 두고 나머지를 "+N"으로 접는 이유가 그것이다 — 이 모듈은 창 안의
 일정을 **전부** 싣고, 몇 개까지 보일지는 칸 크기를 아는 화면이 정한다
 (app.js 의 CAL_MAX_CHIPS).
+
+두 번째 재료: 공식 일정원 (2026-08-29)
+--------------------------------------
+위의 모든 이야기는 **기사에서 유도한** 일정에 대한 것이다. 그 경로에는 구조적인
+구멍이 하나 있다 — 보도되지 않은 일정은 존재하지 않는다. 학회 심포지엄·의원실
+정책토론회·협회 행사는 열리고 나서야 기사가 되거나, 끝내 기사가 되지 않는다.
+
+그래서 `event_sources` 가 기관 게시판·국회 일정 API 를 직접 걷어
+`event_schedule.json` 에 쌓고, 이 모듈이 그것을 **같은 달력에 함께** 세운다.
+두 재료는 성질이 다르다.
+
+    기사 경로    날짜와 이름을 문장에서 캐낸다. 근거 = 그 문장.
+    공식 경로    날짜·이름·주최·장소가 칸으로 온다. 근거 = 그 공지.
+
+같은 일정이 양쪽에 있으면 **공식이 이긴다.** 기관이 제 행사에 대해 적은 날짜가
+그 행사를 전한 기사보다 정확하기 때문이다(실측: '제226회 원자력계 조찬강연회'가
+협회 일정표와 협회 공지 양쪽에 9/4 로 있다). 진 쪽은 사라지지 않고 그 일정의
+근거 목록에 **함께 실린다** — 보도 몇 건이 이 일정을 다뤘는지가 값이다.
+
+공식이라고 무조건 세우지는 않는다. 모든 공식 행은 수집 때 한 번,
+그리고 **여기서 다시 한 번** `event_relevance` 의 관심 분야·중요도 판정을
+지난다(`verify_official`). 저장본을 믿지 않는 것은 기사 경로의 `verify` 와
+같은 원칙이고, 판정 기준을 고치면 다시 걷지 않아도 다음 빌드에서 반영된다.
 """
 
 from __future__ import annotations
@@ -56,6 +79,7 @@ import re
 from datetime import date, timedelta
 
 import article_quality_gate
+import event_relevance
 
 # 달력이 보는 앞날. 한 화면에 드는 길이이자 사용자가 요청한 창이다.
 HORIZON_DAYS = 30
@@ -561,12 +585,152 @@ def _same_event(left: dict, right: dict) -> bool:
         return False
     if left.get("story_id") and left["story_id"] == right.get("story_id"):
         return True
+    if left.get("origin") == "official" or right.get("origin") == "official":
+        return _same_named_event(left, right)
     if _label_noun(left["label"]) != _label_noun(right["label"]):
         return False
     return len(_title_tokens(left) & _title_tokens(right)) >= 2
 
 
-def build(articles: list[dict], today: object, *, days: int = HORIZON_DAYS) -> dict:
+def _same_named_event(left: dict, right: dict) -> bool:
+    """공식 일정이 낀 짝짓기. **이름으로** 잰다.
+
+    사건 명사표(`_EVENT_NOUNS`)는 기사 문장에서 사건을 캐내려고 만든 것이라
+    행사의 고유명에는 잘 안 듣는다 — 실측(2026-09-04): 협회 일정표의
+    '제226회 원자력계 조찬강연회'와 협회 공지의 '제226회 원자력계 조찬강연회
+    개최 및 참가등록 안내'가 같은 행사인데 두 줄로 섰다. '강연회'가 표에 없어
+    한쪽 명사는 빈 값, 다른 쪽은 제목에 섞인 '개최'가 잡혀 둘이 어긋난 탓이다.
+
+    공식 일정은 이름이 곧 그 행사의 고유명이므로 이름을 직접 견준다.
+      · 한쪽 이름이 다른 쪽에 통째로 들어 있으면 같은 행사다
+        ('Nuclear Energy Conference & Expo' ⊂ '2026 Nuclear Energy Conference
+        & Expo (NECX)', 'ICRS15&RPSD2026' = 'ICRS15-RPSD2026').
+      · 아니면 뜻이 있는 낱말 두 개 이상이 겹쳐야 한다.
+
+    기사와 견줄 때는 **이름끼리 재지 않는다.** 기사 경로의 이름은 문장에서
+    합성한 짧은 말이라('한국원자력학회 심포지움 개최') 행사의 고유명과 겹치는
+    낱말이 사건 명사 하나뿐인 일이 흔하다. 대신 **공식 이름이 그 기사 안에
+    실제로 나오는가**를 묻는다 — 위 기사의 제목은 '전원믹스와 시장제도
+    심포지움'이라 공식 이름의 낱말을 그대로 담고 있다.
+    """
+    if left.get("origin") == "official" and right.get("origin") == "official":
+        left_name, right_name = _norm(left.get("label")), _norm(right.get("label"))
+        if not left_name or not right_name:
+            return False
+        # 너무 짧은 이름은 우연히 포함된다 — '개최'가 아무 제목에나 들어 있다.
+        if len(left_name) >= 6 and len(right_name) >= 6:
+            if left_name in right_name or right_name in left_name:
+                return True
+        return len(_label_tokens(left) & _label_tokens(right)) >= 2
+    formal, reported = ((left, right) if left.get("origin") == "official"
+                        else (right, left))
+    return _article_names_the_event(formal, reported)
+
+
+def _article_names_the_event(formal: dict, reported: dict) -> bool:
+    """그 기사가 이 공식 행사를 **이름으로** 부르고 있는가.
+
+    기사의 제목·근거 문장·합성한 이름을 통째로 haystack 으로 놓고, 공식 이름의
+    낱말이 몇 개나 그 안에 있는지 센다.
+
+    문턱이 둘인 이유: 낱말 두 개만으로는 같은 날 열린 남의 행사가 붙는다
+    ('AI'·'시대'는 어디에나 있다). 그래서 걸린 낱말 중 **적어도 하나는 길어야**
+    한다 — 짧은 낱말만 겹치는 것은 우연이고, '전원믹스와' 같은 긴 낱말이
+    겹치는 것은 우연이 아니다.
+    """
+    haystack = "".join(_norm(reported.get(field)) for field in
+                       ("title", "clause", "label"))
+    if not haystack:
+        return False
+    hits = [token for token in _label_tokens(formal)
+            if _norm(token) and _norm(token) in haystack]
+    return len(hits) >= 2 and any(len(_norm(token)) >= 4 for token in hits)
+
+
+def _label_tokens(row: dict) -> set[str]:
+    """이름 안의 뜻 있는 낱말. 어디에나 있는 말과 한 글자는 빼고 본다."""
+    text = re.sub(r"[^가-힣A-Za-z0-9]", " ", str(row.get("label") or ""))
+    return {word.lower() for word in text.split()
+            if len(word) > 1 and word not in _STOP_TOKENS}
+
+
+def verify_official(row: dict, today: date, horizon: date) -> str:
+    """공식 일정을 달력에 세우기 전에 **다시 보는** 검사. 통과하면 빈 문자열.
+
+    수집기가 이미 판정했는데 왜 또 보나 — 저장본은 파일이고 파일은 낡는다.
+    `event_schedule.json` 은 하루 한 번 채워지고 빌드는 세 시간마다 도는데,
+    그 사이 관심 분야 표가 바뀌면 낡은 판정이 화면에 남는다. 여기서 다시 재면
+    다시 걷지 않아도 다음 빌드에서 바로 반영된다. 기사 경로의 `verify` 가
+    저장된 event_date 를 안 믿는 것과 같은 이유다.
+    """
+    start, end = _as_date(row.get("date")), _as_date(row.get("end_date"))
+    if start is None or end is None or start > end:
+        return "official_span_invalid"
+    # 점은 창 안에서 시작해야 하고, 기간은 창과 겹치기만 하면 된다 — 기사 경로와
+    # 같은 규칙이다(이미 시작한 학술대회가 화면에서 통째로 사라지지 않게).
+    if start > horizon or end < today:
+        return "official_out_of_window"
+    if start < today and row.get("kind") != "range":
+        return "official_out_of_window"
+    label = str(row.get("label") or "").strip()
+    if not label:
+        return "official_no_label"
+    if not str(row.get("url") or "").strip():
+        # 근거 URL 이 없으면 독자가 확인할 길이 없다. 이 달력은 확인할 수 없는
+        # 일정을 세우지 않는다.
+        return "official_no_source_url"
+    # 수집기가 판정에 쓴 것과 **같은 입력**으로 다시 잰다. 표시용 주최(host)를
+    # 넣으면 두 판정이 달라져, 수집이 막은 것을 여기서 통과시키게 된다.
+    verdict = event_relevance.judge(
+        row.get("notice_title") or label, row.get("organizer"),
+        row.get("place"), label)
+    if not verdict["ok"]:
+        return f"official_{verdict['reason']}"
+    return ""
+
+
+def _official_row(row: dict) -> dict:
+    """저장된 공식 일정 한 줄 → 달력이 쓰는 행 모양.
+
+    기사 경로의 행과 **같은 칸 이름**을 쓴다(date·end_date·kind·label·clause).
+    그래야 `_fold` 가 둘을 같은 자리에서 접고, 화면이 한 가지 모양만 그린다.
+    근거 문장(clause) 자리에는 기관이 실제로 올린 공지 제목이 들어간다.
+    """
+    notice = str(row.get("notice_title") or row.get("label") or "")
+    return {
+        "date": str(row.get("date") or ""),
+        "end_date": str(row.get("end_date") or row.get("date") or ""),
+        "kind": str(row.get("kind") or "point"),
+        "label": str(row.get("label") or ""),
+        "clause": notice,
+        "origin": "official",
+        # 판정이 읽는 원문. `clause` 와 같은 값이지만 이름을 따로 둔다 —
+        # 이 칸이 빠져 있어 `verify_official` 이 짧은 이름만 보고 협회 일정표의
+        # 'Roadmaps to New Nuclear 2026' 을 '일정이 아니다'로 버렸다(실측).
+        # 구분 칸('(세미나)')은 notice_title 에만 있고 label 에는 없다.
+        "notice_title": notice,
+        # 공식 경로만 갖는 칸 — 시각·주최·장소는 기사에서 좀처럼 안 나온다.
+        "time": str(row.get("time") or ""),
+        "host": str(row.get("host") or ""),
+        "place": str(row.get("place") or ""),
+        "source_id": str(row.get("source_id") or ""),
+        "organizer": str(row.get("organizer") or ""),
+        # `_source_view` 가 읽는 칸들.
+        "hash": str(row.get("id") or ""),
+        "story_id": "",
+        "issue_id": "",
+        "title": notice,
+        "url": str(row.get("url") or ""),
+        "publisher": str(row.get("publisher") or ""),
+        "topics": list(row.get("topics") or []),
+        # 최초 확인일. 기사 경로의 보도일과 같은 자리를 쓴다 — `_fold` 가 이
+        # 값으로 최신순을 매기고 first_seen 을 낮은 쪽으로 지킨다.
+        "reference": str(row.get("first_seen") or ""),
+    }
+
+
+def build(articles: list[dict], today: object, *, days: int = HORIZON_DAYS,
+          official: list[dict] | None = None) -> dict:
     """오늘부터 `days` 일까지의 달력 payload.
 
     매 빌드마다 기사에서 처음부터 다시 유도한다. 상태 파일을 두지 않는 이유는
@@ -601,6 +765,19 @@ def build(articles: list[dict], today: object, *, days: int = HORIZON_DAYS) -> d
             found.append({**event, **_source_view(article),
                           "reference": reference.isoformat()})
 
+    # 공식 일정원. 기사와 **같은 목록**에 넣고 같은 fold 를 태운다 — 화면에
+    # 두 종류의 달력이 생기지 않게 하는 것이 이 통합의 요점이다.
+    for row in (official or []):
+        candidate = _official_row(row)
+        problem = verify_official(candidate, start, horizon)
+        if problem:
+            dropped[problem] = dropped.get(problem, 0) + 1
+            continue
+        if not candidate["reference"]:
+            # 최초 확인일이 없으면 최신순을 매길 수 없다. 오늘 본 것으로 둔다.
+            candidate["reference"] = start.isoformat()
+        found.append(candidate)
+
     events = _fold(found)
     for row in events:
         row["id"] = _event_id(row)
@@ -618,8 +795,16 @@ def build(articles: list[dict], today: object, *, days: int = HORIZON_DAYS) -> d
 
 
 def _source_view(article: dict) -> dict:
-    """칩이 근거로 다는 기사 한 건. 원문을 복제하지 않고 가리키기만 한다."""
-    return {
+    """칩이 근거로 다는 한 건. 원문을 복제하지 않고 가리키기만 한다.
+
+    기사와 공식 공지가 한 목록에 섞이므로 `source_kind` 로 둘을 가른다 — 화면이
+    '공식'과 '보도'를 다른 무게로 그려야 독자가 근거의 성질을 안다.
+
+    이름이 `kind` 가 아닌 이유: 이 딕셔너리는 `build` 에서 일정 행 위에 그대로
+    펼쳐진다(`{**event, **_source_view(article)}`). `kind` 로 두었더니 일정의
+    종류(point·deadline·range)를 근거의 종류가 덮어써서 모든 칩이 'news' 가 됐다.
+    """
+    view = {
         "hash": str(article.get("hash") or ""),
         "story_id": str(article.get("story_id") or ""),
         "issue_id": str(article.get("issue_id") or ""),
@@ -627,7 +812,13 @@ def _source_view(article: dict) -> dict:
         "url": str(article.get("url") or ""),
         "publisher": str(article.get("publisher") or article.get("domain") or ""),
         "topics": list(article.get("topics") or []),
+        "source_kind": "official" if article.get("origin") == "official" else "news",
     }
+    # 공식 공지만 갖는 칸. 기사에는 없으므로 빈 값을 만들지 않는다.
+    for field in ("source_id", "first_seen"):
+        if article.get(field):
+            view[field] = str(article[field])
+    return view
 
 
 def _fold(rows: list[dict]) -> list[dict]:
@@ -635,8 +826,16 @@ def _fold(rows: list[dict]) -> list[dict]:
 
     포항 집회가 W34 저장본에서 8/23, 다시 계산하면 9/20 이었던 것이 이 자리의
     문제였다 — 같은 사건이 기사마다 다른 날짜로 서면 독자는 어느 쪽도 못 믿는다.
+
+    **공식 공지가 기사를 이긴다.** 먼저 놓인 행이 그 일정의 날짜·이름·주최를
+    정하므로, 공식 경로를 앞으로 당겨 정렬한다. 기관이 제 행사에 대해 적은
+    날짜는 그것을 전한 기사보다 정확하다 — 진 쪽은 버려지지 않고 아래에서 근거
+    목록에 붙는다.
     """
+    # 두 번 정렬한다. 파이썬의 정렬은 안정적이라 나중 정렬이 앞의 순서를
+    # 그룹 안에서 그대로 지킨다 — 최신순을 먼저 매기고, 그 위에 공식 우선을 얹는다.
     rows = sorted(rows, key=lambda row: row.get("reference") or "", reverse=True)
+    rows = sorted(rows, key=lambda row: row.get("origin") != "official")
     folded: list[dict] = []
     for row in rows:
         for kept in folded:
@@ -647,9 +846,23 @@ def _fold(rows: list[dict]) -> list[dict]:
                 if all(source["hash"] != row.get("hash") for source in kept["sources"]):
                     kept["sources"].append(_source_view(row))
                 kept["first_seen"] = min(kept["first_seen"], row["reference"])
+                # 진 쪽이 들고 있던 시각·주최·장소를 이긴 쪽의 빈 칸에 채운다.
+                # 같은 행사를 두 곳이 다르게 적는다 — 협회 일정표는 장소를 주고
+                # 주최를 안 주고, 협회 공지는 그 반대다(실측 9/4 조찬강연회).
+                # 이긴 쪽의 값을 덮지는 않는다. 채우기만 한다.
+                for field in ("time", "host", "place"):
+                    if not kept.get(field) and row.get(field):
+                        kept[field] = row[field]
                 # 기간이 점을 이긴다. 같은 일을 한쪽은 하루로, 다른 쪽은
                 # "9월 2일부터 10월 13일까지"로 말했다면 넓은 쪽이 사실이다.
-                if row["kind"] == "range" and kept["kind"] != "range":
+                #
+                # 단 **공식 공지가 이미 정한 날짜는 기사가 못 바꾼다.** 기관이
+                # 제 행사를 하루로 공지했는데 기사가 주변 일정까지 묶어 기간으로
+                # 말하는 일이 있고, 그때 넓은 쪽을 택하면 공식 날짜가 기사에
+                # 덮인다 — 이 통합에서 공식을 앞세운 이유가 통째로 무너진다.
+                if (row["kind"] == "range" and kept["kind"] != "range"
+                        and not (kept.get("origin") == "official"
+                                 and row.get("origin") != "official")):
                     # 이름도 함께 가져온다. 종류만 바꾸면 기간 막대에 '마감'이
                     # 붙은 이름이 남아 화면이 스스로와 어긋난다.
                     kept.update(date=row["date"], end_date=row["end_date"],

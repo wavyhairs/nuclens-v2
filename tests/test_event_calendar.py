@@ -335,5 +335,204 @@ class TestPayloadShape(unittest.TestCase):
         self.assertEqual(payload["start"], "2026-08-29")
 
 
+# ── 공식 일정원과의 통합 ─────────────────────────────────────────────────
+#
+# 아래 값은 전부 2026-08-29 실측이다. 협회 일정표·협회 공지·학회 공지에서
+# 실제로 받은 행사이고, 기사 쪽 문장도 그 행사를 다룬 실제 어법을 따른다.
+
+def official(**fields) -> dict:
+    """`event_sources` 가 저장하는 공식 일정 한 줄의 최소 모양."""
+    base = {"id": "of-abc123", "date": "2026-09-09", "end_date": "2026-09-09",
+            "kind": "point", "time": "14:00",
+            "label": "AI 시대 국가경쟁력을 위한 전원믹스와 시장제도 심포지움",
+            "notice_title": "AI 시대 국가경쟁력을 위한 전원믹스와 시장제도 "
+                            "심포지움 개최(9.9(수) 14:00, 대한상공회의소)",
+            "host": "한국원자력학회", "organizer": "",
+            "place": "대한상공회의소",
+            "url": "https://www.kns.org/boards/chk_view/notice/103327",
+            "source_id": "kns_notice", "publisher": "한국원자력학회",
+            "first_seen": "2026-08-14", "topics": ["power_market"]}
+    return {**base, **fields}
+
+
+class TestOfficialEventsStandOnTheSameGrid(unittest.TestCase):
+    """기관이 공지한 일정이 기사 일정과 한 달력에 선다."""
+
+    def test_an_official_notice_becomes_a_chip(self):
+        payload = event_calendar.build([], TODAY, official=[official()])
+        self.assertEqual(len(payload["events"]), 1)
+        row = payload["events"][0]
+        self.assertEqual(row["date"], "2026-09-09")
+        self.assertEqual(row["origin"], "official")
+        self.assertEqual(row["kind"], "point")
+
+    def test_what_the_source_gave_us_is_preserved(self):
+        """사용자가 요구한 칸 — 날짜·시간·행사명·주최·장소·출처 URL·최초 확인일."""
+        row = event_calendar.build([], TODAY, official=[official()])["events"][0]
+        self.assertEqual(row["time"], "14:00")
+        self.assertEqual(row["host"], "한국원자력학회")
+        self.assertEqual(row["place"], "대한상공회의소")
+        self.assertEqual(row["first_seen"], "2026-08-14")
+        self.assertEqual(row["sources"][0]["url"],
+                         "https://www.kns.org/boards/chk_view/notice/103327")
+        self.assertEqual(row["sources"][0]["source_kind"], "official")
+
+    def test_the_notice_travels_as_the_evidence(self):
+        """근거는 기관이 실제로 올린 공지 제목이다 — 기사 경로의 '절'과 같은 자리."""
+        row = event_calendar.build([], TODAY, official=[official()])["events"][0]
+        self.assertIn("9.9(수) 14:00", row["clause"])
+
+    def test_both_paths_fill_one_calendar(self):
+        payload = event_calendar.build([article(
+            title_kr="한수원, 토론회 개최",
+            detail="한수원이 9월 1일 토론회를 개최할 예정이다.")],
+            TODAY, official=[official()])
+        self.assertEqual([row["date"] for row in payload["events"]],
+                         ["2026-09-01", "2026-09-09"])
+
+
+class TestOfficialBeatsReporting(unittest.TestCase):
+    """같은 일정이 양쪽에 있으면 공식이 근거의 앞자리에 선다."""
+
+    REPORT = article(
+        title_kr="한국원자력학회, 전원믹스와 시장제도 심포지움 연다",
+        detail="한국원자력학회는 9월 9일 대한상공회의소에서 심포지움을 개최한다.",
+        hash="news-1", publisher="전기신문",
+        url="https://example.com/report")
+
+    def test_one_chip_not_two(self):
+        payload = event_calendar.build([self.REPORT], TODAY,
+                                       official=[official()])
+        self.assertEqual(len(payload["events"]), 1)
+
+    def test_the_official_row_owns_the_chip(self):
+        row = event_calendar.build([self.REPORT], TODAY,
+                                   official=[official()])["events"][0]
+        self.assertEqual(row["origin"], "official")
+        self.assertEqual(row["host"], "한국원자력학회")
+        self.assertEqual(row["place"], "대한상공회의소")
+
+    def test_the_article_is_kept_as_further_evidence(self):
+        """진 쪽은 사라지지 않는다 — 몇 건이 이 일정을 다뤘는지가 값이다."""
+        row = event_calendar.build([self.REPORT], TODAY,
+                                   official=[official()])["events"][0]
+        self.assertEqual(row["source_count"], 2)
+        self.assertEqual([source["source_kind"] for source in row["sources"]],
+                         ["official", "news"])
+
+    def test_a_reported_range_cannot_stretch_an_official_date(self):
+        """기관이 하루로 공지한 행사를 기사의 기간이 늘리면 안 된다.
+
+        '기간이 점을 이긴다'는 규칙은 기사끼리의 규칙이다. 공식 날짜에까지
+        적용하면 공식을 앞세운 이유가 통째로 무너진다.
+        """
+        stretched = article(
+            title_kr="한국원자력학회, 전원믹스와 시장제도 심포지움 연다",
+            detail="한국원자력학회는 9월 9일부터 9월 11일까지 심포지움을 개최한다.",
+            hash="news-2", url="https://example.com/2")
+        row = event_calendar.build([stretched], TODAY,
+                                   official=[official()])["events"][0]
+        self.assertEqual((row["date"], row["end_date"]),
+                         ("2026-09-09", "2026-09-09"))
+        self.assertEqual(row["kind"], "point")
+
+    def test_the_earliest_sighting_wins(self):
+        """최초 확인일은 낮은 쪽이다 — 학회 공지가 기사보다 먼저 알렸다."""
+        row = event_calendar.build([self.REPORT], TODAY,
+                                   official=[official()])["events"][0]
+        self.assertEqual(row["first_seen"], "2026-08-14")
+
+
+class TestTwoOfficialSourcesForOneEvent(unittest.TestCase):
+    """협회 일정표와 협회 공지가 같은 행사를 다르게 적는다(실측 9/4 조찬강연회)."""
+
+    LISTING = official(
+        id="of-cal", date="2026-09-04", end_date="2026-09-04", time="",
+        label="제226회 원자력계 조찬강연회",
+        notice_title="제226회 원자력계 조찬강연회 (세미나)",
+        host="", place="웨스틴조선 서울", source_id="kaif_calendar",
+        publisher="한국원자력산업협회", first_seen="2026-08-29", topics=[],
+        url="https://www.kaif.or.kr/ko/?c=240")
+    NOTICE = official(
+        id="of-not", date="2026-09-04", end_date="2026-09-04", time="",
+        label="제226회 원자력계 조찬강연회 개최 및 참가등록 안내 (9. 4. (금) 개최)",
+        notice_title="제226회 원자력계 조찬강연회 개최 및 참가등록 안내 (9. 4. (금) 개최)",
+        host="한국원자력산업협회", place="", source_id="kaif_notice",
+        publisher="한국원자력산업협회", first_seen="2026-07-29", topics=[],
+        url="https://www.kaif.or.kr/ko/?c=193&ix=30040")
+
+    def test_they_fold_into_one(self):
+        """'강연회'는 기사용 사건 명사표에 없다 — 이름으로 재야 접힌다."""
+        payload = event_calendar.build([], TODAY,
+                                       official=[self.LISTING, self.NOTICE])
+        self.assertEqual(len(payload["events"]), 1)
+        self.assertEqual(payload["events"][0]["source_count"], 2)
+
+    def test_the_gaps_are_filled_from_the_other_source(self):
+        """한쪽은 장소를 주고 주최를 안 주며, 다른 쪽은 그 반대다."""
+        row = event_calendar.build([], TODAY,
+                                   official=[self.LISTING, self.NOTICE])["events"][0]
+        self.assertEqual(row["place"], "웨스틴조선 서울")
+        self.assertEqual(row["host"], "한국원자력산업협회")
+        self.assertEqual(row["first_seen"], "2026-07-29")
+
+    def test_a_different_event_on_the_same_day_stays_separate(self):
+        """같은 날이라고 묶으면 안 된다 — 9/4 에 다른 행사가 또 있을 수 있다."""
+        other = official(id="of-x", date="2026-09-04", end_date="2026-09-04",
+                         label="사용후핵연료 관리정책 공청회",
+                         notice_title="사용후핵연료 관리정책 공청회 개최 안내",
+                         host="산업통상부", place="코엑스", time="",
+                         url="https://example.go.kr/1", topics=["waste"])
+        payload = event_calendar.build([], TODAY,
+                                       official=[self.LISTING, other])
+        self.assertEqual(len(payload["events"]), 2)
+
+
+class TestTheGateRunsAgainAtBuildTime(unittest.TestCase):
+    """저장본을 믿지 않는다. 판정을 고치면 다시 걷지 않아도 반영된다."""
+
+    def test_an_off_topic_row_in_the_store_never_reaches_the_grid(self):
+        payload = event_calendar.build([], TODAY, official=[official(
+            label="2026년 제65차 대한핵의학회 추계 학술대회",
+            notice_title="2026년 제65차 대한핵의학회 추계 학술대회 (세미나)",
+            topics=[])])
+        self.assertEqual(payload["events"], [])
+        self.assertEqual(payload["dropped"], {"official_off_topic": 1})
+
+    def test_a_row_without_a_source_url_is_refused(self):
+        """확인할 수 없는 일정은 세우지 않는다."""
+        payload = event_calendar.build([], TODAY, official=[official(url="")])
+        self.assertEqual(payload["dropped"], {"official_no_source_url": 1})
+
+    def test_the_category_column_is_part_of_the_evidence(self):
+        """협회 일정표는 구분 칸('(세미나)')으로 형식을 말한다.
+
+        그 칸은 notice_title 에만 있고 label 에는 없다. 재판정이 label 만 보면
+        'Roadmaps to New Nuclear 2026' 이 '일정이 아니다'로 버려진다(실측).
+        """
+        payload = event_calendar.build([], TODAY, official=[official(
+            date="2026-09-18", end_date="2026-09-18", time="", host="", place="Paris",
+            label="Roadmaps to New Nuclear 2026",
+            notice_title="Roadmaps to New Nuclear 2026 (세미나)",
+            url="https://www.oecd-nea.org/jcms/pl_119678", topics=["newbuild"])])
+        self.assertEqual(len(payload["events"]), 1)
+
+    def test_a_far_future_event_waits_outside_the_window(self):
+        """협회 일정표는 몇 달 앞을 준다. 창에 들어오기 전에는 세우지 않는다."""
+        payload = event_calendar.build([], TODAY, official=[official(
+            date="2026-11-16", end_date="2026-11-18", kind="range",
+            label="2026 경남 SMR 국제 콘퍼런스",
+            notice_title="2026 경남 SMR 국제 콘퍼런스 (세미나)")])
+        self.assertEqual(payload["events"], [])
+        self.assertEqual(payload["dropped"], {"official_out_of_window": 1})
+
+    def test_no_official_material_changes_nothing(self):
+        """새 경로가 죽어도 기존 달력은 그대로 선다."""
+        news = [article(title_kr="한수원, 토론회 개최",
+                        detail="한수원이 9월 1일 토론회를 개최할 예정이다.")]
+        self.assertEqual(event_calendar.build(news, TODAY)["events"],
+                         event_calendar.build(news, TODAY, official=[])["events"])
+
+
 if __name__ == "__main__":
     unittest.main()

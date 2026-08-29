@@ -3367,12 +3367,16 @@ function showCalendarPopover(button) {
   // 자리를 다시 재느라 팝오버가 떤다.
   if (!node.hidden && node.dataset.for === button.dataset.calEvent) return;
   node.dataset.for = button.dataset.calEvent;
+  // 공식 일정은 주최·장소가 근거 문장보다 먼저 궁금하다 — 있으면 그것을 얹는다.
+  const where = [event.time, event.host, event.place].filter(Boolean).join(" · ");
   node.innerHTML = `<p class="cal-pop-when">${esc(calendarWhen(event))}`
-    + `<span>${esc(CAL_KIND_LABELS[event.kind] || "예정")}</span></p>`
+    + `<span>${esc(CAL_KIND_LABELS[event.kind] || "예정")}</span>`
+    + `${event.origin === "official" ? '<b class="cal-official">공식</b>' : ""}</p>`
     + `<p class="cal-pop-label">${esc(event.label)}</p>`
+    + `${where ? `<p class="cal-pop-where">${esc(where)}</p>` : ""}`
     + `<p class="cal-pop-clause">${esc(event.clause)}</p>`
     + `<p class="cal-pop-source">${esc(event.publisher || "")}`
-    + `${event.source_count > 1 ? ` · 보도 ${event.source_count}건` : ""}`
+    + `${event.source_count > 1 ? ` · 근거 ${event.source_count}건` : ""}`
     + ` · 눌러서 출처 보기</p>`;
   node.hidden = false;
   const section = document.getElementById("eventCalendar");
@@ -3398,16 +3402,37 @@ function hideCalendarPopover() {
 // 이슈 다이얼로그를 쓰지 않는다. 일정을 말하는 기사는 대개 브리핑에 선정되지
 // 않은 공지·예고 기사라 열 이슈가 없다(실측 2026-08-29: 27건 중 4건만 이슈로
 // 묶였다). 그래서 이 창은 스스로 근거를 갖고, 이슈가 있을 때만 그리로 건넨다.
+// 공식 일정만 갖는 칸. 기사에서 캐낸 일정에는 주최·장소가 거의 없고, 기관
+// 공지에는 거의 언제나 있다 — 있는 것만 줄로 세운다(빈 칸을 '-'로 채우면
+// 없는 정보가 있는 것처럼 보인다).
+function calendarFacts(event) {
+  const rows = [["시간", event.time], ["주최", event.host], ["장소", event.place]]
+    .filter(([, value]) => value);
+  if (!rows.length) return "";
+  return `<dl class="cal-detail-facts">${rows.map(([name, value]) =>
+    `<dt>${esc(name)}</dt><dd>${esc(value)}</dd>`).join("")}</dl>`;
+}
+
 function calendarEventBlock(event) {
   const sources = (event.sources || []).filter(row => safeUrl(row.url));
+  const official = event.origin === "official";
+  // 근거의 성질을 문장으로 밝힌다. 두 경로는 검증 방법이 달라서, 같은 문구로
+  // 뭉뚱그리면 독자가 '기사에서 읽은 날짜'와 '기관이 공지한 날짜'를 못 가른다.
+  const note = official
+    ? "기관이 공지한 일정입니다. 관심 분야·중요도를 확인해 실었습니다."
+    : "기사에 적힌 문장 그대로입니다. 날짜는 이 문장에서 다시 확인했습니다.";
   return `<article class="cal-detail">
-    <p class="cal-detail-when">${esc(calendarWhen(event))}<span>${esc(CAL_KIND_LABELS[event.kind] || "예정")}</span></p>
+    <p class="cal-detail-when">${esc(calendarWhen(event))}<span>${esc(CAL_KIND_LABELS[event.kind] || "예정")}</span>${
+      official ? '<b class="cal-official">공식</b>' : ""}</p>
     <h3>${esc(event.label)}</h3>
+    ${calendarFacts(event)}
     <p class="cal-detail-clause">${esc(event.clause)}</p>
-    <p class="cal-detail-note">기사에 적힌 문장 그대로입니다. 날짜는 이 문장에서 다시 확인했습니다.</p>
+    <p class="cal-detail-note">${esc(note)}</p>
     ${sources.length ? `<ul class="cal-detail-sources">${sources.map(row =>
       `<li><a href="${esc(safeUrl(row.url))}" target="_blank" rel="noopener">${esc(row.title)}</a>`
-      + `<small>${esc(row.publisher || "")}</small></li>`).join("")}</ul>` : ""}
+      + `<small>${esc(row.publisher || "")}`
+      + `${row.source_kind === "official" ? " · 공식 공지" : ""}</small></li>`).join("")}</ul>` : ""}
+    ${event.first_seen ? `<p class="cal-detail-seen">최초 확인 ${esc(dateLabel(event.first_seen))}</p>` : ""}
     ${event.issue_id ? `<p class="cal-detail-issue"><button type="button" data-cal-issue="${esc(event.issue_id)}">이 사건의 이슈 상세 보기</button></p>` : ""}
   </article>`;
 }

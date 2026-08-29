@@ -7653,7 +7653,24 @@ class EventCalendarSectionTests(unittest.TestCase):
         """빌드가 달력을 실어야 화면이 그린다 — 키 이름이 계약이다."""
         source = (ROOT.parent / "web" / "build_data.py").read_text(encoding="utf-8")
         self.assertIn('"event_calendar": calendar,', source)
-        self.assertIn("event_calendar.build(news_items, now.date())", source)
+        self.assertIn("event_calendar.build(news_items, now.date(),", source)
+
+    def test_the_build_also_ships_the_official_schedule(self):
+        """두 번째 재료가 실제로 넘어가는가.
+
+        `event_sources.py` 가 걷어 커밋한 공식 일정이 빌드에서 달력으로 넘어가지
+        않으면, 수집은 매일 도는데 화면에는 한 건도 안 선다 — 그 고장은 '요즘
+        일정이 없나 보다'로 읽혀 아주 오래 안 걸린다.
+        """
+        source = (ROOT.parent / "web" / "build_data.py").read_text(encoding="utf-8")
+        self.assertIn('_read_json(BOT_DIR / "event_schedule.json", {})', source)
+        self.assertIn("official=official_rows", source)
+
+    def test_a_missing_schedule_file_is_not_an_error(self):
+        """새 수집원이 죽어도 기존 달력은 기사만으로 그대로 선다."""
+        source = (ROOT.parent / "web" / "build_data.py").read_text(encoding="utf-8")
+        block = source[source.index('official_store = _read_json'):]
+        self.assertIn('event_schedule.json", {}) or {}', block[:400])
 
     def test_a_broken_calendar_does_not_take_the_site_down(self):
         """이 구역은 화면 한 칸이지 파이프라인이 아니다.

@@ -2089,6 +2089,34 @@ dialog[open] { animation: dialog-in var(--mo-2) var(--mo-ease-out); }
   line-height: 1.6;
 }
 .cal-detail-note { margin: 6px 0 var(--sp-3); color: var(--c-text-muted); font-size: var(--t-min); }
+/* 근거가 기관 공지임을 말하는 표. 색이 아니라 글자로 말한다 — 색만으로
+   가르면 흑백 출력과 색각 이상에서 두 경로가 같아 보인다. */
+.cal-official {
+  margin-left: auto;
+  padding: 0 5px;
+  border: var(--bd-1) solid var(--c-accent-text);
+  color: var(--c-accent-text);
+  font-family: var(--ff-base);
+  font-size: var(--t-min);
+  font-weight: 700;
+}
+/* 시간·주최·장소. 기관 공지에만 있는 칸이라 없으면 줄째 안 그린다. */
+.cal-detail-facts {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 2px var(--sp-3);
+  margin: 0 0 var(--sp-3);
+  font-size: var(--t-caption);
+}
+.cal-detail-facts dt { color: var(--c-text-muted); font-size: var(--t-min); }
+.cal-detail-facts dd { margin: 0; color: var(--c-text-secondary); }
+.cal-detail-seen {
+  margin: var(--sp-2) 0 0;
+  color: var(--c-text-muted);
+  font-family: var(--ff-mono);
+  font-size: var(--t-min);
+}
+.cal-pop-where { margin: 0 0 6px; color: var(--c-text-secondary); font-size: var(--t-min); }
 .cal-detail-sources { margin: 0; padding: 0; list-style: none; }
 .cal-detail-sources li { padding: var(--sp-2) 0; border-top: var(--bd-1) solid var(--c-border); }
 .cal-detail-sources a { font-size: var(--t-caption); }
