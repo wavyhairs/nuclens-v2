@@ -322,3 +322,92 @@ class DetailSanitizerTests(unittest.TestCase):
         capped = sanitize_detail(sentence * 20)
         self.assertLessEqual(len(capped), DETAIL_LIMIT)
         self.assertTrue(capped.endswith("다."), capped[-20:])
+
+
+class EmailRedactionTests(unittest.TestCase):
+    """기사에서 딸려온 이메일 주소는 저장 전에 지운다.
+
+    한국 기사는 바이라인에 기자 메일을 그대로 적는다. 그 줄이 RSS description 을
+    타고 `source_excerpt` 에 저장돼 있었다(실측 2026-08-29, digest_queue.json 1건).
+    우리 자격증명이 아니라 **제3자의 개인정보**라, 저장소를 공개로 돌리면 신문
+    지면에 한 번 실린 것이 아카이브에 영구히 색인되는 것으로 성격이 바뀐다.
+
+    여기서 잠그는 것은 둘이다 — 지우는가, 그리고 **그것 말고는 안 건드리는가**.
+    """
+
+    def test_a_byline_address_is_removed(self):
+        self.assertEqual(
+            data_quality.strip_emails(
+                "정아람 기자 areum@example.co.kr [한국정경신문=정아람 기자]"),
+            "정아람 기자 [한국정경신문=정아람 기자]")
+
+    def test_the_wrapper_left_behind_is_cleaned_up(self):
+        """"(<메일>)" 이 "()" 로 남으면 그것대로 원문에 없던 모양이다."""
+        self.assertEqual(data_quality.strip_emails("문의 (hong@example.net)"), "문의")
+        self.assertEqual(data_quality.strip_emails("메일 <hong@example.co.kr>"), "메일")
+
+    def test_mailto_prefix_goes_with_it(self):
+        self.assertEqual(
+            data_quality.strip_emails("mailto:someone@example.com 참고"), "참고")
+
+    def test_text_without_an_address_is_returned_untouched(self):
+        """뜻을 바꾸지 않는 것이 조건이다 — 큐레이션·랭킹이 이 텍스트를 읽는다."""
+        for text in ("이메일 없는 평범한 문장입니다.",
+                     "한수원, 신한울 3·4호기 착공 — 2026년 목표",
+                     "SMR 100@사업",          # @ 가 주소가 아닌 경우
+                     "가격은 1,200원@2026년 기준"):
+            self.assertEqual(data_quality.strip_emails(text), text)
+
+    def test_non_strings_do_not_explode(self):
+        for value in (None, 123, [], {}):
+            self.assertEqual(data_quality.strip_emails(value), "")
+
+    def test_it_does_not_touch_urls_through_clean_text(self):
+        """`clean_text` 는 180곳에서 쓰이고 `normalize_url` 도 그중 하나다.
+
+        이메일 규칙이 거기 섞이면 URL·식별자까지 조용히 바뀐다. 지우는 일은
+        부르는 쪽이 명시적으로 하고, `clean_text` 는 예전 그대로여야 한다.
+        """
+        url = "https://example.com/news?author=kim@example.com"
+        self.assertIn("kim@example.com", data_quality.clean_text(url))
+        # normalize_url 은 쿼리를 퍼센트 인코딩한다(원래 동작). 여기서 잠그는 것은
+        # 그 값이 **지워지지 않는다**는 것이지 표기가 그대로라는 것이 아니다.
+        self.assertIn("kim%40example.com", data_quality.normalize_url(url))
+
+    def test_ranking_and_dedup_keys_are_unaffected(self):
+        """제목에 주소가 없으면 중복판정 열쇠는 한 글자도 안 바뀐다."""
+        title = "한수원, 원전 열 활용 청정수소 생산 효율 높인다"
+        self.assertEqual(data_quality.title_key(title),
+                         data_quality.title_key(data_quality.strip_emails(title)))
+
+
+class EmailRedactionAtCaptureTests(unittest.TestCase):
+    """지우는 자리가 실제로 수집 경로 위에 있는가.
+
+    함수만 맞고 부르는 자리가 없으면 다음 기사가 그대로 또 저장된다.
+    """
+
+    def test_the_body_extractor_strips_before_it_returns(self):
+        import article_body
+        paragraphs = "".join(
+            f"<p>한국수력원자력이 원전에서 나오는 열을 활용해 청정수소 생산 효율을 "
+            f"높인다고 {i}일 밝혔다. 관련 사업은 대전에서 진행된다.</p>"
+            for i in range(6))
+        # 짧은 바이라인 줄은 기존 `_usable` 이 이미 버린다. 여기서 잠그는 것은
+        # **긴 줄 안에 섞인** 주소다 — 그것이 지금까지 빠져나가던 모양이다.
+        tail = ("<p>자세한 내용은 한국정경신문 정아람 기자 areum@example.co.kr 으로 "
+                "문의하거나 공식 홈페이지를 참고하시기 바랍니다. 추가 안내가 이어집니다.</p>")
+        body = article_body.extract_text(f"<article>{paragraphs}{tail}</article>")
+        self.assertTrue(body, "본문 추출 자체가 실패하면 이 검사는 아무것도 못 잠근다")
+        self.assertNotIn("areum@example.co.kr", body)
+        self.assertIn("한국정경신문 정아람 기자", body)
+
+    def test_the_feed_parser_strips_the_description(self):
+        import news_bot
+        rows = news_bot.parse_kaeri_board(
+            '<li class="item"><a href="/board/view?id=1"><strong>원자력연구원 성과</strong></a>'
+            '<span class="desc">문의 press@example.re.kr 로 연락바랍니다</span>'
+            "<dd>2026-08-20</dd></li>")
+        self.assertEqual(len(rows), 1)
+        self.assertNotIn("press@example.re.kr", rows[0]["description"])
+        self.assertIn("문의", rows[0]["description"])

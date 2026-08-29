@@ -38,6 +38,7 @@ from data_quality import (
     normalize_url,
     source_profile,
     split_title_publisher,
+    strip_emails,
     title_key,
     url_hash as canonical_url_hash,
 )
@@ -2342,7 +2343,8 @@ def fetch_rss(url: str, source_name: str = "") -> list[dict]:
                 # Google News 는 제목 끝에 " - 매체명" 을 붙인다 (때로 두 번) → 제거.
                 # 큐레이션·중복판정에 매체명이 섞여 들어가는 것을 막는다.
                 "title": clean_title,
-                "description": strip_html(description),
+                # 기사에서 딸려온 기자 메일은 저장 전에 지운다(data_quality.strip_emails).
+                "description": strip_emails(strip_html(description)),
                 "pub": pub,
                 "publisher": pub_name,
                 "publisher_domain": pub_domain,
@@ -2380,7 +2382,7 @@ def _official_board_item(base_url: str, href: str, title: str, description: str,
         "link": link,
         "raw_link": link,
         "title": clean_title,
-        "description": strip_html(description),
+        "description": strip_emails(strip_html(description)),
         "pub": pub,
         "publisher": publisher,
         "publisher_domain": domain,
@@ -2785,7 +2787,7 @@ def collect_articles(feed_name: str, keywords: list[str], anchors: list[str], st
                 continue
 
             title = strip_html(item.get("title", ""))
-            desc = strip_html(item.get("description", ""))
+            desc = strip_emails(strip_html(item.get("description", "")))
 
             if is_rejected_title(title, negatives):
                 continue

@@ -42,6 +42,8 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
 
+from data_quality import strip_emails
+
 try:  # requests 는 news_bot 이 이미 의존하지만, 단독 import 시 죽지 않게 둔다
     import requests
 except ImportError:  # pragma: no cover - 실행 환경엔 항상 있다
@@ -229,6 +231,11 @@ def extract_text(page_html: str, *, limit: int = MAX_BODY_CHARS) -> str:
 
     if not body:
         return ""
+    # 본문에는 바이라인 기자 메일이 자주 붙어 온다. 저장되기 전 여기서 지운다 —
+    # 본문이 curated·archive·큐레이션 프롬프트로 갈라지기 전의 마지막 한 자리다.
+    # **자르기 전에** 지운다: 길이 안쪽으로 끝나는 본문이 훨씬 흔해서, 자른 뒤에만
+    # 지우면 대부분의 기사가 그대로 빠져나간다.
+    body = strip_emails(body)
     if len(body) <= limit:
         return body
     # 문장 중간에서 자르면 모델이 잘린 절을 사실로 읽는다. 경계에서 끊는다.
