@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-29T14:42:21+09:00",
+ "generated_at": "2026-08-30T00:42:12+09:00",
  "events": [
   {
    "id": "of-78b28354d3ea",
@@ -444,21 +444,21 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-08-29T14:42:21+09:00",
+   "at": "2026-08-30T00:42:12+09:00",
    "ok": true,
    "parsed": 2,
    "kept": 1,
-   "new": 1,
+   "new": 0,
    "dropped": {
     "no_interest_match": 1
    }
   },
   "kaif_notice": {
-   "at": "2026-08-29T14:42:21+09:00",
+   "at": "2026-08-30T00:42:12+09:00",
    "ok": true,
    "parsed": 11,
    "kept": 2,
-   "new": 2,
+   "new": 0,
    "dropped": {
     "no_interest_match": 1,
     "low_significance": 5,
@@ -466,11 +466,11 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-08-29T14:42:21+09:00",
+   "at": "2026-08-30T00:42:12+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
-   "new": 36,
+   "new": 22,
    "dropped": {
     "no_interest_match": 18,
     "off_topic": 4,
@@ -479,7 +479,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-08-29T14:42:21+09:00",
+   "at": "2026-08-30T00:42:12+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -487,14 +487,9 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-08-29T14:42:21+09:00",
-   "ok": true,
-   "parsed": 48,
-   "kept": 5,
-   "new": 5,
-   "dropped": {
-    "no_interest_match": 43
-   }
+   "at": "2026-08-30T00:42:12+09:00",
+   "ok": false,
+   "error": "ConnectTimeout: HTTPSConnectionPool(host='www.assembly.go.kr', port=443): Max retries exceeded with url: /portal/noti/seminar/scheduleSmn.do?menuNo=600102 (Caused by ConnectTimeoutError(<HTTPSConnecti"
   }
  }
 }
