@@ -7248,12 +7248,17 @@ class AdminConsoleTests(unittest.TestCase):
         self.assertTrue(middleware.exists(), "엣지 자물쇠가 없다 — /admin 이 공개된다")
         source = middleware.read_text(encoding="utf-8")
         # KV 가 안 붙어 있을 때 통과시키면 '설정을 깜빡한 것'이 곧 '공개'가 된다.
-        self.assertIn("return setupPage();", source)
+        self.assertIn('return setupPage("kv");', source)
         self.assertIn("ADMIN_KV", source)
         self.assertIn("HttpOnly", source)
-        # 0000 은 부트스트랩이지 비밀번호가 아니다. 바꾸기 전에는 진단 화면도
-        # 데이터 JSON 도 열리면 안 된다 — 그 경로가 있으면 0000 이 방치된다.
-        self.assertIn('BOOTSTRAP_PASSWORD = "0000"', source)
+        # 첫 비밀번호도 배포 환경에서 받는다. 코드에 기본값을 두면 저장소를 공개로
+        # 돌리는 순간 그것은 '추측할 값'이 아니라 '읽으면 되는 값'이 된다.
+        self.assertNotIn('BOOTSTRAP_PASSWORD = "0000"', source)
+        self.assertIn("ADMIN_BOOTSTRAP_PASSWORD", source)
+        # 그 값이 없으면 기본값으로 되돌아가는 대신 잠근다 — KV 가 없을 때와 같은 원칙.
+        self.assertIn('return setupPage("bootstrap");', source)
+        # 부트스트랩으로 들어와도 바꾸기 전에는 진단 화면도 데이터 JSON 도 열리면
+        # 안 된다 — 그 경로가 있으면 임시값이 방치된다.
         self.assertIn('jsonError("password_change_required", 403)', source)
 
         # 빌드가 콘솔 데이터를 공개 경로에 쓰면 자물쇠가 무의미해진다.

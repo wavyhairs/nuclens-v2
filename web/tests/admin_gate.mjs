@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
+import { readFile } from "node:fs/promises";
 
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
@@ -21,6 +22,7 @@ const root = path.resolve(here, "..", "..");
 const {
   hashPassword, verifyPassword, passwordProblem,
   signSession, sessionIsValid, safeNext, PBKDF2_ITERATIONS,
+  bootstrapPassword, BOOTSTRAP_ENV_KEY,
 } = await import(pathToFileURL(path.join(root, "functions", "admin", "_middleware.js")).href);
 
 // ── ① 해시 왕복 ────────────────────────────────────────────────────────────
@@ -47,10 +49,41 @@ for (const bad of ["", "hunter2", "pbkdf2-sha256$5000$only-three", "md5$5000$a$b
     `깨진 해시 문자열이 통과했다: ${bad}`);
 }
 
+// ── ①-b 첫 비밀번호는 코드에 없다 ──────────────────────────────────────────
+//
+// 저장소를 공개로 돌리면 코드에 박힌 기본 비밀번호는 '추측할 값'이 아니라
+// '읽으면 되는 값'이 된다. 그래서 부트스트랩 값도 배포 환경에서 받는다.
+// 여기서 지키는 것은 **설정이 없을 때 기본값으로 되돌아가지 않는다**는 것이다.
+const middlewareSource = await readFile(
+  path.join(root, "functions", "admin", "_middleware.js"), "utf8");
+assert.equal(/const\s+BOOTSTRAP_PASSWORD\s*=/.test(middlewareSource), false,
+  "부트스트랩 비밀번호가 다시 코드 상수로 돌아왔다");
+assert.equal(/=\s*["'`]0000["'`]/.test(middlewareSource), false,
+  "0000 이 다시 값으로 박혔다");
+
+assert.equal(BOOTSTRAP_ENV_KEY, "ADMIN_BOOTSTRAP_PASSWORD");
+// 설정이 없으면 빈 문자열 — 부트스트랩 경로가 아무 값도 받지 않는다.
+for (const env of [undefined, {}, { ADMIN_BOOTSTRAP_PASSWORD: "" },
+                   { ADMIN_BOOTSTRAP_PASSWORD: "0000" },
+                   { ADMIN_BOOTSTRAP_PASSWORD: "short7" },
+                   { ADMIN_BOOTSTRAP_PASSWORD: 12345678 }]) {
+  assert.equal(bootstrapPassword(env), "",
+    `설정이 없거나 약한데 부트스트랩 값이 생겼다: ${JSON.stringify(env)}`);
+}
+assert.equal(bootstrapPassword({ ADMIN_BOOTSTRAP_PASSWORD: "a-long-random-value" }),
+  "a-long-random-value", "제대로 설정한 값이 무시된다");
+
 // ── ② 새 비밀번호 규칙 ─────────────────────────────────────────────────────
 //
-// 0000 은 부트스트랩이지 비밀번호가 아니다. 다시 0000 으로 바꿀 수 있으면 강제
-// 변경 화면이 아무것도 강제하지 않은 것이 된다.
+// 첫 비밀번호는 부트스트랩이지 비밀번호가 아니다. 그 값으로 되돌릴 수 있으면
+// 강제 변경 화면이 아무것도 강제하지 않은 것이 된다.
+assert.equal(passwordProblem("a-long-random-value", "a-long-random-value",
+                             "a-long-random-value") !== "", true,
+  "첫 비밀번호로 되돌릴 수 있다");
+assert.equal(passwordProblem("a-long-random-value", "a-long-random-value",
+                             "other-bootstrap"), "",
+  "다른 값인데 첫 비밀번호로 오인해 거부한다");
+// 길이 하한은 부트스트랩 설정과 무관하게 언제나 선다 — 0000 은 여기서 걸린다.
 assert.equal(passwordProblem("0000", "0000") !== "", true, "0000 으로 되돌릴 수 있다");
 assert.equal(passwordProblem("short7", "short7") !== "", true, "8자 하한이 없다");
 assert.equal(passwordProblem("longenough1", "longenough2") !== "", true, "확인 입력이 달라도 통과한다");

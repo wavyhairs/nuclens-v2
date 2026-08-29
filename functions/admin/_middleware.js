@@ -20,21 +20,37 @@
 //   Cloudflare 대시보드 → Workers & Pages → KV → Create namespace
 //   → Pages 프로젝트 → Settings → Bindings → KV namespace, 변수명 `ADMIN_KV`
 //
-// 0000 은 **부트스트랩**이지 비밀번호가 아니다
-// -------------------------------------------
-// KV 에 비밀번호 기록이 없으면 `0000` 으로 들어올 수 있다. 대신 그 상태에서는 콘솔이
-// 열리지 않고 비밀번호 변경 화면만 나온다 — 진단 화면도, 데이터 JSON 도 막힌다.
-// 0000 은 경우의 수가 1만 가지고 /admin/login 은 인터넷에 열린 POST 엔드포인트라,
-// 그대로 두면 자동화된 시도 앞에서 잠긴 문이 아니다. 여기서 유출은 문제가 아니다 —
-// 추측이 문제다. 그래서 0000 이 방치될 수 있는 경로를 아예 만들지 않는다.
+// 첫 비밀번호는 **코드에 없다**
+// -----------------------------
+// 예전에는 이 파일에 `0000` 이 상수로 박혀 있었다. 저장소가 비공개일 때도 이미
+// 좋은 값은 아니었지만(경우의 수 1만 · /admin/login 은 인터넷에 열린 POST),
+// 저장소를 공개로 돌리면 성격이 달라진다 — 추측이 아니라 **읽으면 되는 값**이
+// 되고, 그 값이 통하는 창이 열려 있는지 아무나 확인해 볼 수 있다.
 //
-// 비밀번호를 잊었다면 대시보드에서 KV 의 `admin:password` 키를 지운다 → 다시 0000.
+// 그래서 첫 비밀번호도 배포 환경에서 받는다. Cloudflare Secret 하나를 더 둔다.
+//
+//   Pages 프로젝트 → Settings → Variables and Secrets
+//   → `ADMIN_BOOTSTRAP_PASSWORD` (Secret 으로, 8자 이상 임의값)
+//
+// 이 값이 없으면 콘솔은 **열리지 않는다.** 기본값으로 되돌아가지 않는다 — 설정을
+// 깜빡한 것이 곧 공개가 되면 안 된다(KV 바인딩이 없을 때와 같은 원칙).
+//
+// 이미 비밀번호를 정해 둔 운영 환경은 이 값을 쳐다보지도 않는다. KV 에 기록이
+// 있으면 부트스트랩 경로 자체가 돌지 않기 때문이다 — 이 변경으로 기존 로그인이
+// 깨지지 않는 이유가 그것이다.
+//
+// 부트스트랩으로 들어와도 콘솔은 열리지 않고 비밀번호 변경 화면만 나온다 —
+// 진단 화면도, 데이터 JSON 도 막힌다. 임시값이 방치될 수 있는 경로를 만들지 않는다.
+//
+// 비밀번호를 잊었다면 대시보드에서 KV 의 `admin:password` 키를 지운다 →
+// 다시 `ADMIN_BOOTSTRAP_PASSWORD` 로 한 번 들어와 새로 정한다.
 
 const KV_PASSWORD_KEY = "admin:password";
 const KV_SECRET_KEY = "admin:session-secret";
 const KV_FAIL_PREFIX = "admin:fail:";
 
-const BOOTSTRAP_PASSWORD = "0000";
+// 첫 비밀번호를 담는 환경변수 이름. 값이 아니라 **이름**만 코드에 있다.
+export const BOOTSTRAP_ENV_KEY = "ADMIN_BOOTSTRAP_PASSWORD";
 const MIN_PASSWORD_LENGTH = 8;
 
 const COOKIE_NAME = "nuclens_admin";
@@ -115,15 +131,36 @@ export async function verifyPassword(password, encoded) {
   return timingSafeEqual(await deriveBits(password, salt, iterations, expected.length), expected);
 }
 
+// 배포 환경이 준 첫 비밀번호. 없거나 너무 짧으면 **빈 문자열** — 그 경우 부트스트랩
+// 경로는 아무 값도 받지 않고 콘솔은 잠긴 채로 있다.
+//
+// 길이를 여기서 한 번 더 재는 이유: 이 값을 `0000` 으로 넣어 버리면 상수를 env 로
+// 옮긴 의미가 사라진다. 짧은 값을 조용히 받아 주는 대신 설정 화면이 무엇이
+// 잘못됐는지 말하게 한다(`setupPage`).
+export function bootstrapPassword(env) {
+  const raw = env && typeof env[BOOTSTRAP_ENV_KEY] === "string" ? env[BOOTSTRAP_ENV_KEY] : "";
+  return raw.length >= MIN_PASSWORD_LENGTH ? raw : "";
+}
+
 // 새 비밀번호가 갖춰야 할 조건. 통과하면 "" 를, 아니면 사용자에게 보일 이유를 낸다.
-export function passwordProblem(next, confirm) {
+//
+// `bootstrap` 은 배포 환경이 준 첫 비밀번호다. 그 값으로 되돌릴 수 있으면 강제
+// 변경 화면이 아무것도 강제하지 않은 것이 된다 — 예전에 `0000` 을 막던 자리다.
+export function passwordProblem(next, confirm, bootstrap = "") {
   if (typeof next !== "string" || next.length === 0) return "새 비밀번호를 입력하세요.";
   if (next !== confirm) return "새 비밀번호 두 입력이 서로 다릅니다.";
   if (next.length < MIN_PASSWORD_LENGTH) {
     return `새 비밀번호는 ${MIN_PASSWORD_LENGTH}자 이상이어야 합니다.`;
   }
-  if (next === BOOTSTRAP_PASSWORD) return "기본 비밀번호는 다시 쓸 수 없습니다.";
+  if (bootstrap && next === bootstrap) return "첫 비밀번호는 다시 쓸 수 없습니다.";
   return "";
+}
+
+// 부트스트랩 비밀번호 대조. 길이가 같을 때 바이트마다 조기 종료하지 않는다 —
+// 저장된 해시를 검증하는 `verifyPassword` 와 같은 조심성을 여기에도 둔다.
+function bootstrapMatches(supplied, expected) {
+  if (!expected || typeof supplied !== "string" || supplied.length === 0) return false;
+  return timingSafeEqual(encoder.encode(supplied), encoder.encode(expected));
 }
 
 // ── 세션 쿠키 ──────────────────────────────────────────────────────────────
@@ -185,8 +222,8 @@ function sessionCookie(value, maxAge) {
 // ── 시도 제한 ──────────────────────────────────────────────────────────────
 //
 // KV 는 최종적 일관성이라 읽은 값이 최대 1분까지 낡을 수 있다 — 짧은 순간의 폭주는
-// 이 카운터를 앞지른다. 그래서 이것만으로 0000 을 지킬 수 있다고 보지 않는다.
-// 0000 을 부트스트랩으로만 두고 강제로 바꾸게 하는 것이 실제 방어이고, 이 카운터는
+// 이 카운터를 앞지른다. 그래서 이것만으로 첫 비밀번호를 지킬 수 있다고 보지 않는다.
+// 그 값을 부트스트랩으로만 두고 강제로 바꾸게 하는 것이 실제 방어이고, 이 카운터는
 // **바꾼 뒤의** 비밀번호를 상대로 한 지속적인 추측을 비싸게 만드는 장치다.
 
 function clientKey(request) {
@@ -277,16 +314,16 @@ function passwordPage({ bootstrap, error, status, done }) {
   return page("비밀번호 변경 · Nuclens⁺", `
     <h1>비밀번호 변경</h1>
     ${bootstrap
-      ? `<p class="note">지금은 기본 비밀번호(<code>0000</code>)로 들어와 있습니다.
-           바꾸기 전에는 콘솔이 열리지 않습니다 — 0000 은 경우의 수가 1만 가지라
-           공개 주소에서는 잠긴 문이 아닙니다.</p>`
+      ? `<p class="note">지금은 배포 설정에 넣어 둔 첫 비밀번호로 들어와 있습니다.
+           바꾸기 전에는 콘솔이 열리지 않습니다 — 그 값은 여러 사람이 볼 수 있는
+           설정 화면에 있고, 오래 쓰라고 만든 값이 아닙니다.</p>`
       : "<p>바꾸면 다른 기기의 로그인은 모두 끊깁니다.</p>"}
     ${error ? `<p class="err">${escapeHtml(error)}</p>` : ""}
     ${done ? '<p class="note">비밀번호를 바꿨습니다.</p>' : ""}
     <form method="POST" action="/admin/password">
       <label for="current">현재 비밀번호</label>
       <input id="current" name="current" type="password" autocomplete="current-password"
-             ${bootstrap ? 'placeholder="0000"' : ""} autofocus required>
+             autofocus required>
       <label for="next">새 비밀번호 <small>(${MIN_PASSWORD_LENGTH}자 이상)</small></label>
       <input id="next" name="next" type="password" autocomplete="new-password"
              minlength="${MIN_PASSWORD_LENGTH}" required>
@@ -299,16 +336,28 @@ function passwordPage({ bootstrap, error, status, done }) {
   status);
 }
 
-function setupPage() {
+// 설정이 덜 된 상태. **무엇이** 없는지에 따라 다른 안내를 낸다 — 둘 다 '잠김'으로
+// 뭉뚱그리면 운영자가 어디를 손봐야 하는지 알 수 없다. 어느 쪽이든 콘솔은 열지
+// 않는다: 설정을 깜빡한 것이 곧 공개가 되면 안 된다.
+function setupPage(reason) {
+  const needsKv = reason === "kv";
   return page("운영 콘솔 설정 필요 · Nuclens⁺", `
     <h1>운영 콘솔이 잠겨 있습니다</h1>
-    <p>비밀번호를 보관할 KV 네임스페이스가 아직 연결되지 않았습니다. 연결 전에는
-       열지 않습니다 — 설정을 깜빡한 것이 곧 공개가 되면 안 되기 때문입니다.</p>
-    <p>Cloudflare 대시보드 → <strong>Workers &amp; Pages → KV</strong> 에서
-       네임스페이스를 하나 만들고, Pages 프로젝트 →
-       <strong>Settings → Bindings</strong> 에서 변수명 <code>ADMIN_KV</code> 로
-       연결한 뒤 다시 배포하세요. 첫 로그인 비밀번호는 <code>0000</code> 이고,
-       들어가자마자 바꾸게 됩니다.</p>
+    ${needsKv
+      ? `<p>비밀번호를 보관할 KV 네임스페이스가 아직 연결되지 않았습니다.</p>
+         <p>Cloudflare 대시보드 → <strong>Workers &amp; Pages → KV</strong> 에서
+            네임스페이스를 하나 만들고, Pages 프로젝트 →
+            <strong>Settings → Bindings</strong> 에서 변수명 <code>ADMIN_KV</code> 로
+            연결한 뒤 다시 배포하세요.</p>`
+      : `<p>아직 비밀번호가 정해지지 않았고, 첫 로그인에 쓸 값도 설정돼 있지
+            않습니다. 기본값으로 되돌아가지 않습니다 — 코드에 적힌 비밀번호는
+            비밀번호가 아니기 때문입니다.</p>
+         <p>Pages 프로젝트 → <strong>Settings → Variables and Secrets</strong> 에서
+            <code>${escapeHtml(BOOTSTRAP_ENV_KEY)}</code> 를 <strong>Secret</strong> 으로
+            추가하세요. ${MIN_PASSWORD_LENGTH}자 이상의 임의값이어야 하며, 그보다
+            짧으면 설정되지 않은 것으로 봅니다.</p>
+         <p>그 값으로 한 번 들어오면 곧바로 비밀번호 변경 화면이 나오고, 바꾸기
+            전에는 콘솔이 열리지 않습니다.</p>`}
     <p><a href="/">← 서비스 화면으로</a></p>`, 503);
 }
 
@@ -337,11 +386,14 @@ export async function onRequest(context) {
   const path = url.pathname;
 
   const kv = env.ADMIN_KV;
-  if (!kv || typeof kv.get !== "function") return setupPage();
+  if (!kv || typeof kv.get !== "function") return setupPage("kv");
 
-  // 비밀번호 기록이 없으면 아직 부트스트랩 상태다 — 0000 으로 들어오되 콘솔은 안 열린다.
+  // 비밀번호 기록이 없으면 아직 부트스트랩 상태다 — 배포 설정이 준 첫 비밀번호로
+  // 한 번 들어오되 콘솔은 안 열린다. 그 값조차 없으면 아무 길도 열지 않는다.
   const storedHash = await kv.get(KV_PASSWORD_KEY);
   const bootstrap = !storedHash;
+  const firstPassword = bootstrapPassword(env);
+  if (bootstrap && !firstPassword) return setupPage("bootstrap");
   const secret = await sessionSecret(kv);
   const authenticated = await sessionIsValid(readCookie(request, COOKIE_NAME), secret);
   // 데이터 JSON 과 쓰기 창구(/admin/api/)는 화면이 아니라 fetch 가 부른다. 여기에
@@ -369,7 +421,7 @@ export async function onRequest(context) {
     const target = safeNext(form.get("next"));
     const supplied = form.get("password");
     const ok = bootstrap
-      ? supplied === BOOTSTRAP_PASSWORD
+      ? bootstrapMatches(supplied, firstPassword)
       : await verifyPassword(supplied, storedHash);
     if (ok) {
       await kv.delete(failKey);
@@ -405,13 +457,13 @@ export async function onRequest(context) {
     }
     const current = form.get("current");
     const currentOk = bootstrap
-      ? current === BOOTSTRAP_PASSWORD
+      ? bootstrapMatches(current, firstPassword)
       : await verifyPassword(current, storedHash);
     if (!currentOk) {
       await new Promise(resolve => setTimeout(resolve, FAILED_LOGIN_DELAY_MS));
       return passwordPage({ bootstrap, error: "현재 비밀번호가 올바르지 않습니다.", status: 401, done: false });
     }
-    const problem = passwordProblem(form.get("next"), form.get("confirm"));
+    const problem = passwordProblem(form.get("next"), form.get("confirm"), firstPassword);
     if (problem) {
       return passwordPage({ bootstrap, error: problem, status: 400, done: false });
     }
@@ -423,7 +475,7 @@ export async function onRequest(context) {
                     sessionCookie(await signSession(rotated, expiresAt), SESSION_TTL_SECONDS));
   }
 
-  // 부트스트랩 상태에서는 로그인해도 콘솔이 열리지 않는다. 0000 이 방치될 수 있는
+  // 부트스트랩 상태에서는 로그인해도 콘솔이 열리지 않는다. 임시값이 방치될 수 있는
   // 경로를 남기지 않기 위해서다 — 데이터 JSON 도 함께 막는다.
   if (bootstrap) {
     if (isDataRequest) return jsonError("password_change_required", 403);
