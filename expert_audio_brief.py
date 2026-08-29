@@ -27,6 +27,7 @@ from pathlib import Path
 
 import article_quality_gate
 import gemini_client
+from entity_match import load_entity_registry
 from gemini_client import GeminiError, call_json, is_available
 from audio_brief import (
     AUDIO_DIR,
@@ -142,6 +143,21 @@ _SINGLE_FILLER_RE = re.compile(
     re.IGNORECASE,
 )
 _ANY_SPEAKER_RE = re.compile(r"^[A-Za-z가-힣 _-]{1,30}:\s*(.+)$")
+
+# 원전·기업·기관·프로젝트의 결정론적 한글 별칭 사전(entity_match.py). '주체·대상
+# 미소개' 방어선이 LLM 추출에 기대지 않고 이 사전을 우선 쓰는 이유는, 사전은
+# 같은 입력이면 같은 출력이고 오탐이 없기 때문이다 — story_fingerprint의
+# actors/assets는 자유형 LLM 필드라 영문으로 나오는 경우가 많아(예: "Zaporizhzhia
+# NPP") 한국어 대본 문장과 그대로 대조할 수 없다.
+_ENTITY_REGISTRY_BY_ID: dict[str, dict] | None = None
+
+
+def _entity_registry() -> dict[str, dict]:
+    global _ENTITY_REGISTRY_BY_ID
+    if _ENTITY_REGISTRY_BY_ID is None:
+        _ENTITY_REGISTRY_BY_ID = {e["id"]: e for e in load_entity_registry()}
+    return _ENTITY_REGISTRY_BY_ID
+
 
 DOSSIER_SYSTEM = """당신은 원자력 정책·기술·운영·사업을 함께 보는 선임 원자력 분석가입니다.
 Nuclens가 이미 선정·중복제거한 briefing story들을 전문가 오디오용 dossier로 구조화합니다.
@@ -584,6 +600,33 @@ def plan_prompt(briefing: dict, dossiers: list[dict], allocations: list[dict]) -
 {json.dumps(dossiers, ensure_ascii=False, indent=2)}"""
 
 
+def _identity_rule(dossiers: list[dict]) -> str:
+    """각 story를 **처음** 설명할 때 주체·대상 고유명사를 밝히라는 규칙.
+
+    이름 후보는 여기서 만들지 않는다 — `identity_names_for`가 이미 결정론적으로
+    dossier에 심어 둔 값을 읽기만 한다(엔티티 사전 우선, 없으면 그날 고유
+    앵커). 그래서 이 함수는 값이 없는 dossier는 그냥 건너뛴다 — 프롬프트
+    문구 하나로 정체성을 지어내라고 요구하지 않는다.
+    """
+    pairs = [(d, d.get("identity_names")) for d in dossiers if d.get("identity_names")]
+    if not pairs:
+        return ""
+    lines = "\n".join(
+        f"  - {str(d.get('title') or '')[:40]} → '{names[0]}'"
+        for d, names in pairs)
+    return (
+        "\n[처음 소개 규칙 — 반드시 지킬 것]\n"
+        "- 각 story를 **처음** 설명하는 문단은 첫 1~2문장 안에 그 사건의 핵심\n"
+        "  주체·대상을 밝힙니다. 처음 듣는 사람도 무엇에 대한 이야기인지 바로\n"
+        "  알아야 합니다. 예: '해외 다음 소식은 자포리자 원전입니다. IAEA에\n"
+        "  따르면 자포리자 원전은…'\n"
+        f"{lines}\n"
+        "- 같은 story를 다시 언급하는 이후 문단에서는 이름을 매번 반복하지 않아도\n"
+        "  됩니다 — 처음 등장할 때만 지키면 됩니다.\n"
+        "- 이 규칙이 뉴스 제목을 통째로 읽으라는 뜻은 아닙니다. 명칭만 자연스러운\n"
+        "  문장에 넣으십시오.\n")
+
+
 def script_prompt(briefing: dict, dossiers: list[dict], plan: dict,
                   block: str = "", part: tuple[int, int] = (1, 1)) -> str:
     n = max(1, len(dossiers))
@@ -617,8 +660,9 @@ def script_prompt(briefing: dict, dossiers: list[dict], plan: dict,
         "- 주제가 비슷하다는 이유로 순서를 바꿔 묶지 마십시오. 이어지는 내용이면\n"
         "  순서는 그대로 두고 '앞서 본 …와 이어집니다' 로 연결합니다.\n"
         "- 한 story 를 서로 떨어진 두 자리에서 다시 설명하지 마십시오.\n")
+    identity_rule = _identity_rule(dossiers)
     return f"""EpisodePlan과 dossiers만 근거로 1인 전문가 Script를 작성하십시오.
-{scope}{order_rule}
+{scope}{order_rule}{identity_rule}
 [전달 방식]
 - 화자는 수석 원자력 분석가 한 명뿐이며 모든 줄은 HOST: 로 시작합니다.
 - 가상의 질문자, 자문자답, '네/그렇군요/맞습니다' 같은 대화형 추임새를 금지합니다.
@@ -746,6 +790,43 @@ def issue_anchors(issues: list[dict]) -> dict[str, set[str]]:
     return out
 
 
+def _owned_paragraphs(script: str, issues: list[dict]
+                      ) -> tuple[list[tuple[str, str]], dict[str, set[str]], list[str]]:
+    """(이슈, 문단 원문) 목록 — 주인이 분명한 문단만.
+
+    순서 검증(`script_order_report`)과 도입부 검증(`intro_identification_report`)이
+    '이 문단은 누구 차례인가'를 서로 다르게 판정하면 한쪽 경보가 다른 쪽과
+    모순된다. 그래서 판정 로직은 이 함수 하나에만 두고 둘 다 이걸 쓴다.
+
+    판정 기준: 그 문단에서 최다로 매칭된 이슈의 고유 앵커가 유일할 때만 그
+    문단의 주인을 정한다. 되짚는 문장("앞서 본 …")이 두 이슈 이상을 함께
+    부르면 주인을 정하지 않는다 — 그건 설명이 아니라 연결이다.
+    """
+    expected = [str(i.get("issue_id") or "") for i in issues]
+    anchors = issue_anchors(issues)
+    judged = [i for i in expected if anchors.get(i)]
+
+    pairs: list[tuple[str, str]] = []
+    for line in str(script or "").splitlines():
+        match = SPEAKER_RE.match(line.strip())
+        body = (match.group(2) if match else line).strip()
+        if not body:
+            continue
+        lowered = body.lower()
+        scores = {issue_id: sum(1 for a in anchors[issue_id] if a in lowered)
+                  for issue_id in judged}
+        best = max(scores.values(), default=0)
+        if best <= 0:
+            continue
+        mentioned = sum(1 for s in scores.values() if s > 0)
+        if mentioned >= 2 and _BACKREFERENCE_RE.search(lowered):
+            continue
+        winners = [i for i, s in scores.items() if s == best]
+        if len(winners) == 1:
+            pairs.append((winners[0], body))
+    return pairs, anchors, judged
+
+
 def script_order_report(script: str, issues: list[dict]) -> dict:
     """대본이 이슈를 기대 순서대로, 한 번씩, 빠짐없이 설명하는가.
 
@@ -758,32 +839,9 @@ def script_order_report(script: str, issues: list[dict]) -> dict:
     그 이슈의 앵커가 그 문단에서 최다일 때만 그 문단이 그 이슈 차례다.
     """
     expected = [str(i.get("issue_id") or "") for i in issues]
-    anchors = issue_anchors(issues)
+    pairs, anchors, judged = _owned_paragraphs(script, issues)
     unanchored = [i for i in expected if not anchors.get(i)]
-    judged = [i for i in expected if anchors.get(i)]
-
-    owners: list[str] = []
-    for line in str(script or "").splitlines():
-        match = SPEAKER_RE.match(line.strip())
-        body = (match.group(2) if match else line).lower()
-        if not body.strip():
-            continue
-        scores = {issue_id: sum(1 for a in anchors[issue_id] if a in body)
-                  for issue_id in judged}
-        best = max(scores.values(), default=0)
-        if best <= 0:
-            continue
-        # 되짚는 문장은 설명이 아니다. 프로그램은 관련 이슈를 순서대로 두되
-        # "앞서 본 …와 이어집니다" 로 잇도록 지시받는데, 그 문장이 앞 이슈를
-        # 더 많이 호명하면 그 이슈가 두 번 설명된 것으로 잡힌다. 되짚기 표식이
-        # 있고 두 이슈 이상을 함께 말하는 문단은 주인을 정하지 않는다.
-        mentioned = sum(1 for s in scores.values() if s > 0)
-        if mentioned >= 2 and _BACKREFERENCE_RE.search(body):
-            continue
-        winners = [i for i, s in scores.items() if s == best]
-        # 두 이슈를 같은 무게로 말하는 문단도 주인을 정하지 않는다.
-        if len(winners) == 1:
-            owners.append(winners[0])
+    owners = [issue_id for issue_id, _body in pairs]
 
     observed: list[str] = []
     runs: list[str] = []
@@ -838,6 +896,124 @@ def order_repair_prompt(dossiers: list[dict], script: str, report: dict,
 - 두 번 설명된 story 는 **처음 자리에 합치고** 뒤쪽 반복을 지웁니다.
 - 주제가 이어지더라도 순서를 바꿔 묶지 마십시오. 필요하면 "앞서 본 …와 이어집니다"
   같은 연결 문장을 쓰되 위치는 그대로 둡니다.
+- 문단을 옮기더라도, 각 story 를 **처음 설명하는 자리**의 첫 1~2문장에 있던
+  주체·대상 식별 표현(원전명·기업명·기관명 등)은 그대로 유지하십시오.
+- 모든 줄은 HOST: 로 시작합니다. 인사·마무리는 쓰지 않습니다.
+
+[출력 JSON] {{"script":"HOST: ...\\nHOST: ..."}}
+[Dossiers]
+{json.dumps(dossiers, ensure_ascii=False, indent=2)}
+[기존 Script]
+{script}"""
+
+
+# ---- 주체·대상 소개 검증 --------------------------------------------------------
+#
+# 순서가 맞아도, 이슈를 **처음** 설명하는 문단이 그 사건의 핵심 주체·대상을
+# 첫머리에서 밝히지 않으면 처음 듣는 사람은 무엇에 대한 이야기인지 알 수 없다
+# (2026-08-30 자포리자 원전 사례, 2026-08-28 유사 사례). 프롬프트 문구
+# 하나로는 반복되므로, `_owned_paragraphs` 가 정한 '처음 설명하는 문단'을
+# 결과물에서 직접 확인한다.
+
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+
+
+def _leading_sentences(body: str, count: int = 2) -> str:
+    """문단에서 주체 식별이 있어야 하는 범위 — 첫 `count`문장."""
+    parts = [p for p in _SENTENCE_SPLIT_RE.split(body.strip()) if p]
+    return " ".join(parts[:count]) if parts else body
+
+
+def issue_identity_terms(issue: dict, registry: dict[str, dict] | None = None) -> list[str]:
+    """entity_registry에 등재된 원전·기업·기관·프로젝트의 결정론적 한글명.
+
+    story_fingerprint의 actors/assets는 자유형 LLM 필드라 신뢰할 식별자로 못
+    쓴다(영문 혼입, 표기 흔들림). entity_registry는 웹 빌드가 이미 그 이슈에
+    결정론적으로 매칭해 둔 `entity_ids` 하나만 읽으면 되고, 오탐이 없다.
+    등재되지 않은 이슈(법안·기술 등)는 빈 리스트를 돌려준다 — 그 경우의
+    대안은 `identity_names_for`의 앵커 폴백이 맡는다.
+    """
+    registry = registry if registry is not None else _entity_registry()
+    names: list[str] = []
+    for entity_id in issue.get("entity_ids") or []:
+        entity = registry.get(str(entity_id))
+        if not entity:
+            continue
+        name_kr = str(entity.get("name_kr") or "").strip()
+        if name_kr:
+            names.append(name_kr)
+        names.extend(a for a in (entity.get("aliases") or []) if str(a).strip())
+    return names
+
+
+def identity_names_for(issue: dict, anchors: dict[str, set[str]] | None = None,
+                       registry: dict[str, dict] | None = None) -> list[str]:
+    """이 이슈를 처음 듣는 사람에게 식별시킬 이름 후보.
+
+    entity_registry 매칭을 우선한다(결정론·오탐 없음). 없으면 그 방송 구간
+    안에서 이 이슈만의 고유 앵커(제목에서 뽑은, 다른 이슈와 안 겹치는 말)로
+    대신한다 — 원전명 사전에 없는 법안·기술 이슈도 최소한의 식별자는 갖도록.
+    """
+    names = issue_identity_terms(issue, registry)
+    if names or anchors is None:
+        return names
+    issue_id = str(issue.get("issue_id") or "")
+    # 정렬 키에 문자열 자체를 더한다 — set 순회 순서는 해시 시드에 따라 실행마다
+    # 바뀌므로, 길이가 같은 앵커가 여럿이면 len 만으로는 어떤 두 개가 뽑힐지
+    # 실행마다 달라진다. 같은 이슈는 항상 같은 폴백 이름을 써야 한다.
+    return sorted(anchors.get(issue_id) or (), key=lambda a: (-len(a), a))[:2]
+
+
+def intro_identification_report(script: str, issues: list[dict],
+                                registry: dict[str, dict] | None = None) -> dict:
+    """각 story를 처음 설명하는 문단이 첫 1~2문장 안에 주체·대상을 밝히는가.
+
+    Returns: {"ok", "missing", "checked"} — `missing` 은 도입부에 식별 표현이
+    없는 issue_id 목록이다. 이후 문단에서는 요구하지 않는다 — 매 문단 반복은
+    역효과다.
+    """
+    by_id = {str(i.get("issue_id") or ""): i for i in issues}
+    pairs, anchors, judged = _owned_paragraphs(script, issues)
+    seen: set[str] = set()
+    missing: list[str] = []
+    for issue_id, body in pairs:
+        if issue_id in seen:
+            continue
+        seen.add(issue_id)
+        names = identity_names_for(by_id[issue_id], anchors, registry)
+        if not names:
+            continue
+        lead = _leading_sentences(body).lower()
+        if not any(name.strip().lower() in lead for name in names if name and name.strip()):
+            missing.append(issue_id)
+    return {"ok": not missing, "missing": missing, "checked": judged}
+
+
+def intro_repair_prompt(dossiers: list[dict], script: str, report: dict,
+                        titles: dict[str, str]) -> str:
+    """도입부 식별만 고치는 재요청. 순서·사실·분량은 건드리지 않는다."""
+    by_id = {str(d.get("issue_id") or ""): d for d in dossiers}
+    lines = "\n".join(
+        f"- [{issue_id}] {titles.get(issue_id, '')} → 그 story를 **처음 설명하는**"
+        f" 문단의 첫 1~2문장 안에 '{names[0]}'"
+        + (f"(또는 '{names[1]}')" if len(names) > 1 else "")
+        + "를 넣으십시오."
+        for issue_id in report["missing"]
+        for names in [by_id.get(issue_id, {}).get("identity_names")
+                      or [titles.get(issue_id, issue_id)]]
+    )
+    return f"""아래 대본에서 특정 story 를 **처음 설명하는 문단**이 그 사건의 핵심
+주체·대상 명칭을 첫머리에서 밝히지 않고 있습니다. 처음 듣는 사람은 무엇에 대한
+설명인지 알 수 없습니다.
+
+[식별이 빠진 자리]
+{lines}
+
+[규칙]
+- 지적된 문단에만 짧은 식별 문구를 추가하거나 첫 문장을 자연스럽게 고치십시오.
+  나머지 문단·순서·사실·수치는 그대로 둡니다.
+- 이미 주체를 밝힌 다른 문단에 같은 이름을 반복해서 넣지 마십시오.
+- 뉴스 제목을 통째로 읽지 말고, 명칭만 자연스러운 문장에 끼워 넣으십시오.
 - 모든 줄은 HOST: 로 시작합니다. 인사·마무리는 쓰지 않습니다.
 
 [출력 JSON] {{"script":"HOST: ...\\nHOST: ..."}}
@@ -912,6 +1088,8 @@ def repair_prompt(dossiers: list[dict], script: str, report: dict) -> str:
 - 본문 대사 {low:,}~{high:,}자 범위를 지킵니다.
 - **story 를 설명하는 순서를 바꾸지 마십시오.** 아래 Dossiers 순서가 듣는 사람이
   화면에서 보고 있는 목록 순서입니다. 지적된 문장만 고치고 문단의 자리는 그대로 둡니다.
+- 각 story 를 **처음 설명하는 문단**이 이미 주체·대상 명칭(원전명·기업명·기관명 등)을
+  첫머리에서 밝히고 있다면 그 표현을 지우지 마십시오.
 
 [출력 JSON] {{"script":"HOST: ...\\nHOST: ..."}}
 [검증보고서]
@@ -1052,6 +1230,15 @@ def generate_expert_script(briefing: dict, issues: list[dict],
     for block, rows in script_blocks(issues):
         block_dossiers = [by_issue[str(r.get("issue_id") or "")] for r in rows
                           if str(r.get("issue_id") or "") in by_issue]
+        # 주체·대상 식별 이름은 여기서 결정론적으로 심는다 — 대본 프롬프트가
+        # '핵심 주체가 뭔지' LLM 이 스스로 짐작하게 두지 않는다. 앵커 폴백은
+        # 이 블록(국내/해외) 안에서만 고유하면 되므로 rows 로 범위를 좁힌다.
+        block_anchors = issue_anchors(rows)
+        issue_by_id = {str(r.get("issue_id") or ""): r for r in rows}
+        for dossier in block_dossiers:
+            issue_id = str(dossier.get("issue_id") or "")
+            dossier["identity_names"] = identity_names_for(
+                issue_by_id.get(issue_id) or {"issue_id": issue_id}, block_anchors)
         chunks = even_batches(rows, SCRIPT_BATCH_ISSUES)
         block_parts: list[str] = []
         for index, chunk in enumerate(chunks, 1):
@@ -1084,6 +1271,7 @@ def generate_expert_script(briefing: dict, issues: list[dict],
     parts: list[str] = []
     reports: list[dict] = []
     order_reports: list[dict] = []
+    intro_reports: list[dict] = []
     for block, rows, block_dossiers, block_script in drafted:
         report = _call_structured(
             VERIFY_SYSTEM, verification_prompt(briefing, block_dossiers, block_script),
@@ -1106,13 +1294,13 @@ def generate_expert_script(briefing: dict, issues: list[dict],
 
         # 순서 확인은 **검증·수정 뒤**다. repair_prompt 가 전체 대본을 다시 쓰므로
         # 그 앞에서 확인하면 정작 순서를 흔든 호출을 못 본다.
+        titles = {str(r.get("issue_id") or ""): str(r.get("title") or "")[:60]
+                  for r in rows}
         order = script_order_report(block_script, rows)
         if not order["ok"]:
             print(f"[expert-audio] {block} 구간 순서 이탈 — "
                   f"뒤바뀜={order['out_of_order']} 누락={len(order['missing'])} "
                   f"중복={len(order['duplicated'])} → 재배치 1회")
-            titles = {str(r.get("issue_id") or ""): str(r.get("title") or "")[:60]
-                      for r in rows}
             try:
                 fixed = _call_structured(
                     REPAIR_SYSTEM,
@@ -1132,6 +1320,33 @@ def generate_expert_script(briefing: dict, issues: list[dict],
             except (GeminiError, ValueError) as exc:
                 print(f"[expert-audio] {block} 재배치 실패 — 원본 유지: {str(exc)[:140]}")
         order_reports.append({"block": block, **order})
+
+        # 주체·대상 소개 확인은 순서가 정해진 **뒤**다. 재배치가 문단을 옮기면
+        # '처음 설명하는 자리' 자체가 바뀌므로, 그 앞에서 보면 엉뚱한 문단을 본다.
+        intro = intro_identification_report(block_script, rows)
+        if not intro["ok"]:
+            missing_titles = [titles.get(i, i) for i in intro["missing"]]
+            print(f"[expert-audio] {block} 구간 주체 미소개 — {missing_titles} → 식별 보정 1회")
+            try:
+                fixed = _call_structured(
+                    REPAIR_SYSTEM,
+                    intro_repair_prompt(block_dossiers, block_script, intro, titles),
+                    label=f"expert_intro_repair_{block}", temperature=0.1,
+                    max_output_tokens=12000, primary="synthesis")
+                candidate, _ = normalize_script(fixed.get("script"), len(rows))
+                recheck_intro = intro_identification_report(candidate, rows)
+                recheck_order = script_order_report(candidate, rows)
+                # 식별 보정이 순서를 흔들면 남는 장사가 아니다 — 개선 폭과
+                # 순서 유지 둘 다 볼 때만 채택한다.
+                if len(recheck_intro["missing"]) < len(intro["missing"]) \
+                        and not recheck_order["out_of_order"] \
+                        and len(recheck_order["duplicated"]) <= len(order["duplicated"]):
+                    block_script, intro, order = candidate, recheck_intro, recheck_order
+                else:
+                    print(f"[expert-audio] {block} 식별 보정이 개선 없음 — 원본 유지")
+            except (GeminiError, ValueError) as exc:
+                print(f"[expert-audio] {block} 식별 보정 실패 — 원본 유지: {str(exc)[:140]}")
+        intro_reports.append({"block": block, **intro})
 
         bridge = _block_bridge(block)
         if bridge and parts:
@@ -1163,6 +1378,17 @@ def generate_expert_script(briefing: dict, issues: list[dict],
         if final["out_of_order"]:
             print(f"[expert-audio]   기대 {final['expected']}")
             print(f"[expert-audio]   관측 {final['observed']}")
+    # 블록 병합에서만 드러나는 위반이 없는지 전체 대본으로 한 번 더 본다 —
+    # order 검증과 같은 이유다.
+    report["intro_check"] = {
+        "blocks": intro_reports,
+        **intro_identification_report(script, issues),
+    }
+    if not report["intro_check"]["ok"]:
+        bad = report["intro_check"]["missing"]
+        titles = {str(i.get("issue_id") or ""): str(i.get("title") or "")[:60] for i in issues}
+        print(f"[expert-audio] ⚠ 최종 주체 소개 점검 미통과 — "
+              f"{[titles.get(i, i) for i in bad]}")
     if not verification_passed(report):
         claims = report.get("unsupported_critical_claims") or []
         raise ValueError(f"전문가 대본 검증 미통과 — critical={len(claims)}, scores={_score_summary(report)}")
@@ -1374,6 +1600,12 @@ def generate(force: bool = False, send: bool = True) -> bool:
         "order_check": {
             key: (verification.get("order") or {}).get(key)
             for key in ("ok", "out_of_order", "missing", "duplicated", "unanchored")
+        },
+        # story를 처음 설명하는 문단이 주체·대상을 첫머리에서 밝혔는가. ok=false 가
+        # 쌓이면 그날 회차를 사람이 다시 들어야 할 신호다.
+        "intro_check": {
+            key: (verification.get("intro_check") or {}).get(key)
+            for key in ("ok", "missing")
         },
         "brief_order": [
             {"region": region_of(i), "brief_rank": i.get("brief_rank"),

@@ -15,7 +15,7 @@ import expert_audio_brief as expert
 
 
 def issue(issue_id, title, region, brief_rank=None, *, score=10.0, tags=None,
-          fingerprint=None):
+          fingerprint=None, entity_ids=None):
     return {
         "issue_id": issue_id,
         "title": title,
@@ -26,6 +26,7 @@ def issue(issue_id, title, region, brief_rank=None, *, score=10.0, tags=None,
         "selection_score": score,
         "tags": tags or [],
         "story_fingerprint": fingerprint or {},
+        "entity_ids": entity_ids or [],
         "related_articles": [{"hash": issue_id, "title_kr": title}],
     }
 
@@ -276,6 +277,124 @@ class ScriptPromptTests(unittest.TestCase):
         self.assertIn("설명 순서", prompt)
         self.assertIn("1. 영덕 부지 선정", prompt)
         self.assertIn("2. 테라파워 공급계약", prompt)
+
+    def test_prompt_lists_identity_names_when_dossier_has_them(self):
+        dossiers = [{"issue_id": "z1", "title": "자포리자 원전 외부 전력 차단",
+                     "identity_names": ["자포리자 원전", "자포리자"]}]
+        prompt = expert.script_prompt({"date": "2026-08-30"}, dossiers, {})
+        self.assertIn("처음 소개 규칙", prompt)
+        self.assertIn("자포리자 원전", prompt)
+
+    def test_prompt_omits_the_rule_when_no_identity_name_resolved(self):
+        """이름을 못 정했으면 규칙도 안 낸다 — 지어내라고 요구하지 않는다."""
+        dossiers = [{"issue_id": "z1", "title": "정체불명 이슈"}]
+        prompt = expert.script_prompt({"date": "2026-08-30"}, dossiers, {})
+        self.assertNotIn("처음 소개 규칙", prompt)
+
+
+class IntroIdentificationTests(unittest.TestCase):
+    """'기사 주체·대상 미소개' 회귀 방지 (2026-08-30 자포리자 원전 브리핑 사례).
+
+    해외 첫 소식이 외부전력 차단·비상 디젤발전기부터 설명하면서 정작 그 상황의
+    대상인 '자포리자 원전'을 첫 문장에서 밝히지 않았다. 8/28경 다른 기사에서도
+    같은 계열 문제가 났다 — 대본 생성 구조 전체의 일반 문제로 본다.
+    """
+
+    REGISTRY = {
+        "zaporizhzhia": {"id": "zaporizhzhia", "name_kr": "자포리자 원전",
+                          "aliases": ["자포리자", "자포리아"]},
+    }
+
+    def test_missing_subject_in_opening_paragraph_is_detected(self):
+        issues = [issue("z1", "IAEA, 자포리자 원전 외부 전력 차단 장기화에 블랙아웃 경고",
+                        "해외", 1, entity_ids=["zaporizhzhia"])]
+        script = "\n".join([
+            "HOST: 외부 전력 공급이 일주일 이상 끊기면서 비상 디젤발전기에 의존하고 있습니다.",
+            "HOST: 자포리자 원전은 연료 재고도 빠듯한 상황입니다.",
+        ])
+        report = expert.intro_identification_report(script, issues, self.REGISTRY)
+        self.assertFalse(report["ok"])
+        self.assertIn("z1", report["missing"])
+
+    def test_subject_named_in_first_sentence_passes(self):
+        issues = [issue("z1", "IAEA, 자포리자 원전 외부 전력 차단 장기화에 블랙아웃 경고",
+                        "해외", 1, entity_ids=["zaporizhzhia"])]
+        script = "\n".join([
+            "HOST: 해외 다음 소식은 자포리자 원전입니다. IAEA에 따르면 외부 전력 공급이 "
+            "일주일 이상 끊기면서 비상 디젤발전기에 의존하고 있습니다.",
+            "HOST: 연료 재고도 빠듯한 상황입니다.",
+        ])
+        report = expert.intro_identification_report(script, issues, self.REGISTRY)
+        self.assertTrue(report["ok"], report)
+
+    def test_registered_alias_in_leading_sentence_also_passes(self):
+        """정식 명칭('자포리자 원전')이 아니라 등재된 별칭만 있어도 통과한다."""
+        issues = [issue("z1", "IAEA, 자포리자 원전 외부 전력 차단 장기화에 블랙아웃 경고",
+                        "해외", 1, entity_ids=["zaporizhzhia"])]
+        script = "HOST: 자포리자에서는 외부 전력 공급이 끊긴 지 일주일이 넘었습니다."
+        report = expert.intro_identification_report(script, issues, self.REGISTRY)
+        self.assertTrue(report["ok"], report)
+
+    def test_only_the_opening_paragraph_is_checked_not_every_paragraph(self):
+        """뒤 문단은 이름을 반복하지 않아도 된다 — 매 문단 반복은 역효과다."""
+        issues = [issue("z1", "IAEA, 자포리자 원전 외부 전력 차단 장기화에 블랙아웃 경고",
+                        "해외", 1, entity_ids=["zaporizhzhia"])]
+        script = "\n".join([
+            "HOST: 해외 소식은 자포리자 원전입니다. 외부 전력 공급이 끊겼습니다.",
+            "HOST: 비상 디젤발전기로 버티고 있습니다.",
+            "HOST: 연료 재고도 빠듯합니다.",
+        ])
+        report = expert.intro_identification_report(script, issues, self.REGISTRY)
+        self.assertTrue(report["ok"], report)
+
+    def test_unregistered_issue_falls_back_to_title_anchor(self):
+        """entity_registry 에 없는 이슈(법안·기술 등)는 제목 고유 앵커로 대신한다.
+
+        두 문단 모두 '통과'라는 앵커가 있어 b1 소유 문단으로는 판정되지만,
+        어떤 법안인지(제12차 전력수급기본계획)는 no_subject 쪽만 안 밝힌다.
+        """
+        issues = [issue("b1", "제12차 전력수급기본계획 국회 통과", "국내", 1)]
+        no_subject = "HOST: 관련 법안이 어제 저녁 통과됐습니다."
+        with_subject = "HOST: 제12차 전력수급기본계획이 국회를 통과했습니다."
+        self.assertFalse(expert.intro_identification_report(no_subject, issues, {})["ok"])
+        self.assertTrue(expert.intro_identification_report(with_subject, issues, {})["ok"])
+
+    def test_issue_without_any_unique_anchor_is_not_judged(self):
+        """고유 앵커도 entity_ids 도 없으면 없는 근거로 경보를 울리지 않는다."""
+        twins = [issue("a", "원전 정책 동향", "국내", 1),
+                 issue("b", "원전 정책 동향", "국내", 2)]
+        report = expert.intro_identification_report(
+            "HOST: 원전 정책 동향을 보겠습니다.", twins, {})
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["missing"], [])
+
+    def test_does_not_conflict_with_order_report(self):
+        """도입부 위반이 있어도 순서 판정(script_order_report)은 별도로 정상 작동한다."""
+        issues = [
+            issue("d1", "영덕 신규 원전 부지 선정", "국내", 1, entity_ids=["yeongdeok"]),
+            issue("d2", "테라파워 두산에너빌리티 공급계약", "국내", 2),
+        ]
+        registry = {"yeongdeok": {"id": "yeongdeok", "name_kr": "영덕 원전", "aliases": ["영덕"]}}
+        script = "\n".join([
+            "HOST: 부지 선정 절차가 이번 주 마무리됐습니다.",  # d1인데 '영덕'을 밝히지 않음
+            "HOST: 두산에너빌리티가 테라파워와 계약을 맺었습니다.",
+        ])
+        order = expert.script_order_report(script, issues)
+        intro = expert.intro_identification_report(script, issues, registry)
+        self.assertTrue(order["ok"], order)
+        self.assertFalse(intro["ok"])
+        self.assertIn("d1", intro["missing"])
+
+
+class IntroRepairPromptTests(unittest.TestCase):
+    def test_prompt_names_the_missing_subject_and_the_paragraph_rule(self):
+        dossiers = [{"issue_id": "z1", "identity_names": ["자포리자 원전", "자포리자"]}]
+        report = {"missing": ["z1"]}
+        titles = {"z1": "자포리자 원전 외부 전력 차단"}
+        prompt = expert.intro_repair_prompt(dossiers, "HOST: ...", report, titles)
+        self.assertIn("자포리자 원전", prompt)
+        self.assertIn("처음 설명하는", prompt)
+        self.assertIn("z1", prompt)
 
 
 if __name__ == "__main__":

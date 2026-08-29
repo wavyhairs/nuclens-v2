@@ -375,6 +375,59 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
             expert._call_structured = original
         self.assertIn("절대한계", str(ctx.exception))
 
+    def test_intro_identification_violation_triggers_one_repair_call(self):
+        """자포리자 원전 회귀 방지 (2026-08-30) — 도입부에 주체가 없으면 식별
+        보정 호출이 붙고, 성공하면 최종 대본에 주체명이 들어간다.
+
+        1차 원고는 실제 사고처럼 '외부 전력 차단·블랙아웃'을 바로 설명하며
+        정작 그 대상인 자포리자 원전을 밝히지 않는다.
+        """
+        zap = dict(issue(1, score=20),
+                   title="IAEA, 자포리자 원전 외부 전력 차단 장기화에 블랙아웃 경고",
+                   region="해외", entity_ids=["zaporizhzhia"])
+        calls: list[str] = []
+        no_subject = "\n".join([
+            f"HOST: 외부 전력 차단이 장기화되며 블랙아웃 우려가 커지고 있습니다. {'가' * 500}",
+            f"HOST: {'가' * 500}",
+            f"HOST: {'가' * 500}",
+        ])
+        with_subject = "\n".join([
+            f"HOST: 해외 소식은 자포리자 원전입니다. 외부 전력 차단이 장기화되며 "
+            f"블랙아웃 우려가 커지고 있습니다. {'가' * 500}",
+            f"HOST: {'가' * 500}",
+            f"HOST: {'가' * 500}",
+        ])
+
+        def fake_call(system, message, **kw):
+            label = kw.get("label", "")
+            calls.append(label)
+            if label.startswith("expert_dossiers"):
+                return {"dossiers": [{"issue_id": "i1", "title": zap["title"],
+                                      "body": "가" * 1200}]}
+            if label == "expert_plan":
+                return {"segments": []}
+            if label.startswith("expert_intro_repair"):
+                return {"script": with_subject}
+            if label.startswith("expert_script"):
+                return {"script": no_subject}
+            if label.startswith("expert_verify"):
+                return {"passed": True, "coverage_score": 99, "factual_support_score": 99,
+                        "stage_precision_score": 99, "expert_depth_score": 99,
+                        "single_speaker_score": 100, "unsupported_critical_claims": []}
+            return {}
+
+        original = expert._call_structured
+        expert._call_structured = fake_call
+        try:
+            script, dossiers, plan, report = expert.generate_expert_script(briefing(), [zap])
+        finally:
+            expert._call_structured = original
+
+        self.assertTrue(any(label.startswith("expert_intro_repair") for label in calls),
+                        f"도입부 위반이 있었는데 식별 보정 호출이 없었다: {calls}")
+        self.assertTrue(report["intro_check"]["ok"], report["intro_check"])
+        self.assertIn("자포리자 원전", script)
+
     def test_2026_08_14_material_now_passes(self):
         """그날 실제로 나온 2,461자가 통과하는지 — 실측을 상수로 박아 둔다."""
         dossiers = dossiers_of(5768, count=6)
