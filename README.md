@@ -269,8 +269,36 @@ title_kr : 스페인 알마라즈 원전 수명 2030년까지 연장         ←
 "어느 꼭지가 주제인가"를 말해 주지 않는다. 발송분 기준 확인된 사례는 1건이고,
 프롬프트는 전 수집에 걸린다 — 고치려면 표본을 더 모아야 한다.
 
+### ⑤ 순서는 맞는데 정작 주체를 안 밝히던 것
+
+2026-08-30 해외 전문가 브리핑, 자포리자 원전 기사. 외부전력 차단·비상 디젤발전기·
+연료 부족을 곧장 설명하면서 그 대상인 '자포리자 원전'을 첫 문장에서 밝히지
+않았다 — `script_order_report` 기준으로는 순서·누락·중복이 전부 정상이라
+잡히지 않는다(그 문단은 실제로 자포리자 원전 얘기가 **맞았다**). 8/28경 다른
+기사에서도 같은 계열 문제가 났다 — 특정 기사가 아니라 대본 생성 구조의 문제.
+
+원인은 프롬프트가 '무엇을 말할지'만 지시하고 '무엇에 대한 이야기인지 먼저
+밝히라'는 지시가 없었던 것. 문구 하나를 추가해도 검증·수정(`repair_prompt`)과
+재배치(`order_repair_prompt`)가 전체 대본을 다시 쓰는 과정에서 조용히 사라질
+수 있으므로 세 곳을 함께 고쳤다:
+
+- dossier 에 `identity_names` 를 **결정론적으로** 심는다(`identity_names_for`).
+  원전·기업·기관·프로젝트는 `entity_match.py` 의 엔티티 사전(`entity_ids` →
+  `name_kr`/`aliases`)을 우선한다 — `story_fingerprint.actors/assets` 는 자유형
+  LLM 필드라 영문 표기가 섞여(`Zaporizhzhia NPP`) 한국어 대본과 못 맞춘다.
+  사전에 없는 법안·기술 등은 그 방송 구간(국내/해외) 안에서만 고유한 제목
+  앵커로 대신한다(`issue_anchors` 재사용 — ③의 순서 판정과 같은 앵커를 쓴다).
+- `script_prompt`·`repair_prompt`·`order_repair_prompt` 세 곳 모두 이 이름을
+  '처음 설명하는 문단'에 지키라고 명시한다 — 프롬프트 문구 하나가 아니라
+  세 호출 전부에 심어, 어느 쪽이 대본을 다시 써도 규칙이 남는다.
+- 그래도 결과물에서 직접 확인한다(`intro_identification_report`). ③과 같은
+  '문단의 주인' 판정 위에서 돌아 서로 어긋나지 않고, 위반이 있으면
+  **식별 보정 전용** 호출을 한 번 한다(순서를 흔들면 채택하지 않는다). 이후
+  문단에서는 이름 반복을 요구하지 않는다 — 매 문단 반복은 그 자체로 역효과다.
+  판정 결과는 `audio.json` 의 `intro_check` 에 남는다.
+
 회귀 테스트: `python -m unittest tests.test_issue_continuity tests.test_khnp_relevance
-tests.test_expert_audio_order`
+tests.test_expert_audio_order tests.test_expert_audio_brief`
 
 ## 운영 콘솔 접근 (`/admin`)
 
