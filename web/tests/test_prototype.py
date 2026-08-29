@@ -7042,11 +7042,27 @@ class AdminConsoleTests(unittest.TestCase):
         self.assertEqual(index["2026-08-22"]["borderline_shown"], per_round + 5)
 
     def test_config_reads_the_real_files_not_hand_written_numbers(self):
-        """설정이 바뀌어도 화면이 옛날을 말하면 이 화면을 볼 이유가 없다."""
+        """설정이 바뀌어도 화면이 옛날을 말하면 이 화면을 볼 이유가 없다.
+
+        기준은 **기본 파일 + 콘솔 덧칠**이다. 기본 파일만 세면 이 검사가 콘솔의
+        설계와 반대말을 한다 — 콘솔은 keywords.json 을 덮어쓰지 않고 항목만
+        쌓으므로(admin_overrides), 누가 콘솔에서 키워드를 하나라도 더하는 순간
+        두 수가 갈라진다. 실측 2026-08-29: 콘솔이 더한 4건(석탄 퇴출·탈석탄·
+        이집트 원전·토론회)이 봇 커밋으로 admin_overrides.json 에 들어오자
+        105 vs 101 로 배포가 막혔다. 화면이 옛날을 말하는지 보려던 검사가
+        화면이 **오늘을 말한다는 이유로** 막은 것이다.
+        """
+        import admin_overrides  # noqa: PLC0415
         raw = json.loads((ROOT.parent / "keywords.json").read_text(encoding="utf-8"))
         expected = sum(len(group.get("keywords") or [])
-                       for group in raw.values() if isinstance(group, dict))
+                       for group in admin_overrides.keywords_config(raw).values()
+                       if isinstance(group, dict))
         self.assertEqual(self.config["keywords"]["totals"]["keywords"], expected)
+        # 덧칠이 실제로 얹혔는지도 본다 — 위 식이 기본 파일과 같은 값을 내는
+        # 날에도 이 검사가 '덧칠을 본다'고 주장하지 않도록.
+        base = sum(len(group.get("keywords") or [])
+                   for group in raw.values() if isinstance(group, dict))
+        self.assertGreaterEqual(expected, base)
         self.assertEqual(len(self.config["feeds"]["rss"]), len(news_bot.RSS_SOURCES))
         self.assertEqual(len(self.config["feeds"]["official"]),
                          len(news_bot.OFFICIAL_DIRECT_SOURCES))
