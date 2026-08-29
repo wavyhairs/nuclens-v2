@@ -63,6 +63,7 @@ const api = new Function("document", "state", `
   ${extract("calendarCell")}
   ${extract("calendarMonthLabel")}
   ${extract("calendarWhen")}
+  ${extract("calendarFacts")}
   ${extract("calendarEventBlock")}
   ${extract("hideCalendarPopover")}
   ${extract("renderEventCalendar")}

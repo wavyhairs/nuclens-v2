@@ -29,6 +29,8 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `daily_brief.py` | 일일 브리핑: story dedup→랭킹→투자 관점→보고서 추천→발송/웹 story 계약 기록 |
 | `weekly_bot.py` | 주간 판세 리포트 (Gemini 주 1회 1호출) |
 | `event_calendar.py` | 앞으로 30일 달력 — 날짜와 일정 이름을 **같은 절에서** 뽑아 원문으로 되짚는다 (LLM 0회). 달 정밀도('9월 중')는 날짜 칸에 넣지 않고 따로 낸다 |
+| `event_sources.py` → `event_schedule.json` | **달력 전용** 공식 일정 수집 (LLM 0회, 하루 1회). 학회·협회 게시판, 협회 Monthly Calendar, 국회 행사알림에서 날짜·시각·주최·장소·출처 URL 을 직접 걷는다 — 뉴스 아카이브·이슈 클러스터링에는 들어가지 않는다. 소스별 try/except 격리 |
+| `event_relevance.py` | 공식 일정의 **관심 분야 판정 + 정책·산업 중요도 판정**. 둘을 따로 매겨 버린 사유를 남긴다 — 원자력 기관의 일정표에도 핵의학 학술대회와 채용·조달 공지가 섞여 온다 |
 | `ranking.py` + `ranking_config.json` | 설명 가능한 점수식 — **가중치는 JSON 만 편집** |
 | `metrics.py` | 오프라인 품질 지표 (`python metrics.py`) — 표본 부족 시 insufficient_data |
 | `gemini_client.py` | Gemini REST wrapper (429 백오프) |

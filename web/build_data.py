@@ -6221,17 +6221,40 @@ def build() -> None:
     # 아니고, 재료가 없으면 화면이 스스로 내려가도록 이미 만들어 뒀다 —
     # 여기서 예외를 올리면 그 하루치 브리핑·이슈·흐름이 통째로 배포되지 않는다.
     # (후보 진단 집계가 같은 이유로 같은 모양을 하고 있다.)
+    # 두 번째 재료: event_sources.py 가 하루 한 번 걷어 커밋한 공식 일정.
+    # 파일이 없어도 달력은 기사 경로만으로 그대로 선다 — 새 수집원이 죽어도
+    # 기존 화면이 무너지지 않게 하는 계약이다(publications.json 과 같은 모양).
+    official_store = _read_json(BOT_DIR / "event_schedule.json", {}) or {}
+    official_rows = [row for row in (official_store.get("events") or [])
+                     if isinstance(row, dict)]
     try:
-        calendar = event_calendar.build(news_items, now.date())
+        calendar = event_calendar.build(news_items, now.date(),
+                                        official=official_rows)
         attach_calendar_issues(calendar, issue_catalog)
     except Exception as exc:
         print(f"::warning::앞으로 30일 달력 생성 실패 — {exc} (빌드는 계속한다)")
         calendar = {"start": "", "end": "", "days": event_calendar.HORIZON_DAYS,
                     "events": [], "month_notes": [], "dropped": {"build_error": 1}}
     dropped = calendar.get("dropped") or {}
-    print(f"[build_data] 앞으로 30일 달력: 일정 {len(calendar['events'])}건 · "
+    official_shown = sum(1 for row in calendar.get("events") or []
+                         if row.get("origin") == "official")
+    merged = sum(1 for row in calendar.get("events") or []
+                 if row.get("origin") == "official" and row.get("source_count", 1) > 1)
+    print(f"[build_data] 앞으로 30일 달력: 일정 {len(calendar['events'])}건 "
+          f"(공식 {official_shown}건 · 보도와 통합 {merged}건) · "
           f"이 달 중 {len(calendar['month_notes'])}건"
           + (f" · 근거 부족으로 버림 {dropped}" if dropped else ""))
+    if official_rows and not official_shown:
+        # 저장본에 일정이 있는데 화면에 한 건도 안 서면 창 밖이거나 판정에서
+        # 전부 걸린 것이다. 둘 다 정상일 수 있지만 조용히 지나가면 안 된다.
+        print(f"[build_data] 공식 일정 저장본 {len(official_rows)}건 중 창 안 0건 "
+              f"— 수집 시각 {official_store.get('generated_at') or '?'}")
+    # 수집이 멈춘 것과 '요즘 일정이 없는 것'은 화면에서 똑같이 보인다. 저장본이
+    # 며칠째 그대로면 crawl 의 수집 단계가 안 도는 것이므로 그때는 말해야 한다.
+    collected_at = str(official_store.get("generated_at") or "")[:10]
+    if collected_at and collected_at < (now.date() - timedelta(days=3)).isoformat():
+        print(f"::warning::공식 일정 저장본이 {collected_at} 이후로 갱신되지 않았다 "
+              f"— event_sources.py 수집 단계를 확인할 것")
 
     trend = {
         # 금요일 주간 판세 리포트. 없으면 None → 프론트가 기존 정량 트렌드만 그린다

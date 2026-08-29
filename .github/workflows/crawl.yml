@@ -235,6 +235,21 @@ jobs:
             python pubs_fetch.py --once-per-day
           fi
 
+      # 달력 전용 공식 일정 수집 — 하루 1회. zero-LLM, 기관 게시판 5곳.
+      # 발간물과 같은 편성·같은 게이트를 쓴다(--once-per-day). 기관 공지는
+      # 하루 사이에 몇 건 늘고 마는데 3시간마다 다섯 사이트를 두드릴 이유가 없다.
+      # 국회 일정만 날짜별 상세를 받으므로 요청이 십여 회로 늘고, 나머지는 1회다.
+      #
+      # 실패해도 달력은 기사 경로만으로 그대로 선다 — 그래서 continue-on-error.
+      - name: Fetch official event schedule (1일 1회)
+        continue-on-error: true
+        run: |
+          if [ "${{ inputs.fetch_publications }}" = "true" ]; then
+            echo "dispatch 강제 실행"; python event_sources.py
+          else
+            python event_sources.py --once-per-day
+          fi
+
       - name: Commit state
         if: always()
         run: |
@@ -242,6 +257,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add sent.json curated.json digest_queue.json archive/
           if [ -f publications.json ]; then git add publications.json; fi
+          # 공식 일정 저장본. 커밋해야 '최초 확인일'이 살아남는다 — 협회
+          # 일정표에는 게시일 칸이 없어 그 값이 '우리가 처음 본 날'이고,
+          # 러너와 함께 버리면 매 실행 오늘로 되살아난다.
+          if [ -f event_schedule.json ]; then git add event_schedule.json; fi
           # 크롤이 delivery_log.jsonl 에 남기는 진단 기록(큐레이션 유실·
           # open_question 게이트 사유)이 이 목록에 없어서 러너와 함께 버려지고
           # 있었다. 실측(2026-08-04): 커밋된 173건이 전부 발송 기록이고
