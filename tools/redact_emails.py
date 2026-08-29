@@ -41,6 +41,14 @@ import re
 import sys
 from pathlib import Path
 
+# Windows 콘솔 기본 코드페이지는 한글을 못 찍는다. 저장소의 다른 스크립트
+# (pubs_fetch·event_sources)와 같은 처리를 둔다 — 없으면 요약 한 줄 찍다가
+# UnicodeEncodeError 로 죽어서, 정작 정제는 끝났는데 실패로 보인다.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
+    pass
+
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
