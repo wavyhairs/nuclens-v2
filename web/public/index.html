@@ -515,11 +515,36 @@
       </ul>
       <p id="wordCloudInterpretation" class="chart-interpretation"></p>
     </section>
+    <!-- 앞으로 30일 — 흐름 탭이 뒤를 본 다음 앞을 본다.
+         칸에 서는 이름은 기사 제목이 아니라 **그 날짜가 적힌 문장**에서 뽑은
+         일정 이름이다(event_calendar.py 머리말). 지난 '예정' 코너가 꺼진 이유가
+         날짜와 이름의 짝이 어긋난 것이었으므로, 그 짝을 같은 절에서 맺는다.
+         칩은 3단으로 읽힌다: 이름(상시) → 근거 문장(마우스) → 출처까지(클릭).
+         재료가 드문 화면이라(실측 30칸 중 9칸) 빈 칸을 채우려 하지 않는다. -->
+    <section id="eventCalendar" class="event-calendar" aria-labelledby="eventCalendarHeading" hidden>
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">05</span><h2 id="eventCalendarHeading">앞으로 무엇이 있나</h2></div>
+        <span class="data-note" id="eventCalendarMeta"></span>
+      </div>
+      <div class="cal-legend" aria-hidden="true">
+        <span><i class="cal-dot is-point"></i>예정</span>
+        <span><i class="cal-dot is-deadline"></i>마감</span>
+        <span><i class="cal-dot is-range"></i>기간</span>
+      </div>
+      <div id="eventCalendarGrid" class="cal-grid"></div>
+      <!-- '9월 중'처럼 달까지만 적힌 일정. 날짜 칸에 넣으면 그 달 1일 일정이
+           되므로(실제로 그렇게 틀렸다) 격자 밖에 따로 세운다. -->
+      <section id="eventCalendarMonths" class="cal-months" aria-labelledby="eventCalendarMonthsTitle" hidden>
+        <h3 id="eventCalendarMonthsTitle">날짜까지는 안 나온 것</h3>
+        <ul id="eventCalendarMonthList"></ul>
+      </section>
+      <p class="data-note cal-note">기사 문장에 날짜가 적힌 일정만 세웁니다. 일정을 누르면 근거 문장과 출처를 봅니다.</p>
+    </section>
     <!-- 지난 브리핑 — 흐름 탭의 시간 축. 점·세로선 없이 얇은 괘선과 날짜 정렬만
          쓴다(이 저장소의 괘선 어법). 행 클릭 = 그 날짜의 오늘 화면. -->
     <section id="briefingTimeline" class="briefing-timeline" aria-labelledby="briefingTimelineTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">05</span><h2 id="briefingTimelineTitle">지난 브리핑</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">06</span><h2 id="briefingTimelineTitle">지난 브리핑</h2></div>
         <span class="data-note">날짜를 누르면 그날 브리핑으로 이동합니다</span>
       </div>
       <ol id="briefingTimelineList"></ol>
@@ -579,6 +604,12 @@
   <div><div class="search-dialog-head"><h2 id="statusDialogTitle">데이터 상태</h2><button id="statusDialogClose" type="button" aria-label="상태 닫기">×</button></div><div id="statusDialogContent"></div></div>
 </dialog>
 
+<!-- 일정 상세. 이슈 다이얼로그를 쓰지 않는 이유는 재료가 다르기 때문이다 —
+     일정 기사 27건 중 이슈로 묶인 것은 4건뿐이라(실측 2026-08-29) 나머지는
+     열 이슈가 없다. 그래서 이 창은 스스로 근거를 갖는다: 근거 문장·출처. -->
+<dialog id="calendarDialog" class="calendar-dialog" aria-labelledby="calendarDialogTitle">
+  <div class="issue-dialog-shell"><button id="calendarDialogClose" class="dialog-close" type="button" aria-label="일정 상세 닫기">×</button><div id="calendarDialogContent"></div></div>
+</dialog>
 <dialog id="issueDialog" class="issue-dialog" aria-labelledby="issueDialogTitle">
   <div class="issue-dialog-shell"><button id="issueDialogClose" class="dialog-close" type="button" aria-label="이슈 상세 닫기">×</button><div id="issueDialogContent"></div></div>
 </dialog>
