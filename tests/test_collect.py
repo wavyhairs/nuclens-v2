@@ -15,11 +15,13 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
+from urllib.parse import quote_plus
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 for _k in ("NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
     os.environ.setdefault(_k, "test-dummy")
+import data_quality  # noqa: E402
 import news_bot as nb  # noqa: E402
 from gemini_client import GeminiError, GeminiTruncated  # noqa: E402
 
@@ -1186,6 +1188,56 @@ class TestReferenceSiteCoverage(unittest.TestCase):
         domains = {entry["domain"] for group in ("tier1", "tier2", "tier3") for entry in raw[group]}
         self.assertIn("euractiv.com", domains)
         self.assertIn("neimagazine.com", domains)
+
+
+class TestKoreanNuclearOrgFeeds(unittest.TestCase):
+    """부서 지정 국내 원자력 기관 7곳 (2026-08-29).
+
+    수집원과 출처 등급은 **한 쌍**이다. 피드만 넣고 sources.json 을 빠뜨리면
+    걷기는 걷는데 등급이 안 붙어 general_media·tier3 으로 떨어지고, 그러면 기관
+    공지가 일반 기사와 같은 무게로 선정된다 — 넣은 이유가 사라진다.
+    """
+
+    ORGS = {
+        "niftep.snu.ac.kr": "서울대 원자력미래기술정책연구소",
+        "kns.org": "한국원자력학회",
+        "kaif.or.kr": "한국원자력산업협회",
+        "korad.or.kr": "한국원자력환경공단",
+        "kinac.re.kr": "한국원자력통제기술원",
+        "knfc.co.kr": "한전원자력연료",
+        "ismr.or.kr": "혁신형 SMR 기술개발사업단",
+    }
+
+    def rows(self):
+        return {row["domain_label"]: row for row in nb.RSS_SOURCES
+                if row["domain_label"] in self.ORGS}
+
+    def test_all_seven_are_collected(self):
+        self.assertEqual(set(self.rows()), set(self.ORGS))
+
+    def test_each_is_a_korean_three_day_site_query(self):
+        """when: 이 빠지면 Google News 는 관련도순이라 몇 주 지난 공지를 물어 오고,
+        그것들은 수집 창에서 전멸한다. hl=ko 가 빠지면 국내 색인을 안 탄다."""
+        for domain, row in self.rows().items():
+            with self.subTest(domain=domain):
+                self.assertIn(quote_plus(f"site:{domain} when:3d"), row["url"])
+                self.assertIn("hl=ko&gl=KR&ceid=KR:ko", row["url"])
+                # 도메인 자체가 원자력 기관이라 제목 게이트를 걸 이유가 없다.
+                self.assertFalse(row.get("require_keywords"))
+                # 여러 매체가 섞이는 피드가 아니다 — domain_label 이 곧 출처다.
+                self.assertFalse(row.get("resolve_publisher"))
+                self.assertEqual(row["name"], self.ORGS[domain])
+
+    def test_each_carries_an_official_primary_grade(self):
+        for domain in self.ORGS:
+            with self.subTest(domain=domain):
+                profile = data_quality.source_profile(domain)
+                self.assertEqual(profile["source_type"], "official")
+                self.assertEqual(profile["evidence_role"], "primary")
+                self.assertIn(profile["source_tier"], (1, 2))
+                self.assertEqual(profile["publisher"], self.ORGS[domain])
+                # 등급이 실제로 수집 우선순위에 닿는지. 8 은 tier2 하한이다.
+                self.assertGreaterEqual(nb.source_score(domain), 8)
 
 
 if __name__ == "__main__":
