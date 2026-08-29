@@ -1,13 +1,16 @@
 // 앞으로 30일 달력이 화면에서 어떻게 서는가. 실행: node web/tests/event_calendar.mjs
 // (의존성 없음 — 데이터도 안 읽는 순수 렌더 검사다.)
 //
-// 여기서 잠그는 것은 다섯이다.
+// 여기서 잠그는 것은 여섯이다.
 //   ① 격자가 요일에 맞는다 — 첫날 앞의 빈 칸 수가 그날 요일이고, 칸 수는 7의 배수.
 //   ② 이미 시작한 기간이 사라지지 않는다 — 창 첫날에 서고, 지나가는 칸이 물든다.
 //   ③ 칸당 셋까지만 세우고 나머지는 "+N" 으로 접는다.
 //   ④ 달까지만 나온 일정은 **격자 밖**에 선다 — 그 달 1일 칸에 넣던 것이
 //      지난 코너를 끄게 만든 오류다(event_calendar.py 머리말 ③).
 //   ⑤ 재료가 한 건도 없으면 구역이 통째로 내려간다 — 빈 격자는 고장으로 읽힌다.
+//   ⑥ 격자 아래 이름 목록이 칩이 잃은 이름을 온전히 세운다 — 좁은 화면에서
+//      칩은 점만 남기므로(style.css 의 cal-chip-label 숨김) 이름이 설 자리는
+//      여기뿐이다. 말줄임 없이, 날짜순으로, 8건을 넘으면 접어서.
 //
 // app.js 는 모듈이 아니라 최상위에서 DOM 을 건드리는 평범한 스크립트라 import 가
 // 안 된다. weekly_sections.mjs 와 같은 방식으로 함수 블록만 잘라 평가한다.
@@ -41,7 +44,8 @@ function constant(name) {
 function makeDom() {
   const nodes = new Map();
   for (const id of ["eventCalendar", "eventCalendarMeta", "eventCalendarGrid",
-                    "eventCalendarMonths", "eventCalendarMonthList"]) {
+                    "eventCalendarMonths", "eventCalendarMonthList",
+                    "eventCalendarUpcoming", "eventCalendarUpcomingList"]) {
     nodes.set(id, { id, hidden: false, innerHTML: "", textContent: "" });
   }
   return { nodes, getElementById: id => nodes.get(id) || null };
@@ -60,6 +64,9 @@ const api = new Function("document", "state", `
   ${constant("CAL_ROLE_TAILS")}
   ${extract("calendarLayout")}
   ${extract("calendarChip")}
+  ${constant("CAL_UPCOMING_HEAD")}
+  ${extract("calendarUpcomingRow")}
+  ${extract("calendarUpcomingList")}
   ${extract("calendarCell")}
   ${extract("calendarMonthLabel")}
   ${extract("calendarWhen")}
@@ -67,8 +74,8 @@ const api = new Function("document", "state", `
   ${extract("calendarEventBlock")}
   ${extract("hideCalendarPopover")}
   ${extract("renderEventCalendar")}
-  return { CAL_MAX_CHIPS, calendarLayout, calendarCell, calendarWhen,
-           calendarEventBlock, renderEventCalendar };
+  return { CAL_MAX_CHIPS, CAL_UPCOMING_HEAD, calendarLayout, calendarCell,
+           calendarWhen, calendarEventBlock, renderEventCalendar };
 `);
 
 const cases = [];
@@ -182,6 +189,78 @@ const WINDOW = { start: "2026-08-29", end: "2026-09-28", days: 30 };
 {
   const { dom } = render(null);
   check("payload 자체가 없어도 죽지 않는다", dom.nodes.get("eventCalendar").hidden === true);
+}
+
+// ── ⑥ 격자 아래 이름 목록 ────────────────────────────────────────────────
+//
+// 좁은 화면에서 칩은 이름을 숨기고 점만 남긴다. 칩 안에 남는 폭이 29px 인데
+// 실측 일정 이름은 최단 12자·중앙값 32자라 글씨를 줄여도 닿지 않고, 3~5자로
+// 자르면 22건 중 10건이 '2026 ', '에너지 산' 으로 겹쳐 서로 구별되지 않는다.
+// 그래서 폭이 있는 격자 밖에 이름을 세운다 — 여기가 이름의 마지막 자리이므로
+// 이 목록에서까지 자르면 목록을 만든 뜻이 없어진다.
+{
+  const { dom } = render({ ...WINDOW, events: [event({
+    label: "에너지 산업국가전략 국회 연속토론회: 1차-전기요금 선납제" })], month_notes: [] });
+  const list = dom.nodes.get("eventCalendarUpcomingList").innerHTML;
+  check("절이 서 있다", dom.nodes.get("eventCalendarUpcoming").hidden === false);
+  has("이름이 잘리지 않고 통째로 선다", list,
+    "에너지 산업국가전략 국회 연속토론회: 1차-전기요금 선납제");
+  hasnt("칩의 말줄임 클래스를 쓰지 않는다", list, "cal-chip-label");
+  has("눌러서 여는 문은 칩과 같은 일정이다", list, 'data-cal-event="ev-1"');
+  has("날짜를 함께 적는다", list, "9월 1일");
+  has("종류도 함께 적는다", list, "예정");
+}
+{
+  // 기간은 격자에서 양끝 둘로 서지만, 목록은 일정 하나다 — 같은 이름이 두 줄로
+  // 서면 '몇 건인가'가 거짓말이 된다. byDay 가 아니라 events 를 쓰는 이유.
+  const running = event({ id: "ev-r", kind: "range", date: "2026-09-02",
+                          end_date: "2026-09-10", label: "포항 집회" });
+  const { dom } = render({ ...WINDOW, events: [running], month_notes: [] });
+  check("격자에는 양끝 둘",
+    count(dom.nodes.get("eventCalendarGrid").innerHTML, "포항 집회") === 2);
+  check("목록에는 하나",
+    count(dom.nodes.get("eventCalendarUpcomingList").innerHTML, "포항 집회") === 1);
+}
+{
+  // 날짜순. 격자는 칸이 순서를 말해 주지만 목록은 스스로 세워야 한다.
+  const shuffled = [
+    event({ id: "ev-c", date: "2026-09-20", label: "셋째" }),
+    event({ id: "ev-a", date: "2026-09-02", label: "첫째" }),
+    event({ id: "ev-b", date: "2026-09-11", label: "둘째" }),
+  ];
+  const { dom } = render({ ...WINDOW, events: shuffled, month_notes: [] });
+  const list = dom.nodes.get("eventCalendarUpcomingList").innerHTML;
+  check("날짜순으로 편다",
+    list.indexOf("첫째") < list.indexOf("둘째")
+      && list.indexOf("둘째") < list.indexOf("셋째"));
+}
+// 상한은 app.js 에서 가져온다 — 여기에 8을 다시 적으면 상한이 바뀌어도 검사가
+// 자기가 쓴 값을 확인하며 통과한다(칸당 상한을 constant() 로 가져오는 것과 같은 이유).
+const HEAD = render({ ...WINDOW, events: [event({})], month_notes: [] })
+  .api.CAL_UPCOMING_HEAD;
+const fill = length => Array.from({ length }, (unused, index) =>
+  event({ id: `ev-${index}`, date: "2026-09-01", label: `일정 ${index}` }));
+{
+  const { dom } = render({ ...WINDOW, events: fill(HEAD), month_notes: [] });
+  const list = dom.nodes.get("eventCalendarUpcomingList").innerHTML;
+  hasnt(`상한(${HEAD})까지는 접기가 없다`, list, "cal-up-more");
+  check("전부 선다", count(list, "cal-up-row") === HEAD);
+}
+{
+  const over = fill(HEAD + 3);
+  const { dom } = render({ ...WINDOW, events: over, month_notes: [] });
+  const list = dom.nodes.get("eventCalendarUpcomingList").innerHTML;
+  has("상한을 넘으면 접는다", list, "cal-up-more");
+  has("남은 건수를 말한다", list, "3건 더 보기");
+  check("접어도 이름을 버리지는 않는다 — 전부 DOM 에 있다",
+    count(list, "cal-up-row") === over.length);
+}
+{
+  const { dom } = render({ ...WINDOW, events: [], month_notes: [
+    { month: "2026-09", label: "정부 발표", clause: "9월 중 발표한다.",
+      title: "정부 발표", url: "", publisher: "테스트" }] });
+  check("날짜 일정이 없으면 목록 절이 내려간다",
+    dom.nodes.get("eventCalendarUpcoming").hidden === true);
 }
 
 // ── 상세와 이스케이프 ─────────────────────────────────────────────────────
