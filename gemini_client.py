@@ -296,6 +296,16 @@ def format_call_stats() -> str:
 
 _DAILY_QUOTA_MARKERS = ("PerDay", "per_day", "PerDayPerProject", "RequestsPerDay")
 
+# thinkingConfig 를 거부하는 것으로 실측 확인된 모델. 실측(2026-08-16):
+#   gemini-3.5-flash-lite  thinkingBudget=0 → 400 INVALID_ARGUMENT
+#   gemini-3.1-flash-lite  thinkingBudget=0 → 200
+# 여기 있으면 첫 요청부터 이 필드를 아예 안 보낸다 — 매 호출마다 400 을 맞고
+# 벗어서 재시도하는 API 왕복(과 그만큼의 RPM 소모)을 없앤다. 목록에 없는
+# 새 모델이 같은 증상을 내면 아래 except 절의 400 fallback(_rejects_thinking_config)
+# 이 여전히 한 번 벗고 재시도해 잡아준다 — 이 목록은 "알려진 모델의 첫 요청을
+# 최적화"하는 캐시일 뿐, fallback 을 대신하지 않는다.
+_THINKING_CONFIG_UNSUPPORTED_MODELS = frozenset({"gemini-3.5-flash-lite"})
+
 
 def _rejects_thinking_config(body_text: str) -> bool:
     """400 이 thinkingConfig 때문인지. 아니면 벗어도 안 낫는다.
@@ -397,6 +407,8 @@ def call_json(
       (2026-08-04 실측: 대본 생성이 thoughts=7863/8192 로 output 315에서 잘림.
       로컬은 통과했는데 CI 에서 잘렸다 — thinking 길이는 비결정적이라
       "로컬에서 됐다"가 예산 충분의 근거가 못 된다).
+      단, 모델이 _THINKING_CONFIG_UNSUPPORTED_MODELS 에 있으면 이 값을 줘도
+      thinkingConfig 자체를 안 보낸다 — 그 모델은 이 필드를 거부한다.
     - model 을 주면 기본 MODEL 대신 그 모델을 부른다. 무료 티어 쿼터는 모델별
       버킷이다 — 하루 1회짜리 호출을 상시 파이프라인(크롤 큐레이션)과 같은
       버킷에 두면 저녁마다 굶는다 (2026-08-04 실측: 같은 시각 프로브는
@@ -410,7 +422,8 @@ def call_json(
         "maxOutputTokens": max_output_tokens,
         "responseMimeType": "application/json",
     }
-    if thinking_budget is not None:
+    if (thinking_budget is not None
+            and (model or MODEL) not in _THINKING_CONFIG_UNSUPPORTED_MODELS):
         generation_config["thinkingConfig"] = {"thinkingBudget": thinking_budget}
 
     # 키는 **헤더로** 보낸다. 쿼리스트링(`?key=…`)에 실으면 그 URL 이 닿는 곳마다
@@ -466,13 +479,12 @@ def call_json(
         except urllib.error.HTTPError as e:
             body_text = e.read().decode("utf-8", errors="replace")
             last_err = GeminiError(f"HTTP {e.code}: {body_text[:600]}")
-            # thinkingConfig 를 안 받는 모델이 있다. 실측(2026-08-16):
-            #   gemini-3.5-flash-lite  thinkingBudget=0 → 400 INVALID_ARGUMENT
-            #   gemini-3.1-flash-lite  thinkingBudget=0 → 200
-            # 다른 요소(temperature·maxOutputTokens·responseMimeType)는 양쪽 다
-            # 통과하므로 범인은 이 필드 하나다. 모델 이름을 박아 두면 다음 모델에서
-            # 같은 일이 또 나므로, 400 을 만나면 이 필드만 벗고 한 번 더 본다.
-            # 벗은 뒤에도 400 이면 진짜 잘못된 요청이라 그때 올린다.
+            # thinkingConfig 를 안 받는 모델이 있다. 알려진 모델
+            # (_THINKING_CONFIG_UNSUPPORTED_MODELS)은 애초에 이 필드를 안 보내
+            # 여기까지 안 온다 — 이 분기는 *아직 목록에 없는* 모델을 위한
+            # 안전망이다. 그런 모델을 새로 붙였는데 400 을 만나면 이 필드만
+            # 벗고 한 번 더 본다. 벗은 뒤에도 400 이면 진짜 잘못된 요청이라
+            # 그때 올린다.
             if (e.code == 400 and "thinkingConfig" in generation_config
                     and _rejects_thinking_config(body_text)):
                 print(f"[gemini] {model or MODEL} 가 thinkingConfig 를 거부 — "
