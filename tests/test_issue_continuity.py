@@ -741,8 +741,146 @@ class EvidenceOverlapTests(unittest.TestCase):
         continuity.annotate([cand], [prior], CFG, TODAY)
         self.assertEqual(cand["continuity"]["progression"], "minor")
 
+    def test_evidence_confirmed_still_inherits_story_id(self):
+        """근거를 압도적으로 공유하는 재전송은 여전히 story_id 를 물려받는다.
 
-# ---- ⑥ story 가 접힌 뒤 다시 판정하는가 -------------------------------------------
+        어휘와 무관한 hash 비교라 anchor_only 와 달리 identity 확정과 동급이다
+        (`same_issue` 의 story_id_inheritable 정의 참조).
+        """
+        prior = self.prior("국회, 국가기간 전력망 확충 특별법 등 민생법안 70건 처리")
+        cand = self.repeat("국회 본회의, 「국가기간 전력망 확충 특별법」 등 73건 의안 처리")
+        continuity.annotate([cand], [prior], CFG, TODAY)
+        self.assertEqual(cand["story_id"], continuity.story_cluster.fallback_story_id(prior))
+        self.assertEqual(cand["story_id_source"], "history")
+
+
+# ---- ⑥ story_id 상속 — 실사례 회귀 (2026-08-31) ----------------------------------
+#
+# 2026-08-31 라이브: 『프랑스 볼탈리아, 브라질 350억 달러 규모 데이터센터 프로젝트
+# 승인』(8/28 발송)과 전혀 무관한 『미국 AI 데이터센터 프로젝트, 주민 반발로 1300억
+# 달러 지연·취소』(8/31 신규)가 `#데이터센터`·`#전력수요` 라는 업계 공통 태그
+# 둘만으로 anchor 경로에 걸렸다. `annotate()` 가 그 매칭이 얼마나 강한지 보지
+# 않고 story_id 를 그대로 물려줘 두 기사가 같은 story_id 를 갖게 됐고, 그 값이
+# web/build_data.py 의 issue_id 로 그대로 이어져 `build_issue_pages()` 가
+# `FileExistsError: web/public/issue/story-69f963bc223b6b84` 로 죽었다.
+#
+# 실제 사고의 두 기사는 지문(story_fingerprint)이 아직 없는 큐레이션 단계였다
+# (국내 피드는 LLM story dedup 을 거치지 않는 경우가 흔하다) — 아래 재현도 같은
+# 조건(지문 없음)에서 시작한다.
+
+class StoryIdInheritanceTests(unittest.TestCase):
+    def test_generic_industry_tags_do_not_inherit_story_id(self):
+        """앵커 매칭 자체는 여전히 걸리지만(감점 대상), story_id 는 안 물려준다."""
+        prior = sent(
+            "프랑스 볼탈리아, 브라질 350억 달러 규모 데이터센터 프로젝트 승인",
+            h="voltalia", date="2026-08-28",
+            tags=["#데이터센터", "#전력수요", "#브라질"])
+        cand = article(
+            "미국 AI 데이터센터 프로젝트, 주민 반발로 1300억 달러 지연·취소",
+            h="us-delay", tags=["#데이터센터", "#전력수요", "#미국"])
+
+        match = continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG)
+        self.assertIsNotNone(match, "앵커 매칭 자체는 여전히 걸려야 한다(감점 대상)")
+        self.assertTrue(match["anchor_only"])
+        self.assertFalse(match["identity_confirmed"])
+        self.assertFalse(match["story_id_inheritable"])
+
+        continuity.annotate([cand], [prior], continuity.DEFAULT_CONFIG, "2026-08-31")
+        self.assertNotEqual(cand.get("story_id"), "story-voltalia")
+        self.assertNotEqual(cand.get("story_id_source"), "history")
+
+    def test_disjoint_fingerprint_countries_veto_the_match(self):
+        """지문에 나라가 있으면 앵커·story_id 동일성보다 위에서 막는다."""
+        prior = sent(
+            "프랑스 볼탈리아, 브라질 350억 달러 규모 데이터센터 프로젝트 승인",
+            h="voltalia", date="2026-08-28",
+            fingerprint={"countries": ["France", "Brazil"], "actors": ["Voltalia"],
+                        "assets": ["Data center"]},
+            tags=["#데이터센터", "#전력수요"])
+        cand = article(
+            "미국 AI 데이터센터 프로젝트, 주민 반발로 1300억 달러 지연·취소",
+            h="us-delay",
+            fingerprint={"countries": ["USA"], "actors": ["Meta"],
+                        "assets": ["Data center"]},
+            tags=["#데이터센터", "#전력수요"])
+        self.assertIsNone(
+            continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG))
+
+    def test_shared_story_id_with_contested_fingerprint_is_not_confirmed(self):
+        """자기강화 차단: 오염된 상태를 그대로 줘도(같은 story_id) 새로 확인된
+        지문이 신원 축에서 어긋나면 identity_confirmed 로 세지 않는다.
+
+        1차 continuity 가 약한 매칭으로 story_id 를 잘못 물려준 뒤, 후속 단계
+        (semantic dedup 등)에서 진짜 지문이 붙는 경우를 흉내 낸다 — "이미 같은
+        id" 라는 사실 하나만으로 2차 재판정이 그 id 를 재확인해 버리면 안 된다.
+        """
+        prior = sent(
+            "프랑스 볼탈리아, 브라질 350억 달러 규모 데이터센터 프로젝트 승인",
+            h="voltalia", date="2026-08-28",
+            fingerprint={"actors": ["Voltalia"], "assets": ["Data center"],
+                        "drivers": ["power demand"]})
+        cand = article(
+            "미국 AI 데이터센터 프로젝트, 주민 반발로 1300억 달러 지연·취소",
+            h="us-delay",
+            fingerprint={"actors": ["OpenAI"], "assets": ["Data center campus"],
+                        "drivers": ["local opposition"]})
+        cand["story_id"] = "story-voltalia"          # 오염된 상태를 그대로 재현
+        cand["story_id_source"] = "history"
+        prior["story_id"] = "story-voltalia"
+
+        match = continuity.same_issue(cand, prior, continuity.DEFAULT_CONFIG)
+        self.assertIsNotNone(match)
+        self.assertIn("story_id:story-voltalia", match["reasons"])
+        self.assertFalse(
+            match["identity_confirmed"],
+            "이미 같은 id 라는 사실만으로 신원을 확정하면 자기강화 고리가 생긴다")
+        self.assertFalse(match["story_id_inheritable"])
+
+    def test_two_pass_annotate_does_not_self_reinforce(self):
+        """daily_brief.py 의 1차 판정 → story consolidation → 2차 재판정을 흉내 낸다.
+
+        1차에서 story_id 를 못 물려받으면 candidate 는 여전히 제 hash 기반
+        id 를 들고 있으므로, 2차 재판정에서도 `direct_story_id` 가 서지 않는다
+        — 자기강화가 시작조차 되지 않는다.
+        """
+        prior = sent(
+            "프랑스 볼탈리아, 브라질 350억 달러 규모 데이터센터 프로젝트 승인",
+            h="voltalia", date="2026-08-28",
+            tags=["#데이터센터", "#전력수요", "#브라질"])
+        cand = article(
+            "미국 AI 데이터센터 프로젝트, 주민 반발로 1300억 달러 지연·취소",
+            h="us-delay", tags=["#데이터센터", "#전력수요", "#미국"])
+
+        continuity.annotate([cand], [prior], continuity.DEFAULT_CONFIG, "2026-08-31")
+        first_pass_story_id = cand.get("story_id")
+        self.assertNotEqual(cand.get("story_id_source"), "history")
+
+        # story 조립 뒤 재판정 (rank_and_select 의 continuity_recheck 흉내).
+        continuity.annotate([cand], [prior], continuity.DEFAULT_CONFIG, "2026-08-31")
+        self.assertEqual(cand.get("story_id"), first_pass_story_id)
+        self.assertNotEqual(cand.get("story_id_source"), "history")
+        self.assertFalse(cand["continuity"]["identity_confirmed"])
+
+    def test_strong_fingerprint_identity_still_inherits_story_id(self):
+        """정상적인 연속성은 보존된다 — 신원 축이 확정되면 story_id 를 물려받는다."""
+        prior = sent(
+            "현대건설·테라파워, SMR 사업 협력 계약 체결", h="old", date="2026-08-10",
+            fingerprint={"countries": ["South Korea", "USA"],
+                        "actors": ["Hyundai E&C", "TerraPower", "Export-Import Bank"],
+                        "assets": ["SMR"], "event_family": "contract_award"})
+        cand = article(
+            "테라파워와 현대건설의 차세대 원자로 협력 본격화", h="new",
+            fingerprint={"countries": ["South Korea", "USA"],
+                        "actors": ["Hyundai E&C", "TerraPower"],
+                        "assets": ["SMR"], "event_family": "contract_award"},
+            features=feat())
+
+        continuity.annotate([cand], [prior], continuity.DEFAULT_CONFIG, TODAY)
+        self.assertEqual(cand["story_id"], continuity.story_cluster.fallback_story_id(prior))
+        self.assertEqual(cand["story_id_source"], "history")
+
+
+# ---- ⑦ story 가 접힌 뒤 다시 판정하는가 -------------------------------------------
 
 class ContinuityRecheckTests(unittest.TestCase):
     """판정 재료 하나(근거 교집합)가 rank_and_select **안에서** 만들어진다."""

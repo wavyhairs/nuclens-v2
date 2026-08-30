@@ -1329,6 +1329,88 @@ class IssueSimilarityTests(unittest.TestCase):
         self.assertEqual(sum(len(issue.get("evidence_members") or []) for issue in issues), 1)
 
 
+class IssueCatalogIdValidationTests(unittest.TestCase):
+    """issue_id 충돌을 배포 전에 잡는 마지막 방어선.
+
+    실사고(2026-08-31): 프랑스 볼탈리아의 브라질 데이터센터 승인 건과 전혀 무관한
+    미국 데이터센터 지연 기사가 (당시 issue_continuity.annotate 의 결함으로)
+    같은 story_id 를 물려받았다. `cluster_selected_articles` 는 국가 충돌 때문에
+    둘을 별도 클러스터로 유지했지만, `issue_id` 는 그 story_id 를 그대로 쓰므로
+    두 클러스터가 같은 issue_id 를 갖게 됐다 — `build_issue_pages()` 가
+    `web/public/issue/story-69f963bc223b6b84` 를 두 번 mkdir() 하다 죽었다.
+
+    근본 원인은 issue_continuity 쪽에서 막는다(StoryIdInheritanceTests 참조).
+    여기서는 그 방어가 뚫렸을 때도 조용히 잘못된 페이지를 만들지 않는지 본다.
+    """
+
+    def test_duplicate_issue_id_across_distinct_clusters_raises_a_clear_error(self):
+        catalog = [
+            {"issue_id": "story-dup", "title": "이슈 A",
+             "representative_article": {"hash": "a1"}},
+            {"issue_id": "story-dup", "title": "이슈 B",
+             "representative_article": {"hash": "b1"}},
+        ]
+        with self.assertRaises(ValueError) as ctx:
+            build_data.validate_issue_catalog_ids(catalog)
+        message = str(ctx.exception)
+        self.assertIn("story-dup", message)
+        self.assertIn("이슈 A", message)
+        self.assertIn("이슈 B", message)
+
+    def test_unique_issue_ids_pass_without_error(self):
+        catalog = [
+            {"issue_id": "story-a", "title": "이슈 A",
+             "representative_article": {"hash": "a1"}},
+            {"issue_id": "story-b", "title": "이슈 B",
+             "representative_article": {"hash": "b1"}},
+        ]
+        build_data.validate_issue_catalog_ids(catalog)  # 예외 없이 통과해야 한다
+
+    def test_conflicting_events_sharing_a_poisoned_story_id_are_caught_before_paging(self):
+        """실사고 최소 재현 — 오염된 story_id 가 두 클러스터에 남아 있어도
+        `build_issue_pages()` 를 부르기 전에 명확한 오류로 막힌다.
+
+        (오염 자체를 막는 것은 issue_continuity 쪽 수정의 몫이다. 이 테스트는
+        '그래도 뚫리면 어떻게 되는가'를 재현하는 자리라 story_id 를 여기서
+        직접 오염시킨다.)
+        """
+        poisoned_story_id = "story-69f963bc223b6b84"
+        voltalia = {
+            "hash": "voltalia", "briefing_date": "2026-08-28", "article_date": "2026-08-28",
+            "title_kr": "프랑스 볼탈리아, 브라질 350억 달러 규모 데이터센터 프로젝트 승인",
+            "tags": ["#데이터센터", "#전력수요", "#브라질"], "countries": ["FR", "BR"],
+            "story_id": poisoned_story_id, "story_id_source": "generated",
+        }
+        us_delay = {
+            "hash": "us-delay", "briefing_date": "2026-08-31", "article_date": "2026-08-31",
+            "title_kr": "미국 AI 데이터센터 프로젝트, 주민 반발로 1300억 달러 지연·취소",
+            "tags": ["#데이터센터", "#전력수요", "#미국"], "countries": ["US"],
+            "story_id": poisoned_story_id, "story_id_source": "history",
+        }
+
+        matched, _, diag = build_data.issue_similarity(us_delay, voltalia)
+        self.assertFalse(matched, "국가가 다른 두 사건은 story_id 가 같아도 합쳐지면 안 된다")
+        self.assertIn("country_conflict", diag["blocked_by"])
+
+        issues = build_data.cluster_selected_articles([voltalia, us_delay])
+        self.assertEqual(len(issues), 2, "국가 충돌로 별도 클러스터여야 한다")
+        self.assertEqual(
+            [issue["issue_id"] for issue in issues],
+            [poisoned_story_id, poisoned_story_id],
+            "오염된 story_id 를 그대로 쓰면 두 클러스터가 같은 issue_id 를 갖는다"
+            " — 이 상태로 build_issue_pages() 까지 가면 mkdir() 충돌이 난다")
+
+        catalog = [
+            {"issue_id": issue["issue_id"],
+             "title": issue["representative"]["title_kr"],
+             "representative_article": {"hash": issue["representative"]["hash"]}}
+            for issue in issues
+        ]
+        with self.assertRaises(ValueError) as ctx:
+            build_data.validate_issue_catalog_ids(catalog)
+        self.assertIn(poisoned_story_id, str(ctx.exception))
+
+
 class CandidateTelemetryTests(unittest.TestCase):
     """후보 계측이 **판정을 바꾸지 않는가**.
 

@@ -4773,6 +4773,46 @@ def atlas_readiness(issue_catalog: list[dict]) -> dict:
     }
 
 
+def validate_issue_catalog_ids(issue_catalog: list[dict]) -> None:
+    """서로 다른 클러스터가 같은 issue_id 를 쓰면 페이지를 만들기 전에 멈춘다.
+
+    `issue_id` 는 대체로 대표 기사의 `story_id`(Daily Brief 의 연속일 판정이
+    붙여 준 값)를 그대로 쓴다(`cluster_selected_articles`). 그 story_id 가
+    잘못 상속되면(실측 2026-08-31: 국가·설비가 전혀 다른 두 사건이 업계 공통
+    태그 앵커만으로 같은 story_id 를 물려받음) `cluster_selected_articles` 는
+    국가·설비 충돌 때문에 둘을 **다른 클러스터**로 유지하면서도, 두 클러스터가
+    같은 `issue_id` 를 들고 나온다. `build_issue_pages` 가 그 id 로 디렉터리를
+    하나씩 만들다 두 번째에서 죽거나(과거 `FileExistsError`), `exist_ok=True`
+    로 덮어쓰면 서로 다른 이슈가 같은 URL 을 공유한다 — 둘 다 사고다.
+
+    근본 원인은 `issue_continuity.annotate()` 의 story_id 상속 조건에서
+    막는다(identity_confirmed·evidence_confirmed 없이는 상속하지 않는다).
+    이 검증은 그 방어가 뚫렸을 때(다른 story_id 발급 경로·수동 데이터 편집 등)
+    마지막으로 잡아 배포 전에 사람이 볼 수 있는 오류로 바꾸는 자리다.
+    """
+    seen: dict[str, dict] = {}
+    conflicts: list[str] = []
+    for issue in issue_catalog:
+        issue_id = str(issue.get("issue_id") or "")
+        if not issue_id:
+            continue
+        prior = seen.get(issue_id)
+        if prior is None:
+            seen[issue_id] = issue
+            continue
+        left_hash = str((prior.get("representative_article") or {}).get("hash") or "")
+        right_hash = str((issue.get("representative_article") or {}).get("hash") or "")
+        conflicts.append(
+            f"{issue_id}: {prior.get('title', '')!r}[{left_hash}] "
+            f"vs {issue.get('title', '')!r}[{right_hash}]"
+        )
+    if conflicts:
+        preview = " | ".join(conflicts[:10])
+        raise ValueError(
+            f"duplicate issue_id across distinct clusters ({len(conflicts)}): {preview}"
+        )
+
+
 def build_issue_pages(issue_catalog: list[dict]) -> int:
     """이슈별 OG 메타데이터를 가진 정적 진입 페이지를 생성한다."""
     public_dir = (SITE_DIR / "public").resolve()
@@ -6125,6 +6165,7 @@ def build() -> None:
         entity_registry=entity_registry,
         entity_evidence_out=entity_match_evidence,
     )
+    validate_issue_catalog_ids(issue_catalog)
     # 카드 두 번째 줄을 이슈 타임라인으로 채운다. 기사 하나만 보는 큐레이션
     # 프롬프트로는 원리상 못 만드는 문장이다 — 로이터 헤드라인에는 가뭄이 없지만
     # 그 기사가 속한 클러스터에는 다뉴브강 수위 저하부터 다 들어 있다.
