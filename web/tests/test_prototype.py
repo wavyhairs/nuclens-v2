@@ -3502,14 +3502,25 @@ class GeneratedDataTests(unittest.TestCase):
         html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
         script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
         style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+        # 비교 가능 여부는 comparisonModeFor() 하나로 정한다 — 기간으로 잠그면
+        # 안 되고(previous_period_complete 기준), 키워드 표와 워드 클라우드가
+        # 각자 다시 판정하면 같은 기간에서 둘이 다른 말을 할 수 있다
+        # (2026-08-30: 구름은 rows.some(row => row.prev != null) 로 따로
+        # 판정하다가 기간을 바꾸면 신규/증가/감소 배지가 조용히 사라졌다).
         self.assertIn(
-            "const comparisonMode = pdata ? Boolean(pdata.previous_period_complete) : weekMode;",
+            "function comparisonModeFor(pdata, weekMode = isWeekPeriod()) {",
             script, "비교 여부를 기간으로 잠그면 안 된다")
+        self.assertIn("Boolean(pdata.previous_period_complete)", script)
+        table = script[script.index("function renderKeywordTable"):]
+        table = table[:table.index("\nfunction ")]
+        self.assertIn("comparisonModeFor(pdata, weekMode)", table)
+        cloud = script[script.index("function renderWordCloud("):]
+        cloud = cloud[:cloud.index("\nfunction ")]
+        self.assertIn("comparisonModeFor(periodData())", cloud,
+                       "워드 클라우드도 표와 같은 소스로 비교 가능 여부를 정해야 한다")
         self.assertIn("function previousPeriodLabel", script)
         self.assertIn("function previousPeriodRange", script)
         # 표 머리줄·해석문·모바일 라벨 어디에도 '이번 주/전주'가 박혀 있으면 안 된다.
-        table = script[script.index("function renderKeywordTable"):]
-        table = table[:table.index("\nfunction ")]
         for hardcoded in ("이번 주", "전주"):
             self.assertNotIn(hardcoded, table, hardcoded)
         self.assertIn('id="keywordMeta"', html)
@@ -3524,6 +3535,30 @@ class GeneratedDataTests(unittest.TestCase):
             self.assertIn("previous_period_complete", periods[days], days)
             self.assertIn("requested_start", periods[days], days)
             self.assertEqual(len(periods[days]["tag_comparison"]) <= 12, True, days)
+
+    def test_keyword_status_badge_carries_icon_and_text_not_just_colour(self):
+        """신규·증가·감소 구분이 색 하나뿐이면 옅다는 지적 — 기호·글자를 함께 낸다.
+
+        예전 버그: delta<0(감소)도 delta<3 조건에 걸려 '이어짐'(변화 없음과
+        같은 문구)으로 묶였다. 옆 칸엔 "−5"가 빨갛게 찍혀 있는데 상태 칸은
+        '변화 없다'고 말하는 모순이었다. 실제 판정 로직은
+        web/tests/trend_period_state.mjs(keywordStatusTone)가 실행해서 본다.
+        """
+        html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+        self.assertIn("function keywordStatusTone(row)", script)
+        table = script[script.index("function renderKeywordTable"):]
+        table = table[:table.index("\nfunction ")]
+        self.assertIn("keywordStatusTone(row)", table)
+        self.assertIn('class="kw-status ${tone}"', table)
+        self.assertNotIn('(row.delta || 0) >= 3 ? "늘어남" : "이어짐"', script,
+                         "감소가 '이어짐'으로 묶이던 옛 버그가 돌아왔다")
+        for tone in (".kw-status.new", ".kw-status.up", ".kw-status.down", ".kw-status.flat"):
+            self.assertIn(tone, style, tone)
+        # --r-*: 0 으로 라운드를 잠근 화면이라 새 배지도 둥근 필이 아니라 각진 칩.
+        self.assertIn("border-radius: var(--r-1)", style[style.index(".kw-status {"):][:120])
+        self.assertIn('id="keywordSort"', html)
 
     def test_p2_archive_tracking_sort_filters_and_highlight_exist(self):
         html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
@@ -4656,6 +4691,35 @@ class WeeklyRenderTests(unittest.TestCase):
         code = "\n".join(line for line in row.splitlines() if "<!--" not in line and "-->" not in line)
         self.assertIn("row.shares[0]", code, "비교 시작점이 span 시작이 아니다")
         self.assertNotIn("row.shares.at(-2)", code, "지난주 기준 비교가 돌아왔다")
+
+    def test_each_weekly_bar_shows_its_own_issue_count(self):
+        """막대만으로는 몇 건인지 모른다는 지적 — 막대마다 실제 건수를 찍는다."""
+        row = self.script.split("function topicFlowRow(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("row.values[index]", row)
+        self.assertIn("topic-spark-col", row)
+        self.assertIn("topic-spark-col", self.style)
+
+    def test_direction_is_a_multi_week_pattern_not_first_vs_last(self):
+        """'10 → 4 → 9 → 10'은 시작과 끝이 같아도 '변화없음'이 아니다.
+
+        가운데 급락·회복을 첫 주-마지막 주 비교만으로는 볼 수 없다(사용자
+        지적) — topicFlowPattern 이 걸음(step)마다 방향을 보고 패턴을 낸다.
+        실제 계산 정확성은 web/tests/trend_period_state.mjs 가 본다(파이썬은
+        문자열만 본다).
+        """
+        self.assertIn("function topicFlowPattern(values, sample)", self.script)
+        pattern = self.script.split("function topicFlowPattern(", 1)[1].split("\nfunction ", 1)[0]
+        for label in ("지속 증가", "지속 감소", "감소 후 회복", "증가 후 둔화",
+                      "일시 급증", "등락 반복", "보합"):
+            self.assertIn(label, pattern, label)
+        row = self.script.split("function topicFlowRow(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("topicFlowPattern(row.values, row.sample)", row)
+        # 색만으로 패턴을 가르지 않는다 — 아이콘과 글자 라벨이 함께 나간다.
+        self.assertIn("TOPIC_FLOW_ICON", row)
+        self.assertIn("pattern.label", row)
+        for tone in (".topic-direction.up", ".topic-direction.down",
+                     ".topic-direction.flat", ".topic-direction.mixed"):
+            self.assertIn(tone, self.style, tone)
 
     def test_panel_hidden_without_the_weekly_report(self):
         """'주간 판세'는 주간 리포트가 실제로 있을 때만 뜬다.
@@ -7457,6 +7521,54 @@ class AudioRangeFunctionTests(unittest.TestCase):
         self.assertIn('headers.delete("Content-Encoding")', self.source)
 
 
+class PeriodSelectorStickyTests(unittest.TestCase):
+    """흐름 탭 기간 토글(7일/30일/분기/반기/1년) — 여러 구역에 걸쳐 있는데
+    선택바가 맨 위에만 있으면 아래로 내려갈수록 계속 위로 스크롤해야 한다
+    (사용자 지적). sticky 로 상단바 바로 아래에 붙여 둔다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        cls.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+
+    def test_period_row_is_sticky_below_the_topbar(self):
+        block = self.style[self.style.index(".period-row {"):]
+        block = block[:block.index("}") + 1]
+        self.assertIn("position: sticky", block)
+        self.assertIn("top: 60px", block, "상단바(60px) 바로 아래에 붙어야 한다")
+        self.assertIn("z-index: var(--z-period-bar)", block)
+        # 지나가는 콘텐츠가 비치지 않도록 불투명 배경이 있어야 한다.
+        self.assertIn("background: var(--c-bg)", block)
+
+    def test_mobile_offset_follows_the_shorter_topbar(self):
+        """모바일은 상단바가 56px 다 — 기간바가 그 아래 그대로 붙어야 한다."""
+        mobile = self.style[self.style.index(".topbar { height: 56px; }"):]
+        mobile = mobile[:600]
+        self.assertIn(".period-row { top: 56px;", mobile)
+
+    def test_stays_thin_no_shadow_no_layout_break(self):
+        """화면을 과도하게 가리거나 레이아웃을 깨지 않는다 — 얇게, 그림자 없이."""
+        block = self.style[self.style.index(".period-row {"):]
+        block = block[:block.index("}") + 1]
+        self.assertNotIn("box-shadow", block)
+        self.assertNotIn("height:", block, "고정 높이를 주면 버튼 크기가 바뀔 때 깨진다")
+
+    def test_period_tabs_sit_inside_the_sticky_row(self):
+        row = self.html[self.html.index('class="period-row"'):]
+        self.assertIn('id="periodTabs"', row[:200])
+
+    def test_slope_card_admits_it_ignores_the_toggle(self):
+        """'주제별 주간 변화'는 topic_series(항상 최근 두 주) 한 벌만 받는다 —
+        같은 trend-grid 안 다른 카드(국가·지역별 이슈 수 등)는 모두 기간
+        토글을 따르므로, 말하지 않으면 '분기'를 눌러 놓고 계속 같은 전주
+        대비 그림을 보게 된다.
+        """
+        note = self.html.split('id="topicChart"', 1)[0][-500:]
+        self.assertIn("전주 대비", note)
+        self.assertIn("무관", note)
+
+
 class WordCloudTests(unittest.TestCase):
     """흐름 탭의 워드 클라우드 — 기간 토글을 따르는 그림 한 장."""
 
@@ -7556,6 +7668,36 @@ class WordCloudTests(unittest.TestCase):
         self.assertIn('id="wordCloudLegend"', self.html)
         # 비교할 직전 구간이 없으면 색이 아무 말도 안 하므로 범례도 내린다.
         self.assertIn("wordCloudLegend", self.func("renderWordCloud"))
+
+    def test_colour_is_not_the_only_signal(self):
+        """색 차이가 옅어 구분이 어렵다는 지적 — 낱말에 기호를 더 붙인다.
+
+        '신규' 강조색은 화면당 3회 이하로 아낀다는 기존 원칙(위 주석)은 그대로
+        두고, 색 대신/함께 기호로 구분하게 한다.
+        """
+        self.assertIn("WORD_CLOUD_ICON", self.script)
+        paint = self.func("paintWordCloud")
+        self.assertIn("word-cloud-badge", paint)
+        self.assertIn(".word-cloud-badge", self.style)
+        # 범례도 같은 기호를 쓴다 — 구름과 범례가 다른 기호를 쓰면 범례가 거짓말이 된다.
+        legend = self.html[self.html.index('id="wordCloudLegend"'):]
+        legend = legend[:legend.index("</ul>")]
+        for icon in ("●", "▲", "▼"):
+            self.assertIn(icon, legend, icon)
+
+    def test_disappearing_badges_are_explained_not_silent(self):
+        """기간을 바꾸면 신규·증가·감소 표시가 사라지는 원인 — 직전 구간이
+        archive 에 아직 온전히 쌓이지 않은 기간(예: 분기·반기·1년)에서는
+        비교 자체가 불가능하다. 배지를 억지로 채우는 대신 그 사실을 문장으로
+        말해, '방금까지 있던 상태가 없어졌다'로 읽히지 않게 한다.
+        """
+        body = self.func("renderWordCloud")
+        code = "\n".join(line for line in body.splitlines() if not line.strip().startswith("//"))
+        self.assertIn("comparisonModeFor(periodData())", code)
+        self.assertNotIn("rows.some(row => row.prev != null)", code,
+                         "낱말별 존재 여부로 다시 판정하면 표와 어긋날 수 있다")
+        self.assertIn("archive에 아직 축적되지 않아", code,
+                      "비교 불가 사유를 설명하는 문장이 없다 — 배지가 조용히 사라진다")
 
     def test_each_word_says_its_numbers_to_a_screen_reader(self):
         """크기와 색이 말하는 것을 글자로도 준다 — 그림만으로는 안 들린다."""

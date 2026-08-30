@@ -141,6 +141,7 @@
   --mo-ease-out: cubic-bezier(0, 0, .2, 1);
   /* ── z ── 기존 리터럴의 서열을 그대로 옮긴 것. 새 층은 이 사이에만. */
   --z-pop: 30;
+  --z-period-bar: 80;
   --z-topbar: 90;
   --z-tabs: 100;
   --z-scrim: 119;
@@ -828,19 +829,34 @@ kbd {
 .home-topic-row {
   display: grid;
   /* 마지막 열은 지난주→이번 주·4주 변화 폭·표본 세 조각을 받는다. 72px 이던
-     시절엔 한 조각이 세 줄로 접혀 숫자를 못 읽었다. */
-  grid-template-columns: minmax(150px, 1.2fr) minmax(120px, 1fr) 104px minmax(150px, auto);
+     시절엔 한 조각이 세 줄로 접혀 숫자를 못 읽었다. 방향 열(104px→132px)은
+     '증가 후 둔화'·'등락 반복'처럼 다섯 글자짜리 패턴 이름이 늘면서 넓혔다. */
+  grid-template-columns: minmax(150px, 1.2fr) minmax(120px, 1fr) 132px minmax(150px, auto);
   align-items: center;
   gap: var(--sp-4);
   min-height: 54px;
   border-bottom: var(--bd-1) solid var(--c-border);
   font-size: var(--t-caption);
 }
-.topic-spark { display: flex; align-items: end; height: 28px; gap: 4px; }
-.topic-spark i { flex: 1; min-width: 5px; background: var(--c-secondary); opacity: .72; }
-.topic-direction { font-size: var(--t-min); font-weight: 700; white-space: nowrap; }
+.topic-spark { display: flex; align-items: end; height: 40px; gap: 4px; }
+/* 각 막대 위에 그 주의 실제 건수를 찍는다(사용자 지적: 막대만으로는 몇 건인지
+   모른다). 열을 세로 flex 로 나눠 숫자를 위, 막대를 아래에 붙인다 — 막대
+   높이가 제각각이어도 숫자는 항상 같은 줄에 정렬된다. */
+.topic-spark-col { display: flex; flex: 1; min-width: 5px; height: 100%; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; }
+.topic-spark-col b { font-size: var(--t-min); font-weight: 600; line-height: 1; color: var(--c-text-muted); font-variant-numeric: tabular-nums; }
+.topic-spark-col i { width: 100%; background: var(--c-secondary); opacity: .72; }
+.topic-direction { display: inline-flex; align-items: center; gap: 3px; font-size: var(--t-min); font-weight: 700; white-space: nowrap; }
+.topic-direction i { font-style: normal; }
 .topic-direction.up { color: var(--c-positive); }
 .topic-direction.down { color: var(--c-critical); }
+/* 방향이 두 번 이상 바뀐 패턴(감소 후 회복·증가 후 둔화·일시 급증·등락 반복) —
+   단순 증가·감소가 아니므로 그 둘과 같은 색을 쓰지 않는다. 처음엔 --c-secondary 를
+   썼는데 실측(스크린샷)해 보니 --c-positive(#1e7a5a)와 --c-secondary(#1d725a)가
+   거의 같은 초록이라 '증가'와 구분이 안 됐다. --c-warning·--c-chart-3 는 이
+   파일 다른 자리(위 --c-warning 주석)에서 이미 '텍스트 대비 미검증'이라 피한
+   색이라 새로 쓰지 않는다. 대신 검증된 --c-text(본문 잉크)로 강한 대비를 준다 —
+   ↕ 기호와 전체 라벨이 이미 뜻을 다 말하므로 색은 '평범하지 않다'는 무게만 얹는다. */
+.topic-direction.mixed { color: var(--c-text); }
 .topic-direction.flat,
 .home-topic-row small { color: var(--c-text-muted); }
 /* 방향만으로는 '얼마나'를 모른다. 지난주→이번 주 비교, 4주 변화 폭, 표본 수를
@@ -2353,7 +2369,24 @@ dialog[open] { animation: dialog-in var(--mo-2) var(--mo-ease-out); }
 }
 .readiness-panel p { margin: 1px 0 0; color: var(--c-text-muted); }
 .coverage { display: flex; gap: 16px; white-space: nowrap; }
-.period-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+/* 기간 토글이 화면 맨 위에만 있으면, 그 아래 여섯 구역(기간 흐름·키워드
+   비교·이슈가 어디서 났나·이슈 수·주제별 주간 변화·무엇이 크게 있었나)을
+   보는 동안 기간을 바꾸려고 계속 위로 스크롤해야 한다(사용자 지적). 상단바
+   바로 아래에 그대로 붙여 스크롤해도 항상 손이 닿게 한다 — 위치·모양은
+   그대로 두고 position 만 바꾼 것이라 레이아웃이 깨지지 않는다.
+   배경은 페이지 배경과 같은 색이라(--c-bg) 지나가는 콘텐츠가 비치지 않고,
+   테두리 한 줄로만 가른다 — 그림자 없이 얇게 유지한다. */
+.period-row {
+  position: sticky;
+  top: 60px; /* .topbar 높이. 모바일 오버라이드는 아래 767px 블록 참조 */
+  z-index: var(--z-period-bar);
+  display: flex;
+  justify-content: flex-end;
+  padding-block: 10px;
+  margin-bottom: 12px;
+  border-bottom: var(--bd-1) solid var(--c-border);
+  background: var(--c-bg);
+}
 .trend-stack { display: grid; gap: 16px; }
 .trend-grid { display: grid; grid-template-columns: minmax(300px, .8fr) minmax(460px, 1.2fr); gap: 16px; }
 .data-card { min-width: 0; padding: 20px; border: var(--bd-3) solid var(--c-edge); border-radius: var(--r-2); background: var(--c-surface); }
@@ -2377,6 +2410,18 @@ dialog[open] { animation: dialog-in var(--mo-2) var(--mo-ease-out); }
 .keyword-head { color: var(--c-text-muted); font-weight: 600; }
 .keyword-row .positive { color: var(--c-positive); font-weight: 700; }
 .keyword-row .negative { color: var(--c-critical); font-weight: 700; }
+/* 신규·증가·감소·보합 — 옆의 +/− 색만으로는 구분이 옅다는 지적이라 기호·글자를
+   함께 얹은 작은 배지로 낸다. 보합은 배경 없이 옅은 글자로 둬 눈에 덜 띄게 —
+   넷 다 같은 무게로 칠하면 정작 봐야 할 신규·증가·감소가 묻힌다. */
+/* 둥근 배지가 아니라 각진 칩이다 — 이 화면은 --r-*: 0 으로 라운드를 통째로
+   잠갔다("카드·그림자·과도한 라운드를 줄이고 선과 타이포그래피로 위계를
+   표현한다"). 새 배지도 같은 규칙을 따른다. */
+.kw-status { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: var(--r-1); font-weight: 700; white-space: nowrap; }
+.kw-status i { font-style: normal; }
+.kw-status.new { background: color-mix(in srgb, var(--c-accent) 20%, transparent); color: var(--c-accent-text); }
+.kw-status.up { background: color-mix(in srgb, var(--c-positive) 14%, transparent); color: var(--c-positive); }
+.kw-status.down { background: color-mix(in srgb, var(--c-critical) 14%, transparent); color: var(--c-critical); }
+.kw-status.flat { color: var(--c-text-muted); }
 
 /* ── 워드 클라우드 ────────────────────────────────────────────────────────
  *
@@ -2425,6 +2470,10 @@ dialog[open] { animation: dialog-in var(--mo-2) var(--mo-ease-out); }
   cursor: pointer;
 }
 .word-cloud-word { display: inline-block; }
+/* 신규·증가·감소 색이 옅어 구분이 어렵다는 지적 — 색은 그대로 두고(위 주석의
+   '신규만 강조' 원칙도 그대로) 낱말 앞에 작은 기호를 더한다. 낱말 크기를
+   그대로 따라가면 큰 낱말에서 기호만 거대해지므로 em 으로 축소해 고정한다. */
+.word-cloud-badge { margin-right: .16em; font-size: .6em; font-style: normal; vertical-align: middle; }
 /* 건수는 낱말 크기를 따라가지 않는다 — 같은 축을 두 번 쓰면 크기가 뜻을 잃는다. */
 .word-cloud-count {
   color: var(--c-text-muted);
@@ -2845,7 +2894,7 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   /* 수치는 좁은 화면에서도 남긴다. 예전엔 통째로 display:none 이라 화살표만
      남았는데, 표본 없이 방향만 보면 잡음을 추세로 읽는다. 열을 줄이는 대신
      아래 줄로 내린다. */
-  .home-topic-row { grid-template-columns: minmax(120px, 1fr) 100px 92px; }
+  .home-topic-row { grid-template-columns: minmax(120px, 1fr) 100px 116px; }
   .home-topic-row small { grid-column: 1 / -1; grid-row: 2; }
   #reportCandidateList { grid-template-columns: 1fr; }
 }
@@ -3031,6 +3080,7 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   /* 바텀시트가 열려 있는 동안 뒤 배경이 같이 스크롤되면 위치를 잃는다. */
   .sheet-open, .sheet-open body { overflow: hidden; }
   .topbar { height: 56px; }
+  .period-row { top: 56px; } /* .topbar 모바일 높이를 따라간다 */
   .topbar-inner { display: flex; gap: 8px; }
   .brand { min-width: 0; min-height: 44px; gap: 7px; }
   .brand-mark { width: 34px; height: 34px; font-size: 18px; }
@@ -3292,7 +3342,10 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   .keyword-row > span:nth-child(2) { grid-area: now; }
   .keyword-row > span:nth-child(3) { grid-area: prev; }
   .keyword-row > span:nth-child(4) { grid-area: delta; }
-  .keyword-row > span:nth-child(5) { grid-area: status; color: var(--c-text-muted); }
+  /* 색은 .kw-status.{new,up,down,flat} 가 전담한다 — 여기서 강제로 덮으면
+     (예전엔 muted 로 고정했다) 모바일에서만 증가·감소·신규 배지가 전부 같은
+     회색으로 보였다. grid-area 배치만 남긴다. */
+  .keyword-row > span:nth-child(5) { grid-area: status; }
   .keyword-row > span:not(:first-child) { text-align: left; }
   .keyword-row > span:nth-child(5) { text-align: right; }
   /* 라벨 문구는 기간 토글을 따라 바뀐다 — renderKeywordTable 이 #keywordTable 에
@@ -3334,8 +3387,8 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
   }
   .mobile-tabs button.active { color: #fff; }
   .mobile-tabs button.active::before { position: absolute; top: 0; right: 20%; left: 20%; height: var(--bd-3); background: var(--c-signal); content: ""; }
-  .home-topic-row { grid-template-columns: minmax(0, 1fr) 82px; gap: var(--sp-2) var(--sp-3); padding: var(--sp-2) 0; }
-  .topic-spark { grid-column: 1 / -1; grid-row: 2; height: 22px; }
+  .home-topic-row { grid-template-columns: minmax(0, 1fr) 104px; gap: var(--sp-2) var(--sp-3); padding: var(--sp-2) 0; }
+  .topic-spark { grid-column: 1 / -1; grid-row: 2; height: 34px; }
   .home-topic-row small { grid-column: 1 / -1; grid-row: 3; }
   .topic-direction { justify-self: end; }
   /* 132px 라벨 열은 좁은 화면에서 본문을 반으로 자른다 — 테마명을 윗줄로 올린다. */
