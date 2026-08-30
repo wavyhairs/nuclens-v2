@@ -92,6 +92,14 @@
       "type": "org",
       "until": "2026-09-05T12:42:06.272256+00:00"
     },
+    "제작한": {
+      "new_articles": 32,
+      "reason": "질의 횟수 소진",
+      "retired_at": "2026-08-30T00:39:53.359389+00:00",
+      "term": "제작한",
+      "type": "plant",
+      "until": "2026-09-13T00:39:53.359389+00:00"
+    },
     "한국발전공사": {
       "new_articles": 37,
       "reason": "질의 횟수 소진",
@@ -110,7 +118,7 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 6,
     "date": "2026-08-30"
   },
   "terms": {
@@ -145,12 +153,12 @@
       ],
       "expires_at": "2026-08-30T15:40:06.341956+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 1,
-      "last_run": "2026-08-29T15:40:06.341956+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-08-30T00:39:53.359314+00:00",
       "new_articles": 3,
       "origin": "auto",
-      "planned_at": "2026-08-29T15:40:02.746472+00:00",
-      "queries_run": 4,
+      "planned_at": "2026-08-30T00:39:50.076313+00:00",
+      "queries_run": 5,
       "query": "장관을 원전",
       "score": 3.9,
       "status": "promote_candidate",
@@ -162,56 +170,6 @@
         "2026-08-30"
       ],
       "yields": 3,
-      "zero_streak": 0
-    },
-    "제작한": {
-      "articles": 3,
-      "created_at": "2026-08-26T19:51:40.695217+00:00",
-      "domains": [
-        "ekn.kr",
-        "etnews.com",
-        "biztribune.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "ekn.kr",
-          "hash": "3f659c38e5ef9ea1",
-          "importance": "nice_to_know",
-          "title": "한수원, 국내 최초 3D 프린팅 원전 부품으로 18개월 운전 성공"
-        },
-        {
-          "domain": "etnews.com",
-          "hash": "5312f24e1e9e08ee",
-          "importance": "nice_to_know",
-          "title": "한수원, 3D프린팅 원전 부품 18개월 무결함 운전 성공"
-        },
-        {
-          "domain": "biztribune.co.kr",
-          "hash": "07e47c59bb20cd28",
-          "importance": "nice_to_know",
-          "title": "한수원, 3D 프린팅 원전 부품 새울 1호기서 18개월 무결함 운전 성공"
-        }
-      ],
-      "expires_at": "2026-08-30T07:39:59.559194+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-08-29T15:40:06.341956+00:00",
-      "new_articles": 31,
-      "origin": "auto",
-      "planned_at": "2026-08-29T15:40:02.746472+00:00",
-      "queries_run": 7,
-      "query": "제작한 원전",
-      "score": 4.6,
-      "status": "promote_candidate",
-      "term": "제작한",
-      "ttl_hours": 48,
-      "type": "plant",
-      "yield_days": [
-        "2026-08-27",
-        "2026-08-28",
-        "2026-08-29"
-      ],
-      "yields": 5,
       "zero_streak": 1
     },
     "한국에너지정보문화재단": {
@@ -245,11 +203,11 @@
       "expires_at": "2026-08-30T07:39:59.559194+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-08-29T15:40:06.341956+00:00",
+      "last_run": "2026-08-30T00:39:53.359314+00:00",
       "new_articles": 2,
       "origin": "auto",
-      "planned_at": "2026-08-29T15:40:02.746472+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-08-30T00:39:50.076313+00:00",
+      "queries_run": 4,
       "query": "한국에너지정보문화재단 원자력",
       "score": 3.7,
       "status": "extended",
@@ -260,7 +218,7 @@
         "2026-08-29"
       ],
       "yields": 1,
-      "zero_streak": 1
+      "zero_streak": 2
     }
   },
   "version": 1
