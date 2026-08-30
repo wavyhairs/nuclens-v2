@@ -624,6 +624,30 @@ def _facilities(row: dict) -> frozenset[str]:
     return frozenset(out)
 
 
+def _fingerprint_country_conflict(candidate: dict, prior: dict) -> bool:
+    """두 지문의 countries 축이 서로 완전히 다르면 다른 사건으로 본다.
+
+    `countries` 는 story_fingerprint 의 SCOPE 축이라 `compare()` 의 identity 판정에는
+    안 들어간다(같은 나라를 공유해도 같은 사건의 근거가 못 된다) — 하지만 그 반대
+    방향, **나라가 아예 하나도 안 겹친다**는 것은 반대로 강한 신호다. 호기 충돌
+    (`_facilities`)과 같은 자리에 세우는 이유도 같다.
+
+    실측 2026-08-31 사고: 프랑스 볼탈리아의 브라질 데이터센터 승인 건
+    (countries=France·Brazil)과 미국 데이터센터 지연 기사가 `데이터센터`·`전력수요`
+    라는 업계 공통 태그만 공유해 앵커 경로로 붙었고, 그 매칭이 `story_id` 를
+    물려주는 근거가 됐다(뒤 `same_issue`/`annotate` 수정과 별개로, 지문에 나라가
+    있었다면 애초에 여기서 막혔을 조합이다).
+    """
+    left = candidate.get("story_fingerprint")
+    right = prior.get("story_fingerprint")
+    if not isinstance(left, dict) or not isinstance(right, dict):
+        return False
+    left_countries = story_fingerprint.axis_values(left, "countries")
+    right_countries = story_fingerprint.axis_values(right, "countries")
+    return bool(left_countries and right_countries
+                and left_countries.isdisjoint(right_countries))
+
+
 def anchors_of(row: dict) -> frozenset[str]:
     """이 기사를 특정하는 말의 후보 — 제목·태그·fingerprint 의 행위자/자산.
 
@@ -758,6 +782,8 @@ def same_issue(candidate: dict, prior: dict, cfg: dict,
     fac_a, fac_b = _facilities(candidate), _facilities(prior)
     if fac_a and fac_b and not (fac_a & fac_b):
         return None
+    if _fingerprint_country_conflict(candidate, prior):
+        return None
     if admin_overrides.merge_blocked(candidate, prior):
         return None
 
@@ -818,15 +844,35 @@ def same_issue(candidate: dict, prior: dict, cfg: dict,
     anchor_only = all(r.startswith("anchors:") for r in reasons)
     if fac_a and fac_b and (fac_a & fac_b):
         reasons.append(f"facility:{','.join(sorted(fac_a & fac_b))}")
+
+    # `direct_story_id` 는 "후보가 이미 이 story_id 를 들고 있다"는 사실일 뿐,
+    # 그 값이 어떻게 붙었는지는 모른다 — 예전 회차의 약한 매칭이었을 수도 있다
+    # (2026-08-31 사고: anchors 매칭 하나가 story_id 를 물려주고, 다음 판정에서
+    # 그 id 동일성 자체가 "identity_confirmed" 로 자기강화됐다). 그래서 신원
+    # 축이 어긋나 있으면(`contested_identity_axes`) 이미 같은 id 를 들고 있어도
+    # 확정으로 세지 않는다 — 자기강화 고리를 여기서 끊는다.
+    identity_confirmed = bool(
+        (direct_story_id and not contested_identity_axes) or fingerprint_identity)
+    identity_method = ""
+    if direct_story_id and not contested_identity_axes:
+        identity_method = "story_id"
+    elif fingerprint_identity:
+        identity_method = "fingerprint_anchors"
+    # story_id **상속**은 identity_confirmed 보다 좁힐 이유가 없다 — evidence_confirmed
+    # 도 어휘와 무관한 별도의 강한 근거(같은 근거 기사 뭉치)라 동급으로 본다. 단순
+    # 제목 유사도·progression 판정·일반 앵커(anchor_only)만으로는 여기 못 닿는다:
+    # 그 경로들은 reasons 에는 들어가도 identity_confirmed 도 evidence_confirmed 도
+    # 세우지 못한다.
+    story_id_inheritable = bool(identity_confirmed or evidence_confirmed)
     return {"similarity": sim, "fingerprint_similarity": fp_sim,
             "reasons": reasons, "anchor_only": anchor_only,
             "evidence_shared": overlap.shared,
             "evidence_ratio": overlap.ratio,
             "evidence_confirmed": evidence_confirmed,
-            "identity_confirmed": bool(direct_story_id or fingerprint_identity),
-            "identity_method": "story_id" if direct_story_id else (
-                "fingerprint_anchors" if fingerprint_identity else ""),
+            "identity_confirmed": identity_confirmed,
+            "identity_method": identity_method,
             "story_id": prior_story_id or story_cluster.fallback_story_id(prior),
+            "story_id_inheritable": story_id_inheritable,
             "fingerprint_identity_shared": shared_identity_axes,
             "fingerprint_identity_contested": contested_identity_axes}
 
@@ -1067,6 +1113,7 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
         "identity_confirmed": bool(match.get("identity_confirmed")),
         "identity_method": str(match.get("identity_method") or ""),
         "story_id": str(match.get("story_id") or ""),
+        "story_id_inheritable": bool(match.get("story_id_inheritable")),
         "match_reasons": match["reasons"],
         "progression": prog["verdict"],
         "progression_kind": prog["kind"],
@@ -1126,7 +1173,17 @@ def annotate(items: list[dict], recent: list[dict], cfg: dict | None = None,
             item.pop("continuity", None)
             continue
         item["continuity"] = verdict
-        if verdict.get("story_id"):
+        # story_id 상속은 identity_confirmed(직접 동일 id·재확인됨 또는 지문 신원
+        # 축 확정) 또는 evidence_confirmed(근거 기사 압도적 공유)일 때만 한다.
+        # 단순 제목 유사도·progression 판정·일반 앵커(anchor_only)만으로 붙은
+        # 매칭은 `continuity` 진단·감점에는 반영되지만 story_id 는 물려주지
+        # 않는다 — 그 상속이 web/build_data.py 의 issue_id 로 그대로 이어지고,
+        # 다음 회차 재판정에서 "이미 같은 id" 라는 사실만으로 identity_confirmed
+        # 가 자기강화되는 고리를 만들었다(2026-08-31 사고: 볼탈리아 브라질
+        # 데이터센터 건과 무관한 미국 데이터센터 지연 기사가 `데이터센터`·
+        # `전력수요` 앵커만으로 story_id 를 물려받아 web 빌드에서 issue_id 가
+        # 충돌했다).
+        if verdict.get("story_id") and verdict.get("story_id_inheritable"):
             item["story_id"] = verdict["story_id"]
             item["story_id_source"] = "history"
         matched += 1
@@ -1137,6 +1194,8 @@ def annotate(items: list[dict], recent: list[dict], cfg: dict | None = None,
                                        "similarity", "evidence_shared",
                                        "evidence_confirmed", "progression",
                                        "progression_kind", "window_days",
-                                       "repeat_streak", "penalty", "drop")},
+                                       "repeat_streak", "penalty", "drop",
+                                       "identity_confirmed", "identity_method",
+                                       "story_id_inheritable")},
         })
     return {"checked": len(items), "matched": matched, "verdicts": rows}

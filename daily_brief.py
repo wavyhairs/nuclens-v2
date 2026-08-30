@@ -1148,7 +1148,8 @@ def plan_briefs(queue: list[dict],
                                   ("prior_title", "prior_date", "days_ago", "similarity",
                                    "progression", "progression_kind", "progression_detail",
                                    "window_days", "repeat_streak", "penalty", "story_id",
-                                   "identity_confirmed", "identity_method")}
+                                   "identity_confirmed", "identity_method",
+                                   "story_id_inheritable")}
         return meta
 
     out_items = ([_item_meta(a, "국내", dom_diag, i) for i, a in enumerate(dom, 1)]
