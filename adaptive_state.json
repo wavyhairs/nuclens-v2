@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 0,
-    "date": "2026-08-31"
+    "count": 1,
+    "date": "2026-09-01"
   },
   "retired": {
     "dlr": {
@@ -134,9 +134,56 @@
     }
   },
   "spent": {
-    "count": 5,
-    "date": "2026-08-31"
+    "count": 1,
+    "date": "2026-09-01"
   },
-  "terms": {},
+  "terms": {
+    "한국원전수출산업협회": {
+      "articles": 3,
+      "created_at": "2026-08-31T15:40:13.484228+00:00",
+      "domains": [
+        "yna.co.kr",
+        "etnews.com",
+        "e-platform.net"
+      ],
+      "evidence": [
+        {
+          "domain": "yna.co.kr",
+          "hash": "24aaf9400e064470",
+          "importance": "nice_to_know",
+          "title": "한국원전수출산업협회, 미국 댈러스서 한미 원전산업 협력 세미나 개최"
+        },
+        {
+          "domain": "etnews.com",
+          "hash": "f4d609dbcfc5655e",
+          "importance": "nice_to_know",
+          "title": "한국원전수출산업협회, 미국 댈러스서 한-미 원전산업 협력 세미나 개최"
+        },
+        {
+          "domain": "e-platform.net",
+          "hash": "e362cc1598f511af",
+          "importance": "nice_to_know",
+          "title": "원전수출산업협회, 미국 댈러스서 한-미 원전산업 협력 세미나 개최"
+        }
+      ],
+      "expires_at": "2026-09-01T15:40:13.484228+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-08-31T15:40:14.898388+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-08-31T15:40:13.484228+00:00",
+      "queries_run": 1,
+      "query": "한국원전수출산업협회",
+      "score": 3.7,
+      "status": "tracking",
+      "term": "한국원전수출산업협회",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    }
+  },
   "version": 1
 }
