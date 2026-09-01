@@ -1504,6 +1504,7 @@ class CandidateTelemetryTests(unittest.TestCase):
                 "briefing_date": "2026-08-20", "title_kr": f"일반 원전 소식 {index}",
                 "tags": [], "topics": [], "countries": [],
                 "story_id": f"story-{index}",
+                "story_id_trust": "canonical", "story_identity_version": 2,
             }
             issues.append({
                 "issue_id": f"story-{index}", "first_seen": "2026-08-20",
@@ -1514,6 +1515,7 @@ class CandidateTelemetryTests(unittest.TestCase):
             "hash": "weak-wording", "article_date": "2026-08-21",
             "title_kr": "표현상 전혀 다른 후속 보도", "importance": "standard",
             "tags": [], "topics": [], "countries": [], "story_id": "story-1199",
+            "story_id_trust": "canonical", "story_identity_version": 2,
         }
         telemetry = issue_candidate_stats.SearchTelemetry("evidence")
         attached = build_data.attach_evidence_articles(
@@ -1531,10 +1533,12 @@ class CandidateTelemetryTests(unittest.TestCase):
         cards = [
             {"hash": "old", "briefing_date": "2026-08-10", "article_date": "2026-08-10",
              "title_kr": "현대건설과 테라파워 협력 계약", "story_id": "story-canonical",
-             "story_id_source": "history", "tags": [], "topics": [], "countries": []},
+             "story_id_source": "history", "story_id_trust": "canonical",
+             "story_identity_version": 2, "tags": [], "topics": [], "countries": []},
             {"hash": "new", "briefing_date": "2026-08-17", "article_date": "2026-08-17",
              "title_kr": "차세대 원자로 사업의 후속 소식", "story_id": "story-canonical",
-             "story_id_source": "history", "tags": [], "topics": [], "countries": []},
+             "story_id_source": "history", "story_id_trust": "canonical",
+             "story_identity_version": 2, "tags": [], "topics": [], "countries": []},
         ]
         issues = build_data.cluster_selected_articles(cards)
         self.assertEqual(len(issues), 1)

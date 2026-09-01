@@ -29,6 +29,8 @@ from __future__ import annotations
 from typing import NamedTuple
 from urllib.parse import urlparse
 
+import story_identity
+
 # 대표 하나에 매달 수 있는 수집 단계 근거의 상한. 큐(JSON)에 그대로 실려 나가므로
 # 무한정 쌓으면 digest_queue.json 이 부푼다. 실측상 한 사건의 국내 재전재는 많아야
 # 10여 건이라 24 면 잘리는 일이 거의 없고, 잘려도 카운트는 별도로 누적된다.
@@ -47,20 +49,12 @@ def fallback_story_id(article: dict) -> str:
     durable seed available, so lazy migration deliberately uses it instead of rewriting history.
     Once continuity links a later article, that inherited id wins over this fallback.
     """
-    current = _clean(article.get("story_id"))
-    if current:
-        return current
-    seed = _clean(article.get("hash"))
-    return f"{STORY_ID_PREFIX}{seed}" if seed else ""
+    return story_identity.fallback_id(article)
 
 
 def ensure_story_id(article: dict, *, source: str = "generated") -> str:
     """Add an optional stable story id without changing old-input compatibility."""
-    story_id = fallback_story_id(article)
-    if story_id:
-        article["story_id"] = story_id
-        article.setdefault("story_id_source", source)
-    return story_id
+    return story_identity.ensure(article, source=source)
 
 
 def source_identity(article: dict) -> str:
@@ -268,6 +262,8 @@ def _member_records(article: dict) -> list[dict]:
     if own:
         out.append({
             "hash": own,
+            "story_id": story_identity.ensure(article),
+            "story_id_source": _clean(article.get("story_id_source")),
             "title": _clean(article.get("title_kr") or article.get("title"))[:180],
             "publisher": source_label(article),
             "fold_stage": _clean(article.get("story_dedup_stage"))[:40],
@@ -316,18 +312,12 @@ def consolidate_story_metadata(
     """
     all_members = [representative] + [m for m in members if m is not representative]
 
-    # A history-linked id is stronger than a per-article fallback.  This keeps the identity
-    # stable when a later source becomes the display representative.  With no history yet, the
-    # representative hash is the backward-compatible lazy-migration seed.
-    inherited_ids = [
-        (_clean(art.get("story_id")), _clean(art.get("story_id_source")))
-        for art in all_members if _clean(art.get("story_id"))
-    ]
-    history_ids = [story_id for story_id, source in inherited_ids if source == "history"]
-    chosen_story_id = history_ids[0] if history_ids else fallback_story_id(representative)
-    if chosen_story_id:
-        representative["story_id"] = chosen_story_id
-        representative["story_id_source"] = "history" if history_ids else "generated"
+    # This is display/coverage consolidation, not identity resolution.  Every member keeps
+    # its own canonical ID and the representative can never inherit an arbitrary member's
+    # history ID.  A bad semantic/editorial merge is therefore reversible metadata only.
+    for art in all_members:
+        story_identity.ensure(art)
+    story_identity.ensure(representative)
 
     sources_by_id: dict[str, dict] = {}
     hashes: list[str] = []
@@ -428,6 +418,15 @@ def consolidate_story_metadata(
     # 운영 콘솔의 수동 분리가 집는 단위. 제목만으로는 어느 기사를 떼는지 지정할 수
     # 없다 — 같은 제목이 여러 매체에 있고, 판정은 hash 로 남아야 재현된다.
     representative["story_members"] = member_list
+    representative["display_group_id"] = story_identity.display_group_id(all_members)
+    representative["display_group_members"] = [
+        {
+            "hash": _clean(art.get("hash")),
+            "story_id": _clean(art.get("story_id")),
+            "story_id_source": _clean(art.get("story_id_source")),
+        }
+        for art in all_members if _clean(art.get("hash"))
+    ][:16]
     representative["story_context"] = ctx_out
     existing_relation = str(representative.get("story_relation") or "")
     if relation in {"single", "collected"} and existing_relation in {"duplicate", "merge"}:

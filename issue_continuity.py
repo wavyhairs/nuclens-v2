@@ -136,6 +136,7 @@ import admin_overrides
 import event_stage
 import story_cluster
 import story_fingerprint
+import story_identity
 
 ROOT = Path(__file__).parent
 DELIVERY_LOG_FILE = ROOT / "delivery_log.jsonl"
@@ -789,8 +790,11 @@ def same_issue(candidate: dict, prior: dict, cfg: dict,
 
     candidate_story_id = str(candidate.get("story_id") or "")
     prior_story_id = str(prior.get("story_id") or "")
-    direct_story_id = bool(candidate_story_id and prior_story_id
-                           and candidate_story_id == prior_story_id)
+    # A shared legacy value is not evidence.  Direct ID confirmation is available only
+    # for identities already issued by the v2 authority.
+    same_story_id_value = bool(candidate_story_id and prior_story_id
+                               and candidate_story_id == prior_story_id)
+    direct_story_id = story_identity.trusted_same_id(candidate, prior)
 
     sim = title_similarity(candidate, prior)
     fp_sim, fp_axes, fp_shared = fingerprint_similarity(candidate, prior)
@@ -818,7 +822,7 @@ def same_issue(candidate: dict, prior: dict, cfg: dict,
         and overlap.ratio >= float(cfg.get("evidence_confirm_ratio", 0.6)))
 
     reasons: list[str] = []
-    if direct_story_id:
+    if same_story_id_value:
         reasons.append(f"story_id:{candidate_story_id}")
     if evidence_confirmed:
         reasons.append(f"evidence:{overlap.shared}/{overlap.candidate_total}")
@@ -890,6 +894,8 @@ def load_recent_sent(days: int = 14, *, path: Path | None = None,
     today = today or datetime.now(KST).date()
     cutoff = (today - timedelta(days=max(0, int(days)))).isoformat()
     rows: list[dict] = []
+    registry_rows: list[dict] = []
+    registry_cutoff = (today - timedelta(days=max(30, int(days)))).isoformat()
     try:
         text = path.read_text(encoding="utf-8")
     except OSError:
@@ -905,10 +911,18 @@ def load_recent_sent(days: int = 14, *, path: Path | None = None,
         if not isinstance(row, dict) or row.get("record_type"):
             continue
         stamp = str(row.get("date") or "")
-        if not stamp or stamp < cutoff:
+        if not stamp:
             continue
-        story_cluster.ensure_story_id(row, source="legacy_delivery")
-        rows.append(row)
+        story_identity.mark_persistent(row)
+        if stamp >= registry_cutoff:
+            registry_rows.append(row)
+        if stamp >= cutoff:
+            rows.append(row)
+    registry_audit = story_identity.audit_registry(registry_rows)
+    conflicted_ids = {entry["story_id"] for entry in registry_audit["conflicts"]}
+    for row in rows:
+        if row.get("story_id") in conflicted_ids:
+            row["story_registry_conflicted"] = True
     return rows
 
 
@@ -936,6 +950,8 @@ def as_sent_record(item: dict, briefing_date: str) -> dict:
         "story_article_hashes": item.get("story_article_hashes") or [],
         "story_id": story_id,
         "story_id_source": item.get("story_id_source") or "generated",
+        "story_id_trust": item.get("story_id_trust") or "legacy",
+        "story_identity_version": int(item.get("story_identity_version") or 0),
     }
 
 
@@ -1114,6 +1130,8 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
         "identity_method": str(match.get("identity_method") or ""),
         "story_id": str(match.get("story_id") or ""),
         "story_id_inheritable": bool(match.get("story_id_inheritable")),
+        "fingerprint_identity_contested": match.get(
+            "fingerprint_identity_contested") or [],
         "match_reasons": match["reasons"],
         "progression": prog["verdict"],
         "progression_kind": prog["kind"],
@@ -1167,7 +1185,7 @@ def annotate(items: list[dict], recent: list[dict], cfg: dict | None = None,
         generic = generic_anchors(list(items) + list(recent))
     matched = 0
     for item in items:
-        story_cluster.ensure_story_id(item)
+        story_identity.prepare_candidate(item)
         verdict = verdict_for(item, recent, conf, today, generic)
         if verdict is None:
             item.pop("continuity", None)
@@ -1184,8 +1202,27 @@ def annotate(items: list[dict], recent: list[dict], cfg: dict | None = None,
         # `전력수요` 앵커만으로 story_id 를 물려받아 web 빌드에서 issue_id 가
         # 충돌했다).
         if verdict.get("story_id") and verdict.get("story_id_inheritable"):
-            item["story_id"] = verdict["story_id"]
-            item["story_id_source"] = "history"
+            prior = next(
+                (row for row in recent
+                 if str(row.get("hash") or "") == str(verdict.get("prior_hash") or "")),
+                None,
+            )
+            if prior is not None:
+                resolution = story_identity.inherit(
+                    item,
+                    prior,
+                    records=recent,
+                    fingerprint_confirmed=(verdict.get("identity_method")
+                                           == "fingerprint_anchors"),
+                    evidence_confirmed=bool(verdict.get("evidence_confirmed")),
+                    contested_axes=verdict.get("fingerprint_identity_contested") or (),
+                )
+                verdict["story_id_inheritable"] = resolution.inherited
+                verdict["identity_resolution"] = resolution.status
+                verdict["identity_resolution_reasons"] = list(resolution.reasons)
+                verdict["story_id"] = resolution.story_id
+        elif verdict.get("story_id"):
+            verdict["identity_resolution"] = "uncertain"
         matched += 1
         rows.append({
             "hash": item.get("hash", ""),

@@ -1110,11 +1110,16 @@ def plan_briefs(queue: list[dict],
         meta["story_fingerprint"] = a.get("story_fingerprint", {})
         meta["story_id"] = story_cluster.ensure_story_id(a)
         meta["story_id_source"] = a.get("story_id_source", "generated")
+        meta["story_id_trust"] = a.get("story_id_trust", "canonical")
+        meta["story_identity_version"] = int(a.get("story_identity_version") or 0)
+        meta["story_identity_decision"] = a.get("story_identity_decision", "")
         meta["story_article_hashes"] = (a.get("story_article_hashes") or [])[:12]
         meta["story_related_titles"] = (a.get("story_related_titles") or [])[:12]
         # 접힌 기사의 hash↔제목 짝. 운영 콘솔의 수동 분리가 이것 없이는 "어느
         # 기사를 떼는가"를 지정할 수 없다(제목만으로는 재현되지 않는다).
         meta["story_members"] = (a.get("story_members") or [])[:16]
+        meta["display_group_id"] = a.get("display_group_id", "")
+        meta["display_group_members"] = (a.get("display_group_members") or [])[:16]
         meta["story_sources"] = (a.get("story_sources") or [])[:12]
         meta["story_context"] = (a.get("story_context") or [])[:8]
         # 수집 단계에서 접힌 근거. 예전에는 이 자리에 아무것도 없었다 — 그 기사들이
@@ -1149,7 +1154,8 @@ def plan_briefs(queue: list[dict],
                                    "progression", "progression_kind", "progression_detail",
                                    "window_days", "repeat_streak", "penalty", "story_id",
                                    "identity_confirmed", "identity_method",
-                                   "story_id_inheritable")}
+                                   "story_id_inheritable", "identity_resolution",
+                                   "identity_resolution_reasons")}
         return meta
 
     out_items = ([_item_meta(a, "국내", dom_diag, i) for i, a in enumerate(dom, 1)]

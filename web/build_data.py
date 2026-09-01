@@ -61,6 +61,7 @@ import issue_review  # noqa: E402
 import keei_match  # noqa: E402
 import story_cluster  # noqa: E402
 import story_fingerprint  # noqa: E402
+import story_identity  # noqa: E402
 import weekly_sections  # noqa: E402
 
 try:
@@ -1801,14 +1802,29 @@ def issue_similarity(
         blocked_by.append("facility_conflict")
 
     fingerprint_similarity, fingerprint_diag = story_fingerprint_similarity(left, right)
+    evidence_overlap = story_cluster.evidence_overlap(left, right)
     score = 0.55 * title_ratio + 0.25 * token_ratio + 0.20 * tag_ratio
     method = "none"
     matched = False
     if not blocked_by:
         left_story_id = str(left.get("story_id") or "").strip()
         right_story_id = str(right.get("story_id") or "").strip()
-        if left_story_id and left_story_id == right_story_id:
+        if (left_story_id and left_story_id == right_story_id
+                and story_identity.trusted_same_id(left, right)):
             matched, method, score = True, "story_id", max(score, 1.0)
+        elif (left_story_id and left_story_id == right_story_id
+              and (
+                  (
+                      "assets" in set(fingerprint_diag.get("shared") or ())
+                      and not ({"countries", "assets"}
+                               & set(fingerprint_diag.get("contested") or ()))
+                  )
+                  or evidence_overlap.shared >= 2
+              )):
+            # Pre-v2 IDs are retrieval hints, never proof by themselves.  Preserve a
+            # normal legacy follow-up only when concrete asset identity or immutable
+            # article evidence independently corroborates it.
+            matched, method, score = True, "legacy_story_id_confirmed", max(score, 0.95)
         elif title_ratio >= TITLE_MATCH_RATIO:
             matched, method = True, "title"
         elif tag_shared >= TAGS_MATCH_MIN_SHARED and (
@@ -3009,6 +3025,8 @@ def _story_contract(article: dict) -> dict:
     return {
         "story_id": str(article.get("story_id") or story_cluster.fallback_story_id(article)),
         "story_id_source": str(article.get("story_id_source") or "legacy_hash"),
+        "story_id_trust": str(article.get("story_id_trust") or "legacy"),
+        "story_identity_version": int(article.get("story_identity_version") or 0),
         "story_contract_available": bool(article.get("story_contract_available", False)),
         "story_article_count": article_count,
         "story_outlet_count": outlet_count,
@@ -4367,6 +4385,9 @@ def build_briefings(news_items: list[dict], issues: list[dict], checked_at: str 
             report_topic, report_why, report_angles = pick_report_metadata(current)
             issue_rows.append({
                 "issue_id": issue["issue_id"],
+                "identity_status": issue.get("identity_status", "ok"),
+                "identity_diagnostics": issue.get("identity_diagnostics") or [],
+                "legacy_issue_id": issue.get("legacy_issue_id", ""),
                 "status": "ongoing" if history else "new",
                 "first_seen": issue["first_seen"],
                 "last_seen": briefing_date,
@@ -4621,6 +4642,9 @@ def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_a
         report_topic, report_why, report_angles = pick_report_metadata(card_timeline)
         rows.append({
             "issue_id": issue["issue_id"],
+            "identity_status": issue.get("identity_status", "ok"),
+            "identity_diagnostics": issue.get("identity_diagnostics") or [],
+            "legacy_issue_id": issue.get("legacy_issue_id", ""),
             "status": "ongoing" if len(briefing_dates) > 1 else "new",
             "lifecycle": "active" if days_since_update is not None and days_since_update <= 7 else "quiet",
             "days_since_update": days_since_update,
@@ -4811,6 +4835,61 @@ def validate_issue_catalog_ids(issue_catalog: list[dict]) -> None:
         raise ValueError(
             f"duplicate issue_id across distinct clusters ({len(conflicts)}): {preview}"
         )
+
+
+def resolve_local_issue_id_conflicts(issues: list[dict], *, max_local: int = 5) -> dict:
+    """Quarantine a few colliding clusters and fail closed on systemic corruption.
+
+    Every cluster sharing an ambiguous ID receives a deterministic article-hash fallback;
+    choosing an arbitrary "winner" would preserve contamination in one branch.  The old ID
+    is diagnostic-only because it cannot safely redirect to multiple destinations.
+    """
+    by_id: dict[str, list[dict]] = defaultdict(list)
+    for issue in issues:
+        issue_id = str(issue.get("issue_id") or "").strip()
+        if issue_id:
+            by_id[issue_id].append(issue)
+    groups = {issue_id: rows for issue_id, rows in by_id.items() if len(rows) > 1}
+    affected = sum(len(rows) for rows in groups.values())
+    if affected > max_local:
+        preview = ", ".join(f"{issue_id}:{len(rows)}" for issue_id, rows in list(groups.items())[:8])
+        raise ValueError(
+            f"systemic duplicate issue_id corruption ({affected} clusters; "
+            f"local threshold {max_local}): {preview}"
+        )
+
+    events: list[dict] = []
+    for legacy_id, rows in groups.items():
+        for issue in rows:
+            representative = issue.get("representative") or issue.get("representative_article") or {}
+            article_hash = str(representative.get("hash") or "").strip()
+            if not article_hash:
+                article_hash = hashlib.sha256(
+                    (legacy_id + str(issue.get("title") or "")).encode("utf-8")
+                ).hexdigest()[:16]
+            safe_id = f"issue-{article_hash}"
+            issue["issue_id"] = safe_id
+            issue["identity_status"] = "quarantined"
+            issue["identity_diagnostics"] = [
+                "identity_conflict", "legacy_rejected", "forced_split",
+                "fallback_article_card",
+            ]
+            issue["legacy_issue_id"] = legacy_id
+            issue["issue_id_alias_safe"] = False
+            events.append({
+                "legacy_issue_id": legacy_id,
+                "issue_id": safe_id,
+                "representative_hash": article_hash,
+                "status": "fallback_article_card",
+            })
+    return {
+        "status": "degraded" if events else "ok",
+        "conflict_group_count": len(groups),
+        "quarantined_cluster_count": len(events),
+        "duplicate_issue_id_count": 0,
+        "local_threshold": max_local,
+        "events": events,
+    }
 
 
 def build_issue_pages(issue_catalog: list[dict]) -> int:
@@ -5948,6 +6027,9 @@ def build() -> None:
             "story_id": str((delivery or {}).get("story_id")
                             or story_cluster.fallback_story_id(record)),
             "story_id_source": str((delivery or {}).get("story_id_source") or "legacy_hash"),
+            "story_id_trust": str((delivery or {}).get("story_id_trust") or "legacy"),
+            "story_identity_version": int(
+                (delivery or {}).get("story_identity_version") or 0),
             "date": article_date,
             "article_date": article_date,
             "briefing_date": delivery.get("date") if delivery else None,
@@ -6146,6 +6228,13 @@ def build() -> None:
         print(f"  !! 이슈 병합 검수 {quota_failures}쌍이 쿼터(429)로 미판정 — "
               f"모델 {llm_stats.get('model', '?')}. 후속 보도가 신규 이슈로 갈라진다. "
               f"GEMINI_REVIEW_MODEL 로 버킷을 옮길 것.")
+
+    identity_diagnostics = resolve_local_issue_id_conflicts(issues)
+    if identity_diagnostics["status"] == "degraded":
+        print(
+            f"::warning::identity degraded build — quarantined "
+            f"{identity_diagnostics['quarantined_cluster_count']} clusters"
+        )
 
     review_candidates.sort(
         key=lambda row: (row.get("candidate_score") or 0, row.get("right_date") or ""),
@@ -6424,6 +6513,8 @@ def build() -> None:
         "visible_total": len(news_items),
         "briefing_total": len(briefings),
         "issue_catalog_total": len(issue_catalog),
+        "identity": identity_diagnostics,
+        "build_mode": identity_diagnostics["status"],
         "p1_regression": p1_regression,
         "atlas_readiness": atlas_readiness(issue_catalog),
         "latest_briefing_date": briefings[0]["date"] if briefings else "",
@@ -6526,6 +6617,7 @@ def build() -> None:
         # 후보가 어디서 몇 개 났는지. **크기가 O(1)** 이라 배포본에도 그대로 간다 —
         # 잘린 목록만 보는 사람도 전수 기준 분포는 볼 수 있어야 한다.
         "candidate_diagnostics": candidate_diagnostics,
+        "identity": identity_diagnostics,
         "review_candidates": review_candidates,
         "overrides": {
             "approved": sorted(match_overrides["approved"]),
@@ -6565,7 +6657,9 @@ def build() -> None:
         "base_path": "",
     }
     status = {**system_status(records, selection_stats, now),
-              "generation_id": generation_id}
+              "generation_id": generation_id,
+              "build_mode": identity_diagnostics["status"],
+              "identity": identity_diagnostics}
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ADMIN_OUT_DIR.mkdir(parents=True, exist_ok=True)
