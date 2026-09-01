@@ -75,7 +75,8 @@ class DisplayIdentitySeparationTests(unittest.TestCase):
                 "fingerprint": {},
             }]
         }
-        with mock.patch.object(dedup, "call_json", return_value=response):
+        with mock.patch.object(dedup, "is_available", return_value=True), \
+                mock.patch.object(dedup, "call_json", return_value=response):
             kept, dropped = dedup._dedup_articles_impl(
                 rows, scores, prompt="fixture", label="fixture", stage="semantic_story")
 
