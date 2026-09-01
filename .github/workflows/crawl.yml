@@ -426,16 +426,22 @@ jobs:
           echo "캐시 push 실패 — 비치명, 다음 빌드에서 재시도"
 
       # 배포 후 라이브 스모크 — "데이터는 올라갔는데 화면이 죽는" 사고(2026-08-01) 재발 감지.
-      # 간격 미달·시크릿 미설정으로 배포를 스킵한 경우엔 직전 배포본을 검사하게 되므로 무해.
       # 라이브가 깨졌다는 사실은 수집이 실패했다는 뜻이 아니다. outcome 은
       # `failure` 로 남고(아래 요약이 읽는다) 잡은 계속한다.
       #
-      # `if:` 를 붙이지 않는다 — 암묵 `success()` 그대로다. continue-on-error 스텝의
-      # 실패는 잡 상태를 바꾸지 않으므로 앞의 빌드·배포가 깨진 회차에도 이 스텝은
-      # 그대로 돈다. 반대로 **수집이** 깨진 회차에는 웹 경로 전체가 예전처럼
-      # 생략된다(web-gate 도 같은 암묵 조건이다).
+      # **이번 배포가 성공한 회차에만 돈다.** 예전엔 조건이 없어서(암묵
+      # `success()`) 배포 창에 들지 않은 회차에도 직전 배포본을 검사했다.
+      # 스킵된 스텝은 잡 상태를 바꾸지 않으므로 `success()` 가 그대로 참이고,
+      # 그래서 `web-build=skipped · web-deploy=skipped · web-smoke=success` 라는
+      # 조합이 나왔다 — 아무것도 짓지도 올리지도 않은 회차가 웹 `success` 로
+      # 보고되는 상태다. 스모크는 '지금 올린 것이 사는가'를 보는 검사이므로
+      # 올린 회차에만 도는 것이 그 의미와도 맞는다.
+      #
+      # 배포를 건너뛴 회차의 라이브 상태는 그 사이 배포한 워크플로가 본다
+      # (daily-brief 는 자기 배포 뒤 스모크 + 렌더 스모크, deploy-web 도 자체 스모크).
       - name: Smoke test live site
         id: web-smoke
+        if: steps.web-deploy.outcome == 'success'
         continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
