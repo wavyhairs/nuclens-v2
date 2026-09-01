@@ -215,6 +215,7 @@ jobs:
         run: python embedding_pipeline.py --window-days 21 --max-new 150 --require-nonzero
 
       - name: Plan (선별 → outbox 작성 → 큐 정리)
+        id: plan
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
@@ -376,9 +377,13 @@ jobs:
       # 웹 빌드·품질 기록·배포를 별도 step outcome으로 남긴다. 예전의 한 덩어리
       # 스텝은 build_data가 먼저 죽으면 data_quality_gate 기록조차 만들지 못해,
       # 뒤 운영 알림이 "이상 없음"으로 오인했다.
+      # 이미 발송된 브리핑을 웹 빌드 실패로 되돌릴 수는 없다. outcome 은
+      # `failure` 로 남아 아래 운영 알림·요약이 읽고(그리고 뒤 스텝의 조건도
+      # 그 raw outcome 을 본다), 잡만 계속된다 — data-gate 가 이미 쓰는 방식이다.
       - name: Build web data
         id: web-build
         if: always() && steps.claim.conclusion == 'success'
+        continue-on-error: true
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
@@ -490,6 +495,7 @@ jobs:
       - name: Deploy web to Cloudflare Pages
         id: web-deploy
         if: always() && steps.claim.conclusion == 'success' && steps.web-build.outcome == 'success'
+        continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -525,6 +531,10 @@ jobs:
               --data-gate-outcome "${{ steps.data-gate.outcome }}"
               --web-deploy-outcome "${{ steps.web-deploy.outcome }}"
               --pipeline-observation-id "daily-brief:${{ github.run_id }}"
+              # step outcome 과 다른 축이다. 빌드가 성공해도 국소 identity 충돌을
+              # 격리했으면 degraded 이고, 그 사실은 여기 말고 나올 곳이 없다.
+              --build-mode "${{ steps.web-build.outputs.build_mode }}"
+              --identity-quarantined "${{ steps.web-build.outputs.identity_quarantined }}"
             )
           fi
           python operational_alerts.py --notify \
@@ -587,7 +597,9 @@ jobs:
       # 깨지는 경우(2026-08-01 빈 화면 사고 유형)를 잡는다. 브라우저 설치 비용
       # 때문에 정기 crawl이 아닌 여기서만 실행.
       - name: Render smoke (라이브 화면 검증)
+        id: render-smoke
         if: always() && steps.claim.conclusion == 'success'
+        continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -595,3 +607,23 @@ jobs:
           npm install --no-save playwright@1
           npx playwright install --with-deps chromium
           node web/tests/render_smoke.mjs
+
+      # 브리핑 도메인과 웹 도메인을 **따로** 적는다. 이미 텔레그램으로 나간
+      # 브리핑을 뒤의 웹 빌드 실패가 '실패'로 덮어쓰지 않게 하는 것이 목적이고,
+      # 동시에 웹이 깨졌다는 사실이 초록 잡 뒤에 숨지 않게 하는 것이 목적이다.
+      # 판정 로직은 tools/failure_domains.py 에 있다 — YAML 표현식은 테스트할 수
+      # 없기 때문이다.
+      - name: Publish failure domains
+        if: always()
+        continue-on-error: true
+        run: >-
+          python tools/failure_domains.py --domain daily-brief
+          --plan-outcome "${{ steps.plan.outcome }}"
+          --claim-outcome "${{ steps.claim.outcome }}"
+          --send-outcome "${{ steps.send.outcome }}"
+          --confirm-outcome "${{ steps.confirm.outcome }}"
+          --web-build-outcome "${{ steps.web-build.outcome }}"
+          --web-deploy-outcome "${{ steps.web-deploy.outcome }}"
+          --web-smoke-outcome "${{ steps.render-smoke.outcome }}"
+          --build-mode "${{ steps.web-build.outputs.build_mode }}"
+          --identity-quarantined "${{ steps.web-build.outputs.identity_quarantined }}"

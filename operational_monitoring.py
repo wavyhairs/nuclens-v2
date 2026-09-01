@@ -792,6 +792,55 @@ def web_pipeline_signals(outcomes: Mapping | None, *,
     )]
 
 
+# 빌드가 **끝까지 돌았는데** 결과가 온전하지 않은 상태다. 실패도 정상도 아니다.
+#
+# `web/build_data.py` 는 서로 다른 두 클러스터가 같은 issue_id 를 들고 나오면
+# (실측 2026-09-01: 팰리세이즈 vs 자포리자) 국소 건수에 한해 기사 해시 기반
+# fallback ID 로 갈라 놓고 빌드를 계속한다 — 그 결과가 `build_mode=degraded` 다.
+# 사이트는 서고 브리핑도 나가지만 그 이슈들은 검토를 못 받은 카드로 떠 있다.
+#
+# 이 신호가 없으면 degraded 는 워크플로 어디에도 안 나타난다. meta.json/status.json
+# 안에만 있고 그 파일을 여는 사람은 없다 — 즉 `ok` 와 구별되지 않는다. 그래서
+# **격리 건수를 지문으로** 둔다: 같은 오염이 이어지는 동안은 3시간마다 다시
+# 울리지 않고, 건수가 움직일 때만 다시 알린다.
+_BUILD_MODE_DEGRADED = "degraded"
+
+
+def web_identity_signals(build_mode: str | None, *, quarantined_count: int = 0,
+                         observation_id: str = "") -> list[AlertSignal]:
+    """Surface a build that completed with quarantined identities.
+
+    A degraded build is not a failure: the deploy proceeds and the briefing is
+    unaffected.  It is also not ``ok``: some clusters are shown under a fallback
+    ID that no reviewer has confirmed.  Reporting it as either one loses the
+    distinction the identity architecture exists to make.
+    """
+    if build_mode is None:
+        return []
+    normalized = str(build_mode).strip().lower()
+    if normalized != _BUILD_MODE_DEGRADED:
+        return []
+    count = max(0, int(quarantined_count or 0))
+    return [AlertSignal(
+        key="quality:web-identity-degraded", scope="web_identity",
+        severity="warning", level=LEVEL_ATTENTION,
+        title="같은 ID 를 쓰던 이슈를 자동으로 갈라 놓았습니다",
+        detail=(f"서로 다른 사건 {count}건이 같은 이슈 ID 를 물고 있어 "
+                "기사별 임시 ID 로 분리했습니다. 잘못 합쳐진 이슈를 그대로 "
+                "내보내지 않으려는 안전장치가 작동한 것입니다."),
+        impact=("사이트와 브리핑은 정상입니다. 해당 이슈만 이어짐 기록 없이 "
+                "새 카드로 떠 있습니다."),
+        action=("필요 없음 — 원인이 사라지면 자동으로 원래 ID 로 돌아옵니다. "
+                "같은 건수가 계속 남으면 확인해 주세요."),
+        technical=(f"build_mode=degraded quarantined_cluster_count={count}. "
+                   "meta.json/status.json 의 identity.events 에 legacy_issue_id 가 있습니다."),
+        # 오염이 이어지는 동안 건수는 그대로다. 그 상태가 새 소식은 아니다 —
+        # 건수가 움직일 때만 다시 말한다.
+        fingerprint=f"quarantined={count}",
+        observation_id=str(observation_id).strip(), min_occurrences=1,
+    )]
+
+
 def collection_pipeline_signals(outcome: str | None, *,
                                 observation_id: str = "") -> list[AlertSignal]:
     """Expose a collector crash even when no new source snapshot was written."""

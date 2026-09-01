@@ -215,6 +215,8 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
         pipeline_observation_id: str = "",
         collection_outcome: str | None = None,
         collection_observation_id: str = "",
+        build_mode: str | None = None,
+        identity_quarantined: int = 0,
         now: datetime | None = None) -> dict:
     """Process source health and today's quality events; never raises."""
     now = now or datetime.now(timezone.utc)
@@ -247,7 +249,13 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
         pipeline_outcomes, observation_id=pipeline_observation_id)
     collection_signals = monitor.collection_pipeline_signals(
         collection_outcome, observation_id=collection_observation_id)
-    signals = source_signals + quality_signals + pipeline_signals + collection_signals
+    # 빌드가 성공했더라도 degraded 였는지는 따로 말해야 한다 — step outcome 은
+    # 성공이라 web_pipeline 신호로는 절대 나타나지 않는다.
+    identity_signals = monitor.web_identity_signals(
+        build_mode, quarantined_count=identity_quarantined,
+        observation_id=pipeline_observation_id)
+    signals = (source_signals + quality_signals + pipeline_signals +
+               collection_signals + identity_signals)
     scopes = set(quality_scopes)
     if source_processed:
         scopes.add("source")
@@ -258,6 +266,10 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
         scopes.add("web_pipeline")
     if collection_outcome is not None:
         scopes.add("collection_pipeline")
+    # build_mode 를 넘겼다는 것은 빌드가 끝까지 돌아 판정이 가능했다는 뜻이다.
+    # ok 로 돌아온 회차는 신호가 없으므로 앞선 degraded 사건이 여기서 해소된다.
+    if build_mode is not None:
+        scopes.add("web_identity")
 
     alert_state, due = monitor.evaluate_alerts(
         signals, state.get("operational_alerts"), evaluated_scopes=scopes, now=now)
@@ -345,6 +357,13 @@ def check_admin_chat() -> int:
     return 1
 
 
+def _int_or_zero(value: object) -> int:
+    try:
+        return max(0, int(str(value).strip() or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="수집원 상태·품질 이상 관리자 알림")
     parser.add_argument("--notify", action="store_true",
@@ -365,6 +384,16 @@ def main() -> int:
                         choices=("success", "failure", "cancelled", "skipped"))
     parser.add_argument("--collection-observation-id", default="",
                         help="수집 step 재시도 중복을 막는 workflow run 식별자")
+    # build_data 가 끝까지 돈 회차의 '결과 온전함'. step outcome 과 다른 축이다 —
+    # 성공한 빌드도 degraded 일 수 있고, 그 사실은 여기 말고는 나올 곳이 없다.
+    # choices 를 쓰지 않는다. 워크플로는 빌드가 스킵·실패한 회차에도 이 값을
+    # 넘기는데(`steps.web-build.outputs.build_mode` 는 그때 빈 문자열이다),
+    # choices 면 거기서 argparse 가 죽어 **알림 스텝 전체가 사라진다**.
+    parser.add_argument("--build-mode", default="",
+                        help="web/build_data.py 가 보고한 build_mode (ok|degraded, 미측정이면 빈 값)")
+    # 같은 이유로 type=int 를 쓰지 않는다 — 빈 값 하나에 알림이 통째로 죽는다.
+    parser.add_argument("--identity-quarantined", default="0",
+                        help="fallback ID 로 격리된 이슈 클러스터 수")
     args = parser.parse_args()
     if args.check_admin_chat:
         return check_admin_chat()
@@ -384,6 +413,8 @@ def main() -> int:
             pipeline_observation_id=args.pipeline_observation_id,
             collection_outcome=args.collect_outcome,
             collection_observation_id=args.collection_observation_id,
+            build_mode=(args.build_mode.strip() or None),
+            identity_quarantined=_int_or_zero(args.identity_quarantined),
         )
     except Exception as exc:  # monitoring must never make collection/deploy red
         print(f"[ops-monitor] 예상하지 못한 실패(비치명): {type(exc).__name__}: {exc}")

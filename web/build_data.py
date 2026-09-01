@@ -28,6 +28,7 @@ import shutil
 import sys
 import time
 from collections import Counter, defaultdict
+from collections.abc import Mapping
 from datetime import date, datetime, timedelta, timezone
 from email.utils import format_datetime
 from html import escape as html_escape
@@ -4837,6 +4838,29 @@ def validate_issue_catalog_ids(issue_catalog: list[dict]) -> None:
         )
 
 
+def publish_build_mode(diagnostics: Mapping) -> None:
+    """Hand the identity verdict to the workflow that started this build.
+
+    ``build_mode`` already lives in ``meta.json``/``status.json``, but nothing
+    reads those: a degraded build and a clean one look identical to GitHub, so
+    ``degraded`` silently renders as ``ok`` in every summary and alert.  Writing
+    it to ``$GITHUB_OUTPUT`` is the one place the workflow can pick it up while
+    still distinguishing it from a *crashed* build, which never reaches here.
+    """
+    out = os.environ.get("GITHUB_OUTPUT")
+    status = str(diagnostics.get("status") or "ok")
+    count = int(diagnostics.get("quarantined_cluster_count") or 0)
+    print(f"[build_data:identity] build_mode={status} quarantined={count}")
+    if not out:
+        return
+    try:
+        with open(out, "a", encoding="utf-8") as handle:
+            handle.write(f"build_mode={status}\n")
+            handle.write(f"identity_quarantined={count}\n")
+    except OSError as exc:  # 보고 경로가 빌드를 죽이면 안 된다
+        print(f"::warning::build_mode 를 workflow 에 전달하지 못했습니다: {exc}")
+
+
 def resolve_local_issue_id_conflicts(issues: list[dict], *, max_local: int = 5) -> dict:
     """Quarantine a few colliding clusters and fail closed on systemic corruption.
 
@@ -6235,6 +6259,7 @@ def build() -> None:
             f"::warning::identity degraded build — quarantined "
             f"{identity_diagnostics['quarantined_cluster_count']} clusters"
         )
+    publish_build_mode(identity_diagnostics)
 
     review_candidates.sort(
         key=lambda row: (row.get("candidate_score") or 0, row.get("right_date") or ""),
