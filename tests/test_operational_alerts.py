@@ -315,6 +315,65 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertFalse(out["ok"])
         self.assertEqual(before, self.sent.read_bytes())
 
+    def test_a_degraded_build_reaches_the_administrator(self):
+        """빌드가 성공한 회차라 web_pipeline 경로로는 한 마디도 안 나간다."""
+        self.write_sent({"at": "run-degraded", "counts": {"IAEA": 5},
+                         "kept": {}, "errors": {}})
+        messages = []
+        out = cli.run(sent_path=self.sent, log_path=self.log, notify=True,
+                      sender=lambda text: messages.append(text) or {"ok": True},
+                      expected_sources={"IAEA": "feed"},
+                      pipeline_outcomes={"web_build": "success", "data_gate": "success",
+                                         "web_deploy": "success"},
+                      pipeline_observation_id="crawl:501",
+                      build_mode="degraded", identity_quarantined=2, now=NOW)
+        self.assertTrue(out["sent"])
+        self.assertEqual(1, len(messages))
+        self.assertIn("갈라 놓았습니다", messages[0])
+        # 장애가 아니다 — 사이트도 브리핑도 정상이라고 말해야 한다.
+        self.assertIn("정상", messages[0])
+
+    def test_a_clean_build_resolves_the_previous_degraded_incident(self):
+        """오염이 사라졌는데 사건이 열려 있으면 다음 degraded 를 못 알아본다."""
+        self.write_sent({"at": "run-degraded-2", "counts": {"IAEA": 5},
+                         "kept": {}, "errors": {}})
+        common = dict(sent_path=self.sent, log_path=self.log, notify=True,
+                      expected_sources={"IAEA": "feed"},
+                      pipeline_outcomes={"web_build": "success", "data_gate": "success",
+                                         "web_deploy": "success"})
+        messages = []
+        cli.run(**common, sender=lambda text: messages.append(text) or {"ok": True},
+                pipeline_observation_id="crawl:601", build_mode="degraded",
+                identity_quarantined=2, now=NOW)
+        self.assertEqual(1, len(messages))
+        cli.run(**common, sender=lambda text: messages.append(text) or {"ok": True},
+                pipeline_observation_id="crawl:602", build_mode="ok",
+                identity_quarantined=0, now=NOW + timedelta(hours=3))
+        self.assertEqual(2, len(messages))
+        self.assertIn("정상", messages[1])
+        state = json.loads(self.sent.read_text(encoding="utf-8"))
+        row = state["operational_alerts"]["items"]["quality:web-identity-degraded"]
+        self.assertFalse(row["active"])
+        self.assertTrue(row["resolved_at"])
+
+    def test_an_unmeasured_build_mode_never_crashes_the_notification(self):
+        """워크플로는 빌드가 스킵된 회차에도 빈 문자열을 넘긴다."""
+        self.write_sent({"at": "run-empty", "counts": {"IAEA": 5},
+                         "kept": {}, "errors": {}})
+        out = cli.run(sent_path=self.sent, log_path=self.log,
+                      expected_sources={"IAEA": "feed"},
+                      build_mode=None, identity_quarantined=0, now=NOW)
+        self.assertTrue(out["ok"])
+
+    def test_cli_accepts_the_empty_strings_the_workflow_actually_sends(self):
+        """choices/type=int 로 두면 빈 값 하나에 알림 스텝이 통째로 죽는다."""
+        argv = ["operational_alerts.py", "--sent", str(self.sent),
+                "--delivery-log", str(self.log),
+                "--build-mode", "", "--identity-quarantined", ""]
+        self.write_sent({"at": "run-cli", "counts": {"IAEA": 5}, "kept": {}, "errors": {}})
+        with patch.object(sys, "argv", argv):
+            self.assertEqual(0, cli.main())
+
     def test_daily_workflow_passes_each_web_step_outcome_to_admin_monitor(self):
         workflow = (ROOT / ".github" / "workflows" / "daily-brief.yml").read_text(
             encoding="utf-8")

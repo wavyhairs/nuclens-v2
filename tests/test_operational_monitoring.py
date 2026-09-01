@@ -406,6 +406,46 @@ class WebPipelineSignalTests(unittest.TestCase):
             "success", observation_id="crawl:43"))
 
 
+class WebIdentityDegradedTests(unittest.TestCase):
+    """degraded 는 step outcome 이 success 라 web_pipeline 신호로는 절대 안 나온다.
+
+    그 회차를 ok 로 부르면 격리가 일어났다는 사실이 어디에도 남지 않고,
+    failure 로 부르면 systemic corruption 의 fail-closed 와 구별되지 않는다.
+    """
+
+    def test_a_degraded_build_is_reported_even_though_the_step_succeeded(self):
+        signals = monitor.web_identity_signals(
+            "degraded", quarantined_count=2, observation_id="crawl:99")
+        self.assertEqual(1, len(signals))
+        self.assertEqual("quality:web-identity-degraded", signals[0].key)
+        self.assertEqual("web_identity", signals[0].scope)
+        self.assertEqual("crawl:99", signals[0].observation_id)
+        self.assertIn("2", signals[0].detail)
+        self.assertIn("build_mode=degraded", signals[0].technical)
+
+    def test_degraded_is_not_an_outage(self):
+        """사이트도 브리핑도 정상이다 — ACTION 으로 부르면 진짜 장애가 안 읽힌다."""
+        signal = monitor.web_identity_signals("degraded", quarantined_count=1)[0]
+        self.assertEqual(monitor.LEVEL_ATTENTION, signal.level)
+        self.assertEqual("warning", signal.severity)
+
+    def test_an_ongoing_degraded_state_is_not_new_news_every_three_hours(self):
+        """크롤은 3시간마다 돈다. 같은 오염이 남아 있는 동안 다시 울리면 안 된다."""
+        first = monitor.web_identity_signals("degraded", quarantined_count=2)[0]
+        again = monitor.web_identity_signals("degraded", quarantined_count=2)[0]
+        worse = monitor.web_identity_signals("degraded", quarantined_count=5)[0]
+        self.assertEqual(first.fingerprint, again.fingerprint)
+        self.assertNotEqual(first.fingerprint, worse.fingerprint)
+
+    def test_an_ok_build_is_silent(self):
+        self.assertEqual([], monitor.web_identity_signals("ok", quarantined_count=0))
+
+    def test_an_unmeasured_build_is_silent(self):
+        """빌드가 죽어 build_mode 가 없는 회차는 web_pipeline 신호의 몫이다."""
+        self.assertEqual([], monitor.web_identity_signals(None))
+        self.assertEqual([], monitor.web_identity_signals(""))
+
+
 class AlertLifecycleTests(unittest.TestCase):
     def signal(self, observation: str, *, severity: str = "warning") -> monitor.AlertSignal:
         return monitor.AlertSignal(

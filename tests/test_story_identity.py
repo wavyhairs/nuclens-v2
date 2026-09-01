@@ -1,5 +1,6 @@
 import unittest
 import json
+import os
 import tempfile
 from pathlib import Path
 from unittest import mock
@@ -8,7 +9,7 @@ import dedup
 import story_cluster
 import story_identity
 from web import build_data
-from tools import story_identity_migration
+from tools import failure_domains, story_identity_migration
 
 
 def article(article_hash, title, *, country, actor, asset, story_id="", source=""):
@@ -221,6 +222,109 @@ class MigrationAuditTests(unittest.TestCase):
         ]
         split = story_identity_migration._conflicted_non_owner_hashes(conflicts)
         self.assertEqual(split["story-legacy"], {"palisades"})
+
+
+class IdentityVerdictReachesTheWorkflowTests(unittest.TestCase):
+    """격리는 일어났는데 워크플로가 모르면 degraded 는 ok 와 구별되지 않는다.
+
+    `build_mode` 는 지금까지 meta.json/status.json 안에만 있었고 그 파일을 여는
+    사람은 없다.  이 클래스는 build_data 의 판정이 step output → 실패 도메인
+    분류까지 실제로 전달되는지를 본다.
+    """
+
+    @staticmethod
+    def issue(issue_id, article_hash):
+        representative = {"hash": article_hash, "title_kr": article_hash}
+        return {
+            "issue_id": issue_id, "representative": representative,
+            "members": [representative], "first_seen": "2026-09-01",
+            "last_seen": "2026-09-01", "match_diagnostics": [],
+        }
+
+    def publish(self, diagnostics):
+        """`$GITHUB_OUTPUT` 에 실제로 쓰인 key=value 를 돌려준다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "github_output"
+            out.write_text("", encoding="utf-8")
+            with mock.patch.dict(os.environ, {"GITHUB_OUTPUT": str(out)}):
+                build_data.publish_build_mode(diagnostics)
+            written = {}
+            for line in out.read_text(encoding="utf-8").splitlines():
+                if "=" in line:
+                    key, _, value = line.partition("=")
+                    written[key] = value
+            return written
+
+    def test_a_local_conflict_is_carried_to_the_workflow_as_degraded(self):
+        """팰리세이즈/자포리자 그 조합 — 수집은 성공, 웹만 degraded 다."""
+        issues = [self.issue("story-poisoned", "palisades"),
+                  self.issue("story-poisoned", "zap")]
+        diagnostics = build_data.resolve_local_issue_id_conflicts(issues)
+        self.assertEqual("degraded", diagnostics["status"])
+
+        written = self.publish(diagnostics)
+        self.assertEqual("degraded", written["build_mode"])
+        self.assertEqual("2", written["identity_quarantined"])
+
+        verdict = failure_domains.classify(
+            "crawl",
+            {"collect": "success", "state": "success", "web_build": "success",
+             "web_deploy": "success", "web_smoke": "success"},
+            build_mode=written["build_mode"],
+            identity_quarantined=int(written["identity_quarantined"]))
+        self.assertEqual("success", verdict["core_status"])
+        self.assertEqual("degraded", verdict["web_status"])
+        self.assertFalse(verdict["job_should_fail"])
+
+    def test_the_same_verdict_preserves_a_sent_daily_brief(self):
+        issues = [self.issue("story-poisoned", "palisades"),
+                  self.issue("story-poisoned", "zap")]
+        diagnostics = build_data.resolve_local_issue_id_conflicts(issues)
+        written = self.publish(diagnostics)
+        verdict = failure_domains.classify(
+            "daily-brief",
+            {"plan": "success", "claim": "success", "send": "success",
+             "confirm": "success", "web_build": "success", "web_deploy": "success",
+             "web_smoke": "success"},
+            build_mode=written["build_mode"],
+            identity_quarantined=int(written["identity_quarantined"]))
+        self.assertEqual("success", verdict["core_status"])
+        self.assertEqual("degraded", verdict["web_status"])
+        self.assertFalse(verdict["job_should_fail"])
+
+    def test_a_clean_build_reports_ok_not_silence(self):
+        """조용히 아무것도 안 쓰면 '측정 안 함'과 '정상'을 구별할 수 없다."""
+        diagnostics = build_data.resolve_local_issue_id_conflicts(
+            [self.issue("story-a", "a"), self.issue("story-b", "b")])
+        written = self.publish(diagnostics)
+        self.assertEqual("ok", written["build_mode"])
+        self.assertEqual("0", written["identity_quarantined"])
+
+    def test_systemic_corruption_still_fails_closed_and_reports_nothing(self):
+        """fail-closed 가 degraded 로 내려앉으면 안전장치의 의미가 사라진다.
+
+        예외로 죽으므로 publish_build_mode 에 닿지 못하고, build_mode 가 없는
+        회차는 분류기에서 degraded 가 아니라 web failure 로 읽힌다.
+        """
+        issues = [self.issue("story-poisoned", f"hash-{index}") for index in range(6)]
+        with self.assertRaisesRegex(ValueError, "systemic"):
+            build_data.resolve_local_issue_id_conflicts(issues, max_local=5)
+
+        verdict = failure_domains.classify(
+            "crawl",
+            {"collect": "success", "state": "success", "web_build": "failure",
+             "web_deploy": "skipped", "web_smoke": "skipped"},
+            build_mode="", identity_quarantined=0)
+        self.assertEqual("failure", verdict["web_status"])
+        # 그래도 수집은 오염되지 않는다 — 그것이 이 작업의 전부다.
+        self.assertEqual("success", verdict["core_status"])
+        self.assertFalse(verdict["job_should_fail"])
+
+    def test_reporting_never_becomes_a_new_failure_mode(self):
+        """보고 경로가 빌드를 죽이면 빌드를 살리려던 변경이 빌드를 죽인다."""
+        with mock.patch.dict(os.environ, {"GITHUB_OUTPUT": str(Path("/") / "nope" / "x")}):
+            build_data.publish_build_mode({"status": "degraded",
+                                           "quarantined_cluster_count": 2})
 
 
 if __name__ == "__main__":
