@@ -559,6 +559,18 @@
       "status": "success_with_articles",
       "new_article_count": 80,
       "collect_outcome": "success"
+    },
+    "2026-09-02T15:00:00Z": {
+      "slot": "2026-09-02T15:00:00Z",
+      "attempt_id": "33649707767",
+      "attempts": 1,
+      "claimed_at": "2026-09-02T15:37:18.091312Z",
+      "finished_at": null,
+      "event_name": "workflow_dispatch",
+      "trigger_source": "backup_watchdog",
+      "trigger_state": "schedule_missing_recovery",
+      "status": "running",
+      "new_article_count": null
     }
   }
 }
