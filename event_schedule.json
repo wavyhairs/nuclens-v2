@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-02T00:44:07+09:00",
+ "generated_at": "2026-09-03T00:44:09+09:00",
  "events": [
   {
    "id": "of-78b28354d3ea",
@@ -120,6 +120,25 @@
    ],
    "relevance": "전력산업",
    "significance": "세미나"
+  },
+  {
+   "id": "of-089cd2074b9f",
+   "date": "2026-09-04",
+   "end_date": "2026-09-04",
+   "kind": "point",
+   "time": "10:00",
+   "label": "AI와 에너지 시대 원전 위험 규제 혁신을 이야기하다",
+   "host": "이진숙 의원실, 미래에너지정책연구원 전력포럼",
+   "organizer": "이진숙 의원실, 미래에너지정책연구원 전력포럼",
+   "place": "기타 : FKI타워 2층 토파즈홀",
+   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
+   "source_id": "assembly_events",
+   "publisher": "국회",
+   "notice_title": "AI와 에너지 시대 원전 위험 규제 혁신을 이야기하다",
+   "first_seen": "2026-09-03",
+   "topics": [],
+   "relevance": "원전",
+   "significance": "포럼"
   },
   {
    "id": "of-480f89f5c112",
@@ -444,7 +463,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-09-02T00:44:07+09:00",
+   "at": "2026-09-03T00:44:09+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -452,7 +471,7 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-09-02T00:44:07+09:00",
+   "at": "2026-09-03T00:44:09+09:00",
    "ok": true,
    "parsed": 11,
    "kept": 2,
@@ -464,7 +483,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-09-02T00:44:07+09:00",
+   "at": "2026-09-03T00:44:09+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -477,7 +496,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-09-02T00:44:07+09:00",
+   "at": "2026-09-03T00:44:09+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -485,9 +504,14 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-09-02T00:44:07+09:00",
-   "ok": false,
-   "error": "ConnectTimeout: HTTPSConnectionPool(host='www.assembly.go.kr', port=443): Max retries exceeded with url: /portal/noti/seminar/scheduleSmn.do?menuNo=600102 (Caused by ConnectTimeoutError(<HTTPSConnecti"
+   "at": "2026-09-03T00:44:09+09:00",
+   "ok": true,
+   "parsed": 74,
+   "kept": 3,
+   "new": 1,
+   "dropped": {
+    "no_interest_match": 71
+   }
   }
  }
 }
