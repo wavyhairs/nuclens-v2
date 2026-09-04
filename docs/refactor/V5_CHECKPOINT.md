@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:44:14Z`
+- updated_at_utc: `2026-09-04T13:45:25Z`
 - current_phase: `PHASE 2`
-- current_sub_step: `PHASE 2 local gate complete; push commit and open PR`
+- current_sub_step: `PHASE 2 PR #81 open; await relevant CI then apply Merge Gate`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `7432fc5f238762e8c4c1191ccd47448703816c97`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -31,7 +31,7 @@
 
 ## PR history
 
-PHASE 1 PR #80 (`test: add V5 refactor safety harness`) merged by ordinary PR merge at `7432fc5` on 2026-09-04T13:34:20Z. PR CI `33878508360` and main-push verification `33878813214` succeeded. PHASE 2 local commit `ac673de` is ready for push/PR. No V5.1 PR is awaiting verification.
+PHASE 1 PR #80 (`test: add V5 refactor safety harness`) merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) is open at `ac673de`; CI pending; not merged or reverted. No V5.1 PR is awaiting post-merge verification.
 
 ## Validation status
 
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Switch to `refactor/v5-phase2-snapshot-write`, push `ac673de`, open the PHASE 2 PR, observe relevant Python CI, and apply the Merge Gate against fresh main and active Crawl/Daily/Weekly state.
+Observe PR #81 relevant Python CI. Then fetch fresh main and check active Crawl/Daily/Weekly writers before applying the Merge Gate. If merged, the first subsequent Crawl or Daily pre-brief that checks out the merge SHA/state descendant is the required production verification; do not dispatch one only for V5.1.
 
 ## PHASE 1 local gate (complete; PR pending)
 
