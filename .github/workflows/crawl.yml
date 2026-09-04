@@ -106,8 +106,32 @@ jobs:
     needs: preflight
     if: needs.preflight.outputs.should_run == 'true'
     runs-on: ubuntu-latest
-    # 막힌 실행이 기본 6시간 동안 다음 크롤을 막지 못하게 한다
-    timeout-minutes: 30
+    # 막힌 실행이 기본 6시간 동안 다음 크롤을 막지 못하게 한다.
+    #
+    # 30 분이었다. 그 값이 **완주하는 회차보다 짧아졌다** — 실측 2026-09-04
+    # (run 33833880969 · 33845140906 · 33859264667) 세 회차 연속으로 제한이
+    # `Deploy web to Cloudflare Pages` **한복판에** 떨어져 cancelled 로 끝났다.
+    # 그 회차들은 수집·상태 커밋을 이미 마쳤고 빌드도 success 였다. 19~20분짜리
+    # 빌드 뒤에 배포가 설 자리가 없었을 뿐이다. 06:37 회차는 더 얄궂다 —
+    # wrangler 가 07:07:41 에 `Deployment complete` 를 찍고 7 초 뒤 sleep 15
+    # 도중에 잘렸다. 배포는 실제로 됐는데 운영 알림은 '배포 실패'로 나갔다.
+    #
+    # 실측 예산(2026-09-01~09-04, 배포 창에 든 회차 17건):
+    #   setup+checkout+pip   ~0.3 분
+    #   Collect news         4.7 ~ 9.7 분
+    #   상태·임베딩·커밋      ~0.5 분
+    #   Build web data      12.6 ~ 20.7 분   ← 누적 데이터와 함께 자란다
+    #   Deploy              0.6 ~ 3.2 분    ← `npx --yes wrangler@4` 설치만
+    #                                          21초~164초로 흔들린다
+    #   Smoke + 알림 + 캐시  ~0.6 분
+    # 완주한 회차의 최댓값은 29.5 분이고, 각 단계의 최댓값을 전부 더하면 약 35 분이다.
+    #
+    # 45 는 그 합에 10 분을 더한 값이다. 늘리는 목적은 '느린 성공을 살리는 것'
+    # 뿐이고 이 제한의 원래 목적 — 막힌 실행이 `nuclens-state` 락을 오래 쥐지
+    # 못하게 하는 것 — 은 그대로다: 45 분은 크롤 주기(3시간)와 배포 간격
+    # 게이트(165분) 양쪽보다 훨씬 짧고, watchdog 의 stale_claim 판정(45분)도
+    # 건드리지 않는다(claim 은 수집이 끝나는 ~10분에 이미 running 을 벗어난다).
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -392,6 +416,18 @@ jobs:
         id: web-deploy
         if: steps.web-gate.outputs.should_deploy == 'true' && steps.web-build.outcome == 'success'
         continue-on-error: true
+        # 이 스텝만 따로 묶는다. 잡 제한이 여기서 떨어지면 **뒤가 통째로 잘린다** —
+        # 스모크도, 운영 알림도, issue review 캐시 커밋도 못 돈다(2026-09-04 세
+        # 회차가 그랬다). 스텝 제한이 먼저 떨어지면 `continue-on-error` 가 받아
+        # outcome=failure 로 남고 뒤 스텝은 전부 정상 실행된다 — 웹 도메인만
+        # 실패로 보고되고 수집 결과는 그대로다.
+        #
+        # 8 분은 실측 최장 완주(약 3.2분: npx 설치 164초 + 업로드 20초 + sleep 15)
+        # 의 두 배 반이다. 정상은 40초라 느린 회차를 죽이지 않는다. 여기서 죽는
+        # 것은 npm 레지스트리나 wrangler 가 응답을 멈춘 회차뿐이고, 그건 느린
+        # 성공이 아니라 실패다. 다음 회차는 라이브 meta.json 이 낡은 것을 보고
+        # (배포 간격 게이트) 같은 데이터를 다시 올린다.
+        timeout-minutes: 8
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
