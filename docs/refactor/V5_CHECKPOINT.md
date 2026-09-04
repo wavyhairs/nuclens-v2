@@ -1,13 +1,13 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:36:57Z`
+- updated_at_utc: `2026-09-04T13:44:14Z`
 - current_phase: `PHASE 2`
-- current_sub_step: `PHASE 1 verified complete; analyze one qualified snapshot-writer responsibility group`
+- current_sub_step: `PHASE 2 local gate complete; push commit and open PR`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `7432fc5f238762e8c4c1191ccd47448703816c97`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- work_branch: `refactor/v5-phase1-harness`
+- work_branch: `refactor/v5-phase2-snapshot-write`
 - merge_mode: `autonomous-merge-permitted`
 - harness_version: `4bdfd75 (test: add V5 refactor safety harness)`
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 (`test: add V5 refactor safety harness`) merged by ordinary PR merge at `7432fc5` on 2026-09-04T13:34:20Z. PR CI `33878508360` and main-push verification `33878813214` succeeded. No V5.1 PR is awaiting verification.
+PHASE 1 PR #80 (`test: add V5 refactor safety harness`) merged by ordinary PR merge at `7432fc5` on 2026-09-04T13:34:20Z. PR CI `33878508360` and main-push verification `33878813214` succeeded. PHASE 2 local commit `ac673de` is ready for push/PR. No V5.1 PR is awaiting verification.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 1 branch: root 1,461 OK in 128.542s; harness 13 OK and 3 consecutive stable runs; deploy-mode web 561 OK (3 skipped) in 22.490s; all Node offline contracts including real-browser admin DOM OK; import/workflow smoke, source-write guard, CLI exit checks OK; PR CI 33878508360 success in 1m21s; merged-main verification 33878813214 success in 1m13s at 7432fc5`
+- last_passed_tests: `PHASE 2 commit ac673de: root 1,470 OK in 94.057s; atomic failure-injection 9 + harness 13 OK; exact characterization digest unchanged; PHASE 1 PR CI 33878508360 and merged-main verification 33878813214 success`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Create `refactor/v5-phase2-snapshot-write` from verified `origin/main` `7432fc5`. Limit scope to the qualified `news_bot.save_json` responsibility group (`sent.json`, `curated.json`, `digest_queue.json`), preserve exact serialization/file/new-file semantics, and prove all required failure injections. Do not touch append-only JSONL or transient handoffs.
+Switch to `refactor/v5-phase2-snapshot-write`, push `ac673de`, open the PHASE 2 PR, observe relevant Python CI, and apply the Merge Gate against fresh main and active Crawl/Daily/Weekly state.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -69,6 +69,15 @@ Create `refactor/v5-phase2-snapshot-write` from verified `origin/main` `7432fc5`
 - This harness/workflow-only merge triggers no production state writer, deployment, LLM/API call, cache, article selection, or delivery path. State commit SHA/parent SHA: not applicable; output/state diff: none expected and none produced by the workflow.
 - Root tests and offline front-end contracts passed. Existing test-generated warning/error annotations were unchanged contract fixtures, not workflow failures. No schema/order/identity/ranking/grouping/request-count/config/automation drift was observed.
 - PHASE 1 result: COMPLETE; removed from the unverified-merge set.
+
+## PHASE 2 local gate (complete; PR pending)
+
+- Qualification: PHASE 0 found critical tracked snapshots (`sent.json`, `curated.json`, `digest_queue.json`) owned by `news_bot.save_json`, a direct truncating writer, plus concrete job timeout/cancellation/reset-retry interruption exposure. This satisfies the conditional entry gate without claiming a historical corruption incident.
+- Scope is exactly one responsibility group: crawler snapshot JSON writes. Append-only `archive/*.jsonl` and `delivery_log.jsonl`, Daily/Weekly outboxes, channel queue, and transient handoffs are untouched.
+- Implementation: same-directory exclusive `.nuclens-atomic-*.tmp`, complete legacy JSON serialization, flush, close, `os.replace`, and cleanup on failure. Existing mode is copied; new files use mode 0666 subject to process umask, matching `Path.write_text` creation semantics. The temp residue pattern is ignored.
+- `fsync` is intentionally omitted: workflow success followed by git commit/push is the relevant persistence boundary; local disk survival across runner/power loss is not consumed as durable state.
+- Failure injections passed for temp-open failure, replace failure, existing file, malformed existing file, empty dict/list, simulated ENOSPC, and interrupted partial write. Every pre-replace failure preserved the complete old file and removed temp residue. All three owner wrappers route through the hardened writer.
+- Validation at final commit `ac673de`: atomic + V5 harness 22 tests OK; exact characterization digest unchanged; 3 hash seeds/import/workflow smoke inherited through the harness; full root 1,470 tests OK in 94.057s; diff check clean.
 
 ## PHASE 0 audit (complete)
 
