@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:29:51Z`
+- updated_at_utc: `2026-09-04T13:31:14Z`
 - current_phase: `PHASE 1`
-- current_sub_step: `PHASE 1 local gate complete; push commit and open harness-only PR`
+- current_sub_step: `PHASE 1 PR #80 open; await relevant CI then apply Merge Gate`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -31,7 +31,7 @@
 
 ## PR history
 
-No V5.1 PRs created, merged, or reverted. PHASE 1 local commit: `4bdfd75` on `refactor/v5-phase1-harness`; push/PR is the next action.
+PHASE 1 PR #80 (`test: add V5 refactor safety harness`) opened from `refactor/v5-phase1-harness` at commit `4bdfd75`. Not merged or reverted; CI pending at this checkpoint.
 
 ## Validation status
 
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Switch to `refactor/v5-phase1-harness`, push `4bdfd75`, open the harness-only PR, observe relevant CI, then apply the Merge Gate against freshly fetched `origin/main` and active workflow state.
+Observe PR #80 relevant CI once. If complete, fetch `origin/main`, integrate any new main commits, rerun relevant tests if integration changes the branch, inspect active production workflows, and apply the Merge Gate. If CI is a long scheduled wait, stop from this checkpoint without polling.
 
 ## PHASE 1 local gate (complete; PR pending)
 
