@@ -1,11 +1,11 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:33:37Z`
+- updated_at_utc: `2026-09-04T13:34:37Z`
 - current_phase: `PHASE 1`
-- current_sub_step: `PHASE 1 PR #80 passed CI and Merge Gate; merge next`
+- current_sub_step: `PHASE 1 PR #80 merged; first relevant main-push verification in progress`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- latest_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
+- latest_main_sha: `7432fc5f238762e8c4c1191ccd47448703816c97`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - work_branch: `refactor/v5-phase1-harness`
 - merge_mode: `autonomous-merge-permitted`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `none`
+- pending_operating_verification: `PR #80 merge 7432fc5; Python tests push run 33878813214 in progress`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,7 +31,7 @@
 
 ## PR history
 
-PHASE 1 PR #80 (`test: add V5 refactor safety harness`) opened from `refactor/v5-phase1-harness` at commit `4bdfd75`. Relevant CI run `33878508360` succeeded; Merge Gate passed; not yet merged at this checkpoint.
+PHASE 1 PR #80 (`test: add V5 refactor safety harness`) merged by ordinary PR merge at `7432fc5` on 2026-09-04T13:34:20Z. PR CI `33878508360` succeeded. Main-push verification run `33878813214` is in progress; no later code PR may merge until it succeeds.
 
 ## Validation status
 
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Merge PR #80 by ordinary PR merge, then record the merge SHA. Its `main` push will trigger Python tests and is the first relevant production-path verification for this harness/workflow-only change; do not merge another code PR until that verification succeeds.
+Observe main-push Python test run `33878813214`. On success, verify the run SHA equals merge SHA `7432fc5`, record no unexpected state/config/automation diff, close PHASE 1, and begin PHASE 2 analysis from the verified main. On failure, diagnose before any rerun or further merge.
 
 ## PHASE 1 local gate (complete; PR pending)
 
