@@ -1,13 +1,13 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T20:24:11Z`
+- updated_at_utc: `2026-09-04T20:33:38Z`
 - current_phase: `PHASE 3`
-- current_sub_step: `PHASE 2 production verification complete; PHASE 3 safest-candidate analysis starting from latest main`
+- current_sub_step: `PR #82 created at 04cd09a; awaiting required CI before Merge Gate`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `a83f3bba4bf71558c4b5e89642b87a270eb87d31`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- work_branch: `refactor/v5-phase3-build-data-extraction (to be created from latest main)`
+- work_branch: `refactor/v5-phase3-build-data-extraction`
 - merge_mode: `autonomous-merge-permitted`
 - harness_version: `4bdfd75 (test: add V5 refactor safety harness)`
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) merged by ordinary PR merge at `a1dfd5d` on 2026-09-04T13:47:54Z after CI `33879823426`, passed the Merge Gate, and passed production verification in Crawl run `33890549173`. There are no unverified V5.1 merges.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) merged by ordinary PR merge at `a1dfd5d` on 2026-09-04T13:47:54Z after CI `33879823426`, passed the Merge Gate, and passed production verification in Crawl run `33890549173`. PHASE 3 PR #82 (`refactor: extract publication title helper`) is open at `04cd09a` and awaiting CI. There are no unverified V5.1 merges.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 2 commit ac673de: root 1,470 OK in 94.057s; atomic failure-injection 9 + harness 13 OK; exact characterization digest unchanged; PR CI 33879823426 success in 1m12s; merged-main CI 33880064664 success in 1m18s at a1dfd5d; production Crawl 33890549173 success with valid atomic snapshots and live smoke`
+- last_passed_tests: `PHASE 3 commit 04cd09a: candidate tests 5 + V5 harness 13 OK; candidate mutation detected 2 failures; moved AST identical; call-time patch OK; root 1,470 OK in 126.974s; web offline 561 OK/3 skip in 21.780s; offline Node date/weekly/trend/event/admin/render/DOM contracts OK`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Create `refactor/v5-phase3-build-data-extraction` from freshly fetched `origin/main`. Reconcile every file changed since the PHASE 0 architecture-map SHA, inspect patch/monkeypatch consumers of `web/build_data.py`, and select at most one extraction candidate satisfying all PHASE 3 gates. Add meaningful candidate-specific mutation coverage before moving code. If no candidate satisfies every gate, record `안전한 후보 없음`, skip PHASE 4, and continue to PHASE 5.
+Check all PR #82 checks at head `04cd09a`. If CI succeeds, refresh `origin/main`, classify any intervening state commits, update the branch without taking stale state, rerun relevant tests, inspect the exact two-file diff and active production workflows, then apply the common Merge Gate. Merge only on PASS; afterward verify the first relevant Deploy web run before any later code merge.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -91,6 +91,17 @@ Create `refactor/v5-phase3-build-data-extraction` from freshly fetched `origin/m
 - `sent.json`, `curated.json`, and `digest_queue.json` all parsed successfully. Top-level types and record schema signatures were unchanged; all common curated/sent/queue identities retained their relative order. Curated changed by 31 additions and 74 retention removals; queue changed 583 to 577 entries; no new schema signature appeared. No tracked `.nuclens-atomic-*.tmp` residue exists.
 - Pip and embeddings caches restored successfully. Web build completed with 10,216 archive records, 4,737 displayed articles, 600 briefing articles, 579 issue cards, 417 detail pages, and 49 date briefs; Cloudflare deploy succeeded and live smoke returned 4,737 articles, latest briefing 2026-09-04, and six valid JSON outputs. Failure-domain publication recorded collect/state/build/deploy/smoke all `success`, build mode `ok`, identity quarantined `0`.
 - PHASE 2 result: COMPLETE; PR #81 removed from the unverified-merge set. Latest observed `main` is the state-only descendant `a83f3bba4bf71558c4b5e89642b87a270eb87d31`.
+
+## PHASE 3 local gate (complete; PR pending)
+
+- PHASE 0 map reconciliation found no post-baseline change to `web/build_data.py`; intervening changes were the V5 harness, PHASE 2 writer, and expected production state commits. Repository-wide patch/monkeypatch/direct-assignment search found no consumer patching `strip_org_prefix` or its private regexes.
+- Selected exactly one safest candidate: publication-title organization-prefix stripping. Inputs are title plus organization labels and output is one string. It has no network, write, environment access, mutable-state mutation, identity, Gemini, ranking, dedup threshold, path-base, or giant-module dependency.
+- Commit `04cd09a` moves only `strip_org_prefix` and its two private compiled regexes to `web/publication_title.py`; `web/build_data.py` imports the same public symbol after its existing repository-root path setup. Production entrypoints remain `python web/build_data.py`; the new pure module does not import the giant module and creates no cycle.
+- The three moved AST nodes are identical before/after. A candidate mutation that disables acronym recognition is killed by two boundary assertions in `PublicationTitleTests`, both before and after extraction; no source mutation remains. Five candidate tests pass normally.
+- Runtime call-time lookup was verified by replacing `build_data.strip_org_prefix`, invoking `load_publications`, and observing the replacement result. This preserves current/future patch behavior at the existing public symbol even though no repository consumer currently patches it.
+- V5 harness 13/13 passed, including exact characterization, three hash seeds, frozen Gemini request counter, cache bytes, CLI, imports, workflow execution mode, and trigger contract. Full root 1,470/1,470 and deploy-mode web offline 561/561 with three intentional skips passed. Node syntax/date/weekly/trend/event/admin render and real-DOM contracts passed.
+- `render_smoke.mjs` was intentionally excluded from the offline gate after a local attempt exited before test execution because Playwright is not installed. Its documented contract is a live-site Daily workflow check after `npm install --no-save playwright@1` and Chromium installation; it is not an offline test and this extraction does not alter browser code.
+- Final staged diff: two files, 47 insertions and 40 deletions; no state, schema, generated artifact, config, workflow, prompt, model, threshold, API, cache, or unrelated cleanup change. PR #82: https://github.com/wavyhairs/nuclens-v2/pull/82.
 
 ## PHASE 0 audit (complete)
 
