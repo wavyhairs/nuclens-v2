@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T21:34:50Z`
+- updated_at_utc: `2026-09-04T21:35:48Z`
 - current_phase: `PHASE 4`
-- current_sub_step: `PHASE 4 iteration 2 PR #84 CI 33921625269 passed at c1828e3; Merge Gate starting`
+- current_sub_step: `PHASE 4 iteration 2 PR #84 common Merge Gate PASS; merge authorized and pending`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `9b85797a575ec2e072b31c08a8c39a8970b94ccc`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -144,6 +144,7 @@ Check PR #84 CI at exact head `c1828e3`. On success, fetch latest main, preserve
 - Full root 1,470/1,470, deploy-mode web offline 561/561 with three intentional skips, Python compile, and all offline Node date/weekly/trend/event/admin render/real-DOM contracts passed. Final diff is exactly `web/build_data.py` plus new `web/publication_policy.py`, 93 insertions/82 deletions, with no unrelated change.
 - PR #84: https://github.com/wavyhairs/nuclens-v2/pull/84.
 - PR CI `33921625269` passed at exact head `c1828e35043e839e63938e9ab5f11abae4a6ea48` from 2026-09-04T21:33:12Z to 21:34:37Z. Common Merge Gate is in progress.
+- Merge Gate: fresh `origin/main` equals PR base `9b85797a575ec2e072b31c08a8c39a8970b94ccc`; no intervening state/code commit exists. PR is open and mergeable with no required review, successful exact-head CI, and only the declared two-file 93+/82- diff. Relevant 20 tests and compile/diff checks reran successfully. GitHub reported no active or queued workflow and no critical state/send window. Gate result: PASS; ordinary PR merge authorized.
 
 ## PHASE 0 audit (complete)
 
