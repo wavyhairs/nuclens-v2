@@ -1,13 +1,13 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T21:59:02Z`
+- updated_at_utc: `2026-09-04T22:03:32Z`
 - current_phase: `PHASE 5`
-- current_sub_step: `PHASE 4 iteration 2 verified and PHASE 4 exit criterion met; PHASE 5 conservative news_bot candidate analysis starting`
+- current_sub_step: `PHASE 5 mutable/patch inventory rechecked; one pure controlled-curation normalization extraction selected and pre-extraction mutation killed`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `77d20f2a7a30f941028bf6d72f3ce462d4c6b854`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- work_branch: `refactor/v5-phase5-news-parser (to be created from latest state descendant)`
+- work_branch: `refactor/v5-phase5-curation-normalization (created from 77d20f2)`
 - merge_mode: `autonomous-merge-permitted`
 - harness_version: `4bdfd75 (test: add V5 refactor safety harness)`
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Create `refactor/v5-phase5-news-parser` from freshly fetched `origin/main` state descendant `77d20f2`. Re-run the full mutable-global and patch/monkeypatch inventory for `news_bot.py`. Inspect only pure parsing/normalization/source-interpretation candidates first, require meaningful mutation and compatibility/call-time patch proof, and select at most one safest extraction. ABANDON unsafe candidates; if no safe candidate or three consecutive ABANDONs, end PHASE 5 and continue to PHASE 6.
+On `refactor/v5-phase5-curation-normalization`, extract only the four pure controlled-value normalizers and their immutable vocabulary constants into an acyclic root module. Preserve `news_bot` re-exports and prove that patching `news_bot.norm_topics` affects `normalize_curation_item` at call time. Re-run the killed cap mutation, AST equality, harness, hash seeds, root/web/Node suites, execution-mode and import smoke before deciding whether a PR is allowed.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -160,6 +160,15 @@ Create `refactor/v5-phase5-news-parser` from freshly fetched `origin/main` state
 - Two gradual follow-up extractions left publication title/gist normalization and publication display classification in small acyclic pure modules while preserving the existing `build_data` entrypoint and patch surface.
 - Remaining nearby candidates couple file/time I/O, KEEI/Gemini behavior, ranking, identity, mutable ownership, or provide too little maintenance benefit for the extraction risk. Additional splitting would now primarily divide files rather than reduce maintenance risk.
 - PHASE 4 therefore ends under its benefit-versus-risk exit criterion. No candidate reached an ABANDON condition and no STOP condition exists. Proceed to PHASE 5.
+
+## PHASE 5 inventory and candidate freeze (in progress)
+
+- Fresh `origin/main` is state-only descendant `77d20f2`; the branch contains the verified V5 code and no later code drift. `refactor/v5-phase5-curation-normalization` was created directly from it.
+- Rechecked mutable owners: `SOURCE_FETCH_ERRORS`/`OFFICIAL_FETCH_ERRORS`, `SOURCE_FETCH_DIAGNOSTICS`, `QUOTA_EXHAUSTED`, `CONFIG_ERROR`, and the curation quality/drop counters remain in `news_bot.py`. Rechecked patch-sensitive source lists/fetch functions, Gemini aliases, batch controls, quota flag, delivery/state paths, time sleep, and atomic writer OS calls; none will move.
+- Selected one narrow pure normalization responsibility: `norm_scope`, `norm_topics`, `norm_countries`, and `norm_article_type`, together with only their immutable controlled vocabularies. They have explicit inputs/outputs and no network, write, environment, time, path, state mutation, identity, ranking, dedup, or Gemini behavior.
+- Repository search found direct public use through `news_bot` but no existing patch of these functions or vocabulary constants. The extraction must keep every public symbol re-exported from `news_bot`; its existing callers must continue global call-time lookup so a patch on `news_bot.norm_topics` controls `normalize_curation_item`.
+- Freeze result: existing `TestControlledTagNorm` 3/3 passed. A pre-extraction runtime mutant increasing the controlled-topic cap from 3 to 4 was killed by `test_topics_whitelist_and_cap` with the expected four-versus-three failure. Recorded AST hashes: scope `c378bdd1`, topics `4a918c39`, countries `c683e251`, article type `7abc4c77`.
+- No ABANDON or STOP condition exists. Implementation has not started at this checkpoint.
 
 ## PHASE 0 audit (complete)
 
