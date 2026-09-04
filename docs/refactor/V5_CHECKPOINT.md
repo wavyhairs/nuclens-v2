@@ -1,11 +1,11 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T20:36:03Z`
+- updated_at_utc: `2026-09-04T20:36:58Z`
 - current_phase: `PHASE 3`
-- current_sub_step: `PR #82 common Merge Gate PASS; merge authorized and pending`
+- current_sub_step: `PR #82 merged at 1bc3965; main CI 33917083106 and Deploy web 33917083131 in progress`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- latest_main_sha: `a83f3bba4bf71558c4b5e89642b87a270eb87d31`
+- latest_main_sha: `1bc396549496cb8e4443ad2c6b9f2ad69e5bede9`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - work_branch: `refactor/v5-phase3-build-data-extraction`
 - merge_mode: `autonomous-merge-permitted`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `none`
+- pending_operating_verification: `PR #82 merge 1bc3965; first relevant Deploy web run 33917083131 plus main-push Python run 33917083106`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,7 +31,7 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) merged by ordinary PR merge at `a1dfd5d` on 2026-09-04T13:47:54Z after CI `33879823426`, passed the Merge Gate, and passed production verification in Crawl run `33890549173`. PHASE 3 PR #82 (`refactor: extract publication title helper`) is open at `04cd09a` and awaiting CI. There are no unverified V5.1 merges.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) merged and verified at `a1dfd5d`. PHASE 3 PR #82 (`refactor: extract publication title helper`) passed CI `33916811781` and the Merge Gate, then merged by ordinary PR merge at `1bc3965` on 2026-09-04T20:36:38Z. PR #82 is the sole V5.1 merge awaiting post-merge verification.
 
 ## Validation status
 
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Check all PR #82 checks at head `04cd09a`. If CI succeeds, refresh `origin/main`, classify any intervening state commits, update the branch without taking stale state, rerun relevant tests, inspect the exact two-file diff and active production workflows, then apply the common Merge Gate. Merge only on PASS; afterward verify the first relevant Deploy web run before any later code merge.
+Wait once for already-running main-push Python run `33917083106` and first relevant Deploy web run `33917083131`. Verify exact checkout SHA `1bc3965`, conclusion/duration, build counts and candidate metrics, API/cache/degraded or failure changes, deployment and live smoke, and that no persistent state commit or unexpected diff was produced. Do not merge another code PR until both pass.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -104,6 +104,7 @@ Check all PR #82 checks at head `04cd09a`. If CI succeeds, refresh `origin/main`
 - Final staged diff: two files, 47 insertions and 40 deletions; no state, schema, generated artifact, config, workflow, prompt, model, threshold, API, cache, or unrelated cleanup change. PR #82: https://github.com/wavyhairs/nuclens-v2/pull/82.
 - PR CI run `33916811781` checked out exact head `04cd09a2d5af3b10313b93b6c4d2aae069a10525` and passed from 2026-09-04T20:33:24Z to 20:34:30Z; root and front-end date/selector jobs both succeeded. Common Merge Gate is now in progress.
 - Merge Gate: fresh `origin/main` equals PR base `a83f3bba4bf71558c4b5e89642b87a270eb87d31`; no intervening commit or stale state exists. PR is open and mergeable with no required review, exact head/CI success, and only the declared two-file 47+/40- diff. Relevant 18 tests reran successfully, diff checks are clean, and GitHub reported no active or queued workflow. No Daily/Weekly send window or critical state commit is in progress. Gate result: PASS; ordinary PR merge authorized.
+- PR #82 merged by ordinary merge at `1bc396549496cb8e4443ad2c6b9f2ad69e5bede9` on 2026-09-04T20:36:38Z. Main-push Python run `33917083106` and first relevant Deploy web run `33917083131` started at the exact merge SHA; both were in progress when this post-merge checkpoint was written.
 
 ## PHASE 0 audit (complete)
 
