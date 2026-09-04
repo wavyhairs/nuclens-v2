@@ -1,0 +1,169 @@
+{
+  "meta": {
+    "baseline_sha": "bbe62a4c06c85d28962a54ee85d01db9109079dc",
+    "created_on": "2026-09-04",
+    "sanitized": true,
+    "source": "Synthetic records derived from regression shapes; no production payloads",
+    "regression_references": [
+      "tests/test_article_quality_gate.py::ArticleIntegrityTests::test_observed_canada_mine_to_spain_plant_corruption_is_caught",
+      "tests/test_ranking.py::TestDuplicates::test_paraphrased_same_event_clustered",
+      "tests/test_issue_continuity.py::ProgressionTests::test_mou_to_contract_is_material",
+      "web/tests/test_prototype.py::IssueSimilarityTests::test_rejected_pair_vetoes_the_whole_cluster_not_just_one_reference",
+      "web/tests/test_prototype.py::IssueSimilarityTests::test_a_real_cross_border_event_still_merges_through_its_bridge"
+    ]
+  },
+  "historical_regression_cases": [
+    {
+      "name": "canada_mine_must_not_become_spain_plant",
+      "reference": "tests/test_article_quality_gate.py::ArticleIntegrityTests::test_observed_canada_mine_to_spain_plant_corruption_is_caught",
+      "sanitized_shape": {"source_country": "Canada", "generated_country": "Spain", "topic_switch": "mine_to_plant"},
+      "expected": "quarantine"
+    },
+    {
+      "name": "rejected_pair_vetoes_transitive_issue_bridge",
+      "reference": "web/tests/test_prototype.py::IssueSimilarityTests::test_rejected_pair_vetoes_the_whole_cluster_not_just_one_reference",
+      "sanitized_shape": {"approved_edges": 2, "rejected_edges": 1},
+      "expected": "separate_issues"
+    },
+    {
+      "name": "mou_to_contract_is_material_progression",
+      "reference": "tests/test_issue_continuity.py::ProgressionTests::test_mou_to_contract_is_material",
+      "sanitized_shape": {"prior_stage": "MOU", "current_stage": "contract"},
+      "expected": "material"
+    }
+  ],
+  "coverage_dimensions": [
+    "normal",
+    "same_story_multiple_sources",
+    "different_event_stage",
+    "same_issue_follow_up",
+    "must_separate_story_and_issue",
+    "legacy_identity",
+    "null_empty_malformed_optional_fields",
+    "duplicate_and_reordered_jsonl",
+    "admin_override",
+    "kst_midnight",
+    "daily_cutoff",
+    "weekly_boundary",
+    "month_boundary",
+    "korean_hanja_emoji",
+    "unicode_nfc_nfd"
+  ],
+  "identity_cases": [
+    {"hash": "alpha-001", "title": "한수원 신규 계약 체결"},
+    {"hash": "unicode-001", "title": "원전 原電 ⚛️ Café"},
+    {"hash": "unicode-002", "title": "원전 原電 ⚛️ Café"},
+    {"hash": "legacy-001", "story_id": "story-pre-v2", "title": "과거 식별자"},
+    {"hash": "", "title": null, "story_fingerprint": "malformed"}
+  ],
+  "ranking_items": [
+    {
+      "hash": "rank-contract",
+      "importance": "must_read",
+      "section": "domestic",
+      "domain": "regulator.example",
+      "title": "규제기관, 새 원전 건설 최종 승인",
+      "title_kr": "규제기관, 새 원전 건설 최종 승인",
+      "link": "https://regulator.example/rank-contract",
+      "queued_at": "2026-07-12T21:00:00+00:00",
+      "related_reports": [{"id": "report-a"}],
+      "features": {"event_type": "regulatory_action", "korea_relevance": 3, "market_materiality": 2, "policy_materiality": 3, "novelty": 1, "evidence_strength": 3, "report_worthiness": 2}
+    },
+    {
+      "hash": "rank-contract-copy",
+      "importance": "nice_to_know",
+      "section": "domestic",
+      "domain": "wire.example",
+      "title": "규제기관 새 원전 건설 최종 승인",
+      "title_kr": "규제기관 새 원전 건설 최종 승인",
+      "link": "https://wire.example/rank-contract-copy",
+      "queued_at": "2026-07-12T21:30:00+00:00",
+      "related_reports": [],
+      "features": {"event_type": "regulatory_action", "korea_relevance": 3, "market_materiality": 2, "policy_materiality": 3, "novelty": 1, "evidence_strength": 2, "report_worthiness": 2}
+    },
+    {
+      "hash": "rank-supply",
+      "importance": "nice_to_know",
+      "section": "international",
+      "domain": "industry.example",
+      "title": "연료 공급사가 장기 공급 계약을 체결",
+      "title_kr": "연료 공급사가 장기 공급 계약을 체결",
+      "link": "https://industry.example/rank-supply",
+      "queued_at": "2026-07-12T18:00:00+00:00",
+      "related_reports": [],
+      "features": {"event_type": "contract_award", "korea_relevance": 0, "market_materiality": 3, "policy_materiality": 1, "novelty": 2, "evidence_strength": 2, "report_worthiness": 2}
+    },
+    {
+      "hash": "rank-opinion",
+      "importance": "nice_to_know",
+      "section": "international",
+      "domain": "opinion.example",
+      "title": "원자력의 미래에 관한 칼럼",
+      "title_kr": "원자력의 미래에 관한 칼럼",
+      "link": "https://opinion.example/rank-opinion",
+      "queued_at": "2026-07-11T10:00:00+00:00",
+      "related_reports": [],
+      "features": {"event_type": "opinion", "korea_relevance": 0, "market_materiality": 0, "policy_materiality": 0, "novelty": 0, "evidence_strength": 0, "report_worthiness": 0}
+    }
+  ],
+  "continuity": {
+    "recent": [{
+      "date": "2026-08-16",
+      "hash": "prior-mou",
+      "title": "한수원, 가상국 원전 복구 양해각서(MOU) 체결",
+      "title_kr": "한수원, 가상국 원전 복구 양해각서(MOU) 체결",
+      "summary": "복구 사업 협력을 위한 양해각서",
+      "region": "국내",
+      "tags": ["한수원", "가상국"],
+      "story_fingerprint": {"countries": ["South Korea", "Exampleland"], "actors": ["KHNP", "Example Energy"], "assets": ["Example NPP"], "event_family": "agreement"}
+    }],
+    "candidates": [{
+      "hash": "follow-contract",
+      "title": "한수원, 가상국 원전 복구 본계약 체결",
+      "title_kr": "한수원, 가상국 원전 복구 본계약 체결",
+      "summary": "양해각서 이후 복구 본계약을 체결",
+      "importance": "must_read",
+      "section": "domestic",
+      "domain": "energy.example",
+      "link": "https://energy.example/follow-contract",
+      "queued_at": "2026-08-17T00:00:00+00:00",
+      "tags": ["한수원", "가상국"],
+      "story_fingerprint": {"countries": ["South Korea", "Exampleland"], "actors": ["KHNP", "Example Energy"], "assets": ["Example NPP"], "event_family": "contract_award"},
+      "features": {"event_type": "contract_award", "korea_relevance": 3, "market_materiality": 2, "policy_materiality": 2, "novelty": 1, "evidence_strength": 2, "report_worthiness": 2}
+    }]
+  },
+  "web_articles": [
+    {"hash": "web-a", "title": "Danube 1호기 수명연장 심사 착수", "title_kr": "Danube 1호기 수명연장 심사 착수", "summary": "규제 심사가 시작됐다", "briefing_date": "2026-08-30", "article_date": "2026-08-30", "region": "유럽", "country": "Exampleland", "tags": ["Danube"], "story_id": "story-web-a", "story_identity_version": 2, "story_id_trust": "canonical"},
+    {"hash": "web-b", "title": "Danube 1호기 수명연장 최종 승인", "title_kr": "Danube 1호기 수명연장 최종 승인", "summary": "규제기관이 승인했다", "briefing_date": "2026-08-31", "article_date": "2026-08-31", "region": "유럽", "country": "Exampleland", "tags": ["Danube"], "story_id": "story-web-b", "story_identity_version": 2, "story_id_trust": "canonical"},
+    {"hash": "web-c", "title": "Coastal SMR 부지 환경평가 공청회", "title_kr": "Coastal SMR 부지 환경평가 공청회", "summary": "별도 프로젝트 공청회", "briefing_date": "2026-08-31", "article_date": "2026-08-31", "region": "북미", "country": "Otherland", "tags": ["Coastal SMR"], "story_id": "story-web-c", "story_identity_version": 2, "story_id_trust": "canonical"}
+  ],
+  "admin_override": {"approved": ["web-a--web-b"], "rejected": ["web-b--web-c"]},
+  "embeddings": {
+    "web-a": [1.0, 0.0, 0.0],
+    "web-b": [0.9, 0.1, 0.0],
+    "web-c": [0.0, 0.0, 1.0]
+  },
+  "time_boundaries": [
+    "2026-08-31T23:59:59+09:00",
+    "2026-09-01T00:00:00+09:00",
+    "2026-09-04T04:24:59+09:00",
+    "2026-09-04T04:25:00+09:00",
+    "2026-09-04T17:07:00+09:00"
+  ],
+  "jsonl_rows": [
+    {"hash": "j-2", "value": "둘"},
+    {"hash": "j-1", "value": "하나"},
+    {"hash": "j-2", "value": "둘"}
+  ],
+  "expected": {
+    "characterization_sha256": "b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786",
+    "identity_ids": ["story-alpha-001", "story-unicode-001", "story-unicode-002", "story-pre-v2", ""],
+    "display_id": "display-28a4d65885dca50a",
+    "selected_hashes": ["rank-contract", "rank-supply", "rank-opinion"],
+    "dropped_duplicate_hashes": ["rank-contract-copy"],
+    "continuity_progression": "material",
+    "continuity_story_id": "story-prior-mou",
+    "web_issue_ids": ["story-web-a", "story-web-c"],
+    "web_member_hashes": [["web-a", "web-b"], ["web-c"]]
+  }
+}
