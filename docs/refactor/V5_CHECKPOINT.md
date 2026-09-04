@@ -1,11 +1,11 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:47:04Z`
+- updated_at_utc: `2026-09-04T13:48:13Z`
 - current_phase: `PHASE 2`
-- current_sub_step: `PHASE 2 PR #81 passed CI and Merge Gate; merge next`
+- current_sub_step: `PHASE 2 PR #81 merged; main-push CI and first natural snapshot-writer run pending`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- latest_main_sha: `7432fc5f238762e8c4c1191ccd47448703816c97`
+- latest_main_sha: `a1dfd5d1b7d775ab65cba9d80a9e04a9523a0024`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - work_branch: `refactor/v5-phase2-snapshot-write`
 - merge_mode: `autonomous-merge-permitted`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `none`
+- pending_operating_verification: `PR #81 merge a1dfd5d; Python push run 33880064664 in progress, then first natural Crawl or Daily pre-brief`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,7 +31,7 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) is open at `ac673de`; CI `33879823426` succeeded and Merge Gate passed; not yet merged. No V5.1 PR is awaiting post-merge verification.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) merged by ordinary PR merge at `a1dfd5d` on 2026-09-04T13:47:54Z after CI `33879823426` and Merge Gate passed. It is the sole V5.1 PR awaiting post-merge verification.
 
 ## Validation status
 
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Merge PR #81 by ordinary PR merge. Record the merge SHA and wait for both the immediate main-push Python test and the first subsequent naturally scheduled Crawl or Daily pre-brief using that code. Do not dispatch production for validation; do not merge another code PR until state-writer verification completes.
+Observe immediate main-push Python run `33880064664`, then stop at the long-wait rule until the first naturally scheduled Crawl or Daily pre-brief checks out merge SHA `a1dfd5d` or a state-only descendant. Verify workflow/run identity, state commit parentage and only expected `sent.json`/`curated.json`/`digest_queue.json` changes, valid JSON/schema/order, no `.nuclens-atomic-*.tmp`, normal counts/API/cache/build/degraded metrics. Do not dispatch production and do not merge another code PR.
 
 ## PHASE 1 local gate (complete; PR pending)
 
