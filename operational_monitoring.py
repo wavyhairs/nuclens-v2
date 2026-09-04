@@ -740,6 +740,37 @@ _WEB_PIPELINE_STAGES = {
 }
 
 
+# 물어본 적 없는 단계는 실패가 아니다.
+#
+# `data_gate` 는 `data_gate_metrics.py` 를 부르는 **daily-brief 전용** 스텝이다.
+# crawl.yml 에는 그 스텝 자체가 없어 `--data-gate-outcome` 을 넘기지 않는데,
+# 안 넘어온 값이 `missing` 으로 채워지고 `!= "success"` 에 걸렸다. 그래서 크롤이
+# 보내는 웹 알림에는 실재하지 않는 단계가 매번 실패로 끼어 있었다 — 실측
+# 2026-09-04 run 33833880969: 배포가 잡 제한에 잘린 진짜 원인 옆에
+# `데이터 품질 기록=missing` 이 나란히 붙어 나갔다.
+#
+# 그 문구는 두 번 해롭다. 없는 단계를 찾아보게 만들고, 진짜 원인 하나를 둘로
+# 흐린다 — 이 모듈이 세 단계를 굳이 따로 부르는 이유가 그 반대였다.
+#
+# 반대로 `web_build`·`web_deploy` 는 **필수**다. 그 값이 안 넘어오면 그것 자체가
+# 배선 사고이고, 조용해지는 쪽이 훨씬 나쁘다 — 이 알림이 생긴 이유가 웹이
+# 깨졌는데 알림이 0건이던 2026-09-01 회차다.
+_WEB_PIPELINE_OPTIONAL_STAGES = frozenset({"data_gate"})
+# `skipped` 는 조건이 걸러 냈다는 뜻이고 `missing` 은 물어본 적이 없다는 뜻이다.
+# 선택 단계에서는 둘 다 '이 회차엔 해당 없음'이다 (tools/failure_domains.py 와
+# 같은 구분을 쓴다).
+_WEB_PIPELINE_NOT_RUN = frozenset({"skipped", "missing"})
+
+
+def _stage_failed(stage: str, normalized: Mapping[str, str]) -> bool:
+    outcome = normalized[stage]
+    if outcome == "success":
+        return False
+    if stage in _WEB_PIPELINE_OPTIONAL_STAGES and outcome in _WEB_PIPELINE_NOT_RUN:
+        return False
+    return True
+
+
 def web_pipeline_signals(outcomes: Mapping | None, *,
                          observation_id: str = "") -> list[AlertSignal]:
     """Translate explicit GitHub step outcomes into one pipeline incident.
@@ -759,12 +790,12 @@ def web_pipeline_signals(outcomes: Mapping | None, *,
     failed: list[str] = []
     # Downstream steps are expected to be skipped after a build failure, so
     # report the root failure instead of paging three times for one incident.
-    if normalized["web_build"] != "success":
+    if _stage_failed("web_build", normalized):
         failed.append("web_build")
     else:
-        if normalized["data_gate"] != "success":
+        if _stage_failed("data_gate", normalized):
             failed.append("data_gate")
-        if normalized["web_deploy"] != "success":
+        if _stage_failed("web_deploy", normalized):
             failed.append("web_deploy")
     if not failed:
         return []
@@ -786,8 +817,13 @@ def web_pipeline_signals(outcomes: Mapping | None, *,
                 if serving else "자동 실행 중 한 단계가 끝나지 못했습니다."),
         impact=spec["impact"],
         action=spec["action"],
-        technical=(f"{detail}. data_quality_gate 기록이 없을 수 있으므로 "
-                   "워크플로 로그와 배포 상태를 확인해 주세요."),
+        # data_quality_gate 안내는 **그 단계가 실제로 실패한 회차에만** 붙인다.
+        # 늘 붙이면 그 기록이 아예 없는 crawl 알림에까지 따라와, 운영자가 없는
+        # 파일을 찾게 된다.
+        technical=(f"{detail}. "
+                   + ("data_quality_gate 기록이 없을 수 있으므로 "
+                      if "data_gate" in failed else "")
+                   + "워크플로 로그와 배포 상태를 확인해 주세요."),
         observation_id=str(observation_id).strip(), min_occurrences=1,
     )]
 

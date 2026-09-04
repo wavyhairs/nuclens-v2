@@ -393,6 +393,63 @@ class WebPipelineSignalTests(unittest.TestCase):
             "web_build": "success", "data_gate": "success", "web_deploy": "success",
         }, observation_id="daily-brief:3"))
 
+    def test_a_workflow_without_a_metrics_step_is_not_reported_as_failing(self):
+        """crawl 에는 data_gate 스텝이 없다 — 물어본 적 없는 단계는 실패가 아니다.
+
+        실측 2026-09-04 run 33833880969: 배포가 잡 제한에 잘린 진짜 원인 옆에
+        `데이터 품질 기록=missing` 이 나란히 붙어 나갔다. crawl.yml 은
+        `--data-gate-outcome` 을 넘기지 않는데(그 스텝이 아예 없다) 안 넘어온
+        값이 `missing` 으로 채워져 실패로 세어졌다.
+        """
+        signals = monitor.web_pipeline_signals({
+            "web_build": "success", "web_deploy": "cancelled",
+        }, observation_id="crawl:33833880969")
+        self.assertEqual(1, len(signals))
+        self.assertIn("Cloudflare 배포·스모크=cancelled", signals[0].technical)
+        self.assertNotIn("데이터 품질 기록", signals[0].technical)
+        # 없는 기록을 찾아보라는 안내도 함께 사라져야 한다.
+        self.assertNotIn("data_quality_gate", signals[0].technical)
+
+    def test_a_healthy_crawl_round_without_a_metrics_step_says_nothing(self):
+        """오탐을 없앤다고 정상 회차에 신호가 남으면 고친 게 아니다."""
+        self.assertEqual([], monitor.web_pipeline_signals({
+            "web_build": "success", "web_deploy": "success",
+        }, observation_id="crawl:1"))
+
+    def test_a_skipped_metrics_step_is_not_a_failure_either(self):
+        """daily-brief 의 data-gate 는 claim 실패 회차에 건너뛴다. 그 회차는
+        브리핑 도메인이 이미 따로 울고 있다 — 여기서 한 번 더 울면 소음이다.
+        """
+        self.assertEqual([], monitor.web_pipeline_signals({
+            "web_build": "success", "data_gate": "skipped", "web_deploy": "success",
+        }, observation_id="daily-brief:4"))
+
+    def test_a_real_metrics_failure_still_reports_with_its_hint(self):
+        """선택 단계라고 **실패까지** 눈감으면 daily-brief 의 지표 감시가 죽는다."""
+        signals = monitor.web_pipeline_signals({
+            "web_build": "success", "data_gate": "failure", "web_deploy": "success",
+        }, observation_id="daily-brief:5")
+        self.assertEqual(1, len(signals))
+        self.assertIn("데이터 품질 기록=failure", signals[0].technical)
+        self.assertIn("data_quality_gate", signals[0].technical)
+        # 지표만 빈 날은 '조치 필요'가 아니다 — 기존 등급 그대로.
+        self.assertEqual(monitor.LEVEL_ATTENTION, signals[0].level)
+
+    def test_a_missing_deploy_outcome_still_pages(self):
+        """필수 단계는 여전히 fail-loud 다. 값이 안 넘어오는 것 자체가 배선
+        사고이고, 조용해지는 쪽이 훨씬 나쁘다 — 이 알림이 생긴 이유가 웹이
+        깨졌는데 알림이 0건이던 2026-09-01 회차다.
+        """
+        for label, outcomes in (
+            ("deploy 누락", {"web_build": "success"}),
+            ("build 누락", {"web_deploy": "success"}),
+        ):
+            with self.subTest(label):
+                signals = monitor.web_pipeline_signals(outcomes,
+                                                       observation_id="crawl:2")
+                self.assertEqual(1, len(signals))
+                self.assertIn("missing", signals[0].technical)
+
     def test_collection_crash_is_visible_without_a_source_snapshot(self):
         signals = monitor.collection_pipeline_signals(
             "failure", observation_id="crawl:42")
