@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T21:33:18Z`
+- updated_at_utc: `2026-09-04T21:34:50Z`
 - current_phase: `PHASE 4`
-- current_sub_step: `PHASE 4 iteration 2 PR #84 created at c1828e3; awaiting CI`
+- current_sub_step: `PHASE 4 iteration 2 PR #84 CI 33921625269 passed at c1828e3; Merge Gate starting`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `9b85797a575ec2e072b31c08a8c39a8970b94ccc`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -35,7 +35,7 @@ PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verif
 
 ## Validation status
 
-- last_passed_tests: `PHASE 4 iteration 2 c1828e3: publication tests 7 + V5 harness 13 OK; LLM precedence mutation detected; 6 moved AST nodes identical; call-time patches OK; root 1,470 OK in 126.774s; web offline 561 OK/3 skip in 21.303s; offline Node contracts OK`
+- last_passed_tests: `PHASE 4 iteration 2 c1828e3: publication tests 7 + V5 harness 13 OK; LLM precedence mutation detected; 6 moved AST nodes identical; call-time patches OK; root 1,470 OK in 126.774s; web offline 561 OK/3 skip in 21.303s; offline Node contracts OK; PR CI 33921625269 success in 1m20s at exact head`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -143,6 +143,7 @@ Check PR #84 CI at exact head `c1828e3`. On success, fetch latest main, preserve
 - Temporary-fixture execution proved that patches to `build_data.publication_drop_reason` and `build_data.publication_relevance` still control `load_publications` at call time; the public relevance tuple retains object identity with the new owner.
 - Full root 1,470/1,470, deploy-mode web offline 561/561 with three intentional skips, Python compile, and all offline Node date/weekly/trend/event/admin render/real-DOM contracts passed. Final diff is exactly `web/build_data.py` plus new `web/publication_policy.py`, 93 insertions/82 deletions, with no unrelated change.
 - PR #84: https://github.com/wavyhairs/nuclens-v2/pull/84.
+- PR CI `33921625269` passed at exact head `c1828e35043e839e63938e9ab5f11abae4a6ea48` from 2026-09-04T21:33:12Z to 21:34:37Z. Common Merge Gate is in progress.
 
 ## PHASE 0 audit (complete)
 
