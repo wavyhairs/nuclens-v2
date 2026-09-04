@@ -1,11 +1,11 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T21:35:48Z`
+- updated_at_utc: `2026-09-04T21:36:28Z`
 - current_phase: `PHASE 4`
-- current_sub_step: `PHASE 4 iteration 2 PR #84 common Merge Gate PASS; merge authorized and pending`
+- current_sub_step: `PHASE 4 iteration 2 PR #84 merged at 2610183; main CI 33921851020 and Deploy web 33921851015 in progress`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- latest_main_sha: `9b85797a575ec2e072b31c08a8c39a8970b94ccc`
+- latest_main_sha: `261018338638d169659a68eb720f1b6cd0b32084`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - work_branch: `refactor/v5-phase4-publication-policy`
 - merge_mode: `autonomous-merge-permitted`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `none`
+- pending_operating_verification: `PR #84 merge 2610183; main-push Python 33921851020 and first relevant Deploy web 33921851015`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,7 +31,7 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 (`refactor: extract publication display policy`) is open at `c1828e3` and awaiting CI. There are no unverified V5.1 merges.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 (`refactor: extract publication display policy`) passed CI `33921625269` and the Merge Gate, then merged at `2610183` on 2026-09-04T21:36:09Z. PR #84 is the sole V5.1 merge awaiting post-merge verification.
 
 ## Validation status
 
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Check PR #84 CI at exact head `c1828e3`. On success, fetch latest main, preserve intervening state, rerun relevant tests, verify the exact two-file diff and active workflows, and apply the Merge Gate. Merge only on PASS, then require first relevant Deploy web verification before deciding PHASE 4 exit.
+Wait once for main-push Python `33921851020` and first relevant Deploy web `33921851015`. Verify exact checkout SHA `2610183`, successful build/test/deploy/live smoke, normal candidate/API/cache/build-mode metrics, and no unexpected main commit. Then remove PR #84 from the unverified set and evaluate PHASE 4 exit criteria.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -145,6 +145,7 @@ Check PR #84 CI at exact head `c1828e3`. On success, fetch latest main, preserve
 - PR #84: https://github.com/wavyhairs/nuclens-v2/pull/84.
 - PR CI `33921625269` passed at exact head `c1828e35043e839e63938e9ab5f11abae4a6ea48` from 2026-09-04T21:33:12Z to 21:34:37Z. Common Merge Gate is in progress.
 - Merge Gate: fresh `origin/main` equals PR base `9b85797a575ec2e072b31c08a8c39a8970b94ccc`; no intervening state/code commit exists. PR is open and mergeable with no required review, successful exact-head CI, and only the declared two-file 93+/82- diff. Relevant 20 tests and compile/diff checks reran successfully. GitHub reported no active or queued workflow and no critical state/send window. Gate result: PASS; ordinary PR merge authorized.
+- PR #84 merged at `261018338638d169659a68eb720f1b6cd0b32084` on 2026-09-04T21:36:09Z. Main-push Python `33921851020` and Deploy web `33921851015` started at the exact merge SHA and were in progress at checkpoint time.
 
 ## PHASE 0 audit (complete)
 
