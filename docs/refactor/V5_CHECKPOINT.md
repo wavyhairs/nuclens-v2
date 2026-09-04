@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:31:14Z`
+- updated_at_utc: `2026-09-04T13:33:37Z`
 - current_phase: `PHASE 1`
-- current_sub_step: `PHASE 1 PR #80 open; await relevant CI then apply Merge Gate`
+- current_sub_step: `PHASE 1 PR #80 passed CI and Merge Gate; merge next`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 (`test: add V5 refactor safety harness`) opened from `refactor/v5-phase1-harness` at commit `4bdfd75`. Not merged or reverted; CI pending at this checkpoint.
+PHASE 1 PR #80 (`test: add V5 refactor safety harness`) opened from `refactor/v5-phase1-harness` at commit `4bdfd75`. Relevant CI run `33878508360` succeeded; Merge Gate passed; not yet merged at this checkpoint.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 1 branch: root 1,461 OK in 128.542s; harness 13 OK and 3 consecutive stable runs; deploy-mode web 561 OK (3 skipped) in 22.490s; all Node offline contracts including real-browser admin DOM OK; import/workflow smoke, source-write guard, CLI exit checks OK`
+- last_passed_tests: `PHASE 1 branch: root 1,461 OK in 128.542s; harness 13 OK and 3 consecutive stable runs; deploy-mode web 561 OK (3 skipped) in 22.490s; all Node offline contracts including real-browser admin DOM OK; import/workflow smoke, source-write guard, CLI exit checks OK; GitHub CI 33878508360 success in 1m21s`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Observe PR #80 relevant CI once. If complete, fetch `origin/main`, integrate any new main commits, rerun relevant tests if integration changes the branch, inspect active production workflows, and apply the Merge Gate. If CI is a long scheduled wait, stop from this checkpoint without polling.
+Merge PR #80 by ordinary PR merge, then record the merge SHA. Its `main` push will trigger Python tests and is the first relevant production-path verification for this harness/workflow-only change; do not merge another code PR until that verification succeeds.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -60,6 +60,8 @@ Observe PR #80 relevant CI once. If complete, fetch `origin/main`, integrate any
 - Bootstrap negative controls all detected: ranking weight, dedup threshold, reversed sort, removed story-id seed, changed Gemini prompt, and omitted snapshot write. Runtime monkeypatches only; no mutation remains.
 - Validation: root 1,461 tests OK (128.542s); deploy-mode web 561 OK/3 skip (22.490s); Node app/date/weekly/event/trend/admin gate/render/DOM all OK; harness 13 OK and three consecutive runs stable at 2.063/2.018/2.020s.
 - Initial harness implementation corrections: subprocess socket-class replacement was narrowed to `connect/connect_ex/create_connection`; Windows subprocess decoding was fixed to UTF-8; cache expected bytes gained the existing final newline. Each correction was followed by rerun; no production change resulted.
+- GitHub CI run `33878508360` passed at head `4bdfd75` in 1m21s. Resolved versions included Python 3.12.14, pip 26.2.1, requests 2.34.2, google-genai 2.22.0, feedparser 6.0.14, Node 22.23.2, npm 10.9.8. The local/CI google-genai version differs (2.18.1 vs 2.22.0), but exact characterization and all CI tests passed; no contract drift was observed.
+- Merge Gate: freshly fetched `origin/main` remained `bbe62a4`; PR was clean/mergeable with no review requirement; only the eight declared harness/docs/workflow files differed; no generated state, production fixture, prompt/model/threshold/config change, debug code, or temporary mutation was present; no Crawl/Daily/Weekly workflow was active. Gate result: PASS.
 
 ## PHASE 0 audit (complete)
 
