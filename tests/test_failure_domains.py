@@ -427,6 +427,94 @@ class WorkflowWiringTests(unittest.TestCase):
         self.assertIn("steps.web-deploy.outcome == 'failure'", audit)
         self.assertIn("steps.web-smoke.outcome == 'failure'", audit)
 
+    # ── 실행 예산 ──────────────────────────────────────────────────────────
+    #
+    # 도메인 분리가 옳아도 **잡이 배포 도중 잘리면** 그 회차의 웹은 실패다.
+    # 실측 2026-09-04 (run 33833880969 · 33845140906 · 33859264667): 수집
+    # success → 상태 커밋 success → 빌드 success → `timeout-minutes: 30` 이
+    # `Deploy web to Cloudflare Pages` 한복판에 떨어져 세 회차 연속 cancelled.
+    # 06:37 회차는 wrangler 가 `Deployment complete` 를 찍고 7 초 뒤에 잘렸다 —
+    # 배포는 실제로 됐는데 운영 알림은 '배포 실패'로 나갔다.
+    #
+    # 예산은 코드가 아니라 워크플로에 적힌 숫자이므로 여기서 본다.
+
+    def _minutes(self, block: str) -> int | None:
+        for line in block.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("timeout-minutes:"):
+                return int(stripped.split(":", 1)[1].strip())
+        return None
+
+    def crawl_job(self) -> str:
+        """`  crawl:` 잡 블록. 파일의 마지막 잡이라 끝까지 간다."""
+        marker = "\n  crawl:\n"
+        crawl = self.crawl()
+        self.assertIn(marker, crawl)
+        return crawl.split(marker, 1)[1]
+
+    def test_crawl_job_budget_covers_the_slowest_measured_round(self):
+        """완주한 회차보다 짧은 제한은 '느린 성공'을 장애로 바꾼다.
+
+        실측(2026-09-01~09-04, 배포 창에 든 17회차) 단계별 최댓값:
+        수집 9.7분 + 빌드 20.7분 + 배포 3.2분 + setup·상태·스모크·알림 1.4분
+        ≒ 35분.  완주한 회차의 실제 최댓값은 29.5분이었다.  제한은 그보다
+        커야 한다 — 그러지 못한 값이 30 이었다.
+        """
+        budget = self._minutes(self.crawl_job().split("    steps:", 1)[0])
+        self.assertIsNotNone(budget, "crawl 잡에 timeout-minutes 가 없다")
+        self.assertGreaterEqual(
+            budget, 40,
+            "실측 최악 예산 약 35분 + 여유보다 짧다 — 배포가 잡 제한에 잘린다")
+
+    def test_crawl_job_budget_still_releases_the_shared_lock_in_time(self):
+        """제한의 원래 목적은 그대로다 — 막힌 실행이 `nuclens-state` 를 쥐고
+        다음 크롤과 daily-brief 를 막지 못하게 하는 것.  크롤 주기는 3시간이고
+        배포 간격 게이트는 165분이다.  둘 중 짧은 쪽보다 넉넉히 짧아야 한다.
+        """
+        budget = self._minutes(self.crawl_job().split("    steps:", 1)[0])
+        self.assertLessEqual(
+            budget, 90,
+            "락을 너무 오래 쥔다 — 3시간 주기·165분 배포 게이트를 잠식한다")
+
+    def test_crawl_deploy_step_is_bounded_before_the_job_is(self):
+        """잡 제한이 배포에서 떨어지면 **뒤가 통째로 잘린다** — 스모크도,
+        운영 알림도, issue review 캐시 커밋도 못 돈다.  스텝 제한이 먼저
+        떨어지면 `continue-on-error` 가 받아 web_deploy=failure 로 남고
+        나머지는 정상 실행된다.  그 둘은 같은 '배포 실패'가 아니다.
+        """
+        deploy = self.step(self.crawl(), "web-deploy")
+        step_budget = self._minutes(deploy)
+        self.assertIsNotNone(step_budget, "배포 스텝에 자체 timeout-minutes 가 없다")
+        job_budget = self._minutes(self.crawl_job().split("    steps:", 1)[0])
+        self.assertLess(step_budget, job_budget,
+                        "스텝 제한이 잡 제한보다 늦게 떨어지면 아무 의미가 없다")
+        # 실측 최장 완주는 약 3.2분(npx 설치 164초 + 업로드 20초 + sleep 15).
+        # 그보다 짧으면 느린 성공을 죽인다.
+        self.assertGreaterEqual(step_budget, 6,
+                                "실측 최장 배포(약 3.2분)에 여유가 없다")
+
+    def test_a_timed_out_deploy_is_a_web_failure_only(self):
+        """스텝 제한에 걸린 배포는 웹만 실패다 — 수집은 이미 끝나 push 됐다."""
+        verdict = fd.classify("crawl", {**CRAWL_HEALTHY, "web_build": "success",
+                                        "web_deploy": "failure",
+                                        "web_smoke": "skipped"})
+        self.assertEqual("success", verdict["core_status"])
+        self.assertEqual("failure", verdict["web_status"])
+        self.assertFalse(verdict["job_should_fail"])
+
+    def test_a_cancelled_deploy_is_a_web_failure_only(self):
+        """잡 제한에 잘린 회차도 같은 판정이어야 한다 — `cancelled` 는
+        `skipped` 가 아니다.  실측 run 33833880969 의 실제 outcome 조합이다.
+        """
+        verdict = fd.classify("crawl", {**CRAWL_HEALTHY, "web_build": "success",
+                                        "web_deploy": "cancelled",
+                                        "web_smoke": "skipped"},
+                              build_mode="ok")
+        self.assertEqual("success", verdict["core_status"])
+        self.assertEqual("failure", verdict["web_status"])
+        self.assertEqual(["web_deploy"], verdict["web_failed_stages"])
+        self.assertFalse(verdict["job_should_fail"])
+
     def test_daily_brief_web_steps_carry_their_own_outcome(self):
         daily = self.daily()
         for step_id in ("web-build", "web-deploy", "render-smoke"):
