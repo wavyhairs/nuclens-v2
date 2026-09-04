@@ -760,12 +760,13 @@
       "attempt_id": "33866313903",
       "attempts": 1,
       "claimed_at": "2026-09-04T11:05:56.799626Z",
-      "finished_at": null,
+      "finished_at": "2026-09-04T11:11:14.656799Z",
       "event_name": "workflow_dispatch",
       "trigger_source": "manual",
       "trigger_state": "manual_trigger",
-      "status": "running",
-      "new_article_count": null
+      "status": "success_with_articles",
+      "new_article_count": 44,
+      "collect_outcome": "success"
     }
   }
 }
