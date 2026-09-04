@@ -1,19 +1,19 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:49:40Z`
-- current_phase: `PHASE 2`
-- current_sub_step: `PHASE 2 main-push CI verified; paused by long-wait rule for first natural snapshot-writer run`
+- updated_at_utc: `2026-09-04T20:24:11Z`
+- current_phase: `PHASE 3`
+- current_sub_step: `PHASE 2 production verification complete; PHASE 3 safest-candidate analysis starting from latest main`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- latest_main_sha: `a1dfd5d1b7d775ab65cba9d80a9e04a9523a0024`
+- latest_main_sha: `a83f3bba4bf71558c4b5e89642b87a270eb87d31`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- work_branch: `refactor/v5-phase2-snapshot-write`
+- work_branch: `refactor/v5-phase3-build-data-extraction (to be created from latest main)`
 - merge_mode: `autonomous-merge-permitted`
 - harness_version: `4bdfd75 (test: add V5 refactor safety harness)`
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `PR #81 merge a1dfd5d; first natural Crawl or Daily pre-brief after merge (next scheduled Crawl type expected after 2026-09-04T15:11:00Z)`
+- pending_operating_verification: `none`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) merged by ordinary PR merge at `a1dfd5d` on 2026-09-04T13:47:54Z after CI `33879823426` and Merge Gate passed. It is the sole V5.1 PR awaiting post-merge verification.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) merged by ordinary PR merge at `a1dfd5d` on 2026-09-04T13:47:54Z after CI `33879823426`, passed the Merge Gate, and passed production verification in Crawl run `33890549173`. There are no unverified V5.1 merges.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 2 commit ac673de: root 1,470 OK in 94.057s; atomic failure-injection 9 + harness 13 OK; exact characterization digest unchanged; PR CI 33879823426 success in 1m12s; merged-main CI 33880064664 success in 1m18s at a1dfd5d`
+- last_passed_tests: `PHASE 2 commit ac673de: root 1,470 OK in 94.057s; atomic failure-injection 9 + harness 13 OK; exact characterization digest unchanged; PR CI 33879823426 success in 1m12s; merged-main CI 33880064664 success in 1m18s at a1dfd5d; production Crawl 33890549173 success with valid atomic snapshots and live smoke`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Resume by finding the first natural Crawl or Daily pre-brief started after 2026-09-04T13:47:54Z that checks out merge SHA `a1dfd5d` or a state-only descendant. Verify workflow/run identity, state commit parentage and only expected `sent.json`/`curated.json`/`digest_queue.json` changes, valid JSON/schema/order, no `.nuclens-atomic-*.tmp`, normal counts/API/cache/build/degraded metrics. Do not dispatch production and do not merge another code PR. Current session stops here under the V5.1 long-wait rule; this is not a STOP/ABANDON condition.
+Create `refactor/v5-phase3-build-data-extraction` from freshly fetched `origin/main`. Reconcile every file changed since the PHASE 0 architecture-map SHA, inspect patch/monkeypatch consumers of `web/build_data.py`, and select at most one extraction candidate satisfying all PHASE 3 gates. Add meaningful candidate-specific mutation coverage before moving code. If no candidate satisfies every gate, record `안전한 후보 없음`, skip PHASE 4, and continue to PHASE 5.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -81,6 +81,16 @@ Resume by finding the first natural Crawl or Daily pre-brief started after 2026-
 - PR CI `33879823426` passed at `ac673de` in 1m12s. Merge Gate: fresh `origin/main` remained verified SHA `7432fc5`; PR clean/mergeable with no required review; final diff only `.gitignore`, `news_bot.py`, and the atomic failure-injection test; no state/config/schema/prompt/model/threshold/generated artifact or append-only writer change; no active/queued Crawl, Daily, or Weekly workflow. Gate result: PASS.
 - PR #81 merged at `a1dfd5d`. Immediate main-push Python run `33880064664` checked out that exact SHA and succeeded from 2026-09-04T13:47:56Z to 13:49:20Z (job duration 1m18s). It produced no production state by design. At 13:49:40Z no production workflow was active or queued.
 - The writer itself requires a naturally occurring Crawl or Daily pre-brief for post-merge production verification. The next scheduled Crawl type is expected after 15:11Z, so V5.1 §9 forbids repeated polling or a validation-only dispatch. Checkpoint saved and session paused safely with one unverified merge.
+
+## PHASE 2 production verification (complete)
+
+- First relevant production execution: Nuclear news crawl run `33890549173`, existing `backup_watchdog` recovery automation for the missing `2026-09-04T15:00:00Z` slot; event `workflow_dispatch`, trigger state `schedule_missing_recovery`; started 2026-09-04T15:37:29Z and completed 16:12:51Z; conclusion `success`; checkout SHA exactly PR #81 merge `a1dfd5d1b7d775ab65cba9d80a9e04a9523a0024`.
+- Run-attributed commits are isolated and linear: claim `d14db7437714ec60d1ff6fd6cb2cc68f8f98f9da` with parent `a1dfd5d`, then state `dab3b194bc13fc29934fb19d7ff9c5e2b59be874` with parent `d14db74`. The following scheduled run `33894414250` correctly recognized the same completed slot and skipped collection.
+- Collection/build metrics were normal for the input: 43 candidates, 42 URL/title and fuzzy-unique, 39 after semantic dedup, 39 new articles, Gemini 3 calls; collection state `success_with_articles`. Existing source-health and candidate-headroom warnings reported no service impact and no new failure domain.
+- The state commit changed the expected crawl-owned set: the three hardened snapshots plus crawl/discovery/adaptive state, append-only archive/delivery log, and daily publication/event refresh files. No code, config, workflow, prompt, model, threshold, or unrelated persistent-state owner changed.
+- `sent.json`, `curated.json`, and `digest_queue.json` all parsed successfully. Top-level types and record schema signatures were unchanged; all common curated/sent/queue identities retained their relative order. Curated changed by 31 additions and 74 retention removals; queue changed 583 to 577 entries; no new schema signature appeared. No tracked `.nuclens-atomic-*.tmp` residue exists.
+- Pip and embeddings caches restored successfully. Web build completed with 10,216 archive records, 4,737 displayed articles, 600 briefing articles, 579 issue cards, 417 detail pages, and 49 date briefs; Cloudflare deploy succeeded and live smoke returned 4,737 articles, latest briefing 2026-09-04, and six valid JSON outputs. Failure-domain publication recorded collect/state/build/deploy/smoke all `success`, build mode `ok`, identity quarantined `0`.
+- PHASE 2 result: COMPLETE; PR #81 removed from the unverified-merge set. Latest observed `main` is the state-only descendant `a83f3bba4bf71558c4b5e89642b87a270eb87d31`.
 
 ## PHASE 0 audit (complete)
 
