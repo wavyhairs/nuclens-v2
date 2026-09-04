@@ -1,19 +1,19 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T21:36:28Z`
-- current_phase: `PHASE 4`
-- current_sub_step: `PHASE 4 iteration 2 PR #84 merged at 2610183; main CI 33921851020 and Deploy web 33921851015 in progress`
+- updated_at_utc: `2026-09-04T21:59:02Z`
+- current_phase: `PHASE 5`
+- current_sub_step: `PHASE 4 iteration 2 verified and PHASE 4 exit criterion met; PHASE 5 conservative news_bot candidate analysis starting`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- latest_main_sha: `261018338638d169659a68eb720f1b6cd0b32084`
+- latest_main_sha: `77d20f2a7a30f941028bf6d72f3ce462d4c6b854`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- work_branch: `refactor/v5-phase4-publication-policy`
+- work_branch: `refactor/v5-phase5-news-parser (to be created from latest state descendant)`
 - merge_mode: `autonomous-merge-permitted`
 - harness_version: `4bdfd75 (test: add V5 refactor safety harness)`
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `PR #84 merge 2610183; main-push Python 33921851020 and first relevant Deploy web 33921851015`
+- pending_operating_verification: `none`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 (`refactor: extract publication display policy`) passed CI `33921625269` and the Merge Gate, then merged at `2610183` on 2026-09-04T21:36:09Z. PR #84 is the sole V5.1 merge awaiting post-merge verification.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 (`refactor: extract publication display policy`) passed CI `33921625269`, the Merge Gate, main CI `33921851020`, and Deploy web `33921851015`; it is merged and verified at `2610183`. There are no unverified V5.1 merges.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 4 iteration 2 c1828e3: publication tests 7 + V5 harness 13 OK; LLM precedence mutation detected; 6 moved AST nodes identical; call-time patches OK; root 1,470 OK in 126.774s; web offline 561 OK/3 skip in 21.303s; offline Node contracts OK; PR CI 33921625269 success in 1m20s at exact head`
+- last_passed_tests: `PHASE 4 iteration 2 local gates and PR CI 33921625269 passed; main CI 33921851020 passed; Deploy web 33921851015 passed at exact 2610183 with identical processing/output metrics, build mode ok, deploy/live smoke/admin lock success`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Wait once for main-push Python `33921851020` and first relevant Deploy web `33921851015`. Verify exact checkout SHA `2610183`, successful build/test/deploy/live smoke, normal candidate/API/cache/build-mode metrics, and no unexpected main commit. Then remove PR #84 from the unverified set and evaluate PHASE 4 exit criteria.
+Create `refactor/v5-phase5-news-parser` from freshly fetched `origin/main` state descendant `77d20f2`. Re-run the full mutable-global and patch/monkeypatch inventory for `news_bot.py`. Inspect only pure parsing/normalization/source-interpretation candidates first, require meaningful mutation and compatibility/call-time patch proof, and select at most one safest extraction. ABANDON unsafe candidates; if no safe candidate or three consecutive ABANDONs, end PHASE 5 and continue to PHASE 6.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -146,6 +146,20 @@ Wait once for main-push Python `33921851020` and first relevant Deploy web `3392
 - PR CI `33921625269` passed at exact head `c1828e35043e839e63938e9ab5f11abae4a6ea48` from 2026-09-04T21:33:12Z to 21:34:37Z. Common Merge Gate is in progress.
 - Merge Gate: fresh `origin/main` equals PR base `9b85797a575ec2e072b31c08a8c39a8970b94ccc`; no intervening state/code commit exists. PR is open and mergeable with no required review, successful exact-head CI, and only the declared two-file 93+/82- diff. Relevant 20 tests and compile/diff checks reran successfully. GitHub reported no active or queued workflow and no critical state/send window. Gate result: PASS; ordinary PR merge authorized.
 - PR #84 merged at `261018338638d169659a68eb720f1b6cd0b32084` on 2026-09-04T21:36:09Z. Main-push Python `33921851020` and Deploy web `33921851015` started at the exact merge SHA and were in progress at checkpoint time.
+
+## PHASE 4 iteration 2 production verification (complete)
+
+- Main-push Python run `33921851020` passed at exact merge SHA `2610183` in 1m20s. First relevant Deploy web run `33921851015` checked out that exact SHA and passed from 2026-09-04T21:36:11Z to 21:58:18Z; deploy job duration 22m03s.
+- Dependency, embedding, and audio caches all hit. Metrics remained identical to the prior verified run: 10,236 archive records, 4,746 displayed news, 453 initial issues/15,100 candidates, 727 first-pass evidence attachments/120,778 candidates, review asked 0/failed 0, 124,474 full candidates, 5,000 shipped, 617 briefing articles, 596 issue cards, 431 detail pages, and 50 date briefs. Gemini calls were 0; build mode was `ok`; identity quarantined 0.
+- Existing archive repair and 15/952 (1.6%) preselection-headroom warnings remained unchanged advisory signals. All web/Node/admin/real-browser tests passed. Cloudflare deployed `https://85afee64.nuclens-v2.pages.dev`; the missing-path smoke returned expected 404 and both admin URLs returned expected 401.
+- Concurrent normal Daily automation subsequently advanced `origin/main` through state-only commits `aa03222e05ec` (pre-brief crawl state: archive/curated/delivery log/digest queue/discovery/sent), `dbcbdd7b` (Daily delivery confirmation), `846f43d` (operational alert state), and `77d20f2a` (daily leads/trend insights). Their parent chain descends from `2610183`; no V5 code was altered or overwritten.
+- PHASE 4 iteration 2 result: COMPLETE; PR #84 removed from the unverified set. No revert or retry was required.
+
+## PHASE 4 exit decision (complete)
+
+- Two gradual follow-up extractions left publication title/gist normalization and publication display classification in small acyclic pure modules while preserving the existing `build_data` entrypoint and patch surface.
+- Remaining nearby candidates couple file/time I/O, KEEI/Gemini behavior, ranking, identity, mutable ownership, or provide too little maintenance benefit for the extraction risk. Additional splitting would now primarily divide files rather than reduce maintenance risk.
+- PHASE 4 therefore ends under its benefit-versus-risk exit criterion. No candidate reached an ABANDON condition and no STOP condition exists. Proceed to PHASE 5.
 
 ## PHASE 0 audit (complete)
 
