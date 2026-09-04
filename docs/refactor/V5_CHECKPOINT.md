@@ -1,13 +1,13 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T21:27:33Z`
+- updated_at_utc: `2026-09-04T21:33:18Z`
 - current_phase: `PHASE 4`
-- current_sub_step: `PHASE 4 iteration 1 production verification complete; iteration 2 candidate analysis starting`
+- current_sub_step: `PHASE 4 iteration 2 PR #84 created at c1828e3; awaiting CI`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `9b85797a575ec2e072b31c08a8c39a8970b94ccc`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- work_branch: `refactor/v5-phase4-publication-policy (to be created from latest main)`
+- work_branch: `refactor/v5-phase4-publication-policy`
 - merge_mode: `autonomous-merge-permitted`
 - harness_version: `4bdfd75 (test: add V5 refactor safety harness)`
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 (`refactor: extract publication gist comparison`) passed CI `33919089786`, the Merge Gate, main CI `33919325642`, and Deploy web `33919325566`; it is merged and verified at `9b85797`. There are no unverified V5.1 merges.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 (`refactor: extract publication display policy`) is open at `c1828e3` and awaiting CI. There are no unverified V5.1 merges.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 4 iteration 1: local gates and PR CI 33919089786 passed; main CI 33919325642 passed; Deploy web 33919325566 passed at exact 9b85797 with identical processing/output metrics, build mode ok, deploy/live smoke/admin lock success`
+- last_passed_tests: `PHASE 4 iteration 2 c1828e3: publication tests 7 + V5 harness 13 OK; LLM precedence mutation detected; 6 moved AST nodes identical; call-time patches OK; root 1,470 OK in 126.774s; web offline 561 OK/3 skip in 21.303s; offline Node contracts OK`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Create `refactor/v5-phase4-publication-policy` from `origin/main` at `9b85797` and evaluate exactly one cohesive pure classification responsibility: publication relevance/drop policy and its immutable regex/constants. Require direct tests plus meaningful mutation, unchanged public symbols/call-time lookup, exact moved AST, and every PHASE 3 validation gate. ABANDON if any criterion fails.
+Check PR #84 CI at exact head `c1828e3`. On success, fetch latest main, preserve intervening state, rerun relevant tests, verify the exact two-file diff and active workflows, and apply the Merge Gate. Merge only on PASS, then require first relevant Deploy web verification before deciding PHASE 4 exit.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -134,6 +134,15 @@ Create `refactor/v5-phase4-publication-policy` from `origin/main` at `9b85797` a
 - Existing archive repair and 15/952 (1.6%) preselection-headroom warnings were unchanged advisory signals. All web/Node/admin/real-browser tests passed. Cloudflare deployed `https://2b88e1b5.nuclens-v2.pages.dev`; missing-path live smoke returned expected 404 and both admin URLs returned expected 401.
 - Fresh `origin/main` remained exact merge SHA `9b85797`; the deploy produced no persistent state commit or unexpected diff. The longer duration versus the immediately prior 18m07s run occurred at identical input/output/candidate/API/cache metrics and is not attributed to this pure function move.
 - PHASE 4 iteration 1 result: COMPLETE; PR #83 removed from the unverified set. No revert or retry was required.
+
+## PHASE 4 iteration 2 local gate (complete; PR pending)
+
+- Selected exactly one cohesive pure responsibility: publication display classification. `publication_relevance`, `publication_drop_reason`, their three private compiled regexes, and the public immutable relevance tuple moved to `web/publication_policy.py`.
+- Every function is dict-to-string with no network, write, environment, mutable-state mutation, identity, Gemini call, ranking, dedup threshold, path-base, or giant-module dependency. Repository-wide search found no existing patch of these functions/constants. `build_data` re-exports the public functions and relevance tuple; private regex ownership is singular and the new module is acyclic.
+- All six moved AST nodes are identical. A runtime mutant removing the explicit `off_topic=False` precedence is killed before and after extraction by the documented `Workshop on Regulatory Harmonisation` regression. Seven direct publication behavior tests and the 13-test V5 harness pass.
+- Temporary-fixture execution proved that patches to `build_data.publication_drop_reason` and `build_data.publication_relevance` still control `load_publications` at call time; the public relevance tuple retains object identity with the new owner.
+- Full root 1,470/1,470, deploy-mode web offline 561/561 with three intentional skips, Python compile, and all offline Node date/weekly/trend/event/admin render/real-DOM contracts passed. Final diff is exactly `web/build_data.py` plus new `web/publication_policy.py`, 93 insertions/82 deletions, with no unrelated change.
+- PR #84: https://github.com/wavyhairs/nuclens-v2/pull/84.
 
 ## PHASE 0 audit (complete)
 
