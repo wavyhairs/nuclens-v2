@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T22:03:32Z`
+- updated_at_utc: `2026-09-04T22:09:41Z`
 - current_phase: `PHASE 5`
-- current_sub_step: `PHASE 5 mutable/patch inventory rechecked; one pure controlled-curation normalization extraction selected and pre-extraction mutation killed`
+- current_sub_step: `PHASE 5 PR #85 created at 49a0f74 after all local gates passed; exact-head PR CI pending`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `77d20f2a7a30f941028bf6d72f3ce462d4c6b854`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `none`
+- pending_operating_verification: `PR #85 exact-head CI, then Merge Gate and first relevant crawl/Daily production run after merge`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 (`refactor: extract publication display policy`) passed CI `33921625269`, the Merge Gate, main CI `33921851020`, and Deploy web `33921851015`; it is merged and verified at `2610183`. There are no unverified V5.1 merges.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 merged and verified at `2610183`. PHASE 5 PR #85 (`refactor: extract curation value normalization`) is open at exact head `49a0f74`; no merge has occurred.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 4 iteration 2 local gates and PR CI 33921625269 passed; main CI 33921851020 passed; Deploy web 33921851015 passed at exact 2610183 with identical processing/output metrics, build mode ok, deploy/live smoke/admin lock success`
+- last_passed_tests: `PHASE 5 49a0f74: targeted curation 44 OK; cap mutant killed before/after; four function and seven constant AST nodes identical; call-time patch and single owner identity OK; V5 harness 13 OK including 3 hash seeds; root 1,472 OK in 126.859s; web offline 561 OK/3 skip in 21.128s; all offline Node and direct-script/import/compile/diff checks OK`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-On `refactor/v5-phase5-curation-normalization`, extract only the four pure controlled-value normalizers and their immutable vocabulary constants into an acyclic root module. Preserve `news_bot` re-exports and prove that patching `news_bot.norm_topics` affects `normalize_curation_item` at call time. Re-run the killed cap mutation, AST equality, harness, hash seeds, root/web/Node suites, execution-mode and import smoke before deciding whether a PR is allowed.
+Wait once for PR #85 Python CI at exact head `49a0f74`. If successful, refresh `origin/main`, inspect any intervening code/state commits and active critical workflows, rerun the relevant gate, and apply the common Merge Gate. Merge only on PASS.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -168,7 +168,16 @@ On `refactor/v5-phase5-curation-normalization`, extract only the four pure contr
 - Selected one narrow pure normalization responsibility: `norm_scope`, `norm_topics`, `norm_countries`, and `norm_article_type`, together with only their immutable controlled vocabularies. They have explicit inputs/outputs and no network, write, environment, time, path, state mutation, identity, ranking, dedup, or Gemini behavior.
 - Repository search found direct public use through `news_bot` but no existing patch of these functions or vocabulary constants. The extraction must keep every public symbol re-exported from `news_bot`; its existing callers must continue global call-time lookup so a patch on `news_bot.norm_topics` controls `normalize_curation_item`.
 - Freeze result: existing `TestControlledTagNorm` 3/3 passed. A pre-extraction runtime mutant increasing the controlled-topic cap from 3 to 4 was killed by `test_topics_whitelist_and_cap` with the expected four-versus-three failure. Recorded AST hashes: scope `c378bdd1`, topics `4a918c39`, countries `c683e251`, article type `7abc4c77`.
-- No ABANDON or STOP condition exists. Implementation has not started at this checkpoint.
+- No ABANDON or STOP condition exists.
+
+## PHASE 5 local gate (complete; PR pending)
+
+- Commit `49a0f74` moves exactly the four frozen normalizer bodies and seven controlled-vocabulary expressions into new acyclic root module `curation_normalization.py`; `news_bot.py` imports and re-exports every prior public symbol.
+- All four moved function ASTs and all seven moved constant-expression ASTs are identical to `origin/main`. The topic-cap mutant was killed again after extraction. The added contract patches `news_bot.norm_topics` and observes its return through `normalize_curation_item`, proving existing call-time patch behavior; identity assertions prove a single vocabulary owner.
+- Targeted curation/normalization tests passed 44/44. V5 harness passed 13/13, including three hash seeds, frozen request hashes/call counts, cache/state bytes, temporary-checkout execution mode, and import/network-write guards.
+- Full root suite passed 1,472/1,472 in 126.859s. Deploy-mode web offline suite passed 561/561 with three intentional skips in 21.128s. All offline Node date/weekly/trend/event/admin gate/render/real-DOM contracts, Python compile, direct-script smoke, and diff checks passed.
+- Final diff is exactly three files, 102 insertions and 70 deletions. It changes no state, schema, persistence, workflow, prompt, model, threshold, ranking, identity, dedup, source collection, API, cache, path, or mutable owner.
+- PR #85: https://github.com/wavyhairs/nuclens-v2/pull/85. Exact head `49a0f74c` is awaiting PR CI.
 
 ## PHASE 0 audit (complete)
 
