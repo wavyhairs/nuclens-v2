@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:34:37Z`
-- current_phase: `PHASE 1`
-- current_sub_step: `PHASE 1 PR #80 merged; first relevant main-push verification in progress`
+- updated_at_utc: `2026-09-04T13:36:57Z`
+- current_phase: `PHASE 2`
+- current_sub_step: `PHASE 1 verified complete; analyze one qualified snapshot-writer responsibility group`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `7432fc5f238762e8c4c1191ccd47448703816c97`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `PR #80 merge 7432fc5; Python tests push run 33878813214 in progress`
+- pending_operating_verification: `none`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 (`test: add V5 refactor safety harness`) merged by ordinary PR merge at `7432fc5` on 2026-09-04T13:34:20Z. PR CI `33878508360` succeeded. Main-push verification run `33878813214` is in progress; no later code PR may merge until it succeeds.
+PHASE 1 PR #80 (`test: add V5 refactor safety harness`) merged by ordinary PR merge at `7432fc5` on 2026-09-04T13:34:20Z. PR CI `33878508360` and main-push verification `33878813214` succeeded. No V5.1 PR is awaiting verification.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 1 branch: root 1,461 OK in 128.542s; harness 13 OK and 3 consecutive stable runs; deploy-mode web 561 OK (3 skipped) in 22.490s; all Node offline contracts including real-browser admin DOM OK; import/workflow smoke, source-write guard, CLI exit checks OK; GitHub CI 33878508360 success in 1m21s`
+- last_passed_tests: `PHASE 1 branch: root 1,461 OK in 128.542s; harness 13 OK and 3 consecutive stable runs; deploy-mode web 561 OK (3 skipped) in 22.490s; all Node offline contracts including real-browser admin DOM OK; import/workflow smoke, source-write guard, CLI exit checks OK; PR CI 33878508360 success in 1m21s; merged-main verification 33878813214 success in 1m13s at 7432fc5`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Observe main-push Python test run `33878813214`. On success, verify the run SHA equals merge SHA `7432fc5`, record no unexpected state/config/automation diff, close PHASE 1, and begin PHASE 2 analysis from the verified main. On failure, diagnose before any rerun or further merge.
+Create `refactor/v5-phase2-snapshot-write` from verified `origin/main` `7432fc5`. Limit scope to the qualified `news_bot.save_json` responsibility group (`sent.json`, `curated.json`, `digest_queue.json`), preserve exact serialization/file/new-file semantics, and prove all required failure injections. Do not touch append-only JSONL or transient handoffs.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -62,6 +62,13 @@ Observe main-push Python test run `33878813214`. On success, verify the run SHA 
 - Initial harness implementation corrections: subprocess socket-class replacement was narrowed to `connect/connect_ex/create_connection`; Windows subprocess decoding was fixed to UTF-8; cache expected bytes gained the existing final newline. Each correction was followed by rerun; no production change resulted.
 - GitHub CI run `33878508360` passed at head `4bdfd75` in 1m21s. Resolved versions included Python 3.12.14, pip 26.2.1, requests 2.34.2, google-genai 2.22.0, feedparser 6.0.14, Node 22.23.2, npm 10.9.8. The local/CI google-genai version differs (2.18.1 vs 2.22.0), but exact characterization and all CI tests passed; no contract drift was observed.
 - Merge Gate: freshly fetched `origin/main` remained `bbe62a4`; PR was clean/mergeable with no review requirement; only the eight declared harness/docs/workflow files differed; no generated state, production fixture, prompt/model/threshold/config change, debug code, or temporary mutation was present; no Crawl/Daily/Weekly workflow was active. Gate result: PASS.
+
+## PHASE 1 production verification (complete)
+
+- Workflow/run: Python tests main push, `33878813214`; checkout/merge SHA `7432fc5f238762e8c4c1191ccd47448703816c97`; started 2026-09-04T13:34:23Z, completed 2026-09-04T13:35:39Z; conclusion `success`; duration 1m13s.
+- This harness/workflow-only merge triggers no production state writer, deployment, LLM/API call, cache, article selection, or delivery path. State commit SHA/parent SHA: not applicable; output/state diff: none expected and none produced by the workflow.
+- Root tests and offline front-end contracts passed. Existing test-generated warning/error annotations were unchanged contract fixtures, not workflow failures. No schema/order/identity/ranking/grouping/request-count/config/automation drift was observed.
+- PHASE 1 result: COMPLETE; removed from the unverified-merge set.
 
 ## PHASE 0 audit (complete)
 
