@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T20:34:54Z`
+- updated_at_utc: `2026-09-04T20:36:03Z`
 - current_phase: `PHASE 3`
-- current_sub_step: `PR #82 CI 33916811781 passed at 04cd09a; common Merge Gate starting`
+- current_sub_step: `PR #82 common Merge Gate PASS; merge authorized and pending`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `a83f3bba4bf71558c4b5e89642b87a270eb87d31`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -103,6 +103,7 @@ Check all PR #82 checks at head `04cd09a`. If CI succeeds, refresh `origin/main`
 - `render_smoke.mjs` was intentionally excluded from the offline gate after a local attempt exited before test execution because Playwright is not installed. Its documented contract is a live-site Daily workflow check after `npm install --no-save playwright@1` and Chromium installation; it is not an offline test and this extraction does not alter browser code.
 - Final staged diff: two files, 47 insertions and 40 deletions; no state, schema, generated artifact, config, workflow, prompt, model, threshold, API, cache, or unrelated cleanup change. PR #82: https://github.com/wavyhairs/nuclens-v2/pull/82.
 - PR CI run `33916811781` checked out exact head `04cd09a2d5af3b10313b93b6c4d2aae069a10525` and passed from 2026-09-04T20:33:24Z to 20:34:30Z; root and front-end date/selector jobs both succeeded. Common Merge Gate is now in progress.
+- Merge Gate: fresh `origin/main` equals PR base `a83f3bba4bf71558c4b5e89642b87a270eb87d31`; no intervening commit or stale state exists. PR is open and mergeable with no required review, exact head/CI success, and only the declared two-file 47+/40- diff. Relevant 18 tests reran successfully, diff checks are clean, and GitHub reported no active or queued workflow. No Daily/Weekly send window or critical state commit is in progress. Gate result: PASS; ordinary PR merge authorized.
 
 ## PHASE 0 audit (complete)
 
