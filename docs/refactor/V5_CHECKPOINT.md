@@ -1,13 +1,13 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T20:55:34Z`
+- updated_at_utc: `2026-09-04T21:01:18Z`
 - current_phase: `PHASE 4`
-- current_sub_step: `PHASE 3 production verification complete; PHASE 4 next-responsibility analysis starting`
+- current_sub_step: `PHASE 4 PR #83 created at a9753d2; awaiting CI`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `1bc396549496cb8e4443ad2c6b9f2ad69e5bede9`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- work_branch: `refactor/v5-phase4-build-data-extraction (to be created from latest main)`
+- work_branch: `refactor/v5-phase4-build-data-extraction`
 - merge_mode: `autonomous-merge-permitted`
 - harness_version: `4bdfd75 (test: add V5 refactor safety harness)`
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 (`refactor: extract publication title helper`) passed CI `33916811781`, the Merge Gate, main CI `33917083106`, and Deploy web production verification `33917083131`; it is merged and verified at `1bc3965`. There are no unverified V5.1 merges.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 (`refactor: extract publication gist comparison`) is open at `a9753d2` and awaiting CI. There are no unverified V5.1 merges.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 3 commit 04cd09a: candidate tests 5 + V5 harness 13 OK; candidate mutation detected; AST and call-time patch OK; root 1,470 OK; web offline 561 OK/3 skip; Node contracts OK; PR CI 33916811781 and main CI 33917083106 success; Deploy web 33917083131 success with build/deploy/live smoke at 1bc3965`
+- last_passed_tests: `PHASE 4 commit a9753d2: gist candidate test + V5 harness 13 OK; 0.7→1.0 mutation detected; AST and call-time patch OK; root 1,470 OK in 126.922s; web offline 561 OK/3 skip in 21.117s; offline Node contracts OK`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Create `refactor/v5-phase4-build-data-extraction` from `origin/main` at `1bc3965`. Apply PHASE 3 candidate rules to the next single `web/build_data.py` responsibility, beginning with the remaining publication presentation helpers adjacent to the verified extraction. Require existing behavior coverage plus a candidate-specific runtime mutation; if the benefit/risk gate fails, record ABANDON and inspect the next candidate. Stop PHASE 4 when further benefit is smaller than risk or three consecutive candidates are abandoned.
+Check PR #83 CI at exact head `a9753d2`. On success, fetch latest main, preserve intervening state, rerun relevant tests, inspect exact two-file diff and active workflows, and apply the common Merge Gate. Merge only on PASS, then require the first relevant Deploy web production run before any further code merge.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -114,6 +114,15 @@ Create `refactor/v5-phase4-build-data-extraction` from `origin/main` at `1bc3965
 - Output was 4,746 displayed articles, 617 briefing articles, 596 issue cards, 431 detail pages, and 50 date briefs. Build mode was `ok`, identity quarantined 0. Existing archive repair (17 quarantined/642 date-normalized) and preselection-headroom (15/952, 1.6%) warnings remained advisory and showed no new failure/degraded domain caused by the extraction.
 - All app/date/weekly/event/trend/admin contracts, real-browser admin DOM, and 561 web tests passed in the production workflow. Cloudflare deployment completed at `https://44c39c5a.nuclens-v2.pages.dev`; live missing-data-path smoke returned the expected 404; `/admin/` and `/admin/data/merges.json` both returned the expected 401.
 - PHASE 3 result: COMPLETE; PR #82 removed from the unverified-merge set. No revert or retry was required.
+
+## PHASE 4 iteration 1 local gate (complete; PR pending)
+
+- Selected one additional pure presentation responsibility adjacent to the verified module: `gist_adds_nothing(gist, title_kr) -> bool`. It has no network, write, environment, mutable-state, identity, Gemini, ranking, dedup, path-base, or giant-module dependency; repository search found no direct patch consumer.
+- Commit `a9753d2` moves only the exact function body into `web/publication_title.py` and imports it back into `web/build_data.py`. Existing production entrypoint and public symbol remain unchanged; the dependency direction is still one-way and acyclic.
+- The moved function AST is identical. A runtime mutant changing the similarity boundary from 0.7 to 1.0 is killed by the live-derived title/gist regression test before and after extraction. An initial post-extraction diagnostic incorrectly replaced only the new module attribute after `build_data` had imported the function object, so it did not exercise the mutant; the command was corrected to replace the existing public symbol, detected the expected failure, and required no source change.
+- `load_publications` was exercised with a temporary publication and a patched `build_data.gist_adds_nothing`; the patched return value controlled gist removal, confirming call-time lookup compatibility.
+- V5 harness 13/13, full root 1,470/1,470, deploy-mode web offline 561/561 with three intentional skips, Python compile, and all offline Node date/weekly/trend/event/admin render/real-DOM contracts passed. Final diff is exactly two files, 23 insertions and 22 deletions, with no unrelated change.
+- PR #83: https://github.com/wavyhairs/nuclens-v2/pull/83.
 
 ## PHASE 0 audit (complete)
 
