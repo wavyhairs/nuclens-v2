@@ -64,7 +64,7 @@ import story_cluster  # noqa: E402
 import story_fingerprint  # noqa: E402
 import story_identity  # noqa: E402
 import weekly_sections  # noqa: E402
-from web.publication_title import strip_org_prefix  # noqa: E402
+from web.publication_title import gist_adds_nothing, strip_org_prefix  # noqa: E402
 
 try:
     # Actions 파이프에서는 stdout이 블록 버퍼링된다. 타임아웃으로 죽은 8/26
@@ -3749,27 +3749,6 @@ def publication_relevance(item: dict) -> str:
         return "technical"
     # 애매하면 접지 않는다 — 잘못 접는 쪽이 해롭다.
     return "policy"
-
-
-def gist_adds_nothing(gist: str, title_kr: str) -> bool:
-    """gist 가 한국어 제목을 되풀이하기만 하면 참.
-
-    v1 프롬프트가 "제목에서 읽어낼 수 있는 범위만"을 너무 곧이곧대로 받아 제목을
-    한국어로 다시 쓴 것을 gist 로 냈다(실측: "원자력 안전을 위한 핵심 실험
-    데이터세트 보존" → "원자력 안전 핵심 실험 데이터세트 보존"). 같은 말을 두 줄
-    쓰면 목록만 길어지고 판단에는 보탬이 없다.
-
-    v2 프롬프트가 문서 성격·범위를 쓰도록 바뀌었지만, 이미 캐시된 v1 gist 는
-    다음 번역까지 남는다 — 그동안 화면에서 가린다.
-    """
-    gist, title_kr = (gist or "").strip(), (title_kr or "").strip()
-    if not gist or not title_kr:
-        return False
-    squeeze = lambda text: "".join(text.split())
-    a, b = squeeze(gist), squeeze(title_kr)
-    if a in b or b in a:
-        return True
-    return difflib.SequenceMatcher(None, a, b).ratio() >= 0.7
 
 
 def publication_drop_reason(item: dict) -> str:
