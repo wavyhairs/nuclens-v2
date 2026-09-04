@@ -15,6 +15,10 @@ outbox_result.json
 weekly_result.json
 crawl_gate_result.json
 
+# Crawler snapshot replacement temp files. A killed process may leave one behind;
+# recovery always starts from the intact tracked snapshot, never from this residue.
+.nuclens-atomic-*.tmp
+
 # 수집 단계에서 생성하는 임베딩 캐시 (GitHub Actions cache로만 유지)
 embeddings.json
 
