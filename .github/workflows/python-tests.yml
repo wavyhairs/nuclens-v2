@@ -88,6 +88,16 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      # V5.1 does not pin dependencies in this refactor.  Preserve the resolver's exact
+      # result in the job log so a local/CI difference can be diagnosed without guessing.
+      - name: Resolved runtime versions
+        run: |
+          python --version
+          python -m pip --version
+          python -m pip freeze --all
+          node --version
+          npm --version
+
       # 루트 회귀 검사. 게이트·랭킹·story/issue·운영 알림까지 전부 여기 있다.
       - name: Root tests
         run: python -m unittest discover -s tests
