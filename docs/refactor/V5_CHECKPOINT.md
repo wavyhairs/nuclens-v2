@@ -1,16 +1,16 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:12:27Z`
+- updated_at_utc: `2026-09-04T13:29:51Z`
 - current_phase: `PHASE 1`
-- current_sub_step: `PHASE 0 complete; create Refactor Safety Harness`
+- current_sub_step: `PHASE 1 local gate complete; push commit and open harness-only PR`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- work_branch: `refactor/v5-checkpoint`
+- work_branch: `refactor/v5-phase1-harness`
 - merge_mode: `autonomous-merge-permitted`
-- harness_version: `not created (PHASE 1 next)`
-- characterization_baseline: `root 1,448 tests OK; deploy-mode web 561 tests OK (3 intentional skips); Node offline contracts OK`
+- harness_version: `4bdfd75 (test: add V5 refactor safety harness)`
+- characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
 - pending_operating_verification: `none`
@@ -31,11 +31,11 @@
 
 ## PR history
 
-No V5.1 PRs created, merged, or reverted.
+No V5.1 PRs created, merged, or reverted. PHASE 1 local commit: `4bdfd75` on `refactor/v5-phase1-harness`; push/PR is the next action.
 
 ## Validation status
 
-- last_passed_tests: `python -m unittest discover -s tests -q: 1,448 OK in 125.457s; NUCLENS_SKIP_DATA_GATES=1 web suite: 561 OK, 3 skipped in 21.487s; Node offline contracts: all OK`
+- last_passed_tests: `PHASE 1 branch: root 1,461 OK in 128.542s; harness 13 OK and 3 consecutive stable runs; deploy-mode web 561 OK (3 skipped) in 22.490s; all Node offline contracts including real-browser admin DOM OK; import/workflow smoke, source-write guard, CLI exit checks OK`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,19 @@ None.
 
 ## Next action
 
-Create PHASE 1 harness-only branch from current `origin/main`; freeze sanitized fixtures and exact contracts; add network/write/import/workflow smoke protection, dependency reporting, coverage map, exit criteria, and prove all negative controls before opening a PR.
+Switch to `refactor/v5-phase1-harness`, push `4bdfd75`, open the harness-only PR, observe relevant CI, then apply the Merge Gate against freshly fetched `origin/main` and active workflow state.
+
+## PHASE 1 local gate (complete; PR pending)
+
+- Production algorithm/state/config/prompts/models/thresholds were not changed. The only workflow change records resolved Python/Node dependency versions without pinning them.
+- Added a sanitized synthetic frozen fixture with baseline SHA, creation date, real regression test references, malformed/legacy/Unicode/NFC-NFD/state-boundary/admin-override cases, fixed embeddings, and no secret/private/full-body data.
+- Exact characterization digest protects selected order, complete ranking diagnostics and numeric values, story/issue grouping and IDs, identity metadata, continuity, Daily region selection path, Weekly story/calendar selection, state transition, JSONL bytes, and configured thresholds.
+- Gemini fixture lookup is keyed by canonical request hash containing model and exact structured body; only JSON object key order is canonicalized. Unknown hashes fail. Counter multiset and total call count are asserted. Cache hit/stale/envelope bytes are asserted.
+- IPv4/IPv6 connections are blocked while local IPC remains available. Hash-seed subprocesses and temporary-checkout workflow import-mode subprocesses use the same block with blank secrets and `PYTHONDONTWRITEBYTECODE=1`; production source hashes are unchanged.
+- Comparator allowlist contains only the explicit `generated_at` path and rejects all other drift.
+- Bootstrap negative controls all detected: ranking weight, dedup threshold, reversed sort, removed story-id seed, changed Gemini prompt, and omitted snapshot write. Runtime monkeypatches only; no mutation remains.
+- Validation: root 1,461 tests OK (128.542s); deploy-mode web 561 OK/3 skip (22.490s); Node app/date/weekly/event/trend/admin gate/render/DOM all OK; harness 13 OK and three consecutive runs stable at 2.063/2.018/2.020s.
+- Initial harness implementation corrections: subprocess socket-class replacement was narrowed to `connect/connect_ex/create_connection`; Windows subprocess decoding was fixed to UTF-8; cache expected bytes gained the existing final newline. Each correction was followed by rerun; no production change resulted.
 
 ## PHASE 0 audit (complete)
 
