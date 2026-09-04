@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:48:13Z`
+- updated_at_utc: `2026-09-04T13:49:40Z`
 - current_phase: `PHASE 2`
-- current_sub_step: `PHASE 2 PR #81 merged; main-push CI and first natural snapshot-writer run pending`
+- current_sub_step: `PHASE 2 main-push CI verified; paused by long-wait rule for first natural snapshot-writer run`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `a1dfd5d1b7d775ab65cba9d80a9e04a9523a0024`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `PR #81 merge a1dfd5d; Python push run 33880064664 in progress, then first natural Crawl or Daily pre-brief`
+- pending_operating_verification: `PR #81 merge a1dfd5d; first natural Crawl or Daily pre-brief after merge (next scheduled Crawl type expected after 2026-09-04T15:11:00Z)`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -35,7 +35,7 @@ PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomicall
 
 ## Validation status
 
-- last_passed_tests: `PHASE 2 commit ac673de: root 1,470 OK in 94.057s; atomic failure-injection 9 + harness 13 OK; exact characterization digest unchanged; PR CI 33879823426 success in 1m12s`
+- last_passed_tests: `PHASE 2 commit ac673de: root 1,470 OK in 94.057s; atomic failure-injection 9 + harness 13 OK; exact characterization digest unchanged; PR CI 33879823426 success in 1m12s; merged-main CI 33880064664 success in 1m18s at a1dfd5d`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Observe immediate main-push Python run `33880064664`, then stop at the long-wait rule until the first naturally scheduled Crawl or Daily pre-brief checks out merge SHA `a1dfd5d` or a state-only descendant. Verify workflow/run identity, state commit parentage and only expected `sent.json`/`curated.json`/`digest_queue.json` changes, valid JSON/schema/order, no `.nuclens-atomic-*.tmp`, normal counts/API/cache/build/degraded metrics. Do not dispatch production and do not merge another code PR.
+Resume by finding the first natural Crawl or Daily pre-brief started after 2026-09-04T13:47:54Z that checks out merge SHA `a1dfd5d` or a state-only descendant. Verify workflow/run identity, state commit parentage and only expected `sent.json`/`curated.json`/`digest_queue.json` changes, valid JSON/schema/order, no `.nuclens-atomic-*.tmp`, normal counts/API/cache/build/degraded metrics. Do not dispatch production and do not merge another code PR. Current session stops here under the V5.1 long-wait rule; this is not a STOP/ABANDON condition.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -79,6 +79,8 @@ Observe immediate main-push Python run `33880064664`, then stop at the long-wait
 - Failure injections passed for temp-open failure, replace failure, existing file, malformed existing file, empty dict/list, simulated ENOSPC, and interrupted partial write. Every pre-replace failure preserved the complete old file and removed temp residue. All three owner wrappers route through the hardened writer.
 - Validation at final commit `ac673de`: atomic + V5 harness 22 tests OK; exact characterization digest unchanged; 3 hash seeds/import/workflow smoke inherited through the harness; full root 1,470 tests OK in 94.057s; diff check clean.
 - PR CI `33879823426` passed at `ac673de` in 1m12s. Merge Gate: fresh `origin/main` remained verified SHA `7432fc5`; PR clean/mergeable with no required review; final diff only `.gitignore`, `news_bot.py`, and the atomic failure-injection test; no state/config/schema/prompt/model/threshold/generated artifact or append-only writer change; no active/queued Crawl, Daily, or Weekly workflow. Gate result: PASS.
+- PR #81 merged at `a1dfd5d`. Immediate main-push Python run `33880064664` checked out that exact SHA and succeeded from 2026-09-04T13:47:56Z to 13:49:20Z (job duration 1m18s). It produced no production state by design. At 13:49:40Z no production workflow was active or queued.
+- The writer itself requires a naturally occurring Crawl or Daily pre-brief for post-merge production verification. The next scheduled Crawl type is expected after 15:11Z, so V5.1 §9 forbids repeated polling or a validation-only dispatch. Checkpoint saved and session paused safely with one unverified merge.
 
 ## PHASE 0 audit (complete)
 
