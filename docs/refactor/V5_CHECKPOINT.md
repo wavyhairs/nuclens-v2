@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T21:01:18Z`
+- updated_at_utc: `2026-09-04T21:02:45Z`
 - current_phase: `PHASE 4`
-- current_sub_step: `PHASE 4 PR #83 created at a9753d2; awaiting CI`
+- current_sub_step: `PHASE 4 PR #83 CI 33919089786 passed at a9753d2; Merge Gate starting`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `1bc396549496cb8e4443ad2c6b9f2ad69e5bede9`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -35,7 +35,7 @@ PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verif
 
 ## Validation status
 
-- last_passed_tests: `PHASE 4 commit a9753d2: gist candidate test + V5 harness 13 OK; 0.7→1.0 mutation detected; AST and call-time patch OK; root 1,470 OK in 126.922s; web offline 561 OK/3 skip in 21.117s; offline Node contracts OK`
+- last_passed_tests: `PHASE 4 commit a9753d2: gist candidate test + V5 harness 13 OK; 0.7→1.0 mutation detected; AST and call-time patch OK; root 1,470 OK in 126.922s; web offline 561 OK/3 skip in 21.117s; offline Node contracts OK; PR CI 33919089786 success in 1m11s at exact head`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -123,6 +123,7 @@ Check PR #83 CI at exact head `a9753d2`. On success, fetch latest main, preserve
 - `load_publications` was exercised with a temporary publication and a patched `build_data.gist_adds_nothing`; the patched return value controlled gist removal, confirming call-time lookup compatibility.
 - V5 harness 13/13, full root 1,470/1,470, deploy-mode web offline 561/561 with three intentional skips, Python compile, and all offline Node date/weekly/trend/event/admin render/real-DOM contracts passed. Final diff is exactly two files, 23 insertions and 22 deletions, with no unrelated change.
 - PR #83: https://github.com/wavyhairs/nuclens-v2/pull/83.
+- PR CI `33919089786` passed at exact head `a9753d2a30d0801144a26c5ce63947746137c7bd` from 2026-09-04T21:01:12Z to 21:02:27Z. Common Merge Gate is in progress.
 
 ## PHASE 0 audit (complete)
 
