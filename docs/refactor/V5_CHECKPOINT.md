@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T20:33:38Z`
+- updated_at_utc: `2026-09-04T20:34:54Z`
 - current_phase: `PHASE 3`
-- current_sub_step: `PR #82 created at 04cd09a; awaiting required CI before Merge Gate`
+- current_sub_step: `PR #82 CI 33916811781 passed at 04cd09a; common Merge Gate starting`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `a83f3bba4bf71558c4b5e89642b87a270eb87d31`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -35,7 +35,7 @@ PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomicall
 
 ## Validation status
 
-- last_passed_tests: `PHASE 3 commit 04cd09a: candidate tests 5 + V5 harness 13 OK; candidate mutation detected 2 failures; moved AST identical; call-time patch OK; root 1,470 OK in 126.974s; web offline 561 OK/3 skip in 21.780s; offline Node date/weekly/trend/event/admin/render/DOM contracts OK`
+- last_passed_tests: `PHASE 3 commit 04cd09a: candidate tests 5 + V5 harness 13 OK; candidate mutation detected 2 failures; moved AST identical; call-time patch OK; root 1,470 OK in 126.974s; web offline 561 OK/3 skip in 21.780s; offline Node date/weekly/trend/event/admin/render/DOM contracts OK; PR CI 33916811781 success in 58s at exact head`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -102,6 +102,7 @@ Check all PR #82 checks at head `04cd09a`. If CI succeeds, refresh `origin/main`
 - V5 harness 13/13 passed, including exact characterization, three hash seeds, frozen Gemini request counter, cache bytes, CLI, imports, workflow execution mode, and trigger contract. Full root 1,470/1,470 and deploy-mode web offline 561/561 with three intentional skips passed. Node syntax/date/weekly/trend/event/admin render and real-DOM contracts passed.
 - `render_smoke.mjs` was intentionally excluded from the offline gate after a local attempt exited before test execution because Playwright is not installed. Its documented contract is a live-site Daily workflow check after `npm install --no-save playwright@1` and Chromium installation; it is not an offline test and this extraction does not alter browser code.
 - Final staged diff: two files, 47 insertions and 40 deletions; no state, schema, generated artifact, config, workflow, prompt, model, threshold, API, cache, or unrelated cleanup change. PR #82: https://github.com/wavyhairs/nuclens-v2/pull/82.
+- PR CI run `33916811781` checked out exact head `04cd09a2d5af3b10313b93b6c4d2aae069a10525` and passed from 2026-09-04T20:33:24Z to 20:34:30Z; root and front-end date/selector jobs both succeeded. Common Merge Gate is now in progress.
 
 ## PHASE 0 audit (complete)
 
