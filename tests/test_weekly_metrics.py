@@ -1257,14 +1257,27 @@ class TestWeeklyUpcomingDisabled(unittest.TestCase):
 
 
 class TestPreviousWeekCoreEventFilter(unittest.TestCase):
-    """W34→W35 실제 전력망 3법 반복과 progress 예외를 고정한다."""
+    """W34→W35 실제 전력망 3법 반복과 progress 예외를 고정한다.
+
+    실데이터를 **얼려서** 읽는다.  예전엔 저장소 루트의 `curated.json` 과
+    `weekly_reports.json` 을 그대로 읽었는데, 둘 다 봇이 3시간마다 다시 쓰는
+    **굴러가는 창**이다(curated 약 4,800건 · weekly 최근 4주).  그래서 이
+    검사는 고정된 회귀가 아니라 시한폭탄이었다 — 2026-09-03 크롤이
+    `e9013dd51ee6673f` 을 창 밖으로 밀어내자 W34 핵심사건 다섯 건이 통째로
+    사라졌고, `filter_previous_week_repeats` 가 prior 없음으로 조기 리턴하면서
+    `StopIteration` 과 `filtered != []` 로 터졌다.  코드는 그대로였다.
+
+    창이 다시 구를 때마다 이 검사가 무너지면 진짜 회귀와 구별할 수 없다.
+    필요한 기사 8건과 W34 리포트만 fixture 로 떠 둔다.
+    """
 
     @classmethod
     def setUpClass(cls):
-        root = Path(__file__).parent.parent
-        cls.curated = json.loads((root / "curated.json").read_text(encoding="utf-8"))
-        reports = json.loads((root / "weekly_reports.json").read_text(encoding="utf-8"))
-        cls.w34 = reports["reports"]["2026-W34"]
+        fixture = json.loads(
+            (Path(__file__).parent / "fixtures" / "weekly_prev_week_w34.json")
+            .read_text(encoding="utf-8"))
+        cls.curated = fixture["curated"]
+        cls.w34 = fixture["previous_report"]
 
     def _article(self, hash_value):
         return {**self.curated[hash_value], "hash": hash_value}
