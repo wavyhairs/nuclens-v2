@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T13:45:25Z`
+- updated_at_utc: `2026-09-04T13:47:04Z`
 - current_phase: `PHASE 2`
-- current_sub_step: `PHASE 2 PR #81 open; await relevant CI then apply Merge Gate`
+- current_sub_step: `PHASE 2 PR #81 passed CI and Merge Gate; merge next`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `7432fc5f238762e8c4c1191ccd47448703816c97`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 (`test: add V5 refactor safety harness`) merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) is open at `ac673de`; CI pending; not merged or reverted. No V5.1 PR is awaiting post-merge verification.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 (`fix: atomically replace crawler snapshots`) is open at `ac673de`; CI `33879823426` succeeded and Merge Gate passed; not yet merged. No V5.1 PR is awaiting post-merge verification.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 2 commit ac673de: root 1,470 OK in 94.057s; atomic failure-injection 9 + harness 13 OK; exact characterization digest unchanged; PHASE 1 PR CI 33878508360 and merged-main verification 33878813214 success`
+- last_passed_tests: `PHASE 2 commit ac673de: root 1,470 OK in 94.057s; atomic failure-injection 9 + harness 13 OK; exact characterization digest unchanged; PR CI 33879823426 success in 1m12s`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Observe PR #81 relevant Python CI. Then fetch fresh main and check active Crawl/Daily/Weekly writers before applying the Merge Gate. If merged, the first subsequent Crawl or Daily pre-brief that checks out the merge SHA/state descendant is the required production verification; do not dispatch one only for V5.1.
+Merge PR #81 by ordinary PR merge. Record the merge SHA and wait for both the immediate main-push Python test and the first subsequent naturally scheduled Crawl or Daily pre-brief using that code. Do not dispatch production for validation; do not merge another code PR until state-writer verification completes.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -78,6 +78,7 @@ Observe PR #81 relevant Python CI. Then fetch fresh main and check active Crawl/
 - `fsync` is intentionally omitted: workflow success followed by git commit/push is the relevant persistence boundary; local disk survival across runner/power loss is not consumed as durable state.
 - Failure injections passed for temp-open failure, replace failure, existing file, malformed existing file, empty dict/list, simulated ENOSPC, and interrupted partial write. Every pre-replace failure preserved the complete old file and removed temp residue. All three owner wrappers route through the hardened writer.
 - Validation at final commit `ac673de`: atomic + V5 harness 22 tests OK; exact characterization digest unchanged; 3 hash seeds/import/workflow smoke inherited through the harness; full root 1,470 tests OK in 94.057s; diff check clean.
+- PR CI `33879823426` passed at `ac673de` in 1m12s. Merge Gate: fresh `origin/main` remained verified SHA `7432fc5`; PR clean/mergeable with no required review; final diff only `.gitignore`, `news_bot.py`, and the atomic failure-injection test; no state/config/schema/prompt/model/threshold/generated artifact or append-only writer change; no active/queued Crawl, Daily, or Weekly workflow. Gate result: PASS.
 
 ## PHASE 0 audit (complete)
 
