@@ -3,6 +3,8 @@ import html
 import json
 import os
 import re
+import secrets
+import stat
 import sys
 import time
 import unicodedata
@@ -747,7 +749,52 @@ def load_json(path: Path, default):
 
 
 def save_json(path: Path, data) -> None:
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    """Atomically replace one crawler-owned JSON snapshot.
+
+    The crawl/Daily workflows commit these files after the process exits, so the git
+    commit is the persistence boundary; an fsync would not add a useful durability
+    guarantee here.  Flush and close still happen before replace so readers see either
+    the complete old snapshot or the complete new one.
+    """
+    payload = json.dumps(data, ensure_ascii=False, indent=2)
+    existing_mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else None
+    temp_path: Path | None = None
+    fd: int | None = None
+    try:
+        for _attempt in range(100):
+            candidate = path.with_name(
+                f".nuclens-atomic-{path.name}-{secrets.token_hex(8)}.tmp"
+            )
+            try:
+                # 0o666 lets the process umask produce the same new-file mode as
+                # Path.write_text(). O_EXCL prevents two writers sharing a temp file.
+                fd = os.open(
+                    candidate,
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0),
+                    0o666,
+                )
+                temp_path = candidate
+                break
+            except FileExistsError:
+                continue
+        else:
+            raise FileExistsError(f"could not allocate atomic snapshot temp for {path}")
+
+        if existing_mode is not None:
+            os.chmod(temp_path, existing_mode)
+
+        stream = os.fdopen(fd, "w", encoding="utf-8")
+        fd = None  # fdopen owns it from here.
+        with stream:
+            stream.write(payload)
+            stream.flush()
+        os.replace(temp_path, path)
+        temp_path = None
+    finally:
+        if fd is not None:
+            os.close(fd)
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
 
 
 def load_reports_kb() -> list[dict]:
