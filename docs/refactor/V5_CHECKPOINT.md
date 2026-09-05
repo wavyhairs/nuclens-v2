@@ -1,11 +1,11 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-05T01:29:46Z`
+- updated_at_utc: `2026-09-05T01:30:48Z`
 - current_phase: `PHASE 5`
-- current_sub_step: `PR #85 replacement CI passed at 40160e0 and final common Merge Gate is PASS; ordinary PR merge is authorized`
+- current_sub_step: `PR #85 merged at 77b4f80; main-push Python 33936367064 is in progress and the first natural Crawl/Daily execution remains required`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- latest_main_sha: `3dfd08033a1413e80b7dfe71d16d7934eced492a`
+- latest_main_sha: `77b4f8057072fafa60c878ce445208dfe469e398`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - work_branch: `refactor/v5-phase5-curation-normalization (created from 77d20f2)`
 - merge_mode: `autonomous-merge-permitted`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `merge PR #85, then main-push CI and first relevant crawl/Daily production run that executes the merged news_bot path`
+- pending_operating_verification: `PR #85 merge 77b4f80: main-push Python 33936367064 and first natural Crawl or Daily pre-brief that checks out the merge or a state-only descendant`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,7 +31,7 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 merged and verified at `2610183`. PHASE 5 PR #85 (`refactor: extract curation value normalization`) is open; initial head `49a0f74` passed CI `33924299348`, latest state-only main `3dfd080` is integrated at head `40160e0`, and replacement CI is pending. No merge has occurred.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 merged and verified at `2610183`. PHASE 5 PR #85 (`refactor: extract curation value normalization`) passed both exact-head CIs and the Merge Gate, then merged at `77b4f80` on 2026-09-05T01:30:22Z. PR #85 is the sole unverified V5.1 merge.
 
 ## Validation status
 
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Merge PR #85 by ordinary PR merge. Record the merge SHA immediately, then verify the main-push Python run. Because the changed runtime path is root `news_bot.py`, keep the merge unverified until the first naturally occurring Crawl or Daily pre-brief executes it; do not force a validation-only scheduled workflow.
+Wait once for main-push Python `33936367064`. Then identify the first naturally occurring Crawl or Daily pre-brief that checks out `77b4f80` or its state-only descendant. Do not force a validation-only run or poll repeatedly. Verify run identity, expected state lineage, normal collection/curation/request/cache/build metrics, schema/order/identity invariants, and no new degraded/failure domain before removing PR #85 from the unverified set.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -186,6 +186,7 @@ Merge PR #85 by ordinary PR merge. Record the merge SHA immediately, then verify
 - Replacement CI `33936238616` passed at exact head `40160e0145691dec2f5dea708793520c4873a822` in 1m05s. Fresh `origin/main` remained `3dfd080`, exactly the integrated base; PR #85 is open, non-draft, mergeable, and has no required review.
 - Final diff review is unchanged at the declared three files and 102+/70-. There is no generated state, debug code, mutation, formatting churn, unrelated cleanup, secret, production fixture, config/model/prompt/threshold drift, or moved-body AST difference.
 - GitHub reported no active or queued workflow. Current timing is after the Daily and Friday Weekly send windows with ample time before the next send. There is no unverified earlier V5 merge. Common Merge Gate result: PASS; ordinary PR merge is authorized.
+- PR #85 merged by ordinary merge at `77b4f8057072fafa60c878ce445208dfe469e398` on 2026-09-05T01:30:22Z. Its parents are latest main `3dfd080` and feature head `40160e0`. Main-push Python run `33936367064` started at the exact merge SHA and is in progress. No Deploy web run is expected from this root-only path change.
 
 ## PHASE 0 audit (complete)
 
