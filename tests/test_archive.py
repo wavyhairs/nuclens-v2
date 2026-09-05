@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -176,6 +177,22 @@ class TestControlledTagNorm(unittest.TestCase):
         self.assertEqual(news_bot.norm_article_type("policy"), "policy")
         self.assertEqual(news_bot.norm_article_type("속보"), "news")
         self.assertEqual(news_bot.norm_article_type(None), "news")
+
+    def test_news_bot_patch_controls_runtime_normalization(self):
+        with mock.patch.object(news_bot, "norm_topics", return_value=["patched"]) as patched:
+            result = news_bot.normalize_curation_item(
+                {"topics": ["smr"], "title_kr": "원전 정책"},
+                {"title": "원전 정책", "description": "공식 설명", "domain": "example.com"},
+                body="검증용 본문",
+            )
+        self.assertEqual(result["topics"], ["patched"])
+        patched.assert_called_once_with(["smr"])
+
+    def test_news_bot_reexports_the_single_vocabulary_owner(self):
+        import curation_normalization
+
+        self.assertIs(news_bot.VALID_TOPICS, curation_normalization.VALID_TOPICS)
+        self.assertIs(news_bot.VALID_COUNTRIES, curation_normalization.VALID_COUNTRIES)
 
 
 class SourceUrlTests(unittest.TestCase):
