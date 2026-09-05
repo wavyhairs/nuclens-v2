@@ -210,10 +210,38 @@ On resume, fetch main and inspect the first Crawl or Daily pre-brief created aft
 - Remaining nearby parsing/source-interpretation candidates couple live-source fetch behavior, KST/data-quality helpers, mutable diagnostics/drop counters, Gemini schema handling, or patch-sensitive globals. Extracting them now would add boundaries without a demonstrated reduction in maintenance or operational risk.
 - PHASE 5 therefore ends under its conservative benefit-versus-risk criterion after one production-verified extraction. No candidate reached an ABANDON condition and no STOP condition exists. Proceed to PHASE 6.
 
-## PHASE 6 exit-criteria review (in progress)
+## PHASE 6 exit-criteria review (complete)
 
 - Review target is current `origin/main` `6b549b141f53a0571d64443973b0a87dd53c8845`, a state-only descendant of verified merge `77b4f80`. PHASE 6 permits analysis and checkpoint documentation only; no code modification is authorized.
 - Next action: compare the pre-registered `docs/REFACTOR_EXIT_CRITERIA.md` baseline against current main for responsibility boundaries, function/line metrics, mutable ownership, imports/fan-in/fan-out/cycles, test coverage/runtime, performance/resource evidence, API/cache stability, CI, and production observations; then decide whether another extraction reduces risk or merely splits files.
+
+### Registered-baseline comparison
+
+| Measure | Registered baseline `bbe62a4` | Current main `6b549b1` | Decision evidence |
+|---|---:|---:|---|
+| `web/build_data.py` | 6,776 lines / 160 functions / `build` 768 | 6,639 / 156 / `build` 768 | Four pure publication functions moved to two zero-dependency modules; orchestration unchanged. |
+| `news_bot.py` | 3,423 / 83 / `main` 503 | 3,413 / 79 / `main` 503 | Four pure normalizers moved to a zero-dependency module; the net line reduction also includes the qualified atomic snapshot writer. |
+| `daily_brief.py` | 1,898 / 45 / `plan_briefs` 333 | unchanged | High-risk plan/claim/send/confirm ownership intentionally preserved. |
+| `weekly_bot.py` | 1,534 / 41 / largest 153 | unchanged | Weekly delivery/cache ownership intentionally preserved. |
+| `issue_continuity.py` | 1,238 / 29 / largest 136 | unchanged | High-risk continuity and identity behavior intentionally preserved. |
+| `story_identity.py` | 270 / 14 / largest 47 | unchanged | High-risk identity behavior intentionally preserved. |
+| New pure owners | none | `web/publication_title.py` 68/2, `web/publication_policy.py` 88/2, `curation_normalization.py` 72/4 | All three are acyclic, have zero internal fan-out, and were negative-control plus production verified. |
+| Direct internal fan-out | web 18, news 15, Daily 14, weekly registered 14 | web +2, news +1; Daily/weekly unchanged | Each increase is the explicit one-way dependency on a new pure owner, not added operational coupling. |
+| Known direct cycle | `news_bot -> email_ingest -> news_bot` | unchanged | Pre-registered separate-project item; no new cycle introduced. |
+| Mutable global owners | news source/diagnostic/quota/config; Gemini call log; weekly caches | unchanged | No duplicate owner or hidden alias introduced. |
+| Root regression | 1,448 tests / 125.457s | 1,472 / 126.859s at the last full local gate | 24 net tests added; elapsed values are single-run safety observations, not a performance claim. |
+| Characterization | three hash seeds; median 2.020s; one frozen Gemini call | 13/13 at every phase; last 2.008s; same three seeds/call hash/count | Golden fixtures/comparator remained unchanged after registration. |
+| Persistent snapshots | curated ~16.7 MiB; queue ~3.9 MiB | 15,991,329 and 3,139,425 bytes at inspected main | Input/retention variation only; schemas, relative ordering, append-only lineage, and cache contracts remained stable. |
+
+- Mandatory safety criteria all pass. PRs #80-#85 used exact-head green CI and the common Merge Gate; every merged production-code PR completed its first relevant production verification, leaving zero unverified merges. Characterization preserved byte-for-byte results at all three hash seeds, blocked unknown network, retained production source/config/workflow hashes, and kept the frozen one-call Gemini request hash/count. Golden fixtures and comparator normalization were not weakened.
+- No accepted change altered state schema, delivery semantics, ranking, dedup thresholds, prompts, model selection, or external call counts. Every extracted responsibility had a behavior-killing negative control and retained the existing public/call-time patch surface. PHASE 2 changed only the interruption behavior of three crawler-owned snapshot replacements and preserved exact serialized bytes/new-file modes.
+- Structural benefit is bounded but genuine: publication title/policy and controlled curation normalization now have single, small, acyclic pure owners. The operationally large `build` and `main` functions are unchanged because their stateful orchestration did not qualify as a pure, behavior-protected candidate. Further nearby extraction would couple I/O, identity/ranking, live-source behavior, mutable state, or patch boundaries, and would primarily reduce line counts rather than maintenance/operational risk.
+- API/cache/CLI/import behavior remained exact in the harness and phase gates. Main CI and all first relevant production workflows passed; state lineage stayed linear and expected; no new failed or degraded production domain was observed. The existing cycle, workflow concurrency, dependency pinning, and live-data balance remain the explicitly pre-registered separate-project items.
+- PHASE 6 decision: structural refactoring is COMPLETE under the registered benefit-versus-risk exit criterion. No code was modified in this phase, no candidate was marked ABANDON, and no STOP condition exists. Proceed to PHASE 7 as a separate measured performance assessment.
+
+## PHASE 7 performance assessment (in progress)
+
+- Code and behavior remain frozen while establishing a comparable five-run baseline from existing production counters and timings. No validation-only workflow, repeated polling, semantic-output adjustment, or speculative optimization is authorized.
 
 ## PHASE 0 audit (complete)
 
