@@ -1,11 +1,11 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-04T22:09:41Z`
+- updated_at_utc: `2026-09-05T01:26:28Z`
 - current_phase: `PHASE 5`
-- current_sub_step: `PHASE 5 PR #85 created at 49a0f74 after all local gates passed; exact-head PR CI pending`
+- current_sub_step: `PR #85 initial head CI passed; main advanced through verified state-only commits to 3dfd080, so latest main integration and replacement exact-head CI are next`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- latest_main_sha: `77d20f2a7a30f941028bf6d72f3ce462d4c6b854`
+- latest_main_sha: `3dfd08033a1413e80b7dfe71d16d7934eced492a`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - work_branch: `refactor/v5-phase5-curation-normalization (created from 77d20f2)`
 - merge_mode: `autonomous-merge-permitted`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `PR #85 exact-head CI, then Merge Gate and first relevant crawl/Daily production run after merge`
+- pending_operating_verification: `PR #85 replacement exact-head CI after integrating 3dfd080, then Merge Gate and first relevant crawl/Daily production run after merge`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 merged and verified at `2610183`. PHASE 5 PR #85 (`refactor: extract curation value normalization`) is open at exact head `49a0f74`; no merge has occurred.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 merged and verified at `2610183`. PHASE 5 PR #85 (`refactor: extract curation value normalization`) is open; initial head `49a0f74` passed CI `33924299348`, but latest state-only main must be integrated before the final Merge Gate. No merge has occurred.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 5 49a0f74: targeted curation 44 OK; cap mutant killed before/after; four function and seven constant AST nodes identical; call-time patch and single owner identity OK; V5 harness 13 OK including 3 hash seeds; root 1,472 OK in 126.859s; web offline 561 OK/3 skip in 21.128s; all offline Node and direct-script/import/compile/diff checks OK`
+- last_passed_tests: `PHASE 5 49a0f74: all local gates passed; PR CI 33924299348 passed at exact head in 1m13s. Main then advanced only through expected persistent-state files; relevant tests must be rerun after integration.`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Wait once for PR #85 Python CI at exact head `49a0f74`. If successful, refresh `origin/main`, inspect any intervening code/state commits and active critical workflows, rerun the relevant gate, and apply the common Merge Gate. Merge only on PASS.
+Merge freshly fetched state-only `origin/main` `3dfd080` into `refactor/v5-phase5-curation-normalization`, preserving every latest state file. Confirm the PR diff remains only the declared three code/test files, rerun candidate contracts plus V5 harness, push, and wait once for replacement exact-head CI. Then refresh main and apply the remaining Merge Gate checks.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -177,7 +177,10 @@ Wait once for PR #85 Python CI at exact head `49a0f74`. If successful, refresh `
 - Targeted curation/normalization tests passed 44/44. V5 harness passed 13/13, including three hash seeds, frozen request hashes/call counts, cache/state bytes, temporary-checkout execution mode, and import/network-write guards.
 - Full root suite passed 1,472/1,472 in 126.859s. Deploy-mode web offline suite passed 561/561 with three intentional skips in 21.128s. All offline Node date/weekly/trend/event/admin gate/render/real-DOM contracts, Python compile, direct-script smoke, and diff checks passed.
 - Final diff is exactly three files, 102 insertions and 70 deletions. It changes no state, schema, persistence, workflow, prompt, model, threshold, ranking, identity, dedup, source collection, API, cache, path, or mutable owner.
-- PR #85: https://github.com/wavyhairs/nuclens-v2/pull/85. Exact head `49a0f74c` is awaiting PR CI.
+- PR #85: https://github.com/wavyhairs/nuclens-v2/pull/85. It was created at initial head `49a0f74c`.
+- PR CI `33924299348` checked out exact initial head `49a0f744cd615a260f05c520cf7db025a2cb6f00` and passed from 2026-09-04T22:09:36Z to 22:10:49Z (1m13s).
+- Resume audit found `origin/main` advanced linearly from `77d20f2` to `3dfd080` through six automation commits: issue-review/data-gate state, two crawl claim/state pairs, and a final issue-review cache update. Aggregate changed paths are only `archive/2026-09.jsonl`, `crawl_runs.json`, `curated.json`, `delivery_log.jsonl`, `digest_queue.json`, `discovery_state.json`, `issue_insights.json`, `issue_llm_reviews.json`, and `sent.json`; no code, workflow, config, schema owner, prompt, model, or threshold file changed.
+- The associated Crawl/Daily/Weekly workflows completed successfully, and GitHub reports no active or queued critical workflow in the inspected recent set. Because §7.1 requires the branch to contain latest main, the initial successful CI is not yet the final merge authorization; integration and replacement CI are pending.
 
 ## PHASE 0 audit (complete)
 
