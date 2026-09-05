@@ -23,6 +23,7 @@ import hashlib
 import json
 import math
 import os
+import platform
 import re
 import shutil
 import sys
@@ -91,6 +92,13 @@ OUT_DIR = Path(os.environ.get("OUTPUT_DIR", SITE_DIR / "public" / "data"))
 # 데이터를 공개 경로에 두면 URL 하나로 그대로 읽힌다 — 잠근 게 아니다.
 ADMIN_OUT_DIR = Path(os.environ.get("ADMIN_OUTPUT_DIR", OUT_DIR.parent / "admin" / "data"))
 GENERATION_ID = os.environ.get("GENERATION_ID", "")
+
+# Diagnostic-only controls.  Production keeps using the real KST clock and writes no
+# benchmark artifacts unless these variables are explicitly supplied.
+BUILD_AS_OF_ENV = "NUCLENS_BUILD_AS_OF"
+BUILD_PROFILE_ENV = "NUCLENS_BUILD_PROFILE"
+SEMANTIC_SIGNATURE_ENV = "NUCLENS_SEMANTIC_SIGNATURE"
+_ACTIVE_BUILD_PROFILE: dict | None = None
 
 SHOW_MARKET = False
 NEWS_WINDOW_DAYS = 60
@@ -231,6 +239,170 @@ AUDIT_FULL_DIR = Path(os.environ.get("AUDIT_OUTPUT_DIR", SITE_DIR / "_audit"))
 MATCH_OVERRIDES_FILE = BOT_DIR / "issue_match_overrides.json"
 SITE_URL = os.environ.get("SITE_URL", "https://nuclens-v2.pages.dev").rstrip("/")
 KST = timezone(timedelta(hours=9))
+
+
+def _build_now() -> datetime:
+    """Return the production clock, or an explicitly frozen diagnostic clock."""
+    raw = str(os.environ.get(BUILD_AS_OF_ENV) or "").strip()
+    if not raw:
+        return datetime.now(KST)
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"invalid {BUILD_AS_OF_ENV}: {raw!r}") from exc
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=KST)
+    return parsed.astimezone(KST)
+
+
+def _profile_increment(name: str, amount: int = 1) -> None:
+    if _ACTIVE_BUILD_PROFILE is not None:
+        counters = _ACTIVE_BUILD_PROFILE.setdefault("counters", Counter())
+        counters[name] += amount
+
+
+def _sequence_ratio(left: str, right: str) -> float:
+    _profile_increment("sequence_matcher_calls")
+    return difflib.SequenceMatcher(None, left, right).ratio()
+
+
+def _peak_rss_bytes() -> int | None:
+    """Best-effort process peak RSS without adding a runtime dependency."""
+    if os.name == "nt":
+        try:
+            import ctypes  # noqa: PLC0415
+            from ctypes import wintypes  # noqa: PLC0415
+
+            class ProcessMemoryCounters(ctypes.Structure):
+                _fields_ = [
+                    ("cb", wintypes.DWORD),
+                    ("PageFaultCount", wintypes.DWORD),
+                    ("PeakWorkingSetSize", ctypes.c_size_t),
+                    ("WorkingSetSize", ctypes.c_size_t),
+                    ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                    ("PagefileUsage", ctypes.c_size_t),
+                    ("PeakPagefileUsage", ctypes.c_size_t),
+                ]
+
+            counters = ProcessMemoryCounters()
+            counters.cb = ctypes.sizeof(counters)
+            handle = ctypes.windll.kernel32.GetCurrentProcess()
+            get_memory_info = ctypes.windll.kernel32.K32GetProcessMemoryInfo
+            get_memory_info.argtypes = [
+                wintypes.HANDLE,
+                ctypes.POINTER(ProcessMemoryCounters),
+                wintypes.DWORD,
+            ]
+            get_memory_info.restype = wintypes.BOOL
+            if get_memory_info(handle, ctypes.byref(counters), counters.cb):
+                return int(counters.PeakWorkingSetSize)
+        except (AttributeError, OSError, ValueError):
+            return None
+        return None
+    try:
+        import resource  # noqa: PLC0415
+
+        peak = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+        return peak if platform.system() == "Darwin" else peak * 1024
+    except (ImportError, OSError, ValueError):
+        return None
+
+
+def _canonical_digest(payload: object) -> str:
+    encoded = json.dumps(
+        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def build_semantic_signature(
+    news_items: list[dict],
+    issues: list[dict],
+    llm_verdicts: Mapping[str, bool],
+    match_overrides: Mapping[str, set[str]],
+) -> dict:
+    """Canonical semantic result, deliberately excluding timestamps and telemetry."""
+    cards = []
+    evidence = []
+    attached_hashes: set[str] = set()
+    invariants = []
+    for issue in issues:
+        issue_id = str(issue.get("issue_id") or "")
+        representative = issue.get("representative") or {}
+        members = issue.get("members") or []
+        cards.append({
+            "issue_id": issue_id,
+            "representative_hash": str(representative.get("hash") or ""),
+            "member_hashes": [str(member.get("hash") or "") for member in members],
+        })
+        evidence_diagnostics = {
+            str(row.get("hash") or ""): row
+            for row in issue.get("match_diagnostics") or []
+            if row.get("member_role") == "evidence"
+        }
+        for article in issue.get("evidence_members") or []:
+            article_hash = str(article.get("hash") or "")
+            attached_hashes.add(article_hash)
+            diagnostics = evidence_diagnostics.get(article_hash) or {}
+            evidence.append({
+                "hash": article_hash,
+                "target_issue_id": issue_id,
+                "reference_hash": str(diagnostics.get("reference_hash") or ""),
+                "unattached": False,
+            })
+        countries = sorted(set().union(*(
+            _cluster_countries(member) for member in members
+        )) if members else set())
+        facilities = sorted(set().union(*(
+            set().union(*_facility_signature(member)) for member in members
+        )) if members else set())
+        invariants.append({
+            "issue_id": issue_id,
+            "countries": countries,
+            "facilities": facilities,
+            "fingerprints": [member.get("story_fingerprint") or {} for member in members],
+        })
+    for article in news_items:
+        article_hash = str(article.get("hash") or "")
+        if article.get("briefing_date") or article.get("importance") == "noise":
+            continue
+        if article_hash not in attached_hashes:
+            evidence.append({
+                "hash": article_hash,
+                "target_issue_id": "",
+                "reference_hash": "",
+                "unattached": True,
+            })
+    evidence.sort(key=lambda row: (row["hash"], row["target_issue_id"]))
+    judgments = {
+        "llm": [[pair_id, bool(verdict)] for pair_id, verdict in sorted(llm_verdicts.items())],
+        "manual_approved": sorted(match_overrides.get("approved") or ()),
+        "manual_rejected": sorted(match_overrides.get("rejected") or ()),
+        "llm_approved": sorted(match_overrides.get("llm_approved") or ()),
+        "llm_rejected": sorted(match_overrides.get("llm_rejected") or ()),
+    }
+    components = {
+        "cards": cards,
+        "evidence": evidence,
+        "judgments": judgments,
+        "invariants": invariants,
+    }
+    return {
+        "schema_version": "full-build-semantic-v1",
+        "digests": {name: _canonical_digest(value) for name, value in components.items()},
+        "overall_sha256": _canonical_digest(components),
+        "counts": {
+            "issues": len(cards),
+            "card_members": sum(len(row["member_hashes"]) for row in cards),
+            "evidence_attached": len(attached_hashes),
+            "evidence_unattached": sum(bool(row["unattached"]) for row in evidence),
+            "llm_verdicts": len(judgments["llm"]),
+        },
+        **components,
+    }
 
 # 히어로 h1과 변화 문장의 하드 상한. 넘기면 카드가 아니라 문단이 된다.
 # 70자는 1280px 히어로에서 두 줄. 요약이 이보다 길면 이슈 제목으로 넘어간다.
@@ -1175,7 +1347,7 @@ def _is_restatement(before: object, after: object, threshold: float = 0.45) -> b
     if before_stage and before_stage == after_stage and before_certainty == after_certainty:
         left_sentence = _normalized_sentence(before)
         right_sentence = _normalized_sentence(after)
-        similarity = difflib.SequenceMatcher(None, left_sentence, right_sentence).ratio()
+        similarity = _sequence_ratio(left_sentence, right_sentence)
         token_overlap = len(shorter & longer) / len(shorter)
         return similarity >= 0.4 or token_overlap >= 0.35
     return False
@@ -1778,7 +1950,7 @@ def issue_similarity(
     """
     left_title, right_title = _title_norm(left), _title_norm(right)
     title_ratio = (
-        difflib.SequenceMatcher(None, left_title, right_title).ratio()
+        _sequence_ratio(left_title, right_title)
         if left_title and right_title else 0.0
     )
     left_tokens, right_tokens = _tokens(left), _tokens(right)
@@ -1788,10 +1960,12 @@ def issue_similarity(
     tag_ratio = _jaccard(left_tags, right_tags)
     left_topics, right_topics = set(left.get("topics") or []), set(right.get("topics") or [])
     topic_shared = len(left_topics & right_topics)
+    _profile_increment("remote_cosine_calls")
     embedding_similarity = cosine_similarity(
         (embeddings or {}).get(str(left.get("hash") or "")),
         (embeddings or {}).get(str(right.get("hash") or "")),
     )
+    _profile_increment("local_cosine_calls")
     local_embedding_similarity = cosine_similarity(
         (local_embeddings or {}).get(str(left.get("hash") or "")),
         (local_embeddings or {}).get(str(right.get("hash") or "")),
@@ -2428,7 +2602,7 @@ def _cheap_issue_score(left: dict, right: dict) -> float:
     """Lexical score used only to order evidence candidates."""
     left_title, right_title = _title_norm(left), _title_norm(right)
     title_ratio = (
-        difflib.SequenceMatcher(None, left_title, right_title).ratio()
+        _sequence_ratio(left_title, right_title)
         if left_title and right_title else 0.0
     )
     return (
@@ -2605,9 +2779,11 @@ def _preselect_evidence_issues(
         best = 0.0
         for member in (issue.get("members") or [])[-3:]:
             member_hash = str(member.get("hash") or "")
-            for left_vector, vector_table in (
-                (remote_vector, embeddings or {}), (local_vector, local_embeddings or {})
+            for vector_kind, left_vector, vector_table in (
+                ("remote", remote_vector, embeddings or {}),
+                ("local", local_vector, local_embeddings or {}),
             ):
+                _profile_increment(f"{vector_kind}_cosine_calls")
                 similarity = cosine_similarity(left_vector, vector_table.get(member_hash))
                 if similarity is not None:
                     best = max(best, similarity)
@@ -2738,6 +2914,7 @@ def attach_evidence_articles(
     경로로 합친다. 따라서 정밀 비교량은 기사×전체 이슈가 아니라 기사×후보 상한으로
     증가한다.
     """
+    _profile_increment("evidence_passes")
     if not issues:
         return 0
     latest_card_day = max(
@@ -2770,6 +2947,7 @@ def attach_evidence_articles(
     attached = 0
 
     for evidence_index, article in enumerate(evidence, 1):
+        _profile_increment("evidence_articles_processed")
         if evidence_index == 1 or evidence_index % 100 == 0:
             print(
                 f"[build_data:progress] evidence {evidence_index}/{len(evidence)} "
@@ -2796,6 +2974,7 @@ def attach_evidence_articles(
             if telemetry is not None:
                 telemetry.visit()
             card_members = issue["members"]
+            _profile_increment("cluster_member_scan_items", len(card_members))
             card_days = [
                 _parse_day(member.get("article_date") or member.get("briefing_date") or "")
                 for member in card_members
@@ -5866,14 +6045,28 @@ def build_rss(briefings: list[dict], generated_at: datetime) -> bytes:
 
 
 def build() -> None:
+    global _ACTIVE_BUILD_PROFILE
     build_started = time.monotonic()
+    profile_path = str(os.environ.get(BUILD_PROFILE_ENV) or "").strip()
+    _ACTIVE_BUILD_PROFILE = {"counters": Counter()} if profile_path else None
+    phase_events: list[dict] = []
+    previous_elapsed = 0.0
 
     def progress(phase: str, **counts: object) -> None:
+        nonlocal previous_elapsed
+        elapsed = time.monotonic() - build_started
+        phase_events.append({
+            "phase": phase,
+            "elapsed_seconds": round(elapsed, 6),
+            "delta_seconds": round(elapsed - previous_elapsed, 6),
+            "counts": counts,
+        })
+        previous_elapsed = elapsed
         detail = " ".join(f"{key}={value}" for key, value in counts.items())
         suffix = f" {detail}" if detail else ""
         print(
             f"[build_data:progress] phase={phase} "
-            f"elapsed={time.monotonic() - build_started:.1f}s{suffix}",
+            f"elapsed={elapsed:.1f}s{suffix}",
             flush=True,
         )
 
@@ -5890,7 +6083,7 @@ def build() -> None:
     validate_archive_records(records)
     deliveries = load_deliveries()
     brief_ranks = brief_ranks_by_hash()
-    now = datetime.now(KST)
+    now = _build_now()
     generation_id = GENERATION_ID or now.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     cutoff_news = (now - timedelta(days=NEWS_WINDOW_DAYS)).strftime("%Y-%m-%d")
 
@@ -6537,6 +6730,18 @@ def build() -> None:
         ],
     }
 
+    semantic_signature = build_semantic_signature(
+        news_items, issues, llm_verdicts, match_overrides
+    )
+    signature_path = str(os.environ.get(SEMANTIC_SIGNATURE_ENV) or "").strip()
+    if signature_path:
+        destination = Path(signature_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(
+            json.dumps(semantic_signature, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+
     # Cloudflare Pages의 flat 배포도 manifest/status를 항상 제공한다. 프론트가
     # 존재하지 않는 선택 파일을 매번 요청해 404를 남기지 않도록 하는 계약이다.
     manifest = {
@@ -6633,6 +6838,48 @@ def build() -> None:
         + ("착수 가능" if atlas["ready"]
            else "대기: " + ", ".join(atlas["blocking_nodes"]))
     )
+    progress("build:done", issues=len(issues), evidence=evidence_attached)
+    if profile_path:
+        card_summary = card_telemetry.summary()
+        evidence_summary = evidence_telemetry.summary()
+        profile = {
+            "schema_version": "full-build-profile-v1",
+            "as_of": now.isoformat(),
+            "wall_seconds": round(time.monotonic() - build_started, 6),
+            "phases": phase_events,
+            "counts": {
+                "archive": len(records),
+                "news_items": len(news_items),
+                "selected_articles": len(selected_items),
+                "issues": len(issues),
+                "evidence_attached": evidence_attached,
+                "candidate_rows": len(review_candidates),
+                "full_audit_rows": len(issue_audit.get("review_candidates") or []),
+                "embedding_cache_entries": len(embeddings),
+                "remote_embedding_selected_coverage": round(
+                    remote_embedded_selected_count / len(selected_items), 4
+                ) if selected_items else 0,
+                "embedding_selected_coverage": meta["embedding_selected_coverage"],
+            },
+            "operations": {
+                **dict(_ACTIVE_BUILD_PROFILE.get("counters") or {}),
+                "card_issue_visits": card_summary.get("issue_visits", 0),
+                "card_pairs_scored": card_summary.get("pairs_scored", 0),
+                "evidence_issue_visits": evidence_summary.get("issue_visits", 0),
+                "evidence_pairs_scored": evidence_summary.get("pairs_scored", 0),
+            },
+            "llm": llm_stats,
+            "telemetry": {"card": card_summary, "evidence": evidence_summary},
+            "semantic_signature_sha256": semantic_signature["overall_sha256"],
+            "peak_rss_bytes": _peak_rss_bytes(),
+        }
+        destination = Path(profile_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(
+            json.dumps(profile, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+    _ACTIVE_BUILD_PROFILE = None
 
 
 if __name__ == "__main__":
