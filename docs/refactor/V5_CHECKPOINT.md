@@ -239,9 +239,34 @@ On resume, fetch main and inspect the first Crawl or Daily pre-brief created aft
 - API/cache/CLI/import behavior remained exact in the harness and phase gates. Main CI and all first relevant production workflows passed; state lineage stayed linear and expected; no new failed or degraded production domain was observed. The existing cycle, workflow concurrency, dependency pinning, and live-data balance remain the explicitly pre-registered separate-project items.
 - PHASE 6 decision: structural refactoring is COMPLETE under the registered benefit-versus-risk exit criterion. No code was modified in this phase, no candidate was marked ABANDON, and no STOP condition exists. Proceed to PHASE 7 as a separate measured performance assessment.
 
-## PHASE 7 performance assessment (in progress)
+## PHASE 7 performance assessment (complete)
 
 - Code and behavior remain frozen while establishing a comparable five-run baseline from existing production counters and timings. No validation-only workflow, repeated polling, semantic-output adjustment, or speculative optimization is authorized.
+
+- Measurement reused the pre-existing behavior-neutral progress/candidate/cache counters from five successful, production-scale web builds on the same performance algorithm: Deploy runs `33917083131`, `33919325566`, `33921851015`, and Crawl runs `33933586931`, `33942369759`. The intervening V5 code changes only moved pure functions; all five restored the embedding cache, used 10,236-10,297 archive records, produced 4,746-4,775 displayed articles, and retained the same 596 issue cards, 431 detail pages, 617 briefing articles, and 50 date briefs. Small input/cache growth is reported in the IQR rather than normalized away.
+
+| Production-scale measure, n=5 | Median | Q1-Q3 / IQR |
+|---|---:|---:|
+| Build step wall clock | 1,176.0s | 955.0-1,182.0 / 227.0s |
+| Archive preparation cumulative time | 47.9s | 37.2-50.2 / 13.0s |
+| First evidence pass only | 526.4s | 430.1-526.6 / 96.5s |
+| Second evidence pass through merge summary | 538.776s | 440.288-541.646 / 101.358s |
+| Both evidence paths as build share | 90.59% | 90.36-91.14 / 0.78pp |
+| First-pass review candidates | 120,778 | 120,778-122,071 / 1,293 |
+| Full audit candidates | 124,474 | 124,474-125,794 / 1,320 |
+| Accepted embedding lookups/cache entries | 10,428 | 10,428-10,469 / 41 |
+| Full audit output size | 111.5 MiB | 111.5-112.6 / 1.1 MiB |
+| Build Gemini calls | 0 | 0-2 / 2 |
+
+- Counter details are stable: card clustering considered 15,098-15,100 candidates; both evidence passes scanned 2,872-2,901 evidence articles. Issue merge considered 7,253-7,264 pairs with 7,244-7,264 cache hits and at most nine new pairs; KEEI was 150/150 cache hits in every run; issue-insight cache misses were at most two. Embedding cache acceptance equaled raw entry count in every run. The two Crawl builds made two Gemini calls each for new issue-review/insight cache entries; the three unchanged-input Deploy builds made zero.
+- CPU, peak RSS, OS-level file-read count, and JSON-parse count are not emitted by the current production instrumentation, so no values are invented for them. The available counters already isolate the dominant in-memory path with a narrow 0.78 percentage-point IQR. An instrumentation-only PR would not by itself make an unsafe semantic shortcut eligible and would create another production-observation obligation without a qualifying candidate.
+- Selected bottleneck: the two evidence attachment paths. The first pass produces gray-band review candidates; cached/new approved verdicts then cause card reclustering and the second pass computes evidence against the changed issue set. Reusing or skipping a pass cannot be proven output-neutral because issue membership, evidence, audit pairs, and stable issue identity are downstream consumers. The existing retrieval canary also reports 15/958 actual evidence merges outside lexical head 20, so tighter candidate pruning is affirmatively unsafe; changing the cap/threshold would violate the frozen semantics.
+- No complete immutable cache key for cross-pass pair reuse exists: issue members and approved override state change between passes, while evidence lists are mutable outputs. Adding memoization without resolving those facts would violate the cache-completeness rule. Article/retention reduction, threshold/ranking/prompt changes, and story/issue semantic changes remain forbidden.
+- PHASE 7 decision: no performance change is adopted. This is the required measured “no qualifying improvement” result, not a failed phase. No code/fixture/workflow changed, no performance PR or candidate before/after observations are required, and no ABANDON or STOP condition exists. Proceed to PHASE 8.
+
+## PHASE 8 high-risk final assessment (in progress)
+
+- Automatic code changes are forbidden. Review current production evidence for concrete defects in story identity, issue continuity, ranking, dedup/story clustering, Daily selection/delivery, state schema, and Git persistence; aesthetics or theoretical cleanup do not qualify.
 
 ## PHASE 0 audit (complete)
 
