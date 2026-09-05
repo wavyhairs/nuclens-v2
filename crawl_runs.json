@@ -877,12 +877,13 @@
       "attempt_id": "33966567313",
       "attempts": 1,
       "claimed_at": "2026-09-05T12:37:47.645354Z",
-      "finished_at": null,
+      "finished_at": "2026-09-05T12:41:26.693155Z",
       "event_name": "workflow_dispatch",
       "trigger_source": "backup_watchdog",
       "trigger_state": "schedule_missing_recovery",
-      "status": "running",
-      "new_article_count": null
+      "status": "success_with_articles",
+      "new_article_count": 11,
+      "collect_outcome": "success"
     }
   }
 }
