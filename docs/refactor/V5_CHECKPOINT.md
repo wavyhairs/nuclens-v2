@@ -1,19 +1,19 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-05T01:30:48Z`
+- updated_at_utc: `2026-09-05T01:32:08Z`
 - current_phase: `PHASE 5`
-- current_sub_step: `PR #85 merged at 77b4f80; main-push Python 33936367064 is in progress and the first natural Crawl/Daily execution remains required`
+- current_sub_step: `PR #85 main-push CI passed; waiting under §9 for the first natural Crawl/Daily run that executes merge 77b4f80 or its state-only descendant`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `77b4f8057072fafa60c878ce445208dfe469e398`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- work_branch: `refactor/v5-phase5-curation-normalization (created from 77d20f2)`
+- work_branch: `refactor/v5-checkpoint (wait state; merged PR #85 branch retained remotely)`
 - merge_mode: `autonomous-merge-permitted`
 - harness_version: `4bdfd75 (test: add V5 refactor safety harness)`
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `PR #85 merge 77b4f80: main-push Python 33936367064 and first natural Crawl or Daily pre-brief that checks out the merge or a state-only descendant`
+- pending_operating_verification: `PR #85 merge 77b4f80: first natural Crawl or Daily pre-brief that checks out the merge or a state-only descendant; main-push Python already passed`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -35,7 +35,7 @@ PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verif
 
 ## Validation status
 
-- last_passed_tests: `PHASE 5 40160e0: post-main targeted curation 44 OK, V5 harness 13 OK, AST/diff gates clean; replacement exact-head PR CI 33936238616 passed in 1m05s; Merge Gate PASS`
+- last_passed_tests: `PHASE 5: local/post-main gates and both PR CIs passed; Merge Gate PASS; main-push Python 33936367064 passed at exact merge 77b4f80 in 1m11s`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Wait once for main-push Python `33936367064`. Then identify the first naturally occurring Crawl or Daily pre-brief that checks out `77b4f80` or its state-only descendant. Do not force a validation-only run or poll repeatedly. Verify run identity, expected state lineage, normal collection/curation/request/cache/build metrics, schema/order/identity invariants, and no new degraded/failure domain before removing PR #85 from the unverified set.
+On resume, fetch main and inspect the first Crawl or Daily pre-brief created after 2026-09-05T01:30:22Z. It must check out `77b4f80` or a state-only descendant and actually execute `news_bot.py`; a claim-only/skip run is insufficient. Attribute only that run's state commits, then verify normal collection/curation/request/cache/build metrics, schema/order/identity invariants, expected state scope, and no new degraded/failure domain. If it passes, remove PR #85 from the unverified set, decide the PHASE 5 exit criterion, and continue to PHASE 6. Do not force a validation-only run or repeatedly poll.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -187,6 +187,13 @@ Wait once for main-push Python `33936367064`. Then identify the first naturally 
 - Final diff review is unchanged at the declared three files and 102+/70-. There is no generated state, debug code, mutation, formatting churn, unrelated cleanup, secret, production fixture, config/model/prompt/threshold drift, or moved-body AST difference.
 - GitHub reported no active or queued workflow. Current timing is after the Daily and Friday Weekly send windows with ample time before the next send. There is no unverified earlier V5 merge. Common Merge Gate result: PASS; ordinary PR merge is authorized.
 - PR #85 merged by ordinary merge at `77b4f8057072fafa60c878ce445208dfe469e398` on 2026-09-05T01:30:22Z. Its parents are latest main `3dfd080` and feature head `40160e0`. Main-push Python run `33936367064` started at the exact merge SHA and is in progress. No Deploy web run is expected from this root-only path change.
+
+## PHASE 5 production verification (waiting)
+
+- Main-push Python run `33936367064` checked out exact merge SHA `77b4f8057072fafa60c878ce445208dfe469e398` and passed from 2026-09-05T01:30:28Z to 01:31:39Z; job duration 1m11s. Logged annotations are existing intentional regression fixtures plus the runner's Node 20 deprecation notice, not production observations or job failures.
+- A single post-CI check found no Crawl or Daily run created after the merge. Latest Crawl `33933586931` and Daily `33934961042` both predate `77b4f80`. Fresh `origin/main` remains the exact merge SHA.
+- The next normal Crawl schedule type is expected at/after 03:11Z, subject to GitHub scheduling or the existing watchdog recovery. V5.1 §9 forbids a validation-only dispatch and repeated polling; the session is therefore pausing safely with one unverified merge. Local power/session is not required for GitHub automation to continue.
+- Resume condition: inspect the first post-merge run once. A skipped already-claimed slot does not exercise the extraction; wait for the first run whose logs show collection/curation execution. Preserve all newer state-only descendants and do not merge another code PR before verification completes.
 
 ## PHASE 0 audit (complete)
 
