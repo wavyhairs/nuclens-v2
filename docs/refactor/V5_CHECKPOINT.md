@@ -1,19 +1,19 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-05T01:32:08Z`
-- current_phase: `PHASE 5`
-- current_sub_step: `PR #85 main-push CI passed; waiting under §9 for the first natural Crawl/Daily run that executes merge 77b4f80 or its state-only descendant`
+- updated_at_utc: `2026-09-05T04:23:03Z`
+- current_phase: `COMPLETE`
+- current_sub_step: `PHASE 8 complete; all V5.1 exit conditions satisfied; latest main and production state verified`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- latest_main_sha: `77b4f8057072fafa60c878ce445208dfe469e398`
+- latest_main_sha: `6b549b141f53a0571d64443973b0a87dd53c8845`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
-- work_branch: `refactor/v5-checkpoint (wait state; merged PR #85 branch retained remotely)`
+- work_branch: `refactor/v5-checkpoint (final checkpoint; never merge into main)`
 - merge_mode: `autonomous-merge-permitted`
 - harness_version: `4bdfd75 (test: add V5 refactor safety harness)`
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `PR #85 merge 77b4f80: first natural Crawl or Daily pre-brief that checks out the merge or a state-only descendant; main-push Python already passed`
+- pending_operating_verification: `none`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 merged and verified at `2610183`. PHASE 5 PR #85 (`refactor: extract curation value normalization`) passed both exact-head CIs and the Merge Gate, then merged at `77b4f80` on 2026-09-05T01:30:22Z. PR #85 is the sole unverified V5.1 merge.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 merged and verified at `2610183`. PHASE 5 PR #85 merged and verified at `77b4f80`. All six V5.1 PRs passed exact-head CI and the common Merge Gate; unverified merged PRs: zero.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 5: local/post-main gates and both PR CIs passed; Merge Gate PASS; main-push Python 33936367064 passed at exact merge 77b4f80 in 1m11s`
+- last_passed_tests: `PHASE 5 full local gate 1,472/1,472; V5 harness 13/13; web 561/561 with 3 intentional skips; replacement PR CI 33936238616 and main CI 33936367064 passed; first natural Crawl 33942369759 passed production verification`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-On resume, fetch main and inspect the first Crawl or Daily pre-brief created after 2026-09-05T01:30:22Z. It must check out `77b4f80` or a state-only descendant and actually execute `news_bot.py`; a claim-only/skip run is insufficient. Attribute only that run's state commits, then verify normal collection/curation/request/cache/build metrics, schema/order/identity invariants, expected state scope, and no new degraded/failure domain. If it passes, remove PR #85 from the unverified set, decide the PHASE 5 exit criterion, and continue to PHASE 6. Do not force a validation-only run or repeatedly poll.
+V5.1 작업은 완료됐다. 이 체크포인트 브랜치는 main에 병합하지 않는다. 후속 작업은 아래 별도 프로젝트 후보 중 하나를 새 범위와 독립 안전 계획으로 승인받아 시작할 때만 수행한다.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -264,9 +264,31 @@ On resume, fetch main and inspect the first Crawl or Daily pre-brief created aft
 - No complete immutable cache key for cross-pass pair reuse exists: issue members and approved override state change between passes, while evidence lists are mutable outputs. Adding memoization without resolving those facts would violate the cache-completeness rule. Article/retention reduction, threshold/ranking/prompt changes, and story/issue semantic changes remain forbidden.
 - PHASE 7 decision: no performance change is adopted. This is the required measured “no qualifying improvement” result, not a failed phase. No code/fixture/workflow changed, no performance PR or candidate before/after observations are required, and no ABANDON or STOP condition exists. Proceed to PHASE 8.
 
-## PHASE 8 high-risk final assessment (in progress)
+## PHASE 8 high-risk final assessment (complete)
 
 - Automatic code changes are forbidden. Review current production evidence for concrete defects in story identity, issue continuity, ranking, dedup/story clustering, Daily selection/delivery, state schema, and Git persistence; aesthetics or theoretical cleanup do not qualify.
+
+- Story identity / issue continuity: V5 characterization preserved canonical and legacy IDs, continuity metadata, ordering, and grouping at three hash seeds. Every relevant production build reported `build_mode=ok`, identity quarantined `0`, stable 596 issue cards and 431 detail pages for the comparable input line, and successful merge review with zero failed verdicts. No collision, broken lineage, or concrete identity defect qualifies a rewrite.
+- Ranking / dedup / story clustering: weights, thresholds, prompts, and meanings did not change. The verified Crawl produced normal URL/title, fuzzy, and semantic dedup transitions and retained folded evidence. The performance review shows the evidence paths are expensive, but their two-pass semantics and retrieval canary make pruning/reuse unsafe without changing issue membership or review/audit output; this is not authorization for a high-risk optimization.
+- Daily selection and delivery: scheduled Daily run `33921869093` completed its real production path with plan, claim, send, confirm, web build/deploy, and smoke steps all successful. It linearly persisted pre-brief state `aa03222`, confirmation `dbcbdd7`, alert state `846f43d`, trend state `77d20f2`, and final data-gate/cache state `03922a1`. The existing outbox was reused; confirm recorded `sent` with delivery-log `+0`, demonstrating idempotent reuse rather than duplicate delivery. Failure domains reported briefing/web `success`, build mode `ok`, and identity quarantined `0`.
+- State schema and Git persistence: PHASE 2's atomic snapshot owner passed interruption injection and its first actual Crawl; PHASE 5's first actual Crawl parsed every controlled snapshot, preserved schema and common-record order, appended archive/log data, and left no temp residue. All inspected automation commits form a linear descendant chain and touched only declared owners. No partial snapshot, unsafe reset/rebase, lost state, or append-only rewrite was observed.
+- Existing production advisories do not qualify an automatic high-risk change: archive repair and lexical-headroom warnings remain contained with successful output; email IMAP authentication and intermittent official-source timeouts are external configuration/source-health items; weekly sample imbalance is the pre-registered live-data follow-up. None is a V5-caused regression or proof that identity/ranking/dedup/Daily/state semantics must change now.
+- PHASE 8 decision: NO additional code change. Canonical/legacy identity, issue continuity, ranking/dedup/story meaning, Daily delivery, state schema, and Git persistence remain intentionally untouched beyond the already-qualified atomic writer. No ABANDON or STOP condition exists.
+
+## V5.1 final checkpoint
+
+- 최종 상태: `리팩터링 완료 — 현재 main 정상`.
+- 기준: 최초 main `bbe62a4c06c85d28962a54ee85d01db9109079dc`; 최종 코드 merge `77b4f8057072fafa60c878ce445208dfe469e398`; 최신 state 포함 main `6b549b141f53a0571d64443973b0a87dd53c8845`; merge mode `autonomous-merge-permitted`.
+- 산출물: PHASE 1 안전 하네스, PHASE 2 crawler snapshot atomic replacement, PHASE 3-4 publication title/policy pure owners, PHASE 5 controlled curation normalization pure owner. PHASE 6 구조 종료, PHASE 7 측정 기반 무변경 종료, PHASE 8 고위험 무변경 종료.
+- 동작 동일성: root 1,472/1,472, web 561/561(의도적 skip 3), characterization 13/13 및 hash seed 1/17/101 동일, negative controls/mutants 모두 변화 검출, CLI/workflow command/request hash/API/cache/state transition 계약 유지.
+- State 안전성: schema 변경 `no`; file/path 변경 `no`; serialization 변경 `no`; transient handoff 변경 `no`; latest operating state preserved `yes`. 자연 발생 state commit만 main을 전진시켰으며 최종 parent chain과 소유 파일 범위를 확인했다.
+- 운영 검증: PR #80-#85 모두 exact-head CI, Merge Gate, 영향 경로별 첫 운영 검증을 통과했다. PR #85는 Crawl `33942369759`에서 실제 `python news_bot.py` 실행, 22개 신규 curated 레코드 정규화 위반 0, state/build/deploy/smoke 성공으로 종료됐다. 미검증 merge 0건, 미해결 V5 regression 0건.
+- 성능: 5개 production-scale build의 wall-clock median 1,176s/IQR 227s; 두 evidence 경로 비중 median 90.59%/IQR 0.78pp. 출력 동일성을 보장하는 안전한 pruning/reuse 후보가 없어 성능 코드는 채택하지 않았다.
+- 자동 복구 기록: 하네스 구현 단계의 socket/decode/newline 수정과 이번 재개 중 검증 스크립트의 Windows 명령행 길이/JSON 구조/함수명 및 로그 단계명 파서 오류는 각각 최소 진단 수정 후 재검증했다. production 코드/데이터를 수정하거나 revert한 사례는 없고 최종 검증은 모두 통과했다.
+- 의도적으로 남긴 영역: `story_identity.py`, `issue_continuity.py`, ranking, dedup/story cluster, Daily plan/claim/send/confirm, mutable global owners, `news_bot -> email_ingest -> news_bot` cycle. 구체적 결함 없이 정리 목적으로 건드리지 않았다.
+- 별도 후속 프로젝트 후보: workflow state concurrency, dependency/runtime lock 및 Actions Node 경고, email 자격증명/공식 소스 안정성, weekly live-data balance, storage migration, branch protection redesign. 모두 V5.1 범위 밖이다.
+- 최종 확인 2026-09-05T04:23:03Z: fresh `origin/main`은 `6b549b1` 그대로이고, 새 커밋/경로 변경이 없으며 active/queued GitHub workflow는 각각 0건이다. 체크포인트 외 로컬 변경은 없다.
+- 성공 선언: `V5 완료 — 안전하게 수행 가능한 리팩터링과 성능 개선을 마쳤고, 최신 main 및 운영 state 검증이 정상이다. 현재 범위에서는 추가 구조 리팩터링이 필요하지 않다.`
 
 ## PHASE 0 audit (complete)
 
