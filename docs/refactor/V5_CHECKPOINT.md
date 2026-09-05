@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-05T01:28:11Z`
+- updated_at_utc: `2026-09-05T01:29:46Z`
 - current_phase: `PHASE 5`
-- current_sub_step: `PR #85 includes latest main at 40160e0; post-integration relevant gates passed and replacement CI 33936238616 is pending`
+- current_sub_step: `PR #85 replacement CI passed at 40160e0 and final common Merge Gate is PASS; ordinary PR merge is authorized`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `3dfd08033a1413e80b7dfe71d16d7934eced492a`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `PR #85 replacement CI 33936238616 at 40160e0, then final Merge Gate and first relevant crawl/Daily production run after merge`
+- pending_operating_verification: `merge PR #85, then main-push CI and first relevant crawl/Daily production run that executes the merged news_bot path`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -35,7 +35,7 @@ PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verif
 
 ## Validation status
 
-- last_passed_tests: `PHASE 5 40160e0: after latest-main integration, targeted curation 44 OK, V5 harness 13 OK in 2.008s, four moved function ASTs still identical, PR diff still exact declared 3 files 102+/70-; initial-head CI 33924299348 success`
+- last_passed_tests: `PHASE 5 40160e0: post-main targeted curation 44 OK, V5 harness 13 OK, AST/diff gates clean; replacement exact-head PR CI 33936238616 passed in 1m05s; Merge Gate PASS`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Wait once for replacement PR CI `33936238616` at exact head `40160e0`. If successful, refresh `origin/main` and active workflows once, rerun the smallest relevant contract gate if main advanced, then complete the Merge Gate and merge only on PASS.
+Merge PR #85 by ordinary PR merge. Record the merge SHA immediately, then verify the main-push Python run. Because the changed runtime path is root `news_bot.py`, keep the merge unverified until the first naturally occurring Crawl or Daily pre-brief executes it; do not force a validation-only scheduled workflow.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -183,6 +183,9 @@ Wait once for replacement PR CI `33936238616` at exact head `40160e0`. If succes
 - The associated Crawl/Daily/Weekly workflows completed successfully, and GitHub reports no active or queued critical workflow in the inspected recent set. Because §7.1 requires the branch to contain latest main, the initial successful CI is not yet the final merge authorization; integration and replacement CI are pending.
 - Merged `origin/main` `3dfd080` into the feature branch without conflicts, producing head `40160e0145691dec2f5dea708793520c4873a822`. Latest state files were accepted unchanged from main. The PR-relative diff remains exactly `curation_normalization.py`, `news_bot.py`, and `tests/test_archive.py` at 102+/70-.
 - Post-integration relevant validation passed: targeted curation/normalization 44/44, V5 harness 13/13 in 2.008s, four function AST comparisons identical, and diff check clean. Replacement CI run `33936238616` is queued at exact head `40160e0`.
+- Replacement CI `33936238616` passed at exact head `40160e0145691dec2f5dea708793520c4873a822` in 1m05s. Fresh `origin/main` remained `3dfd080`, exactly the integrated base; PR #85 is open, non-draft, mergeable, and has no required review.
+- Final diff review is unchanged at the declared three files and 102+/70-. There is no generated state, debug code, mutation, formatting churn, unrelated cleanup, secret, production fixture, config/model/prompt/threshold drift, or moved-body AST difference.
+- GitHub reported no active or queued workflow. Current timing is after the Daily and Friday Weekly send windows with ample time before the next send. There is no unverified earlier V5 merge. Common Merge Gate result: PASS; ordinary PR merge is authorized.
 
 ## PHASE 0 audit (complete)
 
