@@ -1,9 +1,9 @@
 # Nuclens V5.1 Refactor Checkpoint
 
 - schema_version: `V5.1`
-- updated_at_utc: `2026-09-05T01:26:28Z`
+- updated_at_utc: `2026-09-05T01:28:11Z`
 - current_phase: `PHASE 5`
-- current_sub_step: `PR #85 initial head CI passed; main advanced through verified state-only commits to 3dfd080, so latest main integration and replacement exact-head CI are next`
+- current_sub_step: `PR #85 includes latest main at 40160e0; post-integration relevant gates passed and replacement CI 33936238616 is pending`
 - initial_baseline_main_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
 - latest_main_sha: `3dfd08033a1413e80b7dfe71d16d7934eced492a`
 - architecture_state_map_baseline_sha: `bbe62a4c06c85d28962a54ee85d01db9109079dc`
@@ -13,7 +13,7 @@
 - characterization_baseline: `SHA-256 b9753b325a00505f4b496b6e907ad35c5cf472a5b36d0326c01e4fbe916a5786; 13 tests; 3 stable runs 2.063/2.018/2.020s; PYTHONHASHSEED 1/17/101 identical`
 - state_schema_changed: `no`
 - persistent_state_changed: `no`
-- pending_operating_verification: `PR #85 replacement exact-head CI after integrating 3dfd080, then Merge Gate and first relevant crawl/Daily production run after merge`
+- pending_operating_verification: `PR #85 replacement CI 33936238616 at 40160e0, then final Merge Gate and first relevant crawl/Daily production run after merge`
 - stop_status: `no`
 - stop_reason: `none`
 
@@ -31,11 +31,11 @@
 
 ## PR history
 
-PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 merged and verified at `2610183`. PHASE 5 PR #85 (`refactor: extract curation value normalization`) is open; initial head `49a0f74` passed CI `33924299348`, but latest state-only main must be integrated before the final Merge Gate. No merge has occurred.
+PHASE 1 PR #80 merged and verified at `7432fc5`. PHASE 2 PR #81 merged and verified at `a1dfd5d`. PHASE 3 PR #82 merged and verified at `1bc3965`. PHASE 4 PR #83 merged and verified at `9b85797`. PHASE 4 PR #84 merged and verified at `2610183`. PHASE 5 PR #85 (`refactor: extract curation value normalization`) is open; initial head `49a0f74` passed CI `33924299348`, latest state-only main `3dfd080` is integrated at head `40160e0`, and replacement CI is pending. No merge has occurred.
 
 ## Validation status
 
-- last_passed_tests: `PHASE 5 49a0f74: all local gates passed; PR CI 33924299348 passed at exact head in 1m13s. Main then advanced only through expected persistent-state files; relevant tests must be rerun after integration.`
+- last_passed_tests: `PHASE 5 40160e0: after latest-main integration, targeted curation 44 OK, V5 harness 13 OK in 2.008s, four moved function ASTs still identical, PR diff still exact declared 3 files 102+/70-; initial-head CI 33924299348 success`
 - last_failed_tests: `advisory-only web suite without NUCLENS_SKIP_DATA_GATES: 1/561 failed`
 - failure_cause: `live weekly sample totals [50,48,112,159,129,140], max/min 3.3125 > advisory threshold 2; explicitly excluded from deploy gate by existing contract`
 - workflows_to_verify: `per-PR impact path: Python tests; Deploy web; Nuclear news crawl; Daily Brief; Weekly report; Deploy crawl watchdog`
@@ -47,7 +47,7 @@ None.
 
 ## Next action
 
-Merge freshly fetched state-only `origin/main` `3dfd080` into `refactor/v5-phase5-curation-normalization`, preserving every latest state file. Confirm the PR diff remains only the declared three code/test files, rerun candidate contracts plus V5 harness, push, and wait once for replacement exact-head CI. Then refresh main and apply the remaining Merge Gate checks.
+Wait once for replacement PR CI `33936238616` at exact head `40160e0`. If successful, refresh `origin/main` and active workflows once, rerun the smallest relevant contract gate if main advanced, then complete the Merge Gate and merge only on PASS.
 
 ## PHASE 1 local gate (complete; PR pending)
 
@@ -181,6 +181,8 @@ Merge freshly fetched state-only `origin/main` `3dfd080` into `refactor/v5-phase
 - PR CI `33924299348` checked out exact initial head `49a0f744cd615a260f05c520cf7db025a2cb6f00` and passed from 2026-09-04T22:09:36Z to 22:10:49Z (1m13s).
 - Resume audit found `origin/main` advanced linearly from `77d20f2` to `3dfd080` through six automation commits: issue-review/data-gate state, two crawl claim/state pairs, and a final issue-review cache update. Aggregate changed paths are only `archive/2026-09.jsonl`, `crawl_runs.json`, `curated.json`, `delivery_log.jsonl`, `digest_queue.json`, `discovery_state.json`, `issue_insights.json`, `issue_llm_reviews.json`, and `sent.json`; no code, workflow, config, schema owner, prompt, model, or threshold file changed.
 - The associated Crawl/Daily/Weekly workflows completed successfully, and GitHub reports no active or queued critical workflow in the inspected recent set. Because §7.1 requires the branch to contain latest main, the initial successful CI is not yet the final merge authorization; integration and replacement CI are pending.
+- Merged `origin/main` `3dfd080` into the feature branch without conflicts, producing head `40160e0145691dec2f5dea708793520c4873a822`. Latest state files were accepted unchanged from main. The PR-relative diff remains exactly `curation_normalization.py`, `news_bot.py`, and `tests/test_archive.py` at 102+/70-.
+- Post-integration relevant validation passed: targeted curation/normalization 44/44, V5 harness 13/13 in 2.008s, four function AST comparisons identical, and diff check clean. Replacement CI run `33936238616` is queued at exact head `40160e0`.
 
 ## PHASE 0 audit (complete)
 
