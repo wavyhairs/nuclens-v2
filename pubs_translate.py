@@ -22,6 +22,8 @@ import json
 import sys
 from pathlib import Path
 
+import llm_policy
+
 ROOT = Path(__file__).parent
 
 BATCH_SIZE = 15
@@ -172,9 +174,11 @@ def translate(items: list[dict], *, client=None, batch_size: int = BATCH_SIZE) -
     for start in range(0, len(todo), batch_size):
         chunk = todo[start:start + batch_size]
         try:
+            policy = llm_policy.profile("pubs_translate")
             payload = client.call_json(SYSTEM_PROMPT, build_user_message(chunk),
                                        temperature=0.1, max_output_tokens=8192,
-                label="pubs_translate",
+                model=policy.model(), label="pubs_translate",
+                **policy.reasoning_kwargs(),
             )
             stats["calls"] += 1
         except Exception as exc:  # 번역 실패는 비치명 — 원문 제목으로 뜬다

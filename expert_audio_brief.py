@@ -27,6 +27,7 @@ from pathlib import Path
 
 import article_quality_gate
 import gemini_client
+import llm_policy
 from entity_match import load_entity_registry
 from gemini_client import GeminiError, call_json, is_available
 from audio_brief import (
@@ -210,6 +211,7 @@ def _call_structured(system: str, message: str, *, label: str, temperature: floa
     폴백은 primary 모델이 재시도(4회)까지 전부 실패했을 때만 한 번 더 부르는
     최후 수단이다 — 흔치 않은 경로라 반대 버킷을 갑자기 고갈시키지 않는다.
     """
+    policy = llm_policy.profile(label)
     models = _model_ladder(primary)
     last: Exception | None = None
     for model in models:
@@ -220,10 +222,11 @@ def _call_structured(system: str, message: str, *, label: str, temperature: floa
                 temperature=temperature,
                 max_output_tokens=max_output_tokens,
                 timeout=150.0,
-                thinking_budget=0,
+                thinking_budget=(0 if policy.thinking_level is None else None),
                 model=model,
                 retries=4,
                 label=label,
+                **policy.reasoning_kwargs(),
             )
         except GeminiError as exc:
             last = exc

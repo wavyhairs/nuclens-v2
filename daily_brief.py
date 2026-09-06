@@ -44,6 +44,7 @@ except (AttributeError, ValueError):
     pass
 
 from gemini_client import GeminiError, call_json, is_available, synthesis_model
+import llm_policy
 from sources import credibility
 import article_quality_gate
 import issue_continuity
@@ -274,10 +275,13 @@ def enrich_investment(items: list[dict]) -> dict[int, dict]:
         lines.append(f"[{i}] {title} | {why} | {summ}")
 
     try:
+        policy = llm_policy.profile("daily_brief")
         result = call_json(
             INVEST_SYSTEM_PROMPT, "\n".join(lines),
             temperature=0.2, max_output_tokens=4096, timeout=120.0,
+            model=policy.model(),
             label="daily_brief",
+            **policy.reasoning_kwargs(),
         )
     except GeminiError as e:
         print(f"[daily_brief] 투자 보강 실패 → 투자 줄 없이 발송: {e}")
@@ -415,10 +419,12 @@ def complete_required_fields(items: list[dict]) -> dict:
             f"BODY: {(art.get('detail') or '')[:900]}",
         ]))
     try:
+        policy = llm_policy.profile("daily_brief_implication")
         result = call_json(
             IMPLICATION_SYSTEM_PROMPT, "\n\n---\n\n".join(blocks),
             temperature=0.2, max_output_tokens=4096, timeout=120.0,
-            model=synthesis_model(), label="daily_brief_implication",
+            model=policy.model(), label="daily_brief_implication",
+            **policy.reasoning_kwargs(),
         )
     except GeminiError as e:
         print(f"[daily_brief] 한수원 시사점 보완 실패 → 빈칸 유지: {e}")
@@ -609,9 +615,11 @@ def build_report_recs(items: list[dict]) -> tuple[str, dict]:
         lines.append(f"[{i}] {t} | {why} | {a.get('section','')}")
 
     try:
+        policy = llm_policy.profile("daily_brief_report")
         result = call_json(REPORT_SYSTEM_PROMPT, "\n".join(lines),
                            temperature=0.2, max_output_tokens=4096, timeout=90.0,
-            model=synthesis_model(), label="daily_brief_report",
+            model=policy.model(), label="daily_brief_report",
+            **policy.reasoning_kwargs(),
         )
     except GeminiError as e:
         print(f"[daily_brief] 보고서 추천 실패 → 섹션 생략: {e}")

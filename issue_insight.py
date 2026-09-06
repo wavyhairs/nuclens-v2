@@ -40,6 +40,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import llm_cache
+import llm_policy
 
 from data_quality import clean_text, implication_is_hollow
 
@@ -361,7 +362,8 @@ def generate(rows: list[dict], *, client=None, cache_path: Path = CACHE_FILE,
             stats["failed"] = len(todo)
             return insights, stats
 
-    model = _resolve_model()
+    policy = llm_policy.profile("issue_insight")
+    model = policy.model()
     stats["model"] = model
     now = datetime.now(timezone.utc).isoformat()
     dirty = False
@@ -376,6 +378,7 @@ def generate(rows: list[dict], *, client=None, cache_path: Path = CACHE_FILE,
                 max_output_tokens=MAX_OUTPUT_TOKENS,
                 model=model,
                 label="issue_insight",
+                **policy.reasoning_kwargs(),
             )
         except Exception as exc:  # noqa: BLE001 — 해석 부재는 비치명
             stats["failed"] += len(chunk)

@@ -2,31 +2,32 @@
 
 Base SHA: `ab0a82ff0f840a8e22c67da5ef27ad6628eb685d`
 Branch: `feat/gemini-reasoning`
-Last verified commit: `ab0a82ff0f840a8e22c67da5ef27ad6628eb685d`
+Last verified commit: `75be109` (Stage A)
 
 Completed stages:
 - Stage 0: latest `origin/main` re-audited; the 14 production generative call groups, embedding, TTS, and non-production exclusions still match the plan.
 - Stage A: wrapper modernization, bounded telemetry, model wiring, and startup model diagnostics implemented without changing existing request bodies.
+- Stage B: central no-op task policy wired to production callers; resumable offline evaluator and split Gold fixtures/candidate generation added.
 
-Current stage: Stage A verification and commit.
-Next action: commit Stage A, then implement the no-op central policy and evaluation infrastructure.
+Current stage: Stage B verification and commit.
+Next action: implement Stage C soft-stale generation policy fingerprints with bounded refresh.
 
 Tests last passed:
-- python tests: 1,480 passed (`GEMINI_API_KEY="" python -m unittest discover -s tests`).
+- python tests: 1,494 passed (`GEMINI_API_KEY="" python -m unittest discover -s tests`).
 - web tests: baseline invocation reached 454 tests but 6 generated-data tests could not start because this fresh worktree has no gitignored `web/public/data/*.json`; generate data before the final web run.
 - node/contracts: not yet run; no root `package.json`. Workflow/static contracts are covered by Python tests.
-- V5 characterization: 44 targeted wrapper/V5 tests passed; `expected.characterization_sha256` and frozen request fixture are unchanged.
+- V5 characterization: targeted V5 tests pass; `expected.characterization_sha256` and frozen request fixture are unchanged.
 
 Gold Sets:
-- Identity: no human labels found; candidate generation pending.
-- Curation: required real Saeul regression and synthetic chronology fixture pending.
-- Semantic: contract fixture/evaluation schema pending; no human labels found.
+- Identity: 144 stratified candidates generated; every answer is `HUMAN_LABEL_REQUIRED` and cached Gemini verdicts are context-only.
+- Curation: real archive regression `4da5b7ab6c225c78` pinned from the user-specified failure contract; broader human Gold is absent.
+- Semantic: five user-specified Saeul chronology/scope contract cases added; broader balanced human Gold is absent.
 - Synthesis: not started; production activation remains out of scope without labels.
 
 Live API evaluation:
 - models/configs tested: none in this implementation branch; the plan's 2026-09-06 24-call probe remains the only live evidence.
 - completed samples: 0.
-- remaining samples: all human-labelled Gold combinations.
+- remaining samples: all Identity candidates and broader Curation/Semantic human-labelled Gold combinations.
 - blocked by quota?: no API run attempted; human labels are absent.
 - last successful evaluation output: none.
 
@@ -45,5 +46,5 @@ Known failures / blockers:
 
 Exact resume command / next step:
 - `cd C:\AI\nuclens-v2\.worktrees\gemini-reasoning`
-- `git status --short && python -m unittest tests.test_gemini_thinking_config tests.test_gemini_client tests.test_v5_characterization`
-- Continue with Stage B (`llm_policy.py`, callers, resumable evaluator, HUMAN_LABEL_REQUIRED candidate files).
+- `git status --short && python -m unittest tests.test_llm_policy tests.test_llm_eval tests.test_reasoning_gold_fixtures tests.test_v5_characterization`
+- Continue with Stage C soft-stale fingerprint migration; do not activate any reasoning level.

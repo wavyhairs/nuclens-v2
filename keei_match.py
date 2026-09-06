@@ -23,6 +23,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import llm_cache
+import llm_policy
 
 ROOT = Path(__file__).parent
 CACHE_FILE = ROOT / "keei_llm_matches.json"
@@ -205,10 +206,13 @@ def match_pairs(candidates: list[dict], *,
         chunk = todo[start:start + batch_size]
         stats["asked"] += len(chunk)
         try:
+            policy = llm_policy.profile("keei_match")
             payload = client.call_json(
                 SYSTEM_PROMPT, build_user_message(chunk),
                 temperature=0.0, max_output_tokens=8192,
+                model=policy.model(),
                 label="keei_match",
+                **policy.reasoning_kwargs(),
             )
             stats["calls"] += 1
         except Exception as exc:  # 실패는 캐시하지 않는다 — 다음 빌드에서 재시도

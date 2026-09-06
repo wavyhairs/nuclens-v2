@@ -15,6 +15,7 @@ from urllib.parse import urlparse, quote_plus, urljoin
 
 # batch 큐레이션용 REST 클라이언트 (429 백오프 재시도 내장 — SDK 무재시도 문제 회피)
 import gemini_client
+import llm_policy
 from gemini_client import (
     GeminiError,
     GeminiTruncated,
@@ -2026,6 +2027,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
             blocks.append("\n".join(lines))
 
         try:
+            policy = llm_policy.profile("curation")
             result = gemini_call_json(
                 system_prompt + (
                     "\n\n[재생성] 이전 출력의 오류가 표시된 항목입니다. 사실·시제를 유지하면서 "
@@ -2034,9 +2036,11 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 ),
                 "\n\n---\n\n".join(blocks),
                 temperature=0.2, max_output_tokens=BATCH_MAX_OUTPUT_TOKENS, timeout=150.0,
+                model=policy.model(),
                 # 재생성인지 최초 호출인지를 갈라서 센다. 429 가 분당 한도였는데
                 # 그 1분에 누가 몇 번 불렀는지 몰라 원인을 두 번 잘못 짚었다.
                 label="curation:재생성" if error_notes else "curation",
+                **policy.reasoning_kwargs(),
             )
         except GeminiTruncated as e:
             return {}, {art["hash"]: [f"request:truncated:{e}"] for art in chunk}

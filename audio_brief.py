@@ -41,6 +41,7 @@ from pathlib import Path
 from gemini_client import GeminiError, call_json, is_available
 import article_quality_gate
 import gemini_client
+import llm_policy
 import news_archive
 
 try:
@@ -491,12 +492,14 @@ def _call_script(message: str) -> dict:
     대기 시간을 그대로 자므로 SCRIPT_RETRIES 회면 분당 한도 몇 창은 넘긴다.
     """
     last_err: Exception | None = None
+    policy = llm_policy.profile("audio_brief")
     for model in _script_models():
         try:
             return call_json(SYSTEM_PROMPT, message, temperature=0.4,
                              max_output_tokens=8192, timeout=120.0,
-                             thinking_budget=0, model=model,
-                             retries=SCRIPT_RETRIES, label="audio_brief")
+                             thinking_budget=(0 if policy.thinking_level is None else None),
+                             model=model, retries=SCRIPT_RETRIES, label="audio_brief",
+                             **policy.reasoning_kwargs())
         except GeminiError as exc:
             last_err = exc
             print(f"[audio] 대본 {model} 실패 — 다음 모델 폴백: {str(exc)[:160]}")

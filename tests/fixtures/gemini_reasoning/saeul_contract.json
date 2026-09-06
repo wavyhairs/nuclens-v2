@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "task": "SEMANTIC",
+  "source_facts": [
+    "새울 3·4호기 건설사업의 사업기간 변경일은 2026-07-31이다.",
+    "새울 3호기는 2026-08-11 시운전 중 자동정지했다.",
+    "사업기간 변경은 새울 3·4호기 전체 사업 범위이고 자동정지는 새울 3호기 범위다."
+  ],
+  "cases": [
+    {
+      "id": "saeul-false-causality",
+      "claim": "8월 11일 자동정지 때문에 7월 31일 새울 3·4호기 사업기간이 연장됐다.",
+      "human_label": "BLOCK",
+      "label_status": "USER_SPECIFIED",
+      "error_types": ["CAUSALITY_ERROR", "TEMPORAL_ERROR"]
+    },
+    {
+      "id": "saeul-separate-events",
+      "claim": "새울 3·4호기 사업기간 변경과 새울 3호기 자동정지는 별도 사안이다.",
+      "human_label": "PASS",
+      "label_status": "USER_SPECIFIED",
+      "error_types": []
+    },
+    {
+      "id": "saeul-unit-scope-3",
+      "claim": "새울 3호기가 자동정지했다.",
+      "human_label": "PASS",
+      "label_status": "USER_SPECIFIED",
+      "error_types": []
+    },
+    {
+      "id": "saeul-unit-scope-4",
+      "claim": "새울 4호기가 자동정지했다.",
+      "human_label": "BLOCK",
+      "label_status": "USER_SPECIFIED",
+      "error_types": ["ENTITY_ERROR", "SCOPE_ERROR"]
+    },
+    {
+      "id": "saeul-project-scope-34",
+      "claim": "사업기간 변경은 새울 3·4호기 건설사업에 적용된다.",
+      "human_label": "PASS",
+      "label_status": "USER_SPECIFIED",
+      "error_types": []
+    }
+  ]
+}

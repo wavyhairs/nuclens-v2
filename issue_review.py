@@ -71,6 +71,7 @@ from pathlib import Path
 
 import issue_candidate_stats
 import llm_cache
+import llm_policy
 
 try:  # gemini_client 없이도 import 가능해야 한다 (테스트는 대역 클라이언트를 넣는다)
     from gemini_client import GeminiTruncated
@@ -475,7 +476,8 @@ def review_pairs(review_candidates: list[dict], *,
 
     now = datetime.now(timezone.utc).isoformat()
     split_budget = SPLIT_BUDGET
-    review_model = _review_model()
+    policy = llm_policy.profile("issue_review")
+    review_model = policy.model()
     stats["model"] = review_model
 
     def ask(chunk: list[dict]) -> None:
@@ -489,6 +491,7 @@ def review_pairs(review_candidates: list[dict], *,
                 max_output_tokens=MAX_OUTPUT_TOKENS,
                 model=review_model,
                 label="issue_review",
+                **policy.reasoning_kwargs(),
             )
         except GeminiTruncated as exc:
             # 같은 예산으로 다시 부르면 같은 자리에서 잘린다 — 입력을 줄여야 한다.

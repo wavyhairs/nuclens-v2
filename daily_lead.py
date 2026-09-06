@@ -29,6 +29,7 @@ from pathlib import Path
 
 import article_quality_gate
 from gemini_client import GeminiError, call_json, is_available, synthesis_model
+import llm_policy
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -267,9 +268,10 @@ def _save_leads(leads: dict) -> None:
 def _call_lead(items: list[dict], summaries: dict[str, dict]) -> dict:
     """1차 호출 → 공허하면 재호출 → 길이 초과면 압축 재호출 → 최후 절단."""
     user_message = build_user_message(items, summaries)
+    policy = llm_policy.profile("daily_lead")
     result = call_json(SYSTEM_PROMPT, user_message,
                        temperature=0.2, max_output_tokens=8192,
-        model=synthesis_model(), label="daily_lead",
+        model=policy.model(), label="daily_lead", **policy.reasoning_kwargs(),
     )
     lead = _normalize(result.get("lead"))
 
@@ -286,7 +288,7 @@ def _call_lead(items: list[dict], summaries: dict[str, dict]) -> dict:
         try:
             retry = call_json(SYSTEM_PROMPT, vague_message,
                               temperature=0.2, max_output_tokens=8192,
-                model=synthesis_model(), label="daily_lead",
+                model=policy.model(), label="daily_lead", **policy.reasoning_kwargs(),
             )
             better = _normalize(retry.get("lead"))
             if better and is_substantive(better, items, summaries):
@@ -310,7 +312,7 @@ def _call_lead(items: list[dict], summaries: dict[str, dict]) -> dict:
     try:
         retry = call_json(SYSTEM_PROMPT, retry_message,
                           temperature=0.2, max_output_tokens=8192,
-            model=synthesis_model(), label="daily_lead",
+            model=policy.model(), label="daily_lead", **policy.reasoning_kwargs(),
         )
         short = _normalize(retry.get("lead"))
         if short and len(short) <= LEAD_LIMIT:
@@ -348,9 +350,10 @@ def _verified_lead(lead: str, items: list[dict], summaries: dict[str, dict],
         "한 문장으로 다시 쓰세요."
     )
     try:
+        policy = llm_policy.profile("daily_lead")
         retry = call_json(SYSTEM_PROMPT, repair_message, temperature=0.2,
-                          max_output_tokens=8192, model=synthesis_model(),
-                          label="daily_lead")
+                          max_output_tokens=8192, model=policy.model(),
+                          label="daily_lead", **policy.reasoning_kwargs())
     except GeminiError as exc:
         print(f"[lead] 재요청 실패 — 문장 사용 안 함: {str(exc)[:120]}")
         return ""
