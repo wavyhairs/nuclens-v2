@@ -59,3 +59,8 @@ web/_benchmark/
 artifacts/gemini-reasoning-eval/
 # Local human-label drafts. Canonical Gold is updated only by an explicit export.
 .eval/gold-labels/
+# Local resumable reasoning checkpoints and AI-assisted provisional outputs.
+# Durable status and exact resume commands live in the tracked progress document.
+.eval/identity-*/
+.eval/identity/
+.eval/sol-output/

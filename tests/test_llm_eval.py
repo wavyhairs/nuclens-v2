@@ -69,6 +69,38 @@ class EvalInfrastructureTests(unittest.TestCase):
         self.assertEqual(summary["false_split"], 1)
         self.assertEqual(summary["thought_tokens"], 4)
 
+    def test_identity_summary_includes_class_balanced_config_metrics(self):
+        rows = [
+            {"status": "ok", "model": "m", "config": "unspecified",
+             "fixture_id": "a", "gold": "MERGE", "prediction": "MERGE",
+             "latency_seconds": 1, "thought_tokens": 0, "repeat": 0},
+            {"status": "ok", "model": "m", "config": "unspecified",
+             "fixture_id": "b", "gold": "SEPARATE", "prediction": "MERGE",
+             "latency_seconds": 3, "thought_tokens": 0, "repeat": 0},
+        ]
+        metrics = llm_eval.summarize(rows)["configs"]["unspecified"]
+        self.assertEqual(metrics["accuracy"], .5)
+        self.assertEqual(metrics["balanced_accuracy"], .5)
+        self.assertEqual(metrics["merge_recall"], 1.0)
+        self.assertEqual(metrics["separate_recall"], 0.0)
+        self.assertEqual(metrics["prediction_counts"], {"MERGE": 2})
+        self.assertEqual(metrics["per_label_precision"],
+                         {"MERGE": .5, "SEPARATE": None})
+        self.assertIsNone(metrics["retries"])
+
+    def test_result_schema_is_enforced(self):
+        self.assertEqual(
+            llm_eval.validate_result("IDENTITY_REVIEW", {"verdict": "MERGE"}),
+            ("MERGE", []))
+        with self.assertRaises(ValueError):
+            llm_eval.validate_result("IDENTITY_REVIEW", {"verdict": "PASS"})
+        with self.assertRaises(ValueError):
+            llm_eval.validate_result(
+                "SEMANTIC", {"verdict": "PASS", "error_types": "FACT_ERROR"})
+        with self.assertRaises(ValueError):
+            llm_eval.validate_result(
+                "SEMANTIC", {"verdict": "BLOCK", "error_types": ["MADE_UP"]})
+
 
 if __name__ == "__main__":
     unittest.main()
