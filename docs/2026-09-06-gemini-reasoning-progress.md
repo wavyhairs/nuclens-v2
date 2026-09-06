@@ -75,9 +75,11 @@ schema failures, or non-quota API failures. Older rows did not persist full toke
 breakdown/retry detail, so retry count for those rows is formally unavailable.
 
 The completed baseline currently exceeds medium on accuracy, balanced accuracy,
-MERGE recall, false_merge, false_split, latency, and thought-token cost. This is strong
-evidence against medium, but the production decision remains pending until all 41
-high rows exist. No reasoning level was changed.
+MERGE recall, false_merge, false_split, median latency, and thought-token cost. Its
+paced/transport latency tail is worse (p95 22.13s versus 10.33s), so latency is not a
+uniform win. The quality and cost evidence is still strongly against medium, but the
+production decision remains pending until all 41 high rows exist. No reasoning level
+was changed.
 
 ### Exact resume point
 
@@ -126,8 +128,9 @@ Across the 489 successes: accuracy 82.82%, balanced accuracy 67.94%, MERGE recal
 truncations, zero JSON failures, and zero non-quota API failures. Medium's small
 balanced-accuracy/MERGE-recall gain over the nearly complete baseline comes with
 lower overall/SEPARATE accuracy, one more false merge, lower repeat consistency,
-and materially higher latency/tokens. This is not clear activation evidence; no
-production policy changed.
+and materially higher median latency/tokens. The baseline has a worse paced latency
+tail, so the latency evidence is mixed rather than a uniform baseline win. This is
+not clear activation evidence; no production policy changed.
 
 First pending key:
 `gemini-3.5-flash-lite|unspecified|962102da67dd64bb--f396174affa85472|1`.
