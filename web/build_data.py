@@ -7011,4 +7011,6 @@ def build() -> None:
 
 
 if __name__ == "__main__":
+    import gemini_client as _gemini_client
+    print(_gemini_client.format_model_policy())
     build()

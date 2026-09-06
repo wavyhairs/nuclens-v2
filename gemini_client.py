@@ -133,6 +133,23 @@ SYNTHESIS_MODEL_DEFAULT = "gemini-3.5-flash-lite"
 def synthesis_model() -> str:
     return _resolve("GEMINI_SYNTHESIS_MODEL", SYNTHESIS_MODEL_DEFAULT)
 
+
+def model_policy_snapshot() -> dict[str, str | int]:
+    """Actions/로컬에서 동일하게 보이는 모델 해석 진단값."""
+    return {
+        "MODEL": MODEL or "",
+        "SYNTH": synthesis_model(),
+        "REVIEW": _resolve("GEMINI_REVIEW_MODEL", "gemini-3.5-flash-lite") or "",
+        "INSIGHT": _resolve("GEMINI_INSIGHT_MODEL", "gemini-3.5-flash-lite") or "",
+        "SCRIPT": _resolve("GEMINI_SCRIPT_MODEL", "gemini-3.5-flash-lite") or "",
+        "RPM_CAP": _pacing_cap(),
+    }
+
+
+def format_model_policy() -> str:
+    values = model_policy_snapshot()
+    return "[gemini] policy — " + " ".join(f"{key}={value}" for key, value in values.items())
+
 # Gemini REST 엔드포인트 — SDK 안 쓰고 stdlib urllib만 사용 (의존성 0)
 _ENDPOINT = (
     "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -141,6 +158,10 @@ _ENDPOINT = (
 
 class GeminiError(RuntimeError):
     """Gemini 호출 실패."""
+
+
+class GeminiConfigError(GeminiError):
+    """호출 전에 발견한 Gemini generation 설정 오류."""
 
 
 class GeminiTruncated(GeminiError):
@@ -200,6 +221,7 @@ def _retry_delay_seconds(body_text: str) -> float | None:
 #
 # 호출 지점이 call_json 하나뿐이라 여기만 잡으면 모든 호출자가 세진다.
 _CALL_LOG: list[tuple[float, str, str]] = []   # (시각, 모델, 라벨)
+_CALL_DETAIL: list[dict] = []
 CALL_LOG_LIMIT = 5000   # 폭주해도 메모리를 먹지 않게 — 넘으면 그냥 안 쌓는다
 
 
@@ -208,8 +230,15 @@ def _record_call(model: str, label: str) -> None:
         _CALL_LOG.append((time.monotonic(), model, label))
 
 
+def _record_detail(**detail: object) -> None:
+    """프롬프트/키를 제외한 bounded 요청 관측치만 메모리에 남긴다."""
+    if len(_CALL_DETAIL) < CALL_LOG_LIMIT:
+        _CALL_DETAIL.append(dict(detail))
+
+
 def reset_call_log() -> None:
     _CALL_LOG.clear()
+    _CALL_DETAIL.clear()
 
 
 def call_stats() -> dict:
@@ -234,7 +263,8 @@ def call_stats() -> dict:
             best = max(best, count)
         peak[model] = best
     return {"total": len(_CALL_LOG), "per_model": per_model,
-            "per_label": per_label, "peak_per_minute": peak}
+            "per_label": per_label, "peak_per_minute": peak,
+            "details": list(_CALL_DETAIL)}
 
 
 # 15 RPM 상한까지 밀어붙이지 않는다. 버스트가 상한을 스치기만 해도 429가 뜨고,
@@ -291,20 +321,21 @@ def format_call_stats() -> str:
     breakdown = " / ".join(f"{label} {count}"
                            for label, count in sorted(stats["per_label"].items(),
                                                       key=lambda kv: -kv[1]))
-    return f"[gemini] 호출 {stats['total']}회 · " + " · ".join(parts) + f" · [{breakdown}]"
+    base = f"[gemini] 호출 {stats['total']}회 · " + " · ".join(parts) + f" · [{breakdown}]"
+    if not stats["details"]:
+        return base
+    thoughts = sum(int(row.get("thought_tokens") or 0) for row in stats["details"])
+    truncated = sum(bool(row.get("truncated")) for row in stats["details"])
+    return base + f"\n[gemini] reasoning 관측 · thought tokens {thoughts} · truncation {truncated}"
 
 
 _DAILY_QUOTA_MARKERS = ("PerDay", "per_day", "PerDayPerProject", "RequestsPerDay")
 
-# thinkingConfig 를 거부하는 것으로 실측 확인된 모델. 실측(2026-08-16):
-#   gemini-3.5-flash-lite  thinkingBudget=0 → 400 INVALID_ARGUMENT
-#   gemini-3.1-flash-lite  thinkingBudget=0 → 200
-# 여기 있으면 첫 요청부터 이 필드를 아예 안 보낸다 — 매 호출마다 400 을 맞고
-# 벗어서 재시도하는 API 왕복(과 그만큼의 RPM 소모)을 없앤다. 목록에 없는
-# 새 모델이 같은 증상을 내면 아래 except 절의 400 fallback(_rejects_thinking_config)
-# 이 여전히 한 번 벗고 재시도해 잡아준다 — 이 목록은 "알려진 모델의 첫 요청을
-# 최적화"하는 캐시일 뿐, fallback 을 대신하지 않는다.
-_THINKING_CONFIG_UNSUPPORTED_MODELS = frozenset({"gemini-3.5-flash-lite"})
+# 실측(2026-09-06): gemini-3.5-flash-lite가 거부하는 것은 thinkingConfig 전체가
+# 아니라 legacy thinkingBudget=0뿐이다. budget=512와 thinkingLevel 4종은 모두
+# 수용했다. level 요청까지 막지 않도록 (모델, 값) 조건으로 좁힌다.
+_THINKING_BUDGET_ZERO_UNSUPPORTED = frozenset({"gemini-3.5-flash-lite"})
+_THINKING_LEVELS = frozenset({"minimal", "low", "medium", "high"})
 
 
 def _rejects_thinking_config(body_text: str) -> bool:
@@ -389,11 +420,12 @@ def call_json(
     system_prompt: str,
     user_message: str,
     *,
-    temperature: float = 0.1,
+    temperature: float | None = 0.1,
     max_output_tokens: int = 4096,
     timeout: float = 60.0,
     retries: int = 3,
     thinking_budget: int | None = None,
+    thinking_level: str | None = None,
     model: str | None = None,
     label: str = "unlabeled",
 ) -> dict:
@@ -402,36 +434,57 @@ def call_json(
     - response_mime_type=application/json 으로 펜스·머리말 없는 순수 JSON 강제.
     - 429/일시 오류는 지수 백오프로 retries 만큼 재시도.
     - 파싱 실패 시 GeminiError 발생.
+    - thinking_level은 minimal/low/medium/high만 허용한다. legacy
+      thinking_budget과 동시에 지정할 수 없고, 명시한 level은 실패 시 조용히
+      제거하지 않는다.
     - thinking_budget=0 은 thinking 을 끈다. 사고가 필요 없는 정형·창작 출력은
       꺼야 한다 — thinking 토큰이 출력 예산을 잠식해 MAX_TOKENS 로 잘린다
       (2026-08-04 실측: 대본 생성이 thoughts=7863/8192 로 output 315에서 잘림.
       로컬은 통과했는데 CI 에서 잘렸다 — thinking 길이는 비결정적이라
       "로컬에서 됐다"가 예산 충분의 근거가 못 된다).
-      단, 모델이 _THINKING_CONFIG_UNSUPPORTED_MODELS 에 있으면 이 값을 줘도
-      thinkingConfig 자체를 안 보낸다 — 그 모델은 이 필드를 거부한다.
+      단, gemini-3.5-flash-lite는 이 legacy 값 0만 거부하므로 필드를 생략한다.
     - model 을 주면 기본 MODEL 대신 그 모델을 부른다. 무료 티어 쿼터는 모델별
       버킷이다 — 하루 1회짜리 호출을 상시 파이프라인(크롤 큐레이션)과 같은
       버킷에 두면 저녁마다 굶는다 (2026-08-04 실측: 같은 시각 프로브는
       성공하는데 브리핑 체인 끝의 호출만 3연속 429).
     """
+    # 설정 오류는 키/네트워크/계측보다 먼저 실패해야 잘못된 요청이 호출로
+    # 기록되거나 quota를 태우지 않는다.
+    if thinking_level is not None and thinking_budget is not None:
+        raise GeminiConfigError("thinking_level과 thinking_budget은 동시에 지정할 수 없음")
+    if thinking_level is not None and thinking_level not in _THINKING_LEVELS:
+        allowed = ", ".join(sorted(_THINKING_LEVELS))
+        raise GeminiConfigError(f"지원하지 않는 thinking_level={thinking_level!r}; 허용값: {allowed}")
+
     if not API_KEY:
         raise GeminiError("GEMINI_API_KEY 미설정. .env 또는 GitHub Secrets에 등록 필요.")
 
     generation_config: dict = {
-        "temperature": temperature,
         "maxOutputTokens": max_output_tokens,
         "responseMimeType": "application/json",
     }
-    if (thinking_budget is not None
-            and (model or MODEL) not in _THINKING_CONFIG_UNSUPPORTED_MODELS):
+    if temperature is not None:
+        generation_config["temperature"] = temperature
+    resolved_model = model or MODEL
+    if thinking_level is not None:
+        generation_config["thinkingConfig"] = {"thinkingLevel": thinking_level}
+        requested_thinking = f"level:{thinking_level}"
+    elif (thinking_budget is not None
+          and not (thinking_budget == 0
+                   and resolved_model in _THINKING_BUDGET_ZERO_UNSUPPORTED)):
         generation_config["thinkingConfig"] = {"thinkingBudget": thinking_budget}
+        requested_thinking = f"budget:{thinking_budget}"
+    elif thinking_budget is not None:
+        requested_thinking = f"budget:{thinking_budget}:omitted_for_model"
+    else:
+        requested_thinking = "unspecified"
 
     # 키는 **헤더로** 보낸다. 쿼리스트링(`?key=…`)에 실으면 그 URL 이 닿는 곳마다
     # 키가 함께 간다 — 예외 메시지, 리다이렉트 로그, 중간 프록시 기록. 지금 코드가
     # URL 을 찍지 않는다는 것은 오늘의 사실이지 계약이 아니고, 저장소를 공개로
     # 돌리면 Actions 로그도 함께 공개된다. Google 이 공식 지원하는 헤더 방식으로
     # 옮겨 애초에 실릴 자리를 없앤다.
-    url = _ENDPOINT.format(model=model or MODEL)
+    url = _ENDPOINT.format(model=resolved_model)
     body = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": [{"role": "user", "parts": [{"text": user_message}]}],
@@ -442,8 +495,10 @@ def call_json(
     for attempt in range(retries + 1):
         # 재시도도 한 번의 호출이고 한도를 그만큼 깎는다. attempt 를 라벨에 실어야
         # "chunk 4회"가 실제로는 12회였다는 것이 보인다.
-        _pace(model or MODEL)
-        _record_call(model or MODEL, label if attempt == 0 else f"{label}:retry")
+        attempt_label = label if attempt == 0 else f"{label}:retry"
+        _pace(resolved_model)
+        _record_call(resolved_model, attempt_label)
+        started = time.monotonic()
         try:
             req = urllib.request.Request(
                 url,
@@ -453,6 +508,26 @@ def call_json(
             )
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 payload = json.loads(resp.read())
+            usage = payload.get("usageMetadata", {}) if isinstance(payload, dict) else {}
+            if not isinstance(usage, dict):
+                usage = {}
+            detail = {
+                "task": label,
+                "label": attempt_label,
+                "model": resolved_model,
+                "requested_thinking": requested_thinking,
+                "observed_thought_tokens": int(usage.get("thoughtsTokenCount") or 0),
+                "prompt_tokens": usage.get("promptTokenCount"),
+                "candidate_tokens": usage.get("candidatesTokenCount"),
+                "thought_tokens": usage.get("thoughtsTokenCount"),
+                "total_tokens": usage.get("totalTokenCount"),
+                "temperature_sent": temperature is not None,
+                "latency_seconds": round(time.monotonic() - started, 4),
+                "finish_reason": _finish_reason(payload),
+                "retry_count": attempt,
+                "truncated": _finish_reason(payload) == "MAX_TOKENS",
+                "quota_kind": None,
+            }
             # candidates[0].content.parts[0].text 추출
             try:
                 text = payload["candidates"][0]["content"]["parts"][0]["text"]
@@ -464,11 +539,15 @@ def call_json(
                     raise GeminiTruncated(_truncation_detail(payload)) from e
                 raise GeminiError(f"응답 구조 비정상: {payload}") from e
             try:
-                return json.loads(text)
+                result = json.loads(text)
+                _record_detail(**detail)
+                return result
             except json.JSONDecodeError:
                 try:
                     # 깨진 응답 복구 시도 (펜스·잡텍스트·문자열 내 줄바꿈)
-                    return _salvage_json(text)
+                    result = _salvage_json(text)
+                    _record_detail(**detail)
+                    return result
                 except json.JSONDecodeError:
                     # 예산 초과로 잘린 것이면 아래 재시도 절로 흘려보내지 않는다 —
                     # 같은 maxOutputTokens 로 3번 더 불러도 같은 자리에서 잘리고
@@ -476,18 +555,37 @@ def call_json(
                     if _finish_reason(payload) == "MAX_TOKENS":
                         raise GeminiTruncated(_truncation_detail(payload)) from None
                     raise
+        except GeminiTruncated:
+            detail["truncated"] = True
+            _record_detail(**detail)
+            raise
         except urllib.error.HTTPError as e:
             body_text = e.read().decode("utf-8", errors="replace")
             last_err = GeminiError(f"HTTP {e.code}: {body_text[:600]}")
+            _record_detail(
+                task=label, label=attempt_label, model=resolved_model,
+                requested_thinking=requested_thinking,
+                observed_thought_tokens=0, temperature_sent=temperature is not None,
+                latency_seconds=round(time.monotonic() - started, 4),
+                finish_reason="", retry_count=attempt, truncated=False,
+                quota_kind=("RPD" if e.code == 429 and _is_daily_quota(body_text)
+                            else "RPM" if e.code == 429 else None),
+                http_status=e.code,
+            )
             # thinkingConfig 를 안 받는 모델이 있다. 알려진 모델
             # (_THINKING_CONFIG_UNSUPPORTED_MODELS)은 애초에 이 필드를 안 보내
             # 여기까지 안 온다 — 이 분기는 *아직 목록에 없는* 모델을 위한
             # 안전망이다. 그런 모델을 새로 붙였는데 400 을 만나면 이 필드만
             # 벗고 한 번 더 본다. 벗은 뒤에도 400 이면 진짜 잘못된 요청이라
             # 그때 올린다.
-            if (e.code == 400 and "thinkingConfig" in generation_config
+            if (e.code == 400 and thinking_level is not None
                     and _rejects_thinking_config(body_text)):
-                print(f"[gemini] {model or MODEL} 가 thinkingConfig 를 거부 — "
+                raise GeminiConfigError(
+                    f"{resolved_model}가 명시적 thinking_level={thinking_level}을 거부") from e
+            if (e.code == 400 and thinking_budget is not None
+                    and "thinkingConfig" in generation_config
+                    and _rejects_thinking_config(body_text)):
+                print(f"[gemini] {resolved_model} 가 legacy thinkingConfig 를 거부 — "
                       f"제거 후 재시도 ({label})")
                 generation_config.pop("thinkingConfig")
                 body["generationConfig"] = generation_config
@@ -507,7 +605,7 @@ def call_json(
                 # 같은 `limit: 20` 메시지가 크롤에선 재시도로 풀린다 — 두 갈래를
                 # 가르는 건 본문 안의 표지뿐이고, 그 표지를 안 남기면 매번 다시 캔다.
                 print(f"[gemini] 일일 한도 판정 — 재시도 없이 포기 "
-                      f"({model or MODEL} / {label} / 표지 {_daily_quota_marker(body_text)})")
+                      f"({resolved_model} / {label} / 표지 {_daily_quota_marker(body_text)})")
                 raise last_err from e
             if e.code == 429:
                 # 분당 한도. 서버가 알려주는 값을 그대로 쓴다 — 고정 사다리는
@@ -515,7 +613,7 @@ def call_json(
                 # 보장된 요청으로 한도를 더 깎는다.
                 wait = _retry_delay_seconds(body_text) or 20 * (attempt + 1)
                 print(f"[gemini] 429 분당 한도 — {wait:.0f}초 대기 후 재시도 "
-                      f"{attempt + 1}/{retries} ({model or MODEL} / {label})")
+                      f"{attempt + 1}/{retries} ({resolved_model} / {label})")
                 time.sleep(wait)
             else:
                 time.sleep(2 ** attempt)

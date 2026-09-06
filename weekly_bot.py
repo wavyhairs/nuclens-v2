@@ -1531,4 +1531,6 @@ def main() -> int:
     confirmed = cmd_confirm()
     return sent or confirmed
 if __name__ == "__main__":
+    import gemini_client as _gemini_client
+    print(_gemini_client.format_model_policy())
     raise SystemExit(main())

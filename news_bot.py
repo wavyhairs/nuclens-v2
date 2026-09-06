@@ -3410,4 +3410,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    print(gemini_client.format_model_policy())
     main()

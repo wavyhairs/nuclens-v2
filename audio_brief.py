@@ -1070,6 +1070,7 @@ def generate(force: bool = False, send: bool = True) -> bool:
 
 
 if __name__ == "__main__":
+    print(gemini_client.format_model_policy())
     # 어떤 실패도 배포를 죽이면 안 된다 — 오디오는 부가 기능이다. 다만 **성패는
     # 종료 코드로 알린다.** 예전엔 무조건 0 이라 워크플로의
     # `python audio_brief.py || echo "실패"` 가 한 번도 실행된 적이 없었고,

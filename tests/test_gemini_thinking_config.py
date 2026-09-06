@@ -105,6 +105,70 @@ class TestSupportedModelKeepsThinkingConfig(unittest.TestCase):
         self.assertNotIn("thinkingConfig", captured[0]["generationConfig"])
 
 
+class TestThinkingLevel(unittest.TestCase):
+    def setUp(self):
+        gc.reset_call_log()
+
+    def tearDown(self):
+        gc.reset_call_log()
+
+    def test_all_supported_levels_are_sent_exactly(self):
+        for level in ("minimal", "low", "medium", "high"):
+            with self.subTest(level=level):
+                captured: list = []
+                with patch.object(gc, "API_KEY", "test-key"), \
+                        patch.object(gc.urllib.request, "urlopen",
+                                     _capturing_success_urlopen(captured)):
+                    gc.call_json("system", "user", thinking_level=level,
+                                 model="gemini-3.5-flash-lite")
+                self.assertEqual(
+                    captured[0]["generationConfig"]["thinkingConfig"],
+                    {"thinkingLevel": level},
+                )
+
+    def test_invalid_level_fails_before_any_call(self):
+        with patch.object(gc, "API_KEY", "test-key"), \
+                patch.object(gc.urllib.request, "urlopen") as urlopen, \
+                self.assertRaises(gc.GeminiConfigError):
+            gc.call_json("system", "user", thinking_level="extreme")
+        urlopen.assert_not_called()
+        self.assertEqual(gc._CALL_LOG, [])
+
+    def test_level_and_budget_conflict_fails_before_any_call(self):
+        with patch.object(gc, "API_KEY", "test-key"), \
+                patch.object(gc.urllib.request, "urlopen") as urlopen, \
+                self.assertRaises(gc.GeminiConfigError):
+            gc.call_json("system", "user", thinking_level="high", thinking_budget=0)
+        urlopen.assert_not_called()
+        self.assertEqual(gc._CALL_LOG, [])
+
+    def test_explicit_level_400_never_downgrades(self):
+        calls: list = []
+
+        def reject(req, timeout=None):
+            calls.append(json.loads(req.data.decode("utf-8")))
+            raise urllib.error.HTTPError(
+                "u", 400, "Bad Request", {},
+                BytesIO(INVALID_ARGUMENT_BODY.encode("utf-8")))
+
+        with patch.object(gc, "API_KEY", "test-key"), \
+                patch.object(gc.urllib.request, "urlopen", reject), \
+                self.assertRaises(gc.GeminiConfigError):
+            gc.call_json("system", "user", thinking_level="high",
+                         model="gemini-9.9-future-lite")
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["generationConfig"]["thinkingConfig"],
+                         {"thinkingLevel": "high"})
+
+    def test_temperature_none_omits_field(self):
+        captured: list = []
+        with patch.object(gc, "API_KEY", "test-key"), \
+                patch.object(gc.urllib.request, "urlopen",
+                             _capturing_success_urlopen(captured)):
+            gc.call_json("system", "user", temperature=None)
+        self.assertNotIn("temperature", captured[0]["generationConfig"])
+
+
 class TestUnknownModelStillFallsBackOn400(unittest.TestCase):
     """목록에 없는 새 모델이 같은 증상을 내면 기존 400 fallback 이 안전망이 된다.
 

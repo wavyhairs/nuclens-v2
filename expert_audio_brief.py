@@ -1651,6 +1651,7 @@ def generate(force: bool = False, send: bool = True) -> bool:
 
 
 if __name__ == "__main__":
+    print(gemini_client.format_model_policy())
     ok = False
     try:
         ok = generate(force="--force" in sys.argv,
