@@ -2,7 +2,7 @@
 
 Base SHA: `ab0a82ff0f840a8e22c67da5ef27ad6628eb685d`
 Branch: `feat/gemini-reasoning`
-Last verified commit: `4e89985` (curation regression guard, after Stage C `a264565`)
+Last verified commit: `8590f32` (Stage F, after curation guard `4e89985`)
 
 Completed stages:
 - Stage 0: latest `origin/main` re-audited; the 14 production generative call groups, embedding, TTS, and non-production exclusions still match the plan.
@@ -11,14 +11,16 @@ Completed stages:
 - Stage C: generation policy fingerprints and bounded soft-stale refresh implemented for issue review, KEEI matching, and issue insights; old values survive deferred/failed refreshes.
 - Stage F infrastructure: shared strict semantic verdict/taxonomy, source-evidence separation, Expert verifier promotion with zero added calls, and the complete Fast verify/repair/re-audit/re-verify chain implemented. Fast production blocking remains disabled pending broader human Semantic Gold.
 - Curation regression: real Saeul mixed-event headline is deterministically separated, and source-unsupported causal wording in optional `implication`/`why_important` is removed without an extra LLM call.
+- Archive presentation boundary: the same Saeul title repair is applied after clustering/signature calculation, so historical JSONL and story identity remain unchanged while deployed titles are corrected.
 
-Current stage: Stage F final verification and commit.
-Next action: generate isolated web data, run web/node contracts, then prepare the PR.
+Current stage: final audit and PR preparation.
+Next action: commit the archive presentation repair, compare with latest `origin/main`, then push/open the PR if still clean.
 
 Tests last passed:
 - python tests: 1,518 passed (`GEMINI_API_KEY="" python -m unittest discover -s tests`).
-- web tests: baseline invocation reached 454 tests but 6 generated-data tests could not start because this fresh worktree has no gitignored `web/public/data/*.json`; generate data before the final web run.
-- node/contracts: not yet run; no root `package.json`; package locations will be rechecked after web generation.
+- Full Build: 82.7s, 10,447 archive rows, 525 issues, 705 evidence attachments, 0 Gemini calls; deployed JSON has zero occurrences of the bad mixed headline.
+- web tests: 569 run, 568 passed, 2 skipped, 1 failed. The sole failure is the pre-existing live-data week-balance gate (`[50,48,112,160,131,149,143]`, ratio 3.33); it reproduces in the untouched original worktree (ratio 3.31).
+- node/contracts: unavailable; the repository has no `package.json`. Workflow/static contracts are covered by Python tests.
 - V5 characterization: 27 targeted V5/policy/eval/Gold tests pass; `expected.characterization_sha256` and frozen request fixture are unchanged.
 
 Gold Sets:
@@ -50,9 +52,9 @@ Explicitly NOT enabled:
 
 Known failures / blockers:
 - Human-labelled Identity, Curation, and Semantic Gold Sets are not present, so reasoning promotion and blocking semantic verification cannot be activated.
-- Fresh-worktree web tests need generated data; this is not a source regression and is the next verification step.
+- The live-data week-balance web test is already red on the untouched worktree and is outside this reasoning-policy change; all other web tests pass.
 
 Exact resume command / next step:
 - `cd C:\AI\nuclens-v2\.worktrees\gemini-reasoning`
-- `git status --short && GEMINI_API_KEY="" python web/build_data.py`
-- Run `python -m unittest discover -s web/tests`, available node contracts, and final diff review; keep Fast blocking and all reasoning promotion disabled pending broader human Gold.
+- `git status --short && git diff origin/main...HEAD --check`
+- Fetch/compare latest `origin/main`, review the complete diff, and prepare the PR; keep Fast blocking and all reasoning promotion disabled pending broader human Gold.

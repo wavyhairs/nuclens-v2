@@ -49,6 +49,29 @@ OPTIONAL_CARD_FIELDS = ("why", "investment", "kr_takeaway")
 CORE_CARD_FIELDS = ("headline", "what")
 
 
+def separate_mixed_event_headline(value: object) -> str:
+    """Separate a known operational-incident/project-period title collision.
+
+    This is deliberately narrower than general summarisation: it only removes a
+    trailing project/execution-period extension when an operational stop already
+    forms a complete headline.  It is safe for archived rows because it changes
+    the display title only; summary/detail retain both independently sourced facts.
+    """
+    text = clean_text(value)
+    incident_at = min((text.find(marker) for marker in ("자동정지", "가동 중단")
+                       if marker in text), default=-1)
+    period_at = min((text.find(marker) for marker in ("사업기간", "시행기간")
+                     if marker in text), default=-1)
+    if incident_at < 0 or period_at <= incident_at or "연장" not in text[period_at:]:
+        return text
+    separators = (" 및 ", "…", "·", ",", " 또 ")
+    cut = max((text.rfind(separator, incident_at, period_at + 1)
+               for separator in separators), default=-1)
+    if cut < 0:
+        cut = period_at
+    return text[:cut].rstrip(" ,·…및또")
+
+
 @dataclass(frozen=True)
 class Finding:
     """One machine-readable gate observation."""

@@ -1473,19 +1473,7 @@ def separate_curation_headline_events(title: object) -> str:
     It is intentionally narrow: an operational stop must precede an explicit
     project/execution-period extension in the same generated title.
     """
-    text = clean_text(title)
-    incident_at = min((text.find(marker) for marker in ("자동정지", "가동 중단")
-                       if marker in text), default=-1)
-    period_at = min((text.find(marker) for marker in ("사업기간", "시행기간")
-                     if marker in text), default=-1)
-    if incident_at < 0 or period_at <= incident_at or "연장" not in text[period_at:]:
-        return text
-    separators = (" 및 ", "…", "·", ",", " 또 ")
-    cut = max((text.rfind(separator, incident_at, period_at + 1)
-               for separator in separators), default=-1)
-    if cut < 0:
-        cut = period_at
-    return text[:cut].rstrip(" ,·…및또")
+    return article_quality_gate.separate_mixed_event_headline(title)
 
 
 # ---- open_question 게이트 -----------------------------------------------------

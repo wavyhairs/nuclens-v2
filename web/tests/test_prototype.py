@@ -6366,6 +6366,23 @@ class ExplicitCurationStatusTests(unittest.TestCase):
         self.assertEqual(visible[0]["implication"], "한수원 수혜가 기대된다.")
         self.assertEqual(stats["fallback_trimmed"], 0)
 
+    def test_archived_saeul_mixed_title_is_repaired_without_losing_facts(self):
+        visible, stats = self.gate(
+            hash="4da5b7ab6c225c78",
+            title="새울 3호기 자동정지…사업기간도 10개월 연장",
+            title_kr="상업운전 앞둠 새울 3호기 시운전 중 자동정지 및 사업기간 연장",
+            summary="새울 3호기가 자동정지했으며 새울 3·4호기 사업기간도 연장됐다.")
+        # Integrity inspection records the repair, but identity inputs stay intact.
+        self.assertIn("사업기간", visible[0]["title_kr"])
+        display = build_data.apply_display_headline_repairs(visible)
+        self.assertEqual(
+            display[0]["title_kr"],
+            "상업운전 앞둠 새울 3호기 시운전 중 자동정지")
+        self.assertIn("사업기간", display[0]["summary"])
+        self.assertEqual(stats["headline_repaired"], 1)
+        self.assertEqual(stats["headline_repair_samples"][0]["hash"],
+                         "4da5b7ab6c225c78")
+
     def test_legacy_record_without_a_status_is_not_hidden(self):
         """없는 상태를 추론해 숨기면 정상 기사가 대량으로 사라진다."""
         visible, stats = self.gate()
