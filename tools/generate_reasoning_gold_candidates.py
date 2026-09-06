@@ -25,7 +25,7 @@ IDENTITY_REASONS = [
     "same_action", "same_meeting", "same_announcement",
     "multi_source_same_event", "follow_up_same_event", "same_entity_only",
     "different_stage", "different_unit", "different_action", "broader_topic",
-    "insufficient_context",
+    "different_time", "insufficient_context", "unclear_event_boundary", "other",
 ]
 CURATION_DIMENSIONS = {
     "event_boundary": ["PASS", "FAIL", "AMBIGUOUS"],

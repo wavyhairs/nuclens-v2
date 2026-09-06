@@ -41,7 +41,8 @@ def _label_errors(cases: list[dict], allowed: set[str], task: str) -> list[str]:
 
 
 def audit(fixtures: Path) -> dict:
-    identity = _read(fixtures / "identity_candidates.json")["cases"]
+    identity_payload = _read(fixtures / "identity_candidates.json")
+    identity = identity_payload["cases"]
     curation = _read(fixtures / "curation_gold.json")["cases"]
     semantic = _read(fixtures / "semantic_gold.json")["cases"]
     errors: list[str] = []
@@ -67,10 +68,17 @@ def audit(fixtures: Path) -> dict:
                             "semantic")
 
     unordered: set[tuple[str, str]] = set()
+    identity_reasons = set(identity_payload.get("reason_codes") or [])
     for case in identity:
         if (case.get("label_status") == "HUMAN_LABEL_REQUIRED"
                 and case.get("reason_code") is not None):
             errors.append(f"identity:{case.get('id')} pending reason_code must be null")
+        if case.get("human_label") is not None:
+            reason = case.get("reason_code")
+            if not reason:
+                errors.append(f"identity:{case.get('id')} labelled without reason_code")
+            elif reason not in identity_reasons:
+                errors.append(f"identity:{case.get('id')} invalid reason_code {reason!r}")
         cards = []
         for side in ("a", "b"):
             card = case.get(side) or {}

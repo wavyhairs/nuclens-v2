@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Identity Gold Labeler</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Nuclens · local evaluation tool</p>
+      <h1>Identity Gold</h1>
+    </div>
+    <div class="position" aria-live="polite"><strong id="position">– / –</strong><span id="pair-id"></span></div>
+  </header>
+
+  <section class="dashboard" aria-label="진행률">
+    <div><span>전체</span><strong id="total">0</strong></div>
+    <div><span>라벨 완료</span><strong id="labeled">0</strong></div>
+    <div><span>MERGE</span><strong id="merge-count">0</strong></div>
+    <div><span>SEPARATE</span><strong id="separate-count">0</strong></div>
+    <div><span>AMBIGUOUS</span><strong id="ambiguous-count">0</strong></div>
+    <div><span>남음</span><strong id="remaining">0</strong></div>
+    <div class="goal"><span>첫 60개</span><strong id="first60">0 / 60</strong><em id="ready">라벨링 중</em></div>
+  </section>
+
+  <nav class="toolbar" aria-label="후보 필터와 이동">
+    <div class="filters">
+      <button data-filter="first60" class="filter active">First 60</button>
+      <button data-filter="all" class="filter">All 150</button>
+      <button data-filter="unlabeled" class="filter">Unlabeled only</button>
+    </div>
+    <div class="pager">
+      <button id="previous" title="이전 (←)">← 이전</button>
+      <button id="next" title="다음 (→)">다음 →</button>
+    </div>
+  </nav>
+
+  <main>
+    <section id="empty" class="empty" hidden>
+      <h2>이 필터에는 남은 후보가 없습니다.</h2>
+      <p>다른 필터를 선택하거나 Export / Validate를 실행하세요.</p>
+    </section>
+
+    <section id="workspace">
+      <div class="articles">
+        <article class="article-card article-a">
+          <div class="card-label">A</div>
+          <h2 id="a-title"></h2>
+          <dl>
+            <div><dt>출처</dt><dd id="a-publisher"></dd></div>
+            <div><dt>게시일</dt><dd id="a-date"></dd></div>
+            <div><dt>원문 제목</dt><dd id="a-original"></dd></div>
+          </dl>
+          <p class="summary" id="a-summary"></p>
+          <a id="a-link" class="source-link" target="_blank" rel="noopener noreferrer">원문 열기 ↗</a>
+        </article>
+
+        <article class="article-card article-b">
+          <div class="card-label">B</div>
+          <h2 id="b-title"></h2>
+          <dl>
+            <div><dt>출처</dt><dd id="b-publisher"></dd></div>
+            <div><dt>게시일</dt><dd id="b-date"></dd></div>
+            <div><dt>원문 제목</dt><dd id="b-original"></dd></div>
+          </dl>
+          <p class="summary" id="b-summary"></p>
+          <a id="b-link" class="source-link" target="_blank" rel="noopener noreferrer">원문 열기 ↗</a>
+        </article>
+      </div>
+
+      <section class="comparison" aria-label="결정론적 비교 정보">
+        <span id="date-gap"></span>
+        <span id="token-overlap"></span>
+        <span id="common-units"></span>
+        <span id="shared-entities"></span>
+        <span id="same-source"></span>
+      </section>
+
+      <section class="decision-panel">
+        <div class="section-heading">
+          <div><p class="eyebrow">사람 판정</p><h2>두 기사가 같은 실제 사건인가?</h2></div>
+          <span id="save-state" class="save-state">저장 대기</span>
+        </div>
+        <div class="verdicts">
+          <button class="verdict merge" data-label="MERGE"><kbd>M</kbd><strong>MERGE</strong><small>같은 실제 사건·행동의 다른 보도</small></button>
+          <button class="verdict separate" data-label="SEPARATE"><kbd>S</kbd><strong>SEPARATE</strong><small>관련 주제지만 서로 다른 사건·행동</small></button>
+          <button class="verdict ambiguous" data-label="AMBIGUOUS"><kbd>A</kbd><strong>AMBIGUOUS</strong><small>현재 정보만으로 확정하기 어려움</small></button>
+        </div>
+
+        <div id="reason-area" class="reason-area" hidden>
+          <h3>Reason code <small>숫자키 1–9</small></h3>
+          <div id="reasons" class="reasons"></div>
+          <label id="other-wrap" class="other-note" hidden>
+            <span>짧은 메모 (필수, 최대 240자)</span>
+            <input id="other-note" maxlength="240" autocomplete="off" placeholder="판단 근거를 짧게 입력">
+          </label>
+        </div>
+
+        <div class="actions">
+          <label class="toggle"><input id="auto-next" type="checkbox" checked><span>Auto-next ON</span></label>
+          <button id="save-next" class="primary">저장 후 다음 <kbd>Enter</kbd></button>
+          <button id="undo" disabled>방금 저장 취소</button>
+          <button id="clear">현재 라벨 지우기</button>
+        </div>
+      </section>
+
+      <section class="reference-panel">
+        <button id="reference-toggle" aria-expanded="false">참고정보 보기 · 모델 판정은 기본 숨김</button>
+        <div id="reference" hidden></div>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shortcuts"><strong>단축키</strong><span>M / S / A 판정</span><span>1–9 reason</span><span>← / → 이동</span><span>Enter 저장</span></div>
+    <div class="export-actions">
+      <button id="validate">Validate</button>
+      <button id="export">Export / Validate</button>
+    </div>
+    <p id="message" role="status"></p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
