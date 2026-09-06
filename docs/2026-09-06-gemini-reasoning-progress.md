@@ -1,8 +1,8 @@
 # Gemini reasoning implementation progress
 
-Base SHA: `ab0a82ff0f840a8e22c67da5ef27ad6628eb685d`
+Base SHA: `3c16d95344c217d2ccd7b612238b4cce10cab084`
 Branch: `feat/gemini-reasoning`
-Last verified commit: `8590f32` (Stage F, after curation guard `4e89985`)
+Last verified commit: `f90de4d` (archive display repair, after Stage F `13a0141`)
 
 Completed stages:
 - Stage 0: latest `origin/main` re-audited; the 14 production generative call groups, embedding, TTS, and non-production exclusions still match the plan.
@@ -18,7 +18,7 @@ Next action: commit the archive presentation repair, compare with latest `origin
 
 Tests last passed:
 - python tests: 1,518 passed (`GEMINI_API_KEY="" python -m unittest discover -s tests`).
-- Full Build: 82.7s, 10,447 archive rows, 525 issues, 705 evidence attachments, 0 Gemini calls; deployed JSON has zero occurrences of the bad mixed headline.
+- Full Build after rebasing onto latest `origin/main`: 82.8s, 10,468 archive rows, 525 issues, 709 evidence attachments, 0 Gemini calls; deployed JSON has zero occurrences of the bad mixed headline.
 - web tests: 569 run, 568 passed, 2 skipped, 1 failed. The sole failure is the pre-existing live-data week-balance gate (`[50,48,112,160,131,149,143]`, ratio 3.33); it reproduces in the untouched original worktree (ratio 3.31).
 - node/contracts: unavailable; the repository has no `package.json`. Workflow/static contracts are covered by Python tests.
 - V5 characterization: 27 targeted V5/policy/eval/Gold tests pass; `expected.characterization_sha256` and frozen request fixture are unchanged.
