@@ -115,8 +115,11 @@ class ReviewLabelStore:
         labels = payload.get("labels")
         if not isinstance(labels, dict):
             raise LabelValidationError("provisional labels must be an object")
-        pending_ids = {case["id"] for case in self.cases
-                       if case.get("label_status") == "HUMAN_LABEL_REQUIRED"}
+        # Provisional rows were imported while their cases were pending.  After a
+        # human export those same cases legitimately become HUMAN_LABELLED while
+        # the immutable candidate hash stays valid, so reload/validate must still
+        # accept the original provisional metadata.
+        candidate_ids = set(self.case_by_id)
         for case_id, entry in labels.items():
             if entry.get("human_reviewed") is not False:
                 raise LabelValidationError(
@@ -126,7 +129,7 @@ class ReviewLabelStore:
                        "provisional_label", "error_types", "confidence", "reason",
                        "evidence_reference")}}
             try:
-                validate_row(self.task_key, raw, pending_ids)
+                validate_row(self.task_key, raw, candidate_ids)
             except ValueError as exc:
                 raise LabelValidationError(str(exc)) from exc
         return payload
@@ -434,8 +437,19 @@ class ReviewLabelStore:
     def _export_payload(self) -> dict:
         payload = deepcopy(self.fixture_payload)
         labels = self.current_labels()
+        sidecar_labels = self.sidecar.get("labels", {})
         for case in payload.get("cases") or []:
             entry = labels.get(case["id"])
+            sidecar_entry = sidecar_labels.get(case["id"])
+            if entry and entry.get("source") == "fixture" and not sidecar_entry:
+                # An untouched canonical contract must remain byte-for-byte
+                # equivalent at the data level; do not normalize optional fields.
+                continue
+            if not entry and not (
+                    sidecar_entry and sidecar_entry.get("cleared") is True):
+                # Likewise, exporting reviewed rows must not add empty optional
+                # fields to unrelated pending candidates.
+                continue
             if self.task_key == "curation":
                 fields = ("human_label", "human_dimensions", "required_repair",
                           "human_notes")
@@ -450,13 +464,8 @@ class ReviewLabelStore:
             values = ({field: deepcopy(entry.get(field)) for field in fields}
                       if entry else empty)
             case.update(values)
-            if entry and entry.get("source") == "fixture":
-                # Preserve pinned USER_SPECIFIED contracts unless the human actually
-                # overrides that case in the sidecar.
-                case["label_status"] = case.get("label_status")
-            else:
-                case["label_status"] = (
-                    "HUMAN_LABELLED" if entry else "HUMAN_LABEL_REQUIRED")
+            case["label_status"] = (
+                "HUMAN_LABELLED" if entry else "HUMAN_LABEL_REQUIRED")
         return payload
 
     def export(self) -> dict:

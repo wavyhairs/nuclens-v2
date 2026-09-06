@@ -54,6 +54,31 @@ class ReviewGoldLabelerTests(unittest.TestCase):
         self.assertEqual(exported["human_dimensions"]["event_boundary"], "FAIL")
         self.assertEqual(exported["label_status"], "HUMAN_LABELLED")
 
+    def test_export_does_not_normalize_unreviewed_candidates(self):
+        pending = {"id": "c2", "human_label": None,
+                   "human_dimensions": {"event_boundary": None},
+                   "human_notes": None, "label_status": "HUMAN_LABEL_REQUIRED"}
+        fixture = self._fixture("curation", {
+            "task": "CURATION",
+            "dimension_contract": {"event_boundary": ["PASS", "FAIL"]},
+            "cases": [
+                {"id": "c1", "human_label": None,
+                 "human_dimensions": {"event_boundary": None},
+                 "human_notes": None, "label_status": "HUMAN_LABEL_REQUIRED"},
+                pending,
+            ],
+        })
+        store = review_gold_labeler.ReviewLabelStore(
+            "curation", fixture, self.root / "labels.json")
+        store.save_label("c1", {"human_label": "PASS",
+                                  "human_dimensions": {"event_boundary": "PASS"},
+                                  "required_repair": None, "human_notes": None})
+        with mock.patch("tools.review_gold_labeler.audit",
+                        return_value={"ok": True, "errors": [], "warnings": []}):
+            store.export()
+        exported = json.loads(fixture.read_text(encoding="utf-8"))["cases"]
+        self.assertEqual(exported[1], pending)
+
     def test_export_preserves_unmodified_user_specified_status(self):
         fixture = self._fixture("curation", {
             "task": "CURATION", "dimension_contract": {"scope": ["PASS", "FAIL"]},
@@ -179,6 +204,12 @@ class ReviewGoldLabelerTests(unittest.TestCase):
         self.assertTrue(approved["human_reviewed"])
         self.assertEqual((approved["human_label"], approved["human_error_types"]),
                          ("BLOCK", ["FACT_ERROR"]))
+        with mock.patch("tools.review_gold_labeler.audit",
+                        return_value={"ok": True, "errors": [], "warnings": []}):
+            store.export()
+        reloaded = review_gold_labeler.ReviewLabelStore(
+            "semantic", fixture, self.root / "labels.json", provisional)
+        self.assertEqual(reloaded.current_labels()["s1"]["human_label"], "BLOCK")
 
     def test_curation_ambiguous_requires_change_or_needs_review(self):
         fixture = self._fixture("curation", {

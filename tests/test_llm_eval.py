@@ -28,6 +28,15 @@ class EvalInfrastructureTests(unittest.TestCase):
                               "label_status": "USER_SPECIFIED"}]}
         self.assertEqual([row["id"] for row in llm_eval.labelled_cases(payload)], ["y"])
 
+    def test_explicit_checkpoint_case_selection_is_ordered_and_strict(self):
+        cases = [{"id": "a"}, {"id": "b"}]
+        self.assertEqual(llm_eval.select_cases(cases, ["b", "a"]),
+                         [{"id": "b"}, {"id": "a"}])
+        with self.assertRaises(ValueError):
+            llm_eval.select_cases(cases, ["a", "a"])
+        with self.assertRaises(ValueError):
+            llm_eval.select_cases(cases, ["missing"])
+
     def test_identity_message_accepts_structured_pair(self):
         message = llm_eval.user_message(
             "IDENTITY_REVIEW", {"id": "x", "a": {"title": "A"},
@@ -87,6 +96,15 @@ class EvalInfrastructureTests(unittest.TestCase):
         self.assertEqual(metrics["per_label_precision"],
                          {"MERGE": .5, "SEPARATE": None})
         self.assertIsNone(metrics["retries"])
+
+    def test_local_socket_block_is_not_reported_as_api_failure(self):
+        summary = llm_eval.summarize([{
+            "key": "x", "status": "failed", "failure_type": "api",
+            "error": "URLError: <urlopen error [WinError 10013] forbidden by its access permissions>",
+            "config": "unspecified",
+        }])
+        self.assertEqual(summary["environment_failure"], 1)
+        self.assertEqual(summary["api_failure"], 0)
 
     def test_result_schema_is_enforced(self):
         self.assertEqual(

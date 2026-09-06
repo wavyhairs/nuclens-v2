@@ -10,9 +10,14 @@ class SolProvisionalGoldTests(unittest.TestCase):
     def test_packages_include_only_pending_cases_and_no_model_answer(self):
         with tempfile.TemporaryDirectory() as temp:
             curation = sol_provisional_gold.prepare("curation", Path(temp))
-            self.assertEqual(curation["case_count"], 39)
+            fixture = json.loads((sol_provisional_gold.FIXTURES /
+                                  "curation_gold.json").read_text("utf-8"))
+            pending_ids = {case["id"] for case in fixture["cases"]
+                           if case["label_status"] == "HUMAN_LABEL_REQUIRED"
+                           and case.get("human_label") is None}
+            self.assertEqual(curation["case_count"], len(pending_ids))
             rows = sol_provisional_gold.read_jsonl(Path(curation["input"]))
-            self.assertEqual(len(rows), 39)
+            self.assertEqual({row["case_id"] for row in rows}, pending_ids)
             self.assertNotIn("human_label", rows[0])
             self.assertIn("nuclens_generated", rows[0])
 
