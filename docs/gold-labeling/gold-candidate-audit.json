@@ -29,11 +29,12 @@
   },
   "curation": {
     "candidate_count": 40,
-    "human_labelled": 1,
-    "human_label_required": 39,
+    "human_labelled": 25,
+    "human_label_required": 15,
     "status": {
       "USER_SPECIFIED": 1,
-      "HUMAN_LABEL_REQUIRED": 39
+      "HUMAN_LABELLED": 24,
+      "HUMAN_LABEL_REQUIRED": 15
     },
     "domains": {
       "policy": 8,
@@ -53,10 +54,11 @@
   },
   "semantic": {
     "candidate_count": 77,
-    "human_labelled": 5,
-    "human_label_required": 72,
+    "human_labelled": 46,
+    "human_label_required": 31,
     "status": {
-      "HUMAN_LABEL_REQUIRED": 72,
+      "HUMAN_LABELLED": 41,
+      "HUMAN_LABEL_REQUIRED": 31,
       "USER_SPECIFIED": 5
     },
     "candidate_kinds": {

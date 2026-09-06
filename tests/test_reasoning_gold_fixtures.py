@@ -68,14 +68,17 @@ class ReasoningGoldFixtureTests(unittest.TestCase):
         self.assertIn("자동정지 및 사업기간 연장", case["generated_title"])
         self.assertEqual(case["human_label"], "REPAIR")
 
-    def test_curation_queue_is_broad_and_mostly_unlabelled(self):
+    def test_curation_queue_is_broad_and_keeps_pending_separate(self):
         payload = json.loads((FIXTURES / "curation_gold.json").read_text(encoding="utf-8"))
         self.assertGreaterEqual(len(payload["cases"]), 30)
         self.assertLessEqual(len(payload["cases"]), 50)
         pending = [case for case in payload["cases"]
                    if case["label_status"] == "HUMAN_LABEL_REQUIRED"]
+        labelled = [case for case in payload["cases"]
+                    if case["label_status"] in {"HUMAN_LABELLED", "USER_SPECIFIED"}]
         self.assertTrue(all(case["human_label"] is None for case in pending))
-        self.assertEqual(len(pending), len(payload["cases"]) - 1)
+        self.assertTrue(all(case["human_label"] is not None for case in labelled))
+        self.assertEqual((len(labelled), len(pending)), (25, 15))
 
     def test_semantic_queue_is_balanced_and_covers_taxonomy(self):
         payload = json.loads((FIXTURES / "semantic_gold.json").read_text(encoding="utf-8"))
@@ -89,9 +92,12 @@ class ReasoningGoldFixtureTests(unittest.TestCase):
         self.assertTrue(set(ERROR_TYPES) <= focuses)
         pending = [case for case in cases
                    if case["label_status"] == "HUMAN_LABEL_REQUIRED"]
-        self.assertEqual(len(pending), 72)
+        labelled = [case for case in cases
+                    if case["label_status"] in {"HUMAN_LABELLED", "USER_SPECIFIED"}]
+        self.assertEqual((len(labelled), len(pending)), (46, 31))
         self.assertTrue(all(case["human_label"] is None for case in pending))
         self.assertTrue(all(case["human_error_types"] is None for case in pending))
+        self.assertTrue(all(case["human_label"] is not None for case in labelled))
 
     def test_candidate_audit_passes_without_warnings(self):
         report = audit(FIXTURES)
