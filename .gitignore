@@ -57,3 +57,5 @@ web/_audit/
 web/_benchmark/
 # Resumable live reasoning evaluations contain API-derived observations only.
 artifacts/gemini-reasoning-eval/
+# Local human-label drafts. Canonical Gold is updated only by an explicit export.
+.eval/gold-labels/

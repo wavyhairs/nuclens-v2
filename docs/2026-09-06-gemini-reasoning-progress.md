@@ -2,6 +2,25 @@
 
 Updated: 2026-09-06 (Asia/Seoul)
 
+## Local Identity labeling UI follow-up
+
+- PR #89 merged into main as `70d04fa661fb260c458840d10070748a0efa1cc0`.
+- A development-only UI is available with `python tools/gold_labeler.py` at
+  `http://127.0.0.1:8765`.
+- Routine saves go to the ignored `.eval/gold-labels/identity_labels.json` sidecar
+  using flush, `fsync`, and atomic replace. The canonical fixture changes only after
+  explicit Export / Validate.
+- Default view is First 60 and resume starts at its first unlabeled pair. M/S/A,
+  number-key reasons, arrows, Enter, Auto-next, editing, clear, and one-step undo are
+  supported.
+- Cached/model verdicts are excluded from initial UI state and fetched only after a
+  deliberate reference-info click.
+- The tool imports no Gemini client, makes no model calls, and is not connected to
+  production web, crawl, Daily, Weekly, Audio, Telegram, or deployment workflows.
+- Verification: root Python `1542` tests passed; web Python `569` tests passed
+  (`4` skipped); front-end Node contracts, admin render, and real-browser admin DOM
+  smoke tests passed.
+
 ## Main / PR state
 
 - PR #88 `Gemini reasoning policy and semantic verification infrastructure`: merged.
