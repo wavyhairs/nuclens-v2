@@ -1272,6 +1272,28 @@ UNSOURCED_NAME_DROPS: list[str] = []
 # 본문 없이 쓰인 해석을 걷어낸 건수.
 NO_BODY_INTERPRETATION_DROPS: list[str] = []
 
+# Generated interpretation에서만 새로 등장한 인과 표현을 걷어낸 기록.
+UNSUPPORTED_CAUSAL_DROPS: list[str] = []
+
+_CAUSAL_MARKERS = (
+    "때문", "로 인해", "이에 따라", "여파로", "결과로", "영향으로",
+    "탓에", "따른 것", "기인", "그 결과",
+)
+
+
+def drop_unsupported_causal_interpretation(value: object, source_text: object,
+                                           title: str = "") -> str:
+    """Optional analysis cannot invent a causal edge absent from source material."""
+    text = clean_text(value)
+    source = clean_text(source_text)
+    if text and any(marker in text for marker in _CAUSAL_MARKERS) \
+            and not any(marker in source for marker in _CAUSAL_MARKERS):
+        UNSUPPORTED_CAUSAL_DROPS.append(f"{title[:40]} | {text[:80]}")
+        # Parsing arbitrary Korean causality into grammatical neutral prose is not
+        # deterministic.  Optional analysis is safer empty than subtly wrong.
+        return ""
+    return text
+
 
 def drop_interpretation_without_body(payload: dict, title: str = "") -> None:
     """본문을 못 받은 기사에서는 해석 필드를 비운다 (제자리 수정).
@@ -1444,6 +1466,28 @@ def drop_hollow_implication(value, title: str = "") -> str:
     return text
 
 
+def separate_curation_headline_events(title: object) -> str:
+    """Keep an incident headline from absorbing a separate project-period change.
+
+    This is the deterministic guard for archive regression 4da5b7ab6c225c78.
+    It is intentionally narrow: an operational stop must precede an explicit
+    project/execution-period extension in the same generated title.
+    """
+    text = clean_text(title)
+    incident_at = min((text.find(marker) for marker in ("자동정지", "가동 중단")
+                       if marker in text), default=-1)
+    period_at = min((text.find(marker) for marker in ("사업기간", "시행기간")
+                     if marker in text), default=-1)
+    if incident_at < 0 or period_at <= incident_at or "연장" not in text[period_at:]:
+        return text
+    separators = (" 및 ", "…", "·", ",", " 또 ")
+    cut = max((text.rfind(separator, incident_at, period_at + 1)
+               for separator in separators), default=-1)
+    if cut < 0:
+        cut = period_at
+    return text[:cut].rstrip(" ,·…및또")
+
+
 # ---- open_question 게이트 -----------------------------------------------------
 #
 # '아직 확정되지 않은 것'은 사실도 해석도 아닌 세 번째 축이다. 정책·수출·사업
@@ -1535,6 +1579,7 @@ def normalize_curation_item(item: dict, article: dict, body: str = "") -> dict:
     title_kr = strip_unsourced_person_names(
         clean_text(item.get("title_kr")) or article.get("title", ""),
         source_text, article.get("title", ""))
+    title_kr = separate_curation_headline_events(title_kr)
     grade = importance if importance in VALID_IMPORTANCE else "nice_to_know"
     features = sanitize_features(item.get("features"))
     event_type = (features or {}).get("event_type", "")
@@ -1570,11 +1615,15 @@ def normalize_curation_item(item: dict, article: dict, body: str = "") -> dict:
             sanitize_detail(item.get("detail")), source_text, article.get("title", "")),
         # 빈껍데기 해석은 화면에 내보내지 않는다. 재생성시키지 않고 그냥 버린다 —
         # 문체 위반으로 기사를 격리하면 영문 제목 폴백으로 떨어져 더 나쁘다.
-        "implication": strip_unsourced_person_names(
-            drop_hollow_implication(item.get("implication"), article.get("title", "")),
+        "implication": drop_unsupported_causal_interpretation(
+            strip_unsourced_person_names(
+                drop_hollow_implication(item.get("implication"), article.get("title", "")),
+                source_text, article.get("title", "")),
             source_text, article.get("title", "")),
-        "why_important": strip_unsourced_person_names(
-            item.get("why_important"), source_text, article.get("title", "")),
+        "why_important": drop_unsupported_causal_interpretation(
+            strip_unsourced_person_names(
+                item.get("why_important"), source_text, article.get("title", "")),
+            source_text, article.get("title", "")),
         "open_question": open_question,
         "open_question_source": open_question_source,
         "open_question_reject": oq_reject,
