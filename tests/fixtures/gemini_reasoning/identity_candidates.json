@@ -17,7 +17,10 @@
     "different_unit",
     "different_action",
     "broader_topic",
-    "insufficient_context"
+    "insufficient_context",
+    "other",
+    "different_time",
+    "unclear_event_boundary"
   ],
   "warning": "Cached/model verdicts are reference only and MUST NOT become Gold labels.",
   "cases": [
@@ -72,10 +75,10 @@
       "candidate_stratum": "known_edge_case",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "헝가리 팍스 원전 냉각수 부족으로 가동 차질",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "multi_source_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "756c2e6e80bbd36e--ad6ee254489e5bc3",
@@ -127,10 +130,10 @@
       "candidate_stratum": "known_edge_case",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "고리 3·4호기 계속운전 심사",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "multi_source_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "27690c176d3ab1e1--f762199f53581f88",
@@ -182,10 +185,10 @@
       "candidate_stratum": "known_edge_case",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "국가기간 전력망 확충 특별법 본회의 처리 관련 동일 사건",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "same_meeting",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "b0cdd490f0e1afe3--ba855ef18b483232",
@@ -240,10 +243,10 @@
       "candidate_stratum": "known_edge_case",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "새울 3호기 정지 조사 후 재가동 승인",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_stage",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "27690c176d3ab1e1--2f08f02b160d0594",
@@ -295,10 +298,10 @@
       "candidate_stratum": "known_edge_case",
       "prior_llm_verdict_not_gold": null,
       "prior_llm_reason_not_gold": "",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "75854021de34f332--a152ea74be0b0e74",
@@ -351,10 +354,10 @@
       "candidate_stratum": "known_edge_case",
       "prior_llm_verdict_not_gold": null,
       "prior_llm_reason_not_gold": "",
-      "human_label": null,
-      "reason_code": null,
-      "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "human_label": "SEPARATE",
+      "reason_code": "other",
+      "human_notes": "주체·대상·행동 모두 달라 사실상 무관한 기사",
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "4da5b7ab6c225c78:stop--4da5b7ab6c225c78:project-period",
@@ -410,10 +413,10 @@
       "candidate_stratum": "known_edge_case",
       "prior_llm_verdict_not_gold": null,
       "prior_llm_reason_not_gold": "",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "same_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "6b0f4d492346398a--9bff425a2d2c0a20",
@@ -466,10 +469,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "중국 원전 건설 이정표 달성",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_unit",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "58158c94ab72ede0--79e904ad0db5c408",
@@ -521,10 +524,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "호남·용인 반도체 클러스터 협약",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "55842b037eb69172--f23d52daba6bc9f7",
@@ -576,10 +579,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "전력기기 수주와 LS그룹 실적",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "87c6c33c04c22365--fe0652b5cb6d5cd4",
@@ -631,10 +634,10 @@
       "candidate_stratum": "disagreement_probe",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "원안위 조직 개편 및 예산 편성과 기장 SMR 인허가",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "525b21a811f83076--cb38eed27ac4ccd4",
@@ -686,10 +689,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "데이터센터와 원전 64기 승인",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "76ffb07f2b6ccb8d--a519ec27d94058f0",
@@ -744,10 +747,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "12차 전기본 수립 재개 관련",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "962102da67dd64bb--f396174affa85472",
@@ -799,10 +802,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "국가 R&D 및 원안위 SMR 예산 관련 보도",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "cf220a841659c83f--d1e966b5772613fd",
@@ -854,10 +857,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "SMR 7대 성장동력 육성 강조",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "follow_up_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "0d65034147a0c1c1--1e53d0f81cb14594",
@@ -909,10 +912,10 @@
       "candidate_stratum": "disagreement_probe",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "호남 전력망 지시와 해남 태양광",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "e39a5781ea57766c--ff6b831bee753ecc",
@@ -966,10 +969,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "부채 해결 촉구와 실적 보도는 별개",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "443dc23a57e6ec6c--57cfc84c702fe349",
@@ -1024,10 +1027,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "원자력 추진선과 i-SMR 표준설계인가로 별개",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "959a0bd83cc42eea--95c33d197b68b465",
@@ -1080,10 +1083,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "정부 주도 메가프로젝트 vs 제주도 AI 데이터센터",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "4c9acb05e565646d--6687fa99fd49a2f3",
@@ -1135,10 +1138,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "경북 환영과 전남광주 절감 전망",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "78d84e4164f7c883--a5a1ef68231b4e51",
@@ -1192,10 +1195,10 @@
       "candidate_stratum": "disagreement_probe",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "테라파워와 한국 기업 SMR 협력 동일 사안",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "997d5f57b3bba72b--a5a1ef68231b4e51",
@@ -1249,10 +1252,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "테라파워 SMR 협력 및 공급망 확대 동일",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "7f3cc06616b787a6--b55e201374267ece",
@@ -1305,10 +1308,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "표준화 논의와 이니셔티브 출범은 다른 사안임",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "follow_up_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "370525a5633cd666--4c9acb05e565646d",
@@ -1360,10 +1363,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "경북과 전남광주의 서로 다른 입장",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "ba51bf425ca92c1c--f69c4976ae046d2a",
@@ -1415,10 +1418,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "대통령 발언과 정부 전략 발표는 별개 사안임",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_stage",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "01083ffbfa10992b--d28bfa9cdcca95f1",
@@ -1471,10 +1474,10 @@
       "candidate_stratum": "disagreement_probe",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "주체는 같으나 안건이 다름",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "9a7b23e4ae5be6f3--f68d886078c31585",
@@ -1526,10 +1529,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "원전 일반 제도 개선과 개별 호기 사고 조사는 다름",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "4c9acb05e565646d--79132d40e8b641bc",
@@ -1581,10 +1584,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "정부의 지역별 차등 전기요금제 설계안 공개 보도",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "0799408181a9cab4--666add9fc32c9d8a",
@@ -1636,10 +1639,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "3대 메가프로젝트 관련 정부 회의 및 점검",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_stage",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "a906966348221102--fba5463a7c92d503",
@@ -1691,10 +1694,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "LG에너지솔루션 북미 ESS 전략 관련 후속",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "76bbb9f943f08ee2--bbc7b1d19ffb0c94",
@@ -1746,10 +1749,10 @@
       "candidate_stratum": "disagreement_probe",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "지역차등 전기요금제 개편안 관련 보도",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_stage",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "0ea4fd6626b7b574--737df86cf04543b5",
@@ -1802,10 +1805,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "전력산업 재편 논의와 산업용 발전엔진 수요는 다름",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "1040c640a9bcc93d--5e9d01995935b47b",
@@ -1857,10 +1860,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "프랑스 원전 폭염 영향",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "79affc73cad65844--d4010b67b8de8881",
@@ -1912,10 +1915,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "대상 원전 호기 또는 날짜가 다름",
-      "human_label": null,
-      "reason_code": null,
-      "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "human_label": "SEPARATE",
+      "reason_code": "other",
+      "human_notes": "주제간 관련성 낮음",
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "0c9c758818ef14de--d102b3fc8a136e96",
@@ -1967,10 +1970,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "제로 탄소 단지와 서부 분산 전략은 다름",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "599a0d520ed54015--aec4e7721d553311",
@@ -2022,10 +2025,10 @@
       "candidate_stratum": "disagreement_probe",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "원전 부지 선정과 아파트 분양",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "d1e54858467d9da4--e35ba84675a81735",
@@ -2077,10 +2080,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "예비자원 점검과 2040년 전력 수요 전망은 다른 사안",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "5acc5e77897a84d4--9eb4bcdac9bb80ce",
@@ -2135,10 +2138,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "전력수요 전망과 수명만료 원전 추진은 별개",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_stage",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "39c688cdd1bd818c--d3effaaae45ac23b",
@@ -2190,10 +2193,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "규제 강화와 금융권 경고는 별개 사건임",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "571c41d8d5a745d5--726ce5e20cdd473d",
@@ -2246,10 +2249,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "호남 반도체 클러스터 전력 공급 방안",
-      "human_label": null,
-      "reason_code": null,
-      "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "human_label": "SEPARATE",
+      "reason_code": "other",
+      "human_notes": "전력공급원 문제와 전기요금제 문제는 서로 다른 정책축",
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "5912265ba9aa8cfe--8ceb26d26c222131",
@@ -2301,10 +2304,10 @@
       "candidate_stratum": "disagreement_probe",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "미국 AI 데이터센터 반발 및 지연 관련 동일 사안",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "follow_up_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "4a171aeb5c1c01ac--f7fb3d73512b4f68",
@@ -2357,10 +2360,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "해상 이동 데이터센터와 모듈러 기술은 별개",
-      "human_label": null,
-      "reason_code": null,
-      "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "human_label": "SEPARATE",
+      "reason_code": "other",
+      "human_notes": "기술 주제가 다른 내용",
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "34575730dc364184--f33f228a288946ee",
@@ -2413,10 +2416,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "규제기관 전망 논의와 연료 수입은 다름",
-      "human_label": null,
-      "reason_code": null,
-      "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "human_label": "SEPARATE",
+      "reason_code": "other",
+      "human_notes": "실질적 사건 관계가 거의 없음",
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "71f5625759c56698--dc1e6a30e09ccefd",
@@ -2470,10 +2473,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "전력산업 재편 논의 주체 차이",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "same_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "05da702fed62250a--959a0bd83cc42eea",
@@ -2525,10 +2528,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "메가프로젝트 추진과 전력수급기본계획 차이",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "8b486e4051da2e66--eeb5f60b2c8223fd",
@@ -2581,10 +2584,10 @@
       "candidate_stratum": "disagreement_probe",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "미 해사청 협력과 미·영 민관 협력은 주체가 다름",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "follow_up_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "76e475ad2520cd4f--a1912ae6be142db4",
@@ -2638,10 +2641,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "전력 목표수요 상향과 재생에너지 목표는 다름",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "same_announcement",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "9e7a3003708adbaa--aa221d1a4aeed024",
@@ -2696,10 +2699,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "스웨덴 협력과 고준위폐기물 위원회는 다름",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "464201f63eb5f96a--9b707d5bc0e90593",
@@ -2752,10 +2755,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "지자체 지원과 SK텔레콤 사업 재편",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "cf41dffd541ba4f8--f73a97b0f28780fb",
@@ -2808,10 +2811,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "랜시엄 투자와 네트워크 장애 복구로 사안이 다름",
-      "human_label": null,
-      "reason_code": null,
-      "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "human_label": "SEPARATE",
+      "reason_code": "other",
+      "human_notes": "같은 기업이나 다른 주제",
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "43f9d6d14c4dcd39--64390f8237447d17",
@@ -2863,10 +2866,10 @@
       "candidate_stratum": "disagreement_probe",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "의원 입법 추진과 경주시 예산 확보는 다름",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "c7f9b3d08bc22513--d6889c5a7737e33a",
@@ -2920,10 +2923,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "정부 예타 면제와 민간 단체 분석은 다름",
-      "human_label": null,
-      "reason_code": null,
-      "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "human_label": "SEPARATE",
+      "reason_code": "other",
+      "human_notes": "같은 주제이나 다른 사건",
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "414635dfc63ab9c4--cd2318c0be5d5379",
@@ -2975,10 +2978,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "지역별 전기요금 차등제 초안 발표 후속",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "follow_up_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "9a7b23e4ae5be6f3--beff8f802cca43be",
@@ -3030,10 +3033,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "원전 계속운전 심사 가속화 및 고리 3·4호기 결정 관련 후속",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "same_announcement",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "92ea07a57c2099e0--e35ba84675a81735",
@@ -3085,10 +3088,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "같은 주제, 같은 점검",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "MERGE",
+      "reason_code": "same_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "4113d294aea75ee0--e510a3f760f56966",
@@ -3141,10 +3144,10 @@
       "candidate_stratum": "disagreement_probe",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "주체는 같으나 안건이 다름",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "5912265ba9aa8cfe--6364a2515606a465",
@@ -3196,10 +3199,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "프로젝트 지연 보도와 특정 지역 주민 반발은 다른 사건임",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "broader_topic",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "443dc23a57e6ec6c--627ba69c29d4adc5",
@@ -3252,10 +3255,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "원자력 추진선 규제와 민간 기업 건의는 다름",
-      "human_label": null,
-      "reason_code": null,
-      "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "human_label": "SEPARATE",
+      "reason_code": "other",
+      "human_notes": "다른 주제",
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "adfbe2085bf6c11e--e4c4b1f4ad2834d4",
@@ -3308,10 +3311,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": true,
       "prior_llm_reason_not_gold": "SMR 7대 SEED 프로젝트 선정 관련",
-      "human_label": null,
-      "reason_code": null,
+      "human_label": "SEPARATE",
+      "reason_code": "different_stage",
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "0412d08712c9a60e--c9d87f6e5f4c141b",
@@ -3365,10 +3368,10 @@
       "candidate_stratum": "stratified_control",
       "prior_llm_verdict_not_gold": false,
       "prior_llm_reason_not_gold": "영덕군 협력과 필리핀 MOU",
-      "human_label": null,
-      "reason_code": null,
-      "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED"
+      "human_label": "SEPARATE",
+      "reason_code": "other",
+      "human_notes": "다른 주제",
+      "label_status": "HUMAN_LABELLED"
     },
     {
       "id": "5e2c11cd445bbcee--b5078cd9e9f6cf5f",
