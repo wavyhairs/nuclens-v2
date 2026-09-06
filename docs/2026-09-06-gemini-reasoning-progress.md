@@ -12,7 +12,8 @@ Updated: 2026-09-06 (Asia/Seoul)
   `HUMAN_LABEL_REQUIRED`; no model/cache value was promoted to Gold.
 - Identity fixture SHA-256:
   `8c9d9a3b59c32ad89589ee3d0b94c135099494527259676841410890b7566479`.
-- Current work branch: `feat/gemini-reasoning-validation`, based on merged main.
+- Current work branch: `feat/gemini-reasoning-validation`, rebased on latest
+  `origin/main` at `c3fd31d` before PR creation.
 - Production policy is unchanged: all 23 profiles request unspecified thinking and
   Fast semantic blocking remains disabled.
 
@@ -241,7 +242,9 @@ Gold status is in `docs/2026-09-06-gemini-task-inventory.md`.
   525 issue details, 709 evidence attachments, 0 Gemini calls. It produced the known
   local degraded identity diagnostic (two quarantined clusters) because this isolated
   worktree has no embeddings file; it did not modify production data.
-- GitHub PR/CI state is pending commit and push.
+- GitHub PR: #92 (`feat/gemini-reasoning-validation` -> `main`). Core commits:
+  `16a41a4` (evaluation/inventory), `b3fd90c` (Sol review workflow), and
+  `5fc2233` (live checkpoint record). CI and mergeability are being checked.
 
 No Telegram send, deployment, production data mutation, or other external side effect
 is part of this branch.
