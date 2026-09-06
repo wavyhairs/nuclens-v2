@@ -60,6 +60,7 @@ BATCH_SIZE = 12
 # 타임라인 2건 이상인 이슈는 실측 113개 중 27개다. 한 회차 상한을 넉넉히 두되
 # 무한정 늘어나지 않게 막는다.
 MAX_NEW_PER_RUN = 40
+POLICY_REFRESH_BUDGET_PER_RUN = 20
 MAX_OUTPUT_TOKENS = 8192
 
 # 무료 티어 쿼터는 모델별 버킷이다. 크롤 큐레이션·트렌드·리드가 쓰는 기본
@@ -316,14 +317,18 @@ def _parse(payload: object, rows: list[dict]) -> tuple[dict[int, str], dict[str,
 
 def generate(rows: list[dict], *, client=None, cache_path: Path = CACHE_FILE,
              batch_size: int = BATCH_SIZE,
-             max_new: int = MAX_NEW_PER_RUN) -> tuple[dict[str, str], dict]:
+             max_new: int = MAX_NEW_PER_RUN,
+             policy_refresh_budget: int = POLICY_REFRESH_BUDGET_PER_RUN,
+             ) -> tuple[dict[str, str], dict]:
     """rows(이슈 카탈로그 행)에 대한 {issue_id: insight} 와 통계.
 
     반환된 문장만 쓴다. 없는 이슈는 화면이 요약으로 물러난다.
     """
     stats = {"candidates": 0, "from_cache": 0, "asked": 0, "calls": 0,
              "deferred": 0, "failed": 0, "empty": 0, "status": "ok",
-             "rejected": {}, "model": "", "prompt_version": PROMPT_VERSION}
+             "rejected": {}, "model": "", "prompt_version": PROMPT_VERSION,
+             "policy_soft_stale": 0, "policy_refresh_scheduled": 0,
+             "policy_refresh_deferred": 0, "policy_refreshed": 0}
     candidates = [row for row in rows if needs_insight(row)]
     stats["candidates"] = len(candidates)
     if not candidates:
@@ -331,16 +336,28 @@ def generate(rows: list[dict], *, client=None, cache_path: Path = CACHE_FILE,
         return {}, stats
 
     cache = load_cache(cache_path)
+    policy = llm_policy.profile("issue_insight")
+    policy_fingerprint = llm_policy.generation_policy_fingerprint(policy, PROMPT_VERSION)
+    stats["generation_policy_fingerprint"] = policy_fingerprint
     insights: dict[str, str] = {}
     todo: list[dict] = []
     for row in candidates:
         issue_id = str(row.get("issue_id") or "")
         digest = timeline_digest(issue_timeline(row))
         entry = cache.get(issue_id)
-        if isinstance(entry, dict) and entry.get("digest") == digest:
+        cache_state = llm_cache.freshness(entry, PROMPT_VERSION, policy_fingerprint)
+        if (isinstance(entry, dict) and entry.get("digest") == digest
+                and cache_state != llm_cache.HARD_STALE):
             stats["from_cache"] += 1
             if entry.get("insight"):
                 insights[issue_id] = entry["insight"]
+            if cache_state == llm_cache.SOFT_STALE:
+                stats["policy_soft_stale"] += 1
+                if stats["policy_refresh_scheduled"] < max(0, policy_refresh_budget):
+                    todo.append({**row, "_digest": digest, "_policy_refresh": True})
+                    stats["policy_refresh_scheduled"] += 1
+                else:
+                    stats["policy_refresh_deferred"] += 1
             continue
         todo.append({**row, "_digest": digest})
 
@@ -362,7 +379,6 @@ def generate(rows: list[dict], *, client=None, cache_path: Path = CACHE_FILE,
             stats["failed"] = len(todo)
             return insights, stats
 
-    policy = llm_policy.profile("issue_insight")
     model = policy.model()
     stats["model"] = model
     now = datetime.now(timezone.utc).isoformat()
@@ -403,9 +419,12 @@ def generate(rows: list[dict], *, client=None, cache_path: Path = CACHE_FILE,
                 "insight": insight,
                 "title": row.get("title", ""),
                 "prompt_version": PROMPT_VERSION,
+                "generation_policy_fingerprint": policy_fingerprint,
                 "model": model,
                 "generated_at": now,
             }
+            if row.get("_policy_refresh"):
+                stats["policy_refreshed"] += 1
             dirty = True
 
     # len(cache) 증가로 판정하면 덮어쓰기가 영영 저장되지 않는다(2026-08-02 게토차).
