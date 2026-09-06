@@ -994,12 +994,13 @@
       "attempt_id": "34042266683",
       "attempts": 1,
       "claimed_at": "2026-09-06T15:25:45.614439Z",
-      "finished_at": null,
+      "finished_at": "2026-09-06T15:30:25.372588Z",
       "event_name": "schedule",
       "trigger_source": "schedule",
       "trigger_state": "schedule_trigger_created",
-      "status": "running",
-      "new_article_count": null
+      "status": "success_with_articles",
+      "new_article_count": 35,
+      "collect_outcome": "success"
     }
   }
 }
