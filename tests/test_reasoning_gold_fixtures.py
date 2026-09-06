@@ -14,17 +14,24 @@ FIXTURES = ROOT / "tests" / "fixtures" / "gemini_reasoning"
 
 
 class ReasoningGoldFixtureTests(unittest.TestCase):
-    def test_identity_candidates_require_human_labels(self):
+    def test_identity_candidates_keep_human_gold_separate_from_pending_cases(self):
         payload = json.loads((FIXTURES / "identity_candidates.json").read_text(encoding="utf-8"))
-        self.assertGreaterEqual(len(payload["cases"]), 120)
-        self.assertLessEqual(len(payload["cases"]), 160)
-        self.assertTrue(all(case["human_label"] is None for case in payload["cases"]))
-        self.assertTrue(all(case["label_status"] == "HUMAN_LABEL_REQUIRED"
-                            for case in payload["cases"]))
+        cases = payload["cases"]
+        self.assertGreaterEqual(len(cases), 120)
+        self.assertLessEqual(len(cases), 160)
+        labelled = [case for case in cases if case["label_status"] == "HUMAN_LABELLED"]
+        pending = [case for case in cases if case["label_status"] == "HUMAN_LABEL_REQUIRED"]
+        self.assertEqual(labelled, cases[:60])
+        self.assertEqual(pending, cases[60:])
+        self.assertTrue(all(case["human_label"] in payload["label_contract"]
+                            and case["reason_code"] in payload["reason_codes"]
+                            for case in labelled))
+        self.assertTrue(all(case["human_label"] is None and case["reason_code"] is None
+                            for case in pending))
         self.assertTrue(all(case[side].get("source_hash") and case[side].get("url")
                             and case[side].get("published_at")
-                            for case in payload["cases"] for side in ("a", "b")))
-        edges = {case["metadata"].get("known_edge_case") for case in payload["cases"]}
+                            for case in cases for side in ("a", "b")))
+        edges = {case["metadata"].get("known_edge_case") for case in cases}
         self.assertTrue(REQUIRED_EDGES <= edges)
 
     def test_candidate_generation_never_promotes_cached_verdict(self):
