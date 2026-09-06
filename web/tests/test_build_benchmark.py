@@ -80,5 +80,42 @@ class SemanticSignatureTests(unittest.TestCase):
         self.assertEqual(before["overall_sha256"], after["overall_sha256"])
 
 
+class BuildLocalCacheTests(unittest.TestCase):
+    def tearDown(self):
+        build_data._ACTIVE_BUILD_CACHE = None
+
+    def test_issue_similarity_cache_is_exact_and_does_not_mutate_articles(self):
+        left = {
+            "hash": "left",
+            "title_kr": "고리 1호기 계속운전 심사 착수",
+            "summary": "계속운전 심사를 시작했다.",
+            "tags": ["#고리1호기", "#계속운전"],
+            "countries": ["KR"],
+        }
+        right = {
+            "hash": "right",
+            "title_kr": "고리 1호기 계속운전 심의 시작",
+            "summary": "계속운전 심의가 시작됐다.",
+            "tags": ["#고리1호기", "#계속운전"],
+            "countries": ["KR"],
+        }
+        expected = build_data.issue_similarity(left, right)
+        build_data._ACTIVE_BUILD_CACHE = build_data._BuildLocalCache()
+        first = build_data.issue_similarity(left, right)
+        second = build_data.issue_similarity(left, right)
+        self.assertEqual(first, expected)
+        self.assertEqual(second, expected)
+        self.assertEqual(set(left), {"hash", "title_kr", "summary", "tags", "countries"})
+
+    def test_approval_reverse_index_is_symmetric(self):
+        reverse = build_data._approval_reverse_index({
+            "approved": {"a--b"},
+            "llm_approved": {"a--c"},
+        })
+        self.assertEqual(reverse["a"], {"b", "c"})
+        self.assertEqual(reverse["b"], {"a"})
+        self.assertEqual(reverse["c"], {"a"})
+
+
 if __name__ == "__main__":
     unittest.main()

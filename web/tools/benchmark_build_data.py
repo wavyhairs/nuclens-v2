@@ -24,6 +24,11 @@ def main() -> int:
     parser.add_argument(
         "--artifact-dir", type=Path, default=ROOT / "web" / "_benchmark"
     )
+    parser.add_argument(
+        "--disable-build-cache",
+        action="store_true",
+        help="Measure the exact PR 0 path after cache code has landed",
+    )
     args = parser.parse_args()
     args.artifact_dir.mkdir(parents=True, exist_ok=True)
 
@@ -39,6 +44,10 @@ def main() -> int:
         "GEMINI_API_KEY": "",
         "GOOGLE_API_KEY": "",
     })
+    if args.disable_build_cache:
+        env["NUCLENS_DISABLE_BUILD_CACHE"] = "1"
+    else:
+        env.pop("NUCLENS_DISABLE_BUILD_CACHE", None)
     completed = subprocess.run(
         [sys.executable, "-u", str(ROOT / "web" / "build_data.py")],
         cwd=ROOT,
