@@ -1,5 +1,9 @@
 # Curation Gold human labeling sheet
 
+Status 2026-09-06: the recommended initial Human review is complete. Exactly 24
+reviewed rows were exported, giving 25 canonical Human Gold cases in total; the
+remaining 15 cases stay `HUMAN_LABEL_REQUIRED` and are not evaluation truth.
+
 원문 입력과 현재 Nuclens 출력을 비교해 각 차원을 사람이 판정합니다.
 
 39개 pending case는 먼저 독립 GPT-5.6 Sol High provisional package로 판정한 뒤

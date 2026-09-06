@@ -165,14 +165,16 @@ not accepted results, and each can be retried only within the 51-call bound.
 | Task | Candidates | Human labels | Pending | Production state |
 | --- | ---: | ---: | ---: | --- |
 | Identity | 150 | 60 | 90 intentionally unused | Evaluation 499/540; activation pending |
-| Curation | 40 | 1 | 39 | `HUMAN_LABEL_REQUIRED` |
-| Semantic | 77 | 5 | 72 | `HUMAN_LABEL_REQUIRED`; Fast gate stays off |
+| Curation | 40 | 25 | 15 intentionally unused | Checkpoint 2/30; quota-blocked |
+| Semantic | 77 | 46 | 31 intentionally unused | Checkpoint queued; Fast gate stays off |
 | Synthesis / Narrative / Extract | — | 0 adequate task contracts | — | `HUMAN_LABEL_REQUIRED` |
 
 Candidate generation and audit were already complete: Curation covers event boundary,
 scope, stage, date, causality and the Saeul regression; Semantic covers 24 aligned,
 24 controlled-perturbation, 24 unsupported-inference cases plus five Saeul contracts.
-The audit passes with zero errors and zero warnings.
+The audit passes with zero errors and zero warnings. Human review exported exactly
+24 Curation and 41 Semantic sidecar rows. A structural comparison against the prior
+fixtures confirmed that no unreviewed case or non-human-owned field changed.
 
 Complete Sol input packages and strict output schemas were generated for the 39
 Curation and 72 Semantic pending cases under `docs/gold-labeling/sol-review/`.
@@ -189,8 +191,9 @@ source evidence, entities, topics, dates, and chronology claims.
 
 Semantic provisional error coverage is: causality 28, overclaim 30, chronology 8,
 unsupported relation 7, contradiction 6, attribution 5, other 1, and none 24.
-Both imports passed strict validation with zero missing/duplicate rows. All 111 rows
-remain `human_reviewed=false`, and both canonical fixtures have an empty Git diff.
+Both imports passed strict validation with zero missing/duplicate rows. All 111 Sol
+rows remain `human_reviewed=false`; the later canonical changes come only from the
+separate Human sidecars.
 
 Sol JSONL is imported only as `AI_ASSISTED_PROVISIONAL_NOT_GOLD` with
 `human_reviewed=false`. The importer validates schema, case/source mapping, duplicate
@@ -220,13 +223,82 @@ Semantic, enlarged when hard-case or label/error/confidence coverage requires it
 High-confidence rows still require an explicit human approval. If the initial Gold
 does not separate configs clearly, the remaining queue is reviewed incrementally.
 
+## Curation and Semantic Human review / live checkpoint
+
+- Curation review completed 24/24 recommended rows: 11 Approve and 13 Change.
+  Canonical totals are 13 PASS, 11 REPAIR, and 1 BLOCK across 25 Human Gold cases.
+- Semantic review completed 41/41 recommended rows: 3 Approve and 38 Change.
+  Canonical totals are 4 PASS, 1 REPAIR, and 41 BLOCK across 46 Human Gold cases.
+- The remaining 15 Curation and 31 Semantic candidates stay null and are not used as
+  evaluation truth.
+- Post-export lifecycle validation and Gold validation both report zero errors and
+  zero warnings; `evaluation_ready=true` for both tasks.
+
+The Curation technical checkpoint uses ten representative cases (5 PASS / 4 REPAIR /
+1 BLOCK) across unspecified, medium, and high, repeat 1. Two actual unspecified calls
+succeeded before the shared 3.1 daily quota stopped the run. Both predicted PASS for
+one BLOCK and one REPAIR, which is far too little evidence for a policy decision.
+There are 28 pending combinations; no Semantic call was attempted after quota was
+confirmed. Earlier local-sandbox socket denials are classified as environment
+failures, not Gemini/API failures, and do not count as completed calls.
+
+First pending Curation key:
+`gemini-3.1-flash-lite|unspecified|curation-6d402bf98f9187b2|0`.
+
+Exact bounded Curation resume after daily quota reset:
+
+```powershell
+python -X utf8 tools/llm_eval.py --task CURATION `
+  --fixtures tests/fixtures/gemini_reasoning/curation_gold.json `
+  --model gemini-3.1-flash-lite `
+  --config unspecified --config level:medium --config level:high --repeat 1 `
+  --out .eval/curation-checkpoint-30 --max-new-calls 28 `
+  --case-id curation-4c60761f7385897c `
+  --case-id saeul-title-merge-4da5b7ab6c225c78 `
+  --case-id curation-6d402bf98f9187b2 `
+  --case-id curation-04b60a0ede3e9484 `
+  --case-id curation-e000f116b94e6aa9 `
+  --case-id curation-7d5fb2f4f0dad180 `
+  --case-id curation-91c28f4c623f0bf0 `
+  --case-id curation-a0e2cb7843a93c7c `
+  --case-id curation-1ce9bd9cd45a8831 `
+  --case-id curation-4ee5aef7063ebdda
+```
+
+The queued Semantic checkpoint uses all five non-BLOCK Gold cases plus five BLOCK
+cases selected for candidate-kind/domain/error coverage:
+
+```powershell
+python -X utf8 tools/llm_eval.py --task SEMANTIC `
+  --fixtures tests/fixtures/gemini_reasoning/semantic_gold.json `
+  --model gemini-3.1-flash-lite `
+  --config unspecified --config level:medium --config level:high --repeat 1 `
+  --out .eval/semantic-checkpoint-30 --max-new-calls 30 `
+  --case-id semantic-fa4c10372e606d1e-aligned `
+  --case-id semantic-66d8933507f8bf75-perturbed `
+  --case-id saeul-separate-events --case-id saeul-unit-scope-3 `
+  --case-id saeul-project-scope-34 `
+  --case-id semantic-aa57a5168dafb9f9-unsupported `
+  --case-id semantic-f6b0a05f1c68e291-perturbed `
+  --case-id semantic-a641fc0911aae0b5-perturbed `
+  --case-id semantic-dfd27e3bcbe93166-perturbed `
+  --case-id semantic-dcb975d82d845013-perturbed
+```
+
+If both checkpoints are technically sound, the planned full runs are 225 Curation
+combinations (25 cases x 3 configs x 3 repeats) and 414 Semantic combinations
+(46 cases x 3 configs x 3 repeats). Successful checkpoint rows will be seeded rather
+than called again.
+
 ## Profile decisions
 
 - Identity 3.1 profiles (`dedup`, `dedup_final`, `keei_match`): decision pending the
   final 41 high calls and targeted regressions.
 - Identity 3.5 profile (`issue_review`): 489/540 model-appropriate live results are
   durable; baseline retained while 51 combinations remain pending.
-- Curation and Semantic: `HUMAN_LABEL_REQUIRED`; no inference from Identity Gold.
+- Curation and Semantic: sufficient initial Human Gold now exists, but live policy
+  comparison is quota-blocked; `IMPLEMENTED_BUT_NOT_ACTIVATED`. Fast semantic
+  blocking remains disabled.
 - Synthesis, narrative, planning, and extraction profiles: `HUMAN_LABEL_REQUIRED`;
   no classification-style accuracy claim and no assumption that high writes better.
 - Activated profiles: none.
@@ -236,20 +308,22 @@ Gold status is in `docs/2026-09-06-gemini-task-inventory.md`.
 
 ## Verification / PR checkpoint
 
-- Root Python with Gemini/Telegram disabled: 1,558 tests passed.
+- Root Python with Gemini/Telegram disabled: 1,561 tests passed.
 - Web Python with CI data gates skipped: 569 passed, 3 skipped.
 - Node syntax and date, weekly selector/sections, event calendar, trend state, admin
   gate/render contracts passed; real-browser admin DOM smoke passed.
-- Gold validator: 0 errors, 0 warnings. Latest focused evaluator/labeler suite: 24 passed.
+- Gold validator: 0 errors, 0 warnings. Latest focused Gold/evaluator/labeler suite:
+  35 passed.
 - Local Full Build: 83.7 seconds, 10,489 archive rows, 4,859 visible rows,
   525 issue details, 709 evidence attachments, 0 Gemini calls. It produced the known
   local degraded identity diagnostic (two quarantined clusters) because this isolated
   worktree has no embeddings file; it did not modify production data.
 - GitHub PR: #92 (`feat/gemini-reasoning-validation` -> `main`). Core commits:
   `16a41a4` (evaluation/inventory), `b3fd90c` (Sol review workflow), and
-  `5fc2233` (live checkpoint record). GitHub Actions run `34033746489` passed
-  the Root and front-end contract jobs at head `16cb6af`; PR #92 was reported
-  `MERGEABLE` / `CLEAN` after the run.
+  `5fc2233` (initial live checkpoint record). The Human review continuation adds
+  `e29c92f` (Curation/Semantic canonical Gold) and `ea12318` (post-export and
+  resumable-evaluation hardening). The last pre-Gold PR head passed GitHub Actions;
+  the updated head must pass the same Root and front-end contract job before merge.
 
 No Telegram send, deployment, production data mutation, or other external side effect
 is part of this branch.

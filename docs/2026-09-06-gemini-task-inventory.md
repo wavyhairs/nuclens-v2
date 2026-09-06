@@ -9,7 +9,7 @@ the API has thinking disabled. No production profile was changed by this review.
 
 | Profile | Class | Call site | Model / requested thinking | Purpose | Deterministic safety net / cache | Failure impact | Human Gold / state |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `curation` | B. Curation | `news_bot.py:2067` | 3.1 Flash Lite / unspecified | title, summary, facts and article features | curation schema/quality/evidence gates; durable article cache and retry queue | High: published article representation | 1/40 Curation Gold; `HUMAN_LABEL_REQUIRED` |
+| `curation` | B. Curation | `news_bot.py:2067` | 3.1 Flash Lite / unspecified | title, summary, facts and article features | curation schema/quality/evidence gates; durable article cache and retry queue | High: published article representation | 25/40 Curation Gold; checkpoint 2/30 then daily quota; `IMPLEMENTED_BUT_NOT_ACTIVATED` |
 | `issue_review` | A. Identity | `issue_review.py:449` | 3.5 Flash Lite / unspecified | decide whether gray-band issue candidates are the same event | no verdict means no merge; bounded split/retry; fingerprinted soft-stale cache | High: issue merge/split | 60 Identity labels; 3.5 live evaluation 489/540, 51 quota-blocked; `IMPLEMENTED_BUT_NOT_ACTIVATED` |
 | `keei_match` | A. Identity | `keei_match.py:180` | 3.1 Flash Lite / unspecified | link KEEI items to issues | failure is not linked; fingerprinted soft-stale cache and bounded re-ask | Medium | Identity Gold available; task-wide 3.1 evaluation 499/540; decision pending |
 | `dedup` | A. Identity | `dedup.py:406` | 3.1 Flash Lite / unspecified | pre-curation event deduplication | deterministic candidate formation; failure keeps all articles | High | Identity Gold available; task-wide 3.1 evaluation 499/540; decision pending |
@@ -29,8 +29,8 @@ the API has thinking disabled. No production profile was changed by this review.
 | `expert_repair` | D. Narrative | `expert_audio_brief.py:1321` via helper at `:215` | 3.5 Flash Lite / unspecified | targeted repair after semantic finding | deterministic re-audit and semantic re-verification | Critical | Depends on independent Semantic Gold plus repair-quality Gold; `HUMAN_LABEL_REQUIRED` |
 | `expert_reorder` | D. Narrative | `expert_audio_brief.py:1347` via helper at `:215` | 3.5 Flash Lite / unspecified | repair section ordering | ordering/section contracts | High | No narrative Human Gold; `HUMAN_LABEL_REQUIRED` |
 | `expert_intro_repair` | D. Narrative | `expert_audio_brief.py:1373` via helper at `:215` | 3.5 Flash Lite / unspecified | repair intro contract | intro and deterministic script contracts | High | No narrative Human Gold; `HUMAN_LABEL_REQUIRED` |
-| `expert_verify` | C. Semantic | `expert_audio_brief.py:1315,1329` via helper at `:215` | 3.1 Flash Lite / unspecified, strict | final source-bound semantic verification | no model ladder/silent downgrade; failure stops that Expert audio | Critical | 5/77 Semantic Gold; `HUMAN_LABEL_REQUIRED` |
-| `fast_verify` | C. Semantic | `semantic_verifier.py:79`, future gate in `audio_brief.py:623` | 3.1 Flash Lite / unspecified, strict | Fast script semantic verification | gate is disabled; if enabled, failure is local and explicit | Critical if activated | 5/77 Semantic Gold; `HUMAN_LABEL_REQUIRED` |
+| `expert_verify` | C. Semantic | `expert_audio_brief.py:1315,1329` via helper at `:215` | 3.1 Flash Lite / unspecified, strict | final source-bound semantic verification | no model ladder/silent downgrade; failure stops that Expert audio | Critical | 46/77 Semantic Gold; checkpoint queued after shared daily quota; `IMPLEMENTED_BUT_NOT_ACTIVATED` |
+| `fast_verify` | C. Semantic | `semantic_verifier.py:79`, future gate in `audio_brief.py:623` | 3.1 Flash Lite / unspecified, strict | Fast script semantic verification | gate is disabled; if enabled, failure is local and explicit | Critical if activated | 46/77 Semantic Gold; checkpoint queued; `IMPLEMENTED_BUT_NOT_ACTIVATED` |
 | `fast_semantic_repair` | D. Narrative | `audio_brief.py:282` | 3.5 Flash Lite / unspecified | repair a failed Fast semantic claim | deterministic evidence audit and semantic re-check | Critical if Fast gate activated | Insufficient Semantic/repair Gold; `HUMAN_LABEL_REQUIRED` |
 
 ### Generative call sites outside the central registry
@@ -58,11 +58,13 @@ outside this task by explicit scope.
 
 - Identity Gold is used only for event-relation decisions. It is not a truth set for
   Curation, Semantic verification, translation, planning, or narrative quality.
-- Curation has 40 audited candidates but only one human answer. The remaining 39
-  include event boundary, scope, stage, date, and causality dimensions.
-- Semantic has 77 audited candidates but only five human answers. The remaining 72
-  cover aligned claims, controlled perturbations, unsupported inference, six domains,
-  and all ten error-focus categories.
+- Curation has 25 Human Gold answers out of 40 audited candidates; the remaining 15
+  stay null. Gold includes PASS, REPAIR, and BLOCK plus event-boundary, scope, stage,
+  date, and causality dimensions.
+- Semantic has 46 Human Gold answers out of 77 audited candidates; the remaining 31
+  stay null. Gold includes aligned claims, controlled perturbations, unsupported
+  inference, six domains, and all ten error-focus categories. Its 41 BLOCK / 4 PASS /
+  1 REPAIR imbalance requires class-balanced metrics.
 - Narrative/synthesis/extract profiles have no adequate task-specific Human Gold or
   preference contract. Their evaluation infrastructure can be extended after a human
   rubric is defined; reasoning remains unspecified meanwhile.

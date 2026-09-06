@@ -1,5 +1,9 @@
 # Semantic Gold human labeling sheet
 
+Status 2026-09-06: the recommended initial Human review is complete. Exactly 41
+reviewed rows were exported, giving 46 canonical Human Gold cases in total; the
+remaining 31 cases stay `HUMAN_LABEL_REQUIRED` and are not evaluation truth.
+
 72개 pending case는 먼저 독립 GPT-5.6 Sol High provisional package로 판정한 뒤
 사람이 검수합니다. Sol 결과는 Human Gold가 아니며 canonical에 자동 반영되지
 않습니다. 공식 Sol 실행 경로에 `docs/gold-labeling/sol-review/semantic-input.jsonl`과
