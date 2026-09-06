@@ -98,7 +98,9 @@ GENERATION_ID = os.environ.get("GENERATION_ID", "")
 BUILD_AS_OF_ENV = "NUCLENS_BUILD_AS_OF"
 BUILD_PROFILE_ENV = "NUCLENS_BUILD_PROFILE"
 SEMANTIC_SIGNATURE_ENV = "NUCLENS_SEMANTIC_SIGNATURE"
+DISABLE_BUILD_CACHE_ENV = "NUCLENS_DISABLE_BUILD_CACHE"
 _ACTIVE_BUILD_PROFILE: dict | None = None
+_ACTIVE_BUILD_CACHE: "_BuildLocalCache | None" = None
 
 SHOW_MARKET = False
 NEWS_WINDOW_DAYS = 60
@@ -259,6 +261,53 @@ def _profile_increment(name: str, amount: int = 1) -> None:
     if _ACTIVE_BUILD_PROFILE is not None:
         counters = _ACTIVE_BUILD_PROFILE.setdefault("counters", Counter())
         counters[name] += amount
+
+
+class _BuildLocalCache:
+    """Ephemeral exact-result cache; every key is scoped to this process.
+
+    Pair tables are deliberately bounded.  Clearing a table only forfeits a cache hit;
+    it cannot change a decision, while keeping peak RSS predictable as the archive grows.
+    """
+
+    MAX_PAIR_FEATURES = 60_000
+    MAX_VECTOR_COSINES = 60_000
+
+    def __init__(self) -> None:
+        self.article_features: dict[tuple[int, str], object] = {}
+        self.pair_features: dict[tuple[int, int, str], object] = {}
+        self.vector_norms: dict[int, float] = {}
+        self.vector_cosines: dict[tuple[int, int], float | None] = {}
+        self.embedding_bands: dict[int, tuple[tuple[int, int], ...]] = {}
+
+    def article(self, article: dict, name: str, factory):
+        key = (id(article), name)
+        if key in self.article_features:
+            _profile_increment("article_feature_cache_hits")
+            return self.article_features[key]
+        value = factory()
+        self.article_features[key] = value
+        _profile_increment("article_feature_cache_misses")
+        return value
+
+    def pair(self, left: dict, right: dict, name: str, factory):
+        key = (id(left), id(right), name)
+        if key in self.pair_features:
+            _profile_increment("pair_primitive_cache_hits")
+            return self.pair_features[key]
+        if len(self.pair_features) >= self.MAX_PAIR_FEATURES:
+            self.pair_features.clear()
+            _profile_increment("pair_primitive_cache_resets")
+        value = factory()
+        self.pair_features[key] = value
+        _profile_increment("pair_primitive_cache_misses")
+        return value
+
+
+def _article_feature(article: dict, name: str, factory):
+    if _ACTIVE_BUILD_CACHE is None:
+        return factory()
+    return _ACTIVE_BUILD_CACHE.article(article, name, factory)
 
 
 def _sequence_ratio(left: str, right: str) -> float:
@@ -1245,28 +1294,40 @@ def count_country_issues(issues: list[dict], since_date: str) -> Counter:
 
 
 def _strong_tags(article: dict) -> set[str]:
-    tags = set(article.get("canonical_tags") or [])
-    if not tags:
-        tags = {_canonical_tag(tag) for tag in article.get("tags") or []}
-    return {tag for tag in tags if tag and tag not in _GENERIC_TAGS}
+    def compute() -> set[str]:
+        tags = set(article.get("canonical_tags") or [])
+        if not tags:
+            tags = {_canonical_tag(tag) for tag in article.get("tags") or []}
+        return {tag for tag in tags if tag and tag not in _GENERIC_TAGS}
+
+    return _article_feature(article, "strong_tags", compute)
 
 
 def _title_norm(article: dict) -> str:
-    title = (article.get("title_kr") or article.get("title") or "").lower()
-    return _NORM_RE.sub("", title)
+    def compute() -> str:
+        title = (article.get("title_kr") or article.get("title") or "").lower()
+        return _NORM_RE.sub("", title)
+
+    return _article_feature(article, "title_norm", compute)
 
 
 def _tokens(article: dict) -> set[str]:
     # Daily Brief에서 하나의 story로 합친 다른 제목/요약도 issue 연결의 보조 lexical
     # 증거로 사용한다. 대표 제목 하나만 보면 사실기사↔분석기사처럼 표현이 달라진 같은
     # 사건이 다시 갈라질 수 있다. 이 토큰은 자동 병합의 단독 근거가 아니고 보조 신호다.
-    parts = [article.get("title_kr") or article.get("title") or "", article.get("summary") or ""]
-    parts.extend(str(x) for x in (article.get("story_related_titles") or [])[:6])
-    for ctx in (article.get("story_context") or [])[:3]:
-        if isinstance(ctx, dict):
-            parts.append(ctx.get("summary") or ctx.get("detail") or "")
-    text = " ".join(str(x or "") for x in parts)
-    return {token.lower()[:8] for token in _TOKEN_RE.findall(text) if len(token) >= 2}
+    def compute() -> set[str]:
+        parts = [
+            article.get("title_kr") or article.get("title") or "",
+            article.get("summary") or "",
+        ]
+        parts.extend(str(x) for x in (article.get("story_related_titles") or [])[:6])
+        for ctx in (article.get("story_context") or [])[:3]:
+            if isinstance(ctx, dict):
+                parts.append(ctx.get("summary") or ctx.get("detail") or "")
+        text = " ".join(str(x or "") for x in parts)
+        return {token.lower()[:8] for token in _TOKEN_RE.findall(text) if len(token) >= 2}
+
+    return _article_feature(article, "tokens", compute)
 
 
 def _jaccard(left: set[str], right: set[str]) -> float:
@@ -1772,25 +1833,47 @@ def report_unmatched_overrides(overrides: dict) -> None:
 def cosine_similarity(left: list[float] | None, right: list[float] | None) -> float | None:
     if not left or not right or len(left) != len(right):
         return None
+    cache_key = (id(left), id(right))
+    if _ACTIVE_BUILD_CACHE is not None and cache_key in _ACTIVE_BUILD_CACHE.vector_cosines:
+        _profile_increment("cosine_cache_hits")
+        return _ACTIVE_BUILD_CACHE.vector_cosines[cache_key]
     dot = sum(a * b for a, b in zip(left, right))
-    left_norm = sum(value * value for value in left) ** 0.5
-    right_norm = sum(value * value for value in right) ** 0.5
-    if not left_norm or not right_norm:
-        return None
-    return dot / (left_norm * right_norm)
+    if _ACTIVE_BUILD_CACHE is None:
+        left_norm = sum(value * value for value in left) ** 0.5
+        right_norm = sum(value * value for value in right) ** 0.5
+    else:
+        left_norm = _ACTIVE_BUILD_CACHE.vector_norms.get(id(left))
+        if left_norm is None:
+            left_norm = sum(value * value for value in left) ** 0.5
+            _ACTIVE_BUILD_CACHE.vector_norms[id(left)] = left_norm
+        right_norm = _ACTIVE_BUILD_CACHE.vector_norms.get(id(right))
+        if right_norm is None:
+            right_norm = sum(value * value for value in right) ** 0.5
+            _ACTIVE_BUILD_CACHE.vector_norms[id(right)] = right_norm
+    result = dot / (left_norm * right_norm) if left_norm and right_norm else None
+    if _ACTIVE_BUILD_CACHE is not None:
+        if len(_ACTIVE_BUILD_CACHE.vector_cosines) >= _BuildLocalCache.MAX_VECTOR_COSINES:
+            _ACTIVE_BUILD_CACHE.vector_cosines.clear()
+            _profile_increment("cosine_cache_resets")
+        _ACTIVE_BUILD_CACHE.vector_cosines[cache_key] = result
+        _profile_increment("cosine_cache_misses")
+    return result
 
 
 def _facility_signature(article: dict) -> tuple[set[str], set[str]]:
-    text = " ".join([
-        str(article.get("title_kr") or article.get("title") or ""),
-        " ".join(str(tag).lstrip("#") for tag in (article.get("tags") or [])),
-    ]).lower()
-    plants = {match.group(0).lower() for match in _FACILITY_RE.finditer(text)}
-    units = {
-        f"{match.group(1).lower()}-{match.group(2)}"
-        for match in _UNIT_RE.finditer(text)
-    }
-    return plants, units
+    def compute() -> tuple[set[str], set[str]]:
+        text = " ".join([
+            str(article.get("title_kr") or article.get("title") or ""),
+            " ".join(str(tag).lstrip("#") for tag in (article.get("tags") or [])),
+        ]).lower()
+        plants = {match.group(0).lower() for match in _FACILITY_RE.finditer(text)}
+        units = {
+            f"{match.group(1).lower()}-{match.group(2)}"
+            for match in _UNIT_RE.finditer(text)
+        }
+        return plants, units
+
+    return _article_feature(article, "facility_signature", compute)
 
 
 def _facility_conflict(left: dict, right: dict) -> bool:
@@ -1825,7 +1908,11 @@ NON_COUNTRY_SCOPES = frozenset({"OTHER", "UNSPECIFIED", "GLOBAL", "EUROPE", "EU"
 
 
 def _cluster_countries(article: dict) -> set[str]:
-    return set(article.get("countries") or []) - NON_COUNTRY_SCOPES
+    return _article_feature(
+        article,
+        "cluster_countries",
+        lambda: set(article.get("countries") or []) - NON_COUNTRY_SCOPES,
+    )
 
 
 def _cluster_country_conflict(article: dict, members: list[dict]) -> bool:
@@ -1936,6 +2023,27 @@ def facility_entities_by_hash(articles: list[dict], alias_entries) -> dict[str, 
     return out
 
 
+def _pair_lexical_primitives(left: dict, right: dict) -> tuple[float, float, int, float]:
+    def compute() -> tuple[float, float, int, float]:
+        left_title, right_title = _title_norm(left), _title_norm(right)
+        title_ratio = (
+            _sequence_ratio(left_title, right_title)
+            if left_title and right_title else 0.0
+        )
+        left_tokens, right_tokens = _tokens(left), _tokens(right)
+        left_tags, right_tags = _strong_tags(left), _strong_tags(right)
+        return (
+            title_ratio,
+            _jaccard(left_tokens, right_tokens),
+            len(left_tags & right_tags),
+            _jaccard(left_tags, right_tags),
+        )
+
+    if _ACTIVE_BUILD_CACHE is None:
+        return compute()
+    return _ACTIVE_BUILD_CACHE.pair(left, right, "lexical", compute)
+
+
 def issue_similarity(
     left: dict,
     right: dict,
@@ -1948,16 +2056,8 @@ def issue_similarity(
     false merge가 누락보다 해롭기 때문에 넓은 주제 태그 하나만으로는 합치지 않는다.
     반환 진단값은 테스트와 임계값 조정에 사용한다.
     """
-    left_title, right_title = _title_norm(left), _title_norm(right)
-    title_ratio = (
-        _sequence_ratio(left_title, right_title)
-        if left_title and right_title else 0.0
-    )
-    left_tokens, right_tokens = _tokens(left), _tokens(right)
-    token_ratio = _jaccard(left_tokens, right_tokens)
-    left_tags, right_tags = _strong_tags(left), _strong_tags(right)
-    tag_shared = len(left_tags & right_tags)
-    tag_ratio = _jaccard(left_tags, right_tags)
+    lexical = _pair_lexical_primitives(left, right)
+    title_ratio, token_ratio, tag_shared, tag_ratio = lexical
     left_topics, right_topics = set(left.get("topics") or []), set(right.get("topics") or [])
     topic_shared = len(left_topics & right_topics)
     _profile_increment("remote_cosine_calls")
@@ -2170,10 +2270,19 @@ def _lexical_score(diagnostics: dict) -> float:
 
 
 def _parse_day(value: str) -> date | None:
+    cache_key = (0, f"date:{type(value).__qualname__}:{value}")
+    if (_ACTIVE_BUILD_CACHE is not None
+            and cache_key in _ACTIVE_BUILD_CACHE.article_features):
+        _profile_increment("article_feature_cache_hits")
+        return _ACTIVE_BUILD_CACHE.article_features[cache_key]
     try:
-        return date.fromisoformat(value)
+        parsed = date.fromisoformat(value)
     except (TypeError, ValueError):
-        return None
+        parsed = None
+    if _ACTIVE_BUILD_CACHE is not None:
+        _ACTIVE_BUILD_CACHE.article_features[cache_key] = parsed
+        _profile_increment("article_feature_cache_misses")
+    return parsed
 
 
 def _representative_key(article: dict) -> tuple:
@@ -2600,29 +2709,32 @@ def cluster_selected_articles(
 
 def _cheap_issue_score(left: dict, right: dict) -> float:
     """Lexical score used only to order evidence candidates."""
-    left_title, right_title = _title_norm(left), _title_norm(right)
-    title_ratio = (
-        _sequence_ratio(left_title, right_title)
-        if left_title and right_title else 0.0
-    )
+    lexical = _pair_lexical_primitives(left, right)
     return (
-        0.55 * title_ratio
-        + 0.25 * _jaccard(_tokens(left), _tokens(right))
-        + 0.20 * _jaccard(_strong_tags(left), _strong_tags(right))
+        0.55 * lexical[0]
+        + 0.25 * lexical[1]
+        + 0.20 * lexical[3]
     )
 
 
 def _title_grams(article: dict, width: int = 3) -> set[str]:
-    title = _title_norm(article)
-    if len(title) < width:
-        return {title} if title else set()
-    return {title[index:index + width] for index in range(len(title) - width + 1)}
+    def compute() -> set[str]:
+        title = _title_norm(article)
+        if len(title) < width:
+            return {title} if title else set()
+        return {title[index:index + width] for index in range(len(title) - width + 1)}
+
+    return _article_feature(article, f"title_grams:{width}", compute)
 
 
 def _embedding_bands(vector: list[float] | None) -> tuple[tuple[int, int], ...]:
     """Sparse random-hyperplane LSH bands for bounded cosine candidate retrieval."""
     if not vector:
         return ()
+    if (_ACTIVE_BUILD_CACHE is not None
+            and id(vector) in _ACTIVE_BUILD_CACHE.embedding_bands):
+        _profile_increment("embedding_band_cache_hits")
+        return _ACTIVE_BUILD_CACHE.embedding_bands[id(vector)]
     dimension = len(vector)
     total_bits = EVIDENCE_LSH_BANDS * EVIDENCE_LSH_BITS_PER_BAND
     bits: list[int] = []
@@ -2642,7 +2754,11 @@ def _embedding_bands(vector: list[float] | None) -> tuple[tuple[int, int], ...]:
         for flag in bits[band * width:(band + 1) * width]:
             value = (value << 1) | flag
         out.append((band, value))
-    return tuple(out)
+    result = tuple(out)
+    if _ACTIVE_BUILD_CACHE is not None:
+        _ACTIVE_BUILD_CACHE.embedding_bands[id(vector)] = result
+        _profile_increment("embedding_band_cache_misses")
+    return result
 
 
 def _build_evidence_issue_index(
@@ -2709,6 +2825,19 @@ def _lsh_candidates(mapping: dict, vector: list[float] | None) -> set[str]:
     return out
 
 
+def _approval_reverse_index(overrides: Mapping[str, set[str]]) -> dict[str, set[str]]:
+    reverse: dict[str, set[str]] = defaultdict(set)
+    for pair_id in (
+        set(overrides.get("approved") or ())
+        | set(overrides.get("llm_approved") or ())
+    ):
+        left, separator, right = str(pair_id).partition("--")
+        if separator:
+            reverse[left].add(right)
+            reverse[right].add(left)
+    return reverse
+
+
 def _preselect_evidence_issues(
     article: dict,
     issue_index: dict,
@@ -2717,26 +2846,20 @@ def _preselect_evidence_issues(
     embeddings: dict[str, list[float]] | None,
     local_embeddings: dict[str, list[float]] | None,
     telemetry: issue_candidate_stats.SearchTelemetry | None,
+    approval_reverse_index: dict[str, set[str]] | None = None,
 ) -> list[dict]:
     """Retrieve bounded candidates, then return lexical/vector heads plus identity lanes."""
     article_day = _parse_day(article.get("article_date", ""))
     article_hash = str(article.get("hash") or "")
     article_story_id = str(article.get("story_id") or "").strip()
     article_facilities = (facility_entities or {}).get(article_hash, set())
-    approvals = (
-        set(overrides.get("approved") or ())
-        | set(overrides.get("llm_approved") or ())
-    )
+    if approval_reverse_index is None:
+        approval_reverse_index = _approval_reverse_index(overrides)
     mandatory_ids: set[str] = set(issue_index["story"].get(article_story_id, set()))
     for facility in article_facilities:
         mandatory_ids.update(issue_index["facility"].get(facility, set()))
-    for pair_id in approvals:
-        left, separator, right = str(pair_id).partition("--")
-        if not separator:
-            continue
-        other = right if left == article_hash else left if right == article_hash else ""
-        if other:
-            mandatory_ids.update(issue_index["members"].get(other, set()))
+    for other in (approval_reverse_index or {}).get(article_hash, set()):
+        mandatory_ids.update(issue_index["members"].get(other, set()))
 
     # Fingerprint identity is an intersection of at least two concrete axes.  Common actors
     # alone therefore cannot fan out the query, while actor+asset/action remains lossless.
@@ -2938,6 +3061,7 @@ def attach_evidence_articles(
     issue_index = _build_evidence_issue_index(
         issues, facility_entities, embeddings, local_embeddings
     )
+    approval_reverse_index = _approval_reverse_index(overrides)
     canary_hashes = {
         str(item.get("hash") or "")
         for item in sorted(evidence, key=lambda row: str(row.get("hash") or ""))[
@@ -2960,7 +3084,7 @@ def attach_evidence_articles(
         best_diag = None
         shortlisted = _preselect_evidence_issues(
             article, issue_index, overrides, facility_entities,
-            embeddings, local_embeddings, telemetry
+            embeddings, local_embeddings, telemetry, approval_reverse_index
         )
         if str(article.get("hash") or "") in canary_hashes:
             rescued, auto_missed, review_missed, checked = _evidence_retrieval_canary(
@@ -6045,8 +6169,9 @@ def build_rss(briefings: list[dict], generated_at: datetime) -> bytes:
 
 
 def build() -> None:
-    global _ACTIVE_BUILD_PROFILE
+    global _ACTIVE_BUILD_CACHE, _ACTIVE_BUILD_PROFILE
     build_started = time.monotonic()
+    _ACTIVE_BUILD_CACHE = None
     profile_path = str(os.environ.get(BUILD_PROFILE_ENV) or "").strip()
     _ACTIVE_BUILD_PROFILE = {"counters": Counter()} if profile_path else None
     phase_events: list[dict] = []
@@ -6207,6 +6332,8 @@ def build() -> None:
 
     embeddings = load_embeddings_cache()
     local_embeddings = build_local_embeddings(news_items)
+    if os.environ.get(DISABLE_BUILD_CACHE_ENV) != "1":
+        _ACTIVE_BUILD_CACHE = _BuildLocalCache()
     match_overrides = load_match_overrides()
     entity_registry = load_entity_registry()
     facility_entities = facility_entities_by_hash(
@@ -6880,6 +7007,7 @@ def build() -> None:
             encoding="utf-8",
         )
     _ACTIVE_BUILD_PROFILE = None
+    _ACTIVE_BUILD_CACHE = None
 
 
 if __name__ == "__main__":
