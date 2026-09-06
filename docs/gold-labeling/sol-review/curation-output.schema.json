@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CURATION GPT-5.6 Sol High provisional judgment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "provisional_label",
+    "error_types",
+    "confidence",
+    "reason",
+    "evidence_reference"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provisional_label": {
+      "enum": [
+        "AMBIGUOUS",
+        "CORRECT",
+        "INCORRECT"
+      ]
+    },
+    "error_types": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "attribution",
+          "causality",
+          "chronology",
+          "event_boundary",
+          "none",
+          "other",
+          "overclaim",
+          "stage",
+          "unit",
+          "unsupported"
+        ]
+      }
+    },
+    "confidence": {
+      "enum": [
+        "high",
+        "low",
+        "medium"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 600
+    },
+    "evidence_reference": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "provisional_label": {
+            "enum": [
+              "CORRECT"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "error_types": {
+            "const": [
+              "none"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "provisional_label": {
+            "not": {
+              "enum": [
+                "CORRECT"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "error_types": {
+            "not": {
+              "contains": {
+                "const": "none"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

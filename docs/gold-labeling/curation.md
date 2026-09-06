@@ -2,6 +2,20 @@
 
 원문 입력과 현재 Nuclens 출력을 비교해 각 차원을 사람이 판정합니다.
 
+39개 pending case는 먼저 독립 GPT-5.6 Sol High provisional package로 판정한 뒤
+사람이 검수합니다. Sol 결과는 Human Gold가 아니며 canonical에 자동 반영되지
+않습니다. 공식 Sol 실행 경로에 `docs/gold-labeling/sol-review/curation-input.jsonl`과
+matching schema를 전달하고, 반환 JSONL을 import한 뒤 UI를 실행합니다.
+
+```powershell
+python tools/sol_provisional_gold.py --task curation --import-provisional path\to\curation-sol-output.jsonl
+python tools/review_gold_labeler.py --task curation
+```
+
+UI의 A는 provisional 승인, C는 사람 수정, U는 추가 검수 보류입니다. 일반 저장은
+`.eval/gold-labels/curation_labels.json`에만 기록되고, `human_reviewed=true`인 case만
+명시적 `Export / Validate` 때 canonical fixture에 반영됩니다.
+
 ## CUR-001 · `saeul-title-merge-4da5b7ab6c225c78`
 
 - 원문: [상업운전 앞둔 새울 3호기 자동정지…사업기간도 10개월 연장](https://www.newsis.com/view/NISX20260814_0003749127)

@@ -1,5 +1,20 @@
 # Semantic Gold human labeling sheet
 
+72개 pending case는 먼저 독립 GPT-5.6 Sol High provisional package로 판정한 뒤
+사람이 검수합니다. Sol 결과는 Human Gold가 아니며 canonical에 자동 반영되지
+않습니다. 공식 Sol 실행 경로에 `docs/gold-labeling/sol-review/semantic-input.jsonl`과
+matching schema를 전달하고, 반환 JSONL을 import한 뒤 UI를 실행합니다.
+
+```powershell
+python tools/sol_provisional_gold.py --task semantic --import-provisional path\to\semantic-sol-output.jsonl
+python tools/review_gold_labeler.py --task semantic
+```
+
+UI의 A는 provisional 승인, C는 사람 수정, U는 추가 검수 보류입니다. 일반 저장은
+`.eval/gold-labels/semantic_labels.json`에만 기록되고, `human_reviewed=true`인 case만
+명시적 `Export / Validate` 때 canonical fixture에 반영됩니다. 선정/생성 metadata는
+기본 화면에서 숨겨지며 source evidence로 취급하지 않습니다.
+
 claim을 source evidence만으로 검증하세요. generated context는 현재 출력 참고일 뿐 근거가 아닙니다.
 
 ## SEM-001 · `semantic-fa4c10372e606d1e-aligned`

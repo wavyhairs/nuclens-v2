@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reasoning Gold Labeler</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div><p class="eyebrow">Nuclens · local human evaluation</p><h1 id="title">Reasoning Gold</h1></div>
+    <div class="position"><strong id="position">– / –</strong><span id="case-id"></span></div>
+  </header>
+  <section class="dashboard">
+    <div><span>전체</span><strong id="total">0</strong></div>
+    <div><span>완료</span><strong id="labeled">0</strong></div>
+    <div><span>남음</span><strong id="remaining">0</strong></div>
+    <div><span>Sol provisional</span><strong id="provisional-count">0</strong></div>
+    <div><span>Hard priority</span><strong id="hard-count">0</strong></div>
+    <div class="goal"><span>평가 준비</span><strong id="ready">NO</strong><em id="counts"></em></div>
+  </section>
+  <nav class="toolbar">
+    <div class="filters">
+      <button class="filter active" data-filter="unlabeled">Unlabeled</button>
+      <button class="filter" data-filter="priority">Initial priority</button>
+      <button class="filter" data-filter="all">All</button>
+    </div>
+    <div class="pager"><button id="previous">← 이전</button><button id="next">다음 →</button></div>
+  </nav>
+  <main>
+    <section id="empty" class="empty" hidden><h2>이 필터에 남은 후보가 없습니다.</h2></section>
+    <section id="workspace">
+      <div id="case-content" class="review-content"></div>
+      <section id="provisional-panel" class="provisional-panel" hidden>
+        <div class="section-heading"><div><p class="eyebrow">AI-assisted provisional · Human Gold 아님</p><h2>GPT-5.6 Sol High 선판정</h2></div><strong id="priority"></strong></div>
+        <div id="provisional-detail" class="provisional-detail"></div>
+        <div class="actions review-actions">
+          <button id="approve" class="primary">Approve <kbd>A</kbd></button>
+          <button id="change">Change <kbd>C</kbd></button>
+          <button id="needs-review">Ambiguous / Needs review <kbd>U</kbd></button>
+        </div>
+      </section>
+      <section class="decision-panel">
+        <div class="section-heading"><div><p class="eyebrow">사람 판정</p><h2>Gold verdict</h2></div><span id="save-state" class="save-state">저장 대기</span></div>
+        <div id="verdicts" class="verdicts"></div>
+        <div id="dimensions" class="review-fields"></div>
+        <div id="error-types" class="review-fields"></div>
+        <label class="review-note"><span id="repair-label">Required repair (선택)</span><textarea id="required-repair" maxlength="1000"></textarea></label>
+        <label class="review-note"><span>Human notes (선택)</span><textarea id="human-notes" maxlength="1000"></textarea></label>
+        <div class="actions">
+          <label class="toggle"><input id="auto-next" type="checkbox" checked><span>Auto-next ON</span></label>
+          <button id="save-next" class="primary">저장 후 다음 <kbd>Enter</kbd></button>
+          <button id="undo" disabled>방금 작업 취소</button>
+          <button id="clear">현재 라벨 지우기</button>
+        </div>
+      </section>
+      <section class="reference-panel"><button id="reference-toggle" aria-expanded="false">선정 참고정보 보기 · 정답 아님</button><div id="reference" hidden></div></section>
+    </section>
+  </main>
+  <footer>
+    <div class="shortcuts"><strong>단축키</strong><span>A 승인 · C 수정 · U 보류</span><span>P/R/N/B 판정</span><span>← / → 이동</span><span>Enter 저장</span></div>
+    <div class="export-actions"><button id="validate">Validate</button><button id="export">Export / Validate</button></div>
+    <p id="message" role="status"></p>
+  </footer>
+  <script src="/review.js"></script>
+</body>
+</html>
