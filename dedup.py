@@ -30,6 +30,7 @@ except (AttributeError, ValueError):
 
 import event_stage
 import admin_overrides
+import llm_policy
 from gemini_client import GeminiError, call_json, is_available
 from story_cluster import consolidate_story_metadata
 
@@ -401,8 +402,11 @@ def _dedup_articles_impl(articles: list[dict], scores: dict[str, float], *,
 
     payload = "\n\n---\n\n".join(_article_block(i, a) for i, a in enumerate(articles))
     try:
+        # label은 테스트/진단에서 자유롭게 바뀔 수 있지만 task 의미는 stage가 정한다.
+        policy = llm_policy.profile("dedup_final" if stage == "editorial_final" else "dedup")
         result = call_json(prompt, payload, temperature=0.05, max_output_tokens=6144,
-                           timeout=120.0, label=label)
+                           timeout=120.0, model=policy.model(), label=label,
+                           **policy.reasoning_kwargs())
     except GeminiError as e:
         print(f"[dedup] Gemini {stage} 실패 → 전량 유지: {e}")
         return list(articles), []

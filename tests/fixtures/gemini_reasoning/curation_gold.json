@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "task": "CURATION",
+  "cases": [
+    {
+      "id": "saeul-title-merge-4da5b7ab6c225c78",
+      "source_kind": "archive_regression",
+      "source_hash": "4da5b7ab6c225c78",
+      "source_title": "상업운전 앞둔 새울 3호기 자동정지…사업기간도 10개월 연장",
+      "generated_title": "상업운전 앞둔 새울 3호기 시운전 중 자동정지 및 사업기간 연장",
+      "facts": [
+        "새울 3호기는 2026-08-11 시운전 중 자동정지했다.",
+        "새울 3·4호기 건설사업 시행기간은 별도 행정 사안으로 10개월 연장됐다."
+      ],
+      "human_label": "REPAIR",
+      "label_status": "USER_SPECIFIED",
+      "error_types": ["STAGE_ERROR", "SCOPE_ERROR"],
+      "required_repair": "단일 headline event로 결합하지 않고 자동정지와 사업기간 변경을 분리한다."
+    }
+  ]
+}

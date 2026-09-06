@@ -87,6 +87,22 @@ class TestCallInstrumentation(unittest.TestCase):
         self.assertIn("_record_call", source)
         self.assertIn("retry", source)
 
+    def test_detail_is_bounded_and_contains_no_prompt_or_key(self):
+        gemini_client._record_detail(
+            task="probe", model="m", requested_thinking="unspecified",
+            observed_thought_tokens=0,
+        )
+        detail = gemini_client.call_stats()["details"][0]
+        self.assertEqual(detail["requested_thinking"], "unspecified")
+        self.assertEqual(detail["observed_thought_tokens"], 0)
+        self.assertNotIn("prompt", detail)
+        self.assertNotIn("api_key", detail)
+
+    def test_reset_clears_detail_together_with_legacy_log(self):
+        gemini_client._record_detail(task="probe")
+        gemini_client.reset_call_log()
+        self.assertEqual(gemini_client._CALL_DETAIL, [])
+
 
 class TestQuotaVerdictIsLogged(unittest.TestCase):
     """429 는 두 갈래고, 어느 쪽으로 갈렸는지가 로그에 남아야 한다.
@@ -133,6 +149,16 @@ class TestSynthesisModelResolution(unittest.TestCase):
     def test_env_var_overrides_default(self):
         with patch.dict(os.environ, {"GEMINI_SYNTHESIS_MODEL": "gemini-test-synth"}):
             self.assertEqual(gemini_client.synthesis_model(), "gemini-test-synth")
+
+    def test_empty_model_overrides_resolve_to_code_defaults(self):
+        keys = ("GEMINI_REVIEW_MODEL", "GEMINI_INSIGHT_MODEL",
+                "GEMINI_SCRIPT_MODEL", "GEMINI_SYNTHESIS_MODEL")
+        with patch.dict(os.environ, {key: "" for key in keys}):
+            snapshot = gemini_client.model_policy_snapshot()
+        self.assertEqual(snapshot["REVIEW"], "gemini-3.5-flash-lite")
+        self.assertEqual(snapshot["INSIGHT"], "gemini-3.5-flash-lite")
+        self.assertEqual(snapshot["SCRIPT"], "gemini-3.5-flash-lite")
+        self.assertEqual(snapshot["SYNTH"], "gemini-3.5-flash-lite")
 
 
 class TestRpmPacing(unittest.TestCase):

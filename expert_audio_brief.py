@@ -27,6 +27,8 @@ from pathlib import Path
 
 import article_quality_gate
 import gemini_client
+import llm_policy
+import semantic_verifier
 from entity_match import load_entity_registry
 from gemini_client import GeminiError, call_json, is_available
 from audio_brief import (
@@ -52,6 +54,7 @@ from audio_brief import (
     report_script_audit,
     send_telegram_audio,
     split_script,
+    semantic_source_evidence,
     to_mp3,
     FFMPEG_MISSING,
     ffmpeg_available,
@@ -174,9 +177,8 @@ SCRIPT_SYSTEM = """당신은 한수원 임직원이 듣는 Nuclens의 수석 원
 입력 dossier와 episode plan에 없는 숫자·기관·일정·인과관계를 만들지 마십시오.
 모든 대사는 HOST: 로 시작하고 JSON만 반환하십시오."""
 
-VERIFY_SYSTEM = """당신은 오디오 대본의 독립 팩트체커입니다. 대본을 제공된 dossier와만
-대조하십시오. 발표·협의·후보선정·허가·착공·운전 같은 사업단계를 특히 엄격히 구분하고,
-근거 없는 중대한 주장은 반드시 unsupported_critical_claims에 기록하십시오. JSON만 반환하십시오."""
+VERIFY_SYSTEM = semantic_verifier.SYSTEM_PROMPT + """
+Expert의 기존 coverage/depth 점수와 unsupported_critical_claims도 함께 반환하십시오."""
 
 REPAIR_SYSTEM = """당신은 검증 지시만 반영하는 원자력 오디오 대본 편집자입니다.
 근거 없는 주장은 삭제하거나 입력 dossier가 허용하는 범위의 조건형 표현으로 낮추고,
@@ -210,7 +212,11 @@ def _call_structured(system: str, message: str, *, label: str, temperature: floa
     폴백은 primary 모델이 재시도(4회)까지 전부 실패했을 때만 한 번 더 부르는
     최후 수단이다 — 흔치 않은 경로라 반대 버킷을 갑자기 고갈시키지 않는다.
     """
-    models = _model_ladder(primary)
+    policy = llm_policy.profile(label)
+    # Verifier model/reasoning is an atomic policy.  A requested level or model
+    # failure must fail this audio, not fall through to a different weaker setup.
+    models = ([policy.model()] if policy.task == llm_policy.FINAL_SEMANTIC_VERIFY
+              else _model_ladder(primary))
     last: Exception | None = None
     for model in models:
         try:
@@ -220,14 +226,17 @@ def _call_structured(system: str, message: str, *, label: str, temperature: floa
                 temperature=temperature,
                 max_output_tokens=max_output_tokens,
                 timeout=150.0,
-                thinking_budget=0,
+                thinking_budget=(0 if policy.thinking_level is None else None),
                 model=model,
                 retries=4,
                 label=label,
+                **policy.reasoning_kwargs(),
             )
         except GeminiError as exc:
             last = exc
-            print(f"[expert-audio] {label} {model} 실패 — 폴백: {str(exc)[:180]}")
+            suffix = ("오디오 중단" if policy.task == llm_policy.FINAL_SEMANTIC_VERIFY
+                      else "폴백")
+            print(f"[expert-audio] {label} {model} 실패 — {suffix}: {str(exc)[:180]}")
     raise last or GeminiError(f"{label} 모델 전부 실패")
 
 
@@ -1039,8 +1048,10 @@ def apply_expert_frame(script: str, briefing: dict, plan: dict) -> str:
     return "\n".join([opening, script, closing])
 
 
-def verification_prompt(briefing: dict, dossiers: list[dict], script: str) -> str:
-    return f"""다음 대본을 dossiers와만 대조해 독립 검증하십시오.
+def verification_prompt(briefing: dict, dossiers: list[dict], script: str, *,
+                        source_evidence: object = None) -> str:
+    return f"""다음 대본을 Source Evidence와 대조해 독립 검증하십시오.
+Dossiers는 구성·커버리지 참고용 generated context이며 factual evidence가 아닙니다.
 
 [점수]
 - coverage_score: 선정된 모든 dossier 핵심이 적절한 깊이로 반영됐는가
@@ -1054,12 +1065,16 @@ def verification_prompt(briefing: dict, dossiers: list[dict], script: str) -> st
 점수가 coverage>=92, factual>=96, stage>=96, depth>=88, single>=98이고 critical claim이 없을 때만 passed=true.
 
 [출력 JSON]
-{{"passed":true,"coverage_score":0,"factual_support_score":0,"stage_precision_score":0,
+{{"verdict":"PASS|REPAIR|UNVERIFIABLE|BLOCK","passed":true,
+ "findings":[{{"type":"FACT_ERROR|NUMBER_ERROR|ENTITY_ERROR|DATE_ERROR|SCOPE_ERROR|STAGE_ERROR|CAUSALITY_ERROR|TEMPORAL_ERROR|CERTAINTY_ERROR|UNSUPPORTED_INFERENCE","line":"...","why":"...","repair":"..."}}],
+ "coverage_score":0,"factual_support_score":0,"stage_precision_score":0,
  "expert_depth_score":0,"single_speaker_score":0,"unsupported_critical_claims":[],
  "repair_instructions":["..."]}}
 
 [브리핑 날짜] {briefing.get('date','')}
-[Dossiers]
+[Source Evidence]
+{json.dumps(source_evidence or [], ensure_ascii=False, indent=2)}
+[Non-evidence Context: Dossiers]
 {json.dumps(dossiers, ensure_ascii=False, indent=2)}
 [Script]
 {script}"""
@@ -1067,6 +1082,12 @@ def verification_prompt(briefing: dict, dossiers: list[dict], script: str) -> st
 
 def verification_passed(report: dict) -> bool:
     if not isinstance(report, dict) or report.get("unsupported_critical_claims"):
+        return False
+    try:
+        semantic = semantic_verifier.normalize_report(report)
+    except GeminiError:
+        return False
+    if not semantic["passed"]:
         return False
     thresholds = {
         "coverage_score": 92,
@@ -1158,8 +1179,11 @@ def merge_reports(reports: list[dict]) -> dict:
         return {"passed": False, "unsupported_critical_claims": []}
     merged = {key: min(float(r.get(key) or 0) for r in rows) for key in keys}
     claims = [c for r in rows for c in (r.get("unsupported_critical_claims") or [])]
+    findings = [finding for r in rows for finding in (r.get("findings") or [])]
     merged["unsupported_critical_claims"] = claims
-    merged["passed"] = all(bool(r.get("passed")) for r in rows) and not claims
+    merged["findings"] = findings
+    merged["passed"] = all(bool(r.get("passed")) for r in rows) and not claims and not findings
+    merged["verdict"] = "PASS" if merged["passed"] else "BLOCK"
     return merged
 
 
@@ -1200,6 +1224,12 @@ def generate_expert_script(briefing: dict, issues: list[dict],
     dossier만 보고, 국내 설명에 해외 사실이 섞일 경로가 사라진다.
     """
     date = str(briefing.get("date") or "")
+    # Dossiers are model-generated context, never proof.  Build the same
+    # article-only contracts used by the final deterministic audit before any
+    # semantic call so the verifier sees a distinct, source-bound evidence tier.
+    contracts = tuple(contracts) if contracts is not None else evidence_contracts(
+        briefing, issues)
+    contracts_by_issue = {contract.key: contract for contract in contracts}
     dossiers: list[dict] = []
     batches = even_batches(issues, DOSSIER_BATCH_ISSUES)
     for index, batch in enumerate(batches, 1):
@@ -1273,8 +1303,15 @@ def generate_expert_script(briefing: dict, issues: list[dict],
     order_reports: list[dict] = []
     intro_reports: list[dict] = []
     for block, rows, block_dossiers, block_script in drafted:
+        block_evidence = semantic_source_evidence([
+            contracts_by_issue[issue_id]
+            for issue_id in (str(row.get("issue_id") or "") for row in rows)
+            if issue_id in contracts_by_issue
+        ])
         report = _call_structured(
-            VERIFY_SYSTEM, verification_prompt(briefing, block_dossiers, block_script),
+            VERIFY_SYSTEM, verification_prompt(
+                briefing, block_dossiers, block_script,
+                source_evidence=block_evidence),
             label=f"expert_verify_{block}", temperature=0.0, max_output_tokens=6000,
             primary="curation",
         )
@@ -1286,7 +1323,9 @@ def generate_expert_script(briefing: dict, issues: list[dict],
             )
             block_script, _ = normalize_script(repaired.get("script"), len(rows))
             report = _call_structured(
-                VERIFY_SYSTEM, verification_prompt(briefing, block_dossiers, block_script),
+                VERIFY_SYSTEM, verification_prompt(
+                    briefing, block_dossiers, block_script,
+                    source_evidence=block_evidence),
                 label=f"expert_verify_after_repair_{block}", temperature=0.0, max_output_tokens=6000,
                 primary="curation",
             )
@@ -1397,7 +1436,6 @@ def generate_expert_script(briefing: dict, issues: list[dict],
     # dossier 기준이라 dossier 자체의 오류를 잡지 못하고, 순서 재배치는 그
     # 검증 뒤에 대본을 다시 썼다.
     framed = apply_expert_frame(script, briefing, plan)
-    contracts = contracts if contracts is not None else evidence_contracts(briefing, issues)
     audit = final_evidence_audit(framed, briefing, contracts,
                                  min_lines=min_paragraphs(len(issues)))
     report["evidence_audit"] = audit.as_dict()
@@ -1595,6 +1633,11 @@ def generate(force: bool = False, send: bool = True) -> bool:
                 "expert_depth_score", "single_speaker_score", "passed"
             )
         },
+        "semantic_gate_version": semantic_verifier.SEMANTIC_GATE_VERSION,
+        "semantic_model": llm_policy.profile("expert_verify").model(),
+        "semantic_thinking_level": (
+            llm_policy.profile("expert_verify").thinking_level or "unspecified"),
+        "semantic_verdict_digest": semantic_verifier.verdict_digest(verification),
         # 텔레그램 번호와 오디오 설명 순서가 맞았는가. ok=false 로 나가는 날이
         # 쌓이면 그건 프롬프트가 아니라 구조를 고칠 신호다.
         "order_check": {
@@ -1651,6 +1694,7 @@ def generate(force: bool = False, send: bool = True) -> bool:
 
 
 if __name__ == "__main__":
+    print(gemini_client.format_model_policy())
     ok = False
     try:
         ok = generate(force="--force" in sys.argv,

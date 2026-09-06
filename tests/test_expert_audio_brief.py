@@ -253,7 +253,7 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
                 # 목표엔 못 미치지만 절대 한계는 넘는 정상 대본
                 return {"script": "\n".join(f"HOST: {'가' * 150}" for _ in range(16))}
             if label.startswith("expert_verify"):
-                return {"passed": True, "coverage_score": 99,
+                return {"verdict": "PASS", "findings": [], "passed": True, "coverage_score": 99,
                         "factual_support_score": 99, "stage_precision_score": 99,
                         "expert_depth_score": 99, "single_speaker_score": 100,
                         "unsupported_critical_claims": []}
@@ -287,7 +287,7 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
             if label.startswith("expert_script"):
                 return {"script": "\n".join(f"HOST: {'가' * 150}" for _ in range(12))}
             if label.startswith("expert_verify"):
-                return {"passed": True, "coverage_score": 99, "factual_support_score": 99,
+                return {"verdict": "PASS", "findings": [], "passed": True, "coverage_score": 99, "factual_support_score": 99,
                         "stage_precision_score": 99, "expert_depth_score": 99,
                         "single_speaker_score": 100, "unsupported_critical_claims": []}
             return {}
@@ -411,7 +411,7 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
             if label.startswith("expert_script"):
                 return {"script": no_subject}
             if label.startswith("expert_verify"):
-                return {"passed": True, "coverage_score": 99, "factual_support_score": 99,
+                return {"verdict": "PASS", "findings": [], "passed": True, "coverage_score": 99, "factual_support_score": 99,
                         "stage_precision_score": 99, "expert_depth_score": 99,
                         "single_speaker_score": 100, "unsupported_critical_claims": []}
             return {}
@@ -445,7 +445,7 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
 
     def test_verification_requires_all_thresholds_and_no_critical_claim(self):
         good = {
-            "passed": True, "coverage_score": 95, "factual_support_score": 98,
+            "verdict": "PASS", "findings": [], "passed": True, "coverage_score": 95, "factual_support_score": 98,
             "stage_precision_score": 98, "expert_depth_score": 91,
             "single_speaker_score": 100, "unsupported_critical_claims": [],
         }
@@ -597,7 +597,13 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
     def _fake_script(self, brief, issues, contracts=None):
         self.script_calls += 1
         script = "\n".join(f"HOST: 문단 {i} 의 해설입니다." for i in range(1, 8))
-        return script, dossiers_of(4000, 3), {"segments": []}, {"passed": True}
+        verification = {
+            "verdict": "PASS", "passed": True, "findings": [],
+            "coverage_score": 99, "factual_support_score": 99,
+            "stage_precision_score": 99, "expert_depth_score": 99,
+            "single_speaker_score": 100, "unsupported_critical_claims": [],
+        }
+        return script, dossiers_of(4000, 3), {"segments": []}, verification
 
     def _fake_tts(self, script):
         self.tts_calls += 1
@@ -813,7 +819,7 @@ class ModelBucketRoutingTests(unittest.TestCase):
             if prefix.startswith("expert_script"):
                 return {"script": "\n".join(f"HOST: {'가' * 150}" for _ in range(12))}
             if prefix.startswith("expert_verify"):
-                return {"passed": True, "coverage_score": 99, "factual_support_score": 99,
+                return {"verdict": "PASS", "findings": [], "passed": True, "coverage_score": 99, "factual_support_score": 99,
                         "stage_precision_score": 99, "expert_depth_score": 99,
                         "single_speaker_score": 100, "unsupported_critical_claims": []}
             return {}

@@ -407,6 +407,11 @@ jobs:
           # 이슈 병합 회색지대 LLM 판정용. 없으면 판정을 못 해 '병합 안 함'으로
           # 떨어지고, 새 쌍은 daily-brief 빌드까지 최대 하루를 기다리게 된다.
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
+          GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
+          GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
+          GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
         run: python web/build_data.py
 
       # nuclens.pages.dev 갱신 — 3시간 간격.

@@ -71,6 +71,7 @@ from pathlib import Path
 
 import issue_candidate_stats
 import llm_cache
+import llm_policy
 
 try:  # gemini_client 없이도 import 가능해야 한다 (테스트는 대역 클라이언트를 넣는다)
     from gemini_client import GeminiTruncated
@@ -144,6 +145,9 @@ MIN_SPLIT_SIZE = 2
 # 운영자가 일시적인 API 예산을 걸어야 할 때만 review_pairs(max_new_pairs=N)으로
 # 명시적으로 제한한다. 제한된 쌍은 기각하지 않고 다음 회차로 미룬다.
 MAX_NEW_PAIRS_PER_RUN = None
+# Policy changes are soft-stale: old verdicts remain active while at most this many
+# active pairs are refreshed in one build.  This is independent of new-pair limits.
+POLICY_REFRESH_BUDGET_PER_RUN = 20
 
 # 무료 티어 쿼터는 **모델별 버킷**이다. 기본 2.5-flash 버킷은 크롤 큐레이션(매시간)
 # ·트렌드·리드가 나눠 쓰기 때문에 체인 끝에 붙은 이 호출만 굶는다.
@@ -407,6 +411,7 @@ def review_pairs(review_candidates: list[dict], *,
                  client=None,
                  batch_size: int = BATCH_SIZE,
                  max_new_pairs: int | None = MAX_NEW_PAIRS_PER_RUN,
+                 policy_refresh_budget: int = POLICY_REFRESH_BUDGET_PER_RUN,
                  low: float = REVIEW_BAND_LOW,
                  high: float = REVIEW_BAND_HIGH) -> tuple[dict[str, bool], dict]:
     """회색지대 쌍을 판정한다.
@@ -422,6 +427,10 @@ def review_pairs(review_candidates: list[dict], *,
         "candidates": len(pairs),
         "from_cache": 0,
         "reasked": 0,
+        "policy_soft_stale": 0,
+        "policy_refresh_scheduled": 0,
+        "policy_refresh_deferred": 0,
+        "policy_refreshed": 0,
         "asked": 0,
         "calls": 0,
         "approved": 0,
@@ -437,6 +446,9 @@ def review_pairs(review_candidates: list[dict], *,
         return {}, stats
 
     cache = load_cache(cache_path)
+    policy = llm_policy.profile("issue_review")
+    policy_fingerprint = llm_policy.generation_policy_fingerprint(policy, PROMPT_VERSION)
+    stats["generation_policy_fingerprint"] = policy_fingerprint
     verdicts: dict[str, bool] = {}
     todo: list[dict] = []
     for row in pairs:
@@ -452,6 +464,16 @@ def review_pairs(review_candidates: list[dict], *,
         else:
             verdicts[row["candidate_id"]] = hit
             stats["from_cache"] += 1
+            entry = cache[row["candidate_id"]]
+            if llm_cache.freshness(entry, PROMPT_VERSION, policy_fingerprint) == \
+                    llm_cache.SOFT_STALE:
+                stats["policy_soft_stale"] += 1
+                if stats["policy_refresh_scheduled"] < max(0, policy_refresh_budget):
+                    row["_policy_refresh"] = True
+                    todo.append(row)
+                    stats["policy_refresh_scheduled"] += 1
+                else:
+                    stats["policy_refresh_deferred"] += 1
 
     # 상한을 넘긴 몫은 버리는 게 아니라 미룬다. 판정이 없는 쌍은 병합되지 않으므로
     # (verdicts 에 안 들어간다) 결과는 "이번 회차엔 아직 모름"이지 "다른 사건"이 아니다.
@@ -475,7 +497,7 @@ def review_pairs(review_candidates: list[dict], *,
 
     now = datetime.now(timezone.utc).isoformat()
     split_budget = SPLIT_BUDGET
-    review_model = _review_model()
+    review_model = policy.model()
     stats["model"] = review_model
 
     def ask(chunk: list[dict]) -> None:
@@ -489,6 +511,7 @@ def review_pairs(review_candidates: list[dict], *,
                 max_output_tokens=MAX_OUTPUT_TOKENS,
                 model=review_model,
                 label="issue_review",
+                **policy.reasoning_kwargs(),
             )
         except GeminiTruncated as exc:
             # 같은 예산으로 다시 부르면 같은 자리에서 잘린다 — 입력을 줄여야 한다.
@@ -515,6 +538,8 @@ def review_pairs(review_candidates: list[dict], *,
             verdict, reason = parsed[idx]
             verdicts[row["candidate_id"]] = verdict
             stats["asked"] += 1
+            if row.get("_policy_refresh"):
+                stats["policy_refreshed"] += 1
             cache[row["candidate_id"]] = {
                 "same_event": verdict,
                 "reason": reason,
@@ -522,6 +547,7 @@ def review_pairs(review_candidates: list[dict], *,
                 "right_title": row.get("right_title"),
                 "embedding_similarity": (row.get("diagnostics") or {}).get("embedding_similarity"),
                 "prompt_version": PROMPT_VERSION,
+                "generation_policy_fingerprint": policy_fingerprint,
                 "model": review_model,
                 "reviewed_at": now,
             }

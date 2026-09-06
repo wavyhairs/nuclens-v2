@@ -25,6 +25,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+POLICY_FINGERPRINT_KEY = "generation_policy_fingerprint"
+FRESH = "fresh"
+SOFT_STALE = "soft_stale"
+HARD_STALE = "hard_stale"
+
 
 def load(path: Path, key: str) -> dict:
     """캐시 파일에서 ``key`` 아래의 항목 사전을 읽는다.
@@ -78,3 +83,18 @@ def is_current(entry: object, prompt_version: int) -> bool:
     if not isinstance(entry, dict):
         return False
     return entry.get("prompt_version") == prompt_version
+
+
+def freshness(entry: object, prompt_version: int, policy_fingerprint: str) -> str:
+    """Separate prompt invalidation from gradual generation-policy migration.
+
+    A prompt mismatch invalidates the old answer.  A policy mismatch (including a
+    legacy entry with no fingerprint) keeps the old answer usable until a bounded
+    refresh succeeds.
+    """
+    if not is_current(entry, prompt_version):
+        return HARD_STALE
+    assert isinstance(entry, dict)
+    if entry.get(POLICY_FINGERPRINT_KEY) != policy_fingerprint:
+        return SOFT_STALE
+    return FRESH

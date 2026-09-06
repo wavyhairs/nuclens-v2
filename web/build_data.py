@@ -745,6 +745,7 @@ def apply_archive_integrity_gate(records: list[dict]) -> tuple[list[dict], dict]
     visible: list[dict] = []
     quarantined: list[dict] = []
     sanitized: list[dict] = []
+    headline_repaired: list[dict] = []
     status_blocked: list[dict] = []
     fallback_trimmed: list[dict] = []
     for record in records:
@@ -769,6 +770,14 @@ def apply_archive_integrity_gate(records: list[dict]) -> tuple[list[dict], dict]
             quarantined.append(sample)
             continue
         value = result.value
+        original_title = clean_text(value.get("title_kr") or value.get("title"))
+        repaired_title = article_quality_gate.separate_mixed_event_headline(original_title)
+        if repaired_title != original_title:
+            headline_repaired.append({
+                **sample,
+                "codes": ["mixed_event_headline_repaired"],
+                "repaired_title_kr": repaired_title,
+            })
         if status == "fallback":
             withheld = [field for field in FALLBACK_WITHHELD_FIELDS
                         if clean_text(value.get(field))]
@@ -782,13 +791,41 @@ def apply_archive_integrity_gate(records: list[dict]) -> tuple[list[dict], dict]
         "checked": len(records),
         "quarantined": len(quarantined),
         "sanitized": len(sanitized),
+        "headline_repaired": len(headline_repaired),
         "status_blocked": len(status_blocked),
         "fallback_trimmed": len(fallback_trimmed),
         "quarantine_samples": quarantined[:20],
         "sanitize_samples": sanitized[:20],
+        "headline_repair_samples": headline_repaired[:20],
         "status_blocked_samples": status_blocked[:20],
         "fallback_trimmed_samples": fallback_trimmed[:20],
     }
+
+
+def apply_display_headline_repairs(payload: object) -> object:
+    """Repair generated display titles after all identity calculations finish.
+
+    Archive titles participate in deterministic clustering.  Rewriting them before
+    clustering changed historical issue identity and tracking-rate metrics.  This
+    boundary mutates only generated/display headline fields immediately before
+    serialization; source ``title`` fields and identity inputs remain untouched.
+    """
+    if isinstance(payload, list):
+        for item in payload:
+            apply_display_headline_repairs(item)
+    elif isinstance(payload, dict):
+        if "title_kr" in payload:
+            payload["title_kr"] = article_quality_gate.separate_mixed_event_headline(
+                payload.get("title_kr"))
+        if "issue_id" in payload and "title" in payload and "title_kr" not in payload:
+            payload["title"] = article_quality_gate.separate_mixed_event_headline(
+                payload.get("title"))
+        if "headline" in payload:
+            payload["headline"] = article_quality_gate.separate_mixed_event_headline(
+                payload.get("headline"))
+        for item in payload.values():
+            apply_display_headline_repairs(item)
+    return payload
 
 
 def brief_ranks_by_hash(path: Path | None = None) -> dict[str, int]:
@@ -6198,10 +6235,12 @@ def build() -> None:
     progress("load_archive:start")
     records = load_archive()
     records, archive_quality = apply_archive_integrity_gate(records)
-    if archive_quality["quarantined"] or archive_quality["sanitized"]:
+    if (archive_quality["quarantined"] or archive_quality["sanitized"]
+            or archive_quality["headline_repaired"]):
         print(f"::warning::archive 무결성 게이트 — 기사 격리 "
-              f"{archive_quality['quarantined']}건 / 사건일 정리 "
-              f"{archive_quality['sanitized']}건")
+              f"{archive_quality['quarantined']}건 / 필드 정리 "
+              f"{archive_quality['sanitized']}건 / 혼합 제목 복구 "
+              f"{archive_quality['headline_repaired']}건")
         for sample in archive_quality["quarantine_samples"][:5]:
             print(f"  · 격리 {sample['hash']}: {sample['title'][:45]} → "
                   f"{sample['title_kr'][:45]} ({','.join(sample['codes'])})")
@@ -6869,6 +6908,13 @@ def build() -> None:
             encoding="utf-8",
         )
 
+    # This is intentionally after semantic signature and clustering.  The fix is
+    # a presentation repair for an archived curation regression, not a new event-
+    # identity signal.
+    for payload in (news_items, briefings, issue_catalog, trend, insights,
+                    publications, entities_view):
+        apply_display_headline_repairs(payload)
+
     # Cloudflare Pages의 flat 배포도 manifest/status를 항상 제공한다. 프론트가
     # 존재하지 않는 선택 파일을 매번 요청해 404를 남기지 않도록 하는 계약이다.
     manifest = {
@@ -7011,4 +7057,6 @@ def build() -> None:
 
 
 if __name__ == "__main__":
+    import gemini_client as _gemini_client
+    print(_gemini_client.format_model_policy())
     build()

@@ -15,6 +15,7 @@ from urllib.parse import urlparse, quote_plus, urljoin
 
 # batch 큐레이션용 REST 클라이언트 (429 백오프 재시도 내장 — SDK 무재시도 문제 회피)
 import gemini_client
+import llm_policy
 from gemini_client import (
     GeminiError,
     GeminiTruncated,
@@ -1271,6 +1272,28 @@ UNSOURCED_NAME_DROPS: list[str] = []
 # 본문 없이 쓰인 해석을 걷어낸 건수.
 NO_BODY_INTERPRETATION_DROPS: list[str] = []
 
+# Generated interpretation에서만 새로 등장한 인과 표현을 걷어낸 기록.
+UNSUPPORTED_CAUSAL_DROPS: list[str] = []
+
+_CAUSAL_MARKERS = (
+    "때문", "로 인해", "이에 따라", "여파로", "결과로", "영향으로",
+    "탓에", "따른 것", "기인", "그 결과",
+)
+
+
+def drop_unsupported_causal_interpretation(value: object, source_text: object,
+                                           title: str = "") -> str:
+    """Optional analysis cannot invent a causal edge absent from source material."""
+    text = clean_text(value)
+    source = clean_text(source_text)
+    if text and any(marker in text for marker in _CAUSAL_MARKERS) \
+            and not any(marker in source for marker in _CAUSAL_MARKERS):
+        UNSUPPORTED_CAUSAL_DROPS.append(f"{title[:40]} | {text[:80]}")
+        # Parsing arbitrary Korean causality into grammatical neutral prose is not
+        # deterministic.  Optional analysis is safer empty than subtly wrong.
+        return ""
+    return text
+
 
 def drop_interpretation_without_body(payload: dict, title: str = "") -> None:
     """본문을 못 받은 기사에서는 해석 필드를 비운다 (제자리 수정).
@@ -1443,6 +1466,16 @@ def drop_hollow_implication(value, title: str = "") -> str:
     return text
 
 
+def separate_curation_headline_events(title: object) -> str:
+    """Keep an incident headline from absorbing a separate project-period change.
+
+    This is the deterministic guard for archive regression 4da5b7ab6c225c78.
+    It is intentionally narrow: an operational stop must precede an explicit
+    project/execution-period extension in the same generated title.
+    """
+    return article_quality_gate.separate_mixed_event_headline(title)
+
+
 # ---- open_question 게이트 -----------------------------------------------------
 #
 # '아직 확정되지 않은 것'은 사실도 해석도 아닌 세 번째 축이다. 정책·수출·사업
@@ -1534,6 +1567,7 @@ def normalize_curation_item(item: dict, article: dict, body: str = "") -> dict:
     title_kr = strip_unsourced_person_names(
         clean_text(item.get("title_kr")) or article.get("title", ""),
         source_text, article.get("title", ""))
+    title_kr = separate_curation_headline_events(title_kr)
     grade = importance if importance in VALID_IMPORTANCE else "nice_to_know"
     features = sanitize_features(item.get("features"))
     event_type = (features or {}).get("event_type", "")
@@ -1569,11 +1603,15 @@ def normalize_curation_item(item: dict, article: dict, body: str = "") -> dict:
             sanitize_detail(item.get("detail")), source_text, article.get("title", "")),
         # 빈껍데기 해석은 화면에 내보내지 않는다. 재생성시키지 않고 그냥 버린다 —
         # 문체 위반으로 기사를 격리하면 영문 제목 폴백으로 떨어져 더 나쁘다.
-        "implication": strip_unsourced_person_names(
-            drop_hollow_implication(item.get("implication"), article.get("title", "")),
+        "implication": drop_unsupported_causal_interpretation(
+            strip_unsourced_person_names(
+                drop_hollow_implication(item.get("implication"), article.get("title", "")),
+                source_text, article.get("title", "")),
             source_text, article.get("title", "")),
-        "why_important": strip_unsourced_person_names(
-            item.get("why_important"), source_text, article.get("title", "")),
+        "why_important": drop_unsupported_causal_interpretation(
+            strip_unsourced_person_names(
+                item.get("why_important"), source_text, article.get("title", "")),
+            source_text, article.get("title", "")),
         "open_question": open_question,
         "open_question_source": open_question_source,
         "open_question_reject": oq_reject,
@@ -2026,6 +2064,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
             blocks.append("\n".join(lines))
 
         try:
+            policy = llm_policy.profile("curation")
             result = gemini_call_json(
                 system_prompt + (
                     "\n\n[재생성] 이전 출력의 오류가 표시된 항목입니다. 사실·시제를 유지하면서 "
@@ -2034,9 +2073,11 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 ),
                 "\n\n---\n\n".join(blocks),
                 temperature=0.2, max_output_tokens=BATCH_MAX_OUTPUT_TOKENS, timeout=150.0,
+                model=policy.model(),
                 # 재생성인지 최초 호출인지를 갈라서 센다. 429 가 분당 한도였는데
                 # 그 1분에 누가 몇 번 불렀는지 몰라 원인을 두 번 잘못 짚었다.
                 label="curation:재생성" if error_notes else "curation",
+                **policy.reasoning_kwargs(),
             )
         except GeminiTruncated as e:
             return {}, {art["hash"]: [f"request:truncated:{e}"] for art in chunk}
@@ -3410,4 +3451,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    print(gemini_client.format_model_policy())
     main()

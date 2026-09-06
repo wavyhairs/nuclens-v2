@@ -161,6 +161,10 @@ jobs:
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
+          GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
+          GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
+          GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
         run: python news_bot.py
@@ -219,6 +223,10 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
+          GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
+          GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
+          GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
         run: python daily_brief.py --plan
 
       - name: Push claim (발송 전 커밋 — 실패 시 발송 중단)
@@ -226,6 +234,10 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
+          GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
+          GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
+          GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -387,6 +399,10 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
+          GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
+          GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
+          GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
         run: |
           git fetch origin main && git reset --hard origin/main
           python tools/run_with_heartbeat.py \
@@ -438,6 +454,11 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
+          GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
+          GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
+          GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
+          GEMINI_VERIFY_MODEL: ${{ vars.GEMINI_VERIFY_MODEL }}
           GEMINI_TTS_MODEL: ${{ vars.GEMINI_TTS_MODEL || 'gemini-3.1-flash-tts-preview' }}
           # 봇 DM 업로드용. 여기서 받는 file_id 가 구독 채널 공개의 재료다 —
           # 채널에는 mp3 를 다시 올리지 않고 그 문자열만 보낸다(channel_queue).

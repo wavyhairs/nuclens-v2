@@ -23,6 +23,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import llm_cache
+import llm_policy
 
 ROOT = Path(__file__).parent
 CACHE_FILE = ROOT / "keei_llm_matches.json"
@@ -39,6 +40,7 @@ BATCH_SIZE = 20
 # 바로 그 버킷이다(당시 모델은 gemini-2.5-flash). 밀린 몫은 버리는 게 아니라 다음 빌드로 미룬다(판정이 없으면
 # 연결하지 않으므로 결과는 '아직 모름'이지 '다른 사건'이 아니다).
 MAX_REASK_PER_RUN = 10
+POLICY_REFRESH_BUDGET_PER_RUN = 20
 
 SYSTEM_PROMPT = """너는 원자력 산업 뉴스를 정리하는 편집자다.
 A(뉴스 이슈 제목)와 B(에너지경제연구원 '세계 원전시장 인사이트' 목차 항목)가
@@ -145,7 +147,9 @@ def _parse_response(payload: dict, count: int) -> dict[int, tuple[bool, str]]:
 def match_pairs(candidates: list[dict], *,
                 cache_path: Path = CACHE_FILE,
                 client=None,
-                batch_size: int = BATCH_SIZE) -> tuple[dict[str, bool], dict]:
+                batch_size: int = BATCH_SIZE,
+                policy_refresh_budget: int = POLICY_REFRESH_BUDGET_PER_RUN,
+                ) -> tuple[dict[str, bool], dict]:
     """후보 쌍을 판정한다.
 
     Args:
@@ -160,6 +164,8 @@ def match_pairs(candidates: list[dict], *,
         "candidates": len(candidates or []),
         "from_cache": 0, "asked": 0, "calls": 0,
         "reasked": 0, "reask_deferred": 0,
+        "policy_soft_stale": 0, "policy_refresh_scheduled": 0,
+        "policy_refresh_deferred": 0, "policy_refreshed": 0,
         "approved": 0, "rejected": 0, "failed": 0,
         "status": "ok",
     }
@@ -171,6 +177,9 @@ def match_pairs(candidates: list[dict], *,
         import gemini_client as client  # 지연 import — 테스트에서 대역 주입 가능
 
     cache = load_cache(cache_path)
+    policy = llm_policy.profile("keei_match")
+    policy_fingerprint = llm_policy.generation_policy_fingerprint(policy, PROMPT_VERSION)
+    stats["generation_policy_fingerprint"] = policy_fingerprint
     cache_dirty = False
     verdicts: dict[str, bool] = {}
     todo: list[dict] = []
@@ -189,6 +198,15 @@ def match_pairs(candidates: list[dict], *,
         else:
             verdicts[pair_id] = hit
             stats["from_cache"] += 1
+            if llm_cache.freshness(cache[pair_id], PROMPT_VERSION, policy_fingerprint) == \
+                    llm_cache.SOFT_STALE:
+                stats["policy_soft_stale"] += 1
+                if stats["policy_refresh_scheduled"] < max(0, policy_refresh_budget):
+                    row["_policy_refresh"] = True
+                    todo.append(row)
+                    stats["policy_refresh_scheduled"] += 1
+                else:
+                    stats["policy_refresh_deferred"] += 1
 
     if len(reask) > MAX_REASK_PER_RUN:
         stats["reask_deferred"] = len(reask) - MAX_REASK_PER_RUN
@@ -208,7 +226,9 @@ def match_pairs(candidates: list[dict], *,
             payload = client.call_json(
                 SYSTEM_PROMPT, build_user_message(chunk),
                 temperature=0.0, max_output_tokens=8192,
+                model=policy.model(),
                 label="keei_match",
+                **policy.reasoning_kwargs(),
             )
             stats["calls"] += 1
         except Exception as exc:  # 실패는 캐시하지 않는다 — 다음 빌드에서 재시도
@@ -223,11 +243,14 @@ def match_pairs(candidates: list[dict], *,
                 continue
             same_event, reason = verdict
             verdicts[row["pair_id"]] = same_event
+            if row.get("_policy_refresh"):
+                stats["policy_refreshed"] += 1
             cache_dirty = True
             cache[row["pair_id"]] = {
                 "same_event": same_event,
                 "reason": reason,
                 "prompt_version": PROMPT_VERSION,
+                "generation_policy_fingerprint": policy_fingerprint,
                 "issue_title": row.get("issue_title", "")[:120],
                 "keei_item": row.get("keei_item", "")[:120],
             }

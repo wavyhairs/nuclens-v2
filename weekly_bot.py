@@ -31,6 +31,7 @@ import json
 import os
 import re
 import sys
+import llm_policy
 from collections import Counter
 from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
@@ -668,10 +669,11 @@ def batch_synthesize(items: list[dict], agg: dict) -> dict:
                  "쓸지 말지는 그 축의 사건을 읽고 정한다.")
 
     try:
-        from gemini_client import call_json, synthesis_model
+        from gemini_client import call_json
+        policy = llm_policy.profile("weekly_bot")
         result = call_json(WEEKLY_PROMPT, user_text,
                            temperature=0.3, max_output_tokens=10000, timeout=120.0,
-            model=synthesis_model(), label="weekly_bot",
+            model=policy.model(), label="weekly_bot", **policy.reasoning_kwargs(),
         )
     except Exception as e:  # noqa: BLE001
         print(f"  ! weekly synthesis failed: {type(e).__name__}: {e}")
@@ -1531,4 +1533,6 @@ def main() -> int:
     confirmed = cmd_confirm()
     return sent or confirmed
 if __name__ == "__main__":
+    import gemini_client as _gemini_client
+    print(_gemini_client.format_model_policy())
     raise SystemExit(main())
