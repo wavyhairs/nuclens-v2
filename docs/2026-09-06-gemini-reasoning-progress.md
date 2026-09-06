@@ -1,60 +1,109 @@
 # Gemini reasoning implementation progress
 
-Base SHA: `3c16d95344c217d2ccd7b612238b4cce10cab084`
-Branch: `feat/gemini-reasoning`
-Last verified commit: `f90de4d` (archive display repair, after Stage F `13a0141`)
+Updated: 2026-09-06 (Asia/Seoul)
 
-Completed stages:
-- Stage 0: latest `origin/main` re-audited; the 14 production generative call groups, embedding, TTS, and non-production exclusions still match the plan.
-- Stage A: wrapper modernization, bounded telemetry, model wiring, and startup model diagnostics implemented without changing existing request bodies.
-- Stage B: central no-op task policy wired to production callers; resumable offline evaluator and split Gold fixtures/candidate generation added.
-- Stage C: generation policy fingerprints and bounded soft-stale refresh implemented for issue review, KEEI matching, and issue insights; old values survive deferred/failed refreshes.
-- Stage F infrastructure: shared strict semantic verdict/taxonomy, source-evidence separation, Expert verifier promotion with zero added calls, and the complete Fast verify/repair/re-audit/re-verify chain implemented. Fast production blocking remains disabled pending broader human Semantic Gold.
-- Curation regression: real Saeul mixed-event headline is deterministically separated, and source-unsupported causal wording in optional `implication`/`why_important` is removed without an extra LLM call.
-- Archive presentation boundary: the same Saeul title repair is applied after clustering/signature calculation, so historical JSONL and story identity remain unchanged while deployed titles are corrected.
+## Main / PR state
 
-Current stage: final audit and PR preparation.
-Next action: commit the archive presentation repair, compare with latest `origin/main`, then push/open the PR if still clean.
+- PR #88 `Gemini reasoning policy and semantic verification infrastructure`: merged.
+- PR head: `0fef3429a67d7485e0b659cf55b89c2fab857278`.
+- Reviewed base: `3c16d95344c217d2ccd7b612238b4cce10cab084`.
+- Merge SHA / post-merge main baseline: `3b50a56bb29de8fdb76f0d6e1a06bf002b0f8caf`.
+- Merged at: `2026-09-06T05:09:57Z`.
+- Required Python CI passed; there were no reviews, comments, conflicts, or blockers at merge time.
+- This follow-up is isolated on `feat/gemini-gold-candidates`; production paths are unchanged.
 
-Tests last passed:
-- python tests: 1,518 passed (`GEMINI_API_KEY="" python -m unittest discover -s tests`).
-- Full Build after rebasing onto latest `origin/main`: 82.8s, 10,468 archive rows, 525 issues, 709 evidence attachments, 0 Gemini calls; deployed JSON has zero occurrences of the bad mixed headline.
-- web tests: 569 run, 568 passed, 2 skipped, 1 failed. The sole failure is the pre-existing live-data week-balance gate (`[50,48,112,160,131,149,143]`, ratio 3.33); it reproduces in the untouched original worktree (ratio 3.31).
-- node/contracts: unavailable; the repository has no `package.json`. Workflow/static contracts are covered by Python tests.
-- V5 characterization: 27 targeted V5/policy/eval/Gold tests pass; `expected.characterization_sha256` and frozen request fixture are unchanged.
+## Post-merge validation
 
-Gold Sets:
-- Identity: 144 stratified candidates generated; every answer is `HUMAN_LABEL_REQUIRED` and cached Gemini verdicts are context-only.
-- Curation: real archive regression `4da5b7ab6c225c78` pinned from the user-specified failure contract; broader human Gold is absent.
-- Semantic: five user-specified Saeul chronology/scope contract cases added; broader balanced human Gold is absent.
-- Synthesis: not started; production activation remains out of scope without labels.
+- Root Python: 1,525 tests passed with `GEMINI_API_KEY` blank.
+- Targeted V5/policy/Gold/semantic contracts: 50 tests passed before candidate expansion; the expanded Gold/evaluator suite now contributes 16 passing focused tests.
+- Web Python, CI-equivalent (`NUCLENS_SKIP_DATA_GATES=1`): 569 passed, 3 skipped.
+- Front-end Node contracts: syntax plus date, weekly selector/sections, event calendar, trend state, admin gate, and admin render all passed.
+- Strict live-data web run without the CI skip still has the pre-existing week-balance failure: totals `[50, 48, 112, 160, 131, 149, 143]`, ratio `3.33`; it reproduced on the untouched pre-change worktree (ratio `3.31`).
+- Full Build on the merge baseline: 86.5 seconds wall / 86.0 seconds phase, 10,468 archive rows, 4,846 visible rows, 525 issues, 709 evidence attachments, and 0 Gemini calls.
+- Deployed news/briefing/issue/trend/entity JSON contained zero instances of the known bad `자동정지 및 사업기간 연장` title after the deterministic presentation repair.
+- Policy inventory: 23 reasoning profiles, every thinking setting unspecified; sampling remains explicit/current; Fast semantic blocking is off.
 
-Live API evaluation:
-- models/configs tested: none in this implementation branch; the plan's 2026-09-06 24-call probe remains the only live evidence.
-- completed samples: 0.
-- remaining samples: all Identity candidates and broader Curation/Semantic human-labelled Gold combinations.
-- blocked by quota?: no API run attempted; human labels are absent.
-- last successful evaluation output: none.
+## Recent operational workflows
 
-Production policy changes currently enabled:
-- No task reasoning level changed.
-- Existing model-selection variables are now wired consistently in workflows.
-- Active caches keep existing decisions while policy-stale entries refresh within an independent 20-item budget; failures retain old decisions.
-- Expert's existing verifier now uses the shared 10-type taxonomy, strict compact verdict, an independent model resolver, and source-bound evidence distinct from generated dossiers; its call count is unchanged.
-- Audio manifests carry semantic gate/model/thinking/verdict-digest metadata; narrative gate v2 makes unsent legacy audio stale while preserving `stale_sent` no-resend behavior.
-- Saeul mixed-event titles and optional unsupported causal analysis are deterministically neutralized.
+- Post-merge SHA `3b50a56b`: Python tests succeeded and Deploy web succeeded.
+- Latest crawl before merge succeeded. Its downstream Daily Brief and Weekly workflows succeeded at the workflow level but were correctly skipped by their preflight gates.
+- Most recent full Daily Brief run (`33992998604`) succeeded. Collection, Telegram send/confirm, Fast → Expert audio generation, subscriber-channel publish, web deploy, audio-cache save, and render smoke steps all succeeded.
+- No post-merge crawl/Daily/Weekly full run has occurred yet. No production workflow was manually dispatched for this tooling-only follow-up.
 
-Explicitly NOT enabled:
-- Identity/Curation/Context/Narrative/Semantic thinking promotion.
-- Fast semantic production blocking (the full chain is present behind a false constant).
-- Sampling/temperature/top-p/top-k changes.
-- Production shadow calls or cache-wide invalidation.
+## Gold candidate state
 
-Known failures / blockers:
-- Human-labelled Identity, Curation, and Semantic Gold Sets are not present, so reasoning promotion and blocking semantic verification cannot be activated.
-- The live-data week-balance web test is already red on the untouched worktree and is outside this reasoning-policy change; all other web tests pass.
+### Identity Gold
 
-Exact resume command / next step:
-- `cd C:\AI\nuclens-v2\.worktrees\gemini-reasoning`
-- `git status --short && git diff origin/main...HEAD --check`
-- Fetch/compare latest `origin/main`, review the complete diff, and prepare the PR; keep Fast blocking and all reasoning promotion disabled pending broader human Gold.
+- Candidates: 150 pairs.
+- Human-labelled: 0.
+- `HUMAN_LABEL_REQUIRED`: 150.
+- Selection mix: 115 stratified controls, 28 disagreement probes, 7 pinned edge/regression cases.
+- Pinned coverage: Paks continuity, Gori LTO continuity, Saeul stop vs project period, same plant/different stage, same meeting/multi-source, same policy/separate announcement, and broader issue vs specific event.
+- Cached Gemini review data is stored only under `REFERENCE_ONLY_NOT_GOLD`; model comparison is `NOT_EVALUATED`.
+
+### Curation Gold
+
+- Candidates: 40.
+- Human-labelled/user-specified: 1 (`4da5b7ab6c225c78`, `REPAIR`).
+- `HUMAN_LABEL_REQUIRED`: 39.
+- Every candidate contains source title/link/hash/date, current Nuclens output, and blank human fields for event boundary, scope, stage, date, and causality.
+- Domain counts: policy 8, reactor 7, power market 7, SMR 6, waste/fusion 6, supply-chain/general 6.
+
+### Semantic Gold
+
+- Candidates: 77 claims.
+- Human-labelled/user-specified: 5 Saeul contract cases.
+- `HUMAN_LABEL_REQUIRED`: 72.
+- Balanced generated queue: 24 source-aligned, 24 controlled perturbations, 24 unsupported inferences.
+- Six domains have 12 generated claims each. All ten semantic error types are covered as review-focus metadata, never as a human answer.
+- Saeul contract includes false causality/chronology, separate events, unit 3, unit 4, and project-wide 3·4 scope.
+
+### Candidate audit
+
+- `python tools/validate_reasoning_gold.py`: passed with 0 errors and 0 warnings.
+- Identity has 150 unique unordered pairs; no direct or reverse duplicates.
+- Required source fields are present, label statuses are internally consistent, domain/risk mixes were inspected, and all ten semantic error types are covered.
+- Human-readable sheets: `docs/gold-labeling/identity.md`, `curation.md`, and `semantic.md`.
+- Structured queues: `tests/fixtures/gemini_reasoning/identity_candidates.json`, `curation_gold.json`, and `semantic_gold.json`.
+
+## API evaluation
+
+- Live evaluation calls in this follow-up: 0.
+- Reason: Identity has no human labels; Curation has one and Semantic has five user-specified labels, which is not a sufficient basis for a production reasoning decision.
+- A zero-call planning run confirmed the Semantic queue currently has five runnable human-labelled combinations for one model/config/repeat.
+- `tools/llm_eval.py` writes every attempt immediately, resumes by model/config/fixture/repeat key, ignores untrusted `expected_verdict`, defaults to at most 30 new calls, and stops immediately after a quota response.
+- Quota state: not hit; no live call was attempted.
+
+## Production reasoning state
+
+- Reasoning activation: unchanged / disabled.
+- All task thinking levels: unspecified.
+- Fast semantic production blocking: off.
+- Production shadow calls: none.
+- Sampling, similarity thresholds, schedules, ranking, embeddings, TTS, Telegram, Cloudflare deployment, and web data contracts: unchanged.
+
+## Remaining human action
+
+Start with `docs/gold-labeling/identity.md` and label the first 60 pairs as `MERGE`, `SEPARATE`, or `AMBIGUOUS`, with one reason code. Transfer those answers to the corresponding JSON fields as `human_label`, `reason_code`, and `label_status: HUMAN_LABELLED`. Do not edit cached/model reference fields.
+
+After labels are entered, regenerate/audit without losing labels:
+
+```powershell
+python tools/generate_reasoning_gold_candidates.py
+python tools/validate_reasoning_gold.py
+```
+
+Then plan the exact API work without making a call:
+
+```powershell
+$env:GEMINI_API_KEY=''
+python tools/llm_eval.py --task IDENTITY_REVIEW --fixtures tests/fixtures/gemini_reasoning/identity_candidates.json --config unspecified --config level:medium --config level:high --repeat 3 --out .eval/identity --max-new-calls 0
+```
+
+Run one bounded checkpoint after reviewing the plan:
+
+```powershell
+python tools/llm_eval.py --task IDENTITY_REVIEW --fixtures tests/fixtures/gemini_reasoning/identity_candidates.json --config unspecified --config level:medium --config level:high --repeat 3 --out .eval/identity --max-new-calls 30
+```
+
+Re-running the same command skips completed keys and resumes from the first pending combination. Production activation remains a separate decision after sufficiently broad human labels and statistically clear results.
