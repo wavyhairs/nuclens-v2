@@ -165,7 +165,7 @@ not accepted results, and each can be retried only within the 51-call bound.
 | Task | Candidates | Human labels | Pending | Production state |
 | --- | ---: | ---: | ---: | --- |
 | Identity | 150 | 60 | 90 intentionally unused | Evaluation 499/540; activation pending |
-| Curation | 40 | 25 | 15 intentionally unused | Checkpoint 2/30; quota-blocked |
+| Curation | 40 | 25 | 15 intentionally unused | Checkpoint 4/30; quota-blocked |
 | Semantic | 77 | 46 | 31 intentionally unused | Checkpoint queued; Fast gate stays off |
 | Synthesis / Narrative / Extract | — | 0 adequate task contracts | — | `HUMAN_LABEL_REQUIRED` |
 
@@ -235,15 +235,18 @@ does not separate configs clearly, the remaining queue is reviewed incrementally
   zero warnings; `evaluation_ready=true` for both tasks.
 
 The Curation technical checkpoint uses ten representative cases (5 PASS / 4 REPAIR /
-1 BLOCK) across unspecified, medium, and high, repeat 1. Two actual unspecified calls
-succeeded before the shared 3.1 daily quota stopped the run. Both predicted PASS for
-one BLOCK and one REPAIR, which is far too little evidence for a policy decision.
-There are 28 pending combinations; no Semantic call was attempted after quota was
-confirmed. Earlier local-sandbox socket denials are classified as environment
-failures, not Gemini/API failures, and do not count as completed calls.
+1 BLOCK) across unspecified, medium, and high, repeat 1. The 2026-09-07 resume skipped
+the two durable successes, added two more unspecified successes, then stopped on the
+next call when the shared 3.1 daily quota again returned `PerDay`. All four completed
+rows predicted PASS for one BLOCK and three REPAIR Gold cases (0/4), which is far too
+little and too class-incomplete for a policy decision. There are 26 pending
+combinations; no Semantic call was attempted after quota was confirmed. The latest
+run attempted only three new calls and did not expand beyond the 28-call bound.
+Earlier local-sandbox socket denials are classified as environment failures, not
+Gemini/API failures, and do not count as completed calls.
 
 First pending Curation key:
-`gemini-3.1-flash-lite|unspecified|curation-6d402bf98f9187b2|0`.
+`gemini-3.1-flash-lite|unspecified|curation-e000f116b94e6aa9|0`.
 
 Exact bounded Curation resume after daily quota reset:
 
@@ -252,7 +255,7 @@ python -X utf8 tools/llm_eval.py --task CURATION `
   --fixtures tests/fixtures/gemini_reasoning/curation_gold.json `
   --model gemini-3.1-flash-lite `
   --config unspecified --config level:medium --config level:high --repeat 1 `
-  --out .eval/curation-checkpoint-30 --max-new-calls 28 `
+  --out .eval/curation-checkpoint-30 --max-new-calls 26 `
   --case-id curation-4c60761f7385897c `
   --case-id saeul-title-merge-4da5b7ab6c225c78 `
   --case-id curation-6d402bf98f9187b2 `

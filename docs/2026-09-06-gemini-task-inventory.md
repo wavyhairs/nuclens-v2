@@ -1,6 +1,6 @@
 # Gemini task/profile inventory
 
-Updated: 2026-09-06 (Asia/Seoul)
+Updated: 2026-09-07 (Asia/Seoul)
 Baseline: `main` at `2ee5c4ad5720c0e0e8297f951be715ca9396d471`
 
 This inventory follows the central `llm_policy` registry and the production call
@@ -9,7 +9,7 @@ the API has thinking disabled. No production profile was changed by this review.
 
 | Profile | Class | Call site | Model / requested thinking | Purpose | Deterministic safety net / cache | Failure impact | Human Gold / state |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `curation` | B. Curation | `news_bot.py:2067` | 3.1 Flash Lite / unspecified | title, summary, facts and article features | curation schema/quality/evidence gates; durable article cache and retry queue | High: published article representation | 25/40 Curation Gold; checkpoint 2/30 then daily quota; `IMPLEMENTED_BUT_NOT_ACTIVATED` |
+| `curation` | B. Curation | `news_bot.py:2067` | 3.1 Flash Lite / unspecified | title, summary, facts and article features | curation schema/quality/evidence gates; durable article cache and retry queue | High: published article representation | 25/40 Curation Gold; checkpoint 4/30 then daily quota; `IMPLEMENTED_BUT_NOT_ACTIVATED` |
 | `issue_review` | A. Identity | `issue_review.py:449` | 3.5 Flash Lite / unspecified | decide whether gray-band issue candidates are the same event | no verdict means no merge; bounded split/retry; fingerprinted soft-stale cache | High: issue merge/split | 60 Identity labels; 3.5 live evaluation 489/540, 51 quota-blocked; `IMPLEMENTED_BUT_NOT_ACTIVATED` |
 | `keei_match` | A. Identity | `keei_match.py:180` | 3.1 Flash Lite / unspecified | link KEEI items to issues | failure is not linked; fingerprinted soft-stale cache and bounded re-ask | Medium | Identity Gold available; task-wide 3.1 evaluation 499/540; decision pending |
 | `dedup` | A. Identity | `dedup.py:406` | 3.1 Flash Lite / unspecified | pre-curation event deduplication | deterministic candidate formation; failure keeps all articles | High | Identity Gold available; task-wide 3.1 evaluation 499/540; decision pending |
