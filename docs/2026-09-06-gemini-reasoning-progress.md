@@ -2,22 +2,24 @@
 
 Base SHA: `ab0a82ff0f840a8e22c67da5ef27ad6628eb685d`
 Branch: `feat/gemini-reasoning`
-Last verified commit: `db9b984` (Stage B)
+Last verified commit: `4e89985` (curation regression guard, after Stage C `a264565`)
 
 Completed stages:
 - Stage 0: latest `origin/main` re-audited; the 14 production generative call groups, embedding, TTS, and non-production exclusions still match the plan.
 - Stage A: wrapper modernization, bounded telemetry, model wiring, and startup model diagnostics implemented without changing existing request bodies.
 - Stage B: central no-op task policy wired to production callers; resumable offline evaluator and split Gold fixtures/candidate generation added.
 - Stage C: generation policy fingerprints and bounded soft-stale refresh implemented for issue review, KEEI matching, and issue insights; old values survive deferred/failed refreshes.
+- Stage F infrastructure: shared strict semantic verdict/taxonomy, source-evidence separation, Expert verifier promotion with zero added calls, and the complete Fast verify/repair/re-audit/re-verify chain implemented. Fast production blocking remains disabled pending broader human Semantic Gold.
+- Curation regression: real Saeul mixed-event headline is deterministically separated, and source-unsupported causal wording in optional `implication`/`why_important` is removed without an extra LLM call.
 
-Current stage: Stage C verification and commit.
-Next action: add safe Stage F semantic verification infrastructure without activating unvalidated Fast blocking or stronger reasoning.
+Current stage: Stage F final verification and commit.
+Next action: generate isolated web data, run web/node contracts, then prepare the PR.
 
 Tests last passed:
-- python tests: 1,501 passed (`GEMINI_API_KEY="" python -m unittest discover -s tests`).
+- python tests: 1,518 passed (`GEMINI_API_KEY="" python -m unittest discover -s tests`).
 - web tests: baseline invocation reached 454 tests but 6 generated-data tests could not start because this fresh worktree has no gitignored `web/public/data/*.json`; generate data before the final web run.
-- node/contracts: not yet run; no root `package.json`. Workflow/static contracts are covered by Python tests.
-- V5 characterization: targeted V5 tests pass; `expected.characterization_sha256` and frozen request fixture are unchanged.
+- node/contracts: not yet run; no root `package.json`; package locations will be rechecked after web generation.
+- V5 characterization: 27 targeted V5/policy/eval/Gold tests pass; `expected.characterization_sha256` and frozen request fixture are unchanged.
 
 Gold Sets:
 - Identity: 144 stratified candidates generated; every answer is `HUMAN_LABEL_REQUIRED` and cached Gemini verdicts are context-only.
@@ -36,17 +38,21 @@ Production policy changes currently enabled:
 - No task reasoning level changed.
 - Existing model-selection variables are now wired consistently in workflows.
 - Active caches keep existing decisions while policy-stale entries refresh within an independent 20-item budget; failures retain old decisions.
+- Expert's existing verifier now uses the shared 10-type taxonomy, strict compact verdict, an independent model resolver, and source-bound evidence distinct from generated dossiers; its call count is unchanged.
+- Audio manifests carry semantic gate/model/thinking/verdict-digest metadata; narrative gate v2 makes unsent legacy audio stale while preserving `stale_sent` no-resend behavior.
+- Saeul mixed-event titles and optional unsupported causal analysis are deterministically neutralized.
 
 Explicitly NOT enabled:
 - Identity/Curation/Context/Narrative/Semantic thinking promotion.
+- Fast semantic production blocking (the full chain is present behind a false constant).
 - Sampling/temperature/top-p/top-k changes.
 - Production shadow calls or cache-wide invalidation.
 
 Known failures / blockers:
 - Human-labelled Identity, Curation, and Semantic Gold Sets are not present, so reasoning promotion and blocking semantic verification cannot be activated.
-- Fresh-worktree web tests need generated data; this is not a source regression.
+- Fresh-worktree web tests need generated data; this is not a source regression and is the next verification step.
 
 Exact resume command / next step:
 - `cd C:\AI\nuclens-v2\.worktrees\gemini-reasoning`
-- `git status --short && python -m unittest tests.test_llm_policy tests.test_llm_eval tests.test_reasoning_gold_fixtures tests.test_v5_characterization`
-- Continue with Stage F verifier schema/shared contracts and deterministic chronology safeguards; keep Fast blocking and reasoning promotion disabled pending broader Semantic Gold.
+- `git status --short && GEMINI_API_KEY="" python web/build_data.py`
+- Run `python -m unittest discover -s web/tests`, available node contracts, and final diff review; keep Fast blocking and all reasoning promotion disabled pending broader human Gold.

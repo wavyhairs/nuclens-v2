@@ -97,6 +97,7 @@ _PROFILES: dict[str, TaskProfile] = {
     "expert_intro_repair": _entry(NARRATIVE_GENERATION, _synthesis_model),
     "expert_verify": _entry(FINAL_SEMANTIC_VERIFY, _verify_model, strict=True),
     "fast_verify": _entry(FINAL_SEMANTIC_VERIFY, _verify_model, strict=True),
+    "fast_semantic_repair": _entry(NARRATIVE_GENERATION, _script_model),
 }
 
 

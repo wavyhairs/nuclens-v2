@@ -458,6 +458,7 @@ jobs:
           GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
           GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
           GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
+          GEMINI_VERIFY_MODEL: ${{ vars.GEMINI_VERIFY_MODEL }}
           GEMINI_TTS_MODEL: ${{ vars.GEMINI_TTS_MODEL || 'gemini-3.1-flash-tts-preview' }}
           # 봇 DM 업로드용. 여기서 받는 file_id 가 구독 채널 공개의 재료다 —
           # 채널에는 mp3 를 다시 올리지 않고 그 문자열만 보낸다(channel_queue).

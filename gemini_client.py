@@ -142,6 +142,7 @@ def model_policy_snapshot() -> dict[str, str | int]:
         "REVIEW": _resolve("GEMINI_REVIEW_MODEL", "gemini-3.5-flash-lite") or "",
         "INSIGHT": _resolve("GEMINI_INSIGHT_MODEL", "gemini-3.5-flash-lite") or "",
         "SCRIPT": _resolve("GEMINI_SCRIPT_MODEL", "gemini-3.5-flash-lite") or "",
+        "VERIFY": _resolve("GEMINI_VERIFY_MODEL", MODEL) or MODEL or "",
         "RPM_CAP": _pacing_cap(),
     }
 

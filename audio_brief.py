@@ -43,6 +43,7 @@ import article_quality_gate
 import gemini_client
 import llm_policy
 import news_archive
+import semantic_verifier
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -192,8 +193,10 @@ def evidence_specs(briefing: dict, issues: list[dict]) -> list[dict]:
                           if h in manifests],
             # 이슈 레벨의 사실 필드. 해석 필드(implication·why_important)는
             # 넣지 않는다 — 해석이 다음 문장의 근거가 되면 안 된다.
-            "extra_text": [issue.get("title"), issue.get("summary"),
-                           issue.get("detail"), issue.get("latest_change")],
+            # latest_change/implication/why_important are generated interpretation.
+            # Letting them prove a later script would launder a model claim into
+            # factual evidence.  Only validated article-derived fields belong here.
+            "extra_text": [issue.get("title"), issue.get("summary"), issue.get("detail")],
         })
     return specs
 
@@ -253,6 +256,45 @@ def verify_script(script: str, contracts, briefing: dict, *,
         reference_date=briefing.get("date"),
         min_lines=min_lines,
     )
+
+
+def semantic_source_evidence(contracts) -> list[dict]:
+    """Serialize only source-bound contracts; generated interpretations stay out."""
+    return [{
+        "key": contract.key,
+        "article_hashes": list(contract.article_hashes),
+        "entities": sorted(contract.entities),
+        "countries": sorted(contract.countries),
+        "stages": sorted(contract.stages),
+        "claims": sorted(contract.claims),
+        "dates": sorted(contract.dates),
+        "text": contract.text,
+    } for contract in contracts or ()]
+
+
+def run_fast_semantic_gate(script: str, contracts, briefing: dict, *,
+                           client=gemini_client) -> tuple[str, dict]:
+    """One verify/targeted-repair/re-audit/re-verify round for future activation."""
+    evidence = semantic_source_evidence(contracts)
+    report = semantic_verifier.verify(evidence, script, label="fast_verify", client=client)
+    if report["passed"]:
+        return script, report
+    repair_policy = llm_policy.profile("fast_semantic_repair")
+    repaired = client.call_json(
+        "지적된 문장/문단만 최소 수정하고 JSON만 반환하십시오.",
+        semantic_verifier.repair_prompt(script, report, evidence),
+        temperature=0.15, max_output_tokens=8192, timeout=150.0, retries=2,
+        model=repair_policy.model(), label="fast_semantic_repair",
+        **repair_policy.reasoning_kwargs())
+    candidate, _ = validate_script(repaired.get("script"))
+    deterministic = verify_script(candidate, contracts, briefing, min_lines=MIN_LINES)
+    if not deterministic.ok:
+        raise ValueError("Fast semantic repair가 deterministic evidence audit를 통과하지 못함")
+    final_report = semantic_verifier.verify(
+        evidence, deterministic.script, label="fast_verify", client=client)
+    if not final_report["passed"]:
+        raise ValueError(f"Fast semantic verifier 재검증 미통과: {final_report['verdict']}")
+    return deterministic.script, final_report
 
 
 # ── 오디오 품질을 관리자에게 알리는 창구 ───────────────────────────────────
@@ -545,7 +587,8 @@ def _problem_note(audit) -> str:
     return "\n".join(lines)
 
 
-def _verified_script(material: str, briefing: dict, contracts) -> str:
+def _verified_script(material: str, briefing: dict, contracts, *,
+                     semantic_result: dict | None = None) -> str:
     """대본을 만들고, **프레임까지 붙인 최종본**을 기사 근거와 대조한다.
 
     순서가 중요하다. 프레임·수정 뒤에 검증해야 마지막 변환이 되살린 주장을 본다.
@@ -571,13 +614,17 @@ def _verified_script(material: str, briefing: dict, contracts) -> str:
     # 회차까지 경고가 되어, 정작 봐야 할 회차가 묻힌다.
     report_script_audit(audit, variant=FAST_VARIANT, date=briefing.get("date"),
                         contract_count=len(contracts or ()))
-    if audit.ok:
-        return audit.script
     if audit.action == "reject":
         raise ValueError(
             f"사실검증 후 남은 문단 부족 — 제외 {len(audit.removed)}건")
-    print(f"[audio] 근거 없는 문단 {len(audit.removed)}건 제외하고 진행")
-    return audit.script
+    if not audit.ok:
+        print(f"[audio] 근거 없는 문단 {len(audit.removed)}건 제외하고 진행")
+    final_script = audit.script
+    if semantic_verifier.FAST_SEMANTIC_GATE_ENABLED:
+        final_script, report = run_fast_semantic_gate(final_script, contracts, briefing)
+        if semantic_result is not None:
+            semantic_result.update(report)
+    return final_script
 
 
 def split_script(script: str, limit: int = CHUNK_SPOKEN) -> list[str]:
@@ -1012,8 +1059,10 @@ def generate(force: bool = False, send: bool = True) -> bool:
         print("[audio] 재료에 이슈가 없음 — 스킵")
         return False
 
+    semantic_result: dict = {}
     try:
-        script = _verified_script(material, briefing, contracts)
+        script = _verified_script(
+            material, briefing, contracts, semantic_result=semantic_result)
     except (GeminiError, ValueError) as exc:
         print(f"[audio] 대본 실패 — 기존 오디오 유지: {exc}")
         return False
@@ -1049,6 +1098,14 @@ def generate(force: bool = False, send: bool = True) -> bool:
         "script_digest": article_quality_gate.script_digest(script),
         "gate_version": article_quality_gate.NARRATIVE_GATE_VERSION,
         "evidence_issue_count": len(contracts),
+        "semantic_gate_enabled": semantic_verifier.FAST_SEMANTIC_GATE_ENABLED,
+        "semantic_gate_version": semantic_verifier.SEMANTIC_GATE_VERSION,
+        "semantic_model": llm_policy.profile("fast_verify").model(),
+        "semantic_thinking_level": (
+            llm_policy.profile("fast_verify").thinking_level or "unspecified"),
+        "semantic_verdict_digest": (
+            semantic_verifier.verdict_digest(semantic_result)
+            if semantic_result else ""),
     }
     _write_audio_variant(date, FAST_VARIANT, meta)
     # 대본을 함께 남긴다 — 프롬프트 적중 여부를 라이브 산출물로 검증하는

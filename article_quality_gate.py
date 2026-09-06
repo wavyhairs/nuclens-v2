@@ -41,7 +41,7 @@ CURATION_STATUSES = frozenset({"reviewed", "fallback", "unreviewed", "quarantine
 EVIDENCE_MANIFEST_VERSION = 2
 # Bump whenever the narrative rules below change what they accept.  Cached audio
 # stores this number, so an older cache stops being trusted automatically.
-NARRATIVE_GATE_VERSION = 1
+NARRATIVE_GATE_VERSION = 2
 
 # These fields are analysis, not the event itself.  Unsupported concrete facts
 # are removed field-by-field rather than causing the whole article to disappear.
