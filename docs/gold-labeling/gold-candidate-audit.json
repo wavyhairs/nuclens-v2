@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "identity": {
+    "candidate_count": 150,
+    "human_labelled": 0,
+    "human_label_required": 150,
+    "status": {
+      "HUMAN_LABEL_REQUIRED": 150
+    },
+    "selection_groups": {
+      "known_edge_case": 7,
+      "stratified_control": 115,
+      "disagreement_probe": 28
+    },
+    "known_edge_cases": [
+      "broader_issue_vs_specific_event",
+      "gori_lto_continuity",
+      "paks_continuity",
+      "saeul_stop_vs_project_period",
+      "same_meeting_multi_source",
+      "same_plant_different_stage",
+      "same_policy_separate_announcement"
+    ],
+    "unique_unordered_pairs": 150
+  },
+  "curation": {
+    "candidate_count": 40,
+    "human_labelled": 1,
+    "human_label_required": 39,
+    "status": {
+      "USER_SPECIFIED": 1,
+      "HUMAN_LABEL_REQUIRED": 39
+    },
+    "domains": {
+      "policy": 8,
+      "reactor": 7,
+      "power_market": 7,
+      "smr": 6,
+      "waste_or_fusion": 6,
+      "supply_chain_or_general": 6
+    },
+    "risk_dimensions": {
+      "event_boundary": 12,
+      "scope": 10,
+      "stage": 12,
+      "causality": 15,
+      "date": 39
+    }
+  },
+  "semantic": {
+    "candidate_count": 77,
+    "human_labelled": 5,
+    "human_label_required": 72,
+    "status": {
+      "HUMAN_LABEL_REQUIRED": 72,
+      "USER_SPECIFIED": 5
+    },
+    "candidate_kinds": {
+      "source_aligned": 24,
+      "controlled_perturbation": 24,
+      "unsupported_inference": 24,
+      "user_specified_contract": 5
+    },
+    "domains": {
+      "reactor": 12,
+      "power_market": 12,
+      "policy": 12,
+      "smr": 12,
+      "waste_or_fusion": 12,
+      "supply_chain_or_general": 12
+    },
+    "covered_error_types": [
+      "CAUSALITY_ERROR",
+      "CERTAINTY_ERROR",
+      "DATE_ERROR",
+      "ENTITY_ERROR",
+      "FACT_ERROR",
+      "NUMBER_ERROR",
+      "SCOPE_ERROR",
+      "STAGE_ERROR",
+      "TEMPORAL_ERROR",
+      "UNSUPPORTED_INFERENCE"
+    ]
+  }
+}
