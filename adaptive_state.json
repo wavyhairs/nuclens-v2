@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-09-08"
   },
   "retired": {
@@ -190,7 +190,7 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 4,
     "date": "2026-09-08"
   },
   "terms": {
@@ -222,6 +222,52 @@
       "term": "AP1000 vs APR1400",
       "ttl_hours": 24,
       "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "체코수소협회": {
+      "articles": 3,
+      "created_at": "2026-09-07T22:10:18.185280+00:00",
+      "domains": [
+        "worktoday.co.kr",
+        "energy-news.co.kr",
+        "e-platform.net"
+      ],
+      "evidence": [
+        {
+          "domain": "worktoday.co.kr",
+          "hash": "af5a28ef5e981866",
+          "importance": "nice_to_know",
+          "title": "한수원, 체코수소협회와 유럽 원자력 청정수소 시장 진출 로드맵 마련"
+        },
+        {
+          "domain": "energy-news.co.kr",
+          "hash": "fc7e4dc7da294fa7",
+          "importance": "nice_to_know",
+          "title": "한수원, 체코수소협회와 원전 연계 청정수소 실증사업 추진 검토"
+        },
+        {
+          "domain": "e-platform.net",
+          "hash": "dac9953233462d9d",
+          "importance": "nice_to_know",
+          "title": "한수원, 체코수소협회와 원자력 청정수소 유럽 진출 로드맵 마련"
+        }
+      ],
+      "expires_at": "2026-09-08T22:10:18.185280+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-09-07T22:10:19.400954+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-07T22:10:18.185280+00:00",
+      "queries_run": 1,
+      "query": "체코수소협회 원자력",
+      "score": 3.7,
+      "status": "tracking",
+      "term": "체코수소협회",
+      "ttl_hours": 24,
+      "type": "org",
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
