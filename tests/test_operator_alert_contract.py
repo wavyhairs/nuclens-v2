@@ -74,6 +74,8 @@ class OperatorSentenceTests(unittest.TestCase):
                 {"web_build": "failure", "data_gate": "skipped", "web_deploy": "skipped"},
                 observation_id="daily-brief:1") +
             monitor.collection_pipeline_signals("failure", observation_id="crawl:1") +
+            monitor.audio_pipeline_signals(
+                "failure", "failure", observation_id="daily-brief:1") +
             monitor.source_health_signals({"sources": {"산업부 보도자료": {
                 "kind": "official", "consecutive_failures": 3,
                 "last_error": "ConnectTimeout: HTTPSConnectionPool(host='www.motir.go.kr')",

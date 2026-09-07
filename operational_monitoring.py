@@ -897,6 +897,51 @@ def collection_pipeline_signals(outcome: str | None, *,
     )]
 
 
+def audio_pipeline_signals(fast_outcome: str | None, expert_outcome: str | None, *,
+                           observation_id: str = "") -> list[AlertSignal]:
+    """오디오 브리핑이 그날 빠졌다는 사실을 관측 가능하게 만든다.
+
+    2026-09-08 까지 이 신호는 없었다. 오디오 스텝은 `python audio_brief.py || echo`
+    라 스크립트가 실패해도 스텝 outcome 이 항상 success 였고, 알림 스텝은 애초에
+    오디오 outcome 을 받지도 않았다. 두 겹으로 가려져서 이틀 연속(09-07 일일 한도,
+    09-08 TTS 503) 오디오가 통째로 빠졌는데도 GitHub UI 는 ✓ 였고, 사용자가
+    "왜 안 왔지" 하고 물어야 알았다.
+
+    LEVEL_ACTION 이 아니라 ATTENTION 인 이유: 오디오는 부가 기능이라 텍스트
+    브리핑·사이트는 정상으로 나간다. 그래도 침묵보다는 낫다 — 이 알림의 목적은
+    복구 재실행을 **사람이 판단할 수 있게** 하는 것이다.
+
+    min_occurrences=1: 하루 한 번뿐인 산출물이라 "두 번 연속"을 기다리면 이틀을
+    잃는다. 오늘 빠졌으면 오늘 말해야 한다.
+    """
+    def failed(outcome: str | None) -> bool:
+        return outcome is not None and str(outcome).strip().lower() != "success"
+
+    missing = [label for label, outcome in
+               (("빠른", fast_outcome), ("전문가", expert_outcome)) if failed(outcome)]
+    if not missing:
+        return []
+    both = len(missing) == 2
+    names = "·".join(missing)
+    return [AlertSignal(
+        key="quality:audio-brief-missing", scope="audio_pipeline",
+        severity="critical" if both else "warning", level=LEVEL_ATTENTION,
+        title=f"{names} 오디오 브리핑이 생성되지 않았습니다",
+        detail=f"오늘 {names} 브리핑 음성이 만들어지지 않아 구독 채널에 나가지 않았습니다.",
+        impact=("텍스트 브리핑과 사이트는 정상입니다. 오디오만 빠지며, 웹 플레이어에는 "
+                "직전에 성공한 날짜의 음성이 그대로 남습니다."),
+        action=("복구하려면 아침 브리핑 워크플로를 '빠진 오디오 재발송' 옵션으로 다시 "
+                "실행해 주세요. 음성 생성 서버가 일시적으로 붐빈 경우라면 시간을 두고 "
+                "실행하면 대개 풀립니다."),
+        technical=(f"audio_brief={fast_outcome or 'missing'} / "
+                   f"expert_audio_brief={expert_outcome or 'missing'}. "
+                   "복구는 daily-brief workflow_dispatch 의 audio_recovery=true "
+                   "(force_audio 는 --no-send 라 발송되지 않는다). 실패 사유는 "
+                   "워크플로 로그의 '[audio]'·'[expert-audio]' 줄."),
+        observation_id=str(observation_id).strip(), min_occurrences=1,
+    )]
+
+
 def latest_data_gate_record(records: Iterable[Mapping]) -> Mapping | None:
     """Return the newest usable quality record from an append-only log."""
     latest = None

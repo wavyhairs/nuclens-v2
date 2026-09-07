@@ -33,6 +33,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -90,6 +91,24 @@ TRIM_FRAME_MS = 10
 # 잡고, 기대치의 이만큼도 안 되면 잘린 것으로 본다.
 SPOKEN_CHARS_PER_SEC = 8.5
 TRUNCATION_RATIO = 0.6
+
+# TTS 는 gemini_client.call_json 을 안 거친다(엔드포인트가 다르다). 그래서 그쪽이
+# 갖춘 429/5xx 정책을 **여기서 다시 갖춰야 한다.** 2026-09-08 실사고: 빠른·전문가
+# 4번의 시도가 전부 503 UNAVAILABLE("high demand ... try again later")로 죽었는데,
+# 로그 타임스탬프가 전부 같은 초에 찍혔다 — 서버가 "나중에 다시"라고 말한 응답에
+# 재시도를 한 번도 안 냈다는 뜻이다. 실제 재시도는 워크플로의 90초 sleep 두 번이
+# 전부였다.
+#
+# 다만 이 백오프로 그날이 구제되진 않았을 것이다(503 이 19:54~20:24, 30분 지속).
+# 짧은 스파이크를 건지는 값이고, 30분짜리 장애는 알림(operational_alerts)과
+# 복구 재실행이 받는다. 여기서 재시도를 무한정 늘리지 않는 이유이기도 하다.
+TTS_TRANSIENT_RETRIES = 3
+TTS_BACKOFF_LADDER = (5.0, 15.0, 45.0)
+# 잡 전체가 쓸 수 있는 TTS 대기 시간 총량. 청크(6~8) × 청크재시도(2) × 모델(2) 로
+# 곱해지는 자리라 호출당 상한만으로는 안 되고 총량을 따로 묶는다 — 오디오가
+# 배포·채널 공개를 밀어내면 부가 기능이 본 기능을 잡아먹는 셈이 된다.
+TTS_BACKOFF_BUDGET_SEC = 300.0
+_tts_backoff_spent = 0.0
 
 _TTS_ENDPOINT = (
     "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -675,41 +694,97 @@ def _tts_models() -> list[str]:
     return models
 
 
+def _tts_ladder_wait(attempt: int) -> float:
+    return TTS_BACKOFF_LADDER[min(attempt, len(TTS_BACKOFF_LADDER)) - 1]
+
+
+def _tts_retry_wait(code: int, body_text: str, model: str, attempt: int) -> float | None:
+    """같은 모델로 되짚을 값어치가 있으면 대기 초, 아니면 None.
+
+    gemini_client.call_json 의 판정을 그대로 따른다 — 같은 API 의 같은 오류를
+    두 경로가 다르게 해석하면 사후 진단이 갈린다.
+    """
+    if code == 429:
+        if gemini_client._is_daily_quota(body_text):
+            # 오늘 안 풀린다. 기다린 뒤 또 태우면 실패가 보장된 요청이 쿼터만
+            # 배로 먹는다. 무료 티어는 모델별 버킷이라 다음 모델은 값어치가 있다.
+            print(f"[audio] 일일 한도 판정 — {model} 재시도 없이 다음 모델 "
+                  f"(표지 {gemini_client._daily_quota_marker(body_text)})")
+            return None
+        # 분당 한도는 서버가 요구한 값을 그대로 쓴다.
+        return gemini_client._retry_delay_seconds(body_text) or _tts_ladder_wait(attempt)
+    if code in (500, 502, 503, 504):
+        return _tts_ladder_wait(attempt)
+    # 400 등은 같은 요청을 다시 보내도 같은 답이 온다.
+    return None
+
+
+def _tts_backoff(wait: float, model: str, attempt: int, reason: str) -> bool:
+    """예산 안에서만 잔다. 넘기면 재시도를 접고 False."""
+    global _tts_backoff_spent
+    if _tts_backoff_spent + wait > TTS_BACKOFF_BUDGET_SEC:
+        print(f"[audio] TTS 백오프 예산 소진 "
+              f"({_tts_backoff_spent:.0f}s/{TTS_BACKOFF_BUDGET_SEC:.0f}s) — "
+              f"{model} 재시도 중단")
+        return False
+    _tts_backoff_spent += wait
+    print(f"[audio] {model} {reason} — {wait:.0f}초 대기 후 재시도 "
+          f"{attempt + 1}/{TTS_TRANSIENT_RETRIES}")
+    time.sleep(wait)
+    return True
+
+
 def call_tts(script: str, models: list[str] | None = None) -> tuple[bytes, int]:
     """멀티스피커 합성 → (PCM s16le, sample rate). 모델 순서대로 폴백.
 
     models 를 주면 그 목록만 쓴다 — 한 대본 안에서 모델이 섞이지 않게
     synthesize 가 모델을 고정해 내려보낸다.
+
+    한 모델 안에서 일시 오류(5xx·분당 429)는 백오프로 되짚고, 되짚어도 안 되면
+    다음 모델로 넘어간다. 일일 한도만은 기다리지 않는다 — 오늘 안 풀린다.
     """
     last_err: Exception | None = None
     for model in (models or _tts_models()):
         url = _TTS_ENDPOINT.format(model=model)
-        request = urllib.request.Request(
-            url,
-            data=json.dumps(tts_payload(script)).encode("utf-8"),
-            headers={"Content-Type": "application/json",
-                     "x-goog-api-key": gemini_client.API_KEY or ""},
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=300) as response:
-                payload = json.loads(response.read())
-            part = payload["candidates"][0]["content"]["parts"][0]
-            mime = part["inlineData"]["mimeType"]
-            pcm = base64.b64decode(part["inlineData"]["data"])
-            match = re.search(r"rate=(\d+)", mime)
-            rate = int(match.group(1)) if match else 24000
-            if not pcm:
-                raise GeminiError(f"{model}: 오디오 0바이트")
-            print(f"[audio] TTS {model} — {len(pcm) / 1024:.0f} KB, rate {rate}")
-            return pcm, rate
-        except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")[:200]
-            last_err = GeminiError(f"{model}: HTTP {exc.code} {detail}")
-            print(f"[audio] {last_err} — 다음 모델 폴백")
-        except (urllib.error.URLError, TimeoutError, KeyError, IndexError,
-                json.JSONDecodeError) as exc:
-            last_err = GeminiError(f"{model}: {type(exc).__name__}: {exc}")
-            print(f"[audio] {last_err} — 다음 모델 폴백")
+        for attempt in range(1, TTS_TRANSIENT_RETRIES + 1):
+            request = urllib.request.Request(
+                url,
+                data=json.dumps(tts_payload(script)).encode("utf-8"),
+                headers={"Content-Type": "application/json",
+                         "x-goog-api-key": gemini_client.API_KEY or ""},
+            )
+            try:
+                with urllib.request.urlopen(request, timeout=300) as response:
+                    payload = json.loads(response.read())
+                part = payload["candidates"][0]["content"]["parts"][0]
+                mime = part["inlineData"]["mimeType"]
+                pcm = base64.b64decode(part["inlineData"]["data"])
+                match = re.search(r"rate=(\d+)", mime)
+                rate = int(match.group(1)) if match else 24000
+                if not pcm:
+                    raise GeminiError(f"{model}: 오디오 0바이트")
+                print(f"[audio] TTS {model} — {len(pcm) / 1024:.0f} KB, rate {rate}")
+                return pcm, rate
+            except urllib.error.HTTPError as exc:
+                # 판정은 **자르지 않은 본문**으로 한다. 표시만 줄인다 — quotaId 는
+                # 본문 뒤쪽 details 에 실려 오는데 예전엔 [:200] 로 자른 뒤라
+                # 일일/분당을 사후에 가를 수 없었다(gemini_client 의 같은 함정).
+                body_text = exc.read().decode("utf-8", errors="replace")
+                last_err = GeminiError(f"{model}: HTTP {exc.code} {body_text[:200]}")
+                wait = _tts_retry_wait(exc.code, body_text, model, attempt)
+                reason = f"HTTP {exc.code}"
+            except (urllib.error.URLError, TimeoutError, KeyError, IndexError,
+                    json.JSONDecodeError) as exc:
+                # 연결 실패와 응답 모양 붕괴(모델이 오디오 대신 텍스트를 냄)는
+                # 서버가 이유를 안 알려준다. 둘 다 표집이 흔들린 결과라 같은
+                # 사다리로 한 번 더 본다 — 예산이 위에서 묶여 있다.
+                last_err = GeminiError(f"{model}: {type(exc).__name__}: {exc}")
+                wait = _tts_ladder_wait(attempt)
+                reason = type(exc).__name__
+            if (wait is None or attempt == TTS_TRANSIENT_RETRIES
+                    or not _tts_backoff(wait, model, attempt, reason)):
+                print(f"[audio] {last_err} — 다음 모델 폴백")
+                break
     raise last_err or GeminiError("TTS 모델 전부 실패")
 
 

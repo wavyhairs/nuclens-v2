@@ -139,6 +139,44 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertFalse(state["operational_alerts"]["items"]
                          ["quality:web-pipeline-failure"]["active"])
 
+    def test_audio_failure_notifies_and_resolves_on_a_later_success(self):
+        """2026-09-08 회귀: 오디오가 통째로 빠졌는데 알림이 한 건도 안 나갔다."""
+        self.write_sent()
+        messages = []
+        failed = cli.run(
+            sent_path=self.sent, log_path=self.log, notify=True,
+            sender=lambda text: messages.append(text) or {"ok": True},
+            expected_sources={}, audio_fast_outcome="failure",
+            audio_expert_outcome="failure",
+            pipeline_observation_id="daily-brief:200", now=NOW)
+        self.assertTrue(failed["sent"])
+        self.assertEqual(1, len(messages))
+        self.assertIn("오디오 브리핑", messages[0])
+        # 오디오는 부가 기능이다 — 텍스트·사이트가 정상인 날을 '조치 필요'로
+        # 부르면 진짜 장애와 구별이 사라진다.
+        self.assertIn("확인 필요", messages[0])
+        self.assertNotIn("조치 필요", messages[0])
+
+        recovered = cli.run(
+            sent_path=self.sent, log_path=self.log, notify=True,
+            sender=lambda text: messages.append(text) or {"ok": True},
+            expected_sources={}, audio_fast_outcome="success",
+            audio_expert_outcome="success",
+            pipeline_observation_id="daily-brief:201", now=NOW + timedelta(hours=1))
+        self.assertTrue(recovered["sent"])
+        self.assertIn("해결됨", messages[-1])
+
+    def test_audio_outcomes_omitted_leaves_no_audio_alert(self):
+        """오디오가 예정되지 않은 회차는 판정하지 않는다 (크롤 경로 등)."""
+        self.write_sent()
+        messages = []
+        result = cli.run(
+            sent_path=self.sent, log_path=self.log, notify=True,
+            sender=lambda text: messages.append(text) or {"ok": True},
+            expected_sources={}, now=NOW)
+        self.assertFalse(any("오디오" in text for text in messages))
+        self.assertTrue(result["ok"])
+
     def test_unsent_pipeline_alert_survives_a_successful_next_run(self):
         self.write_sent()
         failed = {

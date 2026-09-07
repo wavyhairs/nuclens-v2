@@ -275,8 +275,12 @@ class WorkflowWiringTest(unittest.TestCase):
             encoding="utf-8")
 
     def test_the_channel_is_published_after_the_expert_audio(self):
+        # 호출 방식이 아니라 **자리**를 지키는 테스트다. 스크립트 이름으로 찾는다 —
+        # `python expert_audio_brief.py` 를 직접 찾으면 실행을 감싸는 방식이 바뀔
+        # 때마다(2026-09-08: 실패 판정을 남기려고 run_audio 로 감쌌다) 순서 계약과
+        # 무관하게 깨진다.
         yml = self._daily()
-        audio = yml.index("python expert_audio_brief.py")
+        audio = yml.index("expert_audio_brief.py")
         publish = yml.index("python channel_queue.py --publish")
         self.assertLess(audio, publish,
                         "전문가 오디오가 그날 배치의 마지막 재료다")
