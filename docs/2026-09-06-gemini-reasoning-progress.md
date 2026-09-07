@@ -165,8 +165,8 @@ not accepted results, and each can be retried only within the 51-call bound.
 | Task | Candidates | Human labels | Pending | Production state |
 | --- | ---: | ---: | ---: | --- |
 | Identity | 150 | 60 | 90 intentionally unused | Evaluation 499/540; activation pending |
-| Curation | 40 | 25 | 15 intentionally unused | Checkpoint 4/30; quota-blocked |
-| Semantic | 77 | 46 | 31 intentionally unused | Checkpoint queued; Fast gate stays off |
+| Curation | 40 | 25 | 15 intentionally unused | Diagnostic checkpoint 30/30; production replay blocked |
+| Semantic | 77 | 46 | 31 intentionally unused | Checkpoint 29/30; repeated schema failure; Fast gate stays off |
 | Synthesis / Narrative / Extract | — | 0 adequate task contracts | — | `HUMAN_LABEL_REQUIRED` |
 
 Candidate generation and audit were already complete: Curation covers event boundary,
@@ -234,64 +234,43 @@ does not separate configs clearly, the remaining queue is reviewed incrementally
 - Post-export lifecycle validation and Gold validation both report zero errors and
   zero warnings; `evaluation_ready=true` for both tasks.
 
-The Curation technical checkpoint uses ten representative cases (5 PASS / 4 REPAIR /
-1 BLOCK) across unspecified, medium, and high, repeat 1. The 2026-09-07 resume skipped
-the two durable successes, added two more unspecified successes, then stopped on the
-next call when the shared 3.1 daily quota again returned `PerDay`. All four completed
-rows predicted PASS for one BLOCK and three REPAIR Gold cases (0/4), which is far too
-little and too class-incomplete for a policy decision. There are 26 pending
-combinations; no Semantic call was attempted after quota was confirmed. The latest
-run attempted only three new calls and did not expand beyond the 28-call bound.
-Earlier local-sandbox socket denials are classified as environment failures, not
-Gemini/API failures, and do not count as completed calls.
+The Curation diagnostic checkpoint completed ten representative cases (5 PASS / 4
+REPAIR / 1 BLOCK) across unspecified, medium, and high, repeat 1. Every config
+predicted PASS for all ten cases: accuracy 50%, balanced accuracy 33.33%, PASS recall
+100%, and REPAIR/BLOCK recall 0%. There were no quota, API, JSON, schema, truncation,
+or retry failures. Unspecified / medium / high p50 latency was 1.45s / 4.36s / 4.39s;
+p95 was 3.25s / 5.88s / 7.25s; thought tokens were 0 / 4,290 / 5,790.
 
-First pending Curation key:
-`gemini-3.1-flash-lite|unspecified|curation-e000f116b94e6aa9|0`.
+That checkpoint exposed a scope defect rather than activation evidence: the Curation
+adapter judges an already-generated representation with a short classification
+prompt, while the production `curation` profile generates the representation. The
+fixture lacks the complete production generation replay input. These 30 calls remain
+useful diagnostics but cannot select production Curation reasoning, and the planned
+225-call expansion is withheld.
 
-Exact bounded Curation resume after daily quota reset:
+Before the Semantic checkpoint, the adapter was changed to use the exact production
+`semantic_verifier` system prompt, evidence/script/context input contract, output
+schema, max-output, timeout, and retry settings. The checkpoint uses all five
+non-BLOCK cases plus five diverse BLOCK cases. It has 29/30 durable successes:
 
-```powershell
-python -X utf8 tools/llm_eval.py --task CURATION `
-  --fixtures tests/fixtures/gemini_reasoning/curation_gold.json `
-  --model gemini-3.1-flash-lite `
-  --config unspecified --config level:medium --config level:high --repeat 1 `
-  --out .eval/curation-checkpoint-30 --max-new-calls 26 `
-  --case-id curation-4c60761f7385897c `
-  --case-id saeul-title-merge-4da5b7ab6c225c78 `
-  --case-id curation-6d402bf98f9187b2 `
-  --case-id curation-04b60a0ede3e9484 `
-  --case-id curation-e000f116b94e6aa9 `
-  --case-id curation-7d5fb2f4f0dad180 `
-  --case-id curation-91c28f4c623f0bf0 `
-  --case-id curation-a0e2cb7843a93c7c `
-  --case-id curation-1ce9bd9cd45a8831 `
-  --case-id curation-4ee5aef7063ebdda
-```
+| Config | n | Accuracy | Balanced accuracy | PASS / REPAIR / BLOCK recall | Predictions | p50 / p95 | Thought / total tokens |
+| --- | ---: | ---: | ---: | --- | --- | --- | ---: |
+| unspecified | 10 | 50.00% | 66.67% | 100% / 100% / 0% | 4 PASS / 6 REPAIR | 1.31s / 1.90s | 0 / 10,281 |
+| medium | 9 | 55.56% | 66.67% | 100% / 100% / 0% | 4 PASS / 5 REPAIR | 2.27s / 5.70s | 2,592 / 11,458 |
+| high | 10 | 50.00% | 66.67% | 100% / 100% / 0% | 4 PASS / 6 REPAIR | 4.17s / 16.74s | 12,166 / 22,428 |
 
-The queued Semantic checkpoint uses all five non-BLOCK Gold cases plus five BLOCK
-cases selected for candidate-kind/domain/error coverage:
+All completed BLOCK Gold cases were conservatively predicted REPAIR rather than
+unsafe PASS, but none were classified as BLOCK. Normal PASS cases were not falsely
+blocked in this checkpoint. One medium unsupported-inference case returned valid JSON
+whose top level was not an object twice in succession. The evaluator now classifies
+the production normalizer exception as `schema_failure`, not API failure. This meets
+the repeated-schema-failure stop condition, so the 414-call Semantic expansion is
+withheld and the pending key is:
+`gemini-3.1-flash-lite|level:medium|semantic-aa57a5168dafb9f9-unsupported|0`.
 
-```powershell
-python -X utf8 tools/llm_eval.py --task SEMANTIC `
-  --fixtures tests/fixtures/gemini_reasoning/semantic_gold.json `
-  --model gemini-3.1-flash-lite `
-  --config unspecified --config level:medium --config level:high --repeat 1 `
-  --out .eval/semantic-checkpoint-30 --max-new-calls 30 `
-  --case-id semantic-fa4c10372e606d1e-aligned `
-  --case-id semantic-66d8933507f8bf75-perturbed `
-  --case-id saeul-separate-events --case-id saeul-unit-scope-3 `
-  --case-id saeul-project-scope-34 `
-  --case-id semantic-aa57a5168dafb9f9-unsupported `
-  --case-id semantic-f6b0a05f1c68e291-perturbed `
-  --case-id semantic-a641fc0911aae0b5-perturbed `
-  --case-id semantic-dfd27e3bcbe93166-perturbed `
-  --case-id semantic-dcb975d82d845013-perturbed
-```
-
-If both checkpoints are technically sound, the planned full runs are 225 Curation
-combinations (25 cases x 3 configs x 3 repeats) and 414 Semantic combinations
-(46 cases x 3 configs x 3 repeats). Successful checkpoint rows will be seeded rather
-than called again.
+Local sandbox socket denials from the first Curation attempt remain classified as
+environment failures and never count as completed calls. All live result paths are
+ignored local checkpoints; successful keys are durable and will not be called again.
 
 ## Profile decisions
 
@@ -299,9 +278,12 @@ than called again.
   final 41 high calls and targeted regressions.
 - Identity 3.5 profile (`issue_review`): 489/540 model-appropriate live results are
   durable; baseline retained while 51 combinations remain pending.
-- Curation and Semantic: sufficient initial Human Gold now exists, but live policy
-  comparison is quota-blocked; `IMPLEMENTED_BUT_NOT_ACTIVATED`. Fast semantic
-  blocking remains disabled.
+- Curation: Human Gold exists, but the completed diagnostic does not replay the
+  production generation contract; `BLOCKED_BY_API_OR_TECHNICAL_ISSUE` and baseline
+  unspecified retained.
+- Semantic: production-shaped checkpoint stopped at 29/30 after the same medium case
+  produced two schema failures; `BLOCKED_BY_API_OR_TECHNICAL_ISSUE`. Baseline remains
+  unspecified and Fast semantic blocking remains disabled.
 - Synthesis, narrative, planning, and extraction profiles: `HUMAN_LABEL_REQUIRED`;
   no classification-style accuracy claim and no assumption that high writes better.
 - Activated profiles: none.
@@ -311,12 +293,12 @@ Gold status is in `docs/2026-09-06-gemini-task-inventory.md`.
 
 ## Verification / PR checkpoint
 
-- Root Python with Gemini/Telegram disabled: 1,561 tests passed.
+- Root Python with Gemini/Telegram disabled: 1,562 tests passed.
 - Web Python with CI data gates skipped: 569 passed, 3 skipped.
 - Node syntax and date, weekly selector/sections, event calendar, trend state, admin
   gate/render contracts passed; real-browser admin DOM smoke passed.
 - Gold validator: 0 errors, 0 warnings. Latest focused Gold/evaluator/labeler suite:
-  35 passed.
+  36 passed.
 - Local Full Build: 83.7 seconds, 10,489 archive rows, 4,859 visible rows,
   525 issue details, 709 evidence attachments, 0 Gemini calls. It produced the known
   local degraded identity diagnostic (two quarantined clusters) because this isolated
@@ -325,8 +307,10 @@ Gold status is in `docs/2026-09-06-gemini-task-inventory.md`.
   `16a41a4` (evaluation/inventory), `b3fd90c` (Sol review workflow), and
   `5fc2233` (initial live checkpoint record). The Human review continuation adds
   `e29c92f` (Curation/Semantic canonical Gold) and `ea12318` (post-export and
-  resumable-evaluation hardening). The last pre-Gold PR head passed GitHub Actions;
-  the updated head must pass the same Root and front-end contract job before merge.
+  resumable-evaluation hardening). The latest continuation adds a production
+  Semantic evaluator-contract commit and a separate Curation/Semantic checkpoint
+  decision commit. The updated head must pass the same Root and front-end contract
+  job before merge.
 
 No Telegram send, deployment, production data mutation, or other external side effect
 is part of this branch.
