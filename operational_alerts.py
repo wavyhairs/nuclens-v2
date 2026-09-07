@@ -217,6 +217,8 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
         collection_observation_id: str = "",
         build_mode: str | None = None,
         identity_quarantined: int = 0,
+        audio_fast_outcome: str | None = None,
+        audio_expert_outcome: str | None = None,
         now: datetime | None = None) -> dict:
     """Process source health and today's quality events; never raises."""
     now = now or datetime.now(timezone.utc)
@@ -254,8 +256,11 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
     identity_signals = monitor.web_identity_signals(
         build_mode, quarantined_count=identity_quarantined,
         observation_id=pipeline_observation_id)
+    audio_signals = monitor.audio_pipeline_signals(
+        audio_fast_outcome, audio_expert_outcome,
+        observation_id=pipeline_observation_id)
     signals = (source_signals + quality_signals + pipeline_signals +
-               collection_signals + identity_signals)
+               collection_signals + identity_signals + audio_signals)
     scopes = set(quality_scopes)
     if source_processed:
         scopes.add("source")
@@ -270,6 +275,10 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
     # ok 로 돌아온 회차는 신호가 없으므로 앞선 degraded 사건이 여기서 해소된다.
     if build_mode is not None:
         scopes.add("web_identity")
+    # 오디오 outcome 을 넘겼다는 것은 그 회차에 오디오가 예정돼 있었고 판정이
+    # 끝났다는 뜻이다 — 둘 다 성공한 회차는 신호가 없으므로 앞선 누락이 해소된다.
+    if audio_fast_outcome is not None or audio_expert_outcome is not None:
+        scopes.add("audio_pipeline")
 
     alert_state, due = monitor.evaluate_alerts(
         signals, state.get("operational_alerts"), evaluated_scopes=scopes, now=now)
@@ -394,6 +403,14 @@ def main() -> int:
     # 같은 이유로 type=int 를 쓰지 않는다 — 빈 값 하나에 알림이 통째로 죽는다.
     parser.add_argument("--identity-quarantined", default="0",
                         help="fallback ID 로 격리된 이슈 클러스터 수")
+    # 오디오는 부가 기능이라 스텝이 실패를 삼킨다(`|| echo`). 그래서 step outcome
+    # 이 아니라 **스크립트별 종료 코드**를 워크플로가 직접 넘긴다 — 삼킨 실패를
+    # 알림까지 실어 나르는 유일한 경로다. choices 를 쓰지 않는 이유는 build-mode
+    # 와 같다: 오디오가 스킵된 회차의 빈 값에 알림 스텝이 통째로 죽으면 안 된다.
+    parser.add_argument("--audio-fast-outcome", default="",
+                        help="audio_brief.py 종료 결과 (success|failure, 미실행이면 빈 값)")
+    parser.add_argument("--audio-expert-outcome", default="",
+                        help="expert_audio_brief.py 종료 결과 (success|failure, 미실행이면 빈 값)")
     args = parser.parse_args()
     if args.check_admin_chat:
         return check_admin_chat()
@@ -415,6 +432,8 @@ def main() -> int:
             collection_observation_id=args.collection_observation_id,
             build_mode=(args.build_mode.strip() or None),
             identity_quarantined=_int_or_zero(args.identity_quarantined),
+            audio_fast_outcome=(args.audio_fast_outcome.strip() or None),
+            audio_expert_outcome=(args.audio_expert_outcome.strip() or None),
         )
     except Exception as exc:  # monitoring must never make collection/deploy red
         print(f"[ops-monitor] 예상하지 못한 실패(비치명): {type(exc).__name__}: {exc}")

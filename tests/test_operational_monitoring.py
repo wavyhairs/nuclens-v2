@@ -463,6 +463,46 @@ class WebPipelineSignalTests(unittest.TestCase):
             "success", observation_id="crawl:43"))
 
 
+class AudioPipelineSignalTests(unittest.TestCase):
+    """오디오 누락은 2026-09-08 까지 어떤 신호도 만들지 않았다.
+
+    스텝이 `|| echo` 로 실패를 삼켜 outcome 이 늘 success 였고 알림은 오디오를
+    보지도 않아서, 이틀 연속 누락이 GitHub UI 에 전부 ✓ 로 보였다.
+    """
+
+    def test_both_variants_missing_is_critical(self):
+        signals = monitor.audio_pipeline_signals(
+            "failure", "failure", observation_id="daily-brief:7")
+        self.assertEqual(1, len(signals))
+        self.assertEqual("quality:audio-brief-missing", signals[0].key)
+        self.assertEqual("critical", signals[0].severity)
+        self.assertEqual("daily-brief:7", signals[0].observation_id)
+
+    def test_one_variant_missing_is_a_warning(self):
+        signals = monitor.audio_pipeline_signals("success", "failure")
+        self.assertEqual(1, len(signals))
+        self.assertEqual("warning", signals[0].severity)
+        self.assertIn("전문가", signals[0].title)
+        self.assertNotIn("빠른", signals[0].title)
+
+    def test_both_successful_has_no_signal(self):
+        self.assertEqual([], monitor.audio_pipeline_signals("success", "success"))
+
+    def test_audio_is_attention_not_action(self):
+        """오디오는 부가 기능이다 — 텍스트 브리핑과 사이트는 정상으로 나간다."""
+        signals = monitor.audio_pipeline_signals("failure", "failure")
+        self.assertEqual(monitor.LEVEL_ATTENTION, signals[0].level)
+
+    def test_a_single_missed_day_alerts_immediately(self):
+        """하루 한 번뿐인 산출물이라 '두 번 연속'을 기다리면 이틀을 잃는다."""
+        signals = monitor.audio_pipeline_signals("failure", "failure")
+        self.assertEqual(1, signals[0].min_occurrences)
+
+    def test_unmeasured_run_is_not_a_failure(self):
+        """오디오가 예정되지 않은 회차(크롤 등)는 판정 대상이 아니다."""
+        self.assertEqual([], monitor.audio_pipeline_signals(None, None))
+
+
 class WebIdentityDegradedTests(unittest.TestCase):
     """degraded 는 step outcome 이 success 라 web_pipeline 신호로는 절대 안 나온다.
 

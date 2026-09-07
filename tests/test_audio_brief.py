@@ -908,5 +908,42 @@ class TTSRetryPolicyTest(unittest.TestCase):
         self.assertIn("503", str(ctx.exception))
 
 
+class AudioWorkflowWiringTest(unittest.TestCase):
+    """삼킨 실패가 알림까지 실려 나가는지 — 2026-09-08 누락의 두 겹 은폐 방지."""
+
+    def _daily(self) -> str:
+        return (ROOT / ".github" / "workflows" / "daily-brief.yml").read_text(
+            encoding="utf-8")
+
+    def test_audio_outcomes_reach_the_alert_step(self):
+        """스텝은 여전히 실패를 삼키지만(부가 기능), 판정은 밖으로 나가야 한다."""
+        yml = self._daily()
+        self.assertIn("--audio-fast-outcome", yml)
+        self.assertIn("--audio-expert-outcome", yml)
+        self.assertIn("steps.audio.outputs.fast", yml)
+        self.assertIn("steps.audio.outputs.expert", yml)
+
+    def test_each_script_records_its_own_verdict(self):
+        """빠른·전문가는 서로 실패에 독립적이다 — 한 값으로 뭉치면 못 가른다."""
+        yml = self._daily()
+        self.assertIn("run_audio audio audio_brief.py fast", yml)
+        self.assertIn("run_audio expert-audio expert_audio_brief.py expert", yml)
+        # 성공·실패 **양쪽**을 다 적어야 한다. 실패만 적으면 성공한 회차가
+        # '미측정'과 구별되지 않아 앞선 누락 알림이 영영 안 닫힌다.
+        self.assertIn('"${key}=success" >> "$GITHUB_OUTPUT"', yml)
+        self.assertIn('"${key}=failure" >> "$GITHUB_OUTPUT"', yml)
+
+    def test_recovery_sends_but_force_stays_silent(self):
+        """복구가 --no-send 를 타면 아무에게도 안 가는 mp3 를 만들고 성공했다고 믿는다."""
+        yml = self._daily()
+        step = yml.split("- name: Generate audio briefings", 1)[1].split("- name:", 1)[0]
+        recovery = step.index("inputs.audio_recovery")
+        force = step.index("inputs.force_audio")
+        # 복구 분기가 먼저 걸려야 둘 다 켠 실행에서 발송이 산다.
+        self.assertLess(recovery, force)
+        self.assertIn('audio_args="--force"', step)
+        self.assertIn('audio_args="--force --no-send"', step)
+
+
 if __name__ == "__main__":
     unittest.main()
