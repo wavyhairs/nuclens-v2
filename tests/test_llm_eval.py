@@ -1,4 +1,3 @@
-import json
 import unittest
 
 from tools import llm_eval
@@ -44,14 +43,31 @@ class EvalInfrastructureTests(unittest.TestCase):
         self.assertEqual(message, "A: A\nB: B")
 
     def test_semantic_message_cannot_leak_gold_or_candidate_focus(self):
-        message = json.loads(llm_eval.user_message("SEMANTIC", {
+        message = llm_eval.user_message("SEMANTIC", {
             "claim": "claim", "source_evidence": {"facts": ["fact"]},
+            "generated_context_not_source_evidence": {"summary": "context"},
             "human_label": "BLOCK", "human_error_types": ["FACT_ERROR"],
             "selection_metadata_not_gold": {"review_focus": "FACT_ERROR"},
             "candidate_kind": "controlled_perturbation",
-        }))
-        self.assertEqual(message, {"claim": "claim",
-                                   "source_evidence": {"facts": ["fact"]}})
+        })
+        self.assertIn('[Source Evidence]', message)
+        self.assertIn('"facts": [', message)
+        self.assertIn('[Non-evidence Context]', message)
+        self.assertIn('"summary": "context"', message)
+        self.assertIn('[Script]\nclaim', message)
+        self.assertNotIn('human_label', message)
+        self.assertNotIn('review_focus', message)
+
+    def test_semantic_call_uses_production_verifier_contract(self):
+        system, message, options = llm_eval.call_contract("SEMANTIC", {
+            "claim": "claim", "source_evidence": {"facts": ["fact"]},
+        })
+        self.assertEqual(system, llm_eval.semantic_verifier.SYSTEM_PROMPT)
+        self.assertEqual(message, llm_eval.semantic_verifier.verification_prompt(
+            {"facts": ["fact"]}, "claim", context=None))
+        self.assertEqual(options, {
+            "max_output_tokens": 6000, "timeout": 150, "retries": 2,
+        })
 
     def test_only_successful_keys_are_complete_and_latest_retry_wins(self):
         rows = [
@@ -114,10 +130,17 @@ class EvalInfrastructureTests(unittest.TestCase):
             llm_eval.validate_result("IDENTITY_REVIEW", {"verdict": "PASS"})
         with self.assertRaises(ValueError):
             llm_eval.validate_result(
-                "SEMANTIC", {"verdict": "PASS", "error_types": "FACT_ERROR"})
+                "SEMANTIC", {"verdict": "PASS", "passed": True,
+                             "findings": "FACT_ERROR"})
         with self.assertRaises(ValueError):
             llm_eval.validate_result(
-                "SEMANTIC", {"verdict": "BLOCK", "error_types": ["MADE_UP"]})
+                "SEMANTIC", {"verdict": "BLOCK", "passed": False,
+                             "findings": [{"type": "MADE_UP"}]})
+        self.assertEqual(llm_eval.validate_result(
+            "SEMANTIC", {"verdict": "BLOCK", "passed": False,
+                         "findings": [{"type": "FACT_ERROR", "line": "x",
+                                       "why": "y", "repair": "z"}]}),
+            ("BLOCK", ["FACT_ERROR"]))
 
 
 if __name__ == "__main__":

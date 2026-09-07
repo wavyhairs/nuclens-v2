@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import gemini_client
+import semantic_verifier
 
 SYSTEMS = {
     "IDENTITY_REVIEW": """두 제목이 같은 구체적 사건인지 판정한다. JSON만 출력한다.
@@ -89,9 +90,9 @@ def user_message(task: str, case: dict) -> str:
             raise ValueError(f"identity fixture {case.get('id')} has no pair titles")
         return f"A: {left}\nB: {right}"
     if task == "SEMANTIC":
-        return json.dumps({"claim": case.get("claim"),
-                           "source_evidence": case.get("source_evidence")},
-                          ensure_ascii=False, sort_keys=True)
+        return semantic_verifier.verification_prompt(
+            case.get("source_evidence"), case.get("claim") or "",
+            context=case.get("generated_context_not_source_evidence"))
     excluded = {
         "human_label", "expected_verdict", "gold", "label_status",
         "human_dimensions", "human_error_types", "human_notes", "reason_code",
@@ -104,6 +105,12 @@ def user_message(task: str, case: dict) -> str:
 
 def validate_result(task: str, result: object) -> tuple[str, list[str]]:
     """Validate the evaluator contract instead of treating parsed JSON as success."""
+    if task == "SEMANTIC":
+        try:
+            report = semantic_verifier.normalize_report(result)
+        except gemini_client.GeminiError as exc:
+            raise ValueError(str(exc)) from exc
+        return report["verdict"], [finding["type"] for finding in report["findings"]]
     if not isinstance(result, dict):
         raise ValueError("response must be a JSON object")
     verdict = result.get("verdict")
@@ -117,6 +124,17 @@ def validate_result(task: str, result: object) -> tuple[str, list[str]]:
             value not in ERROR_TYPES for value in error_types):
         raise ValueError(f"unknown error type for {task}: {error_types!r}")
     return verdict, error_types
+
+
+def call_contract(task: str, case: dict) -> tuple[str, str, dict]:
+    """Use the production verifier contract where the evaluated profile has one."""
+    if task == "SEMANTIC":
+        return (semantic_verifier.SYSTEM_PROMPT, user_message(task, case), {
+            "max_output_tokens": 6000, "timeout": 150, "retries": 2,
+        })
+    return SYSTEMS[task], user_message(task, case), {
+        "max_output_tokens": 4096, "timeout": 120, "retries": 1,
+    }
 
 
 def _percentile(values: list[float], fraction: float) -> float | None:
@@ -290,10 +308,10 @@ def main() -> int:
                    "gold": case["gold"]}
             detail: dict = {}
             try:
+                system_prompt, message, call_options = call_contract(args.task, case)
                 result = gemini_client.call_json(
-                    SYSTEMS[args.task], user_message(args.task, case),
-                    temperature=0.0, max_output_tokens=4096, timeout=120,
-                    retries=1, model=model, label=f"eval:{args.task}", **kwargs)
+                    system_prompt, message, temperature=0.0,
+                    model=model, label=f"eval:{args.task}", **call_options, **kwargs)
                 detail = (gemini_client._CALL_DETAIL[-1]
                           if len(gemini_client._CALL_DETAIL) > before else {})
                 prediction, error_types = validate_result(args.task, result)
