@@ -102,13 +102,51 @@ TRUNCATION_RATIO = 0.6
 # 다만 이 백오프로 그날이 구제되진 않았을 것이다(503 이 19:54~20:24, 30분 지속).
 # 짧은 스파이크를 건지는 값이고, 30분짜리 장애는 알림(operational_alerts)과
 # 복구 재실행이 받는다. 여기서 재시도를 무한정 늘리지 않는 이유이기도 하다.
-TTS_TRANSIENT_RETRIES = 3
+#
+# 2 인 이유(09-08 복구 실행 뒤 하향): 아래 실패 예산이 먼저 걸려서 세 번째
+# 사다리까지 가는 일이 거의 없다. 5초 한 번이면 짧은 스파이크는 잡히고,
+# 30분짜리 장애는 어차피 프로세스 안에서 못 건진다.
+TTS_TRANSIENT_RETRIES = 2
 TTS_BACKOFF_LADDER = (5.0, 15.0, 45.0)
 # 잡 전체가 쓸 수 있는 TTS 대기 시간 총량. 청크(6~8) × 청크재시도(2) × 모델(2) 로
 # 곱해지는 자리라 호출당 상한만으로는 안 되고 총량을 따로 묶는다 — 오디오가
 # 배포·채널 공개를 밀어내면 부가 기능이 본 기능을 잡아먹는 셈이 된다.
 TTS_BACKOFF_BUDGET_SEC = 300.0
 _tts_backoff_spent = 0.0
+
+# **시간이 아니라 요청 수로도 묶는다.** 시간 예산만으로는 요청 수에 제동이 안
+# 걸린다 — 3회 시도당 수면이 5+15=20초라 300초면 15회 시퀀스를 허용한다.
+#
+# 왜 요청 수가 중요한가: TTS 무료 티어의 한계는 RPD(하루 요청 수)이고,
+# **실패한 요청도 그 예산을 깎는 것으로 보인다.** 09-08 실측이 그 증거다 —
+# 아침 폭풍이 503 으로 13건을 태워 오디오는 하나도 못 만들었는데, 그날 저녁
+# 복구 실행의 전문가 브리핑이 7청크 중 4청크에서 PerDay 429 를 맞았다.
+#
+# 값을 3 으로 잡은 역산(모델당 한도 15 가정):
+#   정상 하루 = 빠른 2청크 + 전문가 7청크 = 9건 (09-05 실측)
+#   복구 1회분을 남기려면  15 − (F/2) ≥ 9  →  F ≤ 12
+#   아침에 도는 프로세스 4개(빠른·전문가 × 워크플로 재시도) → 프로세스당 3건
+# 이 상한은 재시도 도입 **이전의 최악값(12건)** 을 그대로 유지시킨다. 즉 이
+# 백오프가 폭풍일의 쿼터 소모를 늘리지 않는다.
+#
+# ⚠ 15 는 아직 추정이다. 429 본문의 실제 한도 수치를 표시 절단이 잘라먹어
+# 못 봤다(그래서 아래 _http_detail 을 넓혔다). 다음에 429 를 맞으면 로그에
+# 수치가 남으므로 그때 이 값을 재조정한다.
+TTS_FAILURE_BUDGET = 3
+_tts_failures = 0
+
+# 워크플로의 90초 재시도를 건너뛰게 하는 신호. 쿼터·실패예산으로 접은 회차는
+# 90초 뒤 다시 불러도 같은 벽에 부딪히면서 그날 남은 요청만 태운다 — 그리고
+# 그 요청이 바로 저녁 복구 실행이 써야 할 몫이다.
+#
+# 이 신호가 없으면 워크플로 재시도가 최악값을 통째로 2배로 만든다(실측 시뮬:
+# 상한만으로는 16건, 이 신호까지 있으면 8건 — 재시도 도입 이전 12건보다도 낮다).
+_tts_quota_exhausted = False
+
+
+def tts_quota_exhausted() -> bool:
+    """이 회차가 쿼터/예산 때문에 접혔는가 — 호출자가 재시도를 생략할 근거."""
+    return _tts_quota_exhausted
 
 _TTS_ENDPOINT = (
     "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -698,18 +736,43 @@ def _tts_ladder_wait(attempt: int) -> float:
     return TTS_BACKOFF_LADDER[min(attempt, len(TTS_BACKOFF_LADDER)) - 1]
 
 
+# 429 만 넓게 남긴다. 한도 수치와 quotaId 는 본문 **뒤쪽** details 에 실려 오는데,
+# 200 자로 자르면 "You exceeded your current quota" 라는 안내문만 남고 정작
+# 재조정에 필요한 숫자가 사라진다 (09-08: 그래서 실제 한도를 끝내 못 봤다).
+# 5xx 는 반대로 본문이 짧고 내용도 일정해서 넓힐 값어치가 없다 — 폭풍일에는
+# 같은 문장이 수십 번 찍히므로 로그만 부풀린다.
+_TTS_DETAIL_CHARS = {429: 1200}
+_TTS_DETAIL_DEFAULT = 200
+
+
+def _http_detail(code: int, body_text: str) -> str:
+    return body_text[:_TTS_DETAIL_CHARS.get(code, _TTS_DETAIL_DEFAULT)]
+
+
+def _tts_budget_left() -> bool:
+    """실패 예산이 남았는가. 다 썼으면 재시도를 접고 모델당 1회로 degrade 한다.
+
+    degrade 지점이 중요하다 — 예산을 넘겨도 **다음 모델 1회 시도는 계속한다.**
+    무료 티어 쿼터가 모델별 버킷이라 한쪽이 막혀도 다른 쪽은 살아 있을 수 있고,
+    여기서 통째로 포기하면 재시도 도입 이전보다 오히려 나빠진다.
+    """
+    return _tts_failures < TTS_FAILURE_BUDGET
+
+
 def _tts_retry_wait(code: int, body_text: str, model: str, attempt: int) -> float | None:
     """같은 모델로 되짚을 값어치가 있으면 대기 초, 아니면 None.
 
     gemini_client.call_json 의 판정을 그대로 따른다 — 같은 API 의 같은 오류를
     두 경로가 다르게 해석하면 사후 진단이 갈린다.
     """
+    global _tts_quota_exhausted
     if code == 429:
         if gemini_client._is_daily_quota(body_text):
             # 오늘 안 풀린다. 기다린 뒤 또 태우면 실패가 보장된 요청이 쿼터만
             # 배로 먹는다. 무료 티어는 모델별 버킷이라 다음 모델은 값어치가 있다.
             print(f"[audio] 일일 한도 판정 — {model} 재시도 없이 다음 모델 "
                   f"(표지 {gemini_client._daily_quota_marker(body_text)})")
+            _tts_quota_exhausted = True
             return None
         # 분당 한도는 서버가 요구한 값을 그대로 쓴다.
         return gemini_client._retry_delay_seconds(body_text) or _tts_ladder_wait(attempt)
@@ -743,6 +806,7 @@ def call_tts(script: str, models: list[str] | None = None) -> tuple[bytes, int]:
     한 모델 안에서 일시 오류(5xx·분당 429)는 백오프로 되짚고, 되짚어도 안 되면
     다음 모델로 넘어간다. 일일 한도만은 기다리지 않는다 — 오늘 안 풀린다.
     """
+    global _tts_failures, _tts_quota_exhausted
     last_err: Exception | None = None
     for model in (models or _tts_models()):
         url = _TTS_ENDPOINT.format(model=model)
@@ -770,7 +834,9 @@ def call_tts(script: str, models: list[str] | None = None) -> tuple[bytes, int]:
                 # 본문 뒤쪽 details 에 실려 오는데 예전엔 [:200] 로 자른 뒤라
                 # 일일/분당을 사후에 가를 수 없었다(gemini_client 의 같은 함정).
                 body_text = exc.read().decode("utf-8", errors="replace")
-                last_err = GeminiError(f"{model}: HTTP {exc.code} {body_text[:200]}")
+                _tts_failures += 1
+                last_err = GeminiError(
+                    f"{model}: HTTP {exc.code} {_http_detail(exc.code, body_text)}")
                 wait = _tts_retry_wait(exc.code, body_text, model, attempt)
                 reason = f"HTTP {exc.code}"
             except (urllib.error.URLError, TimeoutError, KeyError, IndexError,
@@ -778,9 +844,18 @@ def call_tts(script: str, models: list[str] | None = None) -> tuple[bytes, int]:
                 # 연결 실패와 응답 모양 붕괴(모델이 오디오 대신 텍스트를 냄)는
                 # 서버가 이유를 안 알려준다. 둘 다 표집이 흔들린 결과라 같은
                 # 사다리로 한 번 더 본다 — 예산이 위에서 묶여 있다.
+                _tts_failures += 1
                 last_err = GeminiError(f"{model}: {type(exc).__name__}: {exc}")
                 wait = _tts_ladder_wait(attempt)
                 reason = type(exc).__name__
+            # 실패 예산을 다 썼으면 되짚지 않는다. 실패한 요청도 RPD 를 깎으므로,
+            # 폭풍일에 재시도를 계속 태우면 그날 복구 실행분까지 먹어 치운다.
+            if wait is not None and not _tts_budget_left():
+                print(f"[audio] TTS 실패 예산 소진 "
+                      f"({_tts_failures}/{TTS_FAILURE_BUDGET}) — "
+                      f"{model} 재시도 중단, 남은 모델은 1회씩만 시도")
+                _tts_quota_exhausted = True
+                wait = None
             if (wait is None or attempt == TTS_TRANSIENT_RETRIES
                     or not _tts_backoff(wait, model, attempt, reason)):
                 print(f"[audio] {last_err} — 다음 모델 폴백")
@@ -1224,4 +1299,6 @@ if __name__ == "__main__":
         print(gemini_client.format_call_stats())
     except Exception as exc:  # 계측이 본 작업을 죽이면 안 된다
         print(f"[gemini] 호출 통계 실패: {exc}")
-    sys.exit(0 if ok else 1)
+    # 2 = TTS 쿼터·실패예산 소진. 워크플로가 이 코드를 보고 90초 재시도를
+    # 생략한다 — 같은 벽에 다시 부딪히며 저녁 복구 실행 몫까지 태우지 않도록.
+    sys.exit(0 if ok else (2 if tts_quota_exhausted() else 1))

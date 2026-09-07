@@ -821,15 +821,19 @@ class TTSRetryPolicyTest(unittest.TestCase):
 
     def setUp(self):
         self._orig = (audio_brief.urllib.request.urlopen, audio_brief.time.sleep,
-                      audio_brief._tts_backoff_spent)
+                      audio_brief._tts_backoff_spent, audio_brief._tts_failures,
+                      audio_brief._tts_quota_exhausted)
         self.slept = []
         audio_brief.time.sleep = self.slept.append
         audio_brief._tts_backoff_spent = 0.0
+        audio_brief._tts_failures = 0
+        audio_brief._tts_quota_exhausted = False
         self.addCleanup(self._restore)
 
     def _restore(self):
         (audio_brief.urllib.request.urlopen, audio_brief.time.sleep,
-         audio_brief._tts_backoff_spent) = self._orig
+         audio_brief._tts_backoff_spent, audio_brief._tts_failures,
+         audio_brief._tts_quota_exhausted) = self._orig
 
     @staticmethod
     def _http_error(code, body=""):
@@ -900,6 +904,68 @@ class TTSRetryPolicyTest(unittest.TestCase):
         self.assertEqual(self.slept, [])                    # 예산이 없어 안 잔다
         self.assertEqual(len(self.seen), 2)                 # 모델당 1회씩만
 
+    def test_failure_budget_stops_retrying_but_still_tries_next_model(self):
+        """실패한 요청도 RPD 를 깎는다 — 폭풍일에 재시도가 복구분까지 먹으면 안 된다.
+
+        예산을 넘겨도 **다음 모델 1회 시도는 남긴다.** 쿼터가 모델별 버킷이라
+        한쪽이 막혀도 다른 쪽은 살아 있을 수 있고, 통째로 포기하면 재시도 도입
+        이전보다 오히려 나빠진다.
+        """
+        audio_brief._tts_failures = audio_brief.TTS_FAILURE_BUDGET - 1
+        self._install([self._http_error(503, "high demand"),
+                       self._http_error(503, "high demand"), "ok"])
+        audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2", "m3"])
+        # 예산이 1건 남아 그 실패까지는 세지만, 그 뒤로는 되짚지 않는다.
+        self.assertEqual(self.slept, [])
+        self.assertEqual(len(self.seen), 3)          # 모델당 1회씩
+        self.assertIn("m3", self.seen[2])
+
+    def test_failed_requests_count_toward_the_budget(self):
+        self._install([self._http_error(503, "x"), "ok"])
+        audio_brief.call_tts("HOST: 안녕하세요", models=["m1"])
+        self.assertEqual(1, audio_brief._tts_failures)
+
+    def test_quota_body_is_logged_wide_enough_to_show_the_limit(self):
+        """한도 수치는 본문 뒤쪽 details 에 있다 — 200 자로 자르면 안내문만 남는다."""
+        body = ('{"error":{"code":429,"message":"' + "You exceeded your current quota. " * 6
+                + '","details":[{"violations":[{"quotaId":"GenerateRequestsPerDayPerProjectPerModel",'
+                  '"quotaValue":"15"}]}]}}')
+        self.assertGreater(len(body), 200)
+        self._install([self._http_error(429, body)] * 3)
+        with self.assertRaises(GeminiError) as ctx:
+            audio_brief.call_tts("HOST: 안녕하세요", models=["m1"])
+        self.assertIn("quotaValue", str(ctx.exception))
+        self.assertIn("15", str(ctx.exception))
+
+    def test_non_quota_errors_stay_narrow_in_the_log(self):
+        """5xx 는 본문이 짧고 일정하다 — 폭풍일에 같은 문장으로 로그만 부풀린다."""
+        body = "x" * 900
+        self._install([self._http_error(503, body)] * 3)
+        with self.assertRaises(GeminiError) as ctx:
+            audio_brief.call_tts("HOST: 안녕하세요", models=["m1"])
+        self.assertLess(len(str(ctx.exception)), 400)
+
+    def test_daily_quota_marks_the_run_for_retry_skip(self):
+        """쿼터로 접힌 회차는 워크플로 재시도를 생략해야 한다 — 종료 코드 2 의 근거."""
+        body = '{"error":{"details":[{"violations":[{"quotaId":"RequestsPerDay"}]}]}}'
+        self._install([self._http_error(429, body)] * 2)
+        with self.assertRaises(GeminiError):
+            audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2"])
+        self.assertTrue(audio_brief.tts_quota_exhausted())
+
+    def test_budget_exhaustion_marks_the_run_for_retry_skip(self):
+        audio_brief._tts_failures = audio_brief.TTS_FAILURE_BUDGET - 1
+        self._install([self._http_error(503, "x")] * 4)
+        with self.assertRaises(GeminiError):
+            audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2"])
+        self.assertTrue(audio_brief.tts_quota_exhausted())
+
+    def test_a_recoverable_failure_does_not_mark_retry_skip(self):
+        """일시 오류로 끝난 회차는 90초 뒤 재시도가 여전히 값어치가 있다."""
+        self._install([self._http_error(503, "x"), "ok"])
+        audio_brief.call_tts("HOST: 안녕하세요", models=["m1"])
+        self.assertFalse(audio_brief.tts_quota_exhausted())
+
     def test_all_models_exhausted_raises_last_error(self):
         self._install([self._http_error(503, "a"), self._http_error(503, "b")])
         audio_brief._tts_backoff_spent = audio_brief.TTS_BACKOFF_BUDGET_SEC
@@ -932,6 +998,15 @@ class AudioWorkflowWiringTest(unittest.TestCase):
         # '미측정'과 구별되지 않아 앞선 누락 알림이 영영 안 닫힌다.
         self.assertIn('"${key}=success" >> "$GITHUB_OUTPUT"', yml)
         self.assertIn('"${key}=failure" >> "$GITHUB_OUTPUT"', yml)
+
+    def test_quota_exhaustion_skips_the_workflow_retry(self):
+        """폭풍일에 90초 재시도를 그대로 두면 최악값이 2배가 되고, 그 몫이
+        저녁 복구 실행이 써야 할 요청이다 (시뮬 실측 16건 → 8건)."""
+        yml = self._daily()
+        step = yml.split("- name: Generate audio briefings", 1)[1].split("- name:", 1)[0]
+        self.assertIn('if [ "$rc" = "2" ]', step)
+        # 재시도 생략 분기가 90초 sleep 보다 **앞**에 있어야 실제로 건너뛴다.
+        self.assertLess(step.index('"$rc" = "2"'), step.index("sleep 90"))
 
     def test_recovery_sends_but_force_stays_silent(self):
         """복구가 --no-send 를 타면 아무에게도 안 가는 mp3 를 만들고 성공했다고 믿는다."""

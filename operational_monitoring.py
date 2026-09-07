@@ -923,13 +923,29 @@ def audio_pipeline_signals(fast_outcome: str | None, expert_outcome: str | None,
         return []
     both = len(missing) == 2
     names = "·".join(missing)
+    delivered = [label for label, outcome in
+                 (("빠른", fast_outcome), ("전문가", expert_outcome))
+                 if outcome is not None and not failed(outcome)]
+    # 한쪽만 실패한 날의 영향은 정반대다. 성공한 쪽이 웹 매니페스트의 날짜를
+    # 오늘로 올리는데(audio_brief._write_audio_variant), 날짜가 바뀌면 전날
+    # variant 메타를 통째로 버린다 — 실패한 쪽은 **지난 날짜 음성까지 함께**
+    # 목록에서 사라진다. 09-08 실측: 빠른이 성공하자 09-06 전문가 항목이 같이
+    # 지워져 사이트에 전문가 브리핑이 하나도 남지 않았다. 여기에 "직전 음성이
+    # 남는다"고 쓰면 운영자가 영향을 정반대로 판단한다.
+    if delivered:
+        impact = (f"텍스트 브리핑과 사이트는 정상입니다. 다만 오늘 만들어진 "
+                  f"{'·'.join(delivered)} 브리핑이 웹 플레이어를 오늘 날짜로 넘기면서, "
+                  f"{names} 브리핑은 지난 날짜 음성까지 목록에서 사라집니다 — "
+                  f"지금 사이트에 {names} 브리핑이 하나도 없습니다.")
+    else:
+        impact = ("텍스트 브리핑과 사이트는 정상입니다. 오디오만 빠지며, 웹 "
+                  "플레이어에는 직전에 성공한 날짜의 음성이 그대로 남습니다.")
     return [AlertSignal(
         key="quality:audio-brief-missing", scope="audio_pipeline",
         severity="critical" if both else "warning", level=LEVEL_ATTENTION,
         title=f"{names} 오디오 브리핑이 생성되지 않았습니다",
         detail=f"오늘 {names} 브리핑 음성이 만들어지지 않아 구독 채널에 나가지 않았습니다.",
-        impact=("텍스트 브리핑과 사이트는 정상입니다. 오디오만 빠지며, 웹 플레이어에는 "
-                "직전에 성공한 날짜의 음성이 그대로 남습니다."),
+        impact=impact,
         action=("복구하려면 아침 브리핑 워크플로를 '빠진 오디오 재발송' 옵션으로 다시 "
                 "실행해 주세요. 음성 생성 서버가 일시적으로 붐빈 경우라면 시간을 두고 "
                 "실행하면 대개 풀립니다."),

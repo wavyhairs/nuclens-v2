@@ -496,14 +496,25 @@ jobs:
           # 끝나서 스텝 outcome 이 항상 success 였고, 알림 스텝도 오디오를 안 봐서
           # 이틀 연속 오디오 누락(09-07 일일 한도 / 09-08 TTS 503)이 GitHub UI 에는
           # 전부 ✓ 로 보였다. 비치명 계약은 그대로 두고 판정만 밖으로 내보낸다.
+          # 종료 코드 2 는 TTS 쿼터·실패예산 소진이다. 그때는 90초 재시도를
+          # 건너뛴다 — 같은 벽에 다시 부딪히면서 그날 남은 요청만 태우는데, 그
+          # 요청이 바로 저녁 복구 실행(audio_recovery)이 써야 할 몫이다.
+          # 실측 시뮬레이션(폭풍일 최악): 재시도를 그대로 두면 16건, 여기서
+          # 생략하면 8건 — 재시도 도입 이전(12건)보다도 적게 든다.
           run_audio() {
             label="$1"; script="$2"; key="$3"
-            if python "$script" $audio_args; then
+            rc=0; python "$script" $audio_args || rc=$?
+            if [ "$rc" = "0" ]; then
               echo "${key}=success" >> "$GITHUB_OUTPUT"; return 0
+            fi
+            if [ "$rc" = "2" ]; then
+              echo "[${label}] TTS 예산 소진 — 재시도 생략 (남은 요청은 복구 실행 몫)"
+              echo "${key}=failure" >> "$GITHUB_OUTPUT"; return 0
             fi
             echo "[${label}] 1차 실패 — 90초 뒤 1회 재시도"
             sleep 90
-            if python "$script" $audio_args; then
+            rc=0; python "$script" $audio_args || rc=$?
+            if [ "$rc" = "0" ]; then
               echo "${key}=success" >> "$GITHUB_OUTPUT"; return 0
             fi
             echo "[${label}] 재시도도 실패 — 비치명, 계속"

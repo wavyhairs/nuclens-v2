@@ -26,6 +26,7 @@ from datetime import datetime
 from pathlib import Path
 
 import article_quality_gate
+import audio_brief          # 모듈째로도 잡는다 — 종료 코드 판정이 모듈 전역(쿼터 소진 표시)을 읽는다
 import gemini_client
 import llm_policy
 import semantic_verifier
@@ -1716,4 +1717,6 @@ if __name__ == "__main__":
         print(gemini_client.format_call_stats())
     except Exception as exc:  # 계측이 본 작업을 죽이면 안 된다
         print(f"[gemini] 호출 통계 실패: {exc}")
-    sys.exit(0 if ok else 1)
+    # 2 = TTS 쿼터·실패예산 소진 (audio_brief 와 같은 계약). 전문가 대본은
+    # 청크가 6~8개라 재시도 한 번이 그날 예산에서 빠지는 몫이 특히 크다.
+    sys.exit(0 if ok else (2 if audio_brief.tts_quota_exhausted() else 1))

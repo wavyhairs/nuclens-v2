@@ -498,6 +498,28 @@ class AudioPipelineSignalTests(unittest.TestCase):
         signals = monitor.audio_pipeline_signals("failure", "failure")
         self.assertEqual(1, signals[0].min_occurrences)
 
+    def test_partial_failure_says_the_variant_disappears(self):
+        """한쪽만 실패하면 영향이 정반대다 — 성공한 쪽이 날짜를 올리며 옛 항목을 지운다.
+
+        09-08 실측: 빠른이 성공하자 09-06 전문가 항목이 같이 지워져 사이트에
+        전문가 브리핑이 하나도 남지 않았다. 여기에 '직전 음성이 남는다'고 쓰면
+        운영자가 서비스 영향을 정반대로 판단한다.
+        """
+        signal = monitor.audio_pipeline_signals("success", "failure")[0]
+        self.assertIn("사라집니다", signal.impact)
+        self.assertNotIn("그대로 남습니다", signal.impact)
+
+    def test_total_failure_says_the_old_audio_remains(self):
+        """양쪽 다 실패하면 날짜 롤오버 자체가 없어 옛 음원이 보존된다."""
+        signal = monitor.audio_pipeline_signals("failure", "failure")[0]
+        self.assertIn("그대로 남습니다", signal.impact)
+        self.assertNotIn("사라집니다", signal.impact)
+
+    def test_partner_not_measured_keeps_the_remains_wording(self):
+        """상대가 아예 안 돌았으면 날짜가 안 올라간다 — 지워질 것도 없다."""
+        signal = monitor.audio_pipeline_signals(None, "failure")[0]
+        self.assertIn("그대로 남습니다", signal.impact)
+
     def test_unmeasured_run_is_not_a_failure(self):
         """오디오가 예정되지 않은 회차(크롤 등)는 판정 대상이 아니다."""
         self.assertEqual([], monitor.audio_pipeline_signals(None, None))
