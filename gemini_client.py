@@ -429,6 +429,8 @@ def call_json(
     thinking_level: str | None = None,
     model: str | None = None,
     label: str = "unlabeled",
+    response_json_schema: dict | None = None,
+    capture_response_text: bool = False,
 ) -> dict:
     """system+user 한 쌍을 Gemini에 보내고 JSON 객체로 파싱해 반환.
 
@@ -466,6 +468,8 @@ def call_json(
     }
     if temperature is not None:
         generation_config["temperature"] = temperature
+    if response_json_schema is not None:
+        generation_config["responseJsonSchema"] = response_json_schema
     resolved_model = model or MODEL
     if thinking_level is not None:
         generation_config["thinkingConfig"] = {"thinkingLevel": thinking_level}
@@ -539,6 +543,11 @@ def call_json(
                 if _finish_reason(payload) == "MAX_TOKENS":
                     raise GeminiTruncated(_truncation_detail(payload)) from e
                 raise GeminiError(f"응답 구조 비정상: {payload}") from e
+            if capture_response_text:
+                # Evaluation diagnostics only. Production callers leave this off;
+                # a bounded copy is enough to distinguish JSON shape/fence/text
+                # failures without retaining an unbounded model response.
+                detail["raw_response_text"] = str(text)[:8000]
             try:
                 result = json.loads(text)
                 _record_detail(**detail)
@@ -555,6 +564,7 @@ def call_json(
                     # 무료 티어 한도만 4배로 태운다.
                     if _finish_reason(payload) == "MAX_TOKENS":
                         raise GeminiTruncated(_truncation_detail(payload)) from None
+                    _record_detail(**detail)
                     raise
         except GeminiTruncated:
             detail["truncated"] = True

@@ -28,9 +28,29 @@ class SemanticVerifierContractTests(unittest.TestCase):
 
     def test_missing_compact_verdict_fields_fail_closed(self):
         for report in ({"passed": True, "findings": []},
-                       {"verdict": "PASS", "findings": []}):
+                       {"verdict": "PASS", "findings": []},
+                       {"verdict": "PASS", "passed": True}):
             with self.subTest(report=report), self.assertRaises(gemini_client.GeminiError):
                 semantic_verifier.normalize_report(report)
+
+    def test_non_boolean_passed_fails_closed(self):
+        with self.assertRaises(gemini_client.GeminiError):
+            semantic_verifier.normalize_report(
+                {"verdict": "PASS", "passed": "true", "findings": []})
+
+    def test_verify_sends_the_machine_readable_schema(self):
+        class Client:
+            def __init__(self):
+                self.kwargs = None
+
+            def call_json(self, _system, _message, **kwargs):
+                self.kwargs = kwargs
+                return {"verdict": "PASS", "passed": True, "findings": []}
+
+        client = Client()
+        semantic_verifier.verify([], "HOST: claim", client=client)
+        self.assertEqual(client.kwargs["response_json_schema"],
+                         semantic_verifier.OUTPUT_JSON_SCHEMA)
 
     def test_later_cause_cannot_explain_earlier_effect(self):
         finding = semantic_verifier.chronology_finding(
@@ -90,6 +110,21 @@ class SemanticVerifierContractTests(unittest.TestCase):
         self.assertTrue(report["passed"])
         self.assertEqual([row["label"] for row in client.calls],
                          ["fast_verify", "fast_semantic_repair", "fast_verify"])
+
+    def test_block_and_repair_both_require_intervention_in_fast_and_expert(self):
+        for verdict in ("BLOCK", "REPAIR"):
+            with self.subTest(verdict=verdict):
+                report = {
+                    "verdict": verdict, "passed": False,
+                    "findings": [{"type": "FACT_ERROR", "line": "x",
+                                  "why": "unsupported", "repair": "remove"}],
+                    "coverage_score": 100, "factual_support_score": 100,
+                    "stage_precision_score": 100, "expert_depth_score": 100,
+                    "single_speaker_score": 100,
+                    "unsupported_critical_claims": [],
+                }
+                self.assertFalse(semantic_verifier.normalize_report(report)["passed"])
+                self.assertFalse(expert_audio_brief.verification_passed(report))
 
     def test_generated_latest_change_is_not_evidence(self):
         contracts = audio_brief.evidence_contracts(

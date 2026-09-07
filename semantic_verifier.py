@@ -25,6 +25,31 @@ ERROR_TYPES = frozenset({
 })
 VERDICTS = frozenset({"PASS", "REPAIR", "UNVERIFIABLE", "BLOCK"})
 
+# JSON Schema sent to Gemini in addition to the textual contract.  The parser
+# below remains authoritative and rejects malformed values; the schema reduces
+# shape drift, it does not create a permissive fallback.
+OUTPUT_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "verdict": {"type": "string", "enum": sorted(VERDICTS)},
+        "passed": {"type": "boolean"},
+        "findings": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "type": {"type": "string", "enum": sorted(ERROR_TYPES)},
+                    "line": {"type": "string"},
+                    "why": {"type": "string"},
+                    "repair": {"type": "string"},
+                },
+                "required": ["type", "line", "why", "repair"],
+            },
+        },
+    },
+    "required": ["verdict", "passed", "findings"],
+}
+
 SYSTEM_PROMPT = """당신은 오디오 대본의 독립 semantic verifier입니다.
 오직 Source Evidence에 있는 사실만 근거로 사용하십시오. dossier, implication,
 why_important, 이전 대본, 이전 verifier 결과는 generated interpretation이며 사실
@@ -56,12 +81,14 @@ def verification_prompt(source_evidence: object, script: str, *, context: object
 def normalize_report(report: object) -> dict:
     if not isinstance(report, dict):
         raise gemini_client.GeminiError("semantic verdict가 JSON object가 아님")
-    if "verdict" not in report or "passed" not in report:
+    if not all(key in report for key in ("verdict", "passed", "findings")):
         raise gemini_client.GeminiError("semantic verdict 필수 필드가 빠짐")
+    if not isinstance(report.get("passed"), bool):
+        raise gemini_client.GeminiError("semantic passed가 boolean이 아님")
     verdict = str(report.get("verdict") or "")
     if verdict not in VERDICTS:
         raise gemini_client.GeminiError(f"semantic verdict 값이 잘못됨: {verdict}")
-    findings = report.get("findings") or []
+    findings = report.get("findings")
     if not isinstance(findings, list):
         raise gemini_client.GeminiError("semantic findings가 list가 아님")
     cleaned = []
@@ -70,7 +97,7 @@ def normalize_report(report: object) -> dict:
             raise gemini_client.GeminiError("semantic finding error type이 잘못됨")
         cleaned.append({key: str(finding.get(key) or "")[:500]
                         for key in ("type", "line", "why", "repair")})
-    passed = verdict == "PASS" and bool(report.get("passed", True)) and not cleaned
+    passed = verdict == "PASS" and report["passed"] and not cleaned
     return {"verdict": verdict, "passed": passed, "findings": cleaned}
 
 
@@ -80,7 +107,8 @@ def verify(source_evidence: object, script: str, *, label: str = "fast_verify",
     result = client.call_json(
         SYSTEM_PROMPT, verification_prompt(source_evidence, script, context=context),
         temperature=0.0, max_output_tokens=6000, timeout=150.0, retries=2,
-        model=policy.model(), label=label, **policy.reasoning_kwargs())
+        model=policy.model(), label=label,
+        response_json_schema=OUTPUT_JSON_SCHEMA, **policy.reasoning_kwargs())
     return normalize_report(result)
 
 

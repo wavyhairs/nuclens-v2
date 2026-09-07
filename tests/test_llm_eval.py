@@ -7,6 +7,9 @@ class EvalInfrastructureTests(unittest.TestCase):
     def test_key_includes_all_resume_dimensions(self):
         self.assertEqual(llm_eval.result_key("m", "level:high", "f", 2),
                          "m|level:high|f|2")
+        self.assertEqual(llm_eval.result_key(
+            "m", "level:high", "f", 2, "schema-v2"),
+            "schema-v2|m|level:high|f|2")
 
     def test_configs_never_silently_downgrade(self):
         self.assertEqual(llm_eval.config_kwargs("none"), {})
@@ -67,7 +70,13 @@ class EvalInfrastructureTests(unittest.TestCase):
             {"facts": ["fact"]}, "claim", context=None))
         self.assertEqual(options, {
             "max_output_tokens": 6000, "timeout": 150, "retries": 2,
+            "response_json_schema": llm_eval.semantic_verifier.OUTPUT_JSON_SCHEMA,
+            "capture_response_text": True,
         })
+
+    def test_curation_short_judge_contract_is_disabled(self):
+        with self.assertRaisesRegex(ValueError, "Human labels"):
+            llm_eval.call_contract("CURATION", {"id": "x"})
 
     def test_only_successful_keys_are_complete_and_latest_retry_wins(self):
         rows = [
@@ -141,6 +150,25 @@ class EvalInfrastructureTests(unittest.TestCase):
                          "findings": [{"type": "FACT_ERROR", "line": "x",
                                        "why": "y", "repair": "z"}]}),
             ("BLOCK", ["FACT_ERROR"]))
+
+    def test_semantic_safety_and_severity_metrics_are_separate(self):
+        rows = [
+            {"status": "ok", "model": "m", "config": "none", "fixture_id": "a",
+             "gold": "BLOCK", "prediction": "REPAIR", "latency_seconds": 1},
+            {"status": "ok", "model": "m", "config": "none", "fixture_id": "b",
+             "gold": "BLOCK", "prediction": "PASS", "latency_seconds": 1},
+            {"status": "ok", "model": "m", "config": "none", "fixture_id": "c",
+             "gold": "REPAIR", "prediction": "BLOCK", "latency_seconds": 1},
+            {"status": "ok", "model": "m", "config": "none", "fixture_id": "d",
+             "gold": "PASS", "prediction": "REPAIR", "latency_seconds": 1},
+        ]
+        metrics = llm_eval.summarize(rows, "SEMANTIC")
+        self.assertEqual(metrics["unsafe_pass"], 1)
+        self.assertAlmostEqual(metrics["safe_intervention_rate"], 2 / 3)
+        self.assertEqual(metrics["block_recall"], 0.0)
+        self.assertEqual(metrics["block_as_repair"], 1)
+        self.assertEqual(metrics["repair_as_block"], 1)
+        self.assertEqual(metrics["pass_false_repair"], 1)
 
 
 if __name__ == "__main__":

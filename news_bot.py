@@ -2014,6 +2014,112 @@ def append_open_question_stats(verdicts: dict[str, dict],
     return True
 
 
+def build_curation_batch_request(
+        articles: list[dict], reports_kb: list[dict],
+        bodies: dict[str, str] | None = None,
+        error_notes: dict[str, list[str]] | None = None) -> tuple[str, str]:
+    """Build the exact request used by the production curation call.
+
+    The reasoning evaluator imports this seam instead of maintaining a shorter
+    judge prompt.  Keeping request construction here also makes it impossible
+    for an evaluator-only prompt to drift away from production unnoticed.
+    """
+    blocks = []
+    for i, art in enumerate(articles):
+        official = " (OFFICIAL)" if is_tier1_source(art) else ""
+        lines = [f"[{i}|{art['hash'][:8]}]{official} {art['title'][:150]}",
+                 f"요약: {(art.get('description') or '')[:200]}",
+                 f"출처: {art.get('publisher') or art.get('domain','')}"]
+        body = (bodies or {}).get(art.get("hash", ""))
+        if body:
+            lines.append(f"본문: {body}")
+        relevant = find_relevant_reports(
+            art["title"], art.get("description", ""), reports_kb)
+        if relevant:
+            titles = " / ".join(r.get("title", "")[:40] for r in relevant[:2])
+            lines.append(f"관련보고서: {titles}")
+        if error_notes and art["hash"] in error_notes:
+            lines.append("이전 출력 오류: " + ", ".join(error_notes[art["hash"]]))
+        blocks.append("\n".join(lines))
+    regeneration = (
+        "\n\n[재생성] 이전 출력의 오류가 표시된 항목입니다. 사실·시제를 유지하면서 "
+        "제한 안에서 완결형 문장으로 전부 다시 작성하세요."
+        if error_notes else ""
+    )
+    return CURATION_SYSTEM_PROMPT + BATCH_SUFFIX + regeneration, "\n\n---\n\n".join(blocks)
+
+
+def normalize_curation_response_item(
+        item: dict, article: dict, body: str = "") -> tuple[dict, list[str], object]:
+    """Run one model item through production normalization and integrity gates."""
+    normalized = normalize_curation_item(item, article, body)
+    integrity = audit_curation_integrity(article, normalized, body)
+    normalized = integrity.value
+    errors = curation_errors(normalized, require_features=True)
+    if not integrity.eligible:
+        codes = [finding.code for finding in integrity.findings]
+        errors.append("integrity:" + ",".join(codes or ["mismatch"]))
+    if not errors:
+        normalized["curation_status"] = "reviewed"
+        normalized["curation_source"] = "gemini"
+    return normalized, errors, integrity
+
+
+def parse_curation_batch_response(
+        result: object, articles: list[dict], bodies: dict[str, str] | None = None,
+        item_observer=None) -> tuple[dict[str, dict], dict[str, list[str]]]:
+    """Parse and gate a production-shaped curation batch response.
+
+    ``item_observer`` is telemetry-only: it receives the raw item, its matched
+    article, and the normalized value, and cannot change acceptance.
+    """
+    if not isinstance(result, dict) or not isinstance(result.get("items"), list):
+        return {}, {art["hash"]: ["response:items_missing"] for art in articles}
+
+    tags = {art["hash"][:8]: art for art in articles}
+    valid: dict[str, dict] = {}
+    failures: dict[str, list[str]] = {}
+    seen_hashes: set[str] = set()
+    tagless_multi_response = False
+    for item in result["items"]:
+        if not isinstance(item, dict):
+            continue
+        tag = str(item.get("id") or "").strip()
+        if tag:
+            art = tags.get(tag)
+            if art is None:
+                continue
+        else:
+            if len(articles) != 1:
+                tagless_multi_response = True
+                continue
+            idx = item.get("idx")
+            if not isinstance(idx, int) or not (0 <= idx < len(articles)):
+                continue
+            art = articles[idx]
+        if art["hash"] in seen_hashes:
+            failures[art["hash"]] = ["response:duplicate_idx"]
+            valid.pop(art["hash"], None)
+            continue
+        seen_hashes.add(art["hash"])
+        normalized, errors, _integrity = normalize_curation_response_item(
+            item, art, (bodies or {}).get(art.get("hash", "")) or "")
+        if item_observer is not None:
+            item_observer(item, art, normalized)
+        if errors:
+            failures[art["hash"]] = errors
+        else:
+            valid[art["hash"]] = normalized
+
+    for art in articles:
+        if art["hash"] not in seen_hashes:
+            failures[art["hash"]] = [
+                "response:id_missing" if tagless_multi_response
+                else "response:idx_missing"
+            ]
+    return valid, failures
+
+
 def curate_batch(articles: list[dict], reports_kb: list[dict],
                  bodies: dict[str, str] | None = None) -> dict[str, dict]:
     """새 기사 목록을 chunk 단위 배치 호출로 큐레이션. {hash: cur_dict} 반환.
@@ -2032,46 +2138,23 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
         print("  ! GEMINI_API_KEY 없음 → batch 큐레이션 건너뜀 (전건 fallback)")
         return {}
 
-    system_prompt = CURATION_SYSTEM_PROMPT + BATCH_SUFFIX
     # 재생성 후에도 원문과 다른 사건을 가리킨 항목만 남긴다. 첫 출력의 일시적
     # 오류는 여기 들어와도 재생성에서 정상화되면 관리자 경고 대상이 아니다.
     final_integrity_quarantines: dict[str, dict] = {}
 
     def run_chunk(chunk: list[dict], error_notes: dict[str, list[str]] | None = None):
-        blocks = []
         # 위치가 아니라 **표식**으로 되찾는다. 실측(2026-08-07): 8건을 넣었더니
         # 모델이 한 건(로컬 소식 묶음)을 빼고 **남은 것의 idx 를 다시 매겨서**
         # 2~6번의 요약이 통째로 옆 기사에 붙었다. idx 만 믿으면 이 사고를
         # 검출할 수 없다 — 마지막 idx 하나만 '누락'으로 잡히고 나머지는 조용히
         # 잘못된 짝으로 저장된다. 잘못된 짝은 빈 요약보다 나쁘다.
-        tags = {art["hash"][:8]: art for art in chunk}
-        for i, art in enumerate(chunk):
-            official = " (OFFICIAL)" if is_tier1_source(art) else ""
-            lines = [f"[{i}|{art['hash'][:8]}]{official} {art['title'][:150]}",
-                     f"요약: {(art.get('description') or '')[:200]}",
-                     f"출처: {art.get('publisher') or art.get('domain','')}"]
-            # 원문 본문. 있으면 이것이 판단 근거이고, 없으면 예전 그대로 돈다.
-            # 저장하지 않고 이 프롬프트에서만 쓴다(저작권 판단 유지).
-            body = (bodies or {}).get(art.get("hash", ""))
-            if body:
-                lines.append(f"본문: {body}")
-            relevant = find_relevant_reports(art["title"], art.get("description", ""), reports_kb)
-            if relevant:
-                titles = " / ".join(r.get("title", "")[:40] for r in relevant[:2])
-                lines.append(f"관련보고서: {titles}")
-            if error_notes and art["hash"] in error_notes:
-                lines.append("이전 출력 오류: " + ", ".join(error_notes[art["hash"]]))
-            blocks.append("\n".join(lines))
+        system_prompt, user_message = build_curation_batch_request(
+            chunk, reports_kb, bodies=bodies, error_notes=error_notes)
 
         try:
             policy = llm_policy.profile("curation")
             result = gemini_call_json(
-                system_prompt + (
-                    "\n\n[재생성] 이전 출력의 오류가 표시된 항목입니다. 사실·시제를 유지하면서 "
-                    "제한 안에서 완결형 문장으로 전부 다시 작성하세요."
-                    if error_notes else ""
-                ),
-                "\n\n---\n\n".join(blocks),
+                system_prompt, user_message,
                 temperature=0.2, max_output_tokens=BATCH_MAX_OUTPUT_TOKENS, timeout=150.0,
                 model=policy.model(),
                 # 재생성인지 최초 호출인지를 갈라서 센다. 429 가 분당 한도였는데
@@ -2085,49 +2168,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
             return {}, {art["hash"]: [f"request:{classify_request_failure(e)}:{e}"]
                         for art in chunk}
 
-        items = result.get("items")
-        if not isinstance(items, list):
-            return {}, {art["hash"]: ["response:items_missing"] for art in chunk}
-
-        valid: dict[str, dict] = {}
-        failures: dict[str, list[str]] = {}
-        seen_hashes: set[str] = set()
-        tagless_multi_response = False
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            # 표식이 있으면 그것이 정답이다. idx 는 모델이 항목을 빼면서 다시
-            # 매길 수 있고(실측), 그때 idx 로 짝을 지으면 남의 요약을 저장한다.
-            # **표식이 있는데 이 chunk 에 없는 값이면 버린다** — 분할 재시도에서
-            # 남의 chunk 표식이 넘어오는 일이 있고, 그때 idx 로 물러나면 정확히
-            # 막으려던 그 사고(엉뚱한 짝)가 뒷문으로 들어온다.
-            tag = str(item.get("id") or "").strip()
-            if tag:
-                art = tags.get(tag)
-                if art is None:
-                    continue
-            else:
-                # 여러 기사 응답에서 위치(idx)는 신원이 아니다. 모델이 한 항목을
-                # 생략한 뒤 번호를 다시 매긴 실사고가 있어, id 없는 다건 응답을
-                # 위치로 붙이면 제목과 요약이 조용히 뒤섞인다. 단건 호출만 idx=0
-                # 호환을 유지한다(재생성·분할 호출과 옛 테스트 응답 지원).
-                if len(chunk) != 1:
-                    tagless_multi_response = True
-                    continue
-                idx = item.get("idx")
-                if not isinstance(idx, int) or not (0 <= idx < len(chunk)):
-                    continue
-                art = chunk[idx]
-            if art["hash"] in seen_hashes:
-                failures[art["hash"]] = ["response:duplicate_idx"]
-                valid.pop(art["hash"], None)
-                continue
-            seen_hashes.add(art["hash"])
-            normalized = normalize_curation_item(
-                item, art, (bodies or {}).get(art.get("hash", "")) or "")
-            integrity = audit_curation_integrity(
-                art, normalized, (bodies or {}).get(art.get("hash", "")) or "")
-            normalized = integrity.value
+        def observe_item(item: dict, art: dict, normalized: dict) -> None:
             # open_question 게이트 계측. hash 로 덮어쓰므로 분할 재시도가 같은 기사를
             # 두 번 세지 않는다(마지막 판정이 남는다). 판정 자체는 바꾸지 않는다.
             if normalized.get("importance") == "must_read":
@@ -2138,29 +2179,8 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                     "text": clean_text(item.get("open_question")),
                     "source": (item.get("open_question_source") or "").strip().lower(),
                 }
-            # ★ 결손을 막는 실효 지점. 프롬프트가 features 를 요구하므로 빠진 응답은
-            # 재생성 대상이다. 여기서 안 잡으면 결손인 채 캐시·큐에 들어가고, 큐에
-            # 들어간 기사는 sent 로 마킹돼 다시 수집되지 않으므로 고칠 기회가 없다.
-            # 그 상태로 남으면 ranking 이 _legacy_score() 를 타 event_weights 도
-            # feature 가중치도 반영되지 않는다. 근거: docs/AS_IS.md §2.
-            errors = curation_errors(normalized, require_features=True)
-            if not integrity.eligible:
-                codes = [finding.code for finding in integrity.findings]
-                errors.append("integrity:" + ",".join(codes or ["mismatch"]))
-            if errors:
-                failures[art["hash"]] = errors
-            else:
-                normalized["curation_status"] = "reviewed"
-                normalized["curation_source"] = "gemini"
-                valid[art["hash"]] = normalized
-
-        for art in chunk:
-            if art["hash"] not in seen_hashes:
-                failures[art["hash"]] = [
-                    "response:id_missing" if tagless_multi_response
-                    else "response:idx_missing"
-                ]
-        return valid, failures
+        return parse_curation_batch_response(
+            result, chunk, bodies=bodies, item_observer=observe_item)
 
     out: dict[str, dict] = {}
     lost: dict[str, str] = {}          # hash → 최종 실패 사유 (유실 기록용)

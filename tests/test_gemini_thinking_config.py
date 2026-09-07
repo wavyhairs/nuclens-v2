@@ -82,6 +82,36 @@ class TestKnownUnsupportedModelOmitsThinkingConfigUpfront(unittest.TestCase):
         gc.reset_call_log()
 
 
+class TestStructuredOutputDiagnostics(unittest.TestCase):
+    def tearDown(self):
+        gc.reset_call_log()
+
+    def test_json_schema_is_opt_in_and_sent_unchanged(self):
+        captured: list = []
+        schema = {"type": "object", "required": ["ok"],
+                  "properties": {"ok": {"type": "boolean"}}}
+        with patch.object(gc, "API_KEY", "test-key"), \
+                patch.object(gc.urllib.request, "urlopen",
+                             _capturing_success_urlopen(captured)):
+            gc.call_json("system", "user", response_json_schema=schema)
+        self.assertEqual(
+            captured[0]["generationConfig"]["responseJsonSchema"], schema)
+
+    def test_raw_response_capture_is_bounded_and_explicit(self):
+        gc.reset_call_log()
+        with patch.object(gc, "API_KEY", "test-key"), \
+                patch.object(gc.urllib.request, "urlopen",
+                             _capturing_success_urlopen([])):
+            gc.call_json("system", "user", capture_response_text=True)
+        self.assertEqual(gc._CALL_DETAIL[-1]["raw_response_text"], '{"ok": true}')
+        gc.reset_call_log()
+        with patch.object(gc, "API_KEY", "test-key"), \
+                patch.object(gc.urllib.request, "urlopen",
+                             _capturing_success_urlopen([])):
+            gc.call_json("system", "user")
+        self.assertNotIn("raw_response_text", gc._CALL_DETAIL[-1])
+
+
 class TestSupportedModelKeepsThinkingConfig(unittest.TestCase):
     """gemini-3.1-flash-lite 등 지원 모델의 기존 동작은 바뀌면 안 된다."""
 

@@ -15,6 +15,11 @@ sys.path.insert(0, str(ROOT))
 import gemini_client
 import semantic_verifier
 
+EVALUATOR_POLICY = {
+    "CURATION": "production-replay-v1",
+    "SEMANTIC": "production-fast-schema-v2",
+}
+
 SYSTEMS = {
     "IDENTITY_REVIEW": """두 제목이 같은 구체적 사건인지 판정한다. JSON만 출력한다.
 {"verdict":"MERGE|SEPARATE|AMBIGUOUS","reason_code":"..."}""",
@@ -39,8 +44,10 @@ ERROR_TYPES = {
 }
 
 
-def result_key(model: str, config: str, fixture_id: str, repeat: int) -> str:
-    return f"{model}|{config}|{fixture_id}|{repeat}"
+def result_key(model: str, config: str, fixture_id: str, repeat: int,
+               policy: str | None = None) -> str:
+    base = f"{model}|{config}|{fixture_id}|{repeat}"
+    return f"{policy}|{base}" if policy else base
 
 
 def completed_keys(rows: list[dict]) -> set[str]:
@@ -131,7 +138,13 @@ def call_contract(task: str, case: dict) -> tuple[str, str, dict]:
     if task == "SEMANTIC":
         return (semantic_verifier.SYSTEM_PROMPT, user_message(task, case), {
             "max_output_tokens": 6000, "timeout": 150, "retries": 2,
+            "response_json_schema": semantic_verifier.OUTPUT_JSON_SCHEMA,
+            "capture_response_text": True,
         })
+    if task == "CURATION":
+        raise ValueError(
+            "Curation labels apply to current_output; use tools/curation_replay.py "
+            "and obtain Human labels for replay outputs")
     return SYSTEMS[task], user_message(task, case), {
         "max_output_tokens": 4096, "timeout": 120, "retries": 1,
     }
@@ -154,7 +167,34 @@ def failure_type(row: dict) -> str | None:
     return kind
 
 
-def _metric_block(rows: list[dict]) -> dict:
+def _semantic_safety_metrics(completed: list[dict]) -> dict:
+    unsafe_gold = {"BLOCK", "REPAIR", "UNVERIFIABLE"}
+    intervention_gold = [row for row in completed if row.get("gold") in unsafe_gold]
+    block_gold = [row for row in completed if row.get("gold") == "BLOCK"]
+    pass_gold = [row for row in completed if row.get("gold") == "PASS"]
+    unsafe_pass = sum(row.get("prediction") == "PASS" for row in intervention_gold)
+    return {
+        "unsafe_pass": unsafe_pass,
+        "unsafe_pass_rate": (unsafe_pass / len(intervention_gold)
+                             if intervention_gold else None),
+        "safe_intervention_rate": (
+            sum(row.get("prediction") != "PASS" for row in intervention_gold)
+            / len(intervention_gold) if intervention_gold else None),
+        "block_recall": (
+            sum(row.get("prediction") == "BLOCK" for row in block_gold)
+            / len(block_gold) if block_gold else None),
+        "block_as_repair": sum(row.get("prediction") == "REPAIR" for row in block_gold),
+        "repair_as_block": sum(row.get("gold") == "REPAIR"
+                               and row.get("prediction") == "BLOCK"
+                               for row in completed),
+        "pass_false_block": sum(row.get("prediction") == "BLOCK" for row in pass_gold),
+        "pass_false_repair": sum(row.get("prediction") == "REPAIR" for row in pass_gold),
+        "pass_false_intervention": sum(
+            row.get("prediction") != "PASS" for row in pass_gold),
+    }
+
+
+def _metric_block(rows: list[dict], task: str | None = None) -> dict:
     completed = [row for row in rows if row.get("status") == "ok"]
     latency = [float(row["latency_seconds"]) for row in completed]
     gold_labels = sorted({str(row.get("gold")) for row in completed
@@ -186,7 +226,7 @@ def _metric_block(rows: list[dict]) -> dict:
         grouped.setdefault(key, []).append(str(row.get("prediction")))
     repeat_groups = [values for values in grouped.values() if len(values) >= 2]
     consistent = sum(len(set(values)) == 1 for values in repeat_groups)
-    return {
+    metrics = {
         "completed": len(completed),
         "correct": sum(row.get("gold") == row.get("prediction") for row in completed),
         "accuracy": (sum(row.get("gold") == row.get("prediction")
@@ -219,17 +259,21 @@ def _metric_block(rows: list[dict]) -> dict:
                     if all("retry_count" in row for row in completed) else None),
         "token_telemetry_rows": sum("total_tokens" in row for row in completed),
     }
+    if task == "SEMANTIC":
+        metrics.update(_semantic_safety_metrics(completed))
+    return metrics
 
 
-def summarize(rows: list[dict]) -> dict:
+def summarize(rows: list[dict], task: str | None = None) -> dict:
     completed = [row for row in rows if row.get("status") == "ok"]
     error_counts: dict[str, int] = {}
     for row in completed:
         for error_type in row.get("error_types") or []:
             error_counts[error_type] = error_counts.get(error_type, 0) + 1
-    metrics = _metric_block(rows)
+    metrics = _metric_block(rows, task)
     configs = {
-        config: _metric_block([row for row in rows if row.get("config") == config])
+        config: _metric_block(
+            [row for row in rows if row.get("config") == config], task)
         for config in sorted({str(row.get("config")) for row in rows})
     }
     return {
@@ -264,6 +308,10 @@ def main() -> int:
     args = parser.parse_args()
     if args.max_new_calls < 0:
         parser.error("--max-new-calls must be >= 0")
+    if args.task == "CURATION":
+        parser.error(
+            "the legacy Curation judge is invalidated; audit production replay "
+            "readiness with tools/curation_replay.py")
     if args.max_new_calls and not gemini_client.is_available():
         parser.error("GEMINI_API_KEY is required for live evaluation")
     cases = labelled_cases(json.loads(args.fixtures.read_text(encoding="utf-8")))
@@ -286,7 +334,7 @@ def main() -> int:
     done = completed_keys(rows)
     planned = [
         (model, config, case, repeat,
-         result_key(model, config, case["id"], repeat))
+         result_key(model, config, case["id"], repeat, EVALUATOR_POLICY.get(args.task)))
         for model in models
         for config in configs
         for case in cases
@@ -350,6 +398,15 @@ def main() -> int:
                 detail = gemini_client._CALL_DETAIL[-1]
             row.setdefault("retry_count", detail.get("retry_count") or 0)
             row.setdefault("requested_thinking", detail.get("requested_thinking"))
+            if row.get("status") == "failed" and detail:
+                row.setdefault("finish_reason", detail.get("finish_reason"))
+                row.setdefault("truncated", bool(detail.get("truncated")))
+                row.setdefault("thought_tokens", detail.get("thought_tokens") or 0)
+                row.setdefault("prompt_tokens", detail.get("prompt_tokens") or 0)
+                row.setdefault("candidate_tokens", detail.get("candidate_tokens") or 0)
+                row.setdefault("total_tokens", detail.get("total_tokens") or 0)
+                if detail.get("raw_response_text") is not None:
+                    row["raw_response_text"] = detail["raw_response_text"]
             stream.write(json.dumps(row, ensure_ascii=False) + "\n")
             stream.flush()
             rows.append(row)
@@ -358,13 +415,14 @@ def main() -> int:
             new_attempted += 1
             if quota_stopped or environment_stopped:
                 break
-    summary = summarize(latest_results(rows))
+    summary = summarize(latest_results(rows), args.task)
     summary.update({
         "planned_combinations": len(planned),
         "completed_keys_before_run": len(planned) - len(pending_before),
         "new_calls_attempted": new_attempted,
         "pending_combinations": sum(job[4] not in done for job in planned),
         "checkpoint_call_limit": args.max_new_calls,
+        "evaluator_policy": EVALUATOR_POLICY.get(args.task, "legacy"),
         "quota_state": "STOPPED_ON_QUOTA" if quota_stopped else "NOT_HIT",
         "environment_state": ("STOPPED_ON_ENVIRONMENT_FAILURE"
                               if environment_stopped else "AVAILABLE"),
