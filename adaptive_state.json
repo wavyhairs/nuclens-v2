@@ -28,6 +28,14 @@
       "type": "company",
       "until": "2026-09-09T16:20:45.746050+00:00"
     },
+    "pmdc": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-09-07T00:40:30.090471+00:00",
+      "term": "PMDC",
+      "type": "company",
+      "until": "2026-09-21T00:40:30.090471+00:00"
+    },
     "sfr": {
       "new_articles": 72,
       "reason": "질의 횟수 소진",
@@ -166,57 +174,10 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 4,
     "date": "2026-09-07"
   },
   "terms": {
-    "pmdc": {
-      "articles": 4,
-      "created_at": "2026-09-06T12:39:56.672479+00:00",
-      "domains": [
-        "chosun.com",
-        "hankookilbo.com",
-        "khan.co.kr",
-        "donga.com"
-      ],
-      "evidence": [
-        {
-          "domain": "chosun.com",
-          "hash": "454d5cf509d501eb",
-          "importance": "nice_to_know",
-          "title": "LG유플러스, GS건설 등과 사전제작형 모듈러 데이터센터 표준모델 개발 협력"
-        },
-        {
-          "domain": "hankookilbo.com",
-          "hash": "4dd19a926ac0ced8",
-          "importance": "nice_to_know",
-          "title": "GS건설·LG유플러스, AI 데이터센터용 모듈러 표준 모델 공동 개발"
-        },
-        {
-          "domain": "khan.co.kr",
-          "hash": "ecae4cf8cd31b4c6",
-          "importance": "nice_to_know",
-          "title": "GS건설 등 5개사, 모듈러 데이터센터(PMDC) 개발 협력"
-        }
-      ],
-      "expires_at": "2026-09-07T12:39:56.672479+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-09-06T18:40:22.409918+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-09-06T18:40:21.504921+00:00",
-      "queries_run": 2,
-      "query": "PMDC 원자력",
-      "score": 3.18,
-      "status": "tracking",
-      "term": "PMDC",
-      "ttl_hours": 24,
-      "type": "company",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
     "대통령이지자흐": {
       "articles": 1,
       "created_at": "2026-09-06T21:50:56.257101+00:00",
