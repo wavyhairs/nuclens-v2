@@ -314,3 +314,77 @@ Gold status is in `docs/2026-09-06-gemini-task-inventory.md`.
 
 No Telegram send, deployment, production data mutation, or other external side effect
 is part of this branch.
+
+## 2026-09-08 evaluator correction and quota-safe continuation
+
+This continuation invalidates the old Curation checkpoint for policy selection while
+preserving its files unchanged.  The prior 30 rows are now
+`INVALIDATED_BY_EVALUATOR_CHANGE`: they used a short judge prompt against
+`current_output`, whereas production `curation` generates that output.  Production
+request construction and response matching/normalization/integrity gates are now
+shared with `tools/curation_replay.py`.  Offline PASS/REPAIR/BLOCK characterization
+confirms that Human labels, prior model judgments, and `current_output` never enter
+the replay request.
+
+The fixture cannot yet support a valid live Curation replay.  All 40 candidates lack
+the historical production description/body; the 25 existing Human labels judge the
+stored `current_output`, not a newly generated output.  Therefore replay-ready cases
+are 0/40 and the state is `HUMAN_LABEL_REQUIRED`.  No Curation live call was made.
+Future candidates must preserve production source input, generate isolated outputs,
+and receive separate `replay_human_label` values before a reasoning comparison.
+
+Semantic BLOCK and REPAIR have separate exact-verdict severity but the same current
+downstream safety action.  Fast sends either through mandatory repair, deterministic
+re-audit, and semantic re-verification; Expert also repairs/re-verifies either and
+fails the build if the final report does not pass.  On the preserved 29 successful
+checkpoint rows, exact accuracy is 51.72%, balanced accuracy is 66.67%, exact BLOCK
+recall is 0%, and every one of 14 BLOCK observations was classified REPAIR.  Safety
+metrics tell the complementary story: unsafe PASS 0, safe intervention 100%, and
+PASS false intervention 0.  These rows validate the Fast-style safety taxonomy only;
+they do not validate Expert's richer score/critical-claim contract.
+
+The repeated medium failure was reproduced once with raw response capture and no
+retry.  It was not a fence, text prefix, truncation, or token exhaustion: finish reason
+was `STOP`, and the valid JSON response was a one-element array containing the expected
+REPAIR/UNSUPPORTED_INFERENCE object.  A machine-readable top-level object schema was
+then added without a fallback or downgrade.  The same model/config/case passed 3/3
+bounded post-schema probes, each returning object JSON with REPAIR, no truncation,
+no retry, and no unsafe PASS.  Local durable probe state is
+`.eval/semantic-schema-probe/`; both old checkpoint and new policy-version keys remain
+separate.
+
+The extra quota safety condition prohibited full evaluations in this continuation.
+New live calls were exactly 4, all on `gemini-3.1-flash-lite`: one pre-schema
+reproduction and three post-schema confirmations.  Curation, Identity, and every
+other model used 0 new calls.  A new 30-call Semantic checkpoint and every full run
+remain deferred.
+
+Identity production replay was audited offline only.  Profile-specific adapters now
+reuse the production request builders and parsers for `issue_review`, `keei_match`,
+`dedup`, `dedup_final`, and the legacy cluster dedup path without reading or writing
+production caches.  The existing 60 relation labels remain valid Human judgments,
+but the fixture is not an exact snapshot for any individual production profile:
+issue-review story fingerprints/candidate context, KEEI role-specific pairs, and
+dedup article/batch context are missing.  Existing successful Identity task-level
+calls remain preserved and are not replayed.  Profile replay-ready count is 0/60 for
+each adapter, so Identity live checkpoint is explicitly left to a later run.
+
+Production reasoning remains unspecified for every profile.  Fast semantic blocking
+remains disabled, no profile is activated, and no production cache/data, Telegram,
+deployment, or external delivery path was touched.
+
+After the next explicit live-evaluation window, Semantic can start a new versioned
+checkpoint (never the old result key namespace) only if quota policy permits.  Identity
+must first capture profile-specific production inputs; its live checkpoint must not
+reuse the generic pair judge as a profile replay.
+
+Offline verification after these changes: focused Curation/Semantic/Gemini suites
+passed 221 tests (91 subtests), focused Identity production paths passed 76 tests
+(7 subtests), and the complete pytest run with the deploy/CI data-gate setting passed
+2,144 tests with 3 skips (212 subtests).  The exact root GitHub Actions unittest job
+and all eight Node/front-end contract scripts also passed.  Gold validation remains
+0 errors / 0 warnings with Identity 60, Curation 25, and Semantic 46 Human labels;
+no fixture or `llm_policy` production setting changed.  A separate local run with
+the non-blocking live-data gate enabled had one expected data-distribution failure
+(`weekly totals [50,48,112,160,131,149,143]`); this is unrelated to the evaluator
+change and is explicitly skipped by deploy-web CI, so it was not patched here.
