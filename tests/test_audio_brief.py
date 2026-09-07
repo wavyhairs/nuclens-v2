@@ -6,6 +6,7 @@
   ③ 같은 날짜 재실행은 Gemini 를 다시 부르지 않는다 (무료 티어 보호).
   ④ 실패는 종료 코드로 나간다 — 비치명 처리는 호출자(워크플로) 몫이다.
 """
+import io
 import json
 import os
 import subprocess
@@ -807,6 +808,104 @@ class ExitCodeContractTests(unittest.TestCase):
 
     def test_no_api_key_exits_nonzero(self):
         self.assertEqual(self._run({}), 1)
+
+
+class TTSRetryPolicyTest(unittest.TestCase):
+    """call_tts 의 429/5xx 정책 — gemini_client.call_json 과 같은 판정을 쓴다.
+
+    2026-09-08 실사고 회귀: 503 UNAVAILABLE("high demand ... try again later")에
+    재시도가 한 번도 안 나가 빠른·전문가 4번의 시도가 전부 같은 초에 죽었다.
+    반대로 일일 한도(RPD)에 백오프를 걸면 실패가 보장된 요청이 쿼터만 배로 먹는다
+    — 두 갈래를 본문 표지로 가르는 것이 이 스위트의 계약이다.
+    """
+
+    def setUp(self):
+        self._orig = (audio_brief.urllib.request.urlopen, audio_brief.time.sleep,
+                      audio_brief._tts_backoff_spent)
+        self.slept = []
+        audio_brief.time.sleep = self.slept.append
+        audio_brief._tts_backoff_spent = 0.0
+        self.addCleanup(self._restore)
+
+    def _restore(self):
+        (audio_brief.urllib.request.urlopen, audio_brief.time.sleep,
+         audio_brief._tts_backoff_spent) = self._orig
+
+    @staticmethod
+    def _http_error(code, body=""):
+        return audio_brief.urllib.error.HTTPError(
+            "https://x", code, "err", {}, io.BytesIO(body.encode("utf-8")))
+
+    @staticmethod
+    def _ok_response():
+        payload = {"candidates": [{"content": {"parts": [{"inlineData": {
+            "mimeType": "audio/L16;rate=24000",
+            "data": audio_brief.base64.b64encode(b"" * 100).decode(),
+        }}]}}]}
+        stream = io.BytesIO(json.dumps(payload).encode("utf-8"))
+        stream.__enter__ = lambda self=stream: self
+        stream.__exit__ = lambda *a: False
+        return stream
+
+    def _install(self, outcomes):
+        """outcomes: 호출 순서대로 Exception 이면 raise, "ok" 면 정상 응답."""
+        self.seen = []
+
+        def fake_urlopen(request, timeout=None):
+            self.seen.append(request.full_url)
+            outcome = outcomes.pop(0)
+            if isinstance(outcome, Exception):
+                raise outcome
+            return self._ok_response()
+
+        audio_brief.urllib.request.urlopen = fake_urlopen
+
+    def test_503_retries_same_model_then_succeeds(self):
+        """서버가 '잠시 뒤 다시'라고 말한 응답에는 실제로 다시 보낸다."""
+        self._install([self._http_error(503, "high demand"), "ok"])
+        pcm, rate = audio_brief.call_tts("HOST: 안녕하세요", models=["m1"])
+        self.assertEqual(rate, 24000)
+        self.assertTrue(pcm)
+        self.assertEqual(len(self.seen), 2)                 # 같은 모델로 재시도
+        self.assertEqual(self.slept, [audio_brief.TTS_BACKOFF_LADDER[0]])
+
+    def test_daily_quota_skips_backoff_and_falls_to_next_model(self):
+        """일일 한도는 기다려도 오늘 안 풀린다 — 자지 않고 다음 모델로."""
+        body = '{"error":{"details":[{"violations":[{"quotaId":"GenerateRequestsPerDayPerProjectPerModel"}]}]}}'
+        self._install([self._http_error(429, body), "ok"])
+        audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2"])
+        self.assertEqual(self.slept, [])                    # 백오프 없음
+        self.assertIn("m2", self.seen[1])                   # 곧장 다음 모델
+
+    def test_per_minute_quota_uses_server_delay(self):
+        """분당 한도는 서버가 알려준 값을 쓴다 — 고정 사다리는 이르게 재시도한다."""
+        self._install([self._http_error(429, "Please retry in 42.3s."), "ok"])
+        audio_brief.call_tts("HOST: 안녕하세요", models=["m1"])
+        self.assertEqual(len(self.slept), 1)
+        self.assertAlmostEqual(self.slept[0], 43.3, places=1)   # 42.3 + 버퍼 1.0
+
+    def test_400_is_not_retried(self):
+        """같은 요청에 같은 답이 오는 실패는 재시도 신호가 아니다."""
+        self._install([self._http_error(400, "invalid"), "ok"])
+        audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2"])
+        self.assertEqual(self.slept, [])
+        self.assertIn("m2", self.seen[1])
+
+    def test_backoff_budget_caps_total_sleeping(self):
+        """청크 × 청크재시도 × 모델 로 곱해지는 자리라 총량을 묶는다."""
+        audio_brief._tts_backoff_spent = audio_brief.TTS_BACKOFF_BUDGET_SEC - 1
+        self._install([self._http_error(503, "high demand")] * 4)
+        with self.assertRaises(GeminiError):
+            audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2"])
+        self.assertEqual(self.slept, [])                    # 예산이 없어 안 잔다
+        self.assertEqual(len(self.seen), 2)                 # 모델당 1회씩만
+
+    def test_all_models_exhausted_raises_last_error(self):
+        self._install([self._http_error(503, "a"), self._http_error(503, "b")])
+        audio_brief._tts_backoff_spent = audio_brief.TTS_BACKOFF_BUDGET_SEC
+        with self.assertRaises(GeminiError) as ctx:
+            audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2"])
+        self.assertIn("503", str(ctx.exception))
 
 
 if __name__ == "__main__":
