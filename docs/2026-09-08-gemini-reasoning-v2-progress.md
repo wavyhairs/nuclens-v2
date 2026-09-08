@@ -94,7 +94,8 @@
       우회한 호출이 없다) + repo 파일 변경 0 이다. 앞서 적은 '증가 0' 은 offline
       **capture 검증**에는 맞고 replay 에는 맞지 않았다.
 - [ ] profile별 `REPLAY_FIDELITY_PROVEN` / `NOT_PROVEN` 판정 기록 — **실데이터 대기**
-- [ ] 입력 재구성기: 캡처 시각의 기사 목록/점수를 복원 (판정으로 정확성이 검증된다)
+- [x] 입력 재구성기 `tools/replay_inputs.py` + provenance 판정 (1311a11)
+- [ ] dedup/issue_review 재구성기 (curation 과 달리 입력 출처가 다르다)
 - [ ] 자연 데이터 축적 대기 (7~14일) — 이 항목은 시간 대기이며 HALT 아님
 
 ### P3 — Independent Gold (API 0)
@@ -118,6 +119,24 @@
 - [ ] 입력 분포 동등성 검사 (veto 전용)
 - [ ] contract fingerprint 결합 활성화
 - [ ] 자동 머지 금지 — PR 준비까지만
+
+## 4-A. 재구성 순환 경계 (P2 — 반드시 유지)
+
+`description` 과 `body` 는 **저장소 어디에도 없다**(archive/curated/digest_queue 확인).
+body 는 저작권 판단으로 저장하지 않고, description 은 큐레이션 뒤 summary 로 대체된다.
+따라서 이 둘은 캡처된 프롬프트가 유일한 출처이고, 그 부분에 대한 요청 일치는 순환이다.
+
+| 필드 | 출처 | 요청 일치가 검증인가 |
+|---|---|---|
+| `title`, `publisher`, `domain`, `hash` | archive / curated | **예** |
+| batch 구성, 호출 순서, 재생성 여부 | orchestration | **예** |
+| `description`, `body` | 캡처된 프롬프트 | **아니오 (순환)** |
+
+`replay_inputs.independence()` 가 이 구분을 판정에 싣는다. 최종 보고서에서
+이 경계를 지우고 PROVEN 만 인용하면 안 된다.
+
+P4 reasoning 비교에서는 순환이 문제가 아니다 — 프롬프트에서 뜯은 값은 production 이
+실제로 보낸 것과 바이트가 같아 "입력 고정, config 만 변경"에 오히려 정확하다.
 
 ## 4-0. P1 결과 (확정)
 
@@ -180,4 +199,5 @@
 | 2026-09-09 | P0.5 | 이음매 리팩터링 + `frozen_requests.json` 으로 바이트 중립성 증명. 전체 1579 passed | `ca39d89` |
 | 2026-09-09 | P2 | capture 훅 + workflow 배선(기본 꺼짐). 전체 1597 passed | `0cb60ff`, `a007a4d` |
 | 2026-09-09 | P2 | replay 하네스 + 왕복/부정 테스트. 고장 3종 주입으로 검사기 유효성 확인. 전체 1607 passed | `3d4e285` |
+| 2026-09-09 | P2 | curation 입력 재구성기 + provenance. description/body 가 저장소에 없음을 확인하고 순환 경계를 명시. 전체 1617 passed | `1311a11` |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
