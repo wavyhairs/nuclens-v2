@@ -93,9 +93,12 @@
       는 늘어난다. 옳은 불변식은 `call_log_delta == replayed_calls` (transport 를
       우회한 호출이 없다) + repo 파일 변경 0 이다. 앞서 적은 '증가 0' 은 offline
       **capture 검증**에는 맞고 replay 에는 맞지 않았다.
-- [ ] profile별 `REPLAY_FIDELITY_PROVEN` / `NOT_PROVEN` 판정 기록 — **실데이터 대기**
+- [ ] profile별 판정 실행 — **실데이터 대기**. 도구는 준비 완료:
+      `python tools/fidelity_gate.py --capture <llm_capture.jsonl>`
 - [x] 입력 재구성기 `tools/replay_inputs.py` + provenance 판정 (1311a11)
-- [ ] dedup/issue_review 재구성기 (curation 과 달리 입력 출처가 다르다)
+- [x] dedup 재구성기 (6b9019a) — 15개 필드 중 13개가 저장소 복원 가능
+- [x] fidelity gate `tools/fidelity_gate.py` — 캡처 → profile 판정 (다음 커밋)
+- [ ] issue_review 재구성기 — **이번 범위 제외**(사양 §5: 후순위)
 - [ ] 자연 데이터 축적 대기 (7~14일) — 이 항목은 시간 대기이며 HALT 아님
 
 ### P3 — Independent Gold (API 0)
@@ -200,4 +203,5 @@ P4 reasoning 비교에서는 순환이 문제가 아니다 — 프롬프트에�
 | 2026-09-09 | P2 | capture 훅 + workflow 배선(기본 꺼짐). 전체 1597 passed | `0cb60ff`, `a007a4d` |
 | 2026-09-09 | P2 | replay 하네스 + 왕복/부정 테스트. 고장 3종 주입으로 검사기 유효성 확인. 전체 1607 passed | `3d4e285` |
 | 2026-09-09 | P2 | curation 입력 재구성기 + provenance. description/body 가 저장소에 없음을 확인하고 순환 경계를 명시. 전체 1617 passed | `1311a11` |
+| 2026-09-09 | P2 | dedup 재구성기(13/15 저장소 복원) + fidelity gate. 전체 1630 passed | `6b9019a`, 다음 |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
