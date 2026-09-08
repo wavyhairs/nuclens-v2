@@ -1,0 +1,191 @@
+{
+  "baseline_probe_version": 1,
+  "callsites": {
+    "audio_brief": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature"
+      ],
+      "max_output_tokens": 8192,
+      "model": "gemini-3.5-flash-lite",
+      "observed_baseline_thinking": "absent",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "bb95e567914da5e2",
+      "temperature": 0.4,
+      "thinking_config": null
+    },
+    "curation": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature"
+      ],
+      "max_output_tokens": 32768,
+      "model": "gemini-3.1-flash-lite",
+      "observed_baseline_thinking": "absent",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "34c73f57342f9d14",
+      "temperature": 0.2,
+      "thinking_config": null
+    },
+    "dedup": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature"
+      ],
+      "max_output_tokens": 6144,
+      "model": "gemini-3.1-flash-lite",
+      "observed_baseline_thinking": "absent",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "ad8efbdb3532daa4",
+      "temperature": 0.05,
+      "thinking_config": null
+    },
+    "dedup_final": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature"
+      ],
+      "max_output_tokens": 6144,
+      "model": "gemini-3.1-flash-lite",
+      "observed_baseline_thinking": "absent",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "5b93bd0cd292019a",
+      "temperature": 0.05,
+      "thinking_config": null
+    },
+    "expert_dossiers": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature",
+        "thinkingConfig"
+      ],
+      "max_output_tokens": 8192,
+      "model": "gemini-3.1-flash-lite",
+      "observed_baseline_thinking": "budget:0",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "043a718774c572bd",
+      "temperature": 0.2,
+      "thinking_config": {
+        "thinkingBudget": 0
+      }
+    },
+    "expert_plan": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature"
+      ],
+      "max_output_tokens": 8192,
+      "model": "gemini-3.5-flash-lite",
+      "observed_baseline_thinking": "absent",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "043a718774c572bd",
+      "temperature": 0.2,
+      "thinking_config": null
+    },
+    "expert_repair": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature"
+      ],
+      "max_output_tokens": 8192,
+      "model": "gemini-3.5-flash-lite",
+      "observed_baseline_thinking": "absent",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "043a718774c572bd",
+      "temperature": 0.2,
+      "thinking_config": null
+    },
+    "expert_script": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature"
+      ],
+      "max_output_tokens": 8192,
+      "model": "gemini-3.5-flash-lite",
+      "observed_baseline_thinking": "absent",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "043a718774c572bd",
+      "temperature": 0.2,
+      "thinking_config": null
+    },
+    "expert_verify": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature",
+        "thinkingConfig"
+      ],
+      "max_output_tokens": 8192,
+      "model": "gemini-3.1-flash-lite",
+      "observed_baseline_thinking": "budget:0",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "043a718774c572bd",
+      "temperature": 0.2,
+      "thinking_config": {
+        "thinkingBudget": 0
+      }
+    },
+    "fast_verify": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature"
+      ],
+      "max_output_tokens": 6000,
+      "model": "gemini-3.1-flash-lite",
+      "observed_baseline_thinking": "absent",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "226c9317bace5007",
+      "temperature": 0.0,
+      "thinking_config": null
+    },
+    "issue_review": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature"
+      ],
+      "max_output_tokens": 16384,
+      "model": "gemini-3.5-flash-lite",
+      "observed_baseline_thinking": "absent",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "745b871dbf5af1a2",
+      "temperature": 0.0,
+      "thinking_config": null
+    },
+    "keei_match": {
+      "generation_config_keys": [
+        "maxOutputTokens",
+        "responseMimeType",
+        "temperature"
+      ],
+      "max_output_tokens": 8192,
+      "model": "gemini-3.1-flash-lite",
+      "observed_baseline_thinking": "absent",
+      "response_json_schema_sha": null,
+      "response_mime_type": "application/json",
+      "system_prompt_sha": "5cbf1b3e916d093b",
+      "temperature": 0.0,
+      "thinking_config": null
+    }
+  }
+}
