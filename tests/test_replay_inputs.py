@@ -185,5 +185,110 @@ class ReconstructionTests(unittest.TestCase):
         self.assertEqual(claim["independently_reconstructed_fields"], 0)
 
 
+
+DEDUP_ROWS = [
+    {"hash": "aaaa1111bbbb2222", "title": "신한울 3호기 종합시운전 착수",
+     "title_kr": "신한울 3호기 종합시운전 착수", "publisher": "산업통상자원부",
+     "domain": "example.gov.kr", "feed": "gov", "source_tier": 1,
+     "scope": "kr", "section": "정책", "features": {"event_type": "operation"},
+     "event_date": "2026-09-01", "tags": ["신한울", "시운전"],
+     "summary": "종합시운전에 착수했다.", "detail": "출력 상승 시험이 포함된다."},
+    {"hash": "cccc3333dddd4444", "title": "SMR 표준설계 심의 지연",
+     "title_kr": "SMR 표준설계 심의 지연", "publisher": "에너지신문",
+     "domain": "news.example.com", "feed": "rss", "source_tier": 3,
+     "scope": "kr", "section": "정책", "features": {"event_type": "regulation"},
+     "event_date": "2026-09-02", "tags": ["SMR"],
+     "summary": "심의가 미뤄졌다.", "detail": "다음 분기로 이월."},
+]
+
+
+class DedupReconstructionTests(unittest.TestCase):
+    """dedup 은 15개 필드 중 13개가 저장소에 남아 복원 근거가 더 강하다."""
+
+    def setUp(self):
+        self._urlopen = urllib.request.urlopen
+        self._key = gemini_client.API_KEY
+        self._capture = gemini_client._CAPTURE_DIR
+        gemini_client.API_KEY = "test-key"
+        gemini_client.reset_call_log()
+        self.tmp = Path(self.enterContext(TemporaryDirectory()))
+        self.addCleanup(self._restore)
+
+    def _restore(self):
+        urllib.request.urlopen = self._urlopen
+        gemini_client.API_KEY = self._key
+        gemini_client._CAPTURE_DIR = self._capture
+        gemini_client.reset_call_log()
+
+    def _record(self, articles):
+        import dedup
+
+        gemini_client._CAPTURE_DIR = str(self.tmp / "capture")
+        urllib.request.urlopen = _Recording(json.dumps(
+            {"groups": [{"indices": [0, 1], "relation": "merge", "story_title": "s"}]}))
+        dedup.dedup_articles(list(articles), {a["hash"]: 1.0 for a in articles})
+        urllib.request.urlopen = self._urlopen
+        gemini_client._CAPTURE_DIR = None
+        return recorded_replay.load_capture(self.tmp / "capture" / "llm_capture.jsonl")
+
+    def _index(self, rows):
+        curated = self.tmp / "curated.json"
+        curated.write_text(json.dumps({r["hash"]: r for r in rows}, ensure_ascii=False),
+                           encoding="utf-8")
+        return replay_inputs.load_title_index(curated=curated)
+
+    def _replay(self, records, index):
+        built = replay_inputs.reconstruct_dedup(records[0], index)
+        driver = recorded_replay.dedup_driver(
+            built["articles"], built["scores"], stage=built["stage"])
+        return built, recorded_replay.verify(records, driver)
+
+    def test_repo_rows_alone_reproduce_the_recorded_dedup_request(self):
+        records = self._record(DEDUP_ROWS)
+        built, report = self._replay(records, self._index(DEDUP_ROWS))
+        self.assertEqual(report["status"], recorded_replay.PROVEN, report["mismatches"])
+        self.assertEqual(built["unresolved_indices"], [])
+        self.assertEqual(built["stage"], "dedup")
+
+    def test_runtime_story_fields_round_trip_through_the_prompt(self):
+        # story_context/story_fingerprint 는 브리핑 실행 중 계산되어 저장되지 않는다.
+        rows = [dict(DEDUP_ROWS[0],
+                     story_fingerprint="신한울 3호기 시운전 착수 · 2026-09",
+                     story_context=[{"summary": "1차 맥락"}, {"summary": "2차 맥락"}]),
+                dict(DEDUP_ROWS[1])]
+        records = self._record(rows)
+        # 색인에는 저장 가능한 필드만 있다 — 실제 저장소와 같은 조건.
+        _built, report = self._replay(records, self._index(DEDUP_ROWS))
+        self.assertEqual(report["status"], recorded_replay.PROVEN, report["mismatches"])
+
+    def test_a_wrong_repo_summary_breaks_fidelity(self):
+        records = self._record(DEDUP_ROWS)
+        wrong = [dict(DEDUP_ROWS[0], summary="저장소에 잘못 들어간 요약"),
+                 dict(DEDUP_ROWS[1])]
+        _built, report = self._replay(records, self._index(wrong))
+        self.assertEqual(report["status"], recorded_replay.NOT_PROVEN)
+        self.assertNotIn("driver_error", report["production_result"])
+        self.assertIn("contents", " ".join(report["mismatches"][0]["differences"]))
+
+    def test_duplicate_titles_are_dropped_rather_than_guessed(self):
+        # dedup 블록에는 hash 가 없어 제목이 유일한 join key 다. 겹치면 못 찾는 편이 낫다.
+        twin = dict(DEDUP_ROWS[0], hash="ffff9999ffff9999", summary="다른 기사")
+        index = self._index([DEDUP_ROWS[0], twin, DEDUP_ROWS[1]])
+        self.assertNotIn(DEDUP_ROWS[0]["title"], index)
+
+    def test_independence_reports_the_dedup_specific_boundary(self):
+        records = self._record(DEDUP_ROWS)
+        built, _report = self._replay(records, self._index(DEDUP_ROWS))
+        claim = replay_inputs.independence(built)
+        self.assertEqual(claim["articles_with_repo_identity"], 2)
+        self.assertEqual(sorted(claim["always_prompt_derived"]),
+                         ["story_context", "story_fingerprint"])
+
+    def test_scores_are_flagged_as_placeholders(self):
+        # 점수는 프롬프트에 실리지 않는다. 복원한 척하면 최종 산출물 대조가 거짓이 된다.
+        records = self._record(DEDUP_ROWS)
+        built, _report = self._replay(records, self._index(DEDUP_ROWS))
+        self.assertTrue(built["scores_are_placeholders"])
+
 if __name__ == "__main__":
     unittest.main()

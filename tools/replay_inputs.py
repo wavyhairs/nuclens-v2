@@ -177,21 +177,134 @@ def reconstruct_curation(record: dict, index: dict[str, dict]) -> dict:
     }
 
 
+# ── dedup ──────────────────────────────────────────────────────────────────
+#
+# dedup 블록은 라벨-값 형식이라 되읽기는 쉽다. 복원 난이도는 curation 보다 오히려
+# 낮다 — 15개 필드 중 13개가 `curated.json`/`archive/` 에 그대로 남아 있다.
+# 남는 둘은 브리핑 실행 중에 계산되는 값이라 저장되지 않는다:
+#   story_context     : story_cluster 가 그 회차에 묶은 맥락
+#   story_fingerprint : 그 회차의 story 지문
+# 이 둘만 프롬프트 출처이고 나머지는 저장소에서 독립 복원한다.
+#
+# 다만 join key 가 약하다. dedup 블록에는 hash 가 없어서 제목으로 맞춰야 한다.
+# 제목이 겹치면 아무 쪽이나 고르지 않고 뺀다(머리표식 충돌과 같은 이유).
+
+_DEDUP_LABELS = ("TITLE_KR: ", "TITLE_ORIGINAL: ", "SOURCE: ", "SCOPE_SECTION: ",
+                 "EVENT: ", "TAGS: ", "SUMMARY: ", "DETAIL: ", "STORY_CONTEXT: ",
+                 "EXISTING_FINGERPRINT: ")
+DEDUP_REPO_DERIVED = ("title", "title_kr", "publisher", "domain", "feed",
+                      "source_tier", "scope", "section", "features", "event_date",
+                      "tags", "summary", "detail")
+DEDUP_PROMPT_DERIVED = ("story_context", "story_fingerprint")
+
+
+def parse_dedup_prompt(user_message: str) -> list[dict]:
+    """`dedup._article_block` 이 만든 블록을 되읽는다."""
+    blocks = []
+    for raw in user_message.split(_BLOCK_SEPARATOR):
+        lines = raw.splitlines()
+        if not lines or not re.fullmatch(r"\[\d+\]", lines[0]):
+            raise ValueError(f"dedup 블록 머리줄을 읽을 수 없음: {lines[0][:80]!r}")
+        fields = {}
+        for line in lines[1:]:
+            for label in _DEDUP_LABELS:
+                if line.startswith(label):
+                    fields[label[:-2]] = line[len(label):]
+                    break
+        blocks.append(fields)
+    return blocks
+
+
+def load_title_index(*, archive_dir: Path | None = None,
+                     curated: Path | None = None) -> dict[str, dict]:
+    """정규화한 원제 → 저장소 레코드. dedup 블록에 hash 가 없어서 필요하다."""
+    import dedup as dedup_module
+
+    index: dict[str, dict] = {}
+    collisions: set[str] = set()
+    for row in load_article_index(archive_dir=archive_dir, curated=curated).values():
+        key = dedup_module._trim(row.get("title"), 220)
+        if not key:
+            continue
+        if key in index and index[key].get("hash") != row.get("hash"):
+            collisions.add(key)
+            continue
+        index[key] = row
+    for key in collisions:
+        index.pop(key, None)
+    return index
+
+
+def _story_context_from(text: str) -> list[dict]:
+    """STORY_CONTEXT 문자열을 `_article_block` 이 다시 만들 수 있는 형태로 되돌린다.
+
+    각 조각은 이미 잘려 있고 `_trim` 은 멱등이므로, 같은 구분자로 다시 이으면
+    원래 문자열이 그대로 나온다. 조각이 셋을 넘으면 앞의 둘만 두고 나머지를 하나로
+    합친다 — `_article_block` 이 story_context[:3] 만 보기 때문이다.
+    """
+    if not text:
+        return []
+    parts = text.split(" || ")
+    if len(parts) > 3:
+        parts = parts[:2] + [" || ".join(parts[2:])]
+    return [{"summary": part} for part in parts]
+
+
+def reconstruct_dedup(record: dict, title_index: dict[str, dict]) -> dict:
+    """한 캡처 레코드에서 `dedup_articles` / `editorial_dedup_articles` 입력을 복원한다."""
+    parts = (record["request_body"].get("contents") or [{}])[0].get("parts") or [{}]
+    blocks = parse_dedup_prompt(parts[0].get("text") or "")
+    articles, provenance, unresolved = [], [], []
+    for index, block in enumerate(blocks):
+        stored = title_index.get(block.get("TITLE_ORIGINAL", ""))
+        fields = {field: "prompt" for field in DEDUP_PROMPT_DERIVED}
+        if stored is None:
+            unresolved.append(index)
+            fields.update({field: "prompt" for field in DEDUP_REPO_DERIVED})
+            # 저장소에 없으면 프롬프트가 유일한 출처다. 그 사실을 숨기지 않는다.
+            article = {"title": block.get("TITLE_ORIGINAL", ""),
+                       "title_kr": block.get("TITLE_KR", "")}
+        else:
+            fields.update({field: "repo" for field in DEDUP_REPO_DERIVED})
+            article = {field: stored.get(field) for field in DEDUP_REPO_DERIVED}
+        article["story_fingerprint"] = block.get("EXISTING_FINGERPRINT", "")
+        article["story_context"] = _story_context_from(block.get("STORY_CONTEXT", ""))
+        article["hash"] = (stored or {}).get("hash") or f"unresolved-{index}"
+        articles.append(article)
+        provenance.append({"index": index, "fields": fields})
+    return {
+        "articles": articles,
+        # scores 는 프롬프트에 실리지 않는다. 대표 기사 선택에만 쓰이므로 요청
+        # fidelity 와 무관하고, 최종 산출물 대조에는 별도 복원이 필요하다.
+        "scores": {article["hash"]: 0.0 for article in articles},
+        "scores_are_placeholders": True,
+        "provenance": provenance,
+        "unresolved_indices": unresolved,
+        "stage": ("dedup_final"
+                  if (record.get("detail") or {}).get("task") == "dedup_final"
+                  else "dedup"),
+    }
+
+
 def independence(reconstruction: dict) -> dict:
     """요청 일치가 실제로 무엇을 증명하는지 한 줄로 요약한다."""
     rows = reconstruction["provenance"]
     repo_fields = sum(1 for row in rows for value in row["fields"].values()
                       if value == "repo")
     total = sum(len(row["fields"]) for row in rows)
+    identity = (DEDUP_REPO_DERIVED if "unresolved_indices" in reconstruction
+                else REPO_DERIVED)
+    always_prompt = (DEDUP_PROMPT_DERIVED if "unresolved_indices" in reconstruction
+                     else PROMPT_DERIVED)
     fully_repo = sum(1 for row in rows
-                     if all(row["fields"][field] == "repo" for field in REPO_DERIVED))
+                     if all(row["fields"][field] == "repo" for field in identity))
     return {
         "articles": len(rows),
         "articles_with_repo_identity": fully_repo,
         "independently_reconstructed_fields": repo_fields,
         "prompt_derived_fields": total - repo_fields,
         # description/body 는 저장되지 않으므로 어떤 경우에도 프롬프트 출처다.
-        "always_prompt_derived": list(PROMPT_DERIVED),
+        "always_prompt_derived": list(always_prompt),
         "claim": (
             "요청 일치는 title/publisher/domain/hash 머리표식과 batch 구성·호출 순서·"
             "재생성 여부를 독립 검증한다. description/body 는 프롬프트에서 복원되므로 "
