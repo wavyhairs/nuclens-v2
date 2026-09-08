@@ -393,7 +393,12 @@ def _parse_story_groups(result: dict, n: int) -> list[dict]:
 
 
 def _dedup_articles_impl(articles: list[dict], scores: dict[str, float], *,
-                         prompt: str, label: str, stage: str) -> tuple[list[dict], list[dict]]:
+                         prompt: str, label: str, stage: str,
+                         client=None) -> tuple[list[dict], list[dict]]:
+    # ``client`` 는 오프라인 replay 전용 이음매다. 이 모듈은 위에서
+    # ``from gemini_client import call_json`` 으로 **이름을 복사해** 들고 있어서,
+    # ``gemini_client.call_json`` 을 갈아 끼워도 여기에는 닿지 않는다 — replay 라고
+    # 믿으면서 실제 API 를 부르게 된다. 기본값은 예전과 같은 동작이다.
     if len(articles) < 2:
         return list(articles), []
     if not is_available():
@@ -404,7 +409,8 @@ def _dedup_articles_impl(articles: list[dict], scores: dict[str, float], *,
     try:
         # label은 테스트/진단에서 자유롭게 바뀔 수 있지만 task 의미는 stage가 정한다.
         policy = llm_policy.profile("dedup_final" if stage == "editorial_final" else "dedup")
-        result = call_json(prompt, payload, temperature=0.05, max_output_tokens=6144,
+        call = client if client is not None else call_json
+        result = call(prompt, payload, temperature=0.05, max_output_tokens=6144,
                            timeout=120.0, model=policy.model(), label=label,
                            **policy.reasoning_kwargs())
     except GeminiError as e:
@@ -485,8 +491,8 @@ def _dedup_articles_impl(articles: list[dict], scores: dict[str, float], *,
     return kept, dropped
 
 
-def dedup_articles(articles: list[dict],
-                   scores: dict[str, float]) -> tuple[list[dict], list[dict]]:
+def dedup_articles(articles: list[dict], scores: dict[str, float],
+                   client=None) -> tuple[list[dict], list[dict]]:
     """기사 근거를 읽어 동일 briefing story를 묶는다.
 
     기존의 '제목 + 매체' 비교보다 넓은 개념이다. 동일 사건의 원인분석/수치보강은 하나의
@@ -494,12 +500,12 @@ def dedup_articles(articles: list[dict],
     """
     return _dedup_articles_impl(
         articles, scores, prompt=ARTICLE_STORY_PROMPT,
-        label="dedup", stage="semantic_story",
+        label="dedup", stage="semantic_story", client=client,
     )
 
 
-def editorial_dedup_articles(articles: list[dict],
-                              scores: dict[str, float]) -> tuple[list[dict], list[dict]]:
+def editorial_dedup_articles(articles: list[dict], scores: dict[str, float],
+                             client=None) -> tuple[list[dict], list[dict]]:
     """최종 후보에 대한 2차 편집 중복검사.
 
     1차 story clustering이 놓친 경우를 최종 출력 전에 다시 잡는다. 결과는 제거로 끝내지
@@ -508,7 +514,7 @@ def editorial_dedup_articles(articles: list[dict],
     """
     return _dedup_articles_impl(
         articles, scores, prompt=EDITORIAL_REDUNDANCY_PROMPT,
-        label="dedup_final", stage="editorial_final",
+        label="dedup_final", stage="editorial_final", client=client,
     )
 
 
