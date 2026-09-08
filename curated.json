@@ -454666,31 +454666,53 @@
     "published_at": "2026-09-08T18:23:00+00:00"
   },
   "e948e17bac6afc59": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 2
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
     "section": "domestic",
+    "scope": "kr",
     "category": "정책",
-    "title_kr": "한국, AI 확산에 전력 수요 급증 전망… “당분간 원전 의존 불가피”",
-    "summary": "김 장관은 이 같은 반도체 공장 건설과 인공지능 데이터센터 건설만으로도 한국의 전력 수요가 25에서 30기가와트 증가할 것으로 내다봤습니다.",
+    "topics": [
+      "power_market",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "한국 정부, AI 전력 수요 급증에 따른 원전 의존 확대 검토",
+    "summary": "한국 정부는 AI 및 반도체 산업 성장에 따른 전력 수요 급증에 대응하기 위해 신규 원전 건설 규모를 검토 중이다.",
+    "detail": "",
     "implication": "",
-    "why_important": "",
+    "why_important": "AI 산업의 전력 수요가 원전 확대의 주요 정책 동인으로 작용하고 있다.",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#전력수급",
+      "#원전정책"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-09-08T21:07:19.217780+00:00",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-08T21:13:55.900525+00:00",
     "title": "한국, AI 확산에 전력 수요 급증 전망… “당분간 원전 의존 불가피”",
     "link": "https://www.voakorea.com/a/south-korea-nuclear-energy-090826/8195674.html",
     "feed": "정책",
     "domain": "voakorea.com",
     "matched": "데이터센터 전력",
-    "source_excerpt": "김 장관은 이 같은 반도체 공장 건설과 인공지능 데이터센터 건설만으로도 한국의 전력 수요가 25에서 30기가와트 증가할 것으로 내다봤습니다. 이 추가 전력 수요를 모두 원전으로 충당한다고 단순 환산하면 한국형...",
-    "published_at": "2026-09-08T19:07:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "e948e17bac6afc59",
@@ -454751,7 +454773,8 @@
       "source_excerpt": "db7fb774bdad1c0c30077307e669ac7ed24dbb8974b1106b59d90cbc5f3810e1",
       "published_at": "b83ba6fb6ef690a82ed9ee714f5c3872ac80b5c6d3fe8d6c658e0e08d64f2866"
     },
-    "hash": "e948e17bac6afc59"
+    "hash": "e948e17bac6afc59",
+    "published_at": "2026-09-08T19:07:00+00:00"
   },
   "758725936ed3273f": {
     "features": {
@@ -457539,5 +457562,518 @@
     },
     "hash": "e235603a00215381",
     "published_at": "2026-09-08T21:06:00+00:00"
+  },
+  "b83f9888e6a52bce": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "KR",
+      "FR"
+    ],
+    "article_type": "policy",
+    "title_kr": "한-프랑스 정상회담, 차세대 원자로 및 공급망 협력 강화",
+    "summary": "이재명 대통령과 마크롱 프랑스 대통령은 정상회담을 통해 차세대 원자로 개발 및 공급망 다변화 분야에서 협력을 강화하기로 했다.",
+    "detail": "양국은 호르무즈 해협 항행 자유 공조, 우크라이나 지원, 국방·안보 협력 강화에 합의했다. 특히 원자력 분야에서는 차세대 원자로 개발과 중장기적 공급망 다변화 측면에서 양국 간 협력을 확대하기로 뜻을 모았다. 또한 2030년까지 교역액 200억 달러 달성을 목표로 경제 협력을 추진한다.",
+    "implication": "양국 간 전략적 동반자 관계를 바탕으로 원자력 기술 및 공급망 분야의 실질적 협력 기반을 마련했다.",
+    "why_important": "프랑스와의 원전 기술 협력은 글로벌 원전 시장에서의 공급망 안정성 확보에 중요한 의미를 갖는다.",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#한불협력",
+      "#원전기술"
+    ],
+    "related_reports": [],
+    "event_date": "2026-09-08",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-08T21:13:55.900525+00:00",
+    "title": "李대통령 “韓·佛 호르무즈 해협 항행 자유 위해 긴밀히 공조할 것”",
+    "link": "https://www.seoul.co.kr/news/politics/2026/09/09/20260909500001?wlog_tag3=naver",
+    "feed": "정책",
+    "domain": "seoul.co.kr",
+    "matched": "원자력 정책",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "b83f9888e6a52bce",
+      "source_components": {
+        "article_hash": "b83f9888e6a52bce",
+        "title": "2f656837c414f92a1031a663226ad2d9ed8a08123090f726ba18734c1b04c647",
+        "source_excerpt": "2fe7ffdaa2f7607681f22ba1d1cebf0d3bf8dd744d3425eea7b669e3bd119908",
+        "published_at": "bf15ed2acf475ddf6faf4e7d3ac88b0f08112b8f37acba48233ef26f6d9527db"
+      },
+      "source_fingerprint": "f81cd584d4ca5cc9f66d8a9cb39cb30f5e974d516e43e84c636c0b08bd7cb727",
+      "entities": [],
+      "countries": [
+        "FR",
+        "GB",
+        "KR",
+        "RU",
+        "UA"
+      ],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [
+        "contract"
+      ],
+      "claims": [
+        "8일",
+        "5개월",
+        "4월",
+        "2030년",
+        "200억달러",
+        "27조원"
+      ],
+      "quantities": {
+        "개": [
+          "5"
+        ],
+        "년": [
+          "2026",
+          "2030"
+        ],
+        "달러": [
+          "20000000000"
+        ],
+        "월": [
+          "4",
+          "9"
+        ],
+        "일": [
+          "8",
+          "9"
+        ],
+        "조원": [
+          "27"
+        ]
+      },
+      "manifest_fingerprint": "81b0695a44c8e5227360f787d43dbc931c53a161feaf6c101f8ff2d89095a995"
+    },
+    "verified_source_components": {
+      "article_hash": "b83f9888e6a52bce",
+      "title": "2f656837c414f92a1031a663226ad2d9ed8a08123090f726ba18734c1b04c647",
+      "source_excerpt": "2fe7ffdaa2f7607681f22ba1d1cebf0d3bf8dd744d3425eea7b669e3bd119908",
+      "published_at": "bf15ed2acf475ddf6faf4e7d3ac88b0f08112b8f37acba48233ef26f6d9527db"
+    },
+    "hash": "b83f9888e6a52bce",
+    "published_at": "2026-09-08T15:22:00+00:00"
+  },
+  "421ae475f7588847": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "퀄컴-아마존, AI 칩 개발 협력",
+    "summary": "퀄컴이 아마존웹서비스(AWS)와 다년 협약을 맺고 맞춤형 AI 추론용 반도체를 공동 개발한다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-08T21:13:55.900525+00:00",
+    "title": "퀄컴, 아마존과 80조원 차세대 AI칩 동맹…5.4조원 신주인수권",
+    "link": "https://biz.sbs.co.kr/article_hub/20000333489?division=NAVER",
+    "feed": "정책",
+    "domain": "sbs.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "421ae475f7588847",
+      "source_components": {
+        "article_hash": "421ae475f7588847",
+        "title": "f60b6474b7155b2e60542d305371805d1f0e2a9f7e02521e3b061a93ca6900e6",
+        "source_excerpt": "e80904dff04052d15f69bfb6744f8a7e17d0563f20c958de3eeb90ffaf728b96",
+        "published_at": "e739d490662a285df65ffeba2b7acc05c9464ad169ebe0501a3ee4c534629b57"
+      },
+      "source_fingerprint": "8ec157d7b32fce6b6984ebb054348160e53bb368615aacaafcfe99b7c73154d4",
+      "entities": [],
+      "countries": [
+        "US"
+      ],
+      "topics": [],
+      "stages": [
+        "contract"
+      ],
+      "claims": [
+        "80조원",
+        "5.4조원",
+        "2029년",
+        "150억달러",
+        "600억달러",
+        "8일"
+      ],
+      "quantities": {
+        "년": [
+          "2029"
+        ],
+        "달러": [
+          "15000000000",
+          "60000000000"
+        ],
+        "일": [
+          "8"
+        ],
+        "조원": [
+          "5.4",
+          "80"
+        ]
+      },
+      "manifest_fingerprint": "142928c671e9636db60c60b005178ff336ae7676adf2fba7f8dc01ae3c4fb153"
+    },
+    "verified_source_components": {
+      "article_hash": "421ae475f7588847",
+      "title": "f60b6474b7155b2e60542d305371805d1f0e2a9f7e02521e3b061a93ca6900e6",
+      "source_excerpt": "e80904dff04052d15f69bfb6744f8a7e17d0563f20c958de3eeb90ffaf728b96",
+      "published_at": "e739d490662a285df65ffeba2b7acc05c9464ad169ebe0501a3ee4c534629b57"
+    },
+    "hash": "421ae475f7588847",
+    "published_at": "2026-09-08T18:19:00+00:00"
+  },
+  "47cab5e2fa61595c": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 2
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "security_trade",
+      "regulation"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "정부, 웨스팅하우스 지분 인수 및 대미 투자 협의 진행",
+    "summary": "정부가 웨스팅하우스 지분 인수를 통해 원전 수출 시 지식재산권 문제를 해소하고 미국과의 협력을 강화하는 방안을 추진 중이다.",
+    "detail": "정부는 올해 22억 달러 규모의 대미 투자를 시작으로 연간 200억 달러 한도 내에서 투자를 진행할 계획이다. 웨스팅하우스 지분 인수와 관련해서는 미국 정부와 세부 협의 중이며, 20% 이상의 지분 확보를 통해 이사회 참여를 목표로 하고 있다. 한편, 알래스카 LNG 사업에 대해서는 상업적 합리성을 이유로 신중한 입장을 보이고 있다.",
+    "implication": "원전 수출 경쟁력 확보를 위한 전략적 지분 투자이나, 미국 측과의 지분율 협상 및 실익에 대한 우려가 공존한다.",
+    "why_important": "한미 원전 협력의 핵심인 지식재산권 문제 해결을 위한 정부의 적극적인 행보를 보여준다.",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#원전수출",
+      "#한미협력"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-08T21:13:55.900525+00:00",
+    "title": "웨스팅 의결권 확보땐 원전수출 숨통…알래스카 LNG엔 신중",
+    "link": "https://www.hani.co.kr/arti/politics/bluehouse/1276909.html",
+    "feed": "정책",
+    "domain": "hani.co.kr",
+    "matched": "원전 수출",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "47cab5e2fa61595c",
+      "source_components": {
+        "article_hash": "47cab5e2fa61595c",
+        "title": "8523042102b468373658f919ed2021df98ed261f41679601f2859923b17bacf0",
+        "source_excerpt": "fef7cb2daeb93b8b657e4afd64bcc9c9fd88808bfd46afbeabda985cd675a95b",
+        "published_at": "434eaa43d6b22c5ca52cf988825c903cd47b46ce95d8e18eb64117b148743c02"
+      },
+      "source_fingerprint": "4e145a98a31a72a0538833cf5a9d9412d969615f52125b86e944be4b7637b3d0",
+      "entities": [
+        "westinghouse"
+      ],
+      "countries": [
+        "CA",
+        "KR",
+        "US"
+      ],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [
+        "approval"
+      ],
+      "claims": [
+        "22억달러",
+        "9600억원",
+        "30일",
+        "670억달러",
+        "200억달러",
+        "120억달러",
+        "70억달러",
+        "20%",
+        "100%",
+        "23일",
+        "18일"
+      ],
+      "quantities": {
+        "%": [
+          "100",
+          "20"
+        ],
+        "달러": [
+          "12000000000",
+          "20000000000",
+          "2200000000",
+          "67000000000",
+          "7000000000"
+        ],
+        "억원": [
+          "9600"
+        ],
+        "일": [
+          "18",
+          "23",
+          "30"
+        ]
+      },
+      "manifest_fingerprint": "0ae7a1f808eb88bcd232f517f21196bcacdf48e8f328dd3b2cff7281d931d76b"
+    },
+    "verified_source_components": {
+      "article_hash": "47cab5e2fa61595c",
+      "title": "8523042102b468373658f919ed2021df98ed261f41679601f2859923b17bacf0",
+      "source_excerpt": "fef7cb2daeb93b8b657e4afd64bcc9c9fd88808bfd46afbeabda985cd675a95b",
+      "published_at": "434eaa43d6b22c5ca52cf988825c903cd47b46ce95d8e18eb64117b148743c02"
+    },
+    "hash": "47cab5e2fa61595c",
+    "published_at": "2026-09-08T20:02:00+00:00"
+  },
+  "116a78bbe615bbe3": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 2,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "KR",
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "한-프랑스 비즈니스 라운드테이블, 미래 전략산업 협력 논의",
+    "summary": "이재명 대통령의 프랑스 국빈 방문을 계기로 열린 비즈니스 라운드테이블에서 한수원 등 양국 주요 기업들이 미래 전략산업 협력 방안을 논의했다.",
+    "detail": "이번 행사에는 김회천 한수원 사장을 비롯해 삼성전자, LS, 효성, LG전자, 현대자동차 등 한국 기업인과 프랑스경제인협회 관계자들이 참석했다. 양국은 AI, 양자, 모빌리티, 에너지, 바이오 등 미래 전략산업 분야에서 강점을 결합하고 사업 및 투자 협력을 강화하기로 했다.",
+    "implication": "양국 기업 간 실질적인 협력 채널을 구축하여 미래 에너지 및 첨단 기술 분야의 공동 대응을 모색한다.",
+    "why_important": "정상외교를 통해 원자력 및 에너지 분야의 기업 간 협력 기반을 공고히 하는 계기가 되었다.",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#한불협력",
+      "#에너지협력"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-08T21:13:55.900525+00:00",
+    "title": "李, 한불 기업인 만나 첨단산업 협력 논의…삼성, 佛 미스트랄AI에 전략...",
+    "link": "https://www.edaily.co.kr/News/Read?mediaCodeNo=257&newsId=01951606645578480",
+    "feed": "정책",
+    "domain": "edaily.co.kr",
+    "matched": "한국수력원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "116a78bbe615bbe3",
+      "source_components": {
+        "article_hash": "116a78bbe615bbe3",
+        "title": "09fb7580c989efee15e22df7dbd8b6749c6e55954e285e9d48ad5808b92cd1d1",
+        "source_excerpt": "4e2f59c0fab38f88a20753a34eef860bc920c45861b7b53f35e5916128e90255",
+        "published_at": "88744a29049ade764eb69739dc6204715ec046b8caa0baeae42ba3fd24f15577"
+      },
+      "source_fingerprint": "c4a8930907541fae2a0f075cbc087bdbc70fc960b68efb2b5faf570a7783e4f0",
+      "entities": [
+        "khnp",
+        "orano"
+      ],
+      "countries": [
+        "FR",
+        "KR"
+      ],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "8일"
+      ],
+      "quantities": {
+        "년": [
+          "2026"
+        ],
+        "월": [
+          "9"
+        ],
+        "일": [
+          "8"
+        ]
+      },
+      "manifest_fingerprint": "a5936cbdce1ac7cf48953d716202684a0d790e2614ac82d6ba9e54a05dd43a99"
+    },
+    "verified_source_components": {
+      "article_hash": "116a78bbe615bbe3",
+      "title": "09fb7580c989efee15e22df7dbd8b6749c6e55954e285e9d48ad5808b92cd1d1",
+      "source_excerpt": "4e2f59c0fab38f88a20753a34eef860bc920c45861b7b53f35e5916128e90255",
+      "published_at": "88744a29049ade764eb69739dc6204715ec046b8caa0baeae42ba3fd24f15577"
+    },
+    "hash": "116a78bbe615bbe3",
+    "published_at": "2026-09-08T20:32:00+00:00"
+  },
+  "8a6cb1986d1d299e": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [
+      "security_trade"
+    ],
+    "countries": [
+      "US",
+      "SA"
+    ],
+    "article_type": "official_doc",
+    "title_kr": "미-사우디 원자력 협력 123 협정 전문 공개",
+    "summary": "미국과 사우디아라비아 간의 평화적 원자력 협력을 위한 123 협정 전문이 공개되었다.",
+    "detail": "지난 7월 22일 서명된 이 협정은 양국 간 비군사적 원자력 협력을 위한 법적 틀을 제공한다. 현재 의회 승인을 기다리고 있으며, 미국은 이를 통해 최고 수준의 원자력 안전 및 비확산 기준을 준수하면서 미국 기술을 사우디에 제공할 계획이다.",
+    "implication": "중동 지역 내 원자력 협력의 법적 근거가 마련됨에 따라 향후 사우디 원전 시장 진출을 위한 기반이 조성되었다.",
+    "why_important": "미국의 중동 원전 시장 진출 전략과 비확산 정책의 방향성을 확인할 수 있다.",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#원자력협정",
+      "#비확산"
+    ],
+    "related_reports": [],
+    "event_date": "2026-07-22",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-08T21:13:55.900525+00:00",
+    "title": "Full text, enrichment details emerge on Saudi 123 Agreement",
+    "link": "https://www.ans.org/news/2026-09-08/article-8373/full-text-enrichment-details-emerge-on-saudi-123-agreement",
+    "feed": "정책",
+    "domain": "ans.org",
+    "matched": "ANS Nuclear Newswire",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "8a6cb1986d1d299e",
+      "source_components": {
+        "article_hash": "8a6cb1986d1d299e",
+        "title": "c00d5de68d9b488234ad77d8c7a3a593906fce5f64b28f682a42f369fabcbcdc",
+        "source_excerpt": "dea048346a01b9aed03e760ea75dfeb8b280ebf7760613a78457a4bdef44e8c6",
+        "published_at": "a866915631903284a9cf78df116ec0f13a221bd1160cbfab15af67f8174e0195"
+      },
+      "source_fingerprint": "ba9d99a00959ded6530bf55a4c86807e8bab3caa6e78ae09683b1dae61709077",
+      "entities": [],
+      "countries": [
+        "US"
+      ],
+      "topics": [
+        "fuel_supply"
+      ],
+      "stages": [
+        "approval",
+        "contract"
+      ],
+      "claims": [
+        "saudi123",
+        "section123",
+        "valid123",
+        "than50"
+      ],
+      "quantities": {
+        "년": [
+          "2026"
+        ],
+        "월": [
+          "7"
+        ],
+        "일": [
+          "22"
+        ]
+      },
+      "manifest_fingerprint": "b0a7f2b9bfe336dbc18e04dbfe383a1b01075a4b06b20839d2571d005f6ff9c7"
+    },
+    "verified_source_components": {
+      "article_hash": "8a6cb1986d1d299e",
+      "title": "c00d5de68d9b488234ad77d8c7a3a593906fce5f64b28f682a42f369fabcbcdc",
+      "source_excerpt": "dea048346a01b9aed03e760ea75dfeb8b280ebf7760613a78457a4bdef44e8c6",
+      "published_at": "a866915631903284a9cf78df116ec0f13a221bd1160cbfab15af67f8174e0195"
+    },
+    "hash": "8a6cb1986d1d299e",
+    "published_at": "2026-09-08T20:48:20+00:00"
   }
 }
