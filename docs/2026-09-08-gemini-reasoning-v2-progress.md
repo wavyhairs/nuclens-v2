@@ -104,8 +104,8 @@
 ### P3 — Independent Gold (API 0)
 - [x] #92 Gold 도입 + `HUMAN_REVIEWED_AI_ASSISTED` 재분류 (9b089fb)
 - [x] anchoring 측정용 blind 재검증 15건 결정적 선별 — `tools/gold_provenance.py`
-- [ ] blind 라벨링 UI (Sol 판정 완전 은닉)
-- [ ] Identity 충돌 14건 재검토 대상 확정
+- [x] blind 패킷 (화이트리스트 + 층 섞기 + 변이 검증) — `tools/blind_relabel.py` (657ce87)
+- [x] Identity 계약 매핑 확정 — `tools/identity_contract_map.py` (51f2036)
 - [ ] **BLOCKED_HUMAN 지점 — 준비 완료 후 사용자에게 1회 요청**
 
 ### P4 — Sequential evaluation (최소 API)
@@ -168,6 +168,34 @@ P4 reasoning 비교에서는 순환이 문제가 아니다 — 프롬프트에�
 
 `production_contract_fingerprint()` 최소 입력은 사양 §4 P1 참조. `observed_baseline_thinking` 을 상수로 적으면 P1 은 실패한 것이다.
 
+## 4-B. 사람에게 요청할 작업 — 한 번에 몰아 둔 전부
+
+이 셋 말고는 사람 개입이 필요 없다. 도구·선별·순서는 모두 준비됐다.
+
+| # | 작업 | 분량 | 명령 |
+|---|---|---|---|
+| 1 | capture 스위치 | 설정 1개 | repo variable `NUCLENS_LLM_CAPTURE=on` |
+| 2 | blind 재검증 | **15건** | `python tools/blind_relabel.py --packet <경로>` → 판정 → `--compare` |
+| 3 | Identity 케이스 검토 | **22건** | `other` 9 + `different_action` 8 + `follow_up_same_event` 5 |
+
+3번이 22건인 이유: reason code 하나로 두 계약을 모두 가를 수 없는 칸이다.
+issue_review 는 17건(`different_action` 8 + `other` 9), dedup 은 14건
+(`other` 9 + `follow_up_same_event` 5)을 못 가르고, 합집합이 22건이다.
+
+## 4-C. Identity 계약 충돌 (확정 사실)
+
+`issue_review` 와 `dedup` 이 **같은 예시로 반대 판정을 요구한다**(협상 → 계약 체결).
+버그가 아니라 서로 다른 질문이지만, **단일 Identity 정답지는 성립하지 않는다.**
+
+| profile | 사용 가능 | 케이스 검토 | 계약으로 뒤집힘 | MERGE/SEPARATE |
+|---|---|---|---|---|
+| `issue_review` | 43 | 17 | **6** (전부 `different_stage`) | 19 / 24 |
+| `dedup` / `dedup_final` | 46 | 14 | 0 | 8 / 38 |
+
+기존 60건은 **dedup 계약에 맞춰져 있었다**(뒤집힘 0). 폐기할 이유가 없다.
+issue_review 계약으로 옮기면 13/47 → 19/24 로 클래스 균형이 회복된다.
+dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 안전 지표로 읽는다.
+
 ## 5. 사전 결정표 (질문 대신 이것을 적용한다)
 
 | 상황 | 결정 |
@@ -206,5 +234,7 @@ P4 reasoning 비교에서는 순환이 문제가 아니다 — 프롬프트에�
 | 2026-09-09 | P2 | curation 입력 재구성기 + provenance. description/body 가 저장소에 없음을 확인하고 순환 경계를 명시. 전체 1617 passed | `1311a11` |
 | 2026-09-09 | P2 | dedup 재구성기(13/15 저장소 복원) + fidelity gate. 전체 1630 passed | `6b9019a`, `9f576cb` |
 | 2026-09-09 | P3 | Gold 출처 재분류(라벨 불변) + blind 15건 선별. 전체 1645 passed | `9b089fb` |
+| 2026-09-09 | P3 | blind 패킷(가림 변이 검증). 전체 1656 passed | `657ce87` |
+| 2026-09-09 | P3 | Identity 계약 충돌 발견 + profile별 매핑. 전체 1668 passed | `51f2036` |
 | 2026-09-09 | — | daily-brief 34279339893 완료 확인 후 rebase → push | — |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
