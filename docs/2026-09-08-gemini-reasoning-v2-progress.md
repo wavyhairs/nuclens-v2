@@ -36,7 +36,7 @@
 | P0 | Evaluator lockdown | 0 | `DONE` (fb25171) |
 | P0.5 | Behavior-neutral seam refactor | 0 | `DONE` (ca39d89) |
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
-| P2 | Capture + recorded-response fidelity | 0 | `IN_PROGRESS` |
+| P2 | Capture + recorded-response fidelity | 0 | `IN_PROGRESS` — 배선 완료, 스위치 대기 |
 | P3 | Independent Gold | 0 | `PENDING` |
 | P4 | Sequential reasoning evaluation | 최소 | `PENDING` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
@@ -46,15 +46,20 @@
 
 ## 3. 다음 한 줄
 
-> P2 시작: passive capture 를 `curation` / `dedup` / `dedup_final` 에 배선한다.
-> 이음매는 이미 열려 있다(`client=`, `log_path=`) — capture 는 그 이음매를 통해서만
-> 붙이고, production 기본 경로에는 분기를 추가하지 않는다.
+> **사람이 해야 하는 일 1건 — capture 스위치를 켠다.**
+> 이 브랜치를 머지한 뒤 repo variable `NUCLENS_LLM_CAPTURE` 를 `on` 으로 둔다.
+> (Settings → Secrets and variables → Actions → Variables)
+> 그때부터 7~14일 자연 데이터가 쌓이고, 그 전에는 P2 가 진행되지 않는다.
+> 끄고 싶으면 값을 지우면 된다 — 코드 배포가 필요 없다.
+>
+> **그 사이에 진행할 것 (capture 대기와 병행):**
+> `tools/recorded_replay.py` 를 만든다. 캡처한 응답을 `curate_batch(client=...)`
+> / `dedup_articles(client=...)` 에 순서대로 먹여 production orchestration 을
+> 그대로 돌리고, 당시 결과와 대조한다. 이음매는 이미 열려 있다(ca39d89).
+> 별도 replay 구현을 복제하지 않는 것이 핵심이다.
 >
 > **먼저 확인:** `python -m pytest tests/test_production_request_fixture.py
-> tests/test_observed_baseline.py -q` (9 passed 이어야 한다).
->
-> 다음 산출물: recorded-response replay 하네스 + profile 별
-> `REPLAY_FIDELITY_PROVEN`/`NOT_PROVEN` 판정. Gemini 호출 0회.
+> tests/test_observed_baseline.py tests/test_llm_capture.py -q` (24 passed).
 
 ## 4. Phase별 체크리스트
 
@@ -81,9 +86,10 @@
 - [x] 회귀 테스트: inventory 값과 추출값 불일치 시 실패
 
 ### P2 — Capture + fidelity (API 0)
-- [ ] passive capture 배선 (curation / dedup / issue_review)
-- [ ] recorded-response offline replay 하네스
-- [ ] **불변식: `_CALL_LOG` 증가 0 AND repo 파일 변경 0**
+- [x] passive capture 배선 — `gemini_client._capture` + workflow 4곳 (0cb60ff, a007a4d)
+- [x] capture 안전 불변식 (꺼짐 기본 / 실패 무해 / 키 유출 시 폐기) — `tests/test_llm_capture.py`
+- [ ] recorded-response replay 하네스 (`tools/recorded_replay.py`)
+- [ ] **replay 불변식: `_CALL_LOG` 증가 0 AND repo 파일 변경 0**
 - [ ] profile별 `REPLAY_FIDELITY_PROVEN` / `NOT_PROVEN` 판정 기록
 - [ ] 자연 데이터 축적 대기 (7~14일) — 이 항목은 시간 대기이며 HALT 아님
 
@@ -168,4 +174,5 @@
 | 2026-09-08 | — | v2 원장·사양 생성, 브랜치 분기 | `feat/gemini-reasoning-v2` |
 | 2026-09-09 | P0 | 평가기 봉쇄. 네 task 모두 요청 생성 불가, policy-namespaced key 강제. 테스트 14 passed | `fb25171` |
 | 2026-09-09 | P0.5 | 이음매 리팩터링 + `frozen_requests.json` 으로 바이트 중립성 증명. 전체 1579 passed | `ca39d89` |
+| 2026-09-09 | P2 | capture 훅 + workflow 배선(기본 꺼짐). 전체 1597 passed | `0cb60ff`, `a007a4d` |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
