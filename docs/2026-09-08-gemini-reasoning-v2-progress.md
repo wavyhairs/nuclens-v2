@@ -37,7 +37,7 @@
 | P0.5 | Behavior-neutral seam refactor | 0 | `DONE` (ca39d89) |
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `IN_PROGRESS` — 배선 완료, 스위치 대기 |
-| P3 | Independent Gold | 0 | `IN_PROGRESS` |
+| P3 | Independent Gold | 0 | `BLOCKED_HUMAN` — 도구 완비, 판정 37건 대기 |
 | P4 | Sequential reasoning evaluation | 최소 | `PENDING` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
@@ -46,20 +46,26 @@
 
 ## 3. 다음 한 줄
 
-> **사람이 해야 하는 일 1건 — capture 스위치.** 이 브랜치를 머지한 뒤 repo variable
-> `NUCLENS_LLM_CAPTURE` 를 `on` 으로 둔다 (Settings → Secrets and variables →
-> Actions → Variables). 그때부터 7~14일 자연 데이터가 쌓인다. 값을 지우면 꺼진다.
+> **사람 차례다. 도구는 전부 준비됐다 — 아래 둘만 하면 자동 진행이 재개된다.**
 >
-> **capture 대기와 병행할 다음 작업 — 입력 재구성기.**
-> `tools/recorded_replay.py` 는 완성됐고 입력만 있으면 판정한다. 남은 것은 캡처
-> 시각의 입력(기사 목록·본문·reports_kb·scores)을 복원하는 쪽이다. 후보 출처는
-> 봇이 커밋하는 `curated.json` / `archive/` / `sent.json` 이다.
-> 재구성이 틀리면 프롬프트가 달라져 하네스가 NOT_PROVEN 을 낸다 — 즉 **정확성을
-> 따로 증명할 필요 없이 하네스가 채점해 준다.** 맞출 때까지 반복하면 된다.
+> ```
+> python tools/review_queue.py      # 37건 판정 (blind 15 + identity 22)
+> ```
+> 판정은 `.eval/blind-review.json`, `.eval/identity-review.json` 에 쌓인다.
+> **이 둘은 `.gitignore` 대상이라 푸시되지 않는다 — 다른 컴퓨터로 옮기면 사라진다.**
 >
-> **먼저 확인:** `python -m pytest tests/test_recorded_replay.py
-> tests/test_production_request_fixture.py tests/test_observed_baseline.py
-> tests/test_llm_capture.py -q` (34 passed).
+> 그리고 브랜치를 main 에 머지한 뒤 repo variable `NUCLENS_LLM_CAPTURE=on`.
+> (워크플로 변경이 아직 브랜치에만 있어서, 머지 전에 켜면 아무 일도 안 일어난다.)
+>
+> **판정이 끝난 뒤 자동으로 이어갈 것:**
+> 1. `python tools/blind_relabel.py --compare` → anchoring 방향 판정.
+>    한 방향이면 재라벨 범위를 넓히고, 양방향이면 기존 Gold 를 살린다.
+> 2. identity 관계 판정을 `review_queue.RELATION_TO_VERDICT` 로 profile 별
+>    MERGE/SEPARATE 로 변환해 Gold 에 반영.
+> 3. P4 준비: `llm_eval` 루프를 case-major 로 뒤집고 config 순서 randomize,
+>    `pacing_wait_seconds` 를 latency 에서 분리(원장 §4-D).
+>
+> **사람 없이도 지금 진행 가능한 것:** 위 3번(P4 준비)은 판정과 무관하다.
 
 ## 4. Phase별 체크리스트
 
@@ -106,7 +112,8 @@
 - [x] anchoring 측정용 blind 재검증 15건 결정적 선별 — `tools/gold_provenance.py`
 - [x] blind 패킷 (화이트리스트 + 층 섞기 + 변이 검증) — `tools/blind_relabel.py` (657ce87)
 - [x] Identity 계약 매핑 확정 — `tools/identity_contract_map.py` (51f2036)
-- [ ] **BLOCKED_HUMAN 지점 — 준비 완료 후 사용자에게 1회 요청**
+- [x] 판정 입력 창구 `tools/review_queue.py` (febd82a) — 37건 한 자리
+- [ ] **BLOCKED_HUMAN — 사람이 37건 판정할 차례**
 
 ### P4 — Sequential evaluation (최소 API)
 - [ ] case-major 루프 + config 순서 randomize
@@ -196,6 +203,15 @@ issue_review 는 17건(`different_action` 8 + `other` 9), dedup 은 14건
 issue_review 계약으로 옮기면 13/47 → 19/24 로 클래스 균형이 회복된다.
 dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 안전 지표로 읽는다.
 
+## 4-D. P4 준비 항목 (사람 대기와 무관 — 지금 해도 된다)
+
+- `llm_eval` 루프가 config-major 라 나중 arm 이 `_pace()` 누적으로 체계적으로
+  느리게 측정된다(F17). case-major 로 뒤집고 case 안에서 config 순서 randomize.
+- `pacing_wait_seconds` 를 `latency_seconds` 에서 분리 기록. 지금은 pacing sleep 이
+  latency 에 섞여 들어가 reliability 게이트를 오염시킨다.
+- 모델별 중복 arm 제거: 3.5-flash-lite 에서 `low` 는 thought 0 이라 baseline 과
+  같다(계획 문서 실측). canary 의 `thought_tokens` 로 잘라낸다.
+
 ## 5. 사전 결정표 (질문 대신 이것을 적용한다)
 
 | 상황 | 결정 |
@@ -236,5 +252,7 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-09 | P3 | Gold 출처 재분류(라벨 불변) + blind 15건 선별. 전체 1645 passed | `9b089fb` |
 | 2026-09-09 | P3 | blind 패킷(가림 변이 검증). 전체 1656 passed | `657ce87` |
 | 2026-09-09 | P3 | Identity 계약 충돌 발견 + profile별 매핑. 전체 1668 passed | `51f2036` |
+| 2026-09-09 | P3 | 판정 입력 창구(두 대기열 37건, 경계 테스트). 전체 1681 passed | `febd82a` |
+| 2026-09-09 | — | **여기서 중단. 사람 판정 대기.** 브랜치 푸시 완료 | — |
 | 2026-09-09 | — | daily-brief 34279339893 완료 확인 후 rebase → push | — |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
