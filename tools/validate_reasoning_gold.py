@@ -21,6 +21,18 @@ REQUIRED_EDGES = {
 }
 
 
+# 사람이 값을 정한 상태들. 값이 있는데 이 중 하나가 아니면 출처를 모르는 라벨이다.
+#
+# ``HUMAN_REVIEWED_AI_ASSISTED`` 는 사람이 읽고 승인했지만 **AI 판정을 먼저 본 뒤의**
+# 판단이다. 리뷰 UI 가 Sol 의 판정·확신도·근거를 케이스와 함께 보여 주고 한 키로
+# 승인하게 했기 때문에, 이것은 독립 판정이 아니라 비준이다. 폐기하지 않는 이유는
+# 사람이 실제로 읽었기 때문이고, 독립 Gold 와 같은 칸에 두지 않는 이유는 anchoring
+# 크기를 아직 재지 않았기 때문이다(tools/gold_provenance.py).
+INDEPENDENT_STATUSES = frozenset({"USER_SPECIFIED", "HUMAN_LABELLED"})
+AI_ASSISTED_STATUS = "HUMAN_REVIEWED_AI_ASSISTED"
+LABELLED_STATUSES = INDEPENDENT_STATUSES | {AI_ASSISTED_STATUS}
+
+
 def _read(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -35,7 +47,7 @@ def _label_errors(cases: list[dict], allowed: set[str], task: str) -> list[str]:
         if label is not None:
             if label not in allowed:
                 errors.append(f"{task}:{case.get('id')}: invalid label {label!r}")
-            if status not in {"USER_SPECIFIED", "HUMAN_LABELLED"}:
+            if status not in LABELLED_STATUSES:
                 errors.append(f"{task}:{case.get('id')}: labelled without human status")
     return errors
 

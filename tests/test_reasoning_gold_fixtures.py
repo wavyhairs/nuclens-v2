@@ -1,5 +1,6 @@
 import json
 import unittest
+from collections import Counter
 from pathlib import Path
 
 from tools.generate_reasoning_gold_candidates import (
@@ -68,14 +69,19 @@ class ReasoningGoldFixtureTests(unittest.TestCase):
         self.assertIn("자동정지 및 사업기간 연장", case["generated_title"])
         self.assertEqual(case["human_label"], "REPAIR")
 
-    def test_curation_queue_is_broad_and_mostly_unlabelled(self):
+    def test_curation_labels_carry_their_provenance(self):
         payload = json.loads((FIXTURES / "curation_gold.json").read_text(encoding="utf-8"))
-        self.assertGreaterEqual(len(payload["cases"]), 30)
-        self.assertLessEqual(len(payload["cases"]), 50)
-        pending = [case for case in payload["cases"]
+        cases = payload["cases"]
+        self.assertGreaterEqual(len(cases), 30)
+        self.assertLessEqual(len(cases), 50)
+        pending = [case for case in cases
                    if case["label_status"] == "HUMAN_LABEL_REQUIRED"]
         self.assertTrue(all(case["human_label"] is None for case in pending))
-        self.assertEqual(len(pending), len(payload["cases"]) - 1)
+        self.assertEqual(len(pending), 15)
+        self.assertEqual(
+            Counter(case["label_status"] for case in cases),
+            {"HUMAN_REVIEWED_AI_ASSISTED": 24, "HUMAN_LABEL_REQUIRED": 15,
+             "USER_SPECIFIED": 1})
 
     def test_semantic_queue_is_balanced_and_covers_taxonomy(self):
         payload = json.loads((FIXTURES / "semantic_gold.json").read_text(encoding="utf-8"))
@@ -89,9 +95,39 @@ class ReasoningGoldFixtureTests(unittest.TestCase):
         self.assertTrue(set(ERROR_TYPES) <= focuses)
         pending = [case for case in cases
                    if case["label_status"] == "HUMAN_LABEL_REQUIRED"]
-        self.assertEqual(len(pending), 72)
+        self.assertEqual(len(pending), 31)
+        self.assertEqual(
+            Counter(case["label_status"] for case in cases),
+            {"HUMAN_REVIEWED_AI_ASSISTED": 41, "HUMAN_LABEL_REQUIRED": 31,
+             "USER_SPECIFIED": 5})
         self.assertTrue(all(case["human_label"] is None for case in pending))
         self.assertTrue(all(case["human_error_types"] is None for case in pending))
+
+    def test_ambiguous_human_labelled_status_never_returns_to_curation_or_semantic(self):
+        """`HUMAN_LABELLED` 는 이 두 fixture 에서 출처를 말해 주지 않는다.
+
+        이 라벨들은 Sol 의 판정·확신도·근거를 케이스와 **동시에** 보여 주고 한 키로
+        승인하게 한 UI 를 거쳤다. 그것을 독립 판정과 같은 이름으로 부르면 reasoning
+        비교가 실제로는 "Gemini 가 Sol 과 얼마나 같은가"를 재게 된다.
+        """
+        for name in ("curation_gold.json", "semantic_gold.json"):
+            with self.subTest(fixture=name):
+                cases = json.loads(
+                    (FIXTURES / name).read_text(encoding="utf-8"))["cases"]
+                self.assertNotIn("HUMAN_LABELLED",
+                                 {case["label_status"] for case in cases})
+
+    def test_identity_labels_stay_independent(self):
+        """Identity 라벨러는 모델 판정을 기본 숨김으로 두고 케이스마다 되접는다.
+
+        Curation/Semantic 리뷰 UI 와 질이 다르므로 같이 강등하지 않는다. 다만
+        참고 패널 자체는 존재하므로 '열어 볼 수 있었다'는 여지는 남는다.
+        """
+        cases = json.loads((FIXTURES / "identity_candidates.json")
+                           .read_text(encoding="utf-8"))["cases"]
+        labelled = {case["label_status"] for case in cases
+                    if case["human_label"] is not None}
+        self.assertEqual(labelled, {"HUMAN_LABELLED"})
 
     def test_candidate_audit_passes_without_warnings(self):
         report = audit(FIXTURES)
