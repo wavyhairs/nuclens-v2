@@ -22,7 +22,7 @@
 
 | 항목 | 값 |
 |---|---|
-| 브랜치 | `feat/gemini-reasoning-v2` |
+| 브랜치 | `feat/gemini-reasoning-v2` (푸시됨) |
 | 분기 기준 | `1a9eb7f` (main) |
 | production reasoning | 전 profile 미활성 — 이 작업이 끝날 때까지 유지 |
 | Fast semantic gate | `FAST_SEMANTIC_GATE_ENABLED = False` 유지 |
@@ -37,7 +37,7 @@
 | P0.5 | Behavior-neutral seam refactor | 0 | `DONE` (ca39d89) |
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `IN_PROGRESS` — 배선 완료, 스위치 대기 |
-| P3 | Independent Gold | 0 | `PENDING` |
+| P3 | Independent Gold | 0 | `IN_PROGRESS` |
 | P4 | Sequential reasoning evaluation | 최소 | `PENDING` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
@@ -102,7 +102,8 @@
 - [ ] 자연 데이터 축적 대기 (7~14일) — 이 항목은 시간 대기이며 HALT 아님
 
 ### P3 — Independent Gold (API 0)
-- [ ] anchoring 측정용 blind 재검증 15건 선별 (경계층 집중)
+- [x] #92 Gold 도입 + `HUMAN_REVIEWED_AI_ASSISTED` 재분류 (9b089fb)
+- [x] anchoring 측정용 blind 재검증 15건 결정적 선별 — `tools/gold_provenance.py`
 - [ ] blind 라벨링 UI (Sol 판정 완전 은닉)
 - [ ] Identity 충돌 14건 재검토 대상 확정
 - [ ] **BLOCKED_HUMAN 지점 — 준비 완료 후 사용자에게 1회 요청**
@@ -203,5 +204,7 @@ P4 reasoning 비교에서는 순환이 문제가 아니다 — 프롬프트에�
 | 2026-09-09 | P2 | capture 훅 + workflow 배선(기본 꺼짐). 전체 1597 passed | `0cb60ff`, `a007a4d` |
 | 2026-09-09 | P2 | replay 하네스 + 왕복/부정 테스트. 고장 3종 주입으로 검사기 유효성 확인. 전체 1607 passed | `3d4e285` |
 | 2026-09-09 | P2 | curation 입력 재구성기 + provenance. description/body 가 저장소에 없음을 확인하고 순환 경계를 명시. 전체 1617 passed | `1311a11` |
-| 2026-09-09 | P2 | dedup 재구성기(13/15 저장소 복원) + fidelity gate. 전체 1630 passed | `6b9019a`, 다음 |
+| 2026-09-09 | P2 | dedup 재구성기(13/15 저장소 복원) + fidelity gate. 전체 1630 passed | `6b9019a`, `9f576cb` |
+| 2026-09-09 | P3 | Gold 출처 재분류(라벨 불변) + blind 15건 선별. 전체 1645 passed | `9b089fb` |
+| 2026-09-09 | — | daily-brief 34279339893 완료 확인 후 rebase → push | — |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
