@@ -177,6 +177,11 @@ jobs:
           GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
+          # reasoning 검증용 passive capture. repo variable 이 'on' 일 때만 켜지고,
+          # 빈 값이면 gemini_client 가 capture 를 아예 하지 않는다(기본 꺼짐).
+          # 경로는 .gitignore 대상이고, 이 워크플로의 git add 는 파일을 명시하므로
+          # 봇 상태 커밋에 딸려 들어가지 않는다.
+          NUCLENS_LLM_CAPTURE_DIR: ${{ vars.NUCLENS_LLM_CAPTURE == 'on' && '.eval/capture' || '' }}
         run: python news_bot.py
 
       # 공개 뉴스 채널과 운영 경고 채널을 분리한다. 관리자 채팅 ID가 없거나
@@ -237,6 +242,8 @@ jobs:
           GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
           GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
           GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
+          # reasoning 검증용 passive capture (기본 꺼짐 — vars.NUCLENS_LLM_CAPTURE).
+          NUCLENS_LLM_CAPTURE_DIR: ${{ vars.NUCLENS_LLM_CAPTURE == 'on' && '.eval/capture' || '' }}
         run: python daily_brief.py --plan
 
       - name: Push claim (발송 전 커밋 — 실패 시 발송 중단)
@@ -469,6 +476,8 @@ jobs:
           GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
           GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
           GEMINI_VERIFY_MODEL: ${{ vars.GEMINI_VERIFY_MODEL }}
+          # reasoning 검증용 passive capture (기본 꺼짐 — vars.NUCLENS_LLM_CAPTURE).
+          NUCLENS_LLM_CAPTURE_DIR: ${{ vars.NUCLENS_LLM_CAPTURE == 'on' && '.eval/capture' || '' }}
           GEMINI_TTS_MODEL: ${{ vars.GEMINI_TTS_MODEL || 'gemini-3.1-flash-tts-preview' }}
           # 봇 DM 업로드용. 여기서 받는 file_id 가 구독 채널 공개의 재료다 —
           # 채널에는 mp3 를 다시 올리지 않고 그 문자열만 보낸다(channel_queue).
@@ -686,3 +695,13 @@ jobs:
           --web-smoke-outcome "${{ steps.render-smoke.outcome }}"
           --build-mode "${{ steps.web-build.outputs.build_mode }}"
           --identity-quarantined "${{ steps.web-build.outputs.identity_quarantined }}"
+
+      - name: Upload LLM capture (reasoning validation)
+        if: always() && vars.NUCLENS_LLM_CAPTURE == 'on'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: llm-capture-brief-${{ github.run_id }}
+          path: .eval/capture/llm_capture.jsonl
+          retention-days: 14
+          if-no-files-found: ignore

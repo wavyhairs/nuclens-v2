@@ -176,6 +176,11 @@ jobs:
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
           CRAWL_LOOKBACK_HOURS: ${{ inputs.recovery_lookback_hours || '6' }}
+          # reasoning 검증용 passive capture. repo variable 이 'on' 일 때만 켜지고,
+          # 빈 값이면 gemini_client 가 capture 를 아예 하지 않는다(기본 꺼짐).
+          # 경로는 .gitignore 대상이고, 이 워크플로의 git add 는 파일을 명시하므로
+          # 봇 상태 커밋에 딸려 들어가지 않는다.
+          NUCLENS_LLM_CAPTURE_DIR: ${{ vars.NUCLENS_LLM_CAPTURE == 'on' && '.eval/capture' || '' }}
 
       - name: Finalize crawl slot state
         id: crawl-state
@@ -605,5 +610,15 @@ jobs:
         with:
           name: issue-audit-full-${{ github.run_id }}
           path: web/_audit/issue_audit.full.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload LLM capture (reasoning validation)
+        if: always() && vars.NUCLENS_LLM_CAPTURE == 'on'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: llm-capture-crawl-${{ github.run_id }}
+          path: .eval/capture/llm_capture.jsonl
           retention-days: 14
           if-no-files-found: ignore

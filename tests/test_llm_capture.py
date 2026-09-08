@@ -98,5 +98,43 @@ class CaptureSafetyTests(unittest.TestCase):
         self.assertIsNone(self._dir)
 
 
+class CaptureWiringTests(unittest.TestCase):
+    """평가 대상 callsite 가 실제로 capture 되도록 배선돼 있는가.
+
+    배선이 조용히 빠지면 capture 를 켜 뒀다고 믿으면서 며칠을 흘려보내게 된다.
+    그때 잃는 것은 코드가 아니라 **다시 만들 수 없는 자연 production 데이터**다.
+
+    (PyYAML 은 런타임 의존성이 아니므로 문자열로 확인한다.)
+    """
+
+    ENV = "NUCLENS_LLM_CAPTURE_DIR:"
+    SCOPE = {
+        ".github/workflows/crawl.yml": ("curation / issue_review / keei_match",),
+        ".github/workflows/daily-brief.yml": (
+            "curation", "dedup / dedup_final (plan)", "expert_verify (audio)"),
+    }
+
+    def test_every_scope_workflow_step_passes_the_capture_variable(self):
+        for path, callsites in self.SCOPE.items():
+            with self.subTest(workflow=path):
+                text = Path(path).read_text(encoding="utf-8")
+                self.assertEqual(text.count(self.ENV), len(callsites),
+                                 f"capture wiring drifted for {callsites}")
+
+    def test_capture_is_opt_in_and_uploads_with_bounded_retention(self):
+        for path in self.SCOPE:
+            with self.subTest(workflow=path):
+                text = Path(path).read_text(encoding="utf-8")
+                # repo variable 로만 켜진다 — 기본값은 빈 문자열 = 꺼짐.
+                self.assertIn("vars.NUCLENS_LLM_CAPTURE == 'on'", text)
+                self.assertIn("retention-days: 14", text)
+                # 업로드 실패가 파이프라인을 실패시키지 않아야 한다.
+                self.assertIn("continue-on-error: true", text)
+
+    def test_capture_path_is_ignored_by_git(self):
+        # 봇 상태 커밋에 프롬프트가 딸려 들어가면 되돌릴 수 없다.
+        self.assertIn(".eval/", Path(".gitignore").read_text(encoding="utf-8"))
+
+
 if __name__ == "__main__":
     unittest.main()
