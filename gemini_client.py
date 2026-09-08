@@ -57,6 +57,7 @@ connect-ai의 `_quickLLMCall` 패턴을 차용 — 단일 system+user 메시지,
 from __future__ import annotations
 
 import json
+import itertools
 import os
 import re
 import sys
@@ -235,6 +236,43 @@ def _record_detail(**detail: object) -> None:
     """프롬프트/키를 제외한 bounded 요청 관측치만 메모리에 남긴다."""
     if len(_CALL_DETAIL) < CALL_LOG_LIMIT:
         _CALL_DETAIL.append(dict(detail))
+
+
+# ── passive capture (reasoning 검증 전용) ──────────────────────────────────
+#
+# 평가기가 production 을 재현한다는 것을 증명하려면 "같은 코드를 부른다"로는
+# 부족하다. 실제로 나간 요청 본문과 그때 받은 응답이 있어야 한다. 그래서 여기서만
+# 한 번 갈라 낸다 — 호출자마다 분기를 심으면 그 분기 자체가 production 동작이 된다.
+#
+# 규칙:
+#   - 환경변수가 없으면 전역 하나를 확인하고 끝난다. 신규 API 호출 0, 지연 0.
+#   - 어떤 실패도 production 을 실패시키지 않는다. capture 는 없어도 되는 것이다.
+#   - API 키는 저장하지 않는다. 헤더를 애초에 담지 않고, 쓰기 직전에 한 번 더 본다.
+_CAPTURE_DIR = os.environ.get("NUCLENS_LLM_CAPTURE_DIR") or None
+_CAPTURE_SEQ = itertools.count()
+
+
+def _capture(url: str, body: dict, *, response: object, detail: dict) -> None:
+    if not _CAPTURE_DIR:
+        return
+    try:
+        record = {
+            "seq": next(_CAPTURE_SEQ),
+            "captured_at": time.time(),
+            "url": url,
+            "request_body": body,
+            "response": response,
+            "detail": dict(detail),
+        }
+        text = json.dumps(record, ensure_ascii=False)
+        if API_KEY and API_KEY in text:
+            return  # 키가 샜다면 그 줄은 통째로 버린다
+        target = Path(_CAPTURE_DIR)
+        target.mkdir(parents=True, exist_ok=True)
+        with (target / "llm_capture.jsonl").open("a", encoding="utf-8") as stream:
+            print(text, file=stream)
+    except Exception:  # noqa: BLE001 — capture 실패가 파이프라인을 세우면 안 된다
+        pass
 
 
 def reset_call_log() -> None:
@@ -530,6 +568,7 @@ def call_json(
                 "quota_kind": None,
             }
             # candidates[0].content.parts[0].text 추출
+            _capture(url, body, response=payload, detail=detail)
             try:
                 text = payload["candidates"][0]["content"]["parts"][0]["text"]
             except (KeyError, IndexError) as e:
