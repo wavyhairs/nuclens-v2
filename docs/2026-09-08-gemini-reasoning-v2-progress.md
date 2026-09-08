@@ -35,8 +35,8 @@
 |---|---|---|---|
 | P0 | Evaluator lockdown | 0 | `DONE` (fb25171) |
 | P0.5 | Behavior-neutral seam refactor | 0 | `DONE` (ca39d89) |
-| P1 | Observed baseline audit | 0 | `IN_PROGRESS` |
-| P2 | Capture + recorded-response fidelity | 0 | `PENDING` |
+| P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
+| P2 | Capture + recorded-response fidelity | 0 | `IN_PROGRESS` |
 | P3 | Independent Gold | 0 | `PENDING` |
 | P4 | Sequential reasoning evaluation | 최소 | `PENDING` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
@@ -46,12 +46,15 @@
 
 ## 3. 다음 한 줄
 
-> P1 시작: `tools/observed_baseline.py` 를 만들어 각 callsite 가 실제로 직렬화하는
-> request body 를 추출한다. **`expert_audio_brief.py:230` / `audio_brief.py:599` 의
-> `thinking_budget=0` 이 baseline 에 반드시 나타나야 한다** — 안 나오면 추출기가 틀린 것이다.
+> P2 시작: passive capture 를 `curation` / `dedup` / `dedup_final` 에 배선한다.
+> 이음매는 이미 열려 있다(`client=`, `log_path=`) — capture 는 그 이음매를 통해서만
+> 붙이고, production 기본 경로에는 분기를 추가하지 않는다.
 >
-> 착수 명령: `python -m pytest tests/test_production_request_fixture.py -q` 로 이음매가
-> 살아 있는지 먼저 확인한 뒤 시작한다.
+> **먼저 확인:** `python -m pytest tests/test_production_request_fixture.py
+> tests/test_observed_baseline.py -q` (9 passed 이어야 한다).
+>
+> 다음 산출물: recorded-response replay 하네스 + profile 별
+> `REPLAY_FIDELITY_PROVEN`/`NOT_PROVEN` 판정. Gemini 호출 0회.
 
 ## 4. Phase별 체크리스트
 
@@ -71,11 +74,11 @@
 - [x] 전체 pytest 통과
 
 ### P1 — Observed baseline audit (API 0)
-- [ ] 실제 직렬화 request body 추출기 작성 (`tools/observed_baseline.py`)
-- [ ] `thinking_budget=0`, 모델별 필드 생략, model ladder 반영
-- [ ] `production_contract_fingerprint()` 신설 (§사양 참조)
-- [ ] `docs/...task-inventory.md` 를 추출값으로 재작성
-- [ ] 회귀 테스트: inventory 값과 추출값 불일치 시 실패
+- [x] 실제 직렬화 request body 추출기 작성 (`tools/observed_baseline.py`)
+- [x] `thinking_budget=0`, 모델별 필드 생략, model ladder 반영
+- [x] `production_contract_fingerprint()` 신설 (§사양 참조)
+- [x] `docs/...task-inventory.md` 를 추출값으로 재작성
+- [x] 회귀 테스트: inventory 값과 추출값 불일치 시 실패
 
 ### P2 — Capture + fidelity (API 0)
 - [ ] passive capture 배선 (curation / dedup / issue_review)
@@ -106,7 +109,20 @@
 - [ ] contract fingerprint 결합 활성화
 - [ ] 자동 머지 금지 — PR 준비까지만
 
-## 4-1. P1 상세 (다음 작업)
+## 4-0. P1 결과 (확정)
+
+12개 callsite 중 **2개만** baseline 이 unspecified 가 아니다.
+전체 표: `docs/2026-09-09-gemini-observed-baseline.md` (생성물, 손으로 고치지 않는다).
+
+| 관측값 | callsite |
+|---|---|
+| `budget:0` — 명시적 OFF (3.1) | `expert_dossiers`, `expert_verify` |
+| 필드 없음 (3.5-flash-lite 제약) | `expert_plan`, `expert_script`, `expert_repair`, `audio_brief` |
+| 필드 없음 | `curation`, `dedup`, `dedup_final`, `issue_review`, `keei_match`, `fast_verify` |
+
+`thinkingLevel` 을 보내는 callsite는 0개다 — 활성화 전 상태가 관측으로 확인됐다.
+
+## 4-1. P1 상세 (완료 — 참고용)
 
 추출기가 반드시 재현해야 하는 것 — 이걸 못 잡으면 baseline 이 틀린다:
 
@@ -152,3 +168,4 @@
 | 2026-09-08 | — | v2 원장·사양 생성, 브랜치 분기 | `feat/gemini-reasoning-v2` |
 | 2026-09-09 | P0 | 평가기 봉쇄. 네 task 모두 요청 생성 불가, policy-namespaced key 강제. 테스트 14 passed | `fb25171` |
 | 2026-09-09 | P0.5 | 이음매 리팩터링 + `frozen_requests.json` 으로 바이트 중립성 증명. 전체 1579 passed | `ca39d89` |
+| 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
