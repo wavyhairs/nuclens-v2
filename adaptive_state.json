@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-09-10"
   },
   "retired": {
@@ -206,7 +206,7 @@
     }
   },
   "spent": {
-    "count": 4,
+    "count": 5,
     "date": "2026-09-10"
   },
   "terms": {
@@ -361,6 +361,38 @@
         "2026-09-09"
       ],
       "yields": 1,
+      "zero_streak": 1
+    },
+    "포툼": {
+      "articles": 1,
+      "created_at": "2026-09-09T21:40:18.745159+00:00",
+      "domains": [
+        "yna.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "yna.co.kr",
+          "hash": "f8c7352740e28772",
+          "importance": "must_read",
+          "title": "구글, 핀란드 디지털 인프라에 20조 투자 및 포툼 원전 전력 구매 계약"
+        }
+      ],
+      "expires_at": "2026-09-10T21:40:18.745159+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-09-09T21:40:20.180108+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-09T21:40:18.745159+00:00",
+      "queries_run": 1,
+      "query": "포툼 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "포툼",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
       "zero_streak": 1
     }
   },
