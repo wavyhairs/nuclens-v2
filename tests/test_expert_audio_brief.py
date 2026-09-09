@@ -562,10 +562,13 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
         # 테스트 픽스처가 쌓이지 않게 여기도 함께 돌린다.
         self._orig_queue = channel_queue.QUEUE_FILE
         channel_queue.QUEUE_FILE = base / "channel_outbox.json"
+        # 발송은 expert 가 직접 하지 않는다 — audio_brief.deliver 가 맡고 그
+        # 안에서 audio_brief.send_telegram_audio 를 부른다. 그래서 가짜는 그쪽에
+        # 건다(두 변형이 같은 업로드 정책·재시도를 쓴다는 사실이 이 배선이다).
         self._orig_fns = (expert.is_available, expert.load_briefing,
                           expert.selected_issues, expert.generate_expert_script,
                           expert.synthesize_expert, expert.to_mp3,
-                          expert.send_telegram_audio)
+                          audio_brief.send_telegram_audio)
         self.addCleanup(self._restore)
 
         self.sent = []
@@ -583,7 +586,7 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
         self._orig_ffmpeg = expert.ffmpeg_available
         self.addCleanup(setattr, expert, "ffmpeg_available", self._orig_ffmpeg)
         expert.ffmpeg_available = lambda: True
-        expert.send_telegram_audio = self._fake_send
+        audio_brief.send_telegram_audio = self._fake_send
 
     def _restore(self):
         (expert.AUDIO_DIR, expert.WEB_DATA,
@@ -592,7 +595,7 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
         (expert.is_available, expert.load_briefing,
          expert.selected_issues, expert.generate_expert_script,
          expert.synthesize_expert, expert.to_mp3,
-         expert.send_telegram_audio) = self._orig_fns
+         audio_brief.send_telegram_audio) = self._orig_fns
 
     def _fake_script(self, brief, issues, contracts=None):
         self.script_calls += 1
@@ -706,6 +709,69 @@ class ExpertTelegramDeliveryTests(unittest.TestCase):
         expert.selected_issues = lambda brief, by_id: [issue(i) for i in range(1, 6)]
         self.assertTrue(expert.generate())
         self.assertEqual(1, self.script_calls)
+
+    # ── 전달 상태와 복구 (2026-09-10 실사고) ─────────────────────
+    #
+    # 774초·12.1MB 가 정상으로 만들어졌고 텔레그램 업로드만 write timeout 으로
+    # 죽었다. 생성이 성공했다는 이유로 스텝은 expert=success 를 넘겼고, 그날 구독
+    # 채널에는 보고서추천·국내·해외·빠른 4건만 나갔다.
+
+    def test_a_send_failure_is_observable_as_a_delivery_failure(self):
+        self.send_ok = False
+        self.assertTrue(expert.generate())          # 생성은 성공이다
+        self.assertTrue(audio_brief.delivery_failed(), "전달 실패가 관측되지 않았다")
+        variant = self._manifest()["variants"][expert.EXPERT_VARIANT]
+        self.assertEqual(audio_brief.DELIVERY_TELEGRAM_FAILED,
+                         variant["delivery"]["state"])
+        self.assertNotIn("telegram_sent_at", variant)
+
+    def test_a_delivered_expert_audio_reaches_the_channel_batch(self):
+        self.assertTrue(expert.generate())
+        self.assertFalse(audio_brief.delivery_failed())
+        queue = json.loads(channel_queue.QUEUE_FILE.read_text(encoding="utf-8"))
+        rows = [item for batch in queue["batches"] for item in batch["items"]]
+        self.assertEqual(["전문가 브리핑"], [row["name"] for row in rows])
+        self.assertEqual("tg-expert-id", rows[0]["file_id"])
+
+    def test_recovery_resends_the_12mb_file_without_calling_tts(self):
+        """복구는 재생성이 아니다 — 그날 남은 TTS 예산을 태우면 안 된다."""
+        self._seed()
+        self.assertTrue(expert.generate(recover=True))
+        self.assertEqual(0, self.tts_calls)
+        self.assertEqual(0, self.script_calls)
+        self.assertEqual(1, len(self.sent))
+        variant = self._manifest()["variants"][expert.EXPERT_VARIANT]
+        self.assertEqual("tg-expert-id", variant["telegram_file_id"])
+
+    def test_recovery_resends_even_when_the_digest_drifted(self):
+        """저녁 복구 실행의 재료는 아침과 조금 다르다 — 그때도 TTS 는 안 부른다."""
+        self._seed(trusted=False)
+        self.assertTrue(expert.generate(recover=True))
+        self.assertEqual(0, self.tts_calls)
+        self.assertEqual(0, self.script_calls)
+        self.assertEqual(1, len(self.sent))
+
+    def test_recovery_never_resends_an_already_delivered_run(self):
+        self._seed(telegram_sent_at="2026-08-14T07:30:00+09:00",
+                   telegram_file_id="tg-expert-id")
+        self.assertTrue(expert.generate(recover=True))
+        self.assertEqual([], self.sent, "복구가 중복 발송했다")
+        self.assertEqual(0, self.tts_calls)
+
+    def test_a_failed_delivery_is_recovered_end_to_end(self):
+        """발송 실패 → 복구 실행 → file_id → 채널 배치까지 한 줄로 이어진다."""
+        self.send_ok = False
+        self.assertTrue(expert.generate())
+        self.assertTrue(audio_brief.delivery_failed())
+        tts_before = self.tts_calls
+
+        self.send_ok = True
+        self.assertTrue(expert.generate(recover=True))
+        self.assertEqual(tts_before, self.tts_calls, "복구가 TTS 를 다시 불렀다")
+        self.assertFalse(audio_brief.delivery_failed())
+        queue = json.loads(channel_queue.QUEUE_FILE.read_text(encoding="utf-8"))
+        rows = [item for batch in queue["batches"] for item in batch["items"]]
+        self.assertEqual(["전문가 브리핑"], [row["name"] for row in rows])
 
 
 class TelegramCaptionTests(unittest.TestCase):

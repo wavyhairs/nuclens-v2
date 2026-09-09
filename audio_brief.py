@@ -1059,6 +1059,85 @@ def audio_message_fields(meta: dict) -> dict:
     }
 
 
+# ── 텔레그램 업로드 정책 ─────────────────────────────────────────────────
+#
+# 2026-09-10 실사고: 전문가 브리핑 12.1MB(774초)를 `timeout=120` 으로 올리다
+# `ConnectionError('Connection aborted.', TimeoutError('The write operation
+# timed out'))` 로 죽었다. 같은 회차의 빠른 브리핑 1.5MB 는 멀쩡히 나갔다 —
+# 즉 망이 끊긴 게 아니라 **파일 크기에 견줘 상한이 짧았다.**
+#
+# requests 의 스칼라 timeout 은 연결·읽기·쓰기에 같은 값을 준다. 12MB 업로드에
+# 넉넉한 값을 스칼라로 주면 연결이 안 되는 날에도 그만큼 매달린다. 그래서 둘을
+# 가른다 — 연결은 짧게, 업로드는 크기에 비례해서.
+TELEGRAM_CONNECT_TIMEOUT = 15
+# 업로드 상한 = 기본 + MB 당 가산. 실측 기준선: 1.5MB 는 120초 안에 끝났고,
+# 12.1MB 가 120초를 넘겼다. 아래 값이면 12.1MB 에 ~300초, 20MB 도 상한 300초다.
+TELEGRAM_UPLOAD_BASE_SEC = 90
+TELEGRAM_UPLOAD_PER_MB_SEC = 25
+TELEGRAM_UPLOAD_MIN_SEC = 120
+TELEGRAM_UPLOAD_MAX_SEC = 300
+# 재시도는 **일시적 장애에만** 준다. 총 대기에 상한을 두는 이유는 이 스텝이
+# 40분 잡 예산을 전문가 대본·TTS 와 나눠 쓰기 때문이다 — 업로드가 워크플로
+# 전체를 붙잡으면 구독 채널 공개·배포가 그만큼 밀린다.
+TELEGRAM_UPLOAD_ATTEMPTS = 3
+TELEGRAM_UPLOAD_BUDGET_SEC = 540
+TELEGRAM_BACKOFF_SEC = (5, 20)
+TELEGRAM_MAX_BACKOFF_SEC = 60
+
+# 전달 상태. '만들었다'와 '닿았다'는 다른 사실이다 — 2026-09-10 이전에는 둘이
+# 한 칸이었고, 그래서 12MB 음원이 텔레그램에 못 올라간 날도 워크플로 출력은
+# expert=success 였다.
+DELIVERY_DELIVERED = "delivered"          # DM 업로드 + file_id + 채널 배치 적재
+DELIVERY_NO_FILE_ID = "no_file_id"        # DM 은 나갔는데 file_id 가 안 왔다
+DELIVERY_QUEUE_FAILED = "queue_failed"    # DM·file_id 는 됐는데 배치 적재가 실패
+DELIVERY_TELEGRAM_FAILED = "telegram_failed"  # DM 업로드 자체가 실패
+DELIVERY_UNCONFIGURED = "unconfigured"    # 토큰·대상 미설정
+DELIVERY_SKIPPED = "skipped"              # --no-send
+
+# 그날 회차가 끝났을 때의 전달 상태. `__main__` 이 종료 코드를 정할 때 읽는다.
+LAST_DELIVERY: dict = {}
+
+# send_telegram_audio 의 마지막 실패 사유. 반환값(dict|None)의 계약을 바꾸지
+# 않으려고 옆에 둔다 — 호출자는 이 값을 상태 기록에만 쓴다.
+_LAST_UPLOAD: dict = {"error": "", "attempts": 0, "permanent": False}
+
+
+def upload_timeout(size_bytes: int) -> tuple[float, float]:
+    """(연결, 업로드) 상한. 업로드는 파일 크기에 비례한다."""
+    megabytes = max(0, int(size_bytes)) / (1024 * 1024)
+    upload = TELEGRAM_UPLOAD_BASE_SEC + TELEGRAM_UPLOAD_PER_MB_SEC * megabytes
+    return (float(TELEGRAM_CONNECT_TIMEOUT),
+            float(min(TELEGRAM_UPLOAD_MAX_SEC,
+                      max(TELEGRAM_UPLOAD_MIN_SEC, upload))))
+
+
+def _retry_after(payload: object, default: float) -> float:
+    """429 가 알려 준 대기. 없거나 터무니없으면 우리 값을 쓴다."""
+    parameters = payload.get("parameters") if isinstance(payload, dict) else None
+    seconds = parameters.get("retry_after") if isinstance(parameters, dict) else None
+    try:
+        wait = float(seconds)
+    except (TypeError, ValueError):
+        return default
+    if wait <= 0:
+        return default
+    return min(wait, float(TELEGRAM_MAX_BACKOFF_SEC))
+
+
+def _http_retryable(status: int) -> bool:
+    """다시 걸어 볼 값이 있는 응답인가.
+
+    429(과속)와 5xx(텔레그램 쪽 사정)만 그렇다. 나머지 4xx 는 요청 자체가
+    틀렸다는 뜻이라 같은 payload 로 다시 보내면 같은 답이 온다 — 파일이 너무
+    크다(413), 대화를 못 찾겠다(400)는 기다린다고 낫지 않는다.
+    """
+    return status == 429 or 500 <= status <= 599
+
+
+def _backoff(attempt: int) -> float:
+    return float(TELEGRAM_BACKOFF_SEC[min(attempt - 1, len(TELEGRAM_BACKOFF_SEC) - 1)])
+
+
 def send_telegram_audio(mp3_path: Path, meta: dict) -> dict | None:
     """오디오를 봇 DM 으로 발송. 실패해도 비치명 — 다음 실행이 재시도.
 
@@ -1073,53 +1152,113 @@ def send_telegram_audio(mp3_path: Path, meta: dict) -> dict | None:
     캡션·제목은 audio_message_fields 가 만든다. 빠른·전문가 두 변형이 연달아
     도착하는데, 예전처럼 '오디오 브리핑'을 박아 두면 3분짜리와 10분짜리가 같은
     이름으로 나란히 앉아 어느 쪽이 무엇인지 알 수 없다.
+
+    **재시도는 이미 만든 mp3 만 다시 올린다.** 대본·TTS 는 이 함수가 부르지
+    않으므로 여기서 몇 번을 걸든 유료 구간은 한 번도 다시 돌지 않는다.
+    실패 사유는 `_LAST_UPLOAD` 에 남아 호출자가 상태로 옮긴다.
     """
+    _LAST_UPLOAD.update({"error": "", "attempts": 0, "permanent": False})
     token = gemini_client._resolve("TELEGRAM_BOT_TOKEN")
     chat_id = gemini_client._resolve("TELEGRAM_CHAT_ID")
     if not token or not chat_id:
         print("[audio] 텔레그램 미설정 — 발송 스킵")
+        _LAST_UPLOAD["error"] = "unconfigured"
         return None
     fields = audio_message_fields(meta)
-    import requests
     try:
-        response = requests.post(
-            f"https://api.telegram.org/bot{token}/sendAudio",
-            data={
-                "chat_id": chat_id,
-                "caption": fields["caption"],
-                "title": fields["title"],
-                "performer": fields["performer"],
-                "duration": fields["duration"],
-            },
-            files={"audio": (mp3_path.name, mp3_path.read_bytes(), "audio/mpeg")},
-            timeout=120,
-        )
-        payload = response.json()
-        if not (response.ok and payload.get("ok")):
-            print(f"[audio] 텔레그램 발송 실패 — HTTP {response.status_code}: "
-                  f"{str(payload)[:200]}")
-            return None
-    except Exception as exc:  # noqa: BLE001 — 발송은 부가 기능, 어떤 예외도 비치명
-        print(f"[audio] 텔레그램 발송 실패 — {type(exc).__name__}: {exc}")
+        blob = mp3_path.read_bytes()
+    except OSError as exc:
+        print(f"[audio] 텔레그램 발송 실패 — 음원을 읽지 못함: {exc}")
+        _LAST_UPLOAD.update({"error": f"{type(exc).__name__}: {exc}"[:200],
+                             "permanent": True})
         return None
-    result = (payload.get("result") or {}) if isinstance(payload, dict) else {}
-    file_id = ((result.get("audio") or {}).get("file_id")
-               or (result.get("document") or {}).get("file_id") or "")
-    print(f"[audio] 텔레그램 발송 완료 ({mp3_path.name})")
-    return {"file_id": file_id, "message_id": result.get("message_id")}
+    connect, upload = upload_timeout(len(blob))
+    print(f"[audio] 텔레그램 업로드 시작 — {mp3_path.name} "
+          f"({len(blob) / 1024 / 1024:.1f} MB, 상한 {upload:.0f}초)")
+    import requests
+
+    started = time.monotonic()
+    for attempt in range(1, TELEGRAM_UPLOAD_ATTEMPTS + 1):
+        _LAST_UPLOAD["attempts"] = attempt
+        try:
+            response = requests.post(
+                f"https://api.telegram.org/bot{token}/sendAudio",
+                data={
+                    "chat_id": chat_id,
+                    "caption": fields["caption"],
+                    "title": fields["title"],
+                    "performer": fields["performer"],
+                    "duration": fields["duration"],
+                },
+                files={"audio": (mp3_path.name, blob, "audio/mpeg")},
+                timeout=(connect, upload),
+            )
+            try:
+                payload = response.json()
+            except ValueError:
+                payload = {}
+            if response.ok and isinstance(payload, dict) and payload.get("ok"):
+                result = payload.get("result") or {}
+                file_id = ((result.get("audio") or {}).get("file_id")
+                           or (result.get("document") or {}).get("file_id") or "")
+                print(f"[audio] 텔레그램 발송 완료 ({mp3_path.name}"
+                      + (f", {attempt}회차" if attempt > 1 else "") + ")")
+                return {"file_id": file_id, "message_id": result.get("message_id"),
+                        "attempts": attempt}
+            detail = f"HTTP {response.status_code}: {str(payload)[:160]}"
+            _LAST_UPLOAD["error"] = detail
+            if not _http_retryable(response.status_code):
+                print(f"[audio] 텔레그램 발송 실패 — {detail} (영구 오류, 재시도 없음)")
+                _LAST_UPLOAD["permanent"] = True
+                return None
+            wait = _retry_after(payload, _backoff(attempt))
+        except (requests.Timeout, requests.ConnectionError,
+                requests.exceptions.ChunkedEncodingError) as exc:
+            # 업로드 도중 끊긴 자리. 2026-09-10 사고가 정확히 여기였다.
+            _LAST_UPLOAD["error"] = f"{type(exc).__name__}: {exc}"[:200]
+            wait = _backoff(attempt)
+        except Exception as exc:  # noqa: BLE001 — 발송은 부가 기능, 어떤 예외도 비치명
+            detail = f"{type(exc).__name__}: {exc}"[:200]
+            print(f"[audio] 텔레그램 발송 실패 — {detail}")
+            _LAST_UPLOAD.update({"error": detail, "permanent": True})
+            return None
+        elapsed = time.monotonic() - started
+        if attempt >= TELEGRAM_UPLOAD_ATTEMPTS:
+            print(f"[audio] 텔레그램 발송 실패 — {_LAST_UPLOAD['error']} "
+                  f"({attempt}회 시도, {elapsed:.0f}초)")
+            break
+        if elapsed + wait >= TELEGRAM_UPLOAD_BUDGET_SEC:
+            # 남은 예산으로는 한 번을 더 못 채운다. 여기서 멈추는 편이 낫다 —
+            # 다음 시도를 끝까지 못 끌면 그만큼 채널 공개·배포만 밀린다.
+            print(f"[audio] 텔레그램 발송 실패 — {_LAST_UPLOAD['error']} "
+                  f"(대기 예산 {TELEGRAM_UPLOAD_BUDGET_SEC}초 소진, {attempt}회 시도)")
+            break
+        print(f"[audio] 텔레그램 업로드 {attempt}회차 실패 — {_LAST_UPLOAD['error']} "
+              f"· {wait:.0f}초 뒤 재시도")
+        time.sleep(wait)
+    return None
 
 
-def queue_for_channel(date: str, meta: dict) -> None:
-    """DM 에 올린 오디오를 그날 구독 채널 배치에 적재한다 (발송은 안 한다).
+def last_upload_error() -> str:
+    """마지막 업로드 실패 사유. 성공했거나 아직 안 걸었으면 빈 문자열."""
+    return str(_LAST_UPLOAD.get("error") or "")
+
+
+def queue_for_channel(date: str, meta: dict) -> str:
+    """DM 에 올린 오디오 file_id 를 그날 구독 채널 배치에 적재한다 (발송은 안 한다).
 
     발송이 아니라 적재다 — 채널에는 기사·오디오를 모아 마지막에 한 번에 올린다.
     file_id 가 없으면(옛 매니페스트·발송 실패) 조용히 넘어가지 않고 남긴다.
+
+    돌려주는 값은 적재 상태다: ``queued`` · ``not_ready``(file_id 없음) ·
+    ``failed``(적재 자체가 터짐). 호출자가 이 값을 전달 상태로 옮긴다 —
+    "DM 은 나갔는데 채널에는 안 실렸다"를 성공으로 뭉개지 않으려고 가른다.
     """
     file_id = meta.get("telegram_file_id")
     if not file_id:
         print(f"[audio] {meta.get('label') or meta.get('key')} — file_id 없음, "
               f"채널 배치 적재 생략")
-        return
+        return "not_ready"
     # date 는 매니페스트 최상위에 살고 variant 안에는 없을 수 있다(v1 캐시·재사용
     # 경로). 캡션 첫 줄이 그날 날짜라 비면 '🎧  빠른 브리핑' 으로 나간다.
     fields = audio_message_fields({"date": date, **meta})
@@ -1132,17 +1271,133 @@ def queue_for_channel(date: str, meta: dict) -> None:
     except Exception as exc:  # noqa: BLE001 — 적재 실패가 오디오를 죽이면 안 된다
         print(f"::error::채널 배치 적재 실패({fields['label']}): "
               f"{type(exc).__name__}: {exc}")
+        return "failed"
+    return "queued"
 
 
-def _mark_sent(date: str, key: str, meta: dict, result: dict | None = None) -> None:
+def delivery_record(state: str, *, error: str = "", attempts: int = 0,
+                    file_id: str = "", channel: str = "") -> dict:
+    """전달 한 회차의 사실만 담은 기록. 매니페스트와 종료 코드가 함께 읽는다."""
+    row = {"state": state, "at": datetime.now(KST).isoformat()}
+    if error:
+        row["error"] = error[:200]
+    if attempts:
+        row["attempts"] = int(attempts)
+    if file_id:
+        row["file_id"] = file_id
+    if channel:
+        row["channel"] = channel
+    return row
+
+
+def deliver(date: str, key: str, meta: dict, mp3_path: Path, *,
+            send: bool = True) -> dict:
+    """음원 한 개의 전달 — DM 업로드 → file_id → 채널 배치 적재까지.
+
+    **생성과 갈라 둔 자리다.** 예전에는 `generate()` 가 mp3 를 만들었다는 사실
+    만으로 성공을 알렸고, 발송 실패는 로그 한 줄로만 남았다. 그 결과 워크플로는
+    `expert=success` 를 알림에 넘겼고, 구독 채널에 전문가 오디오가 통째로 빠진
+    날에도 운영 알림이 아무 말도 하지 않았다(2026-09-10 실사고).
+
+    돌려주는 값이 그 회차의 전달 상태이고, 같은 값이 매니페스트에도 남는다.
+    """
+    global LAST_DELIVERY
+    if not send:
+        LAST_DELIVERY = delivery_record(DELIVERY_SKIPPED)
+        return LAST_DELIVERY
+    result = send_telegram_audio(mp3_path, {"date": date, **meta})
+    if not result:
+        error = last_upload_error()
+        unconfigured = error == "unconfigured"
+        record = delivery_record(
+            DELIVERY_UNCONFIGURED if unconfigured else DELIVERY_TELEGRAM_FAILED,
+            error="" if unconfigured else error,
+            attempts=int(_LAST_UPLOAD.get("attempts") or 0))
+        # 실패도 매니페스트에 남긴다. 남지 않으면 다음 실행이 '아직 안 보냈다'와
+        # '보내려다 실패했다'를 구별할 수 없고, 사람도 캐시만 보고는 모른다.
+        # telegram_sent_at 은 **여전히 비워 둔다** — 그 칸이 재발송 여부를 정한다.
+        meta["delivery"] = record
+        _write_audio_variant(date, key, meta)
+        LAST_DELIVERY = record
+        return record
+    channel = _mark_sent(date, key, meta, result)
+    state = DELIVERY_DELIVERED
+    if channel == "not_ready":
+        state = DELIVERY_NO_FILE_ID
+    elif channel == "failed":
+        state = DELIVERY_QUEUE_FAILED
+    record = delivery_record(state, attempts=int(result.get("attempts") or 1),
+                             file_id=str(result.get("file_id") or ""),
+                             channel=channel)
+    meta["delivery"] = record
+    _write_audio_variant(date, key, meta)
+    LAST_DELIVERY = record
+    return record
+
+
+def delivery_failed(record: dict | None = None) -> bool:
+    """이 회차의 음원이 구독자에게 닿지 못했는가.
+
+    미설정(`unconfigured`)·미발송(`skipped`)은 실패가 아니다 — 보내기로 한 적이
+    없는 회차다. 텔레그램에 올리지 못했거나 file_id 를 못 받아 채널 배치에
+    실리지 못한 회차만 실패다.
+    """
+    row = LAST_DELIVERY if record is None else record
+    return str((row or {}).get("state") or "") in {
+        DELIVERY_TELEGRAM_FAILED, DELIVERY_NO_FILE_ID, DELIVERY_QUEUE_FAILED}
+
+
+def _mark_sent(date: str, key: str, meta: dict, result: dict | None = None) -> str:
+    """DM 이 나간 사실을 매니페스트에 박고 채널 배치에 적재한다.
+
+    돌려주는 값은 배치 적재 상태다(`queue_for_channel` 의 어휘). 발송은 됐는데
+    file_id 가 없어 채널에 못 실린 회차를 호출자가 알아야 한다.
+    """
     meta["telegram_sent_at"] = datetime.now(KST).isoformat()
     if result and result.get("file_id"):
         meta["telegram_file_id"] = result["file_id"]
     _write_audio_variant(date, key, meta)
-    queue_for_channel(date, meta)
+    return queue_for_channel(date, meta)
 
 
-def generate(force: bool = False, send: bool = True) -> bool:
+def reuse_existing(date: str, key: str, existing: dict, existing_path: Path,
+                   *, send: bool, label: str) -> bool:
+    """이미 만들어 둔 mp3 의 전달만 이어받는다. **TTS 는 부르지 않는다.**
+
+    빠른·전문가가 같은 계약을 쓰므로 한 자리에 둔다. 두 갈래뿐이다.
+
+      · `telegram_sent_at` 이 없다 → 아직 못 닿은 회차다. 그 파일 그대로 다시
+        올린다(대본·TTS 재호출 0회).
+      · 이미 있다 → 다시 보내지 않는다. 다만 채널 배치 적재는 다시 부른다 —
+        큐 파일 커밋이 실패한 날 DM 만 나가고 채널이 비는 일이 있고, 적재는
+        멱등이라 다시 불러도 항목이 늘지 않는다.
+    """
+    global LAST_DELIVERY
+    if not existing.get("telegram_sent_at"):
+        deliver(date, key, existing, existing_path, send=send)
+        return True
+    print(f"[audio] {date} {label} 이미 생성·발송됨 ({existing_path.name}) — 스킵")
+    channel = queue_for_channel(date, existing)
+    LAST_DELIVERY = delivery_record(
+        DELIVERY_DELIVERED if channel == "queued"
+        else (DELIVERY_NO_FILE_ID if channel == "not_ready" else DELIVERY_QUEUE_FAILED),
+        file_id=str(existing.get("telegram_file_id") or ""), channel=channel)
+    return True
+
+
+def generate(force: bool = False, send: bool = True,
+             recover: bool = False) -> bool:
+    """그날 빠른 브리핑 음원을 준비한다. 반환값은 **생성** 성패다.
+
+    전달 성패는 여기가 아니라 `LAST_DELIVERY` 가 말한다 — 둘은 다른 사실이고,
+    한 칸에 뭉치면 텔레그램에 못 올라간 날도 success 로 보인다(2026-09-10).
+
+    `recover` 는 복구 실행이다: 그날 mp3 가 있는데 아직 안 나갔으면 지문
+    대조를 건너뛰고 **그 파일 그대로 발송만** 재시도한다. `force` 와 다르다 —
+    force 는 유료 구간을 처음부터 다시 돌리고, recover 는 절대 돌리지 않는다.
+    """
+    global LAST_DELIVERY
+    LAST_DELIVERY = {}
     if not is_available():
         print("[audio] GEMINI_API_KEY 없음 — 스킵")
         return False
@@ -1163,20 +1418,18 @@ def generate(force: bool = False, send: bool = True) -> bool:
     existing = (manifest.get("variants") or {}).get(FAST_VARIANT, {}) if manifest.get("date") == date else {}
     if existing.get("file") and (AUDIO_DIR / existing["file"]).exists():
         existing_path = AUDIO_DIR / existing["file"]
+        if recover and not existing.get("telegram_sent_at"):
+            # 복구 실행. 만들어 둔 음원이 아직 안 나갔으면 그게 오늘 보낼 물건이다 —
+            # 지문이 조금 어긋났다고 TTS 를 다시 태우면 복구가 재생성이 된다.
+            print(f"[audio] {date} 빠른 브리핑 복구 — 기존 음원 발송만 재시도 "
+                  f"({existing_path.name})")
+            return reuse_existing(date, FAST_VARIANT, existing, existing_path,
+                                  send=send, label="빠른 브리핑")
         verdict = cache_verdict(existing, digest=digest,
                                script_path=script_path, force=force)
         if verdict == "reuse":
-            if not existing.get("telegram_sent_at"):
-                result = (send_telegram_audio(existing_path, {"date": date, **existing})
-                          if send else None)
-                if result:
-                    _mark_sent(date, FAST_VARIANT, existing, result)
-            else:
-                print(f"[audio] {date} 빠른 브리핑 이미 생성·발송됨 ({existing_path.name}) — 스킵")
-                # DM 은 이미 나갔어도 채널 배치는 비어 있을 수 있다(큐 파일 커밋
-                # 실패·재실행). 적재는 멱등이라 다시 불러도 항목이 늘지 않는다.
-                queue_for_channel(date, existing)
-            return True
+            return reuse_existing(date, FAST_VARIANT, existing, existing_path,
+                                  send=send, label="빠른 브리핑")
         if verdict == "stale_sent":
             # 재료·순서·게이트가 달라졌지만 이 회차는 이미 나갔다. 다시 만들어
             # 보내면 같은 날 두 번 발송이 되고, 그게 더 큰 사고다. 표시만 남긴다.
@@ -1273,9 +1526,7 @@ def generate(force: bool = False, send: bool = True) -> bool:
             old.unlink(missing_ok=True)
     print(f"[audio] {date} 완료 — {file_name} "
           f"({mp3_path.stat().st_size / 1024:.0f} KB, {duration}초)")
-    result = send_telegram_audio(mp3_path, meta) if send else None
-    if result:
-        _mark_sent(date, FAST_VARIANT, meta, result)
+    deliver(date, FAST_VARIANT, meta, mp3_path, send=send)
     return True
 
 
@@ -1290,7 +1541,8 @@ if __name__ == "__main__":
     ok = False
     try:
         ok = generate(force="--force" in sys.argv,
-                      send="--no-send" not in sys.argv)
+                      send="--no-send" not in sys.argv,
+                      recover="--recover" in sys.argv)
     except Exception as exc:  # noqa: BLE001
         import traceback
         traceback.print_exc()
@@ -1301,4 +1553,11 @@ if __name__ == "__main__":
         print(f"[gemini] 호출 통계 실패: {exc}")
     # 2 = TTS 쿼터·실패예산 소진. 워크플로가 이 코드를 보고 90초 재시도를
     # 생략한다 — 같은 벽에 다시 부딪히며 저녁 복구 실행 몫까지 태우지 않도록.
+    #
+    # 3 = 음원은 준비됐는데 **전달이 안 끝났다.** 1(생성 실패)과 갈라야 하는
+    # 이유는 복구 방법이 정반대이기 때문이다 — 1 은 다시 만들어야 하고, 3 은
+    # 절대 다시 만들면 안 되고 있는 파일을 다시 올리기만 해야 한다.
+    if ok and delivery_failed():
+        print(f"[audio] 음원은 준비됐으나 전달 미완료 — {LAST_DELIVERY.get('state')}")
+        sys.exit(3)
     sys.exit(0 if ok else (2 if tts_quota_exhausted() else 1))

@@ -42,8 +42,10 @@ from audio_brief import (
     WEB_DATA,
     _audio_manifest,
     _check_not_truncated,
-    _mark_sent,
     _tts_models,
+    deliver,
+    delivery_failed,
+    reuse_existing,
     _write_audio_variant,
     audio_evidence_digest,
     cache_verdict,
@@ -51,9 +53,7 @@ from audio_brief import (
     evidence_contracts,
     evidence_specs,
     load_briefing,
-    queue_for_channel,
     report_script_audit,
-    send_telegram_audio,
     split_script,
     semantic_source_evidence,
     to_mp3,
@@ -1546,7 +1546,14 @@ def synthesize_expert(script: str) -> tuple[bytes, int, list[str], list[str]]:
     return b"".join(merged), rate, segment_models, warnings
 
 
-def generate(force: bool = False, send: bool = True) -> bool:
+def generate(force: bool = False, send: bool = True,
+             recover: bool = False) -> bool:
+    """그날 전문가 브리핑 음원을 준비한다. 반환값은 **생성** 성패다.
+
+    전달 성패는 `audio_brief.LAST_DELIVERY` 가 말한다 — 빠른 브리핑과 같은
+    계약이고, 그 둘을 가른 까닭은 `audio_brief.deliver` 머리말에 적었다.
+    """
+    audio_brief.LAST_DELIVERY = {}
     if not is_available():
         print("[expert-audio] GEMINI_API_KEY 없음 — 스킵")
         return False
@@ -1570,22 +1577,21 @@ def generate(force: bool = False, send: bool = True) -> bool:
     existing = ((manifest.get("variants") or {}).get(EXPERT_VARIANT) or {}) if manifest.get("date") == date else {}
     if existing.get("file") and (AUDIO_DIR / existing["file"]).exists():
         existing_path = AUDIO_DIR / existing["file"]
+        if recover and not existing.get("telegram_sent_at"):
+            # 복구 실행. 만들어 둔 12MB 음원이 아직 안 나갔으면 그게 오늘 보낼
+            # 물건이다 — 지문이 조금 어긋났다고 7청크짜리 TTS 를 다시 태우면
+            # 복구가 재생성이 된다(2026-09-10 실사고의 복구 경로).
+            print(f"[expert-audio] {date} 전문가 브리핑 복구 — 기존 음원 발송만 "
+                  f"재시도 ({existing_path.name})")
+            return reuse_existing(date, EXPERT_VARIANT, existing, existing_path,
+                                  send=send, label="전문가 브리핑")
         verdict = cache_verdict(existing, digest=digest,
                                script_path=script_path, force=force)
         if verdict == "reuse":
             # 생성은 됐는데 발송만 실패한 날이 있다(429·네트워크 타임아웃). 그날 재실행이
             # 10분짜리 TTS 를 다시 부르지 않고 발송만 이어받게 한다 — 빠른 브리핑과 같은 계약.
-            if not existing.get("telegram_sent_at"):
-                result = (send_telegram_audio(existing_path, {"date": date, **existing})
-                          if send else None)
-                if result:
-                    _mark_sent(date, EXPERT_VARIANT, existing, result)
-            else:
-                print(f"[expert-audio] {date} 전문가 브리핑 이미 생성·발송됨 "
-                      f"({existing_path.name}) — 스킵")
-                # 빠른 브리핑과 같은 계약 — 적재는 멱등이라 다시 불러도 안전하다.
-                queue_for_channel(date, existing)
-            return True
+            return reuse_existing(date, EXPERT_VARIANT, existing, existing_path,
+                                  send=send, label="전문가 브리핑")
         if verdict == "stale_sent":
             print(f"[expert-audio] {date} 캐시가 현재 재료와 불일치 — "
                   f"이미 발송돼 재발송하지 않고 stale 로 표시")
@@ -1694,9 +1700,7 @@ def generate(force: bool = False, send: bool = True) -> bool:
     # 배치도 같은 순서로 쌓인다. 워크플로가 audio_brief 를 먼저 돌리므로 이 순서는
     # 호출 순서가 보장한다. 이 발송이 그날 배치의 **마지막 재료**다 —
     # 워크플로는 바로 다음 스텝에서 배치를 채널로 공개한다.
-    result = send_telegram_audio(mp3_path, meta) if send else None
-    if result:
-        _mark_sent(date, EXPERT_VARIANT, meta, result)
+    deliver(date, EXPERT_VARIANT, meta, mp3_path, send=send)
     return True
 
 
@@ -1705,7 +1709,8 @@ if __name__ == "__main__":
     ok = False
     try:
         ok = generate(force="--force" in sys.argv,
-                      send="--no-send" not in sys.argv)
+                      send="--no-send" not in sys.argv,
+                      recover="--recover" in sys.argv)
     except Exception as exc:  # noqa: BLE001 — 오디오는 웹 배포 비치명 기능
         import traceback
         traceback.print_exc()
@@ -1719,4 +1724,9 @@ if __name__ == "__main__":
         print(f"[gemini] 호출 통계 실패: {exc}")
     # 2 = TTS 쿼터·실패예산 소진 (audio_brief 와 같은 계약). 전문가 대본은
     # 청크가 6~8개라 재시도 한 번이 그날 예산에서 빠지는 몫이 특히 크다.
+    # 3 = 음원은 준비됐는데 전달이 안 끝났다 (audio_brief 와 같은 계약).
+    if ok and delivery_failed():
+        print(f"[expert-audio] 음원은 준비됐으나 전달 미완료 — "
+              f"{audio_brief.LAST_DELIVERY.get('state')}")
+        sys.exit(3)
     sys.exit(0 if ok else (2 if audio_brief.tts_quota_exhausted() else 1))

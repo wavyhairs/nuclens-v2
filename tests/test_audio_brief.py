@@ -155,6 +155,9 @@ class AudioBriefTestCase(unittest.TestCase):
         audio_brief.AUDIO_DIR.mkdir(parents=True, exist_ok=True)
         (audio_brief.AUDIO_DIR / "briefing-fast-2026-08-04.mp3").write_bytes(b"mp3")
         meta = {"date": "2026-08-04", "key": audio_brief.FAST_VARIANT,
+                # label 은 실제 매니페스트에 늘 있다. 없으면 캡션·채널 배치 이름이
+                # '오디오 브리핑' 으로 떨어져 픽스처가 운영과 달라진다.
+                "label": "빠른 브리핑",
                 "file": "briefing-fast-2026-08-04.mp3", "duration_sec": 170, **extra}
         if trusted:
             (audio_brief.AUDIO_DIR / "script-fast-2026-08-04.txt").write_text(
@@ -708,6 +711,111 @@ class AudioBriefTestCase(unittest.TestCase):
         self.assertFalse(audio_brief.generate())
         self.assertEqual(self.calls, [])
 
+    # ── 전달 상태와 복구 (2026-09-10) ────────────────────────────
+    #
+    # 그날 전문가 음원은 정상으로 만들어졌고 텔레그램 업로드만 죽었다. 생성이
+    # 성공했다는 이유로 워크플로에 success 가 나갔고, 구독 채널에 전문가 오디오가
+    # 통째로 빠진 날인데도 운영 알림이 침묵했다. 생성 성패와 전달 성패를 여기서
+    # 가른다 — generate() 는 계속 '만들었나'만 답하고, '닿았나'는 옆 칸이 답한다.
+
+    def test_a_send_failure_is_visible_even_though_generation_succeeded(self):
+        self.write_data()
+        self.responses = [{"script": GOOD_SCRIPT}]
+        self.send_ok = False
+        self.assertTrue(audio_brief.generate())      # 생성은 성공이다
+        self.assertTrue(audio_brief.delivery_failed(), "전달 실패가 관측되지 않았다")
+        self.assertEqual(audio_brief.DELIVERY_TELEGRAM_FAILED,
+                         audio_brief.LAST_DELIVERY["state"])
+        self.assertEqual(audio_brief.DELIVERY_TELEGRAM_FAILED,
+                         self._variant()["delivery"]["state"])
+
+    def test_a_delivered_run_is_not_a_delivery_failure(self):
+        self.write_data()
+        self.responses = [{"script": GOOD_SCRIPT}]
+        self.assertTrue(audio_brief.generate())
+        self.assertFalse(audio_brief.delivery_failed())
+        self.assertEqual(audio_brief.DELIVERY_DELIVERED,
+                         audio_brief.LAST_DELIVERY["state"])
+
+    def test_no_send_runs_are_not_delivery_failures(self):
+        """조용한 재생성(--no-send)은 보내기로 한 적이 없는 회차다."""
+        self.write_data()
+        self.responses = [{"script": GOOD_SCRIPT}]
+        self.assertTrue(audio_brief.generate(send=False))
+        self.assertFalse(audio_brief.delivery_failed())
+
+    def test_recovery_resends_the_existing_mp3_without_touching_tts(self):
+        """복구는 재생성이 아니다 — 있는 파일을 그대로 다시 올린다."""
+        self.write_data()
+        self.seed_cache()
+        self.assertTrue(audio_brief.generate(recover=True))
+        self.assertEqual(self.tts_calls, [], "복구가 TTS 를 불렀다")
+        self.assertEqual(self.calls, [], "복구가 대본 생성을 불렀다")
+        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(self.sent[0][0], "briefing-fast-2026-08-04.mp3")
+
+    def test_recovery_ignores_a_drifted_digest(self):
+        """지문이 어긋났다고 TTS 를 다시 태우면 복구가 곧 재생성이 된다.
+
+        저녁 복구 실행은 아침 이후 다시 돈 build_data 를 재료로 본다 — 지문이
+        조금 달라지는 것이 정상이고, 그때 아직 아무에게도 안 간 mp3 가 있으면
+        그게 오늘 보낼 물건이다.
+        """
+        self.write_data()
+        self.seed_cache(trusted=False)               # 지문 없는 캐시
+        self.assertTrue(audio_brief.generate(recover=True))
+        self.assertEqual(self.tts_calls, [])
+        self.assertEqual(len(self.sent), 1)
+
+    def test_recovery_records_file_id_and_queues_the_channel(self):
+        self.write_data()
+        self.seed_cache()
+        self.assertTrue(audio_brief.generate(recover=True))
+        variant = self._variant()
+        self.assertEqual("tg-file-id", variant["telegram_file_id"])
+        self.assertIn("telegram_sent_at", variant)
+        queue = json.loads(channel_queue.QUEUE_FILE.read_text(encoding="utf-8"))
+        names = [item["name"] for batch in queue["batches"]
+                 for item in batch["items"]]
+        self.assertEqual(["빠른 브리핑"], names)
+        self.assertFalse(audio_brief.delivery_failed())
+
+    def test_recovery_never_resends_what_already_went_out(self):
+        """복구 실행이 이미 도착한 회차를 다시 보내면 그게 더 큰 사고다."""
+        self.write_data()
+        self.seed_cache(telegram_sent_at="2026-08-04T07:30:00+09:00",
+                        telegram_file_id="tg-file-id")
+        self.assertTrue(audio_brief.generate(recover=True))
+        self.assertEqual(self.sent, [], "복구가 중복 발송했다")
+        self.assertEqual(self.tts_calls, [])
+
+    def test_a_recovery_reload_of_the_channel_batch_stays_idempotent(self):
+        """큐 적재는 다시 불러도 항목이 늘지 않는다 — 채널 중복 공개 방지."""
+        self.write_data()
+        self.seed_cache(telegram_sent_at="2026-08-04T07:30:00+09:00",
+                        telegram_file_id="tg-file-id")
+        audio_brief.generate(recover=True)
+        audio_brief.generate(recover=True)
+        queue = json.loads(channel_queue.QUEUE_FILE.read_text(encoding="utf-8"))
+        names = [item["name"] for batch in queue["batches"]
+                 for item in batch["items"]]
+        self.assertEqual(["빠른 브리핑"], names)
+
+    def test_a_failed_send_leaves_the_mp3_recoverable(self):
+        """발송 실패 → 다음 실행이 TTS 없이 발송만 이어받는다 (전 구간)."""
+        self.write_data()
+        self.responses = [{"script": GOOD_SCRIPT}]
+        self.send_ok = False
+        self.assertTrue(audio_brief.generate())
+        tts_before = len(self.tts_calls)
+        self.assertTrue(audio_brief.delivery_failed())
+
+        self.send_ok = True
+        self.assertTrue(audio_brief.generate(recover=True))
+        self.assertEqual(len(self.tts_calls), tts_before, "복구가 TTS 를 다시 불렀다")
+        self.assertFalse(audio_brief.delivery_failed())
+        self.assertEqual("tg-file-id", self._variant()["telegram_file_id"])
+
 
 class ScriptAuditReportTests(unittest.TestCase):
     """오디오 품질 결과가 관리자 알림 창구에 닿는가.
@@ -1016,8 +1124,31 @@ class AudioWorkflowWiringTest(unittest.TestCase):
         force = step.index("inputs.force_audio")
         # 복구 분기가 먼저 걸려야 둘 다 켠 실행에서 발송이 산다.
         self.assertLess(recovery, force)
-        self.assertIn('audio_args="--force"', step)
+        self.assertIn('audio_args="--recover"', step)
         self.assertIn('audio_args="--force --no-send"', step)
+
+    def test_recovery_never_forces_a_regeneration(self):
+        """복구 버튼이 --force 면 전달만 실패한 날 12MB 를 다시 합성한다.
+
+        2026-09-10 이 정확히 그런 날이었다 — 음원은 멀쩡히 캐시에 있었고 텔레그램
+        업로드만 죽었다. 그날 --force 로 복구를 누르면 TTS 7청크를 다시 태운다.
+        """
+        yml = self._daily()
+        step = yml.split("- name: Generate audio briefings", 1)[1].split("- name:", 1)[0]
+        recovery_branch = step.split("inputs.audio_recovery", 1)[1].split("elif", 1)[0]
+        self.assertIn('audio_args="--recover"', recovery_branch)
+        self.assertNotIn('audio_args="--force"', recovery_branch)
+
+    def test_a_delivery_failure_is_its_own_step_output(self):
+        """생성 실패와 전달 실패는 복구 방법이 정반대라 한 값으로 뭉치면 안 된다."""
+        yml = self._daily()
+        step = yml.split("- name: Generate audio briefings", 1)[1].split("- name:", 1)[0]
+        self.assertIn('if [ "$rc" = "3" ]', step)
+        self.assertIn('"${key}=delivery_failed" >> "$GITHUB_OUTPUT"', step)
+        # 전달만 실패한 회차의 재시도는 캐시 재사용이라 값싸다 — 90초를 기다릴
+        # 이유가 없고, 그만큼 채널 공개가 밀린다.
+        self.assertLess(step.index('"$rc" = "3"'), step.index("sleep 90"))
+        self.assertIn("sleep 30", step)
 
 
 if __name__ == "__main__":
