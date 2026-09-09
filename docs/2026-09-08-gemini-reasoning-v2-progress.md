@@ -38,7 +38,7 @@
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `IN_PROGRESS` — 배선 완료, 스위치 대기 |
 | P3 | Independent Gold | 0 | `BLOCKED_HUMAN` — 도구 완비, 판정 37건 대기 |
-| P4 | Sequential reasoning evaluation | 최소 | `PENDING` |
+| P4 | Sequential reasoning evaluation | 최소 | `IN_PROGRESS` — 준비 완료, P2/P3 대기 |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
 
@@ -46,26 +46,28 @@
 
 ## 3. 다음 한 줄
 
-> **사람 차례다. 도구는 전부 준비됐다 — 아래 둘만 하면 자동 진행이 재개된다.**
+> **사람 차례다. 사람 없이 할 수 있는 것은 §4-D 까지 전부 끝났다.**
 >
 > ```
 > python tools/review_queue.py      # 37건 판정 (blind 15 + identity 22)
 > ```
 > 판정은 `.eval/blind-review.json`, `.eval/identity-review.json` 에 쌓인다.
-> **이 둘은 `.gitignore` 대상이라 푸시되지 않는다 — 다른 컴퓨터로 옮기면 사라진다.**
+> **`.gitignore` 대상이라 푸시되지 않는다 — 다른 컴퓨터로 옮기면 사라진다.**
 >
 > 그리고 브랜치를 main 에 머지한 뒤 repo variable `NUCLENS_LLM_CAPTURE=on`.
-> (워크플로 변경이 아직 브랜치에만 있어서, 머지 전에 켜면 아무 일도 안 일어난다.)
+> (워크플로 변경이 브랜치에만 있어서, 머지 전에 켜면 아무 일도 안 일어난다.)
 >
-> **판정이 끝난 뒤 자동으로 이어갈 것:**
+> **판정이 끝난 뒤 이어갈 것:**
 > 1. `python tools/blind_relabel.py --compare` → anchoring 방향 판정.
 >    한 방향이면 재라벨 범위를 넓히고, 양방향이면 기존 Gold 를 살린다.
-> 2. identity 관계 판정을 `review_queue.RELATION_TO_VERDICT` 로 profile 별
->    MERGE/SEPARATE 로 변환해 Gold 에 반영.
-> 3. P4 준비: `llm_eval` 루프를 case-major 로 뒤집고 config 순서 randomize,
->    `pacing_wait_seconds` 를 latency 에서 분리(원장 §4-D).
+> 2. identity 관계를 `review_queue.RELATION_TO_VERDICT` 로 profile 별
+>    MERGE/SEPARATE 로 변환해 Gold 에 반영. 그 뒤 `label_status` 를
+>    독립 상태로 올려야 `llm_eval.labelled_cases` 가 집어 간다.
+> 3. capture 데이터가 쌓이면 `python tools/fidelity_gate.py --capture <파일>`.
+>    PROVEN 이 나온 profile 만 `llm_eval.TASKS` 에 request_builder 를 꽂는다.
 >
-> **사람 없이도 지금 진행 가능한 것:** 위 3번(P4 준비)은 판정과 무관하다.
+> **막힌 이유:** P2 는 자연 데이터, P3 는 사람 판정. 둘 다 시간이 필요한 것이지
+> 코드가 모자란 것이 아니다.
 
 ## 4. Phase별 체크리스트
 
@@ -116,8 +118,8 @@
 - [ ] **BLOCKED_HUMAN — 사람이 37건 판정할 차례**
 
 ### P4 — Sequential evaluation (최소 API)
-- [ ] case-major 루프 + config 순서 randomize
-- [ ] `pacing_wait_seconds` 분리 기록
+- [x] case-major 루프 + config 순서 randomize — `plan_jobs()` (21d18a4)
+- [x] 지연 분해 `latency_seconds`(API) / `wall_clock_seconds` / `overhead_seconds` (21d18a4)
 - [ ] full-size batch canary
 - [ ] dominated config 제거 → paired dev → finalist repeat → time-block holdout
 
@@ -203,14 +205,16 @@ issue_review 는 17건(`different_action` 8 + `other` 9), dedup 은 14건
 issue_review 계약으로 옮기면 13/47 → 19/24 로 클래스 균형이 회복된다.
 dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 안전 지표로 읽는다.
 
-## 4-D. P4 준비 항목 (사람 대기와 무관 — 지금 해도 된다)
+## 4-D. P4 준비 항목 — **완료** (21d18a4)
 
-- `llm_eval` 루프가 config-major 라 나중 arm 이 `_pace()` 누적으로 체계적으로
-  느리게 측정된다(F17). case-major 로 뒤집고 case 안에서 config 순서 randomize.
-- `pacing_wait_seconds` 를 `latency_seconds` 에서 분리 기록. 지금은 pacing sleep 이
-  latency 에 섞여 들어가 reliability 게이트를 오염시킨다.
-- 모델별 중복 arm 제거: 3.5-flash-lite 에서 `low` 는 thought 0 이라 baseline 과
-  같다(계획 문서 실측). canary 의 `thought_tokens` 로 잘라낸다.
+- [x] `plan_jobs()` — case-major + case 안에서 config 순서를 해시로 섞는다.
+- [x] 지연 분해. **정정:** `gemini_client` 의 타이머는 `_pace()` 뒤에 시작하므로
+      이미 깨끗했다 — 오염된 것은 평가기의 벽시계였다. production 은 건드리지 않고
+      `latency_seconds`(API) / `wall_clock_seconds` / `overhead_seconds` 로 나눴다.
+- [x] `redundant_arms()` — thought 0 인 arm 을 관측값으로 잘라낸다. 모델별 표를
+      손으로 적지 않는다(모델이 바뀌면 조용히 틀린다). 관측 1건은 자르지 않는다.
+- [x] `excluded_by_provenance()` — AI 보조 라벨이 평가에서 빠진 건수를 센다.
+      조용히 빠지면 "Gold 가 적다"가 보고서에서 사라진다.
 
 ## 5. 사전 결정표 (질문 대신 이것을 적용한다)
 
@@ -253,6 +257,7 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-09 | P3 | blind 패킷(가림 변이 검증). 전체 1656 passed | `657ce87` |
 | 2026-09-09 | P3 | Identity 계약 충돌 발견 + profile별 매핑. 전체 1668 passed | `51f2036` |
 | 2026-09-09 | P3 | 판정 입력 창구(두 대기열 37건, 경계 테스트). 전체 1681 passed | `febd82a` |
-| 2026-09-09 | — | **여기서 중단. 사람 판정 대기.** 브랜치 푸시 완료 | — |
+| 2026-09-09 | — | 중단 후 재개. 사람 판정은 여전히 미실시 | — |
+| 2026-09-09 | P4 | 호출 순서 case-major + 지연 분해 + 중복 arm 판정. 변이로 순서 편향 검증. 전체 1697 passed | `21d18a4` |
 | 2026-09-09 | — | daily-brief 34279339893 완료 확인 후 rebase → push | — |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
