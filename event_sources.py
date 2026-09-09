@@ -45,6 +45,15 @@
   assembly_events 국회 행사알림. 월 단위 JSON 으로 '무슨 일이 있는 날'을 먼저
                   받고(`findSchlDaySmn.json`), 일정이 있는 날만 상세를 받는다
                   (`findSchlSmn.json`). 제목·시각·장소·주최·링크가 그대로 온다.
+  kpx_notice      한국전력거래소 공지사항(`new.kpx.or.kr/board.es?…bid=0042`).
+                  서버렌더 표라 목록은 쉽게 읽히는데, **이 게시판만 상세 본문까지
+                  받는다** — 제목은 행사 이름만 말하고 행사일은 본문의 '일 시 :'
+                  줄에 있다(실측 2026-09-10: '2026년 ESS중앙계약시장 사업자
+                  의견수렴 간담회 개최' / 등록일 7/23 / 본문 '1. 일 시 : 2026년
+                  7월 29일(수) 14:00'). 등록일을 행사일로 쓰면 6일 어긋난 칸이
+                  선다. 전기본 공개토론회·전력거버넌스 포럼처럼 본문이 포스터
+                  이미지 한 장뿐인 공지도 흔한데, 그런 글은 행사일을 모르는 것이
+                  사실이라 칸을 세우지 않는다(`no_event_date`).
 
 넣지 않은 것과 이유 (재시도 전에 여기부터 볼 것)
   한국원자력환경공단  공지사항 상위가 전부 조달·홍보다(PQ 평가기준·공급업체
@@ -212,7 +221,7 @@ def _event_id(source_id: str, url: str, label: str, when: str) -> str:
 def make_event(*, source_id: str, publisher: str, title: str, url: str,
                posted: date, start: date, end: date, kind: str,
                organizer: str = "", host: str = "", place: str = "",
-               time: str = "", label: str = "") -> dict | None:
+               time: str = "", label: str = "", post_id: str = "") -> dict | None:
     """공식 일정 한 건. 판정을 통과한 것만 돌려준다.
 
     `label` 을 따로 받는 것은 협회 일정표처럼 행사명이 제목과 별개의 칸으로
@@ -264,6 +273,10 @@ def make_event(*, source_id: str, publisher: str, title: str, url: str,
         "topics": verdict["topics"],
         "relevance": verdict["grounds"].get("relevance", ""),
         "significance": verdict["grounds"].get("significance", ""),
+        # 게시판이 주는 안정적인 게시물 번호. 날짜·장소가 바뀌면 `id` 는 바뀌지만
+        # 이 값은 안 바뀐다 — `merge_events` 가 이 값으로 옛 줄을 찾아 옮긴다.
+        # 그래야 연기·장소변경 공지가 새 일정이 아니라 **같은 일정의 갱신**이 된다.
+        **({"post_id": str(post_id)} if post_id else {}),
     }
 
 
@@ -464,6 +477,249 @@ def parse_niftep_notice(
     return out
 
 
+# ── 전력거래소 공지사항 ──────────────────────────────────────────────────
+#
+# 다른 게시판과 **읽는 방법이 다르다.** KNS·KAIF 는 제목 한 줄에 날짜·시각·장소가
+# 다 들어 있어("…심포지움 개최(9.9(수) 14:00, 대한상공회의소)") 목록만으로 칸을
+# 세울 수 있다. KPX 공지는 그렇지 않다 — 제목은 행사 이름만 말하고 날짜는 본문
+# 안쪽의 '일 시 :' 줄에 있다(실측 2026-09-10):
+#
+#     제목  2026년 ESS중앙계약시장 사업자 의견수렴 간담회 개최   (등록일 2026/07/23)
+#     본문  1. 일 시 : 2026년 7월 29일(수) 14:00 ~ 15:30
+#           2. 장 소 : 스페이스쉐어 서울중부센터 9층 스카이홀
+#
+# 그래서 이 수집원만 **상세 본문까지 받는다.** 목록의 등록일은 게시일이지
+# 행사일이 아니다 — 그 둘을 섞으면 7월 23일 칸에 7월 29일 간담회가 선다.
+#
+# 날짜는 **라벨이 붙은 줄에서만** 읽는다. 본문 전체를 훑으면 신청 마감이 행사일이
+# 된다(실측 77367: 'ㅇ 일시 : 5/26(화) 10시~12시' 와 'ㅇ 참석 방법 : 5/19(화)까지
+# …제출' 이 같은 본문에 있다). 라벨이 없으면 날짜를 만들지 않는다 — 실측으로
+# 제12차 전기본 공개토론회(78098)와 전력거버넌스 포럼(77122)은 본문이 포스터
+# 이미지 한 장뿐이고, VPP 설명회 의향조사(77918)는 '개최 일자 : 10월 말(구체적
+# 날짜는 추후 재 공지)' 이다. 셋 다 행사일을 모르는 것이 사실이라 칸을 세우지 않고
+# 후보로만 남긴다.
+#
+# 판정은 다른 게시판과 **똑같이** 제목·이름·장소만 본다. 게시판 주인
+# ('한국전력거래소')은 넘기지 않는다 — 넘겼다가 그 안의 '전력거래'가 관심어로
+# 걸려 게시판에 실린 것이 전부 통과한 선례가 있다(event_relevance.judge 머리말).
+
+KPX_SITE = "https://new.kpx.or.kr"
+KPX_BOARD_PATH = "/board.es?mid=a10501010000&bid=0042"
+KPX_BOARD_URL = KPX_SITE + KPX_BOARD_PATH
+# 한 쪽에 10건. 하루 한 번 도는 수집이라 두 쪽(20건)이면 주말을 끼고도 새 글을
+# 놓치지 않는다. 더 받아 봐야 이미 본 글을 다시 판정할 뿐이다.
+KPX_LIST_PAGES = 2
+# 상세를 받는 건수 상한. 목록 판정을 통과한 글만 받으므로 평소엔 0~2건이다.
+# 게시판이 개편돼 판정이 무너지는 날 20건을 연달아 받지 않도록 뚜껑을 둔다.
+KPX_MAX_DETAILS = 8
+
+_KPX_ROW_RE = re.compile(r"<tr>([\s\S]*?)</tr>", re.I)
+_KPX_LINK_RE = re.compile(r'<a href="([^"]*act=view[^"]*)"[^>]*>([\s\S]*?)</a>', re.I)
+_KPX_DATE_RE = re.compile(r'aria-label="등록일"[^>]*>\s*(\d{4})/(\d{2})/(\d{2})')
+_KPX_POST_RE = re.compile(r"list_no=(\d+)")
+_KPX_VIEW_RE = re.compile(r'<article class="board_view">([\s\S]*?)</article>', re.I)
+_KPX_BREAK_RE = re.compile(r"<br\s*/?>|</p>|</div>|</li>|</tr>|</h\d>", re.I)
+# 목록 제목 앞의 새글 표식(`<span class="sr_only">새글</span>`). 떼지 않으면
+# 행사 이름 앞에 '새글' 이 남는다. **태그째로** 떼는 이유는 글자만 지우면
+# 'New Nuclear' 같은 영문 제목에서 낱말 한 조각이 함께 사라지기 때문이다.
+_KPX_BADGE_RE = re.compile(r'<span class="sr_only">[\s\S]*?</span>', re.I)
+
+
+def _kpx_label(*names: str) -> re.Pattern:
+    """본문에서 '무엇이 적힌 줄인가'를 정하는 라벨. 값은 콜론 뒤다.
+
+    글자 사이에 공백을 허용한다. 관공서 표기가 '일 시'·'장 소'처럼 자간을
+    벌려 쓰는데(실측: KPX 공지 본문의 '1. 일 시 :'), 붙여 쓴 꼴만 적어 두면
+    정작 가장 흔한 표기를 못 읽는다.
+    """
+    spaced = [r"\s*".join(re.escape(ch) for ch in name if not ch.isspace())
+              for name in names]
+    return re.compile(
+        r"^\s*(?:[0-9]{1,2}\s*[.)]|[ㅇ○●·•▪◦□■*\-–]|[가-힣]\s*[.)])?\s*"
+        rf"(?:{'|'.join(spaced)})\s*[:：]\s*(.+)$")
+
+
+_KPX_WHEN_RE = _kpx_label("일시", "일 자", "일자", "행사일", "행사일시", "개최일",
+                          "개최일시", "개최 일자", "개최일자", "기간", "행사기간",
+                          "개최기간", "교육일시", "설명회 일시", "토론회 일시")
+_KPX_PLACE_RE = _kpx_label("장소", "개최장소", "행사장소", "개최 장소")
+_KPX_HOST_RE = _kpx_label("주최", "주관", "주최/주관", "주최 주관", "주최·주관")
+_KPX_AUDIENCE_RE = _kpx_label("참가대상", "참석대상", "대상", "참여대상")
+_KPX_DEADLINE_RE = _kpx_label("신청기간", "접수기간", "신청마감", "접수마감",
+                              "등록마감", "신청 방법", "참가신청")
+# 'M/D' 는 KPX 본문이 즐겨 쓰는 표기다("일시 : 5/26(화) 10시~12시"). 공용
+# `notice_dates` 의 줄임 표기 규칙(`_MD_RE`)에는 슬래시가 없다 — 거기에 넣으면
+# 모든 게시판에서 '1/2' 같은 분수·비율이 날짜가 된다. 그래서 여기서만 점으로
+# 바꿔 넘긴다.
+_KPX_SLASH_MD_RE = re.compile(r"(?<!\d)(\d{1,2})\s*/\s*(\d{1,2})(?!\d)")
+# '10시', '오후 2시 30분' 처럼 콜론이 없는 시각. 공용 `notice_time` 은 HH:MM 만 본다.
+_KPX_HOUR_RE = re.compile(r"(?<!\d)(\d{1,2})\s*시(?:\s*(\d{1,2})\s*분)?")
+_KPX_PM_RE = re.compile(r"오후|pm", re.I)
+# 장소 칸에 값 대신 '아직 모른다'가 적히는 경우. 없는 장소를 지어내지 않는다.
+_KPX_UNSET = ("미정", "추후", "별도 공지", "별도공지", "추후 공지", "확정 시")
+
+
+def parse_kpx_list(page: str, *, base: str = KPX_BOARD_URL) -> list[dict]:
+    """공지사항 목록 → 게시물 한 줄들. **아직 일정이 아니다.**
+
+    돌려주는 것은 게시물 자체다(제목·게시일·상세 URL·게시물 번호). 일정이 되려면
+    상세 본문에서 행사일을 찾아야 하고, 그건 `kpx_events` 가 한다. 이 함수가
+    일정을 만들지 않는 것이 곧 '게시일을 행사일로 쓰지 않는다'는 계약이다.
+    """
+    out: list[dict] = []
+    for block in _KPX_ROW_RE.findall(page):
+        link = _KPX_LINK_RE.search(block)
+        day = _KPX_DATE_RE.search(block)
+        if not (link and day):
+            continue
+        title = clean_text(_TAG_RE.sub(" ", _KPX_BADGE_RE.sub(" ", link.group(2))))
+        href = clean_text(link.group(1)).replace("&amp;", "&")
+        post = _KPX_POST_RE.search(href)
+        if not (title and post):
+            continue
+        out.append({
+            "post_id": post.group(1),
+            "title": title,
+            "posted": date(*(int(part) for part in day.groups())),
+            # 목록 링크에는 그때의 쪽 번호(`nPage`)가 붙어 있다. 새 글이 올라오면
+            # 같은 게시물의 쪽 번호가 밀리고, 그 URL 을 그대로 쓰면 `_event_id` 가
+            # 날마다 달라져 같은 행사가 새 일정으로 다시 선다. 게시물 번호만으로
+            # 표준 주소를 만든다(실측: 이 주소로 상세가 그대로 열린다).
+            "url": urljoin(base, f"{KPX_BOARD_PATH}&act=view&list_no={post.group(1)}"),
+        })
+    return out
+
+
+def kpx_body_text(page: str) -> str:
+    """상세 페이지 → 본문 줄들. 태그를 떼되 **줄 경계는 지킨다.**
+
+    줄이 무너지면 '일 시' 줄의 값과 '참석 방법' 줄의 마감일이 한 줄로 붙고,
+    그 순간 라벨로 날짜를 고르는 이 파서의 전제가 사라진다.
+    """
+    view = _KPX_VIEW_RE.search(page)
+    if not view:
+        return ""
+    body = _KPX_BREAK_RE.sub("\n", view.group(1))
+    text = _TAG_RE.sub(" ", body).replace("&nbsp;", " ").replace("&amp;", "&")
+    lines = [clean_text(line) for line in text.splitlines()]
+    return "\n".join(line for line in lines if line)
+
+
+def _kpx_field(text: str, pattern: re.Pattern) -> str:
+    """라벨이 붙은 줄의 값. 없으면 빈 문자열."""
+    for line in text.splitlines():
+        found = pattern.match(line)
+        if found:
+            value = clean_text(found.group(1))
+            if value:
+                return value
+    return ""
+
+
+def kpx_time(clause: str) -> str:
+    """행사 시각. HH:MM 을 먼저 보고, 없으면 '10시'·'오후 2시 30분' 을 읽는다."""
+    explicit = notice_time(clause)
+    if explicit:
+        return explicit
+    found = _KPX_HOUR_RE.search(clause)
+    if not found:
+        return ""
+    hour = int(found.group(1))
+    minute = int(found.group(2) or 0)
+    if _KPX_PM_RE.search(clause[:found.start()]) and hour < 12:
+        hour += 12
+    if hour > 23 or minute > 59:
+        return ""
+    return f"{hour:02d}:{minute:02d}"
+
+
+def kpx_place(clause: str) -> str:
+    """행사 장소. '추후 별도 공지' 처럼 값이 아닌 값은 버린다."""
+    head = clean_text(clause.split("(")[0]) or clean_text(clause)
+    if not head or any(mark in head for mark in _KPX_UNSET):
+        return ""
+    return head[:60]
+
+
+def kpx_event_span(text: str, posted: date):
+    """본문이 **행사일이라고 말한 자리**에서만 날짜를 읽는다.
+
+    `notice_span` 을 라벨 줄에만 걸어 준다. 라벨이 없으면 None — 게시일로
+    대신하지 않고, '며칠 뒤' 같은 추정도 하지 않는다.
+    """
+    clause = _kpx_field(text, _KPX_WHEN_RE)
+    if not clause:
+        return None, ""
+    normalized = _KPX_SLASH_MD_RE.sub(r"\1.\2.", clause)
+    span = notice_span(normalized, posted)
+    if span is None:
+        return None, clause
+    start, end, kind = span
+    # 이 줄은 '언제 여는가'를 말하는 자리다. 그 줄에 '까지·마감' 이 섞여 있어도
+    # 행사일은 행사일이다 — 마감으로 바꾸면 달력이 접수 창을 행사로 그린다.
+    return (start, end, "range" if end > start else "point"), clause
+
+
+def kpx_events(rows: list[dict], fetch_body, *,
+               max_details: int = KPX_MAX_DETAILS) -> list[dict]:
+    """게시물 목록 → 일정 후보. 판정을 통과한 글만 상세를 받는다.
+
+    상세를 먼저 받고 판정하지 않는 이유는 요청 수다. 목록 20건 중 채용·입찰·
+    개인정보 처리방침 공지가 대부분이고, 그것들은 제목만으로 확실히 걸린다.
+    판정을 통과한 글만 본문을 열면 하루 상세 요청이 평소 0~2건이다.
+
+    `fetch_body(row) -> str` 를 주입받는 까닭은 fixture 로 단위 테스트하기
+    위해서다(다른 파서들이 페이지 문자열을 받는 것과 같은 이유).
+    """
+    out: list[dict] = []
+    opened = 0
+    for row in rows:
+        # 제목만으로 확실히 아닌 것을 먼저 거른다. 여기서 쓰는 판정은
+        # make_event 가 다시 쓰는 것과 **같은 입력**이다 (게시판 주인은 안 넘긴다).
+        verdict = event_relevance.judge(row["title"], "", "", "")
+        if not verdict["ok"]:
+            out.append({"_dropped": verdict["reason"]})
+            continue
+        if opened >= max_details:
+            out.append({"_dropped": "detail_budget"})
+            continue
+        opened += 1
+        body = fetch_body(row) or ""
+        span, clause = kpx_event_span(body, row["posted"])
+        if span is None:
+            # 행사일을 모른다. 게시일을 대신 쓰지 않는다 — 이 게시판에는 본문이
+            # 포스터 이미지 한 장뿐인 토론회 공지가 실제로 있다.
+            out.append({"_dropped": "no_event_date" if not clause
+                        else "unreadable_event_date"})
+            continue
+        start, end, kind = span
+        place = kpx_place(_kpx_field(body, _KPX_PLACE_RE))
+        event = make_event(
+            source_id="kpx_notice", publisher="한국전력거래소",
+            title=row["title"], url=row["url"], posted=row["posted"],
+            start=start, end=end, kind=kind,
+            # 주최는 표시 전용 칸으로만 보낸다. 이 게시판의 행사는 대개 거래소
+            # 자신의 것이고, 주최 문자열을 판정에 넣으면 '한국전력거래소' 안의
+            # '전력거래'가 관심어로 걸려 게시판에 실린 것이 전부 통과한다.
+            host=_kpx_field(body, _KPX_HOST_RE) or "한국전력거래소",
+            place=place, time=kpx_time(clause),
+            label=_label_from_title(row["title"]),
+            post_id=row["post_id"])
+        if not event or event.get("_dropped"):
+            out.append(event or {"_dropped": "no_interest_match"})
+            continue
+        # 달력이 그리지는 않지만 근거로 남기는 칸들. 접수 창과 행사일을 갈라
+        # 두는 것 자체가 이 수집원의 요점이라 마감일은 따로 적어 둔다.
+        for key, pattern in (("audience", _KPX_AUDIENCE_RE),
+                             ("apply_info", _KPX_DEADLINE_RE)):
+            value = _kpx_field(body, pattern)
+            if value:
+                event[key] = value[:120]
+        event["when_clause"] = clause[:160]
+        out.append(event)
+    return out
+
+
 # 국회 행사알림에서 이 달력이 보는 구분. 문화행사(ARTCL)와 휴일은 빼고,
 # 의사일정(ARTCL 아님)·정책행사·의원실행사·세미나만 본다.
 ASSEMBLY_KINDS = {"MEMNA": "의원실행사", "POLIC": "정책행사", "SEMNA": "세미나"}
@@ -563,6 +819,35 @@ def fetch_niftep(today: date) -> list[dict]:
     return parse_niftep_notice(response.text)
 
 
+def fetch_kpx(today: date) -> list[dict]:
+    """전력거래소 공지사항 — 목록 몇 쪽을 받고, 판정을 통과한 글만 본문을 연다.
+
+    이 수집원만 상세를 받는 이유는 `parse_kpx_list` 머리말에 적었다: 게시일과
+    행사일이 다른 자리에 있고, 행사일은 본문에만 있다.
+    """
+    session = _session()
+    session.headers["Referer"] = KPX_BOARD_URL
+    rows: list[dict] = []
+    seen: set[str] = set()
+    for page in range(1, KPX_LIST_PAGES + 1):
+        response = session.get(f"{KPX_BOARD_URL}&nPage={page}", timeout=TIMEOUT)
+        response.raise_for_status()
+        response.encoding = "utf-8"
+        for row in parse_kpx_list(response.text):
+            if row["post_id"] in seen:
+                continue
+            seen.add(row["post_id"])
+            rows.append(row)
+
+    def body(row: dict) -> str:
+        detail = session.get(row["url"], timeout=TIMEOUT)
+        detail.raise_for_status()
+        detail.encoding = "utf-8"
+        return kpx_body_text(detail.text)
+
+    return kpx_events(rows, body)
+
+
 ASSEMBLY_BASE = "https://www.assembly.go.kr/portal/noti/seminar"
 
 
@@ -614,6 +899,7 @@ SOURCES = (
     {"id": "kaif_calendar", "name": "원자력산업협회 일정표", "fetch": fetch_kaif_calendar},
     {"id": "niftep_notice", "name": "서울대 원자력정책연구소 공지", "fetch": fetch_niftep},
     {"id": "assembly_events", "name": "국회 행사알림", "fetch": fetch_assembly},
+    {"id": "kpx_notice", "name": "전력거래소 공지", "fetch": fetch_kpx},
 )
 
 
@@ -643,25 +929,52 @@ def collected_today(store: dict) -> bool:
         datetime.now(KST).date().isoformat()
 
 
+def _post_key(row: dict) -> str:
+    """게시물 한 건을 가리키는 열쇠. 게시물 번호를 주는 수집원에만 있다."""
+    post = str(row.get("post_id") or "")
+    return f"{row.get('source_id')}|{post}" if post else ""
+
+
 def merge_events(kept: list[dict], fresh: list[dict]) -> tuple[list[dict], int]:
     """새로 걷은 것을 저장본에 얹는다. **최초 확인일은 낮은 쪽이 이긴다.**
 
     협회 일정표에는 게시일 칸이 없어 최초 확인일이 '우리가 처음 본 날'이다.
     매 실행 오늘로 덮어쓰면 그 값이 영영 오늘이 되고 '언제부터 알던 일정인가'를
     잃는다. 나머지 칸은 새 값이 이긴다 — 기관이 날짜·장소를 고치면 그것이 사실이다.
+
+    `id` 는 날짜를 재료로 만들어지므로 **연기되면 같은 행사가 다른 id 를 받는다.**
+    그래서 게시물 번호를 주는 수집원(KPX)은 그 번호로 옛 줄을 찾아 자리를 옮긴다 —
+    옮기지 않으면 '9월 3일 토론회'와 '9월 17일로 연기된 같은 토론회'가 달력에
+    나란히 선다. 번호가 없는 수집원의 동작은 그대로다.
     """
     by_id = {row["id"]: row for row in kept}
+    by_post = {key: row for key, row in
+               ((_post_key(row), row) for row in kept) if key}
     added = 0
     for row in fresh:
         existing = by_id.get(row["id"])
-        if existing is None:
-            by_id[row["id"]] = row
-            added += 1
+        if existing is not None:
+            first_seen = min(existing.get("first_seen") or row["first_seen"],
+                             row["first_seen"])
+            existing.update(row)
+            existing["first_seen"] = first_seen
             continue
-        first_seen = min(existing.get("first_seen") or row["first_seen"],
-                         row["first_seen"])
-        existing.update(row)
-        existing["first_seen"] = first_seen
+        key = _post_key(row)
+        prior = by_post.get(key) if key else None
+        if prior is not None:
+            # 같은 게시물이 날짜·장소를 고쳤다. 새 줄을 세우지 않고 그 줄을 옮긴다 —
+            # 신규가 아니므로 `added` 도 세지 않는다.
+            moved = {**prior, **row,
+                     "first_seen": min(prior.get("first_seen") or row["first_seen"],
+                                       row["first_seen"])}
+            by_id.pop(prior["id"], None)
+            by_id[moved["id"]] = moved
+            by_post[key] = moved
+            continue
+        by_id[row["id"]] = row
+        if key:
+            by_post[key] = row
+        added += 1
     return list(by_id.values()), added
 
 

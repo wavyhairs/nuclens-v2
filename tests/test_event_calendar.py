@@ -443,6 +443,67 @@ class TestOfficialBeatsReporting(unittest.TestCase):
         self.assertEqual(row["first_seen"], "2026-08-14")
 
 
+class TestKpxNoticeOnTheCalendar(unittest.TestCase):
+    """전력거래소 공지가 달력에 서는 모양 (실측 2026-09-10, 게시물 77793).
+
+    이 수집원만 상세 본문까지 읽는 이유는 게시일과 행사일이 다른 자리에 있기
+    때문이다 — 그 사실이 화면까지 이어지는지 여기서 못박는다.
+    """
+
+    KPX = official(
+        id="of-kpx1", date="2026-09-16", end_date="2026-09-16", time="14:00",
+        label="ESS중앙계약시장 사업자 의견수렴 간담회",
+        notice_title="2026년 ESS중앙계약시장 사업자 의견수렴 간담회 개최",
+        host="한국전력거래소", organizer="",
+        place="스페이스쉐어 서울중부센터 9층 스카이홀",
+        url="https://new.kpx.or.kr/board.es?act=view&bid=0042"
+            "&list_no=77793&mid=a10501010000",
+        source_id="kpx_notice", publisher="한국전력거래소",
+        first_seen="2026-09-02", topics=["renewable_grid"], post_id="77793")
+
+    def test_the_notice_stands_with_its_time_and_place(self):
+        row = event_calendar.build([], TODAY, official=[self.KPX])["events"][0]
+        self.assertEqual(row["date"], "2026-09-16")
+        self.assertEqual(row["time"], "14:00")
+        self.assertEqual(row["place"], "스페이스쉐어 서울중부센터 9층 스카이홀")
+        self.assertEqual(row["origin"], "official")
+
+    def test_the_board_owner_is_the_publisher_of_record(self):
+        """공식 출처라는 사실(provenance)이 화면까지 살아 있어야 한다."""
+        row = event_calendar.build([], TODAY, official=[self.KPX])["events"][0]
+        source = row["sources"][0]
+        self.assertEqual(source["source_kind"], "official")
+        self.assertEqual(source["publisher"], "한국전력거래소")
+        self.assertIn("list_no=77793", source["url"])
+
+    def test_an_article_about_the_same_meeting_folds_into_one_chip(self):
+        """언론이 같은 간담회를 다루면 칸은 하나여야 한다."""
+        report = article(
+            title_kr="전력거래소, ESS중앙계약시장 사업자 의견수렴 간담회 연다",
+            detail="한국전력거래소는 9월 16일 ESS중앙계약시장 사업자 의견수렴 "
+                   "간담회를 개최한다.",
+            hash="news-kpx", publisher="전기신문",
+            url="https://example.com/kpx")
+        payload = event_calendar.build([report], TODAY, official=[self.KPX])
+        self.assertEqual(len(payload["events"]), 1)
+        row = payload["events"][0]
+        self.assertEqual(row["origin"], "official")
+        self.assertEqual(row["source_count"], 2)
+        self.assertEqual([source["source_kind"] for source in row["sources"]],
+                         ["official", "news"])
+
+    def test_a_notice_the_gate_would_drop_never_reaches_the_screen(self):
+        """빌드가 판정을 다시 재는 자리 — 저장본이 낡아도 화면은 안 낡는다."""
+        payload = event_calendar.build([], TODAY, official=[official(
+            id="of-kpx2", source_id="kpx_notice", publisher="한국전력거래소",
+            label="한국전력거래소 비상임감사 후보자 모집",
+            notice_title="[재공모] 한국전력거래소 비상임감사 후보자 모집",
+            host="한국전력거래소", organizer="", place="",
+            url="https://new.kpx.or.kr/board.es?act=view&bid=0042&list_no=77164")])
+        self.assertEqual(payload["events"], [])
+        self.assertEqual(payload["dropped"], {"official_not_an_event": 1})
+
+
 class TestTwoOfficialSourcesForOneEvent(unittest.TestCase):
     """협회 일정표와 협회 공지가 같은 행사를 다르게 적는다(실측 9/4 조찬강연회)."""
 

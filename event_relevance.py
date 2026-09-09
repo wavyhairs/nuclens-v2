@@ -51,7 +51,30 @@ INTEREST_TERMS: tuple[tuple[str, tuple[str, ...]], ...] = (
                     "uranium", "enrichment")),
     ("power_market", ("전력수급", "전기본", "전원믹스", "전력시장", "전력계통",
                       "송전", "전기요금", "전력정책", "전력산업",
-                      "에너지믹스", "power market")),
+                      "에너지믹스", "power market",
+                      # 2026-09-10 추가. 전력거래소 공지사항을 수집원에 들이면서
+                      # 실측한 구멍이다 — 'ESS중앙계약시장 사업자 의견수렴 간담회',
+                      # '전력거버넌스 포럼', '전기국가 및 수요·재생e 전망 정책토론회'
+                      # 가 전부 no_interest_match 로 떨어졌다. 전력시장·계통 제도를
+                      # 다루는 자리인데 위 어휘가 그 말을 하나도 담고 있지 않았다.
+                      #
+                      # '전력' 한 낱말은 넣지 않는다. 넣으면 '전력기자재 사절단'
+                      # '전력구입비 절감 사례 소개' 까지 관심 분야가 되고, 그때부터
+                      # 이 게이트를 막는 것은 중요도 판정 하나뿐이다.
+                      "전력거래", "전력수요", "전력망", "전력공급", "전력거버넌스",
+                      "계통운영", "계통해석", "에너지시장", "에너지정책",
+                      "에너지수급", "전력수급기본계획")),
+    # 재생·분산·무탄소. 원자력 그 자체는 아니지만 전원믹스를 두고 같은 자리에서
+    # 다투는 주제라 이 달력이 볼 값이 있다 (사용자 요청 2026-09-10).
+    #
+    # 'ess' 를 낱말로 넣지 않는다 — 판정은 소문자로 눕힌 문자열의 부분일치라
+    # 'business'·'process'·'assessment' 가 전부 걸린다. 실제 표기를 그대로 적는다.
+    ("renewable_grid", ("재생에너지", "재생e", "신재생", "분산에너지", "분산자원",
+                        "가상발전소", "vpp", "에너지저장", "ess중앙계약",
+                        "ess 중앙계약", "재생e 입찰", "재생에너지 입찰",
+                        "renewable energy", "distributed energy")),
+    ("carbon_free", ("무탄소", "무탄소전원", "cfe", "청정에너지",
+                     "carbon free", "carbon-free")),
     ("regulation", ("원자력안전", "원안위", "안전규제", "규제기관", "운영허가",
                     "건설허가", "주기적안전성", "내진", "피폭", "방재",
                     "nuclear safety", "nuclear regulat")),
@@ -110,6 +133,18 @@ NOISE_TERMS = ("채용", "신입사원", "경력사원", "교육생 모집", "�
                "홈페이지 점검", "서버 점검", "휴무", "홍보")
 
 
+# 잡음어와 **글자가 겹칠 뿐** 이 도메인에서는 제도 이름인 말. 잡음 판정보다
+# 먼저 본다.
+#
+# 실측(2026-09-10, KPX 공지): 'VPP사업자 및 재생e 입찰제 참여 발전사업자 대상
+# 제도 개선 간담회 시행' 이 NOISE_TERMS 의 '입찰' 에 걸려 버려졌다. 여기서 말하는
+# 입찰은 조달 입찰이 아니라 **제주 재생에너지 입찰제**, 곧 전력시장 제도 그
+# 자체다. 반대로 같은 게시판의 ''26년도 ESS 중앙계약시장 입찰공고 개설 관련…'
+# 은 진짜 조달 공고라 계속 걸려야 한다 — 그래서 '입찰' 을 통째로 풀지 않고
+# '입찰제'·'입찰시장' 이라는 **더 긴 표기가 실제로 있을 때만** 면제한다.
+NOISE_EXEMPT = ("입찰제", "입찰시장")
+
+
 def _hay(*parts: object) -> str:
     """판정에 쓰는 한 줄. 대소문자를 눕혀 영문 표기의 흔들림을 없앤다."""
     return " ".join(str(part or "") for part in parts).lower()
@@ -120,6 +155,17 @@ def _hit(hay: str, terms) -> str:
     for term in terms:
         if term in hay:
             return term
+    return ""
+
+
+def _noise_hit(hay: str) -> str:
+    """걸린 잡음어. 더 긴 제도 이름의 일부일 뿐이면 잡음이 아니다."""
+    for term in NOISE_TERMS:
+        if term not in hay:
+            continue
+        if any(term in phrase and phrase in hay for phrase in NOISE_EXEMPT):
+            continue
+        return term
     return ""
 
 
@@ -157,7 +203,7 @@ def relevance(*parts: object) -> dict:
 def significance(*parts: object) -> dict:
     """② 정책·산업 중요도가 있는가 — 달력 한 칸을 줄 만한 일인가."""
     hay = _hay(*parts)
-    noise = _hit(hay, NOISE_TERMS)
+    noise = _noise_hit(hay)
     if noise:
         return {"ok": False, "reason": "low_significance", "ground": noise,
                 "form": ""}
