@@ -524,6 +524,52 @@ class AudioPipelineSignalTests(unittest.TestCase):
         """오디오가 예정되지 않은 회차(크롤 등)는 판정 대상이 아니다."""
         self.assertEqual([], monitor.audio_pipeline_signals(None, None))
 
+    # ── 생성 성공 · 전달 실패 (2026-09-10) ──────────────────────────────
+    #
+    # 그날 전문가 음원은 774초·12.1MB 로 정상 생성됐고 텔레그램 업로드만
+    # write timeout 으로 죽었다. 생성이 성공했으므로 스텝은 expert=success 를
+    # 넘겼고 이 함수는 침묵했다 — 구독 채널에 전문가 오디오가 통째로 빠진 날에.
+
+    def test_delivery_failure_is_its_own_signal(self):
+        signals = monitor.audio_pipeline_signals(
+            "success", "delivery_failed", observation_id="daily-brief:9")
+        self.assertEqual(1, len(signals))
+        self.assertEqual("quality:audio-brief-undelivered", signals[0].key)
+        self.assertEqual("audio_pipeline", signals[0].scope)
+        self.assertEqual("daily-brief:9", signals[0].observation_id)
+        self.assertEqual(1, signals[0].min_occurrences)
+
+    def test_delivery_failure_is_not_reported_as_generation_failure(self):
+        """고치는 방법이 정반대라 한 신호로 뭉치면 안 된다."""
+        keys = {signal.key for signal in
+                monitor.audio_pipeline_signals("success", "delivery_failed")}
+        self.assertNotIn("quality:audio-brief-missing", keys)
+
+    def test_delivery_failure_promises_no_regeneration(self):
+        """운영자가 읽는 문장에 '다시 만들지 않는다'가 있어야 복구를 누른다."""
+        signal = monitor.audio_pipeline_signals("success", "delivery_failed")[0]
+        self.assertIn("만들어졌지만", signal.detail)
+        self.assertIn("보존", signal.impact)
+        self.assertIn("다시 만들지 않고", signal.impact)
+        self.assertNotIn("Traceback", signal.impact + signal.action)
+
+    def test_generation_and_delivery_failures_coexist(self):
+        """빠른은 아예 못 만들고 전문가는 못 보낸 날 — 둘 다 말해야 한다."""
+        signals = {signal.key: signal for signal in
+                   monitor.audio_pipeline_signals("failure", "delivery_failed")}
+        self.assertEqual({"quality:audio-brief-missing",
+                          "quality:audio-brief-undelivered"}, set(signals))
+        # 전문가가 오늘 날짜로 매니페스트를 넘겼으므로 빠른 브리핑의 옛 음원은
+        # 목록에서 사라진다 — '그대로 남습니다'로 잘못 안내하면 안 된다.
+        self.assertIn("사라집니다", signals["quality:audio-brief-missing"].impact)
+
+    def test_both_undelivered_is_critical(self):
+        signals = monitor.audio_pipeline_signals("delivery_failed", "delivery_failed")
+        self.assertEqual(1, len(signals))
+        self.assertEqual("critical", signals[0].severity)
+        self.assertIn("빠른", signals[0].title)
+        self.assertIn("전문가", signals[0].title)
+
 
 class WebIdentityDegradedTests(unittest.TestCase):
     """degraded 는 step outcome 이 success 라 web_pipeline 신호로는 절대 안 나온다.

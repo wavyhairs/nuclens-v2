@@ -897,6 +897,17 @@ def collection_pipeline_signals(outcome: str | None, *,
     )]
 
 
+# 오디오 스텝이 워크플로 출력으로 넘기는 판정. `success` 도 `failure` 도 아닌
+# 세 번째 값이 있어야 하는 이유는 복구 방법이 정반대이기 때문이다 — 생성 실패는
+# 다시 만들어야 하고, 전달 실패는 **절대 다시 만들면 안 되고** 이미 만든 파일을
+# 다시 올리기만 해야 한다(2026-09-10 실사고).
+AUDIO_OUTCOME_DELIVERY_FAILED = "delivery_failed"
+
+
+def _audio_labeled(fast_outcome: str | None, expert_outcome: str | None):
+    return (("빠른", fast_outcome), ("전문가", expert_outcome))
+
+
 def audio_pipeline_signals(fast_outcome: str | None, expert_outcome: str | None, *,
                            observation_id: str = "") -> list[AlertSignal]:
     """오디오 브리핑이 그날 빠졌다는 사실을 관측 가능하게 만든다.
@@ -907,6 +918,12 @@ def audio_pipeline_signals(fast_outcome: str | None, expert_outcome: str | None,
     09-08 TTS 503) 오디오가 통째로 빠졌는데도 GitHub UI 는 ✓ 였고, 사용자가
     "왜 안 왔지" 하고 물어야 알았다.
 
+    **두 가지 실패를 가른다.** 2026-09-10 에는 전문가 음원이 정상으로 만들어졌는데
+    (774초·12.1MB) 텔레그램 업로드가 write timeout 으로 죽었다. 생성은 성공했으므로
+    스텝은 `expert=success` 를 넘겼고 이 함수는 아무 말도 하지 않았다 — 구독 채널에
+    전문가 오디오가 통째로 빠진 날인데도. 생성 실패와 전달 실패는 사용자에게
+    보이는 결과가 같아도 **고치는 방법이 정반대**라 한 신호로 뭉치면 안 된다.
+
     LEVEL_ACTION 이 아니라 ATTENTION 인 이유: 오디오는 부가 기능이라 텍스트
     브리핑·사이트는 정상으로 나간다. 그래도 침묵보다는 낫다 — 이 알림의 목적은
     복구 재실행을 **사람이 판단할 수 있게** 하는 것이다.
@@ -914,48 +931,86 @@ def audio_pipeline_signals(fast_outcome: str | None, expert_outcome: str | None,
     min_occurrences=1: 하루 한 번뿐인 산출물이라 "두 번 연속"을 기다리면 이틀을
     잃는다. 오늘 빠졌으면 오늘 말해야 한다.
     """
-    def failed(outcome: str | None) -> bool:
-        return outcome is not None and str(outcome).strip().lower() != "success"
+    def normalized(outcome: str | None) -> str:
+        return str(outcome).strip().lower() if outcome is not None else ""
 
-    missing = [label for label, outcome in
-               (("빠른", fast_outcome), ("전문가", expert_outcome)) if failed(outcome)]
-    if not missing:
-        return []
-    both = len(missing) == 2
-    names = "·".join(missing)
-    delivered = [label for label, outcome in
-                 (("빠른", fast_outcome), ("전문가", expert_outcome))
-                 if outcome is not None and not failed(outcome)]
-    # 한쪽만 실패한 날의 영향은 정반대다. 성공한 쪽이 웹 매니페스트의 날짜를
-    # 오늘로 올리는데(audio_brief._write_audio_variant), 날짜가 바뀌면 전날
-    # variant 메타를 통째로 버린다 — 실패한 쪽은 **지난 날짜 음성까지 함께**
-    # 목록에서 사라진다. 09-08 실측: 빠른이 성공하자 09-06 전문가 항목이 같이
-    # 지워져 사이트에 전문가 브리핑이 하나도 남지 않았다. 여기에 "직전 음성이
-    # 남는다"고 쓰면 운영자가 영향을 정반대로 판단한다.
-    if delivered:
-        impact = (f"텍스트 브리핑과 사이트는 정상입니다. 다만 오늘 만들어진 "
-                  f"{'·'.join(delivered)} 브리핑이 웹 플레이어를 오늘 날짜로 넘기면서, "
-                  f"{names} 브리핑은 지난 날짜 음성까지 목록에서 사라집니다 — "
-                  f"지금 사이트에 {names} 브리핑이 하나도 없습니다.")
-    else:
-        impact = ("텍스트 브리핑과 사이트는 정상입니다. 오디오만 빠지며, 웹 "
-                  "플레이어에는 직전에 성공한 날짜의 음성이 그대로 남습니다.")
-    return [AlertSignal(
-        key="quality:audio-brief-missing", scope="audio_pipeline",
-        severity="critical" if both else "warning", level=LEVEL_ATTENTION,
-        title=f"{names} 오디오 브리핑이 생성되지 않았습니다",
-        detail=f"오늘 {names} 브리핑 음성이 만들어지지 않아 구독 채널에 나가지 않았습니다.",
-        impact=impact,
-        action=("복구하려면 아침 브리핑 워크플로를 '빠진 오디오 재발송' 옵션으로 다시 "
-                "실행해 주세요. 음성 생성 서버가 일시적으로 붐빈 경우라면 시간을 두고 "
-                "실행하면 대개 풀립니다."),
-        technical=(f"audio_brief={fast_outcome or 'missing'} / "
-                   f"expert_audio_brief={expert_outcome or 'missing'}. "
-                   "복구는 daily-brief workflow_dispatch 의 audio_recovery=true "
-                   "(force_audio 는 --no-send 라 발송되지 않는다). 실패 사유는 "
-                   "워크플로 로그의 '[audio]'·'[expert-audio]' 줄."),
-        observation_id=str(observation_id).strip(), min_occurrences=1,
-    )]
+    def undelivered(outcome: str | None) -> bool:
+        return normalized(outcome) == AUDIO_OUTCOME_DELIVERY_FAILED
+
+    def failed(outcome: str | None) -> bool:
+        return (outcome is not None and normalized(outcome) != "success"
+                and not undelivered(outcome))
+
+    missing = [label for label, outcome in _audio_labeled(fast_outcome, expert_outcome)
+               if failed(outcome)]
+    stuck = [label for label, outcome in _audio_labeled(fast_outcome, expert_outcome)
+             if undelivered(outcome)]
+    signals: list[AlertSignal] = []
+    observation = str(observation_id).strip()
+    technical_tail = (f"audio_brief={fast_outcome or 'missing'} / "
+                      f"expert_audio_brief={expert_outcome or 'missing'}.")
+
+    if missing:
+        both = len(missing) == 2
+        names = "·".join(missing)
+        # 만들어지기는 한 쪽. 전달만 실패한 변형도 여기 든다 — 웹 매니페스트
+        # 날짜를 오늘로 올리는 것은 **생성**이지 발송이 아니다.
+        generated = [label for label, outcome in
+                     _audio_labeled(fast_outcome, expert_outcome)
+                     if outcome is not None and not failed(outcome)]
+        # 한쪽만 실패한 날의 영향은 정반대다. 성공한 쪽이 웹 매니페스트의 날짜를
+        # 오늘로 올리는데(audio_brief._write_audio_variant), 날짜가 바뀌면 전날
+        # variant 메타를 통째로 버린다 — 실패한 쪽은 **지난 날짜 음성까지 함께**
+        # 목록에서 사라진다. 09-08 실측: 빠른이 성공하자 09-06 전문가 항목이 같이
+        # 지워져 사이트에 전문가 브리핑이 하나도 남지 않았다. 여기에 "직전 음성이
+        # 남는다"고 쓰면 운영자가 영향을 정반대로 판단한다.
+        if generated:
+            impact = (f"텍스트 브리핑과 사이트는 정상입니다. 다만 오늘 만들어진 "
+                      f"{'·'.join(generated)} 브리핑이 웹 플레이어를 오늘 날짜로 넘기면서, "
+                      f"{names} 브리핑은 지난 날짜 음성까지 목록에서 사라집니다 — "
+                      f"지금 사이트에 {names} 브리핑이 하나도 없습니다.")
+        else:
+            impact = ("텍스트 브리핑과 사이트는 정상입니다. 오디오만 빠지며, 웹 "
+                      "플레이어에는 직전에 성공한 날짜의 음성이 그대로 남습니다.")
+        signals.append(AlertSignal(
+            key="quality:audio-brief-missing", scope="audio_pipeline",
+            severity="critical" if both else "warning", level=LEVEL_ATTENTION,
+            title=f"{names} 오디오 브리핑이 생성되지 않았습니다",
+            detail=f"오늘 {names} 브리핑 음성이 만들어지지 않아 구독 채널에 나가지 않았습니다.",
+            impact=impact,
+            action=("복구하려면 아침 브리핑 워크플로를 '빠진 오디오 재발송' 옵션으로 다시 "
+                    "실행해 주세요. 음성 생성 서버가 일시적으로 붐빈 경우라면 시간을 두고 "
+                    "실행하면 대개 풀립니다."),
+            technical=(f"{technical_tail} "
+                       "복구는 daily-brief workflow_dispatch 의 audio_recovery=true "
+                       "(force_audio 는 --no-send 라 발송되지 않는다). 실패 사유는 "
+                       "워크플로 로그의 '[audio]'·'[expert-audio]' 줄."),
+            observation_id=observation, min_occurrences=1,
+        ))
+
+    if stuck:
+        names = "·".join(stuck)
+        signals.append(AlertSignal(
+            key="quality:audio-brief-undelivered", scope="audio_pipeline",
+            severity="critical" if len(stuck) == 2 else "warning",
+            level=LEVEL_ATTENTION,
+            title=f"{names} 오디오가 텔레그램으로 전달되지 않았습니다",
+            detail=(f"{names} 브리핑 음성은 정상적으로 만들어졌지만 텔레그램 전송이 "
+                    f"끝나지 않아 구독 채널에 나가지 않았습니다."),
+            impact=("텍스트 브리핑과 사이트, 웹 플레이어는 정상입니다. 만들어진 음원은 "
+                    "그대로 보존되어 있어, 복구 실행은 음성을 다시 만들지 않고 전송만 "
+                    "다시 시도합니다."),
+            action=("복구하려면 아침 브리핑 워크플로를 '빠진 오디오 재발송' 옵션으로 다시 "
+                    "실행해 주세요. 이미 만들어 둔 음원을 그대로 다시 올리므로 음성 생성 "
+                    "비용은 들지 않습니다."),
+            technical=(f"{technical_tail} 생성 성공·전달 미완료는 오디오 스크립트 종료 "
+                       "코드 3 이다. 사유는 web/public/data/audio/audio.json 의 "
+                       "variants[].delivery.state (telegram_failed / no_file_id / "
+                       "queue_failed) 와 워크플로 로그의 '[audio] 텔레그램' 줄. "
+                       "복구는 audio_recovery=true → `--recover` (TTS 재호출 없음)."),
+            observation_id=observation, min_occurrences=1,
+        ))
+    return signals
 
 
 def latest_data_gate_record(records: Iterable[Mapping]) -> Mapping | None:

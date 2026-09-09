@@ -408,9 +408,11 @@ def main() -> int:
     # 알림까지 실어 나르는 유일한 경로다. choices 를 쓰지 않는 이유는 build-mode
     # 와 같다: 오디오가 스킵된 회차의 빈 값에 알림 스텝이 통째로 죽으면 안 된다.
     parser.add_argument("--audio-fast-outcome", default="",
-                        help="audio_brief.py 종료 결과 (success|failure, 미실행이면 빈 값)")
+                        help="audio_brief.py 종료 결과 "
+                             "(success|delivery_failed|failure, 미실행이면 빈 값)")
     parser.add_argument("--audio-expert-outcome", default="",
-                        help="expert_audio_brief.py 종료 결과 (success|failure, 미실행이면 빈 값)")
+                        help="expert_audio_brief.py 종료 결과 "
+                             "(success|delivery_failed|failure, 미실행이면 빈 값)")
     args = parser.parse_args()
     if args.check_admin_chat:
         return check_admin_chat()
