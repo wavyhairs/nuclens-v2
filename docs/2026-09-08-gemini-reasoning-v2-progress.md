@@ -37,7 +37,7 @@
 | P0.5 | Behavior-neutral seam refactor | 0 | `DONE` (ca39d89) |
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `IN_PROGRESS` — 배선 완료, 스위치 대기 |
-| P3 | Independent Gold | 0 | `BLOCKED_HUMAN` — 37건 완료, **2회차 10건 대기** |
+| P3 | Independent Gold | 0 | `DONE` — 47건 판정 완료, 재라벨 대상 0 (97019a6) |
 | P4 | Sequential reasoning evaluation | 최소 | `IN_PROGRESS` — 준비 완료, P2/P3 대기 |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
@@ -46,20 +46,17 @@
 
 ## 3. 다음 한 줄
 
-> **1회차 37건은 반영됐다. 2회차 10건이 남았다.**
+> **사람 판정은 전부 끝났다(47건). 남은 것은 자연 데이터와 머지 하나다.**
 >
-> ```
-> python tools/review_queue.py      # 남은 10건만 표시된다 (curation PASS)
-> python tools/promote_reviews.py --apply
-> ```
+> 1. 브랜치를 main 에 머지한 뒤 repo variable `NUCLENS_LLM_CAPTURE=on`.
+>    (워크플로 변경이 브랜치에만 있어 머지 전에 켜면 아무 일도 안 일어난다.)
+> 2. 7~14일 뒤 capture artifact 를 받아
+>    `python tools/fidelity_gate.py --capture <llm_capture.jsonl>`
+> 3. `REPLAY_FIDELITY_PROVEN` 이 나온 profile 만 `llm_eval.TASKS` 에
+>    request_builder 와 evaluator_policy 를 꽂는다. 그 전에는 P4 가 열리지 않는다.
 >
-> 왜 10건이 더 필요한가: blind 표본에서 **curation PASS 3/3 이 전부 뒤집혔다.**
-> 그 층의 나머지 10건도 못 믿는다. 대상은 `relabel_queue()` 가 위험 판정에서
-> 직접 끌어오므로 손으로 고르지 않는다.
->
-> **그 뒤:** capture 데이터가 쌓이면 `python tools/fidelity_gate.py --capture <파일>`.
-> PROVEN 이 나온 profile 만 `llm_eval.TASKS` 에 request_builder 를 꽂는다.
-> 그리고 브랜치를 main 에 머지한 뒤 repo variable `NUCLENS_LLM_CAPTURE=on`.
+> **코드로 더 할 수 있는 일은 없다.** P0~P4 준비가 모두 끝났고, 다음 단계는
+> 자연 production 데이터가 쌓이기를 기다리는 것이다.
 
 ## 4. Phase별 체크리스트
 
@@ -108,7 +105,7 @@
 - [x] Identity 계약 매핑 확정 — `tools/identity_contract_map.py` (51f2036)
 - [x] 판정 입력 창구 `tools/review_queue.py` (febd82a) — 37건 한 자리
 - [x] 1회차 37건 판정 완료 (2026-09-09) → `4dc1afa` 로 반영
-- [ ] **2회차 blind 10건** — curation PASS 층이 표본 3/3 뒤집혀 나머지도 못 믿는다
+- [x] 2회차 blind 10건 완료 → PASS 층 전수 13건 중 9건(69%) 뒤집힘
 
 ### P4 — Sequential evaluation (최소 API)
 - [x] case-major 루프 + config 순서 randomize — `plan_jobs()` (21d18a4)
@@ -170,7 +167,49 @@ P4 reasoning 비교에서는 순환이 문제가 아니다 — 프롬프트에�
 
 `production_contract_fingerprint()` 최소 입력은 사양 §4 P1 참조. `observed_baseline_thinking` 을 상수로 적으면 P1 은 실패한 것이다.
 
-## 4-E. 1회차 판정 결과 (2026-09-09, 확정)
+## 4-F. 최종 Gold 상태 (2회차까지 반영, 확정)
+
+**사람 판정 47건 완료** (1회차 37 + 2회차 10). 재라벨 대상 0.
+
+### curation
+
+| 층 | 표본 | 정정 | 결과 |
+|---|---|---|---|
+| PASS | 13 | **9 (69%)** | 전부 REPAIR 로. `RESOLVED_WITH_CORRECTIONS` |
+| REPAIR | 6 | 0 | `CONFIRMED` (미표본 4) |
+| BLOCK | 0 | — | `UNVERIFIED` (1건뿐) |
+
+평가 가능 Gold **20건** (REPAIR 16 / PASS 4), 출처 미검증 제외 5건.
+
+> 1회차 3/3 을 100% 로 외삽했다면 멀쩡한 4건까지 고쳤을 것이다. 전수 재라벨이
+> 옳았고, 그 숫자는 테스트로 고정돼 있다.
+
+### semantic — 근거의 종류가 다르다
+
+| 축 | 근거 | 건수 |
+|---|---|---|
+| safety (PASS 하면 안 된다) | **구성** | 34 |
+| severity (BLOCK 인가 REPAIR 인가) | 가려진 사람 판정 | 11 |
+
+`unsupported_inference` 24건과 `controlled_perturbation` 10건은 오류를 **일부러
+심어** 만든 것이라 개입 필요성이 사람 라벨과 무관하게 참이다. anchoring 때문에
+등급은 못 믿지만 안전 게이트는 돌릴 수 있다. 두 축을 섞으면 쓸 수 있는 지표를
+"Gold 부족"이라며 버리게 된다. `llm_eval.evidence_basis()` 가 이 구분을 낸다.
+
+### identity — 검토 잔여 0
+
+| profile | MERGE | SEPARATE |
+|---|---|---|
+| `issue_review` | 24 | 36 |
+| `dedup` / `dedup_final` | 10 | 50 |
+
+issue_review 는 13/47 → 24/36 으로 균형 회복. dedup 은 MERGE 10건이라 여전히
+얇으므로 false merge 가 아니라 coverage·붕괴 안전 지표로 읽는다.
+
+증거는 fixture 에 durable 하다(`superseded_label`, `human_relation`).
+`.eval/` 사이드카가 없어져도 재구성된다.
+
+## 4-E. 1회차 판정 결과 (2026-09-09, 참고)
 
 **blind 15건 — 일치 11 / 불일치 4, 불일치가 전부 한 방향(보관 라벨이 더 관대).**
 
@@ -280,6 +319,7 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-09 | — | 중단 후 재개. 사람 판정은 여전히 미실시 | — |
 | 2026-09-09 | P4 | 호출 순서 case-major + 지연 분해 + 중복 arm 판정. 변이로 순서 편향 검증. 전체 1697 passed | `21d18a4` |
 | 2026-09-09 | P3 | **사람 판정 37건 반영.** anchoring 확인(PASS 층 3/3 뒤집힘), identity 검토 잔여 0. 전체 1714 passed | `4dc1afa` |
-| 2026-09-09 | P3 | 무너진 층 재라벨 큐 자동화(10건). 전체 1720 passed | 다음 |
+| 2026-09-09 | P3 | 무너진 층 재라벨 큐 자동화(10건). 전체 1720 passed | `cebd9f9` |
+| 2026-09-09 | P3 | **2회차 10건 반영. PASS 층 9/13 뒤집힘. 안전/등급 근거 분리.** 전체 1728 passed | `97019a6` |
 | 2026-09-09 | — | daily-brief 34279339893 완료 확인 후 rebase → push | — |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
