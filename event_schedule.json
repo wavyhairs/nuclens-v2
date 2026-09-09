@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-10T00:45:23+09:00",
+ "generated_at": "2026-09-10T07:37:11+09:00",
  "events": [
   {
    "id": "of-78b28354d3ea",
@@ -238,6 +238,27 @@
    ],
    "relevance": "원전해체",
    "significance": "포럼"
+  },
+  {
+   "id": "of-33e370642eef",
+   "date": "2026-09-16",
+   "end_date": "2026-09-16",
+   "kind": "point",
+   "time": "10:00",
+   "label": "에너지 산업국가전략 국회 연속토론회: 3차-재생에너지 국산화 전략 방안",
+   "host": "박정 의원실, 접경지역내일포럼",
+   "organizer": "박정 의원실, 접경지역내일포럼",
+   "place": "의원회관 제1간담회의실(201호)",
+   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
+   "source_id": "assembly_events",
+   "publisher": "국회",
+   "notice_title": "에너지 산업국가전략 국회 연속토론회: 3차-재생에너지 국산화 전략 방안",
+   "first_seen": "2026-09-10",
+   "topics": [
+    "renewable_grid"
+   ],
+   "relevance": "재생에너지",
+   "significance": "토론회"
   },
   {
    "id": "of-57eba4a2abf8",
@@ -482,7 +503,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-09-10T00:45:23+09:00",
+   "at": "2026-09-10T07:37:11+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -490,7 +511,7 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-09-10T00:45:23+09:00",
+   "at": "2026-09-10T07:37:11+09:00",
    "ok": true,
    "parsed": 12,
    "kept": 2,
@@ -501,7 +522,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-09-10T00:45:23+09:00",
+   "at": "2026-09-10T07:37:11+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -514,7 +535,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-09-10T00:45:23+09:00",
+   "at": "2026-09-10T07:37:11+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -522,14 +543,27 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-09-10T00:45:23+09:00",
+   "at": "2026-09-10T07:37:11+09:00",
    "ok": true,
    "parsed": 79,
-   "kept": 1,
-   "new": 0,
+   "kept": 2,
+   "new": 1,
    "dropped": {
-    "no_interest_match": 77,
+    "no_interest_match": 76,
     "not_an_event": 1
+   }
+  },
+  "kpx_notice": {
+   "at": "2026-09-10T07:37:11+09:00",
+   "ok": true,
+   "parsed": 20,
+   "kept": 1,
+   "new": 1,
+   "dropped": {
+    "no_event_date": 4,
+    "not_an_event": 7,
+    "no_interest_match": 7,
+    "unreadable_event_date": 1
    }
   }
  }
