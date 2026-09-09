@@ -37,7 +37,7 @@
 | P0.5 | Behavior-neutral seam refactor | 0 | `DONE` (ca39d89) |
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `IN_PROGRESS` — 배선 완료, 스위치 대기 |
-| P3 | Independent Gold | 0 | `BLOCKED_HUMAN` — 도구 완비, 판정 37건 대기 |
+| P3 | Independent Gold | 0 | `BLOCKED_HUMAN` — 37건 완료, **2회차 10건 대기** |
 | P4 | Sequential reasoning evaluation | 최소 | `IN_PROGRESS` — 준비 완료, P2/P3 대기 |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
@@ -46,28 +46,20 @@
 
 ## 3. 다음 한 줄
 
-> **사람 차례다. 사람 없이 할 수 있는 것은 §4-D 까지 전부 끝났다.**
+> **1회차 37건은 반영됐다. 2회차 10건이 남았다.**
 >
 > ```
-> python tools/review_queue.py      # 37건 판정 (blind 15 + identity 22)
+> python tools/review_queue.py      # 남은 10건만 표시된다 (curation PASS)
+> python tools/promote_reviews.py --apply
 > ```
-> 판정은 `.eval/blind-review.json`, `.eval/identity-review.json` 에 쌓인다.
-> **`.gitignore` 대상이라 푸시되지 않는다 — 다른 컴퓨터로 옮기면 사라진다.**
 >
+> 왜 10건이 더 필요한가: blind 표본에서 **curation PASS 3/3 이 전부 뒤집혔다.**
+> 그 층의 나머지 10건도 못 믿는다. 대상은 `relabel_queue()` 가 위험 판정에서
+> 직접 끌어오므로 손으로 고르지 않는다.
+>
+> **그 뒤:** capture 데이터가 쌓이면 `python tools/fidelity_gate.py --capture <파일>`.
+> PROVEN 이 나온 profile 만 `llm_eval.TASKS` 에 request_builder 를 꽂는다.
 > 그리고 브랜치를 main 에 머지한 뒤 repo variable `NUCLENS_LLM_CAPTURE=on`.
-> (워크플로 변경이 브랜치에만 있어서, 머지 전에 켜면 아무 일도 안 일어난다.)
->
-> **판정이 끝난 뒤 이어갈 것:**
-> 1. `python tools/blind_relabel.py --compare` → anchoring 방향 판정.
->    한 방향이면 재라벨 범위를 넓히고, 양방향이면 기존 Gold 를 살린다.
-> 2. identity 관계를 `review_queue.RELATION_TO_VERDICT` 로 profile 별
->    MERGE/SEPARATE 로 변환해 Gold 에 반영. 그 뒤 `label_status` 를
->    독립 상태로 올려야 `llm_eval.labelled_cases` 가 집어 간다.
-> 3. capture 데이터가 쌓이면 `python tools/fidelity_gate.py --capture <파일>`.
->    PROVEN 이 나온 profile 만 `llm_eval.TASKS` 에 request_builder 를 꽂는다.
->
-> **막힌 이유:** P2 는 자연 데이터, P3 는 사람 판정. 둘 다 시간이 필요한 것이지
-> 코드가 모자란 것이 아니다.
 
 ## 4. Phase별 체크리스트
 
@@ -115,7 +107,8 @@
 - [x] blind 패킷 (화이트리스트 + 층 섞기 + 변이 검증) — `tools/blind_relabel.py` (657ce87)
 - [x] Identity 계약 매핑 확정 — `tools/identity_contract_map.py` (51f2036)
 - [x] 판정 입력 창구 `tools/review_queue.py` (febd82a) — 37건 한 자리
-- [ ] **BLOCKED_HUMAN — 사람이 37건 판정할 차례**
+- [x] 1회차 37건 판정 완료 (2026-09-09) → `4dc1afa` 로 반영
+- [ ] **2회차 blind 10건** — curation PASS 층이 표본 3/3 뒤집혀 나머지도 못 믿는다
 
 ### P4 — Sequential evaluation (최소 API)
 - [x] case-major 루프 + config 순서 randomize — `plan_jobs()` (21d18a4)
@@ -176,6 +169,33 @@ P4 reasoning 비교에서는 순환이 문제가 아니다 — 프롬프트에�
 | `curation` / `dedup` / `issue_review` / `keei_match` | thinking 필드 없음 |
 
 `production_contract_fingerprint()` 최소 입력은 사양 §4 P1 참조. `observed_baseline_thinking` 을 상수로 적으면 P1 은 실패한 것이다.
+
+## 4-E. 1회차 판정 결과 (2026-09-09, 확정)
+
+**blind 15건 — 일치 11 / 불일치 4, 불일치가 전부 한 방향(보관 라벨이 더 관대).**
+
+| 층 | 표본 | 정정 | 판정 |
+|---|---|---|---|
+| curation REPAIR | 6 | 0 | `CONFIRMED` — 나머지 4건도 살린다 |
+| curation PASS | 3 | **3** | `RELABEL_REQUIRED` — 나머지 10건 재라벨 |
+| semantic controlled_perturbation | 6 | 1 | 대체로 견고 |
+| semantic BLOCK | 5 | 0 | `CONFIRMED` (미표본 34) |
+
+AI 가 "문제 없음"이라 하면 사람이 그대로 승인했지만, 가리고 보니 셋 다 REPAIR 였다.
+anchoring 이 **관대한 방향으로만** 작동했다.
+
+**identity 22건 — 검토 잔여 0.** 두 profile 모두 60건 전부 판정 가능해졌다.
+
+| profile | MERGE | SEPARATE |
+|---|---|---|
+| `issue_review` | 24 | 36 |
+| `dedup` / `dedup_final` | 10 | 50 |
+
+issue_review 는 13/47 이던 균형이 24/36 으로 회복됐다. dedup 은 MERGE 10건이라
+여전히 얇다 — false merge 가 아니라 coverage·붕괴 안전 지표로 읽는다.
+
+증거는 fixture 에 durable 하게 남는다(`superseded_label`, `human_relation`).
+사이드카가 없어져도 재구성된다.
 
 ## 4-B. 사람에게 요청할 작업 — 한 번에 몰아 둔 전부
 
@@ -259,5 +279,7 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-09 | P3 | 판정 입력 창구(두 대기열 37건, 경계 테스트). 전체 1681 passed | `febd82a` |
 | 2026-09-09 | — | 중단 후 재개. 사람 판정은 여전히 미실시 | — |
 | 2026-09-09 | P4 | 호출 순서 case-major + 지연 분해 + 중복 arm 판정. 변이로 순서 편향 검증. 전체 1697 passed | `21d18a4` |
+| 2026-09-09 | P3 | **사람 판정 37건 반영.** anchoring 확인(PASS 층 3/3 뒤집힘), identity 검토 잔여 0. 전체 1714 passed | `4dc1afa` |
+| 2026-09-09 | P3 | 무너진 층 재라벨 큐 자동화(10건). 전체 1720 passed | 다음 |
 | 2026-09-09 | — | daily-brief 34279339893 완료 확인 후 rebase → push | — |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
