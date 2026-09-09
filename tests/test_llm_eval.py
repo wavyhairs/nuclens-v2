@@ -241,5 +241,60 @@ class LatencyDecompositionTests(unittest.TestCase):
         summary = llm_eval.summarize(rows)
         self.assertIsNone(summary["overhead_p50"])
 
+
+class EvidenceBasisTests(unittest.TestCase):
+    """안전 근거와 등급 근거를 섞지 않는가.
+
+    anchoring 때문에 등급(BLOCK/REPAIR)은 못 믿게 됐지만 "PASS 하면 안 된다"는 것은
+    구성에서 나오므로 여전히 참이다. 둘을 한 칸에 담으면 쓸 수 있는 안전 지표를
+    "Gold 부족"이라며 버리게 된다.
+    """
+
+    PAYLOAD = {"cases": [
+        {"id": "u1", "candidate_kind": "unsupported_inference",
+         "human_label": "BLOCK", "label_status": "HUMAN_REVIEWED_AI_ASSISTED"},
+        {"id": "p1", "candidate_kind": "controlled_perturbation",
+         "human_label": "BLOCK", "label_status": "HUMAN_BLIND_CONFIRMED"},
+        {"id": "a1", "candidate_kind": "source_aligned",
+         "human_label": None, "label_status": "HUMAN_LABEL_REQUIRED"},
+        {"id": "a2", "candidate_kind": "source_aligned",
+         "human_label": "PASS", "label_status": "HUMAN_BLIND_CONFIRMED"},
+    ]}
+
+    def test_construction_grounds_the_safety_set_without_human_labels(self):
+        ids = {case["id"] for case in llm_eval.safety_cases(self.PAYLOAD)}
+        self.assertEqual(ids, {"u1", "p1"})
+
+    def test_aligned_cases_are_never_in_the_safety_set(self):
+        # source_aligned 는 PASS 가 정답이다. 여기 섞이면 안전 지표가 뒤집힌다.
+        for case in llm_eval.safety_cases(self.PAYLOAD):
+            self.assertNotEqual(case["candidate_kind"],
+                                llm_eval.STRUCTURALLY_ALIGNED_KIND)
+
+    def test_severity_needs_a_blind_judgment_not_construction(self):
+        ids = {case["id"] for case in llm_eval.severity_cases(self.PAYLOAD)}
+        self.assertEqual(ids, {"p1", "a2"})
+        self.assertNotIn("u1", ids)  # 구성은 등급을 정해 주지 않는다
+
+    def test_the_two_bases_are_reported_apart(self):
+        basis = llm_eval.evidence_basis(self.PAYLOAD)
+        self.assertEqual(basis["safety_cases"], 2)
+        self.assertEqual(basis["severity_cases"], 2)
+        self.assertEqual(basis["safety_basis"], "construction")
+        self.assertEqual(basis["severity_basis"], "blind human judgment")
+        self.assertEqual(basis["excluded_by_provenance"], 1)
+
+    def test_the_real_semantic_fixture_has_a_usable_safety_set(self):
+        import json
+        from pathlib import Path
+
+        payload = json.loads(
+            Path("tests/fixtures/gemini_reasoning/semantic_gold.json")
+            .read_text(encoding="utf-8"))
+        basis = llm_eval.evidence_basis(payload)
+        # 등급은 얇아도 안전 게이트는 돌릴 수 있다는 것이 이 구분의 요점이다.
+        self.assertGreaterEqual(basis["safety_cases"], 30)
+        self.assertGreater(basis["safety_cases"], basis["severity_cases"])
+
 if __name__ == "__main__":
     unittest.main()

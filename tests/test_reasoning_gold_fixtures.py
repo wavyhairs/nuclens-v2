@@ -80,8 +80,8 @@ class ReasoningGoldFixtureTests(unittest.TestCase):
         self.assertEqual(len(pending), 15)
         self.assertEqual(
             Counter(case["label_status"] for case in cases),
-            {"HUMAN_REVIEWED_AI_ASSISTED": 15, "HUMAN_BLIND_CONFIRMED": 6,
-             "HUMAN_BLIND_CORRECTED": 3, "HUMAN_LABEL_REQUIRED": 15,
+            {"HUMAN_REVIEWED_AI_ASSISTED": 5, "HUMAN_BLIND_CONFIRMED": 10,
+             "HUMAN_BLIND_CORRECTED": 9, "HUMAN_LABEL_REQUIRED": 15,
              "USER_SPECIFIED": 1})
 
     def test_semantic_queue_is_balanced_and_covers_taxonomy(self):

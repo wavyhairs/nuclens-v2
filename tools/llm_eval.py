@@ -153,6 +153,52 @@ def excluded_by_provenance(payload: dict) -> int:
                and case.get("label_status") == AI_ASSISTED_STATUS)
 
 
+# 구성으로 정답이 정해지는 케이스. 사람 라벨 없이도 "개입이 필요하다"가 참이다 —
+# `unsupported_inference` 는 근거 없는 주장을 **일부러 심어** 만들었고,
+# `controlled_perturbation` 은 사실을 **일부러 틀리게** 바꿔 만들었다. 그 사실은
+# 사람이 라벨을 붙였는지와 무관하다.
+#
+# 이 구분이 필요한 이유: anchoring 때문에 판정 등급(BLOCK 인가 REPAIR 인가)은 못
+# 믿게 됐지만, **PASS 하면 안 된다**는 것은 여전히 참이다. 둘을 한 칸에 담으면
+# 안전 지표를 쓸 수 있는데도 "Gold 가 부족하다"며 버리게 된다.
+STRUCTURAL_INTERVENTION_KINDS = frozenset({
+    "unsupported_inference", "controlled_perturbation"})
+STRUCTURALLY_ALIGNED_KIND = "source_aligned"
+
+
+def safety_cases(payload: dict) -> list[dict]:
+    """PASS 로 판정하면 안 되는 케이스. 근거가 사람 판정이 아니라 구성이다.
+
+    안전 게이트(`unsafe PASS = 0`)에만 쓴다. **등급 정확도에는 쓰지 않는다** —
+    BLOCK 인지 REPAIR 인지는 구성이 정해 주지 않는다.
+    """
+    return [case for case in payload.get("cases") or []
+            if case.get("candidate_kind") in STRUCTURAL_INTERVENTION_KINDS]
+
+
+def severity_cases(payload: dict) -> list[dict]:
+    """등급까지 믿을 수 있는 케이스. 가려진 사람 판정을 거친 것만."""
+    return [case for case in payload.get("cases") or []
+            if case.get("label_status") in EVALUATION_STATUSES
+            and case.get("human_label")]
+
+
+def evidence_basis(payload: dict) -> dict:
+    """평가에 무엇을 쓸 수 있는지 한 눈에. 두 축을 섞지 않는다."""
+    safety = safety_cases(payload)
+    severity = severity_cases(payload)
+    return {
+        "safety_cases": len(safety),
+        "safety_basis": "construction",
+        "severity_cases": len(severity),
+        "severity_basis": "blind human judgment",
+        "excluded_by_provenance": excluded_by_provenance(payload),
+        "aligned_cases": sum(
+            1 for case in payload.get("cases") or []
+            if case.get("candidate_kind") == STRUCTURALLY_ALIGNED_KIND),
+    }
+
+
 def redundant_arms(rows: list[dict]) -> dict[str, list[str]]:
     """canary 결과에서 baseline 과 **행동이 같은** arm 을 찾아낸다.
 

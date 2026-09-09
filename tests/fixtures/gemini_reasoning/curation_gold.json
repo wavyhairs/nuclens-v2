@@ -109,7 +109,7 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "required_repair": null
     },
     {
@@ -140,7 +140,7 @@
         ],
         "domain": "power_market"
       },
-      "human_label": "PASS",
+      "human_label": "REPAIR",
       "human_dimensions": {
         "event_boundary": "PASS",
         "scope": "PASS",
@@ -149,8 +149,9 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
-      "required_repair": null
+      "label_status": "HUMAN_BLIND_CORRECTED",
+      "required_repair": null,
+      "superseded_label": "PASS"
     },
     {
       "id": "curation-a0e2cb7843a93c7c",
@@ -300,7 +301,7 @@
         ],
         "domain": "supply_chain_or_general"
       },
-      "human_label": "PASS",
+      "human_label": "REPAIR",
       "human_dimensions": {
         "event_boundary": "PASS",
         "scope": "PASS",
@@ -309,8 +310,9 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
-      "required_repair": null
+      "label_status": "HUMAN_BLIND_CORRECTED",
+      "required_repair": null,
+      "superseded_label": "PASS"
     },
     {
       "id": "curation-4ee5aef7063ebdda",
@@ -348,7 +350,7 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "required_repair": null
     },
     {
@@ -428,7 +430,7 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "required_repair": null
     },
     {
@@ -576,7 +578,7 @@
         ],
         "domain": "reactor"
       },
-      "human_label": "PASS",
+      "human_label": "REPAIR",
       "human_dimensions": {
         "event_boundary": "PASS",
         "scope": "PASS",
@@ -585,8 +587,9 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
-      "required_repair": null
+      "label_status": "HUMAN_BLIND_CORRECTED",
+      "required_repair": null,
+      "superseded_label": "PASS"
     },
     {
       "id": "curation-74c753527a5e88ed",
@@ -614,7 +617,7 @@
         ],
         "domain": "power_market"
       },
-      "human_label": "PASS",
+      "human_label": "REPAIR",
       "human_dimensions": {
         "event_boundary": "PASS",
         "scope": "PASS",
@@ -623,8 +626,9 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
-      "required_repair": null
+      "label_status": "HUMAN_BLIND_CORRECTED",
+      "required_repair": null,
+      "superseded_label": "PASS"
     },
     {
       "id": "curation-f19d023d5c9863e4",
@@ -652,7 +656,7 @@
         ],
         "domain": "policy"
       },
-      "human_label": "PASS",
+      "human_label": "REPAIR",
       "human_dimensions": {
         "event_boundary": "PASS",
         "scope": "PASS",
@@ -661,8 +665,9 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
-      "required_repair": null
+      "label_status": "HUMAN_BLIND_CORRECTED",
+      "required_repair": null,
+      "superseded_label": "PASS"
     },
     {
       "id": "curation-159ee56b79e02a3a",
@@ -691,7 +696,7 @@
         ],
         "domain": "smr"
       },
-      "human_label": "PASS",
+      "human_label": "REPAIR",
       "human_dimensions": {
         "event_boundary": "PASS",
         "scope": "PASS",
@@ -700,8 +705,9 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
-      "required_repair": null
+      "label_status": "HUMAN_BLIND_CORRECTED",
+      "required_repair": null,
+      "superseded_label": "PASS"
     },
     {
       "id": "curation-6a779c07bd7dffaf",
@@ -1315,7 +1321,7 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "required_repair": null
     },
     {

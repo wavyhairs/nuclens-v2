@@ -163,24 +163,60 @@ class RelabelQueueTests(unittest.TestCase):
                         "semantic": _load("semantic_gold.json")}
 
     def test_only_relabel_required_strata_are_queued(self):
-        queued = gold_provenance.relabel_queue(self.payloads)
+        """큐에 든 것은 반드시 무너진 층에서 나와야 한다. 비어 있어도 참이다."""
+        from tools import promote_reviews
+
+        for row in gold_provenance.relabel_queue(self.payloads):
+            with self.subTest(case=row["case_id"]):
+                risk = promote_reviews.stratum_risk(self.payloads[row["task"]])
+                self.assertEqual(risk[row["stratum"]]["verdict"], "RELABEL_REQUIRED")
+
+    def test_a_collapsed_stratum_queues_its_remainder(self):
+        # 무너진 층이 있으면 그 층의 미표본이 전부 큐에 실려야 한다.
+        shaken = copy.deepcopy(self.payloads)
+        rows = [c for c in shaken["curation"]["cases"]
+                if (c.get("superseded_label") or c.get("human_label")) == "REPAIR"]
+        for index, case in enumerate(rows[:2]):
+            case["superseded_label"] = "REPAIR"
+            case["human_label"] = "BLOCK"
+            case["label_status"] = "HUMAN_BLIND_CORRECTED"
+        for case in rows[2:]:
+            case["label_status"] = gold_provenance.AI_ASSISTED
+        queued = gold_provenance.relabel_queue(shaken)
         self.assertTrue(queued)
-        self.assertEqual({(row["task"], row["stratum"]) for row in queued},
-                         {("curation", "PASS")})
+        self.assertEqual({row["stratum"] for row in queued}, {"REPAIR"})
+
+    def test_the_queue_empties_once_the_stratum_is_resolved(self):
+        # 실제 현재 상태 — 2회차까지 끝나 재라벨 대상이 없다.
+        self.assertEqual(gold_provenance.relabel_queue(self.payloads), [])
 
     def test_already_reviewed_cases_are_not_asked_twice(self):
-        queued = {row["case_id"] for row in gold_provenance.relabel_queue(self.payloads)}
-        for payload in self.payloads.values():
-            for case in payload["cases"]:
-                if case["id"] in queued:
-                    with self.subTest(case=case["id"]):
-                        self.assertEqual(case["label_status"],
-                                         gold_provenance.AI_ASSISTED)
+        shaken = copy.deepcopy(self.payloads)
+        for case in shaken["curation"]["cases"]:
+            if (case.get("superseded_label") or case.get("human_label")) == "REPAIR":
+                case["label_status"] = gold_provenance.AI_ASSISTED
+        reviewed = {c["id"] for c in shaken["curation"]["cases"]
+                    if c["label_status"] != gold_provenance.AI_ASSISTED}
+        queued = {row["case_id"] for row in gold_provenance.relabel_queue(shaken)}
+        self.assertFalse(queued & reviewed)
 
     def test_a_confirmed_stratum_is_never_queued(self):
         # REPAIR 는 6/6 일치했다. 다시 묻는 것은 사람 시간 낭비다.
         strata = {row["stratum"] for row in gold_provenance.relabel_queue(self.payloads)}
         self.assertNotIn("REPAIR", strata)
+
+    def test_the_pass_stratum_was_relabelled_end_to_end(self):
+        """1회차 3/3 이 뒤집혔지만 전수로는 9/13 이었다.
+
+        3건에서 100% 를 외삽했다면 멀쩡한 4건까지 고쳤을 것이다. 전수 재라벨이
+        옳았던 근거이므로 숫자를 고정해 둔다.
+        """
+        cases = self.payloads["curation"]["cases"]
+        stored_pass = [c for c in cases
+                       if (c.get("superseded_label") or c.get("human_label")) == "PASS"]
+        flipped = [c for c in stored_pass if c.get("superseded_label")]
+        self.assertEqual((len(stored_pass), len(flipped)), (13, 9))
+        self.assertEqual({c["human_label"] for c in flipped}, {"REPAIR"})
 
     def test_nothing_is_queued_when_no_stratum_collapsed(self):
         clean = copy.deepcopy(self.payloads)
