@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import statistics
 import sys
@@ -124,13 +125,57 @@ def config_kwargs(config: str) -> dict[str, str]:
     return {"thinking_level": level}
 
 
+# 평가에 쓸 수 있는 라벨 상태. `HUMAN_REVIEWED_AI_ASSISTED` 는 **일부러 빠져 있다** —
+# 사람이 읽고 승인했지만 AI 판정을 먼저 본 뒤의 판단이라, anchoring 크기를 재기 전에는
+# 독립 정답이 아니다(tools/gold_provenance.py). 조용히 빠지는 것이 아니라 여기서
+# 명시적으로 제외하고, `excluded_by_provenance()` 로 몇 건이 빠졌는지 보고한다.
+EVALUATION_STATUSES = frozenset({"USER_SPECIFIED", "HUMAN_LABELLED"})
+AI_ASSISTED_STATUS = "HUMAN_REVIEWED_AI_ASSISTED"
+
+
 def labelled_cases(payload: dict) -> list[dict]:
     cases = []
     for case in payload.get("cases") or []:
         label = case.get("human_label")
-        if label and case.get("label_status") in {"USER_SPECIFIED", "HUMAN_LABELLED"}:
+        if label and case.get("label_status") in EVALUATION_STATUSES:
             cases.append({**case, "gold": label})
     return cases
+
+
+def excluded_by_provenance(payload: dict) -> int:
+    """출처 때문에 평가에서 빠진 라벨 수. 0 이 아니면 보고에 실어야 한다."""
+    return sum(1 for case in payload.get("cases") or []
+               if case.get("human_label")
+               and case.get("label_status") == AI_ASSISTED_STATUS)
+
+
+def redundant_arms(rows: list[dict]) -> dict[str, list[str]]:
+    """canary 결과에서 baseline 과 **행동이 같은** arm 을 찾아낸다.
+
+    실측(계획 문서 §1.1): `gemini-3.5-flash-lite` 에서 `level:low` 는 thought 토큰이
+    0 이다. 즉 그 모델에서 low 는 thinking 을 끈 baseline 과 구별되지 않는다. 그런
+    arm 을 dev 평가까지 끌고 가면 같은 설정을 두 번 재느라 quota 만 태운다.
+
+    판정 근거를 관측값(thought 토큰)에 둔다 — 모델별 표를 손으로 적으면 모델이
+    바뀔 때 조용히 틀린다.
+    """
+    totals: dict[tuple[str, str], int] = {}
+    seen: dict[tuple[str, str], int] = {}
+    for row in rows:
+        if row.get("status") != "ok":
+            continue
+        key = (str(row.get("model")), str(row.get("config")))
+        totals[key] = totals.get(key, 0) + int(row.get("thought_tokens") or 0)
+        seen[key] = seen.get(key, 0) + 1
+    redundant: dict[str, list[str]] = {}
+    for (model, config), thoughts in sorted(totals.items()):
+        if config in {"none", "unspecified", "current"} or thoughts:
+            continue
+        # 관측이 한 건뿐이면 "0 이었다"가 아니라 "아직 모른다"로 둔다.
+        if seen[(model, config)] < 2:
+            continue
+        redundant.setdefault(model, []).append(config)
+    return redundant
 
 
 # ``user_message()`` 는 여기 있었다. 세 갈래(제목 두 줄 / claim+evidence / case
@@ -139,9 +184,39 @@ def labelled_cases(payload: dict) -> list[dict]:
 # 않는다.
 
 
+def plan_jobs(models: list[str], configs: list[str], cases: list[dict],
+              repeat: int, evaluator_policy: str) -> list[tuple]:
+    """호출 순서를 정한다. **순서가 곧 측정 조건**이라 함수로 빼서 시험한다.
+
+    예전에는 config 가 바깥 루프였다. 그러면 한 config 의 호출이 전부 끝난 뒤에
+    다음 config 가 시작되므로, 뒤에 도는 arm 일수록 `_pace()` 의 분당 상한과 누적
+    quota 압력을 더 받는다. 늘 마지막에 도는 arm(high)이 체계적으로 느리고 덜
+    안정적으로 보이는데, 그건 reasoning 의 성질이 아니라 **자리의 성질**이다.
+
+    그래서 case 를 바깥에 두고 case 안에서 config 순서를 섞는다. 섞기는 무작위가
+    아니라 case id 해시라 재현된다 — 재개해도 같은 순서고, 결과를 본 뒤 순서를
+    바꾸는 길도 막힌다.
+    """
+    jobs = []
+    for model in models:
+        for case in cases:
+            for repeat_index in range(repeat):
+                ordered = sorted(configs, key=lambda config: hashlib.sha256(
+                    f"arm-order-v1|{case['id']}|{repeat_index}|{config}"
+                    .encode("utf-8")).hexdigest())
+                for config in ordered:
+                    jobs.append((
+                        model, config, case, repeat_index,
+                        result_key(model, config, case["id"], repeat_index,
+                                   evaluator_policy)))
+    return jobs
+
+
 def summarize(rows: list[dict]) -> dict:
     completed = [row for row in rows if row.get("status") == "ok"]
     latency = [float(row["latency_seconds"]) for row in completed]
+    overhead = [float(row["overhead_seconds"]) for row in completed
+                if row.get("overhead_seconds") is not None]
     false_merge = sum(row.get("gold") == "SEPARATE" and row.get("prediction") == "MERGE"
                       for row in completed)
     false_split = sum(row.get("gold") == "MERGE" and row.get("prediction") == "SEPARATE"
@@ -165,7 +240,12 @@ def summarize(rows: list[dict]) -> dict:
         "latency_p50": statistics.median(latency) if latency else None,
         "latency_p95": (sorted(latency)[max(0, int(len(latency) * .95) - 1)]
                         if latency else None),
+        # API 시간과 그 밖의 대기(페이싱·백오프)를 갈라 둔다. 섞으면 "느린
+        # config" 와 "늦게 돈 config" 를 구별하지 못한다.
+        "overhead_p50": (statistics.median(overhead) if overhead else None),
+        "overhead_total": round(sum(overhead), 3) if overhead else None,
         "thought_tokens": sum(int(row.get("thought_tokens") or 0) for row in completed),
+        "redundant_arms": redundant_arms(rows),
         "truncation": sum(bool(row.get("truncated")) for row in rows),
         "json_failure": sum(row.get("failure_type") == "json" for row in rows),
         "quota_429": sum(row.get("failure_type") == "quota" for row in rows),
@@ -215,14 +295,7 @@ def main() -> int:
     # Only successful keys are complete. Quota/truncation/API failures stay pending
     # and may be retried on a later bounded run.
     done = completed_keys(rows, evaluator_policy)
-    planned = [
-        (model, config, case, repeat,
-         result_key(model, config, case["id"], repeat, evaluator_policy))
-        for model in models
-        for config in configs
-        for case in cases
-        for repeat in range(args.repeat)
-    ]
+    planned = plan_jobs(models, configs, cases, args.repeat, evaluator_policy)
     pending_before = [job for job in planned if job[4] not in done]
     new_attempted = 0
     quota_stopped = False
@@ -243,9 +316,19 @@ def main() -> int:
                     label=f"eval:{args.task}", **call_options, **kwargs)
                 detail = (gemini_client._CALL_DETAIL[-1]
                           if len(gemini_client._CALL_DETAIL) > before else {})
+                wall_clock = time.monotonic() - started
+                # `gemini_client` 의 타이머는 `_pace()` **뒤에** 시작하므로 순수
+                # 요청·응답 시간이다. 평가기의 벽시계는 그 앞의 페이싱 대기와
+                # 재시도 백오프까지 포함한다. 둘을 한 칸에 담으면 reliability 게이트가
+                # "이 config 가 느리다"와 "이 config 가 늦게 돌았다"를 구별하지 못한다.
+                api_latency = detail.get("latency_seconds")
                 row.update(status="ok", prediction=result.get("verdict"),
                            error_types=result.get("error_types") or [],
-                           latency_seconds=time.monotonic() - started,
+                           latency_seconds=(api_latency if api_latency is not None
+                                            else wall_clock),
+                           wall_clock_seconds=wall_clock,
+                           overhead_seconds=(max(0.0, wall_clock - api_latency)
+                                             if api_latency is not None else None),
                            thought_tokens=detail.get("thought_tokens") or 0,
                            truncated=bool(detail.get("truncated")))
             except gemini_client.GeminiTruncated as exc:
