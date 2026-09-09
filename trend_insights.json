@@ -1,12 +1,12 @@
 {
- "generated_at": "2026-09-10T06:04:23.931427+09:00",
+ "generated_at": "2026-09-10T06:52:18.976357+09:00",
  "window": "7d",
  "items": [
   {
    "keyword": "데이터센터",
-   "count_now": 231,
+   "count_now": 234,
    "count_prev": 224,
-   "direction": "국내외에서 AI 데이터센터 건립과 대규모 투자가 이어지는 한편, 전력 및 수자원 부족과 주민 반발로 인해 사업 축소나 신규 승인 중단 조치가 발생하고 있다.",
+   "direction": "국내에서는 강릉과 당진 등지에서 AI 데이터센터 건립 투자와 전력 공급 문제를 둘러싼 논의가 이어지고 있으며, 해외에서는 미국 일부 주의 세제 혜택 중단 및 신규 승인 보류와 더불어 구글의 핀란드 원전 전력 장기 구매 계약 등 인프라 투자와 전력 수급 문제가 동시에 전개되고 있다.",
    "evidence": [
     {
      "hash": "7cdd66432d1faba7",
@@ -37,19 +37,43 @@
      "title_kr": "美 플래츠버그시, 고에너지 컴퓨팅 시설 신규 승인 1년 중단 검토",
      "url": "http://www.biztribune.co.kr/news/articleView.html?idxno=358723",
      "date": "2026-09-10"
+    },
+    {
+     "hash": "62192713955ecd40",
+     "title_kr": "구글, 핀란드 AI 인프라에 151억 달러 투자 및 원전 전력 장기 구매",
+     "url": "https://www.fnnews.com/news/202609100141291719",
+     "date": "2026-09-10"
     }
    ]
   },
   {
    "keyword": "SMR",
-   "count_now": 174,
+   "count_now": 177,
    "count_prev": 186,
-   "direction": "국내외 연구기관과 기업들이 차세대 SMR 및 마이크로 원자로 개발과 상용화를 추진하는 가운데, 한·프랑스 정상회담을 계기로 양국 간 SMR 핵심 부품 및 공동 연구 협력이 강화되고 있다.",
+   "direction": "국내에서는 효성과 나노 등의 민간 기업이 첨단산업 및 마이크로 원자로 상용화 협력을 추진하고, 국회와 정부 차원에서 세제개편안 포함 건의 및 대미 투자 전략으로 SMR 상용화가 강조되고 있다. 이와 동시에 한국원자력연구원과 프랑스 프라마톰 간 차세대 SMR 공동 연구개발 협력이 추진되며 국제적 공조로 이어지고 있다.",
    "evidence": [
+    {
+     "hash": "a0d2e0a2fa466bbb",
+     "title_kr": "나노(NANO), 마이크로 원자로 상용화 MOU 체결",
+     "url": "https://news.google.com/rss/articles/CBMihgFBVV95cUxOcko0aVZRcGJpS055QU54YjFOSkFpeGdQVk1lZkZBMmk3cDhSUTd5QWY3UVR4a1NkcU5XM2otVFdBUDFIQklOM3J1M2VCMGVURV9ZWEtOR1EwelFVeW1XekR4TENtM2NVeDdxUXlPZ3F2VUZZQnJaczNsaXJDbzMyODQydmRMQQ?oc=5",
+     "date": "2026-09-10"
+    },
     {
      "hash": "0f48c254eb5e752b",
      "title_kr": "효성, 프랑스와 SMR 핵심부품 등 첨단산업 협력 추진",
      "url": "https://www.seoul.co.kr/news/economy/industry/2026/09/10/20260910032004?wlog_tag3=naver",
+     "date": "2026-09-10"
+    },
+    {
+     "hash": "12e1596b3fd6d90f",
+     "title_kr": "한경협, SMR 등 포함한 국내생산세액공제 확대 건의",
+     "url": "https://www.yna.co.kr/view/AKR20260909142700003?input=1195m",
+     "date": "2026-09-10"
+    },
+    {
+     "hash": "2c3594f87a16eded",
+     "title_kr": "이언주 의원, 에너지 인프라 중심 대미 투자 전략 강조",
+     "url": "https://www.edaily.co.kr/News/Read?mediaCodeNo=257&newsId=02154966645578808",
      "date": "2026-09-10"
     },
     {
@@ -63,12 +87,6 @@
      "title_kr": "한·프랑스, 첨단산업 및 차세대 SMR 연구개발 협력 강화",
      "url": "https://www.kmib.co.kr/article/view.asp?arcid=9000010356&cp=nv",
      "date": "2026-09-09"
-    },
-    {
-     "hash": "7c8730e1ec638c8c",
-     "title_kr": "테라파워, 영국 내 나트륨 원전 2034년 가동 목표 추진",
-     "url": "https://www.dt.co.kr/article/12082835",
-     "date": "2026-09-09"
     }
    ]
   },
@@ -76,13 +94,25 @@
    "keyword": "전력망",
    "count_now": 101,
    "count_prev": 83,
-   "direction": "AI 확산에 따른 전력 공급 부족 우려 속에서, 한국전력의 대규모 송배전망 투자 계획과 강원도의 전력 인프라 확충 협약 등 전력망 구축 조치가 이어지고 있다.",
+   "direction": "AI 확산에 따른 데이터센터의 전력 및 냉각 인프라 수요가 급증하면서 일론 머스크 등 주요 인사의 전력 공급 부족 경고가 이어지고 있다. 국내에서는 한국전력이 2030년까지 송배전망에 55조 원을 투자할 계획인 가운데, 강원도와 한전의 전력망 구축 협약 및 기업 전기요금 선납 검토 등 재원 마련과 인프라 확충 움직임이 나타나고 있다.",
    "evidence": [
+    {
+     "hash": "05b42bdf43217603",
+     "title_kr": "일론 머스크, AI 경제 폭발에 따른 전력 공급 부족 병목 경고",
+     "url": "http://coinreaders.com/257426",
+     "date": "2026-09-10"
+    },
     {
      "hash": "da4d4794d5a6b1c7",
      "title_kr": "강원도-한국전력, AI 데이터센터 전력망 구축 업무협약 체결",
      "url": "https://www.donga.com/news/Society/article/all/20260910/134637894/2",
      "date": "2026-09-10"
+    },
+    {
+     "hash": "c3875cc2825c6c27",
+     "title_kr": "AI 확산에 따른 데이터센터 전력·냉각 인프라 수요 급증",
+     "url": "https://www.hankyung.com/article/2026090821001",
+     "date": "2026-09-09"
     },
     {
      "hash": "f34fa49eb30bc235",
@@ -106,14 +136,26 @@
   },
   {
    "keyword": "AI",
-   "count_now": 88,
+   "count_now": 89,
    "count_prev": 85,
-   "direction": "AI 기술 확산으로 데이터센터의 전력 및 인프라 수요가 급증하면서 정부와 기업들의 관련 인프라 투자와 정책 조정이 진행되고 있다.",
+   "direction": "AI 및 로봇 산업 성장에 따른 전력 공급 부족 병목 우려가 제기되는 가운데, 국가AI전략위원회의 실행과제 점검과 아마존·퀄컴의 인프라 동맹 등 투자가 확대되고 있다. 또한 한수원의 수력·양수발전 AI 운영 기술 논의 및 네이버의 원전 특화 AI를 활용한 프랑스 기업과의 산업별 협력이 함께 추진되고 있다.",
    "evidence": [
+    {
+     "hash": "ad25c9b9cdbd72bc",
+     "title_kr": "한수원, 대한민국 국제물주간서 수력·양수발전 AI 운영 기술 논의",
+     "url": "https://www.energy-news.co.kr/news/articleView.html?idxno=228052",
+     "date": "2026-09-10"
+    },
     {
      "hash": "05b42bdf43217603",
      "title_kr": "일론 머스크, AI 경제 폭발에 따른 전력 공급 부족 병목 경고",
      "url": "http://coinreaders.com/257426",
+     "date": "2026-09-10"
+    },
+    {
+     "hash": "29fb8a4b4c1931bf",
+     "title_kr": "네이버, 프랑스 순방 계기 원전 특화 AI 등 산업 협력 확대",
+     "url": "https://www.apnews.kr/news/articleView.html?idxno=3051137",
      "date": "2026-09-10"
     },
     {
@@ -123,9 +165,53 @@
      "date": "2026-09-09"
     },
     {
-     "hash": "e235603a00215381",
-     "title_kr": "정부, AI 산업 경쟁력 강화를 위한 전력 및 인프라 정책 조정",
-     "url": "https://www.ddaily.co.kr/page/view/2026090818163289553",
+     "hash": "54b484a916daab94",
+     "title_kr": "아마존-퀄컴, 40억 달러 규모 AI 인프라 동맹 체결",
+     "url": "https://www.fnnews.com/news/202609090247571388",
+     "date": "2026-09-09"
+    }
+   ]
+  },
+  {
+   "keyword": "한수원",
+   "count_now": 52,
+   "count_prev": 42,
+   "direction": "이재명 대통령의 프랑스 국빈 방문을 계기로 한수원이 프랑스 오라노와 우라늄 농축 공급망 다변화 및 차세대 원자로 안전기술 개발을 위한 협력 의정서와 의향서를 체결했다. 또한 한수원은 '대한민국 국제물주간 2026'에 참여하여 물과 에너지, AI의 융합 및 수력발전의 디지털 전환 방안을 논의했다.",
+   "evidence": [
+    {
+     "hash": "52337f49e17b1bfa",
+     "title_kr": "한수원-프랑스 오라노, 우라늄 농축 및 차세대 원자로 기술 협력 의정서 체결",
+     "url": "https://www.fnnews.com/news/202609091446569574",
+     "date": "2026-09-10"
+    },
+    {
+     "hash": "528f2e0d775573c7",
+     "title_kr": "한수원-프랑스 오라노, 우라늄 농축 공급망 및 차세대 원전 기술 협력",
+     "url": "https://www.fnnews.com/news/202609092023380234",
+     "date": "2026-09-10"
+    },
+    {
+     "hash": "a043cc77db35f928",
+     "title_kr": "한수원-프랑스 오라노, 장기 농축역무 공급 협력 의향서 체결",
+     "url": "http://www.joseilbo.com/news/news_read.php?class=32&grp=&uid=575310",
+     "date": "2026-09-09"
+    },
+    {
+     "hash": "84d0201835cb0329",
+     "title_kr": "한수원-프랑스 오라노, 원자력 협력의향서 체결 등 한-불 경제협력 확대",
+     "url": "https://www.sedaily.com/article/20088751",
+     "date": "2026-09-09"
+    },
+    {
+     "hash": "9043efae331fc476",
+     "title_kr": "한수원, 프랑스 오라노와 우라늄 농축 협력의향서 체결",
+     "url": "https://www.newsis.com/view/NISX20260909_0003782003",
+     "date": "2026-09-09"
+    },
+    {
+     "hash": "9973ff5f8b519054",
+     "title_kr": "한수원, 대한민국 국제물주간 2026 참여 및 물-에너지 융합 논의",
+     "url": "http://www.e2news.com/news/articleView.html?idxno=334037",
      "date": "2026-09-09"
     }
    ]
@@ -134,8 +220,14 @@
    "keyword": "에너지안보",
    "count_now": 51,
    "count_prev": 41,
-   "direction": "중동 긴장으로 인한 국제유가 불안 속에서, 정부는 APEC 에너지 장관 회의를 통해 원전 및 SMR 협력을 논의하고 대미 가스복합발전 및 원전 건설 검토 등 에너지 수급 다변화를 추진하고 있다.",
+   "direction": "중동 긴장에 따른 국제유가 불안과 유럽의 가스 의존도 문제가 대두되는 가운데, 정부는 대미 투자 후속 사업으로 가스복합발전과 원전 8기 건설 검토를 추진하고 있다. 또한 APEC 에너지장관회의를 통해 원전과 SMR을 포함한 에너지 안보 공조 및 협력 방안이 다뤄졌다.",
    "evidence": [
+    {
+     "hash": "ff857b481e10b295",
+     "title_kr": "유럽의 가스 의존도와 원자력 발전 축소 정책의 상관관계",
+     "url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxOZUhaM1dhNEVBaUI1NktkdzlseHlMT0thV3Z1dGxCMEZ2QWk2WkJ5Sk5iOGNJOTl3WXpQNURDTkpSWUx0QUdLeHkwbmJCdHlsZ3hiR25ZSUtDQlRNT1NtbWdBVWpPbVpUdGlYQ1JZY3llc29idDdndkVFckhpWnVwZG1iZmFaRFhCVGFaeXlrb0tRM0o1cVE?oc=5",
+     "date": "2026-09-10"
+    },
     {
      "hash": "b8f05a34366612fd",
      "title_kr": "정부, 대미 투자 1호로 가스복합발전 낙점…원전 8기 건설도 유력",
@@ -158,38 +250,6 @@
      "hash": "ce3cf3cf45572237",
      "title_kr": "APEC 에너지장관회의, 에너지 안보 및 SMR 협력 논의",
      "url": "https://www.nocutnews.co.kr/news/6575247",
-     "date": "2026-09-09"
-    }
-   ]
-  },
-  {
-   "keyword": "한수원",
-   "count_now": 51,
-   "count_prev": 42,
-   "direction": "대통령의 프랑스 국빈 방문을 계기로 한수원이 프랑스 오라노와 우라늄 농축 및 차세대 원자로 기술 협력 의정서를 체결하며 연료 공급망 안정화를 도모하고 있다.",
-   "evidence": [
-    {
-     "hash": "52337f49e17b1bfa",
-     "title_kr": "한수원-프랑스 오라노, 우라늄 농축 및 차세대 원자로 기술 협력 의정서 체결",
-     "url": "https://www.fnnews.com/news/202609091446569574",
-     "date": "2026-09-10"
-    },
-    {
-     "hash": "a043cc77db35f928",
-     "title_kr": "한수원-프랑스 오라노, 장기 농축역무 공급 협력 의향서 체결",
-     "url": "http://www.joseilbo.com/news/news_read.php?class=32&grp=&uid=575310",
-     "date": "2026-09-09"
-    },
-    {
-     "hash": "84d0201835cb0329",
-     "title_kr": "한수원-프랑스 오라노, 원자력 협력의향서 체결 등 한-불 경제협력 확대",
-     "url": "https://www.sedaily.com/article/20088751",
-     "date": "2026-09-09"
-    },
-    {
-     "hash": "9043efae331fc476",
-     "title_kr": "한수원, 프랑스 오라노와 우라늄 농축 협력의향서 체결",
-     "url": "https://www.newsis.com/view/NISX20260909_0003782003",
      "date": "2026-09-09"
     }
    ]
