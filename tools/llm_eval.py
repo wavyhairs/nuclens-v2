@@ -129,7 +129,11 @@ def config_kwargs(config: str) -> dict[str, str]:
 # 사람이 읽고 승인했지만 AI 판정을 먼저 본 뒤의 판단이라, anchoring 크기를 재기 전에는
 # 독립 정답이 아니다(tools/gold_provenance.py). 조용히 빠지는 것이 아니라 여기서
 # 명시적으로 제외하고, `excluded_by_provenance()` 로 몇 건이 빠졌는지 보고한다.
-EVALUATION_STATUSES = frozenset({"USER_SPECIFIED", "HUMAN_LABELLED"})
+# `HUMAN_BLIND_*` 는 가린 채 받은 판정이라 독립 Gold 다 — 일치했든 정정했든,
+# AI 판정을 보지 않고 내린 것이라는 점이 같다.
+EVALUATION_STATUSES = frozenset({
+    "USER_SPECIFIED", "HUMAN_LABELLED",
+    "HUMAN_BLIND_CONFIRMED", "HUMAN_BLIND_CORRECTED"})
 AI_ASSISTED_STATUS = "HUMAN_REVIEWED_AI_ASSISTED"
 
 

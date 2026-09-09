@@ -1262,7 +1262,7 @@
         "UNSUPPORTED_INFERENCE"
       ],
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "id": "semantic-eb147409fff92001-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'PURECORE PROVIDES CORPORATE UPDATE HIGHLIGHTING EXECUTION ACROSS URANIUM, COPPER AND CAPITAL MARKETS – Company Announcement - FT.com' 관련 사업은 이미 상업운전과 최종 준공을 완료했다.",
@@ -1936,7 +1936,7 @@
         "UNSUPPORTED_INFERENCE"
       ],
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "id": "semantic-c1ddbcc160b82974-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'Holtec's SMR-300 test facility taking shape at INL'은 정부의 공개되지 않은 비밀 지시 때문에 발생했다.",
@@ -2557,7 +2557,7 @@
         "STAGE_ERROR"
       ],
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "id": "semantic-babf4bcdf043c2d5-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "한국수력원자력이 '박정성號 통상교섭본부 출범…대미 투자·301조 관세 대응 '동시 시험대...'를 직접 결정하고 발표했다.",
@@ -3850,7 +3850,7 @@
         "CERTAINTY_ERROR"
       ],
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "id": "semantic-e17805472c05ed7e-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'\"AI 붐이 전력망 삼킨다\"… 美 15개 지역 중 9곳 '전력 부족 고위험' 경...'은 정부의 공개되지 않은 비밀 지시 때문에 발생했다.",
@@ -4333,19 +4333,20 @@
         "why_important": ""
       },
       "domain": "smr",
-      "human_label": "REPAIR",
+      "human_label": "BLOCK",
       "human_error_types": [
         "TEMPORAL_ERROR",
         "DATE_ERROR"
       ],
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CORRECTED",
       "id": "semantic-66d8933507f8bf75-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "한 총리, 오는 21일 빌 게이츠 회동…SMR 협력 논의 전망",
       "selection_metadata_not_gold": {
         "review_focus": "NUMBER_ERROR"
-      }
+      },
+      "superseded_label": "REPAIR"
     },
     {
       "source_evidence": {
@@ -4586,7 +4587,7 @@
         "STAGE_ERROR"
       ],
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "id": "semantic-85808a489f14bf7b-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "한국수력원자력이 '새 원전 말하기 전 '나아리의 12년'에 답하라 [왜냐면]'를 직접 결정하고 발표했다.",

@@ -179,7 +179,7 @@
         ],
         "domain": "policy"
       },
-      "human_label": "PASS",
+      "human_label": "REPAIR",
       "human_dimensions": {
         "event_boundary": "PASS",
         "scope": "PASS",
@@ -188,8 +188,9 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
-      "required_repair": null
+      "label_status": "HUMAN_BLIND_CORRECTED",
+      "required_repair": null,
+      "superseded_label": "PASS"
     },
     {
       "id": "curation-6d402bf98f9187b2",
@@ -228,7 +229,7 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "required_repair": null
     },
     {
@@ -389,7 +390,7 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "required_repair": null
     },
     {
@@ -467,7 +468,7 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "required_repair": null
     },
     {
@@ -544,7 +545,7 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "required_repair": null
     },
     {
@@ -853,7 +854,7 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "required_repair": null
     },
     {
@@ -893,7 +894,7 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "required_repair": null
     },
     {
@@ -1264,7 +1265,7 @@
         ],
         "domain": "reactor"
       },
-      "human_label": "PASS",
+      "human_label": "REPAIR",
       "human_dimensions": {
         "event_boundary": "PASS",
         "scope": "PASS",
@@ -1273,8 +1274,9 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
-      "required_repair": null
+      "label_status": "HUMAN_BLIND_CORRECTED",
+      "required_repair": null,
+      "superseded_label": "PASS"
     },
     {
       "id": "curation-af2db12d3bea65b0",
@@ -1572,7 +1574,7 @@
         ],
         "domain": "policy"
       },
-      "human_label": "PASS",
+      "human_label": "REPAIR",
       "human_dimensions": {
         "event_boundary": "PASS",
         "scope": "PASS",
@@ -1581,8 +1583,9 @@
         "causality": "PASS"
       },
       "human_notes": null,
-      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
-      "required_repair": null
+      "label_status": "HUMAN_BLIND_CORRECTED",
+      "required_repair": null,
+      "superseded_label": "PASS"
     }
   ],
   "provenance_note": "HUMAN_REVIEWED_AI_ASSISTED 는 사람이 읽고 승인했으나 AI 판정을 먼저 본 뒤의 판단이다. 라벨 값은 변경되지 않았다. 독립 Gold 로 승격하려면 blind 재검증으로 anchoring 크기를 먼저 재야 한다."

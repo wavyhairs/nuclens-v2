@@ -49,6 +49,11 @@ DIRECT = "USER_SPECIFIED"
 PENDING = "HUMAN_LABEL_REQUIRED"
 # 리뷰 UI 를 거친 상태값. 이 상태로 저장된 라벨은 Sol 판정을 본 뒤의 판단이다.
 ANCHORED_SOURCE = "HUMAN_LABELLED"
+# blind 재검증을 거친 뒤의 상태. 표본은 **고정 집합**이라 승격 뒤에도 같은 케이스가
+# 뽑혀야 한다 — 그래야 패킷이 재현되고 대조를 다시 돌릴 수 있다.
+BLIND_CONFIRMED = "HUMAN_BLIND_CONFIRMED"
+BLIND_CORRECTED = "HUMAN_BLIND_CORRECTED"
+BLIND_ELIGIBLE = frozenset({AI_ASSISTED, BLIND_CONFIRMED, BLIND_CORRECTED})
 
 # 관대함의 방향. 큰 값일수록 개입이 강한 판정이다.
 SEVERITY = {"PASS": 0, "REPAIR": 1, "UNVERIFIABLE": 1, "BLOCK": 2}
@@ -79,7 +84,9 @@ def reclassify(payload: dict) -> tuple[dict, int]:
 def _stratum(task: str, case: dict) -> str | None:
     if task == "semantic":
         return case.get("candidate_kind")
-    return case.get("human_label")
+    # 층은 **원래 보관돼 있던 라벨**로 정한다. 정정된 뒤의 라벨로 나누면 층이
+    # 움직여서, 같은 표본이 다음 실행에 다른 층으로 잡힌다.
+    return case.get("superseded_label") or case.get("human_label")
 
 
 def select_blind_sample(payloads: dict[str, dict]) -> list[dict]:
@@ -91,7 +98,7 @@ def select_blind_sample(payloads: dict[str, dict]) -> list[dict]:
     picked: list[dict] = []
     for task, stratum, count in BLIND_SAMPLE:
         cases = [case for case in payloads[task].get("cases") or []
-                 if case.get("label_status") == AI_ASSISTED
+                 if case.get("label_status") in BLIND_ELIGIBLE
                  and _stratum(task, case) == stratum]
         cases.sort(key=lambda case: hashlib.sha256(
             f"blind-v1|{task}|{case['id']}".encode("utf-8")).hexdigest())
@@ -114,7 +121,9 @@ def compare(blind: dict[str, str], payloads: dict[str, dict],
         new = blind.get(item["case_id"])
         if new is None:
             continue
-        old = stored["human_label"]
+        # **정정 전 라벨**과 비교한다. 정정된 라벨과 비교하면 승격 뒤 재실행에서
+        # 전부 일치로 보여, 애초에 anchoring 을 발견한 증거가 지워진다.
+        old = stored.get("superseded_label") or stored["human_label"]
         if new == old:
             direction = "agree"
         elif SEVERITY.get(new, 1) > SEVERITY.get(old, 1):

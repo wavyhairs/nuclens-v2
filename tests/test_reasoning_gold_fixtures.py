@@ -80,7 +80,8 @@ class ReasoningGoldFixtureTests(unittest.TestCase):
         self.assertEqual(len(pending), 15)
         self.assertEqual(
             Counter(case["label_status"] for case in cases),
-            {"HUMAN_REVIEWED_AI_ASSISTED": 24, "HUMAN_LABEL_REQUIRED": 15,
+            {"HUMAN_REVIEWED_AI_ASSISTED": 15, "HUMAN_BLIND_CONFIRMED": 6,
+             "HUMAN_BLIND_CORRECTED": 3, "HUMAN_LABEL_REQUIRED": 15,
              "USER_SPECIFIED": 1})
 
     def test_semantic_queue_is_balanced_and_covers_taxonomy(self):
@@ -98,7 +99,8 @@ class ReasoningGoldFixtureTests(unittest.TestCase):
         self.assertEqual(len(pending), 31)
         self.assertEqual(
             Counter(case["label_status"] for case in cases),
-            {"HUMAN_REVIEWED_AI_ASSISTED": 41, "HUMAN_LABEL_REQUIRED": 31,
+            {"HUMAN_REVIEWED_AI_ASSISTED": 35, "HUMAN_BLIND_CONFIRMED": 5,
+             "HUMAN_BLIND_CORRECTED": 1, "HUMAN_LABEL_REQUIRED": 31,
              "USER_SPECIFIED": 5})
         self.assertTrue(all(case["human_label"] is None for case in pending))
         self.assertTrue(all(case["human_error_types"] is None for case in pending))
@@ -128,6 +130,35 @@ class ReasoningGoldFixtureTests(unittest.TestCase):
         labelled = {case["label_status"] for case in cases
                     if case["human_label"] is not None}
         self.assertEqual(labelled, {"HUMAN_LABELLED"})
+
+    def test_corrected_labels_never_lose_the_original(self):
+        """가려진 판정이 이겼더라도 이전 판정은 이력으로 남아야 한다.
+
+        남지 않으면 "이 층은 무너졌다"를 나중에 다시 셀 수 없고, anchoring 을
+        발견한 근거 자체가 파일에서 사라진다.
+        """
+        for name in ("curation_gold.json", "semantic_gold.json"):
+            with self.subTest(fixture=name):
+                cases = json.loads(
+                    (FIXTURES / name).read_text(encoding="utf-8"))["cases"]
+                corrected = [case for case in cases
+                             if case["label_status"] == "HUMAN_BLIND_CORRECTED"]
+                self.assertTrue(corrected)
+                for case in corrected:
+                    self.assertIn("superseded_label", case)
+                    self.assertNotEqual(case["superseded_label"], case["human_label"])
+
+    def test_identity_relations_do_not_overwrite_the_stored_label(self):
+        # 하나의 정답지가 없으므로 관계는 덧붙이고, 판정은 계약이 정한다.
+        cases = json.loads((FIXTURES / "identity_candidates.json")
+                           .read_text(encoding="utf-8"))["cases"]
+        reviewed = [case for case in cases if case.get("human_relation")]
+        self.assertEqual(len(reviewed), 22)
+        for case in reviewed:
+            with self.subTest(case=case["id"]):
+                self.assertEqual(case["relation_status"], "HUMAN_RELATION_REVIEWED")
+                self.assertIn(case["human_label"], {"MERGE", "SEPARATE"})
+                self.assertIsNotNone(case["reason_code"])
 
     def test_candidate_audit_passes_without_warnings(self):
         report = audit(FIXTURES)

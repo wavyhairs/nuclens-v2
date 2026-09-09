@@ -87,19 +87,33 @@ class BlindSampleTests(unittest.TestCase):
         self.assertEqual(gold_provenance.select_blind_sample(self.payloads),
                          gold_provenance.select_blind_sample(reordered))
 
-    def test_only_ai_assisted_rows_are_eligible(self):
-        # 사용자가 직접 지정한 라벨에는 anchoring 이 없다. 재검증 예산을 쓰면 낭비다.
+    def test_only_anchored_or_already_blind_rows_are_eligible(self):
+        """사용자가 직접 지정한 라벨에는 anchoring 이 없다 — 예산을 쓰면 낭비다.
+
+        이미 blind 를 거친 행은 계속 포함한다. 표본은 **고정 집합**이어야 승격 뒤에도
+        같은 패킷이 나오고 대조를 다시 돌릴 수 있다.
+        """
         sample = gold_provenance.select_blind_sample(self.payloads)
         ids = {row["case_id"] for row in sample}
         for payload in self.payloads.values():
             for case in payload["cases"]:
                 if case["id"] in ids:
-                    self.assertEqual(case["label_status"], gold_provenance.AI_ASSISTED)
+                    self.assertIn(case["label_status"], gold_provenance.BLIND_ELIGIBLE)
+
+    def test_the_sample_is_stable_across_promotion(self):
+        # 승격은 상태값을 바꾼다. 그때 표본이 움직이면 대조가 재현되지 않는다.
+        before = gold_provenance.select_blind_sample(self.payloads)
+        promoted = copy.deepcopy(self.payloads)
+        for payload in promoted.values():
+            for case in payload["cases"]:
+                if case["label_status"] == gold_provenance.AI_ASSISTED:
+                    case["label_status"] = gold_provenance.BLIND_CONFIRMED
+        self.assertEqual(before, gold_provenance.select_blind_sample(promoted))
 
     def test_a_thin_stratum_fails_loudly_instead_of_shrinking(self):
         thin = copy.deepcopy(self.payloads)
         for case in thin["curation"]["cases"]:
-            if case.get("human_label") == "PASS":
+            if (case.get("superseded_label") or case.get("human_label")) == "PASS":
                 case["label_status"] = "HUMAN_LABEL_REQUIRED"
         with self.assertRaises(ValueError):
             gold_provenance.select_blind_sample(thin)
