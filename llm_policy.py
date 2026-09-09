@@ -129,6 +129,49 @@ def generation_policy_fingerprint(task_profile: TaskProfile, prompt_version: int
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
+# reasoning 결정을 묶어 둘 계약 지문.
+#
+# `generation_policy_fingerprint()` 로는 부족하다. 그건 model/thinking/sampling/
+# prompt_version 네 개만 본다 — parser 나 response schema 가 바뀌어도, batch 크기가
+# 바뀌어도 값이 그대로다. 그러면 "이 설정은 검증됐다"는 판정이 검증한 적 없는 계약
+# 위에서 조용히 계속 유효해 보인다.
+#
+# 필드를 하나라도 빠뜨리면 지문을 만들지 않는다. 부분 계약으로 만든 지문은 없는
+# 것보다 나쁘다 — 빠진 축이 바뀌어도 같은 값이 나오므로 안전하다고 착각하게 된다.
+CONTRACT_FIELDS = (
+    "profile",
+    "resolved_model",
+    # 이름이 아니라 **실제 직렬화된 값**이어야 한다. 상수 "unspecified" 를 적으면
+    # 3.1 의 explicit OFF 와 3.5 의 필드 생략이 같은 지문이 된다(tools/observed_baseline.py).
+    "observed_baseline_thinking",
+    "system_prompt_sha",
+    "user_builder_sha",
+    "response_schema_sha",
+    "temperature",
+    "max_output_tokens",
+    "timeout",
+    "retries",
+    "batch_size",
+    "split_budget",
+    "parser_sha",
+    "normalizer_sha",
+)
+
+
+def production_contract_fingerprint(contract: dict[str, object]) -> str:
+    missing = [field for field in CONTRACT_FIELDS if field not in contract]
+    if missing:
+        raise KeyError(
+            "production contract fingerprint needs every field; missing: "
+            + ", ".join(missing))
+    if str(contract["observed_baseline_thinking"]) in {"unspecified", "none", ""}:
+        raise ValueError(
+            "observed_baseline_thinking must be the serialized value "
+            "(absent / budget:N / level:X), not an abstract name")
+    raw = "|".join(f"{field}={contract[field]!r}" for field in CONTRACT_FIELDS)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
+
+
 def production_policy_snapshot() -> dict[str, dict[str, object]]:
     return {
         name: {

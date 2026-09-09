@@ -92,10 +92,10 @@
         "why_important": ""
       },
       "domain": "reactor",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "PASS",
+      "human_error_types": [],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-fa4c10372e606d1e-aligned",
       "candidate_kind": "source_aligned",
       "claim": "신한울 3ㆍ4호기 건설 현장 용접사 양성 교육 실시",
@@ -256,10 +256,13 @@
         "why_important": ""
       },
       "domain": "reactor",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-fa4c10372e606d1e-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'신한울 3ㆍ4호기 건설 현장 용접사 양성 교육 실시'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -451,10 +454,15 @@
         "why_important": ""
       },
       "domain": "power_market",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "UNSUPPORTED_INFERENCE",
+        "SCOPE_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-aa57a5168dafb9f9-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'권칠승 \"1주택자 세부담 없도록 방안 마련…주거안정 체감 총력\"'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -573,10 +581,14 @@
         "why_important": ""
       },
       "domain": "policy",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "ENTITY_ERROR",
+        "STAGE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-f6b0a05f1c68e291-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "한국수력원자력이 '미국인 70% AI 데이터센터 건설 반대…중간선거 쟁점 부상'를 직접 결정하고 발표했다.",
@@ -634,10 +646,13 @@
         "why_important": ""
       },
       "domain": "policy",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-f6b0a05f1c68e291-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'미국인 70% AI 데이터센터 건설 반대…중간선거 쟁점 부상'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -746,10 +761,14 @@
         "why_important": ""
       },
       "domain": "smr",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "TEMPORAL_ERROR",
+        "DATE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-a641fc0911aae0b5-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'Prodigy Signs Agreement For Transportable Nuclear Power Plant With Canadian Indigenous Communities' 사건은 2099년 1월 1일 발생했다.",
@@ -802,10 +821,15 @@
         "why_important": ""
       },
       "domain": "smr",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-a641fc0911aae0b5-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'Prodigy Signs Agreement For Transportable Nuclear Power Plant With Canadian Indigenous Communities'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -1135,10 +1159,13 @@
         "why_important": ""
       },
       "domain": "waste_or_fusion",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-84575d69ed134631-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'서남권 반도체 전력의 맥 ‘한빛원전’…부지 내 저장시설 조기 구축이...'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -1227,10 +1254,15 @@
         "why_important": ""
       },
       "domain": "supply_chain_or_general",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "TEMPORAL_ERROR",
+        "CERTAINTY_ERROR",
+        "STAGE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "id": "semantic-eb147409fff92001-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'PURECORE PROVIDES CORPORATE UPDATE HIGHLIGHTING EXECUTION ACROSS URANIUM, COPPER AND CAPITAL MARKETS – Company Announcement - FT.com' 관련 사업은 이미 상업운전과 최종 준공을 완료했다.",
@@ -1273,10 +1305,15 @@
         "why_important": ""
       },
       "domain": "supply_chain_or_general",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-eb147409fff92001-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'PURECORE PROVIDES CORPORATE UPDATE HIGHLIGHTING EXECUTION ACROSS URANIUM, COPPER AND CAPITAL MARKETS – Company Announcement - FT.com'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -1365,10 +1402,14 @@
         "why_important": ""
       },
       "domain": "reactor",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "UNSUPPORTED_INFERENCE",
+        "FACT_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-dfd27e3bcbe93166-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'실적 꺾였는데 몸값 1조 거론…범한메카텍, SMR로 승부[IPO 엑스레이]' 때문에 국내 전기요금이 즉시 인상됐다.",
@@ -1411,10 +1452,15 @@
         "why_important": ""
       },
       "domain": "reactor",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-dfd27e3bcbe93166-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'실적 꺾였는데 몸값 1조 거론…범한메카텍, SMR로 승부[IPO 엑스레이]'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -1531,10 +1577,14 @@
         "why_important": ""
       },
       "domain": "power_market",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "TEMPORAL_ERROR",
+        "UNSUPPORTED_INFERENCE",
+        "STAGE_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-1d9b3ed6ef4a4de8-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'생산만으론 부족…저장·전력망도 에너지 경쟁력'의 후속 조치는 원문 보도 전에 모두 완료됐다.",
@@ -1591,10 +1641,15 @@
         "why_important": ""
       },
       "domain": "power_market",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-1d9b3ed6ef4a4de8-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'생산만으론 부족…저장·전력망도 에너지 경쟁력'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -1738,10 +1793,15 @@
         "why_important": ""
       },
       "domain": "policy",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-110e0f02d866b27b-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'“계속운전 신청 원전, 신규원전 수준으로 안전성 철저히 확인”'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -1868,10 +1928,15 @@
         "why_important": "미국 내 SMR 설계 검증을 위한 실증 인프라가 구체화됨에 따라 SMR 상용화 일정이 가시화되고 있음."
       },
       "domain": "smr",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "ENTITY_ERROR",
+        "CERTAINTY_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "id": "semantic-c1ddbcc160b82974-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'Holtec's SMR-300 test facility taking shape at INL'은 정부의 공개되지 않은 비밀 지시 때문에 발생했다.",
@@ -1933,10 +1998,15 @@
         "why_important": "미국 내 SMR 설계 검증을 위한 실증 인프라가 구체화됨에 따라 SMR 상용화 일정이 가시화되고 있음."
       },
       "domain": "smr",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-c1ddbcc160b82974-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'Holtec's SMR-300 test facility taking shape at INL'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -2227,10 +2297,15 @@
         "why_important": "고준위 방폐장 부지 선정은 원전 운영의 지속가능성을 결정짓는 핵심 현안으로, 내년 공모 결과가 향후 원전 정책의 성패를 좌우할 것이다."
       },
       "domain": "waste_or_fusion",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-e00221331ed5b153-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'[‘10번째 도전’ 고준위 방폐장](1) ‘40년 공회전’ 고준위 방폐장 10...'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -2323,10 +2398,13 @@
         "why_important": ""
       },
       "domain": "supply_chain_or_general",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "UNSUPPORTED_INFERENCE",
+        "NUMBER_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-dcb975d82d845013-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "IsoEnergy and DISA to create new US uranium company 관련 공식 수치는 999건이다.",
@@ -2371,10 +2449,15 @@
         "why_important": ""
       },
       "domain": "supply_chain_or_general",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-dcb975d82d845013-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'IsoEnergy and DISA to create new US uranium company'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -2467,10 +2550,14 @@
         "why_important": ""
       },
       "domain": "reactor",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "ENTITY_ERROR",
+        "UNSUPPORTED_INFERENCE",
+        "STAGE_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "id": "semantic-babf4bcdf043c2d5-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "한국수력원자력이 '박정성號 통상교섭본부 출범…대미 투자·301조 관세 대응 '동시 시험대...'를 직접 결정하고 발표했다.",
@@ -2515,10 +2602,15 @@
         "why_important": ""
       },
       "domain": "reactor",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-babf4bcdf043c2d5-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'박정성號 통상교섭본부 출범…대미 투자·301조 관세 대응 '동시 시험대...'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -2693,10 +2785,14 @@
         "why_important": ""
       },
       "domain": "power_market",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "TEMPORAL_ERROR",
+        "DATE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-b32f177b682dce84-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'대불산단 직주근접·대불초 인접… 10년 민간임대 're100 렉시안 써밋' ...' 사건은 2099년 1월 1일 발생했다.",
@@ -2782,10 +2878,15 @@
         "why_important": ""
       },
       "domain": "power_market",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-b32f177b682dce84-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'대불산단 직주근접·대불초 인접… 10년 민간임대 're100 렉시안 써밋' ...'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -2920,10 +3021,15 @@
         "why_important": ""
       },
       "domain": "policy",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-5e37eb1f2c024a40-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'원전현장인력양성원, ‘원전정비원자격제도’ 정부인정 취득'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -3020,10 +3126,15 @@
         "why_important": ""
       },
       "domain": "smr",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "TEMPORAL_ERROR",
+        "CERTAINTY_ERROR",
+        "STAGE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-ef8497efb48823ba-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'ONE Nuclear Executes Binding LOI for Project Cayman, a 2.88 GW Louisiana Energy Project with Co-Located Data Center Campus – Company Announcement - FT.com' 관련 사업은 이미 상업운전과 최종 준공을 완료했다.",
@@ -3070,10 +3181,15 @@
         "why_important": ""
       },
       "domain": "smr",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-ef8497efb48823ba-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'ONE Nuclear Executes Binding LOI for Project Cayman, a 2.88 GW Louisiana Energy Project with Co-Located Data Center Campus – Company Announcement - FT.com'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -3166,10 +3282,14 @@
         "why_important": ""
       },
       "domain": "waste_or_fusion",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "UNSUPPORTED_INFERENCE",
+        "FACT_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-1440fd7c3cd7cdb5-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'Fusion company Shine announces that it was selected by the DOE for two Genesis Mission projects. PR Newswire' 때문에 국내 전기요금이 즉시 인상됐다.",
@@ -3214,10 +3334,15 @@
         "why_important": ""
       },
       "domain": "waste_or_fusion",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-1440fd7c3cd7cdb5-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'Fusion company Shine announces that it was selected by the DOE for two Genesis Mission projects. PR Newswire'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -3306,10 +3431,14 @@
         "why_important": ""
       },
       "domain": "supply_chain_or_general",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "TEMPORAL_ERROR",
+        "UNSUPPORTED_INFERENCE",
+        "STAGE_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-ef6fa5fe7c2b1362-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'Mid-year updates from major uranium producers'의 후속 조치는 원문 보도 전에 모두 완료됐다.",
@@ -3352,10 +3481,15 @@
         "why_important": ""
       },
       "domain": "supply_chain_or_general",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-ef6fa5fe7c2b1362-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'Mid-year updates from major uranium producers'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -3517,10 +3651,15 @@
         "why_important": ""
       },
       "domain": "reactor",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-c6bcaab0bd3b1bdd-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'사람 오가던 길은 끊기고, 전기 실어 나르는 길만 굵어지네'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -3703,10 +3842,15 @@
         "why_important": ""
       },
       "domain": "power_market",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "ENTITY_ERROR",
+        "UNSUPPORTED_INFERENCE",
+        "CERTAINTY_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "id": "semantic-e17805472c05ed7e-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'\"AI 붐이 전력망 삼킨다\"… 美 15개 지역 중 9곳 '전력 부족 고위험' 경...'은 정부의 공개되지 않은 비밀 지시 때문에 발생했다.",
@@ -3796,10 +3940,15 @@
         "why_important": ""
       },
       "domain": "power_market",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-e17805472c05ed7e-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'\"AI 붐이 전력망 삼킨다\"… 美 15개 지역 중 9곳 '전력 부족 고위험' 경...'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -4075,10 +4224,15 @@
         "why_important": "신규 원전의 시운전 과정에서 발생한 인적 오류는 안전성 신뢰도에 직결되는 사안으로, 재발 방지 대책의 이행 여부를 철저히 점검해야 한다."
       },
       "domain": "policy",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-6d619db5c2ade2f3-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'새울 3호기 정지 원인은 조작 실수…“터빈 밸브 설정값 잘못 입력”'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -4179,16 +4333,20 @@
         "why_important": ""
       },
       "domain": "smr",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "TEMPORAL_ERROR",
+        "DATE_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_BLIND_CORRECTED",
       "id": "semantic-66d8933507f8bf75-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "한 총리, 오는 21일 빌 게이츠 회동…SMR 협력 논의 전망",
       "selection_metadata_not_gold": {
         "review_focus": "NUMBER_ERROR"
-      }
+      },
+      "superseded_label": "REPAIR"
     },
     {
       "source_evidence": {
@@ -4231,10 +4389,15 @@
         "why_important": ""
       },
       "domain": "smr",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-66d8933507f8bf75-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'한 총리, 오는 14일 빌 게이츠 회동…SMR 협력 논의 전망'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -4417,10 +4580,14 @@
         "why_important": ""
       },
       "domain": "waste_or_fusion",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "ENTITY_ERROR",
+        "UNSUPPORTED_INFERENCE",
+        "STAGE_ERROR"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_BLIND_CONFIRMED",
       "id": "semantic-85808a489f14bf7b-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "한국수력원자력이 '새 원전 말하기 전 '나아리의 12년'에 답하라 [왜냐면]'를 직접 결정하고 발표했다.",
@@ -4510,10 +4677,15 @@
         "why_important": ""
       },
       "domain": "waste_or_fusion",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-85808a489f14bf7b-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'새 원전 말하기 전 '나아리의 12년'에 답하라 [왜냐면]'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -4602,10 +4774,14 @@
         "why_important": ""
       },
       "domain": "supply_chain_or_general",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "TEMPORAL_ERROR",
+        "DATE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-816ae30c704e67cd-perturbed",
       "candidate_kind": "controlled_perturbation",
       "claim": "'Front-end nuclear fuel supply cooperation: Turning allied interdependence into strategic advantage' 사건은 2099년 1월 1일 발생했다.",
@@ -4648,10 +4824,15 @@
         "why_important": ""
       },
       "domain": "supply_chain_or_general",
-      "human_label": null,
-      "human_error_types": null,
+      "human_label": "BLOCK",
+      "human_error_types": [
+        "CAUSALITY_ERROR",
+        "CERTAINTY_ERROR",
+        "SCOPE_ERROR",
+        "UNSUPPORTED_INFERENCE"
+      ],
       "human_notes": null,
-      "label_status": "HUMAN_LABEL_REQUIRED",
+      "label_status": "HUMAN_REVIEWED_AI_ASSISTED",
       "id": "semantic-816ae30c704e67cd-unsupported",
       "candidate_kind": "unsupported_inference",
       "claim": "'Front-end nuclear fuel supply cooperation: Turning allied interdependence into strategic advantage'은 향후 5년간 산업 전체의 수익성을 확실히 높일 것이다.",
@@ -4771,5 +4952,6 @@
         "review_focus": "saeul_contract"
       }
     }
-  ]
+  ],
+  "provenance_note": "HUMAN_REVIEWED_AI_ASSISTED 는 사람이 읽고 승인했으나 AI 판정을 먼저 본 뒤의 판단이다. 라벨 값은 변경되지 않았다. 독립 Gold 로 승격하려면 blind 재검증으로 anchoring 크기를 먼저 재야 한다."
 }

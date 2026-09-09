@@ -301,7 +301,9 @@
       "human_label": "SEPARATE",
       "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "FOLLOW_UP_NEW_ACTION",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "75854021de34f332--a152ea74be0b0e74",
@@ -357,7 +359,9 @@
       "human_label": "SEPARATE",
       "reason_code": "other",
       "human_notes": "주체·대상·행동 모두 달라 사실상 무관한 기사",
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "RELATED_DISTINCT_EVENT",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "4da5b7ab6c225c78:stop--4da5b7ab6c225c78:project-period",
@@ -527,7 +531,9 @@
       "human_label": "SEPARATE",
       "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "FOLLOW_UP_NEW_ACTION",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "55842b037eb69172--f23d52daba6bc9f7",
@@ -692,7 +698,9 @@
       "human_label": "SEPARATE",
       "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "RELATED_DISTINCT_EVENT",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "76ffb07f2b6ccb8d--a519ec27d94058f0",
@@ -860,7 +868,9 @@
       "human_label": "MERGE",
       "reason_code": "follow_up_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "SAME_EVENT",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "0d65034147a0c1c1--1e53d0f81cb14594",
@@ -915,7 +925,9 @@
       "human_label": "SEPARATE",
       "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "RELATED_DISTINCT_EVENT",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "e39a5781ea57766c--ff6b831bee753ecc",
@@ -1198,7 +1210,9 @@
       "human_label": "SEPARATE",
       "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "FOLLOW_UP_NEW_ACTION",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "997d5f57b3bba72b--a5a1ef68231b4e51",
@@ -1311,7 +1325,9 @@
       "human_label": "MERGE",
       "reason_code": "follow_up_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "FOLLOW_UP_NEW_ACTION",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "370525a5633cd666--4c9acb05e565646d",
@@ -1587,7 +1603,9 @@
       "human_label": "SEPARATE",
       "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "FOLLOW_UP_NEW_ACTION",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "0799408181a9cab4--666add9fc32c9d8a",
@@ -1863,7 +1881,9 @@
       "human_label": "SEPARATE",
       "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "FOLLOW_UP_NEW_ACTION",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "79affc73cad65844--d4010b67b8de8881",
@@ -1918,7 +1938,9 @@
       "human_label": "SEPARATE",
       "reason_code": "other",
       "human_notes": "주제간 관련성 낮음",
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "UNRELATED",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "0c9c758818ef14de--d102b3fc8a136e96",
@@ -2252,7 +2274,9 @@
       "human_label": "SEPARATE",
       "reason_code": "other",
       "human_notes": "전력공급원 문제와 전기요금제 문제는 서로 다른 정책축",
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "UNRELATED",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "5912265ba9aa8cfe--8ceb26d26c222131",
@@ -2307,7 +2331,9 @@
       "human_label": "MERGE",
       "reason_code": "follow_up_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "RELATED_DISTINCT_EVENT",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "4a171aeb5c1c01ac--f7fb3d73512b4f68",
@@ -2363,7 +2389,9 @@
       "human_label": "SEPARATE",
       "reason_code": "other",
       "human_notes": "기술 주제가 다른 내용",
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "UNRELATED",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "34575730dc364184--f33f228a288946ee",
@@ -2419,7 +2447,9 @@
       "human_label": "SEPARATE",
       "reason_code": "other",
       "human_notes": "실질적 사건 관계가 거의 없음",
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "UNRELATED",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "71f5625759c56698--dc1e6a30e09ccefd",
@@ -2531,7 +2561,9 @@
       "human_label": "SEPARATE",
       "reason_code": "different_action",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "FOLLOW_UP_NEW_ACTION",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "8b486e4051da2e66--eeb5f60b2c8223fd",
@@ -2587,7 +2619,9 @@
       "human_label": "MERGE",
       "reason_code": "follow_up_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "FOLLOW_UP_NEW_ACTION",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "76e475ad2520cd4f--a1912ae6be142db4",
@@ -2814,7 +2848,9 @@
       "human_label": "SEPARATE",
       "reason_code": "other",
       "human_notes": "같은 기업이나 다른 주제",
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "UNRELATED",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "43f9d6d14c4dcd39--64390f8237447d17",
@@ -2926,7 +2962,9 @@
       "human_label": "SEPARATE",
       "reason_code": "other",
       "human_notes": "같은 주제이나 다른 사건",
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "RELATED_DISTINCT_EVENT",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "414635dfc63ab9c4--cd2318c0be5d5379",
@@ -2981,7 +3019,9 @@
       "human_label": "MERGE",
       "reason_code": "follow_up_same_event",
       "human_notes": null,
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "FOLLOW_UP_NO_NEW_ACTION",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "9a7b23e4ae5be6f3--beff8f802cca43be",
@@ -3258,7 +3298,9 @@
       "human_label": "SEPARATE",
       "reason_code": "other",
       "human_notes": "다른 주제",
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "UNRELATED",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "adfbe2085bf6c11e--e4c4b1f4ad2834d4",
@@ -3371,7 +3413,9 @@
       "human_label": "SEPARATE",
       "reason_code": "other",
       "human_notes": "다른 주제",
-      "label_status": "HUMAN_LABELLED"
+      "label_status": "HUMAN_LABELLED",
+      "human_relation": "UNRELATED",
+      "relation_status": "HUMAN_RELATION_REVIEWED"
     },
     {
       "id": "5e2c11cd445bbcee--b5078cd9e9f6cf5f",

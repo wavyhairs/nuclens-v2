@@ -59,3 +59,6 @@ web/_benchmark/
 artifacts/gemini-reasoning-eval/
 # Local human-label drafts. Canonical Gold is updated only by an explicit export.
 .eval/gold-labels/
+# 로컬 재개 체크포인트와 baseline probe 산출물. 지속 상태와 재개 명령은
+# docs/2026-09-08-gemini-reasoning-v2-progress.md 에만 둔다.
+.eval/

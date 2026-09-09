@@ -2015,8 +2015,23 @@ def append_open_question_stats(verdicts: dict[str, dict],
 
 
 def curate_batch(articles: list[dict], reports_kb: list[dict],
-                 bodies: dict[str, str] | None = None) -> dict[str, dict]:
+                 bodies: dict[str, str] | None = None,
+                 client=None, log_path: Path | None = None) -> dict[str, dict]:
     """새 기사 목록을 chunk 단위 배치 호출로 큐레이션. {hash: cur_dict} 반환.
+
+    ``client``/``log_path`` 는 오프라인 replay 전용 이음매다. 기본값은 예전과
+    글자까지 같은 동작이고, 프롬프트·파라미터·판정은 어느 쪽으로도 달라지지 않는다.
+
+    이 이음매가 필요한 이유는 두 가지다.
+
+    1. 이 모듈은 ``from gemini_client import call_json as gemini_call_json`` 으로
+       **이름을 복사해** 들고 있다. 그래서 ``gemini_client.call_json`` 을 갈아
+       끼워도 여기에는 닿지 않는다 — replay 라고 믿으면서 실제 API 를 부르게 된다.
+    2. 실패·격리 기록이 ``delivery_log.jsonl`` 로 곧장 간다. 경로를 못 바꾸면
+       replay 가 운영 로그를 오염시킨다.
+
+    두 문제 모두 "조용히 잘못되는" 종류라, 인자로 열어 두고 replay 쪽에서 호출
+    0회·파일 변경 0개를 불변식으로 검사한다.
 
     문장 완결성·길이 게이트를 통과하지 못한 항목만 한 번 재생성한다. 재생성에도
     실패하면 결과에서 제외하여 잘린 문장이 아카이브나 브리핑으로 넘어가지 않는다.
@@ -2026,6 +2041,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
     없음)으로 큐에 들어갔고, 큐에 들어가는 순간 ``sent`` 로 마킹돼 재수집이 막히므로
     영영 복구되지 않았다.
     """
+    call = client if client is not None else gemini_call_json
     if not articles:
         return {}
     if not gemini_rest_available():
@@ -2065,7 +2081,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
 
         try:
             policy = llm_policy.profile("curation")
-            result = gemini_call_json(
+            result = call(
                 system_prompt + (
                     "\n\n[재생성] 이전 출력의 오류가 표시된 항목입니다. 사실·시제를 유지하면서 "
                     "제한 안에서 완결형 문장으로 전부 다시 작성하세요."
@@ -2238,7 +2254,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
     if lost:
         print(f"  ! 큐레이션 유실 {len(lost)}/{len(articles)}건 — "
               f"delivery_log.jsonl 에 기록 (fallback 큐레이션으로 넘어감)")
-        append_curation_failure(lost, articles)
+        append_curation_failure(lost, articles, path=log_path)
 
     if final_integrity_quarantines:
         count = len(final_integrity_quarantines)
@@ -2256,6 +2272,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                                    for row in list(final_integrity_quarantines.values())[:3])),
             fingerprint=operational_monitoring.count_fingerprint("regen", count),
             items=list(final_integrity_quarantines.values()),
+            path=log_path,
         )
 
     # 조용히 지우면 프롬프트가 망가진 것을 아무도 모른다. 실측 기준선: 옛 프롬프트에서
@@ -2292,7 +2309,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 blocked.get(row.get("reason") or "accepted", 0) + 1
         print(f"  · open_question 게이트: must_read {len(oq_verdicts)}건 → "
               + " / ".join(f"{k} {v}" for k, v in sorted(blocked.items())))
-        append_open_question_stats(oq_verdicts)
+        append_open_question_stats(oq_verdicts, path=log_path)
 
     return out
 
