@@ -111,6 +111,33 @@ def select_blind_sample(payloads: dict[str, dict]) -> list[dict]:
     return picked
 
 
+def relabel_queue(payloads: dict[str, dict]) -> list[dict]:
+    """표본에서 무너진 층의 **남은 라벨**을 다음 blind 회차로 올린다.
+
+    표본 3건이 모두 뒤집힌 층이 있으면 그 층의 나머지도 못 믿는다. 그러나 "못 믿는다"
+    를 손으로 적으면 다음 회차에 그 판단이 굳어 버린다. 그래서 목록을 위험 판정에서
+    직접 끌어온다 — `RELABEL_REQUIRED` 가 아닌 층은 여기 오지 않는다.
+
+    이미 blind 를 거친 케이스는 넣지 않는다. 두 번 묻는 것은 사람 시간 낭비다.
+    """
+    from tools import promote_reviews
+
+    queued: list[dict] = []
+    for task, payload in payloads.items():
+        risk = promote_reviews.stratum_risk(payload)
+        shaken = {label for label, row in risk.items()
+                  if row["verdict"] == "RELABEL_REQUIRED"}
+        if not shaken:
+            continue
+        for case in payload.get("cases") or []:
+            if case.get("label_status") != AI_ASSISTED:
+                continue
+            if _stratum(task, case) in shaken:
+                queued.append({"task": task, "stratum": _stratum(task, case),
+                               "case_id": case["id"]})
+    return sorted(queued, key=lambda row: (row["task"], row["case_id"]))
+
+
 def compare(blind: dict[str, str], payloads: dict[str, dict],
             sample: list[dict]) -> dict:
     """blind 판정과 보관된 라벨을 대조한다. **방향**이 핵심이다."""

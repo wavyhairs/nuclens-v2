@@ -153,5 +153,47 @@ class DirectionTests(unittest.TestCase):
         self.assertEqual(result["compared"], 1)
 
 
+
+class RelabelQueueTests(unittest.TestCase):
+    """무너진 층의 나머지를 다음 회차로 올리되, 손으로 적지 않는다."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.payloads = {"curation": _load("curation_gold.json"),
+                        "semantic": _load("semantic_gold.json")}
+
+    def test_only_relabel_required_strata_are_queued(self):
+        queued = gold_provenance.relabel_queue(self.payloads)
+        self.assertTrue(queued)
+        self.assertEqual({(row["task"], row["stratum"]) for row in queued},
+                         {("curation", "PASS")})
+
+    def test_already_reviewed_cases_are_not_asked_twice(self):
+        queued = {row["case_id"] for row in gold_provenance.relabel_queue(self.payloads)}
+        for payload in self.payloads.values():
+            for case in payload["cases"]:
+                if case["id"] in queued:
+                    with self.subTest(case=case["id"]):
+                        self.assertEqual(case["label_status"],
+                                         gold_provenance.AI_ASSISTED)
+
+    def test_a_confirmed_stratum_is_never_queued(self):
+        # REPAIR 는 6/6 일치했다. 다시 묻는 것은 사람 시간 낭비다.
+        strata = {row["stratum"] for row in gold_provenance.relabel_queue(self.payloads)}
+        self.assertNotIn("REPAIR", strata)
+
+    def test_nothing_is_queued_when_no_stratum_collapsed(self):
+        clean = copy.deepcopy(self.payloads)
+        for payload in clean.values():
+            for case in payload["cases"]:
+                if case.get("label_status") == "HUMAN_BLIND_CORRECTED":
+                    case["label_status"] = "HUMAN_BLIND_CONFIRMED"
+                    case.pop("superseded_label", None)
+        self.assertEqual(gold_provenance.relabel_queue(clean), [])
+
+    def test_the_queue_is_deterministic(self):
+        self.assertEqual(gold_provenance.relabel_queue(self.payloads),
+                         gold_provenance.relabel_queue(self.payloads))
+
 if __name__ == "__main__":
     unittest.main()

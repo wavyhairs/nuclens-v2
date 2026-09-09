@@ -98,8 +98,11 @@ def _identity_case(case: dict) -> dict:
 
 def build_state() -> dict:
     payloads = blind_relabel._payloads()
-    blind_cases = blind_relabel.build_packet(
-        payloads, gold_provenance.select_blind_sample(payloads))["cases"]
+    # 1회차 표본에 더해, 그 표본에서 **무너진 층의 남은 라벨**을 함께 올린다.
+    # 층이 통째로 뒤집혔는데 나머지를 그대로 쓰면 뒤집힌 줄 모르고 평가가 돌아간다.
+    sample = (gold_provenance.select_blind_sample(payloads)
+              + gold_provenance.relabel_queue(payloads))
+    blind_cases = blind_relabel.build_packet(payloads, sample)["cases"]
     for case in blind_cases:
         case["queue"] = "blind"
 

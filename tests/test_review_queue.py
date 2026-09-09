@@ -32,11 +32,25 @@ class QueueCompositionTests(unittest.TestCase):
         cls.state = review_queue.build_state()
         cls.cases = cls.state["cases"]
 
-    def test_both_queues_are_present_at_the_planned_size(self):
+    def test_both_queues_are_present(self):
         counts = {}
         for case in self.cases:
             counts[case["queue"]] = counts.get(case["queue"], 0) + 1
-        self.assertEqual(counts, {"blind": 15, "identity": 22})
+        # blind 는 1회차 표본 15 + 무너진 층의 재라벨분이다. 크기를 상수로 박으면
+        # 재라벨 대상이 늘어도 큐에 안 실리는 것을 눈치채지 못한다.
+        self.assertEqual(counts["identity"], 22)
+        self.assertGreaterEqual(counts["blind"], 15)
+
+    def test_the_blind_queue_carries_the_relabel_round(self):
+        from tools import blind_relabel, gold_provenance
+
+        payloads = blind_relabel._payloads()
+        expected = ({row["case_id"] for row in
+                     gold_provenance.select_blind_sample(payloads)}
+                    | {row["case_id"] for row in
+                       gold_provenance.relabel_queue(payloads)})
+        self.assertEqual({c["id"] for c in self.cases if c["queue"] == "blind"},
+                         expected)
 
     def test_identity_queue_is_exactly_the_undecidable_union(self):
         cases = json.loads((FIXTURES / "identity_candidates.json")
