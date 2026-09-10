@@ -1,44 +1,6 @@
 {
- "generated_at": "2026-09-10T07:37:11+09:00",
+ "generated_at": "2026-09-11T00:45:22+09:00",
  "events": [
-  {
-   "id": "of-78b28354d3ea",
-   "date": "2026-08-24",
-   "end_date": "2026-08-27",
-   "kind": "range",
-   "time": "",
-   "label": "2026 Nuclear Energy Conference & Expo (NECX)",
-   "host": "",
-   "organizer": "",
-   "place": "Dallas, TX",
-   "url": "https://www.ans.org/meetings/view-necx2026",
-   "source_id": "kaif_calendar",
-   "publisher": "한국원자력산업협회",
-   "notice_title": "2026 Nuclear Energy Conference & Expo (NECX) (세미나)",
-   "first_seen": "2026-08-29",
-   "topics": [],
-   "relevance": "nuclear",
-   "significance": "세미나"
-  },
-  {
-   "id": "of-3544ab385730",
-   "date": "2026-08-24",
-   "end_date": "2026-08-27",
-   "kind": "range",
-   "time": "",
-   "label": "Nuclear Energy Conference & Expo",
-   "host": "",
-   "organizer": "",
-   "place": "Dallas, TX",
-   "url": "https://www.nei.org/conferences",
-   "source_id": "kaif_calendar",
-   "publisher": "한국원자력산업협회",
-   "notice_title": "Nuclear Energy Conference & Expo (세미나)",
-   "first_seen": "2026-08-29",
-   "topics": [],
-   "relevance": "nuclear",
-   "significance": "세미나"
-  },
   {
    "id": "of-fa1734290fe2",
    "date": "2026-08-31",
@@ -503,7 +465,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-09-10T07:37:11+09:00",
+   "at": "2026-09-11T00:45:22+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -511,18 +473,18 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-09-10T07:37:11+09:00",
+   "at": "2026-09-11T00:45:22+09:00",
    "ok": true,
-   "parsed": 12,
+   "parsed": 10,
    "kept": 2,
    "new": 0,
    "dropped": {
-    "not_an_event": 5,
-    "low_significance": 5
+    "not_an_event": 4,
+    "low_significance": 4
    }
   },
   "kaif_calendar": {
-   "at": "2026-09-10T07:37:11+09:00",
+   "at": "2026-09-11T00:45:22+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -535,7 +497,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-09-10T07:37:11+09:00",
+   "at": "2026-09-11T00:45:22+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -543,25 +505,26 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-09-10T07:37:11+09:00",
+   "at": "2026-09-11T00:45:22+09:00",
    "ok": true,
-   "parsed": 79,
+   "parsed": 60,
    "kept": 2,
-   "new": 1,
+   "new": 0,
    "dropped": {
-    "no_interest_match": 76,
+    "no_interest_match": 57,
     "not_an_event": 1
    }
   },
   "kpx_notice": {
-   "at": "2026-09-10T07:37:11+09:00",
+   "at": "2026-09-11T00:45:22+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 1,
    "new": 1,
    "dropped": {
+    "low_significance": 2,
     "no_event_date": 4,
-    "not_an_event": 7,
+    "not_an_event": 5,
     "no_interest_match": 7,
     "unreadable_event_date": 1
    }
