@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 2,
+    "count": 3,
     "date": "2026-09-10"
   },
   "retired": {
@@ -206,7 +206,7 @@
     }
   },
   "spent": {
-    "count": 10,
+    "count": 12,
     "date": "2026-09-10"
   },
   "terms": {
@@ -244,6 +244,40 @@
       ],
       "yields": 2,
       "zero_streak": 1
+    },
+    "연결신청": {
+      "articles": 1,
+      "created_at": "2026-09-10T03:40:49.438328+00:00",
+      "domains": [
+        "yna.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "yna.co.kr",
+          "hash": "4762adf8f144ad93",
+          "importance": "must_read",
+          "title": "미국 텍사스주, 데이터센터 전력망 연결 신청 급증에 따른 감사 지시"
+        }
+      ],
+      "expires_at": "2026-09-11T03:40:52.214069+00:00",
+      "importance": "must_read",
+      "last_result_count": 1,
+      "last_run": "2026-09-10T03:40:52.214069+00:00",
+      "new_articles": 1,
+      "origin": "auto",
+      "planned_at": "2026-09-10T03:40:49.438328+00:00",
+      "queries_run": 1,
+      "query": "연결 신청 원전",
+      "score": 3.6,
+      "status": "extended",
+      "term": "연결 신청",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [
+        "2026-09-10"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     },
     "인수를포함한": {
       "articles": 1,
@@ -377,23 +411,25 @@
           "title": "구글, 핀란드 디지털 인프라에 20조 투자 및 포툼 원전 전력 구매 계약"
         }
       ],
-      "expires_at": "2026-09-10T21:40:18.745159+00:00",
+      "expires_at": "2026-09-11T03:40:52.214069+00:00",
       "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-09-09T21:40:20.180108+00:00",
-      "new_articles": 0,
+      "last_result_count": 2,
+      "last_run": "2026-09-10T03:40:52.214069+00:00",
+      "new_articles": 2,
       "origin": "auto",
-      "planned_at": "2026-09-09T21:40:18.745159+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-09-10T03:40:49.438328+00:00",
+      "queries_run": 2,
       "query": "포툼 원전",
       "score": 3.6,
-      "status": "tracking",
+      "status": "extended",
       "term": "포툼",
       "ttl_hours": 24,
       "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 1
+      "yield_days": [
+        "2026-09-10"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     },
     "한국경제인협회": {
       "articles": 3,
