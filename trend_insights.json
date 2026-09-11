@@ -1,12 +1,12 @@
 {
- "generated_at": "2026-09-12T06:02:48.757861+09:00",
+ "generated_at": "2026-09-12T06:52:19.477897+09:00",
  "window": "7d",
  "items": [
   {
    "keyword": "데이터센터",
-   "count_now": 232,
+   "count_now": 233,
    "count_prev": 267,
-   "direction": "국내외 데이터센터 건립 확산에 따른 주민 반발과 전력망 비용 전가 방지 법안 추진 등 규제 및 비용 부담 논란이 대두되고 있으며, 울산 및 파주 등에서의 대규모 투자와 가동 목표 추진이 병행되고 있다.",
+   "direction": "국내외 데이터센터 건립과 AI 전력 수요 급증에 따라 투자와 규제 및 비용 전가 논란이 동시에 전개되고 있다. 울산과 파주 등 국내 AI 데이터센터 건설이 추진되는 한편, 전력망 비용 부담 주체를 둘러싼 갈등과 주민 반발이 확산되는 양상이다.",
    "evidence": [
     {
      "hash": "c9a2796e15216b43",
@@ -44,7 +44,7 @@
    "keyword": "SMR",
    "count_now": 192,
    "count_prev": 200,
-   "direction": "소형모듈원자로(SMR) 개발 촉진 및 지원에 관한 특별법 시행과 함께, HD현대중공업의 제작 공장 투자 및 미 국방부의 마이크로원자로 배치 등 국내외 실증 및 상용화 움직임이 구체화되고 있다.",
+   "direction": "소형모듈원자로(SMR) 개발 촉진 및 지원에 관한 특별법 시행과 함께 국내외에서 제작 공장 투자 및 자금 조달이 활발해지고 있다. HD현대중공업의 SMR 주기기 전용 공장 투자와 미 국방부의 마이크로원자로 배치 확정 등이 이어지며 상용화 경쟁이 가속화되는 흐름이다.",
    "evidence": [
     {
      "hash": "ed11472438a2c144",
@@ -56,6 +56,12 @@
      "hash": "9f958d229ac5734a",
      "title_kr": "미 국방부, 인디애나주 NWS Crane 기지에 해군 최초 마이크로원자로 배치 확정",
      "url": "https://www.ans.org/news/2026-09-11/article-8383/navys-first-terrestrial-reactor-coming-to-indianas-nws-crane",
+     "date": "2026-09-12"
+    },
+    {
+     "hash": "268dccb5086b2189",
+     "title_kr": "블루코어(Bluecore), 부유식 SMR 개발 자금 조달",
+     "url": "https://news.google.com/rss/articles/CBMifkFVX3lxTE1IUXhiamE3OHBkWDNFQ0U5YUtYbXFReEdKR0k4SVg5anJaZnFwLWZfZW0tRXZkTVppRm1aRnFtZ0FxRllsRE9FcGo4ZEJiQmVLZmtlbkVaQzR2QUlZUk41QngzdUVxNFpHVVdxZ1dJOXNzSHFVTjBXdDcxRkZBZw?oc=5",
      "date": "2026-09-12"
     },
     {
@@ -74,10 +80,16 @@
   },
   {
    "keyword": "AI",
-   "count_now": 96,
+   "count_now": 97,
    "count_prev": 103,
-   "direction": "AI 인프라 투자가 GPU를 넘어 전력 및 냉각 등 병목 현상 대응으로 확대되는 가운데, 국내외 데이터센터 구축과 보안 특화 AI 모델 개발이 함께 진행되고 있다.",
+   "direction": "엔비디아의 데이터센터 매출 증가 등 AI 모델 고도화에 따른 연산량 확대가 전력 인프라 전반의 투자 촉진으로 이어지고 있다. 국내에서는 네이버클라우드와 한수원 등의 컨소시엄이 보안 특화 AI 모델 개발에 착수하고 LG유플러스가 파주 AI 데이터센터를 구축하는 등 인프라와 플랫폼 분야로 확산되고 있다.",
    "evidence": [
+    {
+     "hash": "93badf8979bf4924",
+     "title_kr": "AI 에이전트 확산에 따른 전력 인프라 투자 가속화 전망",
+     "url": "https://www.ziksir.com/news/articleView.html?idxno=146153",
+     "date": "2026-09-12"
+    },
     {
      "hash": "5fa35d490e49af19",
      "title_kr": "엔비디아 데이터센터 매출 18% 증가, 블랙웰 수요 견인",
@@ -101,12 +113,6 @@
      "title_kr": "LG유플러스, 파주 AI 데이터센터 구축 및 B2B AI 사업 확대",
      "url": "https://www.pointdaily.co.kr/news/articleView.html?idxno=318848",
      "date": "2026-09-11"
-    },
-    {
-     "hash": "ebbbdbabc137906a",
-     "title_kr": "오라클, AI 클라우드 수요 급증으로 분기 매출 예상치 상회",
-     "url": "https://www.newspim.com/news/view/20260911000035",
-     "date": "2026-09-11"
     }
    ]
   },
@@ -114,13 +120,19 @@
    "keyword": "전력망",
    "count_now": 82,
    "count_prev": 119,
-   "direction": "AI 데이터센터와 반도체 클러스터 확장에 따른 대규모 전력 수요로 인해 전력 가용성과 송전망 확보가 핵심 변수로 부상했으며, 이 과정에서 송전탑 건설 등 지역 부담과 비용 전가에 대한 반발이 제기되고 있다.",
+   "direction": "AI 데이터센터와 반도체 클러스터 확장에 따른 전력 수요 급증으로 전력망 확충과 송전선 건설이 핵심 변수로 부상했다. 이 과정에서 글로벌 전력망 투자가 구조적 성장 국면에 진입한 반면, 국내외에서는 대규모 전력 인프라 집중으로 인한 주민 부담 가중과 공급망 과부하 우려가 제기되고 있다.",
    "evidence": [
     {
      "hash": "ef8f6e0f0892cd77",
      "title_kr": "데이터센터 전력망 비용 부담 주체 논란 확산",
      "url": "http://www.koreatimes.com/article/1629313",
      "date": "2026-09-12"
+    },
+    {
+     "hash": "31652fe1234fd874",
+     "title_kr": "핀란드 야당, 구글 AI 데이터센터 투자에 따른 전력 공급난 우려 제기",
+     "url": "https://news.google.com/rss/articles/CBMizAFBVV95cUxOQUhBNXFscDg4QVlfbDFuT2IxYzFXRnNId0ZJXzA2YzlNNC1zMHVmcncxd0x2enBGQ3ZVRjFEX29pTGJoODdlcGxFb2NPQWFBUVotY0pqZ0VuWkczaV9MdTQybmtpWXdqNlBNMkxOanBleUhEVmh6OV9ISkc4Z0pJTk1nanZPb2FCc3hqdXE4TmN6RXdmbjl2ZzlQUmQ4MjBpd1pxSGxCS3hmd2g1NVNSZzJtVTY4TUdBMFFuVmhuYWNXQkhXTHZzZFQ1MkY?oc=5",
+     "date": "2026-09-11"
     },
     {
      "hash": "2ab8625088dbb5f9",
@@ -146,12 +158,24 @@
    "keyword": "한수원",
    "count_now": 64,
    "count_prev": 40,
-   "direction": "한수원은 체코 유소년 축구팀 초청 및 완주군 안심가로등 지원 등 지역 상생 행보를 보이는 동시에, 미국 내 APR1400 원전 건설 협상 및 미국 데이터센터 전력 공급을 위한 발전소 건설 추진 등 해외 인프라 사업을 다각화하고 있다.",
+   "direction": "한국수력원자력은 미국 내 APR1400 원전 건설 및 데이터센터 전력 공급을 위한 가스발전소 추진 등 대미 투자 협상을 진행하고 있다. 이와 동시에 프랑스 오라노와의 핵연료 공급망 협력, 체코 지역 상생 활동 및 보안 특화 AI 모델 개발 컨소시엄 참여 등 다각적인 행보를 보이고 있다.",
    "evidence": [
+    {
+     "hash": "ce9acb187ff87652",
+     "title_kr": "한-프랑스 정상회담, 원전 연료 공급망 협력 및 기술 교류 추진",
+     "url": "http://www.ddanzi.com/894134229",
+     "date": "2026-09-12"
+    },
     {
      "hash": "d063de8a8b0c53e1",
      "title_kr": "한수원, 체코 트레비치 유소년 축구팀 초청해 지역 상생",
      "url": "https://www.newscj.com/news/articleView.html?idxno=3431767",
+     "date": "2026-09-11"
+    },
+    {
+     "hash": "4d33b92decb1f59a",
+     "title_kr": "네이버클라우드 컨소시엄, 700B급 보안 특화 AI 모델 개발 착수",
+     "url": "https://it.chosun.com/news/articleView.html?idxno=2023092169882",
      "date": "2026-09-11"
     },
     {
@@ -172,14 +196,8 @@
    "keyword": "에너지안보",
    "count_now": 57,
    "count_prev": 39,
-   "direction": "미국과의 원전 및 에너지 투자 협상이 진행되는 한편, 핵연료 공급망 다변화와 사용후핵연료 관리 등 원전 강국의 구조적 과제를 해결하기 위한 논의와 대외 협력이 이어지고 있다.",
+   "direction": "정부는 대미 수출 환경 대응과 원전·LNG 투자 등을 연계한 에너지 투자 협상을 진행하며 공급망 다변화를 모색하고 있다. 또한 한국핵안보전략포럼 등을 통해 핵연료 해외 의존과 사용후핵연료 처리 과제 등 에너지 주권 확보의 필요성이 제기되고 있다.",
    "evidence": [
-    {
-     "hash": "553e1be597c2755f",
-     "title_kr": "부호 주한 베트남 대사, 한-베 AI 및 에너지 안보 협력 강화 제안",
-     "url": "https://www.newspim.com/news/view/20260911000108",
-     "date": "2026-09-11"
-    },
     {
      "hash": "f7db2cb9b0a061aa",
      "title_kr": "정부, 대미 에너지 투자 등 대미 수출 환경 대응책 마련 고심",
