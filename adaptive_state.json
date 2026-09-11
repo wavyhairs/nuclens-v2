@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 3,
     "date": "2026-09-11"
   },
   "retired": {
@@ -91,6 +91,14 @@
       "term": "듀앤 아놀드",
       "type": "plant",
       "until": "2026-09-23T09:40:11.671058+00:00"
+    },
+    "연결신청": {
+      "new_articles": 1,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-11T03:40:58.660278+00:00",
+      "term": "연결 신청",
+      "type": "plant",
+      "until": "2026-09-25T03:40:58.660278+00:00"
     },
     "영덕군이": {
       "new_articles": 17,
@@ -196,6 +204,14 @@
       "type": "plant",
       "until": "2026-09-18T09:40:37.636483+00:00"
     },
+    "포툼": {
+      "new_articles": 2,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-11T03:40:58.660278+00:00",
+      "term": "포툼",
+      "type": "plant",
+      "until": "2026-09-25T03:40:58.660278+00:00"
+    },
     "한국발전공사": {
       "new_articles": 37,
       "reason": "질의 횟수 소진",
@@ -230,10 +246,44 @@
     }
   },
   "spent": {
-    "count": 8,
+    "count": 11,
     "date": "2026-09-11"
   },
   "terms": {
+    "gvh": {
+      "articles": 1,
+      "created_at": "2026-09-11T03:40:58.660278+00:00",
+      "domains": [
+        "theguru.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "theguru.co.kr",
+          "hash": "603a7c13853cd80b",
+          "importance": "must_read",
+          "title": "미 NRC, 테네시주 BWRX-300 SMR 건설 허가 이달 말 완료 목표"
+        }
+      ],
+      "expires_at": "2026-09-12T03:41:02.472567+00:00",
+      "importance": "must_read",
+      "last_result_count": 1,
+      "last_run": "2026-09-11T03:41:02.472567+00:00",
+      "new_articles": 1,
+      "origin": "auto",
+      "planned_at": "2026-09-11T03:40:58.660278+00:00",
+      "queries_run": 1,
+      "query": "GVH 원자력",
+      "score": 3.6,
+      "status": "extended",
+      "term": "GVH",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [
+        "2026-09-11"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    },
     "로비사": {
       "articles": 4,
       "created_at": "2026-09-10T15:41:04.650135+00:00",
@@ -283,38 +333,50 @@
       "yields": 1,
       "zero_streak": 1
     },
-    "연결신청": {
-      "articles": 1,
-      "created_at": "2026-09-10T03:40:49.438328+00:00",
+    "산진해경제자유구역청": {
+      "articles": 3,
+      "created_at": "2026-09-11T03:40:58.660278+00:00",
       "domains": [
-        "yna.co.kr"
+        "hankooki.com",
+        "newstown.co.kr",
+        "fnnews.com"
       ],
       "evidence": [
         {
-          "domain": "yna.co.kr",
-          "hash": "4762adf8f144ad93",
-          "importance": "must_read",
-          "title": "미국 텍사스주, 데이터센터 전력망 연결 신청 급증에 따른 감사 지시"
+          "domain": "hankooki.com",
+          "hash": "453cbda5625c857e",
+          "importance": "nice_to_know",
+          "title": "부산진해경자청, SMR 등 차세대 에너지산업 육성 전략 발표"
+        },
+        {
+          "domain": "newstown.co.kr",
+          "hash": "6a97463254f45f7d",
+          "importance": "nice_to_know",
+          "title": "부산진해경제자유구역청, SMR 등 4대 핵심전략산업 재편 신청"
+        },
+        {
+          "domain": "fnnews.com",
+          "hash": "5e74ecdfd15fc495",
+          "importance": "nice_to_know",
+          "title": "부산진해경자청, SMR 등 차세대 에너지 산업 핵심전략산업으로 재편"
         }
       ],
-      "expires_at": "2026-09-11T03:40:52.214069+00:00",
-      "importance": "must_read",
+      "expires_at": "2026-09-12T03:40:58.660278+00:00",
+      "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-09-10T18:40:45.665693+00:00",
-      "new_articles": 1,
+      "last_run": "2026-09-11T03:41:02.472567+00:00",
+      "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-09-10T18:40:42.200246+00:00",
-      "queries_run": 2,
-      "query": "연결 신청 원전",
-      "score": 3.6,
-      "status": "extended",
-      "term": "연결 신청",
+      "planned_at": "2026-09-11T03:40:58.660278+00:00",
+      "queries_run": 1,
+      "query": "산진해경제자유구역청 원자력",
+      "score": 3.4,
+      "status": "tracking",
+      "term": "산진해경제자유구역청",
       "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-09-10"
-      ],
-      "yields": 1,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
       "zero_streak": 1
     },
     "인수를포함한": {
@@ -331,14 +393,14 @@
           "title": "정부, 대미 투자 1호 사업 22억 달러 이달 말 송금 및 웨스팅하우스 지분 인수 추진"
         }
       ],
-      "expires_at": "2026-09-11T18:40:45.665693+00:00",
+      "expires_at": "2026-09-12T03:41:02.472567+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-09-10T18:40:45.665693+00:00",
-      "new_articles": 19,
+      "last_result_count": 2,
+      "last_run": "2026-09-11T03:41:02.472567+00:00",
+      "new_articles": 21,
       "origin": "auto",
-      "planned_at": "2026-09-10T18:40:42.200246+00:00",
-      "queries_run": 6,
+      "planned_at": "2026-09-11T03:40:58.660278+00:00",
+      "queries_run": 7,
       "query": "인수를 포함한 원전",
       "score": 3.6,
       "status": "promote_candidate",
@@ -350,42 +412,8 @@
         "2026-09-10",
         "2026-09-11"
       ],
-      "yields": 6,
+      "yields": 7,
       "zero_streak": 0
-    },
-    "포툼": {
-      "articles": 1,
-      "created_at": "2026-09-09T21:40:18.745159+00:00",
-      "domains": [
-        "yna.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "yna.co.kr",
-          "hash": "f8c7352740e28772",
-          "importance": "must_read",
-          "title": "구글, 핀란드 디지털 인프라에 20조 투자 및 포툼 원전 전력 구매 계약"
-        }
-      ],
-      "expires_at": "2026-09-11T03:40:52.214069+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-09-10T18:40:45.665693+00:00",
-      "new_articles": 2,
-      "origin": "auto",
-      "planned_at": "2026-09-10T18:40:42.200246+00:00",
-      "queries_run": 3,
-      "query": "포툼 원전",
-      "score": 3.6,
-      "status": "extended",
-      "term": "포툼",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-09-10"
-      ],
-      "yields": 1,
-      "zero_streak": 1
     },
     "한국경제인협회": {
       "articles": 3,
