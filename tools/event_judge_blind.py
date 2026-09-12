@@ -101,7 +101,15 @@ def _article_view(article: dict) -> dict:
 
 
 def index_articles(labels: list[str]) -> dict[str, dict]:
-    """arm 산출물에서 해시 → 기사. 넓은 창일수록 많이 들고 있으므로 다 훑는다."""
+    """해시 → 기사. arm 산출물이 먼저, 못 찾은 것은 아카이브에서.
+
+    arm 만 보면 **창 밖의 기사를 못 찾는다.** 사람이 이미 판정한 22쌍 중 10쌍이
+    그래서 빠졌다(8월 기사라 9/12 카탈로그에 없다). 그 쌍들이 평가에서 빠지면
+    세 번째 축이 절반으로 줄어든다. 아카이브는 지우지 않으므로 거기 남아 있다.
+
+    arm 을 먼저 보는 이유: `story_fingerprint` 는 빌드 단계 산물이라 아카이브
+    레코드에 없다(실측 보유율 26.5% → 0%).
+    """
     out: dict[str, dict] = {}
     for label in labels:
         path = ARM_ROOT / label / "data" / "issues.json"
@@ -114,6 +122,18 @@ def index_articles(labels: list[str]) -> dict[str, dict]:
                 key = str(row.get("hash") or "")
                 if key and key not in out:
                     out[key] = row
+    for path in sorted((ROOT / "archive").glob("*.jsonl")):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            key = str(row.get("hash") or "")
+            if key and key not in out:
+                out[key] = row
     return out
 
 
