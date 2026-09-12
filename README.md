@@ -46,6 +46,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `dedup.py` + `story_cluster.py` | 동일 briefing story를 제목·본문요약·fingerprint로 병합하고 보도매체/근거를 보존 |
 | `event_stage.py` | 사건 단계(심사·승인·정지·재가동…) 판정 — **단계가 다르면 중복 처리 금지** 거부권 |
 | `issue_continuity.py` | 연속일 반복 게이트 — 어제 **발송분**과 같은 이슈인지 보고, 전일 대비 단계가 움직였는지로 감점/면제를 가른다 |
+| `issue_change_log.py` | 위 판정을 화면의 **변화 이력**으로 잇는다 (LLM 0회). `progression` 은 delivery_log 에 이미 적혀 있었는데 웹이 읽지 않아, 이슈 타임라인이 기사를 날짜순으로 세우기만 하고 어디가 단계가 넘어간 자리인지 말하지 못했다. **prior 기사가 같은 이슈의 멤버일 때만** 싣는다 — continuity 의 매칭은 감점용이라 일부러 넓고(실측 material 13건 중 같은 이슈는 4건), 그 비대칭을 화면이 물려받으면 없는 연결을 주장한다. 연결은 만들지 않고 클러스터링이 만든 연결에 판정만 붙이므로 `issue_id`·원장·영구 주소에 영향이 없다 |
 | `khnp_relevance.py` | 항목별 조건부 필수성 — "이 기사라면 `한수원 시사점`이 있어야 하는가" |
 | `audio_brief.py` | Nuclens 빠른 브리핑: 1인 라디오형 약 3분, 900자 TTS 청크/무음·음량 보정 |
 | `expert_audio_brief.py` | Nuclens 전문가 브리핑: dossier→시간배분→episode plan→1인 전문가 대본→검증/수정→TTS. 길이는 그날 재료가 정한다 (기사 적으면 짧게, 많으면 10분 초과) |

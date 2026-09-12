@@ -6045,6 +6045,103 @@ class ArticleDetailSurfacesTests(unittest.TestCase):
         self.assertIn(".timeline-detail", css)
 
 
+class ChangeLogWiringTests(unittest.TestCase):
+    """`issue_continuity` 의 판정이 delivery_log 를 지나 카탈로그 행까지 닿는가.
+
+    판정 자체의 게이트는 `tests/test_issue_change_log.py` 가 잠근다(그쪽은 PR
+    검사에서 돈다). 여기서 보는 것은 **배선**이다 — 이 길은 2026-09-12 까지
+    끊겨 있었다: build_data 의 멤버 조립부가 delivery_log 의 story 계약을 한 줄씩
+    옮겨 싣는데 `continuity` 만 빠져 있어, 이슈 타임라인이 기사를 날짜순으로
+    세우기만 하고 그중 어디가 단계가 넘어간 자리인지 말하지 못했다.
+    """
+
+    @staticmethod
+    def member(hash_, briefing_date, title, continuity=None):
+        return {
+            "hash": hash_, "article_date": briefing_date, "briefing_date": briefing_date,
+            "title_kr": title, "title": title, "summary": f"{title} 요약",
+            "detail": "", "topics": [], "canonical_tags": [],
+            "importance": "nice_to_know", "selection_score": 1.0,
+            "url": f"https://example.com/{hash_}", "domain": "example.com",
+            "continuity": continuity or {},
+        }
+
+    # 실측 쌍 (delivery_log 2026-09-05 → 09-06, story-d186fd7060c89e35).
+    PRIOR = "원안위, 새울 3호기 시운전 시험 재가동 승인"
+    FOLLOW = "원안위, 새울 3호기 재가동 승인…운전원 설정값 입력 오류 확인"
+    VERDICT = {
+        "prior_hash": "s1", "prior_date": "2026-09-05", "prior_title": PRIOR,
+        "days_ago": 1, "similarity": 0.714, "progression": "material",
+        "progression_kind": "stage_flip", "progression_detail": "정지·가동중단",
+        "identity_confirmed": True, "identity_method": "fingerprint_anchors",
+    }
+
+    def members(self):
+        return [self.member("s1", "2026-09-05", self.PRIOR),
+                self.member("s2", "2026-09-06", self.FOLLOW, self.VERDICT)]
+
+    def test_catalog_row_carries_the_change_log(self):
+        rows = build_data.build_issue_catalog(
+            [{"issue_id": "issue-x", "members": self.members(), "evidence_members": []}],
+            "2026-09-06", "2026-09-06T00:00:00+09:00")
+        log = rows[0]["change_log"]
+        self.assertEqual([entry["kind"] for entry in log], ["material"])
+        self.assertEqual(log[0]["prior_hash"], "s1")
+        self.assertEqual(log[0]["prior_title"], self.PRIOR)
+
+    def test_briefing_row_carries_the_day_it_was_true(self):
+        """과거 날짜를 열면 앱이 브리핑 행을 쓴다(currentIssueById). 그 행에 전체
+        이력을 실으면 그날 화면이 아직 없던 후속을 보여 준다."""
+        issue = {"issue_id": "issue-x", "first_seen": "2026-09-05",
+                 "members": self.members()}
+        briefings = build_data.build_briefings(
+            [{"briefing_date": day, "region": "국내"} for day in ("2026-09-05", "2026-09-06")],
+            [issue])
+        by_date = {row["date"]: row["issues"][0]["change_log"] for row in briefings}
+        self.assertEqual(by_date["2026-09-05"], [])
+        self.assertEqual([entry["kind"] for entry in by_date["2026-09-06"]], ["material"])
+
+    def test_a_prior_in_another_issue_never_reaches_the_screen(self):
+        rows = build_data.build_issue_catalog(
+            [{"issue_id": "issue-x",
+              "members": [self.member("s2", "2026-09-06", self.FOLLOW, self.VERDICT)],
+              "evidence_members": []}],
+            "2026-09-06", "2026-09-06T00:00:00+09:00")
+        self.assertEqual(rows[0]["change_log"], [])
+
+    def test_delivery_log_keeps_the_prior_hash(self):
+        """제목이 아니라 해시로 잇는다. `issue_ledger` 가 이동 판정에서 같은 결론에
+        이미 닿았다 — '판정 재료는 기사 해시뿐이다'."""
+        source = (ROOT.parent / "daily_brief.py").read_text(encoding="utf-8")
+        marker = source.index('meta["continuity"] = {k: cont.get(k) for k in')
+        self.assertIn('"prior_hash"', source[marker:marker + 400])
+
+    def test_screen_labels_never_use_the_stage_vocabulary(self):
+        """`progression_detail` 은 event_stage 의 어휘 라벨이라 사건 설명이 아니다 —
+        실측 2026-08-26 「정부, 호남 반도체 산단 전력·용수 인프라 예타 면제」에
+        '정지·가동중단'이 붙어 있었다('예비타당성'이 permit:심사 칸에 있다).
+        화면에 닿는 경로 어디에도 그 값이 없어야 한다."""
+        rows = build_data.build_issue_catalog(
+            [{"issue_id": "issue-x", "members": self.members(), "evidence_members": []}],
+            "2026-09-06", "2026-09-06T00:00:00+09:00")
+        self.assertNotIn("progression_detail", json.dumps(rows, ensure_ascii=False))
+        app = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        self.assertNotIn("progression_detail", app)
+        # 등급은 두 칸뿐이고, 라벨은 한 곳에서만 정해진다.
+        self.assertIn("const CHANGE_LOG_LABELS = { material:", app)
+
+    def test_the_block_and_the_timeline_below_it_use_the_same_day(self):
+        """변화 이력 바로 아래 타임라인은 기사일로 선다. 블록이 회차를 적으면 두
+        곳이 같은 사건을 하루 어긋나게 말한다 — 실측 그라블린(회차 8/28 · 기사일
+        8/27). 빌드는 둘 다 싣고, 화면은 기사일을 고른다."""
+        app = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        span = app[app.index("function changeLogSpan(entry)"):]
+        span = span[:span.index(chr(10) + "}")]
+        self.assertIn("entry.prior_article_date || entry.prior_date", span)
+        self.assertIn("entry.article_date || entry.date", span)
+        self.assertIn("changeLogSpan(entry)", app)
+
+
 class IssueDetailIsCardScopedTests(unittest.TestCase):
     """이슈 대표 설명('관련 기사 내용')은 **카드 멤버**에서만 온다.
 
