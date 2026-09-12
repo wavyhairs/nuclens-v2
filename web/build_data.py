@@ -3080,18 +3080,41 @@ def attach_evidence_articles(
     _profile_increment("evidence_passes")
     if not issues:
         return 0
-    latest_card_day = max(
-        (_parse_day(issue.get("last_seen", "")) for issue in issues),
-        default=None,
-    )
-    if not latest_card_day:
+    # 근거 풀의 날짜 경계는 **최신 카드 하나가 아니라 카드 전체**가 정한다.
+    #
+    # 예전에는 `최신 카드 - ISSUE_WINDOW_DAYS` 한 줄로 잘랐다. 카탈로그는 60일치인데
+    # 후보는 최근 21일치뿐이라, 21일이 지난 이슈는 **매 빌드마다 제 근거를 잃었다** —
+    # 이슈는 빌드마다 처음부터 다시 조립되고 부착 결과는 어디에도 저장되지 않는다.
+    #
+    # 실측 2026-09-12, 라이브 두 빌드 대조(20260901T125806Z ↔ 20260912T083635Z):
+    # 같은 id 로 살아남은 372건 중 56건에서 근거 215건이 사라졌고 그중 185건(86%)이
+    # 옛 컷오프 이전 날짜였다. **215건 전부 그 빌드의 news.json 에 그대로 있었다** —
+    # 자료가 없어진 게 아니라 후보 목록에서 빠진 것이다. 부착률이 창을 따라 갈린다:
+    #
+    #     last_seen 08-22 이후(옛 창 안)  이슈 273  근거 붙은 이슈 66.7%  이슈당 3.8건
+    #     last_seen 08-01~08-21          이슈 166                22.3%        0.6건
+    #     last_seen 07월 이전             이슈  86                 0.0%        0.0건
+    #
+    # 진짜 게이트는 아래 이슈별 ±ISSUE_WINDOW_DAYS 검사다. 여기서 만드는 것은 그
+    # 검사가 볼 수 있는 범위 — 카드 전체 창의 합집합 — 뿐이고, 판정 자체는 그대로다.
+    card_days = [
+        day
+        for issue in issues
+        for day in (
+            _parse_day(member.get("article_date") or member.get("briefing_date") or "")
+            for member in issue.get("members") or []
+        )
+        if day
+    ]
+    if not card_days:
         return 0
-    cutoff = latest_card_day - timedelta(days=ISSUE_WINDOW_DAYS)
+    cutoff = min(card_days) - timedelta(days=ISSUE_WINDOW_DAYS)
+    ceiling = max(card_days) + timedelta(days=ISSUE_WINDOW_DAYS)
     evidence = [
         item for item in news_items
         if not item.get("briefing_date")
         and item.get("importance") != "noise"
-        and (_parse_day(item.get("article_date", "")) or cutoff) >= cutoff
+        and cutoff <= (_parse_day(item.get("article_date", "")) or cutoff) <= ceiling
     ]
     evidence.sort(key=lambda item: (item.get("article_date") or "", item["hash"]))
     overrides = match_overrides or {"approved": set(), "rejected": set()}

@@ -1329,6 +1329,80 @@ class IssueSimilarityTests(unittest.TestCase):
         self.assertEqual(sorted(len(issue["members"]) for issue in issues), [1, 1])
         self.assertEqual(sum(len(issue.get("evidence_members") or []) for issue in issues), 1)
 
+    def _aged_cards(self):
+        """창 안의 카드와 그보다 훨씬 오래된 카드. 서로 묶이지 않는 두 사건이다."""
+        return [
+            {
+                "hash": "old-card", "briefing_date": "2026-07-05", "article_date": "2026-07-05",
+                "title_kr": "한수원 체코 두코바니 본계약 후속 절차 착수",
+                "summary": "한수원이 두코바니 본계약 후속 절차에 착수했다.",
+                "tags": ["#두코바니"], "topics": ["export"], "countries": ["KR", "CZ"],
+            },
+            {
+                "hash": "new-card", "briefing_date": "2026-08-30", "article_date": "2026-08-30",
+                "title_kr": "미국 NRC 신규 규제 지침 공개",
+                "summary": "미국 NRC가 신규 규제 지침을 공개했다.",
+                "tags": ["#NRC"], "topics": ["regulation"], "countries": ["US"],
+            },
+        ]
+
+    def test_evidence_pool_follows_every_card_window_not_only_the_newest(self):
+        """21일이 지난 이슈도 제 창 안에서는 근거를 받는다.
+
+        풀 컷오프가 `최신 카드 - ISSUE_WINDOW_DAYS` 하나였을 때, 카탈로그는 60일치인데
+        후보는 최근 21일치뿐이라 옛 이슈는 **빌드마다 제 근거를 잃었다.** 실측
+        2026-09-12 라이브 두 빌드 대조에서 56개 이슈의 근거 215건이 사라졌고, 그중
+        185건(86%)이 옛 컷오프 이전 날짜였다 — 전부 같은 빌드의 news.json 에 그대로
+        있던 기사다. 판정(이슈별 ±ISSUE_WINDOW_DAYS)이 아니라 후보 목록이 문제였다.
+        """
+        cards = self._aged_cards()
+        evidence = {
+            "hash": "old-evidence", "article_date": "2026-07-06",
+            "title_kr": "체코 두코바니 본계약 후속 일정 발표",
+            "summary": "두코바니 본계약의 후속 일정이 발표됐다.",
+            "tags": ["#두코바니"], "topics": ["export"], "countries": ["KR", "CZ"],
+            "importance": "nice_to_know",
+        }
+        embeddings = {
+            "old-card": [1.0, 0.0], "new-card": [0.0, 1.0], "old-evidence": [0.99, 0.01],
+        }
+        issues = build_data.cluster_selected_articles(cards, embeddings)
+        attached = build_data.attach_evidence_articles(
+            cards + [evidence], issues, embeddings)
+        self.assertEqual(attached, 1, "옛 카드의 창 안에 있는 근거 기사가 후보에서 빠졌다")
+        old_issue = next(issue for issue in issues if issue["issue_id"] == "issue-old-card")
+        self.assertEqual([m["hash"] for m in old_issue.get("evidence_members") or []],
+                         ["old-evidence"])
+        new_issue = next(issue for issue in issues if issue["issue_id"] == "issue-new-card")
+        self.assertEqual(new_issue.get("evidence_members") or [], [],
+                         "55일 떨어진 이슈에까지 붙었다 — 이슈별 창 검사가 풀렸다")
+
+    def test_evidence_outside_every_card_window_is_never_a_candidate(self):
+        """풀은 카드 전체 창의 합집합까지다. 그 밖은 채점도 하지 않는다.
+
+        가장 이른 카드보다 ISSUE_WINDOW_DAYS 이상 앞선 기사는 어느 이슈의 창에도
+        들지 않는다. 이슈별 검사가 어차피 막지만, 그런 기사를 후보로 세우는 것은
+        비교 비용만 늘린다 — 근거 풀은 매 빌드 수천 건을 훑는 자리다.
+        """
+        cards = self._aged_cards()
+        stale = {
+            "hash": "stale-evidence", "article_date": "2026-05-01",
+            "title_kr": "한수원 체코 두코바니 본계약 후속 절차 착수",
+            "summary": "한수원이 두코바니 본계약 후속 절차에 착수했다.",
+            "tags": ["#두코바니"], "topics": ["export"], "countries": ["KR", "CZ"],
+            "importance": "nice_to_know",
+        }
+        embeddings = {
+            "old-card": [1.0, 0.0], "new-card": [0.0, 1.0], "stale-evidence": [1.0, 0.0],
+        }
+        telemetry = issue_candidate_stats.SearchTelemetry("evidence")
+        issues = build_data.cluster_selected_articles(cards, embeddings)
+        attached = build_data.attach_evidence_articles(
+            cards + [stale], issues, embeddings, telemetry=telemetry)
+        self.assertEqual(attached, 0)
+        self.assertEqual(telemetry.summary()["articles_that_compared"], 0,
+                         "창 밖 기사를 후보로 세워 비교까지 했다")
+
 
 class IssueCatalogIdValidationTests(unittest.TestCase):
     """issue_id 충돌을 배포 전에 잡는 마지막 방어선.
