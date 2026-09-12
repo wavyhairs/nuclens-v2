@@ -603,6 +603,19 @@ jobs:
           --build-mode "${{ steps.web-build.outputs.build_mode }}"
           --identity-quarantined "${{ steps.web-build.outputs.identity_quarantined }}"
 
+      # 이 스텝은 `failure()` 를 안 쓰므로(`always()` + continue-on-error)
+      # 자리를 옮겨도 동작이 같다. 아래 audit 업로더에 자리를 내주려고 앞으로
+      # 옮겼다 — 그쪽은 잡의 **맨 끝**이어야만 제 일을 한다.
+      - name: Upload LLM capture (reasoning validation)
+        if: always() && vars.NUCLENS_LLM_CAPTURE == 'on'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: llm-capture-crawl-${{ github.run_id }}
+          path: .eval/capture/llm_capture.jsonl
+          retention-days: 14
+          if-no-files-found: ignore
+
       # 배포가 깨졌을 때만 전수 audit 을 건져 둔다. 러너가 사라지면 그 회차의
       # 진단 재료도 같이 사라지는데, 하필 그때가 재료가 가장 필요한 때다
       # (2026-08-16 · 2026-08-21 둘 다 그렇게 조사할 것이 없었다).
@@ -626,15 +639,5 @@ jobs:
         with:
           name: issue-audit-full-${{ github.run_id }}
           path: web/_audit/issue_audit.full.json
-          retention-days: 14
-          if-no-files-found: ignore
-
-      - name: Upload LLM capture (reasoning validation)
-        if: always() && vars.NUCLENS_LLM_CAPTURE == 'on'
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: llm-capture-crawl-${{ github.run_id }}
-          path: .eval/capture/llm_capture.jsonl
           retention-days: 14
           if-no-files-found: ignore
