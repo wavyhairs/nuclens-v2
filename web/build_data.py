@@ -57,6 +57,7 @@ from data_quality import (  # noqa: E402
 from embedding_pipeline import EMBEDDING_MODEL, cached_vector  # noqa: E402
 import article_quality_gate  # noqa: E402
 import event_calendar  # noqa: E402
+import event_ledger  # noqa: E402
 import issue_candidate_stats  # noqa: E402
 import issue_insight  # noqa: E402
 import issue_review  # noqa: E402
@@ -6604,23 +6605,37 @@ def build() -> None:
     official_store = _read_json(BOT_DIR / "event_schedule.json", {}) or {}
     official_rows = [row for row in (official_store.get("events") or [])
                      if isinstance(row, dict)]
+    # 세 번째 재료: 크롤이 쌓아 둔 기사 유래 원장. 기사 창(60일)보다 먼 앞날을
+    # 예고한 일정은 그 기사가 창 밖으로 나가면 재료가 사라진다 — 원장이 그
+    # 사이를 잇는다(event_ledger 머리말). 없어도 달력은 그대로 선다.
+    ledger_store = _read_json(BOT_DIR / "event_ledger.json", {}) or {}
+    remembered_rows = event_ledger.calendar_rows(ledger_store, now.date())
     try:
         calendar = event_calendar.build(news_items, now.date(),
-                                        official=official_rows)
+                                        official=official_rows,
+                                        remembered=remembered_rows)
         attach_calendar_issues(calendar, issue_catalog)
     except Exception as exc:
         print(f"::warning::앞으로 30일 달력 생성 실패 — {exc} (빌드는 계속한다)")
         calendar = {"start": "", "end": "", "days": event_calendar.HORIZON_DAYS,
                     "events": [], "month_notes": [], "dropped": {"build_error": 1}}
     dropped = calendar.get("dropped") or {}
+    missed = calendar.get("missed") or {}
     official_shown = sum(1 for row in calendar.get("events") or []
                          if row.get("origin") == "official")
+    remembered_shown = sum(1 for row in calendar.get("events") or []
+                           if row.get("origin") == "remembered")
     merged = sum(1 for row in calendar.get("events") or []
                  if row.get("origin") == "official" and row.get("source_count", 1) > 1)
     print(f"[build_data] 앞으로 30일 달력: 일정 {len(calendar['events'])}건 "
-          f"(공식 {official_shown}건 · 보도와 통합 {merged}건) · "
-          f"이 달 중 {len(calendar['month_notes'])}건"
-          + (f" · 근거 부족으로 버림 {dropped}" if dropped else ""))
+          f"(공식 {official_shown}건 · 원장 {remembered_shown}건 · 보도와 통합 {merged}건) · "
+          f"이 달 중 {len(calendar['month_notes'])}건 · "
+          f"날짜 근거 {calendar.get('basis') or {}}"
+          + (f" · 근거 부족으로 버림 {dropped}" if dropped else "")
+          # **버린 것과 못 본 것은 다르다.** 앞엣것은 판단이고 뒤엣것은 판단할
+          # 기회조차 없었던 자리다 — 달력이 비는 날 고칠 곳이 게이트인지
+          # 파서인지를 이 둘이 가른다.
+          + (f" · 날짜를 못 읽음 {missed}" if missed else ""))
     if official_rows and not official_shown:
         # 저장본에 일정이 있는데 화면에 한 건도 안 서면 창 밖이거나 판정에서
         # 전부 걸린 것이다. 둘 다 정상일 수 있지만 조용히 지나가면 안 된다.

@@ -3280,6 +3280,22 @@ const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const CAL_MAX_CHIPS = 3;
 const CAL_KIND_LABELS = { point: "예정", deadline: "마감", range: "기간" };
 
+// 그 날짜를 **어떻게 읽었는가**. 화면이 이것을 말해야 독자가 무엇을 믿을지 안다.
+//
+//   explicit   원문에 "9월 18일" 이라고 적혀 있다
+//   syntactic  "9월 9일부터 11일까지" 의 11일 — 앞 날짜의 월을 잇는 범위 표기다
+//   inferred   "오는 18일" — 보도일을 기준으로 푼 날이다
+//
+// 앞의 둘은 원문이 말한 그대로라 따로 밝힐 것이 없다. 셋째만 표를 단다 —
+// 추론한 날짜를 적힌 날짜처럼 보이게 하면 이 달력이 지켜 온 근거의 약속이
+// 깨진다. 칩에는 안 붙인다(칸이 좁고, 날짜 자체는 맞다). 근거를 보러 온
+// 자리에서만 말한다.
+const CAL_INFERRED_NOTE = "보도일 기준으로 읽은 날짜입니다.";
+
+function calendarIsInferred(event) {
+  return event.date_basis === "inferred";
+}
+
 function calendarData() {
   return state.trend?.event_calendar || null;
 }
@@ -3505,6 +3521,8 @@ function showCalendarPopover(button) {
     + `<p class="cal-pop-label">${esc(event.label)}</p>`
     + `${where ? `<p class="cal-pop-where">${esc(where)}</p>` : ""}`
     + `<p class="cal-pop-clause">${esc(event.clause)}</p>`
+    + `${calendarIsInferred(event)
+        ? `<p class="cal-pop-basis">${esc(CAL_INFERRED_NOTE)}</p>` : ""}`
     + `<p class="cal-pop-source">${esc(event.publisher || "")}`
     + `${event.source_count > 1 ? ` · 근거 ${event.source_count}건` : ""}`
     + ` · 눌러서 출처 보기</p>`;
@@ -3550,7 +3568,10 @@ function calendarEventBlock(event) {
   // 뭉뚱그리면 독자가 '기사에서 읽은 날짜'와 '기관이 공지한 날짜'를 못 가른다.
   const note = official
     ? "기관이 공지한 일정입니다. 관심 분야·중요도를 확인해 실었습니다."
-    : "기사에 적힌 문장 그대로입니다. 날짜는 이 문장에서 다시 확인했습니다.";
+    : calendarIsInferred(event)
+      ? "기사에 적힌 문장 그대로입니다. 이 문장은 월 없이 날짜를 적었고, "
+        + "보도일을 기준으로 읽었습니다."
+      : "기사에 적힌 문장 그대로입니다. 날짜는 이 문장에서 다시 확인했습니다.";
   return `<article class="cal-detail">
     <p class="cal-detail-when">${esc(calendarWhen(event))}<span>${esc(CAL_KIND_LABELS[event.kind] || "예정")}</span>${
       official ? '<b class="cal-official">공식</b>' : ""}</p>

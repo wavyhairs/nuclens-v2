@@ -2065,6 +2065,9 @@ dialog[open] { animation: dialog-in var(--mo-2) var(--mo-ease-out); }
 .cal-pop-when span { color: var(--c-text-secondary); font-family: var(--ff-base); font-weight: 650; }
 .cal-pop-label { margin: 0 0 6px; font-size: var(--t-body); font-weight: 700; }
 .cal-pop-clause { margin: 0 0 6px; color: var(--c-text-secondary); font-size: var(--t-caption); line-height: 1.55; }
+/* 추론으로 읽은 날짜임을 밝히는 줄. 근거 문장보다 한 단 낮게 — 이것은
+   원문의 말이 아니라 이 달력이 한 판단이다. */
+.cal-pop-basis { margin: 0 0 6px; color: var(--c-text-tertiary, var(--c-text-secondary)); font-size: var(--t-caption); font-style: italic; line-height: 1.5; }
 .cal-pop-source { margin: 0; color: var(--c-text-muted); font-size: var(--t-min); }
 /* 다가오는 일정 — 좁은 화면에서만 선다. 격자가 잃은 이름을 폭이 있는 곳에서
    되찾는 자리라, 칩이 이름을 달고 있는 넓은 화면에는 있을 이유가 없다. */

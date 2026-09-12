@@ -28,9 +28,10 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `archive_repairs.json` | 과거 깨진 레코드의 고정 회귀 수선·제외 근거 |
 | `daily_brief.py` | 일일 브리핑: story dedup→랭킹→투자 관점→보고서 추천→발송/웹 story 계약 기록 |
 | `weekly_bot.py` | 주간 판세 리포트 (Gemini 주 1회 1호출) |
-| `event_calendar.py` | 앞으로 30일 달력 — 날짜와 일정 이름을 **같은 절에서** 뽑아 원문으로 되짚는다 (LLM 0회). 달 정밀도('9월 중')는 날짜 칸에 넣지 않고 따로 낸다 |
+| `event_calendar.py` | 앞으로 30일 달력 — 날짜와 일정 이름을 **같은 절에서** 뽑아 원문으로 되짚는다 (LLM 0회). 달 정밀도('9월 중')는 날짜 칸에 넣지 않고 따로 낸다. 날짜를 읽은 등급(explicit·syntactic·inferred)을 행마다 싣고, **버린 것(`dropped`)과 못 읽은 것(`missed`)을 따로 센다** — 앞엣것은 판단이고 뒤엣것은 파서가 못 따라간 자리다. 기사 경로에도 주제 판정을 건다(`verify_reported`) |
+| `event_ledger.py` → `event_ledger.json` | 기사가 예고한 **기사 창(60일)보다 먼 앞날**을 기억한다 (LLM 0회, 크롤 회차마다). 달력 창 30일 + 기사 창 60일 구조에서는 90일 뒤 행사가 창에 들어올 때 그 기사가 이미 빠져 있다 — 그 사이를 잇는다. 추론으로 읽은 날짜는 담지 않고, 달력이 저장된 근거 문장을 다시 읽어 세운다 |
 | `event_sources.py` → `event_schedule.json` | **달력 전용** 공식 일정 수집 (LLM 0회, 하루 1회). 학회·협회 게시판, 협회 Monthly Calendar, 국회 행사알림, 전력거래소 공지에서 날짜·시각·주최·장소·출처 URL 을 직접 걷는다 (전력거래소만 상세 본문까지 읽는다 — 게시일과 행사일이 다른 자리에 있다) — 뉴스 아카이브·이슈 클러스터링에는 들어가지 않는다. 소스별 try/except 격리 |
-| `event_relevance.py` | 공식 일정의 **관심 분야 판정 + 정책·산업 중요도 판정**. 둘을 따로 매겨 버린 사유를 남긴다 — 원자력 기관의 일정표에도 핵의학 학술대회와 채용·조달 공지가 섞여 온다 |
+| `event_relevance.py` | 일정의 **관심 분야 판정 + 정책·산업 중요도 판정**. 둘을 따로 매겨 버린 사유를 남긴다 — 원자력 기관의 일정표에도 핵의학 학술대회와 채용·조달 공지가 섞여 온다. 공식 경로는 `judge`, 기사 경로는 `judge_reported` 로 **비대칭**이다 — 기사 쪽에는 행사가 아닌 정책 마일스톤(시행·만료·의결)이 많고, 게시판 쪽에는 '공모·모집'이 대부분 조달·채용이다 |
 | `ranking.py` + `ranking_config.json` | 설명 가능한 점수식 — **가중치는 JSON 만 편집** |
 | `metrics.py` | 오프라인 품질 지표 (`python metrics.py`) — 표본 부족 시 insufficient_data |
 | `gemini_client.py` | Gemini REST wrapper (429 백오프) |
