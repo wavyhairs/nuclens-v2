@@ -57,6 +57,7 @@ from data_quality import (  # noqa: E402
 from embedding_pipeline import EMBEDDING_MODEL, cached_vector  # noqa: E402
 import article_quality_gate  # noqa: E402
 import event_calendar  # noqa: E402
+import event_identity  # noqa: E402
 import event_ledger  # noqa: E402
 import issue_candidate_stats  # noqa: E402
 import issue_change_log  # noqa: E402
@@ -4645,6 +4646,12 @@ def build_briefings(news_items: list[dict], issues: list[dict], checked_at: str 
                 "issue_id": issue["issue_id"],
                 "identity_status": issue.get("identity_status", "ok"),
                 "identity_diagnostics": issue.get("identity_diagnostics") or [],
+                # 이 주소가 어디서 왔는지. `event_identity` 의 판정을 그대로 옮긴다 —
+                # 되돌리려면 무엇을 되돌리는지 화면·감사 쪽에서 읽을 수 있어야 한다.
+                "identity_origin": issue.get("identity_origin", ""),
+                "identity_evidence": issue.get("identity_evidence") or {},
+                "identity_merged_from": list(issue.get("identity_merged_from") or []),
+                "identity_split_from": issue.get("identity_split_from", ""),
                 "legacy_issue_id": issue.get("legacy_issue_id", ""),
                 "status": "ongoing" if history else "new",
                 "first_seen": issue["first_seen"],
@@ -4908,6 +4915,12 @@ def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_a
             "issue_id": issue["issue_id"],
             "identity_status": issue.get("identity_status", "ok"),
             "identity_diagnostics": issue.get("identity_diagnostics") or [],
+            # 이 주소가 어디서 왔는지. `event_identity` 의 판정을 그대로 옮긴다 —
+            # 되돌리려면 무엇을 되돌리는지 화면·감사 쪽에서 읽을 수 있어야 한다.
+            "identity_origin": issue.get("identity_origin", ""),
+            "identity_evidence": issue.get("identity_evidence") or {},
+            "identity_merged_from": list(issue.get("identity_merged_from") or []),
+            "identity_split_from": issue.get("identity_split_from", ""),
             "legacy_issue_id": issue.get("legacy_issue_id", ""),
             "status": "ongoing" if len(briefing_dates) > 1 else "new",
             "lifecycle": "active" if days_since_update is not None and days_since_update <= 7 else "quiet",
@@ -6667,6 +6680,22 @@ def build() -> None:
               f"모델 {llm_stats.get('model', '?')}. 후속 보도가 신규 이슈로 갈라진다. "
               f"GEMINI_REVIEW_MODEL 로 버킷을 옮길 것.")
 
+    # 신원은 **내용이 아니라 원장에서** 온다. 이 자리에 서는 이유가 순서에 있다:
+    # 2차 묶음까지 끝났고 근거도 붙었으므로 묶음의 해시 집합이 확정돼 있고,
+    # `resolve_local_issue_id_conflicts` 앞이므로 중복 id 검사가 상속 결과까지
+    # 함께 본다. 묶음 모양은 건드리지 않으므로 p1 서명과 무관하다
+    # (그 서명은 대표 해시·대표 제목·카드 해시만 본다).
+    event_identity_diagnostics = event_identity.resolve(
+        issues, issue_ledger.load_store()
+    )
+    print(
+        f"[build_data] 사건 신원: 상속 {event_identity_diagnostics['inherited']} · "
+        f"병합 {event_identity_diagnostics['merged']} "
+        f"(흡수된 옛 id {event_identity_diagnostics['merged_away_ids']}) · "
+        f"분열 {event_identity_diagnostics['split']} · "
+        f"신규 {event_identity_diagnostics['minted']} "
+        f"→ 상속률 {event_identity_diagnostics['inheritance_rate']:.1%}"
+    )
     identity_diagnostics = resolve_local_issue_id_conflicts(issues)
     if identity_diagnostics["status"] == "degraded":
         print(
@@ -6975,6 +7004,7 @@ def build() -> None:
         "briefing_total": len(briefings),
         "issue_catalog_total": len(issue_catalog),
         "identity": identity_diagnostics,
+        "event_identity": event_identity_diagnostics,
         "build_mode": identity_diagnostics["status"],
         "p1_regression": p1_regression,
         "atlas_readiness": atlas_readiness(issue_catalog),
@@ -7079,6 +7109,7 @@ def build() -> None:
         # 잘린 목록만 보는 사람도 전수 기준 분포는 볼 수 있어야 한다.
         "candidate_diagnostics": candidate_diagnostics,
         "identity": identity_diagnostics,
+        "event_identity": event_identity_diagnostics,
         "review_candidates": review_candidates,
         "overrides": {
             "approved": sorted(match_overrides["approved"]),

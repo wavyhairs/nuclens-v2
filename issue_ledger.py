@@ -119,18 +119,35 @@ def merge(store: dict, rows: list[dict], day: str) -> dict:
                 **row,
                 "revisions": [_revision(row, day)],
                 "moved_to": "",
+                # 이 항목을 **원장이 마지막으로 적은 날.** `last_seen` 과 다르다 —
+                # 저쪽은 카탈로그가 말한 이슈의 최종 활동일이라 여러 이슈가 같은
+                # 값을 갖고, 그러면 `event_identity.owner_index` 가 기사 소유권을
+                # 가릴 수 없어 그 해시를 버린다(실측 2,733개 중 378개). 이 칸은
+                # 빌드마다 단조 증가하므로 '직전 빌드가 이 기사를 누구에게 줬나'를
+                # 정확히 말한다.
+                "last_written": day,
             }
             added += 1
             continue
         # 이동했다가 같은 id 로 되살아난 이슈. 되살아난 쪽이 현재이므로 이동
         # 표시를 지운다 — 안 지우면 살아 있는 주소가 남의 주소로 넘긴다.
         existing["moved_to"] = ""
+        # 해시는 **덮지 않고 쌓는다.** `event_identity` 가 이 칸을 신원의 유일한
+        # 증거로 읽으므로(그 모듈 머리말), 이번 회차에 안 붙은 기사가 지워지면
+        # 다음 빌드가 같은 사건을 못 알아본다 — 부착은 빌드마다 흔들린다
+        # (PR #105 실측: 같은 id 로 살아남은 372건 중 56건이 근거 215건을 잃었다).
+        # 이른 것이 앞에 남는다: 최초 기사가 그 사건의 신원 앵커다.
+        merged_hashes = list(dict.fromkeys(
+            [h for h in (existing.get("hashes") or []) if h] + row["hashes"]
+        ))
+        row = {**row, "hashes": merged_hashes[:MAX_HASHES]}
         revisions = existing.get("revisions") or []
         last = revisions[-1] if revisions else {}
         if last.get("title") != row["title"] or last.get("summary") != row["summary"]:
             revisions.append(_revision(row, day))
             revised += 1
         existing.update(row)
+        existing["last_written"] = day
         existing["first_seen"] = min(
             filter(None, [existing.get("first_seen"), row["first_seen"]]),
             default=row["first_seen"],
