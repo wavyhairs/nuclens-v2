@@ -3277,6 +3277,33 @@ _DETAIL_MISMATCHES: list[dict] = []
 _DETAIL_MIN_OVERLAP = 0.30
 
 
+def calendar_view(record: dict, article_date: str) -> dict:
+    """달력이 기사 하나에서 실제로 읽는 칸만. 화면 투영을 복제하지 않는다.
+
+    `visible` 의 투영은 랭킹·클러스터링·이슈까지 먹이느라 60칸이 넘는다. 달력은
+    그중 날짜·문장·출처만 본다(`event_calendar._clauses` · `_source_view`).
+    여기서 그 부분집합만 만들어 두면 화면에서 빠진 기사 수천 건을 달력에 태워도
+    메모리와 시간이 화면 투영만큼 들지 않는다.
+    """
+    return {
+        "hash": record.get("hash", ""),
+        "story_id": "",
+        "issue_id": "",
+        "title_kr": record.get("title_kr") or record.get("title", ""),
+        "title": record.get("title", ""),
+        "summary": record.get("summary", ""),
+        "detail": usable_detail(record),
+        "article_date": article_date,
+        "url": source_url(record),
+        "publisher": record.get("publisher", ""),
+        "domain": record.get("domain", ""),
+        "topics": [],
+        "event_date": record.get("event_date"),
+        "event_date_type": record.get("event_date_type", "unknown"),
+        "event_date_precision": record.get("event_date_precision", "unknown"),
+    }
+
+
 def usable_detail(article: dict) -> str:
     """그 기사의 요지가 맞을 때만 돌려준다. 아니면 빈 문자열.
 
@@ -6253,12 +6280,30 @@ def build() -> None:
     cutoff_news = (now - timedelta(days=NEWS_WINDOW_DAYS)).strftime("%Y-%m-%d")
 
     visible = []
+    # 뉴스 중요도로 화면에서 빠졌지만 **달력은 봐야 하는** 기사.
+    #
+    # 행사 예고 기사는 뉴스로서는 값이 낮다. 회사가 전시회에 참가한다는 소식,
+    # 게시판 공지를 그대로 옮긴 안내문 — 큐레이션이 그것을 noise 로 찍는 것은
+    # 옳다. 그런데 **달력에는 그것이 최고의 재료다.** 큰 뉴스가 된 행사는 이미
+    # 열린 행사이고, 아직 안 열린 행사는 대개 작게만 보도된다.
+    #
+    # 실측 2026-09-12: 이 필터가 60일 창의 12,964건 중 6,869건(53%)을 달력에서
+    # 숨기고 있었고, 그 안에 '2026 기후산업국제박람회'(9/16~18 부산 벡스코)와
+    # 그에 붙은 '탄소중립 에너지 대전환 포럼'(9/18)이 들어 있었다 — 날짜·장소가
+    # 본문에 정확히 적혀 있는데 달력이 그 문장을 본 적이 없었다.
+    #
+    # 열어도 안전한 이유는 달력이 **제 게이트를 따로 갖고 있기** 때문이다.
+    # 표지 → 날짜 → 근거 재확인(`verify`) → 주제·중요도 판정(`verify_reported`)
+    # 을 모두 지나야 칸에 선다. 실측으로 6,869건을 더 태웠을 때 늘어난 일정은
+    # **3건**이었다 — 발견은 넓게, 표시는 좁게가 그대로 작동한 결과다.
+    calendar_only = []
     for record in records:
         importance = record.get("importance", "")
-        if importance == "noise" or (importance == "market" and not SHOW_MARKET):
-            continue
         article_date = date_of(record)
         if not article_date:
+            continue
+        if importance == "noise" or (importance == "market" and not SHOW_MARKET):
+            calendar_only.append(calendar_view(record, article_date))
             continue
         delivery = deliveries.get(record.get("hash", ""))
         topics, topic_source = infer_topics(record)
@@ -6610,8 +6655,11 @@ def build() -> None:
     # 사이를 잇는다(event_ledger 머리말). 없어도 달력은 그대로 선다.
     ledger_store = _read_json(BOT_DIR / "event_ledger.json", {}) or {}
     remembered_rows = event_ledger.calendar_rows(ledger_store, now.date())
+    # 달력이 보는 재료는 화면 목록보다 넓다(위 `calendar_only` 주석).
+    calendar_items = news_items + [row for row in calendar_only
+                                   if row["article_date"] >= cutoff_news]
     try:
-        calendar = event_calendar.build(news_items, now.date(),
+        calendar = event_calendar.build(calendar_items, now.date(),
                                         official=official_rows,
                                         remembered=remembered_rows)
         attach_calendar_issues(calendar, issue_catalog)
@@ -6627,6 +6675,8 @@ def build() -> None:
                            if row.get("origin") == "remembered")
     merged = sum(1 for row in calendar.get("events") or []
                  if row.get("origin") == "official" and row.get("source_count", 1) > 1)
+    print(f"[build_data] 앞으로 30일 달력 재료: 화면 {len(news_items)}건 + "
+          f"중요도로 화면에서 빠진 {len(calendar_items) - len(news_items)}건")
     print(f"[build_data] 앞으로 30일 달력: 일정 {len(calendar['events'])}건 "
           f"(공식 {official_shown}건 · 원장 {remembered_shown}건 · 보도와 통합 {merged}건) · "
           f"이 달 중 {len(calendar['month_notes'])}건 · "
