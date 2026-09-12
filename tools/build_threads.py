@@ -208,6 +208,12 @@ def build(args) -> int:
               f"누적 {result['counts']['total']}")
 
     SHADOW_DIR.mkdir(parents=True, exist_ok=True)
+    # 규칙이 거부한 쌍도 남긴다. 승인만 남기면 **놓친 연결**이 평가에서 통째로
+    # 빠지고, 그러면 일치율이 recall 에 대해 아무 말도 하지 않는다.
+    (SHADOW_DIR / "rule_rejected.json").write_text(
+        json.dumps(sorted(key for key, value in verdicts.items()
+                          if value.get("method") == "rule"),
+                   ensure_ascii=False, indent=1), encoding="utf-8")
     milestones = load_milestones()
     payload = [_thread_view(thread, index) for thread in threads]
     for row in payload:
