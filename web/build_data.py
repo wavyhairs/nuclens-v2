@@ -60,6 +60,7 @@ import event_calendar  # noqa: E402
 import event_ledger  # noqa: E402
 import issue_candidate_stats  # noqa: E402
 import issue_insight  # noqa: E402
+import issue_ledger  # noqa: E402
 import issue_review  # noqa: E402
 import keei_match  # noqa: E402
 import story_cluster  # noqa: E402
@@ -5147,8 +5148,85 @@ def resolve_local_issue_id_conflicts(issues: list[dict], *, max_local: int = 5) 
     }
 
 
-def build_issue_pages(issue_catalog: list[dict]) -> int:
-    """이슈별 OG 메타데이터를 가진 정적 진입 페이지를 생성한다."""
+ISSUE_REDIRECT_TEMPLATE = """<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<!-- 재클러스터링으로 이 이슈가 다른 id 로 옮겨갔다. 옛 주소를 지우면 한 번
+     나간 링크(텔레그램·RSS·보고서 각주)가 전부 404 가 된다 — 실측 2026-09-12
+     기준 11일 만에 16.8%. 그래서 지우는 대신 넘긴다. issue_ledger.moved_to 가
+     근거이고, 그 판정은 기사 해시로만 한다(issue_ledger 모듈 주석 참조). -->
+<link rel="canonical" href="{target_url}">
+<meta http-equiv="refresh" content="0; url={target_path}">
+<title>{title} | Nuclens</title>
+</head>
+<body>
+<p>이 이슈는 <a href="{target_path}">현재 주소</a>로 옮겨졌습니다.</p>
+<script>location.replace({target_json});</script>
+</body>
+</html>
+"""
+
+
+def _write_issue_page(template: str, issue_dir: Path, issue_id: str, *,
+                      title: str, description: str,
+                      published: str, modified: str) -> None:
+    """이슈 하나의 정적 진입 페이지. 살아 있는 이슈와 보관 이슈가 같은 껍데기를 쓴다."""
+    issue_url = f"{SITE_URL}/issue/{quote(issue_id, safe='-_')}"
+    page = template
+    replacements = {
+        '<meta name="description" content="Nuclens는 원자력 정책·산업 뉴스를 이슈 단위로 연결하고 중요한 변화를 근거와 함께 추적합니다.">':
+            f'<meta name="description" content="{html_escape(description, quote=True)}">',
+        '<meta property="og:type" content="website">': '<meta property="og:type" content="article">',
+        '<meta property="og:title" content="Nuclens · 원자력 정책·산업 이슈 트래커">':
+            f'<meta property="og:title" content="{html_escape(title, quote=True)} | Nuclens">',
+        '<meta property="og:description" content="원자력 이슈를 연결하고, 변화를 추적합니다.">':
+            f'<meta property="og:description" content="{html_escape(description, quote=True)}">',
+        '<meta property="og:url" content="https://nuclens-v2.pages.dev/">':
+            f'<meta property="og:url" content="{html_escape(issue_url, quote=True)}">',
+        '<link rel="canonical" href="https://nuclens-v2.pages.dev/">':
+            f'<link rel="canonical" href="{html_escape(issue_url, quote=True)}">',
+        '<title>Nuclens · 원자력 정책·산업 이슈 트래커</title>':
+            f'<title>{html_escape(title)} | Nuclens</title>',
+    }
+    for old, new in replacements.items():
+        if old not in page:
+            raise RuntimeError(f"issue page metadata template is missing: {old}")
+        page = page.replace(old, new, 1)
+    structured_data = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": title,
+        "description": description,
+        "datePublished": published,
+        "dateModified": modified,
+        "mainEntityOfPage": issue_url,
+        "publisher": {"@type": "Organization", "name": "Nuclens", "url": SITE_URL},
+    }
+    json_ld = json.dumps(structured_data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    page = page.replace("</head>", f'  <script type="application/ld+json">{json_ld}</script>\n</head>', 1)
+    page_dir = issue_dir / issue_id
+    page_dir.mkdir(parents=True, exist_ok=True)
+    (page_dir / "index.html").write_text(page, encoding="utf-8")
+
+
+def build_issue_pages(issue_catalog: list[dict], ledger: dict | None = None) -> dict:
+    """이슈별 정적 진입 페이지 — 살아 있는 것 · 보관된 것 · 옮겨간 것 셋 다 만든다.
+
+    예전에는 카탈로그에 있는 것만 만들었다. 그래서 이슈가 카탈로그에서 빠지는
+    순간(노화든 재클러스터링 이동이든) 그 주소가 하드 404 가 됐다 — 실측
+    2026-09-12: 11일 만에 16.8%, 발행된 RSS 링크 185건 중 33건. 원장이 그
+    빠진 이슈들을 기억하므로 여기서 셋으로 나눠 세운다.
+
+        live      카탈로그에 있는 이슈 — 앱이 issues.json 에서 찾아 그린다
+        archived  창 밖으로 나간 이슈 — /data/issue/<id>.json 스냅샷으로 그린다
+        moved     다른 id 로 합쳐진 이슈 — 현재 주소로 넘긴다
+
+    보관 스냅샷을 issues.json 에 합치지 않는 이유는 그 파일이 이미 8.8MB 이고
+    첫 화면에서 통째로 받기 때문이다. 원장은 계속 자라므로 그 안에 넣으면
+    상한이 사라진다. 보관분만 이슈별 파일로 떼어 필요할 때만 받게 한다.
+    """
     public_dir = (SITE_DIR / "public").resolve()
     issue_dir = (public_dir / "issue").resolve()
     if issue_dir.parent != public_dir or issue_dir.name != "issue":
@@ -5156,53 +5234,67 @@ def build_issue_pages(issue_catalog: list[dict]) -> int:
     if issue_dir.exists():
         shutil.rmtree(issue_dir)
     issue_dir.mkdir(parents=True)
+    snapshot_dir = OUT_DIR / "issue"
+    if snapshot_dir.exists():
+        shutil.rmtree(snapshot_dir)
 
     template = (public_dir / "index.html").read_text(encoding="utf-8")
-    generated = 0
+    counts = {"live": 0, "archived": 0, "moved": 0}
+    live_ids: set[str] = set()
     for issue in issue_catalog:
         issue_id = str(issue.get("issue_id") or "")
         if not re.fullmatch(r"[A-Za-z0-9_-]+", issue_id):
             continue
-        title = str(issue.get("title") or "Nuclens 이슈")
-        description = _issue_meta_description(issue)
-        issue_url = f"{SITE_URL}/issue/{quote(issue_id, safe='-_')}"
-        page = template
-        replacements = {
-            '<meta name="description" content="Nuclens는 원자력 정책·산업 뉴스를 이슈 단위로 연결하고 중요한 변화를 근거와 함께 추적합니다.">':
-                f'<meta name="description" content="{html_escape(description, quote=True)}">',
-            '<meta property="og:type" content="website">': '<meta property="og:type" content="article">',
-            '<meta property="og:title" content="Nuclens · 원자력 정책·산업 이슈 트래커">':
-                f'<meta property="og:title" content="{html_escape(title, quote=True)} | Nuclens">',
-            '<meta property="og:description" content="원자력 이슈를 연결하고, 변화를 추적합니다.">':
-                f'<meta property="og:description" content="{html_escape(description, quote=True)}">',
-            '<meta property="og:url" content="https://nuclens-v2.pages.dev/">':
-                f'<meta property="og:url" content="{html_escape(issue_url, quote=True)}">',
-            '<link rel="canonical" href="https://nuclens-v2.pages.dev/">':
-                f'<link rel="canonical" href="{html_escape(issue_url, quote=True)}">',
-            '<title>Nuclens · 원자력 정책·산업 이슈 트래커</title>':
-                f'<title>{html_escape(title)} | Nuclens</title>',
-        }
-        for old, new in replacements.items():
-            if old not in page:
-                raise RuntimeError(f"issue page metadata template is missing: {old}")
-            page = page.replace(old, new, 1)
-        structured_data = {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            "headline": title,
-            "description": description,
-            "datePublished": issue.get("first_seen") or "",
-            "dateModified": issue.get("last_seen") or "",
-            "mainEntityOfPage": issue_url,
-            "publisher": {"@type": "Organization", "name": "Nuclens", "url": SITE_URL},
-        }
-        json_ld = json.dumps(structured_data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-        page = page.replace("</head>", f'  <script type="application/ld+json">{json_ld}</script>\n</head>', 1)
+        _write_issue_page(
+            template, issue_dir, issue_id,
+            title=str(issue.get("title") or "Nuclens 이슈"),
+            description=_issue_meta_description(issue),
+            published=str(issue.get("first_seen") or ""),
+            modified=str(issue.get("last_seen") or ""),
+        )
+        live_ids.add(issue_id)
+        counts["live"] += 1
+
+    if not ledger:
+        return counts
+
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    for entry in issue_ledger.archived(ledger, live_ids):
+        issue_id = str(entry.get("issue_id") or "")
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", issue_id) or issue_id in live_ids:
+            continue
+        _write_issue_page(
+            template, issue_dir, issue_id,
+            title=str(entry.get("title") or "Nuclens 이슈"),
+            description=_issue_meta_description(entry),
+            published=str(entry.get("first_seen") or ""),
+            modified=str(entry.get("last_seen") or ""),
+        )
+        (snapshot_dir / f"{issue_id}.json").write_text(
+            json.dumps(issue_ledger.snapshot(entry), ensure_ascii=False,
+                       separators=(",", ":")),
+            encoding="utf-8",
+        )
+        counts["archived"] += 1
+
+    for issue_id, target in issue_ledger.redirects(ledger, live_ids).items():
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", issue_id) or issue_id in live_ids:
+            continue
+        target_path = f"/issue/{quote(target, safe='-_')}/"
+        entry = ledger["issues"].get(issue_id) or {}
         page_dir = issue_dir / issue_id
-        page_dir.mkdir()
-        (page_dir / "index.html").write_text(page, encoding="utf-8")
-        generated += 1
-    return generated
+        page_dir.mkdir(parents=True, exist_ok=True)
+        (page_dir / "index.html").write_text(
+            ISSUE_REDIRECT_TEMPLATE.format(
+                target_url=html_escape(f"{SITE_URL}{target_path}", quote=True),
+                target_path=html_escape(target_path, quote=True),
+                target_json=json.dumps(target_path),
+                title=html_escape(str(entry.get("title") or "Nuclens 이슈")),
+            ),
+            encoding="utf-8",
+        )
+        counts["moved"] += 1
+    return counts
 
 
 def build_brief_pages(briefings: list[dict]) -> int:
@@ -6218,7 +6310,15 @@ def build_rss(briefings: list[dict], generated_at: datetime) -> bytes:
             item = ET.SubElement(channel, "item")
             ET.SubElement(item, "title").text = str(issue.get("title") or "")
             ET.SubElement(item, "link").text = link
-            ET.SubElement(item, "guid", {"isPermaLink": "false"}).text = f"{issue_id}:{briefing_date}"
+            # GUID 는 issue_id 로 만들면 안 된다. 재클러스터링으로 id 가 바뀌면
+            # 리더가 **같은 사건을 새 항목으로** 다시 받는다(실측 2026-09-12:
+            # 11일에 이슈 16.8% 가 id 이동). 그 회차에 실제로 나간 대표 기사의
+            # 해시는 병합 결과와 무관하게 고정이므로 그것을 쓴다. 해시가 없는
+            # 옛 회차만 예전 형식으로 물러선다.
+            representative_hash = str(
+                (issue.get("representative_article") or {}).get("hash") or "")
+            guid_seed = representative_hash or issue_id
+            ET.SubElement(item, "guid", {"isPermaLink": "false"}).text = f"{guid_seed}:{briefing_date}"
             ET.SubElement(item, "pubDate").text = format_datetime(published)
             description = []
             if issue.get("summary"):
@@ -7026,7 +7126,11 @@ def build() -> None:
             json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
             encoding="utf-8",
         )
-    issue_page_count = build_issue_pages(issue_catalog)
+    # 원장 갱신은 페이지 생성 **앞**이다 — 이번 회차에 사라진 이슈가 어디로
+    # 갔는지 알아야 그 주소에 넘길 쪽지를 세울 수 있다.
+    ledger_result = issue_ledger.run(issue_catalog, today=now.date().isoformat())
+    issue_page_counts = build_issue_pages(issue_catalog, ledger_result["store"])
+    issue_page_count = issue_page_counts["live"]
     brief_page_count = build_brief_pages(briefings)
     (SITE_DIR / "public" / "rss.xml").write_bytes(build_rss(briefings, now))
 
@@ -7035,7 +7139,8 @@ def build() -> None:
     print(
         f"[build] 아카이브 {len(records)}건 → 표시 {len(news_items)}건 → "
         f"브리핑 기사 {selected_count}건 / 이슈 카드 {issue_count}개 / "
-        f"상세 페이지 {issue_page_count}개 / 날짜 브리프 {brief_page_count}개 → {OUT_DIR}"
+        f"상세 페이지 {issue_page_count}개 (보관 {issue_page_counts['archived']} · "
+        f"이동 {issue_page_counts['moved']}) / 날짜 브리프 {brief_page_count}개 → {OUT_DIR}"
     )
     # 이 프로세스가 쓴 Gemini 호출을 센다. crawl.yml 은 news_bot 과 build_data 를
     # **한 잡 안에서 이어서** 돌리므로 둘이 같은 분에 겹칠 수 있다 — 429(분당 20회)의

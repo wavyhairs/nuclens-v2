@@ -2232,6 +2232,11 @@ dialog[open] { animation: dialog-in var(--mo-2) var(--mo-ease-out); }
 .archive-filters legend { margin-bottom: 6px; color: var(--c-text-muted); font-size: var(--t-min); }
 .archive-filters .segmented { display: grid; grid-template-columns: repeat(3, 1fr); }
 /* 결과 머리도 구역 머리다 — 홈·흐름과 같은 2px 잉크 괘선으로 연다. */
+/* 목록 범위 전환. 결과 머리 위에 서서 "지금 무엇의 목록인가"를 먼저 말한다 —
+   정렬·필터보다 위인 이유는 이것이 조건이 아니라 목록의 정체이기 때문이다. */
+.archive-scope { display: inline-flex; margin-bottom: var(--sp-3); }
+.archive-scope button { white-space: nowrap; }
+@media (max-width: 560px) { .archive-scope { display: flex; width: 100%; } .archive-scope button { flex: 1; } }
 .archive-result-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding-top: var(--sp-3); padding-bottom: var(--sp-3); border-top: var(--bd-3) solid var(--c-edge); }
 .archive-result-head h2 { margin: 0; font-size: 20px; letter-spacing: -.022em; }
 .archive-result-head p { margin: 3px 0 0; color: var(--c-text-muted); font-size: var(--t-min); }

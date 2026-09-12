@@ -2490,7 +2490,11 @@ class GeneratedDataTests(unittest.TestCase):
         issues = json.loads((DATA_DIR / "issues.json").read_text(encoding="utf-8"))
         issue_root = ROOT / "public" / "issue"
         pages = list(issue_root.glob("*/index.html"))
-        self.assertEqual(len(pages), len(issues))
+        # 페이지 수는 더 이상 카탈로그 수와 같지 않다(2026-09-12). 원장이 기억하는
+        # 보관 이슈와 이동한 옛 id 도 여기에 선다 — 그것이 원장의 목적이다.
+        # 잠글 것은 '같은 수'가 아니라 **카탈로그의 모든 이슈가 자기 페이지를
+        # 갖는가**이고, 그건 아래 루프가 이슈별로 확인한다.
+        self.assertGreaterEqual(len(pages), len(issues))
         self.assertIn('href="/style.css"', root_html)
         self.assertIn('src="/app.js"', root_html)
         self.assertIn('dataBase: "/data"', script)
@@ -5024,9 +5028,13 @@ class ExploreHubTests(unittest.TestCase):
         self.assertIn("min-height: 44px", chip)
 
     def test_tab_labels_renamed(self):
-        self.assertIn(">탐색</button>", self.html)
+        # 탐색 → 스토리 (2026-09-12). 이 탭은 이미 이슈 아카이브였고, 옆에 Story
+        # 메뉴를 따로 두면 같은 데이터의 목록이 둘이 된다. 이름만 사용자 언어로
+        # 바꾸고 기본 범위를 자격 있는 이슈로 좁혔다.
+        self.assertIn(">스토리</button>", self.html)
         self.assertIn(">오늘</button>", self.html)
         self.assertNotIn(">이슈 아카이브<", self.html)
+        self.assertNotIn(">탐색</button>", self.html)
 
 
 class SearchDialogTests(unittest.TestCase):

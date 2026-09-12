@@ -671,7 +671,12 @@ jobs:
           # channel_outbox.json 은 오디오 스텝이 file_id 를 붙이고 공개 스텝이
           # 발송 상태를 적은 뒤다. 여기서 싣지 않으면 러너와 함께 사라지고,
           # 같은 날 재실행이 이미 나간 자료를 다시 채널에 올린다.
-          for f in issue_llm_reviews.json keei_llm_matches.json issue_insights.json delivery_log.jsonl sent.json channel_outbox.json; do
+          # issue_ledger.json 은 이슈 주소의 영속성 기록이다. build_data 가
+          # 카탈로그를 만들 때마다 갱신하므로 여기서 실어야 살아남는다 —
+          # deploy-web.yml 에는 커밋 스텝이 아예 없어서 그쪽 갱신분은 러너와
+          # 함께 사라진다(원장 갱신은 멱등이라 다음 브리핑이 다시 채운다).
+          # 이 파일이 유실되면 옛 이슈 주소가 다시 404 로 돌아간다.
+          for f in issue_llm_reviews.json keei_llm_matches.json issue_insights.json issue_ledger.json delivery_log.jsonl sent.json channel_outbox.json; do
             if [ -f "$f" ]; then git add "$f"; fi
           done
           git diff --cached --quiet && exit 0

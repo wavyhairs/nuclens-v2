@@ -107,6 +107,7 @@ const state = {
   issueSort: "importance", issueView: "card", issueId: "", railIssueId: "",
   archiveQuery: "", archiveRegion: "전체", archiveTopic: "전체",
   archivePeriod: "all", archiveVerification: "전체", archiveSort: "updated", archiveLimit: 20,
+  archiveScope: "stories",
   archiveEntity: "", entities: null,
   period: "7", keywordSort: "mentions", audioMode: "fast", audioFailures: new Set(), savedIds: new Set(), savedMeta: {}, follows: new Set(), followSeen: {},
   offline: !navigator.onLine, pendingGeneration: "",
@@ -856,6 +857,9 @@ function syncUrl(mode = "replace") {
   if (state.archiveTopic !== "전체") params.set("at", state.archiveTopic);
   if (state.archivePeriod !== "all") params.set("ap", state.archivePeriod);
   if (state.archiveVerification !== "전체") params.set("av", state.archiveVerification);
+  // 기본이 stories 라 전체 목록을 볼 때만 적는다 — 공유된 주소가 기본값을
+  // 들고 다니면 나중에 기본이 바뀔 때 옛 링크가 옛 화면을 고집한다.
+  if (state.archiveScope !== "stories") params.set("as", state.archiveScope);
   const query = params.toString();
   const path = state.issueId && state.view !== "trend"
     ? issuePath(state.issueId)
@@ -884,6 +888,7 @@ function restoreUrlState() {
   state.archiveTopic = params.get("at") || "전체";
   state.archivePeriod = ["7", "30", "all"].includes(params.get("ap")) ? params.get("ap") : "all";
   state.archiveVerification = ["verified", "unverified"].includes(params.get("av")) ? params.get("av") : "전체";
+  state.archiveScope = params.get("as") === "all" ? "all" : "stories";
 }
 
 function renderTopicSelects() {
@@ -1908,8 +1913,57 @@ function renderNewsFeed() {
     : '<p class="empty">이 날짜에 발행된 수집 기사가 없습니다.</p>';
 }
 
+// 스토리 자격 — "시간이 지나며 실제로 쌓였는가".
+//
+// 카탈로그 전체를 스토리로 부르면 안 된다. 실측(라이브 2026-09-12, 525건):
+// 421건(80.2%)이 단 한 회차에만 나타났고 268건(51.0%)은 기사가 1건이다. 그런
+// 이슈의 상세에는 타임라인도 변화도 설 자리가 없다 — 명세가 그린 15개 블록 중
+// 대부분이 빈칸으로 렌더링된다.
+//
+// 그래서 기다리는 대신 **고른다**. 이 저장소가 선정 하한·importance·report_pick
+// 으로 이미 하는 일이다. 바를 넘은 174건(33.1%)의 성질:
+//     기사 2건 이상 100% · 서로 다른 날짜 3건 이상 83.9%
+//     변화 문장 74.7% · 검증(공식·복수 출처) 97.1% · 기사 수 중앙값 5
+//
+// 두 조건을 OR 로 두는 이유: 회차는 '우리가 며칠에 걸쳐 다뤘나'이고 날짜는
+// '사건이 며칠에 걸쳐 움직였나'다. 한 회차에만 실렸어도 서로 다른 날짜의 근거가
+// 셋이면 타임라인이 선이 된다(실측 146건이 이 경우를 포함한다).
+const STORY_MIN_BRIEFINGS = 2;
+const STORY_MIN_DATES = 3;
+const storyEligibility = new WeakMap();
+
+function storyEligible(issue) {
+  if (!issue) return false;
+  const cached = storyEligibility.get(issue);
+  if (cached !== undefined) return cached;
+  let eligible = (issue.briefing_count || 0) >= STORY_MIN_BRIEFINGS;
+  if (!eligible) {
+    const days = new Set();
+    (issue.related_articles || []).forEach(article => {
+      if (article.article_date) days.add(article.article_date);
+    });
+    eligible = days.size >= STORY_MIN_DATES;
+  }
+  storyEligibility.set(issue, eligible);
+  return eligible;
+}
+
+function storyCount() {
+  return state.issues.filter(storyEligible).length;
+}
+
+function setArchiveScope(scope) {
+  if (!["stories", "all"].includes(scope) || state.archiveScope === scope) return;
+  state.archiveScope = scope;
+  if (state.view !== "search") switchView("search");
+  else renderArchiveSearch(true);
+  syncUrl();
+}
+
 function archiveIssueMatches(issue) {
-  // 엔티티 필터가 맨 앞 — 엔티티 페이지는 "이 대상의 이슈"가 전제고,
+  // 범위가 맨 앞 — '스토리'는 목록의 성격이고, 아래 필터는 그 안에서의 교집합이다.
+  if (state.archiveScope === "stories" && !storyEligible(issue)) return false;
+  // 엔티티 필터가 그 다음 — 엔티티 페이지는 "이 대상의 이슈"가 전제고,
   // 나머지 필터(주제·기간·검색어)는 그 안에서의 교집합이다.
   if (state.archiveEntity && !(issue.entity_ids || []).includes(state.archiveEntity)) return false;
   if (state.archiveRegion !== "전체" && !(issue.regions || []).includes(state.archiveRegion)) return false;
@@ -2034,14 +2088,27 @@ function renderArchiveSearch(resetLimit = false) {
     state.archiveVerification === "verified" ? "공식·복수 출처 확인" : state.archiveVerification === "unverified" ? "단일 출처·확인 중" : "",
   ].filter(Boolean);
   const matchedArticles = matches.reduce((sum, issue) => sum + (issue.article_count || 0), 0);
-  const scale = `${matches.length}개 이슈 · ${matchedArticles}개 원문`;
+  const unit = state.archiveScope === "stories" ? "개 스토리" : "개 이슈";
+  const scale = `${matches.length}${unit} · ${matchedArticles}개 원문`;
   document.getElementById("archiveSummary").textContent = activeFilters.length
     ? `${activeFilters.join(" · ")} — ${scale}`
     : scale;
+  setPressed(document.getElementById("archiveScope"),
+    document.querySelector(`#archiveScope [data-scope="${state.archiveScope}"]`));
   document.getElementById("archiveQueryDisplay").textContent = state.archiveQuery ? `검색어 · ${state.archiveQuery}` : "검색어 없음";
+  // 스토리 범위에서 0건이면 원인이 필터가 아니라 **범위**일 수 있다. 그때는
+  // 필터 해제보다 '모든 이슈 보기'가 맞는 출구다 — 필터를 다 풀어도 자격을
+  // 못 넘은 이슈는 계속 안 보이므로, 그 안내만 주면 막다른 길이 된다.
+  const emptyState = state.archiveScope === "stories"
+    ? `<div class="empty-state"><strong>조건에 맞는 스토리가 없습니다</strong>
+        <p>스토리는 여러 회차에 걸쳐 추적됐거나 서로 다른 날짜의 근거가 3건 이상인 이슈입니다.
+        조건을 넓히거나 전체 이슈에서 찾아보세요.</p>
+        <button type="button" data-archive-scope="all">모든 이슈 보기</button>
+        ${activeFilters.length ? '<button type="button" data-clear-archive>필터 해제</button>' : ""}</div>`
+    : '<div class="empty-state"><strong>조건에 맞는 이슈가 없습니다</strong><p>기간을 30일로 넓히거나 주제 필터를 해제해 보세요.</p><button type="button" data-clear-archive>필터 해제</button></div>';
   document.getElementById("archiveIssueList").innerHTML = visible.length
     ? visible.map((issue, index) => issueCard(issue, index, true)).join("")
-    : '<div class="empty-state"><strong>조건에 맞는 이슈가 없습니다</strong><p>기간을 30일로 넓히거나 주제 필터를 해제해 보세요.</p><button type="button" data-clear-archive>필터 해제</button></div>';
+    : emptyState;
   const more = document.getElementById("archiveMore");
   more.hidden = visible.length >= matches.length;
   more.textContent = more.hidden ? "더 보기" : `더 보기 · ${matches.length - visible.length}개 남음`;
@@ -2486,9 +2553,80 @@ function renderEvidenceRail() {
     </div>`;
 }
 
+// 보관된 이슈 — 카탈로그 창(60일) 밖으로 나갔지만 주소는 살아 있다.
+//
+// 예전에는 이 경우 상세가 **조용히 아무 일도 안 했다**(issue 를 못 찾으면 return).
+// 공유된 주소를 연 사람 입장에서는 빈 화면이다. issue_ledger 가 남긴 스냅샷을
+// 받아 "무엇에 관한 이슈였는지"와 제목 이력을 보여 준다. 기사 본문은 담지
+// 않는다 — 원장은 신원 기록이지 기사 저장소가 아니다.
+const archivedIssueCache = new Map();
+
+async function loadArchivedIssue(issueId) {
+  if (archivedIssueCache.has(issueId)) return archivedIssueCache.get(issueId);
+  let row = null;
+  try {
+    const response = await fetch(
+      `${state.dataBase}/issue/${encodeURIComponent(issueId)}.json`, { cache: "no-cache" });
+    if (response.ok) {
+      const ctype = response.headers.get("content-type") || "";
+      if (ctype.includes("json")) row = await response.json();
+    }
+  } catch { row = null; }
+  archivedIssueCache.set(issueId, row);
+  return row;
+}
+
+function archivedIssueBody(issue) {
+  const revisions = (issue.revisions || []).filter(row => row && row.title);
+  // 제목이 한 번이라도 바뀐 이슈만 이력을 보여 준다. 한 줄짜리 이력은
+  // 정보가 아니라 장식이다(실측: 11일에 18.8% 가 제목이 바뀐다).
+  const trail = revisions.length > 1
+    ? `<details class="dialog-evidence"><summary>제목이 바뀐 기록 ${revisions.length}건</summary>
+        <ol class="timeline dialog-timeline">${revisions.slice().reverse().map(row => `<li>
+          <div class="timeline-date"><span>${esc(dateLabel(row.date))}</span></div>
+          <div class="timeline-copy"><span>${esc(row.title)}</span></div>
+        </li>`).join("")}</ol></details>`
+    : "";
+  return `
+    <h2 id="issueDialogTitle" tabindex="-1">${esc(issue.title || "지난 이슈")}</h2>
+    <div class="dialog-meta"><span>보관된 이슈</span>${issue.first_seen ? `<span>${dateLabel(issue.first_seen)} 시작</span>` : ""}${
+      issue.article_count ? `<span>누적 ${issue.article_count}건</span>` : ""}</div>
+    <section class="dialog-update">
+      <h3>한 줄 결론</h3>
+      ${issue.summary ? `<p>${esc(issue.summary)}</p>` : '<p class="empty">요약이 없습니다.</p>'}
+      <p class="dialog-open"><strong>이 이슈는 보관되었습니다</strong>${
+        issue.last_seen ? `${esc(dateLabel(issue.last_seen))} 이후 새로운 보도가 확인되지 않아 최근 목록에서 내려갔습니다. 주소와 기록은 그대로 유지됩니다.`
+                        : "최근 목록에서 내려갔지만 주소와 기록은 그대로 유지됩니다."}</p>
+      <div class="dialog-actions"><button type="button" data-archive-scope="all">모든 이슈에서 찾기</button></div>
+    </section>
+    ${trail}`;
+}
+
+function openArchivedIssueDialog(issueId, updateUrl = true) {
+  loadArchivedIssue(issueId).then(issue => {
+    // 기다리는 동안 사용자가 다른 이슈를 열었으면 그 화면을 덮지 않는다.
+    if (state.issueId && state.issueId !== issueId) return;
+    if (!issue) {
+      if (state.issueId === issueId) state.issueId = "";
+      showToast("이 이슈를 찾을 수 없습니다.");
+      return;
+    }
+    const dialog = document.getElementById("issueDialog");
+    document.getElementById("issueDialogContent").innerHTML = archivedIssueBody(issue);
+    state.issueId = issueId;
+    if (!dialog.open) dialog.showModal();
+    requestAnimationFrame(() => document.getElementById("issueDialogTitle")?.focus());
+    if (updateUrl) syncUrl();
+  });
+}
+
 function openIssueDialog(issueId, updateUrl = true) {
   const issue = currentIssueById(issueId);
-  if (!issue) return;
+  if (!issue) {
+    state.issueId = issueId;
+    openArchivedIssueDialog(issueId, updateUrl);
+    return;
+  }
   recordRecentIssue(issueId);
   const dialog = document.getElementById("issueDialog");
   const topics = (issue.topics || []).map(topic => `<span class="topic-chip">${esc(TOPIC_LABELS[topic] || topic)}</span>`).join("");
@@ -4510,6 +4648,8 @@ function bind() {
     }
     if (event.target.closest("[data-clear-briefing]")) clearBriefingFilters();
     if (event.target.closest("[data-clear-archive]")) clearArchiveFilters();
+    const scope = event.target.closest("[data-archive-scope]");
+    if (scope) setArchiveScope(scope.dataset.archiveScope);
   });
   // briefingTitle: 기사 제목을 얹은 날의 h1 은 안에 상세 진입 버튼을 품는다.
   // leadCard: 선두 카드 안의 버튼(타임라인·저장·공유)도 같은 위임을 탄다.
@@ -4688,6 +4828,11 @@ function bind() {
     setPressed(event.currentTarget, button);
     renderArchiveSearch(true);
     syncUrl();
+  });
+  document.getElementById("archiveScope").addEventListener("click", event => {
+    const button = event.target.closest("[data-scope]");
+    if (!button) return;
+    setArchiveScope(button.dataset.scope);
   });
   document.getElementById("archiveClear").addEventListener("click", clearArchiveFilters);
   document.getElementById("archiveMore").addEventListener("click", () => { state.archiveLimit += 20; renderArchiveSearch(); });

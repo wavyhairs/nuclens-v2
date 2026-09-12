@@ -55,7 +55,7 @@
     <nav class="main-tabs" id="mainTabs" aria-label="주요 화면">
       <button class="main-tab active" data-view="news" aria-pressed="true">오늘</button>
       <button class="main-tab" data-view="trend" aria-pressed="false">흐름</button>
-      <button class="main-tab" data-view="search" aria-pressed="false">탐색</button>
+      <button class="main-tab" data-view="search" aria-pressed="false">스토리</button>
       <button class="main-tab" data-view="report" aria-pressed="false">보고서</button>
     </nav>
     <div class="header-tools">
@@ -317,7 +317,7 @@
 
   <section id="view-search" hidden aria-labelledby="archiveTitle">
     <div class="archive-intro">
-      <div><h1 id="archiveTitle">탐색</h1><p id="archiveCatalogMeta"></p></div>
+      <div><h1 id="archiveTitle">스토리</h1><p id="archiveCatalogMeta"></p></div>
       <button id="archiveSearchOpen" type="button" class="secondary-button">검색 <span aria-hidden="true">/</span></button>
     </div>
     <!-- 발견 허브 — 검색어·필터가 없는 랜딩에서만 보인다. 이 화면의 두 번째
@@ -358,6 +358,14 @@
         </div>
       </details>
       <div class="archive-results">
+        <!-- 목록 범위. 기본이 '추적 중인 스토리'인 것이 이 화면의 성격을 정한다 —
+             카탈로그 전체를 첫 화면에 깔면 기사 1건짜리 이슈가 절반이라(실측
+             2026-09-12: 525건 중 268건) 빈 껍데기가 대세가 된다. 자격을 넘은
+             것만 먼저 보이고, 전체는 한 번 더 눌러서 본다. -->
+        <div class="archive-scope segmented" id="archiveScope" role="group" aria-label="목록 범위">
+          <button class="active" type="button" data-scope="stories" aria-pressed="true">추적 중인 스토리</button>
+          <button type="button" data-scope="all" aria-pressed="false">모든 이슈</button>
+        </div>
         <div class="archive-result-head">
           <div><h2>검색 결과</h2><p id="archiveSummary" aria-live="polite"></p></div>
           <label class="compact-select">정렬
@@ -637,7 +645,7 @@
 <nav id="mobileTabs" class="mobile-tabs" aria-label="모바일 주요 화면">
   <button class="active" type="button" data-view="news" aria-pressed="true"><span>오늘</span></button>
   <button type="button" data-view="trend" aria-pressed="false"><span>흐름</span></button>
-  <button type="button" data-view="search" aria-pressed="false"><span>탐색</span></button>
+  <button type="button" data-view="search" aria-pressed="false"><span>스토리</span></button>
   <button type="button" data-view="report" aria-pressed="false"><span>보고서</span></button>
 </nav>
 
