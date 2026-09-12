@@ -970,6 +970,30 @@ _TAIL_FUTURE_RE = re.compile(
     r"접수|마감|제출|실시한다|실시할|개막|주재하|만날|방한하|"
     r"심의|의결할|결정할|점검할|논의할|발표할|공개할|시행)")
 
+# 제목이 날짜를 앞세우고 끝에 사건 명사만 남기는 꼴. 한국어 기사 제목은 시제를
+# 떼므로 "개최한다" 가 아니라 "개최" 로 끝난다 — 실측:
+#     "18일 기후에너지환경부, 12차 전기본 수립 위한 석탄발전 조기 폐지 토론회 개최"
+#     "한국IBM, 13일 'AI 기반 자율형 스토리지' 전략 웨비나 개최"
+#     "해상 원전 국제표준 시동…IAEA 장관급 회의 26일 개최"
+# 서술어까지의 거리가 멀고(30자 이상) 시제가 없어 위의 `_TAIL_FUTURE_RE` 로는
+# 안 걸린다. 그렇다고 거리만 늘리면 본문의 과거 문장이 통째로 딸려 온다.
+#
+# 그래서 **절이 그 명사로 끝날 때만** 미래로 본다. 본문 문장은 종결어미로
+# 끝나지 제목처럼 명사로 끝나지 않는다 — 그 차이가 이 규칙의 안전장치다.
+_TAIL_HEADLINE_RE = re.compile(
+    r"^[^.]{0,70}?(?:개최|개막|폐막|착공|준공|출범|발족|시행|발효|"
+    r"공모|모집|접수|마감|시작|재개|방한|순방|"
+    r"토론회|공청회|간담회|설명회|세미나|심포지엄|심포지움|포럼|"
+    r"학술대회|콘퍼런스|컨퍼런스|워크숍|전시회|박람회|기자회견|"
+    r"본회의|국무회의|국정감사|총회|이사회|위원회|집회|행진)\s*$")
+
+# 제목 규칙을 열어 주기 전에 **절 전체**에서 확인하는 과거 흔적. 토큰 국소
+# 판정(`_TAIL_PAST_RE`)은 18자만 보므로, 문장 끝의 "…개최하여 논의했다" 를
+# 놓친다. 제목 규칙은 절 끝까지 보는 규칙이라 과거 판정도 절 끝까지 봐야 한다.
+_CLAUSE_PAST_RE = re.compile(
+    r"했다|했으며|했고|했습니다|했지만|하였|밝혔|전했|말했|보도했|발표했|"
+    r"열렸|였다|이었다|됐다|되었|한\s*바\s*있|바\s*있다")
+
 # 추론이 닿는 앞날의 길이. 달력 창(30일)보다 넉넉히 잡되 한 달을 크게 넘지
 # 않는다 — "18일"이 석 달 뒤를 가리키는 일은 한국어에서 없다.
 _BARE_DAY_HORIZON = 45
@@ -992,6 +1016,21 @@ _RANGE_HEAD_TO_QUALIFIED_RE = re.compile(
 _SPAN_TAIL_DAY_RE = re.compile(
     r"^\s*(?:일?\s*부터\s*|[~∼–—]\s*|\s-\s*)"
     r"(?P<day>0?[1-9]|[12]\d|3[01])\s*일(?![\d간째차])")
+# 영문 표기의 머리 뒤에 붙는 꼬리. "SEPT 16-18, 2026" 의 18 이 그것이다.
+# 한글 꼬리와 달리 '일' 이 없으므로 이음말이 유일한 단서다 — 그래서 이음말을
+# **반드시** 요구한다. 그것이 없으면 "16 18" 같은 숫자 나열이 전부 날짜가 된다.
+_SPAN_TAIL_EN_RE = re.compile(
+    r"^\s*(?:[-–—~∼]|to|through|until|thru)\s*"
+    r"(?P<day>0?[1-9]|[12]\d|3[01])(?:st|nd|rd|th)?(?![\d])", re.I)
+
+# 영문 달 이름. 머리를 그 자리에서 찾으려면 날짜 하나가 어떻게 적히는지 알아야 한다.
+_MONTH_NAME_RE = {
+    1: r"jan(?:uary)?", 2: r"feb(?:ruary)?", 3: r"mar(?:ch)?", 4: r"apr(?:il)?",
+    5: r"may", 6: r"jun(?:e)?", 7: r"jul(?:y)?", 8: r"aug(?:ust)?",
+    9: r"sep(?:t(?:ember)?)?", 10: r"oct(?:ober)?", 11: r"nov(?:ember)?",
+    12: r"dec(?:ember)?",
+}
+
 # 물결 뒤에 이어지는 'M.D'. 범위의 끝에서만 날짜로 읽는다.
 _DOTTED_TAIL_RE = re.compile(
     r"^\s*[~∼–—]\s*(?P<month>0?[1-9]|1[0-2])\s*[.]\s*"
@@ -1054,6 +1093,8 @@ def _inferred_bare_days(text: str, reference: date,
             offsets = (0,)
         elif _TAIL_FUTURE_RE.match(after):
             offsets, pinned = (0, 1), False
+        elif _TAIL_HEADLINE_RE.match(after) and not _CLAUSE_PAST_RE.search(text):
+            offsets, pinned = (0, 1), False
         else:
             continue
         day = int(match.group("day"))
@@ -1086,7 +1127,13 @@ def _inherited_span_days(text: str, reference: date, anchored: set[date],
         for pattern in _date_patterns(head):
             for match in re.finditer(pattern, text):
                 # 꼬리가 머리 바로 뒤라야 한다. 사이에 낱말이 끼면 남의 날짜다.
-                gap = _SPAN_TAIL_DAY_RE.match(text[match.end():])
+                tail = text[match.end():]
+                gap = _SPAN_TAIL_DAY_RE.match(tail)
+                if gap is None and re.search(r"[A-Za-z]", match.group(0)):
+                    # 영문 꼬리는 **영문 머리 뒤에서만** 읽는다. 숫자 머리 뒤에
+                    # 허용하면 "2026.9.9~9.11" 의 '~9' 가 날짜가 되어 10월 9일이
+                    # 튀어나온다 — 거기서 물결 뒤에 오는 것은 날이 아니라 '월.일' 이다.
+                    gap = _SPAN_TAIL_EN_RE.match(tail)
                 if gap is None:
                     continue
                 if consumed is not None:
@@ -1129,7 +1176,11 @@ def _date_patterns(when: date) -> tuple[str, ...]:
             rf"{when.month}\s*월\s*{when.day}(?!\s*\d)",
             rf"{when.year}\s*[.\-/]\s*{when.month:02d}\s*[.\-/]\s*{when.day:02d}",
             rf"{when.year}\s*[.\-/]\s*{when.month}\s*[.\-/]\s*{when.day}(?!\d)",
-            rf"(?<!\d){when.month}\s*[.\-/]\s*{when.day}(?!\d)")
+            rf"(?<!\d){when.month}\s*[.\-/]\s*{when.day}(?!\d)",
+            # 영문 표기. 해외 학회·전시회 안내가 이 꼴로 온다
+            # (실측: "2026 World Climate Industry EXPO · SEPT 16-18, 2026").
+            rf"(?i:(?<![a-z]){_MONTH_NAME_RE[when.month]}\.?\s*{when.day}"
+            rf"(?:st|nd|rd|th)?)(?!\d)")
 
 
 def scheduled_dates(text: object, reference: object) -> dict:
