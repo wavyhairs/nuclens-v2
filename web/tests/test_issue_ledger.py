@@ -186,7 +186,8 @@ class IssuePagePersistenceTests(unittest.TestCase):
         build_data.SITE_DIR = tmp
         try:
             counts = build_data.build_issue_pages(catalog, ledger)
-            self.assertEqual(counts, {"live": 1, "archived": 1, "moved": 1})
+            self.assertEqual(
+                counts, {"live": 1, "archived": 1, "moved": 1, "aliases": 1})
             pages = tmp / "public" / "issue"
             self.assertTrue((pages / "issue-live" / "index.html").exists())
             self.assertTrue((pages / "issue-old" / "index.html").exists())
@@ -197,6 +198,11 @@ class IssuePagePersistenceTests(unittest.TestCase):
             self.assertTrue(snapshot["archived"])
             self.assertEqual(snapshot["title"], "보관된 이슈")
             self.assertNotIn("related_articles", snapshot)
+            # 앱이 읽는 별칭표. **살아 있는 이슈로 가는 것만** 싣는다 —
+            # 보관 페이지로 가는 별칭은 앱이 issues.json 에서 못 찾는다.
+            aliases = json.loads(
+                (tmp / "data" / "issue_aliases.json").read_text(encoding="utf-8"))
+            self.assertEqual(aliases, {"aliases": {"issue-gone": "issue-live"}})
         finally:
             build_data.OUT_DIR, build_data.SITE_DIR = original_out, original_site
             shutil.rmtree(tmp, ignore_errors=True)
@@ -212,6 +218,12 @@ class IssuePagePersistenceTests(unittest.TestCase):
             counts = build_data.build_issue_pages([_issue("issue-live", ["h1"])], None)
             self.assertEqual(counts["live"], 1)
             self.assertEqual(counts["archived"], 0)
+            # 빈 별칭표라도 **파일은 나와야 한다** — 앱이 받지 못하면 '별칭이
+            # 없다'와 '못 받았다'를 구별할 수 없어 옛 저장이 묘비로 남는다.
+            self.assertEqual(counts["aliases"], 0)
+            aliases = json.loads(
+                (tmp / "data" / "issue_aliases.json").read_text(encoding="utf-8"))
+            self.assertEqual(aliases, {"aliases": {}})
         finally:
             build_data.OUT_DIR, build_data.SITE_DIR = original_out, original_site
             shutil.rmtree(tmp, ignore_errors=True)
