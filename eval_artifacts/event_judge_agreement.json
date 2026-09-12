@@ -1,54 +1,119 @@
 {
- "judged": 117,
- "comparable": 9,
+ "judged": 364,
+ "comparable": 34,
  "buckets": {
-  "gemini_absent": 108,
-  "disagreement": 2,
-  "agreement_different": 4,
-  "agreement_same": 3
+  "gemini_absent": 330,
+  "agreement_different": 13,
+  "agreement_same": 12,
+  "disagreement": 9
  },
- "agreement_rate": 0.7778,
+ "agreement_rate": 0.7353,
  "by_stratum": {
   "human_labeled": {
-   "disagreement": 2,
-   "agreement_different": 1
+   "gemini_absent": 2,
+   "agreement_different": 5,
+   "disagreement": 4,
+   "agreement_same": 1
   },
   "w21→w28": {
-   "gemini_absent": 43,
+   "gemini_absent": 115,
+   "agreement_different": 2,
    "agreement_same": 2
   },
   "w28→w35": {
-   "gemini_absent": 33,
-   "agreement_different": 1,
-   "agreement_same": 1
+   "gemini_absent": 108,
+   "agreement_same": 4,
+   "disagreement": 2,
+   "agreement_different": 3
   },
   "w35→w42": {
-   "gemini_absent": 32,
-   "agreement_different": 2
+   "gemini_absent": 105,
+   "agreement_same": 5,
+   "disagreement": 3,
+   "agreement_different": 3
   }
  },
  "claude_relations": {
-  "UNRELATED": 42,
-  "RELATED_DISTINCT_EVENT": 43,
-  "SAME_EVENT": 5,
-  "FOLLOW_UP_NEW_ACTION": 21,
-  "FOLLOW_UP_NO_NEW_ACTION": 6
+  "RELATED_DISTINCT_EVENT": 147,
+  "FOLLOW_UP_NEW_ACTION": 73,
+  "UNRELATED": 92,
+  "FOLLOW_UP_NO_NEW_ACTION": 31,
+  "SAME_EVENT": 20,
+  "INSUFFICIENT": 1
  },
  "difference_axes": {
-  "topic_only": 40,
-  "follow_up_same_matter": 24,
-  "same_entity_different_issue": 17,
-  "different_stage": 13,
-  "different_occurrence": 8,
-  "multi_source_same_event": 5,
+  "topic_only": 87,
+  "same_entity_different_issue": 79,
+  "different_stage": 75,
+  "follow_up_same_matter": 54,
+  "different_occurrence": 26,
+  "multi_source_same_event": 20,
+  "different_project": 15,
   "different_policy_action": 5,
-  "different_project": 5
+  "different_year": 2,
+  "insufficient_evidence": 1
  },
  "human_cross_check": {
-  "n": 3,
-  "claude_matches_human": 2,
-  "gemini_matches_human": 2,
+  "n": 12,
+  "claude_matches_human": 7,
+  "gemini_matches_human": 6,
   "rows": [
+   {
+    "candidate_id": "571c41d8d5a745d5--726ce5e20cdd473d",
+    "human": "UNRELATED",
+    "claude": "UNRELATED",
+    "gemini_same_event": null,
+    "claude_matches_human": true,
+    "gemini_matches_human": null
+   },
+   {
+    "candidate_id": "c7f9b3d08bc22513--d6889c5a7737e33a",
+    "human": "RELATED_DISTINCT_EVENT",
+    "claude": "RELATED_DISTINCT_EVENT",
+    "gemini_same_event": false,
+    "claude_matches_human": true,
+    "gemini_matches_human": true
+   },
+   {
+    "candidate_id": "58158c94ab72ede0--79e904ad0db5c408",
+    "human": "FOLLOW_UP_NEW_ACTION",
+    "claude": "INSUFFICIENT",
+    "gemini_same_event": null,
+    "claude_matches_human": false,
+    "gemini_matches_human": null
+   },
+   {
+    "candidate_id": "0d65034147a0c1c1--1e53d0f81cb14594",
+    "human": "RELATED_DISTINCT_EVENT",
+    "claude": "RELATED_DISTINCT_EVENT",
+    "gemini_same_event": true,
+    "claude_matches_human": true,
+    "gemini_matches_human": false
+   },
+   {
+    "candidate_id": "8b486e4051da2e66--eeb5f60b2c8223fd",
+    "human": "FOLLOW_UP_NEW_ACTION",
+    "claude": "SAME_EVENT",
+    "gemini_same_event": false,
+    "claude_matches_human": false,
+    "gemini_matches_human": false
+   },
+   {
+    "candidate_id": "79affc73cad65844--d4010b67b8de8881",
+    "human": "UNRELATED",
+    "claude": "UNRELATED",
+    "gemini_same_event": false,
+    "claude_matches_human": true,
+    "gemini_matches_human": true
+   },
+   {
+    "candidate_id": "cf41dffd541ba4f8--f73a97b0f28780fb",
+    "human": "UNRELATED",
+    "claude": "UNRELATED",
+    "gemini_same_event": false,
+    "claude_matches_human": true,
+    "gemini_matches_human": true
+   },
    {
     "candidate_id": "5912265ba9aa8cfe--8ceb26d26c222131",
     "human": "RELATED_DISTINCT_EVENT",
@@ -56,6 +121,14 @@
     "gemini_same_event": true,
     "claude_matches_human": true,
     "gemini_matches_human": false
+   },
+   {
+    "candidate_id": "414635dfc63ab9c4--cd2318c0be5d5379",
+    "human": "FOLLOW_UP_NO_NEW_ACTION",
+    "claude": "FOLLOW_UP_NEW_ACTION",
+    "gemini_same_event": true,
+    "claude_matches_human": false,
+    "gemini_matches_human": true
    },
    {
     "candidate_id": "34575730dc364184--f33f228a288946ee",
@@ -72,14 +145,78 @@
     "gemini_same_event": true,
     "claude_matches_human": false,
     "gemini_matches_human": true
+   },
+   {
+    "candidate_id": "05da702fed62250a--959a0bd83cc42eea",
+    "human": "FOLLOW_UP_NEW_ACTION",
+    "claude": "RELATED_DISTINCT_EVENT",
+    "gemini_same_event": false,
+    "claude_matches_human": false,
+    "gemini_matches_human": false
    }
   ]
  },
  "same_thread": {
-  "False": 63,
-  "True": 54
+  "True": 224,
+  "False": 139,
+  "None": 1
  },
  "disagreements": [
+  {
+   "candidate_id": "5085332ba448f2a6--8078881f05913157",
+   "stratum": "w35→w42",
+   "gemini_same_event": false,
+   "gemini_reason": "예산안 내 SMR 투자 계획과 전체 R&D 예산 증액은 별개",
+   "claude_relation": "FOLLOW_UP_NEW_ACTION",
+   "claude_reason": "투자계획 발표 후 구체 예산 확정",
+   "claude_axis": "different_stage",
+   "a_title": "정부, 2027년 예산안에 SMR 및 핵융합 등 초격차 기술 집중 투자 계획",
+   "b_title": "정부, 내년 에너지 R&D 예산 7336억 원으로 역대 최대 증액"
+  },
+  {
+   "candidate_id": "c2a1e3fcf49ba7e8--f9836d3cb1423104",
+   "stratum": "w28→w35",
+   "gemini_same_event": false,
+   "gemini_reason": "기술 육성 정책과 미래대응기금 신설의 차이",
+   "claude_relation": "FOLLOW_UP_NEW_ACTION",
+   "claude_reason": "SEED 육성 후 기금신설 강조",
+   "claude_axis": "different_stage",
+   "a_title": "청와대, 미래대응기금 신설 및 첨단산업 투자 계획 강조",
+   "b_title": "정부, SMR·핵융합 등 '7대 시드' 육성으로 AI 시대 이후 성장동력 확보 추진"
+  },
+  {
+   "candidate_id": "d090e00015633ab5--fb1014df46236dd8",
+   "stratum": "w28→w35",
+   "gemini_same_event": true,
+   "gemini_reason": "12차 전기본 수립 및 전력수요 관련",
+   "claude_relation": "RELATED_DISTINCT_EVENT",
+   "claude_reason": "계속운전 확대 vs 수요재산정 공개",
+   "claude_axis": "same_entity_different_issue",
+   "a_title": "정부, 12차 전력수급기본계획 수립 착수 및 원전 계속운전 기간 확대 협의",
+   "b_title": "정부, 제12차 전력수급기본계획 전력수요 재산정 및 20일 공개"
+  },
+  {
+   "candidate_id": "0d65034147a0c1c1--1e53d0f81cb14594",
+   "stratum": "human_labeled",
+   "gemini_same_event": true,
+   "gemini_reason": "동일 행사의 다른 보도",
+   "claude_relation": "RELATED_DISTINCT_EVENT",
+   "claude_reason": "착공식 발언 vs 앞선 직접지시",
+   "claude_axis": "different_stage",
+   "a_title": "대통령, 해남 태양광 착공식서 청정에너지와 첨단산업 연계 강조",
+   "b_title": "대통령, 호남 반도체 클러스터 전력 공급 및 송전망 구축 직접 지시"
+  },
+  {
+   "candidate_id": "8b486e4051da2e66--eeb5f60b2c8223fd",
+   "stratum": "human_labeled",
+   "gemini_same_event": false,
+   "gemini_reason": "미 해사청 협력과 미·영 민관 협력은 주체가 다름",
+   "claude_relation": "SAME_EVENT",
+   "claude_reason": "코어파워 MOU, 두 매체 다른각도",
+   "claude_axis": "multi_source_same_event",
+   "a_title": "미 해사청-코어파워, 원자력 추진 상선 협력각서 체결",
+   "b_title": "미국·영국, 핵추진 상선단 구축 위한 민관 협력 추진"
+  },
   {
    "candidate_id": "5912265ba9aa8cfe--8ceb26d26c222131",
    "stratum": "human_labeled",
@@ -92,6 +229,17 @@
    "b_title": "미국 내 AI 데이터센터 건립 반대 여론 확산 및 빅테크 대응"
   },
   {
+   "candidate_id": "27009ea4489faffc--bf6d688ab21e07ed",
+   "stratum": "w35→w42",
+   "gemini_same_event": true,
+   "gemini_reason": "동일한 DOE의 Natura 승인 사건",
+   "claude_relation": "UNRELATED",
+   "claude_reason": "다른 회사의 별개 SMR 규제·계약 사건",
+   "claude_axis": "topic_only",
+   "a_title": "나노 뉴클리어, 미 공군으로부터 Kronos 원자로 개발 SBIR 계약 수주",
+   "b_title": "미국 에너지부, Natura Resources 용융염 원자로 안전설계협약 승인"
+  },
+  {
    "candidate_id": "78d84e4164f7c883--a5a1ef68231b4e51",
    "stratum": "human_labeled",
    "gemini_same_event": true,
@@ -101,7 +249,18 @@
    "claude_axis": "different_project",
    "a_title": "현대건설, 美 테라파워 차세대 원전 최대 8기 EPC 우선권 확보",
    "b_title": "테라파워-한국 기업 SMR 협력, 한국 원전기업 수출 공급망 확대"
+  },
+  {
+   "candidate_id": "2b3faa66940c53d8--7524648ff8032947",
+   "stratum": "w35→w42",
+   "gemini_same_event": false,
+   "gemini_reason": "대미 투자 및 지분 인수와 일반적인 투자 현황은 다름",
+   "claude_relation": "FOLLOW_UP_NO_NEW_ACTION",
+   "claude_reason": "동일 대미협상 현황의 다른 요약",
+   "claude_axis": "follow_up_same_matter",
+   "a_title": "한미 2,000억 달러 투자 프로젝트 및 원전 협력 현황",
+   "b_title": "정부, 대미 투자 1호 사업 22억 달러 이달 말 송금 및 웨스팅하우스 지분 인수 추진"
   }
  ],
- "disagreement_total": 2
+ "disagreement_total": 9
 }
