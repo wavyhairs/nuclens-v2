@@ -551,6 +551,54 @@ function loadSaved() {
   renderSavedCount();
 }
 
+/* ── 저장한 이슈의 옛 주소 복구 ────────────────────────────────────
+   `issue_id` 는 예전에 클러스터 재계산마다 옮겨 다녔다(실측 2026-09-12: 11일에
+   16.8%). PR #107 이 원장에서 신원을 물려받게 해 이동을 멈췄지만, **그 전에
+   저장된 id 는 이미 옛 주소다** — 리다이렉트는 주소를 직접 열 때만 작동하고
+   localStorage 에 키로 박힌 값은 구해 주지 못한다.
+
+   그래서 원장의 별칭표(`issue_aliases.json`)로 옮겨 적는다. 순수 함수로 두는
+   이유는 이 자리가 사용자의 의도(저장)를 다루는 곳이라 node 검사로 잠가야
+   하기 때문이다.
+
+   사슬은 따라간다 — A→B→C 로 두 번 옮겨간 저장도 C 에 닿아야 한다. 고리를
+   만나면 멈춘다(원장도 같은 규칙: `issue_ledger.alias_target`). */
+const ALIAS_CHAIN_LIMIT = 8;
+
+function resolveAlias(issueId, aliases) {
+  let current = issueId;
+  const seen = new Set([current]);
+  for (let step = 0; step < ALIAS_CHAIN_LIMIT; step += 1) {
+    const next = aliases?.[current];
+    if (!next || seen.has(next)) break;
+    seen.add(next);
+    current = next;
+  }
+  return current;
+}
+
+function migrateSavedIds(savedIds, savedMeta, aliases, liveIds) {
+  const source = [...savedIds];
+  // 살아 있는 id 는 건드리지 않는다 — 별칭표에 옛 항목이 남아 있어도
+  // 현재 카탈로그가 이긴다.
+  const targets = source.map(
+    id => (liveIds?.has?.(id) ? id : resolveAlias(id, aliases)));
+  const ids = [];
+  targets.forEach(target => { if (!ids.includes(target)) ids.push(target); });
+  const moved = targets.filter((target, index) => target !== source[index]).length;
+
+  // 스냅샷은 두 번에 걸쳐 옮긴다. **그 id 로 직접 저장한 것이 먼저다** — 옛 id 와
+  // 새 id 를 둘 다 저장해 둔 사람에게, 옮겨 온 옛 스냅샷이 직접 저장한 값을
+  // 덮으면 제목·날짜가 과거로 되돌아간다.
+  const meta = {};
+  ids.forEach(id => { if (savedMeta?.[id]) meta[id] = savedMeta[id]; });
+  source.forEach((id, index) => {
+    const target = targets[index];
+    if (!meta[target] && savedMeta?.[id]) meta[target] = savedMeta[id];
+  });
+  return { ids, meta, moved };
+}
+
 function persistSaved() {
   try {
     localStorage.setItem("nuclens-saved-issues", JSON.stringify([...state.savedIds]));
@@ -2168,15 +2216,53 @@ function renderArchiveSearch(resetLimit = false) {
   if (summary) summary.setAttribute("aria-label", activeFilters.length ? `탐색 필터 ${activeFilters.length}개 적용됨` : "탐색 필터");
 }
 
+/* 별칭표는 **묘비가 생길 때만** 받는다. 원장은 계속 자라므로 첫 화면에서
+   통째로 받는 파일(meta.json)에 넣으면 상한이 사라진다 — build_issue_pages 의
+   보관 스냅샷과 같은 판단이다. 한 번 받으면 세션 동안 다시 받지 않고, 못 받으면
+   예전처럼 묘비를 보여 준다(복구 실패가 화면을 죽이면 안 된다). */
+let issueAliases = null;
+let issueAliasesPending = null;
+
+async function loadIssueAliases() {
+  if (issueAliases) return issueAliases;
+  if (!issueAliasesPending) {
+    issueAliasesPending = (async () => {
+      const payload = await loadRootJSON("issue_aliases.json", true);
+      const raw = payload?.aliases;
+      issueAliases = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+      return issueAliases;
+    })();
+  }
+  return issueAliasesPending;
+}
+
+async function restoreSavedFromAliases() {
+  const aliases = await loadIssueAliases();
+  if (!aliases || !Object.keys(aliases).length) return false;
+  const liveIds = new Set(state.issues.map(issue => issue.issue_id));
+  const { ids, meta, moved } = migrateSavedIds(
+    state.savedIds, state.savedMeta, aliases, liveIds);
+  if (!moved) return false;
+  state.savedIds = new Set(ids);
+  state.savedMeta = meta;
+  persistSaved();
+  return true;
+}
+
 function renderSaved() {
   renderFollowPanel();
   renderRecentIssues();
   const issues = state.issues.filter(issue => state.savedIds.has(issue.issue_id));
   const liveIds = new Set(issues.map(issue => issue.issue_id));
-  // 재클러스터로 사라진 저장 — 스냅샷 묘비로 남긴다(조용한 소실 금지).
-  const tombstones = [...state.savedIds]
-    .filter(id => !liveIds.has(id))
-    .map(id => savedTombstone(id, state.savedMeta?.[id]));
+  // 재클러스터로 사라진 저장 — 먼저 원장 별칭으로 되살려 보고, 그래도 못 찾으면
+  // 스냅샷 묘비로 남긴다(조용한 소실 금지).
+  const missing = [...state.savedIds].filter(id => !liveIds.has(id));
+  if (missing.length && !issueAliases) {
+    restoreSavedFromAliases()
+      .then(restored => { if (restored) renderSaved(); })
+      .catch(() => { /* 복구 실패는 묘비로 흡수된다 */ });
+  }
+  const tombstones = missing.map(id => savedTombstone(id, state.savedMeta?.[id]));
   const cards = issues.map((issue, index) => issueCard(issue, index, true)).concat(tombstones);
   document.getElementById("savedIssueList").innerHTML = cards.length
     ? cards.join("")

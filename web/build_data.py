@@ -5288,8 +5288,24 @@ def build_issue_pages(issue_catalog: list[dict], ledger: dict | None = None) -> 
         shutil.rmtree(snapshot_dir)
 
     template = (public_dir / "index.html").read_text(encoding="utf-8")
-    counts = {"live": 0, "archived": 0, "moved": 0}
+    counts = {"live": 0, "archived": 0, "moved": 0, "aliases": 0}
     live_ids: set[str] = set()
+    # 앱이 읽는 별칭표(옛 id → 현재 id). **원장이 없어도 빈 파일을 낸다** —
+    # 앱이 받지 못하면 옛 저장이 복구 없이 묘비로 남으므로, '없음'과 '못 받음'을
+    # 구별할 수 있어야 한다.
+    aliases: dict[str, str] = {}
+
+    def _write_aliases() -> None:
+        # 원장이 없는 경로(첫 실행·테스트)에서는 여기까지 오는 동안 OUT_DIR 을
+        # 아무도 만들지 않는다 — 보관 스냅샷 디렉터리를 안 만들기 때문이다.
+        OUT_DIR.mkdir(parents=True, exist_ok=True)
+        (OUT_DIR / "issue_aliases.json").write_text(
+            json.dumps({"aliases": aliases}, ensure_ascii=False,
+                       separators=(",", ":"), sort_keys=True),
+            encoding="utf-8",
+        )
+        counts["aliases"] = len(aliases)
+
     for issue in issue_catalog:
         issue_id = str(issue.get("issue_id") or "")
         if not re.fullmatch(r"[A-Za-z0-9_-]+", issue_id):
@@ -5305,6 +5321,7 @@ def build_issue_pages(issue_catalog: list[dict], ledger: dict | None = None) -> 
         counts["live"] += 1
 
     if not ledger:
+        _write_aliases()
         return counts
 
     snapshot_dir.mkdir(parents=True, exist_ok=True)
@@ -5326,9 +5343,17 @@ def build_issue_pages(issue_catalog: list[dict], ledger: dict | None = None) -> 
         )
         counts["archived"] += 1
 
+    # 별칭표는 **meta.json 에 넣지 않는다** — 원장은 계속 자라므로 첫 화면에서
+    # 통째로 받는 파일에 넣으면 상한이 사라진다(위 보관 스냅샷과 같은 판단).
+    # 앱은 저장한 이슈가 살아 있는 목록에 없을 때만 이 파일을 받는다.
     for issue_id, target in issue_ledger.redirects(ledger, live_ids).items():
         if not re.fullmatch(r"[A-Za-z0-9_-]+", issue_id) or issue_id in live_ids:
             continue
+        # 살아 있는 이슈로 가는 것만 싣는다. 보관 페이지로 가는 별칭은 앱이
+        # issues.json 에서 못 찾으므로 옮겨 줘도 그릴 것이 없다 — 그쪽은 주소를
+        # 직접 열었을 때 리다이렉트 페이지가 받는다.
+        if target in live_ids:
+            aliases[issue_id] = target
         target_path = f"/issue/{quote(target, safe='-_')}/"
         entry = ledger["issues"].get(issue_id) or {}
         page_dir = issue_dir / issue_id
@@ -5343,6 +5368,8 @@ def build_issue_pages(issue_catalog: list[dict], ledger: dict | None = None) -> 
             encoding="utf-8",
         )
         counts["moved"] += 1
+
+    _write_aliases()
     return counts
 
 
@@ -7220,7 +7247,8 @@ def build() -> None:
         f"[build] 아카이브 {len(records)}건 → 표시 {len(news_items)}건 → "
         f"브리핑 기사 {selected_count}건 / 이슈 카드 {issue_count}개 / "
         f"상세 페이지 {issue_page_count}개 (보관 {issue_page_counts['archived']} · "
-        f"이동 {issue_page_counts['moved']}) / 날짜 브리프 {brief_page_count}개 → {OUT_DIR}"
+        f"이동 {issue_page_counts['moved']} · 별칭 {issue_page_counts['aliases']}) / "
+        f"날짜 브리프 {brief_page_count}개 → {OUT_DIR}"
     )
     # 이 프로세스가 쓴 Gemini 호출을 센다. crawl.yml 은 news_bot 과 build_data 를
     # **한 잡 안에서 이어서** 돌리므로 둘이 같은 분에 겹칠 수 있다 — 429(분당 20회)의
