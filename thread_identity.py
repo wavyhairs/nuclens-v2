@@ -299,7 +299,9 @@ def resolve(groups: list[set], events_by_id: dict, owners: dict[str, str]) -> di
             entities |= set(event.entities)
         threads.append({
             "thread_id": row["thread_id"],
-            "anchor_event_id": row["evidence"][0] if row["evidence"] else "",
+            # 앵커는 **가장 이른 사건**이다. 상속·병합에서는 증거 목록의 첫 칸이
+            # 사전순이라 묶음이 바뀔 때마다 흔들린다 — 최초 관측일은 단조롭다.
+            "anchor_event_id": members[0].issue_id,
             "event_ids": [event.issue_id for event in members],
             "title": members[0].title,
             "first_seen": members[0].first_seen.isoformat() if members[0].first_seen else "",

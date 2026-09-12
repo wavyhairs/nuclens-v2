@@ -189,3 +189,14 @@ class ChainPoisoningTests(unittest.TestCase):
         self.assertEqual(len(groups), 1)
         self.assertEqual(sorted(groups[0]), ["a1", "a2", "a3"])
         self.assertEqual(stats["blocked_weak_link"], 0)
+
+
+class AnchorTests(unittest.TestCase):
+    def test_anchor_is_the_earliest_event_even_when_inherited(self):
+        """증거 목록의 첫 칸은 사전순이라 묶음이 바뀔 때마다 흔들린다."""
+        events = {event.issue_id: event for event in [
+            _event("zz", "이른 사건", "2026-03-01"),
+            _event("aa", "늦은 사건", "2026-08-01"),
+        ]}
+        out = thread_identity.resolve([{"zz", "aa"}], events, {"aa": "thread-old"})
+        self.assertEqual(out["threads"][0]["anchor_event_id"], "zz")
