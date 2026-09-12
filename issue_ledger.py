@@ -48,12 +48,15 @@ RSS 항목은 구독자 리더에 영구히 남는다. 웹에서 "창에서 밀�
 from __future__ import annotations
 
 import json
+import os
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 BASE = Path(__file__).parent
-OUT_FILE = BASE / "issue_ledger.json"
+# 진단용 구멍. 창 재생처럼 **원장을 더럽히면 안 되는** 실행이 자기 사본을 쓴다.
+# production 은 이 변수를 주지 않으므로 경로가 지금과 같다.
+OUT_FILE = Path(os.environ.get("ISSUE_LEDGER_FILE") or (BASE / "issue_ledger.json"))
 KST = timezone(timedelta(hours=9))
 
 # 이슈당 상한. revisions 는 제목이 바뀔 때만 늘고(하루 최대 1), hashes 는 그

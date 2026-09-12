@@ -117,5 +117,30 @@ class BuildLocalCacheTests(unittest.TestCase):
         self.assertEqual(reverse["c"], {"a"})
 
 
+class IssueWindowOverrideTests(unittest.TestCase):
+    """창을 **진단으로만** 옮길 수 있는지.
+
+    기본값 21 은 계약이다 — 2,484건의 검사가 이 값에 묶여 있어 상수를 옮기는
+    변경은 회귀를 대량 생산한다. 그래서 상수를 고치는 대신 구멍만 낸다:
+    환경변수가 없으면 production 은 지금과 한 글자도 다르지 않게 돈다.
+    """
+
+    def test_default_is_twenty_one(self):
+        self.assertEqual(
+            build_data._positive_int_env(build_data.ISSUE_WINDOW_DAYS_ENV, 21), 21)
+
+    def test_env_moves_the_window(self):
+        with mock.patch.dict(os.environ, {build_data.ISSUE_WINDOW_DAYS_ENV: "42"}):
+            self.assertEqual(
+                build_data._positive_int_env(build_data.ISSUE_WINDOW_DAYS_ENV, 21), 42)
+
+    def test_garbage_falls_back_instead_of_breaking_the_build(self):
+        """창이 깨지면 카탈로그가 통째로 달라진다. 빌드를 죽이는 대신 기본값으로 선다."""
+        for bad in ("", "  ", "three", "0", "-7"):
+            with mock.patch.dict(os.environ, {build_data.ISSUE_WINDOW_DAYS_ENV: bad}):
+                self.assertEqual(
+                    build_data._positive_int_env(build_data.ISSUE_WINDOW_DAYS_ENV, 21), 21)
+
+
 if __name__ == "__main__":
     unittest.main()

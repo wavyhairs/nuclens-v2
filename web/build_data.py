@@ -116,7 +116,34 @@ TREND_PERIOD_DAYS = (7, 30, 90, 180, 365)
 # 그림이라 그 정도로는 낱말 사이가 비어 아무 말도 하지 않는다. 40개면 화면 한
 # 폭을 채우면서도 페이로드가 기간당 몇 KB 늘어나는 선에서 멈춘다.
 TAG_CLOUD_LIMIT = 40
-ISSUE_WINDOW_DAYS = 21
+
+# 이슈 창. **기본값 21 은 계약이다** — 이 상수에 묶인 검사가 여럿이고, 값을 바꾸는
+# 것은 카탈로그 모양을 바꾸는 일이라 측정 없이 옮기면 안 된다. 그래서 상수를
+# 고치는 대신 진단용 구멍만 낸다: 환경변수가 없으면 production 은 지금과 한 글자도
+# 다르지 않게 돈다.
+#
+# 창 하나가 아니라 게이트 다섯에 동시에 걸린다는 점을 기억할 것 —
+# 기사 부착(2곳)·후보 검색·canary 감사·카탈로그 cutoff/ceiling. 그중 cutoff/ceiling
+# 이 후보 풀 크기를 정하므로 비용은 거기서 난다.
+ISSUE_WINDOW_DAYS_ENV = "NUCLENS_ISSUE_WINDOW_DAYS"
+
+
+def _positive_int_env(name: str, default: int) -> int:
+    raw = str(os.environ.get(name) or "").strip()
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        print(f"::warning::{name}={raw!r} 는 정수가 아니다 — 기본값 {default} 를 쓴다")
+        return default
+    if value <= 0:
+        print(f"::warning::{name}={value} 는 양수가 아니다 — 기본값 {default} 를 쓴다")
+        return default
+    return value
+
+
+ISSUE_WINDOW_DAYS = _positive_int_env(ISSUE_WINDOW_DAYS_ENV, 21)
 
 # 추적률을 재는 회차 수. **하루치로 재면 안 된다** — 한 회차의 분모가 이슈 8개
 # 안팎이라 1건이 붙고 떨어질 때마다 지표가 0.125 씩 튄다. 2026-08-03 실측 17일에서

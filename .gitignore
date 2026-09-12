@@ -55,6 +55,8 @@ Thumbs.db
 web/_audit/
 # 재현 가능한 Full Build 벤치마크의 로컬 profile/semantic signature.
 web/_benchmark/
+# 창 재생 arm 산출물. 빌드 결과 사본이라 원본은 archive/원장에 이미 있다.
+web/_windows/
 # Resumable live reasoning evaluations contain API-derived observations only.
 artifacts/gemini-reasoning-eval/
 # Local human-label drafts. Canonical Gold is updated only by an explicit export.
