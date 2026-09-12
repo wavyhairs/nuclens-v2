@@ -32,8 +32,17 @@ jobs:
               raise SystemExit('additional broken arrow sequence remains')
           p.write_text(s2, encoding='utf-8')
           PY
-      - name: Run focused regression test
-        run: python -m pytest web/tests/test_change_log_arrow.py -q
+      - name: Run focused regression check
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          css = Path('web/public/style.css').read_text(encoding='utf-8')
+          line = next(line for line in css.splitlines() if line.startswith('.change-log-after::before'))
+          assert 'content: "→";' in line
+          assert '\x11' not in line
+          assert 'content: "92";' not in line
+          print('change-log arrow regression check passed')
+          PY
       - name: Commit fix and remove temporary workflow
         run: |
           git config user.name "github-actions[bot]"
