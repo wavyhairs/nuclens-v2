@@ -1,0 +1,107 @@
+{
+ "judged": 117,
+ "comparable": 9,
+ "buckets": {
+  "gemini_absent": 108,
+  "disagreement": 2,
+  "agreement_different": 4,
+  "agreement_same": 3
+ },
+ "agreement_rate": 0.7778,
+ "by_stratum": {
+  "human_labeled": {
+   "disagreement": 2,
+   "agreement_different": 1
+  },
+  "w21→w28": {
+   "gemini_absent": 43,
+   "agreement_same": 2
+  },
+  "w28→w35": {
+   "gemini_absent": 33,
+   "agreement_different": 1,
+   "agreement_same": 1
+  },
+  "w35→w42": {
+   "gemini_absent": 32,
+   "agreement_different": 2
+  }
+ },
+ "claude_relations": {
+  "UNRELATED": 42,
+  "RELATED_DISTINCT_EVENT": 43,
+  "SAME_EVENT": 5,
+  "FOLLOW_UP_NEW_ACTION": 21,
+  "FOLLOW_UP_NO_NEW_ACTION": 6
+ },
+ "difference_axes": {
+  "topic_only": 40,
+  "follow_up_same_matter": 24,
+  "same_entity_different_issue": 17,
+  "different_stage": 13,
+  "different_occurrence": 8,
+  "multi_source_same_event": 5,
+  "different_policy_action": 5,
+  "different_project": 5
+ },
+ "human_cross_check": {
+  "n": 3,
+  "claude_matches_human": 2,
+  "gemini_matches_human": 2,
+  "rows": [
+   {
+    "candidate_id": "5912265ba9aa8cfe--8ceb26d26c222131",
+    "human": "RELATED_DISTINCT_EVENT",
+    "claude": "RELATED_DISTINCT_EVENT",
+    "gemini_same_event": true,
+    "claude_matches_human": true,
+    "gemini_matches_human": false
+   },
+   {
+    "candidate_id": "34575730dc364184--f33f228a288946ee",
+    "human": "UNRELATED",
+    "claude": "UNRELATED",
+    "gemini_same_event": false,
+    "claude_matches_human": true,
+    "gemini_matches_human": true
+   },
+   {
+    "candidate_id": "78d84e4164f7c883--a5a1ef68231b4e51",
+    "human": "FOLLOW_UP_NEW_ACTION",
+    "claude": "RELATED_DISTINCT_EVENT",
+    "gemini_same_event": true,
+    "claude_matches_human": false,
+    "gemini_matches_human": true
+   }
+  ]
+ },
+ "same_thread": {
+  "False": 63,
+  "True": 54
+ },
+ "disagreements": [
+  {
+   "candidate_id": "5912265ba9aa8cfe--8ceb26d26c222131",
+   "stratum": "human_labeled",
+   "gemini_same_event": true,
+   "gemini_reason": "미국 AI 데이터센터 반발 및 지연 관련 동일 사안",
+   "claude_relation": "RELATED_DISTINCT_EVENT",
+   "claude_reason": "같은 반발 사안의 다른 소재",
+   "claude_axis": "different_occurrence",
+   "a_title": "미국 AI 데이터센터 프로젝트, 주민 반발로 1300억 달러 지연·취소",
+   "b_title": "미국 내 AI 데이터센터 건립 반대 여론 확산 및 빅테크 대응"
+  },
+  {
+   "candidate_id": "78d84e4164f7c883--a5a1ef68231b4e51",
+   "stratum": "human_labeled",
+   "gemini_same_event": true,
+   "gemini_reason": "테라파워와 한국 기업 SMR 협력 동일 사안",
+   "claude_relation": "RELATED_DISTINCT_EVENT",
+   "claude_reason": "같은 테라파워 협력의 개별 계약",
+   "claude_axis": "different_project",
+   "a_title": "현대건설, 美 테라파워 차세대 원전 최대 8기 EPC 우선권 확보",
+   "b_title": "테라파워-한국 기업 SMR 협력, 한국 원전기업 수출 공급망 확대"
+  }
+ ],
+ "disagreement_total": 2
+}

@@ -49,6 +49,12 @@ THREAD_ID_PREFIX = "thread-"
 MAX_EVENTS_PER_THREAD = 30
 # 이미 여럿인 묶음 둘을 잇는 데 필요한 고리 수.
 LINKS_TO_JOIN_CLUSTERS = 2
+# 이 크기를 넘은 묶음에 붙으려면 **호기 수준**의 공유 범위가 필요하다.
+# 실측 1회차의 30건·24건짜리 묶음이 전부 이 크기를 지나면서 주제가 됐다.
+GROWTH_BRAKE_SIZE = 4
+# 호기 앵커가 **하나도 없는** 묶음의 상한. 대상이 없으면 무엇으로 묶였는지 말할 수
+# 없고, 실측에서 그런 묶음은 예외 없이 주제였다(테라파워 협력사 전반 21건).
+MAX_EVENTS_WITHOUT_UNIT = 8
 
 
 def mint_id(anchor_event_id: str) -> str:
@@ -96,7 +102,9 @@ def cluster(events_by_id: dict, accepted: list[tuple[str, str]]) -> tuple[list[s
         accepted: (event_id, event_id) — 판정이 같은 스토리라고 한 쌍.
     """
     stats = {"links": len(accepted), "joined": 0, "blocked_conflict": 0,
-             "blocked_scope": 0, "blocked_weak_link": 0, "blocked_size": 0}
+             "blocked_scope": 0, "blocked_weak_link": 0, "blocked_growth": 0,
+             "blocked_incoherent": 0, "blocked_anchorless": 0,
+             "blocked_anchor_mismatch": 0, "blocked_size": 0}
     link_count: dict[tuple[str, str], int] = defaultdict(int)
     for left, right in accepted:
         link_count[tuple(sorted((left, right)))] += 1
@@ -119,6 +127,30 @@ def cluster(events_by_id: dict, accepted: list[tuple[str, str]]) -> tuple[list[s
         if _cluster_conflict(events_by_id, left_side, right_side):
             stats["blocked_conflict"] += 1
             continue
+        # 합친 뒤의 묶음이 **한 대상을 말하는가.** 좁은 사건들의 호기가 두 발전소
+        # 이상으로 퍼지면 그것은 한 이야기가 아니다. 쌍 단위로는 못 잡는다 —
+        # 여러 호기를 함께 말하는 기사 한 건이 다리를 놓기 때문이다(`is_broad`).
+        merged_units = (_units_of(events_by_id, left_side, narrow_only=True)
+                        | _units_of(events_by_id, right_side, narrow_only=True))
+        if len({unit.rsplit("-", 1)[0] for unit in merged_units}) >= 2:
+            stats["blocked_incoherent"] += 1
+            continue
+        # 앵커가 없는 묶음은 더 일찍 멈춘다.
+        if not merged_units and len(left_side) + len(right_side) > MAX_EVENTS_WITHOUT_UNIT:
+            stats["blocked_anchorless"] += 1
+            continue
+        # **앵커가 있는 이야기와 없는 이야기는 다른 종류다.** 실측에서 12차 전기본
+        # 정책 20건(앵커 없음)이 한빛 1·2호기 계속운전 2건(앵커 있음)을 흡수해
+        # 27건짜리 '스토리' 가 됐다. 둘 다 그 자체로는 멀쩡한 이야기인데 섞이면
+        # 둘 다 죽는다 — 독자는 한빛 계속운전을 찾다가 전력수급계획 토론회를 읽게
+        # 된다. 한쪽만 호기를 말하고 양쪽 다 이미 이야기면 잇지 않는다.
+        left_units = _units_of(events_by_id, left_side, narrow_only=True)
+        right_units = _units_of(events_by_id, right_side, narrow_only=True)
+        # 크기 조건을 걸지 않는다. 한 건짜리라도 마찬가지다 — 호기 하나를 말하는
+        # 사건이 앵커 없는 정책 묶음에 붙으면 그 사건은 거기서 영영 못 찾는다.
+        if bool(left_units) != bool(right_units):
+            stats["blocked_anchor_mismatch"] += 1
+            continue
         shared_scope = _shared_scope(events_by_id, left_side, right_side)
         if _scope_disjoint(events_by_id, left_side, right_side):
             # 양쪽이 다 호기를 말하는데 겹치는 것이 하나도 없다. 같은 발전소면
@@ -139,6 +171,18 @@ def cluster(events_by_id: dict, accepted: list[tuple[str, str]]) -> tuple[list[s
             if crossing < LINKS_TO_JOIN_CLUSTERS:
                 stats["blocked_weak_link"] += 1
                 continue
+        # 성장 제동. 실측 1회차에서 30건·24건짜리 묶음이 나왔고 둘 다 스토리가
+        # 아니라 **주제**였다(테라파워 협력사 전반 / 12차 전기본 정책 일반).
+        # 자라는 방식이 같았다 — 회사 엔티티 하나를 공유하는 사건이 한 건씩
+        # 계속 붙는다. 어느 크기를 넘으면 **호기 수준의 공유 범위**를 요구한다.
+        # 엔티티 공유는 그 크기에서 더 이상 근거가 못 된다(2026-08-05 실측:
+        # 기관·기업까지 넣으면 같은 사건 3 대 다른 사건 40).
+        if max(len(left_side), len(right_side)) >= GROWTH_BRAKE_SIZE:
+            narrow_shared = (_units_of(events_by_id, left_side, narrow_only=True)
+                             & _units_of(events_by_id, right_side, narrow_only=True))
+            if not narrow_shared and crossing < LINKS_TO_JOIN_CLUSTERS:
+                stats["blocked_growth"] += 1
+                continue
 
         union.union(left, right)
         new_root = union.find(left)
@@ -151,12 +195,34 @@ def cluster(events_by_id: dict, accepted: list[tuple[str, str]]) -> tuple[list[s
     return groups, stats
 
 
-def _units_of(events_by_id: dict, side: set) -> set:
+def is_broad(event) -> bool:
+    """이 사건이 **여러 대상을 한꺼번에 말하는가**.
+
+    실측(2026-09-13 그림자 1회차)에서 오병합의 절반이 이런 기사 하나를 다리로
+    삼았다. 가장 선명한 예 —
+
+        "고리 3·4호기 올해, 한빛 1·2호기 내년 계속운전 심사 상정 예정"
+
+    이 한 줄이 호기 네 개를 모두 들고 있어서, 한빛 1·2호기 계속운전 묶음과
+    고리 3·4호기 계속운전 묶음이 **서로 어긋나지 않는 것처럼** 보이게 만든다.
+    쌍 단위 검사로는 못 잡는다 — 다리가 양쪽 모두와 겹치기 때문이다.
+
+    그래서 범위를 비교할 때는 이런 사건을 빼고 본다. 붙는 것은 막지 않는다.
+    다리가 되는 것만 막는다.
+    """
+    plants = {unit.rsplit("-", 1)[0] for unit in event.units}
+    return len(plants) >= 2
+
+
+def _units_of(events_by_id: dict, side: set, *, narrow_only: bool = False) -> set:
     out: set = set()
     for event_id in side:
         event = events_by_id.get(event_id)
-        if event is not None:
-            out |= set(event.units)
+        if event is None:
+            continue
+        if narrow_only and is_broad(event):
+            continue
+        out |= set(event.units)
     return out
 
 
@@ -180,7 +246,13 @@ def _shared_scope(events_by_id: dict, left_side: set, right_side: set) -> bool:
 
 
 def _scope_disjoint(events_by_id: dict, left_side: set, right_side: set) -> bool:
-    left_units, right_units = _units_of(events_by_id, left_side), _units_of(events_by_id, right_side)
+    """**좁은 사건만으로** 범위를 비교한다.
+
+    여러 호기를 한꺼번에 말하는 기사를 범위에 넣으면 그 기사 하나가 서로 다른
+    설비의 묶음을 이어 준다. `is_broad` 참조.
+    """
+    left_units = _units_of(events_by_id, left_side, narrow_only=True)
+    right_units = _units_of(events_by_id, right_side, narrow_only=True)
     return bool(left_units and right_units and not (left_units & right_units))
 
 

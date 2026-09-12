@@ -50,9 +50,12 @@ class ClusterGuardTests(unittest.TestCase):
         ])
         accepted = [("a1", "a2"), ("b1", "b2"), ("a2", "b1")]
         groups, stats = thread_identity.cluster(events, accepted)
-        self.assertEqual(stats["blocked_scope"], 1)
+        # 어느 가드가 잡는지는 규칙이 늘면서 바뀔 수 있다. 잠그는 것은 **결과**다:
+        # 고리 2호기 묶음과 월성 1호기 묶음이 고리 하나로 이어지지 않는다.
         self.assertEqual(sorted(sorted(group) for group in groups),
                          [["a1", "a2"], ["b1", "b2"]])
+        self.assertGreaterEqual(
+            sum(value for key, value in stats.items() if key.startswith("blocked_")), 1)
 
     def test_two_links_do_join_two_clusters(self):
         events = self._events([
@@ -200,3 +203,67 @@ class AnchorTests(unittest.TestCase):
         ]}
         out = thread_identity.resolve([{"zz", "aa"}], events, {"aa": "thread-old"})
         self.assertEqual(out["threads"][0]["anchor_event_id"], "zz")
+
+
+class TopicVersusStoryTests(unittest.TestCase):
+    """주제가 스토리로 자라는 것을 막는 규칙들 — 전부 실측에서 나왔다."""
+
+    def _events(self, rows):
+        return {event.issue_id: event for event in rows}
+
+    def test_a_multi_unit_article_cannot_bridge_two_plants(self):
+        """실측 오병합의 절반이 이런 기사 하나를 다리로 삼았다.
+
+        "고리 3·4호기 올해, 한빛 1·2호기 내년 계속운전 심사 상정 예정"
+        """
+        bridge = _event("br", "고리 3·4호기 올해, 한빛 1·2호기 내년 심사 상정",
+                        "2026-08-06", units={"kori-3", "kori-4", "hanbit-1", "hanbit-2"})
+        events = self._events([
+            _event("h1", "한빛 1·2호기 계속운전 검토", "2026-07-14", units={"hanbit-1"}),
+            _event("h2", "한빛 1·2호기 원안위 검토 가속", "2026-07-17", units={"hanbit-1"}),
+            _event("k1", "고리 3·4호기 계속운전 심의 지연", "2026-07-20", units={"kori-3"}),
+            _event("k2", "고리 3·4호기 연내 결론", "2026-08-05", units={"kori-3"}),
+            bridge,
+        ])
+        accepted = [("h1", "h2"), ("k1", "k2"), ("h2", "br"), ("br", "k1"), ("h1", "br")]
+        groups, _stats = thread_identity.cluster(events, accepted)
+        plants_per_group = [
+            {unit.rsplit("-", 1)[0] for event_id in group
+             for unit in events[event_id].units if not thread_identity.is_broad(events[event_id])}
+            for group in groups
+        ]
+        for plants in plants_per_group:
+            self.assertLessEqual(len(plants), 1, plants)
+
+    def test_an_anchorless_topic_cannot_swallow_an_anchored_story(self):
+        """12차 전기본 정책 묶음이 한빛 1·2호기 계속운전을 흡수해 27건이 됐었다.
+
+        둘 다 그 자체로는 멀쩡한 이야기인데 섞이면 둘 다 죽는다 — 독자는 한빛
+        계속운전을 찾다가 전력수급계획 토론회를 읽게 된다.
+        """
+        events = self._events([
+            _event("p1", "12차 전기본 원전 반영 혼선", "2026-07-31"),
+            _event("p2", "12차 전기본 토론회 개최", "2026-08-16"),
+            _event("p3", "12차 전기본 목표수요 상향", "2026-08-26"),
+            _event("h1", "한빛 1·2호기 계속운전 검토", "2026-07-14", units={"hanbit-1"}),
+            _event("h2", "한빛 2호기 설계수명 만료", "2026-09-09", units={"hanbit-2"}),
+        ])
+        accepted = [("p1", "p2"), ("p2", "p3"), ("h1", "h2"), ("p3", "h1"), ("p1", "h1")]
+        groups, stats = thread_identity.cluster(events, accepted)
+        for group in groups:
+            anchored = any(events[event_id].units for event_id in group)
+            unanchored = any(not events[event_id].units for event_id in group)
+            self.assertFalse(anchored and unanchored, sorted(group))
+        self.assertGreaterEqual(stats["blocked_anchor_mismatch"], 1)
+
+    def test_a_cluster_without_an_asset_anchor_stops_early(self):
+        """대상이 없으면 무엇으로 묶였는지 말할 수 없다."""
+        rows = [_event(f"p{i}", f"정책 논의 {i}", "2026-08-01")
+                for i in range(thread_identity.MAX_EVENTS_WITHOUT_UNIT + 6)]
+        events = self._events(rows)
+        accepted = [(rows[0].issue_id, row.issue_id) for row in rows[1:]]
+        accepted += [(rows[1].issue_id, row.issue_id) for row in rows[2:]]
+        groups, stats = thread_identity.cluster(events, accepted)
+        self.assertTrue(all(len(group) <= thread_identity.MAX_EVENTS_WITHOUT_UNIT
+                            for group in groups))
+        self.assertGreaterEqual(stats["blocked_anchorless"], 1)
