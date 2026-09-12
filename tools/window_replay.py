@@ -171,9 +171,15 @@ def run_build(label: str, window: int, as_of: str, *, live_llm: bool,
         capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     elapsed = time.time() - started
-    (target / "build.log").write_text(
-        (completed.stdout or "") + "\n--- stderr ---\n" + (completed.stderr or ""),
-        encoding="utf-8")
+    # 라운드마다 따로 남긴다. 한 파일에 덮어쓰면 **1회차의 비용 통계가 사라진다** —
+    # 신규 판정은 1회차에 몰리는데 마지막 라운드 로그만 남으면 "새 호출 1회"처럼
+    # 실제의 10분의 1이 보고된다.
+    log = (completed.stdout or "") + "\n--- stderr ---\n" + (completed.stderr or "")
+    (target / "build.log").write_text(log, encoding="utf-8")
+    round_index = 1
+    while (target / f"build.round{round_index}.log").exists():
+        round_index += 1
+    (target / f"build.round{round_index}.log").write_text(log, encoding="utf-8")
     if completed.returncode:
         tail = "\n".join((completed.stdout or "").splitlines()[-15:])
         raise SystemExit(f"[window_replay] {label} 빌드 실패 rc={completed.returncode}\n{tail}")
