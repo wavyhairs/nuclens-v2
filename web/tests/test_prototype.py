@@ -27,6 +27,7 @@ except (OSError, KeyError, json.JSONDecodeError):
     DATA_DIR = DATA_ROOT
 
 import build_data  # noqa: E402
+import embedding_pipeline  # noqa: E402
 import event_calendar  # noqa: E402
 import issue_candidate_stats  # noqa: E402
 import issue_continuity  # noqa: E402
@@ -3752,7 +3753,18 @@ class GeneratedDataTests(unittest.TestCase):
         self.assertIn("actions/cache/save@v4", crawl)
         self.assertIn("Restore embeddings cache", daily)
         self.assertIn("gemini-embedding-2", crawl)
-        self.assertIn("--window-days 21", crawl)
+        # 백필 창은 **워크플로에 적지 않는다.** 예전에는 `--window-days 21` 을 여기서
+        # 확인했는데, 그 숫자는 `build_data.ISSUE_WINDOW_DAYS` 와 같아야만 뜻이 있다.
+        # 두 곳에 각각 적혀 있으면 창을 옮길 때 이 줄이 조용히 뒤처지고, 그러면 창
+        # 안에 있는데 벡터가 없는 기사가 생긴다 — 그 기사는 `in_review_band` 에서
+        # `embedding_similarity=None` 으로 탈락해 회색지대에 들어가지도 못한다.
+        # 그래서 지금 잠그는 것은 숫자가 아니라 **결합**이다.
+        for workflow in (crawl, daily):
+            self.assertIn("python embedding_pipeline.py", workflow)
+            self.assertNotIn("--window-days", workflow)
+        self.assertEqual(embedding_pipeline.ISSUE_WINDOW_DAYS, build_data.ISSUE_WINDOW_DAYS)
+        self.assertGreater(embedding_pipeline.EMBEDDING_RETENTION_DAYS,
+                           build_data.ISSUE_WINDOW_DAYS)
         self.assertIn("--require-nonzero", daily)
         self.assertNotIn("- name: Smoke test live site\n        continue-on-error: true", crawl)
         self.assertNotIn("- name: Render smoke (라이브 화면 검증)\n        if: always() && steps.claim.conclusion == 'success'\n        continue-on-error: true", daily)

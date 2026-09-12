@@ -154,6 +154,10 @@ def run_build(label: str, window: int, as_of: str, *, live_llm: bool,
         # git status 가 아니었으면 못 봤을 것이다. 격리는 전수여야 한다.
         "ISSUE_INSIGHT_CACHE_FILE": str(target / "issue_insights.json"),
         "KEEI_MATCH_CACHE_FILE": str(target / "keei_llm_matches.json"),
+        # 정적 페이지와 전수 덤프도 arm 안으로. 이것을 빼먹었더니 web/public 의
+        # 페이지가 재생본으로 바뀌고 web/public/data 는 옛 빌드 그대로라 검사가 깨졌다.
+        "PAGES_OUTPUT_DIR": str(target / "public"),
+        "AUDIT_OUTPUT_DIR": str(target / "_audit"),
         "GENERATION_ID": f"window-replay-{label}",
     })
     if not live_llm:

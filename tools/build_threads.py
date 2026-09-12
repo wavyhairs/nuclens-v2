@@ -98,6 +98,43 @@ def derive_scope(thread: dict, index: event_retrieval.Index) -> dict:
     }
 
 
+def load_milestones() -> list[dict]:
+    """다음 관전점의 재료. **새 일정 시스템을 만들지 않는다** —
+
+    `event_ledger.json` 이 이미 달력 창 밖의 확정 일정을 쌓고 있다(월성 2호기
+    설계수명 만료 2026-11-01, ICRS15 2026-10-25 …). 추론으로 읽은 날짜는 애초에
+    담기지 않으므로(`date_basis` 가 inferred 인 것은 제외) 이 목록은 그대로 쓸 수
+    있다. `latest_change` 를 진실의 출처로 삼지 않는 이유와 같은 판단이다 —
+    저쪽은 요약 차이를 사건 변화처럼 말한 적이 있다.
+    """
+    try:
+        payload = json.loads((ROOT / "event_ledger.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    rows = []
+    for row in payload.get("events") or []:
+        text = f"{row.get('title') or ''} {row.get('clause') or ''}"
+        rows.append({**row, "units": asset_alias.unit_tokens(text),
+                     "plants": asset_alias.plant_tokens(text)})
+    rows.sort(key=lambda row: str(row.get("date") or ""))
+    return rows
+
+
+def next_milestone(thread: dict, milestones: list[dict]) -> dict | None:
+    """이 스토리가 다음에 볼 공식 일정. 호기가 먼저, 없으면 발전소."""
+    units = set(thread.get("units") or ())
+    plants = {unit.rsplit("-", 1)[0] for unit in units}
+    for row in milestones:
+        if units and (units & row["units"]):
+            return {"date": row.get("date"), "title": row.get("title"),
+                    "label": row.get("label"), "matched_by": "unit"}
+    for row in milestones:
+        if plants and (plants & row["plants"]):
+            return {"date": row.get("date"), "title": row.get("title"),
+                    "label": row.get("label"), "matched_by": "plant"}
+    return None
+
+
 def build(args) -> int:
     started = time.time()
     index = event_retrieval.build_index()
@@ -171,7 +208,10 @@ def build(args) -> int:
               f"누적 {result['counts']['total']}")
 
     SHADOW_DIR.mkdir(parents=True, exist_ok=True)
+    milestones = load_milestones()
     payload = [_thread_view(thread, index) for thread in threads]
+    for row in payload:
+        row["next_milestone"] = next_milestone(row, milestones)
     payload.sort(key=lambda row: (-row["event_count"], row["thread_id"]))
     (SHADOW_DIR / "threads.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -198,6 +238,7 @@ def build(args) -> int:
         },
         "relations": Counter(row["decision"] for row in relations),
         "redirects": len(thread_ledger.redirects(store, live_ids)),
+        "with_next_milestone": sum(1 for row in payload if row.get("next_milestone")),
         "wall_seconds": round(time.time() - started, 1),
     }
     report["relations"] = dict(report["relations"])
