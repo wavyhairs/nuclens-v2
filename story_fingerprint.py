@@ -63,6 +63,58 @@ AXES: dict[str, tuple[tuple[str, ...], float]] = {
 SCOPE_AXES: tuple[str, ...] = ("countries", "event")
 IDENTITY_AXES: tuple[str, ...] = ("actors", "assets", "action", "cause")
 
+# `event_date` 는 축이 **아니다** — 그리고 그 상태로 믿을 수 없다.
+#
+# 프롬프트 계약(`dedup.ARTICLE_STORY_PROMPT`)은 지문에 `event_date` 를 같이 받아
+# 오지만 `AXES` 에 없으므로 `compare()` 가 한 번도 읽지 않는다. 그래서 이 칸은
+# **무결성 게이트를 지나지 않는다** — 최상위 `event_date` 는
+# `article_quality_gate` 가 선언된 출처(title·description·article_text)와 원문의
+# 날짜 표기를 대조해 검증 못 한 값을 비우지만(실측: 아카이브 427건 중 361건을
+# 비우고 65건만 남는다), 지문 안의 값에는 그 경로가 없다.
+#
+# 실측 2026-09-12, delivery_log 801건:
+#
+#     지문에 event_date 가 채워진 것        124건 (15%)
+#     발송연도 − 사건연도 = 0               70건
+#     발송연도 − 사건연도 = 2               33건 (26.6%)  ← LLM 이 2026 을 2024 로
+#     그 밖(−4 ~ +1)                        21건
+#
+#     2026-08-16 발송  event_date=2024-08-14  테라파워-한국 기업 SMR 협력
+#     2026-08-21 발송  event_date=2024-08-20  국회, 전력망 특별법 등 70건 처리
+#
+# 지금은 읽는 곳이 없어서 무해하다. 타임라인을 이 칸 위에 세우는 순간 해롭다.
+# 그래서 **원시 칸을 직접 읽지 말고 아래 접근자를 쓸 것.** 연도가 기사일과
+# 어긋나면 빈 문자열을 돌려준다 — 위 33건이 전부 여기서 걸린다.
+_ISO_DAY_LEN = 10
+
+
+def reported_event_date(fingerprint: object, article: object) -> str:
+    """지문이 말한 사건일. **기사일과 연도가 맞을 때만** 값이 나온다.
+
+    사건일은 기사일보다 앞설 수 있고(뒤늦게 알려진 결정) 뒤일 수도 있다(예고된
+    일정). 그래서 날짜 차이로는 못 가른다. 가르는 것은 연도다 — 같은 해나 바로
+    앞뒤 해까지는 정상 보도 범위이고, 두 해 이상 어긋난 값은 실측에서 전부
+    LLM 의 연도 오기였다.
+
+    이 함수는 검증이 아니라 **거름망**이다. 통과한 값도 원문에서 확인된 것은
+    아니므로, 화면에 세울 때는 최상위 `event_date`(게이트를 지난 값)를 먼저 보고
+    이 값은 보조로만 쓸 것.
+    """
+    if not isinstance(fingerprint, dict) or not isinstance(article, dict):
+        return ""
+    raw = _SPACE_RE.sub(" ", str(fingerprint.get("event_date") or "").strip())
+    if len(raw) < 4 or not raw[:4].isdigit():
+        return ""
+    reference = str(
+        article.get("article_date") or article.get("date")
+        or article.get("briefing_date") or ""
+    )[:_ISO_DAY_LEN]
+    if len(reference) < 4 or not reference[:4].isdigit():
+        return ""
+    if abs(int(reference[:4]) - int(raw[:4])) > 1:
+        return ""
+    return raw
+
 
 class Comparison(NamedTuple):
     """두 지문의 대조 결과.
