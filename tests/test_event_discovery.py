@@ -168,6 +168,72 @@ class TestARangeKeepsItsTail(unittest.TestCase):
             {"2026-09-21": "explicit"})
 
 
+class TestAHeadlineDropsItsTense(unittest.TestCase):
+    """한국어 기사 제목은 시제를 뗀다 — "개최한다" 가 아니라 "개최" 로 끝난다.
+
+    서술어까지의 거리가 멀고(30자 이상) 시제가 없어 토큰 국소 판정으로는 안
+    걸렸다. 그렇다고 거리만 늘리면 본문의 과거 문장이 통째로 딸려 온다. 그래서
+    **절이 그 명사로 끝날 때만** 미래로 본다 — 본문 문장은 종결어미로 끝나지
+    제목처럼 명사로 끝나지 않는다.
+
+    실측(archive 2026-07~09): 이 규칙으로만 열린 절이 30건이고 전수 검토에서
+    30건 모두 실제 예고 기사였다. 그중 셋이 9/18 전기본 7차 토론회다.
+    """
+
+    def test_the_headline_that_started_all_of_this(self):
+        self.assertEqual(
+            days("18일 기후에너지환경부, 12차 전기본 수립 위한 석탄발전 조기 폐지 "
+                 "토론회 개최", date(2026, 9, 10)),
+            {"2026-09-18": "inferred"})
+
+    def test_other_real_headlines_of_the_same_shape(self):
+        for text, ref, when in (
+                ("제12차 전력수급기본계획 수립을 위한 7차 토론회 18일 개최",
+                 date(2026, 9, 10), "2026-09-18"),
+                ("해상 원전 국제표준 시동…IAEA 장관급 회의 26일 개최",
+                 date(2026, 8, 6), "2026-08-26"),
+                ("정부, 2040년 전력수급기본계획 공청회 20일 개최",
+                 date(2026, 8, 17), "2026-08-20"),
+                ("국회물포럼, 31일 '반도체 산업용수 공급' 토론회",
+                 date(2026, 8, 21), "2026-08-31")):
+            with self.subTest(text=text):
+                self.assertEqual(days(text, ref), {when: "inferred"})
+
+    def test_a_sentence_that_merely_ends_in_a_verb_is_not_a_headline(self):
+        """본문은 종결어미로 끝난다. 제목 규칙이 그리로 새면 과거가 미래가 된다."""
+        for text, ref in (
+                ("육군은 7일 세종시 육군종합보급창에서 군수 정책설명회를 개최하여 "
+                 "논의했다", date(2026, 8, 7)),
+                ("김주영 의원이 7일 국회의원회관에서 전력산업 구조개편 심포지엄을 "
+                 "개최했다", date(2026, 8, 7)),
+                ("지난 18일 정책토론회 개최", date(2026, 9, 20))):
+            with self.subTest(text=text):
+                self.assertEqual(days(text, ref), {})
+
+
+class TestAnEnglishRangeKeepsItsTail(unittest.TestCase):
+    """해외 학회·전시회 안내는 영문 범위로 온다 — 꼬리에 '일' 이 없다.
+
+    실측: "2026 World Climate Industry EXPO · SEPT 16-18, 2026 · 부산 BEXCO".
+    시작일만 남으면 9/17 에 이미 지난 행사가 되어 화면에서 사라진다.
+    """
+
+    def test_the_tail_of_an_english_range(self):
+        for text in ("SEPT 16-18, 2026", "September 16–18, 2026",
+                     "Sep 16 to 18, 2026 Busan BEXCO",
+                     "2026 World Climate Industry EXPO SEPT 16–18, 2026 부산 BEXCO"):
+            with self.subTest(text=text):
+                self.assertEqual(
+                    days(text, date(2026, 9, 1)),
+                    {"2026-09-16": "explicit", "2026-09-18": "syntactic"})
+
+    def test_a_range_of_numbers_that_is_not_a_date(self):
+        """이음말만으로는 안 된다 — 앞에 달 이름이 있어야 날짜다."""
+        self.assertEqual(
+            days("Revenue rose from 16 to 18 percent in September", date(2026, 9, 1)),
+            {})
+
+
 class TestNoDateIsStillNoDate(unittest.TestCase):
     """Case 5·6 — 날짜가 없는 미래 신호를 확정 일정으로 만들지 않는다."""
 
@@ -322,6 +388,20 @@ class TestOneEventIsOneRow(unittest.TestCase):
         ], TODAY)["events"]
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["date_basis"], "explicit")
+
+    def test_the_label_that_says_what_happens_wins(self):
+        """'개최' 는 열린다는 뜻이지 **무엇이** 열리는지가 아니다.
+
+        실측 2026-09-13: 같은 기사의 제목 절이 '기장군 개최' 로, 본문 절이
+        '기장군 사업 설명회' 로 떨어졌는데 제목 쪽이 이겨 칸이 아무 말도
+        안 하게 됐다.
+        """
+        row = event_calendar.build([article(
+            title_kr="기장군, i-SMR 초도기 사업 설명회 13일 개최",
+            detail="기장군은 오는 13일 정관읍행정복지센터에서 i-SMR 초도기 사업 "
+                   "설명회를 개최하고 사업 추진 일정을 공유한다.",
+            article_date="2026-09-08")], TODAY)["events"][0]
+        self.assertIn("설명회", row["label"])
 
     def test_two_names_for_one_event_fold_when_the_titles_agree(self):
         """Case 9 — 이름이 달라도 제목이 같은 것을 말하면 한 줄이다."""
