@@ -1172,6 +1172,69 @@ kbd {
   font-variant-numeric: tabular-nums;
 }
 .dialog-verification .verification-badge { margin-left: 0; }
+/* ── 변화 이력 ─────────────────────────────────────────────────────────────
+   회차와 회차의 **짝**을 세운다. 아래 타임라인은 같은 기사들을 날짜순 한 줄씩
+   세우므로, 여기까지 목록 모양이면 두 블록이 같은 것으로 읽힌다. 앞 상태를 한 단
+   흐리게 두고 뒤 상태를 본문 색으로 세워 방향이 먼저 보이게 한다.
+   등급은 색만으로 가르지 않는다(1.4.1) — 라벨 문구가 먼저고 색은 거든다. */
+.dialog-changelog { margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: 1px solid var(--c-border); }
+.dialog-changelog h3 { margin: 0 0 var(--sp-2); font-size: 17px; }
+.change-log { margin: 0; padding: 0; list-style: none; }
+.change-log > li { padding: var(--sp-3) 0; border-top: 1px solid var(--c-border); }
+.change-log > li:first-child { border-top: 0; }
+.change-log-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-3);
+  color: var(--c-text-muted);
+  font-size: var(--t-min);
+  font-variant-numeric: tabular-nums;
+}
+.change-log-kind {
+  padding: 2px var(--sp-2);
+  border: var(--bd-1) solid currentColor;
+  border-radius: var(--r-1);
+  color: var(--c-text-muted);
+  font-weight: 700;
+}
+.change-log > li.t-material .change-log-kind { color: var(--c-accent-text); }
+.change-log-before,
+.change-log-after { margin: var(--sp-2) 0 0; font-size: var(--t-body); line-height: 1.6; }
+.change-log-before { color: var(--c-text-muted); }
+/* 화살표는 ::before 로 세운다 — 본문에 넣으면 복사·읽기 순서에 기호가 섞인다.
+   자료 팩 쪽 텍스트는 제 화살표를 따로 적는다. */
+.change-log-after { color: var(--c-text); }
+.change-log-after::before { margin-right: var(--sp-2); color: var(--c-accent-text); content: "92"; }
+/* 타임라인 행의 같은 판정. 출처 줄 끝에 붙으므로 그 줄의 크기를 따른다. */
+.timeline-change {
+  margin-left: var(--sp-2);
+  padding: 1px var(--sp-1);
+  border: var(--bd-1) solid currentColor;
+  border-radius: var(--r-1);
+  color: var(--c-text-muted);
+  font-weight: 700;
+}
+.timeline-change.t-material { color: var(--c-accent-text); }
+/* 목록 카드·상세 머리의 표식. 검증/보고서 배지와 같은 모양을 쓴다 — 한 줄에
+   나란히 서는 것들의 모양이 갈리면 그 줄이 소란스러워진다(.report-pick-badge). */
+.change-log-badge {
+  align-self: start;
+  margin-top: 4px;
+  padding: 3px 7px;
+  border: var(--bd-2) solid currentColor;
+  border-radius: var(--r-1);
+  color: var(--c-accent-text);
+  font-size: var(--t-min);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.issue-meta > .change-log-badge,
+.lead-meta > .change-log-badge { flex: 0 0 auto; }
+@media (max-width: 720px) {
+  .change-log-before,
+  .change-log-after { font-size: var(--t-caption); }
+}
 .dialog-related { margin-top: 24px; }
 .dialog-related ul { margin: 12px 0 0; padding: 0; list-style: none; }
 .dialog-related li { padding: 10px 0; border-top: 1px solid var(--c-border); }

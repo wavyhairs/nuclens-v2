@@ -340,6 +340,46 @@ function reportPickBadge(issue) {
   return `<span class="report-pick-badge" title="${esc(topic)}">📝 보고서 검토 추천</span>`;
 }
 
+// ── 변화 이력 ─────────────────────────────────────────────────────────────
+//
+// 발송 **전에** 내려진 판정이다. `issue_continuity` 가 "어제 대비 단계가 넘어갔나"를
+// 보고 material/minor/none 을 매기고, build_data 가 그중 **같은 이슈 안에서 확인된
+// 것만** change_log 로 싣는다(issue_change_log.py 에 게이트의 실측 근거가 있다).
+//
+// 이 화면이 하는 일은 라벨 두 칸뿐이다. 빌드가 함께 실어 보내는 `reason`
+// (stage_flip·scale_advance…)과 판정 문구는 **쓰지 않는다** — 그건 event_stage 의
+// 어휘 라벨이라 사건 설명이 아니고, 실측에서 「예타 면제」기사에 '정지·가동중단'이
+// 붙어 있었다. 여기서 말할 수 있는 것은 "그 회차에 단계가 움직였다"까지다.
+const CHANGE_LOG_LABELS = { material: "단계 이동", minor: "후속 보도" };
+
+function changeLog(issue) {
+  return (issue.change_log || []).filter(entry => CHANGE_LOG_LABELS[entry.kind]);
+}
+
+function changeLogBadge(issue) {
+  const moves = changeLog(issue).filter(entry => entry.kind === "material").length;
+  if (!moves) return "";
+  return `<span class="change-log-badge">↗ 단계 이동${moves > 1 ? ` ${moves}회` : ""}</span>`;
+}
+
+// 판정은 회차와 회차 사이에서 내려지지만 **기사일로 적는다.** 바로 아래 타임라인이
+// 기사일로 서 있어서다 — 회차를 적으면 두 블록이 같은 사건을 하루 어긋나게 말하고
+// (실측 그라블린: 회차 8/28 · 기사일 8/27), 읽는 사람은 가리키는 줄을 못 찾는다.
+// 회차는 payload(date·prior_date)에 그대로 남아 감사에서 쓰인다.
+function changeLogSpan(entry) {
+  const before = entry.prior_article_date || entry.prior_date;
+  const after = entry.article_date || entry.date;
+  return `${dateLabel(before)} → ${dateLabel(after)}`;
+}
+
+// 타임라인 행이 제 판정을 되찾는 통로. change_log 가 hash 로 가리키므로 행에
+// 같은 값을 한 벌 더 싣지 않는다 — related_articles 가 issues.json 의 대부분이다.
+function changeLogByHash(issue) {
+  const map = new Map();
+  changeLog(issue).forEach(entry => { if (entry.hash) map.set(entry.hash, entry); });
+  return map;
+}
+
 function issueEvidenceText(issue) {
   const state = verificationState(issue);
   const articleCount = issue.article_count || (issue.related_articles || []).length;
@@ -1053,6 +1093,7 @@ function issueCard(issue, index, archive = false, front = false) {
       ${topic ? `<span class="issue-topic">${esc(topic)}</span>` : ""}
       ${verificationBadge(issue)}
       ${reportPickBadge(issue)}
+      ${changeLogBadge(issue)}
     </div>
     <div class="issue-body">
       <h3><button type="button" class="issue-title-button" data-issue-id="${esc(issue.issue_id)}">${title}</button></h3>
@@ -1121,6 +1162,7 @@ function leadCard(issue, briefing) {
       ${topic ? `<span>${esc(topic)}</span>` : ""}
       ${verificationBadge(issue)}
       ${reportPickBadge(issue)}
+      ${changeLogBadge(issue)}
     </div>
     <h3><button type="button" class="issue-title-button" data-issue-id="${esc(issue.issue_id)}">${esc(issue.title)}</button></h3>
     <dl class="lead-blocks">${shown.map(block => `<div class="lead-block${block.tone ? ` tone-${block.tone}` : ""}">
@@ -2263,8 +2305,12 @@ function renderPubs() {
     : "");
 }
 
-function articleTimelineRow(article, briefingDate, currentStage = "이번 브리핑", shownDetail = "") {
+function articleTimelineRow(article, briefingDate, currentStage = "이번 브리핑", shownDetail = "",
+                            changes = null) {
   const url = safeUrl(article.url);
+  // 이 회차에서 단계가 움직였다는 판정. 어느 회차 대비인지는 목록 위 '변화 이력'
+  // 블록이 짝으로 말하므로, 행에서는 표식만 세운다.
+  const change = changes?.get(article.hash) || null;
   // 근거 원문은 어느 브리핑에도 실린 적이 없다(briefing_date 가 비어 있다).
   // '이전 흐름'이라고 적으면 예전 브리핑에 나갔던 것처럼 읽힌다 — 자기 구역의
   // 제목이 이미 '추가 근거 원문'이라고 말하므로 여기서는 비운다.
@@ -2286,7 +2332,8 @@ function articleTimelineRow(article, briefingDate, currentStage = "이번 브리
     <div class="timeline-date"><span>${esc(dateText)}</span>${relative === dateText ? "" : `<small>${esc(relative)}</small>`}${stage ? `<em>${esc(stage)}</em>` : ""}</div>
     <div class="timeline-copy">
       ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(article.title_kr)}</a>` : `<span>${esc(article.title_kr)}</span>`}
-      <small>${esc(sourceLabel(article))}${isOfficial(article) ? " · 1차 출처" : ""}</small>
+      <small>${esc(sourceLabel(article))}${isOfficial(article) ? " · 1차 출처" : ""}${
+        change ? `<span class="timeline-change t-${esc(change.kind)}">${esc(CHANGE_LOG_LABELS[change.kind])}</span>` : ""}</small>
       ${body}
     </div>
   </li>`;
@@ -2310,7 +2357,7 @@ const TIMELINE_HEAD = 5;
 
 function timelineList(articles, options) {
   const row = article => articleTimelineRow(
-    article, options.contextDate, options.stage, options.shownDetail);
+    article, options.contextDate, options.stage, options.shownDetail, options.changes);
   const head = articles.slice(0, TIMELINE_HEAD);
   const rest = articles.slice(TIMELINE_HEAD);
   return `<ol class="timeline dialog-timeline">${head.map(row).join("")}</ol>${rest.length
@@ -2397,6 +2444,19 @@ function issueMaterialPack(issue) {
   const state = verificationState(issue);
   lines.push("## 검증 상태",
     `${(VERIFICATION_VIEW[state.status] || VERIFICATION_VIEW.unverified).label} — ${issueEvidenceText(issue)}`, "");
+
+  // 변화 이력은 타임라인보다 먼저 온다. 보고서를 쓰는 사람이 가장 먼저 찾는 것이
+  // "언제 무엇이 넘어갔나"이고, 아래 타임라인은 그 답을 세우기 위한 원재료다.
+  const changes = changeLog(issue);
+  if (changes.length) {
+    lines.push("## 변화 이력");
+    changes.forEach(entry => {
+      lines.push(`- ${changeLogSpan(entry)} · ${CHANGE_LOG_LABELS[entry.kind]}`);
+      lines.push(`  ${entry.prior_title}`);
+      lines.push(`  → ${entry.title}`);
+    });
+    lines.push("");
+  }
 
   const articles = [...(issue.related_articles || [])].sort((a, b) =>
     String(a.article_date).localeCompare(String(b.article_date)));
@@ -2620,6 +2680,34 @@ function openArchivedIssueDialog(issueId, updateUrl = true) {
   });
 }
 
+// 회차와 회차 사이에서 단계가 움직인 자리. 아래 타임라인이 기사를 날짜순으로
+// 세우는 데 반해 여기는 **짝**을 세운다 — "무엇 다음에 무엇이 왔나"가 변화 이력의
+// 내용이고, 평평한 목록은 그 짝을 말하지 못한다.
+//
+// 제목은 양쪽 다 적는다. `card_change_display` 가 카드에서 뒤쪽(현재 상태)을 걷는
+// 것은 그 문장이 **카드 제목과 요약으로 이미 화면에 있기 때문**인데, 여기서는
+// 짝의 두 끝이 곧 정보다. 대신 오늘 상태 하나만 놓고 '달라졌다'고 말하지 않는다.
+function changeLogSection(issue) {
+  const entries = changeLog(issue);
+  if (!entries.length) return "";
+  const moves = entries.filter(entry => entry.kind === "material").length;
+  // 0건짜리 칸은 세지 않는다 — '후속 0건' 은 정보가 아니라 빈 자리의 이름이다.
+  const note = [moves ? `단계 이동 ${moves}건` : "",
+                entries.length - moves ? `후속 ${entries.length - moves}건` : ""]
+    .filter(Boolean).join(" · ");
+  return `<section class="dialog-changelog" aria-labelledby="issueChangeLogTitle">
+    <div class="dialog-section-head"><h3 id="issueChangeLogTitle">변화 이력</h3><span>${esc(note)}</span></div>
+    <ol class="change-log">${entries.map(entry => `<li class="t-${esc(entry.kind)}">
+      <div class="change-log-head">
+        <span class="change-log-kind">${esc(CHANGE_LOG_LABELS[entry.kind])}</span>
+        <span class="change-log-span">${esc(changeLogSpan(entry))}</span>
+      </div>
+      <p class="change-log-before">${esc(entry.prior_title)}</p>
+      <p class="change-log-after">${esc(entry.title)}</p>
+    </li>`).join("")}</ol>
+  </section>`;
+}
+
 function openIssueDialog(issueId, updateUrl = true) {
   const issue = currentIssueById(issueId);
   if (!issue) {
@@ -2657,7 +2745,7 @@ function openIssueDialog(issueId, updateUrl = true) {
       ${issue.summary ? `<p>${esc(issue.summary)}</p>` : '<p class="empty">요약이 없습니다.</p>'}
       ${issueDetail ? `<div class="dialog-detail"><strong>${issue.detail_source ? "관련 기사 내용" : "기사 내용"}</strong>${issue.detail_source ? `<small>이 이슈의 다른 기사 「${esc(issue.detail_source)}」에서</small>` : ""}<p>${esc(issueDetail)}</p></div>` : ""}
       ${issueChangeText(issue) ? `<p class="dialog-change"><strong>이번에 달라진 점</strong>${esc(issueChangeText(issue))}</p>` : ""}
-      <p class="dialog-verification">${verificationBadge(issue, { always: true })}${reportPickBadge(issue)}<span>${esc(issueEvidenceText(issue))}</span></p>
+      <p class="dialog-verification">${verificationBadge(issue, { always: true })}${reportPickBadge(issue)}${changeLogBadge(issue)}<span>${esc(issueEvidenceText(issue))}</span></p>
       ${issue.why_important ? `<p class="dialog-meaning"><strong>왜 중요한가 <span class="ai-badge">AI</span></strong>${esc(issue.why_important)}</p>` : ""}
       ${issue.implication ? `<p class="dialog-meaning"><strong>시사점 <span class="ai-badge">AI</span></strong>${esc(issue.implication)}</p>` : ""}
       ${issue.open_question ? `<p class="dialog-open"><strong>아직 확정되지 않은 것</strong>${esc(issue.open_question)}</p>` : ""}
@@ -2666,6 +2754,7 @@ function openIssueDialog(issueId, updateUrl = true) {
       <div class="dialog-actions"><button type="button" data-copy-issue="${esc(issue.issue_id)}">보고서용 복사</button><button type="button" data-pack-issue="${esc(issue.issue_id)}">자료 팩 복사</button><button type="button" data-save-issue="${esc(issue.issue_id)}">${state.savedIds.has(issue.issue_id) ? "저장됨" : "저장"}</button><button type="button" data-share-issue="${esc(issue.issue_id)}">공유</button></div>
     </section>
     ${keeiDialogSection(issue)}
+    ${changeLogSection(issue)}
     <section class="dialog-history" aria-labelledby="issueHistoryTitle">
       <div class="dialog-section-head"><h3 id="issueHistoryTitle">주요 사건 타임라인</h3><span>브리핑에 선정된 ${cardArticles.length}건</span></div>
       ${cardArticles.length
@@ -2674,6 +2763,7 @@ function openIssueDialog(issueId, updateUrl = true) {
             stage: state.view === "news" ? "이번 브리핑" : "최근 브리핑",
             shownDetail: issueDetail,
             moreLabel: "이전 사건",
+            changes: changeLogByHash(issue),
           })
         : '<p class="empty">선정된 사건이 없습니다.</p>'}
     </section>

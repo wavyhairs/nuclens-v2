@@ -59,6 +59,7 @@ import article_quality_gate  # noqa: E402
 import event_calendar  # noqa: E402
 import event_ledger  # noqa: E402
 import issue_candidate_stats  # noqa: E402
+import issue_change_log  # noqa: E402
 import issue_insight  # noqa: E402
 import issue_ledger  # noqa: E402
 import issue_review  # noqa: E402
@@ -4566,7 +4567,8 @@ def empty_briefing_row(briefing_date: str, stats: dict | None) -> dict:
 def build_briefings(news_items: list[dict], issues: list[dict], checked_at: str = "",
                     daily_leads: dict | None = None,
                     selection_stats: dict | None = None,
-                    selection_overrides: dict | None = None) -> list[dict]:
+                    selection_overrides: dict | None = None,
+                    prior_hashes: dict[tuple[str, str], str] | None = None) -> list[dict]:
     # 오래된 날부터 돈다 — 히어로가 '어제 무엇을 말했는지' 알아야 같은 사건을
     # 이틀 연속 올리지 않는다. 반환 직전에 최신순으로 뒤집는다(briefings[0] 이
     # 최신이라는 계약은 스모크·앱이 함께 의존한다).
@@ -4639,6 +4641,11 @@ def build_briefings(news_items: list[dict], issues: list[dict], checked_at: str 
                 # 기사에만 있고 대표 기사에는 없는 경우가 흔하다.
                 "open_question": pick_open_question(timeline),
                 "latest_change": change_line,
+                # 그날까지의 변화 이력. 카탈로그 행과 달리 **그 회차 시점의
+                # 스냅샷**이다 — 과거 날짜를 열면 앱이 이 행을 쓰므로(app.js
+                # currentIssueById) 전체 이력을 실으면 그날 화면이 아직 없던
+                # 후속을 보여 준다.
+                "change_log": issue_change_log.build(timeline, prior_hashes),
                 "change_display": card_change_display(
                     change_line, representative["title_kr"], implication, why_important
                 ),
@@ -4805,7 +4812,8 @@ def report_entity_stats(registry: list[dict], issue_catalog: list[dict]) -> None
 
 def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_at: str = "",
                         entity_registry: list[dict] | None = None,
-                        entity_evidence_out: list[dict] | None = None) -> list[dict]:
+                        entity_evidence_out: list[dict] | None = None,
+                        prior_hashes: dict[tuple[str, str], str] | None = None) -> list[dict]:
     latest_day = _parse_day(latest_briefing_date)
     alias_entries = _entity_alias_entries(entity_registry) if entity_registry else []
     rows = []
@@ -4896,6 +4904,11 @@ def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_a
             "report_pick_angles": report_angles,
             "open_question": pick_open_question(card_timeline),
             "latest_change": archive_change_line,
+            # 회차를 넘기며 단계가 실제로 움직인 자리. `latest_change` 와 다른
+            # 것을 센다 — 저쪽은 최신 기사와 과거 기사의 **요약을 즉석 비교한
+            # 문장**이고, 이쪽은 발송 전에 이미 내려진 판정(`issue_continuity`)을
+            # 회차 순으로 세운 **이력**이다. 그래서 저쪽은 한 줄이고 이쪽은 목록이다.
+            "change_log": issue_change_log.build(card_timeline, prior_hashes),
             "change_display": card_change_display(
                 archive_change_line, representative["title_kr"], implication, why_important
             ),
@@ -6496,6 +6509,16 @@ def build() -> None:
             "story_display_swapped_from": (delivery or {}).get("story_display_swapped_from", ""),
             "story_display_swapped_from_title": (delivery or {}).get(
                 "story_display_swapped_from_title", ""),
+            # 연속일 반복 게이트(`issue_continuity`)가 발송 **전에** 내린 판정.
+            # "어제 대비 단계가 넘어갔는가"의 답이 여기 이미 들어 있는데 웹이
+            # 읽지 않아, 이슈 타임라인이 기사를 날짜순으로 세우기만 하고 그중
+            # 어디가 움직인 자리인지 말하지 못했다. `issue_change_log` 가 이
+            # 값을 읽어 이슈의 change_log 를 만든다 — 새 판정은 하지 않는다.
+            #
+            # 빈 값은 넣지 않는다 — 판정이 붙는 것은 발송분의 10% 뿐인데(실측
+            # 801건 중 78건) 이 dict 가 그대로 news.json 이 된다.
+            **({"continuity": (delivery or {}).get("continuity")}
+               if isinstance((delivery or {}).get("continuity"), dict) else {}),
             # 보고서 검토 추천은 발송 시점의 판단이라 아카이브 레코드가 아니라
             # delivery_log 에 실려 온다 (daily_brief.plan_briefs).
             "report_pick": delivery.get("report_pick", "") if delivery else "",
@@ -6635,8 +6658,10 @@ def build() -> None:
     )
     checked_at = now.isoformat()
     selection_stats = load_selection_stats()
+    prior_hashes = issue_change_log.prior_hash_index(deliveries)
     briefings = build_briefings(news_items, issues, checked_at, load_daily_leads(),
-                                selection_stats, selection_overrides)
+                                selection_stats, selection_overrides,
+                                prior_hashes=prior_hashes)
     report_unmatched_overrides(selection_overrides)
     # entity_registry 는 클러스터링 앞에서 이미 읽었다(설비 엔티티 우선순위용).
     entity_match_evidence: list[dict] = []
@@ -6646,6 +6671,7 @@ def build() -> None:
         checked_at,
         entity_registry=entity_registry,
         entity_evidence_out=entity_match_evidence,
+        prior_hashes=prior_hashes,
     )
     validate_issue_catalog_ids(issue_catalog)
     # 카드 두 번째 줄을 이슈 타임라인으로 채운다. 기사 하나만 보는 큐레이션

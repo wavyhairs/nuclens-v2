@@ -1155,10 +1155,17 @@ def plan_briefs(queue: list[dict],
             meta["implication_source"] = a["implication_source"]
         # 연속일 반복 판정이 붙은 기사는 그 근거를 남긴다. 감점을 받고도 살아남은
         # 후속 보도가 '왜 살아남았나'(단계 진전)를 사후에 확인할 유일한 자리다.
+        #
+        # `prior_hash` 는 2026-09-12 에 더했다. 그 전까지 직전 발송분을 가리키는
+        # 것이 `prior_title` 뿐이었는데, 제목은 표시용 문자열이지 신원이 아니다 —
+        # 이 저장소는 이슈 이동 판정에서 이미 같은 결론에 닿았다(issue_ledger.py:
+        # "제목 유사도로 이동을 판정하면 오병합을 신원 기록에까지 들인다").
+        # web/build_data 가 이 값으로 '변화 이력'을 잇는다.
         if isinstance(a.get("continuity"), dict):
             cont = a["continuity"]
             meta["continuity"] = {k: cont.get(k) for k in
-                                  ("prior_title", "prior_date", "days_ago", "similarity",
+                                  ("prior_hash", "prior_title", "prior_date",
+                                   "days_ago", "similarity",
                                    "progression", "progression_kind", "progression_detail",
                                    "window_days", "repeat_streak", "penalty", "story_id",
                                    "identity_confirmed", "identity_method",
