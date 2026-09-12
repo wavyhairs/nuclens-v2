@@ -196,12 +196,18 @@ assert.ok(!String(replaced.at(-1) || "").includes("date="),
   `최신 회차인데 주소에 날짜가 남았다: ${replaced.at(-1)}`);
 
 const rowOf = date => rounds.dates.find(row => row.date === date);
+// 기대값은 **화면의 포맷터로** 만든다. 여기서 문자열을 손으로 조립하면 숫자가
+// 1,000 을 넘는 순간 천 단위 구분자 때문에 전수가 맞는데도 깨진다 — 실제로
+// 2026-09-12 근거 풀을 넓히자 경계선 후보가 1,095쌍이 되어 배포가 막혔다
+// (`num()` 은 toLocaleString("ko-KR")). 이 검사가 잡아야 할 것은 자릿수 표기가
+// 아니라 "실린 행 수를 세는가"다.
+const num = vm.runInContext("num", sandbox);
 function assertStatsAreTotals(date) {
   const row = rowOf(date);
   const stats = written.get("roundStats");
-  for (const [label, value] of [["같은 날 병합", `${row.story}건`],
-    ["붙이지 않은 판단", `${row.stage}건`], ["날짜 넘는 병합", `${row.issue}개`],
-    ["경계선 후보", `${row.borderline}쌍`]]) {
+  for (const [label, value] of [["같은 날 병합", `${num(row.story)}건`],
+    ["붙이지 않은 판단", `${num(row.stage)}건`], ["날짜 넘는 병합", `${num(row.issue)}개`],
+    ["경계선 후보", `${num(row.borderline)}쌍`]]) {
     assert.ok(stats.includes(value),
       `${date} 요약의 '${label}' 이 전수(${value})와 다르다 — 실린 행 수를 세고 있다`);
   }
