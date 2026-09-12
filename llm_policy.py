@@ -77,6 +77,10 @@ def _entry(task: str, resolver: Callable[[], str], *, strict: bool = False) -> T
 _PROFILES: dict[str, TaskProfile] = {
     "curation": _entry(BULK_CURATION, _main_model),
     "issue_review": _entry(IDENTITY_REVIEW, _review_model),
+    # 장기 스토리 판정. `issue_review` 와 **같은 과제가 아니다** — 저쪽은
+    # "같은 사건인가", 이쪽은 "같은 이야기의 다른 단계인가"를 묻는다.
+    # 모델 버킷은 같이 쓴다(둘 다 짧은 판정 한 줄).
+    "thread_judge": _entry(IDENTITY_REVIEW, _review_model),
     "keei_match": _entry(IDENTITY_REVIEW, _main_model),
     "dedup": _entry(IDENTITY_REVIEW, _main_model),
     "dedup_final": _entry(IDENTITY_REVIEW, _main_model),
