@@ -1205,7 +1205,7 @@ kbd {
 /* 화살표는 ::before 로 세운다 — 본문에 넣으면 복사·읽기 순서에 기호가 섞인다.
    자료 팩 쪽 텍스트는 제 화살표를 따로 적는다. */
 .change-log-after { color: var(--c-text); }
-.change-log-after::before { margin-right: var(--sp-2); color: var(--c-accent-text); content: "92"; }
+.change-log-after::before { margin-right: var(--sp-2); color: var(--c-accent-text); content: "→"; }
 /* 타임라인 행의 같은 판정. 출처 줄 끝에 붙으므로 그 줄의 크기를 따른다. */
 .timeline-change {
   margin-left: var(--sp-2);
