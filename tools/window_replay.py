@@ -48,6 +48,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 ARM_ROOT = ROOT / "web" / "_windows"
 BASELINE_LEDGER = ARM_ROOT / "_baseline_issue_ledger.json"
+BASELINE_REVIEWS = ARM_ROOT / "_baseline_issue_llm_reviews.json"
 
 
 def _parse_day(value: object) -> date | None:
@@ -75,11 +76,68 @@ def seed_ledger(label: str) -> Path:
     return target
 
 
+def seed_review_cache(label: str, *, reuse: bool = False) -> Path:
+    """판정 캐시도 arm 마다 사본을 준다.
+
+    판정 자체는 창과 무관하다(키가 기사 해시 쌍이다). 그래도 운영 파일에 바로
+    쓰지 않는다 — 재생이 만든 판정은 검토 전이고, 8 MB 파일이 arm 마다 흔들리면
+    무엇이 언제 들어왔는지 못 가린다. 대신 **같은 기준 사본에서 출발**해서
+    arm 사이의 적중률 차이가 창 때문이게 한다.
+    """
+    ARM_ROOT.mkdir(parents=True, exist_ok=True)
+    if not BASELINE_REVIEWS.exists():
+        shutil.copyfile(ROOT / "issue_llm_reviews.json", BASELINE_REVIEWS)
+        print(f"[window_replay] 기준 판정 캐시 고정 → {BASELINE_REVIEWS.name}")
+    target = arm_dir(label) / "issue_llm_reviews.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if not (reuse and target.exists()):
+        shutil.copyfile(BASELINE_REVIEWS, target)
+    return target
+
+
+def snapshot_round(label: str, round_index: int) -> None:
+    """라운드마다 issues.json 을 따로 남긴다.
+
+    멱등성은 "같은 입력을 두 번 돌리면 같은 id 가 나오는가"다. 산출물을 덮어쓰면
+    그 비교가 불가능해진다 — 두 번째 라운드만 남기 때문이다.
+    """
+    source = arm_dir(label) / "data" / "issues.json"
+    if source.exists():
+        shutil.copyfile(source, arm_dir(label) / f"round{round_index}_issues.json")
+
+
+def round_stability(label: str, rounds: int) -> dict:
+    """라운드 사이 issue_id 유지율. D 가 3회차 525/525 로 못 박은 그 검사다."""
+    sets = []
+    for index in range(1, rounds + 1):
+        path = arm_dir(label) / f"round{index}_issues.json"
+        if not path.exists():
+            continue
+        rows = json.loads(path.read_text(encoding="utf-8"))
+        sets.append({str(row.get("issue_id") or "") for row in rows})
+    if len(sets) < 2:
+        return {"rounds": len(sets)}
+
+    def _compare(left: set, right: set) -> dict:
+        return {"kept": len(left & right),
+                "kept_rate": round(len(left & right) / len(left), 4) if left else 0,
+                "gone": len(left - right), "new": len(right - left)}
+
+    out = {"rounds": len(sets), "counts": [len(row) for row in sets],
+           "first_to_last": _compare(sets[0], sets[-1])}
+    if len(sets) >= 3:
+        # 1회차는 판정 캐시를 채우는 회차라 입력이 같지 않다. **진짜 멱등성은
+        # 캐시가 데워진 뒤 두 회차 사이**에서 재야 한다.
+        out["warm_pair"] = _compare(sets[-2], sets[-1])
+    return out
+
+
 def run_build(label: str, window: int, as_of: str, *, live_llm: bool,
               reuse_ledger: bool = False) -> dict:
     target = arm_dir(label)
     target.mkdir(parents=True, exist_ok=True)
     ledger = (target / "issue_ledger.json") if reuse_ledger else seed_ledger(label)
+    reviews = seed_review_cache(label, reuse=reuse_ledger)
     profile = target / "profile.json"
 
     env = os.environ.copy()
@@ -90,6 +148,12 @@ def run_build(label: str, window: int, as_of: str, *, live_llm: bool,
         "OUTPUT_DIR": str(target / "data"),
         "ADMIN_OUTPUT_DIR": str(target / "admin"),
         "ISSUE_LEDGER_FILE": str(ledger),
+        "ISSUE_REVIEW_CACHE_FILE": str(reviews),
+        # 빌드가 저장소 **뿌리에** 쓰는 캐시가 더 있다. 첫 재생에서 실제로
+        # `issue_insights.json`(463줄)과 `keei_llm_matches.json`(72줄)이 더럽혀졌다 —
+        # git status 가 아니었으면 못 봤을 것이다. 격리는 전수여야 한다.
+        "ISSUE_INSIGHT_CACHE_FILE": str(target / "issue_insights.json"),
+        "KEEI_MATCH_CACHE_FILE": str(target / "keei_llm_matches.json"),
         "GENERATION_ID": f"window-replay-{label}",
     })
     if not live_llm:
@@ -131,15 +195,22 @@ def _evidence_hashes(issue: dict) -> set[str]:
 
 
 def _evidence_days(issue: dict) -> list[date]:
-    days = []
-    rep = _parse_day((issue.get("representative_article") or {}).get("article_date"))
-    if rep:
-        days.append(rep)
+    """근거 기사의 날짜. **해시로 중복을 제거한다** —
+
+    대표 기사는 `related_articles` 에도 실려 있어서, 그대로 세면 단독 이슈조차
+    날짜 두 개를 가진 것처럼 보인다. 첫 재생에서 실제로 554/554 가 'span 표본'
+    으로 잡혔다. D 문서의 n=273 과 비교가 안 되는 숫자였다.
+    """
+    by_hash: dict[str, date] = {}
+    rep = issue.get("representative_article") or {}
+    rep_day = _parse_day(rep.get("article_date"))
+    if rep_day and rep.get("hash"):
+        by_hash[str(rep["hash"])] = rep_day
     for row in issue.get("related_articles") or []:
         day = _parse_day(row.get("article_date"))
-        if day:
-            days.append(day)
-    return days
+        if day and row.get("hash"):
+            by_hash[str(row["hash"])] = day
+    return sorted(by_hash.values())
 
 
 def measure(label: str) -> dict:
@@ -253,11 +324,15 @@ def main() -> int:
         if not args.measure_only:
             info = run_build(label, window, args.as_of, live_llm=args.live_llm)
             print(f"[window_replay] {label} 빌드 완료 {info['wall_seconds']}s")
+            snapshot_round(label, 1)
             for round_index in range(2, args.repeat + 1):
                 run_build(label, window, args.as_of, live_llm=args.live_llm,
                           reuse_ledger=True)
+                snapshot_round(label, round_index)
                 print(f"[window_replay] {label} 반복 {round_index} 완료")
-        results.append(measure(label))
+        row = measure(label)
+        row["round_stability"] = round_stability(label, args.repeat)
+        results.append(row)
 
     ARM_ROOT.mkdir(parents=True, exist_ok=True)
     report = {

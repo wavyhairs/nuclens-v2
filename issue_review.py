@@ -80,7 +80,11 @@ except ImportError:  # pragma: no cover
         """gemini_client 부재 시 자리표시자 — 아무것도 여기 걸리지 않는다."""
 
 ROOT = Path(__file__).parent
-CACHE_FILE = ROOT / "issue_llm_reviews.json"
+# 진단용 구멍. 창 재생처럼 **운영 캐시를 더럽히면 안 되는** 실행이 자기 사본을
+# 쓴다. 판정 자체는 창과 무관하지만(키가 기사 해시 쌍이다) 재생이 쌓은 판정을
+# 검토 없이 운영 파일에 섞지 않는다. production 은 이 변수를 주지 않는다.
+CACHE_FILE = Path(os.environ.get("ISSUE_REVIEW_CACHE_FILE")
+                  or (ROOT / "issue_llm_reviews.json"))
 
 # 자동 병합(>=0.92)과 자동 분리(<0.84) 사이. build_data.ISSUE_EMBEDDING_THRESHOLD
 # 를 올리면 REVIEW_BAND_HIGH 도 같이 올려야 한다.

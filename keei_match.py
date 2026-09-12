@@ -20,13 +20,16 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import llm_cache
 import llm_policy
 
 ROOT = Path(__file__).parent
-CACHE_FILE = ROOT / "keei_llm_matches.json"
+# 진단용 구멍. 창 재생이 운영 캐시를 더럽히면 안 된다 — `issue_review` 와 같은 규칙.
+CACHE_FILE = Path(os.environ.get("KEEI_MATCH_CACHE_FILE")
+                  or (ROOT / "keei_llm_matches.json"))
 
 # 프롬프트를 고치면 올린다. 캐시된 옛 판정이 자동으로 무효가 된다.
 PROMPT_VERSION = 1

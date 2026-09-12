@@ -57,6 +57,8 @@ web/_audit/
 web/_benchmark/
 # 창 재생 arm 산출물. 빌드 결과 사본이라 원본은 archive/원장에 이미 있다.
 web/_windows/
+# 장기 스토리 그림자 산출물. thread_ledger.json 이 원본이고 이쪽은 파생물이다.
+web/_shadow/
 # Resumable live reasoning evaluations contain API-derived observations only.
 artifacts/gemini-reasoning-eval/
 # Local human-label drafts. Canonical Gold is updated only by an explicit export.
