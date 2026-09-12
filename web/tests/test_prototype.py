@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 from collections import Counter
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from unittest import mock
 from html import escape as html_escape
 from itertools import combinations
@@ -27,6 +27,7 @@ except (OSError, KeyError, json.JSONDecodeError):
     DATA_DIR = DATA_ROOT
 
 import build_data  # noqa: E402
+import event_calendar  # noqa: E402
 import issue_candidate_stats  # noqa: E402
 import issue_continuity  # noqa: E402
 import issue_review  # noqa: E402
@@ -7873,6 +7874,59 @@ class AdminPendingChipTests(unittest.TestCase):
         self.assertNotIn("group.keywords.length", keywords)
 
 
+class CalendarMaterialTests(unittest.TestCase):
+    """달력이 보는 재료는 **화면 목록보다 넓다.**
+
+    행사 예고 기사는 뉴스로서는 값이 낮다 — 회사가 전시회에 참가한다는 소식,
+    게시판 공지를 옮긴 안내문. 큐레이션이 그것을 noise 로 찍는 것은 옳다.
+    그런데 달력에는 그것이 최고의 재료다: 큰 뉴스가 된 행사는 이미 열린
+    행사이고, 아직 안 열린 행사는 대개 작게만 보도된다.
+
+    실측 2026-09-12: 이 필터가 60일 창의 12,964건 중 6,869건(53%)을 달력에서
+    숨기고 있었고 그 안에 '2026 기후산업국제박람회'(9/16~18 부산 벡스코)가
+    있었다 — 날짜·장소가 본문에 정확히 적혀 있는데 달력이 그 문장을 본 적이
+    없었다. 6,869건을 더 태웠을 때 늘어난 일정은 3건뿐이다(달력이 제 게이트를
+    따로 갖고 있다).
+    """
+
+    NOTICE = {
+        "hash": "n1",
+        "title_kr": "한화큐셀, 2026 기후산업국제박람회 참가",
+        "title": "한화큐셀, '2026 기후산업국제박람회' 참가",
+        "summary": "한화큐셀이 9월 16일부터 18일까지 부산 벡스코에서 열리는 "
+                   "'2026 기후산업국제박람회'에 참가해 에너지 솔루션을 선보인다.",
+        "detail": "",
+        "importance": "noise",
+        "url": "https://example.com/expo",
+        "publisher": "테스트",
+        "pub": "2026-09-09",
+    }
+
+    def test_the_calendar_view_keeps_the_sentence_that_holds_the_date(self):
+        view = build_data.calendar_view(self.NOTICE, "2026-09-09")
+        self.assertIn("9월 16일부터 18일까지", view["summary"])
+        self.assertEqual(view["article_date"], "2026-09-09")
+        self.assertEqual(view["url"], "https://example.com/expo")
+
+    def test_an_event_notice_the_news_screen_hides_still_reaches_the_grid(self):
+        view = build_data.calendar_view(self.NOTICE, "2026-09-09")
+        payload = event_calendar.build([view], date(2026, 9, 12))
+        self.assertEqual([(row["date"], row["end_date"]) for row in payload["events"]],
+                         [("2026-09-16", "2026-09-18")])
+
+    def test_the_build_actually_feeds_those_records_to_the_calendar(self):
+        """배선이 살아 있는가 — 넓힌 목록을 실제로 넘기는지 소스에서 확인한다.
+
+        이 검사가 없으면 `calendar_view` 만 남고 호출이 사라져도 위 두 검사가
+        통과한다(실제로 이 구멍 때문에 박람회가 화면에서 빠져 있었다).
+        """
+        source = (ROOT / "build_data.py").read_text(encoding="utf-8")
+        self.assertIn("calendar_only.append(calendar_view(", source)
+        self.assertIn("calendar_items = news_items + [row for row in calendar_only",
+                      source)
+        self.assertIn("event_calendar.build(calendar_items", source)
+
+
 class EventCalendarSectionTests(unittest.TestCase):
     """흐름 탭의 '앞으로 무엇이 있나' — 뒤를 본 화면 끝에 붙는 앞날 한 칸.
 
@@ -7900,10 +7954,15 @@ class EventCalendarSectionTests(unittest.TestCase):
         self.assertIn("sec-no", section[:section.index("</section>")])
 
     def test_the_build_ships_the_payload(self):
-        """빌드가 달력을 실어야 화면이 그린다 — 키 이름이 계약이다."""
+        """빌드가 달력을 실어야 화면이 그린다 — 키 이름이 계약이다.
+
+        재료 목록의 이름은 `news_items` 가 아니라 `calendar_items` 다. 달력이
+        보는 재료가 화면 목록보다 넓기 때문이다 — 뉴스 중요도로 화면에서 빠진
+        행사 예고 기사까지 태운다(`CalendarMaterialTests`).
+        """
         source = (ROOT.parent / "web" / "build_data.py").read_text(encoding="utf-8")
         self.assertIn('"event_calendar": calendar,', source)
-        self.assertIn("event_calendar.build(news_items, now.date(),", source)
+        self.assertIn("event_calendar.build(calendar_items, now.date(),", source)
 
     def test_the_build_also_ships_the_official_schedule(self):
         """두 번째 재료가 실제로 넘어가는가.
