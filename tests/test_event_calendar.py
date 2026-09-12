@@ -17,6 +17,17 @@ import event_calendar  # noqa: E402
 
 TODAY = date(2026, 8, 29)
 
+# 주제 판정을 통과시키는 판정기. **날짜와 이름만** 재는 테스트에 쓴다.
+#
+# 이 파일의 문장은 전부 실측 원문이고 그중 몇은 원자력·전력 주제가 아니다
+# ('북극항로 특별법 시행령', '산업용수 토론회'). 그 문장들이 여기 있는 이유는
+# 주제가 맞아서가 아니라 **거기서 날짜·이름 오류가 났기** 때문이다. 기사 경로에
+# 주제 게이트가 생기면서(`event_calendar.verify_reported`) 그 문장들이 게이트에서
+# 먼저 걸려 정작 재려던 오류를 못 재게 됐다 — 그래서 그 테스트에서만 게이트를
+# 연다. 게이트 자체는 TestOnlyOurSubjectReachesTheGrid 가 따로 잰다.
+ANY_TOPIC = lambda *parts: {"ok": True, "reason": "", "topics": [],  # noqa: E731
+                            "form": "event", "grounds": {}}
+
 
 def article(**fields) -> dict:
     """달력이 보는 최소한의 기사. 없는 필드는 화면이 빈 값으로 다룬다."""
@@ -95,7 +106,7 @@ class TestTheNounMustBeTheEventOnThatDay(unittest.TestCase):
             title_kr="정부, 북극항로 특별법 시행령 마련",
             detail="해양수산부는 11일부터 9월 21일까지 북극항로 특별법 시행령 "
                    "제정안을 입법예고하며, 오는 12월 17일 시행되는 특별법의 "
-                   "위임사항을 구체화한다.")], TODAY)["events"][0]
+                   "위임사항을 구체화한다.")], TODAY, judge=ANY_TOPIC)["events"][0]
         self.assertIn("입법예고", row["label"])
         self.assertEqual(row["date"], "2026-09-21")
 
@@ -162,7 +173,7 @@ class TestRangesAreNotPoints(unittest.TestCase):
         row = event_calendar.build([article(
             title_kr="정부, 제도 개편",
             detail="8월 20일 발표한 계획에 따라 9월 3일 국회에 제출될 예정이다.",
-        )], TODAY)["events"][0]
+        )], TODAY, judge=ANY_TOPIC)["events"][0]
         self.assertEqual((row["date"], row["end_date"]), ("2026-09-03", "2026-09-03"))
         self.assertEqual(row["kind"], "point")
 
@@ -250,7 +261,8 @@ class TestTheSameEventIsOneChip(unittest.TestCase):
             article(hash="b", title_kr="월성원자력본부, 2027년 지원사업 공모",
                     detail="월성원자력본부가 2027년도 지원사업 공모를 8월 31일까지 진행한다."),
         ]
-        self.assertEqual(len(event_calendar.build(rows, TODAY)["events"]), 2)
+        self.assertEqual(
+            len(event_calendar.build(rows, TODAY, judge=ANY_TOPIC)["events"]), 2)
 
 
 class TestTheWindowSlidesEveryBuild(unittest.TestCase):

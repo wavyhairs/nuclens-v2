@@ -55,6 +55,8 @@ const api = new Function("document", "state", `
   ${constant("CAL_WEEKDAYS")}
   ${constant("CAL_MAX_CHIPS")}
   ${constant("CAL_KIND_LABELS")}
+  ${constant("CAL_INFERRED_NOTE")}
+  ${extract("calendarIsInferred")}
   ${extract("esc")}
   ${extract("safeUrl")}
   ${extract("dateLabel")}
@@ -277,6 +279,21 @@ const fill = length => Array.from({ length }, (unused, index) =>
   has("이슈가 있으면 그리로 건넨다", block, 'data-cal-issue="issue-9"');
   const plain = bound.calendarEventBlock(event({}));
   hasnt("이슈가 없으면 버튼도 없다", plain, "data-cal-issue");
+}
+
+// ── 날짜를 어떻게 읽었는가 ────────────────────────────────────────────────
+//
+// "오는 18일" 처럼 월 없이 적힌 날짜는 보도일을 기준으로 푼 것이다. 그 사실을
+// 안 밝히면 추론한 날이 원문에 적힌 날처럼 보이고, 이 달력이 지켜 온 근거의
+// 약속이 거기서 깨진다. 칩에는 안 붙인다 — 칸이 좁고 날짜 자체는 맞다.
+{
+  const { api: bound } = render({ ...WINDOW, events: [event({})], month_notes: [] });
+  const guessed = bound.calendarEventBlock(event({ date_basis: "inferred" }));
+  has("추론한 날짜는 그 사실을 밝힌다", guessed, "보도일을 기준으로");
+  const written = bound.calendarEventBlock(event({ date_basis: "explicit" }));
+  hasnt("원문에 적힌 날짜에는 군말을 안 붙인다", written, "보도일을 기준으로");
+  const spanned = bound.calendarEventBlock(event({ date_basis: "syntactic" }));
+  hasnt("범위의 꼬리도 원문의 말이다", spanned, "보도일을 기준으로");
 }
 
 const failed = cases.filter(row => !row.ok);

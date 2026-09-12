@@ -280,6 +280,17 @@ jobs:
             python event_sources.py --once-per-day
           fi
 
+      # 기사에서 확인한 **달력 창 밖**의 미래 일정을 원장에 쌓는다. 매 회차 돈다 —
+      # 공식 수집과 달리 바깥을 두드리지 않고 이미 받아 둔 아카이브만 읽으므로
+      # 비용이 없고, 자주 볼수록 크롤이 쉰 회차의 예고를 덜 놓친다.
+      #
+      # 웹 빌드가 아니라 여기서 도는 이유는 커밋 때문이다. 배포 잡의 build_data 는
+      # 상태를 커밋하지 않아 원장이 러너와 함께 사라진다 — 공식 일정 저장본을
+      # 여기서 걷는 것과 같은 이유다.
+      - name: Remember future events from articles
+        continue-on-error: true
+        run: python event_ledger.py
+
       # id 를 붙인다 — 수집 도메인의 성공은 '수집이 돌았다'가 아니라 '수집 결과가
       # main 에 남았다'까지다. 아래 failure domain 요약이 이 outcome 을 읽는다.
       - name: Commit state
@@ -294,6 +305,10 @@ jobs:
           # 일정표에는 게시일 칸이 없어 그 값이 '우리가 처음 본 날'이고,
           # 러너와 함께 버리면 매 실행 오늘로 되살아난다.
           if [ -f event_schedule.json ]; then git add event_schedule.json; fi
+          # 기사 유래 일정 원장. 커밋해야 '기사 창보다 먼 앞날'이 살아남는다 —
+          # 러너와 함께 버리면 매 회차 최근 90일 아카이브에서 다시 만들어야 하고,
+          # 그보다 오래전에 예고된 일정은 영영 못 돌아온다.
+          if [ -f event_ledger.json ]; then git add event_ledger.json; fi
           # 크롤이 delivery_log.jsonl 에 남기는 진단 기록(큐레이션 유실·
           # open_question 게이트 사유)이 이 목록에 없어서 러너와 함께 버려지고
           # 있었다. 실측(2026-08-04): 커밋된 173건이 전부 발송 기록이고

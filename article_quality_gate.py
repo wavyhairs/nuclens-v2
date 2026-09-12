@@ -923,6 +923,235 @@ def explicit_dates(text: object, reference: object) -> tuple[date, ...]:
     return tuple(sorted(_explicit_evidence_dates(clean_text(text), anchor)))
 
 
+# ── 일정 발견용 날짜 읽기 ────────────────────────────────────────────────
+#
+# `explicit_dates` 는 **검증용**이다 — 카드 게이트가 "이 날짜가 원문에 적혀
+# 있는가"를 물을 때 쓰므로 느슨해지면 무결성 판정 전체가 함께 느슨해진다.
+# 그래서 아래 발견용 추출기는 그 함수를 건드리지 않고 따로 둔다. 대신 찾은
+# 날짜마다 **어떻게 찾았는지**를 함께 돌려준다. 등급이 다르면 쓰는 자리도
+# 달라야 한다(달력은 추론분에 '추정' 표기를 단다).
+#
+#   explicit   "9월 18일" · "2026-09-18"      원문에 그대로 적힌 날
+#   syntactic  "9월 9일부터 11일까지"의 11일    앞 날짜의 월을 잇는 **구문**이다.
+#                                              추론이 아니라 한국어 범위 표기다.
+#   inferred   "오는 18일"                     발행일 기준 추론. 게이트를 지난 것만.
+
+# 월이 앞에 붙지 않은 '18일'. "9월 18일"·"9/18"·"9.18"·"9~11일"의 조각을 다시
+# 집지 않도록 앞자리를 막는다.
+# '간'·'째'·'차' 가 뒤에 붙으면 그것은 날짜가 아니라 **길이**다 — 실측:
+# "8월 31일부터 17일간 개최한다" 의 17일은 9월 17일이 아니라 열이레다.
+_BARE_DAY_TOKEN_RE = re.compile(
+    r"(?<![\d월.\-/~∼–—])(?P<day>0?[1-9]|[12]\d|3[01])\s*일(?![\d간째차])")
+
+# 날짜 토큰 **바로 앞**에 붙는 큐. 월을 직접 못박으므로 아래 서술어 판정보다
+# 세다 — "이달 10일부터 다음 달 11일까지"의 두 날은 서로 다른 달이다.
+_CUE_THIS_MONTH_RE = re.compile(r"(?:오는|이달|금월|이번\s*달)\s*$")
+_CUE_NEXT_MONTH_RE = re.compile(r"(?:내달|다음\s*달|내월)\s*$")
+# '지난달 14일' 은 지지난 달도 다음 달도 아닌 **지난달**이다. '지난' 뒤에 '달'이
+# 붙으면 `지난\s*$` 로는 안 걸린다 — 실측: "한전 임추위는 지난달 14일 지원서
+# 접수를 마감하고" 가 9월 14일 마감으로 섰다.
+_CUE_PAST_RE = re.compile(
+    r"(?:지난|앞서|작년|지지난|지난\s*달|지난달|전달|엊그제|그제)\s*$")
+
+# 날짜 토큰 **바로 뒤**에 오는 서술어. 절 전체가 아니라 이 자리만 본다.
+#
+# 절 단위로 미래·과거를 가르면 한 절이 둘을 함께 담을 때 반드시 한쪽을 틀린다
+# (실측 2026-08-09: "… 12일 늦은 오후 예정된 일식으로 … FT가 8일(현지시간)
+# 보도했습니다" — 12일은 행사일이고 8일은 보도일이다).
+_TAIL_PAST_RE = re.compile(
+    r"^[^.]{0,18}?(?:밝혔|전했|말했|보도했|발표했|했다|했으며|했고|했습니다|"
+    r"열렸|개최했|개최한\s*바|시작했|였다|이었다|됐다|되었|한\s*바\s*있)")
+# "8일(현지시간) 보도" 꼴. 괄호 안의 시간대 표기는 그 날짜가 보도 시각이라는 뜻이다.
+_TAIL_REPORTING_RE = re.compile(r"^\s*\((?:현지\s*시간|현지\s*시각|한국\s*시간)")
+_TAIL_FUTURE_RE = re.compile(
+    r"^[^.]{0,24}?(?:개최한다|개최할|개최된다|개최합니다|개최하며|개최를|"
+    r"열린다|열릴|열립니다|열고|열어|예정|계획이|진행한다|진행할|진행된다|"
+    r"진행됩니다|진행되며|시작한다|시작할|시작된다|연다|앞두고|앞둔|"
+    r"접수|마감|제출|실시한다|실시할|개막|주재하|만날|방한하|"
+    r"심의|의결할|결정할|점검할|논의할|발표할|공개할|시행)")
+
+# 추론이 닿는 앞날의 길이. 달력 창(30일)보다 넉넉히 잡되 한 달을 크게 넘지
+# 않는다 — "18일"이 석 달 뒤를 가리키는 일은 한국어에서 없다.
+_BARE_DAY_HORIZON = 45
+# 발행일 직전 며칠은 **보도일**로 본다. 이 가드가 없으면 발행일보다 하루 이른
+# 날이 "이번 달에는 지났으니 다음 달"로 밀려 한 달 뒤 유령 일정이 선다
+# (실측 2026-08-21: "20일 국회에서 간담회를 열고 … 논의했다" → 2026-09-20).
+_REPORTING_DAY_WINDOW = 7
+
+# 범위를 잇는 표. 두 날짜 **사이에만** 있어야 범위다.
+# 월이 붙은 날짜로 이어지는 범위의 **머리**. "11일부터 9월 21일까지" 의 11일이
+# 그것이다. 이 자리는 추론하지 않는다 — 머리의 월은 꼬리에서 거꾸로 읽어야
+# 하는데 그러면 대개 발행일 이전으로 떨어지고, 없는 시작일을 앞으로 밀어
+# 만들면 41일짜리 가짜 기간이 격자를 통째로 물들인다(실측: 입법예고 9/2~10/13
+# 하나가 31칸 중 27칸을 먹었다). 꼬리의 날짜가 스스로 말하게 둔다.
+_RANGE_HEAD_TO_QUALIFIED_RE = re.compile(
+    r"^\s*(?:부터|[~∼–—]|-)\s*(?:\d{4}\s*[.\-/년]\s*)?\d{1,2}\s*[월.\-/]")
+
+# 머리 날짜 **바로 뒤**에 붙는 꼬리. 이음말과 날짜를 한 번에 집는다 —
+# 따로 찾으면 "9월 9~11일"의 11 이 물결 뒤라는 이유로 걸러진다.
+_SPAN_TAIL_DAY_RE = re.compile(
+    r"^\s*(?:일?\s*부터\s*|[~∼–—]\s*|\s-\s*)"
+    r"(?P<day>0?[1-9]|[12]\d|3[01])\s*일(?![\d간째차])")
+# 물결 뒤에 이어지는 'M.D'. 범위의 끝에서만 날짜로 읽는다.
+_DOTTED_TAIL_RE = re.compile(
+    r"^\s*[~∼–—]\s*(?P<month>0?[1-9]|1[0-2])\s*[.]\s*"
+    r"(?P<day>0?[1-9]|[12]\d|3[01])\s*[.]?(?!\d)")
+
+
+def _month_shifted(reference: date, day: int, offset: int) -> date | None:
+    index = reference.year * 12 + reference.month - 1 + offset
+    year, month_index = divmod(index, 12)
+    try:
+        return date(year, month_index + 1, day)
+    except ValueError:
+        return None
+
+
+def _is_reporting_day(day: int, reference: date) -> bool:
+    """그 숫자가 '보도한 날'을 가리키는가 — 발행일이거나 그 직전 며칠인가."""
+    same_month = _month_shifted(reference, day, 0)
+    if same_month is None:
+        return False
+    return timedelta(0) <= reference - same_month <= timedelta(days=_REPORTING_DAY_WINDOW)
+
+
+def _mask_qualified_dates(text: str) -> str:
+    """월·연이 붙은 날짜를 같은 길이의 공백으로 덮는다. 자리는 그대로 둔다.
+
+    덮지 않으면 "12월 3일"의 '3일'이 월 없는 날로 다시 읽힌다 — 앞 글자가
+    공백이라 한 글자짜리 뒤보기로는 '월'이 안 보인다. 길이를 지키는 이유는
+    아래 판정이 토큰 **앞뒤 문맥**을 보기 때문이다.
+    """
+    blank = lambda match: " " * (match.end() - match.start())  # noqa: E731
+    for regex in (_FULL_NUMERIC_DATE_RE, _COMPACT_DATE_RE, _MONTH_DAY_RE):
+        text = regex.sub(blank, text)
+    return text
+
+
+def _inferred_bare_days(text: str, reference: date,
+                        consumed: tuple[tuple[int, int], ...] = ()) -> dict[date, str]:
+    """월 없이 적힌 날짜를 앞날로 푼다. **토큰마다 따로** 판정한다.
+
+    `consumed` 는 범위의 꼬리로 이미 읽은 자리다. 덮지 않으면 같은 숫자가 두 번
+    읽혀 서로 다른 날이 된다 — 실측: "10월 25일부터 29일까지 제주 롯데호텔에서
+    개최된다" 의 29일이 꼬리로는 10월 29일, 월 없는 날로는 9월 29일이 됐고
+    달력은 둘 중 이른 9월 29일에 칸을 세웠다.
+    """
+    found: dict[date, str] = {}
+    masked = _mask_qualified_dates(text)
+    for start, end in consumed:
+        masked = masked[:start] + " " * (end - start) + masked[end:]
+    for match in _BARE_DAY_TOKEN_RE.finditer(masked):
+        before, after = text[:match.start()], text[match.end():]
+        if (_CUE_PAST_RE.search(before) or _TAIL_PAST_RE.match(after)
+                or _TAIL_REPORTING_RE.match(after)
+                or _RANGE_HEAD_TO_QUALIFIED_RE.match(after)):
+            continue
+        pinned = True
+        if _CUE_NEXT_MONTH_RE.search(before):
+            offsets = (1,)
+        elif _CUE_THIS_MONTH_RE.search(before):
+            offsets = (0,)
+        elif _TAIL_FUTURE_RE.match(after):
+            offsets, pinned = (0, 1), False
+        else:
+            continue
+        day = int(match.group("day"))
+        # 월을 못박는 큐가 없으면 발행일 언저리의 숫자는 보도일로 본다.
+        if not pinned and _is_reporting_day(day, reference):
+            continue
+        for offset in offsets:
+            candidate = _month_shifted(reference, day, offset)
+            if candidate is None:
+                continue
+            if reference <= candidate <= reference + timedelta(days=_BARE_DAY_HORIZON):
+                found.setdefault(candidate, "inferred")
+                break
+    return found
+
+
+def _inherited_span_days(text: str, reference: date, anchored: set[date],
+                         consumed: list[tuple[int, int]] | None = None,
+                         ) -> dict[date, str]:
+    """범위의 **꼬리**. 앞 날짜의 월을 잇는다 — 추론이 아니라 범위 표기다.
+
+    "9월 9일부터 11일까지"의 11일은 9월 11일 말고 다른 뜻이 없다. 같은 자리에서
+    "9월 9~11일"·"2026.9.9~9.11"도 꼬리를 잃고 있었는데, 잃으면 행사가 하루로
+    접히고 시작일이 지난 뒤에는 통째로 사라진다(실측: WSCE 2026, 9/9~9/11).
+    """
+    if not anchored:
+        return {}
+    found: dict[date, str] = {}
+    for head in sorted(anchored):
+        for pattern in _date_patterns(head):
+            for match in re.finditer(pattern, text):
+                # 꼬리가 머리 바로 뒤라야 한다. 사이에 낱말이 끼면 남의 날짜다.
+                gap = _SPAN_TAIL_DAY_RE.match(text[match.end():])
+                if gap is None:
+                    continue
+                if consumed is not None:
+                    consumed.append((match.end() + gap.start(),
+                                     match.end() + gap.end()))
+                day = int(gap.group("day"))
+                for offset in (0, 1):
+                    candidate = _month_shifted(head, day, offset)
+                    if candidate is not None and head < candidate <= head + timedelta(days=93):
+                        found.setdefault(candidate, "syntactic")
+                        break
+            for match in re.finditer(pattern, text):
+                dotted = _DOTTED_TAIL_RE.match(text[match.end():])
+                if dotted is None:
+                    continue
+                if consumed is not None:
+                    consumed.append((match.end() + dotted.start(),
+                                     match.end() + dotted.end()))
+                # 맨 'M.D' 는 보통 소수점이라 `_MONTH_DAY_RE` 가 일부러 안 읽는다.
+                # 다만 **온전한 날짜 바로 뒤에 물결로 이어질 때**는 소수가 아니라
+                # 범위의 끝이다(실측: "2026.9.9~9.11"). 그 자리에서만 읽는다.
+                try:
+                    candidate = date(head.year, int(dotted.group("month")),
+                                     int(dotted.group("day")))
+                except ValueError:
+                    continue
+                if head < candidate <= head + timedelta(days=93):
+                    found.setdefault(candidate, "syntactic")
+    return found
+
+
+def _date_patterns(when: date) -> tuple[str, ...]:
+    """그 날짜가 원문에 적히는 꼴들. 자리를 찾을 때도 범위를 읽을 때도 쓴다.
+
+    '일'을 **선택**으로 두는 이유는 범위의 머리 때문이다 — "9월 9~11일"에서
+    앞 날짜는 '9월 9'로 끝나고 '일'은 꼬리에만 붙는다. 머리를 못 찾으면 꼬리도
+    못 잇는다.
+    """
+    return (rf"{when.month}\s*월\s*{when.day}\s*일",
+            rf"{when.month}\s*월\s*{when.day}(?!\s*\d)",
+            rf"{when.year}\s*[.\-/]\s*{when.month:02d}\s*[.\-/]\s*{when.day:02d}",
+            rf"{when.year}\s*[.\-/]\s*{when.month}\s*[.\-/]\s*{when.day}(?!\d)",
+            rf"(?<!\d){when.month}\s*[.\-/]\s*{when.day}(?!\d)")
+
+
+def scheduled_dates(text: object, reference: object) -> dict:
+    """일정을 찾을 때 읽는 날짜들 — {날짜: 어떻게 찾았는가}.
+
+    `explicit_dates` 를 감싸고 두 겹을 더 얹는다. 검증용 추출기는 그대로 두고
+    발견용만 넓히는 것이 요점이다 — 카드 무결성 게이트는 이 함수를 쓰지 않는다.
+    """
+    anchor = _parse_reference_date(reference)
+    if anchor is None:
+        return {}
+    body = clean_text(text)
+    found: dict[date, str] = {day: "explicit"
+                              for day in _explicit_evidence_dates(body, anchor)}
+    consumed: list[tuple[int, int]] = []
+    for day, how in _inherited_span_days(body, anchor, set(found), consumed).items():
+        found.setdefault(day, how)
+    for day, how in _inferred_bare_days(body, anchor, tuple(consumed)).items():
+        found.setdefault(day, how)
+    return found
+
+
 def date_evidence_problem(expected: object, precision: object,
                           evidence: object, reference: object) -> str:
     """Public wrapper: does the evidence text actually state this date?
