@@ -1,0 +1,4490 @@
+{
+  "_comment": "KEEI 인사이트 ↔ 이슈 매칭 LLM 판정 캐시. 사람이 고쳐도 된다.",
+  "matches": {
+    "issue-01083ffbfa10992b--0e615713ea": {
+      "issue_title": "美 원전 투자 재시동 및 국내 전력수요 급증, 건설사 수주 기대감 상승",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "다른 기술, 다른 안건",
+      "same_event": false
+    },
+    "issue-01083ffbfa10992b--7175604cab": {
+      "issue_title": "미국, 원전 기자재 조달에 24조원 대출…韓 기업 기회",
+      "keei_item": "영국 정부·EDF, Sizewell B 원전 계속운전 지원 조건 합의",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사안",
+      "same_event": false
+    },
+    "issue-01083ffbfa10992b--8fce4c09fa": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "美 원전 투자 재시동 및 국내 전력수요 급증, 건설사 수주 기대감 상승",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "투자 환경과 특정 대출 약정은 다름",
+      "same_event": false
+    },
+    "issue-01083ffbfa10992b--d7e636e0b2": {
+      "issue_title": "美 원전 투자 재시동 및 국내 전력수요 급증, 건설사 수주 기대감 상승",
+      "keei_item": "일본 간사이전력, 자재비·인건비 상승으로 기업용 전기요금 10~15% 인상",
+      "prompt_version": 1,
+      "reason": "서로 다른 국가와 사안임",
+      "same_event": false
+    },
+    "issue-02a4ae90b447d0fb--249f1333d0": {
+      "issue_title": "사우디에 이어 한국도 미국에 우라늄 농축권한 요청",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "우라늄 농축과 SMR 협력은 다른 사안",
+      "same_event": false
+    },
+    "issue-02a4ae90b447d0fb--8b6d0658ea": {
+      "issue_title": "사우디에 이어 한국도 미국에 우라늄 농축권한 요청",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "주체와 사안이 다름",
+      "same_event": false
+    },
+    "issue-02a4ae90b447d0fb--9a0229abcf": {
+      "issue_title": "사우디에 이어 한국도 미국에 우라늄 농축권한 요청",
+      "keei_item": "미국·사우디아라비아, 123 협정 체결",
+      "prompt_version": 1,
+      "reason": "주체와 협정 내용이 다름",
+      "same_event": false
+    },
+    "issue-037106987823f68c--ee30e34bc3": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "싱가포르-중국, 원자력 기술 협력 MOU 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "협력 대상 국가와 내용이 다름",
+      "same_event": false
+    },
+    "issue-0412d08712c9a60e--54df950745": {
+      "issue_title": "한수원, 영덕군과 신규 원전 건설 관련 상생발전 협력 합의",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 주체",
+      "same_event": false
+    },
+    "issue-0412d08712c9a60e--77d959ece5": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원안위, 부산 기장군 혁신형 SMR 안전성 심사 착수",
+      "keei_item": "한국 원안위, i-SMR 표준설계인가 안전성 심사 착수",
+      "prompt_version": 1,
+      "reason": "동일한 i-SMR 안전성 심사 착수 건임",
+      "same_event": true
+    },
+    "issue-0412d08712c9a60e--841ceedbf0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "영덕 신규 원전, 전략환경영향평가 착수…초안 9월 제출 예정",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "대상 국가와 프로젝트가 다름",
+      "same_event": false
+    },
+    "issue-0412d08712c9a60e--d65bac9c4d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원안위, 부산 기장군 혁신형 SMR 안전성 심사 착수",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "심사 착수와 부지 선정은 서로 다른 단계의 사안임",
+      "same_event": false
+    },
+    "issue-0412d08712c9a60e--f2e783de29": {
+      "issue_title": "영덕 신규 원전, 전략환경영향평가 착수…초안 9월 제출 예정",
+      "keei_item": "스웨덴 Studsvik 등, 연이어 신규 원전 사업 국가보조 신청",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사업",
+      "same_event": false
+    },
+    "issue-04b60a0ede3e9484--dc799316ad": {
+      "issue_title": "원안위, 중저준위 방폐장 표층처분시설 건설·운영변경허가 의결",
+      "keei_item": "원자력안전위원회, 연중 상시 정기검사 허용 위한 법령 개정안 의결",
+      "prompt_version": 1,
+      "reason": "방폐장 허가와 정기검사 법령 개정은 다른 안건",
+      "same_event": false
+    },
+    "issue-05da702fed62250a--23a6f604ae": {
+      "issue_title": "제12차 전력수급기본계획, 원전 비중 확대 시험대",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "한국의 전력 계획과 일본의 산업단지 조성은 별개 사안임",
+      "same_event": false
+    },
+    "issue-05da702fed62250a--841ceedbf0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "제12차 전력수급기본계획, 원전 비중 확대 시험대",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "국가와 정책 대상이 다름",
+      "same_event": false
+    },
+    "issue-067dba612698c5cc--bd91314eae": {
+      "issue_title": "프랑스 그라블린 원전, 해파리 떼로 2년 연속 가동 중단",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "원인과 대상 국가가 다름",
+      "same_event": false
+    },
+    "issue-07ef074eb438fd8a--dcf5909f44": {
+      "issue_title": "노스 애나 원전, 부지 조기 허가(ESP) 갱신 신청",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "대상 원전과 허가 종류 다름",
+      "same_event": false
+    },
+    "issue-09bf8e63f8773688--4fe7b05f50": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국 하이양 원전 3호기, 열성능 시험 완료",
+      "keei_item": "중국 Taipingling 원전 2호기, 최초 계통연결 완료",
+      "prompt_version": 1,
+      "reason": "대상 원전 호기가 다름",
+      "same_event": false
+    },
+    "issue-09bf8e63f8773688--c9500d2dc5": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국 하이양 원전 3호기, 열성능 시험 완료",
+      "keei_item": "슬로바키아, Mochovce 4호기 연료장전 완료",
+      "prompt_version": 1,
+      "reason": "대상 원전 및 국가가 다름",
+      "same_event": false
+    },
+    "issue-09d2791626624247--841ceedbf0": {
+      "issue_title": "원안위, 계속운전 원전의 신규 원전 수준 안전성 확인 발표",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-09d2791626624247--92b30862a0": {
+      "issue_title": "SMR, 대한민국 미래 대도약 '7대 SEED 프로젝트' 선정 및 세제 혜택 예고",
+      "keei_item": "일본 정부, 선진 원자로와 핵융합 에너지를 중점 산업 분야로 선정",
+      "prompt_version": 1,
+      "reason": "다른 국가의 정책",
+      "same_event": false
+    },
+    "issue-0a3a69c9a73e8bbe--249f1333d0": {
+      "issue_title": "테라파워 나트륨 SMR, 美 와이오밍주서 건설 현황 조명",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "개별 프로젝트 vs 국제 협력",
+      "same_event": false
+    },
+    "issue-0abd318976122879--0330b81e50": {
+      "issue_title": "美 정부, '지하 원전' 추진 속 두산·수산이앤에스 미래 기회 확보 기대",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "다른 안건, 다른 정책",
+      "same_event": false
+    },
+    "issue-0abd318976122879--d4863d270a": {
+      "issue_title": "미 에너지부, 딥 피션 지하 SMR 안전 설계 승인",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사안",
+      "same_event": false
+    },
+    "issue-0abd318976122879--dcf5909f44": {
+      "issue_title": "미국 에너지부, Natura Resources 용융염 원자로 안전설계협약 승인",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "대상 원전과 안건이 다름",
+      "same_event": false
+    },
+    "issue-0ac155e31f324409--bc52b67e71": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "부산 기장 해수담수화시설, 원전 연계 핑크수소 거점 활용 제안",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "사업 주체와 목적이 다름",
+      "same_event": false
+    },
+    "issue-0ac155e31f324409--d65bac9c4d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "부산 기장 해수담수화시설, 원전 연계 핑크수소 거점 활용 제안",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "기장군 활용 목적이 다름",
+      "same_event": false
+    },
+    "issue-0b5218c29cbb0084--249f1333d0": {
+      "issue_title": "미국 롱비치항, 해양 SMR 개발 협력 이니셔티브에 첫 참여",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-0b5218c29cbb0084--54df950745": {
+      "issue_title": "롱비치 항만, 미 해양청(MARAD)과 해상 원자로 개발 협력 첫 파트너십 체결",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "국가와 주체가 다름",
+      "same_event": false
+    },
+    "issue-0b5218c29cbb0084--ee30e34bc3": {
+      "issue_title": "롱비치 항만, 미 해양청(MARAD)과 해상 원자로 개발 협력 첫 파트너십 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "국가와 사안이 다름",
+      "same_event": false
+    },
+    "issue-0b5218c29cbb0084--f797174d9b": {
+      "issue_title": "미국 롱비치항, 해양 SMR 개발 협력 이니셔티브에 첫 참여",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-0c9c758818ef14de--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국, '제로 탄소 단지'로 EU 규제 돌파…AI 데이터센터 유치",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국가와 추진 주체가 서로 다름",
+      "same_event": false
+    },
+    "issue-0c9c758818ef14de--de0fd4314f": {
+      "issue_title": "중국, '제로 탄소 단지'로 EU 규제 돌파…AI 데이터센터 유치",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "같은 국가, 다른 사안",
+      "same_event": false
+    },
+    "issue-0d29e5a153e4d297--0e615713ea": {
+      "issue_title": "독일, 2040년대 유럽 최초 핵융합로 목표로 국가 허브 발표",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "국가와 사안이 다름",
+      "same_event": false
+    },
+    "issue-0d29e5a153e4d297--6debc28b1b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "독일, 2040년대 유럽 최초 핵융합로 목표로 국가 허브 발표",
+      "keei_item": "아르헨티나, 민간투자 기반 ACR-300 건설 계획 발표",
+      "prompt_version": 1,
+      "reason": "대상 국가와 기술이 다름",
+      "same_event": false
+    },
+    "issue-0d29e5a153e4d297--b78f9ce6eb": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "독일, 2040년대 유럽 최초 핵융합로 목표로 국가 허브 발표",
+      "keei_item": "독일 연방연구기술우주부, 핵융합 허브 3개에 1억 2,500만 유로 지원",
+      "prompt_version": 1,
+      "reason": "독일 핵융합 허브 관련 동일 사안",
+      "same_event": true
+    },
+    "issue-0d65034147a0c1c1--0073017cf6": {
+      "issue_title": "대통령, 해남 태양광 착공식서 청정에너지와 첨단산업 연계 강조",
+      "keei_item": "일본 간사이전력, 후쿠이현 지역 활성화 지원금 작년보다 약 93억 원 감소",
+      "prompt_version": 1,
+      "reason": "서로 다른 국가와 에너지원 관련 사안임",
+      "same_event": false
+    },
+    "issue-0f67fdfe143a9591--249f1333d0": {
+      "issue_title": "미국 원자력규제위원회(NRC), 해안경비대 및 해양광물청과 협력 MOU 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체는 같으나 안건이 다름",
+      "same_event": false
+    },
+    "issue-0f67fdfe143a9591--54df950745": {
+      "issue_title": "미국 원자력규제위원회(NRC), 해안경비대 및 해양광물청과 협력 MOU 체결",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-0fe72c91dc24354b--249f1333d0": {
+      "issue_title": "웨스팅하우스-아멘텀, APX SMR 플릿 배치 역량 확대를 위한 파트너십 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체와 안건이 다름",
+      "same_event": false
+    },
+    "issue-0fe72c91dc24354b--54df950745": {
+      "issue_title": "웨스팅하우스, 어멘텀과 원전 공통 엔지니어링 플랫폼 협력",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 협력 사안",
+      "same_event": false
+    },
+    "issue-0fe72c91dc24354b--88604b2e8c": {
+      "issue_title": "웨스팅하우스-아멘텀, APX SMR 플릿 배치 역량 확대를 위한 파트너십 체결",
+      "keei_item": "스웨덴 Videberg Kraft, SMR 공급사로 Rolls-Royce SMR 최종 선정",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-0fe72c91dc24354b--dcf5909f44": {
+      "issue_title": "웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "주체, 사안 다름",
+      "same_event": false
+    },
+    "issue-0fe72c91dc24354b--ee30e34bc3": {
+      "issue_title": "웨스팅하우스, 어멘텀과 원전 공통 엔지니어링 플랫폼 협력",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 협력 사안",
+      "same_event": false
+    },
+    "issue-114d22fbd5a28b36--8b6d0658ea": {
+      "issue_title": "정부, AI 시대 대비 ESS 및 무탄소 전력 인프라 확대 전략 추진",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "전력 인프라와 우라늄 생산은 서로 다른 사안임",
+      "same_event": false
+    },
+    "issue-114d22fbd5a28b36--9f6f4710a8": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정부, AI 시대 대비 ESS 및 무탄소 전력 인프라 확대 전략 추진",
+      "keei_item": "우즈베키스탄 정부, Jizzakh 원전 사업 현지화 비중 30%로 확대 추진",
+      "prompt_version": 1,
+      "reason": "국가 및 사업 내용이 서로 다름",
+      "same_event": false
+    },
+    "issue-114d22fbd5a28b36--c2b8808fe0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정부, AI 시대 대비 ESS 및 무탄소 전력 인프라 확대 전략 추진",
+      "keei_item": "스페인 정부, Almaraz 원전 운영허가 2030년까지 갱신",
+      "prompt_version": 1,
+      "reason": "국내 전력 전략과 스페인 원전은 무관",
+      "same_event": false
+    },
+    "issue-114d22fbd5a28b36--de0fd4314f": {
+      "issue_title": "정부, AI 시대 대비 ESS 및 무탄소 전력 인프라 확대 전략 추진",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "국내 전력 전략과 중국의 원전 목표는 별개 사안임",
+      "same_event": false
+    },
+    "issue-11b0b2782e1ce3f0--249f1333d0": {
+      "issue_title": "아프리카 국가들, 에너지 안보 강화를 위해 원자력 발전 모색",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "지역과 사안이 다름",
+      "same_event": false
+    },
+    "issue-12ec710dcc1a738a--0b3993f90d": {
+      "issue_title": "러시아 콜라 II 원전 부지 준비 작업 착수, 규제기관 인허가 후 진행",
+      "keei_item": "폴란드 SGE, 영국 내 BWRX-300 14기 건설 위한 신청서 제출",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 프로젝트",
+      "same_event": false
+    },
+    "issue-12ec710dcc1a738a--54df950745": {
+      "issue_title": "로사톰, 러시아 내 18개 원전 건설 프로젝트 진행 중 발표",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "대상 국가가 다름",
+      "same_event": false
+    },
+    "issue-12ec710dcc1a738a--841ceedbf0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "로사톰, 러시아 내 18개 원전 건설 프로젝트 진행 중 발표",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "러시아와 캐나다의 원전 정책은 다름",
+      "same_event": false
+    },
+    "issue-12ec710dcc1a738a--add41ecabd": {
+      "issue_title": "러시아 콜라 II 원전 부지 준비 작업 착수, 규제기관 인허가 후 진행",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 기술",
+      "same_event": false
+    },
+    "issue-132131d1ecd3871d--6debc28b1b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "스탠다드 뉴클리어, 2026년 TRISO 핵연료 생산 시설 가동 계획 발표",
+      "keei_item": "아르헨티나, 민간투자 기반 ACR-300 건설 계획 발표",
+      "prompt_version": 1,
+      "reason": "기업과 프로젝트가 다름",
+      "same_event": false
+    },
+    "issue-132131d1ecd3871d--841ceedbf0": {
+      "issue_title": "스탠다드 뉴클리어, 2026년 TRISO 핵연료 생산 시설 가동 계획 발표",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "개별 기업 vs 국가 전략",
+      "same_event": false
+    },
+    "issue-132131d1ecd3871d--f797174d9b": {
+      "issue_title": "스탠다드 뉴클리어, 2026년 TRISO 핵연료 생산 시설 가동 계획 발표",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "주체와 사안이 다름",
+      "same_event": false
+    },
+    "issue-1333abd082ef5397--0330b81e50": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 원자력 인허가 체계, 규제 속도 경쟁력 강화 방향으로 전환",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "미국 원전 인허가 체계 개선 관련",
+      "same_event": true
+    },
+    "issue-1333abd082ef5397--add41ecabd": {
+      "issue_title": "미국 원자력 인허가 체계, 규제 속도 경쟁력 강화 방향으로 전환",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "미국 전체 인허가와 핵융합 규제는 별개",
+      "same_event": false
+    },
+    "issue-13d178fae214cbef--92b30862a0": {
+      "issue_title": "KINS, i-SMR 및 선진원자로 안전규제 논의 본격화 심포지엄 개최",
+      "keei_item": "일본 정부, 선진 원자로와 핵융합 에너지를 중점 산업 분야로 선정",
+      "prompt_version": 1,
+      "reason": "규제기관 심포지엄과 정부 산업 정책은 별개 사안임",
+      "same_event": false
+    },
+    "issue-147ece88607645c4--23a6f604ae": {
+      "issue_title": "제12차 전력수급기본계획, 원전 비중 확대 시험대",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "한국의 전력계획과 일본의 산업단지 조성은 별개",
+      "same_event": false
+    },
+    "issue-147ece88607645c4--841ceedbf0": {
+      "issue_title": "정부, 2000억 달러 규모 대미 전략투자 첫 사업 막판 조율",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "투자 대상 국가와 전략적 성격이 다름",
+      "same_event": false
+    },
+    "issue-147ece88607645c4--8fce4c09fa": {
+      "issue_title": "정부, 2000억 달러 규모 대미 전략투자 첫 사업 막판 조율",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "투자 주체와 사업 내용이 다름",
+      "same_event": false
+    },
+    "issue-16a7d73f5329df9a--8b6d0658ea": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한국수력원자력, 2026년 상반기 매출 감소에도 영업이익 29% 증가",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "기업 실적과 우라늄 생산은 무관",
+      "same_event": false
+    },
+    "issue-16ce5b43e2aa2a4e--bc52b67e71": {
+      "issue_title": "루마니아, SMR 옵션 재검토 제안 정부 부처에서 거부",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "국가와 주체가 다름",
+      "same_event": false
+    },
+    "issue-177995631b062915--249f1333d0": {
+      "issue_title": "SMR 시장, 한미일 '분업' 모델과 중러 '올인원' 모델 대결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "한미일 SMR 협력이라는 동일한 사안을 다룸",
+      "same_event": true
+    },
+    "issue-189cc4c4e5021986--36d332f8d9": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "두산스코다파워, 핀란드 로비사 원전 현대화 사업 착수",
+      "keei_item": "핀란드 Fortum, 스웨덴 Oskarshamn 신규원전 사업에 대한 국가보조 신청",
+      "prompt_version": 1,
+      "reason": "대상 원전 및 사업 내용이 다름",
+      "same_event": false
+    },
+    "issue-195a5cc0f97befa7--6f56f58c45": {
+      "issue_title": "유럽, 폭염 및 가뭄 대응 위해 원전 냉각수 확보 조치 시행",
+      "keei_item": "유럽투자은행, 루마니아 Cernavodă 1호기 설비개선 1.3조 원 대출 승인",
+      "prompt_version": 1,
+      "reason": "유럽 전반의 조치와 특정 원전 대출은 별개",
+      "same_event": false
+    },
+    "issue-195a5cc0f97befa7--bd91314eae": {
+      "issue_title": "루마니아, 다뉴브강 수위 저하로 유일한 원전 가동 전면 중단",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "기후 영향에 따른 원전 가동 중단이라는 동일 사건",
+      "same_event": true
+    },
+    "issue-1a48967b5795e76b--add41ecabd": {
+      "issue_title": "미국 주정부 데이터센터 인허가 규제 강화, 전력망 비용 분담 법제화 추진",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "규제 대상과 안건이 서로 다름",
+      "same_event": false
+    },
+    "issue-1e53d0f81cb14594--23a6f604ae": {
+      "issue_title": "대통령, 3대 메가프로젝트 점검 및 전담조직 구성 논의 예정",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 프로젝트",
+      "same_event": false
+    },
+    "issue-1e53d0f81cb14594--8fce4c09fa": {
+      "issue_title": "정부, 호남·용인 반도체 클러스터 전력·용수 공급 협약 체결",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 산업 분야",
+      "same_event": false
+    },
+    "issue-1f19bad6b206fd4f--48657c5c8d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "글로벌 핵융합 상용화 속도전…2040년대 상업 운전 목표로 규제 완화",
+      "keei_item": "중국 Taipingling 원전 2호기, 상업운전 개시",
+      "prompt_version": 1,
+      "reason": "핵융합 정책과 중국 원전은 무관",
+      "same_event": false
+    },
+    "issue-1f19bad6b206fd4f--add41ecabd": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "글로벌 핵융합 상용화 속도전…2040년대 상업 운전 목표로 규제 완화",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "핵융합 규제 완화 및 인허가 진전",
+      "same_event": true
+    },
+    "issue-1f5270f31d6e57ef--e2a678ffcd": {
+      "issue_title": "김보라 안성시장, 지역별 차등 전기요금제에 반대 입장 표명",
+      "keei_item": "일본, 중동 정세 악화로 인한 연료가격 상승분 6월부터 가정용 전기요금 반영",
+      "prompt_version": 1,
+      "reason": "전기요금제와 연료비 반영은 다른 사안",
+      "same_event": false
+    },
+    "issue-2159831fad1ddf60--cba0dde103": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원안위, 원전 운전 중 정기검사 허용 위한 시행규칙 개정 추진",
+      "keei_item": "일본 규제위, 원전 운전 중 계획적 정비 허용 추진",
+      "prompt_version": 1,
+      "reason": "국가 및 규제 대상이 서로 다름",
+      "same_event": false
+    },
+    "issue-2159831fad1ddf60--dc799316ad": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원안위, 원전 운전 중 정기검사 허용 위한 시행규칙 개정 추진",
+      "keei_item": "원자력안전위원회, 연중 상시 정기검사 허용 위한 법령 개정안 의결",
+      "prompt_version": 1,
+      "reason": "원전 정기검사 제도 개선 동일 사안",
+      "same_event": true
+    },
+    "issue-2275c1caa1bcad23--d4863d270a": {
+      "issue_title": "영국 스타트업 뉴클리어 터빈스, 신형 원자로 개념 공개 및 1,500만 파운드 투자 유치",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "국가와 사안이 다름",
+      "same_event": false
+    },
+    "issue-24264cf1e2c21525--54df950745": {
+      "issue_title": "러시아, 중국과의 장기적인 원자력 협력 강조",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "협력 대상 국가가 다름",
+      "same_event": false
+    },
+    "issue-2449e0ab8d45461b--23a6f604ae": {
+      "issue_title": "미국 에너지부, 패듀카·사바나강 부지에 민간 데이터센터 건설 파트너십 발표",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국가와 사안이 다름",
+      "same_event": false
+    },
+    "issue-2449e0ab8d45461b--6debc28b1b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 에너지부, 패듀카·사바나강 부지에 민간 데이터센터 건설 파트너십 발표",
+      "keei_item": "아르헨티나, 민간투자 기반 ACR-300 건설 계획 발표",
+      "prompt_version": 1,
+      "reason": "데이터센터와 원전 건설은 다름",
+      "same_event": false
+    },
+    "issue-2449e0ab8d45461b--8fce4c09fa": {
+      "issue_title": "미국 에너지부, 패듀카·사바나강 부지에 민간 데이터센터 건설 파트너십 발표",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "같은 주체, 다른 사업 안건",
+      "same_event": false
+    },
+    "issue-269538276bb6a27b--c9500d2dc5": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "슬로바키아 모호체 4호기, 물리적 시운전 시험 준비 완료",
+      "keei_item": "슬로바키아, Mochovce 4호기 연료장전 완료",
+      "prompt_version": 1,
+      "reason": "모호체 4호기 시운전 및 연료장전",
+      "same_event": true
+    },
+    "issue-27cf26ee5365bab5--6445d0b3c3": {
+      "issue_title": "미국 NRC 및 FEMA, 크레인 원자력발전소 재가동 비상 대비 태세 논의",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "다른 원전, 다른 안건",
+      "same_event": false
+    },
+    "issue-27cf26ee5365bab5--8b6d0658ea": {
+      "issue_title": "미국 NRC 및 FEMA, 크레인 원자력발전소 재가동 비상 대비 태세 논의",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "개별 원전 vs 국가 동향",
+      "same_event": false
+    },
+    "issue-27cf6798c17900be--de0fd4314f": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국, 2030년 에너지 인프라 개발 신규 목표 설정",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "중국 2030 에너지 및 원전 목표",
+      "same_event": true
+    },
+    "issue-27cf6798c17900be--f797174d9b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국, 2030년 에너지 인프라 개발 신규 목표 설정",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "국가와 대상이 서로 다름",
+      "same_event": false
+    },
+    "issue-27e417353612169a--0330b81e50": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 NRC, 환경영향평가 규정 개정 제안 규칙 공청회 개최",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "동일한 규정 개정 관련 절차",
+      "same_event": true
+    },
+    "issue-27e417353612169a--b6aec252c7": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 NRC, 환경영향평가 규정 개정 제안 규칙 공청회 개최",
+      "keei_item": "미 NRC, 환경심사 규정 개정안 발표",
+      "prompt_version": 1,
+      "reason": "동일한 규정 개정안 관련 사안",
+      "same_event": true
+    },
+    "issue-2b442f968d18a90b--0e615713ea": {
+      "issue_title": "나노 뉴클리어, 버지니아 원자력 에너지 컨소시엄 합류 발표",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 기술",
+      "same_event": false
+    },
+    "issue-2b442f968d18a90b--f797174d9b": {
+      "issue_title": "나노 뉴클리어, 버지니아 원자력 에너지 컨소시엄 합류 발표",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "다른 기업, 다른 주, 다른 안건",
+      "same_event": false
+    },
+    "issue-2bc98b86f3112851--249f1333d0": {
+      "issue_title": "IAEA, 캐나다 서스캐처원대와 원자력 교육 협력 협정 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-2bc98b86f3112851--54df950745": {
+      "issue_title": "IAEA, 캐나다 서스캐처원대와 원자력 교육 협력 협정 체결",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-2bc98b86f3112851--9a0229abcf": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "IAEA, 캐나다 서스캐처원대와 원자력 교육 협력 협정 체결",
+      "keei_item": "미국·사우디아라비아, 123 협정 체결",
+      "prompt_version": 1,
+      "reason": "협력 대상 및 국가가 다름",
+      "same_event": false
+    },
+    "issue-2bdc5f2fb94508de--3156a605c7": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 주정부 데이터센터 인허가 규제 강화, 전력망 비용 분담 법제화 추진",
+      "keei_item": "미 하원 에너지상무위, 원자력 인허가·연료주기 관련 6개 법안 본회의 회부",
+      "prompt_version": 1,
+      "reason": "데이터센터 규제와 원전 법안은 별개 사안",
+      "same_event": false
+    },
+    "issue-2d50d6d28f7292c7--bc52b67e71": {
+      "issue_title": "일본, 에너지 수급 강인화 패키지 발표…원전 재건축 및 SMR 도입 가속",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "일본 정책과 영국 SMR 도입은 별개",
+      "same_event": false
+    },
+    "issue-2d50d6d28f7292c7--e2a678ffcd": {
+      "issue_title": "일본, 에너지 수급 강인화 패키지 발표…원전 재건축 및 SMR 도입 가속",
+      "keei_item": "일본, 중동 정세 악화로 인한 연료가격 상승분 6월부터 가정용 전기요금 반영",
+      "prompt_version": 1,
+      "reason": "일본의 서로 다른 정책 및 사안임",
+      "same_event": false
+    },
+    "issue-2ee56fe1780454f0--23a6f604ae": {
+      "issue_title": "삼성전자, 미국 내 로비 의제에 데이터센터 전력망 추가",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "삼성전자와 일본의 AI 전력망 정책은 별개임",
+      "same_event": false
+    },
+    "issue-2fb4f99952cfbc5e--8b6d0658ea": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "카자흐스탄, 2026년 상반기 우라늄 생산량 9% 증가 발표",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "국가와 대상 국가가 다름",
+      "same_event": false
+    },
+    "issue-30943d4c45bc5f69--8b6d0658ea": {
+      "issue_title": "IEA, 호르무즈 해협 충격으로 2026년 세계 석유 공급 전망 하향",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "석유 공급과 우라늄 생산은 다른 사안임",
+      "same_event": false
+    },
+    "issue-30943d4c45bc5f69--dbc1699314": {
+      "issue_title": "IEA, 호르무즈 해협 충격으로 2026년 세계 석유 공급 전망 하향",
+      "keei_item": "전 세계 원전 장기 시나리오 전망 (NEA Nuclear Energy Outlook)",
+      "prompt_version": 1,
+      "reason": "석유 공급 전망과 원전 전망은 다른 사안임",
+      "same_event": false
+    },
+    "issue-3102d57c68498e6e--835e580735": {
+      "issue_title": "브라질 INB, 우라늄 자급 목표로 지질 연구 추진",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-3102d57c68498e6e--8b6d0658ea": {
+      "issue_title": "브라질 INB, 우라늄 자급 목표로 지질 연구 추진",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-31715b9c7ef12b5a--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "그리드위즈, 알엑스와 SMR 기반 AI 데이터센터 솔루션 개발 협력",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "기업 협력과 국가 정책으로 다름",
+      "same_event": false
+    },
+    "issue-31715b9c7ef12b5a--249f1333d0": {
+      "issue_title": "그리드위즈, 알엑스와 SMR 기반 AI 데이터센터 솔루션 개발 협력",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "기업 간 협력과 국가 간 협력으로 사안이 다름",
+      "same_event": false
+    },
+    "issue-31b3d4a649669513--6445d0b3c3": {
+      "issue_title": "도미니언 에너지, 노스 애나 신규 원전 부지 허가 유지",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "개별 원전 vs 주 법안",
+      "same_event": false
+    },
+    "issue-31b3d4a649669513--d65bac9c4d": {
+      "issue_title": "도미니언 에너지, 노스 애나 신규 원전 부지 허가 유지",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 프로젝트",
+      "same_event": false
+    },
+    "issue-31b3d4a649669513--dcf5909f44": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "노스 애나 원전, 부지 조기 허가(ESP) 갱신 신청",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "대상 원전 및 안건이 다름",
+      "same_event": false
+    },
+    "issue-320c30e555c0cd76--f797174d9b": {
+      "issue_title": "이란 혁명수비대, 미·이스라엘 핵 보유 시 핵 개발 지속 경고",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 주체",
+      "same_event": false
+    },
+    "issue-337a9ffbe7eef399--249f1333d0": {
+      "issue_title": "영국 SMR 프로젝트, Jacobs(제이콥스)社가 기획 및 인허가 지원",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 SMR 프로젝트",
+      "same_event": false
+    },
+    "issue-337a9ffbe7eef399--3afede2c57": {
+      "issue_title": "영국 SMR 프로젝트, Jacobs(제이콥스)社가 기획 및 인허가 지원",
+      "keei_item": "일본 경제산업성, 개량형경수로·SMR 기술개발·공급망 구축 지원 대상 선정",
+      "prompt_version": 1,
+      "reason": "국가와 프로젝트가 다름",
+      "same_event": false
+    },
+    "issue-337a9ffbe7eef399--7175604cab": {
+      "issue_title": "영국 SMR 프로젝트, Jacobs(제이콥스)社가 기획 및 인허가 지원",
+      "keei_item": "영국 정부·EDF, Sizewell B 원전 계속운전 지원 조건 합의",
+      "prompt_version": 1,
+      "reason": "다른 원전 유형, 다른 안건",
+      "same_event": false
+    },
+    "issue-33b53bc5a243a876--0330b81e50": {
+      "issue_title": "AI 생태계 육성 위한 3대 메가 프로젝트, 전력·인허가 불확실성 해소 필요",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사안",
+      "same_event": false
+    },
+    "issue-33b53bc5a243a876--23a6f604ae": {
+      "issue_title": "AI 생태계 육성 위한 3대 메가 프로젝트, 전력·인허가 불확실성 해소 필요",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사안",
+      "same_event": false
+    },
+    "issue-34575730dc364184--841ceedbf0": {
+      "issue_title": "캐나다 신규 SMR, 미국·프랑스·영국산 농축 우라늄 연료 수입 의존",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "다른 안건, 일반 전략과 세부 사안",
+      "same_event": false
+    },
+    "issue-34575730dc364184--a50cc0c8f8": {
+      "issue_title": "캐나다 신규 SMR, 미국·프랑스·영국산 농축 우라늄 연료 수입 의존",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "연료 수입과 제조 승인은 별개",
+      "same_event": false
+    },
+    "issue-34575730dc364184--a9ffef226f": {
+      "issue_title": "캐나다 신규 SMR, 미국·프랑스·영국산 농축 우라늄 연료 수입 의존",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 주체",
+      "same_event": false
+    },
+    "issue-349e783fd4decdfa--0e615713ea": {
+      "issue_title": "미국 에너지부, 원자력 혁신 캠퍼스 유치 후보지 5개 주 선정 발표",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "다른 기술 분야",
+      "same_event": false
+    },
+    "issue-349e783fd4decdfa--8fce4c09fa": {
+      "issue_title": "미국 에너지부, 원자력 혁신 캠퍼스 유치 후보지 5개 주 선정 발표",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "다른 안건",
+      "same_event": false
+    },
+    "issue-349e783fd4decdfa--99f6aed02e": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 에너지부, 원자력 혁신 캠퍼스 유치 후보지 5개 주 선정 발표",
+      "keei_item": "미 에너지부, Genesis Mission 일환으로 원자력 AI 혁신 프로젝트 선정",
+      "prompt_version": 1,
+      "reason": "프로젝트의 성격이 다름",
+      "same_event": false
+    },
+    "issue-3590184774ef2006--249f1333d0": {
+      "issue_title": "캐나다 정부, 마이크로 원자로 기술 개발에 450만 달러 지원",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-3590184774ef2006--841ceedbf0": {
+      "issue_title": "캐나다 정부, 마이크로 원자로 기술 개발에 450만 달러 지원",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "개별 지원 vs 국가 전략",
+      "same_event": false
+    },
+    "issue-3733dacb6eb9bc94--a3cf49987b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "두산에너빌리티, 테라파워 나트륨 냉각 고속로 핵심 기자재 공급 계약",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "동일한 기업 간의 나트륨 냉각 고속로 협력 건임",
+      "same_event": true
+    },
+    "issue-3845bd6bc47811e1--249f1333d0": {
+      "issue_title": "온타리오주, 맥마스터 원자로 의료용 동위원소 생산에 투자",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-397c97cc02966102--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정부, 150조 규모 미래대응기금 조성…SMR·AI 인프라 투자",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "한국과 일본의 서로 다른 국가별 정책임",
+      "same_event": false
+    },
+    "issue-398fa0e5ecf0d24a--0330b81e50": {
+      "issue_title": "미국 해양광물관리국, NRC와 해상 원자력 프로젝트 협력 MOU 체결",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "주체는 같으나 안건이 다름",
+      "same_event": false
+    },
+    "issue-398fa0e5ecf0d24a--249f1333d0": {
+      "issue_title": "미국 원자력규제위원회(NRC), 해안경비대 및 해양광물청과 협력 MOU 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "협력 대상과 목적이 다름",
+      "same_event": false
+    },
+    "issue-398fa0e5ecf0d24a--54df950745": {
+      "issue_title": "미국 원자력규제위원회(NRC), 해안경비대 및 해양광물청과 협력 MOU 체결",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-39d2da80812a25d1--249f1333d0": {
+      "issue_title": "미 해사청(MARAD), 코퍼스 크리스티 항만과 SMR 개발 협력 MOU 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "특정 항만 MOU와 아시아 SMR 협력은 다른 사안",
+      "same_event": false
+    },
+    "issue-3b00d0a5a0199c0b--8fce4c09fa": {
+      "issue_title": "미국 에너지부, NASA와 래디언트 인더스트리에 HALEU 공급 조건부 약속",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "주체는 같으나 안건이 다름",
+      "same_event": false
+    },
+    "issue-3b00d0a5a0199c0b--a9ffef226f": {
+      "issue_title": "미국 에너지부, NASA 및 Radiant에 HALEU 연료 할당 결정",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 안건",
+      "same_event": false
+    },
+    "issue-3b2beac3f62235b6--249f1333d0": {
+      "issue_title": "中 '동수서산' 전략 확대…AI 데이터센터 인프라 집중 투자",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "중국 데이터센터와 미국 SMR 협력은 서로 다른 사안임",
+      "same_event": false
+    },
+    "issue-3c3357d444dad489--23a6f604ae": {
+      "issue_title": "제12차 전력수급기본계획, 원전 비중 확대 시험대",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국내 전력계획과 일본의 산업단지 조성은 다른 사안임",
+      "same_event": false
+    },
+    "issue-3c3357d444dad489--841ceedbf0": {
+      "issue_title": "제12차 전력수급기본계획, 원전 비중 확대 시험대",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "국내 전력계획과 캐나다의 원전 전략은 다른 사안임",
+      "same_event": false
+    },
+    "issue-3c3560063b344488--23a6f604ae": {
+      "issue_title": "정부, 150조 규모 미래대응기금 조성…SMR·AI 인프라 투자",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "한국의 기금 조성과 일본의 산업단지는 다름",
+      "same_event": false
+    },
+    "issue-3c3560063b344488--3afede2c57": {
+      "issue_title": "정부, SMR 제조·공급망 구축 지원에 235억원 배정",
+      "keei_item": "일본 경제산업성, 개량형경수로·SMR 기술개발·공급망 구축 지원 대상 선정",
+      "prompt_version": 1,
+      "reason": "지원 주체와 대상 국가가 서로 다름",
+      "same_event": false
+    },
+    "issue-3c3560063b344488--92b30862a0": {
+      "issue_title": "SMR, 대한민국 미래 대도약 '7대 SEED 프로젝트' 선정 및 세제 혜택 예고",
+      "keei_item": "일본 정부, 선진 원자로와 핵융합 에너지를 중점 산업 분야로 선정",
+      "prompt_version": 1,
+      "reason": "한국과 일본의 각기 다른 국가 정책임",
+      "same_event": false
+    },
+    "issue-3c3560063b344488--d65bac9c4d": {
+      "issue_title": "정부, SMR 7대 SEED 프로젝트 선정 및 세제 지원 강화",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "정책 지원과 부지 선정은 별개",
+      "same_event": false
+    },
+    "issue-3c3560063b344488--de0fd4314f": {
+      "issue_title": "정부, SMR·차세대 태양광을 미래 성장동력으로 육성 발표",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "국가와 정책 대상이 다름",
+      "same_event": false
+    },
+    "issue-3d40dcc6ed6f3fac--0cc8670c5e": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "글로벌 SMR 상용화 경쟁 가속화 및 한국의 대응 현황",
+      "keei_item": "전 세계 방사성동위원소 산업 현황 (NEA 보고서)",
+      "prompt_version": 1,
+      "reason": "분야와 주제가 서로 다름",
+      "same_event": false
+    },
+    "issue-3d40dcc6ed6f3fac--77d959ece5": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "글로벌 SMR 상용화 경쟁 가속화 및 한국의 대응 현황",
+      "keei_item": "한국 원안위, i-SMR 표준설계인가 안전성 심사 착수",
+      "prompt_version": 1,
+      "reason": "A는 일반론, B는 특정 심사 착수임",
+      "same_event": false
+    },
+    "issue-3d40dcc6ed6f3fac--d65bac9c4d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "글로벌 SMR 상용화 경쟁 가속화 및 한국의 대응 현황",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "전망과 개별 부지 선정으로 다름",
+      "same_event": false
+    },
+    "issue-3daa09ef0de9e494--02506fe991": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "현대건설, 美 홀텍·엔터지와 SMR-300 도입 가능성 검토",
+      "keei_item": "미국 Holtec, Oyster Creek 원전 부지에 SMR-300 4기 도입 추진",
+      "prompt_version": 1,
+      "reason": "동일한 SMR-300 도입 프로젝트를 다룸",
+      "same_event": true
+    },
+    "issue-3daa09ef0de9e494--249f1333d0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "현대건설, 美 홀텍·엔터지와 SMR-300 도입 가능성 검토",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "개별 프로젝트와 국가 간 협력 정책은 다름",
+      "same_event": false
+    },
+    "issue-3daa09ef0de9e494--bc52b67e71": {
+      "issue_title": "현대건설, 美 홀텍·엔터지와 SMR-300 도입 가능성 검토",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 파트너",
+      "same_event": false
+    },
+    "issue-3eacd5e0a0ef3dcd--613ab26b06": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한수원 포천양수건설소, 2027년 발전소 주변지역 지원사업 공모",
+      "keei_item": "중국 국무원, 원전 8기 신규 건설 승인",
+      "prompt_version": 1,
+      "reason": "국가와 사업 내용이 다름",
+      "same_event": false
+    },
+    "issue-3faaf3dac53cbed1--8b6d0658ea": {
+      "issue_title": "미 FCC, 중국산 로봇·전력 인버터 수입 제한은 미국 생산 확대 및 국가안보 조치",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "다른 사안",
+      "same_event": false
+    },
+    "issue-4113d294aea75ee0--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "이 대통령, 해남 청정에너지로 미래 산업 성장 동력 강조",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국가와 정책 방향이 다름",
+      "same_event": false
+    },
+    "issue-4113d294aea75ee0--54df950745": {
+      "issue_title": "호남 반도체 클러스터 연계 정부의 원전 추진 검토, 부지 확보 난항 예상",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "다른 국가",
+      "same_event": false
+    },
+    "issue-42f55252997bbbc3--0b3993f90d": {
+      "issue_title": "러시아 콜라 II 원전 부지 준비 작업 착수, 규제기관 인허가 후 진행",
+      "keei_item": "폴란드 SGE, 영국 내 BWRX-300 14기 건설 위한 신청서 제출",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 원전 프로젝트",
+      "same_event": false
+    },
+    "issue-42f55252997bbbc3--add41ecabd": {
+      "issue_title": "러시아 콜라 II 원전 부지 준비 작업 착수, 규제기관 인허가 후 진행",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "국가·기술·사안 모두 다름",
+      "same_event": false
+    },
+    "issue-4323de7d47ff47c1--5924c0c9b7": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "스페인 알마라스(Almaraz) 원전 운영 허가 2030년까지 연장",
+      "keei_item": "스페인 Almaraz 원전, 연장운전 조건부 적합 판정",
+      "prompt_version": 1,
+      "reason": "동일 원전의 운영 연장 사안",
+      "same_event": true
+    },
+    "issue-4323de7d47ff47c1--c2b8808fe0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "스페인 알마라스(Almaraz) 원전 운영 허가 2030년까지 연장",
+      "keei_item": "스페인 정부, Almaraz 원전 운영허가 2030년까지 갱신",
+      "prompt_version": 1,
+      "reason": "동일 원전의 운영 연장 사안",
+      "same_event": true
+    },
+    "issue-4478d007124fabee--613ab26b06": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "프랑스, 그라벨린 원전 신규 2기 건설 1단계 예비 작업 승인",
+      "keei_item": "중국 국무원, 원전 8기 신규 건설 승인",
+      "prompt_version": 1,
+      "reason": "국가와 대상 원전이 다름",
+      "same_event": false
+    },
+    "issue-457aa2e1b508d72c--841ceedbf0": {
+      "issue_title": "원안위, 계속운전 원전의 신규 원전 수준 안전성 확인 발표",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "국가와 안건이 다름",
+      "same_event": false
+    },
+    "issue-4ab0b75736a22046--0073017cf6": {
+      "issue_title": "일본 정부, 미쓰비시중공업(MHI) 차세대 원자로 개발 지원",
+      "keei_item": "일본 간사이전력, 후쿠이현 지역 활성화 지원금 작년보다 약 93억 원 감소",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 사안",
+      "same_event": false
+    },
+    "issue-4ab0b75736a22046--c5588363a1": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "일본, 에너지 수급 강인화 패키지 발표…원전 재건축 및 SMR 도입 가속",
+      "keei_item": "일본 정부, 에너지 수급구조 강화 정책 패키지 발표…원전 최대한 활용",
+      "prompt_version": 1,
+      "reason": "동일한 일본 에너지 정책 발표 건임",
+      "same_event": true
+    },
+    "issue-4ab0b75736a22046--ddd33cac84": {
+      "issue_title": "일본 정부, 미쓰비시중공업(MHI) 차세대 원자로 개발 지원",
+      "keei_item": "일본 니가타현, 원전 재가동에 따른 도쿄전력 지원금 활용 방안 마련",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 사안",
+      "same_event": false
+    },
+    "issue-4ab0b75736a22046--e2a678ffcd": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "일본, 에너지 수급 강인화 패키지 발표…원전 재건축 및 SMR 도입 가속",
+      "keei_item": "일본, 중동 정세 악화로 인한 연료가격 상승분 6월부터 가정용 전기요금 반영",
+      "prompt_version": 1,
+      "reason": "원전 정책과 전기요금으로 다름",
+      "same_event": false
+    },
+    "issue-4b899066712be0cd--835e580735": {
+      "issue_title": "테라파워, 선진원자로 기업 최초로 INPO 가입",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "주체·사안이 다름",
+      "same_event": false
+    },
+    "issue-4b899066712be0cd--a3cf49987b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "테라파워, 선진원자로 기업 최초로 INPO 가입",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "협력 내용과 대상이 다름",
+      "same_event": false
+    },
+    "issue-4d4464de943be9a8--249f1333d0": {
+      "issue_title": "정부, 산업용 전기요금 지역별 차등제 도입 추진",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "전기요금제와 SMR 국제 협력은 다른 사안임",
+      "same_event": false
+    },
+    "issue-4d4464de943be9a8--a50cc0c8f8": {
+      "issue_title": "정부, 지역별 전기요금 차등제 산업용 10% 할인안 제시",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "전기요금 정책과 원전 연료 승인으로 무관함",
+      "same_event": false
+    },
+    "issue-4d4464de943be9a8--e2a678ffcd": {
+      "issue_title": "김보라 안성시장, 지역별 차등 전기요금제에 반대 입장 표명",
+      "keei_item": "일본, 중동 정세 악화로 인한 연료가격 상승분 6월부터 가정용 전기요금 반영",
+      "prompt_version": 1,
+      "reason": "한국의 전기요금제와 일본의 요금 인상은 별개",
+      "same_event": false
+    },
+    "issue-4d55708b92e20a28--76da1c3e41": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "X-에너지, 텍사스 SMR 프로젝트에 최대 10억 달러 추가 공적 자금 확보",
+      "keei_item": "미 에너지부, X-energy의 Texas 사업에 최대 1조 4,000억 원 추가 지원",
+      "prompt_version": 1,
+      "reason": "동일 프로젝트의 자금 지원 사안",
+      "same_event": true
+    },
+    "issue-4d55708b92e20a28--a50cc0c8f8": {
+      "issue_title": "X-에너지, 텍사스 SMR 프로젝트에 최대 10억 달러 추가 공적 자금 확보",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "기업과 프로젝트 내용이 다름",
+      "same_event": false
+    },
+    "issue-4dd2920f69b7ea54--23a6f604ae": {
+      "issue_title": "아마존 텍사스 AI 데이터센터, 7.65GW 가스발전 허가 획득",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국가, 전원, 주체 모두 다름",
+      "same_event": false
+    },
+    "issue-4e6a1d2c0301a4d0--08db51ddba": {
+      "issue_title": "미국 NRC, 방사성 물질 운송 규정 현대화 제안 및 의견 수렴",
+      "keei_item": "미 NRC, 원전 인허가 및 방사선 방호 규정 현대화 규정안 발표",
+      "prompt_version": 1,
+      "reason": "주체는 같으나 안건이 다름",
+      "same_event": false
+    },
+    "issue-4e6a1d2c0301a4d0--249f1333d0": {
+      "issue_title": "미국 NRC, 방사성 물질 운송 규정 현대화 제안 및 의견 수렴",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-4eb98cc6028338d9--249f1333d0": {
+      "issue_title": "나노 뉴클리어, 포르틸과 크로노스 MMR 연료 취급·저장 시스템 설계 협력",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체·사안·범위가 다름",
+      "same_event": false
+    },
+    "issue-4eb98cc6028338d9--a9ffef226f": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "나노 뉴클리어, 포르틸과 크로노스 MMR 연료 취급·저장 시스템 설계 협력",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "기업과 협력 내용이 다름",
+      "same_event": false
+    },
+    "issue-4eccf7e2ecd1798d--0330b81e50": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 NRC, 방사선 방호 'ALARA' 원칙 폐지 제안 규칙에 대한 공청회 개최",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "규정 내용과 절차 개편으로 다름",
+      "same_event": false
+    },
+    "issue-4eccf7e2ecd1798d--08db51ddba": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 NRC, 방사선 방호 'ALARA' 원칙 폐지 제안 규칙에 대한 공청회 개최",
+      "keei_item": "미 NRC, 원전 인허가 및 방사선 방호 규정 현대화 규정안 발표",
+      "prompt_version": 1,
+      "reason": "동일한 규제기관의 동일한 규정 현대화 사안",
+      "same_event": true
+    },
+    "issue-4ee5aef7063ebdda--0b3993f90d": {
+      "issue_title": "벡텔, 폴란드 첫 원전 부지 관리 인수…설계에서 건설 단계로 전환",
+      "keei_item": "폴란드 SGE, 영국 내 BWRX-300 14기 건설 위한 신청서 제출",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 프로젝트",
+      "same_event": false
+    },
+    "issue-4ee5aef7063ebdda--4c3014b044": {
+      "issue_title": "벡텔, 폴란드 첫 원전 부지 관리 인수…설계에서 건설 단계로 전환",
+      "keei_item": "폴란드 OSGE, 자국 내 BWRX-300 14기 건설 관련 CfD 지원 신청",
+      "prompt_version": 1,
+      "reason": "다른 프로젝트",
+      "same_event": false
+    },
+    "issue-507b8b82e83bb7fd--249f1333d0": {
+      "issue_title": "DL이앤씨, 엑스에너지와 SMR 표준화 설계 및 저탄소 사업 확대",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "기업 간 협력과 국가 간 협력은 다름",
+      "same_event": false
+    },
+    "issue-5085332ba448f2a6--0e615713ea": {
+      "issue_title": "정부, 2027년 예산안에 SMR 및 핵융합 등 초격차 기술 집중 투자 계획",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "투자 주체와 정책 대상이 다름",
+      "same_event": false
+    },
+    "issue-5190f5f0f0d050de--6f56f58c45": {
+      "issue_title": "유럽, 가뭄·폭염으로 원전 가동 차질…에너지 위기 확산",
+      "keei_item": "유럽투자은행, 루마니아 Cernavodă 1호기 설비개선 1.3조 원 대출 승인",
+      "prompt_version": 1,
+      "reason": "유럽 전반의 가뭄 이슈와 특정 원전 대출은 별개임",
+      "same_event": false
+    },
+    "issue-5190f5f0f0d050de--bd91314eae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "글로벌 폭염·가뭄으로 유럽 원전 다수 가동 중단…에너지 공급 차질",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "유럽 폭염으로 인한 원전 가동 차질 동일",
+      "same_event": true
+    },
+    "issue-5190f5f0f0d050de--f020226b19": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "루마니아, 다뉴브강 수위 저하로 원전 가동 중단 후 전력 절약 요청",
+      "keei_item": "루마니아 SNN·헝가리 정부, 다뉴브강 저수위 대응조치 시행",
+      "prompt_version": 1,
+      "reason": "다뉴브강 저수위 대응이라는 동일 사건",
+      "same_event": true
+    },
+    "issue-525b21a811f83076--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국, '제로 탄소 단지'로 EU 규제 돌파…AI 데이터센터 유치",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국가와 추진하는 산업단지 성격이 다름",
+      "same_event": false
+    },
+    "issue-525b21a811f83076--249f1333d0": {
+      "issue_title": "中 '동수서산' 전략 확대…AI 데이터센터 인프라 집중 투자",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "중국 데이터센터와 미국 SMR 협력은 무관",
+      "same_event": false
+    },
+    "issue-525b21a811f83076--613ab26b06": {
+      "issue_title": "중국, 네이멍구에 대규모 AI 데이터센터 가동 및 추가 건설 추진",
+      "keei_item": "중국 국무원, 원전 8기 신규 건설 승인",
+      "prompt_version": 1,
+      "reason": "데이터센터와 원전 건설은 별개",
+      "same_event": false
+    },
+    "issue-525b21a811f83076--de0fd4314f": {
+      "issue_title": "중국, '제로 탄소 단지'로 EU 규제 돌파…AI 데이터센터 유치",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "데이터센터 유치와 원전 용량 목표는 별개",
+      "same_event": false
+    },
+    "issue-527a6bd0d4f4a288--841ceedbf0": {
+      "issue_title": "한수원 포천양수건설소, 2027년 발전소 주변지역 지원사업 공모",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-527a6bd0d4f4a288--d4863d270a": {
+      "issue_title": "한수원 포천양수건설소, 2027년 발전소 주변지역 지원사업 공모",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "다른 발전원, 다른 안건",
+      "same_event": false
+    },
+    "issue-52a290304fefba37--add41ecabd": {
+      "issue_title": "차세대 원전 인허가 및 운영의 인적 요인 중요성 논의",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "기술·사안·범위가 다름",
+      "same_event": false
+    },
+    "issue-538c53ac4627ea3f--5ea831d148": {
+      "issue_title": "중국 정부, 신규 원전 8기 건설 승인하며 대규모 확장 지속",
+      "keei_item": "스위스, 신규 원전 건설 금지 해제 법안 가결로 의회 절차 완료",
+      "prompt_version": 1,
+      "reason": "다른 국가의 다른 사건",
+      "same_event": false
+    },
+    "issue-538c53ac4627ea3f--613ab26b06": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국, AI 전력 확보 위해 7년간 원전 64기 승인…한국과 대비",
+      "keei_item": "중국 국무원, 원전 8기 신규 건설 승인",
+      "prompt_version": 1,
+      "reason": "장기 계획과 개별 신규 승인 건의 차이",
+      "same_event": false
+    },
+    "issue-538c53ac4627ea3f--6debc28b1b": {
+      "issue_title": "중국, AI 전력 확보 위해 7년간 원전 64기 승인…한국과 대비",
+      "keei_item": "아르헨티나, 민간투자 기반 ACR-300 건설 계획 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-538c53ac4627ea3f--841ceedbf0": {
+      "issue_title": "중국, AI 전력 확보 위해 7년간 원전 64기 승인…한국과 대비",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-538c53ac4627ea3f--d4863d270a": {
+      "issue_title": "중국, 신규 원자로 8기 건설 승인",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사안",
+      "same_event": false
+    },
+    "issue-53c3e58995054339--098d44ce44": {
+      "issue_title": "미국 캘리포니아 유일 원전 연장 제동, 차기 주정부가 결정한다",
+      "keei_item": "영국 EDF Energy, Heysham A·Hartlepool 원전 운전기간 2년 연장 결정",
+      "prompt_version": 1,
+      "reason": "대상 국가와 원전이 다름",
+      "same_event": false
+    },
+    "issue-53cff084bc298889--23a6f604ae": {
+      "issue_title": "미국 내 AI 데이터센터 건설 반대 여론 확산 및 선거 쟁점화",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "미국 내 반대 여론과 일본의 산업단지 조성은 다름",
+      "same_event": false
+    },
+    "issue-5550c8a8d7845204--8b6d0658ea": {
+      "issue_title": "K원전 인력 4년 만에 증가, 수출 호조 및 대규모 프로젝트 영향",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "국가·사안이 다름",
+      "same_event": false
+    },
+    "issue-55842b037eb69172--23a6f604ae": {
+      "issue_title": "국내 전력기기업체, 북미 AI 데이터센터 및 전력망 확충으로 수주 급증",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국가별 산업 동향임",
+      "same_event": false
+    },
+    "issue-562a6126b2b20d7b--0330b81e50": {
+      "issue_title": "내년 원전 4기 계속운전 절차 미착수, 전력 수급 불안정 우려",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "국가 및 주체가 다름",
+      "same_event": false
+    },
+    "issue-562a6126b2b20d7b--dc799316ad": {
+      "issue_title": "원안위, 고리 3·4호기 계속운전 올해 하반기 결정 및 처벌법 개정 추진",
+      "keei_item": "원자력안전위원회, 연중 상시 정기검사 허용 위한 법령 개정안 의결",
+      "prompt_version": 1,
+      "reason": "다른 법령 개정 사안",
+      "same_event": false
+    },
+    "issue-57175db7ebab8eb7--249f1333d0": {
+      "issue_title": "그리스, SMR 도입 타당성 검토 위한 국가 전담 연구그룹 신설",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 주체와 대상",
+      "same_event": false
+    },
+    "issue-57175db7ebab8eb7--54df950745": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "그리스, SMR 도입 타당성 검토 위한 국가 전담 연구그룹 신설",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "대상 국가와 추진 주체가 서로 다름",
+      "same_event": false
+    },
+    "issue-57175db7ebab8eb7--bc52b67e71": {
+      "issue_title": "그리스, SMR 도입 타당성 검토 위한 국가 전담 연구그룹 신설",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 단계",
+      "same_event": false
+    },
+    "issue-571c41d8d5a745d5--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "산업부, 호남권 AI·반도체 산업 거점 육성 계획 발표",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국내 산업 육성과 일본 GX 단지 조성임",
+      "same_event": false
+    },
+    "issue-571c41d8d5a745d5--6debc28b1b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "산업부, 호남권 AI·반도체 산업 거점 육성 계획 발표",
+      "keei_item": "아르헨티나, 민간투자 기반 ACR-300 건설 계획 발표",
+      "prompt_version": 1,
+      "reason": "국내 산업 육성과 아르헨티나 원전 건설임",
+      "same_event": false
+    },
+    "issue-571c41d8d5a745d5--841ceedbf0": {
+      "issue_title": "김성환 기후장관, 광주 반도체 클러스터 용수·전력 공급 방안 언급",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-57378b685cd5d6bc--88604b2e8c": {
+      "issue_title": "알로 아토믹스, 알로-X 시험용 원자로 제어 플랫폼 공급사로 로크웰 오토메이션 선정",
+      "keei_item": "스웨덴 Videberg Kraft, SMR 공급사로 Rolls-Royce SMR 최종 선정",
+      "prompt_version": 1,
+      "reason": "주체·대상 원전이 다름",
+      "same_event": false
+    },
+    "issue-57378b685cd5d6bc--92b30862a0": {
+      "issue_title": "알로 아토믹스, 알로-X 시험용 원자로 제어 플랫폼 공급사로 로크웰 오토메이션 선정",
+      "keei_item": "일본 정부, 선진 원자로와 핵융합 에너지를 중점 산업 분야로 선정",
+      "prompt_version": 1,
+      "reason": "주체·사안·범위가 다름",
+      "same_event": false
+    },
+    "issue-579ba98f1a05deae--249f1333d0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "싱가포르 국무장관, 한국과 SMR 협력 및 아세안 파워그리드 구축 제안",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "협력 대상 및 주체가 서로 다른 사안",
+      "same_event": false
+    },
+    "issue-579ba98f1a05deae--3afede2c57": {
+      "issue_title": "싱가포르 국무장관, 한국과 SMR 협력 및 아세안 파워그리드 구축 제안",
+      "keei_item": "일본 경제산업성, 개량형경수로·SMR 기술개발·공급망 구축 지원 대상 선정",
+      "prompt_version": 1,
+      "reason": "협력 주체와 목적이 다름",
+      "same_event": false
+    },
+    "issue-579ba98f1a05deae--bc52b67e71": {
+      "issue_title": "싱가포르 국무장관, 한국과 SMR 협력 및 아세안 파워그리드 구축 제안",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 국가가 다름",
+      "same_event": false
+    },
+    "issue-5841f6b7706c0048--a9ffef226f": {
+      "issue_title": "미국 에너지부, NASA 및 Radiant에 HALEU 연료 할당 결정",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-5976e83faefed3d5--6445d0b3c3": {
+      "issue_title": "24.7GW 전력 더 필요한데 … 신규 원전 몇 기 짓나 또 '국민 선택'",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "국가 및 안건이 다름",
+      "same_event": false
+    },
+    "issue-5976e83faefed3d5--8016579319": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "24.7GW 전력 더 필요한데 … 신규 원전 몇 기 짓나 또 '국민 선택'",
+      "keei_item": "대만 입법원, 탈원전 정책 폐지 여부 결정을 위한 국민투표 시행안 가결",
+      "prompt_version": 1,
+      "reason": "대만 탈원전 정책 폐지 국민투표 관련",
+      "same_event": true
+    },
+    "issue-5976e83faefed3d5--841ceedbf0": {
+      "issue_title": "24.7GW 전력 더 필요한데 … 신규 원전 몇 기 짓나 또 '국민 선택'",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "국가 및 안건이 다름",
+      "same_event": false
+    },
+    "issue-59b66e399462ed45--6f56f58c45": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "유럽투자은행(EIB), 체르나보다 원전 1호기 개보수 사업에 8억 유로 대출 승인",
+      "keei_item": "유럽투자은행, 루마니아 Cernavodă 1호기 설비개선 1.3조 원 대출 승인",
+      "prompt_version": 1,
+      "reason": "동일 원전 개보수 사업에 대한 대출 승인",
+      "same_event": true
+    },
+    "issue-5af9f6b4e9ba2d63--85716785e1": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "독일, 프라마톰 자회사에 VVER 핵연료 생산 승인",
+      "keei_item": "독일, Lingen 공장 VVER-1000 원전연료 생산을 위한 시설변경 승인",
+      "prompt_version": 1,
+      "reason": "독일 Lingen 공장 VVER 연료 생산 승인",
+      "same_event": true
+    },
+    "issue-5d1cf0b4c7f1c44a--d65bac9c4d": {
+      "issue_title": "대구시, 차세대 SMR 유치 경쟁 본격화…군위 내륙형 2호기 목표",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "주체·대상·단계가 다름",
+      "same_event": false
+    },
+    "issue-5dd57acfbbc87613--0073017cf6": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "석탄화력발전소 폐지지역 지원 특별법 국회 본회의 통과",
+      "keei_item": "일본 간사이전력, 후쿠이현 지역 활성화 지원금 작년보다 약 93억 원 감소",
+      "prompt_version": 1,
+      "reason": "한국의 특별법과 일본의 지원금은 무관",
+      "same_event": false
+    },
+    "issue-5f508326eb5801f7--0330b81e50": {
+      "issue_title": "美 정부, '지하 원전' 추진 속 두산·수산이앤에스 미래 기회 확보 기대",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "A는 특정 기술, B는 인허가 절차",
+      "same_event": false
+    },
+    "issue-5f508326eb5801f7--835e580735": {
+      "issue_title": "LANL, ZiaCore 마이크로원자로 임계 도달 발표",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "개별 사건이 전체 목표 달성",
+      "same_event": true
+    },
+    "issue-5f508326eb5801f7--dcf5909f44": {
+      "issue_title": "美 정부, '지하 원전' 추진 속 두산·수산이앤에스 미래 기회 확보 기대",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "대상 원전과 안건이 다름",
+      "same_event": false
+    },
+    "issue-5f50f27e3d506043--0e615713ea": {
+      "issue_title": "미국 에너지부, 제네시스 미션 프로젝트에 원자력 분야 대거 선정 발표",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "사안·범위가 다름",
+      "same_event": false
+    },
+    "issue-5f50f27e3d506043--92b30862a0": {
+      "issue_title": "미국 에너지부, 제네시스 미션 프로젝트에 원자력 분야 대거 선정 발표",
+      "keei_item": "일본 정부, 선진 원자로와 핵융합 에너지를 중점 산업 분야로 선정",
+      "prompt_version": 1,
+      "reason": "국가·주체가 다름",
+      "same_event": false
+    },
+    "issue-5f50f27e3d506043--99f6aed02e": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 에너지부, 제네시스 미션 프로젝트에 원자력 분야 대거 선정 발표",
+      "keei_item": "미 에너지부, Genesis Mission 일환으로 원자력 AI 혁신 프로젝트 선정",
+      "prompt_version": 1,
+      "reason": "미 에너지부의 동일 프로젝트 선정 발표",
+      "same_event": true
+    },
+    "issue-5f77125a9ea8f953--0e615713ea": {
+      "issue_title": "상용 핵융합 발전 기술의 상용화 동향",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "한쪽은 동향, 다른 쪽은 정책",
+      "same_event": false
+    },
+    "issue-5f77125a9ea8f953--a3cf49987b": {
+      "issue_title": "상용 핵융합 발전 기술의 상용화 동향",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "핵융합 기술과 나트륨 원전은 다름",
+      "same_event": false
+    },
+    "issue-616c6b13d9f03cfa--a50cc0c8f8": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "센트러스-X-에너지, HALEU 농축 계약 체결 및 TRISO-X 캠퍼스 확장",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "연료 공급사와 규제 대상이 서로 다름",
+      "same_event": false
+    },
+    "issue-616c6b13d9f03cfa--a9ffef226f": {
+      "issue_title": "센트러스-X-에너지, HALEU 농축 계약 체결 및 TRISO-X 캠퍼스 확장",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "같은 기업, 다른 사안",
+      "same_event": false
+    },
+    "issue-61fefa0bf9e0db2c--0e615713ea": {
+      "issue_title": "SuperCritical Materials, 해수 우라늄 추출 기술 라이선스 확보",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "주체·기술·사안이 다름",
+      "same_event": false
+    },
+    "issue-61fefa0bf9e0db2c--8b6d0658ea": {
+      "issue_title": "SuperCritical Materials, 해수 우라늄 추출 기술 라이선스 확보",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "한쪽은 기업 기술, 다른 쪽은 국가 생산량",
+      "same_event": false
+    },
+    "issue-6260c0799db78ac9--23a6f604ae": {
+      "issue_title": "제12차 전력수급기본계획, 원전 비중 확대 시험대",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "한국의 전력 계획과 일본의 산업 정책임",
+      "same_event": false
+    },
+    "issue-6260c0799db78ac9--6445d0b3c3": {
+      "issue_title": "24.7GW 전력 더 필요한데 … 신규 원전 몇 기 짓나 또 '국민 선택'",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "국가·사안·범위가 다름",
+      "same_event": false
+    },
+    "issue-6260c0799db78ac9--841ceedbf0": {
+      "issue_title": "제12차 전력수급기본계획, 원전 비중 확대 시험대",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "한국의 전력 계획과 캐나다의 에너지 전략임",
+      "same_event": false
+    },
+    "issue-62dc161cb51f2498--249f1333d0": {
+      "issue_title": "콜로라도 광산대학, AI 활용 핵연료 재활용 및 핵심 광물 탐사 연구",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체·사안·범위가 다름",
+      "same_event": false
+    },
+    "issue-62dc161cb51f2498--99f6aed02e": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "콜로라도 광산대학, AI 활용 핵연료 재활용 및 핵심 광물 탐사 연구",
+      "keei_item": "미 에너지부, Genesis Mission 일환으로 원자력 AI 혁신 프로젝트 선정",
+      "prompt_version": 1,
+      "reason": "대학 연구와 에너지부 프로젝트는 별개",
+      "same_event": false
+    },
+    "issue-62dc161cb51f2498--ad72316c8e": {
+      "issue_title": "콜로라도 광산대학, AI 활용 핵연료 재활용 및 핵심 광물 탐사 연구",
+      "keei_item": "일본 간사이전력, 자국 최초로 원전을 활용한 ‘오프사이트 PPA’ 추진",
+      "prompt_version": 1,
+      "reason": "주체·국가·사안이 다름",
+      "same_event": false
+    },
+    "issue-64e9af97c5aec46c--249f1333d0": {
+      "issue_title": "한국 SMR 동력 컨테이너선 개념 설계, 미국선급협회(ABS)로부터 기본승인(AIP) 획득",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "안건의 구체성이 다름",
+      "same_event": false
+    },
+    "issue-64e9af97c5aec46c--d4863d270a": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한국 SMR 동력 컨테이너선 개념 설계, 미국선급협회(ABS)로부터 기본승인(AIP) 획득",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "개별 선박 설계 승인과 제도 도입은 다름",
+      "same_event": false
+    },
+    "issue-65bc735c35edf37c--249f1333d0": {
+      "issue_title": "한국수력원자력, 필리핀 아보이티즈 파워와 원전 사업 협력 MOU 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 사안",
+      "same_event": false
+    },
+    "issue-65bc735c35edf37c--841ceedbf0": {
+      "issue_title": "한수원, 필리핀과 원자력 협력 MOU 체결로 아시아 시장 확대",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "국가와 안건이 다름",
+      "same_event": false
+    },
+    "issue-65bc735c35edf37c--ee30e34bc3": {
+      "issue_title": "한수원, 필리핀 아보이티즈 파워와 원전 사업 MOU 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "주체와 내용이 다름",
+      "same_event": false
+    },
+    "issue-65bc735c35edf37c--f2e783de29": {
+      "issue_title": "한국수력원자력, 필리핀 아보이티즈 파워와 원전 사업 협력 MOU 체결",
+      "keei_item": "스웨덴 Studsvik 등, 연이어 신규 원전 사업 국가보조 신청",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사안",
+      "same_event": false
+    },
+    "issue-6833a35dd8fc11fe--249f1333d0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "McDermott, 네덜란드 Rolls-Royce SMR 프로젝트 지원 협력 계약 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "네덜란드 프로젝트와 아시아 협력은 별개",
+      "same_event": false
+    },
+    "issue-6833a35dd8fc11fe--88604b2e8c": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "McDermott, 네덜란드 Rolls-Royce SMR 프로젝트 지원 협력 계약 체결",
+      "keei_item": "스웨덴 Videberg Kraft, SMR 공급사로 Rolls-Royce SMR 최종 선정",
+      "prompt_version": 1,
+      "reason": "네덜란드와 스웨덴의 서로 다른 프로젝트",
+      "same_event": false
+    },
+    "issue-6833a35dd8fc11fe--d38ee438da": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "McDermott, 네덜란드 Rolls-Royce SMR 프로젝트 지원 협력 계약 체결",
+      "keei_item": "독일 Siemens Energy, Rolls-Royce SMR용 증기터빈 핵심부품 생산 추진",
+      "prompt_version": 1,
+      "reason": "협력 대상 및 사업 내용이 다름",
+      "same_event": false
+    },
+    "issue-6a25f94bf83612cd--23a6f604ae": {
+      "issue_title": "김주영 의원, AI 시대 전력산업 구조개편 국회 심포지엄 개최",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "주체와 안건이 다름",
+      "same_event": false
+    },
+    "issue-6a25f94bf83612cd--8fce4c09fa": {
+      "issue_title": "정부, 호남·용인 반도체 클러스터 전력·용수 공급 협약 체결",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 산업",
+      "same_event": false
+    },
+    "issue-6b4bcffb54f95abb--23a6f604ae": {
+      "issue_title": "AI 데이터센터 급증에 따른 전력안보 체계 강화 필요",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "전력안보 일반론과 일본의 특정 산업단지 조성은 다름",
+      "same_event": false
+    },
+    "issue-6b4bcffb54f95abb--ddd33cac84": {
+      "issue_title": "AI 데이터센터 급증에 따른 전력안보 체계 강화 필요",
+      "keei_item": "일본 니가타현, 원전 재가동에 따른 도쿄전력 지원금 활용 방안 마련",
+      "prompt_version": 1,
+      "reason": "전력안보 일반론과 일본 지자체의 지원금 방안은 다름",
+      "same_event": false
+    },
+    "issue-6b93ed7e22e9bb4b--0330b81e50": {
+      "issue_title": "미국 원자력규제위원회(NRC), 공청회서 신규 규정 제안 내용 공개",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "NRC의 규제 절차 개편",
+      "same_event": true
+    },
+    "issue-6b93ed7e22e9bb4b--08db51ddba": {
+      "issue_title": "미국 원자력규제위원회(NRC), 공청회서 신규 규정 제안 내용 공개",
+      "keei_item": "미 NRC, 원전 인허가 및 방사선 방호 규정 현대화 규정안 발표",
+      "prompt_version": 1,
+      "reason": "동일한 규제 현대화 규정안",
+      "same_event": true
+    },
+    "issue-6b93ed7e22e9bb4b--249f1333d0": {
+      "issue_title": "미국 NRC, 방사성 물질 운송 규정 현대화 제안 및 의견 수렴",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체와 안건이 다름",
+      "same_event": false
+    },
+    "issue-6b93ed7e22e9bb4b--b6aec252c7": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 원자력규제위원회(NRC), 공청회서 신규 규정 제안 내용 공개",
+      "keei_item": "미 NRC, 환경심사 규정 개정안 발표",
+      "prompt_version": 1,
+      "reason": "규정 제안과 환경심사 규정 개정은 다름",
+      "same_event": false
+    },
+    "issue-6c28e5d6eeed09d6--5ea831d148": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한수원 체코 두코바니 원전 사업, 지질조사 완료 및 2029년 착공 준비",
+      "keei_item": "스위스, 신규 원전 건설 금지 해제 법안 가결로 의회 절차 완료",
+      "prompt_version": 1,
+      "reason": "체코 원전과 스위스 법안은 서로 다른 사안",
+      "same_event": false
+    },
+    "issue-6ccb38614efd6818--85716785e1": {
+      "issue_title": "LG에너지솔루션, 미국 미시간 랜싱 ESS 배터리 공장 가동",
+      "keei_item": "독일, Lingen 공장 VVER-1000 원전연료 생산을 위한 시설변경 승인",
+      "prompt_version": 1,
+      "reason": "배터리 공장과 원전 연료 시설은 무관함",
+      "same_event": false
+    },
+    "issue-6da9d8c70fd660b7--841ceedbf0": {
+      "issue_title": "영덕 신규 원전, 전략환경영향평가 착수…초안 9월 제출 예정",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "국가와 원전 사업의 성격이 다름",
+      "same_event": false
+    },
+    "issue-6da9d8c70fd660b7--f2e783de29": {
+      "issue_title": "영덕 신규 원전, 전략환경영향평가 착수…초안 9월 제출 예정",
+      "keei_item": "스웨덴 Studsvik 등, 연이어 신규 원전 사업 국가보조 신청",
+      "prompt_version": 1,
+      "reason": "국가와 원전 사업의 성격이 다름",
+      "same_event": false
+    },
+    "issue-6f43d6ced821513e--7175604cab": {
+      "issue_title": "EDF, 테크닙 에너지스와 EPR2 원자로 건설 및 인도 협력 전략적 협약 체결",
+      "keei_item": "영국 정부·EDF, Sizewell B 원전 계속운전 지원 조건 합의",
+      "prompt_version": 1,
+      "reason": "다른 원전, 다른 안건",
+      "same_event": false
+    },
+    "issue-6f43d6ced821513e--841ceedbf0": {
+      "issue_title": "EDF, 테크닙 에너지스와 EPR2 원자로 건설 및 인도 협력 전략적 협약 체결",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 유형의 사건",
+      "same_event": false
+    },
+    "issue-6f43d6ced821513e--ee30e34bc3": {
+      "issue_title": "EDF, 테크닙 에너지스와 EPR2 원자로 건설 및 인도 협력 전략적 협약 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 주체, 다른 안건",
+      "same_event": false
+    },
+    "issue-72163a7758d29118--a9ffef226f": {
+      "issue_title": "나노뉴클리어, 틸먼과 AI 데이터센터용 마이크로 원자로 공급 협력",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "기업별 공급 협력 대상과 내용이 서로 다름",
+      "same_event": false
+    },
+    "issue-726ce5e20cdd473d--0330b81e50": {
+      "issue_title": "정부, 산업용 전기요금 지역별 차등제 추진, 이달 중 공청회 개최",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-726ce5e20cdd473d--249f1333d0": {
+      "issue_title": "정부, 산업용 전기요금 지역별 차등제 도입 추진",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "전기요금제와 SMR 협력은 다른 사안",
+      "same_event": false
+    },
+    "issue-726ce5e20cdd473d--6debc28b1b": {
+      "issue_title": "정부, 2026년 하반기 업무보고서 산업용 전기요금 지역별 차등 적용 발표",
+      "keei_item": "아르헨티나, 민간투자 기반 ACR-300 건설 계획 발표",
+      "prompt_version": 1,
+      "reason": "국가, 안건, 대상 모두 다름",
+      "same_event": false
+    },
+    "issue-726ce5e20cdd473d--a50cc0c8f8": {
+      "issue_title": "정부, 영호남 산업용 전기요금 최대 10% 인하 방침",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "전기요금 정책과 연료 제조 승인은 무관",
+      "same_event": false
+    },
+    "issue-726ce5e20cdd473d--f797174d9b": {
+      "issue_title": "정부, 2026년 하반기 업무보고서 산업용 전기요금 지역별 차등 적용 발표",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-72fdb8f9c170e368--de0fd4314f": {
+      "issue_title": "미군, 2030년까지 마이크로원자로 기지 배치 추진",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "미군 마이크로원자로와 중국 원전 목표는 별개임",
+      "same_event": false
+    },
+    "issue-72fdb8f9c170e368--f5d65c6801": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 육군, 마이크로 원자로 배치 위해 5개 기업에 22억 달러 지원",
+      "keei_item": "미 육군, Janus 프로그램 마이크로원자로 5개 사업자·부지 선정",
+      "prompt_version": 1,
+      "reason": "미 육군 마이크로 원자로 사업임",
+      "same_event": true
+    },
+    "issue-737df86cf04543b5--23a6f604ae": {
+      "issue_title": "AI 시대 전력수요 대응 위한 한전 중심 전력산업 재편 논의 본격화",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국가와 안건이 다름",
+      "same_event": false
+    },
+    "issue-73dc4aec3344793a--99f6aed02e": {
+      "issue_title": "텍사스 2.5GW 가스-원자력 복합 프로젝트, 엔지니어링 및 인허가 단계 진입",
+      "keei_item": "미 에너지부, Genesis Mission 일환으로 원자력 AI 혁신 프로젝트 선정",
+      "prompt_version": 1,
+      "reason": "프로젝트의 성격과 목적이 다름",
+      "same_event": false
+    },
+    "issue-76a5d2f70d878ec6--85716785e1": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "캐나다 브루스 파워, 의료용 동위원소 처리 시설 운영 승인",
+      "keei_item": "독일, Lingen 공장 VVER-1000 원전연료 생산을 위한 시설변경 승인",
+      "prompt_version": 1,
+      "reason": "의료용 동위원소와 핵연료 생산은 다름",
+      "same_event": false
+    },
+    "issue-76ffb07f2b6ccb8d--23a6f604ae": {
+      "issue_title": "제12차 전력수급기본계획(전기본) 수립 방향에 대한 기고문",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-7702cb1efa54b619--54df950745": {
+      "issue_title": "아르헨티나-루마니아, 노후 원전 수명연장 협력 추진",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-7702cb1efa54b619--a9ffef226f": {
+      "issue_title": "아르헨티나-루마니아, 노후 원전 수명연장 협력 추진",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-78b0e1f04036be7f--5ea831d148": {
+      "issue_title": "불가리아 AP1000 신규 원전 건설, 양국 간 '전략적 우선순위'로 강조",
+      "keei_item": "스위스, 신규 원전 건설 금지 해제 법안 가결로 의회 절차 완료",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-78b0e1f04036be7f--6445d0b3c3": {
+      "issue_title": "불가리아 AP1000 신규 원전 건설, 양국 간 '전략적 우선순위'로 강조",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "다른 국가/지역의 사건",
+      "same_event": false
+    },
+    "issue-78b0e1f04036be7f--841ceedbf0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "불가리아 AP1000 신규 원전 건설, 양국 간 '전략적 우선순위'로 강조",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "불가리아 원전과 캐나다 에너지 전략은 다름",
+      "same_event": false
+    },
+    "issue-7a867b2ff27fd40f--23abb7f7ab": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "트럼프 행정부, 핵심 전력망 외국산 기기 제한 행정명령 서명",
+      "keei_item": "폴란드 대통령, 원전 인허가 간소화 법 개정안 서명",
+      "prompt_version": 1,
+      "reason": "서로 다른 국가의 정책 사안임",
+      "same_event": false
+    },
+    "issue-7a867b2ff27fd40f--835e580735": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국, 전력망 인프라 안보 강화 위한 행정명령 발동",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "행정명령의 목적과 대상이 다름",
+      "same_event": false
+    },
+    "issue-7b2b8cc8cc78400b--dbc1699314": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "석탄발전 부지 활용 SMR 전환 잠재 시장 450GW 전망",
+      "keei_item": "전 세계 원전 장기 시나리오 전망 (NEA Nuclear Energy Outlook)",
+      "prompt_version": 1,
+      "reason": "개별 프로젝트와 업계 전망의 차이",
+      "same_event": false
+    },
+    "issue-7e77e7f003ff7ab6--bd91314eae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "유럽 폭염으로 인한 원전 가동 중단 및 경제적 손실 발생",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "유럽 폭염으로 인한 원전 영향 동일",
+      "same_event": true
+    },
+    "issue-7f066d5dce3f0910--08db51ddba": {
+      "issue_title": "원자력안전위원회, 2026년 하반기 K-원자력 안전 업무보고",
+      "keei_item": "미 NRC, 원전 인허가 및 방사선 방호 규정 현대화 규정안 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 주체",
+      "same_event": false
+    },
+    "issue-7f066d5dce3f0910--841ceedbf0": {
+      "issue_title": "원자력안전위원회, 2026년 하반기 K-원자력 안전 업무보고",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 주체",
+      "same_event": false
+    },
+    "issue-7fbf45e0f47e3880--835e580735": {
+      "issue_title": "대우건설, 하반기 신규 수주 목표 20조원…체코 두코바니 원전 포함",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-7fbf45e0f47e3880--841ceedbf0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "대우건설, 하반기 신규 수주 목표 20조원…체코 두코바니 원전 포함",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "언급된 국가와 사업 주체가 서로 다름",
+      "same_event": false
+    },
+    "issue-81f953a60f1d554b--b6aec252c7": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국원자력학회(ANS), OMB에 핵 연구 교류 저해 우려 표명",
+      "keei_item": "미 NRC, 환경심사 규정 개정안 발표",
+      "prompt_version": 1,
+      "reason": "서로 다른 규제 및 정책 이슈",
+      "same_event": false
+    },
+    "issue-858f887a11d713e9--c2b8808fe0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "스페인 최고령 원전, 퇴출 위기 극복하고 운영 지속 결정",
+      "keei_item": "스페인 정부, Almaraz 원전 운영허가 2030년까지 갱신",
+      "prompt_version": 1,
+      "reason": "스페인 Almaraz 원전 운영 연장 건",
+      "same_event": true
+    },
+    "issue-86fd8470109cefcd--6debc28b1b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "BWXT 및 카이로스 파워, 5억 달러 규모 핵연료 허브 건설 계획 발표",
+      "keei_item": "아르헨티나, 민간투자 기반 ACR-300 건설 계획 발표",
+      "prompt_version": 1,
+      "reason": "서로 다른 국가 및 기업의 프로젝트",
+      "same_event": false
+    },
+    "issue-86fd8470109cefcd--8fce4c09fa": {
+      "issue_title": "BWXT 및 카이로스 파워, 5억 달러 규모 핵연료 허브 건설 계획 발표",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "한쪽은 개별 사업, 다른 쪽은 정책",
+      "same_event": false
+    },
+    "issue-86fd8470109cefcd--f797174d9b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "BWXT 및 카이로스 파워, 5억 달러 규모 핵연료 허브 건설 계획 발표",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "서로 다른 기업의 원전 개발 계획",
+      "same_event": false
+    },
+    "issue-8891f90e1c26806d--23a6f604ae": {
+      "issue_title": "미국 백악관, AI 시대 '전기소비자 보호 서약' 발표로 전력원 판도 변화 예고",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-8891f90e1c26806d--8b6d0658ea": {
+      "issue_title": "미국 백악관, AI 시대 '전기소비자 보호 서약' 발표로 전력원 판도 변화 예고",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "다른 안건",
+      "same_event": false
+    },
+    "issue-895b471e7f2e1d4c--a9ffef226f": {
+      "issue_title": "빌 게이츠 방한, SMR 공급망 논의…테라파워, 美 NRC 건설허가 획득",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "기업과 추진하는 프로젝트가 서로 다름",
+      "same_event": false
+    },
+    "issue-89a559f17ff440e3--54df950745": {
+      "issue_title": "롱비치 항만, 미 해양청(MARAD)과 해상 원자로 개발 협력 첫 파트너십 체결",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-89a559f17ff440e3--ee30e34bc3": {
+      "issue_title": "롱비치 항만, 미 해양청(MARAD)과 해상 원자로 개발 협력 첫 파트너십 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-8ba4942a5024e40e--56dc541d23": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 트럼프 대통령, 사우디와 123 원자력협정안 의회 제출",
+      "keei_item": "일본 후쿠이현, 현 의회에 핵연료세 인상 조례안 제출",
+      "prompt_version": 1,
+      "reason": "서로 다른 국가의 원자력 관련 사안",
+      "same_event": false
+    },
+    "issue-8ba4942a5024e40e--9a0229abcf": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 트럼프 대통령, 사우디와 123 원자력협정안 의회 제출",
+      "keei_item": "미국·사우디아라비아, 123 협정 체결",
+      "prompt_version": 1,
+      "reason": "미-사우디 123 협정 관련 진행 단계",
+      "same_event": true
+    },
+    "issue-8ba4942a5024e40e--e52f9efd04": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미-사우디 원자력 협력 123 협정 전문 공개",
+      "keei_item": "미국·사우디아라비아 123 협정, 미 의회 제출·검토 절차 돌입",
+      "prompt_version": 1,
+      "reason": "미-사우디 123 협정 관련 절차임",
+      "same_event": true
+    },
+    "issue-8d4e6351d6c710b2--dc799316ad": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "국회 본회의, 「국가기간 전력망 확충 특별법」 등 73건 의안 처리",
+      "keei_item": "원자력안전위원회, 연중 상시 정기검사 허용 위한 법령 개정안 의결",
+      "prompt_version": 1,
+      "reason": "서로 다른 법령 및 규제 기관 사안",
+      "same_event": false
+    },
+    "issue-8ee1f406adeda252--bd91314eae": {
+      "issue_title": "프랑스 EDF 원전 6기, 폭염으로 가동 중단…원전 가용성 20% 육박",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "폭염으로 인한 원전 가동 영향 동일",
+      "same_event": true
+    },
+    "issue-91479bf4a11beb13--dcf5909f44": {
+      "issue_title": "독일, 프라마톰의 러시아 설계 핵연료봉 제조 승인",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-92e555a3c19fdcb7--9a0229abcf": {
+      "issue_title": "미국 핵안보국(NNSA), Y-12 칼시너 프로젝트 해체 작업 승인",
+      "keei_item": "미국·사우디아라비아, 123 협정 체결",
+      "prompt_version": 1,
+      "reason": "사건의 성격과 대상이 완전히 다름",
+      "same_event": false
+    },
+    "issue-937708a71d17b0a2--16d9dcc69c": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 NRC, Constellation Ginna 원전 계속운전 신청서 접수",
+      "keei_item": "미 NRC, Hatch 원전 2차 계속운전 승인",
+      "prompt_version": 1,
+      "reason": "서로 다른 원전의 인허가 건",
+      "same_event": false
+    },
+    "issue-937708a71d17b0a2--dcf5909f44": {
+      "issue_title": "미국 NRC, Constellation Ginna 원전 계속운전 신청서 접수",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "다른 규제 대상",
+      "same_event": false
+    },
+    "issue-938ccbdeeccd6e39--ee30e34bc3": {
+      "issue_title": "프랑스 Stellaria, MSR 기반 통합 에너지 허브 개발 MOU 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 주체, 다른 안건",
+      "same_event": false
+    },
+    "issue-9408dcd56e1630ae--0330b81e50": {
+      "issue_title": "뉴클레오(Newcleo), 프랑스 MOX 연료 시설 인허가 절차 진전",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 주체, 다른 안건",
+      "same_event": false
+    },
+    "issue-9408dcd56e1630ae--add41ecabd": {
+      "issue_title": "뉴클레오(Newcleo), 프랑스 MOX 연료 시설 인허가 절차 진전",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 기술, 다른 안건",
+      "same_event": false
+    },
+    "issue-95e2af27fb009d26--23a6f604ae": {
+      "issue_title": "HD현대중공업, 미국 AI 데이터센터에 1조원 규모 발전용 엔진 공급 계약",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-95e2af27fb009d26--8fce4c09fa": {
+      "issue_title": "HD현대중공업, 미국 데이터센터용 9560억 원 규모 발전설비 수주",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 안건",
+      "same_event": false
+    },
+    "issue-95e2af27fb009d26--ee30e34bc3": {
+      "issue_title": "HD현대중공업, 9560억 원 규모 발전용 엔진 수출 계약 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "주체, 안건, 대상 모두 다름",
+      "same_event": false
+    },
+    "issue-9722bb6b6a22d2e9--b6aec252c7": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원자력안전법 개정안 국회 통과…사업자 '1차 안전책임' 법제화",
+      "keei_item": "미 NRC, 환경심사 규정 개정안 발표",
+      "prompt_version": 1,
+      "reason": "서로 다른 국가의 법령 개정",
+      "same_event": false
+    },
+    "issue-975146cde1cfceb8--6f56f58c45": {
+      "issue_title": "유럽, 가뭄·폭염으로 원전 가동 차질…에너지 위기 확산",
+      "keei_item": "유럽투자은행, 루마니아 Cernavodă 1호기 설비개선 1.3조 원 대출 승인",
+      "prompt_version": 1,
+      "reason": "가동 차질과 설비개선 대출은 다른 사안",
+      "same_event": false
+    },
+    "issue-975146cde1cfceb8--bd91314eae": {
+      "issue_title": "유럽, 가뭄·폭염으로 원전 가동 차질…에너지 위기 확산",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "폭염으로 인한 원전 감발이라는 동일 사건",
+      "same_event": true
+    },
+    "issue-97e7c36d2ed5091a--8b6d0658ea": {
+      "issue_title": "국내 원전 산업 인력, 4년 만에 증가세 전환",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "국가 및 안건이 다름",
+      "same_event": false
+    },
+    "issue-97ec4ac6339c3b3c--5924c0c9b7": {
+      "issue_title": "스페인 정부, 알마라스(Almaraz) 원전 운영 연장 승인",
+      "keei_item": "스페인 Almaraz 원전, 연장운전 조건부 적합 판정",
+      "prompt_version": 1,
+      "reason": "알마라스 원전 운영 연장이라는 동일 사안",
+      "same_event": true
+    },
+    "issue-9957f9f4b43552f8--23a6f604ae": {
+      "issue_title": "트럼프, AI 데이터센터 확대 옹호 및 규제 완화 기조 재확인",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "미국의 정책 기조와 일본의 산업단지 조성은 별개",
+      "same_event": false
+    },
+    "issue-99fb7b94934451e5--249f1333d0": {
+      "issue_title": "정부, 소형모듈원전(SMR) 기술 국가전략기술로 지정 및 지원 확대",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체와 안건이 다름",
+      "same_event": false
+    },
+    "issue-9b85b2a6e2593847--841ceedbf0": {
+      "issue_title": "K건설, 중동 플랜트 불확실성에 원전·전력 인프라 수주로 선회",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "주체, 국가, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-9b85b2a6e2593847--d4863d270a": {
+      "issue_title": "한수원, 신규 대형 원전 및 SMR 부지 후보지 선정",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "다른 단계의 안건",
+      "same_event": false
+    },
+    "issue-9b85b2a6e2593847--d65bac9c4d": {
+      "issue_title": "한수원, 신규 대형 원전 및 SMR 부지 후보지 선정",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "한수원의 신규 원전 부지 선정",
+      "same_event": true
+    },
+    "issue-9bff425a2d2c0a20--4fe7b05f50": {
+      "issue_title": "중국 톈완(Tianwan) 8호기 냉수압 시험 완료",
+      "keei_item": "중국 Taipingling 원전 2호기, 최초 계통연결 완료",
+      "prompt_version": 1,
+      "reason": "다른 원전, 다른 호기",
+      "same_event": false
+    },
+    "issue-9ddff9f82d2068a6--a3cf49987b": {
+      "issue_title": "美, 동맹국에 중국 주도 AI 협력기구 가입 금지 압박",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "AI 협력과 원전 협력은 별개",
+      "same_event": false
+    },
+    "issue-9e7a3003708adbaa--88604b2e8c": {
+      "issue_title": "원안위, 스웨덴과 고준위 방폐장 및 SMR 안전규제 협력 강화",
+      "keei_item": "스웨덴 Videberg Kraft, SMR 공급사로 Rolls-Royce SMR 최종 선정",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 안건",
+      "same_event": false
+    },
+    "issue-9ff80dab9059f991--249f1333d0": {
+      "issue_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 범위가 다름",
+      "same_event": false
+    },
+    "issue-9ff80dab9059f991--54df950745": {
+      "issue_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 국가가 다름",
+      "same_event": false
+    },
+    "issue-a267fd2b0c6cf19b--bd91314eae": {
+      "issue_title": "루마니아 체르나보다 원전 2호기, 저수위로 정지",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "기후 영향에 따른 원전 정지 사례",
+      "same_event": true
+    },
+    "issue-a267fd2b0c6cf19b--f020226b19": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "루마니아 체르나보다 원전 2호기, 저수위로 정지",
+      "keei_item": "루마니아 SNN·헝가리 정부, 다뉴브강 저수위 대응조치 시행",
+      "prompt_version": 1,
+      "reason": "다뉴브강 저수위로 인한 원전 대응 동일",
+      "same_event": true
+    },
+    "issue-a3ebf95f8f2a3d16--0330b81e50": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "NRC, 원자로 인허가 현대화 제안 규칙 관련 질의응답 진행",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "NRC 인허가 현대화 관련 절차 개편",
+      "same_event": true
+    },
+    "issue-a3ebf95f8f2a3d16--08db51ddba": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "NRC, 원자로 인허가 현대화 제안 규칙 관련 질의응답 진행",
+      "keei_item": "미 NRC, 원전 인허가 및 방사선 방호 규정 현대화 규정안 발표",
+      "prompt_version": 1,
+      "reason": "NRC 인허가 현대화 규정 관련 사안",
+      "same_event": true
+    },
+    "issue-a4723d13eaa57660--48657c5c8d": {
+      "issue_title": "중국 뤼펑 2호기 '슈퍼 모듈' 설치 완료, 원전 건설 이정표 달성",
+      "keei_item": "중국 Taipingling 원전 2호기, 상업운전 개시",
+      "prompt_version": 1,
+      "reason": "대상 원전 및 건설 단계가 다름",
+      "same_event": false
+    },
+    "issue-a4723d13eaa57660--4fe7b05f50": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국 뤼펑 2호기 '슈퍼 모듈' 설치 완료, 원전 건설 이정표 달성",
+      "keei_item": "중국 Taipingling 원전 2호기, 최초 계통연결 완료",
+      "prompt_version": 1,
+      "reason": "서로 다른 중국 원전 프로젝트",
+      "same_event": false
+    },
+    "issue-a4723d13eaa57660--841ceedbf0": {
+      "issue_title": "중국, 신규 원자로 8기 건설 승인",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사안",
+      "same_event": false
+    },
+    "issue-a4723d13eaa57660--d4863d270a": {
+      "issue_title": "중국, 신규 원자로 8기 건설 승인",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "다른 국가의 다른 사안",
+      "same_event": false
+    },
+    "issue-a5a1ef68231b4e51--249f1333d0": {
+      "issue_title": "테라파워-한국 기업 SMR 협력, 한국 원전기업 수출 공급망 확대",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "개별 기업 협력과 국가 간 협력은 다름",
+      "same_event": false
+    },
+    "issue-a75afed1bd7ff155--249f1333d0": {
+      "issue_title": "러시아, 원전 30GW 추가 건설 및 수출 확대 계획",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "러시아 원전 계획과 미국 SMR 협력은 무관",
+      "same_event": false
+    },
+    "issue-a81dcba7d0fa007b--16d9dcc69c": {
+      "issue_title": "홀텍, 오이스터 크릭 원전 해체 승인 및 걸프 사우스 진출 추진",
+      "keei_item": "미 NRC, Hatch 원전 2차 계속운전 승인",
+      "prompt_version": 1,
+      "reason": "다른 원전, 다른 사안",
+      "same_event": false
+    },
+    "issue-a81dcba7d0fa007b--dcf5909f44": {
+      "issue_title": "홀텍, 오이스터 크릭 원전 해체 승인 및 걸프 사우스 진출 추진",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 사안",
+      "same_event": false
+    },
+    "issue-a8c1cdc2ca53d72f--0e615713ea": {
+      "issue_title": "미 상무부, 아이다호·와이오밍 신규 원자력 개발에 3,100만 달러 투자 발표",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "주체, 기술, 내용 모두 다름",
+      "same_event": false
+    },
+    "issue-a8c1cdc2ca53d72f--f797174d9b": {
+      "issue_title": "미 상무부, 아이다호·와이오밍 신규 원자력 개발에 3,100만 달러 투자 발표",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "주체, 지역, 내용 모두 다름",
+      "same_event": false
+    },
+    "issue-aa165fa0824b87d8--0330b81e50": {
+      "issue_title": "11차 전기본 신규 양수발전 1.25GW 입찰, 발전사 수주 경쟁 심화",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 에너지원",
+      "same_event": false
+    },
+    "issue-aa165fa0824b87d8--f2e783de29": {
+      "issue_title": "11차 전기본 신규 양수발전 1.25GW 입찰, 발전사 수주 경쟁 심화",
+      "keei_item": "스웨덴 Studsvik 등, 연이어 신규 원전 사업 국가보조 신청",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 에너지원",
+      "same_event": false
+    },
+    "issue-aafd59741b95cafa--0330b81e50": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "美 정부, '지하 원전' 추진 속 두산·수산이앤에스 미래 기회 확보 기대",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "지하 원전과 인허가 절차는 별개",
+      "same_event": false
+    },
+    "issue-aafd59741b95cafa--83998966ea": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "테라파워, 영국 내 SMR 건설 부지 선정 및 협력 추진",
+      "keei_item": "스웨덴 Blykalla, Untra 부지에 SMR 건설 사업 정부 승인·국가보조 신청 추진",
+      "prompt_version": 1,
+      "reason": "국가 및 사업 주체가 다름",
+      "same_event": false
+    },
+    "issue-aafd59741b95cafa--a3cf49987b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "두산에너빌리티, 테라파워 나트륨 냉각 고속로 핵심 기자재 공급 계약",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "테라파워 나트륨 원전 공급망 협력 건임",
+      "same_event": true
+    },
+    "issue-aafd59741b95cafa--d4863d270a": {
+      "issue_title": "미 에너지부, 딥 피션 지하 SMR 안전 설계 승인",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "국가와 안건이 다름",
+      "same_event": false
+    },
+    "issue-aafd59741b95cafa--dcf5909f44": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "美 정부, '지하 원전' 추진 속 두산·수산이앤에스 미래 기회 확보 기대",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "지하 원전과 설계 인증은 별개",
+      "same_event": false
+    },
+    "issue-aec4e7721d553311--841ceedbf0": {
+      "issue_title": "영덕 신규원전 2기 건설 본궤도…9월 전략환경영향평가 초안 제출",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "대상 국가와 원전 사업이 다름",
+      "same_event": false
+    },
+    "issue-aec4e7721d553311--d65bac9c4d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원안위, 부산 기장군 혁신형 SMR 안전성 심사 착수",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "안전성 심사와 부지 선정은 별개",
+      "same_event": false
+    },
+    "issue-aee00725a324e9a4--835e580735": {
+      "issue_title": "최태원·정기선이 주목한 SMR, 미국에서 본게임 시작",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "SMR 산업 동향과 특정 원자로 임계 도달은 다름",
+      "same_event": false
+    },
+    "issue-afefc17d290a9361--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "이 대통령, 해남 청정에너지로 미래 산업 성장 동력 강조",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국가와 추진하는 산업 분야가 다름",
+      "same_event": false
+    },
+    "issue-b0a08cb6ff57b807--249f1333d0": {
+      "issue_title": "'원전 르네상스'에… 산업부-원안위, 규제 역량 묶어 수출 시장으로",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "국내 규제 협력과 국제 협력각서는 다른 사건임",
+      "same_event": false
+    },
+    "issue-b0a08cb6ff57b807--ee30e34bc3": {
+      "issue_title": "산업부·원안위, 원전 수출 위한 규제체계 협력 업무협약 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "국내 규제 협력과 국제 우라늄 협정은 다름",
+      "same_event": false
+    },
+    "issue-b1e1072288426172--0330b81e50": {
+      "issue_title": "KEPIC-Week에서 사용후핵연료 인수기술기준(안) 공청회 최초 개최 예정",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-b1e1072288426172--ad72316c8e": {
+      "issue_title": "KEPIC-Week에서 사용후핵연료 인수기술기준(안) 공청회 최초 개최 예정",
+      "keei_item": "일본 간사이전력, 자국 최초로 원전을 활용한 ‘오프사이트 PPA’ 추진",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-b1fb7fdb7c5bdceb--bd91314eae": {
+      "issue_title": "프랑스 EDF 원전, 폭염으로 일요일 가동 불능 전력량 기록 경신",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "폭염으로 인한 원전 가동 영향 동일",
+      "same_event": true
+    },
+    "issue-b3adbd243878a3c3--23a6f604ae": {
+      "issue_title": "KEPIC, AIㆍSMR 시대 맞춰 기준체계 확장",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-b445f28b575da231--249f1333d0": {
+      "issue_title": "정부, 산업용 전기요금 지역별 차등제 도입 추진",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "전기요금제와 SMR 국제 협력은 서로 다른 사안임",
+      "same_event": false
+    },
+    "issue-b445f28b575da231--8b6d0658ea": {
+      "issue_title": "정부, AI 시대 대비 ESS 및 무탄소 전력 인프라 확대 전략 추진",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "국내 인프라 전략과 미국 우라늄 생산은 무관함",
+      "same_event": false
+    },
+    "issue-b445f28b575da231--a50cc0c8f8": {
+      "issue_title": "정부, 지역별 차등 전기요금제 초안 발표",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "전혀 다른 주제의 사안임",
+      "same_event": false
+    },
+    "issue-b445f28b575da231--de0fd4314f": {
+      "issue_title": "정부, AI 시대 대비 ESS 및 무탄소 전력 인프라 확대 전략 추진",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "국내 인프라 전략과 중국 원전 목표는 별개임",
+      "same_event": false
+    },
+    "issue-b5078cd9e9f6cf5f--bd91314eae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "유럽, 폭염 및 가뭄 대응 위해 원전 냉각수 확보 조치 시행",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "유럽 폭염으로 인한 원전 영향 동일",
+      "same_event": true
+    },
+    "issue-b5078cd9e9f6cf5f--f020226b19": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "유럽, 폭염 및 가뭄 대응 위해 원전 냉각수 확보 조치 시행",
+      "keei_item": "루마니아 SNN·헝가리 정부, 다뉴브강 저수위 대응조치 시행",
+      "prompt_version": 1,
+      "reason": "다뉴브강 저수위 대응 조치 동일",
+      "same_event": true
+    },
+    "issue-b55e201374267ece--10aeef51d9": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "IAEA, 해상원자력 국제협력체 'ATLAS' 출범",
+      "keei_item": "IAEA, 해상 원자력 이용 촉진 위한 국제협력체계 ‘ATLAS’ 출범",
+      "prompt_version": 1,
+      "reason": "동일한 ATLAS 출범 건임",
+      "same_event": true
+    },
+    "issue-b55e201374267ece--add41ecabd": {
+      "issue_title": "미국 정부·IAEA, SMR 추진선·FSMR 국제 규제 표준화 논의 착수",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "다른 기술, 다른 안건",
+      "same_event": false
+    },
+    "issue-b7041a996c04f630--249f1333d0": {
+      "issue_title": "산업부·원안위, 원전 수출 위한 규제체계 협력 업무협약 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 안건",
+      "same_event": false
+    },
+    "issue-b7041a996c04f630--dc799316ad": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한울 4호기, 원자력안전위원회(NSSC) 정기검사 중 임계 허용",
+      "keei_item": "원자력안전위원회, 연중 상시 정기검사 허용 위한 법령 개정안 의결",
+      "prompt_version": 1,
+      "reason": "개별 원전 검사와 법령 개정은 별개",
+      "same_event": false
+    },
+    "issue-b7041a996c04f630--ee30e34bc3": {
+      "issue_title": "산업부·원안위, 원전 수출 위한 규제체계 협력 업무협약 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-b74b72c478a0f54a--56dc541d23": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 의회, 국내 우라늄 농축 증대 및 유카 마운틴 폐기 법안 추진",
+      "keei_item": "일본 후쿠이현, 현 의회에 핵연료세 인상 조례안 제출",
+      "prompt_version": 1,
+      "reason": "미국 법안과 일본 조례안은 서로 다른 사안",
+      "same_event": false
+    },
+    "issue-b74b72c478a0f54a--5ea831d148": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 의회, 국내 우라늄 농축 증대 및 유카 마운틴 폐기 법안 추진",
+      "keei_item": "스위스, 신규 원전 건설 금지 해제 법안 가결로 의회 절차 완료",
+      "prompt_version": 1,
+      "reason": "미국 법안과 스위스 법안은 서로 다른 사안",
+      "same_event": false
+    },
+    "issue-b74b72c478a0f54a--6debc28b1b": {
+      "issue_title": "네바다주 상원의원들, 유카산 폐기 법안 재발의",
+      "keei_item": "아르헨티나, 민간투자 기반 ACR-300 건설 계획 발표",
+      "prompt_version": 1,
+      "reason": "대상 국가, 사안 다름",
+      "same_event": false
+    },
+    "issue-b8de1afb30b85fb7--de0fd4314f": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정부, 호남권 반도체 클러스터 팹 완공 목표 2029년으로 1년 앞당겨",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "반도체 클러스터와 중국 원전 정책은 무관",
+      "same_event": false
+    },
+    "issue-b8ffb05eb3e85a2f--64601fdd0c": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "유렌코(Urenco), 우라늄 농축 용량 확대",
+      "keei_item": "미국 Urenco USA, New Mexico 우라늄 농축시설 증설사업 기공식 개최",
+      "prompt_version": 1,
+      "reason": "유렌코의 우라늄 농축시설 증설 동일",
+      "same_event": true
+    },
+    "issue-ba51bf425ca92c1c--841ceedbf0": {
+      "issue_title": "이재명 대통령, SMR 등 7대 미래성장동력 전략적 투자 강조",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-bb65e11c8f33af62--835e580735": {
+      "issue_title": "오클로(Oklo)의 그로브스 동위원소 시험로, 첫 임계 달성",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "Oklo 임계 달성이 목표에 포함",
+      "same_event": true
+    },
+    "issue-bb65e11c8f33af62--a9ffef226f": {
+      "issue_title": "오클로(Oklo)의 그로브스 동위원소 시험로, 첫 임계 달성",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "안건이 다름",
+      "same_event": false
+    },
+    "issue-bccf5f15f321ec1b--0330b81e50": {
+      "issue_title": "SMR 입지·거래 규제, 향후 2년간의 중요성 강조",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "A는 동향, B는 특정 개편",
+      "same_event": false
+    },
+    "issue-bccf5f15f321ec1b--23a6f604ae": {
+      "issue_title": "정부, 150조 규모 미래대응기금 조성…SMR·AI 인프라 투자",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "한국과 일본의 서로 다른 국가별 정책임",
+      "same_event": false
+    },
+    "issue-bccf5f15f321ec1b--3afede2c57": {
+      "issue_title": "정부, SMR 7대 SEED 프로젝트 선정 및 세제 지원 강화",
+      "keei_item": "일본 경제산업성, 개량형경수로·SMR 기술개발·공급망 구축 지원 대상 선정",
+      "prompt_version": 1,
+      "reason": "국가와 프로젝트 주체가 서로 다름",
+      "same_event": false
+    },
+    "issue-bccf5f15f321ec1b--add41ecabd": {
+      "issue_title": "SMR 입지·거래 규제, 향후 2년간의 중요성 강조",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "핵융합은 SMR과 다름",
+      "same_event": false
+    },
+    "issue-bccf5f15f321ec1b--d65bac9c4d": {
+      "issue_title": "정부, SMR 7대 SEED 프로젝트 선정 및 세제 지원 강화",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "정부 정책과 한수원의 부지 선정은 별개 사안",
+      "same_event": false
+    },
+    "issue-bdd164e591b5109d--0e615713ea": {
+      "issue_title": "세르비아 정부, 국가 원자력 에너지 개발 로드맵 발표",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 기술 모두 다름",
+      "same_event": false
+    },
+    "issue-bdd164e591b5109d--6445d0b3c3": {
+      "issue_title": "세르비아 정부, 프랑스 EDF와 신규 원자력 프로그램 협정 체결",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사안",
+      "same_event": false
+    },
+    "issue-bdd164e591b5109d--bc52b67e71": {
+      "issue_title": "세르비아 정부, 프랑스 EDF와 신규 원자력 프로그램 협정 체결",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "EDF 참여하나 대상 다름",
+      "same_event": false
+    },
+    "issue-bdd164e591b5109d--de0fd4314f": {
+      "issue_title": "세르비아 정부, 국가 원자력 에너지 개발 로드맵 발표",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "국가가 다름",
+      "same_event": false
+    },
+    "issue-bdd7d6c200b05cfb--249f1333d0": {
+      "issue_title": "미스트랄·휴메인, 사우디와 수억 유로 규모 소버린 AI 협력",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "분야와 주체가 완전히 다름",
+      "same_event": false
+    },
+    "issue-bdd7d6c200b05cfb--8fce4c09fa": {
+      "issue_title": "미스트랄·휴메인, 사우디와 수억 유로 규모 소버린 AI 협력",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "분야와 주체가 완전히 다름",
+      "same_event": false
+    },
+    "issue-bdf0fa9bc581aaa0--835e580735": {
+      "issue_title": "새울 3호기 시운전 중 자동정지, 원안위 긴급점검 착수",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사건",
+      "same_event": false
+    },
+    "issue-bdf0fa9bc581aaa0--d4863d270a": {
+      "issue_title": "원안위, 새울 3호기 시운전 중 자동정지 사건조사 착수",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "개별 사건과 제도 도입",
+      "same_event": false
+    },
+    "issue-be44c7daf4c104cd--a50cc0c8f8": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "연료 주기 동향과 특정 기업 승인은 별개",
+      "same_event": false
+    },
+    "issue-be44c7daf4c104cd--f602b9ce25": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
+      "keei_item": "2025년 미국 · EU 우라늄 시장 동향(EIA·ESA 보고서)",
+      "prompt_version": 1,
+      "reason": "연료 주기 동향과 시장 보고서는 별개",
+      "same_event": false
+    },
+    "issue-be44c7daf4c104cd--f797174d9b": {
+      "issue_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "연료 주기 동향 발표와 신규 원전 개발 계획은 다름",
+      "same_event": false
+    },
+    "issue-be6777d5d213285c--56dc541d23": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 의회, 국내 우라늄 농축 증대 및 유카 마운틴 폐기 법안 추진",
+      "keei_item": "일본 후쿠이현, 현 의회에 핵연료세 인상 조례안 제출",
+      "prompt_version": 1,
+      "reason": "미국과 일본의 서로 다른 원전 정책 사안임",
+      "same_event": false
+    },
+    "issue-be6777d5d213285c--5ea831d148": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 의회, 국내 우라늄 농축 증대 및 유카 마운틴 폐기 법안 추진",
+      "keei_item": "스위스, 신규 원전 건설 금지 해제 법안 가결로 의회 절차 완료",
+      "prompt_version": 1,
+      "reason": "미국과 스위스의 서로 다른 원전 정책 사안임",
+      "same_event": false
+    },
+    "issue-be6777d5d213285c--e52f9efd04": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 의회, 국내 우라늄 농축 증대 및 유카 마운틴 폐기 법안 추진",
+      "keei_item": "미국·사우디아라비아 123 협정, 미 의회 제출·검토 절차 돌입",
+      "prompt_version": 1,
+      "reason": "안건이 서로 다름",
+      "same_event": false
+    },
+    "issue-beae8672ddf45352--23abb7f7ab": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "트럼프 美 대통령, 중국산 드론 및 부품에 최대 100% 관세 부과",
+      "keei_item": "폴란드 대통령, 원전 인허가 간소화 법 개정안 서명",
+      "prompt_version": 1,
+      "reason": "중국 관세와 폴란드 원전 법안은 무관",
+      "same_event": false
+    },
+    "issue-beae8672ddf45352--a50cc0c8f8": {
+      "issue_title": "트럼프 美 대통령, 중국산 드론 및 부품에 최대 100% 관세 부과",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "관세 정책과 연료 제조 승인은 전혀 다른 사안",
+      "same_event": false
+    },
+    "issue-bedc552e1c2994b5--3afede2c57": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "부산대, 연구안보 역량강화 사업 선정…원자력·SMR 등 핵심산업 보안 강화",
+      "keei_item": "일본 경제산업성, 개량형경수로·SMR 기술개발·공급망 구축 지원 대상 선정",
+      "prompt_version": 1,
+      "reason": "대학 보안 사업과 일본 정부 지원은 별개",
+      "same_event": false
+    },
+    "issue-bedc552e1c2994b5--d65bac9c4d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "부산대, 연구안보 역량강화 사업 선정…원자력·SMR 등 핵심산업 보안 강화",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "대학 보안 사업과 한수원 부지 선정은 무관",
+      "same_event": false
+    },
+    "issue-c0e6afae0ae48a66--8b6d0658ea": {
+      "issue_title": "美 텍사스, 규제 완화로 기업 유치했으나 용수 고갈 위기 직면",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "주제가 다름",
+      "same_event": false
+    },
+    "issue-c0e6afae0ae48a66--add41ecabd": {
+      "issue_title": "美 텍사스, 규제 완화로 기업 유치했으나 용수 고갈 위기 직면",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 주제 다름",
+      "same_event": false
+    },
+    "issue-c0f630a0bffe6168--b78f9ce6eb": {
+      "issue_title": "디아블로 캐년(Diablo Canyon) 원전, 연방 정부 지원 확보",
+      "keei_item": "독일 연방연구기술우주부, 핵융합 허브 3개에 1억 2,500만 유로 지원",
+      "prompt_version": 1,
+      "reason": "디아블로 캐년 원전과 독일 핵융합 지원은 다름",
+      "same_event": false
+    },
+    "issue-c0f630a0bffe6168--d24ea04f1b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "디아블로 캐년(Diablo Canyon) 원전, 연방 정부 지원 확보",
+      "keei_item": "미 에너지부, Diablo Canyon 1호기 계속운전에 약 3,800억 원 지급",
+      "prompt_version": 1,
+      "reason": "디아블로 캐년 원전 정부 지원 동일",
+      "same_event": true
+    },
+    "issue-c1dc07ee6de3f998--249f1333d0": {
+      "issue_title": "한국 SMR 동력 컨테이너선 개념 설계, 미국선급협회(ABS)로부터 기본승인(AIP) 획득",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "하나는 개별 설계, 다른 하나는 국제 협력",
+      "same_event": false
+    },
+    "issue-c1dc07ee6de3f998--d4863d270a": {
+      "issue_title": "한국 SMR 동력 컨테이너선 개념 설계, 미국선급협회(ABS)로부터 기본승인(AIP) 획득",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "하나는 개별 설계, 다른 하나는 제도 도입",
+      "same_event": false
+    },
+    "issue-c1e3991f418610f6--841ceedbf0": {
+      "issue_title": "캐나다, 700억 캐나다달러 규모 수력·풍력·송전 인프라 투자 협약 체결",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "재생에너지 투자와 원자력 전략은 다른 사안임",
+      "same_event": false
+    },
+    "issue-c50e1b9e7a78a81e--23a6f604ae": {
+      "issue_title": "창원시, SMR·수소 등 미래에너지 산업 육성 및 청정에너지 수도 전환",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "창원의 산업 육성과 일본의 산업단지 조성은 별개",
+      "same_event": false
+    },
+    "issue-c76e8785efc2694e--48657c5c8d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국 타이핑링 2호기 원자력발전소 상업운전 개시",
+      "keei_item": "중국 Taipingling 원전 2호기, 상업운전 개시",
+      "prompt_version": 1,
+      "reason": "타이핑링 2호기 상업운전 개시 동일",
+      "same_event": true
+    },
+    "issue-c76e8785efc2694e--4fe7b05f50": {
+      "issue_title": "중국 타이핑링 2호기 원자력발전소 상업운전 개시",
+      "keei_item": "중국 Taipingling 원전 2호기, 최초 계통연결 완료",
+      "prompt_version": 1,
+      "reason": "같은 원전, 다른 진행 단계",
+      "same_event": true
+    },
+    "issue-c76e8785efc2694e--de0fd4314f": {
+      "issue_title": "중국 타이핑링 2호기 원자력발전소 상업운전 개시",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "A는 개별 사건, B는 목표",
+      "same_event": false
+    },
+    "issue-c79d38874a299d89--0330b81e50": {
+      "issue_title": "허성무 의원, '원전비리방지법' 개정안 발의로 순환보직 삭제 및 재취업 규제 완화 추진",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-c9f1242ff12ab32a--8fce4c09fa": {
+      "issue_title": "LS일렉트릭, 북미 데이터센터 배전 시장서 1.2조 원 수주",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 안건",
+      "same_event": false
+    },
+    "issue-ca69ce47dc1e639d--249f1333d0": {
+      "issue_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 사안",
+      "same_event": false
+    },
+    "issue-ca69ce47dc1e639d--54df950745": {
+      "issue_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
+      "keei_item": "라오스, 러시아와 원자력 협력협정 체결 및 원전 도입 타당성 검토 추진",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 프로젝트",
+      "same_event": false
+    },
+    "issue-cad7ad5a754410fe--0e615713ea": {
+      "issue_title": "정부, 2027년 예산안에 SMR 및 핵융합 등 초격차 기술 집중 투자 계획",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "투자 계획과 기술 로드맵 발표는 서로 다른 사안임",
+      "same_event": false
+    },
+    "issue-cad7ad5a754410fe--3afede2c57": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정부, SMR 제조·공급망 구축 지원에 235억원 배정",
+      "keei_item": "일본 경제산업성, 개량형경수로·SMR 기술개발·공급망 구축 지원 대상 선정",
+      "prompt_version": 1,
+      "reason": "지원 주체와 대상 국가가 서로 다름",
+      "same_event": false
+    },
+    "issue-cad7ad5a754410fe--841ceedbf0": {
+      "issue_title": "이재명 대통령, SMR 등 7대 미래성장동력 전략적 투자 강조",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "국내 투자 전략과 캐나다 원전 전략은 별개임",
+      "same_event": false
+    },
+    "issue-cad8f7d2c2d3c640--249f1333d0": {
+      "issue_title": "삼성중공업, 미국 Sargent & Lundy와 부유식 SMR 플랫폼 개발 MOU 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "하나는 개별 기업, 다른 하나는 국제 협력",
+      "same_event": false
+    },
+    "issue-cad8f7d2c2d3c640--f797174d9b": {
+      "issue_title": "삼성중공업, 미국 Sargent & Lundy와 부유식 SMR 플랫폼 개발 MOU 체결",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "주체, 안건, 대상 모두 다름",
+      "same_event": false
+    },
+    "issue-cb01e84344688fa0--02506fe991": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "체코 산업통상부, CEZ, 롤스로이스 SMR 2개 추가 부지 개발 MOU 체결",
+      "keei_item": "미국 Holtec, Oyster Creek 원전 부지에 SMR-300 4기 도입 추진",
+      "prompt_version": 1,
+      "reason": "체코 롤스로이스와 미국 홀텍은 다른 사업",
+      "same_event": false
+    },
+    "issue-cb01e84344688fa0--d65bac9c4d": {
+      "issue_title": "체코 산업통상부, CEZ, 롤스로이스 SMR 2개 추가 부지 개발 MOU 체결",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 대상 모두 다름",
+      "same_event": false
+    },
+    "issue-cb01e84344688fa0--ee30e34bc3": {
+      "issue_title": "체코 산업통상부, CEZ, 롤스로이스 SMR 2개 추가 부지 개발 MOU 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-cc2e553cf2927ac5--249f1333d0": {
+      "issue_title": "웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 범위가 다름",
+      "same_event": false
+    },
+    "issue-cc2e553cf2927ac5--dcf5909f44": {
+      "issue_title": "웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "주체, 안건이 다름",
+      "same_event": false
+    },
+    "issue-cc5ef12e160a4ddf--841ceedbf0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "영덕 신규원전 2기 건설 본궤도…9월 전략환경영향평가 초안 제출",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "국가와 대상 사업이 서로 다름",
+      "same_event": false
+    },
+    "issue-cc5ef12e160a4ddf--d65bac9c4d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "영덕 신규원전 2기 건설 본궤도…9월 전략환경영향평가 초안 제출",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "영덕 신규원전 추진이라는 동일 사안",
+      "same_event": true
+    },
+    "issue-cd798dfa8457d15c--249f1333d0": {
+      "issue_title": "아이다호 국립연구소 주도 프로메테우스 프로젝트, 연방 정부 6천만 달러 지원 선정",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "하나는 개별 프로젝트, 다른 하나는 국제 협력",
+      "same_event": false
+    },
+    "issue-cd798dfa8457d15c--99f6aed02e": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "아이다호 국립연구소 주도 프로메테우스 프로젝트, 연방 정부 6천만 달러 지원 선정",
+      "keei_item": "미 에너지부, Genesis Mission 일환으로 원자력 AI 혁신 프로젝트 선정",
+      "prompt_version": 1,
+      "reason": "서로 다른 원자력 프로젝트 지원",
+      "same_event": false
+    },
+    "issue-cd798dfa8457d15c--b78f9ce6eb": {
+      "issue_title": "아이다호 국립연구소 주도 프로메테우스 프로젝트, 연방 정부 6천만 달러 지원 선정",
+      "keei_item": "독일 연방연구기술우주부, 핵융합 허브 3개에 1억 2,500만 유로 지원",
+      "prompt_version": 1,
+      "reason": "지원 대상 프로젝트와 국가가 다름",
+      "same_event": false
+    },
+    "issue-cd798dfa8457d15c--ddd33cac84": {
+      "issue_title": "아이다호 국립연구소 주도 프로메테우스 프로젝트, 연방 정부 6천만 달러 지원 선정",
+      "keei_item": "일본 니가타현, 원전 재가동에 따른 도쿄전력 지원금 활용 방안 마련",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-cd7db33ecb04145e--48657c5c8d": {
+      "issue_title": "중국 바이룽 2호기 재래식 건물 기초 콘크리트 타설 시작",
+      "keei_item": "중국 Taipingling 원전 2호기, 상업운전 개시",
+      "prompt_version": 1,
+      "reason": "대상 원전 및 건설 단계가 다름",
+      "same_event": false
+    },
+    "issue-cd7db33ecb04145e--4fe7b05f50": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국 바이룽 2호기 재래식 건물 기초 콘크리트 타설 시작",
+      "keei_item": "중국 Taipingling 원전 2호기, 최초 계통연결 완료",
+      "prompt_version": 1,
+      "reason": "바이룽 건설과 타이핑링 계통연결은 별개",
+      "same_event": false
+    },
+    "issue-cd7db33ecb04145e--e0700959da": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국 바이룽 2호기 재래식 건물 기초 콘크리트 타설 시작",
+      "keei_item": "중국, Zhaoyuan 원전 2호기 최초 콘크리트 타설",
+      "prompt_version": 1,
+      "reason": "대상 원전이 서로 다름",
+      "same_event": false
+    },
+    "issue-cdd5f9ed8f148233--0073017cf6": {
+      "issue_title": "대통령, 해남 태양광 착공식서 청정에너지와 첨단산업 연계 강조",
+      "keei_item": "일본 간사이전력, 후쿠이현 지역 활성화 지원금 작년보다 약 93억 원 감소",
+      "prompt_version": 1,
+      "reason": "서로 다른 국가와 에너지 관련 사안임",
+      "same_event": false
+    },
+    "issue-cdd5f9ed8f148233--23a6f604ae": {
+      "issue_title": "이재명 대통령, 해남 청정에너지로 반도체 클러스터 및 지역소멸 극복 강조",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "주체와 안건이 다름",
+      "same_event": false
+    },
+    "issue-cdd5f9ed8f148233--8fce4c09fa": {
+      "issue_title": "정부, 호남·용인 반도체 클러스터 전력·용수 공급 협약 체결",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "국가와 안건이 다름",
+      "same_event": false
+    },
+    "issue-cfdf56da54c3bf4e--0e615713ea": {
+      "issue_title": "미 에너지부, 오크리지 국립연구소 핵융합 증식 블랭킷 시설 지원",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "시설 지원과 로드맵 발표는 다른 사안",
+      "same_event": false
+    },
+    "issue-cfdf56da54c3bf4e--71662a8146": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 에너지부, 오크리지 국립연구소 핵융합 증식 블랭킷 시설 지원",
+      "keei_item": "주요국 핵융합에너지 개발 현황 비교(EU Fusion for Energy 보고서)",
+      "prompt_version": 1,
+      "reason": "특정 시설 지원과 핵융합 현황 보고는 별개",
+      "same_event": false
+    },
+    "issue-d0468add0e6e8f36--617747aa21": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "베트남 국회, 닌투언 원전 사업 3개 독립 프로젝트로 분리 추진",
+      "keei_item": "스웨덴 정부, Ringhals 사업 추진 중인 Videberg Kraft 지분 60% 취득",
+      "prompt_version": 1,
+      "reason": "베트남 원전과 스웨덴 지분 취득은 무관",
+      "same_event": false
+    },
+    "issue-d080a8fb0f8f4da1--a3cf49987b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한-베트남, 핵심광물 및 원전·에너지 협력 확대",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "한-베트남 협력과 한-미 기업 협력은 별개",
+      "same_event": false
+    },
+    "issue-d1e966b5772613fd--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정부, 150조 규모 미래대응기금 조성…SMR·AI 인프라 투자",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "한국과 일본의 서로 다른 국가별 정책임",
+      "same_event": false
+    },
+    "issue-d2d6214a79979e89--d65bac9c4d": {
+      "issue_title": "경북도·경주시, '실용' SMR 유치 실패 후 '상용' SMR 유치 재도전",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 안건이 다름",
+      "same_event": false
+    },
+    "issue-d4010b67b8de8881--6f56f58c45": {
+      "issue_title": "원안위, 새울 1호기 정기검사 완료 및 재가동 승인",
+      "keei_item": "유럽투자은행, 루마니아 Cernavodă 1호기 설비개선 1.3조 원 대출 승인",
+      "prompt_version": 1,
+      "reason": "한국 원전 재가동과 루마니아 원전 설비개선은 별개",
+      "same_event": false
+    },
+    "issue-d4010b67b8de8881--dc799316ad": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원안위, 새울원전 1호기 정기검사 후 재가동 승인",
+      "keei_item": "원자력안전위원회, 연중 상시 정기검사 허용 위한 법령 개정안 의결",
+      "prompt_version": 1,
+      "reason": "개별 원전 재가동과 법령 개정은 다른 사안임",
+      "same_event": false
+    },
+    "issue-d4776c81220de821--0b3993f90d": {
+      "issue_title": "FANCO, HALEU 핵연료 제조 시설 건설 계획 NRC 제출",
+      "keei_item": "폴란드 SGE, 영국 내 BWRX-300 14기 건설 위한 신청서 제출",
+      "prompt_version": 1,
+      "reason": "핵연료 시설과 BWRX-300 건설은 다른 사안임",
+      "same_event": false
+    },
+    "issue-d4776c81220de821--56dc541d23": {
+      "issue_title": "FANCO, HALEU 핵연료 제조 시설 건설 계획 NRC 제출",
+      "keei_item": "일본 후쿠이현, 현 의회에 핵연료세 인상 조례안 제출",
+      "prompt_version": 1,
+      "reason": "핵연료 시설과 핵연료세 인상은 다른 사안임",
+      "same_event": false
+    },
+    "issue-d5c99163163d6cfe--83998966ea": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "삼성물산, 스웨덴 SMR 신규 사업 전략적 파트너 선정",
+      "keei_item": "스웨덴 Blykalla, Untra 부지에 SMR 건설 사업 정부 승인·국가보조 신청 추진",
+      "prompt_version": 1,
+      "reason": "사업 주체 및 프로젝트가 다름",
+      "same_event": false
+    },
+    "issue-d5c99163163d6cfe--d65bac9c4d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "삼성물산, 스웨덴 SMR 신규 사업 전략적 파트너 선정",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "사업 주체와 대상 지역이 다름",
+      "same_event": false
+    },
+    "issue-d5c99163163d6cfe--f2e783de29": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "삼성물산, 스웨덴 SMR 신규 사업 전략적 파트너 선정",
+      "keei_item": "스웨덴 Studsvik 등, 연이어 신규 원전 사업 국가보조 신청",
+      "prompt_version": 1,
+      "reason": "사업 주체와 구체적 사안이 다름",
+      "same_event": false
+    },
+    "issue-d5f14a4cd0093d3c--08db51ddba": {
+      "issue_title": "핀란드 규제기관, 세계 최초 사용후핵연료 처분장 운영 허가 요건 충족 결정",
+      "keei_item": "미 NRC, 원전 인허가 및 방사선 방호 규정 현대화 규정안 발표",
+      "prompt_version": 1,
+      "reason": "대상 국가, 사안 다름",
+      "same_event": false
+    },
+    "issue-d5f14a4cd0093d3c--0cc8670c5e": {
+      "issue_title": "핀란드 온칼로 사용후핵연료 처분장, 안전성 평가 통과",
+      "keei_item": "전 세계 방사성동위원소 산업 현황 (NEA 보고서)",
+      "prompt_version": 1,
+      "reason": "사용후핵연료와 방사성동위원소는 다른 주제",
+      "same_event": false
+    },
+    "issue-d5f14a4cd0093d3c--59ed9f8ae2": {
+      "issue_title": "핀란드 온칼로 사용후핵연료 처분장, 안전성 평가 통과",
+      "keei_item": "전 세계 사용후핵연료 현황 통계 (IAEA Global SNF Inventory)",
+      "prompt_version": 1,
+      "reason": "개별 사건과 통계",
+      "same_event": false
+    },
+    "issue-d621a4293eb89200--249f1333d0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한경협, SMR 등 포함한 국내생산세액공제 확대 건의",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "정책 건의와 국제 협력으로 사안이 다름",
+      "same_event": false
+    },
+    "issue-d621a4293eb89200--3afede2c57": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한경협, SMR 등 포함한 국내생산세액공제 확대 건의",
+      "keei_item": "일본 경제산업성, 개량형경수로·SMR 기술개발·공급망 구축 지원 대상 선정",
+      "prompt_version": 1,
+      "reason": "국내 세액공제 건의와 일본 기술 지원임",
+      "same_event": false
+    },
+    "issue-d621a4293eb89200--841ceedbf0": {
+      "issue_title": "이재명 대통령, SMR 등 7대 미래성장동력 전략적 투자 강조",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "국가와 정책 대상이 서로 다름",
+      "same_event": false
+    },
+    "issue-d621a4293eb89200--92b30862a0": {
+      "issue_title": "SMR, 대한민국 미래 대도약 '7대 SEED 프로젝트' 선정 및 세제 혜택 예고",
+      "keei_item": "일본 정부, 선진 원자로와 핵융합 에너지를 중점 산업 분야로 선정",
+      "prompt_version": 1,
+      "reason": "국가별 정책 및 산업 육성 계획이 다름",
+      "same_event": false
+    },
+    "issue-d621a4293eb89200--d65bac9c4d": {
+      "issue_title": "정부, SMR 7대 SEED 프로젝트 선정 및 세제 지원 강화",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "정부 정책과 한수원의 부지 선정은 별개 사안",
+      "same_event": false
+    },
+    "issue-d675dcf3f120c2fb--6445d0b3c3": {
+      "issue_title": "세르비아 정부, 프랑스 EDF와 신규 원자력 프로그램 협정 체결",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "국가, 주체, 안건 모두 다름",
+      "same_event": false
+    },
+    "issue-d675dcf3f120c2fb--9a0229abcf": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "세르비아 정부, 프랑스 EDF와 신규 원자력 프로그램 협정 체결",
+      "keei_item": "미국·사우디아라비아, 123 협정 체결",
+      "prompt_version": 1,
+      "reason": "협정 당사국이 다름",
+      "same_event": false
+    },
+    "issue-d675dcf3f120c2fb--bc52b67e71": {
+      "issue_title": "세르비아 정부, 프랑스 EDF와 신규 원자력 프로그램 협정 체결",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-d6f14709a1027330--dbc1699314": {
+      "issue_title": "한국 원전, 2025년 설비이용률 84.6%로 세계 최고 수준 전망",
+      "keei_item": "전 세계 원전 장기 시나리오 전망 (NEA Nuclear Energy Outlook)",
+      "prompt_version": 1,
+      "reason": "A는 개별국 전망, B는 전세계 동향",
+      "same_event": false
+    },
+    "issue-d7e6c73c3151fe00--d4863d270a": {
+      "issue_title": "Constellation, 소형 모듈형 원자로(SMR) 개발사 Blue Energy에 전략적 지분 투자",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "주체, 안건, 국가가 다름",
+      "same_event": false
+    },
+    "issue-d8ddeb54d18d01d7--37147e9bf3": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 DOE NRIC, 차세대 원자로 및 핵연료 주기 프로젝트 13개 선정",
+      "keei_item": "미 에너지부, Nuclear Energy Launch Pad 2차 지원 대상 13개 사업 선정",
+      "prompt_version": 1,
+      "reason": "미 DOE의 동일한 지원 사업임",
+      "same_event": true
+    },
+    "issue-d8ddeb54d18d01d7--99f6aed02e": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 DOE NRIC, 차세대 원자로 및 핵연료 주기 프로젝트 13개 선정",
+      "keei_item": "미 에너지부, Genesis Mission 일환으로 원자력 AI 혁신 프로젝트 선정",
+      "prompt_version": 1,
+      "reason": "프로젝트의 성격이 다름",
+      "same_event": false
+    },
+    "issue-da9a4893cdd4761d--249f1333d0": {
+      "issue_title": "산업부·원안위, 원전 수출 위한 규제체계 협력 업무협약 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "국내 규제 협력과 국제 협력각서는 다른 사건임",
+      "same_event": false
+    },
+    "issue-da9a4893cdd4761d--dc799316ad": {
+      "issue_title": "원안위, 고리 3·4호기 계속운전 올해 하반기 결정 및 처벌법 개정 추진",
+      "keei_item": "원자력안전위원회, 연중 상시 정기검사 허용 위한 법령 개정안 의결",
+      "prompt_version": 1,
+      "reason": "다른 규제 안건",
+      "same_event": false
+    },
+    "issue-da9a4893cdd4761d--ee30e34bc3": {
+      "issue_title": "산업부·원안위, 원전 수출 위한 규제체계 협력 업무협약 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "국내 규제 협력과 호주·인도 행정협정은 무관함",
+      "same_event": false
+    },
+    "issue-db88cff11d029f91--249f1333d0": {
+      "issue_title": "미국 인디애나주, 원자력 준비 태세 지정 시스템 도입",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "다른 주, 다른 안건",
+      "same_event": false
+    },
+    "issue-db88cff11d029f91--6445d0b3c3": {
+      "issue_title": "미국 인디애나주, 원자력 준비 태세 지정 시스템 도입",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "다른 주, 다른 안건",
+      "same_event": false
+    },
+    "issue-db89d389ada4d697--02506fe991": {
+      "issue_title": "미국 정부·IAEA, SMR 추진선·FSMR 국제 규제 표준화 논의 착수",
+      "keei_item": "미국 Holtec, Oyster Creek 원전 부지에 SMR-300 4기 도입 추진",
+      "prompt_version": 1,
+      "reason": "국제 표준화 논의와 특정 기업 사업은 다름",
+      "same_event": false
+    },
+    "issue-db89d389ada4d697--ddd33cac84": {
+      "issue_title": "IAEA, 해상원자력 국제협력체 'ATLAS' 출범",
+      "keei_item": "일본 니가타현, 원전 재가동에 따른 도쿄전력 지원금 활용 방안 마련",
+      "prompt_version": 1,
+      "reason": "국제기구와 지자체 사안으로 다름",
+      "same_event": false
+    },
+    "issue-dc1568d26b7a3c04--249f1333d0": {
+      "issue_title": "사우디아라비아-미국, 평화적 핵에너지 협력 및 양자 안전조치 협정 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-dc1568d26b7a3c04--9a0229abcf": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "사우디아라비아-미국, 평화적 핵에너지 협력 및 양자 안전조치 협정 체결",
+      "keei_item": "미국·사우디아라비아, 123 협정 체결",
+      "prompt_version": 1,
+      "reason": "동일한 양자 간 원자력 협정",
+      "same_event": true
+    },
+    "issue-dc1568d26b7a3c04--e52f9efd04": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "사우디아라비아-미국, 평화적 핵에너지 협력 및 양자 안전조치 협정 체결",
+      "keei_item": "미국·사우디아라비아 123 협정, 미 의회 제출·검토 절차 돌입",
+      "prompt_version": 1,
+      "reason": "미-사우디 원자력 협력 관련임",
+      "same_event": true
+    },
+    "issue-dc1568d26b7a3c04--ee30e34bc3": {
+      "issue_title": "사우디아라비아-미국, 평화적 핵에너지 협력 및 양자 안전조치 협정 체결",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-dcb975d82d845013--6445d0b3c3": {
+      "issue_title": "아이소에너지와 DISA, 미국 우라늄 신규 합작사 설립 합의",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "안건이 다름",
+      "same_event": false
+    },
+    "issue-dcb975d82d845013--8b6d0658ea": {
+      "issue_title": "아이소에너지와 DISA, 미국 우라늄 신규 합작사 설립 합의",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "개별 사건과 동향/전망",
+      "same_event": false
+    },
+    "issue-ddd7d2806859e642--0e615713ea": {
+      "issue_title": "태국, 건물 에너지 효율 및 전력망 현대화 로드맵 발표",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "태국의 에너지 효율과 미국의 핵융합 로드맵은 다름",
+      "same_event": false
+    },
+    "issue-ddd7d2806859e642--841ceedbf0": {
+      "issue_title": "태국, 건물 에너지 효율 및 전력망 현대화 로드맵 발표",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "태국의 에너지 효율과 캐나다의 원자력 전략은 다름",
+      "same_event": false
+    },
+    "issue-ddd8072c258528d9--0e615713ea": {
+      "issue_title": "미국 에너지부, 80년 수명 연장된 원전 '80 클럽' 관련 기사 발표",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "같은 주체의 다른 안건",
+      "same_event": false
+    },
+    "issue-ddd8072c258528d9--835e580735": {
+      "issue_title": "미국 에너지부, 80년 수명 연장된 원전 '80 클럽' 관련 기사 발표",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "안건이 다름",
+      "same_event": false
+    },
+    "issue-ddd8072c258528d9--d24ea04f1b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 에너지부, 80년 수명 연장된 원전 '80 클럽' 관련 기사 발표",
+      "keei_item": "미 에너지부, Diablo Canyon 1호기 계속운전에 약 3,800억 원 지급",
+      "prompt_version": 1,
+      "reason": "정책 홍보와 개별 원전 지원",
+      "same_event": false
+    },
+    "issue-e0c2d46c6a2b5c2a--249f1333d0": {
+      "issue_title": "정부, 한국형 핵추진잠수함 ‘장보고-N’ 사업 전담조직 확대 직제 개정안 국무회의 통과",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "군사 vs 민간 원자력",
+      "same_event": false
+    },
+    "issue-e0c2d46c6a2b5c2a--617747aa21": {
+      "issue_title": "정부, 한국형 핵추진잠수함 ‘장보고-N’ 사업 전담조직 확대 직제 개정안 국무회의 통과",
+      "keei_item": "스웨덴 정부, Ringhals 사업 추진 중인 Videberg Kraft 지분 60% 취득",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 사업",
+      "same_event": false
+    },
+    "issue-e0c2d46c6a2b5c2a--dc799316ad": {
+      "issue_title": "국방부, 핵추진잠수함정책기획단 신설 및 방사청 사업단 확대 의결",
+      "keei_item": "원자력안전위원회, 연중 상시 정기검사 허용 위한 법령 개정안 의결",
+      "prompt_version": 1,
+      "reason": "주체, 안건, 대상 모두 다름",
+      "same_event": false
+    },
+    "issue-e166e0749a04c6dd--0e615713ea": {
+      "issue_title": "미국 에너지부, 오클로(Oklo) 시험용 원자로 가동 승인",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "다른 기술 분야",
+      "same_event": false
+    },
+    "issue-e166e0749a04c6dd--835e580735": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "오클로(Oklo)의 그로브스 동위원소 시험로, 첫 임계 달성",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "개별 기업 성과와 국가 목표",
+      "same_event": false
+    },
+    "issue-e166e0749a04c6dd--a9ffef226f": {
+      "issue_title": "오클로(Oklo)의 그로브스 동위원소 시험로, 첫 임계 달성",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "같은 기업, 다른 사안",
+      "same_event": false
+    },
+    "issue-e2e42584280401fc--b6aec252c7": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원전 안전기준 최신화 추진: 안전등급·가동중검사·품질보증 규정 개정",
+      "keei_item": "미 NRC, 환경심사 규정 개정안 발표",
+      "prompt_version": 1,
+      "reason": "규정 개정의 범위가 다름",
+      "same_event": false
+    },
+    "issue-e35ba84675a81735--8b6d0658ea": {
+      "issue_title": "정부, \"역대 최대 전력수요 가능성 대비 예비자원 점검\"",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "주체와 안건이 다름",
+      "same_event": false
+    },
+    "issue-e36af93d31a69547--8b6d0658ea": {
+      "issue_title": "미국 원자력규제위원회(NRC)의 변화: 50년간의 위원들",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "주제가 다름",
+      "same_event": false
+    },
+    "issue-e3bff0056142abce--5ea831d148": {
+      "issue_title": "캐나다 Phoenix 우라늄 광산, 본격적인 건설 작업 착수",
+      "keei_item": "스위스, 신규 원전 건설 금지 해제 법안 가결로 의회 절차 완료",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-e3bff0056142abce--841ceedbf0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "캐나다 Phoenix 우라늄 광산, 본격적인 건설 작업 착수",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "광산 건설과 에너지 전략",
+      "same_event": false
+    },
+    "issue-e53a1ba2dfe73d05--6445d0b3c3": {
+      "issue_title": "TRISO-X 연료 시설 건설 지속을 위한 신규 보조금 확보",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 안건",
+      "same_event": false
+    },
+    "issue-e53a1ba2dfe73d05--841ceedbf0": {
+      "issue_title": "TRISO-X 연료 시설 건설 지속을 위한 신규 보조금 확보",
+      "keei_item": "캐나다 정부, 신규 원전 건설 포함한 원자력 에너지 전략 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-e6cef644d033b341--bd91314eae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "유럽, 폭염 및 가뭄 대응 위해 원전 냉각수 확보 조치 시행",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "폭염·가뭄에 따른 원전 운영 영향으로 동일 사안임",
+      "same_event": true
+    },
+    "issue-e6cef644d033b341--f020226b19": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "루마니아 체르나보다 원전 2호기, 저수위로 정지",
+      "keei_item": "루마니아 SNN·헝가리 정부, 다뉴브강 저수위 대응조치 시행",
+      "prompt_version": 1,
+      "reason": "동일한 저수위 대응 사안",
+      "same_event": true
+    },
+    "issue-e6f1b841d625b887--23a6f604ae": {
+      "issue_title": "아마존 AI 데이터센터, 연 3300만톤 탄소 배출 논란",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-e6f1b841d625b887--f797174d9b": {
+      "issue_title": "엔비디아, AI 인프라 확보 위해 전력업체 랜시엄에 4조원 투자",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "주체와 사안이 다름",
+      "same_event": false
+    },
+    "issue-ec91ed3e3ac96397--3afede2c57": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "일본, 호르무즈 우회 송유관 건설 지원 및 원전 활용 방침 재확인",
+      "keei_item": "일본 경제산업성, 개량형경수로·SMR 기술개발·공급망 구축 지원 대상 선정",
+      "prompt_version": 1,
+      "reason": "국가 정책과 기술 개발 지원",
+      "same_event": false
+    },
+    "issue-ec91ed3e3ac96397--c5588363a1": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "일본, 호르무즈 우회 송유관 건설 지원 및 원전 활용 방침 재확인",
+      "keei_item": "일본 정부, 에너지 수급구조 강화 정책 패키지 발표…원전 최대한 활용",
+      "prompt_version": 1,
+      "reason": "일본 에너지 정책 패키지 관련임",
+      "same_event": true
+    },
+    "issue-ec91ed3e3ac96397--ddd33cac84": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "일본, 호르무즈 우회 송유관 건설 지원 및 원전 활용 방침 재확인",
+      "keei_item": "일본 니가타현, 원전 재가동에 따른 도쿄전력 지원금 활용 방안 마련",
+      "prompt_version": 1,
+      "reason": "국가 정책과 지자체 지원금",
+      "same_event": false
+    },
+    "issue-eecf0e2088a3582e--23a6f604ae": {
+      "issue_title": "국제 구리 가격 톤당 1만 4000달러 돌파…AI 전력망 수요 급증과 공급난",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "구리 가격 상승과 일본의 원전 정책은 무관함",
+      "same_event": false
+    },
+    "issue-f0e25c21cc586ce0--bc52b67e71": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "뉴스케일파워, 6GW SMR 전력계약 논의 및 AI 설계 도구 도입",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "기업과 사업 대상이 다름",
+      "same_event": false
+    },
+    "issue-f0e25c21cc586ce0--d4863d270a": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "뉴스케일파워, 6GW SMR 전력계약 논의 및 AI 설계 도구 도입",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "기업 활동과 제도 도입",
+      "same_event": false
+    },
+    "issue-f1b7e28af992975c--bd91314eae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "루마니아·헝가리, 가뭄으로 전력 위기 직면 및 비상사태 선포",
+      "keei_item": "프랑스·헝가리·루마니아, 폭염·가뭄으로 일부 원전 감발·정지",
+      "prompt_version": 1,
+      "reason": "가뭄으로 인한 원전 운영 차질이라는 동일 사안임",
+      "same_event": true
+    },
+    "issue-f1b7e28af992975c--f020226b19": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "루마니아, 다뉴브강 수위 저하로 유일한 원전 가동 전면 중단",
+      "keei_item": "루마니아 SNN·헝가리 정부, 다뉴브강 저수위 대응조치 시행",
+      "prompt_version": 1,
+      "reason": "동일한 저수위 가동 중단 사안",
+      "same_event": true
+    },
+    "issue-f29ddd79b8bbaeb4--249f1333d0": {
+      "issue_title": "인도 의회, 우라늄 프로젝트 가속화 시급성 강조",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "주체, 대상, 주제 다름",
+      "same_event": false
+    },
+    "issue-f29ddd79b8bbaeb4--ee30e34bc3": {
+      "issue_title": "인도 의회, 우라늄 프로젝트 가속화 시급성 강조",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "인도의 우라늄 확보 노력",
+      "same_event": true
+    },
+    "issue-f33f228a288946ee--0330b81e50": {
+      "issue_title": "美 정부, '지하 원전' 추진 속 두산·수산이앤에스 미래 기회 확보 기대",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "다른 안건 (특정 기술 vs 일반 규제)",
+      "same_event": false
+    },
+    "issue-f33f228a288946ee--1925d37910": {
+      "issue_title": "빌 게이츠 테라파워, AI 데이터센터용 2호 SMR 프로젝트 추진",
+      "keei_item": "일본 정부, 7차 에기본 실현을 위한 원자력 정책 로드맵 확정",
+      "prompt_version": 1,
+      "reason": "테라파워의 SMR 프로젝트와 일본의 원자력 정책은 다름",
+      "same_event": false
+    },
+    "issue-f33f228a288946ee--23a6f604ae": {
+      "issue_title": "빌 게이츠 테라파워, AI 데이터센터용 2호 SMR 프로젝트 추진",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "테라파워의 특정 프로젝트와 일본의 산업단지 조성은 다름",
+      "same_event": false
+    },
+    "issue-f33f228a288946ee--249f1333d0": {
+      "issue_title": "테라파워-한국 기업 SMR 협력, 한국 원전기업 수출 공급망 확대",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "한미 SMR 협력 및 공급망 확대라는 동일 맥락",
+      "same_event": true
+    },
+    "issue-f33f228a288946ee--7175604cab": {
+      "issue_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "keei_item": "영국 정부·EDF, Sizewell B 원전 계속운전 지원 조건 합의",
+      "prompt_version": 1,
+      "reason": "기업 및 사업 대상이 다름",
+      "same_event": false
+    },
+    "issue-f33f228a288946ee--835e580735": {
+      "issue_title": "미국 NRC, DOE 및 캐나다 CNSC, SMR 개발사들과 선진원자로 전망 논의",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "A는 논의, B는 특정 원자로 성과",
+      "same_event": false
+    },
+    "issue-f33f228a288946ee--a3cf49987b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "두산에너빌리티, 테라파워 나트륨 냉각 고속로 핵심 기자재 공급 계약",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "동일한 나트륨 냉각 고속로 협력",
+      "same_event": true
+    },
+    "issue-f33f228a288946ee--a9ffef226f": {
+      "issue_title": "빌 게이츠 방한, SMR 공급망 논의…테라파워, 美 NRC 건설허가 획득",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "기업과 추진하는 사업이 서로 다름",
+      "same_event": false
+    },
+    "issue-f33f228a288946ee--d4863d270a": {
+      "issue_title": "빌 게이츠 방한, 국내 기업 테라파워 SMR 공급망 참여 본격화",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "테라파워 공급망과 국내 설계 검토 제도는 다름",
+      "same_event": false
+    },
+    "issue-f33f228a288946ee--dcf5909f44": {
+      "issue_title": "美 정부, '지하 원전' 추진 속 두산·수산이앤에스 미래 기회 확보 기대",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "다른 안건 (미래 기술 vs 기존 설계)",
+      "same_event": false
+    },
+    "issue-f33f228a288946ee--f797174d9b": {
+      "issue_title": "미국 NRC, DOE 및 캐나다 CNSC, SMR 개발사들과 선진원자로 전망 논의",
+      "keei_item": "미국 Elementl Power, Ohio 주에 원전 개발 계획 발표",
+      "prompt_version": 1,
+      "reason": "A는 논의, B는 기업 사업 발표",
+      "same_event": false
+    },
+    "issue-f377614915cf667c--a9ffef226f": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "스탠다드 뉴클리어, 래디언트와 TRISO 핵연료 공급 계약 체결",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "계약 상대방과 범위가 다름",
+      "same_event": false
+    },
+    "issue-f60dc4f395c063ea--36d5d7452d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "불가리아 코즐로두이 3·4호기, 10년 해체 면허 발급",
+      "keei_item": "불가리아 원자력규제청, Kozloduy 3·4호기 10년 해체허가 발급",
+      "prompt_version": 1,
+      "reason": "동일한 해체 면허 발급 사안",
+      "same_event": true
+    },
+    "issue-f6af92cf5882fd6d--a50cc0c8f8": {
+      "issue_title": "중국, 2027년까지 산업용 AI 지능체 1000개 육성 정책 추진",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "전혀 다른 주제의 사안임",
+      "same_event": false
+    },
+    "issue-f73a97b0f28780fb--23a6f604ae": {
+      "issue_title": "엔비디아, AI 인프라 강화를 위해 전력 기업 랜시엄에 4조원 투자",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "다른 주체, 다른 프로젝트",
+      "same_event": false
+    },
+    "issue-f73a97b0f28780fb--a50cc0c8f8": {
+      "issue_title": "엔비디아, 오픈AI 데이터센터 구축에 150조 원 금융 보증",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "데이터센터 투자와 연료 제조 승인",
+      "same_event": false
+    },
+    "issue-f7fb3d73512b4f68--23a6f604ae": {
+      "issue_title": "AI 데이터센터, 전력·냉각 한계 극복 위해 해상으로 이동",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "해상 데이터센터와 일본 GX 산업단지는 다름",
+      "same_event": false
+    },
+    "issue-f82c91c55bd56e31--8fce4c09fa": {
+      "issue_title": "유럽, 침체된 산업 부흥 위해 1조 유로 규모 투자 결정",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "다른 국가, 다른 안건",
+      "same_event": false
+    },
+    "issue-f8729b9ad3d35dd4--249f1333d0": {
+      "issue_title": "미국 민주당 주지사들, 에너지 위기 대응책으로 원자력 발전 전환",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "국내 정책과 국제 협력",
+      "same_event": false
+    },
+    "issue-f8729b9ad3d35dd4--835e580735": {
+      "issue_title": "미국 민주당 주지사들, 에너지 위기 대응책으로 원자력 발전 전환",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "정책 동향과 기술 성과",
+      "same_event": false
+    },
+    "issue-f93e320d91da6966--e2a678ffcd": {
+      "issue_title": "제12차 전력수급기본계획 수립을 위한 대국민 토론회 20일 개최",
+      "keei_item": "일본, 중동 정세 악화로 인한 연료가격 상승분 6월부터 가정용 전기요금 반영",
+      "prompt_version": 1,
+      "reason": "전력수급계획과 전기요금은 다른 사안",
+      "same_event": false
+    },
+    "issue-ff63cb05a4066390--3afede2c57": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "일본 정부, 마이크론 히로시마 공장에 5,360억엔 지원",
+      "keei_item": "일본 경제산업성, 개량형경수로·SMR 기술개발·공급망 구축 지원 대상 선정",
+      "prompt_version": 1,
+      "reason": "반도체 지원과 원전 기술 지원으로 대상이 다름",
+      "same_event": false
+    },
+    "issue-ffdb243b18554e80--0330b81e50": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "美 정부, '지하 원전' 추진 속 두산·수산이앤에스 미래 기회 확보 기대",
+      "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
+      "prompt_version": 1,
+      "reason": "지하 원전과 인허가 절차 개편은 별개 사안",
+      "same_event": false
+    },
+    "issue-ffdb243b18554e80--77d959ece5": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "美 정부, '지하 원전' 추진 속 두산·수산이앤에스 미래 기회 확보 기대",
+      "keei_item": "한국 원안위, i-SMR 표준설계인가 안전성 심사 착수",
+      "prompt_version": 1,
+      "reason": "안건이 서로 다름",
+      "same_event": false
+    },
+    "issue-ffdb243b18554e80--dcf5909f44": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "美 정부, '지하 원전' 추진 속 두산·수산이앤에스 미래 기회 확보 기대",
+      "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
+      "prompt_version": 1,
+      "reason": "지하 원전과 AP1000 설계 인증은 다른 안건",
+      "same_event": false
+    },
+    "story-03eec1ad43415c80--c48e711d0f": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "국회, 전통산업 경쟁력 강화 위한 '무탄소 PPA 확대' 토론회 개최",
+      "keei_item": "일본 자원에너지청, 장기 탈탄소 전원 경매 가이드라인 개정안 마련",
+      "prompt_version": 1,
+      "reason": "국가와 정책 대상이 서로 다름",
+      "same_event": false
+    },
+    "story-03eec1ad43415c80--ddd33cac84": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "포스코, 철강 탈탄소 위한 원전 PPA 허용 건의",
+      "keei_item": "일본 니가타현, 원전 재가동에 따른 도쿄전력 지원금 활용 방안 마련",
+      "prompt_version": 1,
+      "reason": "주체와 사안이 완전히 다른 별개의 사건임",
+      "same_event": false
+    },
+    "story-0809388b2c901a85--23abb7f7ab": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "트럼프 미 대통령, 우주 사관학교 설립 행정명령 서명",
+      "keei_item": "폴란드 대통령, 원전 인허가 간소화 법 개정안 서명",
+      "prompt_version": 1,
+      "reason": "주체와 사건의 성격이 완전히 다름",
+      "same_event": false
+    },
+    "story-0809388b2c901a85--3d685ecca6": {
+      "issue_title": "트럼프 미 대통령, '우주사관학교' 설립 행정명령 서명",
+      "keei_item": "일본 문부과학성, 원자력 인재 양성 산·학·관 센터 신설 추진",
+      "prompt_version": 1,
+      "reason": "서로 다른 국가와 사안임",
+      "same_event": false
+    },
+    "story-10b0434dfdbd3b5c--0b3993f90d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 레이븐-플린트, 우라늄 전환 시설 인허가 신청서 NRC 접수",
+      "keei_item": "폴란드 SGE, 영국 내 BWRX-300 14기 건설 위한 신청서 제출",
+      "prompt_version": 1,
+      "reason": "대상 기업과 국가가 서로 다름",
+      "same_event": false
+    },
+    "story-14abbebf6bb0a431--36d332f8d9": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "삼성물산, 스웨덴 1.2GW SMR 사업 공동 EPC 참여",
+      "keei_item": "핀란드 Fortum, 스웨덴 Oskarshamn 신규원전 사업에 대한 국가보조 신청",
+      "prompt_version": 1,
+      "reason": "대상 원전 및 사업이 다름",
+      "same_event": false
+    },
+    "story-14abbebf6bb0a431--617747aa21": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "삼성물산, 스웨덴 1.2GW SMR 사업 공동 EPC 참여",
+      "keei_item": "스웨덴 정부, Ringhals 사업 추진 중인 Videberg Kraft 지분 60% 취득",
+      "prompt_version": 1,
+      "reason": "삼성물산의 EPC 참여와 스웨덴 정부의 지분 취득은 별개 사안임",
+      "same_event": false
+    },
+    "story-14abbebf6bb0a431--83998966ea": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "삼성물산, 스웨덴 1.2GW SMR 사업 공동 EPC 참여",
+      "keei_item": "스웨덴 Blykalla, Untra 부지에 SMR 건설 사업 정부 승인·국가보조 신청 추진",
+      "prompt_version": 1,
+      "reason": "사업 주체 및 프로젝트가 다름",
+      "same_event": false
+    },
+    "story-14abbebf6bb0a431--f2e783de29": {
+      "issue_title": "삼성물산·GE Vernova·Studsvik, 스웨덴 1.2GW 원전 프로젝트 추진",
+      "keei_item": "스웨덴 Studsvik 등, 연이어 신규 원전 사업 국가보조 신청",
+      "prompt_version": 1,
+      "reason": "스웨덴 신규 원전 사업 관련 동일 사안",
+      "same_event": true
+    },
+    "story-166d03d61f2780a1--617747aa21": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원전수소 생산 위한 전력거래 제도 정비 필요성 제기",
+      "keei_item": "스웨덴 정부, Ringhals 사업 추진 중인 Videberg Kraft 지분 60% 취득",
+      "prompt_version": 1,
+      "reason": "주제와 대상 사업이 서로 무관함",
+      "same_event": false
+    },
+    "story-16bab8dc452d7e6e--6502bd2e82": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "울진군, 죽변 비상활주로 이전 사업비 분담 구조 재검토 요구",
+      "keei_item": "헝가리 정부, Paks Ⅱ 원전 사업 전반 재검토",
+      "prompt_version": 1,
+      "reason": "대상 지역과 사업의 성격이 다름",
+      "same_event": false
+    },
+    "story-17feaa64491a40f8--249f1333d0": {
+      "issue_title": "미 해사청-코어파워, 원자력 추진 상선 협력각서 체결",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "원자력 추진 상선과 SMR 도입은 다른 사안",
+      "same_event": false
+    },
+    "story-17feaa64491a40f8--a3cf49987b": {
+      "issue_title": "미 해사청-코어파워, 원자력 추진 상선 협력각서 체결",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "원자력 추진 상선과 테라파워 SMR은 다른 사안",
+      "same_event": false
+    },
+    "story-17feaa64491a40f8--add41ecabd": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원자력 추진선 규제체계 마련 및 국제기준 정비 가속화",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "추진 기술 분야가 서로 다름",
+      "same_event": false
+    },
+    "story-1f8e829fa562808f--3156a605c7": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 하원, 신규 원전 건설 및 인허가 개혁 법안 논의",
+      "keei_item": "미 하원 에너지상무위, 원자력 인허가·연료주기 관련 6개 법안 본회의 회부",
+      "prompt_version": 1,
+      "reason": "동일한 법안 처리 과정에 대한 보도임",
+      "same_event": true
+    },
+    "story-1f8e829fa562808f--6445d0b3c3": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 하원, 신규 원전 건설 및 인허가 개혁 법안 논의",
+      "keei_item": "미국 New Jersey 주, 신규 원전 도입 위한 법안 제정",
+      "prompt_version": 1,
+      "reason": "입법 주체와 관할 지역이 다름",
+      "same_event": false
+    },
+    "story-1fb37f8c5e57fede--99f6aed02e": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "웨스트버지니아주, 미 에너지부(DOE) 원전 수명주기 혁신 캠퍼스 최종 후보 선정",
+      "keei_item": "미 에너지부, Genesis Mission 일환으로 원자력 AI 혁신 프로젝트 선정",
+      "prompt_version": 1,
+      "reason": "서로 다른 원자력 혁신 프로젝트임",
+      "same_event": false
+    },
+    "story-1fd31b23a4d14947--23abb7f7ab": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 NRC, 우라늄 회수 시설 지하수 보호 및 폐로 규정 개정안 발표",
+      "keei_item": "폴란드 대통령, 원전 인허가 간소화 법 개정안 서명",
+      "prompt_version": 1,
+      "reason": "규제 기관과 법안 내용이 다름",
+      "same_event": false
+    },
+    "story-1fd31b23a4d14947--b6aec252c7": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 NRC, 우라늄 회수 시설 지하수 보호 및 폐로 규정 개정안 발표",
+      "keei_item": "미 NRC, 환경심사 규정 개정안 발표",
+      "prompt_version": 1,
+      "reason": "규정 개정의 세부 대상이 다름",
+      "same_event": false
+    },
+    "story-224aef821c084125--c35275bb9a": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정부, 대미 투자 1호 사업 22억 달러 이달 말 송금 및 웨스팅하우스 지분 인수 추진",
+      "keei_item": "슬로바키아 정부, ČEZ 보유 JESS 지분 49% 9월 인수 추진",
+      "prompt_version": 1,
+      "reason": "대상 국가와 기업이 서로 다름",
+      "same_event": false
+    },
+    "story-25e92d6e4de51fe2--dc799316ad": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정기국회, 반도체·데이터센터 인프라 지원 위한 법 개정 논의",
+      "keei_item": "원자력안전위원회, 연중 상시 정기검사 허용 위한 법령 개정안 의결",
+      "prompt_version": 1,
+      "reason": "논의되는 법안의 목적이 다름",
+      "same_event": false
+    },
+    "story-362f6541c79b3cf7--249f1333d0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한경협, SMR 등 포함한 국내생산세액공제 확대 건의",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "국내 세액공제와 국제 협력은 다른 사안임",
+      "same_event": false
+    },
+    "story-3b25e5e221cce438--dc799316ad": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "국무회의, 계량법 개정안 의결…산업계량 정의 신설 및 관리체계 유연화",
+      "keei_item": "원자력안전위원회, 연중 상시 정기검사 허용 위한 법령 개정안 의결",
+      "prompt_version": 1,
+      "reason": "관련 법령 및 소관 부처가 다름",
+      "same_event": false
+    },
+    "story-3fb25c8cd30fd600--23a6f604ae": {
+      "issue_title": "정부, 호남 반도체 클러스터 부지 무안군 선정…군공항 이전 본격화",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "서로 다른 국가와 산업 분야임",
+      "same_event": false
+    },
+    "story-41279c9019a4a6d3--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "일본, 2033년까지 600억 달러 투입해 데이터센터 전력 용량 4배 확대",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "데이터센터 전력 확보를 위한 원전 활용 정책으로 동일함",
+      "same_event": true
+    },
+    "story-46920b014bcfae94--835e580735": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 NECX 2026, SMR 스타트업들의 원자로 임계 달성 사례 공유",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "행사 내용과 실제 성과가 다름",
+      "same_event": false
+    },
+    "story-4e1bbcf5fe2a6b99--7d0ce85eb8": {
+      "issue_title": "대미 투자 협상 난항, 전략자산 활용한 상업성 확보 과제",
+      "keei_item": "일본 JBIC, 대미 투자 2차 사업에 6.3조 원 융자…SMR은 보류",
+      "prompt_version": 1,
+      "reason": "대미 투자 사업의 구체적 내용이 다름",
+      "same_event": false
+    },
+    "story-50a0d5222dadcb85--613ab26b06": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국, 배터리 저장장치 제조 프로젝트 승인 일시 중단",
+      "keei_item": "중국 국무원, 원전 8기 신규 건설 승인",
+      "prompt_version": 1,
+      "reason": "에너지원과 사업 내용이 다름",
+      "same_event": false
+    },
+    "story-603a7c13853cd80b--0b3993f90d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 NRC, 테네시주 BWRX-300 SMR 건설 허가 이달 말 완료 목표",
+      "keei_item": "폴란드 SGE, 영국 내 BWRX-300 14기 건설 위한 신청서 제출",
+      "prompt_version": 1,
+      "reason": "미국 테네시와 영국 폴란드 건설은 다른 사건임",
+      "same_event": false
+    },
+    "story-603a7c13853cd80b--4c3014b044": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 NRC, 테네시주 BWRX-300 SMR 건설 허가 이달 말 완료 목표",
+      "keei_item": "폴란드 OSGE, 자국 내 BWRX-300 14기 건설 관련 CfD 지원 신청",
+      "prompt_version": 1,
+      "reason": "미국 테네시와 폴란드 자국 내 건설은 다른 사건임",
+      "same_event": false
+    },
+    "story-611ead18ffeec15c--933e2607c4": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한국, 인도네시아 원전 시장 진출 위한 수주 활동 전개",
+      "keei_item": "일본 도쿄전력·JAPC, 다른 발전사에 자사 중간저장시설 반입 의사 타진",
+      "prompt_version": 1,
+      "reason": "대상 국가와 사업 내용이 다름",
+      "same_event": false
+    },
+    "story-611ead18ffeec15c--d4863d270a": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한국, 인도네시아 원전 시장 진출 위한 수주 활동 전개",
+      "keei_item": "한국, SMR 등 신규 원자로 설계 사전검토 제도 도입 구체화",
+      "prompt_version": 1,
+      "reason": "해외 수주 활동과 국내 제도 도입으로 사안이 다름",
+      "same_event": false
+    },
+    "story-627ba69c29d4adc5--7569e8217b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "민간 SMR 활성화를 위한 PPA 직접구매 허용 필요성 제기",
+      "keei_item": "인도 원자력에너지부, 민간 원전 투자 허용 위한 세부 규정 초안 공개",
+      "prompt_version": 1,
+      "reason": "제도 개선의 대상과 국가가 다름",
+      "same_event": false
+    },
+    "story-661b1150fb0281ea--de0fd4314f": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국, 제15차 5개년 계획 통해 AI 가속기 10만장급 클러스터 구축",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "AI 인프라와 원전 설비 목표는 별개",
+      "same_event": false
+    },
+    "story-66738c9585266a88--85716785e1": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "포항시, 현대중공업터보기계 투자 유치로 SMR 기자재 생산 거점화",
+      "keei_item": "독일, Lingen 공장 VVER-1000 원전연료 생산을 위한 시설변경 승인",
+      "prompt_version": 1,
+      "reason": "대상 기업과 사업 내용이 다름",
+      "same_event": false
+    },
+    "story-66738c9585266a88--d38ee438da": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "포항시, 현대중공업터보기계 투자 유치로 SMR 기자재 생산 거점화",
+      "keei_item": "독일 Siemens Energy, Rolls-Royce SMR용 증기터빈 핵심부품 생산 추진",
+      "prompt_version": 1,
+      "reason": "서로 다른 기업과 프로젝트임",
+      "same_event": false
+    },
+    "story-67e9d8e68965f581--4fe7b05f50": {
+      "issue_title": "한울원전 붕산수 누출 사고 발생…지역사회 진상 규명 촉구",
+      "keei_item": "중국 Taipingling 원전 2호기, 최초 계통연결 완료",
+      "prompt_version": 1,
+      "reason": "국내 사고와 중국 원전 가동은 다른 사안",
+      "same_event": false
+    },
+    "story-6ca36fe31334fe1a--8b6d0658ea": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정부, 내년 에너지 R&D 예산 7336억원으로 48% 증액",
+      "keei_item": "미국, 2025년 국내 우라늄 정광 생산량 전년 대비 세 배 증가",
+      "prompt_version": 1,
+      "reason": "예산 정책과 생산량 통계는 별개",
+      "same_event": false
+    },
+    "story-84184ba869024d4d--48657c5c8d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 팰리세이즈 원전, 연료 장전 개시…폐쇄 후 재가동 위한 주요 이정표 달성",
+      "keei_item": "중국 Taipingling 원전 2호기, 상업운전 개시",
+      "prompt_version": 1,
+      "reason": "대상 원전과 국가가 다름",
+      "same_event": false
+    },
+    "story-84184ba869024d4d--6ed1757444": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 팰리세이즈 원전, 연료 장전 개시…폐쇄 후 재가동 위한 주요 이정표 달성",
+      "keei_item": "미국 Holtec, Palisades 원전 재가동 위한 연료장전 착수",
+      "prompt_version": 1,
+      "reason": "동일 원전의 연료 장전 사건임",
+      "same_event": true
+    },
+    "story-87c6c33c04c22365--bc52b67e71": {
+      "issue_title": "원안위, 2027년 예산 3,030억 편성…SMR 규제체계 및 상시검사 강화",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "한국 규제 예산과 영국 SMR 도입 제안은 무관",
+      "same_event": false
+    },
+    "story-8ca4577d71a2491f--9f6f4710a8": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "우즈베키스탄, 지자흐 원전 현지화율 30%로 상향 지시",
+      "keei_item": "우즈베키스탄 정부, Jizzakh 원전 사업 현지화 비중 30%로 확대 추진",
+      "prompt_version": 1,
+      "reason": "동일 원전의 현지화율 정책임",
+      "same_event": true
+    },
+    "story-8cef40d37b9514ab--a3cf49987b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 상무부, 반도체 관세 확대 및 한국 기업 대미 투자 압박",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "무역 정책과 원전 공급망 협력은 별개",
+      "same_event": false
+    },
+    "story-960f72ba9fd3624f--7d0ce85eb8": {
+      "issue_title": "미·일, 5500억 달러 규모 대미 전략 투자 및 관세 합의 재확인",
+      "keei_item": "일본 JBIC, 대미 투자 2차 사업에 6.3조 원 융자…SMR은 보류",
+      "prompt_version": 1,
+      "reason": "투자 규모와 세부 사업 내용이 다름",
+      "same_event": false
+    },
+    "story-9f4c99f51b32e804--f2e783de29": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "웨스팅하우스, IPO 신청 및 신규 원전 사업 구조 개편",
+      "keei_item": "스웨덴 Studsvik 등, 연이어 신규 원전 사업 국가보조 신청",
+      "prompt_version": 1,
+      "reason": "기업의 경영 전략과 국가 보조는 별개",
+      "same_event": false
+    },
+    "story-a1912ae6be142db4--de0fd4314f": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정부, 2040년 재생에너지 220GW 확대 목표 제시",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "국가와 에너지원이 서로 다름",
+      "same_event": false
+    },
+    "story-a4aa06fac0666fcc--add41ecabd": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 핵융합산업협회(FIA), 상업용 핵융합 규제 가이드라인 백서 발간",
+      "keei_item": "미국 Tennessee·Washington 주, 핵융합 규제 정비 및 인허가 진전",
+      "prompt_version": 1,
+      "reason": "백서 발간과 주 정부의 인허가 진전은 별개",
+      "same_event": false
+    },
+    "story-a75afed1bd7ff155--de0fd4314f": {
+      "issue_title": "정부, 2040년 재생에너지 220GW 확대 목표 제시",
+      "keei_item": "중국, 탄소배출 저감 행동계획 발표…2030년 원전 설비용량 110GW 목표 제시",
+      "prompt_version": 1,
+      "reason": "재생에너지 목표와 원전 설비 목표는 다름",
+      "same_event": false
+    },
+    "story-a906966348221102--a3cf49987b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "ESS 시장과 SMR 협력은 별개 사안",
+      "same_event": false
+    },
+    "story-aad1c8b4da3dc8ea--76da1c3e41": {
+      "issue_title": "COP30, 기후재원 확대 합의했으나 화석연료 퇴출 로드맵은 미흡",
+      "keei_item": "미 에너지부, X-energy의 Texas 사업에 최대 1조 4,000억 원 추가 지원",
+      "prompt_version": 1,
+      "reason": "COP30 기후재원과 X-energy 지원은 서로 다른 사안임",
+      "same_event": false
+    },
+    "story-aeea870445785e55--249f1333d0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "태국, 에너지 안보 위해 SMR 도입 및 청정에너지 비중 확대",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "태국의 도입 계획과 미국의 협력은 별개",
+      "same_event": false
+    },
+    "story-baca5170b9b93ee2--835e580735": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국, 전력망 인프라 안보 강화 위한 행정명령 발동",
+      "keei_item": "미국, 세 번째 선진 원자로 임계 도달로 대통령 행정명령 목표 달성",
+      "prompt_version": 1,
+      "reason": "전력망 안보와 원자로 임계는 다른 사건",
+      "same_event": false
+    },
+    "story-bcee3cc819a64b2a--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "인도 요타, 16조원 규모 데이터센터에 엔비디아 GPU 8만개 배치",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "인도 데이터센터와 일본 GX 단지는 다른 사건임",
+      "same_event": false
+    },
+    "story-c13d41dd8a54217c--3afede2c57": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "고준위 방폐장 부지 공모, 1단계 선정 시 최대 200억 지원",
+      "keei_item": "일본 경제산업성, 개량형경수로·SMR 기술개발·공급망 구축 지원 대상 선정",
+      "prompt_version": 1,
+      "reason": "국내 방폐장과 일본의 기술 지원은 별개",
+      "same_event": false
+    },
+    "story-c1ddbcc160b82974--02506fe991": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "홀텍, 아이다호 국립연구소(INL)에 SMR-300 테스트 시설 구축",
+      "keei_item": "미국 Holtec, Oyster Creek 원전 부지에 SMR-300 4기 도입 추진",
+      "prompt_version": 1,
+      "reason": "구축 시설과 도입 부지가 다름",
+      "same_event": false
+    },
+    "story-c1ddbcc160b82974--bc52b67e71": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "홀텍, 아이다호 국립연구소(INL)에 SMR-300 테스트 시설 구축",
+      "keei_item": "Holtec과 EDF, 영국에 SMR-300 최대 4기 도입 위한 제안서 제출",
+      "prompt_version": 1,
+      "reason": "시설 구축과 영국 도입 제안은 별개",
+      "same_event": false
+    },
+    "story-c358b979285ac464--99f6aed02e": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 DOE, 국내 광물 채굴 기술 혁신에 7,300만 달러 지원",
+      "keei_item": "미 에너지부, Genesis Mission 일환으로 원자력 AI 혁신 프로젝트 선정",
+      "prompt_version": 1,
+      "reason": "광물 채굴과 AI 프로젝트는 다른 사안임",
+      "same_event": false
+    },
+    "story-c36dd376bcc98430--7d0ce85eb8": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미·일, 5500억 달러 규모 대미 전략 투자 및 관세 합의 재확인",
+      "keei_item": "일본 JBIC, 대미 투자 2차 사업에 6.3조 원 융자…SMR은 보류",
+      "prompt_version": 1,
+      "reason": "투자 규모와 성격이 다른 별개 사안",
+      "same_event": false
+    },
+    "story-c36dd376bcc98430--92b30862a0": {
+      "issue_title": "미·일, G20 계기 산업·기술 공조 강화 및 대규모 투자 약정",
+      "keei_item": "일본 정부, 선진 원자로와 핵융합 에너지를 중점 산업 분야로 선정",
+      "prompt_version": 1,
+      "reason": "일반 산업 공조와 특정 산업 선정은 별개",
+      "same_event": false
+    },
+    "story-c5a7f5394e4063a7--ddd33cac84": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "포스코, 철강 탈탄소 위한 원전 PPA 허용 건의",
+      "keei_item": "일본 니가타현, 원전 재가동에 따른 도쿄전력 지원금 활용 방안 마련",
+      "prompt_version": 1,
+      "reason": "국내 PPA 건의와 일본 지자체 지원금임",
+      "same_event": false
+    },
+    "story-c924b8fc99b091ba--85716785e1": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "지멘스 에너지, 영국 롤스로이스 SMR용 터빈 부품 생산",
+      "keei_item": "독일, Lingen 공장 VVER-1000 원전연료 생산을 위한 시설변경 승인",
+      "prompt_version": 1,
+      "reason": "기업과 사업 내용이 완전히 다름",
+      "same_event": false
+    },
+    "story-cf3a48a0423086ac--249f1333d0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한-프랑스, SMR 공동연구 등 16건 협력 합의",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "한-프랑스 협력과 한-미-일 협력은 별개",
+      "same_event": false
+    },
+    "story-d19d6c3aaf04b2c4--a3cf49987b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한·호주 경제계, 핵심광물·AI·방산 등 첨단산업 협력 확대 합의",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "협력 대상과 분야가 다름",
+      "same_event": false
+    },
+    "story-e009af115f0ba074--0e615713ea": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 에너지부, 듀앤 아놀드 원전 재가동 위해 19억 달러 대출 확정",
+      "keei_item": "미 에너지부, 핵융합 기술 로드맵 최종본 발표",
+      "prompt_version": 1,
+      "reason": "원전 재가동과 핵융합 기술은 별개",
+      "same_event": false
+    },
+    "story-e009af115f0ba074--8fce4c09fa": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 에너지부, 듀앤 아놀드 원전 재가동 위해 19억 달러 대출 확정",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "개별 원전 대출과 공급망 전체 지원은 다름",
+      "same_event": false
+    },
+    "story-e4fde776b8c09bc1--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "영광군, 18GW 에너지 기반 소부장·에너지 연계 산단 조성 제안",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "국가와 사업 주체가 다름",
+      "same_event": false
+    },
+    "story-e83e576c4b640b0d--6502bd2e82": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "오스테드, 인천 해상풍력 1.4GW 사업 입찰 보류 및 재검토",
+      "keei_item": "헝가리 정부, Paks Ⅱ 원전 사업 전반 재검토",
+      "prompt_version": 1,
+      "reason": "사업 대상과 국가가 다름",
+      "same_event": false
+    },
+    "story-e83e576c4b640b0d--7d0ce85eb8": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "오스테드, 인천 해상풍력 1.4GW 사업 입찰 보류 및 재검토",
+      "keei_item": "일본 JBIC, 대미 투자 2차 사업에 6.3조 원 융자…SMR은 보류",
+      "prompt_version": 1,
+      "reason": "사업 내용과 국가가 다름",
+      "same_event": false
+    },
+    "story-e83fff73156ff7f4--07df75016b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "러시아 로사톰, 카자흐스탄 발하쉬 원전 EPC 계약 체결",
+      "keei_item": "카자흐스탄, 러시아 Rosatom과 Balkhash 원전 EPC 계약 체결",
+      "prompt_version": 1,
+      "reason": "동일 원전의 EPC 계약 체결 사건임",
+      "same_event": true
+    },
+    "story-e953ef2351651b19--a3cf49987b": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한-프랑스, 원자력 전 주기 협력 강화 및 고위급 대화채널 개설",
+      "keei_item": "미국 TerraPower, 한국 기업과 Natrium 상용화·공급망 협력 확대",
+      "prompt_version": 1,
+      "reason": "협력 대상 국가 및 기업이 다름",
+      "same_event": false
+    },
+    "story-e953ef2351651b19--a9ffef226f": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한-프랑스, 원자력 전 주기 협력 강화 및 고위급 대화채널 개설",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "협력 대상 국가 및 기업이 다름",
+      "same_event": false
+    },
+    "story-eb158dfa6ce0660f--e0700959da": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "중국 자오위안 원전 2호기, 원자로 건물 콘크리트 타설 시작",
+      "keei_item": "중국, Zhaoyuan 원전 2호기 최초 콘크리트 타설",
+      "prompt_version": 1,
+      "reason": "동일 원전의 건설 공정 시작임",
+      "same_event": true
+    },
+    "story-ef96aafc7f363583--9a0229abcf": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "인도-우즈베키스탄, 우라늄 장기 공급 협정 체결 임박",
+      "keei_item": "미국·사우디아라비아, 123 협정 체결",
+      "prompt_version": 1,
+      "reason": "협정 대상 국가가 다름",
+      "same_event": false
+    },
+    "story-ef96aafc7f363583--ee30e34bc3": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "인도-우즈베키스탄, 우라늄 장기 공급 협정 체결 임박",
+      "keei_item": "호주·인도, 평화적 목적의 우라늄 수출 위한 행정협정 체결",
+      "prompt_version": 1,
+      "reason": "협정 체결 대상 국가가 다름",
+      "same_event": false
+    },
+    "story-f1ecac74ad93af10--3156a605c7": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미국 하원, AI 데이터센터 전력 비용 부담 의무화 법안 본회의 상정",
+      "keei_item": "미 하원 에너지상무위, 원자력 인허가·연료주기 관련 6개 법안 본회의 회부",
+      "prompt_version": 1,
+      "reason": "AI 전력 비용 법안과 원자력 인허가 법안은 다름",
+      "same_event": false
+    },
+    "story-f983acecede886d0--a9ffef226f": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "센트러스, 래디언트와 마이크로리액터용 HALEU 연료 공급 계약 체결",
+      "keei_item": "미국 Oklo, Centrus·Standard Nuclear와 원전 연료 공급망 협력 추진",
+      "prompt_version": 1,
+      "reason": "계약 대상과 협력 프로젝트가 서로 다름",
+      "same_event": false
+    }
+  },
+  "prompt_version": 1
+}
