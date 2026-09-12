@@ -1,0 +1,20 @@
+# -*- coding: utf-8 -*-
+import json
+
+records = [
+{"candidate_id":"92fff3a73439a3e1--d528a309e93f3736","relation":"SAME_EVENT","same_thread":True,"confidence":0.62,"difference_axis":"multi_source_same_event","decisive_evidence":"둘 다 호남 클러스터 예타면제·2029년 송전 목표를 하루 차 보도","reason":"호남 클러스터 예타면제 국무회의 결정 보도"},
+{"candidate_id":"0b047e278edb34bb--1f8fa0842ada19b6","relation":"RELATED_DISTINCT_EVENT","same_thread":True,"confidence":0.45,"difference_axis":"same_entity_different_issue","decisive_evidence":"a는 수요전망 수정, b는 석탄발전 조기폐지 공식화로 다른 사안","reason":"같은 전기본, 수요전망과 석탄폐지는 별개"},
+{"candidate_id":"40c55eaaa3e1c6e4--e9f1936aaf0b7475","relation":"SAME_EVENT","same_thread":True,"confidence":0.8,"difference_axis":"multi_source_same_event","decisive_evidence":"산업부의 웨스팅하우스 지분설 부인, 하루 차 동일 발표","reason":"동일한 산업부 부인 발표"},
+{"candidate_id":"10775bba6f983bb8--d74f792c831ab784","relation":"RELATED_DISTINCT_EVENT","same_thread":True,"confidence":0.45,"difference_axis":"same_entity_different_issue","decisive_evidence":"a는 용수사업 예타면제 의결, b는 전력공급 시점 발표로 다른 조치","reason":"호남 클러스터, 용수예타와 전력시점은 별개"},
+{"candidate_id":"1003a7b590ec67a7--c7f9b3d08bc22513","relation":"UNRELATED","same_thread":False,"confidence":0.75,"difference_axis":"different_project","decisive_evidence":"a는 용인 클러스터, b는 호남 클러스터로 부지가 다름","reason":"용인과 호남, 다른 반도체 클러스터"},
+{"candidate_id":"38aa27b55057c078--479eb23a61ad65ae","relation":"RELATED_DISTINCT_EVENT","same_thread":True,"confidence":0.4,"difference_axis":"different_stage","decisive_evidence":"a는 토론회 재개, b는 수요 재산정 발표로 별개 시점","reason":"같은 전기본 절차, 다른 단계"},
+{"candidate_id":"2bed756f70c17c7d--8078881f05913157","relation":"FOLLOW_UP_NEW_ACTION","same_thread":True,"confidence":0.5,"difference_axis":"follow_up_same_matter","decisive_evidence":"당정 예산방침 발표 후 구체 에너지R&D 예산액이 확정 공개됨","reason":"예산 방침에서 구체 액수 확정으로 진전"},
+{"candidate_id":"e68101347b188124--e9a0f8ea1ff23815","relation":"UNRELATED","same_thread":False,"confidence":0.8,"difference_axis":"topic_only","decisive_evidence":"a는 LGU+ 실적, b는 정부 전기본 정책으로 무관","reason":"기업 실적과 정부 정책, 무관"},
+{"candidate_id":"aab3ce653eda03aa--bfa46d91713f8ac6","relation":"RELATED_DISTINCT_EVENT","same_thread":True,"confidence":0.4,"difference_axis":"same_entity_different_issue","decisive_evidence":"a는 한빛원전·재생에너지 활용, b는 신규원전 부지난항으로 다른 방안","reason":"호남 전력확보, 기존활용과 신규건설은 별개"},
+{"candidate_id":"0b047e278edb34bb--a3e13685ce3cf3f9","relation":"RELATED_DISTINCT_EVENT","same_thread":True,"confidence":0.45,"difference_axis":"same_entity_different_issue","decisive_evidence":"a는 수요전망 수정, b는 석탄발전 중단 방침으로 다른 사안","reason":"같은 전기본, 수요전망과 석탄정책은 별개"},
+]
+
+with open("C:/AI/nuclens-v2/eval_artifacts/shards/judg_07.jsonl", "a", encoding="utf-8") as f:
+    for r in records:
+        f.write(json.dumps(r, ensure_ascii=False) + "\n")
+print(f"wrote {len(records)} lines")

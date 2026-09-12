@@ -1,0 +1,116 @@
+{
+ "judged": 80,
+ "comparable": 79,
+ "buckets": {
+  "agreement_same": 13,
+  "agreement_different": 58,
+  "disagreement": 8,
+  "claude_uncertain": 1
+ },
+ "agreement_rate": 0.8987,
+ "by_stratum": {
+  "judged": {
+   "agreement_same": 13,
+   "agreement_different": 39,
+   "disagreement": 6,
+   "claude_uncertain": 1
+  },
+  "rule_rejected": {
+   "agreement_different": 19,
+   "disagreement": 2
+  }
+ },
+ "claude_verdicts": {
+  "same_thread": 17,
+  "different_thread": 62,
+  "uncertain": 1
+ },
+ "relationships": {
+  "same_matter": 10,
+  "": 63,
+  "stage_progress": 7
+ },
+ "disagreements": [
+  {
+   "pair_id": "issue-975146cde1cfceb8--issue-ca20b30862dbeec1",
+   "stratum": "rule_rejected",
+   "production": "different_thread",
+   "production_reason": "규칙 거부",
+   "claude": "same_thread",
+   "claude_reason": "동일 유럽 폭염 원전차질 사태",
+   "a_title": "유럽, 가뭄·폭염으로 원전 가동 차질…에너지 위기 확산",
+   "b_title": "글로벌 폭염·가뭄으로 유럽 원전 다수 가동 중단…에너지 공급 차질"
+  },
+  {
+   "pair_id": "issue-3c3357d444dad489--issue-bd1c124b246d63a9",
+   "stratum": "judged",
+   "production": "different_thread",
+   "production_reason": "동일 인물의 발언이나 다루는 정책 세부 내용이 다름",
+   "claude": "same_thread",
+   "claude_reason": "동일 장관 12차전기본 연속 발언",
+   "a_title": "김성환 장관, 산업용 지역요금제 초안 다음 주 공개",
+   "b_title": "기후장관, 용인·호남 반도체 전력에 원전 15기 필요성 언급"
+  },
+  {
+   "pair_id": "issue-40c55eaaa3e1c6e4--story-224aef821c084125",
+   "stratum": "judged",
+   "production": "different_thread",
+   "production_reason": "지분 인수설 부인과 지분 확보 시나리오 전망은 별개 사안",
+   "claude": "same_thread",
+   "claude_reason": "웨스팅하우스 지분설 부인과 시나리오분석",
+   "a_title": "산업부, 한·미 웨스팅하우스 지분 공동 인수설 부인",
+   "b_title": "웨스팅하우스 지분 확보 시나리오와 국내 원전 수출 영향 분석"
+  },
+  {
+   "pair_id": "issue-c635ceb310705bc0--story-f396174affa85472",
+   "stratum": "rule_rejected",
+   "production": "different_thread",
+   "production_reason": "규칙 거부",
+   "claude": "same_thread",
+   "claude_reason": "SEED 선정→R&D 예산 세부화",
+   "a_title": "정부, SMR 7대 SEED 프로젝트 선정 및 세제 지원 강화",
+   "b_title": "정부, 5년간 국가 R&D에 200조 원 투입…SMR 등 7대 SEED 육성"
+  },
+  {
+   "pair_id": "issue-3daa09ef0de9e494--story-c1ddbcc160b82974",
+   "stratum": "judged",
+   "production": "same_thread",
+   "production_reason": "SMR-300 도입 검토와 실증 시설 구축으로 이어짐",
+   "claude": "different_thread",
+   "claude_reason": "걸프연안 검토 vs INL 실증시설",
+   "a_title": "현대건설, 美 홀텍·엔터지와 SMR-300 도입 가능성 검토",
+   "b_title": "홀텍, 아이다호 국립연구소에 SMR-300 실증 시설 구축"
+  },
+  {
+   "pair_id": "issue-067dba612698c5cc--issue-4478d007124fabee",
+   "stratum": "judged",
+   "production": "same_thread",
+   "production_reason": "프랑스 그라벨린 원전의 동일한 해파리 유입 가동 중단",
+   "claude": "different_thread",
+   "claude_reason": "그라블린 해파리, 다른 회차 유입",
+   "a_title": "해파리 유입으로 프랑스 그라벨린 원전 3기 가동 중단",
+   "b_title": "프랑스 그라블린 원전, 해파리 유입으로 원자로 가동 중단"
+  },
+  {
+   "pair_id": "issue-0a3a69c9a73e8bbe--issue-3733dacb6eb9bc94",
+   "stratum": "judged",
+   "production": "same_thread",
+   "production_reason": "테라파워 SMR 건설 현황과 상업화 계약 체결로 이어짐",
+   "claude": "different_thread",
+   "claude_reason": "와이오밍 건설 vs SK 상업화계약, 다른 사업",
+   "a_title": "테라파워 나트륨 SMR, 美 와이오밍주서 건설 현황 조명",
+   "b_title": "산업통상부 장관, 한수원·SK-테라파워 상업화 계약 체결식 참석 예정"
+  },
+  {
+   "pair_id": "issue-074e1d56020a919b--story-39a2e5de12c38fe1",
+   "stratum": "judged",
+   "production": "same_thread",
+   "production_reason": "12차 전력수급기본계획 관련 공론화 및 반영 논의",
+   "claude": "different_thread",
+   "claude_reason": "같은 계획, 원전공론화 vs 재생에너지전략 별개",
+   "a_title": "기후장관, 신규 원전 건설 여부 공론화 통해 결정 방침",
+   "b_title": "기후부, '전기국가' 전환 가속화 및 제12차 전력수급기본계획 반영 논의"
+  }
+ ],
+ "disagreement_total": 8
+}
