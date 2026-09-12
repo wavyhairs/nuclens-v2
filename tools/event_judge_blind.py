@@ -185,6 +185,24 @@ def build(args) -> int:
           f"(기사 못 찾음 {missing})")
     for name, count in sorted(strata.items()):
         print(f"    {name}: {count}")
+
+    # 조각으로도 낸다. 판정자를 여러 컨텍스트로 나누면 한 판정이 다음 판정을
+    # 물들이는 범위가 줄어든다 — 같은 세션 안에서 2,000쌍을 연달아 보면 앞의
+    # 판단이 뒤의 기준이 된다.
+    if args.shards > 1:
+        shard_dir = EVAL_DIR / "shards"
+        shard_dir.mkdir(parents=True, exist_ok=True)
+        for old_file in shard_dir.glob("*.jsonl"):
+            old_file.unlink()
+        for index in range(args.shards):
+            rows = out[index::args.shards]
+            if not rows:
+                continue
+            path = shard_dir / f"blind_{index:02d}.jsonl"
+            path.write_text(
+                "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
+                encoding="utf-8")
+            print(f"    조각 {path.name}: {len(rows)}쌍")
     return 0
 
 
@@ -338,6 +356,7 @@ def main() -> int:
     builder.add_argument("--cap", type=int, default=250,
                          help="delta 하나당 최대 표본. 0 이면 전수")
     builder.add_argument("--seed", type=int, default=20260913)
+    builder.add_argument("--shards", type=int, default=1)
     builder.set_defaults(func=build)
 
     joiner = sub.add_parser("join", help="판정을 production 결과와 대조한다")
