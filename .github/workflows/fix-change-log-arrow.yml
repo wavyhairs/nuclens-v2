@@ -1,0 +1,44 @@
+name: Fix change log arrow
+
+on:
+  push:
+    branches:
+      - fix/change-log-arrow
+    paths:
+      - .github/workflows/fix-change-log-arrow.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/change-log-arrow
+      - name: Replace broken arrow escape
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('web/public/style.css')
+          s = p.read_text(encoding='utf-8')
+          old = 'content: "\x1192";'
+          new = 'content: "→";'
+          if old not in s:
+              raise SystemExit('broken arrow sequence not found')
+          s2 = s.replace(old, new, 1)
+          if old in s2:
+              raise SystemExit('additional broken arrow sequence remains')
+          p.write_text(s2, encoding='utf-8')
+          PY
+      - name: Run focused regression test
+        run: python -m pytest web/tests/test_change_log_arrow.py -q
+      - name: Commit fix and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/fix-change-log-arrow.yml
+          git add web/public/style.css web/tests/test_change_log_arrow.py
+          git commit -m "fix: render change log arrow correctly"
+          git push origin HEAD:fix/change-log-arrow
