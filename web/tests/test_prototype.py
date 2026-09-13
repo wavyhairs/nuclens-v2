@@ -5120,14 +5120,29 @@ class ExploreHubTests(unittest.TestCase):
         chip = chip[:chip.index("}")]
         self.assertIn("min-height: 44px", chip)
 
-    def test_tab_labels_renamed(self):
-        # 탐색 → 스토리 (2026-09-12). 이 탭은 이미 이슈 아카이브였고, 옆에 Story
-        # 메뉴를 따로 두면 같은 데이터의 목록이 둘이 된다. 이름만 사용자 언어로
-        # 바꾸고 기본 범위를 자격 있는 이슈로 좁혔다.
-        self.assertIn(">스토리</button>", self.html)
+    def test_tab_labels_match_data_shape(self):
+        # 탐색 → 스토리 (2026-09-12) → 탐색 (2026-09-13).
+        #
+        # 되돌린 이유: 그 뒤에 장기 스토리(Beta)가 들어오면서 '스토리'가 두
+        # 화면을 가리키게 됐다. 이 탭은 issues.json 을 거르는 **이슈 카탈로그**고,
+        # 여러 이슈를 하나로 묶은 진짜 스토리는 longterm 뿐이다. 화면 안쪽 문구는
+        # 애초에 개명을 따라간 적이 없어("탐색에서 보기" 등 app.js 5곳) 되돌리는
+        # 쪽이 다수 표기와도 맞는다. 자격 바(기본 범위)는 이름과 무관하게 남는다.
+        self.assertIn(">탐색</button>", self.html)
         self.assertIn(">오늘</button>", self.html)
         self.assertNotIn(">이슈 아카이브<", self.html)
-        self.assertNotIn(">탐색</button>", self.html)
+        # '스토리'는 장기 스토리(Beta) 한 곳에만 남는다 — 탭·H1·범위 어디에도
+        # 옛 이름이 돌아오면 안 된다.
+        self.assertNotIn(">스토리</button>", self.html)
+        self.assertNotIn("<span>스토리</span>", self.html)
+        self.assertIn('<h1 id="archiveTitle">이슈 탐색</h1>', self.html)
+        self.assertIn(">추적 중인 이슈</button>", self.html)
+        # 주석·태그를 걷어낸 **보이는 문구**에서 '스토리'는 장기 스토리에만
+        # 붙어야 한다. 탭 하나만 고치고 H1·범위·요약을 놓치면 여기서 걸린다.
+        visible = re.sub(r"<!--.*?-->", " ", self.html, flags=re.S)
+        visible = re.sub(r"<script[^>]*>.*?</script>", " ", visible, flags=re.S | re.I)
+        visible = re.sub(r"<[^>]+>", " ", visible)
+        self.assertEqual(visible.count("스토리"), visible.count("장기 스토리"))
 
 
 class SearchDialogTests(unittest.TestCase):
