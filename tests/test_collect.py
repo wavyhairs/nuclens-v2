@@ -1098,7 +1098,11 @@ class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
             yml = (self.ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
             if "build_data.py" not in yml:
                 continue
-            self.assertIn("GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}", yml,
+            # 키 **값**은 GEMINI_PAID_MODE 가 고른다(tests/test_gemini_key_mode.py).
+            # 여기서 보는 것은 그 선택 결과가 이 워크플로에도 닿는가다.
+            select = ("GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' "
+                      "&& secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}")
+            self.assertIn(select, yml,
                           f"{name} 이 build_data 를 돌리는데 GEMINI_API_KEY 를 안 넘긴다")
 
     def test_daily_brief_measures_data_gates_and_commits_the_record(self):
