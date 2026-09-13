@@ -56,6 +56,9 @@
       <button class="main-tab active" data-view="news" aria-pressed="true">오늘</button>
       <button class="main-tab" data-view="trend" aria-pressed="false">흐름</button>
       <button class="main-tab" data-view="search" aria-pressed="false">스토리</button>
+      <!-- 장기 스토리(Beta). 데이터가 없거나 낡았으면 app.js 가 hidden 을 풀지
+           않는다 — 빈 화면으로 가는 탭을 크롬에 남기지 않는다. -->
+      <button class="main-tab" data-view="longterm" aria-pressed="false" hidden>장기 스토리<span class="beta-dot" aria-hidden="true">β</span></button>
       <button class="main-tab" data-view="report" aria-pressed="false">보고서</button>
     </nav>
     <div class="header-tools">
@@ -382,6 +385,42 @@
     </div>
   </section>
 
+  <!-- 장기 스토리(Beta) — 위의 "스토리" 화면과 **목록의 단위가 다르다.** 그쪽은
+       이슈를 거른 목록이고, 여기는 그 이슈들을 여러 주에 걸쳐 하나로 묶은 상위
+       객체다(docs/2026-09-13-long-term-story.md F12). 그래서 기존 화면을 바꾸지
+       않고 따로 세운다.
+
+       데이터가 없거나 낡았거나 판정 빌드가 반쪽으로 끝났으면 이 구역과 탭이
+       통째로 안 뜬다 — 판정은 자동이고 오병합이 남아 있어 '조용히 틀린 화면'
+       보다 '없는 화면'이 낫다. -->
+  <section id="view-longterm" hidden aria-labelledby="longTermTitle">
+    <div class="archive-intro">
+      <!-- 오버라인을 두지 않는다. 이 화면의 어휘는 TODAY·THIS WEEK 둘로 못
+           박혀 있고(test_p1_copy_overlines_and_card_hierarchy), 영문 오버라인을
+           쓰려면 'STORY' 가 들어가는데 그건 화면에 내보내지 않기로 한 파이프라인
+           내부 용어다(test_screen_copy_uses_no_internal_story_jargon). 제목과
+           Beta 표식이면 이 화면이 무엇인지 말하는 데 충분하다. -->
+      <div>
+        <h1 id="longTermTitle">장기 스토리 <span class="beta-badge">Beta</span></h1>
+        <p id="longTermMeta"></p>
+      </div>
+    </div>
+    <!-- 무엇을 보고 있는지 먼저 말한다. 이 목록은 사람이 엮은 것이 아니라
+         사건 원장에서 자동으로 이어 붙인 것이고, 그 사실을 숨기면 사용자는
+         편집된 연재물로 읽는다. -->
+    <p class="longterm-note" id="longTermNote"></p>
+    <div class="longterm-head">
+      <div class="segmented" id="longTermSort" role="group" aria-label="정렬">
+        <button class="active" type="button" data-sort="recent" aria-pressed="true">최근 움직인 순</button>
+        <button type="button" data-sort="span" aria-pressed="false">기간 긴 순</button>
+        <button type="button" data-sort="events" aria-pressed="false">사건 많은 순</button>
+      </div>
+      <button id="longTermAll" class="secondary-button" type="button" hidden>전체 목록</button>
+    </div>
+    <div id="longTermList" class="longterm-list"></div>
+    <button id="longTermMore" class="archive-more" type="button" hidden>더 보기</button>
+  </section>
+
   <section id="view-trend" hidden aria-labelledby="trendTitle">
     <!-- 오버라인과 h1 을 한 덩어리로 묶는다 — .trend-intro 는 flex
          space-between 이라 래퍼 없이 두 형제를 두면 오버라인은 왼쪽,
@@ -646,6 +685,7 @@
   <button class="active" type="button" data-view="news" aria-pressed="true"><span>오늘</span></button>
   <button type="button" data-view="trend" aria-pressed="false"><span>흐름</span></button>
   <button type="button" data-view="search" aria-pressed="false"><span>스토리</span></button>
+  <button type="button" data-view="longterm" aria-pressed="false" hidden><span>장기 β</span></button>
   <button type="button" data-view="report" aria-pressed="false"><span>보고서</span></button>
 </nav>
 

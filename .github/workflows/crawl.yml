@@ -522,12 +522,12 @@ jobs:
           # 같은 URL 이 curl 로는 200 인데 이 블록만 6종 전부 HTTPError 로 죽어
           # 스모크가 상시 실패하고 있었다(2026-08-02 규명). UA 를 명시한다.
           UA = {"User-Agent": "nuclens-smoke/1.0"}
-          names = ["news.json", "briefings.json", "issues.json", "trend.json", "meta.json", "insights.json", "publications.json"]
+          names = ["news.json", "briefings.json", "issues.json", "trend.json", "meta.json", "insights.json", "publications.json", "threads.json"]
           # 새로 추가된 파일은 첫 배포 전까지 라이브에 없다. 간격 미달 회차는 배포를
           # 건너뛰고 '직전 배포본'을 검사하므로, 필수로 두면 병합 직후 한 번은
           # 무조건 빨갛게 뜬다. 빌드가 항상 생성한다는 보장은 웹 단위 테스트가
           # 이미 하고 있으므로 여기서는 404 만 눈감아 준다(형식 검사는 그대로).
-          TOLERATE_MISSING = {"publications.json"}
+          TOLERATE_MISSING = {"publications.json", "threads.json"}
           fails, data = [], {}
           for n in names:
               try:
@@ -552,9 +552,18 @@ jobs:
           b = data.get("briefings.json") or []
           if b and m and b[0].get("date") != m.get("latest_briefing_date"):
               fails.append(f"briefings[0].date({b[0].get('date')}) != meta({m.get('latest_briefing_date')})")
+          # 장기 스토리(Beta)는 **떠 있어야 한다고 요구하지 않는다.** 이 화면은
+          # 원장이 낡거나 판정 빌드가 반쪽으로 끝나면 스스로 숨도록 설계돼
+          # 있고, 그 숨김은 정상 동작이지 스모크 실패가 아니다. 모양만 본다.
+          t = data.get("threads.json")
+          if t is not None and not isinstance(t, dict):
+              fails.append(f"threads.json 이 객체가 아님({type(t).__name__})")
           if fails:
               print("::error::스모크 실패 — " + " | ".join(fails)); sys.exit(1)
-          print(f"스모크 OK — 기사 {len(data['news.json'])}건, 최신 브리핑 {m.get('latest_briefing_date')}, JSON 6종 정상")
+          threads_note = ("장기 스토리 숨김" if not (t or {}).get("visible")
+                          else f"장기 스토리 {((t or {}).get('stats') or {}).get('threads', 0)}개")
+          print(f"스모크 OK — 기사 {len(data['news.json'])}건, 최신 브리핑 {m.get('latest_briefing_date')}, "
+                f"JSON {len(data)}종 정상, {threads_note}")
           EOF
 
       # 웹 파이프라인 전용 운영 알림.

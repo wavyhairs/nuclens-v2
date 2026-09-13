@@ -170,6 +170,13 @@ jobs:
       - name: Saved-issue alias migration (app.js)
         run: node web/tests/saved_alias_migration.mjs
 
+      # 장기 스토리(Beta)를 언제 안 그리는가. 빌드가 파일 안에 '지금 보여도
+      # 되는가'를 적어 보내지만, **배포가 멈춰 낡은 파일이 CDN 에 남는 경우**는
+      # 그 판정으로 잡을 수 없다 — 화면이 유효기한으로 한 번 더 잰다. 여기서
+      # 회귀가 나면 조용하다: 탭이 떠 있고 몇 주 된 이야기가 '최신'인 척 선다.
+      - name: Long-term story gate (app.js)
+        run: node web/tests/long_term_gate.mjs
+
       # 운영 콘솔 자물쇠는 엣지에서 도는 JS 이고 해시·세션·비밀번호 규칙이 전부
       # 그 안에 있다. 여기가 어긋나면 맞는 비밀번호로도 못 들어가거나 반대로
       # 아무거나 통과하는데, 어느 쪽이든 배포 뒤에야 알게 된다.

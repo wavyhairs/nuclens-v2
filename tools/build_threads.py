@@ -1,16 +1,19 @@
-"""장기 스토리를 **그림자로** 만든다 — production UI 는 아직 이것을 읽지 않는다.
+"""장기 스토리를 판정해 원장에 쌓는다. 화면은 원장을 읽지 이 실행을 읽지 않는다.
 
-왜 그림자인가
--------------
-기존 "스토리" 메뉴는 이미 있고, 이슈 중 추적 가치가 높은 것을 고르는 화면이다
-(`archiveScope === "stories"`). 그 화면을 검증되지 않은 새 계층으로 바꾸면,
-품질 문제가 곧바로 사용자에게 간다. 그래서 먼저 따로 만들어 재고 나서 잇는다.
-
-산출물
-------
-    thread_ledger.json        영속 — 스토리와 그 관계(되돌릴 수 있게)
-    web/_shadow/threads.json  파생 — 언제든 다시 만든다. 배포되지 않는다
+무엇이 어디로 가나
+------------------
+    thread_ledger.json        영속 — 스토리와 그 관계(되돌릴 수 있게). **커밋된다**
+    web/_shadow/threads.json  파생 — 진단용. .gitignore 라 배포되지 않는다
     web/_shadow/report.json   이번 실행의 진단
+
+판정은 비싸고(LLM) 투영은 싸다. 그래서 주기를 갈랐다 — 이 실행은 정기 빌드에서
+하루 1회 돌아 원장을 갱신하고, 화면이 읽는 `data/threads.json` 은 빌드마다
+`thread_web.py` 가 원장에서 다시 만든다. **기존 "스토리" 메뉴는 건드리지 않는다**
+(`archiveScope === "stories"`) — 그쪽은 단위가 이슈고 이쪽은 그 이슈들을 묶은
+상위 객체라 목록의 단위가 다르다. 장기 스토리는 별도 화면(Beta)으로 선다.
+
+이 실행이 ok 로 끝나지 않으면 그 사실이 원장의 `build` 에 남고, 웹 투영이 그것을
+보고 화면을 통째로 내린다. 반쪽 판정 그래프에서 나온 값을 내보내지 않는다.
 
 입력은 `issue_ledger.json` 하나다. 카탈로그가 아니라 원장에서 읽는 것이 요점이다 —
 카탈로그는 60일이면 사라지지만 원장은 지우지 않으므로, 몇 달 전 사건이 후보로
@@ -30,11 +33,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-import asset_alias  # noqa: E402
 import event_retrieval  # noqa: E402
 import thread_identity  # noqa: E402
 import thread_judge  # noqa: E402
 import thread_ledger  # noqa: E402
+import thread_web  # noqa: E402
 
 SHADOW_DIR = ROOT / "web" / "_shadow"
 
@@ -98,41 +101,11 @@ def derive_scope(thread: dict, index: event_retrieval.Index) -> dict:
     }
 
 
-def load_milestones() -> list[dict]:
-    """다음 관전점의 재료. **새 일정 시스템을 만들지 않는다** —
-
-    `event_ledger.json` 이 이미 달력 창 밖의 확정 일정을 쌓고 있다(월성 2호기
-    설계수명 만료 2026-11-01, ICRS15 2026-10-25 …). 추론으로 읽은 날짜는 애초에
-    담기지 않으므로(`date_basis` 가 inferred 인 것은 제외) 이 목록은 그대로 쓸 수
-    있다. `latest_change` 를 진실의 출처로 삼지 않는 이유와 같은 판단이다 —
-    저쪽은 요약 차이를 사건 변화처럼 말한 적이 있다.
-    """
-    try:
-        payload = json.loads((ROOT / "event_ledger.json").read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return []
-    rows = []
-    for row in payload.get("events") or []:
-        text = f"{row.get('title') or ''} {row.get('clause') or ''}"
-        rows.append({**row, "units": asset_alias.unit_tokens(text),
-                     "plants": asset_alias.plant_tokens(text)})
-    rows.sort(key=lambda row: str(row.get("date") or ""))
-    return rows
-
-
-def next_milestone(thread: dict, milestones: list[dict]) -> dict | None:
-    """이 스토리가 다음에 볼 공식 일정. 호기가 먼저, 없으면 발전소."""
-    units = set(thread.get("units") or ())
-    plants = {unit.rsplit("-", 1)[0] for unit in units}
-    for row in milestones:
-        if units and (units & row["units"]):
-            return {"date": row.get("date"), "title": row.get("title"),
-                    "label": row.get("label"), "matched_by": "unit"}
-    for row in milestones:
-        if plants and (plants & row["plants"]):
-            return {"date": row.get("date"), "title": row.get("title"),
-                    "label": row.get("label"), "matched_by": "plant"}
-    return None
+# 다음 관전점은 그림자와 웹 투영이 **같은 것**을 써야 한다. 각자 짝을 지으면
+# 같은 스토리에 다른 일정이 붙는다. 정의는 thread_web 에 있고 여기서는 이름만
+# 빌려 온다 — tests/test_build_threads.py 가 계속 이 이름으로 부른다.
+load_milestones = thread_web.load_milestones
+next_milestone = thread_web.next_milestone
 
 
 def build(args) -> int:
@@ -202,7 +175,18 @@ def build(args) -> int:
                 method="thread_judge", version=thread_judge.CONTRACT_VERSION))
 
     if not args.dry_run:
-        result = thread_ledger.run(threads, relations)
+        # 이 회차가 어떻게 끝났는지를 원장에 같이 적는다. 그림자 진단은
+        # .gitignore 라 다른 체크아웃에서 도는 웹 빌드가 볼 수 없다 —
+        # 판정이 반쪽으로 끝난 회차를 화면이 알아보려면 커밋되는 파일에 남아야 한다.
+        result = thread_ledger.run(threads, relations, build={
+            "status": judge_stats["status"],
+            "contract": judge_stats["contract"],
+            "candidates": judge_stats["candidates"],
+            "asked": judge_stats["asked"],
+            "failed": judge_stats["failed"],
+            "threads": len(threads),
+            "events": sum(len(thread["event_ids"]) for thread in threads),
+        })
         print(f"[threads] 원장: 신규 {result['counts']['added']} · "
               f"갱신 {result['counts']['updated']} · 관계 {result['counts']['relations']} · "
               f"누적 {result['counts']['total']}")
