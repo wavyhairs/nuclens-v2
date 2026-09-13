@@ -655,7 +655,8 @@ python channel_queue.py --find-channel
 | `TELEGRAM_CHANNEL_ID` | ⭕ | 구독자용 채널. 미설정 시 채널 공개만 건너뛰고 자료는 큐에 남아 다음 실행이 재시도한다(DM 으로 폴백하지 않음). 닿는지 확인: `python channel_queue.py --check-channel` (메시지를 보내지 않는다) |
 | `TELEGRAM_ADMIN_CHAT_ID` | ⭕ | 수집원 장애·품질 이상 전용 관리자 알림. 미설정 시 Actions 로그만 남기며 공개 채널로 폴백하지 않음. 닿는지 확인: `python operational_alerts.py --check-admin-chat` (메시지를 보내지 않는다) |
 | `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` | ✅ | 국내 뉴스 검색 ([NAVER API HUB](https://www.ncloud.com/product/applicationService/naverApiHub) — developers.naver.com 아님) |
-| `GEMINI_API_KEY` | ⭕ | 없으면 신규 기사 큐레이션·투자관점 생략. 미검증 fallback은 자동 발송하지 않고 재검토 대기 |
+| `GEMINI_API_KEY` | ⭕ | **유료** 프로젝트 키. 없으면 신규 기사 큐레이션·투자관점 생략. 미검증 fallback은 자동 발송하지 않고 재검토 대기 |
+| `GEMINI_FREE_API_KEY` | ⭕ | **무료** 프로젝트 키(Billing 미연결). 둘 중 어느 쪽을 쓸지는 아래 `GEMINI_PAID_MODE` 가 고른다 |
 | `IMAP_USER` / `IMAP_PASSWORD` | ⭕ | ANS 뉴스레터 수집 (Gmail 앱 비밀번호, 공백 제거) |
 
 ## Variables (GitHub Actions)
@@ -664,6 +665,7 @@ python channel_queue.py --find-channel
 |---|---|---|
 | `AUTOMATION_ENABLED` | 없음(=정지) | 마스터 스위치. `true` 여야 정기 실행이 돈다 |
 | `BRIEFING_ENABLED` | 없음(=발송 안 함) | 발송 계열(daily-brief·weekly) 전용. **둘 다 `true`** 여야 텔레그램으로 나간다 |
+| `GEMINI_PAID_MODE` | 없음(=무료) | 유료/무료 키 선택. 정확히 `ON` 일 때만 `GEMINI_API_KEY`, 나머지는 전부 `GEMINI_FREE_API_KEY` |
 | `GEMINI_MODEL` | `gemini-3.1-flash-lite` | 큐레이션 모델(대량·저난도 호출 버킷) |
 | `GEMINI_REVIEW_MODEL` | `gemini-3.5-flash-lite` | issue_review(사건 병합 판정) 전용 버킷 |
 | `GEMINI_INSIGHT_MODEL` | `gemini-3.5-flash-lite` | issue_insight(이슈 해석 문장) 전용 버킷 |
@@ -671,6 +673,30 @@ python channel_queue.py --find-channel
 | `GEMINI_SYNTHESIS_MODEL` | `gemini-3.5-flash-lite` | daily_lead·trend_insights·주간 synthesis·한수원 시사점·보고서 추천·전문가 오디오 plan/repair/reorder 공유 버킷 |
 | `GEMINI_RPM_CAP` | `12` | 모델별 분당 호출 페이싱 상한 — 무료 티어 15 RPM 을 스치기 전에 자동 대기 |
 | `SITE_URL` / `CLOUDFLARE_PAGES_PROJECT` | 워크플로 기본값 | 배포·스모크 대상 |
+
+### 유료/무료 키 전환 (`GEMINI_PAID_MODE`)
+
+평소는 `OFF` 로 둔다. 유료가 필요한 순간에만 `ON` 으로 바꾸고, 끝나면 다시
+`OFF` 로 되돌린다. **코드 수정·커밋·PR·머지가 전혀 필요 없다.**
+
+| 값 | 쓰는 키 |
+|---|---|
+| `ON` | `secrets.GEMINI_API_KEY` (유료) |
+| `OFF` · 빈 값 · 미설정 · `on` · `TRUE` 같은 오타 | `secrets.GEMINI_FREE_API_KEY` (무료) |
+
+알아둘 것:
+
+- **변수를 바꿔도 워크플로가 저절로 돌지 않는다.** 다음에 새로 시작되는
+  실행부터 적용된다. 이미 돌고 있는 실행은 시작 당시의 키를 그대로 쓴다.
+- 무료 한도 소진으로 **이미 실패한 작업을 유료로 재개**하려면: `ON` 으로
+  바꾼 뒤 해당 workflow 를 **재실행**하고, 끝나면 `OFF` 로 돌린다.
+- 고른 쪽 시크릿이 비어 있으면 **반대쪽 키로 넘어가지 않고 잡이 즉시 실패**한다.
+  각 잡의 `Verify Gemini key selection` 스텝이 첫 Gemini 호출보다 먼저 돌며 막는다.
+  로그에는 `Gemini key mode: free` / `paid` 라벨만 찍힌다 — 키 값은 안 찍는다.
+- 실행 중에 429(한도 소진)나 400/403/404/5xx 가 나와도 **다른 키로 자동
+  전환하지 않는다.** 고른 키 하나로 끝까지 간다.
+- 파이썬은 지금처럼 `GEMINI_API_KEY` 하나만 읽는다. 로컬 실행도 그대로여서
+  `.env` 나 환경변수의 `GEMINI_API_KEY` 를 직접 넣으면 된다.
 
 스위치를 둘로 나눈 이유: 수집·웹 갱신은 돌리면서 발송은 내용을 검토한 뒤에
 켜고 싶은 구간이 있다. 하나뿐이면 수집을 켜는 순간 발송도 같이 나간다.

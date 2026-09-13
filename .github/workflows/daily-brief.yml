@@ -127,6 +127,47 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # ── Gemini 키 모드 (이 잡의 유일한 확인 지점) ───────────────────────
+      #
+      # 무료/유료는 코드가 아니라 Repository Variable `GEMINI_PAID_MODE` 하나로
+      # 고른다. 정확히 `ON` 일 때만 유료 키를 쓰고 OFF·빈 값·미설정·오타는 전부
+      # 무료 키다. 전환에 커밋·PR·머지가 필요 없고, **다음에 새로 시작되는
+      # 실행부터** 적용된다 — 변수를 바꾸는 것만으로는 아무 워크플로도 안 돈다.
+      #
+      # 이 스텝이 필요한 이유: 각 스텝이 쓰는 선택 식
+      #   vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY
+      # 은 **고른 쪽이 비어 있으면 반대쪽 키로 조용히 넘어간다.** 빈 문자열이
+      # falsy 라서 `||` 가 살아나기 때문이다. 유료를 켠 줄 알았는데 무료로 돌거나,
+      # 더 나쁘게는 무료로 둔 줄 알았는데 유료가 나간다 — 로그는 어느 쪽이든
+      # 평소와 똑같아서 청구서가 오기 전엔 모른다.
+      #
+      # 그래서 첫 Gemini 스텝보다 **먼저** 골라 본 결과를 확인하고, 어긋나면 잡을
+      # 세운다. 여기서 멈추면 뒤 스텝이 돌지 않으므로 잘못된 키로 나가는 호출은 0
+      # 이다(뒤의 `if: always()` 스텝들도 claim 스텝 결과에 묶여 있어 함께 건너뛴다).
+      #
+      # 키 값은 어디에도 안 찍는다. 비교만 하고 라벨(free/paid)만 남긴다.
+      - name: Verify Gemini key selection
+        env:
+          PAID_MODE: ${{ vars.GEMINI_PAID_MODE }}
+          SELECTED: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
+          PAID_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FREE_KEY: ${{ secrets.GEMINI_FREE_API_KEY }}
+        run: |
+          if [ "$PAID_MODE" = "ON" ]; then
+            mode=paid; want="$PAID_KEY"; name=secrets.GEMINI_API_KEY
+          else
+            mode=free; want="$FREE_KEY"; name=secrets.GEMINI_FREE_API_KEY
+          fi
+          echo "Gemini key mode: $mode"
+          if [ -z "$want" ]; then
+            echo "::error::Gemini key mode: $mode 인데 $name 가 비어 있다 — 반대쪽 키로 넘어가지 않고 여기서 멈춘다"
+            exit 1
+          fi
+          if [ "$SELECTED" != "$want" ]; then
+            echo "::error::Gemini key mode: $mode 인데 선택 식이 다른 키를 골랐다 — 빈 시크릿으로 인한 폴백을 의심할 것"
+            exit 1
+          fi
+
       # 정기 crawl(3시간마다)이 보존한 최신 임베딩을 웹 이슈 연결에도 사용한다.
       - name: Restore embeddings cache
         uses: actions/cache/restore@v4
@@ -171,7 +212,7 @@ jobs:
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
           GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
           GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
@@ -231,14 +272,14 @@ jobs:
       - name: Backfill briefing embeddings
         continue-on-error: true
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_EMBEDDING_MODEL: gemini-embedding-2
         run: python embedding_pipeline.py --max-new 150 --require-nonzero
 
       - name: Plan (선별 → outbox 작성 → 큐 정리)
         id: plan
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
           GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
           GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
@@ -251,7 +292,7 @@ jobs:
       - name: Push claim (발송 전 커밋 — 실패 시 발송 중단)
         id: claim
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
           GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
           GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
@@ -345,7 +386,7 @@ jobs:
       - name: Trend insights (웹 트렌드 흐름 해석)
         if: always() && steps.claim.conclusion == 'success'
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
         run: |
           git config user.name "github-actions[bot]"
@@ -416,7 +457,7 @@ jobs:
         if: always() && steps.claim.conclusion == 'success'
         continue-on-error: true
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
           GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
           GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
@@ -471,7 +512,7 @@ jobs:
         id: audio
         if: always() && steps.claim.conclusion == 'success' && steps.web-build.outcome == 'success'
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
           GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
           GEMINI_INSIGHT_MODEL: ${{ vars.GEMINI_INSIGHT_MODEL }}
@@ -676,7 +717,7 @@ jobs:
         continue-on-error: true
         timeout-minutes: 20
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
           GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
         run: |
