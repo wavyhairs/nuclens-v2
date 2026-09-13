@@ -88,20 +88,48 @@ def _write_object(path: Path, value: dict) -> bool:
         return False
 
 
-def expected_source_specs() -> dict[str, str]:
+def expected_source_specs() -> dict[str, object]:
     """Read the crawler's post-admin-override source list without duplicating it."""
     try:
         import news_bot
+        def spec(row: Mapping, kind: str) -> object:
+            profile = str(row.get("monitoring_profile") or "").strip()
+            return {"kind": kind, "monitoring_profile": profile} if profile else kind
+
         return {
-            **{str(row["name"]): (
-                "official" if row.get("source_kind") == "official" else "feed")
+            **{str(row["name"]): spec(
+                row, "official" if row.get("source_kind") == "official" else "feed")
                for row in news_bot.RSS_SOURCES if row.get("name")},
-            **{str(row["name"]): "official" for row in news_bot.OFFICIAL_DIRECT_SOURCES
+            **{str(row["name"]): spec(row, "official") for row in news_bot.OFFICIAL_DIRECT_SOURCES
                if row.get("name")},
         }
     except Exception as exc:  # source snapshot itself still remains usable
         print(f"[ops-monitor] 수집원 목록 로드 실패, 관측된 이름만 사용: {exc}")
         return {}
+
+
+def prune_nonactionable_source_state(state: dict, health: dict,
+                                     specs: Mapping, retired: set[str]) -> None:
+    """Drop obsolete source warnings without emitting misleading resolutions."""
+    health_sources = health.get("sources") if isinstance(health.get("sources"), dict) else {}
+    for name in retired:
+        health_sources.pop(name, None)
+
+    quiet = set()
+    for name, value in specs.items():
+        if isinstance(value, Mapping) and value.get("monitoring_profile") == "low_frequency":
+            quiet.add(str(name))
+
+    alerts = state.get("operational_alerts")
+    items = alerts.get("items") if isinstance(alerts, dict) else None
+    if not isinstance(items, dict):
+        return
+    for key in list(items):
+        if any(key.startswith(f"source:{name}:") for name in retired):
+            items.pop(key, None)
+            continue
+        if any(key in {f"source:{name}:empty", f"source:{name}:stale"} for name in quiet):
+            items.pop(key, None)
 
 
 # ── 관리자 채팅 진단 ────────────────────────────────────────────────────────
@@ -242,6 +270,12 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
         health, source_processed = monitor.ingest_source_snapshot(
             state.get("source_health"), state.get("source_yield"), specs, now=now)
     state["source_health"] = health
+    try:
+        import news_bot
+        retired_sources = set(getattr(news_bot, "RETIRED_SOURCE_NAMES", set()))
+    except Exception:
+        retired_sources = set()
+    prune_nonactionable_source_state(state, health, specs, retired_sources)
 
     records = _read_jsonl(log_path)
     today = now.astimezone(KST).date().isoformat()

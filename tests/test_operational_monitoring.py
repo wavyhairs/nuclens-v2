@@ -69,18 +69,59 @@ class SourceHealthTests(unittest.TestCase):
         self.assertEqual(1, health["sources"]["B"]["checks"])
         self.assertEqual("ok", health["sources"]["B"]["last_status"])
 
-    def test_alerts_use_different_failure_and_empty_thresholds(self):
+    def test_failure_alert_waits_for_a_full_day_but_regular_empty_feed_does_not(self):
         health = {"sources": {
             "NSSC": {"kind": "official", "consecutive_failures": 2,
-                     "last_checked_at": "run-2", "last_error": "HTTP 500"},
+                     "failure_started_at": T0.isoformat(),
+                     "last_checked_at": (T0 + timedelta(hours=24)).isoformat(),
+                     "last_error": "HTTP 500"},
             "IAEA": {"kind": "feed", "consecutive_empty": 3,
                      "last_checked_at": "run-3"},
             "WNN": {"kind": "feed", "consecutive_empty": 2,
-                    "last_checked_at": "run-2"},
+                     "last_checked_at": "run-2"},
         }}
-        signals = monitor.source_health_signals(health)
+        signals = monitor.source_health_signals(health, now=T0 + timedelta(hours=24))
         self.assertEqual({"source:NSSC:failure", "source:IAEA:empty"},
                          {signal.key for signal in signals})
+
+    def test_transient_official_failure_is_silent(self):
+        health = None
+        for hours in (0, 3, 6):
+            health = monitor.update_source_health(health, [{
+                "name": "NSSC", "kind": "official", "status": "failed",
+                "error": "timeout",
+            }], T0 + timedelta(hours=hours))
+        self.assertEqual(
+            monitor.source_health_signals(health, now=T0 + timedelta(hours=6)), [])
+        self.assertEqual(
+            health["sources"]["NSSC"]["failure_started_at"], T0.isoformat())
+
+    def test_low_frequency_empty_and_stale_are_silent(self):
+        health = {"sources": {"기관": {
+            "kind": "feed", "monitoring_profile": monitor.LOW_FREQUENCY_PROFILE,
+            "consecutive_empty": 30, "last_checked_at": T0.isoformat(),
+            "last_newest_pub": (T0 - timedelta(days=100)).isoformat(),
+        }}}
+        self.assertEqual(monitor.source_health_signals(health, now=T0), [])
+
+    def test_long_failure_notifies_once_then_only_on_critical_escalation(self):
+        health = {"sources": {"NSSC": {
+            "kind": "official", "consecutive_failures": 10,
+            "failure_started_at": T0.isoformat(), "last_error": "timeout",
+        }}}
+        warning = monitor.source_health_signals(health, now=T0 + timedelta(hours=24))
+        state, due = monitor.evaluate_alerts(warning, None, now=T0 + timedelta(hours=24))
+        self.assertEqual(len(due), 1)
+        state = monitor.mark_notified(state, due, now=T0 + timedelta(hours=24))
+
+        repeated = monitor.source_health_signals(health, now=T0 + timedelta(hours=48))
+        state, due = monitor.evaluate_alerts(repeated, state, now=T0 + timedelta(hours=48))
+        self.assertEqual(due, [])
+
+        critical = monitor.source_health_signals(health, now=T0 + timedelta(hours=72))
+        _state, due = monitor.evaluate_alerts(critical, state, now=T0 + timedelta(hours=72))
+        self.assertEqual(len(due), 1)
+        self.assertEqual(due[0].severity, "critical")
 
 
 class PartialSourceFailureTests(unittest.TestCase):
@@ -191,7 +232,8 @@ class PartialSourceFailureTests(unittest.TestCase):
                      "diagnostics": {"WNN": {"entries": 12, "usable": 0}}},
                     {"WNN": "feed"}),
                 T0 + timedelta(hours=index))
-        self.assertEqual({s.key for s in monitor.source_health_signals(health, now=T0)},
+        self.assertEqual({s.key for s in monitor.source_health_signals(
+            health, now=T0 + timedelta(hours=25))},
                          {"source:WNN:failure"})
 
     def test_recovery_clears_the_partial_streaks(self):

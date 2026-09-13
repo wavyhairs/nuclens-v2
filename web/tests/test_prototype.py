@@ -386,12 +386,20 @@ class OfficialDirectSourceTests(unittest.TestCase):
             "domain": rows[0]["publisher_domain"], "publisher": rows[0]["publisher"]
         }))
 
-    def test_all_four_domestic_official_sources_bypass_google_news(self):
-        self.assertEqual(len(news_bot.OFFICIAL_DIRECT_SOURCES), 4)
+    def test_domestic_official_sources_bypass_google_news(self):
         self.assertTrue(all("news.google." not in source["url"] for source in news_bot.OFFICIAL_DIRECT_SOURCES))
-        self.assertEqual(
-            {source["domain_label"] for source in news_bot.OFFICIAL_DIRECT_SOURCES},
-            {"khnp.co.kr", "nssc.go.kr", "motir.go.kr", "kaeri.re.kr"},
+        self.assertTrue(
+            {
+                "khnp.co.kr",
+                "nssc.go.kr",
+                "motir.go.kr",
+                "kaeri.re.kr",
+                "niftep.snu.ac.kr",
+                "kaif.or.kr",
+                "korad.or.kr",
+                "kinac.re.kr",
+                "ismr.or.kr",
+            }.issubset({source["domain_label"] for source in news_bot.OFFICIAL_DIRECT_SOURCES}),
         )
 
     def test_google_link_replacement_requires_title_publisher_and_domain(self):

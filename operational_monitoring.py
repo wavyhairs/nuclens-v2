@@ -9,8 +9,8 @@ has been planned.
 Two distinctions are deliberate:
 
 * A successful fetch with zero entries is ``empty``, not a network failure.
-  Repeated empty responses are still worth inspecting because a parser can
-  silently stop matching after a publisher changes its markup.
+  Repeated empty responses are useful only for ordinary news feeds. Sources
+  explicitly marked low-frequency are silent until collection itself fails.
 * Detecting an alert and recording a successful notification are separate.
   If Telegram fails, ``last_notified_at`` is not advanced and the next run can
   retry instead of silently losing the warning.
@@ -111,6 +111,9 @@ UNUSABLE_ENTRY_FLOOR = 5
 # 관측 상한의 약 3배로 잡아 현재 0/18 이 걸리게 한다. 관측 창이 15일이라 그보다
 # 긴 정상 공백은 확인할 수 없었다 — 낮추기 전에 더 긴 창으로 다시 재야 한다.
 STALE_FEED_DAYS = 14
+LOW_FREQUENCY_PROFILE = "low_frequency"
+SOURCE_FAILURE_ALERT_AFTER = timedelta(hours=24)
+SOURCE_FAILURE_CRITICAL_AFTER = timedelta(hours=72)
 
 
 def _nonnegative_int(value: object) -> int:
@@ -134,8 +137,8 @@ def _days_since(value: object, now: datetime) -> int | None:
     return max(0, (now - parsed).days)
 
 
-def _source_specs(expected_sources: object) -> dict[str, str]:
-    """Normalize source definitions to ``{name: kind}``.
+def _source_specs(expected_sources: object) -> dict[str, dict[str, str]]:
+    """Normalize source definitions to monitoring specifications.
 
     Accepted forms intentionally match the crawler's existing constants:
     mappings, strings, or dictionaries containing ``name`` and optionally
@@ -143,16 +146,21 @@ def _source_specs(expected_sources: object) -> dict[str, str]:
     feeds default to ``feed``.
     """
     if isinstance(expected_sources, Mapping):
-        out: dict[str, str] = {}
+        out: dict[str, dict[str, str]] = {}
         for name, value in expected_sources.items():
             if not str(name).strip():
                 continue
             if isinstance(value, Mapping):
                 kind = value.get("source_kind") or (
                     "official" if value.get("kind") else "feed")
+                profile = str(value.get("monitoring_profile") or "").strip()
             else:
                 kind = value
-            out[str(name)] = "official" if str(kind) == "official" else "feed"
+                profile = ""
+            out[str(name)] = {
+                "kind": "official" if str(kind) == "official" else "feed",
+                "monitoring_profile": profile,
+            }
         return out
 
     out = {}
@@ -160,10 +168,13 @@ def _source_specs(expected_sources: object) -> dict[str, str]:
         return out
     for item in expected_sources:
         if isinstance(item, str):
-            out[item] = "feed"
+            out[item] = {"kind": "feed", "monitoring_profile": ""}
         elif isinstance(item, Mapping) and item.get("name"):
             kind = item.get("source_kind") or ("official" if item.get("kind") else "feed")
-            out[str(item["name"])] = "official" if kind == "official" else "feed"
+            out[str(item["name"])] = {
+                "kind": "official" if kind == "official" else "feed",
+                "monitoring_profile": str(item.get("monitoring_profile") or "").strip(),
+            }
     return out
 
 
@@ -189,6 +200,7 @@ def source_observations(snapshot: Mapping | None,
 
     observations = []
     for name in sorted(names):
+        spec = specs.get(name, {"kind": "feed", "monitoring_profile": ""})
         present = any(name in field
                       for field in (counts, kept, errors, success, diagnostics))
         error = str(errors.get(name) or "").strip()
@@ -204,7 +216,8 @@ def source_observations(snapshot: Mapping | None,
         row = row if isinstance(row, Mapping) else {}
         observations.append({
             "name": name,
-            "kind": specs.get(name, "feed"),
+            "kind": spec["kind"],
+            "monitoring_profile": spec["monitoring_profile"],
             "status": status,
             "count": count,
             "kept": _nonnegative_int(kept.get(name)),
@@ -256,6 +269,9 @@ def update_source_health(previous: Mapping | None,
             "last_count": count,
             "last_kept_count": kept,
             "checks": _nonnegative_int(row.get("checks")) + 1,
+            "monitoring_profile": str(
+                observation.get("monitoring_profile") or row.get("monitoring_profile") or ""
+            ).strip(),
         })
 
         if observation.get("has_diagnostics"):
@@ -281,20 +297,29 @@ def update_source_health(previous: Mapping | None,
                 row["consecutive_unusable"] = 0
 
         if status == "failed":
-            row["consecutive_failures"] = _nonnegative_int(row.get("consecutive_failures")) + 1
+            prior_failures = _nonnegative_int(row.get("consecutive_failures"))
+            row["consecutive_failures"] = prior_failures + 1
             row["consecutive_empty"] = 0
+            row.pop("empty_started_at", None)
+            if prior_failures == 0 or not row.get("failure_started_at"):
+                row["failure_started_at"] = checked_at
             row["failures"] = _nonnegative_int(row.get("failures")) + 1
             row["last_failure_at"] = checked_at
             row["last_error"] = str(observation.get("error") or "unknown error")[:240]
         else:
             row["consecutive_failures"] = 0
+            row.pop("failure_started_at", None)
             row["successes"] = _nonnegative_int(row.get("successes")) + 1
             row["last_success_at"] = checked_at
             row["last_error"] = ""
             if status == "empty":
-                row["consecutive_empty"] = _nonnegative_int(row.get("consecutive_empty")) + 1
+                prior_empty = _nonnegative_int(row.get("consecutive_empty"))
+                row["consecutive_empty"] = prior_empty + 1
+                if prior_empty == 0 or not row.get("empty_started_at"):
+                    row["empty_started_at"] = checked_at
             else:
                 row["consecutive_empty"] = 0
+                row.pop("empty_started_at", None)
                 row["last_nonempty_at"] = checked_at
         sources[name] = row
 
@@ -380,6 +405,8 @@ def source_health_signals(health: Mapping | None, *,
                           bozo_threshold: int = 2,
                           unusable_threshold: int = 2,
                           stale_days: int = STALE_FEED_DAYS,
+                          failure_alert_after: timedelta = SOURCE_FAILURE_ALERT_AFTER,
+                          failure_critical_after: timedelta = SOURCE_FAILURE_CRITICAL_AFTER,
                           now: datetime | None = None) -> list[AlertSignal]:
     """Create distinct alerts for hard failures, empty runs and partial faults.
 
@@ -409,6 +436,8 @@ def source_health_signals(health: Mapping | None, *,
             continue
         failures = _nonnegative_int(raw.get("consecutive_failures"))
         empties = _nonnegative_int(raw.get("consecutive_empty"))
+        profile = str(raw.get("monitoring_profile") or "").strip()
+        low_frequency = profile == LOW_FREQUENCY_PROFILE
         observation_id = str(raw.get("last_checked_at") or "")
         kind_label = "공식기관" if raw.get("kind") == "official" else "RSS/피드"
 
@@ -447,7 +476,7 @@ def source_health_signals(health: Mapping | None, *,
                     observation_id=observation_id, min_occurrences=1,
                 ))
             quiet = _days_since(raw.get("last_newest_pub"), now)
-            if quiet is not None and quiet >= stale_days:
+            if not low_frequency and quiet is not None and quiet >= stale_days:
                 out.append(AlertSignal(
                     key=f"source:{name}:stale", scope="source", severity="warning",
                     level=LEVEL_ATTENTION,
@@ -465,24 +494,30 @@ def source_health_signals(health: Mapping | None, *,
                     observation_id=observation_id, min_occurrences=1,
                 ))
 
-        if failures >= failure_threshold:
-            severity = "critical" if raw.get("kind") == "official" and failures >= 3 else "warning"
+        failure_started = (_parse_time(raw.get("failure_started_at")) or
+                           _parse_time(raw.get("last_failure_at")))
+        failure_age = now - failure_started if failure_started else timedelta(0)
+        if failures >= failure_threshold and failure_age >= failure_alert_after:
+            critical = failure_age >= failure_critical_after
+            severity = "critical" if critical else "warning"
+            hours = max(0, int(failure_age.total_seconds() // 3600))
             out.append(AlertSignal(
                 key=f"source:{name}:failure", scope="source", severity=severity,
                 # 이것은 자동으로 낫지 않는다 — 한 출처의 기사가 실제로 빠지고 있다.
                 level=LEVEL_ACTION if severity == "critical" else LEVEL_ATTENTION,
                 title=f"{name} 기사를 가져오지 못하고 있습니다",
-                detail=f"{kind_label} 접속이 연속 {failures}회 실패했습니다.",
+                detail=f"{kind_label} 접속이 {hours}시간 동안 복구되지 않았습니다.",
                 impact="이 출처의 기사만 브리핑·사이트에서 빠집니다. 다른 출처는 정상 수집됩니다.",
-                action=("해당 사이트가 열리는지 확인해 주세요. 사이트 쪽 장애라면 "
-                        "복구되는 대로 자동으로 다시 수집합니다."
-                        if severity == "critical" else
-                        "다음 회차에 자동 재시도합니다. 계속되면 확인해 주세요."),
+                action=("해당 사이트 또는 수집 경로를 확인해 주세요."
+                        if critical else
+                        "하루 이상 지속됐습니다. 해당 사이트가 열리는지 확인해 주세요."),
                 technical=(f"consecutive_failures={failures} "
+                           f"failure_hours={hours} "
                            f"last_error={raw.get('last_error') or 'n/a'}"),
+                fingerprint=f"started={failure_started.isoformat() if failure_started else ''}",
                 observation_id=observation_id, min_occurrences=1,
             ))
-        elif empties >= empty_threshold:
+        elif not low_frequency and empties >= empty_threshold:
             out.append(AlertSignal(
                 key=f"source:{name}:empty", scope="source", severity="warning",
                 level=LEVEL_ATTENTION,

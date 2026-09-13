@@ -266,6 +266,26 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertEqual("official", specs["IAEA Top News"])
         self.assertEqual("official", specs["DOE"])
         self.assertEqual("feed", specs["WNN"])
+        self.assertEqual(
+            {"kind": "official", "monitoring_profile": "low_frequency"},
+            specs["한국원자력산업협회"],
+        )
+
+    def test_retired_and_quiet_alerts_are_pruned_without_resolution(self):
+        state = {"operational_alerts": {"items": {
+            "source:E&E News 원자력:empty": {"active": True, "last_notified_at": "x"},
+            "source:한국원자력산업협회:empty": {"active": True, "last_notified_at": "x"},
+            "source:WNN:failure": {"active": True},
+        }}}
+        health = {"sources": {"E&E News 원자력": {}, "한국원자력산업협회": {}}}
+        cli.prune_nonactionable_source_state(
+            state, health,
+            {"한국원자력산업협회": {
+                "kind": "official", "monitoring_profile": "low_frequency"}},
+            {"E&E News 원자력"},
+        )
+        self.assertEqual(set(state["operational_alerts"]["items"]), {"source:WNN:failure"})
+        self.assertNotIn("E&E News 원자력", health["sources"])
 
     def test_admin_sender_targets_only_dedicated_chat(self):
         class Response:
