@@ -254,7 +254,9 @@ class RssGuidStabilityTests(unittest.TestCase):
 
 
 class StoryScopeTests(unittest.TestCase):
-    """스토리 목록의 자격 바 — 카탈로그 전체를 스토리라고 부르지 않는다.
+    """탐색 화면의 자격 바 — 카탈로그 전체를 '추적 중인 이슈'로 부르지 않는다.
+
+    화면 라벨은 '추적 중인 이슈'이고 식별자만 story* 로 남아 있다(2026-09-13).
 
     라이브 실측 2026-09-12: 525건 중 421건(80.2%)이 단 한 회차에만 나타났고
     268건(51.0%)은 기사가 1건이다. 그런 이슈의 상세에는 타임라인도 변화도 설
@@ -275,13 +277,13 @@ class StoryScopeTests(unittest.TestCase):
 
     def test_eligibility_uses_both_briefings_and_distinct_dates(self):
         """회차는 '우리가 며칠에 걸쳐 다뤘나'이고 날짜는 '사건이 며칠에 걸쳐
-        움직였나'다. 하나만 쓰면 한쪽 종류의 스토리가 통째로 빠진다."""
+        움직였나'다. 하나만 쓰면 한쪽 종류가 통째로 빠진다."""
         self.assertIn("function storyEligible(", self.script)
         self.assertIn("STORY_MIN_BRIEFINGS = 2", self.script)
         self.assertIn("STORY_MIN_DATES = 3", self.script)
 
     def test_empty_stories_offer_the_full_catalog(self):
-        """스토리 범위에서 0건이면 원인이 필터가 아니라 범위일 수 있다.
+        """'추적 중인 이슈' 범위에서 0건이면 원인이 필터가 아니라 범위일 수 있다.
         필터 해제만 안내하면 막다른 길이 된다."""
         self.assertIn('data-archive-scope="all"', self.script)
 
@@ -297,12 +299,17 @@ class StoryScopeTests(unittest.TestCase):
         self.assertIn("function loadArchivedIssue(", self.script)
         self.assertIn("/issue/${encodeURIComponent(issueId)}.json", self.script)
 
-    def test_the_story_tab_replaced_explore_rather_than_adding_a_fifth(self):
+    def test_the_catalog_tab_was_replaced_rather_than_added_as_a_fifth(self):
         """탭을 하나 더 만들면 모바일 하단바가 다섯이 되고, 같은 데이터의
-        목록이 둘이 된다."""
+        목록이 둘이 된다. 데스크톱 1 + 모바일 1 = 2.
+
+        **라벨은 여기서 보지 않는다.** 예전에는 이 자리에서도 탭 글자를 못
+        박았는데, 그 바람에 2026-09-13 개명이 test_prototype 만 고치고 여기서
+        배포가 깨졌다. 같은 계약을 두 파일에 두면 한쪽만 고쳐진다 — 라벨은
+        test_prototype.test_tab_labels_match_data_shape 한 곳이 갖는다.
+        여기가 지키는 것은 **개수**다.
+        """
         self.assertEqual(self.html.count('data-view="search"'), 2)
-        self.assertIn(">스토리</button>", self.html)
-        self.assertNotIn(">탐색</button>", self.html)
 
 
 if __name__ == "__main__":
