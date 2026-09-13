@@ -5393,11 +5393,13 @@ def build_issue_pages(issue_catalog: list[dict], ledger: dict | None = None) -> 
     for issue_id, target in issue_ledger.redirects(ledger, live_ids).items():
         if not re.fullmatch(r"[A-Za-z0-9_-]+", issue_id) or issue_id in live_ids:
             continue
-        # 살아 있는 이슈로 가는 것만 싣는다. 보관 페이지로 가는 별칭은 앱이
-        # issues.json 에서 못 찾으므로 옮겨 줘도 그릴 것이 없다 — 그쪽은 주소를
-        # 직접 열었을 때 리다이렉트 페이지가 받는다.
-        if target in live_ids:
-            aliases[issue_id] = target
+        # 예전에는 **살아 있는 이슈로 가는 것만** 실었다. 앱이 issues.json 에서
+        # 못 찾는 주소로 옮겨 줘야 그릴 것이 없다는 이유였는데, 그 사이에 앱이
+        # 보관 스냅샷으로 상세를 그릴 수 있게 됐다(`openArchivedIssueDialog`).
+        # `issue_ledger.redirects` 가 이미 **실제로 서는 대상**(살아 있는 것 +
+        # 보관된 것)만 돌려주므로 그대로 싣는다 — 좁혀 두면 흡수된 이슈가 다시
+        # 흡수 대상마저 창 밖으로 나갔을 때 앱 안에서만 묘비가 남는다.
+        aliases[issue_id] = target
         target_path = f"/issue/{quote(target, safe='-_')}/"
         entry = ledger["issues"].get(issue_id) or {}
         page_dir = issue_dir / issue_id

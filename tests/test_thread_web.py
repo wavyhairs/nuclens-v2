@@ -14,13 +14,13 @@ KST = timezone(timedelta(hours=9))
 NOW = datetime(2026, 9, 13, 12, 0, tzinfo=KST)
 
 
-def _event(issue_id, title, first, last, *, briefing_count=1):
+def _event(issue_id, title, first, last, *, briefing_count=1, moved_to=""):
     return Event(
         issue_id=issue_id, title=title, summary="",
         first_seen=date.fromisoformat(first), last_seen=date.fromisoformat(last),
         units=frozenset(), plants=frozenset(), entities=frozenset(),
         assets=frozenset(), actors=frozenset(), action="", tokens=frozenset(),
-        briefing_count=briefing_count, raw={},
+        briefing_count=briefing_count, raw={"moved_to": moved_to},
     )
 
 
@@ -106,16 +106,34 @@ class ProjectionTests(unittest.TestCase):
         self.assertEqual(row["last_seen"], "2026-09-01")
         self.assertEqual(row["lifespan_days"], 25)
 
-    def test_sub_events_are_ordered_oldest_first(self):
-        """타임라인은 이야기가 자란 순서다. 최신순으로 그리면 '심사 착수 → 보류
-        → 결정' 이 거꾸로 읽힌다."""
+    def test_sub_events_are_ordered_newest_first(self):
+        """목록이 `last_seen` 정렬이고 카드 제목도 최신 사건을 거는 화면이다.
+        제목 바로 아래 첫 행이 다른 날을 가리키면 어긋난 것으로 읽힌다. 이슈
+        상세의 타임라인(`byTimelineOrder`)과도 방향이 같아진다.
+
+        값은 치른다 — '착수 → 보류 → 결정' 이 거꾸로 읽힌다. 훑는 화면에서는
+        '지금 어디까지 왔나' 가 먼저라고 보고 고른 쪽이다."""
         store = _store(_many(thread_web.MIN_THREADS)
                        + [_thread("story", ["issue-c", "issue-a", "issue-b"])])
         row = next(row for row in _payload(store)["threads"]
                    if row["thread_id"] == "story")
         self.assertEqual([event["date"] for event in row["events"]],
-                         ["2026-07-14", "2026-07-17", "2026-09-09"])
+                         ["2026-09-09", "2026-07-17", "2026-07-14"])
         self.assertEqual(row["briefing_count"], 5)
+
+    def test_the_card_is_named_by_where_the_story_is_now(self):
+        """원장의 title 은 앵커(가장 이른 사건)의 제목이고, 앵커가 이른 사건인
+        이유는 **id 가 왕복하지 않게** 하려는 것이지 그 제목이 이야기를 잘
+        부르기 때문이 아니다. 화면은 지금 상태를 건다 — 원장은 건드리지 않는다."""
+        store = _store(_many(thread_web.MIN_THREADS)
+                       + [_thread("story", ["issue-a", "issue-b", "issue-c"],
+                                  title="한빛 1·2호기 계속운전 청신호")])
+        row = next(row for row in _payload(store)["threads"]
+                   if row["thread_id"] == "story")
+        self.assertEqual(row["title"], "한빛 2호기 운영허가 만료로 가동 정지")
+        self.assertEqual(row["origin_title"], "한빛 1·2호기 계속운전 청신호")
+        # 원장은 신원 기록이라 그대로다. 이름이 움직여도 주소는 안 움직인다.
+        self.assertEqual(store["threads"]["story"]["title"], "한빛 1·2호기 계속운전 청신호")
 
     def test_a_one_day_cluster_is_not_a_long_term_story(self):
         """이 화면의 이름이 장기 스토리다. 하루 안에 끝난 묶음은 같은 일을
@@ -130,6 +148,51 @@ class ProjectionTests(unittest.TestCase):
         self.assertNotIn("blip", {row["thread_id"] for row in payload["threads"]})
         # 조용히 사라지지는 않는다 — 몇 개를 걸렀는지 진단에 남는다.
         self.assertEqual(payload["stats"]["short_excluded"], 1)
+
+    def test_absorbed_events_link_to_the_address_that_still_opens(self):
+        """원장은 prune 하지 않으므로 `event_retrieval` 이 흡수된 이슈까지 사건으로
+        낸다(실측 2026-09-13: 811건 중 219건). 그 id 를 링크로 내보내면 화면에서
+        '이 이슈를 찾을 수 없습니다' 로 끝난다 — 흡수된 이슈는 보관 스냅샷을
+        받지 못하기 때문이다. 행은 남기고 주소만 현재 이슈로 옮긴다."""
+        moved = [_event("issue-m", "한빛 2호기 심사 지연으로 가동 중단",
+                        "2026-09-11", "2026-09-12", moved_to="issue-c")]
+        store = _store(_many(thread_web.MIN_THREADS)
+                       + [_thread("story", ["issue-a", "issue-c", "issue-m"])])
+        payload = thread_web.build_payload(store=store, events=EVENTS + moved,
+                                           milestones=[], now=NOW)
+        row = next(row for row in payload["threads"] if row["thread_id"] == "story")
+        # 제목·날짜는 그날의 기록이라 남고, id 만 살아 있는 주소를 가리킨다.
+        self.assertEqual([event["date"] for event in row["events"]],
+                         ["2026-09-11", "2026-09-09", "2026-07-14"])
+        self.assertEqual([event["event_id"] for event in row["events"]],
+                         ["issue-c", "issue-c", "issue-a"])
+        self.assertEqual(row["events"][0]["title"], "한빛 2호기 심사 지연으로 가동 중단")
+
+    def test_a_chain_of_absorptions_is_followed_to_the_end(self):
+        chain = [_event("issue-m", "1보", "2026-09-10", "2026-09-10", moved_to="issue-n"),
+                 _event("issue-n", "2보", "2026-09-11", "2026-09-11", moved_to="issue-c")]
+        by_id = {event.issue_id: event for event in EVENTS + chain}
+        self.assertEqual(thread_web.surviving_id("issue-m", by_id), "issue-c")
+
+    def test_an_absorption_loop_stops_instead_of_hanging(self):
+        loop = [_event("issue-m", "1보", "2026-09-10", "2026-09-10", moved_to="issue-n"),
+                _event("issue-n", "2보", "2026-09-11", "2026-09-11", moved_to="issue-m")]
+        by_id = {event.issue_id: event for event in loop}
+        self.assertIn(thread_web.surviving_id("issue-m", by_id), {"issue-m", "issue-n"})
+
+    def test_the_same_headline_under_two_ids_is_one_row_not_two(self):
+        """흡수 전후의 항목이 제목까지 같으면 이야기의 두 장면이 아니라 한 장면이
+        id 두 개를 입은 것이다. 제목이 다르면 (위 검사처럼) 남긴다."""
+        twin = [_event("issue-m", "한빛 2호기 운영허가 만료로 가동 정지",
+                       "2026-09-12", "2026-09-12", moved_to="issue-c")]
+        store = _store(_many(thread_web.MIN_THREADS)
+                       + [_thread("story", ["issue-a", "issue-c", "issue-m"])])
+        payload = thread_web.build_payload(store=store, events=EVENTS + twin,
+                                           milestones=[], now=NOW)
+        row = next(row for row in payload["threads"] if row["thread_id"] == "story")
+        self.assertEqual([event["date"] for event in row["events"]],
+                         ["2026-09-09", "2026-07-14"])
+        self.assertEqual(row["event_count"], 2)
 
     def test_a_thread_whose_events_vanished_is_dropped(self):
         """원장이 사건보다 앞서간 경우. 그릴 것이 없는 항목을 목록에 남기면

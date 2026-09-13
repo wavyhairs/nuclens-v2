@@ -177,6 +177,13 @@ jobs:
       - name: Long-term story gate (app.js)
         run: node web/tests/long_term_gate.mjs
 
+      # 흡수된 이슈를 앱 안에서 열 때. 정적 주소는 리다이렉트 쪽지로 넘어가는데
+      # 앱 상세만 별칭표를 안 읽어서 클릭이 죽어 있었다(라이브 실측 2026-09-13:
+      # 장기 스토리 타임라인 317행 중 147행). 여기서도 빌드가 방금 지은
+      # `data/issue_aliases.json` 의 모양까지 같이 본다.
+      - name: Merged-issue redirect (app.js)
+        run: node web/tests/issue_merge_redirect.mjs
+
       # 운영 콘솔 자물쇠는 엣지에서 도는 JS 이고 해시·세션·비밀번호 규칙이 전부
       # 그 안에 있다. 여기가 어긋나면 맞는 비밀번호로도 못 들어가거나 반대로
       # 아무거나 통과하는데, 어느 쪽이든 배포 뒤에야 알게 된다.

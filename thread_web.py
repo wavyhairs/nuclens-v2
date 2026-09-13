@@ -175,6 +175,58 @@ def next_milestone(thread: dict, milestones: list[dict]) -> dict | None:
     return None
 
 
+# ── 죽은 주소를 내보내지 않는다 ───────────────────────────────────────────
+# `event_retrieval.load_events` 는 `issue_ledger.json` 의 **모든** 항목을 사건으로
+# 낸다. 원장은 아카이브라 prune 이 없으므로 거기에는 이미 다른 이슈로 흡수된
+# 항목(`moved_to`)도 그대로 남아 있다 — 실측 2026-09-13: 811건 중 219건(27%).
+#
+# 그 id 를 타임라인 링크로 내보내면 화면에서 죽은 클릭이 된다. 흡수된 이슈는
+# `build_issue_pages` 가 보관 스냅샷(`/data/issue/<id>.json`)을 만들지 않기
+# 때문이다(`issue_ledger.archived` 가 moved 를 제외한다). 정적 주소
+# `/issue/<id>/` 는 리다이렉트 쪽지가 받아 주지만 앱 안의 상세는 그 쪽지를 읽지
+# 않아서, 라이브 실측 2026-09-13 기준 타임라인 317행 중 147행(46%)이 "이 이슈를
+# 찾을 수 없습니다" 로 끝났다(101개 스토리 중 68개는 **맨 아래 행**이 그랬다).
+#
+# 그래서 링크만 현재 주소로 옮긴다. **행 자체는 지우지 않는다** — 흡수는 보통
+# "중복이었다"가 아니라 "이 사건이 더 큰 이슈로 굴러 들어갔다"라서, 흡수된 쪽의
+# 제목·날짜는 그날 실제로 보도된 기록이다(팍스 원전 스토리는 8행 중 6행이 한
+# 이슈로 흡수됐지만 여섯 날의 내용이 전부 다르다). 지우면 이야기가 사라진다.
+
+def surviving_id(event_id: str, by_id: dict) -> str:
+    """`moved_to` 사슬의 끝 — 지금 실제로 열리는 주소. 고리를 만나면 멈춘다."""
+    seen: set[str] = set()
+    current = str(event_id)
+    while current and current not in seen:
+        seen.add(current)
+        raw = getattr(by_id.get(current), "raw", None) or {}
+        target = str(raw.get("moved_to") or "").strip()
+        if not target:
+            return current
+        current = target
+    return current
+
+
+def _collapse_ghosts(members: list, by_id: dict) -> list:
+    """같은 이슈로 흡수되면서 **제목까지 같은** 행은 한 번만 세운다.
+
+    위에서 행을 지키기로 했지만, 한 가지는 지워야 한다: 흡수 전후의 두 항목이
+    제목까지 같은 경우다. 그것은 이야기의 두 장면이 아니라 한 장면이 id 두 개를
+    입고 나란히 선 것이라, 읽는 사람에게는 같은 줄이 두 번 찍힌 것으로만 보인다
+    (실측 2026-09-13: 101개 스토리 중 77개에서 101행 — 317행이 216행이 됐다).
+    제목이 다르면 남긴다.
+    """
+    seen: set[tuple[str, str]] = set()
+    out = []
+    for event in members:
+        key = (surviving_id(event.issue_id, by_id),
+               " ".join(str(event.title or "").split()))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(event)
+    return out
+
+
 # ── 살아 있는 스토리 ──────────────────────────────────────────────────────
 
 def live_entries(store: dict) -> list[dict]:
@@ -200,6 +252,7 @@ def _thread_view(entry: dict, by_id: dict, labels: tuple[dict, dict],
     members = [by_id[event_id] for event_id in (entry.get("event_ids") or ())
                if event_id in by_id]
     members.sort(key=lambda event: (event.first_seen or "", event.issue_id))
+    members = _collapse_ghosts(members, by_id)
     first = next((event.first_seen for event in members if event.first_seen), None)
     last = max((event.last_seen for event in members if event.last_seen), default=None)
     # 원장의 first_seen 은 단조 감소만 하는 값이라(신원이 왕복하지 않게) 현재
@@ -213,7 +266,16 @@ def _thread_view(entry: dict, by_id: dict, labels: tuple[dict, dict],
                 ((entry.get("scope") or {}).get("excludes") or {}).get("units") or ()]
     view = {
         "thread_id": str(entry.get("thread_id") or ""),
-        "title": str(entry.get("title") or ""),
+        # 원장의 title 은 **앵커(가장 이른 사건)의 제목**이다. 앵커가 가장 이른
+        # 사건인 이유는 id 가 왕복하지 않게 하려는 것이지(`thread_identity.mint_id`)
+        # 그 제목이 이야기를 가장 잘 부르기 때문이 아니다 — 제목은 거기에 얹혀
+        # 갔을 뿐이다. 화면은 **지금 어디까지 왔나**를 묻는 자리라 최신 사건의
+        # 제목을 건다(실측 2026-09-13: 101개 전부가 최초 제목이었고, 그중 67개는
+        # 최신 제목과 달랐다 — 47일 된 카드가 첫날의 이름으로 서 있었다).
+        # 원장은 그대로 둔다. 신원(안정)과 표시(현재)는 다른 일이다.
+        "title": (members[-1].title if members else str(entry.get("title") or "")),
+        # 이름이 움직여도 주소는 안 움직인다는 것을 화면이 말할 수 있게 남긴다.
+        "origin_title": str(entry.get("title") or ""),
         "first_seen": first_seen,
         "last_seen": last_seen,
         "lifespan_days": (last - first).days if (first and last) else None,
@@ -227,13 +289,23 @@ def _thread_view(entry: dict, by_id: dict, labels: tuple[dict, dict],
         # 닮았지만 들어오지 않는가**. 자동 군집을 정직하게 보이는 자리다.
         "excluded_unit_labels": [unit_label(unit, plant_names) for unit in excluded[:6]],
         "identity_origin": str(entry.get("identity_origin") or ""),
+        # 최신이 맨 위. 이 목록은 `last_seen` 으로 정렬된 **최근 움직인 것** 의
+        # 목록이고, 카드 제목도 최신 사건을 건다 — 제목 바로 아래 첫 행이 그
+        # 제목과 다른 날을 가리키면 읽는 사람에게는 어긋난 것으로 보인다.
+        # 이슈 상세의 타임라인도 최신순이다(`byTimelineOrder`).
+        #
+        # 잃는 것은 적어 둔다: '착수 → 보류 → 결정' 이 위에서 아래로 거꾸로
+        # 읽힌다. 훑는 화면에서는 "지금 어디까지 왔나"가 먼저라고 보고 그쪽을
+        # 골랐다. 되돌리려면 여기 한 줄과 아래 검사 하나만 뒤집으면 된다.
         "events": [{
-            "event_id": event.issue_id,
+            # 제목·날짜는 그날의 기록이고, id 는 **지금 열리는 주소**다. 흡수된
+            # 사건은 둘이 갈리므로 링크 쪽만 현재 주소로 옮긴다(위 주석).
+            "event_id": surviving_id(event.issue_id, by_id),
             "title": event.title,
             "date": event.first_seen.isoformat() if event.first_seen else "",
             "last_seen": event.last_seen.isoformat() if event.last_seen else "",
             "briefing_count": event.briefing_count,
-        } for event in members],
+        } for event in reversed(members)],
     }
     view["next_milestone"] = next_milestone({"units": units}, milestones)
     return view

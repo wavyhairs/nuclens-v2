@@ -2756,11 +2756,24 @@ function archivedIssueBody(issue) {
     ${trail}`;
 }
 
-function openArchivedIssueDialog(issueId, updateUrl = true) {
-  loadArchivedIssue(issueId).then(issue => {
+// `viaAlias` 는 별칭표를 이미 한 번 거쳤다는 표식이다 — 사슬 끝까지 따라간
+// 주소마저 비어 있으면 거기서 멈춰야지, 되돌아가며 다시 찾으면 안 된다.
+function openArchivedIssueDialog(issueId, updateUrl = true, viaAlias = false) {
+  loadArchivedIssue(issueId).then(async issue => {
     // 기다리는 동안 사용자가 다른 이슈를 열었으면 그 화면을 덮지 않는다.
     if (state.issueId && state.issueId !== issueId) return;
     if (!issue) {
+      // 스냅샷이 없다는 것은 **보관이 아니라 이동**이다. 보관된 이슈는 빌드가
+      // 스냅샷을 남기고(`issue_ledger.archived`), 흡수된 이슈는 남기지 않는다.
+      // 정적 주소 `/issue/<id>/` 는 이미 원장의 별칭표로 현재 이슈에 넘겨 주는데
+      // 앱 안의 상세만 그 판정을 안 읽어서 묘비가 떴다 — 같은 표를 여기서도 본다.
+      const target = viaAlias
+        ? issueId : resolveAlias(issueId, await loadIssueAliases());
+      if (target && target !== issueId) {
+        showToast("이 사건은 다른 이슈로 합쳐졌습니다. 현재 이슈를 엽니다.");
+        openIssueDialog(target, updateUrl, true);
+        return;
+      }
       if (state.issueId === issueId) state.issueId = "";
       showToast("이 이슈를 찾을 수 없습니다.");
       return;
@@ -2802,11 +2815,11 @@ function changeLogSection(issue) {
   </section>`;
 }
 
-function openIssueDialog(issueId, updateUrl = true) {
+function openIssueDialog(issueId, updateUrl = true, viaAlias = false) {
   const issue = currentIssueById(issueId);
   if (!issue) {
     state.issueId = issueId;
-    openArchivedIssueDialog(issueId, updateUrl);
+    openArchivedIssueDialog(issueId, updateUrl, viaAlias);
     return;
   }
   recordRecentIssue(issueId);
