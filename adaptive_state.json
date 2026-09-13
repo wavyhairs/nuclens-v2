@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-09-13"
   },
   "retired": {
@@ -286,9 +286,44 @@
     }
   },
   "spent": {
-    "count": 0,
+    "count": 1,
     "date": "2026-09-13"
   },
-  "terms": {},
+  "terms": {
+    "가스복합발전소및": {
+      "articles": 1,
+      "created_at": "2026-09-13T00:40:21.597497+00:00",
+      "domains": [
+        "financialpost.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "financialpost.co.kr",
+          "hash": "8342c8d42209bfea",
+          "importance": "must_read",
+          "title": "김정관 산업부 장관, 1000억 달러 규모 대미 투자 협상 위해 방미"
+        }
+      ],
+      "expires_at": "2026-09-14T00:40:23.009424+00:00",
+      "importance": "must_read",
+      "last_result_count": 2,
+      "last_run": "2026-09-13T00:40:23.009424+00:00",
+      "new_articles": 2,
+      "origin": "auto",
+      "planned_at": "2026-09-13T00:40:21.597497+00:00",
+      "queries_run": 1,
+      "query": "가스복합발전소 및 원전",
+      "score": 3.6,
+      "status": "extended",
+      "term": "가스복합발전소 및",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [
+        "2026-09-13"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    }
+  },
   "version": 1
 }
