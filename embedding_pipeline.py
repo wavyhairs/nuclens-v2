@@ -19,7 +19,32 @@ from typing import Iterable
 
 EMBEDDING_MODEL = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-2")
 EMBEDDING_DIMENSION = int(os.environ.get("GEMINI_EMBEDDING_DIMENSION", "768"))
-EMBEDDING_RETENTION_DAYS = 35  # 21일 이슈 창 + 재실행 여유
+
+
+def _positive_int_env(name: str, default: int) -> int:
+    raw = str(os.environ.get(name) or "").strip()
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
+# 이슈 창과 **보존 기간은 같이 움직여야 한다.** 예전에는 `35 # 21일 이슈 창 + 여유`
+# 라고 손으로 적혀 있었는데, 그 결합이 주석에만 있으면 창을 넓히는 순간 조용히
+# 깨진다. 벡터가 없으면 `issue_review.in_review_band` 가 `embedding_similarity=None`
+# 으로 False 를 돌려주고, 그 쌍은 회색지대에 **들어가지도 못한다** — 창을 넓힌
+# 효과가 아니라 보존이 끊긴 효과를 재게 된다.
+#
+# 기본값은 21 + 14 = 35 로 **지금과 같다.** 창을 옮기면 보존이 따라온다.
+ISSUE_WINDOW_DAYS = _positive_int_env("NUCLENS_ISSUE_WINDOW_DAYS", 21)
+# 여유 14일의 근거: 벡터는 기사가 창 안에 있는 동안 계속 필요한데, 백필이 놓친
+# 회차(API 장애·쿼터)를 다음 실행이 따라잡을 시간이 있어야 한다. 여유가 0이면
+# 창 끝자락 기사가 매 빌드 재생성 대상이 되어 호출이 는다.
+EMBEDDING_RETENTION_MARGIN_DAYS = 14
+EMBEDDING_RETENTION_DAYS = _positive_int_env(
+    "EMBEDDING_RETENTION_DAYS", ISSUE_WINDOW_DAYS + EMBEDDING_RETENTION_MARGIN_DAYS
+)
 DEFAULT_CACHE_FILE = Path("embeddings.json")
 
 
@@ -234,7 +259,9 @@ def refresh_embeddings(
 def main() -> int:
     parser = argparse.ArgumentParser(description="최근 브리핑 임베딩 캐시 백필")
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent)
-    parser.add_argument("--window-days", type=int, default=21)
+    # 백필 창은 이슈 창을 따라간다. 둘이 어긋나면 창 안에 있는데 벡터가 없는
+    # 기사가 생기고, 그 기사는 임베딩 경로에서 통째로 빠진다.
+    parser.add_argument("--window-days", type=int, default=ISSUE_WINDOW_DAYS)
     parser.add_argument("--max-new", type=int, default=150)
     parser.add_argument("--require-nonzero", action="store_true")
     args = parser.parse_args()

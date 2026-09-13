@@ -45,7 +45,10 @@ import llm_policy
 from data_quality import clean_text, implication_is_hollow
 
 ROOT = Path(__file__).parent
-CACHE_FILE = ROOT / "issue_insights.json"
+# 진단용 구멍. 창 재생이 운영 캐시를 더럽히면 안 된다 —
+# `issue_review` · `issue_ledger` 와 같은 규칙. production 은 주지 않는다.
+CACHE_FILE = Path(os.environ.get("ISSUE_INSIGHT_CACHE_FILE")
+                  or (ROOT / "issue_insights.json"))
 
 # 프롬프트를 고치면 올린다. 캐시된 옛 문장이 자동으로 무효가 된다.
 # v3 (2026-08-07): 경과를 최신순으로 표시 + 본문 요지 투입 + 모순·복사 금지.

@@ -64,3 +64,50 @@ class EmbeddingPipelineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RetentionFollowsIssueWindowTests(unittest.TestCase):
+    """보존 기간이 이슈 창을 따라가는지.
+
+    예전에는 `EMBEDDING_RETENTION_DAYS = 35 # 21일 이슈 창 + 여유` 였다. 결합이
+    주석에만 있으면 창을 넓히는 순간 조용히 깨지고, 벡터가 없는 쌍은
+    `issue_review.in_review_band` 가 False 를 돌려주어 **회색지대에 들어가지도
+    못한다.** 그러면 창 확대의 효과가 아니라 보존이 끊긴 효과를 재게 된다.
+    """
+
+    def _reload(self, env: dict) -> object:
+        import importlib
+        with patch.dict("os.environ", env, clear=False):
+            return importlib.reload(ep)
+
+    def tearDown(self):
+        import importlib
+        with patch.dict("os.environ", {}, clear=False):
+            for name in ("NUCLENS_ISSUE_WINDOW_DAYS", "EMBEDDING_RETENTION_DAYS"):
+                __import__("os").environ.pop(name, None)
+            importlib.reload(ep)
+
+    def test_default_is_unchanged(self):
+        module = self._reload({"NUCLENS_ISSUE_WINDOW_DAYS": "", "EMBEDDING_RETENTION_DAYS": ""})
+        self.assertEqual(module.ISSUE_WINDOW_DAYS, 21)
+        self.assertEqual(module.EMBEDDING_RETENTION_DAYS, 35)
+
+    def test_widening_the_issue_window_widens_retention(self):
+        module = self._reload({"NUCLENS_ISSUE_WINDOW_DAYS": "42", "EMBEDDING_RETENTION_DAYS": ""})
+        self.assertEqual(module.EMBEDDING_RETENTION_DAYS, 56)
+        self.assertGreater(module.EMBEDDING_RETENTION_DAYS, module.ISSUE_WINDOW_DAYS)
+
+    def test_backfill_window_follows_the_issue_window(self):
+        """백필 창이 뒤처지면 창 안에 있는데 벡터가 없는 기사가 생긴다."""
+        module = self._reload({"NUCLENS_ISSUE_WINDOW_DAYS": "35", "EMBEDDING_RETENTION_DAYS": ""})
+        parser_default = module.ISSUE_WINDOW_DAYS
+        self.assertEqual(parser_default, 35)
+
+    def test_explicit_override_still_wins(self):
+        module = self._reload({"NUCLENS_ISSUE_WINDOW_DAYS": "42", "EMBEDDING_RETENTION_DAYS": "90"})
+        self.assertEqual(module.EMBEDDING_RETENTION_DAYS, 90)
+
+    def test_garbage_falls_back_instead_of_crashing_the_crawl(self):
+        module = self._reload({"NUCLENS_ISSUE_WINDOW_DAYS": "three weeks", "EMBEDDING_RETENTION_DAYS": ""})
+        self.assertEqual(module.ISSUE_WINDOW_DAYS, 21)
+        self.assertEqual(module.EMBEDDING_RETENTION_DAYS, 35)

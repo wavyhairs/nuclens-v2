@@ -27,6 +27,7 @@ except (OSError, KeyError, json.JSONDecodeError):
     DATA_DIR = DATA_ROOT
 
 import build_data  # noqa: E402
+import embedding_pipeline  # noqa: E402
 import event_calendar  # noqa: E402
 import issue_candidate_stats  # noqa: E402
 import issue_continuity  # noqa: E402
@@ -3752,7 +3753,18 @@ class GeneratedDataTests(unittest.TestCase):
         self.assertIn("actions/cache/save@v4", crawl)
         self.assertIn("Restore embeddings cache", daily)
         self.assertIn("gemini-embedding-2", crawl)
-        self.assertIn("--window-days 21", crawl)
+        # 백필 창은 **워크플로에 적지 않는다.** 예전에는 `--window-days 21` 을 여기서
+        # 확인했는데, 그 숫자는 `build_data.ISSUE_WINDOW_DAYS` 와 같아야만 뜻이 있다.
+        # 두 곳에 각각 적혀 있으면 창을 옮길 때 이 줄이 조용히 뒤처지고, 그러면 창
+        # 안에 있는데 벡터가 없는 기사가 생긴다 — 그 기사는 `in_review_band` 에서
+        # `embedding_similarity=None` 으로 탈락해 회색지대에 들어가지도 못한다.
+        # 그래서 지금 잠그는 것은 숫자가 아니라 **결합**이다.
+        for workflow in (crawl, daily):
+            self.assertIn("python embedding_pipeline.py", workflow)
+            self.assertNotIn("--window-days", workflow)
+        self.assertEqual(embedding_pipeline.ISSUE_WINDOW_DAYS, build_data.ISSUE_WINDOW_DAYS)
+        self.assertGreater(embedding_pipeline.EMBEDDING_RETENTION_DAYS,
+                           build_data.ISSUE_WINDOW_DAYS)
         self.assertIn("--require-nonzero", daily)
         self.assertNotIn("- name: Smoke test live site\n        continue-on-error: true", crawl)
         self.assertNotIn("- name: Render smoke (라이브 화면 검증)\n        if: always() && steps.claim.conclusion == 'success'\n        continue-on-error: true", daily)
@@ -7237,6 +7249,7 @@ class AdminConsoleTests(unittest.TestCase):
         # 창을 통째로 가져간다. 그래도 창은 경로마다 상한을 넘지 않는다.
         for key, count in paths.items():
             self.assertLessEqual(count, per_round, key)
+        budget_left = build_data.CONSOLE_BORDERLINE_TOTAL
         for row in rounds["dates"]:
             self.assertEqual(shipped.get(row["date"], 0), row["borderline_shown"], row["date"])
             self.assertLessEqual(row["borderline_shown"], row["borderline"], row["date"])
@@ -7244,8 +7257,18 @@ class AdminConsoleTests(unittest.TestCase):
             # 세고 있다는 뜻이고, 화면은 그걸 구분하지 못한다.
             self.assertLessEqual(row["borderline"], row["scored"], row["date"])
             # 상한에 안 걸렸으면 하나도 자르지 않는다 — 자르면 '전부 표시'가 거짓이다.
-            if row["borderline"] <= per_round:
+            #
+            # **다만 상한이 둘이다.** 회차당 `CONSOLE_BORDERLINE_PER_ROUND` 말고
+            # 전체 `CONSOLE_BORDERLINE_TOTAL` 이 따로 있고, 최신 회차부터 채우므로
+            # 예산이 바닥나면 옛 회차는 회차 상한에 한참 못 미쳐도 0건이 된다.
+            # 경계에 걸친 회차는 남은 예산만큼만 실린다 — 그래서 조건이
+            # "예산이 남았나"가 아니라 "이 회차를 다 담을 만큼 남았나"다.
+            # 이 검사는 그 두 번째 상한을 빠뜨리고 있었다 — 9/1 자 낡은 payload
+            # 에서는 회차 수가 적어 예산이 남았고 그래서 통과했다. 새로 구운
+            # payload 에서 18개 회차가 걸린다. 코드가 아니라 검사가 모자랐다.
+            if row["borderline"] <= per_round and budget_left >= row["borderline"]:
                 self.assertEqual(row["borderline_shown"], row["borderline"], row["date"])
+            budget_left -= row["borderline_shown"]
         # story 는 자르지 않는다. 두 집계가 갈라지면 요약과 목록이 다른 말을 한다.
         by_date = {row["date"]: row["count"] for row in self.merges["story"]["by_date"]}
         for row in rounds["dates"]:

@@ -228,12 +228,12 @@ jobs:
           echo "!! push 3회 실패 — 수집분 미커밋 (브리핑은 계속)"
           exit 1
 
-      - name: Backfill 21-day briefing embeddings
+      - name: Backfill briefing embeddings
         continue-on-error: true
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_EMBEDDING_MODEL: gemini-embedding-2
-        run: python embedding_pipeline.py --window-days 21 --max-new 150 --require-nonzero
+        run: python embedding_pipeline.py --max-new 150 --require-nonzero
 
       - name: Plan (선별 → outbox 작성 → 큐 정리)
         id: plan

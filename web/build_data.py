@@ -95,6 +95,22 @@ OUT_DIR = Path(os.environ.get("OUTPUT_DIR", SITE_DIR / "public" / "data"))
 # 엣지의 접근 통제(functions/admin/_middleware.js)가 닿지 않는다. 화면만 잠그고
 # 데이터를 공개 경로에 두면 URL 하나로 그대로 읽힌다 — 잠근 게 아니다.
 ADMIN_OUT_DIR = Path(os.environ.get("ADMIN_OUTPUT_DIR", OUT_DIR.parent / "admin" / "data"))
+# 정적 진입점(이슈·회차 페이지·RSS)이 나가는 자리. 진단 실행이 운영 산출물을
+# 덮으면 안 된다 — 창 재생이 실제로 web/public/brief 를 통째로 다시 썼고,
+# 그 결과 페이지와 web/public/data 가 서로 다른 빌드의 것이 되어 검사 세 건이
+# 깨졌다. 코드 회귀가 아니라 **격리 누락**이었다.
+PAGES_OUTPUT_DIR_ENV = "PAGES_OUTPUT_DIR"
+
+
+def pages_dir() -> Path:
+    """정적 진입점이 나가는 자리. **호출할 때 정한다.**
+
+    import 시점에 굳히면 `SITE_DIR` 을 갈아끼우는 검사가 더 이상 페이지를
+    옮기지 못한다 — 실제로 `test_build_issue_pages_serves_live_archived_and_moved`
+    가 그렇게 깨졌다. 환경변수가 없으면 지금과 같은 자리다.
+    """
+    override = str(os.environ.get(PAGES_OUTPUT_DIR_ENV) or "").strip()
+    return Path(override) if override else (SITE_DIR / "public")
 GENERATION_ID = os.environ.get("GENERATION_ID", "")
 
 # Diagnostic-only controls.  Production keeps using the real KST clock and writes no
@@ -116,7 +132,34 @@ TREND_PERIOD_DAYS = (7, 30, 90, 180, 365)
 # 그림이라 그 정도로는 낱말 사이가 비어 아무 말도 하지 않는다. 40개면 화면 한
 # 폭을 채우면서도 페이로드가 기간당 몇 KB 늘어나는 선에서 멈춘다.
 TAG_CLOUD_LIMIT = 40
-ISSUE_WINDOW_DAYS = 21
+
+# 이슈 창. **기본값 21 은 계약이다** — 이 상수에 묶인 검사가 여럿이고, 값을 바꾸는
+# 것은 카탈로그 모양을 바꾸는 일이라 측정 없이 옮기면 안 된다. 그래서 상수를
+# 고치는 대신 진단용 구멍만 낸다: 환경변수가 없으면 production 은 지금과 한 글자도
+# 다르지 않게 돈다.
+#
+# 창 하나가 아니라 게이트 다섯에 동시에 걸린다는 점을 기억할 것 —
+# 기사 부착(2곳)·후보 검색·canary 감사·카탈로그 cutoff/ceiling. 그중 cutoff/ceiling
+# 이 후보 풀 크기를 정하므로 비용은 거기서 난다.
+ISSUE_WINDOW_DAYS_ENV = "NUCLENS_ISSUE_WINDOW_DAYS"
+
+
+def _positive_int_env(name: str, default: int) -> int:
+    raw = str(os.environ.get(name) or "").strip()
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        print(f"::warning::{name}={raw!r} 는 정수가 아니다 — 기본값 {default} 를 쓴다")
+        return default
+    if value <= 0:
+        print(f"::warning::{name}={value} 는 양수가 아니다 — 기본값 {default} 를 쓴다")
+        return default
+    return value
+
+
+ISSUE_WINDOW_DAYS = _positive_int_env(ISSUE_WINDOW_DAYS_ENV, 21)
 
 # 추적률을 재는 회차 수. **하루치로 재면 안 된다** — 한 회차의 분모가 이슈 8개
 # 안팎이라 1건이 붙고 떨어질 때마다 지표가 0.125 씩 튄다. 2026-08-03 실측 17일에서
@@ -5276,7 +5319,7 @@ def build_issue_pages(issue_catalog: list[dict], ledger: dict | None = None) -> 
     첫 화면에서 통째로 받기 때문이다. 원장은 계속 자라므로 그 안에 넣으면
     상한이 사라진다. 보관분만 이슈별 파일로 떼어 필요할 때만 받게 한다.
     """
-    public_dir = (SITE_DIR / "public").resolve()
+    public_dir = pages_dir().resolve()
     issue_dir = (public_dir / "issue").resolve()
     if issue_dir.parent != public_dir or issue_dir.name != "issue":
         raise RuntimeError(f"unsafe issue page directory: {issue_dir}")
@@ -5375,7 +5418,7 @@ def build_issue_pages(issue_catalog: list[dict], ledger: dict | None = None) -> 
 
 def build_brief_pages(briefings: list[dict]) -> int:
     """날짜별 오늘 화면을 OG·canonical·JSON-LD가 있는 정적 진입점으로 만든다."""
-    public_dir = (SITE_DIR / "public").resolve()
+    public_dir = pages_dir().resolve()
     brief_dir = (public_dir / "brief").resolve()
     if brief_dir.parent != public_dir or brief_dir.name != "brief":
         raise RuntimeError(f"unsafe brief page directory: {brief_dir}")
@@ -7239,7 +7282,9 @@ def build() -> None:
     issue_page_counts = build_issue_pages(issue_catalog, ledger_result["store"])
     issue_page_count = issue_page_counts["live"]
     brief_page_count = build_brief_pages(briefings)
-    (SITE_DIR / "public" / "rss.xml").write_bytes(build_rss(briefings, now))
+    rss_dir = pages_dir()
+    rss_dir.mkdir(parents=True, exist_ok=True)
+    (rss_dir / "rss.xml").write_bytes(build_rss(briefings, now))
 
     selected_count = sum(briefing["article_count"] for briefing in briefings)
     issue_count = sum(briefing["issue_count"] for briefing in briefings)

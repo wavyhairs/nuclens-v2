@@ -48,12 +48,15 @@ RSS 항목은 구독자 리더에 영구히 남는다. 웹에서 "창에서 밀�
 from __future__ import annotations
 
 import json
+import os
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 BASE = Path(__file__).parent
-OUT_FILE = BASE / "issue_ledger.json"
+# 진단용 구멍. 창 재생처럼 **원장을 더럽히면 안 되는** 실행이 자기 사본을 쓴다.
+# production 은 이 변수를 주지 않으므로 경로가 지금과 같다.
+OUT_FILE = Path(os.environ.get("ISSUE_LEDGER_FILE") or (BASE / "issue_ledger.json"))
 KST = timezone(timedelta(hours=9))
 
 # 이슈당 상한. revisions 는 제목이 바뀔 때만 늘고(하루 최대 1), hashes 는 그
@@ -99,8 +102,71 @@ def catalog_rows(issue_catalog: list[dict]) -> list[dict]:
             "briefing_count": int(issue.get("briefing_count") or 0),
             "topics": [t for t in (issue.get("topics") or []) if t][:4],
             "hashes": hashes[:MAX_HASHES],
+            **_retrieval_fields(issue),
         })
     return rows
+
+
+# 오래된 사건을 **다시 찾기 위한** 칸들. 원장은 지우지 않으므로 여기 적히는 것이
+# 몇 달 뒤 검색의 전부다. 화면이 읽는 칸이 아니라 검색이 읽는 칸이다.
+#
+# 왜 원장에 적는가: 카탈로그는 60일이면 사라지고 `curated.json` 은 14일 롤링
+# 캐시다. 아카이브에 기사 원문은 남지만 **어떤 기사들이 한 사건이었는지**는
+# 원장에만 있다. 그 관계를 잃으면 나중에 재현할 방법이 없다.
+_MAX_RETRIEVAL_TOKENS = 12
+
+
+def _fingerprint_axis(fingerprint: object, names: tuple[str, ...]) -> str:
+    if not isinstance(fingerprint, dict):
+        return ""
+    for name in names:
+        value = fingerprint.get(name)
+        if isinstance(value, (list, tuple)):
+            value = " ".join(str(item) for item in value if item)
+        text = _clean(value)
+        if text:
+            return text[:120]
+    return ""
+
+
+def _retrieval_fields(issue: dict) -> dict:
+    articles = list(issue.get("related_articles") or [])
+    representative = issue.get("representative_article") or {}
+    if representative:
+        articles = [representative, *articles]
+    days = sorted({str(row.get("article_date") or "")[:10]
+                   for row in articles if row.get("article_date")})
+    countries: list[str] = []
+    for row in articles:
+        for country in (row.get("countries") or []):
+            text = _clean(country)
+            if text and text not in countries:
+                countries.append(text)
+    fingerprint = issue.get("story_fingerprint") or {}
+    text = " ".join([_clean(issue.get("title")),
+                     *(_clean(row.get("title_kr") or row.get("title"))
+                       for row in articles[:8])])
+    try:
+        import asset_alias  # noqa: PLC0415  — 순환 import 를 만들지 않는다
+        units = sorted(asset_alias.unit_tokens(text))
+        plants = sorted(asset_alias.plant_tokens(text))
+    except Exception:  # 별칭 모듈이 없어도 원장은 계속 적는다
+        units, plants = [], []
+    return {
+        "entity_ids": [e for e in (issue.get("entity_ids") or []) if e][:_MAX_RETRIEVAL_TOKENS],
+        "countries": countries[:6],
+        "units": units[:_MAX_RETRIEVAL_TOKENS],
+        "plants": plants[:_MAX_RETRIEVAL_TOKENS],
+        "evidence_days": days[:1] + days[-1:] if days else [],
+        "evidence_day_count": len(days),
+        "facts": {
+            "actors": _fingerprint_axis(fingerprint, ("actors", "actor", "operator", "organization")),
+            "assets": _fingerprint_axis(fingerprint, ("assets", "asset", "facility", "project", "plant")),
+            "event_family": _fingerprint_axis(fingerprint, ("event_family", "event_type", "event")),
+            "action": _fingerprint_axis(fingerprint, ("action", "decision", "stage")),
+        },
+        "identity_status": _clean(issue.get("identity_status")),
+    }
 
 
 def _revision(row: dict, day: str) -> dict:
@@ -141,6 +207,20 @@ def merge(store: dict, rows: list[dict], day: str) -> dict:
             [h for h in (existing.get("hashes") or []) if h] + row["hashes"]
         ))
         row = {**row, "hashes": merged_hashes[:MAX_HASHES]}
+        # 검색용 칸도 **덮지 않고 쌓는다.** 같은 이유다 — 이번 회차에 안 붙은
+        # 기사가 들고 있던 엔티티·호기가 지워지면, 몇 달 뒤 그 이름으로는 이
+        # 사건을 못 찾는다. 근거는 남았는데 이름표만 사라지는 상태가 된다.
+        for field in ("entity_ids", "countries", "units", "plants"):
+            row[field] = list(dict.fromkeys(
+                [value for value in (existing.get(field) or []) if value]
+                + list(row.get(field) or [])
+            ))[:_MAX_RETRIEVAL_TOKENS]
+        old_days = [day for day in (existing.get("evidence_days") or []) if day]
+        new_days = sorted(set(old_days) | set(row.get("evidence_days") or []))
+        if new_days:
+            row["evidence_days"] = new_days[:1] + new_days[-1:]
+        row["evidence_day_count"] = max(int(existing.get("evidence_day_count") or 0),
+                                        int(row.get("evidence_day_count") or 0))
         revisions = existing.get("revisions") or []
         last = revisions[-1] if revisions else {}
         if last.get("title") != row["title"] or last.get("summary") != row["summary"]:
