@@ -2904,11 +2904,12 @@
     },
     "03e750bdec0ed533--8087dd0c3497cc5f": {
       "embedding_similarity": 0.8647,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "원안위, 고리 3·4호기 계속운전 연내 결론 및 SMR 규제 가속화",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "원안위 계속운전 결론과 지자체 현안 논의",
-      "reviewed_at": "2026-08-26T16:29:01.056720+00:00",
+      "reason": "원안위 계속운전 결론과 기장군 현안 논의",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "기장군, 한수원 사장과 고리원전 계속운전 및 i-SMR 현안 논의",
       "same_event": false
     },
@@ -5754,11 +5755,12 @@
     },
     "05da702fed62250a--f58d098a7c4890d5": {
       "embedding_similarity": 0.8417,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "정부, 3대 메가프로젝트 대응 제12차 전력수급기본계획 재정비",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "전력기본계획과 배출권 개편",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "전력수급기본계획과 배출권거래제는 다른 사안",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "정부, 전기화 전환에 따른 배출권거래제 간접배출 관리체계 개편 착수",
       "same_event": false
     },
@@ -8610,11 +8612,12 @@
     },
     "076036e9576007bc--f58d098a7c4890d5": {
       "embedding_similarity": 0.8554,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "정부, 산업용 전기요금 권역별 차등요금제 개편안 공개",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "전기요금 개편과 배출권거래제 개편은 다름",
-      "reviewed_at": "2026-08-25T15:55:19.705017+00:00",
+      "reason": "전기요금제 개편과 배출권거래제는 다른 사안",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "정부, 전기화 전환에 따른 배출권거래제 간접배출 관리체계 개편 착수",
       "same_event": false
     },
@@ -24785,13 +24788,14 @@
     },
     "17feaa64491a40f8--267f758041b9a4ca": {
       "embedding_similarity": 0.8526,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 정부·IAEA, SMR 추진선·FSMR 국제 규제 표준화 논의 착수",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "서로 다른 안건임",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "해양 원자력 및 SMR 추진선 관련 동일 사안",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "미국 해사청-코어파워(Core Power), 해양 원자력 협력 MOU 체결",
-      "same_event": false
+      "same_event": true
     },
     "17feaa64491a40f8--2dfe611832eac5a2": {
       "embedding_similarity": 0.843,
@@ -24949,21 +24953,23 @@
     },
     "17feaa64491a40f8--cc2e553cf2927ac5": {
       "embedding_similarity": 0.841,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "웨스팅하우스-아멘텀, AP1000/AP300 협력 계약 체결",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "서로 다른 원자력 협력 계약",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "AP1000 협력과 해양 원자력 MOU는 다름",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "미국 해사청-코어파워(Core Power), 해양 원자력 협력 MOU 체결",
       "same_event": false
     },
     "17feaa64491a40f8--db89d389ada4d697": {
       "embedding_similarity": 0.853,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국, 2026년 IAEA 해상 원자력 기술 ATLAS 이니셔티브 출범 주최",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "서로 다른 주체와 안건임",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "IAEA 이니셔티브와 해사청 MOU는 별개",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "미국 해사청-코어파워(Core Power), 해양 원자력 협력 MOU 체결",
       "same_event": false
     },
@@ -25702,6 +25708,17 @@
       "reason": "일본의 원전 활용 정책과 미일 투자 합의는 다른 사건임",
       "reviewed_at": "2026-09-05T12:52:03.177390+00:00",
       "right_title": "미·일, 5500억 달러 규모 대미 전략 투자 및 관세 합의 재확인",
+      "same_event": false
+    },
+    "18c200b7dddf8008--f8e7b22057b9012f": {
+      "embedding_similarity": 0.8502,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미·일, 5500억 달러 규모 대미 전략 투자 및 관세 합의 재확인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "미일 투자 합의와 한국의 대미 투자 협상은 별개",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
+      "right_title": "정부, 2000억 달러 규모 대미 투자 프로젝트 협상 막바지",
       "same_event": false
     },
     "18d485ea7e099351--5acc5e77897a84d4": {
@@ -37344,11 +37361,12 @@
     },
     "267f758041b9a4ca--39d2da80812a25d1": {
       "embedding_similarity": 0.848,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 정부·IAEA, SMR 추진선·FSMR 국제 규제 표준화 논의 착수",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "규제 표준화와 항만 MOU",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "규제 표준화 논의와 항만 협력 MOU는 별개",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "미 해사청(MARAD), 코퍼스 크리스티 항만과 SMR 개발 협력 MOU 체결",
       "same_event": false
     },
@@ -51439,11 +51457,12 @@
     },
     "34575730dc364184--be44c7daf4c104cd": {
       "embedding_similarity": 0.8433,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "캐나다 신규 SMR, 미국·프랑스·영국산 농축 우라늄 연료 수입 의존",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "캐나다 우라늄 의존과 연료 주기 동향",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "국가별 우라늄 의존도와 연료 주기 동향 발표",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
       "same_event": false
     },
@@ -51960,6 +51979,17 @@
       "reason": "심시 착수와 예산 편성은 별개",
       "reviewed_at": "2026-09-02T12:52:44.894427+00:00",
       "right_title": "원안위, 2027년 SMR 규제기술 연구개발 예산 3,030억 원 편성",
+      "same_event": false
+    },
+    "34b54b6a74dfabbb--accf4201d8c8346b": {
+      "embedding_similarity": 0.8618,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "원안위, 부산 기장군 혁신형 SMR 안전성 심사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원안위 심사와 부산시 입장은 별개의 사안임",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
+      "right_title": "부산시, SMR 운영실증 부지로서의 안전관리 역량 강조",
       "same_event": false
     },
     "34b54b6a74dfabbb--adcc281a1003146c": {
@@ -58269,21 +58299,23 @@
     },
     "39d2da80812a25d1--9177c575aca6c154": {
       "embedding_similarity": 0.8416,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "두산에너빌리티, 테라파워 나트륨 냉각 고속로 핵심 기자재 공급 계약",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "기자재 공급 계약과 항만 MOU",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "기자재 공급 계약과 항만 MOU는 다른 사건",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "미 해사청(MARAD), 코퍼스 크리스티 항만과 SMR 개발 협력 MOU 체결",
       "same_event": false
     },
     "39d2da80812a25d1--9ff80dab9059f991": {
       "embedding_similarity": 0.8426,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "서로 다른 SMR 협력 건",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "기관별 SMR 협력 대상이 다름",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "미 해사청(MARAD), 코퍼스 크리스티 항만과 SMR 개발 협력 MOU 체결",
       "same_event": false
     },
@@ -82365,6 +82397,17 @@
       "right_title": "정부, 대미 에너지 투자 등 대미 수출 환경 대응책 마련 고심",
       "same_event": false
     },
+    "4e1bbcf5fe2a6b99--f8e7b22057b9012f": {
+      "embedding_similarity": 0.8515,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "대미 투자 협상 난항, 전략자산 활용한 상업성 확보 과제",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대미 투자 협상이라는 동일한 사안임",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
+      "right_title": "정부, 2000억 달러 규모 대미 투자 프로젝트 협상 막바지",
+      "same_event": true
+    },
     "4e1bbcf5fe2a6b99--fa10c502916b3075": {
       "embedding_similarity": 0.8525,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -85569,14 +85612,15 @@
       "same_event": false
     },
     "525b21a811f83076--d102b3fc8a136e96": {
-      "embedding_similarity": 0.9093,
+      "embedding_similarity": 0.9161,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "중국, 네이멍구에 대규모 AI 데이터센터 가동 및 추가 건설 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "데이터센터 가동과 서부 분산 전략은 별개",
-      "reviewed_at": "2026-08-24T01:28:01.019125+00:00",
+      "reason": "중국 AI 데이터센터 관련 동일 사안",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "중국, AI 연산 수요 대응 위해 데이터센터 서부 분산 전략 추진",
-      "same_event": false
+      "same_event": true
     },
     "525b21a811f83076--de52298e952eb3a9": {
       "embedding_similarity": 0.8615,
@@ -99287,11 +99331,12 @@
     },
     "616c6b13d9f03cfa--be44c7daf4c104cd": {
       "embedding_similarity": 0.8478,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "센트러스 에너지, X-에너지에 LEU 및 HALEU 농축 서비스 제공 확정 계약 체결",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "농축 서비스 계약과 연료 주기 동향",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "농축 계약 체결과 연료 주기 동향 보고",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
       "same_event": false
     },
@@ -128424,11 +128469,12 @@
     },
     "86025b5da7ff3e53--f58d098a7c4890d5": {
       "embedding_similarity": 0.8474,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "정부, 산업용 전기요금 지역별 차등제 도입 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "전기요금 차등제와 배출권 개편",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "전기요금제와 배출권거래제는 다른 사안",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "정부, 전기화 전환에 따른 배출권거래제 간접배출 관리체계 개편 착수",
       "same_event": false
     },
@@ -137127,12 +137173,13 @@
       "same_event": false
     },
     "9722bb6b6a22d2e9--be815502ed442536": {
-      "embedding_similarity": 0.8602,
+      "embedding_similarity": 0.8713,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "원자력안전법 개정안 국회 통과…사업자 '1차 안전책임' 법제화",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "원안법 통과와 원자력의학원 지정은 다른 사건",
-      "reviewed_at": "2026-08-24T13:00:21.150365+00:00",
+      "reason": "서로 다른 법안과 대상",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "한국원자력의학원, 방사선 상해 전문 치료병원으로 법적 지정",
       "same_event": false
     },
@@ -142674,11 +142721,12 @@
     },
     "a3e13685ce3cf3f9--f58d098a7c4890d5": {
       "embedding_similarity": 0.849,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "정부, 12차 전기본에 2040년 석탄발전 중단 및 전력망 투자 확대 방침",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "석탄발전 중단과 배출권 개편",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "전기본과 배출권거래제는 다른 사안",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "정부, 전기화 전환에 따른 배출권거래제 간접배출 관리체계 개편 착수",
       "same_event": false
     },
@@ -151425,6 +151473,17 @@
       "right_title": "정부, 대미투자 1호로 텍사스 LNG 발전소 유력 검토",
       "same_event": false
     },
+    "b674a830b574b651--f8e7b22057b9012f": {
+      "embedding_similarity": 0.8682,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국, 한국의 대미 투자 지연에 불만…일본과 비교하며 속도 압박",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대미 투자 협상 과정과 지연 관련 동일 사안",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
+      "right_title": "정부, 2000억 달러 규모 대미 투자 프로젝트 협상 막바지",
+      "same_event": true
+    },
     "b6a496b86a3783a1--b8de1afb30b85fb7": {
       "embedding_similarity": 0.8407,
       "left_title": "정부, 호남권 반도체 클러스터 팹 완공 목표 2029년으로 1년 앞당겨",
@@ -155098,11 +155157,12 @@
     },
     "be44c7daf4c104cd--be6777d5d213285c": {
       "embedding_similarity": 0.8575,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 의회, 국내 우라늄 농축 증대 및 유카 마운틴 폐기 법안 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "미국 의회 입법과 글로벌 핵연료 주기 발표임",
-      "reviewed_at": "2026-08-25T15:55:19.705017+00:00",
+      "reason": "미국 의회 법안과 글로벌 연료 주기 동향",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
       "same_event": false
     },
@@ -155118,21 +155178,23 @@
     },
     "be44c7daf4c104cd--d1658517bf1f5c3f": {
       "embedding_similarity": 0.8417,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "Ur-Energy, 와이오밍 프로젝트 첫 우라늄 출하",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "우라늄 출하와 연료 주기 동향",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "우라늄 출하와 연료 주기 동향 보고",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
       "same_event": false
     },
     "be44c7daf4c104cd--d5488ec8773bdc1a": {
       "embedding_similarity": 0.8526,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "센트러스-X-에너지, HALEU 농축 계약 체결 및 TRISO-X 캠퍼스 확장",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "HALEU 계약과 연료 주기 동향",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "농축 계약과 연료 주기 동향 보고",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
       "same_event": false
     },
@@ -155148,11 +155210,12 @@
     },
     "be44c7daf4c104cd--f016fc6728215437": {
       "embedding_similarity": 0.8458,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미 NRC, 오라노(Orano)의 '프로젝트 아이크' 농축시설 인허가 심사 착수",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "농축시설 인허가와 연료 주기 동향",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "농축시설 인허가 심사와 연료 주기 동향",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
       "same_event": false
     },
@@ -156957,6 +157020,17 @@
       "reason": "G20 미일 투자와 전문가 코멘트는 별개",
       "reviewed_at": "2026-09-03T19:20:26.065657+00:00",
       "right_title": "성정민 박사, 한일 공급망 파트너십 및 원자력 협력 강조",
+      "same_event": false
+    },
+    "c36dd376bcc98430--f8e7b22057b9012f": {
+      "embedding_similarity": 0.8698,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미·일, G20 계기 산업·기술 공조 강화 및 대규모 투자 약정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "미일 공조와 한국의 대미 투자 협상은 다른 사안",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
+      "right_title": "정부, 2000억 달러 규모 대미 투자 프로젝트 협상 막바지",
       "same_event": false
     },
     "c37069e03f838d95--cad8f7d2c2d3c640": {
@@ -159422,12 +159496,13 @@
       "same_event": false
     },
     "cb38eed27ac4ccd4--d102b3fc8a136e96": {
-      "embedding_similarity": 0.8831,
+      "embedding_similarity": 0.8753,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "중국, AI 전력 확보 위해 7년간 원전 64기 승인…한국과 대비",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "중국 원전 승인과 서부 분산 전략은 별개",
-      "reviewed_at": "2026-08-24T01:28:01.019125+00:00",
+      "reason": "원전 승인과 데이터센터 전략의 차이",
+      "reviewed_at": "2026-09-13T18:55:57.726681+00:00",
       "right_title": "중국, AI 연산 수요 대응 위해 데이터센터 서부 분산 전략 추진",
       "same_event": false
     },
