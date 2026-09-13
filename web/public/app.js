@@ -2011,9 +2011,13 @@ function renderNewsFeed() {
     : '<p class="empty">이 날짜에 발행된 수집 기사가 없습니다.</p>';
 }
 
-// 스토리 자격 — "시간이 지나며 실제로 쌓였는가".
+// 추적 자격 — "시간이 지나며 실제로 쌓였는가".
 //
-// 카탈로그 전체를 스토리로 부르면 안 된다. 실측(라이브 2026-09-12, 525건):
+// 화면에는 '추적 중인 이슈'로 나간다. 식별자만 story* 로 남아 있다(2026-09-13
+// 개명) — '스토리'는 이제 장기 스토리(Beta) 화면 하나를 가리키는 말이라, 같은
+// 단어를 이 목록에도 쓰면 사용자가 두 화면을 구분할 수 없다.
+//
+// 카탈로그 전체를 자격 있는 것으로 볼 수는 없다. 실측(라이브 2026-09-12, 525건):
 // 421건(80.2%)이 단 한 회차에만 나타났고 268건(51.0%)은 기사가 1건이다. 그런
 // 이슈의 상세에는 타임라인도 변화도 설 자리가 없다 — 명세가 그린 15개 블록 중
 // 대부분이 빈칸으로 렌더링된다.
@@ -2059,7 +2063,7 @@ function setArchiveScope(scope) {
 }
 
 function archiveIssueMatches(issue) {
-  // 범위가 맨 앞 — '스토리'는 목록의 성격이고, 아래 필터는 그 안에서의 교집합이다.
+  // 범위가 맨 앞 — '추적 중인 이슈'는 목록의 성격이고, 아래 필터는 그 안에서의 교집합이다.
   if (state.archiveScope === "stories" && !storyEligible(issue)) return false;
   // 엔티티 필터가 그 다음 — 엔티티 페이지는 "이 대상의 이슈"가 전제고,
   // 나머지 필터(주제·기간·검색어)는 그 안에서의 교집합이다.
@@ -2186,20 +2190,19 @@ function renderArchiveSearch(resetLimit = false) {
     state.archiveVerification === "verified" ? "공식·복수 출처 확인" : state.archiveVerification === "unverified" ? "단일 출처·확인 중" : "",
   ].filter(Boolean);
   const matchedArticles = matches.reduce((sum, issue) => sum + (issue.article_count || 0), 0);
-  const unit = state.archiveScope === "stories" ? "개 스토리" : "개 이슈";
-  const scale = `${matches.length}${unit} · ${matchedArticles}개 원문`;
+  const scale = `${matches.length}개 이슈 · ${matchedArticles}개 원문`;
   document.getElementById("archiveSummary").textContent = activeFilters.length
     ? `${activeFilters.join(" · ")} — ${scale}`
     : scale;
   setPressed(document.getElementById("archiveScope"),
     document.querySelector(`#archiveScope [data-scope="${state.archiveScope}"]`));
   document.getElementById("archiveQueryDisplay").textContent = state.archiveQuery ? `검색어 · ${state.archiveQuery}` : "검색어 없음";
-  // 스토리 범위에서 0건이면 원인이 필터가 아니라 **범위**일 수 있다. 그때는
+  // '추적 중인 이슈' 범위에서 0건이면 원인이 필터가 아니라 **범위**일 수 있다. 그때는
   // 필터 해제보다 '모든 이슈 보기'가 맞는 출구다 — 필터를 다 풀어도 자격을
   // 못 넘은 이슈는 계속 안 보이므로, 그 안내만 주면 막다른 길이 된다.
   const emptyState = state.archiveScope === "stories"
-    ? `<div class="empty-state"><strong>조건에 맞는 스토리가 없습니다</strong>
-        <p>스토리는 여러 회차에 걸쳐 추적됐거나 서로 다른 날짜의 근거가 3건 이상인 이슈입니다.
+    ? `<div class="empty-state"><strong>조건에 맞는 이슈가 없습니다</strong>
+        <p>추적 중인 이슈는 여러 회차에 걸쳐 다뤘거나 서로 다른 날짜의 근거가 3건 이상인 이슈입니다.
         조건을 넓히거나 전체 이슈에서 찾아보세요.</p>
         <button type="button" data-archive-scope="all">모든 이슈 보기</button>
         ${activeFilters.length ? '<button type="button" data-clear-archive>필터 해제</button>' : ""}</div>`
@@ -4344,7 +4347,7 @@ function handleHubAction(event) {
 }
 
 /* ── 장기 스토리 (Beta) ───────────────────────────────────────────────────
-   기존 "스토리" 화면(archiveScope === "stories")은 그대로 둔다. 그쪽 목록의
+   기존 "탐색" 화면(archiveScope === "stories")은 그대로 둔다. 그쪽 목록의
    항목은 이슈이고 여기 항목은 그 이슈들을 여러 주에 걸쳐 하나로 묶은 상위
    객체라, 같은 목록에 섞으면 단위가 다른 두 가지가 한 줄씩 번갈아 선다.
 
@@ -4494,7 +4497,7 @@ function renderLongTerm() {
   if (note) {
     note.textContent = "여러 주에 걸친 보도를 하나의 이야기로 이어 붙인 목록입니다. "
       + "사람이 엮은 연재가 아니라 사건 기록에서 자동으로 묶은 것이라, 붙지 않아야 할 것이 "
-      + "섞이거나 한 이야기가 둘로 갈릴 수 있습니다. 기존 ‘스토리’ 화면은 그대로 있습니다.";
+      + "섞이거나 한 이야기가 둘로 갈릴 수 있습니다. 기존 ‘탐색’ 화면은 그대로 있습니다.";
   }
   const rows = focused ? [focused] : longTermSorted();
   const shown = focused ? rows : rows.slice(0, state.longTermLimit);
