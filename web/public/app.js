@@ -85,7 +85,7 @@ const COUNTRY_MAP_LABELS = [
 ];
 
 const OFFICIAL_HINTS = ["go.kr", "khnp", "kaeri", "iaea.org", "energy.gov", "nrc.gov"];
-const VIEW_IDS = ["news", "trend", "search", "report"];
+const VIEW_IDS = ["news", "trend", "search", "report", "longterm"];
 const ISSUE_ROUTE = /^\/issue\/([^/]+)\/?$/;
 const BRIEF_ROUTE = /^\/brief\/(\d{4}-\d{2}-\d{2})\/?$/;
 
@@ -109,6 +109,8 @@ const state = {
   archivePeriod: "all", archiveVerification: "전체", archiveSort: "updated", archiveLimit: 20,
   archiveScope: "stories",
   archiveEntity: "", entities: null,
+  // 장기 스토리(Beta). threads 는 없을 수 있다 — 그때 이 화면은 통째로 안 뜬다.
+  threads: null, threadId: "", longTermSort: "recent", longTermLimit: 20,
   period: "7", keywordSort: "mentions", audioMode: "fast", audioFailures: new Set(), savedIds: new Set(), savedMeta: {}, follows: new Set(), followSeen: {},
   offline: !navigator.onLine, pendingGeneration: "",
 };
@@ -948,6 +950,7 @@ function syncUrl(mode = "replace") {
   // 기본이 stories 라 전체 목록을 볼 때만 적는다 — 공유된 주소가 기본값을
   // 들고 다니면 나중에 기본이 바뀔 때 옛 링크가 옛 화면을 고집한다.
   if (state.archiveScope !== "stories") params.set("as", state.archiveScope);
+  if (state.view === "longterm" && state.threadId) params.set("th", state.threadId);
   const query = params.toString();
   const path = state.issueId && state.view !== "trend"
     ? issuePath(state.issueId)
@@ -977,6 +980,11 @@ function restoreUrlState() {
   state.archivePeriod = ["7", "30", "all"].includes(params.get("ap")) ? params.get("ap") : "all";
   state.archiveVerification = ["verified", "unverified"].includes(params.get("av")) ? params.get("av") : "전체";
   state.archiveScope = params.get("as") === "all" ? "all" : "stories";
+  // 옛 주소는 흡수된 스토리를 가리킬 수 있다. 데이터를 이미 들고 있으므로
+  // 여기서 살아 있는 쪽으로 넘긴다.
+  state.threadId = resolveThreadId(params.get("th") || "");
+  if (state.threadId && !params.get("view") && longTermReady()) state.view = "longterm";
+  if (state.view === "longterm" && !longTermReady()) { state.view = "news"; state.threadId = ""; }
 }
 
 function renderTopicSelects() {
@@ -4322,8 +4330,198 @@ function handleHubAction(event) {
   scrollToPageTop();
 }
 
+/* ── 장기 스토리 (Beta) ───────────────────────────────────────────────────
+   기존 "스토리" 화면(archiveScope === "stories")은 그대로 둔다. 그쪽 목록의
+   항목은 이슈이고 여기 항목은 그 이슈들을 여러 주에 걸쳐 하나로 묶은 상위
+   객체라, 같은 목록에 섞으면 단위가 다른 두 가지가 한 줄씩 번갈아 선다.
+
+   빌드가 `data/threads.json` 을 만들고, 그 파일이 스스로 "지금 보여도 되는가"를
+   들고 온다. 화면은 그 판정을 믿되 **한 번 더 잰다** — 배포가 멈춰 낡은 파일이
+   CDN 에 남는 경우는 빌드 시점 판정이 못 잡기 때문이다. */
+
+// 빌드가 계약을 바꾸면 이 화면은 뜨지 않는다. 모르는 모양을 그리려 애쓰는 것보다
+// 안 그리는 쪽이 안전하다 — 계약을 올릴 때 이 상수도 같이 올린다.
+const THREAD_CONTRACT = "thread-web-v1";
+
+function longTermVisible(payload, nowMs = Date.now()) {
+  if (!payload || typeof payload !== "object") return false;
+  if (String(payload.version || "") !== THREAD_CONTRACT) return false;
+  if (payload.visible !== true) return false;
+  if (!Array.isArray(payload.threads) || payload.threads.length === 0) return false;
+  // 빌드가 적어 둔 유효기한. 정기 빌드가 멈춘 채 배포본만 남아 있으면 여기서
+  // 걸린다 — 서버 판정은 그 파일이 만들어지던 순간의 사실일 뿐이다.
+  const hideAfter = Date.parse(String(payload.hide_after || ""));
+  if (Number.isFinite(hideAfter) && nowMs > hideAfter) return false;
+  return true;
+}
+
+function longTermReady() {
+  return longTermVisible(state.threads);
+}
+
+function longTermThreads() {
+  return (state.threads?.threads || []);
+}
+
+// 흡수된 스토리의 옛 주소로 들어온 링크를 살아 있는 쪽으로 넘긴다.
+function resolveThreadId(threadId) {
+  const redirects = state.threads?.redirects || {};
+  const seen = new Set();
+  let current = String(threadId || "");
+  while (current && redirects[current] && !seen.has(current)) {
+    seen.add(current);
+    current = redirects[current];
+  }
+  return current;
+}
+
+function longTermSorted() {
+  const rows = longTermThreads().slice();
+  const byRecent = (a, b) => String(b.last_seen).localeCompare(String(a.last_seen))
+    || (b.event_count - a.event_count);
+  if (state.longTermSort === "span") {
+    rows.sort((a, b) => (b.lifespan_days || 0) - (a.lifespan_days || 0) || byRecent(a, b));
+  } else if (state.longTermSort === "events") {
+    rows.sort((a, b) => (b.event_count - a.event_count) || byRecent(a, b));
+  } else {
+    rows.sort(byRecent);
+  }
+  return rows;
+}
+
+function threadPeriodText(thread) {
+  const span = thread.lifespan_days;
+  const days = Number.isFinite(span) ? `${span}일` : "기간 미상";
+  return `${dateLabel(thread.first_seen)} – ${dateLabel(thread.last_seen)} · ${days}`;
+}
+
+function threadChips(thread) {
+  // 호기가 가장 좁은 신호다. 먼저 세우고 엔티티는 뒤에 둔다.
+  const chips = [
+    ...(thread.unit_labels || []).map(label => ({ label, kind: "unit" })),
+    ...(thread.entity_labels || []).map(label => ({ label, kind: "entity" })),
+  ].slice(0, 6);
+  if (!chips.length) return "";
+  return `<div class="longterm-chips">${chips.map(chip =>
+    `<span class="topic-chip${chip.kind === "unit" ? " chip-unit" : ""}">${esc(chip.label)}</span>`).join("")}</div>`;
+}
+
+// 일정은 호기로 맞은 것과 발전소로 맞은 것의 무게가 다르다. 호기는 한 대상만
+// 가리키지만 발전소는 "월성 어딘가"라서, 월성 1호기 이야기에 월성 2·3·4호기의
+// 일정이 붙을 수 있다. 지우지 않고 **약한 쪽이라고 적는다** — 데이터는 맞고
+// 확신의 크기만 다르다.
+function threadMilestone(thread) {
+  const milestone = thread.next_milestone;
+  if (!milestone || !milestone.date) return "";
+  const weak = milestone.matched_by !== "unit";
+  const label = String(milestone.label || milestone.title || "").trim();
+  return `<p class="longterm-milestone${weak ? " is-weak" : ""}">
+    <strong>${weak ? "같은 발전소 일정" : "다음 관전점"}</strong>
+    <span>${esc(dateLabel(milestone.date))}</span>
+    <span>${esc(label)}</span></p>`;
+}
+
+function threadTimeline(thread) {
+  const events = thread.events || [];
+  if (!events.length) return "";
+  return `<ol class="timeline longterm-timeline">${events.map(event => `<li>
+    <div class="timeline-date"><span>${esc(dateLabel(event.date))}</span></div>
+    <div class="timeline-copy">
+      <button type="button" class="longterm-event" data-thread-event="${esc(event.event_id)}">${esc(event.title)}</button>
+      ${event.briefing_count > 1 ? `<small>브리핑 ${event.briefing_count}회</small>` : ""}
+    </div>
+  </li>`).join("")}</ol>`;
+}
+
+// 범위 밖 호기를 적는다. 자동 군집을 정직하게 보이는 자리다 — 같은 발전소의
+// 다른 호기는 어떤 기사를 경유해도 이 이야기가 아니라는 거부권이 실제로 서 있다.
+function threadScope(thread) {
+  const excluded = thread.excluded_unit_labels || [];
+  if (!excluded.length) return "";
+  return `<p class="longterm-scope">범위 밖 <span>${excluded.map(esc).join(" · ")}</span></p>`;
+}
+
+function threadCard(thread) {
+  return `<article class="longterm-card" id="${esc(thread.thread_id)}">
+    <div class="longterm-card-head">
+      <p class="longterm-period">${esc(threadPeriodText(thread))}</p>
+      <span class="longterm-count">사건 ${thread.event_count}건</span>
+    </div>
+    <h2><button type="button" class="longterm-title" data-thread="${esc(thread.thread_id)}">${esc(thread.title)}</button></h2>
+    ${threadChips(thread)}
+    ${threadMilestone(thread)}
+    ${threadTimeline(thread)}
+    ${threadScope(thread)}
+  </article>`;
+}
+
+function renderLongTerm() {
+  const list = document.getElementById("longTermList");
+  const more = document.getElementById("longTermMore");
+  const meta = document.getElementById("longTermMeta");
+  const note = document.getElementById("longTermNote");
+  const backAll = document.getElementById("longTermAll");
+  if (!list) return;
+  if (!longTermReady()) {
+    list.innerHTML = "";
+    if (more) more.hidden = true;
+    return;
+  }
+  const stats = state.threads.stats || {};
+  const focused = state.threadId
+    ? longTermThreads().find(thread => thread.thread_id === state.threadId)
+    : null;
+  if (backAll) backAll.hidden = !focused;
+  if (meta) {
+    meta.textContent = focused
+      ? `${stats.threads || 0}개 스토리 중 1개`
+      : `${stats.threads || 0}개 스토리 · 사건 ${stats.events || 0}건 · `
+        + `기간 중앙 ${stats.median_lifespan_days || 0}일 · 30일 넘게 이어진 것 ${stats.over_30_days || 0}개`;
+  }
+  if (note) {
+    note.textContent = "여러 주에 걸친 보도를 하나의 이야기로 이어 붙인 목록입니다. "
+      + "사람이 엮은 연재가 아니라 사건 기록에서 자동으로 묶은 것이라, 붙지 않아야 할 것이 "
+      + "섞이거나 한 이야기가 둘로 갈릴 수 있습니다. 기존 ‘스토리’ 화면은 그대로 있습니다.";
+  }
+  const rows = focused ? [focused] : longTermSorted();
+  const shown = focused ? rows : rows.slice(0, state.longTermLimit);
+  list.innerHTML = shown.length
+    ? shown.map(threadCard).join("")
+    : `<p class="empty">표시할 장기 스토리가 없습니다.</p>`;
+  if (more) {
+    more.hidden = focused || rows.length <= shown.length;
+    more.textContent = `더 보기 (${Math.max(0, rows.length - shown.length)}개 남음)`;
+  }
+}
+
+// 탭은 데이터가 살아 있을 때만 크롬에 걸린다. 빈 화면으로 가는 탭을 남기면
+// 사용자는 그것을 고장으로 읽는다.
+function syncLongTermChrome() {
+  const ready = longTermReady();
+  document.querySelectorAll('[data-view="longterm"]').forEach(button => {
+    button.hidden = !ready;
+  });
+  if (!ready && state.view === "longterm") switchView("news");
+}
+
+function openThread(threadId, updateUrl = true) {
+  const resolved = resolveThreadId(threadId);
+  if (!longTermThreads().some(thread => thread.thread_id === resolved)) {
+    showToast("이 장기 스토리를 찾을 수 없습니다.");
+    return;
+  }
+  state.threadId = resolved;
+  if (state.view !== "longterm") switchView("longterm", false);
+  renderLongTerm();
+  if (updateUrl) syncUrl();
+  scrollToPageTop();
+}
+
 function switchView(view, updateUrl = true) {
   if (!VIEW_IDS.includes(view)) return;
+  // 딥링크·뒤로가기로도 닫힌 화면에 들어갈 수 없다. 게이트는 크롬 한 군데가
+  // 아니라 진입 경로 전부에 서 있어야 안전장치다.
+  if (view === "longterm" && !longTermReady()) view = "news";
   if (view !== state.view && state.issueId) closeIssueDialog(false);
   state.view = view;
   VIEW_IDS.forEach(id => {
@@ -4347,6 +4545,7 @@ function switchView(view, updateUrl = true) {
   if (view === "search") renderArchiveSearch();
   if (view === "trend") renderTrend();
   if (view === "search") renderSaved();
+  if (view === "longterm") renderLongTerm();
   if (view === "report") { renderReportCandidates(); renderPubs(); }
   if (updateUrl) syncUrl();
   scrollToPageTop();
@@ -5013,6 +5212,36 @@ function bind() {
   document.getElementById("archiveClear").addEventListener("click", clearArchiveFilters);
   document.getElementById("archiveMore").addEventListener("click", () => { state.archiveLimit += 20; renderArchiveSearch(); });
 
+  // 장기 스토리(Beta). 요소가 hidden 이어도 리스너는 붙여 둔다 — 데이터가
+  // 늦게 살아나 크롬이 열릴 때 다시 붙이는 경로를 만들지 않기 위해서다.
+  document.getElementById("longTermSort")?.addEventListener("click", event => {
+    const button = event.target.closest("[data-sort]");
+    if (!button || button.dataset.sort === state.longTermSort) return;
+    state.longTermSort = button.dataset.sort;
+    state.longTermLimit = 20;
+    setPressed(event.currentTarget, button);
+    renderLongTerm();
+  });
+  document.getElementById("longTermMore")?.addEventListener("click", () => {
+    state.longTermLimit += 20;
+    renderLongTerm();
+  });
+  document.getElementById("longTermAll")?.addEventListener("click", () => {
+    state.threadId = "";
+    renderLongTerm();
+    syncUrl();
+    scrollToPageTop();
+  });
+  document.getElementById("longTermList")?.addEventListener("click", event => {
+    // 하위 사건은 기존 이슈 상세로 보낸다. 카탈로그 창(60일) 밖으로 나간
+    // 사건이면 openIssueDialog 가 보관본 경로로 알아서 떨어진다 — 장기
+    // 스토리는 정의상 옛 사건을 들고 있으므로 이 갈래가 정상 경로다.
+    const eventButton = event.target.closest("[data-thread-event]");
+    if (eventButton) { openIssueDialog(eventButton.dataset.threadEvent); return; }
+    const titleButton = event.target.closest("[data-thread]");
+    if (titleButton) openThread(titleButton.dataset.thread);
+  });
+
   // 워드 클라우드는 실제 글자 폭을 재서 싸므로 판이 화면에 서 있어야 한다.
   // 숨은 탭에서는 clientWidth 가 0 이라 첫 렌더가 아무것도 못 재고, 창 크기가
   // 바뀌면 글자 크기·낱말 수까지 다시 정해야 한다. 둘 다 여기서 받는다.
@@ -5210,7 +5439,7 @@ async function init() {
   initLoading = true;
   try {
     await initializeDataBase();
-    [state.news, state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities] = await Promise.all([
+    [state.news, state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities, state.threads] = await Promise.all([
       loadJSON("news.json"), loadJSON("briefings.json"), loadJSON("issues.json"),
       loadJSON("trend.json"), loadJSON("meta.json"), loadJSON("insights.json"),
       // 발간물은 부가 데이터 — 없어도 사이트 전체가 죽으면 안 된다 (8/1 빈 화면 사고 계약)
@@ -5220,6 +5449,9 @@ async function init() {
       loadRootJSON("audio/audio.json", true).catch(() => null),
       // 엔티티 사전도 부가 데이터 — 없으면 허브의 대상 그룹만 비고 나머지는 산다.
       loadJSON("entities.json").catch(() => null),
+      // 장기 스토리(Beta)도 같은 계약이다. 없으면 그 탭만 안 뜬다 — 파일이
+      // 아직 배포되지 않은 회차(첫 병합 직후)가 실제로 그렇다.
+      loadJSON("threads.json").catch(() => null),
     ]);
   } catch (error) {
     initLoading = false;
@@ -5240,6 +5472,7 @@ async function init() {
   const savedAudioMode = localStorage.getItem("nuclens-audio-mode");
   state.audioMode = ["fast", "expert"].includes(savedAudioMode) ? savedAudioMode : "fast";
   state.briefingDate = state.meta.latest_briefing_date || state.briefings[0]?.date || "";
+  syncLongTermChrome();
   restoreUrlState();
   renderTopicSelects();
   document.getElementById("topicSel").value = state.topic;
@@ -5258,6 +5491,7 @@ async function init() {
   renderBriefing();
   renderArchiveSearch();
   renderTrend();
+  renderLongTerm();
   renderSaved();
   renderSystemStatus();
   renderReturnNote();

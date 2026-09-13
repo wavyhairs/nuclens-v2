@@ -53,9 +53,15 @@ def load_store(path: Path | None = None) -> dict:
     threads = raw.get("threads")
     if not isinstance(threads, dict):
         threads = {}
+    live = raw.get("live_thread_ids")
+    build = raw.get("build")
     return {
         "version": raw.get("version") or LEDGER_VERSION,
         "generated_at": raw.get("generated_at") or "",
+        # 명단과 빌드 결과는 다음 회차가 덮어쓰기 전까지 그대로 살아 있어야 한다 —
+        # 여기서 떨어뜨리면 판정을 돌리지 않는 웹 빌드가 매번 '알 수 없음'을 본다.
+        "live_thread_ids": [str(value) for value in live] if isinstance(live, list) else [],
+        "build": build if isinstance(build, dict) else {},
         "threads": {key: value for key, value in threads.items()
                     if isinstance(value, dict) and value.get("thread_id")},
     }
@@ -178,11 +184,27 @@ def redirects(store: dict, live_ids: set[str]) -> dict[str, str]:
 
 
 def run(threads: list[dict], relations: list[dict], *,
-        path: Path | None = None, save: bool = True) -> dict:
+        build: dict | None = None, path: Path | None = None,
+        save: bool = True) -> dict:
+    """이번 판정의 결과를 원장에 얹는다.
+
+    `build` 는 이 회차가 어떻게 끝났는가다. 원장에 같이 적는 이유는 **읽는 쪽이
+    다른 체크아웃에 있기 때문**이다 — 그림자 진단(`web/_shadow/report.json`)은
+    .gitignore 라 웹 빌드가 볼 수 없다. 판정이 반쪽으로 끝난 회차를 화면이
+    알아보려면 그 사실이 커밋되는 파일에 남아야 한다.
+
+    `live_thread_ids` 는 **이번에 실제로 선 스토리**의 명단이다. 원장은 지우지
+    않으므로 구성원이 전부 떨어져 나간 옛 스토리도 옛 event_ids 를 들고 파일에
+    남는다 — 명단이 없으면 그것을 살아 있는 것과 구분할 방법이 없다.
+    """
     store = load_store(path)
     counts = merge(store, threads, relations)
     store["version"] = LEDGER_VERSION
     store["generated_at"] = _now()
+    store["live_thread_ids"] = sorted(
+        {str(row.get("thread_id")) for row in threads if row.get("thread_id")})
+    if build is not None:
+        store["build"] = {**build, "at": store["generated_at"]}
     counts["total"] = len(store["threads"])
     if save:
         save_store(store, path)

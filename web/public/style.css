@@ -2899,6 +2899,122 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
 .timeline-copy > span { color: var(--c-text-secondary); font-size: var(--t-caption); line-height: 1.55; }
 .timeline-copy small { color: var(--c-text-muted); font-size: var(--t-min); }
 
+/* ── 장기 스토리 (Beta) ───────────────────────────────────────────────────
+   여러 주에 걸친 사건을 한 이야기로 묶은 화면. 기존 "스토리" 목록과 **모양이
+   달라야 한다** — 그쪽은 이슈 카드가 격자로 서고 여기는 한 덩어리가 기간·제목·
+   타임라인을 세로로 들고 있다. 같은 카드 모양을 쓰면 단위가 다른 두 화면이
+   구분되지 않는다.
+
+   Beta 표식은 장식이 아니라 계약이다. 판정이 자동이고 오병합이 남아 있다는
+   사실을 화면이 스스로 말한다. */
+.beta-badge {
+  padding: 2px var(--sp-2);
+  border: var(--bd-2) solid var(--c-edge);
+  border-radius: var(--r-1);
+  background: var(--c-signal);
+  color: var(--c-signal-ink);
+  font-family: var(--ff-mono);
+  font-size: var(--t-min);
+  font-weight: 700;
+  letter-spacing: .06em;
+  vertical-align: middle;
+}
+/* 탭 안의 표식. 잉크 크롬 위라 슬래브를 깔지 않고 글자만 라임으로 둔다 —
+   좁은 탭에 배경까지 얹으면 라벨이 배지에 눌린다. */
+.beta-dot { margin-left: 3px; color: var(--c-signal); font-weight: 800; }
+.longterm-note {
+  max-width: 74ch;
+  margin: 0 0 var(--sp-5);
+  color: var(--c-text-muted);
+  font-size: var(--t-caption);
+}
+.longterm-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+.longterm-list { display: grid; gap: var(--sp-5); }
+.longterm-card {
+  padding: var(--sp-5);
+  border: var(--bd-2) solid var(--c-edge);
+  border-radius: var(--r-2);
+  background: var(--c-surface);
+}
+.longterm-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+/* 기간이 제목보다 먼저 온다. 이 화면에서 먼저 답해야 하는 질문은 '무슨
+   이야기인가'가 아니라 '얼마나 오래된 이야기인가'다 — 그것이 이 계층이
+   기존 스토리 목록과 다른 유일한 이유다. */
+.longterm-period {
+  margin: 0;
+  color: var(--c-accent-text);
+  font-family: var(--ff-mono);
+  font-size: var(--t-min);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .04em;
+}
+.longterm-count { color: var(--c-text-muted); font-size: var(--t-min); font-variant-numeric: tabular-nums; }
+.longterm-card h2 { margin: var(--sp-2) 0 0; font-size: var(--t-card); line-height: 1.3; }
+.longterm-title {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.longterm-title:hover { text-decoration: underline; }
+.longterm-chips { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-3); }
+/* 호기는 가장 좁은 신원 신호다 — 엔티티 칩과 같은 회색으로 두면 목록에서
+   가장 확실한 것이 가장 흐리게 보인다. */
+.chip-unit { border-color: var(--c-border-strong); color: var(--c-text-secondary); font-weight: 650; }
+.longterm-milestone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-left: var(--bd-3) solid var(--c-accent);
+  background: var(--c-surface-sunken);
+  font-size: var(--t-caption);
+}
+.longterm-milestone strong { color: var(--c-accent-text); font-size: var(--t-min); letter-spacing: .04em; }
+/* 발전소로만 맞은 일정. 확신이 한 단 낮다는 것을 색과 선 굵기로 말한다 —
+   문구만 바꾸고 모양을 같이 두면 둘이 같은 무게로 읽힌다. */
+.longterm-milestone.is-weak { border-left-color: var(--c-border-strong); }
+.longterm-milestone.is-weak strong { color: var(--c-text-muted); }
+.longterm-timeline { margin-top: var(--sp-4); }
+.longterm-timeline li { padding-bottom: var(--sp-3); }
+.longterm-event {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-text-secondary);
+  font-size: var(--t-caption);
+  line-height: 1.55;
+  text-align: left;
+}
+.longterm-event:hover { color: var(--c-secondary); text-decoration: underline; }
+/* 무엇이 닮았지만 들어오지 않는가. 자동 군집을 정직하게 보이는 자리라
+   본문보다 물러서 있되 지워지지는 않는 무게로 둔다. */
+.longterm-scope {
+  margin: var(--sp-3) 0 0;
+  padding-top: var(--sp-2);
+  border-top: var(--bd-1) solid var(--c-border);
+  color: var(--c-text-muted);
+  font-size: var(--t-min);
+}
+.longterm-scope span { color: var(--c-text-secondary); }
+
 .mobile-tabs { display: none; }
 .toast {
   position: fixed;
@@ -3438,7 +3554,11 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
     bottom: 0;
     left: 0;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    /* 개수를 박지 않는다 — 장기 스토리 탭은 데이터가 살아 있을 때만 걸려서
+       4개와 5개 사이를 런타임에 오간다. repeat(4, 1fr) 이면 다섯 번째가
+       둘째 줄로 떨어져 하단 탭이 두 층이 된다. */
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     min-height: 60px;
     padding-bottom: env(safe-area-inset-bottom);
     border-top: 1px solid var(--c-primary-strong);

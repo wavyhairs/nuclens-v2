@@ -3532,14 +3532,21 @@ class GeneratedDataTests(unittest.TestCase):
         self.assertIn('typeof item === "object"', render)
         self.assertIn("item.title && item.url", render)
         # 모바일에서도 도달 가능해야 한다 — 데스크톱 전용이면 폰에서는 기능이
-        # 아예 없는 것과 같다. 탭 수와 grid 열 수는 함께 움직여야 한다(실측
-        # 360px에서 5열 72px, 라벨 잘림 0).
+        # 아예 없는 것과 같다(실측 360px에서 5열 72px, 라벨 잘림 0).
         mobile_nav = html.split('id="mobileTabs"', 1)[1].split("</nav>", 1)[0]
         self.assertIn('data-view="report"', mobile_nav)
         style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
-        self.assertEqual(mobile_nav.count("<button"),
-                         4, "모바일 탭 수가 바뀌면 grid-template-columns도 함께 고쳐야 한다")
-        self.assertIn("grid-template-columns: repeat(4, 1fr)", style)
+        # 예전엔 탭 수와 `repeat(N, 1fr)` 을 함께 고치라고 검사했다. 장기
+        # 스토리(Beta) 탭이 들어오면서 그 계약이 성립하지 않는다 — 그 탭은
+        # 데이터가 살아 있을 때만 걸려서 **개수가 런타임에 4와 5를 오간다.**
+        # 열 수를 박으면 다섯 번째가 둘째 줄로 떨어져 하단 탭이 두 층이 된다.
+        # 그래서 이제 검사하는 것은 "개수를 박지 않았는가"다.
+        tabs = style.split("@media (max-width: 767px)", 1)[1]
+        tabs = tabs[tabs.index(".mobile-tabs {"):]
+        tabs = tabs[:tabs.index("}")]
+        self.assertIn("grid-auto-flow: column", tabs)
+        self.assertIn("grid-auto-columns: 1fr", tabs)
+        self.assertNotRegex(tabs, r"grid-template-columns:\s*repeat\(")
 
     def test_keei_candidates_narrow_but_never_decide(self):
         """점수는 후보만 좁힌다 — 판정은 LLM 몫이다.
@@ -5296,9 +5303,17 @@ class SavedFollowTests(unittest.TestCase):
         self.assertIn('id="headerSaved"', self.html)
         self.assertIn('data-go-saved', self.html)
         self.assertIn('id="search-saved"', self.html)
-        # 저장은 탐색 안으로 합쳐졌고 모바일 탭은 4개다.
+        # 저장은 탐색 안으로 합쳐졌다. 탭 **개수**는 박지 않는다 — 장기
+        # 스토리(Beta) 탭은 데이터가 살아 있을 때만 걸려서 4와 5를 오간다.
+        # 지켜야 할 것은 숫자가 아니라 "데스크톱에 있는 화면은 모바일에서도
+        # 닿는다"이므로, 두 목록이 같은 view 를 들고 있는지를 본다.
+        def views(nav):
+            return set(re.findall(r'data-view="([a-z]+)"', nav))
+
         mobile_nav = self.html.split('id="mobileTabs"', 1)[1].split("</nav>", 1)[0]
-        self.assertEqual(mobile_nav.count("<button"), 4)
+        desktop_nav = self.html.split('id="mainTabs"', 1)[1].split("</nav>", 1)[0]
+        self.assertEqual(views(mobile_nav), views(desktop_nav))
+        self.assertIn("longterm", views(mobile_nav))
 
     def test_saved_meta_snapshot_and_tombstone(self):
         self.assertIn("nuclens-saved-meta", self.script)

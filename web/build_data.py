@@ -68,6 +68,7 @@ import keei_match  # noqa: E402
 import story_cluster  # noqa: E402
 import story_fingerprint  # noqa: E402
 import story_identity  # noqa: E402
+import thread_web  # noqa: E402
 import weekly_sections  # noqa: E402
 from web.publication_policy import (  # noqa: E402
     PUBLICATION_RELEVANCE_VALUES,
@@ -7242,6 +7243,27 @@ def build() -> None:
               "build_mode": identity_diagnostics["status"],
               "identity": identity_diagnostics}
 
+    # 장기 스토리(Beta) — `thread_ledger.json` 을 화면 계약으로 투영한다. 판정은
+    # 하루 1회 `tools/build_threads.py` 가 따로 돌고 여기서는 **LLM 을 부르지
+    # 않는다**. 실패가 사이트 전체를 죽이면 안 되는 부가 데이터라(8/1 빈 화면
+    # 사고 계약) 예외는 여기서 삼키고 '숨김' 페이로드로 떨어진다 —
+    # 화면은 그것을 보고 탭 자체를 걸지 않는다.
+    try:
+        threads_payload = thread_web.build_payload(now=now)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[build_data:threads] 투영 실패 — 장기 스토리 화면 숨김 ({type(exc).__name__}: {exc})")
+        threads_payload = {
+            "version": thread_web.CONTRACT_VERSION,
+            "generated_at": now.isoformat(), "source_generated_at": "",
+            "visible": False, "status": "projection_failed",
+            "reasons": ["projection_failed"], "stale_hours": thread_web.STALE_HOURS,
+            "hide_after": "", "degraded": True, "build": {},
+            "stats": {"threads": 0}, "redirects": {}, "threads": [],
+        }
+    print(f"[build_data:threads] 장기 스토리 {threads_payload['stats'].get('threads', 0)}개 · "
+          f"{'노출' if threads_payload['visible'] else '숨김'}"
+          f"{'' if threads_payload['visible'] else ' — ' + ', '.join(threads_payload['reasons'])}")
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ADMIN_OUT_DIR.mkdir(parents=True, exist_ok=True)
     shipped_audit = shipped_issue_audit(issue_audit)
@@ -7256,6 +7278,7 @@ def build() -> None:
         ("entities.json", entities_view),
         # 원본이 아니라 사본을 싣는다 — 아래 admin_outputs 는 전수를 봐야 한다.
         ("issue_audit.json", shipped_audit),
+        ("threads.json", threads_payload),
         ("manifest.json", manifest),
         ("status.json", status),
     )
