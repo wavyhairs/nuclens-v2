@@ -233,6 +233,21 @@ OFFICIAL_DIRECT_SOURCES = [
      "name": "산업부 보도자료", "publisher": "산업통상부", "domain_label": "motir.go.kr"},
     {"kind": "kaeri_html", "url": "https://www.kaeri.re.kr/board?menuId=MENU00326",
      "name": "원자력연구원 보도자료", "publisher": "한국원자력연구원", "domain_label": "kaeri.re.kr"},
+    {"kind": "snu_niftep_html", "url": "https://niftep.snu.ac.kr/kr/sub/notice/lab.asp",
+     "name": "서울대 원자력미래기술정책연구소", "publisher": "서울대 원자력미래기술정책연구소",
+     "domain_label": "niftep.snu.ac.kr", "monitoring_profile": "low_frequency"},
+    {"kind": "kaif_html", "url": "https://www.kaif.or.kr/ko/?c=main",
+     "name": "한국원자력산업협회", "publisher": "한국원자력산업협회",
+     "domain_label": "kaif.or.kr", "monitoring_profile": "low_frequency"},
+    {"kind": "korad_html", "url": "https://www.korad.or.kr/korad/board/index.do?menu_idx=56&manage_idx=24",
+     "name": "한국원자력환경공단", "publisher": "한국원자력환경공단",
+     "domain_label": "korad.or.kr", "monitoring_profile": "low_frequency"},
+    {"kind": "kinac_html", "url": "https://www.kinac.re.kr/main",
+     "name": "한국원자력통제기술원", "publisher": "한국원자력통제기술원",
+     "domain_label": "kinac.re.kr", "monitoring_profile": "low_frequency"},
+    {"kind": "ismr_html", "url": "https://www.ismr.or.kr/newsletter?js_check=1",
+     "name": "혁신형 SMR 기술개발사업단", "publisher": "혁신형 SMR 기술개발사업단",
+     "domain_label": "ismr.or.kr", "monitoring_profile": "low_frequency"},
 ]
 
 # 게시판 개편·차단·403 은 예외 없이 0건으로 조용히 지나간다. 실패 사유를 run 단위로
@@ -322,7 +337,7 @@ RSS_SOURCES += [
     {"url": "https://www.lemonde.fr/energies/rss_full.xml", "name": "Le Monde 에너지",
      "domain_label": "lemonde.fr"},
 ]
-# FT·Les Échos·E&E News는 공개 RSS가 없거나 403 → 검증된 Google News site: 패턴.
+# FT·Les Échos는 공개 RSS가 없거나 403 → 검증된 Google News site: 패턴.
 # FT는 페이월이라 본문이 없다. 제목·헤드라인 수준의 추적용으로만 쓴다.
 _FT_Q = quote_plus('site:ft.com ("nuclear power" OR reactor OR SMR OR uranium) when:2d')
 RSS_SOURCES.append({
@@ -334,11 +349,9 @@ RSS_SOURCES.append({
     "url": f"https://news.google.com/rss/search?q={_LESECHOS_Q}&hl=fr&gl=FR&ceid=FR:fr",
     "name": "Les Échos 원자력", "domain_label": "lesechos.fr",
 })
-_EENEWS_Q = quote_plus("site:eenews.net (nuclear OR reactor OR uranium) when:3d")
-RSS_SOURCES.append({
-    "url": f"https://news.google.com/rss/search?q={_EENEWS_Q}&hl=en-US&gl=US&ceid=US:en",
-    "name": "E&E News 원자력", "domain_label": "eenews.net",
-})
+# E&E News 기존 도메인은 영구적인 0건을 반환하므로 퇴역시킨다. 검증된
+# POLITICO Pro 공개 경로가 생기면 별도 출처로 다시 등록한다.
+RETIRED_SOURCE_NAMES = {"E&E News 원자력"}
 
 # ---- 사내 참조 사이트 목록 보완 (2026-08-05) --------------------------------
 # 부서 「세계원전시장 인사이트」 업무 절차서의 '주요 기사 검색 사이트' 대조.
@@ -396,10 +409,8 @@ RSS_SOURCES.append({
 })
 
 # ---- 국내 원자력 기관·학계 (2026-08-29) --------------------------------------
-# 부서 지정 목록. 규제·연구·사업자 4곳(원안위·산업부·한수원·원자력연구원)은 이미
-# OFFICIAL_DIRECT_SOURCES 로 게시판 원문을 직접 읽는다. 여기 넣는 7곳은 게시판
-# 구조가 제각각(학회 SPA·협회 목록·사업단 워드프레스)이라 전용 파서를 새로 쓰는
-# 대신 Google News site: 로 우회한다.
+# 부서 지정 목록. 공식 페이지 구조를 검증한 기관은 OFFICIAL_DIRECT_SOURCES 로
+# 옮겼다. 여기 남은 2곳만 전용 파서가 없어 Google News site: 로 우회한다.
 #
 #   when:3d      기관 공지는 언론 기사보다 색인이 늦다. 1d 로 좁히면 색인되기
 #                전에 창이 닫혀 매번 0건이 된다.
@@ -407,17 +418,11 @@ RSS_SOURCES.append({
 #   게이트 없음   같은 이유 — Euractiv 처럼 비원자력이 섞이는 곳이 아니다.
 #
 # 주의: 이 도메인들은 언론사가 아니라 기관 사이트라 Google News 색인이 얇다.
-# 며칠씩 0건이어도 '실패'가 아니라 '무소식'으로 뜬다(operational_monitoring 의
-# empty/failed 구분). 몇 주째 계속 0건이면 색인 자체가 없다는 뜻이므로, 그때는
-# 전용 파서를 붙여 OFFICIAL_DIRECT_SOURCES 로 옮기는 것이 맞다.
+# 며칠씩 0건이어도 정상이라 monitoring_profile 로 즉시 알림을 막는다. 실제 누락이
+# 확인되면 전용 파서를 붙여 OFFICIAL_DIRECT_SOURCES 로 옮기는 것이 맞다.
 KR_NUCLEAR_ORG_FEEDS = (
-    ("서울대 원자력미래기술정책연구소", "niftep.snu.ac.kr"),
     ("한국원자력학회", "kns.org"),
-    ("한국원자력산업협회", "kaif.or.kr"),
-    ("한국원자력환경공단", "korad.or.kr"),
-    ("한국원자력통제기술원", "kinac.re.kr"),
     ("한전원자력연료", "knfc.co.kr"),
-    ("혁신형 SMR 기술개발사업단", "ismr.or.kr"),
 )
 for _org_name, _org_domain in KR_NUCLEAR_ORG_FEEDS:
     _org_q = quote_plus(f"site:{_org_domain} when:3d")
@@ -426,6 +431,7 @@ for _org_name, _org_domain in KR_NUCLEAR_ORG_FEEDS:
         # resolve_publisher 를 쓰지 않으므로 domain_label 이 곧 기사 도메인이 된다
         # — sources.json 의 같은 도메인 항목이 그대로 등급·근거 역할로 붙는다.
         "name": _org_name, "domain_label": _org_domain,
+        "monitoring_profile": "low_frequency",
     })
 
 SMR_HINTS = ("smr", "small modular", "i-smr", "advanced reactor")
@@ -2497,9 +2503,153 @@ def parse_nssc_rows(rows: list[dict], *, publisher: str = "원자력안전위원
     return out
 
 
+def parse_motir_board(page: str, *, publisher: str = "산업통상부",
+                      domain: str = "motir.go.kr") -> list[dict]:
+    """산업부 RSS 장애 시 보도·참고자료 HTML 목록을 읽는다."""
+    out = []
+    for block in re.findall(r"<tr\b[^>]*>([\s\S]*?)</tr>", page, re.I):
+        href = re.search(r'<a href="([^"]*/ATCL3f49a5a8c/[^"]+/view[^"]*)"', block, re.I)
+        title = re.search(r'<div class="board-link">[\s\S]*?<a[^>]*>([\s\S]*?)</a>', block, re.I)
+        day = re.search(r'<td>\s*(\d{4}-\d{2}-\d{2})\s*</td>', block, re.I)
+        if not (href and title and day):
+            continue
+        item = _official_board_item(
+            "https://www.motir.go.kr/", href.group(1), title.group(1), "",
+            day.group(1), publisher, domain,
+        )
+        if item:
+            out.append(item)
+    return out
+
+
+def parse_nssc_home(page: str, *, publisher: str = "원자력안전위원회",
+                    domain: str = "nssc.go.kr") -> list[dict]:
+    """원안위 JSON 게시판 장애 시 홈페이지의 최신 보도자료를 읽는다."""
+    out = []
+    for block in re.findall(r"<li\b[^>]*>([\s\S]*?)</li>", page, re.I):
+        href = re.search(r'<a href="([^"]*BOARD_SEQ=5(?:&|&amp;)BBS_SEQ=[^"]+)"[^>]*>([\s\S]*?)</a>', block, re.I)
+        day = re.search(r'<span>\s*(\d{4}[.-]\d{2}[.-]\d{2})\s*</span>', block, re.I)
+        if not (href and day):
+            continue
+        item = _official_board_item(
+            "https://www.nssc.go.kr/", href.group(1), href.group(2), "",
+            day.group(1), publisher, domain,
+        )
+        if item:
+            out.append(item)
+    return out
+
+
+def parse_kaif_board(page: str, *, publisher: str = "한국원자력산업협회",
+                     domain: str = "kaif.or.kr") -> list[dict]:
+    out = []
+    for block in re.findall(r"<li\b[^>]*>([\s\S]*?)</li>", page, re.I):
+        href = re.search(r'<a href="([^"]*gbn=view(?:&|&amp;)ix=\d+[^"]*)"', block, re.I)
+        title = re.search(r'<div class="subject">([\s\S]*?)</div>', block, re.I)
+        day = re.search(r'<div class="date">\s*(\d{4}[.-]\d{2}[.-]\d{2})\s*</div>', block, re.I)
+        if not (href and title and day):
+            continue
+        item = _official_board_item(
+            "https://www.kaif.or.kr/ko/", href.group(1), title.group(1), "",
+            day.group(1), publisher, domain,
+        )
+        if item:
+            out.append(item)
+    return out
+
+
+def parse_kinac_board(page: str, *, publisher: str = "한국원자력통제기술원",
+                      domain: str = "kinac.re.kr") -> list[dict]:
+    out = []
+    for block in re.findall(r"<li\b[^>]*>([\s\S]*?)</li>", page, re.I):
+        href = re.search(r'<a href="([^"]*/board/view[^"]*menuId=MN0000000490[^"]*)"', block, re.I)
+        title = re.search(r'<p class="title">([\s\S]*?)</p>', block, re.I)
+        day = re.search(r'<p class="date">\s*(\d{4}[.-]\d{2}[.-]\d{2})\s*</p>', block, re.I)
+        if not (href and title and day):
+            continue
+        item = _official_board_item(
+            "https://www.kinac.re.kr/", href.group(1), title.group(1), "",
+            day.group(1), publisher, domain,
+        )
+        if item:
+            out.append(item)
+    return out
+
+
+def parse_korad_board(page: str, *, publisher: str = "한국원자력환경공단",
+                      domain: str = "korad.or.kr") -> list[dict]:
+    out = []
+    for block in re.findall(r"<tr\b[^>]*>([\s\S]*?)</tr>", page, re.I):
+        key = re.search(r'data-keyValue="(\d+)"', block, re.I)
+        title = re.search(r'<td[^>]*class="[^"]*title[^"]*"[^>]*>[\s\S]*?<span>([\s\S]*?)</span>', block, re.I)
+        day = re.search(r'<td[^>]*class="[^"]*adddate[^"]*"[^>]*>\s*(\d{4}[.-]\d{2}[.-]\d{2})\s*</td>', block, re.I)
+        if not (key and title and day):
+            continue
+        href = f"/korad/board/view.do?board_idx={key.group(1)}&manage_idx=24&menu_idx=56"
+        item = _official_board_item(
+            "https://www.korad.or.kr/", href, title.group(1), "",
+            day.group(1), publisher, domain,
+        )
+        if item:
+            out.append(item)
+    return out
+
+
+def parse_ismr_board(page: str, *, publisher: str = "혁신형 SMR 기술개발사업단",
+                     domain: str = "ismr.or.kr") -> list[dict]:
+    out = []
+    for block in re.findall(r'<div class="board-list-item">([\s\S]*?)</div>\s*</div>', page, re.I):
+        href = re.search(r'<a href="([^"]+/newsletter/\d+)" class="subj">([\s\S]*?)</a>', block, re.I)
+        day = re.search(r'<span class="date-text">\s*(\d{4}[.-]\d{2}[.-]\d{2})\s*</span>', block, re.I)
+        if not (href and day):
+            continue
+        item = _official_board_item(
+            "https://www.ismr.or.kr/", href.group(1), href.group(2), "",
+            day.group(1), publisher, domain,
+        )
+        if item:
+            out.append(item)
+    return out
+
+
+def parse_snu_niftep_board(page: str, *, publisher: str = "서울대 원자력미래기술정책연구소",
+                           domain: str = "niftep.snu.ac.kr") -> list[dict]:
+    out = []
+    for block in re.findall(r"<li\b[^>]*>([\s\S]*?)</li>", page, re.I):
+        anchor = re.search(
+            r'<a href="javascript:;" onclick="eclick\(\'view\',(\d+)\)">([\s\S]*?)</a>',
+            block, re.I)
+        day = re.search(r'<div class="td inf col_date">\s*(\d{4}[.-]\d{2}[.-]\d{2})\s*</div>', block, re.I)
+        if not (anchor and day):
+            continue
+        href = f"/kr/sub/notice/lab.asp?mode=view&idx={anchor.group(1)}"
+        item = _official_board_item(
+            "https://niftep.snu.ac.kr/", href, anchor.group(2), "",
+            day.group(1), publisher, domain,
+        )
+        if item:
+            out.append(item)
+    return out
+
+
+def _official_request(method: str, url: str, **kwargs):
+    """Retry bounded connection faults inside one crawl run."""
+    import requests
+
+    request = getattr(requests, method)
+    for attempt in range(2):
+        try:
+            return request(url, timeout=(8, 20), **kwargs)
+        except (requests.ConnectTimeout, requests.ConnectionError):
+            if attempt == 1:
+                raise
+
+
 def fetch_official_direct(src: dict) -> list[dict]:
     """국내 공식기관 게시판을 직접 읽는다. 한 기관 실패는 빈 목록으로 격리한다."""
     items = _fetch_official_direct(src)
+    if not items and src.get("name") not in SOURCE_FETCH_ERRORS:
+        SOURCE_FETCH_ERRORS[src.get("name", "?")] = "RuntimeError: parser returned no items"
     # 게시판은 개편돼도 200 을 준다. 가장 최근 글이 언제 것인지를 남겨야
     # '조용한 기관'과 '멈춘 게시판'을 나중에 가를 수 있다.
     _record_source_diagnostics(
@@ -2516,36 +2666,69 @@ def _fetch_official_direct(src: dict) -> list[dict]:
         headers = {"User-Agent": "nuclear-news-bot/1.0"}
         if src["kind"] == "motir_rss_post":
             import feedparser
-            response = requests.post(src["url"], headers=headers, timeout=20)
-            response.raise_for_status()
-            feed = feedparser.parse(response.content)
-            out = []
-            for entry in feed.entries:
-                item = _official_board_item(
-                    "https://www.motir.go.kr/", entry.get("link", ""),
-                    entry.get("title", ""), entry.get("description", ""),
-                    entry.get("published", ""), src["publisher"], src["domain_label"],
+            try:
+                response = _official_request("post", src["url"], headers=headers)
+                response.raise_for_status()
+                feed = feedparser.parse(response.content)
+                out = []
+                for entry in feed.entries:
+                    item = _official_board_item(
+                        "https://www.motir.go.kr/", entry.get("link", ""),
+                        entry.get("title", ""), entry.get("description", ""),
+                        entry.get("published", ""), src["publisher"], src["domain_label"],
+                    )
+                    if item:
+                        out.append(item)
+                if out:
+                    return out
+            except Exception as exc:
+                print(
+                    "  ! 산업부 RSS 실패 — HTML 예비 경로 사용: "
+                    f"{type(exc).__name__}: {exc}"
                 )
-                if item:
-                    out.append(item)
-            return out
+            response = _official_request(
+                "get", "https://www.motir.go.kr/kor/article/ATCL3f49a5a8c?pageIndex=1",
+                headers=headers)
+            response.raise_for_status()
+            response.encoding = response.apparent_encoding or response.encoding
+            return parse_motir_board(response.text, publisher=src["publisher"], domain=src["domain_label"])
         if src["kind"] == "nssc_json":
             payload = {
                 "pageNo": "1", "pagePerCnt": "15", "MENU_ID": "190",
                 "CONTENTS_NO": "", "SITE_NO": "2", "BOARD_SEQ": "5",
                 "BBS_SEQ": "", "CATE_SEQ": "", "SEARCH_FLD": "", "SEARCH": "",
             }
-            response = requests.post(src["url"], data=payload, headers=headers, timeout=20)
+            try:
+                response = _official_request("post", src["url"], data=payload, headers=headers)
+                response.raise_for_status()
+                rows = ((response.json().get("data") or {}).get("list") or [])
+                out = parse_nssc_rows(rows, publisher=src["publisher"], domain=src["domain_label"])
+                if out:
+                    return out
+            except Exception as exc:
+                print(
+                    "  ! 원안위 JSON 실패 — 홈페이지 예비 경로 사용: "
+                    f"{type(exc).__name__}: {exc}"
+                )
+            response = _official_request("get", "https://www.nssc.go.kr/", headers=headers)
             response.raise_for_status()
-            rows = ((response.json().get("data") or {}).get("list") or [])
-            return parse_nssc_rows(rows, publisher=src["publisher"], domain=src["domain_label"])
-        response = requests.get(src["url"], headers=headers, timeout=20)
+            response.encoding = response.apparent_encoding or response.encoding
+            return parse_nssc_home(response.text, publisher=src["publisher"], domain=src["domain_label"])
+        response = _official_request("get", src["url"], headers=headers)
         response.raise_for_status()
         response.encoding = response.apparent_encoding or response.encoding
-        if src["kind"] == "khnp_html":
-            return parse_khnp_board(response.text, publisher=src["publisher"], domain=src["domain_label"])
-        if src["kind"] == "kaeri_html":
-            return parse_kaeri_board(response.text, publisher=src["publisher"], domain=src["domain_label"])
+        parsers = {
+            "khnp_html": parse_khnp_board,
+            "kaeri_html": parse_kaeri_board,
+            "snu_niftep_html": parse_snu_niftep_board,
+            "kaif_html": parse_kaif_board,
+            "korad_html": parse_korad_board,
+            "kinac_html": parse_kinac_board,
+            "ismr_html": parse_ismr_board,
+        }
+        parser = parsers.get(src["kind"])
+        if parser:
+            return parser(response.text, publisher=src["publisher"], domain=src["domain_label"])
         return []
     except Exception as exc:
         SOURCE_FETCH_ERRORS[src.get("name", "?")] = f"{type(exc).__name__}: {exc}"[:240]

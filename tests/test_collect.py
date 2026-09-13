@@ -1212,17 +1212,30 @@ class TestKoreanNuclearOrgFeeds(unittest.TestCase):
         "ismr.or.kr": "혁신형 SMR 기술개발사업단",
     }
 
-    def rows(self):
+    DIRECT_KINDS = {
+        "niftep.snu.ac.kr": "snu_niftep_html",
+        "kaif.or.kr": "kaif_html",
+        "korad.or.kr": "korad_html",
+        "kinac.re.kr": "kinac_html",
+        "ismr.or.kr": "ismr_html",
+    }
+
+    def rss_rows(self):
         return {row["domain_label"]: row for row in nb.RSS_SOURCES
                 if row["domain_label"] in self.ORGS}
 
-    def test_all_seven_are_collected(self):
-        self.assertEqual(set(self.rows()), set(self.ORGS))
+    def direct_rows(self):
+        return {row["domain_label"]: row for row in nb.OFFICIAL_DIRECT_SOURCES
+                if row["domain_label"] in self.ORGS}
 
-    def test_each_is_a_korean_three_day_site_query(self):
+    def test_all_seven_are_collected(self):
+        self.assertEqual(set(self.rss_rows()) | set(self.direct_rows()), set(self.ORGS))
+
+    def test_unparsed_sources_remain_korean_three_day_site_queries(self):
         """when: 이 빠지면 Google News 는 관련도순이라 몇 주 지난 공지를 물어 오고,
         그것들은 수집 창에서 전멸한다. hl=ko 가 빠지면 국내 색인을 안 탄다."""
-        for domain, row in self.rows().items():
+        self.assertEqual(set(self.rss_rows()), {"kns.org", "knfc.co.kr"})
+        for domain, row in self.rss_rows().items():
             with self.subTest(domain=domain):
                 self.assertIn(quote_plus(f"site:{domain} when:3d"), row["url"])
                 self.assertIn("hl=ko&gl=KR&ceid=KR:ko", row["url"])
@@ -1231,6 +1244,15 @@ class TestKoreanNuclearOrgFeeds(unittest.TestCase):
                 # 여러 매체가 섞이는 피드가 아니다 — domain_label 이 곧 출처다.
                 self.assertFalse(row.get("resolve_publisher"))
                 self.assertEqual(row["name"], self.ORGS[domain])
+                self.assertEqual(row["monitoring_profile"], "low_frequency")
+
+    def test_five_sources_use_verified_direct_parsers(self):
+        self.assertEqual(set(self.direct_rows()), set(self.DIRECT_KINDS))
+        for domain, kind in self.DIRECT_KINDS.items():
+            with self.subTest(domain=domain):
+                row = self.direct_rows()[domain]
+                self.assertEqual(row["kind"], kind)
+                self.assertEqual(row["monitoring_profile"], "low_frequency")
 
     def test_each_carries_an_official_primary_grade(self):
         for domain in self.ORGS:
@@ -1242,6 +1264,76 @@ class TestKoreanNuclearOrgFeeds(unittest.TestCase):
                 self.assertEqual(profile["publisher"], self.ORGS[domain])
                 # 등급이 실제로 수집 우선순위에 닿는지. 8 은 tier2 하한이다.
                 self.assertGreaterEqual(nb.source_score(domain), 8)
+
+    def test_retired_e_and_e_feed_is_not_polled(self):
+        self.assertFalse(any(row.get("domain_label") == "eenews.net"
+                             for row in nb.RSS_SOURCES))
+
+
+class TestInstitutionBoardParsers(unittest.TestCase):
+    def assert_item(self, rows, *, title, domain):
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["title"], title)
+        self.assertEqual(rows[0]["publisher_domain"], domain)
+
+    def test_kaif(self):
+        rows = nb.parse_kaif_board('''<li><a href="?c=193&gbn=view&ix=30057">
+          <div class="subject">원자력 혁신유공 후보 추천</div>
+          <div class="date">2026.09.11</div></a></li>''')
+        self.assert_item(rows, title="원자력 혁신유공 후보 추천", domain="kaif.or.kr")
+        self.assertIn("ix=30057", rows[0]["link"])
+
+    def test_kinac(self):
+        rows = nb.parse_kinac_board('''<li><a href="/board/view?linkId=1&menuId=MN0000000490">
+          <p class="title">KINAC, IAEA와 전문인력 양성</p>
+          <p class="date">2026-09-07</p></a></li>''')
+        self.assert_item(rows, title="KINAC, IAEA와 전문인력 양성", domain="kinac.re.kr")
+
+    def test_korad(self):
+        rows = nb.parse_korad_board('''<tr><td class="left title"><a data-keyValue="1332088">
+          <span>이사회 윤리청렴 실천서약식 개최</span></a></td>
+          <td class="important num adddate">2026-08-26</td></tr>''')
+        self.assert_item(rows, title="이사회 윤리청렴 실천서약식 개최", domain="korad.or.kr")
+        self.assertIn("board_idx=1332088", rows[0]["link"])
+
+    def test_ismr(self):
+        rows = nb.parse_ismr_board('''<div class="board-list-item"><div class="num">384</div>
+          <a href="https://www.ismr.or.kr/newsletter/390" class="subj">Rolls-Royce SMR 협력</a>
+          <div class="date"><span class="date-text">2026.09.09</span></div></div>''')
+        self.assert_item(rows, title="Rolls-Royce SMR 협력", domain="ismr.or.kr")
+
+    def test_snu_niftep(self):
+        rows = nb.parse_snu_niftep_board('''<li><div class="td col_subject">
+          <a href="javascript:;" onclick="eclick('view',1411)">SMR 연구 중간발표</a></div>
+          <div class="td inf col_date">2026-04-27</div></li>''')
+        self.assert_item(rows, title="SMR 연구 중간발표", domain="niftep.snu.ac.kr")
+        self.assertIn("idx=1411", rows[0]["link"])
+
+    def test_motir_html_fallback_parser(self):
+        rows = nb.parse_motir_board('''<tr><td class="ta-l"><div class="board-link">
+          <a href="/kor/article/ATCL3f49a5a8c/172191/view"><i>원전 정책 발표</i></a>
+          </div></td><td>정책과</td><td>2026-09-11</td></tr>''')
+        self.assert_item(rows, title="원전 정책 발표", domain="motir.go.kr")
+
+    def test_nssc_html_fallback_parser(self):
+        rows = nb.parse_nssc_home('''<li><a href="/ko/cms/CMN_CON/MainLink.do?BOARD_SEQ=5&BBS_SEQ=47035">
+          원자력안전위원회 개최</a><span>2026.09.11</span></li>''')
+        self.assert_item(rows, title="원자력안전위원회 개최", domain="nssc.go.kr")
+
+    def test_official_request_retries_connect_timeout_once(self):
+        import requests
+
+        response = object()
+        with patch.object(requests, "get", side_effect=[requests.ConnectTimeout(), response]) as get:
+            self.assertIs(nb._official_request("get", "https://example.test"), response)
+        self.assertEqual(get.call_count, 2)
+
+    def test_empty_direct_parser_is_recorded_as_failure(self):
+        source = {"name": "기관", "kind": "kaif_html"}
+        nb.SOURCE_FETCH_ERRORS.clear()
+        with patch.object(nb, "_fetch_official_direct", return_value=[]):
+            self.assertEqual(nb.fetch_official_direct(source), [])
+        self.assertIn("parser returned no items", nb.SOURCE_FETCH_ERRORS["기관"])
 
 
 if __name__ == "__main__":
