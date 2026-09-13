@@ -7249,6 +7249,7 @@ class AdminConsoleTests(unittest.TestCase):
         # 창을 통째로 가져간다. 그래도 창은 경로마다 상한을 넘지 않는다.
         for key, count in paths.items():
             self.assertLessEqual(count, per_round, key)
+        budget_left = build_data.CONSOLE_BORDERLINE_TOTAL
         for row in rounds["dates"]:
             self.assertEqual(shipped.get(row["date"], 0), row["borderline_shown"], row["date"])
             self.assertLessEqual(row["borderline_shown"], row["borderline"], row["date"])
@@ -7256,8 +7257,18 @@ class AdminConsoleTests(unittest.TestCase):
             # 세고 있다는 뜻이고, 화면은 그걸 구분하지 못한다.
             self.assertLessEqual(row["borderline"], row["scored"], row["date"])
             # 상한에 안 걸렸으면 하나도 자르지 않는다 — 자르면 '전부 표시'가 거짓이다.
-            if row["borderline"] <= per_round:
+            #
+            # **다만 상한이 둘이다.** 회차당 `CONSOLE_BORDERLINE_PER_ROUND` 말고
+            # 전체 `CONSOLE_BORDERLINE_TOTAL` 이 따로 있고, 최신 회차부터 채우므로
+            # 예산이 바닥나면 옛 회차는 회차 상한에 한참 못 미쳐도 0건이 된다.
+            # 경계에 걸친 회차는 남은 예산만큼만 실린다 — 그래서 조건이
+            # "예산이 남았나"가 아니라 "이 회차를 다 담을 만큼 남았나"다.
+            # 이 검사는 그 두 번째 상한을 빠뜨리고 있었다 — 9/1 자 낡은 payload
+            # 에서는 회차 수가 적어 예산이 남았고 그래서 통과했다. 새로 구운
+            # payload 에서 18개 회차가 걸린다. 코드가 아니라 검사가 모자랐다.
+            if row["borderline"] <= per_round and budget_left >= row["borderline"]:
                 self.assertEqual(row["borderline_shown"], row["borderline"], row["date"])
+            budget_left -= row["borderline_shown"]
         # story 는 자르지 않는다. 두 집계가 갈라지면 요약과 목록이 다른 말을 한다.
         by_date = {row["date"]: row["count"] for row in self.merges["story"]["by_date"]}
         for row in rounds["dates"]:
