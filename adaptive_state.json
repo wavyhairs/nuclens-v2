@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 0,
-    "date": "2026-09-14"
+    "count": 5,
+    "date": "2026-09-15"
   },
   "retired": {
     "ap1000vsapr1400": {
@@ -287,9 +287,55 @@
   },
   "spent": {
     "count": 3,
-    "date": "2026-09-14"
+    "date": "2026-09-15"
   },
   "terms": {
+    "mra": {
+      "articles": 3,
+      "created_at": "2026-09-14T15:40:10.418027+00:00",
+      "domains": [
+        "yna.co.kr",
+        "energy-news.co.kr",
+        "knpnews.com"
+      ],
+      "evidence": [
+        {
+          "domain": "yna.co.kr",
+          "hash": "83cca4aa733254bb",
+          "importance": "nice_to_know",
+          "title": "한국원자력안전재단, 미국 전기전자공학회(IEEE)와 원전기기 성능검증 상호인정협약 체결"
+        },
+        {
+          "domain": "energy-news.co.kr",
+          "hash": "6ecc80710b52b189",
+          "importance": "nice_to_know",
+          "title": "원자력안전재단-IEEE, 원전기기 성능검증 상호인정협약 체결"
+        },
+        {
+          "domain": "knpnews.com",
+          "hash": "ebf0f3941e2ed499",
+          "importance": "must_read",
+          "title": "원자력안전재단-미국 IEEE, 원전기기 성능검증 상호인정협약(MRA) 체결"
+        }
+      ],
+      "expires_at": "2026-09-17T15:40:10.418027+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-09-14T15:40:13.750209+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-14T15:40:10.418027+00:00",
+      "queries_run": 1,
+      "query": "MRA 원자력",
+      "score": 7.0,
+      "status": "tracking",
+      "term": "MRA",
+      "ttl_hours": 72,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "가스복합발전소및": {
       "articles": 1,
       "created_at": "2026-09-13T00:40:21.597497+00:00",
@@ -323,6 +369,178 @@
         "2026-09-14"
       ],
       "yields": 5,
+      "zero_streak": 0
+    },
+    "울진군등": {
+      "articles": 3,
+      "created_at": "2026-09-14T15:40:10.418027+00:00",
+      "domains": [
+        "kbsm.net",
+        "enewstoday.co.kr",
+        "newsprime.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "kbsm.net",
+          "hash": "7dc3b0ca1558fe93",
+          "importance": "nice_to_know",
+          "title": "원전소재 지자체 행정협의회, 사용후핵연료 지원방안 마련 촉구"
+        },
+        {
+          "domain": "enewstoday.co.kr",
+          "hash": "9faa87cd08e02f92",
+          "importance": "nice_to_know",
+          "title": "울진군 등 원전 지자체, 사용후핵연료 건식저장시설 지원대책 선제 마련 촉구"
+        },
+        {
+          "domain": "newsprime.co.kr",
+          "hash": "8d9f36006f02788b",
+          "importance": "nice_to_know",
+          "title": "울진군 등 원전소재 5개 지자체, 건식저장시설 지원방안 사전 확정 촉구"
+        }
+      ],
+      "expires_at": "2026-09-16T15:40:10.418027+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-09-14T15:40:13.750209+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-14T15:40:10.418027+00:00",
+      "queries_run": 1,
+      "query": "울진군 등 원전",
+      "score": 4.6,
+      "status": "tracking",
+      "term": "울진군 등",
+      "ttl_hours": 48,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "원자력안전재단": {
+      "articles": 2,
+      "created_at": "2026-09-14T15:40:10.418027+00:00",
+      "domains": [
+        "energy-news.co.kr",
+        "knpnews.com"
+      ],
+      "evidence": [
+        {
+          "domain": "energy-news.co.kr",
+          "hash": "6ecc80710b52b189",
+          "importance": "nice_to_know",
+          "title": "원자력안전재단-IEEE, 원전기기 성능검증 상호인정협약 체결"
+        },
+        {
+          "domain": "knpnews.com",
+          "hash": "ebf0f3941e2ed499",
+          "importance": "must_read",
+          "title": "원자력안전재단-미국 IEEE, 원전기기 성능검증 상호인정협약(MRA) 체결"
+        }
+      ],
+      "expires_at": "2026-09-15T15:40:10.418027+00:00",
+      "importance": "must_read",
+      "new_articles": 0,
+      "origin": "auto",
+      "queries_run": 0,
+      "query": "원자력안전재단",
+      "score": 4.1,
+      "status": "tracking",
+      "term": "원자력안전재단",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 0
+    },
+    "한국원자력안전재단": {
+      "articles": 4,
+      "created_at": "2026-09-14T15:40:10.418027+00:00",
+      "domains": [
+        "lecturernews.com",
+        "yna.co.kr",
+        "energy-news.co.kr",
+        "knpnews.com"
+      ],
+      "evidence": [
+        {
+          "domain": "lecturernews.com",
+          "hash": "79be06e6a794d1db",
+          "importance": "noise",
+          "title": "전북대 양자시스템공학과 학생들, 제4회 방사선 여름학교서 수상"
+        },
+        {
+          "domain": "yna.co.kr",
+          "hash": "83cca4aa733254bb",
+          "importance": "nice_to_know",
+          "title": "한국원자력안전재단, 미국 전기전자공학회(IEEE)와 원전기기 성능검증 상호인정협약 체결"
+        },
+        {
+          "domain": "energy-news.co.kr",
+          "hash": "6ecc80710b52b189",
+          "importance": "nice_to_know",
+          "title": "원자력안전재단-IEEE, 원전기기 성능검증 상호인정협약 체결"
+        }
+      ],
+      "expires_at": "2026-09-17T15:40:10.418027+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-09-14T15:40:13.750209+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-14T15:40:10.418027+00:00",
+      "queries_run": 1,
+      "query": "한국원자력안전재단",
+      "score": 6.18,
+      "status": "tracking",
+      "term": "한국원자력안전재단",
+      "ttl_hours": 72,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "한국원자력환경공단을방문해": {
+      "articles": 3,
+      "created_at": "2026-09-14T15:40:10.418027+00:00",
+      "domains": [
+        "wikitree.co.kr",
+        "breaknews.com",
+        "kbsm.net"
+      ],
+      "evidence": [
+        {
+          "domain": "wikitree.co.kr",
+          "hash": "006913c84346dd48",
+          "importance": "nice_to_know",
+          "title": "경주시의회, 월성원자력본부 및 한국원자력환경공단 현장 방문"
+        },
+        {
+          "domain": "breaknews.com",
+          "hash": "1aa9220420c502a4",
+          "importance": "nice_to_know",
+          "title": "경주시의회, 월성원전 및 방폐장 현장 점검…안전관리 강화 당부"
+        },
+        {
+          "domain": "kbsm.net",
+          "hash": "882f575c6d0d69f4",
+          "importance": "nice_to_know",
+          "title": "경주시의회, 월성원전 및 한국원자력환경공단 현장 점검"
+        }
+      ],
+      "expires_at": "2026-09-16T15:40:10.418027+00:00",
+      "importance": "nice_to_know",
+      "new_articles": 0,
+      "origin": "auto",
+      "queries_run": 0,
+      "query": "한국원자력환경공단을 방문해",
+      "score": 4.6,
+      "status": "tracking",
+      "term": "한국원자력환경공단을 방문해",
+      "ttl_hours": 48,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
       "zero_streak": 0
     }
   },
