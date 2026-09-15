@@ -30,6 +30,16 @@ on:
       - "issue_match_overrides.json"
       - "selection_overrides.json"
       - "social_topics.json"
+      # 콘솔이 KV 에 적고 워크플로가 내려받는 덧칠. 위 파일들과 **같은 성질**이다 —
+      # news_bot 이 정의 직후에 얹어 RSS_SOURCES·OFFICIAL_DIRECT_SOURCES·
+      # ANTI_KEYWORDS 를 바꾼다. 사람이 손으로 커밋하지 않는다는 점만 다르고,
+      # 판정을 바꾼다는 점은 같다.
+      #
+      # 2026-08-29 콘솔에서 더한 피드 하나(niftep.snu.ac.kr Google News 우회)가
+      # 09-13 봇 커밋으로 main 에 들어왔는데, 이 목록에 없어서 아무 검사도 안 돌았다.
+      # 2주 뒤 `.py` 를 건드린 첫 PR 이 test_collect 실패로 그것을 떠안았고, 로컬에서는
+      # 재현되지 않아(그 PR 의 분기점에는 그 항목이 없다) 원인을 찾는 데 반나절이 들었다.
+      - "admin_overrides.json"
       - ".github/workflows/python-tests.yml"
   push:
     branches: [main]
@@ -48,6 +58,16 @@ on:
       - "issue_match_overrides.json"
       - "selection_overrides.json"
       - "social_topics.json"
+      # 콘솔이 KV 에 적고 워크플로가 내려받는 덧칠. 위 파일들과 **같은 성질**이다 —
+      # news_bot 이 정의 직후에 얹어 RSS_SOURCES·OFFICIAL_DIRECT_SOURCES·
+      # ANTI_KEYWORDS 를 바꾼다. 사람이 손으로 커밋하지 않는다는 점만 다르고,
+      # 판정을 바꾼다는 점은 같다.
+      #
+      # 2026-08-29 콘솔에서 더한 피드 하나(niftep.snu.ac.kr Google News 우회)가
+      # 09-13 봇 커밋으로 main 에 들어왔는데, 이 목록에 없어서 아무 검사도 안 돌았다.
+      # 2주 뒤 `.py` 를 건드린 첫 PR 이 test_collect 실패로 그것을 떠안았고, 로컬에서는
+      # 재현되지 않아(그 PR 의 분기점에는 그 항목이 없다) 원인을 찾는 데 반나절이 들었다.
+      - "admin_overrides.json"
       - ".github/workflows/python-tests.yml"
   workflow_dispatch:
 
