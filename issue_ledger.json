@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-16T04:30:38+09:00",
+ "generated_at": "2026-09-16T07:47:21+09:00",
  "issues": {
   "issue-01083ffbfa10992b": {
    "article_count": 3,
@@ -61,19 +61,24 @@
    "units": []
   },
   "issue-01e1896c892484a1": {
-   "article_count": 8,
+   "article_count": 17,
    "briefing_count": 1,
    "countries": [
     "KR"
    ],
    "entity_ids": [],
+   "evidence_day_count": 11,
+   "evidence_days": [
+    "2026-08-26",
+    "2026-09-15"
+   ],
    "facts": {
     "action": "",
-    "actors": "",
-    "assets": "",
-    "event_family": ""
+    "actors": "Government KEPCO",
+    "assets": "Transmission network Semiconductor cluster",
+    "event_family": "infrastructure_planning"
    },
-   "first_seen": "2026-08-25",
+   "first_seen": "2026-09-16",
    "hashes": [
     "c7f9b3d08bc22513",
     "01e1896c892484a1",
@@ -95,12 +100,29 @@
     "c661d42607b48d7c",
     "5ea017e458781684",
     "c15a49cf584f415c",
-    "b84cd0c3dce4210e"
+    "b84cd0c3dce4210e",
+    "971313da21360267",
+    "7325a265d5865b3c",
+    "6f813c3c4b67654e",
+    "12de1c94a6f59b3c",
+    "9bc06f4b7a421df6",
+    "e718cb733fa68887",
+    "989cf97157377b85",
+    "58ae0ab85084e2ff",
+    "039d4a87abeaef3b",
+    "307da06c103c5713",
+    "20b915e7748e42a8",
+    "c440de53dd5d691d",
+    "d108c2b518a061a3",
+    "1003a7b590ec67a7",
+    "cc4ae94c5e703fb3",
+    "954b1e96134ae526"
    ],
+   "identity_status": "ok",
    "issue_id": "issue-01e1896c892484a1",
-   "last_seen": "2026-08-25",
-   "last_written": "2026-09-13",
-   "moved_to": "issue-8d4e6351d6c710b2",
+   "last_seen": "2026-09-16",
+   "last_written": "2026-09-16",
+   "moved_to": "",
    "plants": [],
    "region": "국내",
    "revisions": [
@@ -118,10 +140,15 @@
      "date": "2026-09-13",
      "summary": "정부가 14조 2,000억 원 규모의 국가기간 전력망 사업에 대한 예타 면제를 확정하여 송전망 구축 기간을 1년 6개월 단축한다.",
      "title": "정부, 14조원 규모 국가기간 전력망 예타 면제 확정"
+    },
+    {
+     "date": "2026-09-16",
+     "summary": "호남권 반도체 클러스터 조성을 위한 전력 공급 협약이 체결되어 2029년 3GW 우선 공급 및 단계적 확장이 결정되었다.",
+     "title": "호남권 반도체 클러스터 전력·용수 공급 경로 확정"
     }
    ],
-   "summary": "정부가 14조 2,000억 원 규모의 국가기간 전력망 사업에 대한 예타 면제를 확정하여 송전망 구축 기간을 1년 6개월 단축한다.",
-   "title": "정부, 14조원 규모 국가기간 전력망 예타 면제 확정",
+   "summary": "호남권 반도체 클러스터 조성을 위한 전력 공급 협약이 체결되어 2029년 3GW 우선 공급 및 단계적 확장이 결정되었다.",
+   "title": "호남권 반도체 클러스터 전력·용수 공급 경로 확정",
    "topics": [
     "power_market"
    ],
@@ -6702,8 +6729,8 @@
    "units": []
   },
   "issue-40c55eaaa3e1c6e4": {
-   "article_count": 34,
-   "briefing_count": 4,
+   "article_count": 24,
+   "briefing_count": 3,
    "countries": [
     "KR",
     "US"
@@ -6720,9 +6747,9 @@
    ],
    "facts": {
     "action": "",
-    "actors": "Westinghouse",
-    "assets": "Nuclear power",
-    "event_family": "corporate_negotiation"
+    "actors": "한수원 웨스팅하우스",
+    "assets": "nuclear_power_plant",
+    "event_family": "corporate_move"
    },
    "first_seen": "2026-08-28",
    "hashes": [
@@ -6766,11 +6793,12 @@
     "5b0c7f1f9010565a",
     "ed18be4fd90b4c18",
     "bcad9c4791bfba06",
-    "e3030a5e10f3fbdf"
+    "e3030a5e10f3fbdf",
+    "8aedff067a37c200"
    ],
    "identity_status": "ok",
    "issue_id": "issue-40c55eaaa3e1c6e4",
-   "last_seen": "2026-09-16",
+   "last_seen": "2026-09-15",
    "last_written": "2026-09-16",
    "moved_to": "",
    "plants": [],
@@ -6795,10 +6823,15 @@
      "date": "2026-09-16",
      "summary": "한국과 미국이 웨스팅하우스 지분 5~10% 투자 및 의결권 확보를 두고 막판 협상을 진행 중이다.",
      "title": "한미, 웨스팅하우스 지분 5~10% 투자 및 의결권 확보 협상"
+    },
+    {
+     "date": "2026-09-16",
+     "summary": "정부가 미국 웨스팅하우스 지분 인수와 미국 내 원전 8기 건설을 포함한 협력 방안을 미국 측과 협상 중이며, 18일 최종 합의문에 관련 내용이 담길 예정이다.",
+     "title": "한수원, 웨스팅하우스 지분 인수 및 미국 내 원전 8기 건설 협상 추진"
     }
    ],
-   "summary": "한국과 미국이 웨스팅하우스 지분 5~10% 투자 및 의결권 확보를 두고 막판 협상을 진행 중이다.",
-   "title": "한미, 웨스팅하우스 지분 5~10% 투자 및 의결권 확보 협상",
+   "summary": "정부가 미국 웨스팅하우스 지분 인수와 미국 내 원전 8기 건설을 포함한 협력 방안을 미국 측과 협상 중이며, 18일 최종 합의문에 관련 내용이 담길 예정이다.",
+   "title": "한수원, 웨스팅하우스 지분 인수 및 미국 내 원전 8기 건설 협상 추진",
    "topics": [
     "newbuild",
     "security_trade",
@@ -6851,8 +6884,8 @@
    "units": []
   },
   "issue-4113d294aea75ee0": {
-   "article_count": 26,
-   "briefing_count": 4,
+   "article_count": 25,
+   "briefing_count": 3,
    "countries": [
     "KR"
    ],
@@ -6867,9 +6900,9 @@
    ],
    "facts": {
     "action": "",
-    "actors": "Government KEPCO",
-    "assets": "Transmission network Semiconductor cluster",
-    "event_family": "infrastructure_planning"
+    "actors": "MOTIE SK GS",
+    "assets": "AI data center",
+    "event_family": "industrial_policy"
    },
    "first_seen": "2026-08-13",
    "hashes": [
@@ -6925,7 +6958,7 @@
    ],
    "identity_status": "ok",
    "issue_id": "issue-4113d294aea75ee0",
-   "last_seen": "2026-09-16",
+   "last_seen": "2026-09-11",
    "last_written": "2026-09-16",
    "moved_to": "",
    "plants": [],
@@ -6950,10 +6983,15 @@
      "date": "2026-09-16",
      "summary": "호남권 반도체 클러스터 조성을 위한 전력 공급 협약이 체결되어 2029년 3GW 우선 공급 및 단계적 확장이 결정되었다.",
      "title": "호남권 반도체 클러스터 전력·용수 공급 경로 확정"
+    },
+    {
+     "date": "2026-09-16",
+     "summary": "산업통상자원부가 호남권을 재생에너지 기반 AI·반도체 산업의 핵심 거점으로 육성하기 위해 인프라 구축 및 정책 지원을 강화한다.",
+     "title": "산업부, 호남권 AI·반도체 산업 거점 육성 계획 발표"
     }
    ],
-   "summary": "호남권 반도체 클러스터 조성을 위한 전력 공급 협약이 체결되어 2029년 3GW 우선 공급 및 단계적 확장이 결정되었다.",
-   "title": "호남권 반도체 클러스터 전력·용수 공급 경로 확정",
+   "summary": "산업통상자원부가 호남권을 재생에너지 기반 AI·반도체 산업의 핵심 거점으로 육성하기 위해 인프라 구축 및 정책 지원을 강화한다.",
+   "title": "산업부, 호남권 AI·반도체 산업 거점 육성 계획 발표",
    "topics": [
     "power_market",
     "datacenter_ai"
@@ -7968,13 +8006,13 @@
    "units": []
   },
   "issue-4d4464de943be9a8": {
-   "article_count": 21,
+   "article_count": 24,
    "briefing_count": 2,
    "countries": [
     "KR"
    ],
    "entity_ids": [],
-   "evidence_day_count": 14,
+   "evidence_day_count": 16,
    "evidence_days": [
     "2026-08-08",
     "2026-09-09"
@@ -8024,7 +8062,10 @@
     "114c0105a9a5871f",
     "ddf2e23780e3ff54",
     "5813792d4e5e0bc3",
-    "d31557a5ab424790"
+    "d31557a5ab424790",
+    "88e4045d10732127",
+    "9aae6b2b352685c8",
+    "2b01a56cd95da97e"
    ],
    "identity_status": "ok",
    "issue_id": "issue-4d4464de943be9a8",
@@ -9505,7 +9546,7 @@
    "units": []
   },
   "issue-571c41d8d5a745d5": {
-   "article_count": 16,
+   "article_count": 15,
    "briefing_count": 4,
    "countries": [
     "KR"
@@ -12155,8 +12196,8 @@
    "units": []
   },
   "issue-726ce5e20cdd473d": {
-   "article_count": 65,
-   "briefing_count": 8,
+   "article_count": 62,
+   "briefing_count": 9,
    "countries": [
     "KR"
    ],
@@ -12252,7 +12293,9 @@
     "d31557a5ab424790",
     "cdac14c346396c80",
     "a9c104257866f8bb",
-    "8b82b5beb7e7c506"
+    "8b82b5beb7e7c506",
+    "c008c848aabfbd44",
+    "8478d4a5a6ffd917"
    ],
    "identity_status": "ok",
    "issue_id": "issue-726ce5e20cdd473d",
@@ -18214,7 +18257,7 @@
    "units": []
   },
   "issue-b8de1afb30b85fb7": {
-   "article_count": 5,
+   "article_count": 4,
    "briefing_count": 1,
    "countries": [
     "KR"
@@ -27925,7 +27968,7 @@
    "units": []
   },
   "story-1e85c02f82d433ab": {
-   "article_count": 2,
+   "article_count": 1,
    "briefing_count": 1,
    "countries": [
     "US",
@@ -28627,7 +28670,7 @@
    "units": []
   },
   "story-2c8c37e2574cf314": {
-   "article_count": 11,
+   "article_count": 13,
    "briefing_count": 1,
    "countries": [
     "US",
@@ -28659,7 +28702,9 @@
     "4af46a150f568712",
     "25a269b980048d37",
     "457fcbb59813b1b0",
-    "9e7285d5f3923662"
+    "9e7285d5f3923662",
+    "b07bb5adfa8c24e6",
+    "618699d25c6e6a21"
    ],
    "identity_status": "ok",
    "issue_id": "story-2c8c37e2574cf314",
@@ -29583,7 +29628,7 @@
    "units": []
   },
   "story-3fb25c8cd30fd600": {
-   "article_count": 5,
+   "article_count": 4,
    "briefing_count": 1,
    "countries": [
     "KR"
@@ -29676,8 +29721,8 @@
    "units": []
   },
   "story-414635dfc63ab9c4": {
-   "article_count": 10,
-   "briefing_count": 3,
+   "article_count": 9,
+   "briefing_count": 2,
    "countries": [
     "KR"
    ],
@@ -29695,7 +29740,7 @@
     "assets": "",
     "event_family": ""
    },
-   "first_seen": "2026-08-31",
+   "first_seen": "2026-09-01",
    "hashes": [
     "c008c848aabfbd44",
     "9da2eea7915b1da3",
@@ -30079,17 +30124,17 @@
    "units": []
   },
   "story-464201f63eb5f96a": {
-   "article_count": 26,
+   "article_count": 27,
    "briefing_count": 1,
    "countries": [
     "KR",
     "US"
    ],
    "entity_ids": [],
-   "evidence_day_count": 20,
+   "evidence_day_count": 21,
    "evidence_days": [
     "2026-08-16",
-    "2026-09-15"
+    "2026-09-16"
    ],
    "facts": {
     "action": "",
@@ -30124,7 +30169,8 @@
     "f46a881fd888c20a",
     "60c095c3d8e21698",
     "418ea839cdb9a5ab",
-    "98606f16cffef72c"
+    "98606f16cffef72c",
+    "c290cbe27de994a7"
    ],
    "identity_status": "ok",
    "issue_id": "story-464201f63eb5f96a",
@@ -30616,7 +30662,7 @@
    "units": []
   },
   "story-4e1bbcf5fe2a6b99": {
-   "article_count": 8,
+   "article_count": 9,
    "briefing_count": 1,
    "countries": [
     "KR",
@@ -32109,17 +32155,17 @@
    "units": []
   },
   "story-66f216663c3f0437": {
-   "article_count": 5,
+   "article_count": 6,
    "briefing_count": 1,
    "countries": [
     "KR",
     "KZ"
    ],
    "entity_ids": [],
-   "evidence_day_count": 1,
+   "evidence_day_count": 2,
    "evidence_days": [
     "2026-09-15",
-    "2026-09-15"
+    "2026-09-16"
    ],
    "facts": {
     "action": "",
@@ -32133,7 +32179,8 @@
     "f62b3875277c9e69",
     "da0327c7086557b2",
     "bf0422ee1bda874f",
-    "9b8ca80eee44ed31"
+    "9b8ca80eee44ed31",
+    "d3d4035832c51489"
    ],
    "identity_status": "ok",
    "issue_id": "story-66f216663c3f0437",
@@ -33207,7 +33254,7 @@
    "units": []
   },
   "story-74e5378ee7284fb8": {
-   "article_count": 10,
+   "article_count": 9,
    "briefing_count": 1,
    "countries": [
     "KR"
@@ -33815,7 +33862,8 @@
     "bf7d9623ff0d639a",
     "4bc170c993c51129",
     "e5dbf107091296dc",
-    "8a3c33c84d1bbe27"
+    "8a3c33c84d1bbe27",
+    "9d775590460c176a"
    ],
    "identity_status": "ok",
    "issue_id": "story-7a4ef48576459360",
@@ -35344,16 +35392,16 @@
    "units": []
   },
   "story-9280bb770c9a48c7": {
-   "article_count": 2,
+   "article_count": 3,
    "briefing_count": 1,
    "countries": [
     "IT"
    ],
    "entity_ids": [],
-   "evidence_day_count": 1,
+   "evidence_day_count": 2,
    "evidence_days": [
     "2026-09-15",
-    "2026-09-15"
+    "2026-09-16"
    ],
    "facts": {
     "action": "",
@@ -35364,7 +35412,8 @@
    "first_seen": "2026-09-16",
    "hashes": [
     "9280bb770c9a48c7",
-    "5ebe466627c3974d"
+    "5ebe466627c3974d",
+    "8118e05bb2583ff3"
    ],
    "identity_status": "ok",
    "issue_id": "story-9280bb770c9a48c7",
@@ -35602,16 +35651,16 @@
    "units": []
   },
   "story-980c9a9e381ecd8d": {
-   "article_count": 5,
+   "article_count": 16,
    "briefing_count": 1,
    "countries": [
     "KR"
    ],
    "entity_ids": [],
-   "evidence_day_count": 1,
+   "evidence_day_count": 4,
    "evidence_days": [
-    "2026-09-15",
-    "2026-09-15"
+    "2026-09-01",
+    "2026-09-16"
    ],
    "facts": {
     "action": "",
@@ -35625,7 +35674,18 @@
     "4b5cef1853ca2e37",
     "3ed1a8710404d7c2",
     "16784c01b2790a2f",
-    "15b5d9eccc47be7d"
+    "15b5d9eccc47be7d",
+    "f23ba37231732761",
+    "c9889e3fbb901b42",
+    "77482118f0c728ef",
+    "6b6bb806e670ed58",
+    "d3f28161ac40b2f0",
+    "abc02e10f4b71839",
+    "980c9a9e381ecd8d",
+    "8e0e0826ba972d8f",
+    "0e9bf0b963209c3d",
+    "f5a12b8297ade668",
+    "aeee1eb9661324fc"
    ],
    "identity_status": "ok",
    "issue_id": "story-980c9a9e381ecd8d",
@@ -35696,7 +35756,7 @@
    "units": []
   },
   "story-9b1fae628f12cba4": {
-   "article_count": 18,
+   "article_count": 17,
    "briefing_count": 1,
    "countries": [
     "KR"
@@ -35705,7 +35765,7 @@
     "kepco",
     "basic-plan"
    ],
-   "evidence_day_count": 9,
+   "evidence_day_count": 10,
    "evidence_days": [
     "2026-08-17",
     "2026-09-15"
@@ -35957,7 +36017,7 @@
    ]
   },
   "story-9f4c99f51b32e804": {
-   "article_count": 9,
+   "article_count": 10,
    "briefing_count": 1,
    "countries": [
     "US",
@@ -35969,10 +36029,10 @@
     "kepco",
     "westinghouse"
    ],
-   "evidence_day_count": 5,
+   "evidence_day_count": 6,
    "evidence_days": [
     "2026-08-25",
-    "2026-09-15"
+    "2026-09-16"
    ],
    "facts": {
     "action": "",
@@ -35992,7 +36052,8 @@
     "f8fffb1aa35a33dc",
     "e9f1936aaf0b7475",
     "9585e05364d31056",
-    "8efc37e093f1d7a5"
+    "8efc37e093f1d7a5",
+    "662bc7db74c69c53"
    ],
    "identity_status": "ok",
    "issue_id": "story-9f4c99f51b32e804",
@@ -36110,7 +36171,7 @@
    "units": []
   },
   "story-a3e57010d24635a7": {
-   "article_count": 14,
+   "article_count": 11,
    "briefing_count": 3,
    "countries": [
     "KR",
@@ -36158,7 +36219,8 @@
     "1d7b0dc21625cedd",
     "8ba0f69ec65ba414",
     "09901c1fb0d5b984",
-    "1370b0e15070ccc4"
+    "1370b0e15070ccc4",
+    "92c1435dd6a38436"
    ],
    "identity_status": "ok",
    "issue_id": "story-a3e57010d24635a7",
@@ -38526,7 +38588,7 @@
    "units": []
   },
   "story-d3effaaae45ac23b": {
-   "article_count": 16,
+   "article_count": 18,
    "briefing_count": 2,
    "countries": [
     "US",
@@ -38534,10 +38596,10 @@
     "AU"
    ],
    "entity_ids": [],
-   "evidence_day_count": 11,
+   "evidence_day_count": 12,
    "evidence_days": [
     "2026-08-17",
-    "2026-09-13"
+    "2026-09-16"
    ],
    "facts": {
     "action": "",
@@ -38562,7 +38624,9 @@
     "72e01f4b204eb532",
     "9b7792184c21ab07",
     "db4189f1648a9879",
-    "d28a120879f31bf4"
+    "d28a120879f31bf4",
+    "ce32e17ef47bfe4b",
+    "90653c41cb49d24e"
    ],
    "identity_status": "ok",
    "issue_id": "story-d3effaaae45ac23b",
@@ -38592,8 +38656,8 @@
    "units": []
   },
   "story-d5217cd852b861bd": {
-   "article_count": 47,
-   "briefing_count": 5,
+   "article_count": 64,
+   "briefing_count": 6,
    "countries": [
     "KR",
     "US"
@@ -38603,16 +38667,16 @@
     "westinghouse",
     "team-korea"
    ],
-   "evidence_day_count": 13,
+   "evidence_day_count": 16,
    "evidence_days": [
     "2026-08-17",
-    "2026-09-15"
+    "2026-09-16"
    ],
    "facts": {
     "action": "",
-    "actors": "Ministry of Trade, Industry and Energy",
-    "assets": "Texas gas power plant APR1400",
-    "event_family": "investment_agreement"
+    "actors": "Westinghouse",
+    "assets": "Nuclear power",
+    "event_family": "corporate_negotiation"
    },
    "first_seen": "2026-08-26",
    "hashes": [
@@ -38677,11 +38741,29 @@
     "27ad3db58d55c2a0",
     "a3a5f603ed8d172b",
     "a2c8bc520f1e1754",
-    "35b7bd043de4736e"
+    "35b7bd043de4736e",
+    "5b0c7f1f9010565a",
+    "fece368d0fe623c4",
+    "484b135e8d1ae735",
+    "ed18be4fd90b4c18",
+    "7f7782d5347cdbdf",
+    "5bb16693a3c6e266",
+    "8df8ff446b69d318",
+    "fbde7ac1fa70af0b",
+    "f0f6afe4ef0c2582",
+    "47cab5e2fa61595c",
+    "d01fa08affc6bebe",
+    "d76380ca9c1e1687",
+    "cc02374d00f97cc7",
+    "5ebee02e765eac57",
+    "dcaac36649cb7fe2",
+    "c326ad6a65522b31",
+    "2a166c826657df4e",
+    "36dd1cf383e84c8d"
    ],
    "identity_status": "ok",
    "issue_id": "story-d5217cd852b861bd",
-   "last_seen": "2026-09-14",
+   "last_seen": "2026-09-16",
    "last_written": "2026-09-16",
    "moved_to": "",
    "plants": [],
@@ -38701,10 +38783,15 @@
      "date": "2026-09-14",
      "summary": "한미 양국이 3500억 달러 규모의 대미 투자 1차 프로젝트 합의문을 18일경 발표할 예정이며, 외교·국방 고위급 회의를 통해 현안을 조율 중이다.",
      "title": "한미, 3500억 달러 규모 대미 투자 1차 프로젝트 합의문 발표 예정"
+    },
+    {
+     "date": "2026-09-16",
+     "summary": "한국과 미국이 웨스팅하우스 지분 5~10% 투자 및 의결권 확보를 두고 막판 협상을 진행 중이다.",
+     "title": "한미, 웨스팅하우스 지분 5~10% 투자 및 의결권 확보 협상"
     }
    ],
-   "summary": "한미 양국이 3500억 달러 규모의 대미 투자 1차 프로젝트 합의문을 18일경 발표할 예정이며, 외교·국방 고위급 회의를 통해 현안을 조율 중이다.",
-   "title": "한미, 3500억 달러 규모 대미 투자 1차 프로젝트 합의문 발표 예정",
+   "summary": "한국과 미국이 웨스팅하우스 지분 5~10% 투자 및 의결권 확보를 두고 막판 협상을 진행 중이다.",
+   "title": "한미, 웨스팅하우스 지분 5~10% 투자 및 의결권 확보 협상",
    "topics": [
     "security_trade",
     "newbuild",
@@ -39643,7 +39730,7 @@
    "units": []
   },
   "story-edc41bace7398257": {
-   "article_count": 4,
+   "article_count": 3,
    "briefing_count": 1,
    "countries": [
     "US"
