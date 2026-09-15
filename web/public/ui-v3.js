@@ -304,22 +304,226 @@ function v3WireRows(container) {
   });
 }
 
-// A1 단계의 오늘 화면 — 자리만 잡는다.
+// ── 오늘 화면 ──────────────────────────────────────────────────────────────
 //
-// 명세 §A-4-6 이 "3단 컴포넌트를 이 단계에서 만들되 아직 어느 화면에도 붙이지
-// 않는다"고 못박았다. 플래그 배선이 실제로 도는지 눈으로 확인할 곳은 있어야 하므로
-// 한 줄만 세운다. A2 가 이 함수를 통째로 갈아 끼운다.
+// 한 issue_id 는 이 화면 전체에서 **한 번만** 선다. 세 목록이 각자 필터를 들고
+// 있으면 같은 이슈가 두 번 서고, 그때 머리줄의 개수 표시도 실제 카드 수와
+// 어긋난다(구 화면이 같은 이유로 changedIds 집합을 들고 있다).
+//
+// 핵심 3건은 `highlight_issues` 의 **순서와 issue_id 만** 쓴다. 그 배열은
+// {issue_id, title} 두 키뿐이라(실측 58회차 전부) 나머지 필드는 그날 이슈 목록에서
+// 조인해야 한다. 조인이 실패한 자리는 건너뛰고 brief_rank 순서로 메운다 — 화면이
+// 3칸을 비운 채 서 있지 않게.
+function v3PickToday(briefing, issues) {
+  const byId = new Map(issues.map(issue => [issue.issue_id, issue]));
+  const used = new Set();
+  const top = [];
+  for (const pick of briefing?.highlight_issues || []) {
+    const issue = byId.get(pick?.issue_id);
+    if (issue && !used.has(issue.issue_id)) { top.push(issue); used.add(issue.issue_id); }
+    if (top.length >= 3) break;
+  }
+  if (top.length < 3) {
+    for (const issue of issues) {
+      if (top.length >= 3) break;
+      if (used.has(issue.issue_id)) continue;
+      top.push(issue); used.add(issue.issue_id);
+    }
+  }
+  // '진행 중 이슈의 변화'. change_kind 가 "change" 인 것만 — "previous" 는 문장이
+  // **바뀌기 전** 상태를 말한다는 표시라(app.js 의 issueChangeLabel 주석), 오늘의
+  // 변화 자리에 세우면 옛 상태가 오늘 일로 읽힌다. 라이브 10/160 건에서 한 번
+  // 고친 자리다.
+  const changed = issues.filter(issue =>
+    !used.has(issue.issue_id) && issue.status === "ongoing" && issue.change_kind === "change");
+  changed.forEach(issue => used.add(issue.issue_id));
+  const rest = issues.filter(issue => !used.has(issue.issue_id));
+  return { top, changed, rest };
+}
+
+const V3_REST_VISIBLE = 5;
+
+function v3TodayHtml(briefing, issues, options = {}) {
+  const { top, changed, rest } = v3PickToday(briefing, issues);
+  const dates = options.dates || [];
+  const index = dates.indexOf(briefing?.date);
+  const restHidden = Math.max(0, rest.length - V3_REST_VISIBLE);
+  return `
+  <div class="v3-hero">
+    <div class="v3-date">
+      <button type="button" data-v3-step="1" aria-label="이전 브리핑"${index < 0 || index >= dates.length - 1 ? " disabled" : ""}>‹</button>
+      <details class="v3-datepick">
+        <summary>${esc(dateWeekdayLabel(briefing?.date))}</summary>
+        <ul>${dates.map(date => `<li><button type="button" data-v3-date="${esc(date)}"${date === briefing?.date ? ' aria-current="date"' : ""}>${esc(dateWeekdayLabel(date))}</button></li>`).join("")}</ul>
+      </details>
+      <button type="button" data-v3-step="-1" aria-label="다음 브리핑"${index <= 0 ? " disabled" : ""}>›</button>
+    </div>
+    <h1>${UI_V3_STRINGS.todayTitle}</h1>
+    <p>${esc(UI_V3_STRINGS.todayLead(issues.length, changed.length))}</p>
+  </div>
+
+  <ol class="v3-rows v3-top">${top.map((issue, i) => v3Row(issue, "rank", i)).join("")}</ol>
+
+  <div id="v3AudioSlot" class="v3-audio-slot"></div>
+
+  ${changed.length ? `<section class="v3-block" aria-labelledby="v3ChangedTitle">
+    <h2 id="v3ChangedTitle">${UI_V3_STRINGS.changedTitle}</h2>
+    <p class="v3-sub">${UI_V3_STRINGS.changedSub}</p>
+    <ul class="v3-rows">${changed.map(issue => v3Row(issue, "change")).join("")}</ul>
+  </section>` : ""}
+
+  ${rest.length ? `<section class="v3-block" aria-labelledby="v3RestTitle">
+    <h2 id="v3RestTitle">${UI_V3_STRINGS.restTitle}</h2>
+    <ul class="v3-rows">${rest.map((issue, i) =>
+      v3Row(issue, "plain", i).replace("<li ", i >= V3_REST_VISIBLE ? '<li hidden ' : "<li ")).join("")}</ul>
+    ${restHidden ? `<button class="v3-showmore" type="button" data-v3-more="rest">${UI_V3_STRINGS.showMore(restHidden)}</button>` : ""}
+  </section>` : ""}
+
+  <button class="v3-weekly" type="button" data-v3-go="trend">
+    <b>${UI_V3_STRINGS.weeklyLink}</b><span aria-hidden="true">→</span>
+  </button>`;
+}
+
+// 오디오 플레이어는 **옮겨 쓴다.** 노드를 옮기면 붙어 있던 리스너가 그대로
+// 따라오므로 renderAudioBrief 의 로직(빠른·전문가 선택·배속·진행 바)을 한 줄도
+// 다시 쓰지 않는다.
+//
+// 다만 옮긴 뒤 #v3Root 안에 두면 다음 렌더의 innerHTML 재할당이 그 노드를
+// **파괴한다** — 날짜를 한 번 옮기는 순간 플레이어가 영영 사라지고, 그 뒤로는
+// getElementById 가 null 을 돌려줘 오디오 칸이 조용히 없어진다. 그래서 렌더를
+// 시작할 때마다 먼저 화면 밖 보관함으로 빼 둔다.
+function v3ParkAudio() {
+  const player = document.getElementById("audioBrief");
+  if (!player) return null;
+  let parked = document.getElementById("v3Parked");
+  if (!parked) {
+    parked = document.createElement("div");
+    parked.id = "v3Parked";
+    parked.hidden = true;
+    document.body.appendChild(parked);
+  }
+  if (player.parentElement !== parked) parked.appendChild(player);
+  return player;
+}
+
 function v3RenderToday(root, briefing, options = {}) {
-  root.innerHTML = `<section class="v3-block">
-    <h2>${UI_V3_STRINGS.todayTitle}</h2>
-    <p class="v3-sub">화면 v3 는 준비 중입니다(A1: 플래그 기반). 기존 화면은 주소에서 <code>ui=v3</code> 를 빼면 그대로 열립니다.</p>
-  </section>`;
+  // innerHTML 을 건드리기 **전에** 뺀다.
+  const player = v3ParkAudio();
+  if (!briefing) {
+    root.innerHTML = `<section class="v3-block"><h2>${UI_V3_STRINGS.todayTitle}</h2>
+      <p class="v3-sub">이 날짜에는 브리핑이 없습니다.</p></section>`;
+    return;
+  }
+  const issues = options.issues || [];
+  root.innerHTML = v3TodayHtml(briefing, issues, options);
   v3WireRows(root);
+  const slot = root.querySelector("#v3AudioSlot");
+  if (player && slot) {
+    // renderAudioBrief 가 이번 회차에 들려줄 것이 없다고 판정하면 hidden 으로
+    // 둔다. 그때는 버튼도 세우지 않는다 — 눌러도 아무 일이 없는 칸을 만들지 않는다.
+    const available = !player.hasAttribute("hidden");
+    slot.innerHTML = available
+      ? `<button class="v3-listen" type="button" data-v3-audio aria-expanded="false"><b>${UI_V3_STRINGS.listen}</b><small>${UI_V3_STRINGS.listenSub}</small></button>`
+      : "";
+    slot.appendChild(player);
+    if (available) player.setAttribute("hidden", "");
+  }
+}
+
+// ── 3단 시트 (DOM) ────────────────────────────────────────────────────────
+//
+// 주소·뒤로가기·포커스 복귀는 **새로 만들지 않는다.** app.js 의 issueId 배선
+// (openIssueDialog / closeIssueDialog / restoreIssueFromHistory / syncUrl)이 이미
+// 그 일을 하고 있고, v3 는 그 안에서 그릴 물건만 바꾼다. 여기에 pushState 를 또
+// 얹으면 뒤로가기 한 번에 두 칸이 움직인다.
+let v3SheetEl = null;
+let v3ScrimEl = null;
+let v3LastFocus = null;
+
+function v3EnsureSheet() {
+  if (v3SheetEl) return;
+  v3ScrimEl = document.createElement("div");
+  v3ScrimEl.className = "v3-scrim";
+  v3ScrimEl.hidden = true;
+  v3SheetEl = document.createElement("div");
+  v3SheetEl.className = "v3-sheet";
+  v3SheetEl.setAttribute("role", "dialog");
+  v3SheetEl.setAttribute("aria-modal", "true");
+  v3SheetEl.setAttribute("aria-labelledby", "v3SheetTitle");
+  v3SheetEl.hidden = true;
+  v3SheetEl.innerHTML = `
+    <div class="v3-sheet-head">
+      <button class="v3-sheet-close" type="button" aria-label="${UI_V3_STRINGS.close}">✕</button>
+    </div>
+    <div class="v3-sheet-body" id="v3SheetBody"></div>
+    <div class="v3-sheet-foot"></div>`;
+  document.body.append(v3ScrimEl, v3SheetEl);
+  v3ScrimEl.addEventListener("click", () => v3RequestClose());
+  v3SheetEl.querySelector(".v3-sheet-close").addEventListener("click", () => v3RequestClose());
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && v3SheetEl && !v3SheetEl.hidden) v3RequestClose();
+  });
+}
+
+// 닫기는 app.js 에 맡긴다 — 거기서 history.back() 으로 되돌려야 주소와 뒤로가기가
+// 어긋나지 않는다. 이 파일이 직접 닫으면 주소에 issue 가 남는다.
+function v3RequestClose() {
+  if (typeof closeIssueDialog === "function") closeIssueDialog();
+  else v3CloseSheet();
+}
+
+function v3OpenSheet(issue, options = {}) {
+  v3EnsureSheet();
+  v3LastFocus = document.activeElement;
+  const url = safeUrl(issue?.representative_article?.url || "");
+  const id = String(issue?.issue_id || "");
+  document.getElementById("v3SheetBody").innerHTML = v3SheetBody(issue, Boolean(options.qa));
+  v3SheetEl.querySelector(".v3-sheet-foot").innerHTML =
+    `<button type="button" data-save-issue="${esc(id)}">${
+      typeof state !== "undefined" && state.savedIds?.has(id) ? UI_V3_STRINGS.saved : UI_V3_STRINGS.save}</button>`
+    + (url ? `<a class="v3-primary" href="${esc(url)}" target="_blank" rel="noopener noreferrer">원문 보기</a>` : "");
+  const more = v3SheetEl.querySelector(".v3-rel-more");
+  if (more) {
+    more.addEventListener("click", () => {
+      v3SheetEl.querySelectorAll(".v3-rel li[hidden]").forEach(row => { row.hidden = false; });
+      more.remove();
+    });
+  }
+  v3SheetEl.hidden = false;
+  v3ScrimEl.hidden = false;
+  document.body.style.overflow = "hidden";
+  document.getElementById("v3SheetBody").scrollTop = 0;
+  requestAnimationFrame(() => {
+    v3SheetEl.classList.add("on");
+    v3ScrimEl.classList.add("on");
+    v3SheetEl.querySelector(".v3-sheet-close").focus();
+  });
+}
+
+function v3CloseSheet() {
+  if (!v3SheetEl || v3SheetEl.hidden) return;
+  v3SheetEl.classList.remove("on");
+  v3ScrimEl.classList.remove("on");
+  document.body.style.overflow = "";
+  const hide = () => { v3SheetEl.hidden = true; v3ScrimEl.hidden = true; };
+  if (typeof prefersReducedMotion === "function" && prefersReducedMotion()) hide();
+  else window.setTimeout(hide, 240);
+  if (v3LastFocus && document.contains(v3LastFocus)) v3LastFocus.focus();
+  v3LastFocus = null;
+}
+
+function v3SheetOpen() {
+  return Boolean(v3SheetEl) && !v3SheetEl.hidden;
 }
 
 const UI_V3 = {
   STRINGS: UI_V3_STRINGS,
   renderToday: v3RenderToday,
+  pickToday: v3PickToday,
+  todayHtml: v3TodayHtml,
+  openSheet: v3OpenSheet,
+  closeSheet: v3CloseSheet,
+  sheetOpen: v3SheetOpen,
   row: v3Row,
   tier2: v3Tier2,
   sheetBody: v3SheetBody,

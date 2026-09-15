@@ -71,7 +71,8 @@ const api = new Function(`
   ${fromV3("v3Related")}
   ${fromV3("v3Outlets")}
   ${fromV3("v3SheetBody")}
-  return { v3Row, v3CardWhy, v3PriorReport, v3ChangeLabel, v3SheetBody,
+  ${fromV3("v3PickToday")}
+  return { v3PickToday, v3Row, v3CardWhy, v3PriorReport, v3ChangeLabel, v3SheetBody,
            v3TimelineItems, v3RelatedItems, v3Publisher, V3_CHANGE_LABELS };
 `)();
 
@@ -366,6 +367,70 @@ check("검수 모드(qa=1)도 함께 남는다", () => {
   urlApi.syncUrl();
   assert.ok(urlApi.calls[0].includes("qa=1"), urlApi.calls[0]);
   urlApi.state.uiQa = false;
+});
+
+// ── 오늘 화면의 세 목록 (A2) ─────────────────────────────────────────────
+//
+// 한 issue_id 가 화면에 두 번 서면 머리줄의 개수 표시도 실제 행 수와 어긋난다.
+// 구 화면이 같은 이유로 changedIds 집합을 들고 있다.
+const mk = (id, extra = {}) => ({ issue_id: id, title: id, summary: "s", card_why: "w", ...extra });
+
+check("한 issue_id 는 오늘 화면 전체에서 한 번만 선다", () => {
+  const issues = [
+    mk("a", { status: "ongoing", change_kind: "change" }),
+    mk("b"), mk("c"), mk("d", { status: "ongoing", change_kind: "change" }), mk("e"),
+  ];
+  const briefing = { highlight_issues: [{ issue_id: "a" }, { issue_id: "b" }, { issue_id: "c" }] };
+  const { top, changed, rest } = api.v3PickToday(briefing, issues);
+  const all = [...top, ...changed, ...rest].map(i => i.issue_id);
+  assert.equal(all.length, new Set(all).size, `중복: ${all}`);
+  assert.equal(all.length, issues.length, "빠진 이슈가 있다");
+  assert.deepEqual(top.map(i => i.issue_id), ["a", "b", "c"]);
+  assert.deepEqual(changed.map(i => i.issue_id), ["d"], "핵심 3건에 든 a 가 변화 목록에 또 섰다");
+});
+
+check("핵심 3건은 highlight_issues 의 순서를 따른다", () => {
+  const issues = [mk("x"), mk("y"), mk("z")];
+  const briefing = { highlight_issues: [{ issue_id: "z" }, { issue_id: "x" }, { issue_id: "y" }] };
+  assert.deepEqual(api.v3PickToday(briefing, issues).top.map(i => i.issue_id), ["z", "x", "y"]);
+});
+
+check("highlight_issues 는 {issue_id, title} 뿐이라 본 목록에서 조인한다", () => {
+  const issues = [mk("x", { card_why: "진짜 한 줄" })];
+  // 실측: 58회차 전부 이 두 키만 들고 있다. 배열에서 바로 그리면 한 줄이 없다.
+  const briefing = { highlight_issues: [{ issue_id: "x", title: "옛 제목" }] };
+  const top = api.v3PickToday(briefing, issues).top;
+  assert.equal(top[0].card_why, "진짜 한 줄");
+});
+
+check("조인에 실패한 id 는 건너뛰고 3칸을 채운다", () => {
+  const issues = [mk("x"), mk("y"), mk("z"), mk("w")];
+  const briefing = { highlight_issues: [{ issue_id: "없는id" }, { issue_id: "y" }] };
+  const top = api.v3PickToday(briefing, issues).top;
+  assert.equal(top.length, 3, "화면이 빈 칸을 들고 섰다");
+  assert.ok(top.map(i => i.issue_id).includes("y"));
+});
+
+check("highlight_issues 가 아예 없어도 3칸이 선다", () => {
+  const issues = [mk("x"), mk("y"), mk("z"), mk("w")];
+  assert.equal(api.v3PickToday({}, issues).top.length, 3);
+});
+
+check("'진행 중 이슈의 변화'는 change_kind === \"change\" 만 세운다", () => {
+  const issues = [
+    mk("t1"), mk("t2"), mk("t3"),
+    mk("chg", { status: "ongoing", change_kind: "change" }),
+    mk("prev", { status: "ongoing", change_kind: "previous" }),
+    mk("none", { status: "ongoing", change_kind: "" }),
+    mk("new", { status: "new", change_kind: "change" }),
+  ];
+  const { changed, rest } = api.v3PickToday({}, issues);
+  assert.deepEqual(changed.map(i => i.issue_id), ["chg"]);
+  // previous 는 문장이 '바뀌기 전' 상태를 말한다는 표시다. 오늘의 변화 자리에
+  // 세우면 옛 상태가 오늘 일로 읽힌다(라이브 10/160 에서 한 번 고친 자리).
+  assert.ok(rest.map(i => i.issue_id).includes("prev"),
+    "change_kind=previous 가 '오늘의 변화'로 올라갔다");
+  assert.ok(rest.map(i => i.issue_id).includes("new"), "status=new 가 진행 중으로 올라갔다");
 });
 
 console.log(`\n${passed}건 전부 통과`);

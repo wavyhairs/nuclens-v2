@@ -1748,18 +1748,56 @@ function placeTodayAgenda() {
 // 화면 v3 의 유일한 진입점. 조립은 전부 ui-v3.js 가 하고, app.js 는 어느 데이터를
 // 넘길지만 정한다 — 두 파일이 같은 화면을 반씩 그리면 금방 갈라진다.
 //
-// 3단 시트가 읽을 레코드는 **카탈로그(state.issues)** 에서 찾는다. briefing.issues
-// 안의 같은 이슈는 그 회차 시점의 related_articles 를 들고 있어서(실측 734건 중
-// 449건 불일치, 최대 1 vs 54) 타임라인이 조용히 잘린다.
-function v3Catalog(issueId) {
-  return state.issues.find(issue => issue.issue_id === issueId) || null;
-}
-
+// 어느 레코드를 넘기는가는 **이미 정해져 있다.** briefingIssuesForDisplay() 가
+// 최신 날짜에서는 카탈로그 레코드로 갈아 끼우고(그래야 타임라인 수와 배지가 상세와
+// 같다) 과거 회차는 그날의 스냅샷으로 둔다. v3 가 여기서 제 규칙을 새로 세우면
+// 같은 이슈가 구 화면과 v3 에서 다른 타임라인을 보인다.
 function renderV3(briefing) {
   const root = document.getElementById("v3Root");
   if (!root) return;
   root.hidden = false;
-  UI_V3.renderToday(root, briefing, { qa: state.uiQa, catalog: v3Catalog });
+  UI_V3.renderToday(root, briefing, {
+    qa: state.uiQa,
+    issues: briefingIssuesForDisplay(briefing),
+    dates: briefingDates(),
+  });
+}
+
+// v3 의 목록 조작. 행 펼침은 ui-v3.js 가 제 안에서 처리하고, 여기 있는 것은
+// **화면 상태를 바꾸는 것**뿐이다 — 날짜 이동·탭 이동·시트 열기.
+function handleV3Action(event) {
+  const step = event.target.closest("[data-v3-step]");
+  if (step) { stepBriefing(Number(step.dataset.v3Step)); return true; }
+  const pick = event.target.closest("[data-v3-date]");
+  if (pick) {
+    state.briefingDate = pick.dataset.v3Date;
+    renderDateSelect();
+    renderBriefing();
+    renderSystemStatus();
+    syncUrl();
+    return true;
+  }
+  const more = event.target.closest("[data-v3-more]");
+  if (more) {
+    more.closest("section")?.querySelectorAll(".v3-rows li[hidden]").forEach(row => { row.hidden = false; });
+    more.remove();
+    return true;
+  }
+  const go = event.target.closest("[data-v3-go]");
+  if (go) { switchView(go.dataset.v3Go); return true; }
+  const audio = event.target.closest("[data-v3-audio]");
+  if (audio) {
+    const player = document.getElementById("audioBrief");
+    if (player) {
+      player.hidden = !player.hidden;
+      audio.setAttribute("aria-expanded", String(!player.hidden));
+    }
+    return true;
+  }
+  const sheet = event.target.closest("[data-v3-sheet]");
+  // 시트는 issueId 배선을 그대로 탄다 — 주소·뒤로가기·복원이 전부 거기 있다.
+  if (sheet) { openIssueDialog(sheet.dataset.v3Sheet); return true; }
+  return false;
 }
 
 function renderBriefing() {
@@ -2915,6 +2953,15 @@ function openIssueDialog(issueId, updateUrl = true, viaAlias = false) {
     return;
   }
   recordRecentIssue(issueId);
+  // v3 는 같은 자리에서 시트를 연다. 주소(issuePath)·뒤로가기(issueHistoryOwned)·
+  // 복원(restoreIssueFromHistory)은 아래 공통 경로가 그대로 맡는다 — 시트 쪽에
+  // pushState 를 또 얹으면 뒤로가기 한 번에 두 칸이 움직인다.
+  if (state.ui === "v3") {
+    state.issueId = issueId;
+    UI_V3.openSheet(issue, { qa: state.uiQa });
+    if (updateUrl) { issueHistoryOwned = true; syncUrl("push"); }
+    return;
+  }
   const dialog = document.getElementById("issueDialog");
   const topics = (issue.topics || []).map(topic => `<span class="topic-chip">${esc(TOPIC_LABELS[topic] || topic)}</span>`).join("");
   const selectionReasons = (issue.selection_reasons || [])
@@ -2998,6 +3045,9 @@ function openIssueDialog(issueId, updateUrl = true, viaAlias = false) {
 function dismissIssueDialog() {
   const dialog = document.getElementById("issueDialog");
   state.issueId = "";
+  // v3 의 시트도 같은 문으로 닫힌다 — Esc·배경 탭·× 가 전부 closeIssueDialog()
+  // 로 들어오므로 닫는 자리는 하나뿐이다.
+  if (typeof UI_V3 !== "undefined" && UI_V3.sheetOpen()) UI_V3.closeSheet();
   if (dialog.open) dialog.close();
 }
 
@@ -5148,6 +5198,13 @@ function bind() {
    "headlineEvidence", "weeklyReportBody", "insightList", "evidenceRail", "briefingTitle",
    "recentIssueList"].forEach(id => {
     document.getElementById(id).addEventListener("click", handleIssueAction);
+  });
+  // v3 는 제 컨테이너 하나에만 위임을 건다. 목록이 통째로 다시 그려져도 리스너가
+  // 살아 있어야 해서 컨테이너에 걸고, v3 전용 동작을 먼저 본 뒤 기존 위임으로
+  // 흘려보낸다(저장·공유 버튼은 기존 훅을 그대로 쓴다).
+  document.getElementById("v3Root")?.addEventListener("click", event => {
+    if (handleV3Action(event)) return;
+    handleIssueAction(event);
   });
   document.getElementById("clearRecentIssues")?.addEventListener("click", () => {
     try { localStorage.removeItem("nuclens-recent-issues"); } catch { /* 무해 */ }

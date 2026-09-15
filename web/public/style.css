@@ -3825,3 +3825,52 @@ body.ui-v3 .v3-sheet-foot .v3-primary {
 @media (prefers-reduced-motion: reduce) {
   body.ui-v3 .v3-sheet, body.ui-v3 .v3-scrim { transition: none !important; }
 }
+
+/* ── v3 오늘 화면 (A2) ─────────────────────────────────────────────────── */
+
+/* 날짜 목록은 긴 <select> 대신 눌러서 여는 칸에 둔다. 접혀 있으므로 1단 기본
+   상태의 글자 수·누를 곳에 들어가지 않는다 — 58개 회차가 첫 화면 부피를
+   지배하던 자리다. */
+body.ui-v3 .v3-datepick { position: relative; flex: 1; }
+body.ui-v3 .v3-datepick > summary {
+  list-style: none; cursor: pointer; min-height: 44px; display: flex;
+  align-items: center; justify-content: center; font-weight: 700;
+  border: 2px solid var(--c-border); background: var(--c-surface);
+  border-radius: var(--r-1);
+}
+body.ui-v3 .v3-datepick > summary::-webkit-details-marker { display: none; }
+body.ui-v3 .v3-datepick > ul {
+  position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 4px);
+  max-height: 320px; overflow-y: auto; list-style: none; margin: 0; padding: 4px;
+  background: var(--c-surface); border: 2px solid var(--c-border-strong);
+  border-radius: var(--r-1);
+}
+body.ui-v3 .v3-datepick > ul button {
+  width: 100%; text-align: left; min-height: 44px; padding: 0 10px;
+  background: none; border: 0; color: inherit; font: inherit; cursor: pointer;
+  border-radius: var(--r-1);
+}
+body.ui-v3 .v3-datepick > ul button[aria-current="date"] {
+  background: var(--c-signal); color: var(--c-signal-ink); font-weight: 700;
+}
+
+body.ui-v3 .v3-top { margin-top: 4px; }
+
+body.ui-v3 .v3-audio-slot { margin: 16px 0; }
+body.ui-v3 .v3-listen {
+  width: 100%; display: flex; flex-direction: column; align-items: flex-start;
+  gap: 2px; min-height: 56px; padding: 10px 14px; cursor: pointer;
+  border: 2px solid var(--c-primary); background: var(--c-surface);
+  color: inherit; font: inherit; border-radius: var(--r-1);
+}
+body.ui-v3 .v3-listen b { font-size: 1rem; }
+body.ui-v3 .v3-listen small { color: var(--c-text-muted); font-size: .8rem; }
+/* 옮겨 온 기존 플레이어. 히어로 안에서 쓰던 여백만 걷는다. */
+body.ui-v3 #audioBrief { margin-top: 10px; }
+
+body.ui-v3 .v3-weekly {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  min-height: 52px; padding: 0 14px; margin: 18px 0 8px; cursor: pointer;
+  border: 2px solid var(--c-border); background: var(--c-surface);
+  color: inherit; font: inherit; border-radius: var(--r-1);
+}
