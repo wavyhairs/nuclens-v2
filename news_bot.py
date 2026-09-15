@@ -624,6 +624,17 @@ D. 통제 태그 - 웹 트렌드 집계용. **반드시 아래 고정 목록의 
 
 - why_important: must_read만 작성. **1~2개의 완결형 문장, 150자 이내**. 분석관 톤. 격식체. 핵심 시사점만 압축. 절대 길게 풀어쓰거나 문자열을 자르지 말 것.
 
+- why_short: must_read만 작성. why_important의 핵심을 **목록 한 줄용**으로 줄인 것.
+  · 공백 포함 45자 이내, 한 문장.
+  · 명사형 종결(~함 / ~됨 / ~임)로 끝낼 것. "~다", "~요"로 끝내지 말 것.
+  · 누가·무엇이 영향을 받는지 주어를 드러낼 것.
+  · 수치는 1개까지만.
+  · 금지: 목적을 설명하는 "~위해서임/~위한 것임", 제목을 다시 쓰는 문장,
+    why_important 금지 어미와 같은 류("~시사함", "~기대됨", "~전망됨", "~중요함", "~필요함").
+  · why_important가 빈 문자열이면 why_short도 빈 문자열.
+  · 좋음: "국산 기자재 수출 시 성능검증 중복 부담이 줄어듦"
+  · 나쁨: "국내 성능검증기관의 신뢰도를 높이기 위해서임" (목적 설명)
+
 - open_question: must_read만 작성. **원문에서 아직 확정되지 않은 것**을 50자 이내 완결형 서술문 1개로. 없으면 null.
   · 질문형이 아니라 선언형으로 쓸 것. (O) "최종 계약 체결 시점은 아직 확정되지 않았다" / (X) "최종 계약은 언제 체결될까?"
   · **원문에 명시적으로 미정·조사 중·검토 중·협의 중·기한 미정으로 남아 있는 것만 쓴다.** 원문에 없는 미확정 사항을 추론해 만들지 말 것.
@@ -664,6 +675,7 @@ D. 통제 태그 - 웹 트렌드 집계용. **반드시 아래 고정 목록의 
   "detail": "...",
   "implication": "...",
   "why_important": "...",
+  "why_short": "...",
   "open_question": "...|null",
   "open_question_source": "title|description|article_text|unknown",
   "watch_next": "...",
@@ -1010,6 +1022,7 @@ def fallback_curation(article: dict) -> dict | None:
         "summary": summary,
         "implication": "",
         "why_important": "",
+        "why_short": "",
         "watch_next": "",
         "tags": [],
         "related_reports": [],
@@ -1472,6 +1485,68 @@ def drop_hollow_implication(value, title: str = "") -> str:
     return text
 
 
+# ── why_short: 목록 한 줄용 문장 ──────────────────────────────────────────
+#
+# why_important 는 150자 이내로 생성되므로 목록 한 줄에 넣으면 중간에 잘린다
+# (실측 중앙값 87자, 45자 이내는 1.1%). 이 필드는 그 한 줄을 대신한다.
+#
+# **호출을 새로 만들지 않는다.** 큐레이션은 기사 BATCH_CHUNK 건당 Gemini 를 1회
+# 부르고, why_short 는 그 한 번의 출력 JSON 에 필드가 하나 더 붙는 방식으로만
+# 생긴다. 줄이기 위한 별도 호출도, 과거 아카이브 backfill 도 없다.
+#
+# 규칙을 어기면 **빈 문자열로 만든다.** 기사를 격리하거나 재호출하지 않는다 —
+# 격리하면 영문 제목 폴백으로 떨어져 지금보다 나쁘고(implication 게이트와 같은
+# 판단), 빈 값이어도 화면은 멀쩡하다. 그 자리는 빌드가 implication·why_important
+# 로 메운다(build_data 의 finalize_card_fields).
+WHY_SHORT_MAX_CHARS = 45
+
+# 명사형 종결만 받는다. 목록 한 줄은 문장이 아니라 라벨에 가까워서, 종결어미가
+# 섞이면 같은 줄에 선 항목끼리 문체가 어긋난다(§C-1 의 '문체 혼재').
+WHY_SHORT_ENDINGS = ("함", "됨", "임", "짐", "남", "옴", "듦", "늚", "쥠", "섬")
+
+# why_important 가 이미 금지한 상투어와 같은 류. 여기서 다시 막는 이유는 짧게
+# 줄이는 과정에서 알맹이가 빠지고 이 어미만 남기 쉬워서다.
+WHY_SHORT_BANNED = (
+    "시사함", "기대됨", "전망됨", "중요함", "필요함", "주목됨", "보여줌",
+    "위해서임", "위한 것임", "위함", "예상됨", "요구됨",
+)
+
+WHY_SHORT_DROPS: list[str] = []
+
+
+def _why_short_reject(text: str, title: str, why_important: str) -> str:
+    """탈락 사유. 통과면 빈 문자열."""
+    if not why_important:
+        # why_important 가 없는데 한 줄만 있으면 근거 없는 해석이 화면 맨 앞에 선다.
+        return "why_important 없음"
+    if len(text) > WHY_SHORT_MAX_CHARS:
+        return f"{len(text)}자 초과"
+    if not text.endswith(WHY_SHORT_ENDINGS):
+        return "명사형 종결 아님"
+    for banned in WHY_SHORT_BANNED:
+        if text.endswith(banned):
+            return f"금지 어미 '{banned}'"
+    # 제목을 다시 쓴 문장은 한 줄을 차지할 이유가 없다. 문턱은 dedup 이 쓰는 값과
+    # 같게 둔다 — 이 파일 안에서 유사도 기준이 둘로 갈리지 않게.
+    if title:
+        norm = lambda value: re.sub(r"[^0-9A-Za-z가-힣]", "", value)
+        ratio = difflib.SequenceMatcher(None, norm(text), norm(title)).ratio()
+        if ratio >= 0.82:
+            return f"제목 재진술(유사도 {ratio:.2f})"
+    return ""
+
+
+def drop_invalid_why_short(value, title: str = "", why_important: object = "") -> str:
+    text = clean_text(value)
+    if not text:
+        return ""
+    reason = _why_short_reject(text, clean_text(title), clean_text(why_important))
+    if reason:
+        WHY_SHORT_DROPS.append(f"{reason} | {title[:30]} | {text[:50]}")
+        return ""
+    return text
+
+
 def separate_curation_headline_events(title: object) -> str:
     """Keep an incident headline from absorbing a separate project-period change.
 
@@ -1585,6 +1660,13 @@ def normalize_curation_item(item: dict, article: dict, body: str = "") -> dict:
     # must_read 만 채운다 — 나머지는 애초에 후보가 아니라 'not_must_read' 가
     # 626건에 붙어도 정보가 없다. 빈 값이면 통과(importance 로 구분된다).
     oq_reject = open_question_reject_reason(item, grade, event_type) if grade == "must_read" else ""
+    # why_short 의 게이트 하나가 "why_important 가 비었는데 한 줄만 있는가"라
+    # 최종값을 먼저 만들어 둔다 — 원본 item 을 보면 게이트에 걸려 비워진 경우를
+    # 놓친다.
+    why_important_value = drop_unsupported_causal_interpretation(
+        strip_unsourced_person_names(
+            item.get("why_important"), source_text, article.get("title", "")),
+        source_text, article.get("title", ""))
     normalized = {
         "features": features,
         "importance": grade,
@@ -1614,10 +1696,15 @@ def normalize_curation_item(item: dict, article: dict, body: str = "") -> dict:
                 drop_hollow_implication(item.get("implication"), article.get("title", "")),
                 source_text, article.get("title", "")),
             source_text, article.get("title", "")),
-        "why_important": drop_unsupported_causal_interpretation(
-            strip_unsourced_person_names(
-                item.get("why_important"), source_text, article.get("title", "")),
-            source_text, article.get("title", "")),
+        "why_important": why_important_value,
+        # 목록 한 줄용. why_important 와 **같은 문**을 먼저 지나고(사람 이름·근거
+        # 없는 인과), 그 뒤에 한 줄 전용 규칙을 본다. 어기면 빈 문자열이다.
+        "why_short": drop_invalid_why_short(
+            drop_unsupported_causal_interpretation(
+                strip_unsourced_person_names(
+                    item.get("why_short"), source_text, article.get("title", "")),
+                source_text, article.get("title", "")),
+            article.get("title", ""), why_important_value),
         "open_question": open_question,
         "open_question_source": open_question_source,
         "open_question_reject": oq_reject,
@@ -1689,7 +1776,7 @@ BATCH_SUFFIX = """
 이번에는 기사 여러 건을 한 번에 받습니다. 위의 모든 분류 규칙·필드 정의를 각 기사에
 동일하게 적용하되, 출력은 아래 JSON 한 객체만 (다른 텍스트·펜스 금지):
 
-{"items": [{"idx": 0, "id": "머리표식", "importance": "...", "section": "...", "scope": "kr|overseas", "category": "...", "title_kr": "...", "summary": "...", "detail": "...", "implication": "...", "why_important": "...", "open_question": "...|null", "open_question_source": "title|description|article_text|unknown", "tags": [], "topics": [], "countries": [], "article_type": "...", "event_date": "2026-08-01|null", "event_date_type": "announcement|occurrence|effective|deadline|scheduled|unknown", "event_date_precision": "day|month|year|unknown", "event_date_source": "title|description|article_text|unknown", "related_reports": [], "features": {"event_type": "...", "korea_relevance": 0, "market_materiality": 0, "policy_materiality": 0, "report_worthiness": 0}}]}
+{"items": [{"idx": 0, "id": "머리표식", "importance": "...", "section": "...", "scope": "kr|overseas", "category": "...", "title_kr": "...", "summary": "...", "detail": "...", "implication": "...", "why_important": "...", "why_short": "...", "open_question": "...|null", "open_question_source": "title|description|article_text|unknown", "tags": [], "topics": [], "countries": [], "article_type": "...", "event_date": "2026-08-01|null", "event_date_type": "announcement|occurrence|effective|deadline|scheduled|unknown", "event_date_precision": "day|month|year|unknown", "event_date_source": "title|description|article_text|unknown", "related_reports": [], "features": {"event_type": "...", "korea_relevance": 0, "market_materiality": 0, "policy_materiality": 0, "report_worthiness": 0}}]}
 
 [★ id — 기사를 되찾는 표식. 틀리면 요약이 다른 기사에 붙는다]
 각 기사 머리는 `[번호|표식]` 형식이다. 예: `[3|a1b2c3d4] 제목…`
@@ -3506,6 +3593,7 @@ def main() -> None:
             "implication": cur.get("implication", ""),
             # must_read 의 '왜 중요' — 기존 큐 스키마에 빠져 있어 카드에서 유실되던 필드
             "why_important": cur.get("why_important", ""),
+            "why_short": cur.get("why_short", ""),
             "open_question": cur.get("open_question", ""),
             "open_question_source": cur.get("open_question_source", "unknown"),
             "watch_next": cur.get("watch_next", ""),

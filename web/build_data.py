@@ -775,8 +775,8 @@ SITE_HIDDEN_STATUSES = frozenset({"quarantined"})
 # fallback 은 사실이 틀린 것이 아니라 검토를 못 받은 것이라 숨기지 않는다.
 # 다만 검토받지 않은 **해석**은 내보내지 않는다 — 사실은 원문이 받쳐 주지만
 # 해석은 받쳐 주는 것이 없다. assess_delivery_eligibility 의 limitations 와 같은 목록.
-FALLBACK_WITHHELD_FIELDS = ("implication", "why_important", "open_question",
-                            "watch_next")
+FALLBACK_WITHHELD_FIELDS = ("implication", "why_important", "why_short",
+                            "open_question", "watch_next")
 
 
 def apply_archive_integrity_gate(records: list[dict]) -> tuple[list[dict], dict]:
@@ -3684,8 +3684,16 @@ def finalize_card_fields(rows: list[dict]) -> None:
         if display and _is_restatement(title, display):
             display = ""
 
+        # 우선순위 맨 앞이 `why_short` 다 — 목록 한 줄을 위해 만든 문장이고,
+        # 없으면 종전대로 implication → why_important 로 떨어진다.
+        #
+        # **화면은 이 결정에 끼어들지 않는다.** 프론트에서 or 폴백을 하면 아래
+        # 두 필터(제목 재진술·change_display 중복)를 통째로 우회한다. 그래서
+        # why_short 가 제목을 다시 쓴 문장이면 여기서 자동으로 탈락하고
+        # implication 이 선다 — 화면은 card_why 하나만 읽으면 된다.
         why = ""
-        for candidate in (row.get("implication"), row.get("why_important")):
+        for candidate in (row.get("why_short"), row.get("implication"),
+                          row.get("why_important")):
             candidate = str(candidate or "").strip()
             if not candidate or _is_restatement(title, candidate):
                 continue
@@ -4765,6 +4773,9 @@ def build_briefings(news_items: list[dict], issues: list[dict], checked_at: str 
                 "detail_source": issue_detail_source,
                 "implication": implication,
                 "why_important": why_important,
+                # 대표 기사와 **같은 기사**에서 온 한 줄이어야 한다. 서로 다른
+                # 기사의 문장이 섞이면 카드가 한 이슈를 두 목소리로 말한다.
+                "why_short": representative.get("why_short", ""),
                 # 그날 보고서 검토 추천을 받은 기사가 이 이슈에 있으면 그 주제.
                 # 추천은 그날의 판단이라 이번 브리핑분(current)에서만 본다.
                 "report_pick": report_topic,
@@ -5036,6 +5047,7 @@ def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_a
             "detail_source": archive_detail_source,
             "implication": implication,
             "why_important": why_important,
+            "why_short": representative.get("why_short", ""),
             # 아카이브 행은 그 이슈가 **언젠가** 보고서감이었는지를 남긴다 —
             # 브리핑 행과 달리 '오늘'이라는 기준일이 없다.
             "report_pick": report_topic,
@@ -6618,6 +6630,7 @@ def build() -> None:
             "detail": usable_detail(record),
             "implication": record.get("implication", ""),
             "why_important": record.get("why_important", ""),
+            "why_short": record.get("why_short", ""),
             "open_question": record.get("open_question", ""),
             "tags": record.get("tags") or [],
             "canonical_tags": canonical_tags,
