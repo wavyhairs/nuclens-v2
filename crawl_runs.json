@@ -1982,12 +1982,13 @@
       "attempt_id": "35024716669",
       "attempts": 1,
       "claimed_at": "2026-09-15T21:17:21.947386Z",
-      "finished_at": null,
+      "finished_at": "2026-09-15T21:24:24.102945Z",
       "event_name": "schedule",
       "trigger_source": "schedule",
       "trigger_state": "schedule_trigger_created",
-      "status": "running",
-      "new_article_count": null
+      "status": "success_with_articles",
+      "new_article_count": 57,
+      "collect_outcome": "success"
     }
   }
 }
