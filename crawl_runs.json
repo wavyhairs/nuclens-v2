@@ -1917,12 +1917,13 @@
       "attempt_id": "34953504362",
       "attempts": 1,
       "claimed_at": "2026-09-15T09:37:27.795954Z",
-      "finished_at": null,
+      "finished_at": "2026-09-15T09:48:25.295066Z",
       "event_name": "workflow_dispatch",
       "trigger_source": "backup_watchdog",
       "trigger_state": "schedule_missing_recovery",
-      "status": "running",
-      "new_article_count": null
+      "status": "success_with_articles",
+      "new_article_count": 80,
+      "collect_outcome": "success"
     }
   }
 }
