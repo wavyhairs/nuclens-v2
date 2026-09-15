@@ -28,8 +28,17 @@ const v3Source = readFileSync(
 function extract(source, name, where) {
   const start = source.indexOf(`function ${name}(`);
   if (start < 0) throw new Error(`${where} 에 ${name}() 이 없다 — 이름이 바뀌었으면 이 검사도 같이 고쳐라`);
+  // 매개변수 목록을 **먼저 건너뛴다.** 기본값이 `options = {}` 이면 그 중괄호가
+  // 본문보다 앞에 서서, 괄호만 세는 방식은 시그니처 한 줄만 잘라 온다(실제로 그렇게
+  // 잘려서 `new Function` 이 "Unexpected token 'function'" 으로 터졌다).
+  let paren = 0;
+  let i = source.indexOf("(", start);
+  for (; i < source.length; i += 1) {
+    if (source[i] === "(") paren += 1;
+    else if (source[i] === ")" && (paren -= 1) === 0) break;
+  }
   let depth = 0;
-  for (let i = source.indexOf("{", start); i < source.length; i += 1) {
+  for (i = source.indexOf("{", i); i < source.length; i += 1) {
     if (source[i] === "{") depth += 1;
     else if (source[i] === "}" && (depth -= 1) === 0) return source.slice(start, i + 1);
   }
@@ -40,6 +49,8 @@ const fromV3 = (name) => extract(v3Source, name, "ui-v3.js");
 
 // 라벨 표와 문구는 ui-v3.js 에서 **그대로** 가져온다. 여기에 값을 다시 적으면
 // 검사가 자기가 쓴 값을 확인하게 된다.
+const visibleDecl = /const V3_REST_VISIBLE = \d+;[\s\S]*?const V3_CHANGED_VISIBLE = \d+;/.exec(v3Source);
+if (!visibleDecl) throw new Error("ui-v3.js 에 행 상한 선언이 없다");
 const labelDecl = /const V3_CHANGE_LABELS = \{[^}]*\};/.exec(v3Source);
 if (!labelDecl) throw new Error("ui-v3.js 에 V3_CHANGE_LABELS 선언이 없다");
 const stringsDecl = /const UI_V3_STRINGS = \{[\s\S]*?\n\};/.exec(v3Source);
@@ -53,6 +64,8 @@ const api = new Function(`
   const state = { savedIds: new Set() };
   ${labelDecl[0]}
   ${stringsDecl[0]}
+  ${visibleDecl[0]}
+  const dateWeekdayLabel = (d) => String(d);
   ${fromV3("v3CardWhy")}
   ${fromV3("v3IsDomainLike")}
   ${fromV3("v3Publisher")}
@@ -74,9 +87,10 @@ const api = new Function(`
   ${fromV3("v3PickToday")}
   ${fromV3("v3IssueSpanDays")}
   ${fromV3("v3SortBySpan")}
+  ${fromV3("v3TodayHtml")}
   ${fromV3("v3SearchHtml")}
   ${fromV3("v3ReportHtml")}
-  return { v3PickToday, v3IssueSpanDays, v3SortBySpan, v3SearchHtml, v3ReportHtml, v3Row, v3CardWhy, v3PriorReport, v3ChangeLabel, v3SheetBody,
+  return { v3TodayHtml, v3PickToday, v3IssueSpanDays, v3SortBySpan, v3SearchHtml, v3ReportHtml, v3Row, v3CardWhy, v3PriorReport, v3ChangeLabel, v3SheetBody,
            v3TimelineItems, v3RelatedItems, v3Publisher, V3_CHANGE_LABELS };
 `)();
 
@@ -536,6 +550,50 @@ check("발간물은 제목·발간기관·날짜 세 가지만 낸다", () => {
 check("보고 후보 행에는 '보고 검토' 표시가 붙는다", () => {
   const html = api.v3ReportHtml({ picks: [mk("p1", { report_pick: "원전 수출" })], pubs: [] });
   assert.ok(html.includes("보고 검토"));
+});
+
+// ── 화면 부피 상한 (A2 보강) ─────────────────────────────────────────────
+//
+// 상한이 없으면 '줄인 화면'이라는 말이 그날 이슈 수에 따라 참이 되었다 거짓이
+// 되었다 한다. 실측: 9/13 스냅샷(13건) 2,230px → 배포일 데이터 2,642px 로 예산을
+// 넘겼고, 늘어난 것은 전부 상한이 없던 '진행 중 이슈의 변화'였다.
+
+const manyIssues = (nChanged, nRest) => [
+  mk("t1"), mk("t2"), mk("t3"),
+  ...Array.from({ length: nChanged }, (_, i) =>
+    mk("c" + i, { status: "ongoing", change_kind: "change" })),
+  ...Array.from({ length: nRest }, (_, i) => mk("r" + i)),
+];
+const briefingOf = (issues) => ({
+  date: "2026-09-15",
+  highlight_issues: [{ issue_id: "t1" }, { issue_id: "t2" }, { issue_id: "t3" }],
+});
+const visibleRows = (html) =>
+  (html.match(/<li class="v3-row/g) || []).length;
+
+check("행은 상한을 넘겨 서지 않는다 — 3 + 5 + 5", () => {
+  const issues = manyIssues(12, 20);
+  const html = api.v3TodayHtml(briefingOf(issues), issues, { dates: ["2026-09-15"] });
+  assert.equal(visibleRows(html), 13,
+    `보이는 행이 13개를 넘었다 — 그날 이슈 수만큼 화면이 길어진다`);
+});
+
+check("감춘 행은 지우지 않는다 — 더 보기로 전부 닿는다", () => {
+  const issues = manyIssues(12, 20);
+  const html = api.v3TodayHtml(briefingOf(issues), issues, { dates: ["2026-09-15"] });
+  // 감춘 것까지 세면 전부 있어야 한다.
+  assert.equal((html.match(/data-v3-issue=/g) || []).length, issues.length);
+  assert.ok(html.includes('data-v3-more="changed"'), "변화 섹션에 더 보기가 없다");
+  assert.ok(html.includes('data-v3-more="rest"'), "그 밖 섹션에 더 보기가 없다");
+  assert.ok(html.includes("7개 더 보기"), "변화 12건 중 5건만 보이므로 7건이 남는다");
+  assert.ok(html.includes("15개 더 보기"), "그 밖 20건 중 5건만 보이므로 15건이 남는다");
+});
+
+check("적은 날에는 더 보기를 만들지 않는다", () => {
+  const issues = manyIssues(2, 3);
+  const html = api.v3TodayHtml(briefingOf(issues), issues, { dates: ["2026-09-15"] });
+  assert.equal(visibleRows(html), 8);
+  assert.ok(!html.includes("data-v3-more"), "감출 것이 없는데 버튼이 섰다");
 });
 
 console.log(`\n${passed}건 전부 통과`);
