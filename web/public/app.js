@@ -100,7 +100,11 @@ const STRINGS = {
 };
 
 const state = {
-  news: [], briefings: [], issues: [], trend: null, insights: null, meta: null,
+  // news 는 첫 렌더를 기다리게 하지 않는다 — `ensureNews()` 가 뒤에서 받아 온다.
+  // 부팅 시점에는 언제나 빈 배열이므로, 이 값을 읽는 쪽은 `newsLoaded` 를 함께 본다
+  // (0건과 '아직 안 옴'은 다른 상태다).
+  news: [], newsLoaded: false, newsPending: null,
+  briefings: [], issues: [], trend: null, insights: null, meta: null,
   pubs: null, pubsOrg: "전체",
   manifest: null, systemStatus: null, dataBase: "/data",
   briefingDate: "", region: "전체", topic: "전체", view: "news",
@@ -161,6 +165,45 @@ async function loadRootJSON(name, optional = false) {
     if (optional) return null;
     throw error;
   }
+}
+
+// ── news.json 지연 로드 ───────────────────────────────────────────────────
+//
+// 부팅은 10개 파일을 Promise.all 로 묶어 **전부** 기다렸는데, 그중 news.json 하나가
+// raw 16.8 MB / gzip 2.65 MB 로 나머지를 합친 것보다 크다. 첫 화면이 그 파일을
+// 기다릴 이유가 없다 — 읽는 곳은 둘뿐이고(수집 원문 서랍, 흐름 탭의 구버전 폴백),
+// 서랍은 기본적으로 접혀 있다.
+//
+// 그래서 **차단하지 않고 뒤에서** 받는다. 켜 두는 쪽(on-demand only)이 아니라
+// 첫 렌더 직후 배경으로 부르는 쪽을 고른 이유는, 접힌 서랍의 요약 줄이 이미
+// 건수를 말하고 있어서다 — on-demand 로 하면 그 숫자가 서랍을 열기 전까지
+// 사라진다. 지금은 잠깐 비었다가 채워진다.
+//
+// 실패는 비치명이다(8/1 빈 화면 사고 계약). 서랍만 못 채우고 나머지는 산다.
+function ensureNews() {
+  if (state.newsLoaded) return Promise.resolve(state.news);
+  if (state.newsPending) return state.newsPending;
+  state.newsPending = loadJSON("news.json")
+    .then(rows => {
+      state.news = Array.isArray(rows) ? rows : [];
+      state.newsLoaded = true;
+      return state.news;
+    })
+    .catch(() => {
+      // 다시 부를 수 있게 자물쇠만 푼다. newsLoaded 는 거짓으로 남아
+      // 화면이 '0건'이 아니라 '못 불러왔다'를 말한다.
+      state.newsPending = null;
+      return state.news;
+    });
+  return state.newsPending;
+}
+
+// 배경 로드가 끝난 뒤, 그 데이터를 읽는 화면만 다시 그린다. 전체 재렌더는
+// 하지 않는다 — 사용자가 이미 만지고 있는 다른 칸을 흔들 이유가 없다.
+function refreshNewsDependentViews() {
+  if (!appReady) return;
+  if (document.getElementById("newsList")) renderNewsFeed();
+  if (state.view === "trend" && document.getElementById("trendReadiness")) renderTrendReadiness();
 }
 
 async function initializeDataBase() {
@@ -1999,13 +2042,22 @@ function articleCard(article) {
 }
 
 function renderNewsFeed() {
+  document.getElementById("feedTitle").textContent = `${dateLabel(state.briefingDate)} 발행`;
+  // 아직 안 온 것과 0건은 다르다. 같은 문구를 쓰면 배경 로드가 실패한 날
+  // "이 날짜에 발행된 수집 기사가 없습니다"가 거짓말이 된다.
+  if (!state.newsLoaded) {
+    document.getElementById("feedLabel").textContent = "오늘 수집한 원문";
+    document.getElementById("newsList").innerHTML = state.newsPending
+      ? '<p class="empty">수집 원문을 불러오고 있습니다…</p>'
+      : '<p class="empty">수집 원문을 불러오지 못했습니다. 이 칸을 다시 열면 재시도합니다.</p>';
+    return;
+  }
   const articles = state.news.filter(article => (
     article.article_date === state.briefingDate
     && (state.region === "전체" || article.region === state.region)
     && (state.topic === "전체" || (article.topics || []).includes(state.topic))
   ));
   document.getElementById("feedLabel").textContent = `오늘 수집한 원문 ${articles.length}건`;
-  document.getElementById("feedTitle").textContent = `${dateLabel(state.briefingDate)} 발행`;
   document.getElementById("newsList").innerHTML = articles.length
     ? articles.map(articleCard).join("")
     : '<p class="empty">이 날짜에 발행된 수집 기사가 없습니다.</p>';
@@ -3054,13 +3106,24 @@ function renderTrendReadiness() {
   const coverage = `<div class="coverage"><span>주제 분류 <strong>${topicCoverage}%</strong></span><span>국가 분류 <strong>${countryCoverage}%</strong></span></div>`;
   const pdata = periodData();
   const { start, end } = pdata ? { start: pdata.start, end: pdata.end } : trendRange();
-  const articleCount = pdata?.story_count ?? state.news.filter(article => article.article_date >= start && article.article_date <= end).length;
+  // 빌드가 실어 보낸 선정 사건 수가 정본이다(모든 기간에 실린다). state.news 로
+  // 세는 길은 periods 가 없는 **구버전 trend.json** 전용 폴백인데, news.json 은 이제
+  // 지연 로드라 그 순간 비어 있을 수 있다. 안 온 데이터로 0을 적지 않는다 —
+  // 셀 수 없으면 그 숫자만 뺀다(아래 countable).
+  const articleCount = pdata?.story_count
+    ?? (state.newsLoaded
+      ? state.news.filter(article => article.article_date >= start && article.article_date <= end).length
+      : null);
+  const countable = articleCount !== null;
   const issueCount = articleCount;
   const panel = document.getElementById("trendReadiness");
   document.getElementById("trendData").hidden = !ready;
   panel.classList.toggle("ready", ready);
+  const basisLine = pdata
+    ? `동일 사건 중복 보도 제거 적용 · 선정 사건 ${articleCount}건`
+    : (countable ? `중복 제거 적용 · 원본 ${articleCount}건 → 연결 이슈 ${issueCount}개` : "중복 제거 적용");
   panel.innerHTML = ready
-    ? `<div><strong>분석 기간 ${dateLabel(start)}–${dateLabel(end)}</strong><p>${pdata ? `동일 사건 중복 보도 제거 적용 · 선정 사건 ${articleCount}건` : `중복 제거 적용 · 원본 ${articleCount}건 → 연결 이슈 ${issueCount}개`}${basis}</p></div>${coverage}`
+    ? `<div><strong>분석 기간 ${dateLabel(start)}–${dateLabel(end)}</strong><p>${basisLine}${basis}</p></div>${coverage}`
     : `<div><strong>분류 기준을 확인하고 있습니다</strong><p>분류가 완료되면 분석 기간과 근거 데이터를 함께 표시합니다.${basis}</p></div>${coverage}`;
 }
 
@@ -5186,6 +5249,13 @@ function bind() {
     renderBriefing();
     syncUrl();
   });
+  // 배경 로드가 실패했을 때의 두 번째 기회. 서랍을 여는 것이 "이 데이터를 지금
+  // 보겠다"는 유일한 신호라, 재시도 버튼을 따로 세우지 않는다.
+  document.getElementById("feedDrawer")?.addEventListener("toggle", event => {
+    if (!event.target.open || state.newsLoaded) return;
+    ensureNews().then(refreshNewsDependentViews);
+    renderNewsFeed();
+  });
   document.getElementById("clearFilters").addEventListener("click", clearBriefingFilters);
   document.getElementById("closeFilters").addEventListener("click", () => closeFilterDrawer(document.getElementById("briefingFilters")));
   document.getElementById("closeArchiveFilters").addEventListener("click", () => closeFilterDrawer(document.getElementById("archiveFilterDrawer")));
@@ -5455,8 +5525,9 @@ async function init() {
   initLoading = true;
   try {
     await initializeDataBase();
-    [state.news, state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities, state.threads] = await Promise.all([
-      loadJSON("news.json"), loadJSON("briefings.json"), loadJSON("issues.json"),
+    // news.json 은 여기 없다 — `ensureNews()` 가 첫 렌더 뒤에 받는다(정의부 주석).
+    [state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities, state.threads] = await Promise.all([
+      loadJSON("briefings.json"), loadJSON("issues.json"),
       loadJSON("trend.json"), loadJSON("meta.json"), loadJSON("insights.json"),
       // 발간물은 부가 데이터 — 없어도 사이트 전체가 죽으면 안 된다 (8/1 빈 화면 사고 계약)
       loadJSON("publications.json").catch(() => null),
@@ -5516,6 +5587,9 @@ async function init() {
   syncUrl();
   appReady = true;
   initLoading = false;
+  // 첫 렌더가 끝난 **뒤에** 수집 원문을 받는다. 여기가 부팅에서 news.json 이
+  // 사라진 자리다 — 화면은 이미 서 있고, 도착하면 그 칸만 다시 그린다.
+  ensureNews().then(refreshNewsDependentViews);
   if (!generationTimer) generationTimer = window.setInterval(checkForNewGeneration, 60000);
 }
 
