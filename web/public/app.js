@@ -1765,6 +1765,8 @@ function renderV3(briefing = currentBriefing()) {
   }
   root.hidden = false;
   if (state.view === "trend") { renderV3Trend(root, briefing); return; }
+  if (state.view === "search") { renderV3Search(root); return; }
+  if (state.view === "report") { renderV3Report(root); return; }
   UI_V3.renderToday(root, briefing, {
     qa: state.uiQa,
     issues: briefingIssuesForDisplay(briefing),
@@ -1795,6 +1797,44 @@ function renderV3Trend(root, briefing) {
   });
 }
 
+// 탐색 탭. 판정은 전부 기존 함수가 한다 — archiveIssueMatches 가 필터를,
+// sortArchiveIssues 가 정렬을 맡는다. v3 가 더하는 것은 '오래 이어진 이슈' 하나이고,
+// 그 기준은 이슈 원장의 first_seen~last_seen 이다(threads.json 을 읽지 않는다).
+function v3ArchiveLanding() {
+  return !state.archiveQuery && !state.archiveEntity
+    && state.archiveRegion === "전체" && state.archiveTopic === "전체"
+    && state.archivePeriod === "all" && state.archiveVerification === "전체";
+}
+
+function renderV3Search(root) {
+  const landing = v3ArchiveLanding();
+  const matched = state.issues.filter(archiveIssueMatches);
+  const results = state.archiveSort === "span"
+    ? UI_V3.sortBySpan(matched)
+    : sortArchiveIssues(matched);
+  const chips = (state.entities?.entities || [])
+    .filter(entity => entity.issue_count > 0 || state.follows.has(entity.id))
+    .slice(0, 12)
+    .map(entity => ({ id: entity.id, label: entity.name_kr, count: entity.issue_count }));
+  const filterCount = [
+    state.archiveRegion !== "전체", state.archiveTopic !== "전체",
+    state.archivePeriod !== "all", state.archiveVerification !== "전체",
+  ].filter(Boolean).length;
+  UI_V3.renderSearch(root, {
+    landing, chips, query: state.archiveQuery, results,
+    total: matched.length, limit: state.archiveLimit,
+    sort: state.archiveSort, filterCount, qa: state.uiQa,
+  });
+}
+
+function renderV3Report(root) {
+  UI_V3.renderReport(root, {
+    picks: state.issues.filter(issue => (issue.report_pick || "").trim()).slice(0, 6),
+    pubs: (state.pubs?.items || []).slice(0, 20),
+    qa: state.uiQa,
+  });
+}
+
 // v3 의 목록 조작. 행 펼침은 ui-v3.js 가 제 안에서 처리하고, 여기 있는 것은
 // **화면 상태를 바꾸는 것**뿐이다 — 날짜 이동·탭 이동·시트 열기.
 function handleV3Action(event) {
@@ -1817,6 +1857,16 @@ function handleV3Action(event) {
   }
   const go = event.target.closest("[data-v3-go]");
   if (go) { switchView(go.dataset.v3Go); return true; }
+  const ent = event.target.closest("[data-v3-ent]");
+  if (ent) {
+    state.archiveEntity = ent.dataset.v3Ent;
+    state.archiveLimit = 20;
+    renderV3();
+    syncUrl();
+    return true;
+  }
+  const page = event.target.closest("[data-v3-page]");
+  if (page) { state.archiveLimit += 20; renderV3(); return true; }
   const audio = event.target.closest("[data-v3-audio]");
   if (audio) {
     const player = document.getElementById("audioBrief");
@@ -5255,6 +5305,23 @@ function bind() {
   document.getElementById("v3Root")?.addEventListener("click", event => {
     if (handleV3Action(event)) return;
     handleIssueAction(event);
+  });
+  // 검색과 정렬은 클릭이 아니라 submit·change 다. 컨테이너에 걸어 두면 목록이
+  // 다시 그려져도 살아 있다.
+  document.getElementById("v3Root")?.addEventListener("submit", event => {
+    const form = event.target.closest("[data-v3-search]");
+    if (!form) return;
+    event.preventDefault();
+    state.archiveQuery = normalizedSearch(form.elements.q.value);
+    state.archiveLimit = 20;
+    renderV3();
+    syncUrl();
+  });
+  document.getElementById("v3Root")?.addEventListener("change", event => {
+    const sort = event.target.closest("[data-v3-sort]");
+    if (!sort) return;
+    state.archiveSort = sort.value;
+    renderV3();
   });
   document.getElementById("clearRecentIssues")?.addEventListener("click", () => {
     try { localStorage.removeItem("nuclens-recent-issues"); } catch { /* 무해 */ }

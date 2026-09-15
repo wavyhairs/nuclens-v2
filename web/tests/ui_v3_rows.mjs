@@ -74,7 +74,9 @@ const api = new Function(`
   ${fromV3("v3PickToday")}
   ${fromV3("v3IssueSpanDays")}
   ${fromV3("v3SortBySpan")}
-  return { v3PickToday, v3IssueSpanDays, v3SortBySpan, v3Row, v3CardWhy, v3PriorReport, v3ChangeLabel, v3SheetBody,
+  ${fromV3("v3SearchHtml")}
+  ${fromV3("v3ReportHtml")}
+  return { v3PickToday, v3IssueSpanDays, v3SortBySpan, v3SearchHtml, v3ReportHtml, v3Row, v3CardWhy, v3PriorReport, v3ChangeLabel, v3SheetBody,
            v3TimelineItems, v3RelatedItems, v3Publisher, V3_CHANGE_LABELS };
 `)();
 
@@ -477,6 +479,63 @@ check("원본 배열을 바꾸지 않는다", () => {
   ];
   api.v3SortBySpan(issues);
   assert.deepEqual(issues.map(i => i.issue_id), ["a", "b"]);
+});
+
+// ── 탐색·보고서 (A5) ─────────────────────────────────────────────────────
+
+check("탐색 랜딩은 결과 목록을 그리지 않는다", () => {
+  const html = api.v3SearchHtml({ landing: true, chips: [{ id: "e1", label: "한빛 원전", count: 4 }] });
+  assert.ok(!html.includes("v3-rows"), "아무것도 묻지 않았는데 결과가 깔렸다");
+  assert.ok(html.includes("한빛 원전"));
+  assert.ok(html.includes("지금 많이 등장하는 대상"));
+});
+
+check("조건이 서면 결과를 plain 행으로 낸다", () => {
+  const results = [mk("a"), mk("b")];
+  const html = api.v3SearchHtml({ landing: false, results, total: 2, limit: 20 });
+  assert.ok(html.includes("검색 결과 2건"));
+  assert.ok(html.includes("v3-plain"), "plain 변형이 아니다");
+  assert.ok(!html.includes("v3-rank"));
+});
+
+check("20개씩 끊고 남은 수를 버튼에 적는다", () => {
+  const results = Array.from({ length: 45 }, (_, i) => mk("i" + i));
+  const html = api.v3SearchHtml({ landing: false, results, total: 45, limit: 20 });
+  assert.equal((html.match(/data-v3-issue=/g) || []).length, 20);
+  assert.ok(html.includes("25건 더 보기"));
+});
+
+check("'오래 이어진 이슈'가 정렬 목록에 있다", () => {
+  const html = api.v3SearchHtml({ landing: true, chips: [] });
+  assert.ok(html.includes('value="span"') && html.includes("오래 이어진 이슈"));
+});
+
+check("결과 0건은 빈 상태 문구를 낸다", () => {
+  const html = api.v3SearchHtml({ landing: false, results: [], total: 0 });
+  assert.ok(html.includes("조건에 맞는 이슈가 없습니다"));
+  assert.ok(!html.includes("data-v3-issue"));
+});
+
+check("보고 후보가 0건인 주에도 화면이 선다", () => {
+  const html = api.v3ReportHtml({ picks: [], pubs: [] });
+  assert.ok(html.includes("보고 후보로 분류된 이슈가 아직 없습니다"));
+  assert.ok(html.includes("연결된 발간물이 없습니다"));
+});
+
+check("발간물은 제목·발간기관·날짜 세 가지만 낸다", () => {
+  const html = api.v3ReportHtml({ picks: [], pubs: [
+    { title_kr: "원자력 안전 보고서", org_kr: "OECD 원자력기구(NEA)", date: "2026-09-01",
+      url: "https://example.com/r", gist: "이 문장은 목록에 안 나온다" },
+  ] });
+  assert.ok(html.includes("원자력 안전 보고서"));
+  assert.ok(html.includes("OECD 원자력기구(NEA)") && html.includes("9월 1일"));
+  assert.ok(!html.includes("이 문장은 목록에 안 나온다"), "요지까지 목록에 실렸다");
+  assert.ok(html.includes('href="https://example.com/r"'));
+});
+
+check("보고 후보 행에는 '보고 검토' 표시가 붙는다", () => {
+  const html = api.v3ReportHtml({ picks: [mk("p1", { report_pick: "원전 수출" })], pubs: [] });
+  assert.ok(html.includes("보고 검토"));
 });
 
 console.log(`\n${passed}건 전부 통과`);

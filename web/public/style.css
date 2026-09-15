@@ -3928,3 +3928,51 @@ body.ui-v3 .sr-only {
    통째로 접던 규칙에 예외가 하나 열린다. v3 자신은 #v3Root 를 숨겨 비킨다. */
 body.ui-v3.ui-v3-legacy #main > #view-longterm { display: block !important; }
 body.ui-v3.ui-v3-legacy #main { max-width: none; padding-inline: 0; }
+
+/* ── v3 탐색·보고서 (A5) ──────────────────────────────────────────────── */
+
+body.ui-v3 .v3-search { display: flex; gap: 8px; margin: 10px 0 8px; }
+body.ui-v3 .v3-search input {
+  flex: 1; min-height: 46px; padding: 0 12px; font: inherit; color: inherit;
+  background: var(--c-surface); border: 2px solid var(--c-border); border-radius: var(--r-1);
+}
+body.ui-v3 .v3-search button {
+  min-height: 46px; padding: 0 16px; font: inherit; font-weight: 600; cursor: pointer;
+  background: var(--c-primary); color: #fff; border: 2px solid var(--c-primary);
+  border-radius: var(--r-1);
+}
+body.ui-v3 .v3-searchbar { display: flex; gap: 8px; align-items: center; }
+body.ui-v3 .v3-filter { flex: 1; }
+body.ui-v3 .v3-filter > summary {
+  cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--c-border); background: var(--c-surface); border-radius: var(--r-1);
+  font-weight: 600;
+}
+body.ui-v3 .v3-filter > summary b {
+  margin-left: 6px; background: var(--c-signal); color: var(--c-signal-ink);
+  padding: 0 6px; font-size: .78rem;
+}
+body.ui-v3 .v3-sortsel { font-size: .8rem; color: var(--c-text-muted); display: grid; gap: 2px; }
+body.ui-v3 .v3-sortsel select {
+  min-height: 44px; font: inherit; color: inherit; background: var(--c-surface);
+  border: 2px solid var(--c-border); border-radius: var(--r-1); padding: 0 8px;
+}
+
+body.ui-v3 .v3-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+body.ui-v3 .v3-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px;
+  border: 2px solid var(--c-border); background: var(--c-surface); color: inherit;
+  font: inherit; cursor: pointer; border-radius: var(--r-1);
+}
+body.ui-v3 .v3-chip b { color: var(--c-accent-text); font-variant-numeric: tabular-nums; }
+
+/* 발간물 행은 통째로 링크다 — 2단이 없으므로 펼침 표시도 없다. */
+body.ui-v3 .v3-pubs .v3-face { text-decoration: none; }
+body.ui-v3 .v3-pick-why { font-size: .9rem; color: var(--c-text-secondary); }
+body.ui-v3 .v3-pick-why p { margin: 0 0 6px; line-height: 1.55; }
+body.ui-v3 .v3-pick-why b { display: block; font-size: .78rem; color: var(--c-text-muted); }
+body.ui-v3 .v3-angles { display: flex; flex-wrap: wrap; gap: 6px; }
+body.ui-v3 .v3-angles span {
+  font-size: .74rem; padding: 2px 8px; border: 1px solid var(--c-border);
+  background: var(--c-bg); border-radius: var(--r-1);
+}

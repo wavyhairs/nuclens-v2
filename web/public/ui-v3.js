@@ -423,6 +423,7 @@ function v3ParkAudio() {
 const V3_BORROWED = [
   "audioBrief", "trendTopicFlow", "eventCalendarUpcoming", "eventCalendarMonths",
   "trendReadiness", "trendData", "trendWordCloud", "eventCalendarGrid", "briefingTimeline",
+  "archiveFilterDrawer",
 ];
 
 function v3ParkAll() {
@@ -597,6 +598,123 @@ function v3RenderTrend(root, ctx = {}) {
   }
 }
 
+// ── 탐색 탭 ────────────────────────────────────────────────────────────────
+//
+// 구 화면은 조건이 하나도 없어도 결과 목록 9,133px 를 곧바로 깐다. 아무것도 묻지
+// 않았는데 답부터 쌓여 있는 셈이라, 첫 화면에서는 **묻는 자리만** 둔다.
+//
+// 랜딩 판정은 app.js 가 이미 갖고 있다(renderArchiveSearch 의 isLanding). 여기서
+// 같은 판정을 다시 세우면 두 화면이 서로 다른 순간에 허브를 접는다.
+function v3SearchHtml(ctx) {
+  const { landing, query = "", chips = [], results = [], total = 0, limit = 20,
+          sort = "updated", filterCount = 0 } = ctx;
+  const head = `
+  <div class="v3-hero">
+    <h1>탐색</h1>
+    <form class="v3-search" data-v3-search role="search">
+      <input type="search" name="q" value="${esc(query)}" placeholder="이슈·기관·설비 검색"
+             aria-label="이슈 검색" enterkeyhint="search">
+      <button type="submit">검색</button>
+    </form>
+    <div class="v3-searchbar">
+      <details class="v3-filter"><summary>필터${filterCount ? ` <b>${filterCount}</b>` : ""}</summary>
+        <div data-v3-slot="filters"></div>
+      </details>
+      <label class="v3-sortsel">정렬
+        <select data-v3-sort>
+          <option value="updated"${sort === "updated" ? " selected" : ""}>최근 갱신순</option>
+          <option value="span"${sort === "span" ? " selected" : ""}>오래 이어진 이슈</option>
+          <option value="tracked"${sort === "tracked" ? " selected" : ""}>추적 횟수순</option>
+          <option value="sources"${sort === "sources" ? " selected" : ""}>출처 수순</option>
+        </select>
+      </label>
+    </div>
+  </div>`;
+
+  if (landing) {
+    return `${head}
+    <section class="v3-block" aria-labelledby="v3HubTitle">
+      <h2 id="v3HubTitle">지금 많이 등장하는 대상</h2>
+      <div class="v3-chips">${chips.map(chip =>
+        `<button type="button" class="v3-chip" data-v3-ent="${esc(chip.id)}">${esc(chip.label)}<b>${Number(chip.count) || 0}</b></button>`).join("")
+        || `<p class="v3-sub">아직 연결된 대상이 없습니다.</p>`}</div>
+    </section>`;
+  }
+
+  const shown = results.slice(0, limit);
+  const more = Math.max(0, total - shown.length);
+  return `${head}
+  <section class="v3-block" aria-labelledby="v3ResultTitle">
+    <h2 id="v3ResultTitle">검색 결과 ${total}건</h2>
+    ${shown.length
+      ? `<ul class="v3-rows">${shown.map(issue => v3Row(issue, "plain")).join("")}</ul>
+         ${more ? `<button class="v3-showmore" type="button" data-v3-page>${more}건 더 보기</button>` : ""}`
+      : `<p class="v3-sub">조건에 맞는 이슈가 없습니다. 필터를 줄여 보세요.</p>`}
+  </section>`;
+}
+
+function v3RenderSearch(root, ctx = {}) {
+  v3ParkAll();
+  root.innerHTML = v3SearchHtml(ctx);
+  v3WireRows(root);
+  // 필터 상자는 구 골격의 것을 빌린다 — select 넷과 그 리스너를 다시 만들면
+  // 같은 필터가 두 벌이 되고, 한쪽만 고치는 날이 온다.
+  v3Place(root, '[data-v3-slot="filters"]', "archiveFilterDrawer");
+}
+
+// ── 보고서 탭 ──────────────────────────────────────────────────────────────
+//
+// 보고 후보는 plain 행에 '보고 검토' 표시를 붙이고, 2단에 사유(report_pick_why)와
+// 각도(report_pick_angles)를 더한다. 발간물은 제목·발간기관·날짜 세 줄이면 족하다.
+function v3ReportHtml(ctx) {
+  const { picks = [], pubs = [] } = ctx;
+  return `
+  <div class="v3-hero"><h1>보고서</h1></div>
+
+  <section class="v3-block" aria-labelledby="v3PickTitle">
+    <h2 id="v3PickTitle">이번 주 보고 후보</h2>
+    ${picks.length
+      ? `<ul class="v3-rows">${picks.map(issue => v3Row(issue, "plain")).join("")}</ul>`
+      : `<p class="v3-sub">보고 후보로 분류된 이슈가 아직 없습니다. 생기면 근거와 함께 여기 섭니다.</p>`}
+  </section>
+
+  <section class="v3-block" aria-labelledby="v3PubTitle">
+    <h2 id="v3PubTitle">참고 발간물${pubs.length ? ` ${pubs.length}건` : ""}</h2>
+    ${pubs.length
+      ? `<ul class="v3-rows v3-pubs">${pubs.map(item => {
+          const url = safeUrl(item.url || "");
+          const title = String(item.title_kr || item.title || "").trim();
+          const org = String(item.org_kr || item.org || "").trim();
+          const meta = [org, item.date ? dateLabel(item.date) : ""].filter(Boolean).join(" · ");
+          const body = `<span class="v3-title">${esc(title)}</span>${meta ? `<span class="v3-rg">${esc(meta)}</span>` : ""}`;
+          return `<li class="v3-row">${url
+            ? `<a class="v3-face" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${body}</a>`
+            : `<div class="v3-face">${body}</div>`}</li>`;
+        }).join("")}</ul>`
+      : `<p class="v3-sub">연결된 발간물이 없습니다.</p>`}
+  </section>`;
+}
+
+function v3RenderReport(root, ctx = {}) {
+  v3ParkAll();
+  root.innerHTML = v3ReportHtml(ctx);
+  v3WireRows(root);
+  // 보고 후보의 2단에만 붙는 두 줄. 행 컴포넌트를 변형으로 늘리지 않고 여기서
+  // 덧댄다 — '보고 검토'는 보고서 탭 한 곳의 사정이다.
+  (ctx.picks || []).forEach(issue => {
+    const why = String(issue.report_pick_why || "").trim();
+    const angles = (issue.report_pick_angles || []).slice(0, 3);
+    if (!why && !angles.length) return;
+    const panel = root.querySelector(`[data-v3-issue="${CSS.escape(issue.issue_id)}"] .v3-panel`);
+    if (!panel) return;
+    const extra = document.createElement("div");
+    extra.className = "v3-pick-why";
+    extra.innerHTML = `${why ? `<p><b>보고 관점</b>${esc(why)}</p>` : ""}
+      ${angles.length ? `<div class="v3-angles">${angles.map(a => `<span>${esc(a)}</span>`).join("")}</div>` : ""}`;
+    panel.insertBefore(extra, panel.querySelector(".v3-actions"));
+  });
+}
+
 // ── 3단 시트 (DOM) ────────────────────────────────────────────────────────
 //
 // 주소·뒤로가기·포커스 복귀는 **새로 만들지 않는다.** app.js 의 issueId 배선
@@ -687,11 +805,15 @@ const UI_V3 = {
   STRINGS: UI_V3_STRINGS,
   renderToday: v3RenderToday,
   renderTrend: v3RenderTrend,
+  renderSearch: v3RenderSearch,
+  renderReport: v3RenderReport,
   pickToday: v3PickToday,
   sortBySpan: v3SortBySpan,
   issueSpanDays: v3IssueSpanDays,
   todayHtml: v3TodayHtml,
   trendHtml: v3TrendHtml,
+  searchHtml: v3SearchHtml,
+  reportHtml: v3ReportHtml,
   openSheet: v3OpenSheet,
   closeSheet: v3CloseSheet,
   sheetOpen: v3SheetOpen,
