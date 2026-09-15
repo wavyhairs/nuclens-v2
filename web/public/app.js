@@ -208,6 +208,47 @@ function refreshNewsDependentViews() {
   if (state.view === "trend" && document.getElementById("trendReadiness")) renderTrendReadiness();
 }
 
+// ── v3 선행 렌더 (today.json) ─────────────────────────────────────────────
+//
+// 부팅이 기다리는 JSON 이 압축 전 합계 37 MB 인데, 첫 화면이 실제로 쓰는 것은 최신
+// 회차 하루치와 그 이슈들뿐이다. today.json 은 그 한 벌이고 gzip 38 KB 다.
+//
+// **추가 산출물이라 기존 경로는 그대로 돈다.** 이 함수가 하는 일은 본 데이터가
+// 오기 전에 오늘 화면을 한 번 세우는 것뿐이고, 곧이어 평소의 Promise.all 이
+// 끝나면 같은 화면이 온전한 데이터로 다시 그려진다.
+//
+// 파일이 없거나 깨져도 아무 일이 없다 — 그냥 평소 속도로 뜬다(8/1 빈 화면 사고 계약).
+function v3Requested() {
+  return new URLSearchParams(location.search).get("ui") === "v3";
+}
+
+async function v3FirstPaint() {
+  const today = await loadJSON("today.json").catch(() => null);
+  if (!today?.date || !Array.isArray(today.issues)) return false;
+  const params = new URLSearchParams(location.search);
+  const wantedDate = briefDateFromLocation() || params.get("date") || "";
+  // 과거 회차를 달라는 주소면 선행 렌더를 건너뛴다. 그 날짜의 이슈가 이
+  // 페이로드에 없어서 "브리핑이 없습니다"를 한 번 보여 줬다가 뒤집게 된다.
+  if (wantedDate && wantedDate !== today.date) return false;
+  // 딥링크로 시트를 여는 주소도 마찬가지 — 그 이슈가 오늘 회차 밖일 수 있다.
+  if (issueIdFromLocation() || params.get("issue")) return false;
+
+  // 날짜 목록은 **회차 껍데기**로 세운다. briefingDates()·currentBriefing() 이
+  // 그대로 돌아 날짜 이동 칸이 첫 화면부터 살아 있다. 본 데이터가 오면 통째로
+  // 갈린다.
+  state.briefings = (today.dates || [today.date]).map(date =>
+    date === today.date
+      ? { ...today.briefing, date, issues: today.issues }
+      : { date, issues: [] });
+  state.issues = today.issues;
+  state.meta = today.meta || {};
+  state.briefingDate = today.date;
+  restoreUrlState();
+  if (state.view !== "news") return false;
+  renderBriefing();
+  return true;
+}
+
 async function initializeDataBase() {
   if (initRetryCount > 0) {
     state.manifest = null;
@@ -5736,6 +5777,8 @@ async function init() {
   initLoading = true;
   try {
     await initializeDataBase();
+    // v3 는 하루치 한 벌로 오늘 화면을 먼저 세운다. 실패해도 아래가 평소대로 돈다.
+    if (v3Requested()) await v3FirstPaint().catch(() => false);
     // news.json 은 여기 없다 — `ensureNews()` 가 첫 렌더 뒤에 받는다(정의부 주석).
     [state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities, state.threads] = await Promise.all([
       loadJSON("briefings.json"), loadJSON("issues.json"),

@@ -3710,6 +3710,65 @@ def finalize_card_fields(rows: list[dict]) -> None:
         row["card_why"] = why
 
 
+# 첫 화면 페이로드에서 빼는 필드. **어느 화면도 읽지 않는 감사·진단값**만 고른다
+# (app.js·ui-v3.js 전수 검색 0건). 화면이 쓰는 필드를 여기 넣으면 본 데이터가
+# 도착하기 전 그 짧은 창에서만 칸이 비는, 재현이 어려운 증상이 된다.
+#
+# issues.json 에서는 그대로 나간다 — 이 목록은 today.json 한 곳에만 적용된다.
+TODAY_DROP_FIELDS = frozenset({
+    "identity_diagnostics", "identity_evidence", "identity_merged_from",
+    "identity_split_from", "legacy_issue_id",
+    "story_members", "story_article_hashes", "story_related_titles",
+    "story_sources", "story_context", "story_reason", "story_dedup_stage",
+})
+
+
+def _today_issue(row: dict) -> dict:
+    return {key: value for key, value in row.items() if key not in TODAY_DROP_FIELDS}
+
+
+def build_today_payload(briefings: list[dict], issue_catalog: list[dict],
+                        meta: dict) -> dict:
+    """첫 화면 한 벌 → today.json. **추가 산출물이고 기존 11종은 그대로 나간다.**
+
+    왜 있는가
+    ---------
+    부팅이 기다리는 JSON 이 압축 전 합계 37 MB 다. 그중 첫 화면이 실제로 쓰는 것은
+    최신 회차 하루치와 그 이슈들뿐이다. 실측(2026-09-13, 이슈 13건): 이 페이로드는
+    raw 370 KB · gzip 38 KB 로 briefings.json 하나의 3% 다.
+
+    새 필드를 만들지 않는다 — 이미 지은 두 산출물에서 **잘라 담기만** 한다.
+    여기서 값을 새로 계산하면 같은 이슈를 두 파일이 다르게 말하는 날이 온다.
+
+    이슈 레코드는 **카탈로그(issue_catalog)** 에서 가져온다. briefings 안에 내장된
+    같은 이슈는 그 회차 시점의 related_articles 를 들고 있어(실측 734건 중 449건
+    불일치, 최대 1 vs 54) 상세의 타임라인이 조용히 잘린다. 화면도 최신 회차에서는
+    카탈로그를 쓴다(briefingIssuesForDisplay).
+
+    `dates` 를 함께 싣는 이유: 날짜 이동 칸이 briefings.json 없이도 서야 한다.
+    이 목록이 없으면 첫 화면에 이전/다음 버튼이 죽은 채로 잠깐 서 있다.
+    """
+    if not briefings:
+        return {"date": "", "dates": [], "briefing": {}, "issues": [], "meta": {}}
+    latest = briefings[0]
+    by_id = {row.get("issue_id"): row for row in issue_catalog}
+    ids = [row.get("issue_id") for row in (latest.get("issues") or [])]
+    issues = [_today_issue(by_id[key]) for key in ids if key in by_id]
+    # 카탈로그에 없는 이슈(그 회차에만 있던 스냅샷)는 브리핑 레코드로 메운다 —
+    # 빠뜨리면 그 이슈만 첫 화면에서 사라졌다가 본 데이터가 오면 나타난다.
+    missing = [_today_issue(row) for row in (latest.get("issues") or [])
+               if row.get("issue_id") not in by_id]
+    issues.extend(missing)
+    return {
+        "date": latest.get("date", ""),
+        # 최신순. 화면의 briefingDates() 와 같은 순서여야 이전/다음이 같은 방향으로 간다.
+        "dates": [row.get("date", "") for row in briefings],
+        "briefing": {key: value for key, value in latest.items() if key != "issues"},
+        "issues": issues,
+        "meta": meta,
+    }
+
+
 def _is_primary_source(article: dict) -> bool:
     return article.get("evidence_role") == "primary" or article.get("source_tier") == 1
 
@@ -7270,6 +7329,7 @@ def build() -> None:
     ADMIN_OUT_DIR.mkdir(parents=True, exist_ok=True)
     shipped_audit = shipped_issue_audit(issue_audit)
     outputs = (
+        ("today.json", build_today_payload(briefings, issue_catalog, meta)),
         ("news.json", news_items),
         ("briefings.json", briefings),
         ("issues.json", issue_catalog),
