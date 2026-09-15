@@ -3853,8 +3853,8 @@ def pick_open_question(members: list[dict]) -> str:
     return ""
 
 
-def pick_detail(members: list[dict], representative: dict) -> tuple[str, str]:
-    """이슈 상세에 실을 기사 요지와 그 출처 기사 제목.
+def pick_detail(members: list[dict], representative: dict) -> tuple[str, str, str]:
+    """이슈 상세에 실을 기사 요지와 그 출처 기사의 제목·해시.
 
     대표 기사만 보면 안 된다 — 본문 수집은 매체마다 성패가 갈려서(실측 성공률 85%,
     Reuters·FT 는 봇 차단으로 0%) 대표 기사에만 요지가 없는 경우가 흔하다.
@@ -3864,13 +3864,20 @@ def pick_detail(members: list[dict], representative: dict) -> tuple[str, str]:
     `members` 는 **카드 멤버만** 넣는다. 근거 기사(`evidence_members`)는 관련기사
     목록과 검증에만 쓰이고 대표 설명으로 승격되지 않는다 — 범위는 호출부가 정하고
     `build_issue_catalog` 주석에 실측이 있다.
+
+    제목과 **함께 해시를 돌려준다.** 제목은 화면에 보일 문자열이지 신원이 아니다 —
+    서로 다른 기사가 같은 한국어 제목을 받는 일이 실제로 있다(실측 530건 중 7건에서
+    카드와 근거가 제목을 공유한다. 해시가 겹치는 이슈는 0건이므로 정말 다른 기사다).
+    그래서 "이 요지가 어느 기사에서 왔나"를 제목으로 되물으면 엉뚱한 기사를 가리킨다.
+    이 저장소는 같은 결론에 이미 닿아 있다 — `issue_change_log`: "제목은 표시용
+    문자열이지 신원이 아니다… 판정 재료는 기사 해시뿐이다".
     """
     # 출처 표기는 **대표 기사가 아닐 때만** 의미가 있다. 대표 기사면 그 제목이
     # 바로 위 h2 라서 같은 문장을 두 번 쓰는 꼴이 된다("대다수가 다는 표시는
     # 신호가 아니다"는 이 저장소의 기존 원칙).
     representative_detail = usable_detail(representative)
     if representative_detail:
-        return representative_detail, ""
+        return representative_detail, "", ""
 
     def newest_first(member: dict) -> tuple:
         # _representative_key 는 중요도·점수가 앞이라 날짜가 뒤로 밀린다. 여기서
@@ -3880,8 +3887,10 @@ def pick_detail(members: list[dict], representative: dict) -> tuple[str, str]:
     for member in sorted(members, key=newest_first, reverse=True):
         detail = usable_detail(member)
         if detail:
-            return detail, str(member.get("title_kr") or member.get("title") or "")
-    return "", ""
+            return (detail,
+                    str(member.get("title_kr") or member.get("title") or ""),
+                    str(member.get("hash") or ""))
+    return "", "", ""
 
 
 def verification_state(articles: list[dict], checked_at: str = "") -> dict:
@@ -4751,7 +4760,7 @@ def build_briefings(news_items: list[dict], issues: list[dict], checked_at: str 
                 current, history,
                 card_visible_text(representative["title_kr"], implication, why_important),
             )
-            issue_detail, issue_detail_source = pick_detail(timeline, representative)
+            issue_detail, issue_detail_source, issue_detail_hash = pick_detail(timeline, representative)
             report_topic, report_why, report_angles = pick_report_metadata(current)
             issue_rows.append({
                 "issue_id": issue["issue_id"],
@@ -4771,6 +4780,9 @@ def build_briefings(news_items: list[dict], issues: list[dict], checked_at: str 
                 "summary": representative.get("summary", ""),
                 "detail": issue_detail,
                 "detail_source": issue_detail_source,
+                # 출처의 **신원**. detail_source 는 화면에 보일 제목이고, 같은 제목을
+                # 받은 다른 기사가 있을 수 있어 그것으로는 기사를 되찾을 수 없다.
+                "detail_source_hash": issue_detail_hash,
                 "implication": implication,
                 "why_important": why_important,
                 # 대표 기사와 **같은 기사**에서 온 한 줄이어야 한다. 서로 다른
@@ -5023,7 +5035,7 @@ def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_a
         # 본문이 다른 사건을 말하는 조합이 되고, 그것은 요지가 없는 것보다 나쁘다.
         # (`verification`·`article_count` 는 그대로 all_timeline 을 센다 — 검증은
         # 근거를 함께 세는 것이 맞다.)
-        archive_detail, archive_detail_source = pick_detail(card_timeline, representative)
+        archive_detail, archive_detail_source, archive_detail_hash = pick_detail(card_timeline, representative)
         report_topic, report_why, report_angles = pick_report_metadata(card_timeline)
         rows.append({
             "issue_id": issue["issue_id"],
@@ -5045,6 +5057,7 @@ def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_a
             "summary": representative.get("summary", ""),
             "detail": archive_detail,
             "detail_source": archive_detail_source,
+            "detail_source_hash": archive_detail_hash,
             "implication": implication,
             "why_important": why_important,
             "why_short": representative.get("why_short", ""),
