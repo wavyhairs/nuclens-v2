@@ -468,6 +468,32 @@ function v3RenderToday(root, briefing, options = {}) {
   }
 }
 
+// ── 오래 이어진 이슈 ──────────────────────────────────────────────────────
+//
+// 장기 스토리 탭이 v3 에서 내려가면서 "오래 끌고 있는 이슈"를 찾을 길이 하나
+// 없어진다. 그 자리를 탐색 탭의 정렬 하나가 맡는다.
+//
+// 기준은 이슈 원장의 first_seen~last_seen 이다. threads.json 을 읽지 않는다 —
+// 두 엔진이 같은 질문에 다른 답을 하는 상태(§C-2-1)를 화면이 물려받지 않게 한다.
+function v3IssueSpanDays(issue) {
+  const from = String(issue?.first_seen || "");
+  const to = String(issue?.last_seen || "");
+  if (!from || !to) return 0;
+  const start = Date.parse(`${from}T00:00:00Z`);
+  const end = Date.parse(`${to}T00:00:00Z`);
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return 0;
+  return Math.round((end - start) / 86400000) + 1;
+}
+
+function v3SortBySpan(issues) {
+  return issues.slice().sort((a, b) =>
+    v3IssueSpanDays(b) - v3IssueSpanDays(a)
+    // 같은 기간이면 회차가 많은 쪽 — '오래'는 달력 길이만이 아니라 몇 번
+    // 다뤘는가이기도 하다. 그것도 같으면 최근 것.
+    || (b.tracked_briefings || 0) - (a.tracked_briefings || 0)
+    || String(b.last_seen || "").localeCompare(String(a.last_seen || "")));
+}
+
 // ── 흐름 탭 ────────────────────────────────────────────────────────────────
 //
 // 구 화면은 12개 구역이 같은 내용을 여러 방식으로 되풀이한다 — 주제 추이가 4주
@@ -662,6 +688,8 @@ const UI_V3 = {
   renderToday: v3RenderToday,
   renderTrend: v3RenderTrend,
   pickToday: v3PickToday,
+  sortBySpan: v3SortBySpan,
+  issueSpanDays: v3IssueSpanDays,
   todayHtml: v3TodayHtml,
   trendHtml: v3TrendHtml,
   openSheet: v3OpenSheet,

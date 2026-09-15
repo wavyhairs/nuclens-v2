@@ -1755,6 +1755,14 @@ function placeTodayAgenda() {
 function renderV3(briefing = currentBriefing()) {
   const root = document.getElementById("v3Root");
   if (!root) return;
+  // 장기 스토리 딥링크는 v3 가 비킨다. body 클래스 하나로 구 골격을 도로 편다 —
+  // CSS 가 #main > section 을 통째로 접고 있으므로 예외를 거기서 푼다.
+  document.body.classList.toggle("ui-v3-legacy", v3LegacyView());
+  if (v3LegacyView()) {
+    root.hidden = true;
+    renderLongTerm();
+    return;
+  }
   root.hidden = false;
   if (state.view === "trend") { renderV3Trend(root, briefing); return; }
   UI_V3.renderToday(root, briefing, {
@@ -4687,11 +4695,22 @@ function renderLongTerm() {
 // 탭은 데이터가 살아 있을 때만 크롬에 걸린다. 빈 화면으로 가는 탭을 남기면
 // 사용자는 그것을 고장으로 읽는다.
 function syncLongTermChrome() {
-  const ready = longTermReady();
+  // v3 에서는 탭을 내린다. 이슈의 흐름은 3단 시트의 타임라인이 맡는다.
+  //
+  // 탭만 내리고 화면은 살려 둔다 — 이미 공유된 `?view=longterm&th=` 링크가
+  // v3 에서 죽으면 안 된다. 그 주소로 들어오면 v3 는 비키고 기존 화면이 그대로
+  // 선다(renderV3 의 legacy 분기). threads.json 과 그 판정 코드는 손대지 않는다.
+  const ready = longTermReady() && state.ui !== "v3";
   document.querySelectorAll('[data-view="longterm"]').forEach(button => {
     button.hidden = !ready;
   });
-  if (!ready && state.view === "longterm") switchView("news");
+  if (!longTermReady() && state.view === "longterm") switchView("news");
+}
+
+// v3 가 아직 제 화면을 갖지 않은 뷰. 여기서는 v3 가 비키고 구 골격이 선다 —
+// 링크를 깨뜨리지 않으려고 남겨 둔 통로이지 v3 의 화면이 아니다.
+function v3LegacyView() {
+  return state.view === "longterm";
 }
 
 function openThread(threadId, updateUrl = true) {
@@ -5686,6 +5705,9 @@ async function init() {
   state.briefingDate = state.meta.latest_briefing_date || state.briefings[0]?.date || "";
   syncLongTermChrome();
   restoreUrlState();
+  // 한 번 더 부른다. 위의 호출은 state.ui 가 정해지기 **전**이라 v3 규칙(장기 탭을
+  // 내린다)을 적용할 수 없다. 멱등이므로 구 경로에서는 같은 답을 두 번 낼 뿐이다.
+  syncLongTermChrome();
   renderTopicSelects();
   document.getElementById("topicSel").value = state.topic;
   document.getElementById("archiveRegion").value = state.archiveRegion;

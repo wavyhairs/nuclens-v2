@@ -72,7 +72,9 @@ const api = new Function(`
   ${fromV3("v3Outlets")}
   ${fromV3("v3SheetBody")}
   ${fromV3("v3PickToday")}
-  return { v3PickToday, v3Row, v3CardWhy, v3PriorReport, v3ChangeLabel, v3SheetBody,
+  ${fromV3("v3IssueSpanDays")}
+  ${fromV3("v3SortBySpan")}
+  return { v3PickToday, v3IssueSpanDays, v3SortBySpan, v3Row, v3CardWhy, v3PriorReport, v3ChangeLabel, v3SheetBody,
            v3TimelineItems, v3RelatedItems, v3Publisher, V3_CHANGE_LABELS };
 `)();
 
@@ -431,6 +433,50 @@ check("'진행 중 이슈의 변화'는 change_kind === \"change\" 만 세운다
   assert.ok(rest.map(i => i.issue_id).includes("prev"),
     "change_kind=previous 가 '오늘의 변화'로 올라갔다");
   assert.ok(rest.map(i => i.issue_id).includes("new"), "status=new 가 진행 중으로 올라갔다");
+});
+
+// ── 오래 이어진 이슈 (A4) ────────────────────────────────────────────────
+//
+// 장기 스토리 탭이 v3 에서 내려가면서 "오래 끌고 있는 이슈"를 찾을 길이 하나
+// 없어진다. 그 자리를 이 정렬이 맡는다. 기준은 이슈 원장의 first_seen~last_seen
+// 이고 threads.json 은 읽지 않는다 — 두 엔진이 같은 질문에 다른 답을 하는 상태를
+// 화면이 물려받지 않게 한다(§C-2-1).
+
+check("기간은 양끝 포함으로 센다", () => {
+  assert.equal(api.v3IssueSpanDays({ first_seen: "2026-09-13", last_seen: "2026-09-13" }), 1);
+  assert.equal(api.v3IssueSpanDays({ first_seen: "2026-09-01", last_seen: "2026-09-13" }), 13);
+});
+
+check("날짜가 없거나 뒤집히면 0 — 정렬이 폭발하지 않는다", () => {
+  assert.equal(api.v3IssueSpanDays({}), 0);
+  assert.equal(api.v3IssueSpanDays({ first_seen: "2026-09-13", last_seen: "2026-09-01" }), 0);
+  assert.equal(api.v3IssueSpanDays({ first_seen: "엉터리", last_seen: "2026-09-01" }), 0);
+});
+
+check("오래 이어진 순으로 선다", () => {
+  const issues = [
+    { issue_id: "짧음", first_seen: "2026-09-12", last_seen: "2026-09-13" },
+    { issue_id: "긺", first_seen: "2026-08-01", last_seen: "2026-09-13" },
+    { issue_id: "중간", first_seen: "2026-09-01", last_seen: "2026-09-13" },
+  ];
+  assert.deepEqual(api.v3SortBySpan(issues).map(i => i.issue_id), ["긺", "중간", "짧음"]);
+});
+
+check("기간이 같으면 회차가 많은 쪽이 앞", () => {
+  const issues = [
+    { issue_id: "a", first_seen: "2026-09-01", last_seen: "2026-09-10", tracked_briefings: 2 },
+    { issue_id: "b", first_seen: "2026-09-01", last_seen: "2026-09-10", tracked_briefings: 5 },
+  ];
+  assert.deepEqual(api.v3SortBySpan(issues).map(i => i.issue_id), ["b", "a"]);
+});
+
+check("원본 배열을 바꾸지 않는다", () => {
+  const issues = [
+    { issue_id: "a", first_seen: "2026-09-12", last_seen: "2026-09-13" },
+    { issue_id: "b", first_seen: "2026-08-01", last_seen: "2026-09-13" },
+  ];
+  api.v3SortBySpan(issues);
+  assert.deepEqual(issues.map(i => i.issue_id), ["a", "b"]);
 });
 
 console.log(`\n${passed}건 전부 통과`);
