@@ -262,6 +262,16 @@ jobs:
       - name: Admin console renders in a real browser
         run: node web/tests/admin_dom.mjs
 
+      # 화면 부피 예산. 지금의 구 화면은 이미 세 번 줄인 결과다(2026-08-03 모바일
+      # 감사 · 08-05 에디토리얼 개편 · PHASE_PLAN S4) — 매번 줄었다가 다시 불었다.
+      # 줄었다는 사실을 PR 설명의 표에만 적으면 다음 사람은 그 표를 읽지 않는다.
+      # 그래서 숫자를 CI 가 든다. 예산을 넘겨야 할 변경이면 ui_budget.mjs 의 값을
+      # 함께 고치게 되고, 그때 왜인지 적힌다.
+      #
+      # admin_dom.mjs 와 같은 길이라 새 의존성이 없다(러너 이미지의 크롬).
+      - name: UI size budget (v3)
+        run: node web/tests/ui_budget.mjs
+
       # 데이터 지표 게이트는 끈다. 추적률은 "오늘 뉴스가 어떻게 묶였나"의 결과지
       # 화면 코드의 성질이 아니다 — 켜 두면 뉴스가 한산한 날 CSS 오타 수정도
       # 배포가 막힌다(2026-08-03 실측: 추적률 0.125 로 이 워크플로 첫 실행이 실패).
