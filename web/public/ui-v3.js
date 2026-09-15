@@ -341,13 +341,24 @@ function v3PickToday(briefing, issues) {
   return { top, changed, rest };
 }
 
+// 한 화면에 세우는 행의 상한. 이것이 없으면 바쁜 날 화면이 끝없이 길어진다 —
+// '줄인 화면'이라는 말이 그날 이슈 수에 따라 참이 되었다 거짓이 되었다 한다.
+//
+// 실측으로 드러났다: 9/13 스냅샷(13건)에서는 2,230px 였는데 배포일 데이터에서는
+// 2,642px 로 예산(2,500)을 넘겼다. 늘어난 것은 전부 '진행 중 이슈의 변화'였고,
+// 그 섹션만 상한이 없었다.
+//
+// 3 + 5 + 5 = 13행이 상한이고, 그것이 곧 2,230px 였던 그 화면이다. 감춘 것은
+// 지우지 않는다 — '더 보기'로 그 자리에서 펼친다.
 const V3_REST_VISIBLE = 5;
+const V3_CHANGED_VISIBLE = 5;
 
 function v3TodayHtml(briefing, issues, options = {}) {
   const { top, changed, rest } = v3PickToday(briefing, issues);
   const dates = options.dates || [];
   const index = dates.indexOf(briefing?.date);
   const restHidden = Math.max(0, rest.length - V3_REST_VISIBLE);
+  const changedHidden = Math.max(0, changed.length - V3_CHANGED_VISIBLE);
   return `
   <div class="v3-hero">
     <div class="v3-date">
@@ -369,7 +380,9 @@ function v3TodayHtml(briefing, issues, options = {}) {
   ${changed.length ? `<section class="v3-block" aria-labelledby="v3ChangedTitle">
     <h2 id="v3ChangedTitle">${UI_V3_STRINGS.changedTitle}</h2>
     <p class="v3-sub">${UI_V3_STRINGS.changedSub}</p>
-    <ul class="v3-rows">${changed.map(issue => v3Row(issue, "change")).join("")}</ul>
+    <ul class="v3-rows">${changed.map((issue, i) =>
+      v3Row(issue, "change", i).replace("<li ", i >= V3_CHANGED_VISIBLE ? '<li hidden ' : "<li ")).join("")}</ul>
+    ${changedHidden ? `<button class="v3-showmore" type="button" data-v3-more="changed">${UI_V3_STRINGS.showMore(changedHidden)}</button>` : ""}
   </section>` : ""}
 
   ${rest.length ? `<section class="v3-block" aria-labelledby="v3RestTitle">
