@@ -1,46 +1,6 @@
 {
- "generated_at": "2026-09-13T00:33:25+09:00",
+ "generated_at": "2026-09-15T00:46:23+09:00",
  "events": [
-  {
-   "id": "of-fa1734290fe2",
-   "date": "2026-08-31",
-   "end_date": "2026-08-31",
-   "kind": "point",
-   "time": "10:00",
-   "label": "AI시대의 데이터센터 건설산업 육성과 공급전략 국회 세미나",
-   "host": "박덕흠·유의동·복기왕·정동만 의원실",
-   "organizer": "박덕흠·유의동·복기왕·정동만 의원실",
-   "place": "국회도서관 대강당",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "AI시대의 데이터센터 건설산업 육성과 공급전략 국회 세미나",
-   "first_seen": "2026-08-29",
-   "topics": [
-    "datacenter_ai"
-   ],
-   "relevance": "데이터센터",
-   "significance": "세미나"
-  },
-  {
-   "id": "of-67498bbddb65",
-   "date": "2026-08-31",
-   "end_date": "2026-08-31",
-   "kind": "point",
-   "time": "14:00~16:00",
-   "label": "청정수소 구현을 위한 원전수소 역할과 위상 정책 세미나",
-   "host": "정태호 의원실, 국회수소경제포럼",
-   "organizer": "정태호 의원실, 국회수소경제포럼",
-   "place": "의원회관 신관 제3세미나실",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "청정수소 구현을 위한 원전수소 역할과 위상 정책 세미나",
-   "first_seen": "2026-08-29",
-   "topics": [],
-   "relevance": "원전",
-   "significance": "세미나"
-  },
   {
    "id": "of-2e6b1d697819",
    "date": "2026-09-02",
@@ -507,7 +467,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-09-13T00:33:25+09:00",
+   "at": "2026-09-15T00:46:23+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -515,7 +475,7 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-09-13T00:33:25+09:00",
+   "at": "2026-09-15T00:46:23+09:00",
    "ok": true,
    "parsed": 11,
    "kept": 2,
@@ -526,7 +486,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-09-13T00:33:25+09:00",
+   "at": "2026-09-15T00:46:23+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -539,7 +499,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-09-13T00:33:25+09:00",
+   "at": "2026-09-15T00:46:23+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -547,27 +507,21 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-09-13T00:33:25+09:00",
-   "ok": true,
-   "parsed": 78,
-   "kept": 4,
-   "new": 2,
-   "dropped": {
-    "no_interest_match": 73,
-    "not_an_event": 1
-   }
+   "at": "2026-09-15T00:46:23+09:00",
+   "ok": false,
+   "error": "ConnectTimeout: HTTPSConnectionPool(host='www.assembly.go.kr', port=443): Max retries exceeded with url: /portal/noti/seminar/scheduleSmn.do?menuNo=600102 (Caused by ConnectTimeoutError(<HTTPSConnecti"
   },
   "kpx_notice": {
-   "at": "2026-09-13T00:33:25+09:00",
+   "at": "2026-09-15T00:46:23+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 1,
    "new": 1,
    "dropped": {
+    "no_interest_match": 6,
     "low_significance": 2,
     "no_event_date": 5,
     "not_an_event": 5,
-    "no_interest_match": 6,
     "unreadable_event_date": 1
    }
   }
