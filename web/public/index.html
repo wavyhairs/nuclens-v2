@@ -91,6 +91,10 @@
 </header>
 
 <main id="main" class="wrap page-shell" tabindex="-1">
+  <!-- 화면 v3 가 그리는 자리. 플래그가 없으면 이 칸은 비어 있고 CSS 로도 숨어
+       있어(style.css의 #v3Root) 기존 화면에 아무 영향이 없다. v3 일 때는 반대로
+       이 칸만 남고 아래 골격 전체가 body.ui-v3 아래에서 접힌다. -->
+  <div id="v3Root" hidden></div>
   <section id="view-news" aria-labelledby="briefingTitle">
     <!-- 히어로 전체가 aria-live 였다. 안에 칩·버튼이 다 들어 있어 날짜를 한 칸
          옮길 때마다 스크린리더가 블록 전체를 다시 읽었다. 바뀌는 것은 헤드라인
@@ -304,7 +308,7 @@
              있을 이유가 없다. 흐름 탭으로 가는 길은 상단 내비게이션이 갖고 있다
              (index.html 의 data-go-view="trend"). -->
 
-        <details class="feed-drawer">
+        <details class="feed-drawer" id="feedDrawer">
           <summary><span id="feedLabel">오늘 수집한 원문</span><small id="feedTitle"></small></summary>
           <div id="newsList" class="news-list"></div>
         </details>
@@ -701,6 +705,10 @@
   <div class="wrap foot-bottom"><p>Nuclens는 제목·요약·출처 링크만 제공합니다.</p><p id="footerStatus">서비스 상태 확인 중</p></div>
 </footer>
 
+<!-- 화면 v3 (?ui=v3). app.js **앞에** 온다 — app.js 가 분기에서 UI_V3 를 부르는데
+     뒤에 두면 그 상수가 app.js 파싱 시점에 아직 없다. 반대 방향 의존(v3 가 쓰는
+     esc·dateLabel·TOPIC_LABELS)은 전부 함수 안에서 참조하므로 호출 시점에 이미 있다. -->
+<script src="/ui-v3.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

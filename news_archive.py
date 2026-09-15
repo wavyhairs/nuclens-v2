@@ -220,6 +220,9 @@ def make_record(article: dict, cur: dict, archived_at: str) -> dict:
         "detail": cur.get("detail", ""),
         "implication": cur.get("implication", ""),
         "why_important": cur.get("why_important", ""),
+        # 목록 한 줄용. 여기 없으면 아카이브에 안 남고 웹에서도 영영 못 본다
+        # (why_important 가 같은 이유로 유실됐던 전례).
+        "why_short": cur.get("why_short", ""),
         # '아직 확정되지 않은 것' — 사실도 해석도 아닌 세 번째 축.
         # 여기 화이트리스트에 없으면 아카이브에 안 남고 웹에서도 영영 못 본다.
         "open_question": cur.get("open_question", ""),
@@ -316,12 +319,12 @@ def _upgrade_record(record: dict) -> dict:
             upgraded["quality_drop"] = True
             upgraded["quality_drop_reason"] = repair.get("reason", "manual_quality_gate")
         for field in ("title_kr", "summary", "implication", "why_important",
-                      "open_question"):
+                      "why_short", "open_question"):
             if field in repair:
                 upgraded[field] = clean_text(repair[field])
 
     # 해석 필드는 원문 사실이 아니므로 잘린 과거 문장을 추측해 보수하지 않고 숨긴다.
-    for field in ("implication", "why_important"):
+    for field in ("implication", "why_important", "why_short"):
         field_errors = [error for error in curation_errors(upgraded) if error.startswith(field + ":")]
         if field_errors:
             upgraded[field] = ""

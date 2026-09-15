@@ -775,8 +775,8 @@ SITE_HIDDEN_STATUSES = frozenset({"quarantined"})
 # fallback 은 사실이 틀린 것이 아니라 검토를 못 받은 것이라 숨기지 않는다.
 # 다만 검토받지 않은 **해석**은 내보내지 않는다 — 사실은 원문이 받쳐 주지만
 # 해석은 받쳐 주는 것이 없다. assess_delivery_eligibility 의 limitations 와 같은 목록.
-FALLBACK_WITHHELD_FIELDS = ("implication", "why_important", "open_question",
-                            "watch_next")
+FALLBACK_WITHHELD_FIELDS = ("implication", "why_important", "why_short",
+                            "open_question", "watch_next")
 
 
 def apply_archive_integrity_gate(records: list[dict]) -> tuple[list[dict], dict]:
@@ -3684,8 +3684,16 @@ def finalize_card_fields(rows: list[dict]) -> None:
         if display and _is_restatement(title, display):
             display = ""
 
+        # 우선순위 맨 앞이 `why_short` 다 — 목록 한 줄을 위해 만든 문장이고,
+        # 없으면 종전대로 implication → why_important 로 떨어진다.
+        #
+        # **화면은 이 결정에 끼어들지 않는다.** 프론트에서 or 폴백을 하면 아래
+        # 두 필터(제목 재진술·change_display 중복)를 통째로 우회한다. 그래서
+        # why_short 가 제목을 다시 쓴 문장이면 여기서 자동으로 탈락하고
+        # implication 이 선다 — 화면은 card_why 하나만 읽으면 된다.
         why = ""
-        for candidate in (row.get("implication"), row.get("why_important")):
+        for candidate in (row.get("why_short"), row.get("implication"),
+                          row.get("why_important")):
             candidate = str(candidate or "").strip()
             if not candidate or _is_restatement(title, candidate):
                 continue
@@ -3708,6 +3716,65 @@ def finalize_card_fields(rows: list[dict]) -> None:
         # 카드가 읽는 유일한 '왜 중요해요' 필드. 화면에서 or 폴백을 하면 이 계약이
         # 두 곳에 흩어져 드리프트한다.
         row["card_why"] = why
+
+
+# 첫 화면 페이로드에서 빼는 필드. **어느 화면도 읽지 않는 감사·진단값**만 고른다
+# (app.js·ui-v3.js 전수 검색 0건). 화면이 쓰는 필드를 여기 넣으면 본 데이터가
+# 도착하기 전 그 짧은 창에서만 칸이 비는, 재현이 어려운 증상이 된다.
+#
+# issues.json 에서는 그대로 나간다 — 이 목록은 today.json 한 곳에만 적용된다.
+TODAY_DROP_FIELDS = frozenset({
+    "identity_diagnostics", "identity_evidence", "identity_merged_from",
+    "identity_split_from", "legacy_issue_id",
+    "story_members", "story_article_hashes", "story_related_titles",
+    "story_sources", "story_context", "story_reason", "story_dedup_stage",
+})
+
+
+def _today_issue(row: dict) -> dict:
+    return {key: value for key, value in row.items() if key not in TODAY_DROP_FIELDS}
+
+
+def build_today_payload(briefings: list[dict], issue_catalog: list[dict],
+                        meta: dict) -> dict:
+    """첫 화면 한 벌 → today.json. **추가 산출물이고 기존 11종은 그대로 나간다.**
+
+    왜 있는가
+    ---------
+    부팅이 기다리는 JSON 이 압축 전 합계 37 MB 다. 그중 첫 화면이 실제로 쓰는 것은
+    최신 회차 하루치와 그 이슈들뿐이다. 실측(2026-09-13, 이슈 13건): 이 페이로드는
+    raw 370 KB · gzip 38 KB 로 briefings.json 하나의 3% 다.
+
+    새 필드를 만들지 않는다 — 이미 지은 두 산출물에서 **잘라 담기만** 한다.
+    여기서 값을 새로 계산하면 같은 이슈를 두 파일이 다르게 말하는 날이 온다.
+
+    이슈 레코드는 **카탈로그(issue_catalog)** 에서 가져온다. briefings 안에 내장된
+    같은 이슈는 그 회차 시점의 related_articles 를 들고 있어(실측 734건 중 449건
+    불일치, 최대 1 vs 54) 상세의 타임라인이 조용히 잘린다. 화면도 최신 회차에서는
+    카탈로그를 쓴다(briefingIssuesForDisplay).
+
+    `dates` 를 함께 싣는 이유: 날짜 이동 칸이 briefings.json 없이도 서야 한다.
+    이 목록이 없으면 첫 화면에 이전/다음 버튼이 죽은 채로 잠깐 서 있다.
+    """
+    if not briefings:
+        return {"date": "", "dates": [], "briefing": {}, "issues": [], "meta": {}}
+    latest = briefings[0]
+    by_id = {row.get("issue_id"): row for row in issue_catalog}
+    ids = [row.get("issue_id") for row in (latest.get("issues") or [])]
+    issues = [_today_issue(by_id[key]) for key in ids if key in by_id]
+    # 카탈로그에 없는 이슈(그 회차에만 있던 스냅샷)는 브리핑 레코드로 메운다 —
+    # 빠뜨리면 그 이슈만 첫 화면에서 사라졌다가 본 데이터가 오면 나타난다.
+    missing = [_today_issue(row) for row in (latest.get("issues") or [])
+               if row.get("issue_id") not in by_id]
+    issues.extend(missing)
+    return {
+        "date": latest.get("date", ""),
+        # 최신순. 화면의 briefingDates() 와 같은 순서여야 이전/다음이 같은 방향으로 간다.
+        "dates": [row.get("date", "") for row in briefings],
+        "briefing": {key: value for key, value in latest.items() if key != "issues"},
+        "issues": issues,
+        "meta": meta,
+    }
 
 
 def _is_primary_source(article: dict) -> bool:
@@ -4706,6 +4773,9 @@ def build_briefings(news_items: list[dict], issues: list[dict], checked_at: str 
                 "detail_source": issue_detail_source,
                 "implication": implication,
                 "why_important": why_important,
+                # 대표 기사와 **같은 기사**에서 온 한 줄이어야 한다. 서로 다른
+                # 기사의 문장이 섞이면 카드가 한 이슈를 두 목소리로 말한다.
+                "why_short": representative.get("why_short", ""),
                 # 그날 보고서 검토 추천을 받은 기사가 이 이슈에 있으면 그 주제.
                 # 추천은 그날의 판단이라 이번 브리핑분(current)에서만 본다.
                 "report_pick": report_topic,
@@ -4977,6 +5047,7 @@ def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_a
             "detail_source": archive_detail_source,
             "implication": implication,
             "why_important": why_important,
+            "why_short": representative.get("why_short", ""),
             # 아카이브 행은 그 이슈가 **언젠가** 보고서감이었는지를 남긴다 —
             # 브리핑 행과 달리 '오늘'이라는 기준일이 없다.
             "report_pick": report_topic,
@@ -6559,6 +6630,7 @@ def build() -> None:
             "detail": usable_detail(record),
             "implication": record.get("implication", ""),
             "why_important": record.get("why_important", ""),
+            "why_short": record.get("why_short", ""),
             "open_question": record.get("open_question", ""),
             "tags": record.get("tags") or [],
             "canonical_tags": canonical_tags,
@@ -7270,6 +7342,7 @@ def build() -> None:
     ADMIN_OUT_DIR.mkdir(parents=True, exist_ok=True)
     shipped_audit = shipped_issue_audit(issue_audit)
     outputs = (
+        ("today.json", build_today_payload(briefings, issue_catalog, meta)),
         ("news.json", news_items),
         ("briefings.json", briefings),
         ("issues.json", issue_catalog),

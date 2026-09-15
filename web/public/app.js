@@ -100,9 +100,15 @@ const STRINGS = {
 };
 
 const state = {
-  news: [], briefings: [], issues: [], trend: null, insights: null, meta: null,
+  // news 는 첫 렌더를 기다리게 하지 않는다 — `ensureNews()` 가 뒤에서 받아 온다.
+  // 부팅 시점에는 언제나 빈 배열이므로, 이 값을 읽는 쪽은 `newsLoaded` 를 함께 본다
+  // (0건과 '아직 안 옴'은 다른 상태다).
+  news: [], newsLoaded: false, newsPending: null,
+  briefings: [], issues: [], trend: null, insights: null, meta: null,
   pubs: null, pubsOrg: "전체",
   manifest: null, systemStatus: null, dataBase: "/data",
+  // 화면 v3 플래그. "" 또는 "v3" — restoreUrlState() 가 정하고 body 클래스로 나간다.
+  ui: "", uiQa: false,
   briefingDate: "", region: "전체", topic: "전체", view: "news",
   issueSort: "importance", issueView: "card", issueId: "", railIssueId: "",
   archiveQuery: "", archiveRegion: "전체", archiveTopic: "전체",
@@ -161,6 +167,86 @@ async function loadRootJSON(name, optional = false) {
     if (optional) return null;
     throw error;
   }
+}
+
+// ── news.json 지연 로드 ───────────────────────────────────────────────────
+//
+// 부팅은 10개 파일을 Promise.all 로 묶어 **전부** 기다렸는데, 그중 news.json 하나가
+// raw 16.8 MB / gzip 2.65 MB 로 나머지를 합친 것보다 크다. 첫 화면이 그 파일을
+// 기다릴 이유가 없다 — 읽는 곳은 둘뿐이고(수집 원문 서랍, 흐름 탭의 구버전 폴백),
+// 서랍은 기본적으로 접혀 있다.
+//
+// 그래서 **차단하지 않고 뒤에서** 받는다. 켜 두는 쪽(on-demand only)이 아니라
+// 첫 렌더 직후 배경으로 부르는 쪽을 고른 이유는, 접힌 서랍의 요약 줄이 이미
+// 건수를 말하고 있어서다 — on-demand 로 하면 그 숫자가 서랍을 열기 전까지
+// 사라진다. 지금은 잠깐 비었다가 채워진다.
+//
+// 실패는 비치명이다(8/1 빈 화면 사고 계약). 서랍만 못 채우고 나머지는 산다.
+function ensureNews() {
+  if (state.newsLoaded) return Promise.resolve(state.news);
+  if (state.newsPending) return state.newsPending;
+  state.newsPending = loadJSON("news.json")
+    .then(rows => {
+      state.news = Array.isArray(rows) ? rows : [];
+      state.newsLoaded = true;
+      return state.news;
+    })
+    .catch(() => {
+      // 다시 부를 수 있게 자물쇠만 푼다. newsLoaded 는 거짓으로 남아
+      // 화면이 '0건'이 아니라 '못 불러왔다'를 말한다.
+      state.newsPending = null;
+      return state.news;
+    });
+  return state.newsPending;
+}
+
+// 배경 로드가 끝난 뒤, 그 데이터를 읽는 화면만 다시 그린다. 전체 재렌더는
+// 하지 않는다 — 사용자가 이미 만지고 있는 다른 칸을 흔들 이유가 없다.
+function refreshNewsDependentViews() {
+  if (!appReady) return;
+  if (document.getElementById("newsList")) renderNewsFeed();
+  if (state.view === "trend" && document.getElementById("trendReadiness")) renderTrendReadiness();
+}
+
+// ── v3 선행 렌더 (today.json) ─────────────────────────────────────────────
+//
+// 부팅이 기다리는 JSON 이 압축 전 합계 37 MB 인데, 첫 화면이 실제로 쓰는 것은 최신
+// 회차 하루치와 그 이슈들뿐이다. today.json 은 그 한 벌이고 gzip 38 KB 다.
+//
+// **추가 산출물이라 기존 경로는 그대로 돈다.** 이 함수가 하는 일은 본 데이터가
+// 오기 전에 오늘 화면을 한 번 세우는 것뿐이고, 곧이어 평소의 Promise.all 이
+// 끝나면 같은 화면이 온전한 데이터로 다시 그려진다.
+//
+// 파일이 없거나 깨져도 아무 일이 없다 — 그냥 평소 속도로 뜬다(8/1 빈 화면 사고 계약).
+function v3Requested() {
+  return new URLSearchParams(location.search).get("ui") === "v3";
+}
+
+async function v3FirstPaint() {
+  const today = await loadJSON("today.json").catch(() => null);
+  if (!today?.date || !Array.isArray(today.issues)) return false;
+  const params = new URLSearchParams(location.search);
+  const wantedDate = briefDateFromLocation() || params.get("date") || "";
+  // 과거 회차를 달라는 주소면 선행 렌더를 건너뛴다. 그 날짜의 이슈가 이
+  // 페이로드에 없어서 "브리핑이 없습니다"를 한 번 보여 줬다가 뒤집게 된다.
+  if (wantedDate && wantedDate !== today.date) return false;
+  // 딥링크로 시트를 여는 주소도 마찬가지 — 그 이슈가 오늘 회차 밖일 수 있다.
+  if (issueIdFromLocation() || params.get("issue")) return false;
+
+  // 날짜 목록은 **회차 껍데기**로 세운다. briefingDates()·currentBriefing() 이
+  // 그대로 돌아 날짜 이동 칸이 첫 화면부터 살아 있다. 본 데이터가 오면 통째로
+  // 갈린다.
+  state.briefings = (today.dates || [today.date]).map(date =>
+    date === today.date
+      ? { ...today.briefing, date, issues: today.issues }
+      : { date, issues: [] });
+  state.issues = today.issues;
+  state.meta = today.meta || {};
+  state.briefingDate = today.date;
+  restoreUrlState();
+  if (state.view !== "news") return false;
+  renderBriefing();
+  return true;
 }
 
 async function initializeDataBase() {
@@ -937,6 +1023,10 @@ async function checkForNewGeneration() {
 
 function syncUrl(mode = "replace") {
   const params = new URLSearchParams();
+  // syncUrl() 은 주소를 state 에서 **매번 다시 만든다.** 여기서 플래그를 도로
+  // 써넣지 않으면 첫 상호작용에 ui=v3 가 사라진다.
+  if (state.ui) params.set("ui", state.ui);
+  if (state.uiQa) params.set("qa", "1");
   if (state.briefingDate) params.set("date", state.briefingDate);
   if (state.region !== "전체") params.set("region", state.region);
   if (state.topic !== "전체") params.set("topic", state.topic);
@@ -963,6 +1053,16 @@ function syncUrl(mode = "replace") {
 
 function restoreUrlState() {
   const params = new URLSearchParams(location.search);
+  // ── 화면 v3 플래그 ──────────────────────────────────────────────────────
+  //
+  // **여기서, 이 자리에서 클래스를 붙인다.** init() 은 restoreUrlState() →
+  // … → renderBriefing()(거기서 booting 해제) 순으로 흐르고, booting 동안
+  // .briefing-content-grid 는 접혀 있다(index.html 주석). 그 사이에 붙이면 구
+  // 골격이 펼쳐진 채 한 번 그려졌다가 사라지는 일이 없다 — 이 화면은 그 종류의
+  // 이동으로 CLS 0.90 을 찍은 적이 있다.
+  state.ui = params.get("ui") === "v3" && typeof UI_V3 !== "undefined" ? "v3" : "";
+  state.uiQa = state.ui === "v3" && params.get("qa") === "1";
+  document.body.classList.toggle("ui-v3", state.ui === "v3");
   const requestedDate = briefDateFromLocation() || params.get("date");
   if (briefingDates().includes(requestedDate)) state.briefingDate = requestedDate;
   const requestedRegion = params.get("region");
@@ -1686,6 +1786,143 @@ function placeTodayAgenda() {
   }
 }
 
+// 화면 v3 의 유일한 진입점. 조립은 전부 ui-v3.js 가 하고, app.js 는 어느 데이터를
+// 넘길지만 정한다 — 두 파일이 같은 화면을 반씩 그리면 금방 갈라진다.
+//
+// 어느 레코드를 넘기는가는 **이미 정해져 있다.** briefingIssuesForDisplay() 가
+// 최신 날짜에서는 카탈로그 레코드로 갈아 끼우고(그래야 타임라인 수와 배지가 상세와
+// 같다) 과거 회차는 그날의 스냅샷으로 둔다. v3 가 여기서 제 규칙을 새로 세우면
+// 같은 이슈가 구 화면과 v3 에서 다른 타임라인을 보인다.
+function renderV3(briefing = currentBriefing()) {
+  const root = document.getElementById("v3Root");
+  if (!root) return;
+  // 장기 스토리 딥링크는 v3 가 비킨다. body 클래스 하나로 구 골격을 도로 편다 —
+  // CSS 가 #main > section 을 통째로 접고 있으므로 예외를 거기서 푼다.
+  document.body.classList.toggle("ui-v3-legacy", v3LegacyView());
+  if (v3LegacyView()) {
+    root.hidden = true;
+    renderLongTerm();
+    return;
+  }
+  root.hidden = false;
+  if (state.view === "trend") { renderV3Trend(root, briefing); return; }
+  if (state.view === "search") { renderV3Search(root); return; }
+  if (state.view === "report") { renderV3Report(root); return; }
+  UI_V3.renderToday(root, briefing, {
+    qa: state.uiQa,
+    issues: briefingIssuesForDisplay(briefing),
+    dates: briefingDates(),
+  });
+}
+
+// 흐름 탭의 재료. 판단은 전부 기존 함수가 한다 — weeklyReportFor 가 어느 주의
+// 리포트인지 고르고(토~금 구간 매칭은 weekly_selector.mjs 가 잠근다),
+// dropTextsAlreadyOnCards 가 카드에 이미 있는 문장을 걷는다. v3 가 여기서 제
+// 판단을 새로 세우면 같은 리포트를 두 탭이 다르게 읽는다.
+function renderV3Trend(root, briefing) {
+  const report = briefing ? weeklyReportFor(briefing.date) : null;
+  const drop = (rows) => briefing ? dropTextsAlreadyOnCards(rows, briefing) : rows.filter(Boolean);
+  // 기본 화면이 쓰는 두 칸만 먼저 그린다. 나머지(차트·지도·워드클라우드·지난
+  // 브리핑)는 '데이터 더 보기'를 열 때 renderTrend() 가 통째로 그린다.
+  renderTrendTopicFlow();
+  renderEventCalendar();
+  UI_V3.renderTrend(root, {
+    weekLabel: weekRangeLabel(report),
+    conclusions: drop((report?.policy_shifts || []).map(row => row?.what)).slice(0, 3),
+    soWhat: drop((report?.policy_shifts || []).map(row => row?.so_what)).slice(0, 3),
+    watch: drop(report?.watchpoints || []).slice(0, 3),
+    intro: drop([report?.weekly_intro])[0] || "",
+    changed: briefing ? weeklyChangedIssues(briefing) : [],
+    qa: state.uiQa,
+    onExpandData: () => renderTrend(),
+  });
+}
+
+// 탐색 탭. 판정은 전부 기존 함수가 한다 — archiveIssueMatches 가 필터를,
+// sortArchiveIssues 가 정렬을 맡는다. v3 가 더하는 것은 '오래 이어진 이슈' 하나이고,
+// 그 기준은 이슈 원장의 first_seen~last_seen 이다(threads.json 을 읽지 않는다).
+function v3ArchiveLanding() {
+  return !state.archiveQuery && !state.archiveEntity
+    && state.archiveRegion === "전체" && state.archiveTopic === "전체"
+    && state.archivePeriod === "all" && state.archiveVerification === "전체";
+}
+
+function renderV3Search(root) {
+  const landing = v3ArchiveLanding();
+  const matched = state.issues.filter(archiveIssueMatches);
+  const results = state.archiveSort === "span"
+    ? UI_V3.sortBySpan(matched)
+    : sortArchiveIssues(matched);
+  const chips = (state.entities?.entities || [])
+    .filter(entity => entity.issue_count > 0 || state.follows.has(entity.id))
+    .slice(0, 12)
+    .map(entity => ({ id: entity.id, label: entity.name_kr, count: entity.issue_count }));
+  const filterCount = [
+    state.archiveRegion !== "전체", state.archiveTopic !== "전체",
+    state.archivePeriod !== "all", state.archiveVerification !== "전체",
+  ].filter(Boolean).length;
+  UI_V3.renderSearch(root, {
+    landing, chips, query: state.archiveQuery, results,
+    total: matched.length, limit: state.archiveLimit,
+    sort: state.archiveSort, filterCount, qa: state.uiQa,
+  });
+}
+
+function renderV3Report(root) {
+  UI_V3.renderReport(root, {
+    picks: state.issues.filter(issue => (issue.report_pick || "").trim()).slice(0, 6),
+    pubs: (state.pubs?.items || []).slice(0, 20),
+    qa: state.uiQa,
+  });
+}
+
+// v3 의 목록 조작. 행 펼침은 ui-v3.js 가 제 안에서 처리하고, 여기 있는 것은
+// **화면 상태를 바꾸는 것**뿐이다 — 날짜 이동·탭 이동·시트 열기.
+function handleV3Action(event) {
+  const step = event.target.closest("[data-v3-step]");
+  if (step) { stepBriefing(Number(step.dataset.v3Step)); return true; }
+  const pick = event.target.closest("[data-v3-date]");
+  if (pick) {
+    state.briefingDate = pick.dataset.v3Date;
+    renderDateSelect();
+    renderBriefing();
+    renderSystemStatus();
+    syncUrl();
+    return true;
+  }
+  const more = event.target.closest("[data-v3-more]");
+  if (more) {
+    more.closest("section")?.querySelectorAll(".v3-rows li[hidden]").forEach(row => { row.hidden = false; });
+    more.remove();
+    return true;
+  }
+  const go = event.target.closest("[data-v3-go]");
+  if (go) { switchView(go.dataset.v3Go); return true; }
+  const ent = event.target.closest("[data-v3-ent]");
+  if (ent) {
+    state.archiveEntity = ent.dataset.v3Ent;
+    state.archiveLimit = 20;
+    renderV3();
+    syncUrl();
+    return true;
+  }
+  const page = event.target.closest("[data-v3-page]");
+  if (page) { state.archiveLimit += 20; renderV3(); return true; }
+  const audio = event.target.closest("[data-v3-audio]");
+  if (audio) {
+    const player = document.getElementById("audioBrief");
+    if (player) {
+      player.hidden = !player.hidden;
+      audio.setAttribute("aria-expanded", String(!player.hidden));
+    }
+    return true;
+  }
+  const sheet = event.target.closest("[data-v3-sheet]");
+  // 시트는 issueId 배선을 그대로 탄다 — 주소·뒤로가기·복원이 전부 거기 있다.
+  if (sheet) { openIssueDialog(sheet.dataset.v3Sheet); return true; }
+  return false;
+}
+
 function renderBriefing() {
   const briefing = currentBriefing();
   const issueList = document.getElementById("issueList");
@@ -1698,6 +1935,10 @@ function renderBriefing() {
     renderEmptyBriefing(null, issueList);
     return;
   }
+  // 화면 v3 분기. 구 골격은 body.ui-v3 아래에서 CSS 가 접고, v3 는 #v3Root 에만
+  // 그린다 — 아래 골격 채우기를 그대로 두면 안 보이는 칸을 채우느라 같은 일을
+  // 두 번 한다. booting 은 위에서 이미 걷혔다.
+  if (state.ui === "v3") { renderV3(briefing); return; }
   renderTodayAgenda(briefing);
   renderHomeIntelligence(briefing);
   // 필터 때문에 비어 보이는 것과 그날 실제로 이슈가 0건인 것은 다르다.
@@ -1999,13 +2240,22 @@ function articleCard(article) {
 }
 
 function renderNewsFeed() {
+  document.getElementById("feedTitle").textContent = `${dateLabel(state.briefingDate)} 발행`;
+  // 아직 안 온 것과 0건은 다르다. 같은 문구를 쓰면 배경 로드가 실패한 날
+  // "이 날짜에 발행된 수집 기사가 없습니다"가 거짓말이 된다.
+  if (!state.newsLoaded) {
+    document.getElementById("feedLabel").textContent = "오늘 수집한 원문";
+    document.getElementById("newsList").innerHTML = state.newsPending
+      ? '<p class="empty">수집 원문을 불러오고 있습니다…</p>'
+      : '<p class="empty">수집 원문을 불러오지 못했습니다. 이 칸을 다시 열면 재시도합니다.</p>';
+    return;
+  }
   const articles = state.news.filter(article => (
     article.article_date === state.briefingDate
     && (state.region === "전체" || article.region === state.region)
     && (state.topic === "전체" || (article.topics || []).includes(state.topic))
   ));
   document.getElementById("feedLabel").textContent = `오늘 수집한 원문 ${articles.length}건`;
-  document.getElementById("feedTitle").textContent = `${dateLabel(state.briefingDate)} 발행`;
   document.getElementById("newsList").innerHTML = articles.length
     ? articles.map(articleCard).join("")
     : '<p class="empty">이 날짜에 발행된 수집 기사가 없습니다.</p>';
@@ -2826,6 +3076,15 @@ function openIssueDialog(issueId, updateUrl = true, viaAlias = false) {
     return;
   }
   recordRecentIssue(issueId);
+  // v3 는 같은 자리에서 시트를 연다. 주소(issuePath)·뒤로가기(issueHistoryOwned)·
+  // 복원(restoreIssueFromHistory)은 아래 공통 경로가 그대로 맡는다 — 시트 쪽에
+  // pushState 를 또 얹으면 뒤로가기 한 번에 두 칸이 움직인다.
+  if (state.ui === "v3") {
+    state.issueId = issueId;
+    UI_V3.openSheet(issue, { qa: state.uiQa });
+    if (updateUrl) { issueHistoryOwned = true; syncUrl("push"); }
+    return;
+  }
   const dialog = document.getElementById("issueDialog");
   const topics = (issue.topics || []).map(topic => `<span class="topic-chip">${esc(TOPIC_LABELS[topic] || topic)}</span>`).join("");
   const selectionReasons = (issue.selection_reasons || [])
@@ -2909,6 +3168,9 @@ function openIssueDialog(issueId, updateUrl = true, viaAlias = false) {
 function dismissIssueDialog() {
   const dialog = document.getElementById("issueDialog");
   state.issueId = "";
+  // v3 의 시트도 같은 문으로 닫힌다 — Esc·배경 탭·× 가 전부 closeIssueDialog()
+  // 로 들어오므로 닫는 자리는 하나뿐이다.
+  if (typeof UI_V3 !== "undefined" && UI_V3.sheetOpen()) UI_V3.closeSheet();
   if (dialog.open) dialog.close();
 }
 
@@ -3054,13 +3316,24 @@ function renderTrendReadiness() {
   const coverage = `<div class="coverage"><span>주제 분류 <strong>${topicCoverage}%</strong></span><span>국가 분류 <strong>${countryCoverage}%</strong></span></div>`;
   const pdata = periodData();
   const { start, end } = pdata ? { start: pdata.start, end: pdata.end } : trendRange();
-  const articleCount = pdata?.story_count ?? state.news.filter(article => article.article_date >= start && article.article_date <= end).length;
+  // 빌드가 실어 보낸 선정 사건 수가 정본이다(모든 기간에 실린다). state.news 로
+  // 세는 길은 periods 가 없는 **구버전 trend.json** 전용 폴백인데, news.json 은 이제
+  // 지연 로드라 그 순간 비어 있을 수 있다. 안 온 데이터로 0을 적지 않는다 —
+  // 셀 수 없으면 그 숫자만 뺀다(아래 countable).
+  const articleCount = pdata?.story_count
+    ?? (state.newsLoaded
+      ? state.news.filter(article => article.article_date >= start && article.article_date <= end).length
+      : null);
+  const countable = articleCount !== null;
   const issueCount = articleCount;
   const panel = document.getElementById("trendReadiness");
   document.getElementById("trendData").hidden = !ready;
   panel.classList.toggle("ready", ready);
+  const basisLine = pdata
+    ? `동일 사건 중복 보도 제거 적용 · 선정 사건 ${articleCount}건`
+    : (countable ? `중복 제거 적용 · 원본 ${articleCount}건 → 연결 이슈 ${issueCount}개` : "중복 제거 적용");
   panel.innerHTML = ready
-    ? `<div><strong>분석 기간 ${dateLabel(start)}–${dateLabel(end)}</strong><p>${pdata ? `동일 사건 중복 보도 제거 적용 · 선정 사건 ${articleCount}건` : `중복 제거 적용 · 원본 ${articleCount}건 → 연결 이슈 ${issueCount}개`}${basis}</p></div>${coverage}`
+    ? `<div><strong>분석 기간 ${dateLabel(start)}–${dateLabel(end)}</strong><p>${basisLine}${basis}</p></div>${coverage}`
     : `<div><strong>분류 기준을 확인하고 있습니다</strong><p>분류가 완료되면 분석 기간과 근거 데이터를 함께 표시합니다.${basis}</p></div>${coverage}`;
 }
 
@@ -4513,11 +4786,22 @@ function renderLongTerm() {
 // 탭은 데이터가 살아 있을 때만 크롬에 걸린다. 빈 화면으로 가는 탭을 남기면
 // 사용자는 그것을 고장으로 읽는다.
 function syncLongTermChrome() {
-  const ready = longTermReady();
+  // v3 에서는 탭을 내린다. 이슈의 흐름은 3단 시트의 타임라인이 맡는다.
+  //
+  // 탭만 내리고 화면은 살려 둔다 — 이미 공유된 `?view=longterm&th=` 링크가
+  // v3 에서 죽으면 안 된다. 그 주소로 들어오면 v3 는 비키고 기존 화면이 그대로
+  // 선다(renderV3 의 legacy 분기). threads.json 과 그 판정 코드는 손대지 않는다.
+  const ready = longTermReady() && state.ui !== "v3";
   document.querySelectorAll('[data-view="longterm"]').forEach(button => {
     button.hidden = !ready;
   });
-  if (!ready && state.view === "longterm") switchView("news");
+  if (!longTermReady() && state.view === "longterm") switchView("news");
+}
+
+// v3 가 아직 제 화면을 갖지 않은 뷰. 여기서는 v3 가 비키고 구 골격이 선다 —
+// 링크를 깨뜨리지 않으려고 남겨 둔 통로이지 v3 의 화면이 아니다.
+function v3LegacyView() {
+  return state.view === "longterm";
 }
 
 function openThread(threadId, updateUrl = true) {
@@ -4558,6 +4842,13 @@ function switchView(view, updateUrl = true) {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
+  // v3 는 제 컨테이너 하나에 탭별 화면을 그린다. 구 골격은 CSS 로 접혀 있어
+  // 아래 렌더러를 부르면 안 보이는 칸을 채우느라 같은 일을 두 번 한다.
+  if (state.ui === "v3") {
+    renderV3();
+    if (updateUrl) syncUrl();
+    return;
+  }
   if (view === "search") renderArchiveSearch();
   if (view === "trend") renderTrend();
   if (view === "search") renderSaved();
@@ -5049,6 +5340,30 @@ function bind() {
    "recentIssueList"].forEach(id => {
     document.getElementById(id).addEventListener("click", handleIssueAction);
   });
+  // v3 는 제 컨테이너 하나에만 위임을 건다. 목록이 통째로 다시 그려져도 리스너가
+  // 살아 있어야 해서 컨테이너에 걸고, v3 전용 동작을 먼저 본 뒤 기존 위임으로
+  // 흘려보낸다(저장·공유 버튼은 기존 훅을 그대로 쓴다).
+  document.getElementById("v3Root")?.addEventListener("click", event => {
+    if (handleV3Action(event)) return;
+    handleIssueAction(event);
+  });
+  // 검색과 정렬은 클릭이 아니라 submit·change 다. 컨테이너에 걸어 두면 목록이
+  // 다시 그려져도 살아 있다.
+  document.getElementById("v3Root")?.addEventListener("submit", event => {
+    const form = event.target.closest("[data-v3-search]");
+    if (!form) return;
+    event.preventDefault();
+    state.archiveQuery = normalizedSearch(form.elements.q.value);
+    state.archiveLimit = 20;
+    renderV3();
+    syncUrl();
+  });
+  document.getElementById("v3Root")?.addEventListener("change", event => {
+    const sort = event.target.closest("[data-v3-sort]");
+    if (!sort) return;
+    state.archiveSort = sort.value;
+    renderV3();
+  });
   document.getElementById("clearRecentIssues")?.addEventListener("click", () => {
     try { localStorage.removeItem("nuclens-recent-issues"); } catch { /* 무해 */ }
     renderRecentIssues();
@@ -5185,6 +5500,13 @@ function bind() {
     state.topic = event.target.value;
     renderBriefing();
     syncUrl();
+  });
+  // 배경 로드가 실패했을 때의 두 번째 기회. 서랍을 여는 것이 "이 데이터를 지금
+  // 보겠다"는 유일한 신호라, 재시도 버튼을 따로 세우지 않는다.
+  document.getElementById("feedDrawer")?.addEventListener("toggle", event => {
+    if (!event.target.open || state.newsLoaded) return;
+    ensureNews().then(refreshNewsDependentViews);
+    renderNewsFeed();
   });
   document.getElementById("clearFilters").addEventListener("click", clearBriefingFilters);
   document.getElementById("closeFilters").addEventListener("click", () => closeFilterDrawer(document.getElementById("briefingFilters")));
@@ -5455,8 +5777,11 @@ async function init() {
   initLoading = true;
   try {
     await initializeDataBase();
-    [state.news, state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities, state.threads] = await Promise.all([
-      loadJSON("news.json"), loadJSON("briefings.json"), loadJSON("issues.json"),
+    // v3 는 하루치 한 벌로 오늘 화면을 먼저 세운다. 실패해도 아래가 평소대로 돈다.
+    if (v3Requested()) await v3FirstPaint().catch(() => false);
+    // news.json 은 여기 없다 — `ensureNews()` 가 첫 렌더 뒤에 받는다(정의부 주석).
+    [state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities, state.threads] = await Promise.all([
+      loadJSON("briefings.json"), loadJSON("issues.json"),
       loadJSON("trend.json"), loadJSON("meta.json"), loadJSON("insights.json"),
       // 발간물은 부가 데이터 — 없어도 사이트 전체가 죽으면 안 된다 (8/1 빈 화면 사고 계약)
       loadJSON("publications.json").catch(() => null),
@@ -5490,6 +5815,9 @@ async function init() {
   state.briefingDate = state.meta.latest_briefing_date || state.briefings[0]?.date || "";
   syncLongTermChrome();
   restoreUrlState();
+  // 한 번 더 부른다. 위의 호출은 state.ui 가 정해지기 **전**이라 v3 규칙(장기 탭을
+  // 내린다)을 적용할 수 없다. 멱등이므로 구 경로에서는 같은 답을 두 번 낼 뿐이다.
+  syncLongTermChrome();
   renderTopicSelects();
   document.getElementById("topicSel").value = state.topic;
   document.getElementById("archiveRegion").value = state.archiveRegion;
@@ -5505,9 +5833,17 @@ async function init() {
     `${state.issues.length}개 이슈 · ${catalogArticles}개 원문 · ${dateLabel(firstIssueDate)}–${dateLabel(state.meta.latest_briefing_date)}`;
   renderDateSelect();
   renderBriefing();
-  renderArchiveSearch();
-  renderTrend();
-  renderLongTerm();
+  // v3 는 비활성 탭을 부팅에서 그리지 않는다. switchView() 가 진입할 때마다 이미
+  // 다시 그리고 있으므로(아래 view === "search"/"trend"/"longterm" 분기), 부팅의
+  // 이 세 줄은 **숨어 있는 화면을 미리 그려 두는 것**이 전부다. v3 는 어차피 구
+  // 골격을 CSS 로 접으므로 그 비용이 통째로 낭비다.
+  //
+  // 구 경로의 호출 순서는 건드리지 않는다 — 플래그 없는 화면은 픽셀 단위로 같아야 한다.
+  if (state.ui !== "v3") {
+    renderArchiveSearch();
+    renderTrend();
+    renderLongTerm();
+  }
   renderSaved();
   renderSystemStatus();
   renderReturnNote();
@@ -5516,6 +5852,9 @@ async function init() {
   syncUrl();
   appReady = true;
   initLoading = false;
+  // 첫 렌더가 끝난 **뒤에** 수집 원문을 받는다. 여기가 부팅에서 news.json 이
+  // 사라진 자리다 — 화면은 이미 서 있고, 도착하면 그 칸만 다시 그린다.
+  ensureNews().then(refreshNewsDependentViews);
   if (!generationTimer) generationTimer = window.setInterval(checkForNewGeneration, 60000);
 }
 
