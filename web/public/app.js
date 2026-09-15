@@ -1752,14 +1752,38 @@ function placeTodayAgenda() {
 // 최신 날짜에서는 카탈로그 레코드로 갈아 끼우고(그래야 타임라인 수와 배지가 상세와
 // 같다) 과거 회차는 그날의 스냅샷으로 둔다. v3 가 여기서 제 규칙을 새로 세우면
 // 같은 이슈가 구 화면과 v3 에서 다른 타임라인을 보인다.
-function renderV3(briefing) {
+function renderV3(briefing = currentBriefing()) {
   const root = document.getElementById("v3Root");
   if (!root) return;
   root.hidden = false;
+  if (state.view === "trend") { renderV3Trend(root, briefing); return; }
   UI_V3.renderToday(root, briefing, {
     qa: state.uiQa,
     issues: briefingIssuesForDisplay(briefing),
     dates: briefingDates(),
+  });
+}
+
+// 흐름 탭의 재료. 판단은 전부 기존 함수가 한다 — weeklyReportFor 가 어느 주의
+// 리포트인지 고르고(토~금 구간 매칭은 weekly_selector.mjs 가 잠근다),
+// dropTextsAlreadyOnCards 가 카드에 이미 있는 문장을 걷는다. v3 가 여기서 제
+// 판단을 새로 세우면 같은 리포트를 두 탭이 다르게 읽는다.
+function renderV3Trend(root, briefing) {
+  const report = briefing ? weeklyReportFor(briefing.date) : null;
+  const drop = (rows) => briefing ? dropTextsAlreadyOnCards(rows, briefing) : rows.filter(Boolean);
+  // 기본 화면이 쓰는 두 칸만 먼저 그린다. 나머지(차트·지도·워드클라우드·지난
+  // 브리핑)는 '데이터 더 보기'를 열 때 renderTrend() 가 통째로 그린다.
+  renderTrendTopicFlow();
+  renderEventCalendar();
+  UI_V3.renderTrend(root, {
+    weekLabel: weekRangeLabel(report),
+    conclusions: drop((report?.policy_shifts || []).map(row => row?.what)).slice(0, 3),
+    soWhat: drop((report?.policy_shifts || []).map(row => row?.so_what)).slice(0, 3),
+    watch: drop(report?.watchpoints || []).slice(0, 3),
+    intro: drop([report?.weekly_intro])[0] || "",
+    changed: briefing ? weeklyChangedIssues(briefing) : [],
+    qa: state.uiQa,
+    onExpandData: () => renderTrend(),
   });
 }
 
@@ -4708,6 +4732,13 @@ function switchView(view, updateUrl = true) {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
+  // v3 는 제 컨테이너 하나에 탭별 화면을 그린다. 구 골격은 CSS 로 접혀 있어
+  // 아래 렌더러를 부르면 안 보이는 칸을 채우느라 같은 일을 두 번 한다.
+  if (state.ui === "v3") {
+    renderV3();
+    if (updateUrl) syncUrl();
+    return;
+  }
   if (view === "search") renderArchiveSearch();
   if (view === "trend") renderTrend();
   if (view === "search") renderSaved();

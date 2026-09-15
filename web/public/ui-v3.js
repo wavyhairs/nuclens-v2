@@ -392,9 +392,7 @@ function v3TodayHtml(briefing, issues, options = {}) {
 // **파괴한다** — 날짜를 한 번 옮기는 순간 플레이어가 영영 사라지고, 그 뒤로는
 // getElementById 가 null 을 돌려줘 오디오 칸이 조용히 없어진다. 그래서 렌더를
 // 시작할 때마다 먼저 화면 밖 보관함으로 빼 둔다.
-function v3ParkAudio() {
-  const player = document.getElementById("audioBrief");
-  if (!player) return null;
+function v3ParkBox() {
   let parked = document.getElementById("v3Parked");
   if (!parked) {
     parked = document.createElement("div");
@@ -402,13 +400,53 @@ function v3ParkAudio() {
     parked.hidden = true;
     document.body.appendChild(parked);
   }
-  if (player.parentElement !== parked) parked.appendChild(player);
-  return player;
+  return parked;
+}
+
+// 옮겨 쓰는 노드는 전부 이 문을 지난다. 렌더를 시작할 때 화면 밖으로 빼 두고,
+// 새 골격을 그린 뒤 제자리에 다시 넣는다.
+function v3Park(id) {
+  const node = document.getElementById(id);
+  if (!node) return null;
+  const parked = v3ParkBox();
+  if (node.parentElement !== parked) parked.appendChild(node);
+  return node;
+}
+
+function v3ParkAudio() {
+  return v3Park("audioBrief");
+}
+
+// v3 가 빌려 쓰는 구 골격 노드. 렌더마다 전부 빼 두지 않으면 innerHTML 재할당이
+// 남은 것을 파괴한다 — 한 번 파괴되면 getElementById 가 null 을 돌려줘 그 칸이
+// 조용히 없어지고, 증상은 '가끔 안 보인다'로만 나타난다.
+const V3_BORROWED = [
+  "audioBrief", "trendTopicFlow", "eventCalendarUpcoming", "eventCalendarMonths",
+  "trendReadiness", "trendData", "trendWordCloud", "eventCalendarGrid", "briefingTimeline",
+];
+
+function v3ParkAll() {
+  V3_BORROWED.forEach(v3Park);
+}
+
+// 빌린 노드를 자리에 꽂는다. 없으면(구 골격이 그 칸을 안 그린 회차) 조용히 넘어간다.
+//
+// **hidden 을 건드리지 않는다.** 이 칸들은 제 렌더러가 "이번 회차에 보일 것이
+// 있는가"를 판정해 스스로 숨는다(워드 클라우드·달력·주제 흐름이 전부 그렇다).
+// 여기서 강제로 벗기면 빈 상자가 서고, 빈 제목은 '아직 안 나왔다'가 아니라
+// '고장'으로 읽힌다. 렌더러는 이 함수보다 **먼저** 돌아야 한다.
+function v3Place(root, slotSelector, id) {
+  const slot = root.querySelector(slotSelector);
+  const node = document.getElementById(id);
+  if (!slot || !node) return false;
+  slot.appendChild(node);
+  return true;
 }
 
 function v3RenderToday(root, briefing, options = {}) {
   // innerHTML 을 건드리기 **전에** 뺀다.
-  const player = v3ParkAudio();
+  v3ParkAll();
+  const player = document.getElementById("audioBrief");
   if (!briefing) {
     root.innerHTML = `<section class="v3-block"><h2>${UI_V3_STRINGS.todayTitle}</h2>
       <p class="v3-sub">이 날짜에는 브리핑이 없습니다.</p></section>`;
@@ -427,6 +465,109 @@ function v3RenderToday(root, briefing, options = {}) {
       : "";
     slot.appendChild(player);
     if (available) player.setAttribute("hidden", "");
+  }
+}
+
+// ── 흐름 탭 ────────────────────────────────────────────────────────────────
+//
+// 구 화면은 12개 구역이 같은 내용을 여러 방식으로 되풀이한다 — 주제 추이가 4주
+// 흐름 막대·주간 변화 그래프·키워드 표로 세 번 나오고, 국가 지도와 국가별 이슈
+// 수도 같은 답을 한다. 실측 18,604px.
+//
+// v3 는 답을 하나씩만 낸다. 지운 것은 없다 — 되풀이하는 쪽을 '데이터 더 보기'
+// 안으로 넣고, 그 칸은 **열 때 처음 그린다**(지연 렌더). 접혀 있는 동안은 부피에
+// 들어가지 않는다.
+//
+// 재료는 app.js 가 만들어 넘긴다. 이 파일이 weeklyReportFor·dropTextsAlreadyOnCards
+// 같은 판단을 다시 하면 같은 리포트를 두 화면이 다르게 읽는다.
+function v3List(items, cls = "") {
+  return `<ul class="v3-mini ${cls}">${items.map(text => `<li>${esc(text)}</li>`).join("")}</ul>`;
+}
+
+// 빌린 칸이 비었거나 스스로 숨은 구역은 통째로 접는다. 제목만 남은 구역은
+// '아직 안 나왔다'가 아니라 '고장'으로 읽힌다(구 화면의 fill() 이 같은 계약).
+function v3HideEmptyBlocks(root) {
+  root.querySelectorAll(".v3-block").forEach(block => {
+    const slots = [...block.querySelectorAll("[data-v3-slot]")];
+    if (!slots.length) return;
+    const live = slots.some(slot =>
+      [...slot.children].some(child => !child.hidden && child.innerHTML.trim()));
+    // details 안의 슬롯만 비었으면 그 details 만 접는다.
+    const outside = slots.filter(slot => !slot.closest("details"));
+    if (!outside.length) return;
+    const outsideLive = outside.some(slot =>
+      [...slot.children].some(child => !child.hidden && child.innerHTML.trim()));
+    block.hidden = !outsideLive && !live ? true : !outsideLive;
+  });
+  root.querySelectorAll("details.v3-more").forEach(box => {
+    const slot = box.querySelector("[data-v3-slot]");
+    if (!slot || box.dataset.v3Lazy) return;
+    const live = [...slot.children].some(child => !child.hidden && child.innerHTML.trim());
+    box.hidden = !live;
+  });
+}
+
+function v3TrendHtml(ctx) {
+  const { weekLabel = "", conclusions = [], soWhat = [], watch = [], intro = "", changed = [] } = ctx;
+  const hasReport = conclusions.length || soWhat.length || watch.length || intro;
+  return `
+  <div class="v3-hero">
+    <h1>이번 주 판세</h1>
+    ${weekLabel ? `<p>${esc(weekLabel)}</p>` : ""}
+  </div>
+
+  ${hasReport ? `<section class="v3-block" aria-labelledby="v3WeekTitle">
+    <h2 id="v3WeekTitle" class="sr-only">주간 판세</h2>
+    ${conclusions.length ? `<h3 class="v3-minih">무엇이 바뀌었나</h3>${v3List(conclusions)}` : ""}
+    ${soWhat.length ? `<h3 class="v3-minih">그래서 의미는</h3>${v3List(soWhat)}` : ""}
+    ${watch.length ? `<h3 class="v3-minih">다음에 볼 것</h3>${v3List(watch)}` : ""}
+    ${intro ? `<details class="v3-more"><summary>해설 펼치기</summary><p class="v3-narrative">${esc(intro)}</p></details>` : ""}
+  </section>` : `<section class="v3-block"><p class="v3-sub">이번 주 리포트가 아직 없습니다.</p></section>`}
+
+  <section class="v3-block" aria-labelledby="v3FlowTitle">
+    <h2 id="v3FlowTitle">최근 몇 주, 어디로 움직였나</h2>
+    <div data-v3-slot="topicFlow"></div>
+  </section>
+
+  ${changed.length ? `<section class="v3-block" aria-labelledby="v3MovedTitle">
+    <h2 id="v3MovedTitle">이번 주 움직인 이슈</h2>
+    <ul class="v3-rows">${changed.map(issue => v3Row(issue, "change")).join("")}</ul>
+  </section>` : ""}
+
+  <section class="v3-block" aria-labelledby="v3NextTitle">
+    <h2 id="v3NextTitle">앞으로 무엇이 있나</h2>
+    <div data-v3-slot="upcoming"></div>
+    <details class="v3-more"><summary>날짜까지는 안 나온 것</summary><div data-v3-slot="months"></div></details>
+  </section>
+
+  <details class="v3-more v3-data" data-v3-lazy="trend">
+    <summary>데이터 더 보기</summary>
+    <div data-v3-slot="data"></div>
+  </details>`;
+}
+
+function v3RenderTrend(root, ctx = {}) {
+  v3ParkAll();
+  root.innerHTML = v3TrendHtml(ctx);
+  v3WireRows(root);
+  v3Place(root, '[data-v3-slot="topicFlow"]', "trendTopicFlow");
+  v3Place(root, '[data-v3-slot="upcoming"]', "eventCalendarUpcoming");
+  v3Place(root, '[data-v3-slot="months"]', "eventCalendarMonths");
+  // 빌린 칸이 스스로 숨었으면 그것을 감싼 v3 구역도 함께 접는다 — 안 그러면
+  // 제목만 남아 '고장'으로 읽힌다.
+  v3HideEmptyBlocks(root);
+
+  // 지연 렌더. 여는 순간 처음 그린다 — 접힌 채로 두면 차트·지도·워드클라우드가
+  // 아예 계산되지 않는다.
+  const box = root.querySelector('[data-v3-lazy="trend"]');
+  if (box) {
+    box.addEventListener("toggle", () => {
+      if (!box.open || box.dataset.v3Filled) return;
+      box.dataset.v3Filled = "1";
+      if (typeof ctx.onExpandData === "function") ctx.onExpandData();
+      ["trendReadiness", "trendData", "trendWordCloud", "eventCalendarGrid", "briefingTimeline"]
+        .forEach(id => v3Place(root, '[data-v3-slot="data"]', id));
+    }, { once: false });
   }
 }
 
@@ -519,8 +660,10 @@ function v3SheetOpen() {
 const UI_V3 = {
   STRINGS: UI_V3_STRINGS,
   renderToday: v3RenderToday,
+  renderTrend: v3RenderTrend,
   pickToday: v3PickToday,
   todayHtml: v3TodayHtml,
+  trendHtml: v3TrendHtml,
   openSheet: v3OpenSheet,
   closeSheet: v3CloseSheet,
   sheetOpen: v3SheetOpen,

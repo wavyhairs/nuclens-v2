@@ -3874,3 +3874,50 @@ body.ui-v3 .v3-weekly {
   border: 2px solid var(--c-border); background: var(--c-surface);
   color: inherit; font: inherit; border-radius: var(--r-1);
 }
+
+/* ── v3 흐름 탭 (A3) ───────────────────────────────────────────────────── */
+
+body.ui-v3 .v3-minih {
+  font-size: .82rem; color: var(--c-text-muted); margin: 16px 0 6px;
+  font-weight: 650;
+}
+body.ui-v3 .v3-block > .v3-minih:first-of-type { margin-top: 4px; }
+body.ui-v3 .v3-mini { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+body.ui-v3 .v3-mini li {
+  line-height: 1.55; font-size: .95rem; padding-left: 12px; position: relative;
+}
+body.ui-v3 .v3-mini li::before {
+  content: ""; position: absolute; left: 0; top: .62em; width: 5px; height: 5px;
+  background: var(--c-accent-text);
+}
+body.ui-v3 .v3-narrative { margin: 8px 0 0; line-height: 1.6; color: var(--c-text-secondary); }
+
+/* 접히는 칸. 접혀 있는 동안은 부피에 들어가지 않는다 — 되풀이하는 데이터를
+   지우지 않고 여기 넣는 것이 이 화면의 축소 방식이다. */
+body.ui-v3 .v3-more { margin-top: 12px; }
+body.ui-v3 .v3-more > summary {
+  cursor: pointer; min-height: 44px; display: flex; align-items: center;
+  font-weight: 600; color: var(--c-text-secondary);
+  border-top: 1px solid var(--c-border); padding-top: 12px;
+}
+body.ui-v3 .v3-data > summary {
+  border: 2px dashed var(--c-border); border-radius: var(--r-1);
+  justify-content: center; padding: 0; margin-top: 8px;
+}
+
+/* 빌려 온 구 골격 블록은 v3 안에서 제 여백만 걷는다. 구 화면의 구역 번호
+   (01·02…)는 v3 의 위계가 아니므로 감춘다. */
+body.ui-v3 #v3Root .sec-no,
+body.ui-v3 #v3Root .section-heading > .data-note { display: none; }
+body.ui-v3 #v3Root > .v3-block > [data-v3-slot] > section,
+body.ui-v3 #v3Root [data-v3-slot] > section { margin: 0; }
+body.ui-v3 #v3Root [data-v3-slot] > section > .section-heading,
+body.ui-v3 #v3Root [data-v3-slot] > section > h2,
+body.ui-v3 #v3Root [data-v3-slot] > section > h3 { display: none; }
+body.ui-v3 #v3Root [data-v3-slot="data"] > section { margin: 18px 0; }
+body.ui-v3 #v3Root [data-v3-slot="data"] > section > .section-heading { display: block; }
+
+body.ui-v3 .sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
