@@ -2291,6 +2291,7 @@ class GeneratedDataTests(unittest.TestCase):
         라이브 사고(『제12차 전력수급기본계획』 상세에 『산업용 전기요금 지역별
         차등제』 본문)는 데이터에서만 보이는 조합이었다.
         """
+        emits_hash = any("detail_source_hash" in issue for issue in self.issue_catalog)
         for issue in self.issue_catalog:
             detail = str(issue.get("detail") or "").strip()
             source = str(issue.get("detail_source") or "").strip()
@@ -2305,10 +2306,24 @@ class GeneratedDataTests(unittest.TestCase):
                 detail, [str(a.get("detail") or "").strip() for a in cards],
                 f"{issue['issue_id']}: 요지가 카드 멤버의 것이 아니다 (출처 {source!r})",
             )
-            if source:
+            # 출처는 **해시로** 되묻는다. 제목으로 비교하면 같은 제목을 받은 다른
+            # 기사가 근거 쪽에 있을 때 멀쩡한 빌드를 막는다 — 2026-09-15 배포가
+            # 그렇게 멈췄고, 그때 카드와 근거의 해시는 하나도 겹치지 않았다.
+            source_hash = str(issue.get("detail_source_hash") or "").strip()
+            # 빌드가 이 필드를 내보내기 시작한 뒤로는 **짝이 반드시 있어야** 한다.
+            # 그러지 않으면 필드가 사라진 날 이 검사가 조용히 아무 일도 안 하게 된다
+            # (옛 산출물로 돌릴 때만 통째로 건너뛴다).
+            if source and emits_hash:
+                self.assertTrue(source_hash,
+                                f"{issue['issue_id']}: 출처는 있는데 신원이 없다 — {source!r}")
+            if source and source_hash:
                 self.assertNotIn(
-                    source, [str(a.get("title_kr") or "") for a in evidence],
+                    source_hash, [str(a.get("hash") or "") for a in evidence],
                     f"{issue['issue_id']}: 요지 출처가 근거 기사다 — {source!r}",
+                )
+                self.assertIn(
+                    source_hash, [str(a.get("hash") or "") for a in cards],
+                    f"{issue['issue_id']}: 요지 출처가 이 이슈의 카드가 아니다 — {source!r}",
                 )
 
     def test_p1_keeps_the_p0_latest_briefing_and_weekly_order(self):
@@ -6099,28 +6114,49 @@ class ArticleDetailSurfacesTests(unittest.TestCase):
         # 요지는 제 기사 제목과 겹쳐야 통과한다(usable_detail) — 픽스처도
         # 실제 기사처럼 어휘를 공유하게 둔다.
         old = {"article_date": "2026-08-01", "title_kr": "옛 기사 팍스 원전 점검",
+               "hash": "h-old",
                "detail": "옛 기사 팍스 원전 점검이 시작됐다는 요지다."}
         new = {"article_date": "2026-08-06", "title_kr": "새 기사 팍스 원전 재가동",
+               "hash": "h-new",
                "detail": "새 기사 팍스 원전 재가동이 확정됐다는 요지다."}
         representative = {"title_kr": "대표 팍스 원전 기사",
                           "detail": "대표 팍스 원전 기사의 요지다."}
 
-        detail, source = build_data.pick_detail([old, new], representative)
+        detail, source, source_hash = build_data.pick_detail([old, new], representative)
         self.assertEqual(detail, "대표 팍스 원전 기사의 요지다.")
         # 대표 기사면 출처를 적지 않는다 — 그 제목이 바로 위 h2 다.
         self.assertEqual(source, "")
+        self.assertEqual(source_hash, "")
 
         # 대표에 요지가 없으면 **가장 최신** 기사에서 가져온다. 오래된 멤버를
         # 쓰면 제목은 새 사건인데 내용은 옛 상태인 조합이 나온다.
-        detail, source = build_data.pick_detail([old, new],
-                                                {"title_kr": "대표 팍스 원전 기사"})
+        detail, source, source_hash = build_data.pick_detail(
+            [old, new], {"title_kr": "대표 팍스 원전 기사"})
         self.assertEqual(detail, "새 기사 팍스 원전 재가동이 확정됐다는 요지다.")
         self.assertEqual(source, "새 기사 팍스 원전 재가동")
+        # 제목만으로는 기사를 되찾을 수 없다 — 해시가 함께 나와야 한다.
+        self.assertEqual(source_hash, "h-new")
+
+    def test_source_identity_survives_a_shared_title(self):
+        """서로 다른 기사가 같은 한국어 제목을 받는 일이 실제로 있다.
+
+        실측(카탈로그 530건): 카드와 근거가 제목을 공유하는 이슈 7건, 그런데 해시가
+        겹치는 이슈는 0건 — 정말 다른 기사다. 제목으로 출처를 되물으면 엉뚱한 기사를
+        가리키고, 그 위에 세운 검사는 멀쩡한 빌드를 막는다(2026-09-15 배포가 그랬다).
+        """
+        same_title = "한수원-웨스팅하우스, 미국 내 원전 8기 건설 협력 잠정 합의"
+        card = {"article_date": "2026-09-08", "title_kr": same_title, "hash": "h-card",
+                "detail": f"{same_title} 관련 잠정 합의 내용이 공개됐다."}
+        detail, source, source_hash = build_data.pick_detail(
+            [card], {"title_kr": same_title})
+        self.assertEqual(source, same_title)
+        self.assertEqual(source_hash, "h-card",
+                         "같은 제목을 쓰는 근거 기사와 구분할 길이 해시뿐이다")
 
     def test_missing_detail_is_not_an_error(self):
         # 2026-08-07 이전 아카이브에는 detail 이 없다. 빈 값이 정상이다.
         self.assertEqual(build_data.pick_detail([{"article_date": "2026-08-01"}], {}),
-                         ("", ""))
+                         ("", "", ""))
 
     def test_article_view_carries_detail_into_the_timeline(self):
         view = build_data._article_view({
@@ -6144,7 +6180,7 @@ class ArticleDetailSurfacesTests(unittest.TestCase):
         self.assertEqual(build_data.usable_detail(wrong), "")
         self.assertEqual(build_data._article_view(wrong)["detail"], "")
         # 이슈 상세에도 실리지 않는다.
-        self.assertEqual(build_data.pick_detail([wrong], wrong), ("", ""))
+        self.assertEqual(build_data.pick_detail([wrong], wrong), ("", "", ""))
 
     def test_known_hallucinated_archive_title_is_corrected_at_the_source(self):
         """폴리뉴스 원문에 없던 영덕·기장 후보지 단정을 아카이브에 남기지 않는다."""
