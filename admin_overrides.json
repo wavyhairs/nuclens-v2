@@ -9,8 +9,8 @@
     "issue_group_split 은 쌍이 아니라 선이다. left_hashes × right_hashes 를 가로지르는 쌍 전부로 펼쳐진다 — 쌍 하나만 막으면 다른 멤버를 통해 도로 합쳐진다."
   ],
   "version": 1,
-  "updated_at": "2026-09-15T09:05:13.917Z",
-  "synced_at": "2026-09-15T09:37:56+00:00",
+  "updated_at": "2026-08-29T03:53:37.628Z",
+  "synced_at": "2026-09-15T10:18:07+00:00",
   "source": "kv",
   "entries": [
     {
@@ -199,25 +199,6 @@
       "group": "정책",
       "value": "전력거래소 원전",
       "id": "keyword-6fa27d9b-1c5"
-    },
-    {
-      "kind": "feed_add",
-      "note": "콘솔에서 추가",
-      "created_at": "2026-08-29T03:56:51.600Z",
-      "url": "https://news.google.com/rss/search?q=site%3Aniftep.snu.ac.kr%20when%3A3d&hl=ko&gl=KR&ceid=KR:ko",
-      "name": "서울대 원자력미래기술정책연구소",
-      "domain_label": "niftep.snu.ac.kr",
-      "require_keywords": [],
-      "resolve_publisher": false,
-      "id": "feed-362db23d-74b"
-    },
-    {
-      "kind": "official_disable",
-      "note": "콘솔에서 중지",
-      "created_at": "2026-09-15T09:05:13.917Z",
-      "target": "https://niftep.snu.ac.kr/kr/sub/notice/lab.asp",
-      "label": "서울대 원자력미래기술정책연구소",
-      "id": "official-46977a32-59c"
     }
   ]
 }
