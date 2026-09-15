@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-15T00:46:23+09:00",
+ "generated_at": "2026-09-16T00:50:47+09:00",
  "events": [
   {
    "id": "of-2e6b1d697819",
@@ -286,6 +286,27 @@
    "significance": "토론회"
   },
   {
+   "id": "of-e7fa3f0b7d10",
+   "date": "2026-09-29",
+   "end_date": "2026-09-29",
+   "kind": "deadline",
+   "time": "",
+   "label": "제38회 한일 원자력산업세미나 및 제12회 동아시아 원자력포럼 참가 신청 안내",
+   "host": "한국원자력산업협회",
+   "organizer": "",
+   "place": "",
+   "url": "https://www.kaif.or.kr/ko?c=193&gbn=view&gp=1&ix=30060&s=",
+   "source_id": "kaif_notice",
+   "publisher": "한국원자력산업협회",
+   "notice_title": "제38회 한일 원자력산업세미나 및 제12회 동아시아 원자력포럼 참가 신청 안내 (~9. 29. / 선착순)",
+   "first_seen": "2026-09-15",
+   "topics": [
+    "finance"
+   ],
+   "relevance": "원자력산업",
+   "significance": "세미나"
+  },
+  {
    "id": "of-e84de075fb02",
    "date": "2026-10-04",
    "end_date": "2026-10-09",
@@ -467,7 +488,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-09-15T00:46:23+09:00",
+   "at": "2026-09-16T00:50:47+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -475,18 +496,18 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-09-15T00:46:23+09:00",
+   "at": "2026-09-16T00:50:47+09:00",
    "ok": true,
    "parsed": 11,
-   "kept": 2,
-   "new": 0,
+   "kept": 3,
+   "new": 1,
    "dropped": {
     "not_an_event": 5,
-    "low_significance": 4
+    "low_significance": 3
    }
   },
   "kaif_calendar": {
-   "at": "2026-09-15T00:46:23+09:00",
+   "at": "2026-09-16T00:50:47+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -499,7 +520,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-09-15T00:46:23+09:00",
+   "at": "2026-09-16T00:50:47+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -507,21 +528,21 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-09-15T00:46:23+09:00",
+   "at": "2026-09-16T00:50:47+09:00",
    "ok": false,
    "error": "ConnectTimeout: HTTPSConnectionPool(host='www.assembly.go.kr', port=443): Max retries exceeded with url: /portal/noti/seminar/scheduleSmn.do?menuNo=600102 (Caused by ConnectTimeoutError(<HTTPSConnecti"
   },
   "kpx_notice": {
-   "at": "2026-09-15T00:46:23+09:00",
+   "at": "2026-09-16T00:50:47+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 1,
    "new": 1,
    "dropped": {
+    "not_an_event": 6,
     "no_interest_match": 6,
     "low_significance": 2,
-    "no_event_date": 5,
-    "not_an_event": 5,
+    "no_event_date": 4,
     "unreadable_event_date": 1
    }
   }
