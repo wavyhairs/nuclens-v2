@@ -107,6 +107,8 @@ const state = {
   briefings: [], issues: [], trend: null, insights: null, meta: null,
   pubs: null, pubsOrg: "전체",
   manifest: null, systemStatus: null, dataBase: "/data",
+  // 화면 v3 플래그. "" 또는 "v3" — restoreUrlState() 가 정하고 body 클래스로 나간다.
+  ui: "", uiQa: false,
   briefingDate: "", region: "전체", topic: "전체", view: "news",
   issueSort: "importance", issueView: "card", issueId: "", railIssueId: "",
   archiveQuery: "", archiveRegion: "전체", archiveTopic: "전체",
@@ -980,6 +982,10 @@ async function checkForNewGeneration() {
 
 function syncUrl(mode = "replace") {
   const params = new URLSearchParams();
+  // syncUrl() 은 주소를 state 에서 **매번 다시 만든다.** 여기서 플래그를 도로
+  // 써넣지 않으면 첫 상호작용에 ui=v3 가 사라진다.
+  if (state.ui) params.set("ui", state.ui);
+  if (state.uiQa) params.set("qa", "1");
   if (state.briefingDate) params.set("date", state.briefingDate);
   if (state.region !== "전체") params.set("region", state.region);
   if (state.topic !== "전체") params.set("topic", state.topic);
@@ -1006,6 +1012,16 @@ function syncUrl(mode = "replace") {
 
 function restoreUrlState() {
   const params = new URLSearchParams(location.search);
+  // ── 화면 v3 플래그 ──────────────────────────────────────────────────────
+  //
+  // **여기서, 이 자리에서 클래스를 붙인다.** init() 은 restoreUrlState() →
+  // … → renderBriefing()(거기서 booting 해제) 순으로 흐르고, booting 동안
+  // .briefing-content-grid 는 접혀 있다(index.html 주석). 그 사이에 붙이면 구
+  // 골격이 펼쳐진 채 한 번 그려졌다가 사라지는 일이 없다 — 이 화면은 그 종류의
+  // 이동으로 CLS 0.90 을 찍은 적이 있다.
+  state.ui = params.get("ui") === "v3" && typeof UI_V3 !== "undefined" ? "v3" : "";
+  state.uiQa = state.ui === "v3" && params.get("qa") === "1";
+  document.body.classList.toggle("ui-v3", state.ui === "v3");
   const requestedDate = briefDateFromLocation() || params.get("date");
   if (briefingDates().includes(requestedDate)) state.briefingDate = requestedDate;
   const requestedRegion = params.get("region");
@@ -1729,6 +1745,23 @@ function placeTodayAgenda() {
   }
 }
 
+// 화면 v3 의 유일한 진입점. 조립은 전부 ui-v3.js 가 하고, app.js 는 어느 데이터를
+// 넘길지만 정한다 — 두 파일이 같은 화면을 반씩 그리면 금방 갈라진다.
+//
+// 3단 시트가 읽을 레코드는 **카탈로그(state.issues)** 에서 찾는다. briefing.issues
+// 안의 같은 이슈는 그 회차 시점의 related_articles 를 들고 있어서(실측 734건 중
+// 449건 불일치, 최대 1 vs 54) 타임라인이 조용히 잘린다.
+function v3Catalog(issueId) {
+  return state.issues.find(issue => issue.issue_id === issueId) || null;
+}
+
+function renderV3(briefing) {
+  const root = document.getElementById("v3Root");
+  if (!root) return;
+  root.hidden = false;
+  UI_V3.renderToday(root, briefing, { qa: state.uiQa, catalog: v3Catalog });
+}
+
 function renderBriefing() {
   const briefing = currentBriefing();
   const issueList = document.getElementById("issueList");
@@ -1741,6 +1774,10 @@ function renderBriefing() {
     renderEmptyBriefing(null, issueList);
     return;
   }
+  // 화면 v3 분기. 구 골격은 body.ui-v3 아래에서 CSS 가 접고, v3 는 #v3Root 에만
+  // 그린다 — 아래 골격 채우기를 그대로 두면 안 보이는 칸을 채우느라 같은 일을
+  // 두 번 한다. booting 은 위에서 이미 걷혔다.
+  if (state.ui === "v3") { renderV3(briefing); return; }
   renderTodayAgenda(briefing);
   renderHomeIntelligence(briefing);
   // 필터 때문에 비어 보이는 것과 그날 실제로 이슈가 0건인 것은 다르다.
@@ -5576,9 +5613,17 @@ async function init() {
     `${state.issues.length}개 이슈 · ${catalogArticles}개 원문 · ${dateLabel(firstIssueDate)}–${dateLabel(state.meta.latest_briefing_date)}`;
   renderDateSelect();
   renderBriefing();
-  renderArchiveSearch();
-  renderTrend();
-  renderLongTerm();
+  // v3 는 비활성 탭을 부팅에서 그리지 않는다. switchView() 가 진입할 때마다 이미
+  // 다시 그리고 있으므로(아래 view === "search"/"trend"/"longterm" 분기), 부팅의
+  // 이 세 줄은 **숨어 있는 화면을 미리 그려 두는 것**이 전부다. v3 는 어차피 구
+  // 골격을 CSS 로 접으므로 그 비용이 통째로 낭비다.
+  //
+  // 구 경로의 호출 순서는 건드리지 않는다 — 플래그 없는 화면은 픽셀 단위로 같아야 한다.
+  if (state.ui !== "v3") {
+    renderArchiveSearch();
+    renderTrend();
+    renderLongTerm();
+  }
   renderSaved();
   renderSystemStatus();
   renderReturnNote();

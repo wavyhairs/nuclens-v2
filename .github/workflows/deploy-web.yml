@@ -170,6 +170,11 @@ jobs:
       - name: Check app.js parses
         run: node --check web/public/app.js
 
+      # ui-v3.js 도 같은 이유로 막는다. 이쪽은 증상이 한 겹 더 나쁘다 — app.js
+      # 앞에 실리므로 여기서 파스가 깨지면 **플래그와 무관하게** 전 화면이 죽는다.
+      - name: Check ui-v3.js parses
+        run: node --check web/public/ui-v3.js
+
       # 날짜 산술은 파이썬 테스트가 못 잡는다 — app.js 안에 있고 의존성이 없어서
       # 지금까지 수동 실행 전용이었다. '최근 7일이 8일이 되던' 종류의 off-by-one 과
       # 주간 리포트 구간(토~금) 매칭이 여기에 걸린다. 3초짜리라 배포 경로에 둔다.
@@ -224,6 +229,14 @@ jobs:
       # `data/issue_aliases.json` 의 모양까지 같이 본다.
       - name: Merged-issue redirect (app.js)
         run: node web/tests/issue_merge_redirect.mjs
+
+      # 화면 v3 의 3단 컴포넌트가 필드를 어떻게 읽는가. 넷 다 조용히 틀리는
+      # 자리다 — 1단 폴백이 빌드 계약을 우회하거나(제목 재진술이 그대로 나감),
+      # 변화 이력의 마지막 항목(=가장 오래된 변화)을 '이전 보도'로 세우거나,
+      # 배포된 적 없는 라벨이 같은 이슈를 구 화면과 다르게 부르거나,
+      # 빈 배지가 서거나. 화면을 봐도 그럴듯해 보여서 더 늦게 걸린다.
+      - name: UI v3 rows and sheet (app.js + ui-v3.js)
+        run: node web/tests/ui_v3_rows.mjs
 
       # 운영 콘솔 자물쇠는 엣지에서 도는 JS 이고 해시·세션·비밀번호 규칙이 전부
       # 그 안에 있다. 여기가 어긋나면 맞는 비밀번호로도 못 들어가거나 반대로
