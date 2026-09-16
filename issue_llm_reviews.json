@@ -4382,11 +4382,12 @@
     },
     "056b606cbfbb0901--f396174affa85472": {
       "embedding_similarity": 0.8531,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "정부, 20조 원 규모 '한국판 전략형 국부펀드' 설립 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "국부펀드 설립과 SMR R&D 육성은 다름",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "국부펀드 설립과 R&D SEED 육성은 별개",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "정부, 5년간 국가 R&D에 200조 원 투입…SMR 등 7대 SEED 육성",
       "same_event": false
     },
@@ -12620,6 +12621,17 @@
       "reason": "철강노조 전기요금 요구와 포항시 데이터센터 인프라는 별개",
       "reviewed_at": "2026-09-15T16:01:07.168458+00:00",
       "right_title": "포항시, 데이터센터 전력망 확충 및 신산업 인프라 구축 추진",
+      "same_event": false
+    },
+    "097b96999975e9f1--443dc23a57e6ec6c": {
+      "embedding_similarity": 0.8554,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "원자력 추진선 규제체계 마련 및 국제기준 정비 가속화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원자력 추진선 규제와 해양 SMR 기술 협력",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "한국전력기술, 해양 SMR 'BANDI' 핵심기술 확보 협력",
       "same_event": false
     },
     "09901c1fb0d5b984--1e85c02f82d433ab": {
@@ -43702,6 +43714,17 @@
       "right_title": "하이퍼스케일러, AI 데이터센터 전력 확보 위해 원전 직접 구매 확대",
       "same_event": false
     },
+    "262a0452c1ac89dc--844839f651a1ba7f": {
+      "embedding_similarity": 0.8415,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "브룩필드, 네이버 AI 팩토리 구축 사업 전략 파트너십 공식화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 기업의 별개 투자 및 파트너십",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "베인캐피털벤처스, 16억 달러 규모 AI 인프라 및 물리적 AI 펀드 조성",
+      "same_event": false
+    },
     "262a0452c1ac89dc--8683b53e01abe193": {
       "embedding_similarity": 0.8625,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -47572,6 +47595,61 @@
       "right_title": "네이버, 프랑스 순방 계기 원전 특화 AI 등 산업 협력 확대",
       "same_event": false
     },
+    "2a016601e92d0d99--80b351cd95e70516": {
+      "embedding_similarity": 0.842,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미 의회, AI 위험 대응 위한 '킬스위치' 및 전담 규제기관 도입 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "킬스위치 논의와 인프라 확충 강조는 별개임",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "미 하원 거스리 위원장, AI 규제보다 인프라 확충 우선 강조",
+      "same_event": false
+    },
+    "2a016601e92d0d99--9139fd0916b49ade": {
+      "embedding_similarity": 0.8555,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "G20, AI 규제 최소화 및 인프라 확충 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "G20 합의와 미 하원 위원장 발언은 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "미 하원 거스리 위원장, AI 규제보다 인프라 확충 우선 강조",
+      "same_event": false
+    },
+    "2a016601e92d0d99--9957f9f4b43552f8": {
+      "embedding_similarity": 0.8658,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "트럼프, AI 데이터센터 확대 옹호 및 규제 완화 기조 재확인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "트럼프 기조와 하원 위원장 발언은 별개임",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "미 하원 거스리 위원장, AI 규제보다 인프라 확충 우선 강조",
+      "same_event": false
+    },
+    "2a016601e92d0d99--ae1881fd98d4b999": {
+      "embedding_similarity": 0.8523,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 하원, AI 데이터센터 전력 비용 부담 의무화 법안 본회의 상정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "법안 상정과 위원장 발언은 다른 사안임",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "미 하원 거스리 위원장, AI 규제보다 인프라 확충 우선 강조",
+      "same_event": false
+    },
+    "2a016601e92d0d99--f1ecac74ad93af10": {
+      "embedding_similarity": 0.85,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "법안 추진과 위원장 발언은 다른 사안임",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "미 하원 거스리 위원장, AI 규제보다 인프라 확충 우선 강조",
+      "same_event": false
+    },
     "2a166c826657df4e--2eba66f067fdc974": {
       "embedding_similarity": 0.8434,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -49810,6 +49888,17 @@
       "right_title": "미국 펜실베이니아주, 대규모 데이터센터 전력망 규제 강화",
       "same_event": false
     },
+    "2bdc5f2fb94508de--58c466a456c5217f": {
+      "embedding_similarity": 0.849,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 펜실베이니아주, 대규모 데이터센터 전력망 규제 강화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주 규제 강화와 연합 출범은 별개임",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "엔비디아·구글 등 20개 기업, AI 데이터센터 전력 유연화 연합 출범",
+      "same_event": false
+    },
     "2bdc5f2fb94508de--5912265ba9aa8cfe": {
       "embedding_similarity": 0.8507,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -50322,11 +50411,12 @@
     },
     "2bdc5f2fb94508de--e014872747c23fbc": {
       "embedding_similarity": 0.9044,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 펜실베이니아주, 대규모 데이터센터 전력망 규제 강화",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주정부 규제와 연방정부 정책",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "주정부 규제와 연방 정책 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -54467,11 +54557,12 @@
     },
     "2ee56fe1780454f0--e014872747c23fbc": {
       "embedding_similarity": 0.8856,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "삼성전자, 미국 내 로비 의제에 데이터센터 전력망 추가",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "기업 로비 활동과 연방정부 정책",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "기업 로비와 연방 정책 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -59495,12 +59586,13 @@
       "same_event": false
     },
     "341fae7beffafdcb--f396174affa85472": {
-      "embedding_similarity": 0.8699,
+      "embedding_similarity": 0.8922,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "정부, SMR 7대 SEED 프로젝트 선정 및 세제 지원 강화",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "SMR 7대 SEED 육성 정책 관련 동일 사안",
-      "reviewed_at": "2026-09-01T18:41:35.996807+00:00",
+      "reason": "SMR 7대 SEED 프로젝트 관련 후속 보도",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "정부, 5년간 국가 R&D에 200조 원 투입…SMR 등 7대 SEED 육성",
       "same_event": true
     },
@@ -83101,11 +83193,12 @@
     },
     "43f9d6d14c4dcd39--f396174affa85472": {
       "embedding_similarity": 0.8601,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "김정재 의원, SMR 국가전략기술 포함 및 세제 지원 확대 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "SMR 국가전략기술 포함 및 R&D 육성",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "SMR 국가전략기술 및 SEED 육성 관련",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "정부, 5년간 국가 R&D에 200조 원 투입…SMR 등 7대 SEED 육성",
       "same_event": true
     },
@@ -85318,6 +85411,17 @@
       "reason": "SK텔레콤 재편과 건설사 모듈러 공법",
       "reviewed_at": "2026-09-08T12:51:12.815058+00:00",
       "right_title": "건설사들, AI 데이터센터 구축 위한 모듈러 공법 경쟁 가속화",
+      "same_event": false
+    },
+    "464201f63eb5f96a--4d4a8ae74dda91a7": {
+      "embedding_similarity": 0.8571,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "SK텔레콤, AI 데이터센터 사업 재편 및 2035년 15GW 확보 목표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "SK텔레콤 사업 재편과 SK이노베이션 전시는 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "SK이노베이션, 기후산업국제박람회서 AI 데이터센터 에너지 기술 전시",
       "same_event": false
     },
     "464201f63eb5f96a--4dcd99159e660144": {
@@ -91838,6 +91942,17 @@
       "right_title": "원전 계속운전 심사 지연으로 한빛 2호기 가동 중단",
       "same_event": true
     },
+    "4d21c83d2a6bd107--8a366730b4e4c321": {
+      "embedding_similarity": 0.8587,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한·미·영 등 9개국, 핵융합 상용화 위한 다자 협력 체계 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "다자간 핵융합 협력과 미-영 양자 파트너십",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "미국-영국, 핵융합 상용화 가속 위한 3개 파트너십 발표",
+      "same_event": false
+    },
     "4d21c83d2a6bd107--b190942afaa5f0cb": {
       "embedding_similarity": 0.8808,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -93286,6 +93401,17 @@
       "right_title": "정부, 미국 내 원전 8기 건설 추진…한미 양국 노형 도입 줄다리기",
       "same_event": false
     },
+    "4e1bbcf5fe2a6b99--aa99401f6caf7d5e": {
+      "embedding_similarity": 0.8536,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "대미 투자 협상 난항, 전략자산 활용한 상업성 확보 과제",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대미 투자 협상 난항 관련 동일 사안",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "대미 투자 국회 보고 연기, 원전 및 파이로프로세싱 협상 난항",
+      "same_event": true
+    },
     "4e1bbcf5fe2a6b99--b674a830b574b651": {
       "embedding_similarity": 0.8843,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -93316,6 +93442,17 @@
       "reason": "대미 투자 및 원전 8기 건설 추진 협상",
       "reviewed_at": "2026-09-08T18:48:59.986630+00:00",
       "right_title": "정부, 대미 투자 1호로 가스복합발전 낙점…원전 8기 건설도 유력",
+      "same_event": true
+    },
+    "4e1bbcf5fe2a6b99--b99053b63fb27ae1": {
+      "embedding_similarity": 0.8789,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "대미 투자 협상 난항, 전략자산 활용한 상업성 확보 과제",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대미 투자 협상 난항 및 원전 이견 보도",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "한미 대미 투자 협상 난항, 원전 및 파이로프로세싱 투자 이견",
       "same_event": true
     },
     "4e1bbcf5fe2a6b99--bb15859d10f6656b": {
@@ -95456,14 +95593,15 @@
       "same_event": false
     },
     "5085332ba448f2a6--f396174affa85472": {
-      "embedding_similarity": 0.8993,
+      "embedding_similarity": 0.9016,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "정부, 2027년 예산안에 SMR 및 핵융합 등 초격차 기술 집중 투자 계획",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "예산안 투자 계획과 5년간 R&D 투입은 다른 안건",
-      "reviewed_at": "2026-09-01T18:41:35.996807+00:00",
+      "reason": "정부 SMR 및 SEED 기술 투자 계획",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "정부, 5년간 국가 R&D에 200조 원 투입…SMR 등 7대 SEED 육성",
-      "same_event": false
+      "same_event": true
     },
     "5085332ba448f2a6--f91f886b5ead41f3": {
       "embedding_similarity": 0.8657,
@@ -98307,6 +98445,17 @@
       "right_title": "美 데이터센터 천연가스 수요, 2035년 일일 180억 입방피트 전망",
       "same_event": false
     },
+    "53cff084bc298889--58c466a456c5217f": {
+      "embedding_similarity": 0.8452,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 내 AI 데이터센터 건설 반대 여론 확산 및 선거 쟁점화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "반대 여론과 연합 출범은 별개임",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "엔비디아·구글 등 20개 기업, AI 데이터센터 전력 유연화 연합 출범",
+      "same_event": false
+    },
     "53cff084bc298889--58effbba016eec58": {
       "embedding_similarity": 0.8478,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -99040,12 +99189,13 @@
       "same_event": false
     },
     "53cff084bc298889--e014872747c23fbc": {
-      "embedding_similarity": 0.8404,
+      "embedding_similarity": 0.9027,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 내 AI 데이터센터 건설 반대 여론 확산 및 선거 쟁점화",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "반대 여론과 전력 공급망 투자 의무화는 다름",
-      "reviewed_at": "2026-09-01T18:41:35.996807+00:00",
+      "reason": "주정부 규제와 연방 정책 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -106476,6 +106626,61 @@
       "right_title": "SK텔레콤, AIDC 사업 체계 재편…SK하이퍼·SK호라이즌 이원화",
       "same_event": false
     },
+    "58c466a456c5217f--67c693714bcd14b1": {
+      "embedding_similarity": 0.8414,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "美 인디애나 주지사, 데이터센터 전력 100% 자체 조달 요구",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주지사 요구와 연합 출범은 별개임",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "엔비디아·구글 등 20개 기업, AI 데이터센터 전력 유연화 연합 출범",
+      "same_event": false
+    },
+    "58c466a456c5217f--9139fd0916b49ade": {
+      "embedding_similarity": 0.8662,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "G20, AI 규제 최소화 및 인프라 확충 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "G20 합의와 연합 출범은 다른 사안임",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "엔비디아·구글 등 20개 기업, AI 데이터센터 전력 유연화 연합 출범",
+      "same_event": false
+    },
+    "58c466a456c5217f--9957f9f4b43552f8": {
+      "embedding_similarity": 0.8629,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "트럼프, AI 데이터센터 확대 옹호 및 규제 완화 기조 재확인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "트럼프 발언과 연합 출범은 다른 사안임",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "엔비디아·구글 등 20개 기업, AI 데이터센터 전력 유연화 연합 출범",
+      "same_event": false
+    },
+    "58c466a456c5217f--ae1881fd98d4b999": {
+      "embedding_similarity": 0.851,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 하원, AI 데이터센터 전력 비용 부담 의무화 법안 본회의 상정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "법안 상정과 연합 출범은 다른 사안임",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "엔비디아·구글 등 20개 기업, AI 데이터센터 전력 유연화 연합 출범",
+      "same_event": false
+    },
+    "58c466a456c5217f--f8c7352740e28772": {
+      "embedding_similarity": 0.8403,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "구글, 핀란드 디지털 인프라에 20조 투자 및 포툼 원전 전력 구매 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "구글 핀란드 투자와 연합 출범은 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "엔비디아·구글 등 20개 기업, AI 데이터센터 전력 유연화 연합 출범",
+      "same_event": false
+    },
     "58effbba016eec58--78926903156f16fa": {
       "embedding_similarity": 0.8401,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -107114,11 +107319,12 @@
     },
     "5912265ba9aa8cfe--e014872747c23fbc": {
       "embedding_similarity": 0.8754,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 AI 데이터센터 프로젝트, 주민 반발로 1300억 달러 지연·취소",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "민간 프로젝트 지연과 연방정부 정책",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "프로젝트 지연과 연방 정책 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -108370,11 +108576,12 @@
     },
     "59a743132acb9c15--e014872747c23fbc": {
       "embedding_similarity": 0.8669,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "웨스트버지니아주, 5GW 규모 복합 발전단지 부지 통제 요건 승인",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주 단위 발전단지 승인과 연방 정책",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "개별 발전단지 승인과 연방 정책 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -109479,6 +109686,17 @@
       "reason": "웨스팅하우스 관련 지분 협상과 기업 구조 개편",
       "reviewed_at": "2026-09-15T16:01:07.168458+00:00",
       "right_title": "한미, 웨스팅하우스 지분 5~10% 투자 및 의결권 확보 협상",
+      "same_event": true
+    },
+    "5b0c7f1f9010565a--aa99401f6caf7d5e": {
+      "embedding_similarity": 0.8766,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한미, 웨스팅하우스 지분 5~10% 투자 및 의결권 확보 협상",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "웨스팅하우스 지분 투자 협상 동일 사안",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "대미 투자 국회 보고 연기, 원전 및 파이로프로세싱 협상 난항",
       "same_event": true
     },
     "5b0c7f1f9010565a--b3abfaa5df0dc6ae": {
@@ -110884,6 +111102,17 @@
       "reviewed_at": "2026-09-14T19:15:59.636977+00:00",
       "right_title": "정부, 해외 원전 사업 주도권 조정 방침",
       "same_event": false
+    },
+    "5da600fef839df85--aa99401f6caf7d5e": {
+      "embedding_similarity": 0.8623,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한수원, 웨스팅하우스 지분 인수 및 미국 내 원전 8기 건설 협상 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원전 협상 및 대미 투자 관련 동일 사건",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "대미 투자 국회 보고 연기, 원전 및 파이로프로세싱 협상 난항",
+      "same_event": true
     },
     "5da600fef839df85--bb9449abc3de8062": {
       "embedding_similarity": 0.8713,
@@ -112442,6 +112671,17 @@
       "reason": "서로 다른 국가 간의 협력 사안임",
       "reviewed_at": "2026-09-15T03:56:18.236540+00:00",
       "right_title": "한-베트남, 핵심광물 및 원전·에너지 협력 확대",
+      "same_event": false
+    },
+    "5f68b58b2fb338e3--c0a58f0d0c0af487": {
+      "embedding_similarity": 0.8405,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한-베트남, 핵심광물 및 원전·에너지 협력 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "협력 대상 국가가 베트남과 중앙아로 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "한국-중앙아 5개국, '서울선언' 채택 및 원전·에너지 협력 강화",
       "same_event": false
     },
     "5f68b58b2fb338e3--c60046634052feca": {
@@ -117246,6 +117486,17 @@
       "right_title": "한-카자흐스탄, 원전 및 SMR 공동 연구개발 협력 MOU 체결",
       "same_event": false
     },
+    "666be141636a7bfe--c0a58f0d0c0af487": {
+      "embedding_similarity": 0.8889,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한-중앙아 5개국 산업장관회의 개최, 핵심광물 공급망 협력 강화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "한-중앙아 협력 및 서울선언 관련 동일 사안",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "한국-중앙아 5개국, '서울선언' 채택 및 원전·에너지 협력 강화",
+      "same_event": true
+    },
     "666be141636a7bfe--d19d6c3aaf04b2c4": {
       "embedding_similarity": 0.8628,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -118175,6 +118426,17 @@
       "reviewed_at": "2026-09-15T19:21:32.642657+00:00",
       "right_title": "카자흐스탄 2029 국가개발계획 및 자원 정책 동향",
       "same_event": false
+    },
+    "66f216663c3f0437--c0a58f0d0c0af487": {
+      "embedding_similarity": 0.8598,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한-카자흐, 원전·SMR 공동 R&D 추진 등 포괄적 전략동반자 격상",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "한-중앙아(카자흐스탄 포함) 원전·에너지 협력",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "한국-중앙아 5개국, '서울선언' 채택 및 원전·에너지 협력 강화",
+      "same_event": true
     },
     "66f216663c3f0437--cf3a48a0423086ac": {
       "embedding_similarity": 0.8523,
@@ -119152,11 +119414,12 @@
     },
     "67b29b69bb768171--e014872747c23fbc": {
       "embedding_similarity": 0.8593,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "아마존 AI 데이터센터, 연 3300만톤 탄소 배출 논란",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "탄소 배출 논란과 정부 인프라 투자 정책",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "주제만 같고 사안이 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -133199,6 +133462,17 @@
       "right_title": "정부, 미국 내 원전 8기 건설 및 웨스팅하우스 지분 인수 검토",
       "same_event": true
     },
+    "7524648ff8032947--aa99401f6caf7d5e": {
+      "embedding_similarity": 0.8651,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 대미 투자 1호 사업 22억 달러 이달 말 송금 및 웨스팅하우스 지분 인수 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대미 투자 및 원전 협상 관련 동일 사건",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "대미 투자 국회 보고 연기, 원전 및 파이로프로세싱 협상 난항",
+      "same_event": true
+    },
     "7524648ff8032947--ac769169cf9c6de9": {
       "embedding_similarity": 0.8561,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -141202,6 +141476,17 @@
       "right_title": "대미 에너지 투자 프로젝트 가시화에 따른 국내 원전·건설업계 수혜 전망",
       "same_event": false
     },
+    "7d19110e0c58b28f--aa99401f6caf7d5e": {
+      "embedding_similarity": 0.851,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한-미, 대미 에너지 투자 협상 막판 조율",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "한미 에너지 투자 협상 관련 동일 사건",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "대미 투자 국회 보고 연기, 원전 및 파이로프로세싱 협상 난항",
+      "same_event": true
+    },
     "7d19110e0c58b28f--b1f681c4c740b1b1": {
       "embedding_similarity": 0.8654,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -141245,6 +141530,17 @@
       "reviewed_at": "2026-09-11T21:09:04.295416+00:00",
       "right_title": "정부, 대미 투자 1호로 가스복합발전 낙점…원전 8기 건설도 유력",
       "same_event": false
+    },
+    "7d19110e0c58b28f--b99053b63fb27ae1": {
+      "embedding_similarity": 0.8517,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한-미, 대미 에너지 투자 협상 막판 조율",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "한미 대미 투자 및 원전 협상 관련 보도",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "한미 대미 투자 협상 난항, 원전 및 파이로프로세싱 투자 이견",
+      "same_event": true
     },
     "7d19110e0c58b28f--bf81f3cf9cfa826f": {
       "embedding_similarity": 0.8508,
@@ -157721,11 +158017,12 @@
     },
     "98fd740156337298--e014872747c23fbc": {
       "embedding_similarity": 0.8684,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미 연준, AI 인프라 투자가 경제 및 물가에 미치는 영향 논의 본격화",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "연준의 논의와 연방정부 투자 의무화",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "연준 논의와 연방 정책 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -158435,12 +158732,13 @@
       "same_event": false
     },
     "9957f9f4b43552f8--e014872747c23fbc": {
-      "embedding_similarity": 0.8477,
+      "embedding_similarity": 0.9073,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "트럼프, AI 데이터센터 확대 옹호 및 규제 완화 기조 재확인",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "규제 완화 발언과 인프라 투자 의무화는 별개",
-      "reviewed_at": "2026-09-01T18:41:35.996807+00:00",
+      "reason": "대통령 발언과 연방 정책 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -164062,12 +164360,13 @@
       "same_event": false
     },
     "a4fec121e2c54527--f396174affa85472": {
-      "embedding_similarity": 0.8853,
+      "embedding_similarity": 0.8826,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "정부, SMR·차세대 태양광을 미래 성장동력으로 육성 발표",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "SMR 등 미래 성장동력 육성 정책 관련 보도",
-      "reviewed_at": "2026-09-01T18:41:35.996807+00:00",
+      "reason": "정부 SMR 미래 성장동력 육성 발표",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "정부, 5년간 국가 R&D에 200조 원 투입…SMR 등 7대 SEED 육성",
       "same_event": true
     },
@@ -166642,6 +166941,39 @@
       "right_title": "방사선 재해 대응 및 치료 관련 법안 국회 통과",
       "same_event": true
     },
+    "aa99401f6caf7d5e--b674a830b574b651": {
+      "embedding_similarity": 0.8498,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국, 한국의 대미 투자 지연에 불만…일본과 비교하며 속도 압박",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대미 투자 및 원전 협상 지연 관련 동일 사안",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "대미 투자 국회 보고 연기, 원전 및 파이로프로세싱 협상 난항",
+      "same_event": true
+    },
+    "aa99401f6caf7d5e--bb9449abc3de8062": {
+      "embedding_similarity": 0.8639,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한미, 3500억 달러 규모 대미 투자 1차 프로젝트 합의문 발표 예정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대미 투자 프로젝트 관련 동일 사안",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "대미 투자 국회 보고 연기, 원전 및 파이로프로세싱 협상 난항",
+      "same_event": true
+    },
+    "aa99401f6caf7d5e--d5217cd852b861bd": {
+      "embedding_similarity": 0.8513,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 대미 투자 및 한미 원전 협력 구체적 사항 미확정 공식 발표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대미 투자 및 원전 협상 관련 공식 발표",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "대미 투자 국회 보고 연기, 원전 및 파이로프로세싱 협상 난항",
+      "same_event": true
+    },
     "aa9a22ea4501c7a9--b0e178ca6114b1a9": {
       "embedding_similarity": 0.8453,
       "left_title": "김성환 기후장관, 광주 반도체 클러스터 용수·전력 공급 방안 언급",
@@ -167044,11 +167376,12 @@
     },
     "ab17d3bffd6e0497--e014872747c23fbc": {
       "embedding_similarity": 0.8702,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "PJM에서 3GW 부하 이탈 재발: NERC의 2024년 조사 결과 시사점",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "전력망 조사 결과와 연방정부 정책",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "조사 결과와 정책은 별개",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -172394,6 +172727,17 @@
       "right_title": "정부, 대미 투자 1호로 가스복합발전 낙점…원전 8기 건설도 유력",
       "same_event": false
     },
+    "b674a830b574b651--b99053b63fb27ae1": {
+      "embedding_similarity": 0.8531,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국, 한국의 대미 투자 지연에 불만…일본과 비교하며 속도 압박",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대미 투자 지연 및 원전 협상 난항 맥락 일치",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "한미 대미 투자 협상 난항, 원전 및 파이로프로세싱 투자 이견",
+      "same_event": true
+    },
     "b674a830b574b651--bb9449abc3de8062": {
       "embedding_similarity": 0.8705,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -173997,6 +174341,28 @@
       "right_title": "부산 SMR 건립 추진에 따른 지역 부품업계 사업 전환 기대",
       "same_event": false
     },
+    "b99053b63fb27ae1--bb9449abc3de8062": {
+      "embedding_similarity": 0.8805,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한미, 3500억 달러 규모 대미 투자 1차 프로젝트 합의문 발표 예정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "협상 타결 임박과 난항으로 내용이 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "한미 대미 투자 협상 난항, 원전 및 파이로프로세싱 투자 이견",
+      "same_event": false
+    },
+    "b99053b63fb27ae1--d5217cd852b861bd": {
+      "embedding_similarity": 0.854,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 대미 투자 및 한미 원전 협력 구체적 사항 미확정 공식 발표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "정부 공식 발표와 협상 난항 보도로 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
+      "right_title": "한미 대미 투자 협상 난항, 원전 및 파이로프로세싱 투자 이견",
+      "same_event": false
+    },
     "b9c853b6fe1adbe5--ff194befff09fb10": {
       "embedding_similarity": 0.8416,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -174167,12 +174533,13 @@
       "same_event": true
     },
     "ba51bf425ca92c1c--f396174affa85472": {
-      "embedding_similarity": 0.8444,
+      "embedding_similarity": 0.8708,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "이재명 대통령, SMR 등 7대 미래성장동력 전략적 투자 강조",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "7대 미래성장동력 투자 정책 관련 동일 사안",
-      "reviewed_at": "2026-09-01T18:41:35.996807+00:00",
+      "reason": "정부 7대 성장동력 SMR 투자 관련",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "정부, 5년간 국가 R&D에 200조 원 투입…SMR 등 7대 SEED 육성",
       "same_event": true
     },
@@ -182919,12 +183286,13 @@
       "same_event": false
     },
     "d19da100485296da--e014872747c23fbc": {
-      "embedding_similarity": 0.8432,
+      "embedding_similarity": 0.861,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "트럼프 미국 대통령, 데이터센터 건설 반대 여론에 정면 대응",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "반대 여론 대응과 인프라 투자 의무화는 다름",
-      "reviewed_at": "2026-09-01T18:41:35.996807+00:00",
+      "reason": "대통령 대응과 연방 정책 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -183152,12 +183520,13 @@
       "same_event": false
     },
     "d1e966b5772613fd--f396174affa85472": {
-      "embedding_similarity": 0.8483,
+      "embedding_similarity": 0.8415,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "이재명 대통령, SMR·양자컴 등 7대 성장동력으로 AI 시대 대비 강조",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "7대 성장동력 육성 정부 정책 관련 동일 사안",
-      "reviewed_at": "2026-09-01T18:41:35.996807+00:00",
+      "reason": "정부 7대 성장동력 SMR 육성 관련",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "정부, 5년간 국가 R&D에 200조 원 투입…SMR 등 7대 SEED 육성",
       "same_event": true
     },
@@ -185985,11 +186354,12 @@
     },
     "e014872747c23fbc--f73a97b0f28780fb": {
       "embedding_similarity": 0.8687,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "엔비디아, AI 인프라 강화를 위해 전력 기업 랜시엄에 4조원 투자",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "기업 투자와 정부 정책 발표는 다름",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -186015,11 +186385,12 @@
     },
     "e014872747c23fbc--f8729b9ad3d35dd4": {
       "embedding_similarity": 0.8683,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 민주당 주지사들, 에너지 위기 대응책으로 원자력 발전 전환",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주지사들의 정책 전환과 연방정부 규정",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
+      "reason": "주지사들의 전환과 연방 정책 다름",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
       "same_event": false
     },
@@ -188339,12 +188710,13 @@
       "same_event": false
     },
     "f396174affa85472--f9836d3cb1423104": {
-      "embedding_similarity": 0.9133,
+      "embedding_similarity": 0.892,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "정부, SMR·핵융합 등 '7대 시드' 육성으로 AI 시대 이후 성장동력 확보 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "7대 시드 육성 및 성장동력 확보 관련 동일 사안",
-      "reviewed_at": "2026-09-01T18:41:35.996807+00:00",
+      "reason": "정부 7대 시드 SMR 육성 정책 관련",
+      "reviewed_at": "2026-09-16T18:55:06.700074+00:00",
       "right_title": "정부, 5년간 국가 R&D에 200조 원 투입…SMR 등 7대 SEED 육성",
       "same_event": true
     },
