@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-17T04:36:20+09:00",
+ "generated_at": "2026-09-17T07:32:14+09:00",
  "issues": {
   "issue-01083ffbfa10992b": {
    "article_count": 3,
@@ -285,7 +285,7 @@
    "units": []
   },
   "issue-03e750bdec0ed533": {
-   "article_count": 22,
+   "article_count": 21,
    "briefing_count": 3,
    "countries": [
     "KR"
@@ -6737,7 +6737,7 @@
    "units": []
   },
   "issue-40c55eaaa3e1c6e4": {
-   "article_count": 29,
+   "article_count": 28,
    "briefing_count": 3,
    "countries": [
     "KR",
@@ -6807,7 +6807,8 @@
     "9360d66f16d4cff4",
     "7cd745fd1b061e48",
     "3d568a3796f683d4",
-    "22a6c21979272b77"
+    "22a6c21979272b77",
+    "81d0ccd190a702d9"
    ],
    "identity_status": "ok",
    "issue_id": "issue-40c55eaaa3e1c6e4",
@@ -9183,7 +9184,7 @@
    "units": []
   },
   "issue-53cff084bc298889": {
-   "article_count": 27,
+   "article_count": 25,
    "briefing_count": 2,
    "countries": [
     "US",
@@ -10748,6 +10749,51 @@
     "power_market",
     "newbuild",
     "datacenter_ai"
+   ],
+   "units": []
+  },
+  "issue-627ba69c29d4adc5": {
+   "article_count": 1,
+   "briefing_count": 1,
+   "countries": [
+    "KR"
+   ],
+   "entity_ids": [],
+   "evidence_day_count": 1,
+   "evidence_days": [
+    "2026-09-01",
+    "2026-09-01"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "Private Sector",
+    "assets": "SMR",
+    "event_family": "policy_proposal"
+   },
+   "first_seen": "2026-09-02",
+   "hashes": [
+    "627ba69c29d4adc5"
+   ],
+   "identity_status": "ok",
+   "issue_id": "issue-627ba69c29d4adc5",
+   "last_seen": "2026-09-02",
+   "last_written": "2026-09-17",
+   "moved_to": "",
+   "plants": [],
+   "region": "국내",
+   "revisions": [
+    {
+     "date": "2026-09-17",
+     "summary": "GS, SK, 포스코 등 민간 대기업들이 SMR 시장 진출을 위해 분산에너지 특별법 개정, 원자력안전법 규제 완화, SMR 요금제도 확정 등을 정부에 건의했다.",
+     "title": "민간 대기업들, SMR 사업 활성화를 위한 제도 개편 및 요금제도 확정 건의"
+    }
+   ],
+   "summary": "GS, SK, 포스코 등 민간 대기업들이 SMR 시장 진출을 위해 분산에너지 특별법 개정, 원자력안전법 규제 완화, SMR 요금제도 확정 등을 정부에 건의했다.",
+   "title": "민간 대기업들, SMR 사업 활성화를 위한 제도 개편 및 요금제도 확정 건의",
+   "topics": [
+    "smr",
+    "regulation",
+    "power_market"
    ],
    "units": []
   },
@@ -15568,7 +15614,7 @@
    "units": []
   },
   "issue-9957f9f4b43552f8": {
-   "article_count": 26,
+   "article_count": 25,
    "briefing_count": 3,
    "countries": [
     "US",
@@ -15987,7 +16033,7 @@
    "units": []
   },
   "issue-9e62e9f99422beca": {
-   "article_count": 2,
+   "article_count": 4,
    "briefing_count": 1,
    "countries": [
     "KR"
@@ -15995,9 +16041,9 @@
    "entity_ids": [
     "hanbit"
    ],
-   "evidence_day_count": 1,
+   "evidence_day_count": 2,
    "evidence_days": [
-    "2026-09-04",
+    "2026-09-03",
     "2026-09-04"
    ],
    "facts": {
@@ -16009,7 +16055,9 @@
    "first_seen": "2026-09-05",
    "hashes": [
     "9e62e9f99422beca",
-    "8e4cba23b11a81fb"
+    "8e4cba23b11a81fb",
+    "e0603db689609523",
+    "7785a71786a0956a"
    ],
    "identity_status": "ok",
    "issue_id": "issue-9e62e9f99422beca",
@@ -26713,8 +26761,8 @@
    "units": []
   },
   "story-03eec1ad43415c80": {
-   "article_count": 6,
-   "briefing_count": 3,
+   "article_count": 4,
+   "briefing_count": 2,
    "countries": [
     "KR"
    ],
@@ -26726,9 +26774,9 @@
    ],
    "facts": {
     "action": "",
-    "actors": "National Assembly",
-    "assets": "nuclear power",
-    "event_family": "legislative_action"
+    "actors": "POSCO",
+    "assets": "Wolsong Unit 1",
+    "event_family": "policy_proposal"
    },
    "first_seen": "2026-09-10",
    "hashes": [
@@ -26742,7 +26790,7 @@
    ],
    "identity_status": "ok",
    "issue_id": "story-03eec1ad43415c80",
-   "last_seen": "2026-09-17",
+   "last_seen": "2026-09-11",
    "last_written": "2026-09-17",
    "moved_to": "",
    "plants": [
@@ -26764,10 +26812,15 @@
      "date": "2026-09-17",
      "summary": "이상휘 의원은 철강 및 청정수소 생산 기업이 원자력 발전 전력을 장기계약으로 직접 구매할 수 있도록 하는 전기사업법 개정안을 대표 발의했다.",
      "title": "이상휘 의원, 철강·수소 기업의 원전 전력 직접구매 허용 전기사업법 개정안 발의"
+    },
+    {
+     "date": "2026-09-17",
+     "summary": "포스코가 철강 생산 탈탄소화를 위해 대형 원전 전력을 장기 구매할 수 있는 PPA 제도 도입과 월성 1호기 재가동 활용 방안을 건의했다.",
+     "title": "포스코, 철강 탈탄소 위한 원전 PPA 허용 건의"
     }
    ],
-   "summary": "이상휘 의원은 철강 및 청정수소 생산 기업이 원자력 발전 전력을 장기계약으로 직접 구매할 수 있도록 하는 전기사업법 개정안을 대표 발의했다.",
-   "title": "이상휘 의원, 철강·수소 기업의 원전 전력 직접구매 허용 전기사업법 개정안 발의",
+   "summary": "포스코가 철강 생산 탈탄소화를 위해 대형 원전 전력을 장기 구매할 수 있는 PPA 제도 도입과 월성 1호기 재가동 활용 방안을 건의했다.",
+   "title": "포스코, 철강 탈탄소 위한 원전 PPA 허용 건의",
    "topics": [
     "power_market",
     "restart_lto"
@@ -27387,7 +27440,7 @@
    ]
   },
   "story-0fe1e5be66a5cb09": {
-   "article_count": 17,
+   "article_count": 16,
    "briefing_count": 3,
    "countries": [
     "KR"
@@ -27729,7 +27782,7 @@
    ]
   },
   "story-166d03d61f2780a1": {
-   "article_count": 4,
+   "article_count": 5,
    "briefing_count": 1,
    "countries": [
     "KR"
@@ -27740,7 +27793,7 @@
    "evidence_day_count": 5,
    "evidence_days": [
     "2026-08-27",
-    "2026-09-14"
+    "2026-09-17"
    ],
    "facts": {
     "action": "",
@@ -27754,7 +27807,8 @@
     "1b5150b1e2b7d104",
     "f265bee606742e67",
     "f72c8ad3c98db0ce",
-    "20fc030d26d25d18"
+    "20fc030d26d25d18",
+    "2ee2ee618e7b615a"
    ],
    "identity_status": "ok",
    "issue_id": "story-166d03d61f2780a1",
@@ -28760,7 +28814,7 @@
    "units": []
   },
   "story-2c8c37e2574cf314": {
-   "article_count": 14,
+   "article_count": 15,
    "briefing_count": 2,
    "countries": [
     "US",
@@ -28769,7 +28823,7 @@
    "entity_ids": [
     "doosan"
    ],
-   "evidence_day_count": 9,
+   "evidence_day_count": 10,
    "evidence_days": [
     "2026-08-24",
     "2026-09-16"
@@ -30389,7 +30443,7 @@
    "units": []
   },
   "story-4796900841f0262b": {
-   "article_count": 4,
+   "article_count": 6,
    "briefing_count": 1,
    "countries": [
     "KR",
@@ -30399,9 +30453,9 @@
    "entity_ids": [
     "iaea"
    ],
-   "evidence_day_count": 2,
+   "evidence_day_count": 4,
    "evidence_days": [
-    "2026-09-09",
+    "2026-08-28",
     "2026-09-16"
    ],
    "facts": {
@@ -30415,7 +30469,9 @@
     "4796900841f0262b",
     "4f2f319737c8e3e9",
     "2d4d156e961683ff",
-    "79c158ea750d62b4"
+    "79c158ea750d62b4",
+    "06fd6e40bcb8daa9",
+    "57cfc84c702fe349"
    ],
    "identity_status": "ok",
    "issue_id": "story-4796900841f0262b",
@@ -30829,7 +30885,7 @@
    "units": []
   },
   "story-4e1bbcf5fe2a6b99": {
-   "article_count": 12,
+   "article_count": 14,
    "briefing_count": 1,
    "countries": [
     "KR",
@@ -30838,10 +30894,10 @@
    "entity_ids": [
     "khnp"
    ],
-   "evidence_day_count": 11,
+   "evidence_day_count": 12,
    "evidence_days": [
     "2026-08-16",
-    "2026-09-16"
+    "2026-09-17"
    ],
    "facts": {
     "action": "",
@@ -30867,7 +30923,9 @@
     "bf81f3cf9cfa826f",
     "b99053b63fb27ae1",
     "1c5f1a0ac4944b8d",
-    "6689e619347055ca"
+    "6689e619347055ca",
+    "ea8adab7243470d9",
+    "8b74f32f6e94e507"
    ],
    "identity_status": "ok",
    "issue_id": "story-4e1bbcf5fe2a6b99",
@@ -32187,7 +32245,7 @@
   },
   "story-627ba69c29d4adc5": {
    "article_count": 3,
-   "briefing_count": 2,
+   "briefing_count": 1,
    "countries": [
     "KR"
    ],
@@ -32203,11 +32261,13 @@
     "assets": "",
     "event_family": ""
    },
-   "first_seen": "2026-09-02",
+   "first_seen": "2026-09-03",
    "hashes": [
     "627ba69c29d4adc5",
     "23637045fa235993",
-    "70b4b2f45c575967"
+    "70b4b2f45c575967",
+    "8d010b0ab37c89a2",
+    "013bda912c2bec8f"
    ],
    "identity_status": "ok",
    "issue_id": "story-627ba69c29d4adc5",
@@ -32232,8 +32292,7 @@
    "title": "민간 SMR 활성화를 위한 PPA 직접구매 허용 필요성 제기",
    "topics": [
     "smr",
-    "power_market",
-    "regulation"
+    "power_market"
    ],
    "units": []
   },
@@ -32425,17 +32484,17 @@
    "units": []
   },
   "story-66f216663c3f0437": {
-   "article_count": 7,
+   "article_count": 9,
    "briefing_count": 1,
    "countries": [
     "KR",
     "KZ"
    ],
    "entity_ids": [],
-   "evidence_day_count": 2,
+   "evidence_day_count": 3,
    "evidence_days": [
     "2026-09-15",
-    "2026-09-16"
+    "2026-09-17"
    ],
    "facts": {
     "action": "",
@@ -32451,7 +32510,9 @@
     "bf0422ee1bda874f",
     "9b8ca80eee44ed31",
     "d3d4035832c51489",
-    "1984a687e7736b0e"
+    "1984a687e7736b0e",
+    "c3e9db3a8135a3fb",
+    "1b330a5401666e48"
    ],
    "identity_status": "ok",
    "issue_id": "story-66f216663c3f0437",
@@ -33195,7 +33256,7 @@
    "units": []
   },
   "story-6f17ce9466327497": {
-   "article_count": 3,
+   "article_count": 2,
    "briefing_count": 1,
    "countries": [
     "KR",
@@ -36251,7 +36312,7 @@
    "units": []
   },
   "story-9e62e9f99422beca": {
-   "article_count": 5,
+   "article_count": 3,
    "briefing_count": 1,
    "countries": [
     "KR"
@@ -36314,7 +36375,7 @@
    ]
   },
   "story-9f4c99f51b32e804": {
-   "article_count": 10,
+   "article_count": 8,
    "briefing_count": 1,
    "countries": [
     "US",
@@ -38987,7 +39048,7 @@
    "units": []
   },
   "story-d3effaaae45ac23b": {
-   "article_count": 16,
+   "article_count": 17,
    "briefing_count": 2,
    "countries": [
     "US",
@@ -39069,7 +39130,7 @@
    "evidence_day_count": 16,
    "evidence_days": [
     "2026-08-17",
-    "2026-09-16"
+    "2026-09-17"
    ],
    "facts": {
     "action": "",
@@ -40567,17 +40628,18 @@
    "units": []
   },
   "story-f1ecac74ad93af10": {
-   "article_count": 8,
+   "article_count": 10,
    "briefing_count": 3,
    "countries": [
     "US",
-    "CA"
+    "CA",
+    "KR"
    ],
    "entity_ids": [],
-   "evidence_day_count": 6,
+   "evidence_day_count": 8,
    "evidence_days": [
     "2026-08-19",
-    "2026-09-16"
+    "2026-09-17"
    ],
    "facts": {
     "action": "",
@@ -40597,7 +40659,8 @@
     "deb33af68d9ba836",
     "30d5ffdb533b0d9c",
     "f2daed57e16e68ad",
-    "e4b2467a0f8d1fdd"
+    "e4b2467a0f8d1fdd",
+    "615e4b66becdf9ef"
    ],
    "identity_status": "ok",
    "issue_id": "story-f1ecac74ad93af10",
@@ -41020,6 +41083,55 @@
    "topics": [
     "fuel_cycle",
     "smr"
+   ],
+   "units": []
+  },
+  "story-f9ebcfacf10894d9": {
+   "article_count": 7,
+   "briefing_count": 1,
+   "countries": [
+    "KR"
+   ],
+   "entity_ids": [],
+   "evidence_day_count": 3,
+   "evidence_days": [
+    "2026-09-09",
+    "2026-09-16"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "National Assembly",
+    "assets": "nuclear power",
+    "event_family": "legislative_action"
+   },
+   "first_seen": "2026-09-17",
+   "hashes": [
+    "f9ebcfacf10894d9",
+    "83f9354bc3aa7047",
+    "479253f4815881e5",
+    "0b74990233228c2e",
+    "a846278fd444bacd",
+    "cec16cf715bad3c2",
+    "70b4b2f45c575967"
+   ],
+   "identity_status": "ok",
+   "issue_id": "story-f9ebcfacf10894d9",
+   "last_seen": "2026-09-17",
+   "last_written": "2026-09-17",
+   "moved_to": "",
+   "plants": [],
+   "region": "국내",
+   "revisions": [
+    {
+     "date": "2026-09-17",
+     "summary": "이상휘 의원은 철강 및 청정수소 생산 기업이 원자력 발전 전력을 장기계약으로 직접 구매할 수 있도록 하는 전기사업법 개정안을 대표 발의했다.",
+     "title": "이상휘 의원, 철강·수소 기업의 원전 전력 직접구매 허용 전기사업법 개정안 발의"
+    }
+   ],
+   "summary": "이상휘 의원은 철강 및 청정수소 생산 기업이 원자력 발전 전력을 장기계약으로 직접 구매할 수 있도록 하는 전기사업법 개정안을 대표 발의했다.",
+   "title": "이상휘 의원, 철강·수소 기업의 원전 전력 직접구매 허용 전기사업법 개정안 발의",
+   "topics": [
+    "power_market"
    ],
    "units": []
   },
