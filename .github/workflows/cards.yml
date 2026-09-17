@@ -49,10 +49,36 @@ jobs:
           mkdir -p web/public/data
           curl -fsS "https://nuclens-v2.pages.dev/data/briefings.json?cb=$(date +%s)" -o web/public/data/briefings.json
 
+      - name: Verify Gemini key selection
+        env:
+          PAID_MODE: ${{ vars.GEMINI_PAID_MODE }}
+          SELECTED: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
+          PAID_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FREE_KEY: ${{ secrets.GEMINI_FREE_API_KEY }}
+        run: |
+          if [ "$PAID_MODE" = "ON" ]; then
+            mode=paid; want="$PAID_KEY"; name=secrets.GEMINI_API_KEY
+          else
+            mode=free; want="$FREE_KEY"; name=secrets.GEMINI_FREE_API_KEY
+          fi
+          echo "Gemini key mode: $mode"
+          if [ -z "$want" ]; then
+            echo "::error::Gemini key mode: $mode 인데 $name 가 비어 있다 — 반대쪽 키로 넘어가지 않고 여기서 멈춘다"
+            exit 1
+          fi
+          if [ "$SELECTED" != "$want" ]; then
+            echo "::error::Gemini key mode: $mode 인데 선택 식이 다른 키를 골랐다 — 빈 시크릿으로 인한 폴백을 의심할 것"
+            exit 1
+          fi
+
+      # embeddings.json 은 git 이 아니라 Actions 캐시에 산다. 없이 빌드하면
+      # 이슈 병합이 로컬 폴백으로 떨어져 crawl 이 만든 것과 클러스터가 달라진다.
+      # 읽기만 하고 저장하지 않는다 — 캐시의 주인은 crawl.yml 이다.
+
       - name: Make cards
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
+          GEMINI_MODEL: ${{ vars.CARDS_GEMINI_MODEL || 'gemini-2.5-flash' }}
         run: |
           if [ -n "${{ inputs.date }}" ]; then python make_cards.py --date "${{ inputs.date }}"; else python make_cards.py --force; fi
 
