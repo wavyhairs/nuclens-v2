@@ -169,78 +169,10 @@ jobs:
       # 데이터 문제로 오진하게 만든다(2026-08-01 실사고). 배포 전에 막는다.
       - name: Check app.js parses
         run: node --check web/public/app.js
-
-      # ui-v3.js 도 같은 이유로 막는다. 이쪽은 증상이 한 겹 더 나쁘다 — app.js
-      # 앞에 실리므로 여기서 파스가 깨지면 **플래그와 무관하게** 전 화면이 죽는다.
-      - name: Check ui-v3.js parses
-        run: node --check web/public/ui-v3.js
-
-      # 날짜 산술은 파이썬 테스트가 못 잡는다 — app.js 안에 있고 의존성이 없어서
-      # 지금까지 수동 실행 전용이었다. '최근 7일이 8일이 되던' 종류의 off-by-one 과
-      # 주간 리포트 구간(토~금) 매칭이 여기에 걸린다. 3초짜리라 배포 경로에 둔다.
       - name: Date math (app.js)
         run: node web/tests/date_window.mjs
-
-      # 주간 3분이 어느 리포트를 붙이는가. 리포트는 금요일 오후에야 생기는데
-      # '선택 날짜가 속한 주'로 찾던 탓에 토~목 엿새가 통째로 '집계 중'이었다
-      # (2026-08-22 토요일: 8/15~21 리포트를 두고도 비어 있었다). 반대 방향 —
-      # 7월 화면에 8월 결론이 붙던 것 — 도 같은 픽스처가 함께 막는다.
-      - name: Weekly report selector (app.js)
-        run: node web/tests/weekly_selector.mjs
-
-      # 주간 판세의 결정적 코너(핵심사건·국가별 단신·발간물·예정). 재료는
-      # weekly_bot 이 고르고 저장한 것이고 화면은 순서·표기만 정하는데, 그
-      # 표기가 무너지면 국가명과 제목이 '한국정부'로 붙어 나간다. 데이터를
-      # 안 읽는 순수 렌더 검사라 여기서 3초면 끝난다.
-      - name: Weekly sections render (app.js)
-        run: node web/tests/weekly_sections.mjs
-
-      # 앞으로 30일 달력. 격자 산술(첫날 요일·7의 배수·기간이 지나가는 칸)은
-      # 파이썬이 못 본다 — app.js 안에 있고, 어긋나면 날짜가 한 칸씩 밀린
-      # 채로 배포된다. 그 오류는 화면을 봐도 '그럴듯해' 보여서 더 늦게 걸린다.
-      - name: Event calendar render (app.js)
-        run: node web/tests/event_calendar.mjs
-
-      # 흐름 탭 기간 선택·상태 표시. 표(previous_period_complete)와 워드
-      # 클라우드가 각자 다시 판정하면 기간을 바꿨을 때 한쪽만 조용히 신규·
-      # 증가·감소 배지를 잃는다. 4주 흐름의 패턴 분류(감소 후 회복 등)도
-      # 여기서 본다 — 첫 주·마지막 주만 비교하면 가운데 굴곡이 사라진다.
       - name: Trend period state (app.js)
         run: node web/tests/trend_period_state.mjs
-
-      # 저장한 이슈의 옛 주소 복구. 이 자리는 **사용자의 의도**를 다루므로 조용한
-      # 소실도 남의 저장을 덮는 것도 안 된다. 여기서 도는 이유가 하나 더 있다 —
-      # 이 검사는 방금 지은 `data/issue_aliases.json` 의 모양까지 본다(옛 id ↔
-      # 현재 id 가 자기를 가리키지 않는지). python-tests 에서는 그 파일이 없어
-      # 모양 검사만 건너뛰고 순수 함수 검사는 그대로 돈다.
-      - name: Saved-issue alias migration (app.js)
-        run: node web/tests/saved_alias_migration.mjs
-
-      # 장기 스토리(Beta)를 언제 안 그리는가. 빌드가 파일 안에 '지금 보여도
-      # 되는가'를 적어 보내지만, **배포가 멈춰 낡은 파일이 CDN 에 남는 경우**는
-      # 그 판정으로 잡을 수 없다 — 화면이 유효기한으로 한 번 더 잰다. 여기서
-      # 회귀가 나면 조용하다: 탭이 떠 있고 몇 주 된 이야기가 '최신'인 척 선다.
-      - name: Long-term story gate (app.js)
-        run: node web/tests/long_term_gate.mjs
-
-      # 흡수된 이슈를 앱 안에서 열 때. 정적 주소는 리다이렉트 쪽지로 넘어가는데
-      # 앱 상세만 별칭표를 안 읽어서 클릭이 죽어 있었다(라이브 실측 2026-09-13:
-      # 장기 스토리 타임라인 317행 중 147행). 여기서도 빌드가 방금 지은
-      # `data/issue_aliases.json` 의 모양까지 같이 본다.
-      - name: Merged-issue redirect (app.js)
-        run: node web/tests/issue_merge_redirect.mjs
-
-      # 화면 v3 의 3단 컴포넌트가 필드를 어떻게 읽는가. 넷 다 조용히 틀리는
-      # 자리다 — 1단 폴백이 빌드 계약을 우회하거나(제목 재진술이 그대로 나감),
-      # 변화 이력의 마지막 항목(=가장 오래된 변화)을 '이전 보도'로 세우거나,
-      # 배포된 적 없는 라벨이 같은 이슈를 구 화면과 다르게 부르거나,
-      # 빈 배지가 서거나. 화면을 봐도 그럴듯해 보여서 더 늦게 걸린다.
-      - name: UI v3 rows and sheet (app.js + ui-v3.js)
-        run: node web/tests/ui_v3_rows.mjs
-
-      # 운영 콘솔 자물쇠는 엣지에서 도는 JS 이고 해시·세션·비밀번호 규칙이 전부
-      # 그 안에 있다. 여기가 어긋나면 맞는 비밀번호로도 못 들어가거나 반대로
-      # 아무거나 통과하는데, 어느 쪽이든 배포 뒤에야 알게 된다.
       - name: Admin gate contract
         run: node web/tests/admin_gate.mjs
 
@@ -261,21 +193,6 @@ jobs:
       # 브라우저 내려받기 2분이 매 배포에 붙는다.
       - name: Admin console renders in a real browser
         run: node web/tests/admin_dom.mjs
-
-      # 화면 부피 예산. 지금의 구 화면은 이미 세 번 줄인 결과다(2026-08-03 모바일
-      # 감사 · 08-05 에디토리얼 개편 · PHASE_PLAN S4) — 매번 줄었다가 다시 불었다.
-      # 줄었다는 사실을 PR 설명의 표에만 적으면 다음 사람은 그 표를 읽지 않는다.
-      # 그래서 숫자를 CI 가 든다. 예산을 넘겨야 할 변경이면 ui_budget.mjs 의 값을
-      # 함께 고치게 되고, 그때 왜인지 적힌다.
-      #
-      # admin_dom.mjs 와 같은 길이라 새 의존성이 없다(러너 이미지의 크롬).
-      - name: UI size budget (v3)
-        run: node web/tests/ui_budget.mjs
-
-      # 데이터 지표 게이트는 끈다. 추적률은 "오늘 뉴스가 어떻게 묶였나"의 결과지
-      # 화면 코드의 성질이 아니다 — 켜 두면 뉴스가 한산한 날 CSS 오타 수정도
-      # 배포가 막힌다(2026-08-03 실측: 추적률 0.125 로 이 워크플로 첫 실행이 실패).
-      # 그 게이트는 crawl.yml·로컬에서 계속 켜져 있다.
       - name: Run web tests
         env:
           NUCLENS_SKIP_DATA_GATES: "1"

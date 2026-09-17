@@ -85,7 +85,7 @@ const COUNTRY_MAP_LABELS = [
 ];
 
 const OFFICIAL_HINTS = ["go.kr", "khnp", "kaeri", "iaea.org", "energy.gov", "nrc.gov"];
-const VIEW_IDS = ["news", "trend", "search", "report", "longterm"];
+const VIEW_IDS = ["news", "trend", "search", "report", "scrap"];
 const ISSUE_ROUTE = /^\/issue\/([^/]+)\/?$/;
 const BRIEF_ROUTE = /^\/brief\/(\d{4}-\d{2}-\d{2})\/?$/;
 
@@ -97,26 +97,24 @@ const STRINGS = {
   entityClear: "탐색으로 돌아가기",
   recentCapture: "최근 포착",
   hubEmptyEntities: "아직 연결된 대상이 없습니다 — 데이터가 쌓이면 채워집니다.",
+  draftAiNote: "*자료 : Nuclens AI 초안 — 수치·판단은 원문 대조 후 사용",
+  draftHeading: "보고서 초안 (AI)",
+  previewHeading: "보고서용 복사 내용 미리보기",
+  agendaEmpty: "등록된 정책의제가 없습니다 — 의제가 등재되면 여기서 대응 자료를 관리합니다.",
+  agendaNoLog: "(기록 없음 — 판단 로그는 운영 콘솔에서 기록)",
+  libraryEmpty: "자료실이 비어 있습니다 — 과거 사례 브리핑이 검수를 통과하면 실립니다.",
 };
 
 const state = {
-  // news 는 첫 렌더를 기다리게 하지 않는다 — `ensureNews()` 가 뒤에서 받아 온다.
-  // 부팅 시점에는 언제나 빈 배열이므로, 이 값을 읽는 쪽은 `newsLoaded` 를 함께 본다
-  // (0건과 '아직 안 옴'은 다른 상태다).
-  news: [], newsLoaded: false, newsPending: null,
-  briefings: [], issues: [], trend: null, insights: null, meta: null,
-  pubs: null, pubsOrg: "전체",
+  news: [], briefings: [], issues: [], trend: null, insights: null, meta: null,
+  pubs: null, pubsOrg: "전체", scraps: null,
   manifest: null, systemStatus: null, dataBase: "/data",
-  // 화면 v3 플래그. "" 또는 "v3" — restoreUrlState() 가 정하고 body 클래스로 나간다.
-  ui: "", uiQa: false,
   briefingDate: "", region: "전체", topic: "전체", view: "news",
   issueSort: "importance", issueView: "card", issueId: "", railIssueId: "",
-  archiveQuery: "", archiveRegion: "전체", archiveTopic: "전체",
+  agendas: null, precedents: null, agendaId: "",
+  archiveQuery: "", archiveRegion: "전체", archiveTopic: "전체", archiveDomain: "",
   archivePeriod: "all", archiveVerification: "전체", archiveSort: "updated", archiveLimit: 20,
-  archiveScope: "stories",
   archiveEntity: "", entities: null,
-  // 장기 스토리(Beta). threads 는 없을 수 있다 — 그때 이 화면은 통째로 안 뜬다.
-  threads: null, threadId: "", longTermSort: "recent", longTermLimit: 20,
   period: "7", keywordSort: "mentions", audioMode: "fast", audioFailures: new Set(), savedIds: new Set(), savedMeta: {}, follows: new Set(), followSeen: {},
   offline: !navigator.onLine, pendingGeneration: "",
 };
@@ -167,86 +165,6 @@ async function loadRootJSON(name, optional = false) {
     if (optional) return null;
     throw error;
   }
-}
-
-// ── news.json 지연 로드 ───────────────────────────────────────────────────
-//
-// 부팅은 10개 파일을 Promise.all 로 묶어 **전부** 기다렸는데, 그중 news.json 하나가
-// raw 16.8 MB / gzip 2.65 MB 로 나머지를 합친 것보다 크다. 첫 화면이 그 파일을
-// 기다릴 이유가 없다 — 읽는 곳은 둘뿐이고(수집 원문 서랍, 흐름 탭의 구버전 폴백),
-// 서랍은 기본적으로 접혀 있다.
-//
-// 그래서 **차단하지 않고 뒤에서** 받는다. 켜 두는 쪽(on-demand only)이 아니라
-// 첫 렌더 직후 배경으로 부르는 쪽을 고른 이유는, 접힌 서랍의 요약 줄이 이미
-// 건수를 말하고 있어서다 — on-demand 로 하면 그 숫자가 서랍을 열기 전까지
-// 사라진다. 지금은 잠깐 비었다가 채워진다.
-//
-// 실패는 비치명이다(8/1 빈 화면 사고 계약). 서랍만 못 채우고 나머지는 산다.
-function ensureNews() {
-  if (state.newsLoaded) return Promise.resolve(state.news);
-  if (state.newsPending) return state.newsPending;
-  state.newsPending = loadJSON("news.json")
-    .then(rows => {
-      state.news = Array.isArray(rows) ? rows : [];
-      state.newsLoaded = true;
-      return state.news;
-    })
-    .catch(() => {
-      // 다시 부를 수 있게 자물쇠만 푼다. newsLoaded 는 거짓으로 남아
-      // 화면이 '0건'이 아니라 '못 불러왔다'를 말한다.
-      state.newsPending = null;
-      return state.news;
-    });
-  return state.newsPending;
-}
-
-// 배경 로드가 끝난 뒤, 그 데이터를 읽는 화면만 다시 그린다. 전체 재렌더는
-// 하지 않는다 — 사용자가 이미 만지고 있는 다른 칸을 흔들 이유가 없다.
-function refreshNewsDependentViews() {
-  if (!appReady) return;
-  if (document.getElementById("newsList")) renderNewsFeed();
-  if (state.view === "trend" && document.getElementById("trendReadiness")) renderTrendReadiness();
-}
-
-// ── v3 선행 렌더 (today.json) ─────────────────────────────────────────────
-//
-// 부팅이 기다리는 JSON 이 압축 전 합계 37 MB 인데, 첫 화면이 실제로 쓰는 것은 최신
-// 회차 하루치와 그 이슈들뿐이다. today.json 은 그 한 벌이고 gzip 38 KB 다.
-//
-// **추가 산출물이라 기존 경로는 그대로 돈다.** 이 함수가 하는 일은 본 데이터가
-// 오기 전에 오늘 화면을 한 번 세우는 것뿐이고, 곧이어 평소의 Promise.all 이
-// 끝나면 같은 화면이 온전한 데이터로 다시 그려진다.
-//
-// 파일이 없거나 깨져도 아무 일이 없다 — 그냥 평소 속도로 뜬다(8/1 빈 화면 사고 계약).
-function v3Requested() {
-  return new URLSearchParams(location.search).get("ui") === "v3";
-}
-
-async function v3FirstPaint() {
-  const today = await loadJSON("today.json").catch(() => null);
-  if (!today?.date || !Array.isArray(today.issues)) return false;
-  const params = new URLSearchParams(location.search);
-  const wantedDate = briefDateFromLocation() || params.get("date") || "";
-  // 과거 회차를 달라는 주소면 선행 렌더를 건너뛴다. 그 날짜의 이슈가 이
-  // 페이로드에 없어서 "브리핑이 없습니다"를 한 번 보여 줬다가 뒤집게 된다.
-  if (wantedDate && wantedDate !== today.date) return false;
-  // 딥링크로 시트를 여는 주소도 마찬가지 — 그 이슈가 오늘 회차 밖일 수 있다.
-  if (issueIdFromLocation() || params.get("issue")) return false;
-
-  // 날짜 목록은 **회차 껍데기**로 세운다. briefingDates()·currentBriefing() 이
-  // 그대로 돌아 날짜 이동 칸이 첫 화면부터 살아 있다. 본 데이터가 오면 통째로
-  // 갈린다.
-  state.briefings = (today.dates || [today.date]).map(date =>
-    date === today.date
-      ? { ...today.briefing, date, issues: today.issues }
-      : { date, issues: [] });
-  state.issues = today.issues;
-  state.meta = today.meta || {};
-  state.briefingDate = today.date;
-  restoreUrlState();
-  if (state.view !== "news") return false;
-  renderBriefing();
-  return true;
 }
 
 async function initializeDataBase() {
@@ -344,7 +262,10 @@ function relativeArticleDate(articleDate, briefingDate) {
 }
 
 function sourceLabel(article) {
-  return article.publisher || article.domain || "출처 미상";
+  const raw = article.publisher || article.domain || "출처 미상";
+  // 수집기가 매체명 뒤에 도메인을 이어붙인 값("동아경제신문 & daenews.co.kr")이
+  // 각주·타임라인에 그대로 나가던 것을 걷는다 — 표시층 정리다.
+  return String(raw).replace(/\s*&\s*[a-z0-9.-]+\.[a-z]{2,}$/i, "");
 }
 
 function isOfficial(article) {
@@ -428,54 +349,28 @@ function reportPickBadge(issue) {
   return `<span class="report-pick-badge" title="${esc(topic)}">📝 보고서 검토 추천</span>`;
 }
 
-// ── 변화 이력 ─────────────────────────────────────────────────────────────
+// 카드 앞면의 귀속 — Semafor 철칙("무출처 관점 금지")과 Carbon Brief 발췌 공식의
+// 최소 이식이다. 요약은 AI가 쓰지만 사실의 출처는 매체다. 기자명은 RSS 에 없으므로
+// 매체명만 쓴다(없는 것을 만들지 않는다).
 //
-// 발송 **전에** 내려진 판정이다. `issue_continuity` 가 "어제 대비 단계가 넘어갔나"를
-// 보고 material/minor/none 을 매기고, build_data 가 그중 **같은 이슈 안에서 확인된
-// 것만** change_log 로 싣는다(issue_change_log.py 에 게이트의 실측 근거가 있다).
-//
-// 이 화면이 하는 일은 라벨 두 칸뿐이다. 빌드가 함께 실어 보내는 `reason`
-// (stage_flip·scale_advance…)과 판정 문구는 **쓰지 않는다** — 그건 event_stage 의
-// 어휘 라벨이라 사건 설명이 아니고, 실측에서 「예타 면제」기사에 '정지·가동중단'이
-// 붙어 있었다. 여기서 말할 수 있는 것은 "그 회차에 단계가 움직였다"까지다.
-const CHANGE_LOG_LABELS = { material: "단계 이동", minor: "후속 보도" };
-
-function changeLog(issue) {
-  return (issue.change_log || []).filter(entry => CHANGE_LOG_LABELS[entry.kind]);
-}
-
-function changeLogBadge(issue) {
-  const moves = changeLog(issue).filter(entry => entry.kind === "material").length;
-  if (!moves) return "";
-  return `<span class="change-log-badge">↗ 단계 이동${moves > 1 ? ` ${moves}회` : ""}</span>`;
-}
-
-// 판정은 회차와 회차 사이에서 내려지지만 **기사일로 적는다.** 바로 아래 타임라인이
-// 기사일로 서 있어서다 — 회차를 적으면 두 블록이 같은 사건을 하루 어긋나게 말하고
-// (실측 그라블린: 회차 8/28 · 기사일 8/27), 읽는 사람은 가리키는 줄을 못 찾는다.
-// 회차는 payload(date·prior_date)에 그대로 남아 감사에서 쓰인다.
-function changeLogSpan(entry) {
-  const before = entry.prior_article_date || entry.prior_date;
-  const after = entry.article_date || entry.date;
-  return `${dateLabel(before)} → ${dateLabel(after)}`;
-}
-
-// 타임라인 행이 제 판정을 되찾는 통로. change_log 가 hash 로 가리키므로 행에
-// 같은 값을 한 벌 더 싣지 않는다 — related_articles 가 issues.json 의 대부분이다.
-function changeLogByHash(issue) {
-  const map = new Map();
-  changeLog(issue).forEach(entry => { if (entry.hash) map.set(entry.hash, entry); });
-  return map;
+// 배지를 새로 만들지 않는 이유: '복수 출처'는 이미 '독립 출처 2곳+' 배지가 말한다.
+// 여기서 더할 정보는 **누가 보도했나**뿐이라 이름만 얹고, 매체가 여럿일 때만
+// '외 N'을 붙인다.
+function issueSourceText(issue) {
+  const names = [];
+  for (const article of issue.related_articles || []) {
+    if ((article.member_role || "card") !== "card") continue;
+    const name = (article.publisher || article.domain || "").trim();
+    if (name && !names.includes(name)) names.push(name);
+  }
+  if (!names.length) return "";
+  return names.length > 1 ? `${names[0]} 외 ${names.length - 1}` : names[0];
 }
 
 function issueEvidenceText(issue) {
   const state = verificationState(issue);
   const articleCount = issue.article_count || (issue.related_articles || []).length;
   const parts = [`근거 ${articleCount}건`];
-  const storyArticles = Number(issue.story_article_count || 1);
-  const storyOutlets = Number(issue.story_outlet_count || 1);
-  if (storyArticles > 1) parts.push(`동일 사건 보도 ${storyArticles}건 통합`);
-  if (storyOutlets > 1) parts.push(`보도 매체 ${storyOutlets}곳`);
   if (state.independent_source_count > 0) parts.push(`독립 출처 ${state.independent_source_count}곳`);
   if (state.official_source_count > 0) parts.push(`공식 출처 ${state.official_source_count}건`);
   // 확인 시각은 빌드 시각이라 모든 카드가 같은 값이다. 상단 상태줄이 이미
@@ -637,54 +532,6 @@ function loadSaved() {
     state.savedMeta = {};
   }
   renderSavedCount();
-}
-
-/* ── 저장한 이슈의 옛 주소 복구 ────────────────────────────────────
-   `issue_id` 는 예전에 클러스터 재계산마다 옮겨 다녔다(실측 2026-09-12: 11일에
-   16.8%). PR #107 이 원장에서 신원을 물려받게 해 이동을 멈췄지만, **그 전에
-   저장된 id 는 이미 옛 주소다** — 리다이렉트는 주소를 직접 열 때만 작동하고
-   localStorage 에 키로 박힌 값은 구해 주지 못한다.
-
-   그래서 원장의 별칭표(`issue_aliases.json`)로 옮겨 적는다. 순수 함수로 두는
-   이유는 이 자리가 사용자의 의도(저장)를 다루는 곳이라 node 검사로 잠가야
-   하기 때문이다.
-
-   사슬은 따라간다 — A→B→C 로 두 번 옮겨간 저장도 C 에 닿아야 한다. 고리를
-   만나면 멈춘다(원장도 같은 규칙: `issue_ledger.alias_target`). */
-const ALIAS_CHAIN_LIMIT = 8;
-
-function resolveAlias(issueId, aliases) {
-  let current = issueId;
-  const seen = new Set([current]);
-  for (let step = 0; step < ALIAS_CHAIN_LIMIT; step += 1) {
-    const next = aliases?.[current];
-    if (!next || seen.has(next)) break;
-    seen.add(next);
-    current = next;
-  }
-  return current;
-}
-
-function migrateSavedIds(savedIds, savedMeta, aliases, liveIds) {
-  const source = [...savedIds];
-  // 살아 있는 id 는 건드리지 않는다 — 별칭표에 옛 항목이 남아 있어도
-  // 현재 카탈로그가 이긴다.
-  const targets = source.map(
-    id => (liveIds?.has?.(id) ? id : resolveAlias(id, aliases)));
-  const ids = [];
-  targets.forEach(target => { if (!ids.includes(target)) ids.push(target); });
-  const moved = targets.filter((target, index) => target !== source[index]).length;
-
-  // 스냅샷은 두 번에 걸쳐 옮긴다. **그 id 로 직접 저장한 것이 먼저다** — 옛 id 와
-  // 새 id 를 둘 다 저장해 둔 사람에게, 옮겨 온 옛 스냅샷이 직접 저장한 값을
-  // 덮으면 제목·날짜가 과거로 되돌아간다.
-  const meta = {};
-  ids.forEach(id => { if (savedMeta?.[id]) meta[id] = savedMeta[id]; });
-  source.forEach((id, index) => {
-    const target = targets[index];
-    if (!meta[target] && savedMeta?.[id]) meta[target] = savedMeta[id];
-  });
-  return { ids, meta, moved };
 }
 
 function persistSaved() {
@@ -922,7 +769,7 @@ function renderSystemStatus() {
   const header = document.getElementById("headerStatus");
   const footer = document.getElementById("footerStatus");
   const briefing = currentBriefing() || state.briefings[0] || {};
-  // '마지막 수집'은 **수집기가 마지막으로 돈 시각**이다(매시간). last_success_at
+  // '마지막 수집'은 **수집기가 마지막으로 돈 시각**이다(3시간마다). last_success_at
   // 은 build_data 가 "마지막 정상 **브리핑**"으로 정의한 값이라(하루 1회) 그걸
   // 수집 시각이라 부르면 오후 내내 아침 시각이 떠 있다 — 2026-08-11 21:49 KST 에
   // '마지막 수집 07:05' 였고, 실제 수집은 20:35 였다. 14.7시간 밀린 것처럼 읽힌다.
@@ -996,8 +843,12 @@ function renderSystemStatus() {
       <div><dt>오늘 원문</dt><dd>${briefing.article_count || 0}건</dd></div>
       <div><dt>연결 이슈</dt><dd>${briefing.issue_count || 0}개</dd></div>
       ${primaryCount ? `<div><dt>정부·기관 원문</dt><dd>${primaryCount}건</dd></div>` : ""}
-      <div><dt>다음 갱신</dt><dd>2시간 이내</dd></div>
+      <div><dt>갱신 주기</dt><dd>3시간 간격</dd></div>
     </dl>${status === "ok" ? "" : `<p>${esc(message)}</p>`}`;
+  // 흐름 탭 방법론 단락의 수집원 수 — meta 가 실어 온 sources.json 카운트.
+  const tiers = state.meta?.source_tiers;
+  const methodologySources = document.getElementById("methodologySources");
+  if (methodologySources && tiers) methodologySources.textContent = String((tiers.tier1 || 0) + (tiers.tier2 || 0));
 }
 
 async function checkForNewGeneration() {
@@ -1023,24 +874,18 @@ async function checkForNewGeneration() {
 
 function syncUrl(mode = "replace") {
   const params = new URLSearchParams();
-  // syncUrl() 은 주소를 state 에서 **매번 다시 만든다.** 여기서 플래그를 도로
-  // 써넣지 않으면 첫 상호작용에 ui=v3 가 사라진다.
-  if (state.ui) params.set("ui", state.ui);
-  if (state.uiQa) params.set("qa", "1");
   if (state.briefingDate) params.set("date", state.briefingDate);
   if (state.region !== "전체") params.set("region", state.region);
   if (state.topic !== "전체") params.set("topic", state.topic);
   if (state.view !== "news") params.set("view", state.view);
   if (state.archiveQuery) params.set("q", state.archiveQuery);
   if (state.archiveEntity) params.set("ent", state.archiveEntity);
+  if (state.agendaId) params.set("agenda", state.agendaId);
   if (state.archiveRegion !== "전체") params.set("ar", state.archiveRegion);
   if (state.archiveTopic !== "전체") params.set("at", state.archiveTopic);
+  if (state.archiveDomain) params.set("ad", state.archiveDomain);
   if (state.archivePeriod !== "all") params.set("ap", state.archivePeriod);
   if (state.archiveVerification !== "전체") params.set("av", state.archiveVerification);
-  // 기본이 stories 라 전체 목록을 볼 때만 적는다 — 공유된 주소가 기본값을
-  // 들고 다니면 나중에 기본이 바뀔 때 옛 링크가 옛 화면을 고집한다.
-  if (state.archiveScope !== "stories") params.set("as", state.archiveScope);
-  if (state.view === "longterm" && state.threadId) params.set("th", state.threadId);
   const query = params.toString();
   const path = state.issueId && state.view !== "trend"
     ? issuePath(state.issueId)
@@ -1053,16 +898,6 @@ function syncUrl(mode = "replace") {
 
 function restoreUrlState() {
   const params = new URLSearchParams(location.search);
-  // ── 화면 v3 플래그 ──────────────────────────────────────────────────────
-  //
-  // **여기서, 이 자리에서 클래스를 붙인다.** init() 은 restoreUrlState() →
-  // … → renderBriefing()(거기서 booting 해제) 순으로 흐르고, booting 동안
-  // .briefing-content-grid 는 접혀 있다(index.html 주석). 그 사이에 붙이면 구
-  // 골격이 펼쳐진 채 한 번 그려졌다가 사라지는 일이 없다 — 이 화면은 그 종류의
-  // 이동으로 CLS 0.90 을 찍은 적이 있다.
-  state.ui = params.get("ui") === "v3" && typeof UI_V3 !== "undefined" ? "v3" : "";
-  state.uiQa = state.ui === "v3" && params.get("qa") === "1";
-  document.body.classList.toggle("ui-v3", state.ui === "v3");
   const requestedDate = briefDateFromLocation() || params.get("date");
   if (briefingDates().includes(requestedDate)) state.briefingDate = requestedDate;
   const requestedRegion = params.get("region");
@@ -1075,16 +910,14 @@ function restoreUrlState() {
   // ent 딥링크는 탐색 화면을 전제한다 — view 파라미터가 따로 없으면 그리로 간다.
   state.archiveEntity = params.get("ent") || "";
   if (state.archiveEntity && !params.get("view")) state.view = "search";
+  // agenda 딥링크는 보고서 화면을 전제한다 (같은 규약).
+  state.agendaId = params.get("agenda") || "";
+  if (state.agendaId && !params.get("view")) state.view = "report";
   state.archiveRegion = ["전체", "국내", "해외"].includes(params.get("ar")) ? params.get("ar") : "전체";
   state.archiveTopic = params.get("at") || "전체";
+  state.archiveDomain = params.get("ad") || "";
   state.archivePeriod = ["7", "30", "all"].includes(params.get("ap")) ? params.get("ap") : "all";
   state.archiveVerification = ["verified", "unverified"].includes(params.get("av")) ? params.get("av") : "전체";
-  state.archiveScope = params.get("as") === "all" ? "all" : "stories";
-  // 옛 주소는 흡수된 스토리를 가리킬 수 있다. 데이터를 이미 들고 있으므로
-  // 여기서 살아 있는 쪽으로 넘긴다.
-  state.threadId = resolveThreadId(params.get("th") || "");
-  if (state.threadId && !params.get("view") && longTermReady()) state.view = "longterm";
-  if (state.view === "longterm" && !longTermReady()) { state.view = "news"; state.threadId = ""; }
 }
 
 function renderTopicSelects() {
@@ -1097,7 +930,6 @@ function renderTopicSelects() {
     archiveCounts.set(topic, (archiveCounts.get(topic) || 0) + 1);
   }));
   [
-    ["topicSel", briefingCounts, state.topic],
     ["archiveTopic", archiveCounts, state.archiveTopic],
   ].forEach(([id, counts, selected]) => {
     const select = document.getElementById(id);
@@ -1132,13 +964,19 @@ function issueMatchesFilters(issue) {
 }
 
 function issueStatusText(issue, archive = false) {
-  if (archive && issue.lifecycle === "quiet") return `종결 · ${dateLabel(issue.last_seen)}`;
+  const parts = [];
   const tracked = issue.tracked_briefings || issue.briefing_count || 1;
+  if (archive && issue.lifecycle === "quiet") parts.push(`종결 · ${dateLabel(issue.last_seen)}`);
   // 중요도가 추적 이력을 덮으면 '달라진 이슈'인데 무엇이 이어지는지 안 보인다.
-  if (issue.importance === "must_read") return tracked > 1 ? `주요 · ${tracked}회 추적` : "주요";
-  if (tracked > 1) return `업데이트 · ${tracked}회 추적`;
+  else if (issue.importance === "must_read") parts.push(tracked > 1 ? `주요 · ${tracked}회 추적` : "주요");
+  else if (tracked > 1) parts.push(`업데이트 · ${tracked}회 추적`);
   // 검증 상태는 배지가 단독으로 책임진다. 여기서 다시 말하면 같은 줄에 두 번 뜬다.
-  return "새 이슈";
+  else parts.push("새 이슈");
+  const storyArticles = Number(issue.story_article_count || 1);
+  const storyOutlets = Number(issue.story_outlet_count || 1);
+  if (storyArticles > 1) parts.push(`동일 사건 보도 ${storyArticles}건 통합`);
+  if (storyOutlets > 1) parts.push(`보도 매체 ${storyOutlets}곳`);
+  return parts.join(" · ");
 }
 
 function issueActions(issue) {
@@ -1204,10 +1042,10 @@ function issueCard(issue, index, archive = false, front = false) {
   // 카드가 답해야 하는 것은 '이 뉴스가 무슨 뜻인가'이지 '어제 뭐라고 했나'가
   // 아니다. 상태는 이미 메타 줄('업데이트 · N회 추적')이 말하고, 지난 문장은
   // 상세의 사건 타임라인에 그대로 있다. 카드에서 뺀 것들과 같은 원칙.
-  // 카드의 두 번째 줄은 '무엇'이 아니라 '왜'다. summary 는 제목을 어순만 바꿔
-  // 다시 쓴 문장이 대부분이라(8/3 브리핑 실측 8건 중 5건) 두 번 읽게 만들 뿐
-  // 정보를 더하지 않는다. implication(= 상세의 '시사점')은 이미 만들어 두고도
-  // 두 탭 아래에만 두던 문장이다. 그 자리를 바꾼다.
+  // (2026-08-17 갱신) 아래 두 문단은 "summary 는 제목의 재진술"이라는 8/3 판단
+  // 위에 있었다. 271건 재측정에서 제목과의 자카드 중앙값 0.23, 재진술 의심(0.6+)
+  // 0건 — 그 사이 큐레이션 프롬프트가 "제목에 없는 사실을 반드시 담을 것"으로
+  // 바뀌었다. 그래서 사실 칸의 재료를 summary 로 되돌렸다. 기록으로 남긴다.
   //
   // **why_important 는 여기 쓰지 않는다.** 2026-08-04 에 두 해석이 갈라졌지만
   // 카드에 맞는 건 짧은 쪽뿐이다 — 실측 중앙값 implication 53자 / why_important
@@ -1220,16 +1058,26 @@ function issueCard(issue, index, archive = false, front = false) {
   // 읽게 만들면 스캔이 안 된다. 세 칸의 역할 분리(사실 / 영향 / 앞으로)는
   // build_data.finalize_card_fields 가 확정해 둔다. 여기서 or 폴백을 쌓으면
   // 그 계약이 두 곳으로 흩어진다.
-  const changeText = issueChangeText(issue);
-  const whyText = String(issue.card_why ?? (issue.implication || issue.why_important || "")).trim();
+  // 사실 줄은 summary 다. 271건 전부 채워져 있고 말줄임 0%, 중앙값 73자로 세 줄에
+  // 완결된다(실측 2026-08-16). 예전에는 이 자리를 change_display 가 차지했는데
+  // 그건 13%만 채워지는 데다, 화살표 뒤쪽이 summary 와 같은 문장이라(자카드 1.00)
+  // '달라진 것' 라벨을 달고 요약을 되풀이하고 있었다.
+  const factText = String(issue.summary || "").trim();
+  // 추적 이슈만 갖는 한 줄 — 화살표 **앞**쪽(직전 상태). 제목도 요약도 현재를
+  // 말하므로, 카드에서 이 줄만이 '무엇으로부터' 달라졌는지를 알려준다.
+  const priorText = String(issue.card_prior || "").trim();
+  // 2026-08-16: 목록 카드의 해석 줄은 why_important 만 — implication(시사점)은
+  // 스캔 화면에서 내리고 상세·rail 에서만 선다. 폴백도 계약과 같은 필드만 본다.
+  const whyText = String(issue.card_why ?? (issue.why_important || "")).trim();
   const nextText = String(issue.open_question || "").trim();
+  const sourceText = issueSourceText(issue);
   const mark = text => (archive ? markMatch(text, state.archiveQuery) : esc(text));
   const cardRow = (label, text, extra = "") => (text
     ? `<p class="issue-line"><span class="issue-line-label">${label}</span>${extra}<span class="issue-line-text">${mark(text)}</span></p>`
     : "");
   // 검색 하이라이트 판정도 화면에 실제로 뜨는 문장을 기준으로 해야 한다.
   const visibleMatch = matchesQuery(
-    `${issue.title || ""} ${changeText} ${whyText} ${nextText}`,
+    `${issue.title || ""} ${factText} ${priorText} ${whyText} ${nextText}`,
     state.archiveQuery);
   const matchContext = archive && state.archiveQuery && !visibleMatch
     ? `<p class="search-match">검색 조건 <mark>${esc(state.archiveQuery)}</mark>과 연결된 이슈입니다.</p>`
@@ -1247,14 +1095,15 @@ function issueCard(issue, index, archive = false, front = false) {
       <span class="issue-state">${esc(issueStatusText(issue, archive))}</span>
       <span>${esc(issue.region)}</span>
       ${topic ? `<span class="issue-topic">${esc(topic)}</span>` : ""}
+      ${sourceText ? `<span class="issue-source">${esc(sourceText)}</span>` : ""}
       ${verificationBadge(issue)}
       ${reportPickBadge(issue)}
-      ${changeLogBadge(issue)}
     </div>
     <div class="issue-body">
       <h3><button type="button" class="issue-title-button" data-issue-id="${esc(issue.issue_id)}">${title}</button></h3>
-      ${cardRow(issueChangeLabel(issue, "달라진 것"), changeText)}
-      ${cardRow("왜 중요해요", whyText, `<span class="ai-badge">AI</span>`)}
+      ${cardRow("무슨 일", factText)}
+      ${cardRow("직전까지", priorText)}
+      ${cardRow("왜 중요한가", whyText, `<span class="ai-badge">AI</span>`)}
       ${cardRow("다음 확인", nextText)}
       ${selectionReason ? `<div class="issue-reason-row"><span class="issue-reason-chip topic-chip">${esc(selectionReason)}</span></div>` : ""}
       ${matchContext}
@@ -1295,7 +1144,8 @@ function leadCard(issue, briefing) {
   const blocks = [
     model.change ? { label: issueChangeLabel(issue, "달라진 것"), text: model.change.text, tone: "change", group: "fact" } : null,
     model.why ? { label: model.why.label, text: model.why.text, group: "read" } : null,
-    model.impact ? { label: model.impact.label, text: model.impact.text, group: "read" } : null,
+    // model.impact(시사점)는 선두 카드에서도 내린다(2026-08-16) — 스캔 화면의 해석은
+    // '왜 중요한가' 한 줄까지, 시사점은 근거 패널(rail)과 상세가 편다.
     model.openQuestion ? { label: "다음 확인", text: model.openQuestion, tone: "open", group: "read" } : null,
   ].filter(Boolean);
   // 남는 게 없으면 요약이 바닥을 받친다.
@@ -1316,9 +1166,9 @@ function leadCard(issue, briefing) {
       <span>${esc(issue.region)}</span>
       ${countryChips.map(label => `<span>${esc(label)}</span>`).join("")}
       ${topic ? `<span>${esc(topic)}</span>` : ""}
+      ${issueSourceText(issue) ? `<span class="issue-source">${esc(issueSourceText(issue))}</span>` : ""}
       ${verificationBadge(issue)}
       ${reportPickBadge(issue)}
-      ${changeLogBadge(issue)}
     </div>
     <h3><button type="button" class="issue-title-button" data-issue-id="${esc(issue.issue_id)}">${esc(issue.title)}</button></h3>
     <dl class="lead-blocks">${shown.map(block => `<div class="lead-block${block.tone ? ` tone-${block.tone}` : ""}">
@@ -1441,29 +1291,28 @@ function emptyBriefingState(briefing) {
 
 function renderEmptyBriefing(briefing, issueList) {
   const view = emptyBriefingState(briefing);
-  document.getElementById("changedIssues").hidden = true;
-  document.getElementById("todayAgenda").hidden = true;
+  document.getElementById("continuingSection").hidden = true;
+  // 0건인 날에는 고를 것이 없다 — 카드도 머리도 걷는다.
+  const pickList = document.getElementById("pickList");
+  if (pickList) { pickList.innerHTML = ""; pickList.hidden = true; }
+  document.getElementById("todayTitle").textContent = "오늘의 원전 현안";
+  document.getElementById("todayLede").textContent = "";
+  const panelTitle = document.getElementById("briefPanelTitle");
+  if (panelTitle) panelTitle.hidden = true;
+  document.getElementById("briefPanel").hidden = false;
+  const agenda = document.getElementById("todayAgenda");
+  if (agenda) agenda.hidden = true;
+  const strip = document.getElementById("cardStrip");
+  if (strip) strip.hidden = true;
   // 사유는 히어로가 말하고, 목록은 '그래서 어디로 가면 되는가'만 담당한다.
   // 그 전제가 코드에 없어서 emptyBriefingState 가 만든 title 이 아무 데도 안
   // 붙고 있었다 — 0건인 날 화면에는 고정 헤드라인("이번 주 원자력, 무엇이
   // 달라졌나")만 남아, 아래가 비었는데 위에서는 달라진 게 있다고 말했다.
   // 2026-08-16 라이브에서 실제로 그렇게 났다(발송 실패로 그날 이슈가 0건).
-  const hero = document.getElementById("briefingHero");
-  // 이슈가 있던 날에서 날짜를 옮겨 오면 그날의 히어로 형태가 그대로 남는다.
-  if (hero) hero.classList.remove("lead-issue", "weekly-hero", "no-lead");
-  document.getElementById("briefingKicker").textContent = "주간 원자력 인텔리전스";
-  document.getElementById("briefingTitle").textContent = view.title;
   document.getElementById("briefingDateLabel").textContent =
     briefing && briefing.date ? dateWeekdayLabel(briefing.date) : "";
-  // 같은 이유로 직전 날짜의 선두 카드도 걷는다 — 0건이라면서 카드가 하나 떠
-  // 있는 화면이 된다.
-  document.getElementById("leadIssue").hidden = true;
-  document.getElementById("leadCard").innerHTML = "";
-  document.getElementById("showChangedIssues").hidden = true;
-  // 근거 칩도 함께 지운다 — 안 그러면 직전 브리핑의 근거가 남아 없는 문장을 가리킨다
-  const staleEvidence = document.getElementById("headlineEvidence");
-  if (staleEvidence) { staleEvidence.hidden = true; staleEvidence.innerHTML = ""; }
-  issueList.innerHTML = `<div class="empty-state"><p>${view.detail}</p></div>`;
+  document.getElementById("statusLine").textContent = "";
+  issueList.innerHTML = `<div class="empty-state"><strong>${esc(view.title)}</strong><p>${view.detail}</p></div>`;
 }
 
 // 날짜 문자열 산술은 UTC 자정 위에서만 한다.
@@ -1485,6 +1334,17 @@ function weekRange(date) {
   return { start: shiftDate(date, -6), end: date };
 }
 
+// 주간 리포트의 구간은 **토~금**이다. weekly_bot 이 금요일에 돌면서 직전 7일을
+// 묶기 때문이고(week_start = 실행일 -6), 저장된 값도 8/1~8/7 · 8/8~8/14 로 그렇다.
+// ISO 주차(월~일)로 계산하면 하루씩 어긋나 매칭이 통째로 빈다.
+function briefingWeek(date) {
+  const parsed = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return { start: "", end: "" };
+  const toFriday = (5 - parsed.getUTCDay() + 7) % 7;   // 0=일 … 5=금 … 6=토
+  const end = shiftDate(date, toFriday);
+  return { start: shiftDate(end, -6), end };
+}
+
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // 리포트가 덮는 구간의 끝. 저장된 값에 week_end 가 있으면 그것이 정답이고,
@@ -1494,21 +1354,21 @@ function weeklyReportEnd(report, start) {
   return ISO_DATE_RE.test(end) ? end : shiftDate(start, 6);
 }
 
-// **선택한 날짜까지 이미 완성된 가장 최근 리포트**를 고른다. 하나뿐인 selector 다 —
-// 오늘 화면의 주간 블록('한 주의 원자력')이 여기를 지난다 — 2026-08-22 통합
-// 이후로는 그 블록 하나뿐이다.
+// **선택한 날짜까지 이미 완성된 가장 최근 리포트**를 고른다.
 //
 // 예전에는 '선택 날짜가 속한 토~금 주차' 리포트만 찾았다. 그런데 리포트는 그 주
 // **금요일 오후**에야 생긴다. 토요일 0시에 새 주차가 시작되므로 토·일·월·화·수·목
 // 엿새 동안 그 주차 키는 비어 있고, 화면은 내내 '집계 중'이었다 — 바로 옆에 완성된
-// 지난주 리포트를 들고서. (2026-08-22 토요일: 8/15~21 리포트가 있는데도 안 떴다.)
+// 지난주 리포트를 들고서.
 //
 // 미래 리포트는 여전히 절대 고르지 않는다(week_end <= 선택일). 7월 브리핑에 8/8~14
 // 결론이 붙던 2026-08-16 의 문제는 '직전으로 대체'가 아니라 '미래를 당겨 쓴 것'이
 // 원인이었고, 그 문은 아래 부등호가 계속 닫아 둔다.
+// 구버전 trend.json(weekly_reports 없음)만 예전 단일 리포트로 산다.
 function weeklyReportFor(date) {
   const reports = state.trend?.weekly_reports;
-  if (!ISO_DATE_RE.test(String(date || "")) || !reports || typeof reports !== "object") return null;
+  if (!reports || typeof reports !== "object") return state.trend?.weekly_report || null;
+  if (!ISO_DATE_RE.test(String(date || ""))) return null;
   let best = null;
   let bestEnd = "";
   for (const [start, report] of Object.entries(reports)) {
@@ -1604,13 +1464,12 @@ function topicFlowStepSign(prev, curr) {
 const TOPIC_FLOW_SAMPLE_MIN = 8;
 
 // 첫 주와 마지막 주만 비교하면 '10 → 4 → 9 → 10'이 '변화 없음'이 된다 —
-// 가운데 급락이 있었다는 사실이 통째로 사라진다(사용자 지적). 그래서 주
-// 사이 걸음(step)을 전부 보고 그 모양으로 패턴을 가른다. 값(row.values,
-// 이슈 건수)으로 판단한다 — 이번 화면에서 그 값 자체를 막대 위에 그대로
-// 보여주므로, 패턴 이름과 눈에 보이는 숫자가 어긋나지 않는다. 옆의
-// 'span주 +Npp' 문구는 비중(shares) 기준으로 그대로 남는다 — 그건 '다른
-// 주제 대비 몫이 얼마나 움직였나', 이 패턴은 '그 사이 모양이 어땠나'로
-// 서로 다른 질문에 답한다.
+// 가운데 급락이 있었다는 사실이 통째로 사라진다. 그래서 주 사이 걸음(step)을
+// 전부 보고 그 모양으로 패턴을 가른다. 값(row.values, 이슈 건수)으로 판단한다 —
+// 이번 화면에서 그 값 자체를 막대 위에 그대로 보여주므로, 패턴 이름과 눈에
+// 보이는 숫자가 어긋나지 않는다. 옆의 'span주 +Npp' 문구는 비중(shares)
+// 기준으로 그대로 남는다 — 그건 '다른 주제 대비 몫이 얼마나 움직였나',
+// 이 패턴은 '그 사이 모양이 어땠나'로 서로 다른 질문에 답한다.
 function topicFlowPattern(values, sample) {
   if (sample < TOPIC_FLOW_SAMPLE_MIN) return { tone: "flat", label: "보합" };
   const steps = [];
@@ -1674,9 +1533,9 @@ function renderHomeIntelligence(briefing) {
   metrics.hidden = confirmedRate < 0.5;
   metrics.textContent = metrics.hidden ? "" : `근거 확인 ${confirmed.length}건 · 주간 이슈 ${weeklyIssues.length}건`;
 
-  // 주간 리포트(weekly_intro · so_what)는 여기서 안 낸다 — 2026-08-22 부터
-  // 화면 맨 위 '한 주의 원자력'(renderTodayAgenda) 한 곳이 그 리포트를 통째로
-  // 소유한다. 이 함수에 남은 몫은 히어로의 근거 확인 비율 한 줄이다.
+  // 주간 리포트(weekly_intro · so_what)는 여기서 안 낸다 — 화면 맨 위
+  // '한 주의 원자력'(renderTodayAgenda) 한 곳이 그 리포트를 통째로 소유한다.
+  // 이 함수에 남은 몫은 히어로의 근거 확인 비율 한 줄이다.
   // weeklyReportFor 를 여기서 다시 부르지 않는 것이 중복 방지의 형태다.
 }
 
@@ -1706,14 +1565,234 @@ function dropTextsAlreadyOnCards(lines, briefing) {
 // (weeklyReportFor — 미래 리포트는 안 고른다). ② 제목에 그 리포트가 말하는 구간을
 // 그대로 적는다 — 며칠간 내용이 같은 이유가 화면에서 설명된다.
 //
-// 2026-08-22: 한 리포트를 여기 하나로 모았다. 그전에는 what·watchpoints 가 여기,
-// weekly_intro·so_what 이 화면 한참 아래 04 "3분이면 이해되는 한 주의 원자력"에
-// 있었다. 같은 금요일 리포트이고 같은 selector 를 지나는데도 둘 다 '3분'이라
-// 이름 붙어 별개 기능처럼 보였고, 무엇보다 **무엇이 바뀌었나(what)와 그래서 무슨
-// 의미인가(so_what)를 읽으려면 화면을 오르내려야 했다.** 네 영역의 순서가 곧
-// 읽는 순서다 — 무엇이 바뀌었나 → 이번 주 흐름 → 그래서 어떤 의미 → 다음에 볼 것.
+// 한 리포트를 여기 하나로 모았다. 그전에는 what·watchpoints 가 여기,
+// weekly_intro·so_what 이 화면 아래 홈 인텔리전스에 있었다. 같은 금요일
+// 리포트인데도 별개 기능처럼 보였고, 무엇보다 **무엇이 바뀌었나(what)와 그래서
+// 무슨 의미인가(so_what)를 읽으려면 화면을 오르내려야 했다.** 네 영역의 순서가
+// 곧 읽는 순서다 — 무엇이 바뀌었나 → 이번 주 흐름 → 그래서 어떤 의미 → 다음에 볼 것.
+// 카드뉴스 띠 — /cards/index.json 의 최신 날짜 PNG 를 가로로 넘겨 본다. 보고 있는
+// 브리핑 날짜의 카드가 있으면 그것, 없으면 최신 것을 날짜 표시와 함께.
+let cardIndexPromise = null;
+function cardIndex() {
+  cardIndexPromise = cardIndexPromise
+    || fetch(`/cards/index.json?cb=${Date.now()}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
+  return cardIndexPromise;
+}
+// ── 웹 푸시 ───────────────────────────────────────────────────────────
+// 아침 브리핑 뒤 push_notify.py 가 /push/list 의 구독자에게 한 번 보낸다.
+// 공개키는 비밀이 아니다(구독을 이 서버로 묶는 식별자). 개인키는 GitHub Secrets.
+const PUSH_PUBLIC_KEY = "BOshdtsrxCv_P4mecLbxVjl9KM2-OW1nsXn9VoR7i4HupiS7oU2u1lS5ZDx6Ll0vQhVE5SSKp68_pWfEHMZRgZA";
+function urlBase64ToUint8Array(base64) {
+  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+  const raw = atob((base64 + padding).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from([...raw].map(ch => ch.charCodeAt(0)));
+}
+function pushSupported() {
+  return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+}
+function isStandalone() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+async function initPush() {
+  const button = document.getElementById("pushToggle");
+  const hint = document.getElementById("pushHint");
+  if (!button) return;
+  const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (!pushSupported()) {
+    // iOS Safari 는 홈 화면에 추가하기 전엔 PushManager 가 없다 — 그 안내만 남긴다.
+    if (isiOS && !isStandalone()) {
+      hint.textContent = "iPhone: 공유 → '홈 화면에 추가' 한 뒤, 그 앱에서 알림을 켜세요.";
+      hint.hidden = false;
+    }
+    return;
+  }
+  let reg;
+  try { reg = await navigator.serviceWorker.register("/sw.js"); }
+  catch { return; }
+  button.hidden = false;
+  const paint = async () => {
+    const sub = await reg.pushManager.getSubscription();
+    const on = !!sub && Notification.permission === "granted";
+    button.textContent = on ? "🔔 아침 알림 켜짐 · 끄기" : "🔔 아침 알림 받기";
+    button.setAttribute("aria-pressed", String(on));
+    button.classList.toggle("is-on", on);
+    return sub;
+  };
+  let current = await paint();
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    hint.hidden = true;
+    try {
+      if (current) {
+        await fetch("/push/subscribe", { method: "DELETE", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: current.endpoint }) });
+        await current.unsubscribe();
+      } else {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          hint.textContent = "브라우저에서 알림이 차단돼 있습니다. 사이트 설정에서 허용으로 바꿔 주세요.";
+          hint.hidden = false;
+          return;
+        }
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(PUSH_PUBLIC_KEY),
+        });
+        const res = await fetch("/push/subscribe", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription: sub.toJSON() }) });
+        if (!res.ok) throw new Error(`subscribe ${res.status}`);
+        hint.textContent = "켜졌습니다. 다음 아침 브리핑부터 알림이 옵니다.";
+        hint.hidden = false;
+      }
+    } catch (error) {
+      hint.textContent = `알림 설정 실패: ${String(error).slice(0, 80)}`;
+      hint.hidden = false;
+    } finally {
+      button.disabled = false;
+      current = await paint();
+    }
+  });
+}
+
+function renderCardStrip(date) {
+  const section = document.getElementById("cardStrip");
+  if (!section) return;
+  cardIndex().then(index => {
+    const dates = (index && index.dates) || {};
+    const pick = dates[date] ? date : (index && index.latest) || "";
+    const files = (dates[pick] || []).filter(Boolean);
+    if (!pick || !files.length) { section.hidden = true; return; }
+    document.getElementById("cardStripMeta").textContent =
+      `${dateWeekdayLabel(pick)} · ${files.length}장${pick === date ? "" : " (최신)"}`;
+    document.getElementById("cardStripTrack").innerHTML = files.map((file, i) =>
+      `<a class="card-strip-item" href="/cards/${encodeURIComponent(pick)}/${encodeURIComponent(file)}" target="_blank" rel="noopener" data-card-index="${i}">
+        <img src="/cards/${encodeURIComponent(pick)}/${encodeURIComponent(file)}" alt="카드뉴스 ${i + 1}/${files.length}" loading="lazy" width="1080" height="1080">
+      </a>`).join("");
+    section.hidden = false;
+    bindCardStripNav();
+    bindCardViewer(pick, files);
+    placeCardStrip();
+  });
+}
+
+// 띠에서 카드를 누르면 크게 본다. 좌우 버튼으로 다음 장, 터치는 스와이프 —
+// 트랙이 한 칸 100% 인 scroll-snap 이라 넘김은 브라우저가 한다(지니 09-17).
+// 원본 PNG 새 탭은 남긴다 — 가운데 클릭·Ctrl 클릭은 그대로 링크로 동작한다.
+function bindCardViewer(date, files) {
+  const dlg = document.getElementById("cardViewer");
+  const track = document.getElementById("cardViewerTrack");
+  const strip = document.getElementById("cardStripTrack");
+  const prev = document.getElementById("cardViewerPrev");
+  const next = document.getElementById("cardViewerNext");
+  const count = document.getElementById("cardViewerCount");
+  if (!dlg || !track || !strip || !prev || !next) return;
+
+  const at = () => (track.clientWidth ? Math.round(track.scrollLeft / track.clientWidth) : 0);
+  const sync = () => {
+    const i = at();
+    if (count) count.textContent = `${i + 1} / ${track.children.length}`;
+    prev.disabled = i <= 0;
+    next.disabled = i >= track.children.length - 1;
+  };
+  const move = (dir) => {
+    track.scrollBy({ left: dir * track.clientWidth, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    setTimeout(sync, 400);
+  };
+  const open = (index) => {
+    track.innerHTML = files.map((file, i) =>
+      `<div class="card-viewer-slide"><img src="/cards/${encodeURIComponent(date)}/${encodeURIComponent(file)}" alt="카드뉴스 ${i + 1}/${files.length}"></div>`).join("");
+    if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+    // 열자마자 누른 장으로. 레이아웃이 선 뒤라야 clientWidth 가 나온다.
+    const land = () => { track.scrollLeft = track.clientWidth * index; sync(); };
+    land();
+    setTimeout(land, 50);
+  };
+
+  strip.onclick = (event) => {
+    const link = event.target.closest("[data-card-index]");
+    if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    open(Number(link.dataset.cardIndex) || 0);
+  };
+
+  if (!dlg.dataset.bound) {
+    dlg.dataset.bound = "1";
+    prev.addEventListener("click", () => move(-1));
+    next.addEventListener("click", () => move(1));
+    track.addEventListener("scroll", sync, { passive: true });
+    document.getElementById("cardViewerClose")?.addEventListener("click", () => dlg.close());
+    // 카드 바깥(어두운 여백)을 누르면 닫는다. 이미지 위는 그대로 둔다.
+    track.addEventListener("click", (event) => {
+      if (event.target.closest("img")) return;
+      dlg.close();
+    });
+  }
+}
+
+// 넓은 화면엔 좌우 버튼으로 한 장씩 넘긴다(지니 09-17). 폰은 스와이프 — 트랙이
+// 이미 scroll-snap 이라 손가락만으로 넘어간다. 한 번에 정확히 한 장 움직이도록
+// 이동 폭은 카드 실제 너비 + 간격에서 잰다(CSS 가 flex-basis 를 바꿔도 따라온다).
+function bindCardStripNav() {
+  const track = document.getElementById("cardStripTrack");
+  const prev = document.getElementById("cardStripPrev");
+  const next = document.getElementById("cardStripNext");
+  if (!track || !prev || !next) return;
+  // 한 번에 카드 한 장. 이동 폭을 카드 실제 너비 + 간격에서 재면 스냅 지점에
+  // 정확히 떨어지고, CSS 가 폭을 바꿔도(폰 84vw) 따라온다.
+  const step = () => {
+    const first = track.firstElementChild;
+    if (!first) return track.clientWidth;
+    const gap = parseFloat(getComputedStyle(track).columnGap || "0") || 0;
+    return first.getBoundingClientRect().width + gap;
+  };
+  const sync = () => {
+    const max = track.scrollWidth - track.clientWidth;
+    prev.disabled = track.scrollLeft <= 1;
+    next.disabled = track.scrollLeft >= max - 1;
+  };
+  // 끝에 닿았는지는 scroll 이벤트로 갱신한다. 다만 그 이벤트 하나에만 기대지
+  // 않는다 — 렌더가 멈춘 탭에서는 scroll 이 아예 안 뜬다(실측 09-17). 버튼을
+  // 누른 뒤에도 한 번 더 잰다.
+  const move = (dir) => {
+    track.scrollBy({ left: dir * step(), behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    setTimeout(sync, 400);
+  };
+  if (!track.dataset.navBound) {
+    track.dataset.navBound = "1";
+    prev.addEventListener("click", () => move(-1));
+    next.addEventListener("click", () => move(1));
+    track.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync);
+  }
+  sync();
+}
+
+// 데스크톱에서 카드뉴스는 '먼저 볼 3건' **위**에 선다(지니 09-17). 넓은 화면은
+// 세로가 남아 가로 띠가 위에 있어도 3건을 밀어내지 않는데, 원래 자리(목차 아래)
+// 에서는 1,238px 아래라 사실상 안 보였다. 폰은 원래 자리 그대로 — 거기서는 띠가
+// 위에 오면 3건이 첫 화면 밖으로 나간다.
+function placeCardStrip() {
+  const strip = document.getElementById("cardStrip");
+  const picks = document.getElementById("pickList");
+  const panel = document.getElementById("briefPanel");
+  if (!strip || !picks || !panel) return;
+  if (!narrowScreen.matches) {
+    if (strip.nextElementSibling !== picks) picks.before(strip);
+  } else if (strip.previousElementSibling !== panel) {
+    panel.after(strip);          // 원래 자리 — 목차 다음
+  }
+}
+
 function renderTodayAgenda(briefing) {
   const agenda = document.getElementById("todayAgenda");
+  const toggle = document.getElementById("agendaToggle");
+  if (toggle && !toggle.dataset.bound) {
+    toggle.dataset.bound = "1";
+    toggle.addEventListener("click", () => {
+      const body = document.getElementById("agendaBody");
+      body.hidden = !body.hidden;
+      toggle.setAttribute("aria-expanded", body.hidden ? "false" : "true");
+    });
+  }
   const report = weeklyReportFor(briefing.date);
   const label = weekRangeLabel(report);
   document.getElementById("todayAgendaTitle").textContent =
@@ -1758,6 +1837,9 @@ function renderTodayAgenda(briefing) {
   pending.textContent = pending.hidden ? ""
     : "아직 완성된 주간 리포트가 없습니다 — 주간 리포트는 금요일 오후에 만들어집니다.";
   agenda.hidden = empty && pending.hidden;
+  // 리포트가 하나도 없는 날은 이 블록의 내용이 펜딩 한 문장뿐이다. 그동안 상자
+  // chrome 이 폴드에서 128px 을 먹는다(실측 2026-08-22 라이브). 문장은 남기고 상자만 벗긴다.
+  agenda.classList.toggle("is-pending-only", empty && !pending.hidden);
   document.getElementById("todayAgendaMeta").textContent =
     empty ? "" : `한눈에 ${conclusions.length} · 확인 ${watch.length}`;
 }
@@ -1769,7 +1851,7 @@ function renderTodayAgenda(briefing) {
 //   375×812   700px / 1,105px  ← 1.36 화면
 // 모바일만 이상치다. 글이 좁은 폭에서 접히며 블록이 두 배 넘게 불어 첫 화면이
 // 통째로 '이번 주' 요약이 된다 — 그런데 탭 이름은 '오늘'이고, 안쪽 라벨은
-// 요일과 무관하게 매일 `이번 주 결론`이었다(8/5·8/7 동일 — 지금은 `핵심 결론`).
+// 요일과 무관하게 매일 `이번 주 결론`이다(8/5·8/7 동일).
 //
 // 내용은 하나도 안 숨긴다. 주간 watchpoints 는 카드의 open_question 이 실측
 // 19건 중 0건이라 화면에서 그 질문에 답하는 유일한 자리다 — 접으면 모바일
@@ -1786,255 +1868,242 @@ function placeTodayAgenda() {
   }
 }
 
-// 화면 v3 의 유일한 진입점. 조립은 전부 ui-v3.js 가 하고, app.js 는 어느 데이터를
-// 넘길지만 정한다 — 두 파일이 같은 화면을 반씩 그리면 금방 갈라진다.
+// ── 목차형 홈 ───────────────────────────────────────────────────────
+// 홈은 읽는 화면이 아니라 고르는 화면이다. 선두 카드·달라진 이슈·오늘 이슈로
+// 갈려 있던 세 목록을 한 줄씩 세운 목차 하나로 합쳤다. 정렬·보기·필터는 걷었다
+// — 9줄에는 거를 것이 없고, 거르고 싶으면 탐색 탭이 주인이다.
+// 첫 화면은 4건 — 9건은 "잘 안 들어온다"(지니 09-16). 지역 맞물림이라 국내 2·해외 2.
+// 나머지는 꼬리의 '펼치기'가 제자리에서 연다(옛 '전체 브리핑' 링크는 같은 화면을
+// 다시 그릴 뿐이라 아무 일도 안 일어났다).
+const TOC_LIMIT = 4;
+// 오늘 먼저 볼 건수. 3은 "고른 것"으로 읽히는 최대치다 — 넷부터는 목록이 된다.
+const PICK_LIMIT = 3;
+const CONTINUING_LIMIT = 3;
+
+// 행 전체가 진짜 <a href> 다. 새 탭·키보드 이동·뒤로가기 스크롤 복원이 전부
+// 브라우저 기본 동작으로 따라온다 — pushState 로 가로채면 셋 다 직접 짜야 한다.
+// 대분류 12개의 색 묶음. 열두 색을 다 주면 목록이 형광펜이 되므로 성격이 같은
+// 것끼리 일곱 벌로 묶는다 — 라벨이 정확하니 색이 겹쳐도 글자가 가른다.
+// 분류 칩 — 현안 대분류(khnp_domain) 하나. 없으면 아무것도 그리지 않는다:
+// 옛 topics 로 근사하던 대역(2026-09-11)은 걷었다. 그 근사가 '에너지안보·통상'
+// 같은 틀린 칩을 맞는 척 세웠다(지니 09-15). 빈칸이 틀린 칩보다 낫다.
 //
-// 어느 레코드를 넘기는가는 **이미 정해져 있다.** briefingIssuesForDisplay() 가
-// 최신 날짜에서는 카탈로그 레코드로 갈아 끼우고(그래야 타임라인 수와 배지가 상세와
-// 같다) 과거 회차는 그날의 스냅샷으로 둔다. v3 가 여기서 제 규칙을 새로 세우면
-// 같은 이슈가 구 화면과 v3 에서 다른 타임라인을 보인다.
-function renderV3(briefing = currentBriefing()) {
-  const root = document.getElementById("v3Root");
-  if (!root) return;
-  // 장기 스토리 딥링크는 v3 가 비킨다. body 클래스 하나로 구 골격을 도로 편다 —
-  // CSS 가 #main > section 을 통째로 접고 있으므로 예외를 거기서 푼다.
-  document.body.classList.toggle("ui-v3-legacy", v3LegacyView());
-  if (v3LegacyView()) {
-    root.hidden = true;
-    renderLongTerm();
-    return;
-  }
-  root.hidden = false;
-  if (state.view === "trend") { renderV3Trend(root, briefing); return; }
-  if (state.view === "search") { renderV3Search(root); return; }
-  if (state.view === "report") { renderV3Report(root); return; }
-  UI_V3.renderToday(root, briefing, {
-    qa: state.uiQa,
-    issues: briefingIssuesForDisplay(briefing),
-    dates: briefingDates(),
+// 칩은 버튼이다. 누르면 탐색 탭에서 같은 분류가 모인 목록으로 간다. 행 전체는
+// 상세로 가는 링크이므로 둘은 겹치면 안 된다 — 링크 안에 버튼을 넣는 것은
+// 유효하지 않은 마크업이라, 행은 <div> 로 두고 제목 링크를 늘여(stretched link)
+// 행 전체를 덮는다. 칩은 그 위에 선다.
+// 홈 목차의 분류 필터 — 칩을 누르면 그날 이슈 중 같은 분류만 제자리에서 보인다
+// (지니 09-16: "분류를 누르면 연관된 것만 바로"). 탭을 옮기지 않는다.
+let homeDomainFilter = "";
+function tocChips(issue) {
+  const domain = issue.khnp_domain || "";
+  if (!domain) return "";
+  const active = domain === homeDomainFilter;
+  const title = active ? "필터 해제" : `${domain} 이슈만 보기`;
+  return `<span class="toc-chips"><button type="button" class="chip chip--domain${active ? " is-active" : ""}"
+    data-hub-domain="${esc(domain)}" aria-pressed="${active}" title="${esc(title)}">${esc(domain)}</button></span>`;
+}
+
+// 행 = 번호 · 지역 분류 · 제목 · 화살표. 요약·출처 줄은 없다 — "길게 요약을
+// 띄우는 것 자체가 이상하다"(지니 09-15). 고르는 화면이지 읽는 화면이 아니다.
+function tocRow(issue, index = 0) {
+  return `<div class="toc-row">
+  <span class="toc-num" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
+  <span class="toc-body">
+    <span class="toc-meta-line"><span class="toc-region">${esc(issue.region || "")}</span>${tocChips(issue)}</span>
+    <span class="toc-title"><a class="toc-link" href="/issue/${encodeURIComponent(issue.issue_id)}/">${esc(issue.title)}</a></span>
+  </span>
+  <span class="toc-arrow" aria-hidden="true">→</span>
+</div>`;
+}
+// 먼저 볼 3건. 목차 행(tocRow)과 같은 데이터인데 번호를 크게 쓰고 '왜 중요한가'
+// 한 줄을 더한다 — 요약이 아니라 고른 이유다. 분류는 여기선 누를 수 없는 글자다:
+// 링크 안에 버튼을 넣을 수 없고, 필터는 아래 목차 행이 이미 들고 있다.
+// 시안(nuclens-today-mockup.html)의 2단계를 옮긴다. 누르면 카드가 제자리에서
+// 펼쳐져 한 줄 요약·다음에 확인할 것·추적 기간과 **액션 세 개**를 보인다. 전체
+// 상세는 그 다음 단계다 — 목록에서 바로 상세로 보내면 "이게 뭔지" 확인하는 한
+// 걸음이 없어 아니면 되돌아 나와야 한다(지니 09-17 "눌렀을 때 버튼도 나오고").
+function pickDetail(issue) {
+  const tracked = issue.tracked_briefings || 1;
+  const track = tracked > 1
+    ? `${dateLabel(issue.first_seen)}부터 추적 중 · 브리핑 ${tracked}회`
+    : "오늘 처음 잡힌 이슈";
+  const question = (issue.open_question || "").trim();
+  const url = safeUrl((issue.representative_article || {}).url || "");
+  const saved = state.savedIds.has(issue.issue_id);
+  // '전체 내용 보기'는 data-issue-id 위임을 탄다 — 폰은 바텀 시트, 데스크톱은
+  // 근거 패널. 화면마다 맞는 쪽이 열리게 두고 여기서 강제하지 않는다.
+  return `<p class="pick-sum">${esc(issue.summary || "")}</p>
+  ${question ? `<p class="pick-q"><b>다음에 확인할 것</b>${esc(question)}</p>` : ""}
+  <p class="pick-track">${esc(track)}</p>
+  <div class="pick-actions">
+    <button type="button" class="primary" data-issue-id="${esc(issue.issue_id)}">전체 내용 보기</button>
+    ${url ? `<a href="${url}" target="_blank" rel="noopener">원문</a>` : ""}
+    <button type="button" data-save-issue="${esc(issue.issue_id)}">${saved ? "저장됨" : "저장"}</button>
+  </div>`;
+}
+
+// <a> 가 아니라 <button> 이다 — 펼침은 이동이 아니다. 원문으로 나가는 링크는
+// 펼친 안에 따로 있다.
+function pickCard(issue, index) {
+  const meta = [issue.region || "", issue.khnp_domain || ""].filter(Boolean).join(" · ");
+  // why_important 는 빈 날이 많다 — 빌드(split_interpretation)가 시사점과 겹치면
+  // 한쪽을 비우기 때문이다(09-16 라이브 상위 3건 중 2건 공백). 카드의 이 줄에는
+  // 라벨이 없으니 '시사점'으로 메워도 거짓말이 되지 않는다. 요약은 안 쓴다 —
+  // 요약 줄 금지는 그대로다(지니 09-15).
+  const why = (issue.why_important || issue.implication || "").trim();
+  const panelId = `pickDetail-${index + 1}`;
+  return `<li class="pick-card">
+  <button class="pick-open" type="button" aria-expanded="false" aria-controls="${panelId}">
+    <span class="pick-rank" aria-hidden="true">${index + 1}</span>
+    <span class="pick-body">
+      ${meta ? `<span class="pick-meta">${esc(meta)}</span>` : ""}
+      <span class="pick-title">${esc(issue.title)}</span>
+      ${why ? `<span class="pick-why">${esc(why)}</span>` : ""}
+      <span class="pick-foot">
+        <span class="pick-badge">${verificationBadge(issue, { always: true })}</span>
+        <span class="pick-more">자세히<i aria-hidden="true">⌄</i></span>
+      </span>
+    </span>
+  </button>
+  <div class="pick-detail" id="${panelId}" hidden>${pickDetail(issue)}</div>
+</li>`;
+}
+
+function applyCardLines(pickList, picks, date) {
+  cardIndex().then(index => {
+    const lines = (index && index.lines && index.lines[date]) || null;
+    if (!lines) return;
+    picks.forEach((issue, i) => {
+      const line = String(lines[issue.issue_id] || "").trim();
+      if (!line) return;
+      const card = pickList.children[i];
+      const slot = card && card.querySelector(".pick-why");
+      if (slot) { slot.textContent = line; return; }
+      // 사이트 문장이 비어 카드에 줄 자체가 없던 이슈 — 여기서 처음 생긴다
+      const body = card && card.querySelector(".pick-body");
+      const foot = body && body.querySelector(".pick-foot");
+      if (!body) return;   // foot 앞에 끼워 넣는다 — 제목·이유·근거 순서를 지킨다
+      const span = document.createElement("span");
+      span.className = "pick-why";
+      span.textContent = line;
+      body.insertBefore(span, foot);
+    });
   });
 }
 
-// 흐름 탭의 재료. 판단은 전부 기존 함수가 한다 — weeklyReportFor 가 어느 주의
-// 리포트인지 고르고(토~금 구간 매칭은 weekly_selector.mjs 가 잠근다),
-// dropTextsAlreadyOnCards 가 카드에 이미 있는 문장을 걷는다. v3 가 여기서 제
-// 판단을 새로 세우면 같은 리포트를 두 탭이 다르게 읽는다.
-function renderV3Trend(root, briefing) {
-  const report = briefing ? weeklyReportFor(briefing.date) : null;
-  const drop = (rows) => briefing ? dropTextsAlreadyOnCards(rows, briefing) : rows.filter(Boolean);
-  // 기본 화면이 쓰는 두 칸만 먼저 그린다. 나머지(차트·지도·워드클라우드·지난
-  // 브리핑)는 '데이터 더 보기'를 열 때 renderTrend() 가 통째로 그린다.
-  renderTrendTopicFlow();
-  renderEventCalendar();
-  UI_V3.renderTrend(root, {
-    weekLabel: weekRangeLabel(report),
-    conclusions: drop((report?.policy_shifts || []).map(row => row?.what)).slice(0, 3),
-    soWhat: drop((report?.policy_shifts || []).map(row => row?.so_what)).slice(0, 3),
-    watch: drop(report?.watchpoints || []).slice(0, 3),
-    intro: drop([report?.weekly_intro])[0] || "",
-    changed: briefing ? weeklyChangedIssues(briefing) : [],
-    qa: state.uiQa,
-    onExpandData: () => renderTrend(),
-  });
-}
-
-// 탐색 탭. 판정은 전부 기존 함수가 한다 — archiveIssueMatches 가 필터를,
-// sortArchiveIssues 가 정렬을 맡는다. v3 가 더하는 것은 '오래 이어진 이슈' 하나이고,
-// 그 기준은 이슈 원장의 first_seen~last_seen 이다(threads.json 을 읽지 않는다).
-function v3ArchiveLanding() {
-  return !state.archiveQuery && !state.archiveEntity
-    && state.archiveRegion === "전체" && state.archiveTopic === "전체"
-    && state.archivePeriod === "all" && state.archiveVerification === "전체";
-}
-
-function renderV3Search(root) {
-  const landing = v3ArchiveLanding();
-  const matched = state.issues.filter(archiveIssueMatches);
-  const results = state.archiveSort === "span"
-    ? UI_V3.sortBySpan(matched)
-    : sortArchiveIssues(matched);
-  const chips = (state.entities?.entities || [])
-    .filter(entity => entity.issue_count > 0 || state.follows.has(entity.id))
-    .slice(0, 12)
-    .map(entity => ({ id: entity.id, label: entity.name_kr, count: entity.issue_count }));
-  const filterCount = [
-    state.archiveRegion !== "전체", state.archiveTopic !== "전체",
-    state.archivePeriod !== "all", state.archiveVerification !== "전체",
-  ].filter(Boolean).length;
-  UI_V3.renderSearch(root, {
-    landing, chips, query: state.archiveQuery, results,
-    total: matched.length, limit: state.archiveLimit,
-    sort: state.archiveSort, filterCount, qa: state.uiQa,
-  });
-}
-
-function renderV3Report(root) {
-  UI_V3.renderReport(root, {
-    picks: state.issues.filter(issue => (issue.report_pick || "").trim()).slice(0, 6),
-    pubs: (state.pubs?.items || []).slice(0, 20),
-    qa: state.uiQa,
-  });
-}
-
-// v3 의 목록 조작. 행 펼침은 ui-v3.js 가 제 안에서 처리하고, 여기 있는 것은
-// **화면 상태를 바꾸는 것**뿐이다 — 날짜 이동·탭 이동·시트 열기.
-function handleV3Action(event) {
-  const step = event.target.closest("[data-v3-step]");
-  if (step) { stepBriefing(Number(step.dataset.v3Step)); return true; }
-  const pick = event.target.closest("[data-v3-date]");
-  if (pick) {
-    state.briefingDate = pick.dataset.v3Date;
-    renderDateSelect();
-    renderBriefing();
-    renderSystemStatus();
-    syncUrl();
-    return true;
-  }
-  const more = event.target.closest("[data-v3-more]");
-  if (more) {
-    more.closest("section")?.querySelectorAll(".v3-rows li[hidden]").forEach(row => { row.hidden = false; });
-    more.remove();
-    return true;
-  }
-  const go = event.target.closest("[data-v3-go]");
-  if (go) { switchView(go.dataset.v3Go); return true; }
-  const ent = event.target.closest("[data-v3-ent]");
-  if (ent) {
-    state.archiveEntity = ent.dataset.v3Ent;
-    state.archiveLimit = 20;
-    renderV3();
-    syncUrl();
-    return true;
-  }
-  const page = event.target.closest("[data-v3-page]");
-  if (page) { state.archiveLimit += 20; renderV3(); return true; }
-  const audio = event.target.closest("[data-v3-audio]");
-  if (audio) {
-    const player = document.getElementById("audioBrief");
-    if (player) {
-      player.hidden = !player.hidden;
-      audio.setAttribute("aria-expanded", String(!player.hidden));
-    }
-    return true;
-  }
-  const sheet = event.target.closest("[data-v3-sheet]");
-  // 시트는 issueId 배선을 그대로 탄다 — 주소·뒤로가기·복원이 전부 거기 있다.
-  if (sheet) { openIssueDialog(sheet.dataset.v3Sheet); return true; }
-  return false;
+function continuingRow(issue) {
+  // 변화 문장은 'A → B' 꼴이다. 목차에 이미 제목이 있으니 바뀐 쪽만 보인다.
+  const change = String(issue.latest_change || "").split("→").pop().trim();
+  return `<a class="cont-row" href="/issue/${encodeURIComponent(issue.issue_id)}/">
+  <span class="cont-title">${esc(issue.title)}</span>
+  ${change ? `<span class="cont-change">${esc(change)}</span>` : ""}
+</a>`;
 }
 
 function renderBriefing() {
   const briefing = currentBriefing();
-  const issueList = document.getElementById("issueList");
-  // 부팅 스켈레톤을 걷고 본문 격자를 편다. 브리핑이 없는 날·0건인 날도 여기를
-  // 지나므로(아래 두 반환 경로) 격자가 접힌 채 남는 일은 없다.
+  const tocList = document.getElementById("tocList");
   document.body.classList.remove("booting");
-  // 모든 반환 경로(브리핑 없음·0건·정상)에서 한 번씩 판정되도록 맨 앞에서 부른다.
   renderAudioBrief(briefing);
   if (!briefing) {
-    renderEmptyBriefing(null, issueList);
+    renderEmptyBriefing(null, tocList);
     return;
   }
-  // 화면 v3 분기. 구 골격은 body.ui-v3 아래에서 CSS 가 접고, v3 는 #v3Root 에만
-  // 그린다 — 아래 골격 채우기를 그대로 두면 안 보이는 칸을 채우느라 같은 일을
-  // 두 번 한다. booting 은 위에서 이미 걷혔다.
-  if (state.ui === "v3") { renderV3(briefing); return; }
-  renderTodayAgenda(briefing);
-  renderHomeIntelligence(briefing);
-  // 필터 때문에 비어 보이는 것과 그날 실제로 이슈가 0건인 것은 다르다.
   if (!briefing.issues.length) {
-    renderEmptyBriefing(briefing, issueList);
-    document.getElementById("issueCount").textContent = "0개 이슈";
-    renderBriefingSidebar(briefing);
+    renderEmptyBriefing(briefing, tocList);
     renderNewsFeed();
     return;
   }
-  let issues = briefingIssuesForDisplay(briefing).filter(issueMatchesFilters);
-  // 선두는 편집 판단이라 목록 정렬 토글을 따르지 않는다 — '최신순'으로 바꿨다고
-  // 가장 먼저 볼 이슈가 달라지지는 않는다. 필터는 따른다(안 보이는 이슈를 선두로
-  // 세울 수는 없다).
-  const lead = issues[0] || null;
-  const leadId = lead ? lead.issue_id : "";
-  document.getElementById("leadIssue").hidden = !lead;
-  // 선두 이슈의 표시 여부가 정해진 **뒤에** 자리를 잡는다 — 앞에서 부르면
-  // 첫 렌더에서 leadIssue 가 아직 hidden 이라 조건이 늘 거짓이다.
-  placeTodayAgenda();
-  document.getElementById("leadCard").innerHTML = lead ? leadCard(lead, briefing) : "";
-  if (state.issueSort === "latest") {
-    issues = [...issues].sort((a, b) => String(b.last_seen).localeCompare(String(a.last_seen)) || b.article_count - a.article_count);
-  }
-  // HERO 는 생성 문장이 아니라 고정 제품 헤드라인이다. daily_lead 는 아카이브와
-  // RSS 용으로 계속 만들지만 이 자리에 다시 연결하지 않는다.
-  document.getElementById("briefingTitle").textContent = "이번 주 원자력, 무엇이 달라졌나";
-  document.getElementById("briefingKicker").textContent = "주간 원자력 인텔리전스";
-  const hero = document.getElementById("briefingHero");
-  if (hero) {
-    hero.classList.add("lead-issue", "weekly-hero");
-    hero.classList.remove("no-lead");
-  }
-  document.getElementById("briefingDateLabel").textContent = `${dateWeekdayLabel(briefing.date)} · 제${state.briefings.length - state.briefings.indexOf(briefing)}호`;
-  // 근거 칩은 히어로가 문장을 낼 때 그 문장이 어디서 왔는지 보이려고 있었다.
-  // 낼 문장이 없으니 칩도 없다. 컨테이너는 남긴다 — index.html 이 참조한다.
-  const evidenceBox = document.getElementById("headlineEvidence");
-  if (evidenceBox) {
-    evidenceBox.hidden = true;
-    evidenceBox.innerHTML = "";
-  }
 
-  const changed = weeklyChangedIssues(briefing);
-  const sectionChanges = changed.length >= 3 ? changed : [];
-  const changedIds = new Set(sectionChanges.map(issue => issue.issue_id));
-  // 선두로 올린 이슈는 아래 두 목록에서 뺀다 — 같은 이슈가 한 화면에 두 번 서면
-  // 개수 표시("8개 이슈")도 실제 카드 수와 어긋난다.
-  const rest = issues.filter(issue => !changedIds.has(issue.issue_id) && issue.issue_id !== leadId);
-  const changedSection = document.getElementById("changedIssues");
-  const visibleChanged = sectionChanges.filter(issue => issueMatchesFilters(issue) && issue.issue_id !== leadId);
-  changedSection.hidden = visibleChanged.length === 0;
-  document.getElementById("changedCount").textContent = `${visibleChanged.length}개 이슈`;
-  document.getElementById("changedList").innerHTML =
-    visibleChanged.map((issue, index) => issueCard(issue, index)).join("");
-  const changedButton = document.getElementById("showChangedIssues");
-  changedButton.hidden = visibleChanged.length === 0;
-  // 몇 건이 달라졌는지는 버튼이 말한다 — 히어로에 지표 블록을 새로 세우면
-  // 헤더 상태 칩·상태 스트립과 같은 숫자를 되풀이하게 된다(중복 표시 금지 원칙).
-  if (visibleChanged.length) {
-    changedButton.innerHTML = `달라진 이슈 ${visibleChanged.length}건 보기 <span aria-hidden="true">→</span>`;
-  }
+  document.getElementById("briefingDateLabel").textContent =
+    `${dateWeekdayLabel(briefing.date)} · 제${state.briefings.length - state.briefings.indexOf(briefing)}호`;
 
-  document.getElementById("issueCount").textContent = `${rest.length}개 이슈`;
-  issueList.classList.toggle("list-view", state.issueView === "list");
-  // front 강조는 '기본 화면'에서만 — 최신 브리핑 + 필터·정렬이 기본값일 때.
-  // 편집 판단이 아니라 기존 순서의 상위 2건을 조판만 다르게 세우는 것이므로,
-  // 조건이 하나라도 어긋나면(과거 날짜·필터·최신순) 강조를 접는다. 개수는
-  // 정확히 2건 — "2~3건" 같은 재량 표현이 남으면 화면마다 다르게 구현된다.
-  const frontActive = briefing.date === state.briefings?.[0]?.date
-    && state.region === "전체" && state.topic === "전체"
-    && state.issueSort === "importance" && state.issueView === "card";
-  // 위 '지금 달라진 이슈'에 결과가 남아 있는데 아래에서 '없습니다'라고 하면
-  // 한 화면이 스스로를 부정한다. 두 구역을 합쳐 0건일 때만 빈 상태를 보인다.
-  const elsewhere = visibleChanged.length ? "지금 달라진 이슈" : "가장 먼저 볼 이슈";
-  issueList.innerHTML = rest.length
-    ? rest.map((issue, index) => issueCard(issue, index, false, frontActive && index < 2)).join("")
-    : (visibleChanged.length || lead
-      ? `<p class="section-note">필터에 맞는 이슈는 위 <strong>${elsewhere}</strong>에 있습니다.</p>`
-      : '<div class="empty-state"><strong>조건에 맞는 이슈가 없습니다</strong><p>주제나 지역 필터를 해제해 보세요.</p><button type="button" data-clear-briefing>필터 해제</button></div>');
-  const activeFilters = [];
-  if (state.region !== "전체") activeFilters.push(state.region);
-  if (state.topic !== "전체") activeFilters.push(TOPIC_LABELS[state.topic] || state.topic);
-  document.getElementById("filterSummary").innerHTML = activeFilters.map(item => `<span>${esc(item)}</span>`).join("");
-  document.getElementById("filterCount").textContent = activeFilters.length ? `(${activeFilters.length})` : "";
-  // 이 숫자는 세 자리(선두 카드 + 이어지는 이슈 + 오늘의 이슈)의 합계다. 바로 아래
-  // 섹션이 '7건'이라고 쓰는데 여기가 '8건'이면 한 화면이 스스로와 어긋나 보인다 —
-  // 무엇을 더한 값인지 말해 주면 어긋남이 아니라 내역이 된다.
-  // 선두 카드는 이 커밋(8551f68) 이후에 생겼다. 문구는 그때 것을 쓰되 셈은
-  // 선두 1건을 포함해야 한다 — 안 그러면 화면에 보이는 카드 수보다 하나 적다.
-  document.getElementById("filterSheetCount").textContent = `필터 결과 전체 ${visibleChanged.length + rest.length + (lead ? 1 : 0)}건`;
-  const clear = document.getElementById("clearFilters");
-  clear.hidden = activeFilters.length === 0;
-  clear.textContent = activeFilters.length ? `필터 해제 (${activeFilters.length})` : "필터 해제";
-  renderBriefingSidebar(briefing, leadId);
+  const ordered = briefingIssuesForDisplay(briefing);
+  const issueNo = state.briefings.length - state.briefings.indexOf(briefing);
+  const dateLabel = `${dateWeekdayLabel(briefing.date)} · 제${issueNo}호`;
+  // 분류 필터가 걸려 있으면 그날 이슈 중 같은 분류 전부, 아니면 상위 TOC_LIMIT 건.
+  if (homeDomainFilter && !ordered.some(issue => issue.khnp_domain === homeDomainFilter)) {
+    homeDomainFilter = "";   // 날짜를 옮겨 그 분류가 없으면 필터는 조용히 풀린다
+  }
+  // 분류 필터가 걸리면 '고른 3건'이라는 말이 성립하지 않는다 — 그때는 카드를
+  // 걷고 필터에 걸린 이슈 전부를 목차로만 보인다.
+  const picks = homeDomainFilter ? [] : ordered.slice(0, PICK_LIMIT);
+  const pickList = document.getElementById("pickList");
+  pickList.innerHTML = picks.map(pickCard).join("");
+  pickList.hidden = picks.length === 0;
+  // 카드뉴스 카피의 '왜' 한 줄(≤40자)로 갈아 끼운다 — 사이트의 why_important 는
+  // 36~143자 서술형이라 카드에 쓰기엔 길다. index.json 이 아직 안 왔으면 위에서
+  // 그린 사이트 문장이 그대로 남는다.
+  // ponytail: 늦게 도착하면 글자가 한 번 바뀐다. 첫 방문에만, 줄이 다를 때만.
+  // 거슬리면 briefings.json 빌드에 이 줄을 실어 동기 렌더로 옮길 것.
+  if (picks.length) applyCardLines(pickList, picks, briefing.date);
+
+  const top = homeDomainFilter
+    ? ordered.filter(issue => issue.khnp_domain === homeDomainFilter)
+    : ordered.slice(PICK_LIMIT, PICK_LIMIT + TOC_LIMIT);
+  const rowOffset = homeDomainFilter ? 0 : PICK_LIMIT;
+  tocList.innerHTML = top.map((issue, index) => tocRow(issue, rowOffset + index)).join("");
+  document.getElementById("briefPanelTitle").hidden = homeDomainFilter !== "";
+  document.getElementById("briefPanel").hidden = top.length === 0;
+  // 패널 꼬리 한 줄: 날짜·호수·건수. 머리는 없다(폰 첫 화면 확보).
+  const foot = document.getElementById("briefPanelDate");
+  const more = document.getElementById("briefPanelAll");
+  const archive = document.getElementById("briefPanelArchive");
+  if (homeDomainFilter) {
+    foot.textContent = `${homeDomainFilter} ${top.length}건 · ${dateWeekdayLabel(briefing.date)}`;
+    more.hidden = false;
+    more.textContent = "전체 보기 ✕";
+    more.onclick = () => { homeDomainFilter = ""; renderBriefing(); };
+    archive.hidden = false;
+    archive.onclick = event => {
+      event.preventDefault();
+      state.archiveDomain = homeDomainFilter;
+      state.archiveQuery = ""; state.archiveEntity = ""; state.archiveTopic = "전체";
+      renderArchiveSearch(true);
+      switchView("search");
+      syncUrl("push");
+    };
+  } else {
+    const shownCount = picks.length + top.length;
+    foot.textContent = `${dateLabel} · ${shownCount}건`;
+    const rest = ordered.slice(PICK_LIMIT + TOC_LIMIT);
+    more.hidden = rest.length === 0;
+    more.textContent = `나머지 ${rest.length}건 펼치기 →`;
+    more.onclick = () => {
+      tocList.insertAdjacentHTML("beforeend",
+        rest.map((issue, index) => tocRow(issue, PICK_LIMIT + TOC_LIMIT + index)).join(""));
+      more.hidden = true;
+      foot.textContent = `${dateLabel} · ${ordered.length}건`;
+    };
+    archive.hidden = true;
+  }
+  renderCardStrip(briefing.date);
+  // 정책의제 '한 주의 원자력' — 목차 아래. 주간 리포트가 없으면 스스로 숨는다.
+  renderTodayAgenda(briefing);
+
+  // 이어지는 현안은 목차와 겹치지 않을 때만 선다 — 같은 이슈가 한 화면에 두 번
+  // 서면 9줄이라는 약속이 깨진다.
+  const shown = new Set([...picks, ...top].map(issue => issue.issue_id));
+  const continuing = weeklyChangedIssues(briefing)
+    .filter(issue => !shown.has(issue.issue_id))
+    .slice(0, CONTINUING_LIMIT);
+  document.getElementById("continuingSection").hidden = continuing.length === 0;
+  document.getElementById("continuingList").innerHTML = continuing.map(continuingRow).join("");
+
+  document.getElementById("todayTitle").textContent =
+    picks.length ? `오늘 먼저 볼 ${picks.length}건` : "오늘의 원전 현안";
+  const changedCount = continuing.length;
+  document.getElementById("todayLede").textContent = picks.length
+    ? `이슈 ${briefing.issues.length}건 중 골랐습니다.`
+      + (changedCount ? ` 진행 중 이슈 ${changedCount}건에 변화가 있습니다.` : "")
+    : "";
+
+  const articles = briefing.issues.reduce((sum, issue) => sum + (issue.article_count || 0), 0);
+  document.getElementById("statusLine").textContent =
+    `이슈 ${briefing.issues.length}건 · 원문 ${articles}건`;
+
   renderNewsFeed();
-  renumberSections("view-news");
 }
 
 // ── 오디오 브리핑 플레이어 ──────────────────────────────────
@@ -2061,16 +2130,29 @@ function fmtClock(value) {
   return `${Math.floor(value / 60)}:${String(Math.floor(value % 60)).padStart(2, "0")}`;
 }
 
+function audioPartialSuffix() {
+  // TTS 가 중간에 멈춘 부분본 표시 — audio.json 에 partial 키가 있을 때만.
+  // v2 는 variant 별로 partial 이 붙고, v1 구형은 최상위에 붙는다.
+  const meta = activeAudioVariant() || state.audio;
+  return meta && meta.partial
+    ? ` · 부분 ${meta.chunks_done}/${meta.chunks_total}` : "";
+}
+
 function audioFailureKey(briefing, mode) {
   return `${briefing?.date || ""}:${mode || ""}`;
 }
 
 function audioVariantsFor(briefing) {
   const meta = state.audio;
-  if (!meta || !briefing || meta.date !== briefing.date) return {};
-  const raw = meta.variants && typeof meta.variants === "object"
-    ? meta.variants
-    : (meta.file ? { fast: { ...meta, label: "빠른 브리핑", description: "핵심 뉴스 요약" } } : {});
+  if (!meta || !briefing) return {};
+  // 과거 날짜는 days(v2, 14일 창)에서 찾고, 오늘치는 종전 계약을 그대로 둔다 —
+  // 구버전 audio.json(days 없음)에서도 오늘 것은 재생돼야 한다.
+  const today = meta.date !== briefing.date ? null
+    : (meta.variants && typeof meta.variants === "object"
+      ? meta.variants
+      : (meta.file ? { fast: { ...meta, label: "빠른 브리핑", description: "핵심 뉴스 요약" } } : {}));
+  const raw = (meta.days && meta.days[briefing.date]) || today;
+  if (!raw) return {};
   return Object.fromEntries(Object.entries(raw).filter(([mode, variant]) => (
     variant?.file && !state.audioFailures.has(audioFailureKey(briefing, mode))
   )));
@@ -2105,91 +2187,14 @@ function updateAudioToggle(playing) {
   button.textContent = playing ? "⏸ 일시정지" : `▶ ${label} 듣기`;
 }
 
-// ── 재생 위치 ────────────────────────────────────────────────────────────
-//
-// 손잡이를 끄는 동안에는 timeupdate 가 값을 되돌리지 않는다. 그러지 않으면
-// 드래그가 매 프레임 제자리로 튕긴다.
+// 시크바 상태 두 조각.
+// audioSeekHeld — 손이 바를 잡고 있는 동안 timeupdate 가 손 위치를 덮지 않게.
+//   예전 가드는 document.activeElement 기준이었는데, range 는 포인터를 떼도
+//   포커스를 쥐고 있어 시크 한 번 뒤 진행바가 영구히 멈췄다.
+// audioPendingSeek — preload="none" 이라 메타데이터가 없을 때 currentTime 대입은
+//   조용히 무시된다. 목표를 여기 쥐고 있다가 메타데이터가 오면 적용한다.
 let audioSeekHeld = false;
-// preload="none" 이라 재생을 시작하기 전에는 duration 이 NaN 이다. 그 사이에 끈
-// 위치는 메타데이터가 붙은 뒤에 얹는다 — 안 그러면 첫 드래그가 조용히 사라진다.
 let audioPendingSeek = null;
-
-// 길이는 두 곳에서 온다. 실제 음원이 우선이고, 아직 안 읽었으면 manifest 의
-// duration_sec 를 쓴다 — 재생 전에도 막대가 제 길이를 갖고 있어야 끌 수 있다.
-function audioDuration() {
-  const audio = document.getElementById("audioEl");
-  if (audio && Number.isFinite(audio.duration) && audio.duration > 0) return audio.duration;
-  const declared = Number(activeAudioVariant()?.duration_sec);
-  return Number.isFinite(declared) && declared > 0 ? declared : 0;
-}
-
-// 첫 조작에서만 메타데이터를 당긴다. 기본은 preload="none" 그대로 둔다 — 첫
-// 화면에 서는 플레이어라 아무도 안 듣는 날에도 받아 오면 그만큼이 낭비다.
-function ensureAudioMetadata() {
-  const audio = document.getElementById("audioEl");
-  if (!audio || audio.preload !== "none") return;
-  if (Number.isFinite(audio.duration) && audio.duration > 0) return;
-  audio.preload = "metadata";
-  audio.load();
-}
-
-// 아직 받지 않은 구간으로는 옮길 수 없다. seekable 은 **받아 둔 만큼**만 덮으므로
-// 그 밖으로 옮기면 미디어 요소가 탐색을 물리고 제자리로 돌려놓는다. 조용히
-// 돌아가면 사용자는 막대가 고장 난 것으로 읽는다 — 실제로 그렇게 보고됐다
-// (전문가 브리핑 8.85MB, 빠른 브리핑 1.87MB 는 금세 다 받아져 티가 안 났다).
-// 서버가 Range 를 주면 이 경로는 거의 타지 않는다(functions/data/audio).
-function seekableCovers(audio, target) {
-  const ranges = audio.seekable;
-  for (let index = 0; index < ranges.length; index += 1) {
-    if (target >= ranges.start(index) - 0.25 && target <= ranges.end(index) + 0.25) return true;
-  }
-  return false;
-}
-
-// 옮길 수 있으면 옮기고, 없으면 목표를 붙잡아 둔다. 붙잡은 동안 막대는 목표
-// 자리에 서 있고(waiting), 그 지점이 받아지는 순간 실제로 건너뛴다.
-function applyAudioSeek(target) {
-  const audio = document.getElementById("audioEl");
-  const seek = document.getElementById("audioSeek");
-  if (!audio) return false;
-  const ready = Number.isFinite(audio.duration) && audio.duration > 0
-    && seekableCovers(audio, target);
-  if (ready) {
-    try {
-      audio.currentTime = target;
-      audioPendingSeek = null;
-      seek?.classList.remove("waiting");
-      return true;
-    } catch {
-      // 아래로 떨어져 보류로 처리한다.
-    }
-  }
-  audioPendingSeek = target;
-  seek?.classList.add("waiting");
-  return false;
-}
-
-function syncAudioProgress(current) {
-  const audio = document.getElementById("audioEl");
-  if (!audio) return;
-  // 보류 중이면 목표를 보인다. 재생 위치를 그리면 방금 옮긴 손잡이가 되돌아온
-  // 것처럼 보여, 실제로는 곧 건너뛸 상황을 고장으로 읽게 된다.
-  const at = Number.isFinite(current) ? current
-    : (audioPendingSeek != null ? audioPendingSeek : audio.currentTime);
-  const total = audioDuration();
-  const seek = document.getElementById("audioSeek");
-  if (seek) {
-    seek.max = total || 0;
-    seek.disabled = !total;
-    if (!audioSeekHeld) seek.value = total ? Math.min(at, total) : 0;
-    // range 는 숫자를 읽는다 — 초 단위 실수 대신 시계를 읽어 주게 한다.
-    seek.setAttribute("aria-valuetext", `${fmtClock(at)} / ${fmtClock(total)}`);
-    // 채워진 구간을 CSS 가 그릴 수 있게 비율을 넘긴다.
-    seek.style.setProperty("--audio-progress", total ? `${(at / total) * 100}%` : "0%");
-  }
-  const clock = document.getElementById("audioTime");
-  if (clock) clock.textContent = `${fmtClock(at)} / ${fmtClock(total)}`;
-}
 
 function renderAudioBrief(briefing) {
   const box = document.getElementById("audioBrief");
@@ -2199,6 +2204,7 @@ function renderAudioBrief(briefing) {
   const show = Object.values(variants).some(item => item?.file);
   box.hidden = !show;
   if (!show) {
+    // 다른 날짜로 넘어가면 그 날짜에 없는 오디오가 계속 재생되면 안 된다
     if (audio && !audio.paused) audio.pause();
     return;
   }
@@ -2207,6 +2213,8 @@ function renderAudioBrief(briefing) {
   // activeAudioVariant가 저장된 모드 대신 실제 사용 가능한 fallback으로 바꿀 수 있다.
   // 그 뒤 버튼 상태를 갱신해야 aria-pressed와 재생 음원이 어긋나지 않는다.
   updateAudioModeButtons(briefing);
+  // 파일명이 날짜를 품지만(briefing-<date>.mp3) 같은 날 재생성도 있어
+  // generated_at 으로 캐시를 가른다 — manifest 구버전 캐시 사고(8/1)의 교훈.
   const stamp = variant.generated_at || state.audio?.generated_at || state.audio?.date;
   const src = `/data/audio/${encodeURIComponent(variant.file)}?v=${encodeURIComponent(stamp || "")}`;
   if (audio.dataset.src !== src) {
@@ -2214,12 +2222,17 @@ function renderAudioBrief(briefing) {
     audio.dataset.src = src;
     audio.src = src;
     updateAudioToggle(false);
+    // 배속 세그먼트는 재생을 시작해야 펼쳐진다(좁은 화면) — 날짜를 옮기면
+    // 새 음원이므로 접힌 상태로 되돌린다.
     box.classList.remove("started");
-    // 다른 회차로 갈아탔다 — 앞 회차에서 끌던 위치를 새 음원에 얹으면 안 된다.
+    document.getElementById("audioTime").textContent =
+      `0:00 / ${fmtClock(variant.duration_sec)}${audioPartialSuffix()}`;
+    const seek = document.getElementById("audioSeek");
+    seek.max = String(Math.ceil(variant.duration_sec || 0));
+    seek.value = "0";
+    // 다른 음원으로 갈아탄다 — 이전 음원을 향하던 드래그·대기 시크는 무효다.
     audioSeekHeld = false;
     audioPendingSeek = null;
-    document.getElementById("audioSeek")?.classList.remove("waiting");
-    syncAudioProgress(0);
   }
   const desc = document.getElementById("audioDescription");
   if (desc) desc.textContent = variant.description || (state.audioMode === "expert"
@@ -2240,86 +2253,25 @@ function articleCard(article) {
 }
 
 function renderNewsFeed() {
-  document.getElementById("feedTitle").textContent = `${dateLabel(state.briefingDate)} 발행`;
-  // 아직 안 온 것과 0건은 다르다. 같은 문구를 쓰면 배경 로드가 실패한 날
-  // "이 날짜에 발행된 수집 기사가 없습니다"가 거짓말이 된다.
-  if (!state.newsLoaded) {
-    document.getElementById("feedLabel").textContent = "오늘 수집한 원문";
-    document.getElementById("newsList").innerHTML = state.newsPending
-      ? '<p class="empty">수집 원문을 불러오고 있습니다…</p>'
-      : '<p class="empty">수집 원문을 불러오지 못했습니다. 이 칸을 다시 열면 재시도합니다.</p>';
-    return;
-  }
   const articles = state.news.filter(article => (
     article.article_date === state.briefingDate
     && (state.region === "전체" || article.region === state.region)
     && (state.topic === "전체" || (article.topics || []).includes(state.topic))
   ));
   document.getElementById("feedLabel").textContent = `오늘 수집한 원문 ${articles.length}건`;
+  document.getElementById("feedTitle").textContent = `${dateLabel(state.briefingDate)} 발행`;
   document.getElementById("newsList").innerHTML = articles.length
     ? articles.map(articleCard).join("")
     : '<p class="empty">이 날짜에 발행된 수집 기사가 없습니다.</p>';
 }
 
-// 추적 자격 — "시간이 지나며 실제로 쌓였는가".
-//
-// 화면에는 '추적 중인 이슈'로 나간다. 식별자만 story* 로 남아 있다(2026-09-13
-// 개명) — '스토리'는 이제 장기 스토리(Beta) 화면 하나를 가리키는 말이라, 같은
-// 단어를 이 목록에도 쓰면 사용자가 두 화면을 구분할 수 없다.
-//
-// 카탈로그 전체를 자격 있는 것으로 볼 수는 없다. 실측(라이브 2026-09-12, 525건):
-// 421건(80.2%)이 단 한 회차에만 나타났고 268건(51.0%)은 기사가 1건이다. 그런
-// 이슈의 상세에는 타임라인도 변화도 설 자리가 없다 — 명세가 그린 15개 블록 중
-// 대부분이 빈칸으로 렌더링된다.
-//
-// 그래서 기다리는 대신 **고른다**. 이 저장소가 선정 하한·importance·report_pick
-// 으로 이미 하는 일이다. 바를 넘은 174건(33.1%)의 성질:
-//     기사 2건 이상 100% · 서로 다른 날짜 3건 이상 83.9%
-//     변화 문장 74.7% · 검증(공식·복수 출처) 97.1% · 기사 수 중앙값 5
-//
-// 두 조건을 OR 로 두는 이유: 회차는 '우리가 며칠에 걸쳐 다뤘나'이고 날짜는
-// '사건이 며칠에 걸쳐 움직였나'다. 한 회차에만 실렸어도 서로 다른 날짜의 근거가
-// 셋이면 타임라인이 선이 된다(실측 146건이 이 경우를 포함한다).
-const STORY_MIN_BRIEFINGS = 2;
-const STORY_MIN_DATES = 3;
-const storyEligibility = new WeakMap();
-
-function storyEligible(issue) {
-  if (!issue) return false;
-  const cached = storyEligibility.get(issue);
-  if (cached !== undefined) return cached;
-  let eligible = (issue.briefing_count || 0) >= STORY_MIN_BRIEFINGS;
-  if (!eligible) {
-    const days = new Set();
-    (issue.related_articles || []).forEach(article => {
-      if (article.article_date) days.add(article.article_date);
-    });
-    eligible = days.size >= STORY_MIN_DATES;
-  }
-  storyEligibility.set(issue, eligible);
-  return eligible;
-}
-
-function storyCount() {
-  return state.issues.filter(storyEligible).length;
-}
-
-function setArchiveScope(scope) {
-  if (!["stories", "all"].includes(scope) || state.archiveScope === scope) return;
-  state.archiveScope = scope;
-  if (state.view !== "search") switchView("search");
-  else renderArchiveSearch(true);
-  syncUrl();
-}
-
 function archiveIssueMatches(issue) {
-  // 범위가 맨 앞 — '추적 중인 이슈'는 목록의 성격이고, 아래 필터는 그 안에서의 교집합이다.
-  if (state.archiveScope === "stories" && !storyEligible(issue)) return false;
-  // 엔티티 필터가 그 다음 — 엔티티 페이지는 "이 대상의 이슈"가 전제고,
+  // 엔티티 필터가 맨 앞 — 엔티티 페이지는 "이 대상의 이슈"가 전제고,
   // 나머지 필터(주제·기간·검색어)는 그 안에서의 교집합이다.
   if (state.archiveEntity && !(issue.entity_ids || []).includes(state.archiveEntity)) return false;
   if (state.archiveRegion !== "전체" && !(issue.regions || []).includes(state.archiveRegion)) return false;
   if (state.archiveTopic !== "전체" && !(issue.topics || []).includes(state.archiveTopic)) return false;
+  if (state.archiveDomain && issue.khnp_domain !== state.archiveDomain) return false;
   const confirmed = ["official", "corroborated"].includes(verificationState(issue).status);
   if (state.archiveVerification === "verified" && !confirmed) return false;
   if (state.archiveVerification === "unverified" && confirmed) return false;
@@ -2422,7 +2374,7 @@ function renderArchiveSearch(resetLimit = false) {
   // 랜딩(모든 조건이 기본값)에서만 발견 허브를 깐다. 조건이 하나라도 서면
   // 이 화면은 결과 화면이고, 허브는 소음이다.
   const isLanding = !state.archiveQuery && !state.archiveEntity
-    && state.archiveRegion === "전체" && state.archiveTopic === "전체"
+    && state.archiveRegion === "전체" && state.archiveTopic === "전체" && !state.archiveDomain
     && state.archivePeriod === "all" && state.archiveVerification === "전체";
   const hub = document.getElementById("exploreHub");
   if (hub) {
@@ -2437,6 +2389,7 @@ function renderArchiveSearch(resetLimit = false) {
     state.archivePeriod !== "all" ? `최근 ${state.archivePeriod}일` : "",
     state.archiveRegion !== "전체" ? state.archiveRegion : "",
     state.archiveTopic !== "전체" ? TOPIC_LABELS[state.archiveTopic] || state.archiveTopic : "",
+    state.archiveDomain || "",
     state.archiveVerification === "verified" ? "공식·복수 출처 확인" : state.archiveVerification === "unverified" ? "단일 출처·확인 중" : "",
   ].filter(Boolean);
   const matchedArticles = matches.reduce((sum, issue) => sum + (issue.article_count || 0), 0);
@@ -2444,22 +2397,10 @@ function renderArchiveSearch(resetLimit = false) {
   document.getElementById("archiveSummary").textContent = activeFilters.length
     ? `${activeFilters.join(" · ")} — ${scale}`
     : scale;
-  setPressed(document.getElementById("archiveScope"),
-    document.querySelector(`#archiveScope [data-scope="${state.archiveScope}"]`));
   document.getElementById("archiveQueryDisplay").textContent = state.archiveQuery ? `검색어 · ${state.archiveQuery}` : "검색어 없음";
-  // '추적 중인 이슈' 범위에서 0건이면 원인이 필터가 아니라 **범위**일 수 있다. 그때는
-  // 필터 해제보다 '모든 이슈 보기'가 맞는 출구다 — 필터를 다 풀어도 자격을
-  // 못 넘은 이슈는 계속 안 보이므로, 그 안내만 주면 막다른 길이 된다.
-  const emptyState = state.archiveScope === "stories"
-    ? `<div class="empty-state"><strong>조건에 맞는 이슈가 없습니다</strong>
-        <p>추적 중인 이슈는 여러 회차에 걸쳐 다뤘거나 서로 다른 날짜의 근거가 3건 이상인 이슈입니다.
-        조건을 넓히거나 전체 이슈에서 찾아보세요.</p>
-        <button type="button" data-archive-scope="all">모든 이슈 보기</button>
-        ${activeFilters.length ? '<button type="button" data-clear-archive>필터 해제</button>' : ""}</div>`
-    : '<div class="empty-state"><strong>조건에 맞는 이슈가 없습니다</strong><p>기간을 30일로 넓히거나 주제 필터를 해제해 보세요.</p><button type="button" data-clear-archive>필터 해제</button></div>';
   document.getElementById("archiveIssueList").innerHTML = visible.length
     ? visible.map((issue, index) => issueCard(issue, index, true)).join("")
-    : emptyState;
+    : '<div class="empty-state"><strong>조건에 맞는 이슈가 없습니다</strong><p>기간을 30일로 넓히거나 주제 필터를 해제해 보세요.</p><button type="button" data-clear-archive>필터 해제</button></div>';
   const more = document.getElementById("archiveMore");
   more.hidden = visible.length >= matches.length;
   more.textContent = more.hidden ? "더 보기" : `더 보기 · ${matches.length - visible.length}개 남음`;
@@ -2477,53 +2418,15 @@ function renderArchiveSearch(resetLimit = false) {
   if (summary) summary.setAttribute("aria-label", activeFilters.length ? `탐색 필터 ${activeFilters.length}개 적용됨` : "탐색 필터");
 }
 
-/* 별칭표는 **묘비가 생길 때만** 받는다. 원장은 계속 자라므로 첫 화면에서
-   통째로 받는 파일(meta.json)에 넣으면 상한이 사라진다 — build_issue_pages 의
-   보관 스냅샷과 같은 판단이다. 한 번 받으면 세션 동안 다시 받지 않고, 못 받으면
-   예전처럼 묘비를 보여 준다(복구 실패가 화면을 죽이면 안 된다). */
-let issueAliases = null;
-let issueAliasesPending = null;
-
-async function loadIssueAliases() {
-  if (issueAliases) return issueAliases;
-  if (!issueAliasesPending) {
-    issueAliasesPending = (async () => {
-      const payload = await loadRootJSON("issue_aliases.json", true);
-      const raw = payload?.aliases;
-      issueAliases = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-      return issueAliases;
-    })();
-  }
-  return issueAliasesPending;
-}
-
-async function restoreSavedFromAliases() {
-  const aliases = await loadIssueAliases();
-  if (!aliases || !Object.keys(aliases).length) return false;
-  const liveIds = new Set(state.issues.map(issue => issue.issue_id));
-  const { ids, meta, moved } = migrateSavedIds(
-    state.savedIds, state.savedMeta, aliases, liveIds);
-  if (!moved) return false;
-  state.savedIds = new Set(ids);
-  state.savedMeta = meta;
-  persistSaved();
-  return true;
-}
-
 function renderSaved() {
   renderFollowPanel();
   renderRecentIssues();
   const issues = state.issues.filter(issue => state.savedIds.has(issue.issue_id));
   const liveIds = new Set(issues.map(issue => issue.issue_id));
-  // 재클러스터로 사라진 저장 — 먼저 원장 별칭으로 되살려 보고, 그래도 못 찾으면
-  // 스냅샷 묘비로 남긴다(조용한 소실 금지).
-  const missing = [...state.savedIds].filter(id => !liveIds.has(id));
-  if (missing.length && !issueAliases) {
-    restoreSavedFromAliases()
-      .then(restored => { if (restored) renderSaved(); })
-      .catch(() => { /* 복구 실패는 묘비로 흡수된다 */ });
-  }
-  const tombstones = missing.map(id => savedTombstone(id, state.savedMeta?.[id]));
+  // 재클러스터로 사라진 저장 — 스냅샷 묘비로 남긴다(조용한 소실 금지).
+  const tombstones = [...state.savedIds]
+    .filter(id => !liveIds.has(id))
+    .map(id => savedTombstone(id, state.savedMeta?.[id]));
   const cards = issues.map((issue, index) => issueCard(issue, index, true)).concat(tombstones);
   document.getElementById("savedIssueList").innerHTML = cards.length
     ? cards.join("")
@@ -2546,9 +2449,243 @@ function renderReportCandidates() {
       <h3><button type="button" data-issue-id="${esc(issue.issue_id)}">${esc(issue.title)}</button></h3>
       ${why ? `<p>${esc(why)}</p>` : ""}
       ${reasons.length ? `<div class="report-angle-row">${reasons.map(reason => `<span class="topic-chip">${esc(reason)}</span>`).join("")}</div>` : ""}
+      ${draftPreviewBlock(issue, { withCopy: true })}
       <button type="button" class="secondary-button" data-pack-issue="${esc(issue.issue_id)}">보고서 자료팩 복사</button>
     </article>`;
   }).join("") : '<div class="empty-state"><strong>이번 주 보고 후보가 없습니다</strong><p>보고 후보로 분류된 이슈가 생기면 근거 자료와 함께 표시합니다.</p></div>';
+}
+
+// ── 정책의제 대응 + 대응 자료실 (보고서 탭 02·03) ────────────────────────────
+//
+// 카드는 상황 인지용(제목·다음 확인·미니 통계), 판단에 필요한 전체는 카드를
+// 열어야 나온다. 자동 연결은 '후보'로만 표기한다 — 자동 연결 ≠ 사람이 확인한
+// 연결. 진행형 경과는 이슈·판단 로그의 몫이고, 자료실 사례는 종결된 사실만.
+
+function agendaList() { return state.agendas?.agendas || []; }
+
+function agendaById(id) { return agendaList().find(agenda => agenda.id === id); }
+
+function precedentsFor(agendaId) {
+  return (state.precedents?.entries || [])
+    .filter(entry => (entry.agenda_ids || []).includes(agendaId));
+}
+
+function agendaActiveLogs(agenda) {
+  return (agenda.log || []).filter(log => !log.disabled);
+}
+
+// 이슈 → 의제 역인덱스. 핀(확인된 연결)과 자동 후보를 분리해 돌려준다.
+function agendaLinksForIssue(issueId) {
+  const pinned = [];
+  const candidates = [];
+  for (const agenda of agendaList()) {
+    if ((agenda.pinned_issue_ids || []).includes(issueId)) pinned.push(agenda);
+    else if ((agenda.candidate_issue_ids || []).includes(issueId)) candidates.push(agenda);
+  }
+  // 후보 정렬은 agendas.json 순서(핀·최신 활동순) 그대로, 최대 2개만 — 후보가
+  // 줄줄이 붙으면 '관련 의제'라는 말의 신뢰가 죽는다.
+  return { pinned, candidates: candidates.slice(0, 2) };
+}
+
+// 목록용 한 줄 요지 — 변화 문장의 "옛 → 새" 화살표는 한 줄 요지에선 장황하다.
+// 화살표 뒤(현재 상태)만 취한다. 변화의 서사가 필요하면 이슈 상세로 간다.
+function issueGist(issue) {
+  const text = issueChangeText(issue) || issue.summary || "";
+  const arrow = text.lastIndexOf("→");
+  return arrow >= 0 ? text.slice(arrow + 1).trim() : text;
+}
+
+function agendaIssueRow(issueId) {
+  const issue = state.issues.find(row => row.issue_id === issueId);
+  if (!issue) return "";
+  // 제목만 나열하면 목록이 아니라 목차다 — 내용 한 줄(요약·변화)을 같이 싣는다.
+  const gist = issueGist(issue);
+  return `<li><button type="button" data-issue-id="${esc(issueId)}" data-force-dialog="1">${esc(issue.title)}</button>
+    <small>${esc(dateLabel(issue.last_seen))} · 근거 ${issue.article_count || 0}건</small>
+    ${gist ? `<p class="agenda-issue-gist">${esc(gist)}</p>` : ""}</li>`;
+}
+
+// 의제의 타임라인 재료 — 핀(확인된 연결) 우선, 부족하면 자동 후보로 채운다.
+// 콘솔(핀 입력)이 생기기 전에도 도구가 빈 껍데기가 되면 안 된다('26.9.8 판정:
+// "내용도 없고 관련 기사 엮어놓은 것도 없다"). 자동 채움은 항상 그 사실을
+// 표기한다 — 자동 연결 ≠ 확인된 연결 원칙은 라벨로 지킨다.
+function agendaTimelineIssues(agenda, limit = 8) {
+  const pinned = agenda.pinned_issue_ids || [];
+  const fill = (agenda.candidate_issue_ids || []).slice(0, Math.max(0, limit - pinned.length));
+  return { pinned: pinned.slice(0, limit), auto: fill };
+}
+
+function renderAgendaDetail(agenda) {
+  const logs = agendaActiveLogs(agenda);
+  const latestLog = logs.length ? logs[logs.length - 1] : null;
+  const evidence = agenda.evidence || {};
+  const cases = precedentsFor(agenda.id);
+  const reviewed = agenda.bottleneck_reviewed_at ? ` <small>(검토일 ${reportDate(agenda.bottleneck_reviewed_at)})</small>` : "";
+  const allLogs = agenda.log || [];
+  return `<div class="agenda-detail">
+    ${agenda.question ? `<p class="agenda-question">${esc(agenda.question)}</p>` : ""}
+    <dl class="agenda-lines">
+      ${agenda.bottleneck ? `<div><dt>현재 병목</dt><dd>${esc(agenda.bottleneck)}${reviewed}</dd></div>` : ""}
+      ${agenda.latest_news ? `<div><dt>최신 관련 소식</dt><dd>${esc(agenda.latest_news)}${agenda.latest_news_issue_id ? ` <button type="button" class="text-action" data-issue-id="${esc(agenda.latest_news_issue_id)}" data-force-dialog="1">이슈 보기</button>` : ""}</dd></div>` : ""}
+      <div><dt>최근 판단</dt><dd>${latestLog ? `${esc(latestLog.note)} <small>(${esc(dateLabel(latestLog.created_at))})</small>` : esc(STRINGS.agendaNoLog)}</dd></div>
+      ${agenda.next_check ? `<div><dt>다음 확인</dt><dd>${esc(agenda.next_check)}</dd></div>` : ""}
+      <div><dt>연결 근거 현황</dt><dd>이슈 ${evidence.issues || 0} · 확인 ${evidence.verified || 0} · 공식 출처 ${evidence.official_sources || 0}</dd></div>
+    </dl>
+    ${agenda.transfer_conditions ? `<details class="agenda-fold"><summary>적용 조건 — 해외·과거 사례를 가져올 때</summary><p>${esc(agenda.transfer_conditions)}</p></details>` : ""}
+    ${agenda.pinned_issue_ids?.length ? `<div class="agenda-issues"><h4>의제 이슈 <small>확인된 연결 ${agenda.pinned_issue_ids.length}건</small></h4>
+      <ul>${agenda.pinned_issue_ids.map(agendaIssueRow).join("")}</ul></div>` : ""}
+    ${!agenda.pinned_issue_ids?.length && agenda.candidate_issue_ids?.length ? `<div class="agenda-issues"><h4>관련 이슈 <small>자동 연결 · 확인 전</small></h4>
+      <ul>${agenda.candidate_issue_ids.slice(0, 6).map(agendaIssueRow).join("")}</ul></div>` : ""}
+    ${agenda.candidate_issue_ids?.length ? `<details class="agenda-fold"><summary>관련 후보 전체 ${agenda.candidate_count}건 — 자동 연결, 확인 전</summary>
+      <ul>${agenda.candidate_issue_ids.slice(0, 15).map(agendaIssueRow).join("")}</ul></details>` : ""}
+    ${agenda.events?.length ? `<div class="agenda-events"><h4>향후 일정</h4>
+      <ul>${agenda.events.map(ev => `<li>${esc(dateLabel(ev.date))} · ${esc(ev.label)}</li>`).join("")}</ul></div>` : ""}
+    ${allLogs.length ? `<details class="agenda-fold"><summary>판단 이력 ${allLogs.length}건</summary>
+      <ol class="agenda-log">${allLogs.map(log => `<li${log.disabled ? ' class="withdrawn"' : ""}>
+        ${esc(dateLabel(log.created_at))} — ${esc(log.note)}
+        ${log.evidence ? `<small>근거: 「${esc(log.evidence.issue_title)}」 (${esc(dateLabel(log.evidence.article_date))} 기준)</small>` : ""}
+      </li>`).join("")}</ol></details>` : ""}
+    ${cases.length ? `<div class="agenda-cases"><h4>연결 사례</h4>
+      <ul>${cases.map(entry => `<li><button type="button" class="text-action" data-open-precedent="${esc(entry.id)}">${esc(entry.title)}</button>
+        <small>${esc(entry.one_liner || "")}</small></li>`).join("")}</ul></div>` : ""}
+    <details class="report-preview"><summary>${esc(STRINGS.previewHeading)}</summary>
+      <pre class="report-preview-text">${esc(agendaReportText(agenda))}</pre>
+      <button type="button" class="secondary-button" data-copy-agenda="${esc(agenda.id)}">대응 자료팩 복사</button>
+    </details>
+  </div>`;
+}
+
+function renderAgendaBlock() {
+  const box = document.getElementById("agendaBlock");
+  if (!box) return;
+  const agendas = agendaList();
+  if (!agendas.length) {
+    box.innerHTML = `<p class="empty">${esc(STRINGS.agendaEmpty)}</p>`;
+    return;
+  }
+  box.innerHTML = agendas.map(agenda => {
+    const open = state.agendaId === agenda.id;
+    const stats = `관련 이슈 ${(agenda.pinned_issue_ids || []).length + (agenda.candidate_count || 0)}`
+      + ` · 판단 ${agendaActiveLogs(agenda).length} · 사례 ${precedentsFor(agenda.id).length}`;
+    return `<article class="agenda-card${open ? " open" : ""}">
+      <h3><button type="button" data-agenda-toggle="${esc(agenda.id)}" aria-expanded="${open}">${esc(agenda.title)}</button></h3>
+      ${agenda.next_check ? `<p class="agenda-next"><strong>다음 확인</strong> ${esc(agenda.next_check)}</p>` : ""}
+      <p class="agenda-stats">${esc(stats)}</p>
+      ${open ? renderAgendaDetail(agenda) : ""}
+    </article>`;
+  }).join("");
+}
+
+function renderLibrary() {
+  const box = document.getElementById("libraryList");
+  if (!box) return;
+  const entries = state.precedents?.entries || [];
+  if (!entries.length) {
+    box.innerHTML = `<p class="empty">${esc(STRINGS.libraryEmpty)}</p>`;
+    return;
+  }
+  box.innerHTML = entries.map(entry => {
+    if (entry.kind === "dossier") {
+      const url = safeUrl(entry.file ? `${location.origin}${entry.file}` : "");
+      return `<details class="library-item" id="prec-${esc(entry.id)}">
+        <summary><strong>${esc(entry.title)}</strong><small>${esc(entry.period || "")}</small></summary>
+        ${entry.one_liner ? `<p>${esc(entry.one_liner)}</p>` : ""}
+        ${entry.use_for ? `<p class="library-use"><strong>어디에 쓰나</strong> ${esc(entry.use_for)}</p>` : ""}
+        ${url ? `<a class="source-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">원문 PDF 열기 <span aria-hidden="true">↗</span></a>` : ""}
+      </details>`;
+    }
+    return `<details class="library-item" id="prec-${esc(entry.id)}">
+      <summary><strong>${esc(entry.title)}</strong><small>${esc(entry.period || "")}</small></summary>
+      ${entry.one_liner ? `<p>${esc(entry.one_liner)}</p>` : ""}
+      ${(entry.sections || []).map(section => `<h4>${esc(section.h || "")}</h4><p>${esc(section.body || "")}</p>`).join("")}
+      ${(entry.sources || []).length ? `<p class="library-sources">출처: ${entry.sources.map(src => {
+        const url = safeUrl(src.url);
+        return url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(src.label || url)}</a>` : esc(src.label || "");
+      }).join(" · ")}</p>` : ""}
+    </details>`;
+  }).join("");
+}
+
+// 대응 자료팩 — 관찰(현 상황·동향)→판단→대응의 3축을 명시한다. 문장은 원문
+// 그대로(개조식 변환은 khnp-report 몫), 판단 기록이 없으면 없다고 쓴다 —
+// 그럴듯한 판단을 지어 넣는 것보다 빈칸이 정직하다.
+function agendaReportText(agenda) {
+  const notes = footnoteBook();
+  const byId = new Map(state.issues.map(issue => [issue.issue_id, issue]));
+  const lines = [`□ 「${agenda.title} — 대응자료」 (${reportDate(state.meta?.latest_briefing_date || "")} 기준)`, ""];
+  lines.push("1. 현 상황");
+  if (agenda.question) lines.push(` ○ (문제) ${agenda.question}`);
+  if (agenda.latest_news) lines.push(` ○ (확인된 것) ${agenda.latest_news}`);
+  if (agenda.next_check) lines.push(` ○ (다음 확인) ${agenda.next_check}`);
+  lines.push("", "2. 주요 쟁점");
+  if (agenda.bottleneck) lines.push(` ○ (병목) ${agenda.bottleneck}`);
+  if (agenda.transfer_conditions) lines.push(` ○ (적용 조건) ${agenda.transfer_conditions}`);
+  // 핀이 없어도 동향 절이 비면 안 된다 — 자동 연결로 채우되 그 사실을 밝힌다.
+  const picks = agendaTimelineIssues(agenda);
+  const timelineRow = issue => {
+    const gist = issueGist(issue);
+    lines.push(` ○ ${reportDate(issue.last_seen)} ${issue.title}${notes.cite(issue.representative_article)}`);
+    if (gist) lines.push(`  – ${gist}`);
+  };
+  const pinnedIssues = picks.pinned.map(id => byId.get(id)).filter(Boolean);
+  const autoIssues = picks.auto.map(id => byId.get(id)).filter(Boolean);
+  if (pinnedIssues.length || autoIssues.length || agenda.events?.length) {
+    lines.push("", "3. 최근 동향");
+    pinnedIssues.forEach(timelineRow);
+    if (autoIssues.length) {
+      lines.push(` ○ (자동 연결 · 확인 전 ${autoIssues.length}건)`);
+      autoIssues.forEach(timelineRow);
+    }
+    (agenda.events || []).forEach(ev => lines.push(` ○ (예정) ${reportDate(ev.date)} ${ev.label}`));
+  }
+  lines.push("", "4. 현재 판단");
+  const logs = agendaActiveLogs(agenda);
+  if (logs.length) {
+    logs.slice(-3).forEach(log => {
+      lines.push(` ○ ${reportDate(log.created_at)} ${log.note}`);
+      if (log.evidence) lines.push(`  – 근거: 「${log.evidence.issue_title}」 (${reportDate(log.evidence.article_date)})`);
+    });
+  } else {
+    lines.push(" ○ (기록 없음)");
+  }
+  const cases = precedentsFor(agenda.id);
+  if (cases.length) {
+    lines.push("", "5. 과거 사례");
+    cases.forEach(entry => {
+      lines.push(` ○ ${entry.title}${entry.one_liner ? ` — ${entry.one_liner}` : ""}`);
+      (entry.sections || []).forEach(section => {
+        const head = String(section.h || "");
+        if (head.includes("무엇이 다른가") || head.includes("어떻게 쓸 것인가")) {
+          lines.push(`  – (${head.includes("다른가") ? "이번과의 차이" : "참고 범위"}) ${section.body || ""}`);
+        }
+      });
+      if (entry.kind === "dossier" && entry.use_for) lines.push(`  – (용도) ${entry.use_for}`);
+    });
+  }
+  lines.push("", "6. 대응 필요사항");
+  if (agenda.next_check) lines.push(` ○ (추가 확인) ${agenda.next_check}`);
+  if (cases.length) lines.push(` ○ (준비 자료) ${cases.map(entry => entry.title).join(" / ")}`);
+  lines.push(" ○ (보고 필요 여부) □ (작성 필요)");
+  lines.push("", "7. 시사점", " □ (작성 필요)");
+  lines.push(...notes.lines());
+  lines.push("", `*자료 : Nuclens ${location.origin}/?view=report&agenda=${agenda.id}`);
+  return lines.join("\n");
+}
+
+async function copyAgendaPack(button, agendaId) {
+  const agenda = agendaById(agendaId);
+  if (!agenda) return;
+  await copyToClipboard(button, agendaReportText(agenda), "대응 자료팩을 복사하지 못했습니다");
+}
+
+function openAgendaInReport(agendaId) {
+  const dialog = document.getElementById("issueDialog");
+  if (dialog?.open) dialog.close();
+  state.agendaId = agendaId;
+  if (state.view !== "report") switchView("report");
+  else renderAgendaBlock();
+  syncUrl();
+  document.getElementById("agendaBlock")?.scrollIntoView({ block: "start", behavior: prefersReducedMotion() ? "auto" : "smooth" });
 }
 
 const PUB_KIND_LABELS = {
@@ -2652,12 +2789,67 @@ function renderPubs() {
     : "");
 }
 
-function articleTimelineRow(article, briefingDate, currentStage = "이번 브리핑", shownDetail = "",
-                            changes = null) {
+function renderScraps() {
+  const listBox = document.getElementById("scrapList");
+  if (!listBox) return;
+  // 렌더러는 데이터를 신뢰하지 않는다 — renderPubs 와 같은 계약.
+  const rawDays = (state.scraps && Array.isArray(state.scraps.days)) ? state.scraps.days : [];
+  const days = rawDays
+    .filter(day => day && typeof day === "object" && typeof day.date === "string" && Array.isArray(day.items))
+    .map(day => ({
+      date: day.date,
+      items: day.items.filter(item => item && typeof item === "object" && item.title && item.url),
+    }))
+    .filter(day => day.items.length);
+  if (!days.length) {
+    listBox.innerHTML = '<div class="empty-state"><strong>아직 정리된 스크랩 기사가 없습니다</strong><p>매일 아침 사내 스크랩에서 확인된 기사의 공개 원문을 모읍니다.</p></div>';
+    return;
+  }
+  listBox.innerHTML = days.map(day => {
+    const cardHtml = (item) => {
+      const url = safeUrl(item.url);
+      // 이 탭의 정렬 키는 지면 매체다(빌드가 시드 순서 = 지면 가나다순 유지).
+      // 정렬 키가 회색 2순위면 목록에 순서가 있어도 안 보인다 — 지면 매체를
+      // pill 로 1순위에 세우고, 온라인 발행처가 다르면 '원문 …'으로 병기한다.
+      // 제목이 먼저다: 훑는 눈이 회색 메타부터 밟게 하지 않는다.
+      const paper = item.print_publisher || item.publisher || "출처 미상";
+      const online = item.publisher && item.publisher !== paper
+        ? `<span>원문 ${esc(item.publisher)}</span>` : "";
+      // 조간|석간 — 어느 보고에서 온 기사인지. 구 이력에는 없어 빈 값이 정상,
+      // 이 칩이 서고부터 '석간이 안 왔다'가 화면에서 보인다.
+      const edition = item.edition ? `<span>${esc(item.edition)}</span>` : "";
+      return `<article class="news-item">
+        <h3>${esc(item.title)}</h3>
+        <div class="news-meta"><span class="scrap-paper">${esc(paper)}</span>${online}${edition}</div>
+        ${item.summary ? `<p class="news-summary">${esc(item.summary)}</p>` : ""}
+        ${url ? `<a class="source-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">원문 확인 <span aria-hidden="true">↗</span></a>` : ""}
+      </article>`;
+    };
+    // 주제(topics[0])로 묶는다 — 카톡 스크랩 보고의 섹션 어법. 시드에는 분류가
+    // 없어(로컬 파서가 "[종합일간지]" 류 헤더를 버린다) 아카이브 조인이 주는
+    // 주제 분류를 대신 쓴다. 조인 실패 항목은 '기타'로 마지막에 선다.
+    const groups = new Map();
+    day.items.forEach(item => {
+      const key = (Array.isArray(item.topics) && item.topics[0]) || "etc";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(item);
+    });
+    const sections = [...groups.entries()]
+      .sort((a, b) => (a[0] === "etc") - (b[0] === "etc") || b[1].length - a[1].length)
+      .map(([key, items]) => {
+        const label = key === "etc" ? "기타" : (TOPIC_LABELS[key] || key);
+        return `<div class="scrap-topic"><span>${esc(label)}</span><small>${items.length}건</small></div>`
+          + items.map(cardHtml).join("");
+      }).join("");
+    return `<section class="scrap-day">
+      <h3 class="scrap-day-date">${esc(dateWeekdayLabel(day.date))} <small>${day.items.length}건</small></h3>
+      ${sections}
+    </section>`;
+  }).join("");
+}
+
+function articleTimelineRow(article, briefingDate, currentStage = "이번 브리핑", shownDetail = "") {
   const url = safeUrl(article.url);
-  // 이 회차에서 단계가 움직였다는 판정. 어느 회차 대비인지는 목록 위 '변화 이력'
-  // 블록이 짝으로 말하므로, 행에서는 표식만 세운다.
-  const change = changes?.get(article.hash) || null;
   // 근거 원문은 어느 브리핑에도 실린 적이 없다(briefing_date 가 비어 있다).
   // '이전 흐름'이라고 적으면 예전 브리핑에 나갔던 것처럼 읽힌다 — 자기 구역의
   // 제목이 이미 '추가 근거 원문'이라고 말하므로 여기서는 비운다.
@@ -2679,8 +2871,7 @@ function articleTimelineRow(article, briefingDate, currentStage = "이번 브리
     <div class="timeline-date"><span>${esc(dateText)}</span>${relative === dateText ? "" : `<small>${esc(relative)}</small>`}${stage ? `<em>${esc(stage)}</em>` : ""}</div>
     <div class="timeline-copy">
       ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(article.title_kr)}</a>` : `<span>${esc(article.title_kr)}</span>`}
-      <small>${esc(sourceLabel(article))}${isOfficial(article) ? " · 1차 출처" : ""}${
-        change ? `<span class="timeline-change t-${esc(change.kind)}">${esc(CHANGE_LOG_LABELS[change.kind])}</span>` : ""}</small>
+      <small>${esc(sourceLabel(article))}${isOfficial(article) ? " · 1차 출처" : ""}</small>
       ${body}
     </div>
   </li>`;
@@ -2704,7 +2895,7 @@ const TIMELINE_HEAD = 5;
 
 function timelineList(articles, options) {
   const row = article => articleTimelineRow(
-    article, options.contextDate, options.stage, options.shownDetail, options.changes);
+    article, options.contextDate, options.stage, options.shownDetail);
   const head = articles.slice(0, TIMELINE_HEAD);
   const rest = articles.slice(TIMELINE_HEAD);
   return `<ol class="timeline dialog-timeline">${head.map(row).join("")}</ol>${rest.length
@@ -2755,19 +2946,254 @@ function relatedIssues(issue, limit = 3) {
     .map(row => row.issue);
 }
 
+// 사내 서식 표기 — '26.8.14. 꼴. 연도는 아포스트로피 두 자리, 월·일은 앞 0 을
+// 떼고 마침표로 닫는다(khnp-report references/style-rules.md §2).
+function reportDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ""));
+  if (!match) return "";
+  return `'${match[1].slice(2)}.${Number(match[2])}.${Number(match[3])}.`;
+}
+
+// 출처 각주를 모으는 작은 누산기. 같은 기사가 여러 번 인용돼도 번호는 하나다.
+function footnoteBook() {
+  const rows = [];
+  const index = new Map();
+  return {
+    // 반환값은 본문에 붙일 `[n]` — 붙일 게 없으면 빈 문자열이라 그냥 이어 쓴다.
+    cite(article) {
+      const url = safeUrl(article?.url);
+      const title = String(article?.title_kr || article?.title || "").trim();
+      if (!url && !title) return "";
+      const key = url || title;
+      if (!index.has(key)) {
+        index.set(key, rows.length + 1);
+        const parts = [sourceLabel(article), title ? `「${title}」` : "",
+                       reportDate(article?.article_date), url];
+        rows.push(`[${rows.length + 1}] ${parts.filter(Boolean).join(", ")}`);
+      }
+      return ` [${index.get(key)}]`;
+    },
+    lines() {
+      return rows.length ? ["", "*출처 :", ...rows] : [];
+    },
+  };
+}
+
+// 보고 후보 이슈의 개조식 초안(report_draft.py 산출). 없으면 빈 문자열 —
+// 호출부가 템플릿 복사로 물러난다.
+function reportDraftFor(issueId) {
+  return state.reportDrafts?.drafts?.[issueId]?.draft || "";
+}
+
+// 스토리(chronicle) — 이슈의 60일 수명을 넘어 쌓이는 시간축 원장(chronicles.json).
+// 원장이 없거나 이슈가 스토리에 속하지 않으면 null — 호출부가 블록을 통째로
+// 숨긴다(발간물·오디오와 같은 비치명 계약).
+function chronicleFor(issue) {
+  const cid = issue?.chronicle_id || "";
+  return (cid && state.chronicles?.chronicles?.[cid]) || null;
+}
+
+// 국면형 서사(chronicle_narrative.py 산출). 없으면 null — 타임라인만 선다.
+function chronicleNarrativeFor(chronicleId) {
+  return state.chronicleNarratives?.narratives?.[chronicleId] || null;
+}
+
+// 원장 이벤트는 기사 뷰의 부분집합 필드만 갖는다 — 타임라인 부품이 기대하는
+// 형태로 그대로 통과시킨다(publisher 만 있으면 sourceLabel 이 처리).
+function chronicleEventsDesc(chron) {
+  return (chron.events || []).slice()
+    .sort((a, b) => String(b.article_date || "").localeCompare(String(a.article_date || "")));
+}
+
+// 이슈 다이얼로그의 스토리 구역. 핵심 차별점: 현 다이얼로그 타임라인은 60일 창
+// 안만 보이는데, 스토리는 그 밖으로 밀려난 과거 사건까지 이어 보여준다.
+//
+// 그래서 **타임라인이 못 보여주는 게 있을 때만** 선다 — ①원장에 현재 이슈
+// 밖의 과거 사건이 있거나 ②서사가 생성돼 있을 때. 원장이 이슈와 같은 내용뿐인
+// 날(전진 축적 첫날이 그렇다)에 세우면 같은 목록을 두 번 보여주는 소음이 된다
+// ("같은 문단을 한 화면에 두 번 두지 않는다" — dropTextsAlreadyOnCards 와
+// 같은 계약, 실제로 '타임라인이랑 뭐가 다르냐' 판정을 받았다 '26.9.7).
+function chronicleDialogSection(issue, contextDate) {
+  const chron = chronicleFor(issue);
+  if (!chron || (chron.events || []).length < 2) return "";
+  const narrative = chronicleNarrativeFor(chron.chronicle_id);
+  const issueHashes = new Set(
+    (issue.related_articles || []).map(article => article.hash).filter(Boolean));
+  const pastEvents = (chron.events || []).filter(event => !issueHashes.has(event.hash));
+  if (!pastEvents.length && !narrative) return "";
+  const range = flowSpanRange();
+  const narrativeBlock = narrative ? `
+      <div class="chronicle-narrative">
+        ${narrative.phase_now ? `<p class="chronicle-phase"><strong>지금 국면 <span class="ai-badge">AI</span></strong>${esc(narrative.phase_now)}</p>` : ""}
+        ${(narrative.narrative || []).map(paragraph => `<p>${esc(paragraph)}</p>`).join("")}
+        ${(narrative.watchpoints || []).length ? `<p class="chronicle-watch"><strong>지켜볼 지점</strong>${narrative.watchpoints.map(esc).join(" · ")}</p>` : ""}
+      </div>` : "";
+  return `<section class="dialog-chronicle" aria-labelledby="issueChronicleTitle">
+      <div class="dialog-section-head"><h3 id="issueChronicleTitle">스토리</h3><span>${esc(dateLabel(chron.first_seen))}부터 사건 ${(chron.events || []).length}건</span></div>
+      ${range ? flowSpanTrack(chron, range) : ""}
+      ${narrativeBlock}
+      ${pastEvents.length ? `<p class="dialog-evidence-note">위 타임라인에 없는 과거 사건 — 이슈가 갈리거나 수집 창(60일) 밖으로 밀려난 기록입니다.</p>
+      ${timelineList(pastEvents.slice()
+        .sort((a, b) => String(b.article_date || "").localeCompare(String(a.article_date || ""))), {
+        contextDate,
+        stage: "지난 흐름",
+        shownDetail: "",
+        moreLabel: "이전 사건",
+      })}` : ""}
+    </section>`;
+}
+
+// 초안 뒤에 붙는 출처 목록 — 초안 본문은 LLM 산출이라 각주 번호가 없으므로,
+// 근거가 된 카드 기사들을 결정적으로 나열한다(footnoteBook 형식 재사용).
+function draftSourceLines(issue) {
+  const notes = footnoteBook();
+  (issue.related_articles || [])
+    .filter(article => article.member_role !== "evidence")
+    .slice(0, 6)
+    .forEach(article => notes.cite(article));
+  return notes.lines();
+}
+
+// 보고서용 복사 — 위계는 □ → ○ → – 로 옮긴다(사내 서식).
+//
+// 보고 후보(report_pick) 이슈는 개조식 초안이 있으면 초안을 내보낸다 — 카드
+// 필드 나열은 "결국 기사 정리"라는 판정('26.9.7)을 받았다. 초안은 AI 산출이므로
+// 머리에 그 사실을 밝힌다.
+//
+// 초안이 없는 이슈는 템플릿 그대로 — **문장은 원문 그대로** 둔다: 개조식 체언
+// 종결로 바꾸는 것은 사람이나 khnp-report 스킬이 할 일이고, 여기서 어미를
+// 기계적으로 자르면 근거 없는 문장이 된다. AI 가 쓴 문장에는 라벨을 남긴다.
 function issueReportText(issue) {
+  // 스토리 소속이면 경과 한 문단을 재료로 붙인다 — 보고서의 '경과' 칸이
+  // 60일 창 밖 발단까지 물고 들어가게 하는 최소 연결(v1).
+  const chron = chronicleFor(issue);
+  const narrative = chron ? chronicleNarrativeFor(chron.chronicle_id) : null;
+  const chronicleLines = narrative?.phase_now
+    ? ["", ` ○ (경과·AI) ${narrative.phase_now}`
+       + ` (${dateLabel(chron.first_seen)}부터 사건 ${(chron.events || []).length}건)`]
+    : [];
+  const draft = reportDraftFor(issue.issue_id);
+  if (draft) {
+    return [`□ ${issue.title || ""}`, "", draft, ...chronicleLines,
+            ...draftSourceLines(issue), "", STRINGS.draftAiNote].join("\n");
+  }
+  const notes = footnoteBook();
   const representative = issue.representative_article || {};
-  const source = [sourceLabel(representative), safeUrl(representative.url)].filter(Boolean).join(" · ");
-  return [
-    `• 이슈: ${issue.title || ""}`,
-    issue.summary ? `• 핵심: ${issue.summary}` : "",
-    issueChangeText(issue) ? `• 변화: ${issueChangeText(issue)}` : "",
-    issue.why_important ? `• 왜 중요(AI 해석): ${issue.why_important}` : "",
-    issue.implication ? `• 시사점(AI 해석): ${issue.implication}` : "",
-    issue.open_question ? `• 미확정: ${issue.open_question}` : "",
-    `• 검증: ${(VERIFICATION_VIEW[verificationState(issue).status] || VERIFICATION_VIEW.unverified).label} — ${issueEvidenceText(issue)}`,
-    source ? `• 근거: ${source}` : "",
-  ].filter(Boolean).join("\n");
+  const verState = verificationState(issue);
+  const lines = [`□ ${issue.title || ""}${notes.cite(representative)}`];
+  const add = (label, text) => { if (text) lines.push(` ○ (${label}) ${text}`); };
+  add("사실", issue.summary);
+  // (변화)가 (사실)을 그대로 품고 있으면 생략 — "옛 문장 → 새 문장" 이어붙이기가
+  // 요약과 중복돼 보고서 재료에서 같은 말을 두 번 하게 된다(실측 '26.9.7).
+  const change = issueChangeText(issue);
+  if (change && !normalizedIncludes(change, issue.summary)) add("변화", change);
+  add("왜 중요·AI", issue.why_important);
+  add("시사점·AI", issue.implication);
+  add("남은 확인", issue.open_question);
+  add("검증", `${(VERIFICATION_VIEW[verState.status] || VERIFICATION_VIEW.unverified).label} — ${issueEvidenceText(issue)}`);
+  return [...lines, ...chronicleLines, ...notes.lines()].join("\n");
+}
+
+// 공백·문장부호 차이를 무시한 포함 판정 — 중복 줄 제거 전용.
+function normalizedIncludes(haystack, needle) {
+  const norm = text => String(text || "").replace(/[\s.,'"“”‘’·]/g, "");
+  const target = norm(needle);
+  return Boolean(target) && norm(haystack).includes(target);
+}
+
+// 복사 전에 내용을 화면에서 읽게 한다 — "복사 말고 실제로도 어떤 내용인지 볼 수
+// 있게"('26.9.7 사용자 요청). 미리보기와 복사는 같은 함수(issueReportText)를
+// 쓴다 — 형식을 두 벌 지으면 금방 갈라진다(savedIssuesPack 주석과 같은 계약).
+function draftPreviewBlock(issue, { withCopy = false } = {}) {
+  const draft = reportDraftFor(issue.issue_id);
+  return `<details class="report-preview"${draft ? " open" : ""}>
+    <summary>${esc(draft ? STRINGS.draftHeading : STRINGS.previewHeading)}</summary>
+    <pre class="report-preview-text">${esc(issueReportText(issue))}</pre>
+    ${withCopy ? `<button type="button" class="secondary-button" data-copy-issue="${esc(issue.issue_id)}">보고서용 복사</button>` : ""}
+  </details>`;
+}
+
+// 주간보고 골격 — THIS WEEK 코너 순서(①이번 주 ②국가별 ③발간물 ④예정)가 그대로
+// 사내 주간보고의 목차다. 코너를 그 순서로 옮기고 각주만 붙인다.
+//
+// 시사점은 넣지 않는다. 3층 톤 분리(TODAY=사실 / THIS WEEK=변화·맥락 /
+// 보고서=한수원 관점 시사점)에서 시사점은 사람이 쓰는 층이다 — 빈 칸으로 두고
+// 자리만 표시한다.
+function weeklyReportOutline() {
+  const week = state.trend?.this_week;
+  if (!week) return "";
+  const notes = footnoteBook();
+  const byId = new Map(state.issues.map(issue => [issue.issue_id, issue]));
+  const cite = issueId => notes.cite(byId.get(issueId)?.representative_article);
+  const lines = [
+    `□ 「원자력 정책·산업 주간 동향」 (${reportDate(week.week_start)}~${reportDate(week.week_end)})`,
+    "",
+  ];
+
+  if (week.top?.length) {
+    lines.push("1. 이번 주 핵심");
+    week.top.forEach(row => {
+      lines.push(` □ ${row.title}${cite(row.issue_id)}`);
+      if (row.summary) lines.push(`  ○ ${row.summary}`);
+      lines.push(`  – 이번 주 ${row.week_article_count || 0}건`
+        + `${row.publisher_count ? ` · 매체 ${row.publisher_count}곳` : ""}`
+        + `${row.is_continuing ? " · 기존 이슈 후속" : " · 신규"}`);
+    });
+    lines.push("");
+  }
+  if (week.countries?.length) {
+    lines.push("2. 국가별 동향");
+    week.countries.forEach(row => {
+      lines.push(` □ [${COUNTRY_LABELS[row.country] || row.country}] ${row.title}${cite(row.issue_id)}`);
+    });
+    lines.push("");
+  }
+  if (week.publications?.length) {
+    lines.push("3. 발간물");
+    week.publications.forEach(row => {
+      const title = row.title_kr || row.title || "";
+      // 발간물 제목은 발행일을 제목 안에 달고 오는 일이 잦다(KEEI 격주간 등).
+      // 그 위에 또 붙이면 "인사이트(2026.08.14.) ('26.8.14.)" 가 된다.
+      const when = /\d{4}[.\-/]\s?\d{1,2}/.test(title) ? "" : reportDate(row.date);
+      lines.push(` □ ${row.org_kr || ""} ${title}${when ? ` (${when})` : ""}`);
+      const url = safeUrl(row.url);
+      if (url) lines.push(`  – ${url}`);
+    });
+    lines.push("");
+  }
+  if (week.upcoming?.length) {
+    lines.push("4. 향후 일정");
+    week.upcoming.forEach(row => {
+      lines.push(` □ ${reportDate(row.date)}${row.type === "deadline" ? "(기한)" : ""} ${row.title}`);
+    });
+    lines.push("");
+  }
+  // 시사점 최종 문장은 사람 몫(3층 톤 분리)이되, 빈칸만 주지 않는다 — 주간
+  // LLM 합성(policy_shifts.so_what·watchpoints)이 이미 있는데 복사본에 안 실려
+  // "골격이 쓸 게 없다"는 판정('26.9.7)을 받았다. AI 초안으로 표시해 넘긴다.
+  const weekly = weeklyReportFor(week.week_end) || {};
+  const soWhats = (weekly.policy_shifts || [])
+    .map(row => String(row?.so_what || "").trim()).filter(Boolean);
+  const watchpoints = (weekly.watchpoints || [])
+    .map(text => String(text || "").trim()).filter(Boolean).slice(0, 3);
+  lines.push("5. 시사점");
+  if (soWhats.length) {
+    soWhats.forEach(text => lines.push(` □ (AI 초안) ${text}`));
+    watchpoints.forEach(text => lines.push(` □ (확인 필요·AI) ${text}`));
+    lines.push(" □ (작성 필요) 최종 시사점은 위 초안 검토 후 직접 작성");
+  } else {
+    lines.push(" □ (작성 필요)");
+  }
+  lines.push("");
+  lines.push(...notes.lines());
+  lines.push("", `*자료 : Nuclens ${location.origin} (${reportDate(week.week_end)} 기준)`);
+  return lines.join("\n");
+}
+
+async function copyWeeklyOutline(button) {
+  const text = weeklyReportOutline();
+  if (!text) { showToast("이번 주 코너가 없습니다"); return; }
+  await copyToClipboard(button, text, "주간보고 골격을 복사하지 못했습니다");
 }
 
 // 동향분석 보고서 초안을 쓸 때 필요한 재료를 한 번에 옮긴다. '보고서용 복사'가
@@ -2791,19 +3217,6 @@ function issueMaterialPack(issue) {
   const state = verificationState(issue);
   lines.push("## 검증 상태",
     `${(VERIFICATION_VIEW[state.status] || VERIFICATION_VIEW.unverified).label} — ${issueEvidenceText(issue)}`, "");
-
-  // 변화 이력은 타임라인보다 먼저 온다. 보고서를 쓰는 사람이 가장 먼저 찾는 것이
-  // "언제 무엇이 넘어갔나"이고, 아래 타임라인은 그 답을 세우기 위한 원재료다.
-  const changes = changeLog(issue);
-  if (changes.length) {
-    lines.push("## 변화 이력");
-    changes.forEach(entry => {
-      lines.push(`- ${changeLogSpan(entry)} · ${CHANGE_LOG_LABELS[entry.kind]}`);
-      lines.push(`  ${entry.prior_title}`);
-      lines.push(`  → ${entry.title}`);
-    });
-    lines.push("");
-  }
 
   const articles = [...(issue.related_articles || [])].sort((a, b) =>
     String(a.article_date).localeCompare(String(b.article_date)));
@@ -2920,9 +3333,22 @@ function renderEvidenceRail() {
     .filter(reason => String(reason || "").trim())
     .map(reason => `<span class="topic-chip">${esc(reason)}</span>`).join("");
   const sourceUrl = sourceArticle ? safeUrl(sourceArticle.url) : "";
-  // 블록이 조건부라 번호를 하드코딩하면 01 다음에 03 이 온다. 남은 것만 세어 붙인다.
+  // 블록이 조건부라 번호를 하드코딩하면 01 다음에 03 이 온다. 남은 것만 세어
+  // 붙인다. 주의: no() 는 정의 시점에 소비되므로 const 정의 순서 = 화면 순서다.
+  // 화면에 먼저 서는 블록을 나중에 정의하면 번호가 역전된다(실측 1회).
   let railNo = 0;
   const no = () => String(++railNo).padStart(2, "0");
+  // 요지(= 상세의 '한 줄 결론', issue.summary). 실측 313건에서 why·impact·
+  // openQuestion 셋 다 없는 이슈가 36% — 그런 날 레일은 제목·배지·출처 반복만
+  // 남아 껍데기였다(사용자 지적 "상세 옆이 너무 짧다"). summary 는 사실상
+  // 결측 0 이라 이 블록이 바닥을 받친다. 라벨은 상세와 같은 것을 쓴다(한 필드
+  // 한 이름). AI 배지는 달지 않는다 — 카드·상세도 summary 엔 안 단다.
+  const summaryBlock = issue.summary
+    ? `<section class="rail-block">
+        <p class="rail-no">${no()} / 한 줄 결론</p>
+        <p class="rail-summary">${esc(issue.summary)}</p>
+      </section>`
+    : "";
   const readingBlock = model.why || model.impact || model.openQuestion
     ? `<section class="rail-block">
         <p class="rail-no">${no()} / 읽을 때</p>
@@ -2931,6 +3357,11 @@ function renderEvidenceRail() {
         ${model.openQuestion ? `<p class="rail-open"><strong>아직 확정되지 않은 것</strong>${esc(model.openQuestion)}</p>` : ""}
       </section>`
     : "";
+  // 단일 기사 이슈(전수 62%)는 그 기사 제목이 이슈 제목과 같아, 목록이 위
+  // h2 를 세 번째로 반복하는 자리였다. 그때는 제목 행을 접고 출처만 세운다.
+  const soleArticle = model.articles.length === 1 ? model.articles[0] : null;
+  const soleDuplicatesTitle = !!soleArticle
+    && String(soleArticle.title_kr || "").replace(/\s+/g, "") === String(issue.title || "").replace(/\s+/g, "");
   rail.hidden = false;
   rail.innerHTML = `
     <div class="rail-head">
@@ -2940,17 +3371,24 @@ function renderEvidenceRail() {
       ${selectionReasons ? `<div class="topic-row rail-reasons">${selectionReasons}</div>` : ""}
     </div>
     <div class="rail-body">
+      ${summaryBlock}
       ${readingBlock}
       <section class="rail-block">
         <p class="rail-no">${no()} / 핵심 근거</p>
-        <ol class="rail-sources">${model.articles.slice(0, 4).map(article => {
-          const url = safeUrl(article.url);
-          return `<li>
-            ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(article.title_kr)}</a>`
-                  : `<span>${esc(article.title_kr)}</span>`}
-            <small>${esc(sourceLabel(article))}${isOfficial(article) ? " · 1차 출처" : ""}</small>
-          </li>`;
-        }).join("")}</ol>
+        ${soleDuplicatesTitle
+          ? `<p class="rail-sole-source">${(() => {
+              const url = safeUrl(soleArticle.url);
+              const label = `${esc(sourceLabel(soleArticle))}${isOfficial(soleArticle) ? " · 1차 출처" : ""}`;
+              return url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${label} — 원문 열기 ↗</a>` : label;
+            })()}</p>`
+          : `<ol class="rail-sources">${model.articles.slice(0, 4).map(article => {
+              const url = safeUrl(article.url);
+              return `<li>
+                ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(article.title_kr)}</a>`
+                      : `<span>${esc(article.title_kr)}</span>`}
+                <small>${esc(sourceLabel(article))}${isOfficial(article) ? " · 1차 출처" : ""}</small>
+              </li>`;
+            }).join("")}</ol>`}
         ${sourceUrl && model.source.official ? `<p class="rail-primary"><a href="${esc(sourceUrl)}" target="_blank" rel="noopener noreferrer">공식 문서 열기 ↗</a></p>` : ""}
       </section>
       <div class="rail-actions">
@@ -2960,131 +3398,10 @@ function renderEvidenceRail() {
     </div>`;
 }
 
-// 보관된 이슈 — 카탈로그 창(60일) 밖으로 나갔지만 주소는 살아 있다.
-//
-// 예전에는 이 경우 상세가 **조용히 아무 일도 안 했다**(issue 를 못 찾으면 return).
-// 공유된 주소를 연 사람 입장에서는 빈 화면이다. issue_ledger 가 남긴 스냅샷을
-// 받아 "무엇에 관한 이슈였는지"와 제목 이력을 보여 준다. 기사 본문은 담지
-// 않는다 — 원장은 신원 기록이지 기사 저장소가 아니다.
-const archivedIssueCache = new Map();
-
-async function loadArchivedIssue(issueId) {
-  if (archivedIssueCache.has(issueId)) return archivedIssueCache.get(issueId);
-  let row = null;
-  try {
-    const response = await fetch(
-      `${state.dataBase}/issue/${encodeURIComponent(issueId)}.json`, { cache: "no-cache" });
-    if (response.ok) {
-      const ctype = response.headers.get("content-type") || "";
-      if (ctype.includes("json")) row = await response.json();
-    }
-  } catch { row = null; }
-  archivedIssueCache.set(issueId, row);
-  return row;
-}
-
-function archivedIssueBody(issue) {
-  const revisions = (issue.revisions || []).filter(row => row && row.title);
-  // 제목이 한 번이라도 바뀐 이슈만 이력을 보여 준다. 한 줄짜리 이력은
-  // 정보가 아니라 장식이다(실측: 11일에 18.8% 가 제목이 바뀐다).
-  const trail = revisions.length > 1
-    ? `<details class="dialog-evidence"><summary>제목이 바뀐 기록 ${revisions.length}건</summary>
-        <ol class="timeline dialog-timeline">${revisions.slice().reverse().map(row => `<li>
-          <div class="timeline-date"><span>${esc(dateLabel(row.date))}</span></div>
-          <div class="timeline-copy"><span>${esc(row.title)}</span></div>
-        </li>`).join("")}</ol></details>`
-    : "";
-  return `
-    <h2 id="issueDialogTitle" tabindex="-1">${esc(issue.title || "지난 이슈")}</h2>
-    <div class="dialog-meta"><span>보관된 이슈</span>${issue.first_seen ? `<span>${dateLabel(issue.first_seen)} 시작</span>` : ""}${
-      issue.article_count ? `<span>누적 ${issue.article_count}건</span>` : ""}</div>
-    <section class="dialog-update">
-      <h3>한 줄 결론</h3>
-      ${issue.summary ? `<p>${esc(issue.summary)}</p>` : '<p class="empty">요약이 없습니다.</p>'}
-      <p class="dialog-open"><strong>이 이슈는 보관되었습니다</strong>${
-        issue.last_seen ? `${esc(dateLabel(issue.last_seen))} 이후 새로운 보도가 확인되지 않아 최근 목록에서 내려갔습니다. 주소와 기록은 그대로 유지됩니다.`
-                        : "최근 목록에서 내려갔지만 주소와 기록은 그대로 유지됩니다."}</p>
-      <div class="dialog-actions"><button type="button" data-archive-scope="all">모든 이슈에서 찾기</button></div>
-    </section>
-    ${trail}`;
-}
-
-// `viaAlias` 는 별칭표를 이미 한 번 거쳤다는 표식이다 — 사슬 끝까지 따라간
-// 주소마저 비어 있으면 거기서 멈춰야지, 되돌아가며 다시 찾으면 안 된다.
-function openArchivedIssueDialog(issueId, updateUrl = true, viaAlias = false) {
-  loadArchivedIssue(issueId).then(async issue => {
-    // 기다리는 동안 사용자가 다른 이슈를 열었으면 그 화면을 덮지 않는다.
-    if (state.issueId && state.issueId !== issueId) return;
-    if (!issue) {
-      // 스냅샷이 없다는 것은 **보관이 아니라 이동**이다. 보관된 이슈는 빌드가
-      // 스냅샷을 남기고(`issue_ledger.archived`), 흡수된 이슈는 남기지 않는다.
-      // 정적 주소 `/issue/<id>/` 는 이미 원장의 별칭표로 현재 이슈에 넘겨 주는데
-      // 앱 안의 상세만 그 판정을 안 읽어서 묘비가 떴다 — 같은 표를 여기서도 본다.
-      const target = viaAlias
-        ? issueId : resolveAlias(issueId, await loadIssueAliases());
-      if (target && target !== issueId) {
-        showToast("이 사건은 다른 이슈로 합쳐졌습니다. 현재 이슈를 엽니다.");
-        openIssueDialog(target, updateUrl, true);
-        return;
-      }
-      if (state.issueId === issueId) state.issueId = "";
-      showToast("이 이슈를 찾을 수 없습니다.");
-      return;
-    }
-    const dialog = document.getElementById("issueDialog");
-    document.getElementById("issueDialogContent").innerHTML = archivedIssueBody(issue);
-    state.issueId = issueId;
-    if (!dialog.open) dialog.showModal();
-    requestAnimationFrame(() => document.getElementById("issueDialogTitle")?.focus());
-    if (updateUrl) syncUrl();
-  });
-}
-
-// 회차와 회차 사이에서 단계가 움직인 자리. 아래 타임라인이 기사를 날짜순으로
-// 세우는 데 반해 여기는 **짝**을 세운다 — "무엇 다음에 무엇이 왔나"가 변화 이력의
-// 내용이고, 평평한 목록은 그 짝을 말하지 못한다.
-//
-// 제목은 양쪽 다 적는다. `card_change_display` 가 카드에서 뒤쪽(현재 상태)을 걷는
-// 것은 그 문장이 **카드 제목과 요약으로 이미 화면에 있기 때문**인데, 여기서는
-// 짝의 두 끝이 곧 정보다. 대신 오늘 상태 하나만 놓고 '달라졌다'고 말하지 않는다.
-function changeLogSection(issue) {
-  const entries = changeLog(issue);
-  if (!entries.length) return "";
-  const moves = entries.filter(entry => entry.kind === "material").length;
-  // 0건짜리 칸은 세지 않는다 — '후속 0건' 은 정보가 아니라 빈 자리의 이름이다.
-  const note = [moves ? `단계 이동 ${moves}건` : "",
-                entries.length - moves ? `후속 ${entries.length - moves}건` : ""]
-    .filter(Boolean).join(" · ");
-  return `<section class="dialog-changelog" aria-labelledby="issueChangeLogTitle">
-    <div class="dialog-section-head"><h3 id="issueChangeLogTitle">변화 이력</h3><span>${esc(note)}</span></div>
-    <ol class="change-log">${entries.map(entry => `<li class="t-${esc(entry.kind)}">
-      <div class="change-log-head">
-        <span class="change-log-kind">${esc(CHANGE_LOG_LABELS[entry.kind])}</span>
-        <span class="change-log-span">${esc(changeLogSpan(entry))}</span>
-      </div>
-      <p class="change-log-before">${esc(entry.prior_title)}</p>
-      <p class="change-log-after">${esc(entry.title)}</p>
-    </li>`).join("")}</ol>
-  </section>`;
-}
-
-function openIssueDialog(issueId, updateUrl = true, viaAlias = false) {
+function openIssueDialog(issueId, updateUrl = true) {
   const issue = currentIssueById(issueId);
-  if (!issue) {
-    state.issueId = issueId;
-    openArchivedIssueDialog(issueId, updateUrl, viaAlias);
-    return;
-  }
+  if (!issue) return;
   recordRecentIssue(issueId);
-  // v3 는 같은 자리에서 시트를 연다. 주소(issuePath)·뒤로가기(issueHistoryOwned)·
-  // 복원(restoreIssueFromHistory)은 아래 공통 경로가 그대로 맡는다 — 시트 쪽에
-  // pushState 를 또 얹으면 뒤로가기 한 번에 두 칸이 움직인다.
-  if (state.ui === "v3") {
-    state.issueId = issueId;
-    UI_V3.openSheet(issue, { qa: state.uiQa });
-    if (updateUrl) { issueHistoryOwned = true; syncUrl("push"); }
-    return;
-  }
   const dialog = document.getElementById("issueDialog");
   const topics = (issue.topics || []).map(topic => `<span class="topic-chip">${esc(TOPIC_LABELS[topic] || topic)}</span>`).join("");
   const selectionReasons = (issue.selection_reasons || [])
@@ -3114,16 +3431,26 @@ function openIssueDialog(issueId, updateUrl = true, viaAlias = false) {
       ${issue.summary ? `<p>${esc(issue.summary)}</p>` : '<p class="empty">요약이 없습니다.</p>'}
       ${issueDetail ? `<div class="dialog-detail"><strong>${issue.detail_source ? "관련 기사 내용" : "기사 내용"}</strong>${issue.detail_source ? `<small>이 이슈의 다른 기사 「${esc(issue.detail_source)}」에서</small>` : ""}<p>${esc(issueDetail)}</p></div>` : ""}
       ${issueChangeText(issue) ? `<p class="dialog-change"><strong>이번에 달라진 점</strong>${esc(issueChangeText(issue))}</p>` : ""}
-      <p class="dialog-verification">${verificationBadge(issue, { always: true })}${reportPickBadge(issue)}${changeLogBadge(issue)}<span>${esc(issueEvidenceText(issue))}</span></p>
+      <p class="dialog-verification">${verificationBadge(issue, { always: true })}${reportPickBadge(issue)}<span>${esc(issueEvidenceText(issue))}</span></p>
       ${issue.why_important ? `<p class="dialog-meaning"><strong>왜 중요한가 <span class="ai-badge">AI</span></strong>${esc(issue.why_important)}</p>` : ""}
       ${issue.implication ? `<p class="dialog-meaning"><strong>시사점 <span class="ai-badge">AI</span></strong>${esc(issue.implication)}</p>` : ""}
       ${issue.open_question ? `<p class="dialog-open"><strong>아직 확정되지 않은 것</strong>${esc(issue.open_question)}</p>` : ""}
       ${selectionReasons ? `<div class="topic-row dialog-reasons" aria-label="선정 사유">${selectionReasons}</div>` : ""}
       ${topics ? `<div class="topic-row">${topics}</div>` : ""}
+      ${(() => {
+        // 이슈→의제 역링크 — 핀(사람이 확인한 연결)은 ●, 자동 후보는 ○·흐리게.
+        // 자동 연결 ≠ 확인된 연결이라는 구분이 이 칩의 존재 이유다.
+        const links = agendaLinksForIssue(issue.issue_id);
+        if (!links.pinned.length && !links.candidates.length) return "";
+        return `<div class="topic-row agenda-links" aria-label="관련 의제">
+          ${links.pinned.map(agenda => `<button type="button" class="agenda-chip" data-open-agenda="${esc(agenda.id)}">● ${esc(agenda.title)}</button>`).join("")}
+          ${links.candidates.map(agenda => `<button type="button" class="agenda-chip auto" data-open-agenda="${esc(agenda.id)}">○ ${esc(agenda.title)} · 자동</button>`).join("")}
+        </div>`;
+      })()}
       <div class="dialog-actions"><button type="button" data-copy-issue="${esc(issue.issue_id)}">보고서용 복사</button><button type="button" data-pack-issue="${esc(issue.issue_id)}">자료 팩 복사</button><button type="button" data-save-issue="${esc(issue.issue_id)}">${state.savedIds.has(issue.issue_id) ? "저장됨" : "저장"}</button><button type="button" data-share-issue="${esc(issue.issue_id)}">공유</button></div>
+      ${draftPreviewBlock(issue)}
     </section>
     ${keeiDialogSection(issue)}
-    ${changeLogSection(issue)}
     <section class="dialog-history" aria-labelledby="issueHistoryTitle">
       <div class="dialog-section-head"><h3 id="issueHistoryTitle">주요 사건 타임라인</h3><span>브리핑에 선정된 ${cardArticles.length}건</span></div>
       ${cardArticles.length
@@ -3132,7 +3459,6 @@ function openIssueDialog(issueId, updateUrl = true, viaAlias = false) {
             stage: state.view === "news" ? "이번 브리핑" : "최근 브리핑",
             shownDetail: issueDetail,
             moreLabel: "이전 사건",
-            changes: changeLogByHash(issue),
           })
         : '<p class="empty">선정된 사건이 없습니다.</p>'}
     </section>
@@ -3146,6 +3472,7 @@ function openIssueDialog(issueId, updateUrl = true, viaAlias = false) {
         moreLabel: "이전 근거",
       })}
     </details>` : ""}
+    ${chronicleDialogSection(issue, contextDate)}
     ${related.length ? `<section class="dialog-related" aria-labelledby="issueRelatedTitle">
       <div class="dialog-section-head"><h3 id="issueRelatedTitle">관련 이슈</h3><span>같은 주제로 연결된 이슈입니다</span></div>
       <ul>${related.map(item => `<li>
@@ -3168,9 +3495,6 @@ function openIssueDialog(issueId, updateUrl = true, viaAlias = false) {
 function dismissIssueDialog() {
   const dialog = document.getElementById("issueDialog");
   state.issueId = "";
-  // v3 의 시트도 같은 문으로 닫힌다 — Esc·배경 탭·× 가 전부 closeIssueDialog()
-  // 로 들어오므로 닫는 자리는 하나뿐이다.
-  if (typeof UI_V3 !== "undefined" && UI_V3.sheetOpen()) UI_V3.closeSheet();
   if (dialog.open) dialog.close();
 }
 
@@ -3316,24 +3640,15 @@ function renderTrendReadiness() {
   const coverage = `<div class="coverage"><span>주제 분류 <strong>${topicCoverage}%</strong></span><span>국가 분류 <strong>${countryCoverage}%</strong></span></div>`;
   const pdata = periodData();
   const { start, end } = pdata ? { start: pdata.start, end: pdata.end } : trendRange();
-  // 빌드가 실어 보낸 선정 사건 수가 정본이다(모든 기간에 실린다). state.news 로
-  // 세는 길은 periods 가 없는 **구버전 trend.json** 전용 폴백인데, news.json 은 이제
-  // 지연 로드라 그 순간 비어 있을 수 있다. 안 온 데이터로 0을 적지 않는다 —
-  // 셀 수 없으면 그 숫자만 뺀다(아래 countable).
-  const articleCount = pdata?.story_count
-    ?? (state.newsLoaded
-      ? state.news.filter(article => article.article_date >= start && article.article_date <= end).length
-      : null);
-  const countable = articleCount !== null;
-  const issueCount = articleCount;
+  const articleCount = pdata?.story_count ?? state.news.filter(article => article.article_date >= start && article.article_date <= end).length;
+  const issueCount = pdata
+    ? articleCount
+    : state.issues.filter(issue => (issue.related_articles || []).some(article => article.article_date >= start && article.article_date <= end)).length;
   const panel = document.getElementById("trendReadiness");
   document.getElementById("trendData").hidden = !ready;
   panel.classList.toggle("ready", ready);
-  const basisLine = pdata
-    ? `동일 사건 중복 보도 제거 적용 · 선정 사건 ${articleCount}건`
-    : (countable ? `중복 제거 적용 · 원본 ${articleCount}건 → 연결 이슈 ${issueCount}개` : "중복 제거 적용");
   panel.innerHTML = ready
-    ? `<div><strong>분석 기간 ${dateLabel(start)}–${dateLabel(end)}</strong><p>${basisLine}${basis}</p></div>${coverage}`
+    ? `<div><strong>분석 기간 ${dateLabel(start)}–${dateLabel(end)}</strong><p>${pdata ? `동일 사건 중복 보도 제거 적용 · 선정 사건 ${articleCount}건` : `중복 제거 적용 · 원본 ${articleCount}건 → 연결 이슈 ${issueCount}개`}${basis}</p></div>${coverage}`
     : `<div><strong>분류 기준을 확인하고 있습니다</strong><p>분류가 완료되면 분석 기간과 근거 데이터를 함께 표시합니다.${basis}</p></div>${coverage}`;
 }
 
@@ -3358,14 +3673,6 @@ function isWeekPeriod(period = state.period) { return String(period) === "7"; }
 function isMonthPeriod(period = state.period) { return String(period) === "30"; }
 function isLongPeriod(period = state.period) { return Number(period) >= 90; }
 
-// '비교 가능한가'는 기간 전체의 사실 하나다 — 키워드 표와 워드 클라우드가 각자
-// 다른 방식으로 판정하면(예: 표는 이 플래그, 구름은 row.prev 존재 여부) 어느
-// 한쪽만 어긋나는 순간 같은 기간을 두고 표와 구름이 다른 말을 하게 된다.
-// 옛 trend.json(구버전, periods 없음)에서는 weekMode 로 물러난다.
-function comparisonModeFor(pdata, weekMode = isWeekPeriod()) {
-  return pdata ? Boolean(pdata.previous_period_complete) : weekMode;
-}
-
 function keywordRows(period = state.period) {
   const pdata = periodData(period);
   if (pdata?.tag_comparison?.length) return pdata.tag_comparison.map(row => ({
@@ -3384,6 +3691,8 @@ function keywordRows(period = state.period) {
     const now = week.get(tag) ?? rise?.now ?? 0;
     const prev = rise?.prev ?? (newTags.has(tag) ? 0 : now);
     return { tag, now, prev, delta: now - prev, isNew: newTags.has(tag) || (now > 0 && prev === 0) };
+    // 0·0 행은 표에 앉을 자격이 없다 — 실측: 수집 키워드가 new_tags 에 올라오고
+    // 언급이 0이면 '한수원 0 0 0 신규' 같은 행이 근거 0건 버튼까지 달고 섰다.
   }).filter(row => row.now > 0 || row.prev > 0);
 }
 
@@ -3401,6 +3710,14 @@ function previousPeriodRange(pdata) {
   if (!pdata?.previous_period_complete || !pdata.requested_start) return null;
   const end = shiftDate(pdata.requested_start, -1);
   return { start: shiftDate(end, -(Number(pdata.days || state.period) - 1)), end };
+}
+
+// '비교 가능한가'는 기간 전체의 사실 하나다 — 키워드 표와 워드 클라우드가 각자
+// 다른 방식으로 판정하면(예: 표는 이 플래그, 구름은 row.prev 존재 여부) 어느
+// 한쪽만 어긋나는 순간 같은 기간을 두고 표와 구름이 다른 말을 하게 된다.
+// 옛 trend.json(구버전, periods 없음)에서는 weekMode 로 물러난다.
+function comparisonModeFor(pdata, weekMode = isWeekPeriod()) {
+  return pdata ? Boolean(pdata.previous_period_complete) : weekMode;
 }
 
 // 신규·증가·감소·보합 — 색만으로 가르던 상태를 아이콘·글자 배지로도 낸다.
@@ -3711,75 +4028,6 @@ function weeklySection(title, note, body) {
     + (note ? `<p class="data-note">${esc(note)}</p>` : "") + body + `</section>`;
 }
 
-// 결정적 코너 — 재료는 weekly_bot 이 고르고 저장한 것 그대로다. 화면은 순서와
-// 표기만 정한다. 사건에 이슈가 붙어 있으면 제목이 그 상세로 가는 버튼이 된다.
-function weeklyStoryTitle(row) {
-  const label = esc(row.title || "");
-  if (!label) return "";
-  return row.issue_id
-    ? `<button type="button" class="weekly-story-link" data-issue-id="${esc(row.issue_id)}">${label}</button>`
-    : `<strong>${label}</strong>`;
-}
-
-function weeklyTopStories(rows) {
-  if (!rows.length) return "";
-  return rows.map(row => {
-    // 보도 폭은 '몇 곳이 따로 확인했나'라서 숫자가 정보다. 한 건뿐이면 안 쓴다 —
-    // 모든 줄에 붙는 표시는 신호가 아니라 배경이 된다.
-    const spread = row.articles > 1
-      ? `<p class="weekly-spread">이어지는 이슈 · ${row.articles}건 · 매체 ${row.outlets}곳</p>` : "";
-    return `<div class="weekly-item weekly-story"><p class="weekly-story-head">${weeklyStoryTitle(row)}</p>`
-      + (row.summary ? `<p>${esc(row.summary)}</p>` : "") + spread + `</div>`;
-  }).join("");
-}
-
-function weeklyCountryBriefs(rows) {
-  if (!rows.length) return "";
-  // 국가명은 제목과 **다른 칸**에 둔다. 한 줄로 이으면 '한국정부'처럼 한 낱말로
-  // 읽힌다 — 라벨 열은 테마 강약이 쓰는 것과 같은 격자다.
-  return rows.map(row =>
-    `<div class="weekly-brief"><p class="weekly-brief-country">${esc(row.country_kr || row.country || "")}</p>`
-    + `<div class="weekly-brief-body"><p>${weeklyStoryTitle(row)}</p></div></div>`).join("");
-}
-
-function weeklyPublications(rows) {
-  if (!rows.length) return "";
-  return rows.map(row => {
-    const org = row.org ? `<span class="weekly-pub-org">${esc(row.org)}</span>` : "";
-    return `<div class="weekly-item weekly-pub">${org}`
-      + `<p><a href="${esc(row.url)}" target="_blank" rel="noopener">${esc(row.title)}</a></p>`
-      + (row.gist ? `<p class="data-note">${esc(row.gist)}</p>` : "") + `</div>`;
-  }).join("");
-}
-
-// 예정 코너를 화면에 낼지 (2026-08-22 부터 false).
-//
-// 파이썬 쪽 weekly_sections.SHOW_WEEKLY_UPCOMING 과 같은 뜻이고 같이 뒤집는다.
-// 상수가 두 벌인 이유는 하나다 — 파이썬 값은 브라우저까지 오지 않는다.
-// 빌드가 이미 페이로드에서 예정 줄을 비우지만(build_data), 여기서 한 번 더
-// 막는다: 이미 배포된 data/*.json 이나 캐시에는 옛 upcoming 이 그대로 남아
-// 있고, 그 파일을 읽는 것은 새 app.js 다.
-const SHOW_WEEKLY_UPCOMING = false;
-
-function weeklyUpcoming(rows) {
-  if (!rows.length) return "";
-  return rows.map(row => {
-    // 정밀도가 '월'이면 날짜를 지어내지 않는다 — 저장본이 말하는 만큼만 쓴다.
-    const [, month, day] = (row.date || "").split("-");
-    const when = row.precision === "month" ? `${Number(month)}월` : `${Number(month)}월 ${Number(day)}일`;
-    return `<div class="weekly-brief"><p class="weekly-brief-country">${esc(when)}</p>`
-      + `<div class="weekly-brief-body"><p>${weeklyStoryTitle(row)}</p></div></div>`;
-  }).join("");
-}
-
-// 예정 코너 한 덩어리. flag 가 꺼져 있으면 저장본에 줄이 남아 있어도 빈 문자열이다
-// — 코너를 지운 게 아니라 끈 것이라, 다시 켤 때 고칠 곳은 위 상수 하나다.
-function weeklyUpcomingSection(report) {
-  if (!SHOW_WEEKLY_UPCOMING) return "";
-  return weeklySection("예정", `${dateLabel(report.week_end)} 이후 · 원문에서 확인된 일정만`,
-    weeklyUpcoming(report.upcoming || []));
-}
-
 // 흐름 탭의 첫 블록 — 설명문보다 방향과 크기가 먼저 온다.
 //
 // theme_moves 의 해설을 각 행에 접어 붙이려다 말았다. 테마는 LLM 자유 서술이고
@@ -3799,6 +4047,68 @@ function renderTrendTopicFlow() {
   document.getElementById("trendTopicFlowRows").innerHTML = rows.map(topicFlowRow).join("");
 }
 
+// 주간 고정 코너 — 1440·DeBriefed 의 '그릇을 안 바꾼다'. 순서·이름을 주마다
+// 바꾸지 않는 것이 가치의 원천이므로 코너는 항상 이 순서다. 다만 **빈 코너는
+// 그리지 않는다** — 빌드가 채울 수 없는 코너의 키를 아예 안 보낸다(Axios 비판:
+// 칸을 강제하면 모르는 것도 채운다). 해석 문장 0, LLM 0 — 전부 기존 필드 재배치.
+function renderThisWeek() {
+  const box = document.getElementById("thisWeekBody");
+  if (!box) return "";
+  const week = state.trend?.this_week;
+  if (!week) { box.innerHTML = ""; return ""; }
+
+  const issueButton = (id, text) =>
+    `<button type="button" class="issue-title-button" data-issue-id="${esc(id)}">${esc(text)}</button>`;
+
+  const top = (week.top || []).map(row => {
+    // 이어지는 이슈인지, 며칠에 걸쳐 몇 매체가 다뤘는지 — 사실만 붙인다.
+    const meta = [
+      row.is_continuing ? "이어지는 이슈" : "이번 주 처음",
+      `${row.week_article_count || 0}건`,
+      row.publisher_count ? `매체 ${row.publisher_count}곳` : "",
+    ].filter(Boolean).join(" · ");
+    return `<div class="weekly-item"><h4>${issueButton(row.issue_id, row.title)}</h4>`
+      + (row.summary ? `<p>${esc(row.summary)}</p>` : "")
+      + `<p class="data-note">${esc(meta)}</p></div>`;
+  }).join("");
+
+  const countries = (week.countries || []).map(row =>
+    `<li><span class="tw-country">${esc(COUNTRY_LABELS[row.country] || row.country)}</span>`
+    + issueButton(row.issue_id, row.title) + `</li>`).join("");
+
+  const pubs = (week.publications || []).map(row =>
+    `<li><span class="tw-country">${esc(row.org_kr || "")}</span>`
+    + `<a href="${esc(row.url)}" target="_blank" rel="noopener">`
+    + `${esc(row.title_kr || row.title || "")}</a></li>`).join("");
+
+  // 예정은 '언제'가 먼저다. 날짜가 월 단위까지만 확실한 건 그렇게 말한다 —
+  // 추정한 정밀도를 화면이 올려 말하면 그게 곧 틀린 예고가 된다.
+  const upcoming = (week.upcoming || []).map(row =>
+    // '기한'은 날짜의 성질이므로 날짜 칸에 붙인다. 행 끝으로 보내면 넓은 화면에서
+    // 제목과 멀어져 무엇의 기한인지 읽히지 않는다.
+    `<li><span class="tw-date">${esc(dateLabel(row.date))}`
+    + `${row.precision === "month" ? " 중" : ""}`
+    + `${row.type === "deadline" ? " 기한" : ""}</span>`
+    + `<span>${esc(row.title)}</span></li>`).join("");
+
+  // 이 블록의 기간은 주간 판세 리포트의 기간과 다를 수 있다(리포트는 금요일에
+  // 굳고 코너는 매 빌드 갱신된다). 머리말 하나로 둘을 덮으면 8/8–8/14 라고
+  // 써 놓고 8/17 항목을 보여주게 된다 — 코너는 자기 기간을 자기가 말한다.
+  const span = `${dateLabel(week.week_start)}–${dateLabel(week.week_end)}`;
+  box.innerHTML = [
+    weeklySection("이번 주", `${span} · 가장 많이 쌓인 사건`, top),
+    weeklySection("국가별 단신", "나라당 한 건", countries ? `<ul class="tw-list">${countries}</ul>` : ""),
+    weeklySection("이번 주 발간물", "", pubs ? `<ul class="tw-list">${pubs}</ul>` : ""),
+    weeklySection("예정", "원문에 날짜가 명시된 것만", upcoming ? `<ul class="tw-list">${upcoming}</ul>` : ""),
+    // 코너 순서가 그대로 사내 주간보고 목차다 — 옮겨 붙이는 손을 뺀다.
+    // 복사 전에 내용을 읽게 한다 — 이슈 미리보기와 같은 계약(draftPreviewBlock).
+    `<details class="report-preview"><summary>${esc(STRINGS.previewHeading)}</summary>` +
+      `<pre class="report-preview-text">${esc(weeklyReportOutline())}</pre></details>`,
+    `<p class="tw-actions"><button type="button" class="secondary-button" data-copy-weekly>주간보고 골격 복사</button></p>`,
+  ].join("");
+  return box.innerHTML;
+}
+
 function renderWeeklyReport() {
   const panel = document.getElementById("weeklyReport");
   const report = state.trend?.weekly_report;
@@ -3806,12 +4116,17 @@ function renderWeeklyReport() {
   // 그대로 남는다. 원래 가드는 `!report && !questions.length` 였는데,
   // weekly_reports.json 이 3개월째 생성된 적이 없어(weekly.yml 미가동) 실제로는
   // open_questions 한 코너만 '주간 판세' 제목을 달고 떠 있었다.
-  if (!report) { panel.hidden = true; return; }
+  // 고정 코너는 금요일 리포트가 없어도 선다 — 그게 '그릇을 안 바꾼다'의 뜻이다.
+  // 리포트만 있고 코너가 없거나 그 반대여도 탭이 비지 않는다.
+  const thisWeek = renderThisWeek();
+  const week = state.trend?.this_week;
+  if (!report && !thisWeek) { panel.hidden = true; return; }
   panel.hidden = false;
 
   document.getElementById("weeklyReportMeta").textContent = report
     ? `${dateLabel(report.week_start)}–${dateLabel(report.week_end)} · 이슈 ${report.source_issue_count ?? 0}건`
-    : "";
+    : (week ? `${dateLabel(week.week_start)}–${dateLabel(week.week_end)}` : "");
+  if (!report) { document.getElementById("weeklyReportBody").innerHTML = ""; return; }
 
   const themes = (report?.theme_moves || []).filter(row => row && row.theme);
   const arrow = { "강화": "▲", "약화": "▼", "유지": "―" };
@@ -3819,22 +4134,11 @@ function renderWeeklyReport() {
   const DIRECTION_TONE = { "강화": "up", "약화": "down", "유지": "flat" };
 
   // '이번 주 판을 바꾼 것'(weekly_intro + policy_shifts)과 '다음 주 하나만
-  // 본다면'(watchpoints)은 뺐다. 오늘 화면의 '핵심 결론'·'지금 확인할 것'·'이번 주
+  // 본다면'(watchpoints)은 뺐다. 오늘 화면의 '이번 주 결론'·'다음 확인'·'이번 주
   // 해설'이 같은 문장을 이미 낸다 — 실측 2026-08-08: 흐름 첫 화면 산문 여섯
   // 문단 중 일곱 문장이 오늘 탭과 글자 그대로 동일. 탭을 옮겼는데 같은 글이
   // 다시 나오면 그건 깊이가 아니라 반복이다.
-  // 코너 순서는 "무슨 일이 있었나 → 어디서 → 무엇을 읽나 → 다음은 언제" 다음에
-  // 해석이 온다. 재료는 전부 같은 리포트(같은 기간)에서 나오므로 화면 안에서
-  // 기간이 섞이지 않는다 — '예정'만 그 기간의 **뒤**를 본다.
-  // 그 '다음은 언제'(예정)는 지금 꺼져 있다 — SHOW_WEEKLY_UPCOMING 참조.
-  // 자리는 남겨 둔다: 다시 켤 때 코너가 어디로 들어가야 하는지가 순서다.
-  const weekLabel = `${dateLabel(report.week_start)}–${dateLabel(report.week_end)}`;
   document.getElementById("weeklyReportBody").innerHTML = [
-    weeklySection("이번 주", `${weekLabel} · 주요 사건`,
-      weeklyTopStories(report.top_stories || [])),
-    weeklySection("국가별 단신", "", weeklyCountryBriefs(report.country_briefs || [])),
-    weeklySection("이번 주 발간물", "", weeklyPublications(report.publications || [])),
-    weeklyUpcomingSection(report),
     // 테마명을 라벨 열로 뗀다. 화살표·테마·설명이 한 문장으로 이어져 있으면
     // 훑는 눈이 걸릴 데가 없다 — 카드의 세 칸과 같은 원칙이다.
     // 라벨을 '투자 테마 강약'에서 중화했다(2026-08-11 사용자 결정). 한수원
@@ -3858,16 +4162,54 @@ function renderWeeklyReport() {
 
 // 지난 브리핑 — 흐름 탭의 시간 축. briefings.json 은 이미 클라이언트에 있다
 // (빌드 변경 0). 빈 날의 사유는 데이터가 말할 때만 쓴다 — 추정 금지.
+function renderBriefingTimeline() {
+  const list = document.getElementById("briefingTimelineList");
+  if (!list) return;
+  list.innerHTML = state.briefings.map(briefing => {
+    const issueCount = Number(briefing.issue_count || 0);
+    const changed = Number(briefing.changed_issue_count || 0);
+    let counts;
+    if (issueCount) {
+      counts = `이슈 ${issueCount}${changed ? ` · 변화 ${changed}` : ""}`;
+    } else if (briefing.pipeline_status && briefing.pipeline_status !== "ok") {
+      counts = "지연·확인 중";
+    } else if (Number(briefing.below_floor_count || 0) > 0) {
+      counts = `기준 미달 ${briefing.below_floor_count}건`;
+    } else {
+      counts = "생성된 브리핑이 없습니다";
+    }
+    return `<li class="${issueCount ? "" : "bt-quiet"}">
+      <button type="button" data-go-date="${esc(briefing.date)}">
+        <span class="bt-date">${esc(dateLabel(briefing.date))}</span>
+        <span class="bt-headline">${esc(briefing.headline || "")}</span>
+        <span class="bt-counts">${esc(counts)}</span>
+      </button>
+    </li>`;
+  }).join("");
+}
+
+// 구역 번호는 화면에 실제로 선 구역을 센다. 조건부 구역이 늘면서 01 이 숨은 날
+// 흐름 탭이 02 부터 시작했다 — 번호가 있는데 앞이 비면 뭔가 빠졌다고 읽힌다.
+// HTML 의 숫자는 편집 순서를 적어 두는 용도로 남기고, 표시값만 여기서 고친다.
+function renumberSections(viewId) {
+  const view = document.getElementById(viewId);
+  if (!view) return;
+  let index = 0;
+  for (const marker of view.querySelectorAll(".sec-no")) {
+    const host = marker.closest("section");
+    if (host && host.hidden) continue;
+    marker.textContent = String(++index).padStart(2, "0");
+  }
+}
+
 // ── 앞으로 30일 달력 ──────────────────────────────────────────────────────
 //
 // 흐름 탭은 뒤를 보는 화면이다. 그 끝에 앞을 보는 칸 하나를 둔다.
 //
 // 무엇이 칸에 서는가
 // ------------------
-// 기사 제목이 아니라 **그 날짜가 적힌 문장에서 뽑은 일정 이름**이다. 지난
-// '예정' 코너(SHOW_WEEKLY_UPCOMING, 2026-08-22 부터 꺼져 있다)는 날짜는 절에서,
-// 이름은 제목에서 따로 가져와 붙였다. 그래서 "9월 1일 · 한빛원전 …주민 설명회"
-// 가 떴는데 그 설명회는 8월 25일 일이었고, 9월 1일에 잡힌 것은 토론회였다.
+// 기사 제목이 아니라 **그 날짜가 적힌 문장에서 뽑은 일정 이름**이다. 날짜는
+// 절에서, 이름은 제목에서 따로 가져와 붙이면 "9월 1일 · 8월 25일 행사"가 된다.
 // 짝을 맺는 일은 파이썬이 하고(event_calendar.py) 화면은 그 결과를 그린다.
 //
 // 왜 세 단으로 읽히는가
@@ -3880,9 +4222,8 @@ function renderWeeklyReport() {
 //
 // 왜 빈 칸이 많은가
 // -----------------
-// 재료가 원래 드물다(실측 2026-08-29: 31칸 중 9칸에만 일정이 선다). 채우려고
-// 정밀도를 낮추면 그것이 지난번의 오류가 된다 — '9월 중'을 9월 1일로 적는
-// 순간 한 칸에 다섯 건이 몰렸고 그중 어느 것도 그날 일정이 아니었다.
+// 재료가 원래 드물다. 채우려고 정밀도를 낮추면 그것이 오류가 된다 — '9월 중'을
+// 9월 1일로 적는 순간 한 칸에 다섯 건이 몰리고 그중 어느 것도 그날 일정이 아니다.
 // 빈 칸은 고장이 아니라 사실이다. 달까지만 나온 일정은 격자 밖 목록으로 간다.
 const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 // 한 칸에 세우는 칩. 넘치면 "+N" 으로 접는다. 파이썬은 창 안의 일정을 전부
@@ -3890,22 +4231,6 @@ const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 // 정한다 — 상한을 양쪽에 두면 한쪽만 바뀌는 날 페이로드가 조용히 잘린다.
 const CAL_MAX_CHIPS = 3;
 const CAL_KIND_LABELS = { point: "예정", deadline: "마감", range: "기간" };
-
-// 그 날짜를 **어떻게 읽었는가**. 화면이 이것을 말해야 독자가 무엇을 믿을지 안다.
-//
-//   explicit   원문에 "9월 18일" 이라고 적혀 있다
-//   syntactic  "9월 9일부터 11일까지" 의 11일 — 앞 날짜의 월을 잇는 범위 표기다
-//   inferred   "오는 18일" — 보도일을 기준으로 푼 날이다
-//
-// 앞의 둘은 원문이 말한 그대로라 따로 밝힐 것이 없다. 셋째만 표를 단다 —
-// 추론한 날짜를 적힌 날짜처럼 보이게 하면 이 달력이 지켜 온 근거의 약속이
-// 깨진다. 칩에는 안 붙인다(칸이 좁고, 날짜 자체는 맞다). 근거를 보러 온
-// 자리에서만 말한다.
-const CAL_INFERRED_NOTE = "보도일 기준으로 읽은 날짜입니다.";
-
-function calendarIsInferred(event) {
-  return event.date_basis === "inferred";
-}
 
 function calendarData() {
   return state.trend?.event_calendar || null;
@@ -3922,16 +4247,13 @@ function calendarEventById(id) {
 
 // 일정을 칸에 앉힌다.
 //
-// 기간은 **양끝에 선다** — 시작하는 날과 끝나는 날. 처음에는 지나가는 칸을
-// 물들여 막대를 대신했는데, 실데이터에서 그게 무너졌다(2026-08-29: 입법예고
-// 하나가 9/2~10/13 이라 격자 31칸 중 27칸이 물들었다). 긴 기간은 '언제'가
-// 아니라 상태라서, 칸을 칠하면 달력이 통째로 배경색이 된다.
-// 반대로 끝만 찍으면 그날 시작하는 행사로 읽히고(지난 코너의 ②번 오류),
-// 시작만 찍으면 마감일이 격자에서 사라진다. 그래서 둘 다 세우고, 각 칩이
-// 자기가 어느 끝인지를 말한다. 누르면 둘 다 같은 일정 하나로 열린다.
+// 기간은 **양끝에 선다** — 시작하는 날과 끝나는 날. 지나가는 칸을 물들이면
+// 긴 입법예고 하나가 격자 대부분을 배경색으로 만든다. 반대로 끝만 찍으면
+// 그날 시작하는 행사로 읽히고, 시작만 찍으면 마감일이 격자에서 사라진다.
+// 그래서 둘 다 세우고, 각 칩이 자기가 어느 끝인지를 말한다.
 //
 // 이미 시작한 기간의 앞끝은 **창의 첫날**로 당긴다 — 시작일이 화면 밖이라고
-// 빼면 진행 중인 일정이 통째로 사라진다(포항 집회 8/23~9/20).
+// 빼면 진행 중인 일정이 통째로 사라진다.
 function calendarLayout(calendar) {
   const byDay = new Map();
   const put = (day, event, role) => {
@@ -3979,10 +4301,9 @@ function calendarUpcomingRow(event) {
     + `</button></li>`;
 }
 
-// 목록도 격자처럼 재료가 늘면 길어진다 — 창을 30일로 넓힌 뒤 실측 22건, 그중
-// 태반이 하순에 몰렸다. 전부 펴면 이 구역이 화면의 절반을 넘어가 아래 지난
-// 브리핑까지 밀어낸다. timelineList() 와 같은 접기(앞 N건 + <details>)를 쓴다 —
-// 이 파일에 이미 있는 '더 보기' 어법이라 새 패턴을 안 들인다.
+// 목록도 격자처럼 재료가 늘면 길어진다. 전부 펴면 이 구역이 화면의 절반을
+// 넘어가 아래 지난 브리핑까지 밀어낸다. timelineList() 와 같은 접기
+// (앞 N건 + <details>)를 쓴다 — 이 파일에 이미 있는 '더 보기' 어법.
 const CAL_UPCOMING_HEAD = 8;
 
 function calendarUpcomingList(events) {
@@ -4132,8 +4453,6 @@ function showCalendarPopover(button) {
     + `<p class="cal-pop-label">${esc(event.label)}</p>`
     + `${where ? `<p class="cal-pop-where">${esc(where)}</p>` : ""}`
     + `<p class="cal-pop-clause">${esc(event.clause)}</p>`
-    + `${calendarIsInferred(event)
-        ? `<p class="cal-pop-basis">${esc(CAL_INFERRED_NOTE)}</p>` : ""}`
     + `<p class="cal-pop-source">${esc(event.publisher || "")}`
     + `${event.source_count > 1 ? ` · 근거 ${event.source_count}건` : ""}`
     + ` · 눌러서 출처 보기</p>`;
@@ -4159,8 +4478,8 @@ function hideCalendarPopover() {
 // ── 눌렀을 때: 출처까지 ──────────────────────────────────────────────────
 //
 // 이슈 다이얼로그를 쓰지 않는다. 일정을 말하는 기사는 대개 브리핑에 선정되지
-// 않은 공지·예고 기사라 열 이슈가 없다(실측 2026-08-29: 27건 중 4건만 이슈로
-// 묶였다). 그래서 이 창은 스스로 근거를 갖고, 이슈가 있을 때만 그리로 건넨다.
+// 않은 공지·예고 기사라 열 이슈가 없다. 그래서 이 창은 스스로 근거를 갖고,
+// 이슈가 있을 때만 그리로 건넨다.
 // 공식 일정만 갖는 칸. 기사에서 캐낸 일정에는 주최·장소가 거의 없고, 기관
 // 공지에는 거의 언제나 있다 — 있는 것만 줄로 세운다(빈 칸을 '-'로 채우면
 // 없는 정보가 있는 것처럼 보인다).
@@ -4179,10 +4498,7 @@ function calendarEventBlock(event) {
   // 뭉뚱그리면 독자가 '기사에서 읽은 날짜'와 '기관이 공지한 날짜'를 못 가른다.
   const note = official
     ? "기관이 공지한 일정입니다. 관심 분야·중요도를 확인해 실었습니다."
-    : calendarIsInferred(event)
-      ? "기사에 적힌 문장 그대로입니다. 이 문장은 월 없이 날짜를 적었고, "
-        + "보도일을 기준으로 읽었습니다."
-      : "기사에 적힌 문장 그대로입니다. 날짜는 이 문장에서 다시 확인했습니다.";
+    : "기사에 적힌 문장 그대로입니다. 날짜는 이 문장에서 다시 확인했습니다.";
   return `<article class="cal-detail">
     <p class="cal-detail-when">${esc(calendarWhen(event))}<span>${esc(CAL_KIND_LABELS[event.kind] || "예정")}</span>${
       official ? '<b class="cal-official">공식</b>' : ""}</p>
@@ -4234,46 +4550,6 @@ function handleCalendarAction(event) {
       if (!rows.some(row => row.id === entry.event.id)) rows.push(entry.event);
     }
     openCalendarDialog(rows, `${dateLabel(more.dataset.calDay)} 일정 ${rows.length}건`);
-  }
-}
-
-function renderBriefingTimeline() {
-  const list = document.getElementById("briefingTimelineList");
-  if (!list) return;
-  list.innerHTML = state.briefings.map(briefing => {
-    const issueCount = Number(briefing.issue_count || 0);
-    const changed = Number(briefing.changed_issue_count || 0);
-    let counts;
-    if (issueCount) {
-      counts = `이슈 ${issueCount}${changed ? ` · 변화 ${changed}` : ""}`;
-    } else if (briefing.pipeline_status && briefing.pipeline_status !== "ok") {
-      counts = "지연·확인 중";
-    } else if (Number(briefing.below_floor_count || 0) > 0) {
-      counts = `기준 미달 ${briefing.below_floor_count}건`;
-    } else {
-      counts = "생성된 브리핑이 없습니다";
-    }
-    return `<li class="${issueCount ? "" : "bt-quiet"}">
-      <button type="button" data-go-date="${esc(briefing.date)}">
-        <span class="bt-date">${esc(dateLabel(briefing.date))}</span>
-        <span class="bt-headline">${esc(briefing.headline || "")}</span>
-        <span class="bt-counts">${esc(counts)}</span>
-      </button>
-    </li>`;
-  }).join("");
-}
-
-// 구역 번호는 화면에 실제로 선 구역을 센다. 조건부 구역이 늘면서 01 이 숨은 날
-// 흐름 탭이 02 부터 시작했다 — 번호가 있는데 앞이 비면 뭔가 빠졌다고 읽힌다.
-// HTML 의 숫자는 편집 순서를 적어 두는 용도로 남기고, 표시값만 여기서 고친다.
-function renumberSections(viewId) {
-  const view = document.getElementById(viewId);
-  if (!view) return;
-  let index = 0;
-  for (const marker of view.querySelectorAll(".sec-no")) {
-    const host = marker.closest("section");
-    if (host && host.hidden) continue;
-    marker.textContent = String(++index).padStart(2, "0");
   }
 }
 
@@ -4500,10 +4776,9 @@ function renderWordCloud() {
   };
 
   // '비교 가능한가'는 낱말 하나하나의 사정이 아니라 이 기간 전체의 사실이다.
-  // 예전에는 rows.some(row => row.prev != null) 로 즉석에서 다시 판정했는데,
-  // 키워드 표(comparisonModeFor)와 다른 경로라 어느 한쪽만 바뀌면 같은 기간을
-  // 두고 표는 "비교됨", 구름은 "비교 안 됨"으로 갈라질 수 있었다. 이제 같은
-  // 소스(pdata.previous_period_complete) 하나를 공유한다.
+  // 키워드 표(comparisonModeFor)와 같은 소스(pdata.previous_period_complete)
+  // 하나를 공유한다 — 어느 한쪽만 바뀌면 같은 기간을 두고 표는 "비교됨",
+  // 구름은 "비교 안 됨"으로 갈라질 수 있었다.
   const comparable = comparisonModeFor(periodData());
   document.getElementById("wordCloudMeta").textContent = comparable
     ? `${periodLabel()} · 크기는 언급 수, 색은 ${previousPeriodLabel()} 대비 변화`
@@ -4515,7 +4790,7 @@ function renderWordCloud() {
 
   // 해석 문장. 그림만 두면 "그래서 무엇을 봐야 하나"가 안 남는다.
   // 비교 불가 기간에는 신규·증가·감소 배지가 전부 사라지는데, 그 이유를
-  // 말하지 않으면 '방금까지 있던 상태가 없어졌다'로 읽힌다(사용자 지적).
+  // 말하지 않으면 '방금까지 있던 상태가 없어졌다'로 읽힌다.
   // 키워드 표가 이미 같은 사유를 말하는 문장과 같은 어법을 쓴다.
   const biggest = rows[0];
   const newFloor = wordCloudNewFloor(rows);
@@ -4540,11 +4815,13 @@ function renderTrend() {
   renderPeriodTimeline();
   // 지난 브리핑은 트렌드 집계 준비 여부와 무관하다 — 이른 return 앞에서 그린다.
   renderBriefingTimeline();
+  // 스토리도 번호가 붙은 구역 — renumberSections 앞에서 hidden 이 정해져야 한다.
+  renderChronicles();
   // 워드 클라우드는 번호가 붙은 구역이라 renumberSections 앞에서 hidden 이 정해져야
   // 한다. 그러지 않으면 숨은 구역이 번호를 한 칸 먹는다.
   renderWordCloud();
   // 달력도 번호가 붙은 구역이다. 재료가 없으면 스스로 내려가고, 그때 '지난
-  // 브리핑'이 05 로 당겨진다 — 빈 번호가 남지 않게 하는 것이 renumberSections.
+  // 브리핑'이 앞 번호로 당겨진다 — 빈 번호가 남지 않게 하는 것이 renumberSections.
   renderEventCalendar();
   // 번호가 붙은 구역은 전부 위에서 결정됐다 — 아래 정량 블록에는 sec-no 가 없으므로
   // trend_ready 조기 return 앞에서 매긴다.
@@ -4561,11 +4838,58 @@ function renderTrend() {
   renderSlopeGraph();
 }
 
+// 흐름 탭의 '이어지는 사안' — 스토리 원장에서 최근 갱신 순으로 몇 건.
+// 살아있는 이슈(카탈로그에 chronicle_id 로 연결)가 있으면 제목 클릭이 그 이슈
+// 다이얼로그를 연다(data-issue-id 전역 위임 재사용). 이슈가 60일 창 밖으로
+// 죽었어도 카드 자체는 남는다 — 그게 이 원장의 존재 이유다.
+const CHRONICLE_LIST_MAX = 6;
+
+function renderChronicles() {
+  const section = document.getElementById("chronicleSection");
+  if (!section) return;
+  const chronicles = Object.values(state.chronicles?.chronicles || {})
+    .filter(chron => (chron.events || []).length >= 2)
+    .sort((a, b) => String(b.last_seen || "").localeCompare(String(a.last_seen || "")))
+    .slice(0, CHRONICLE_LIST_MAX);
+  section.hidden = !chronicles.length;
+  if (!chronicles.length) return;
+  const byChronicle = new Map(
+    state.issues.filter(issue => issue.chronicle_id)
+      .map(issue => [issue.chronicle_id, issue.issue_id]));
+  const range = flowSpanRange();
+  document.getElementById("chronicleMeta").textContent =
+    `이슈 수명(60일)을 넘어 이어 붙인 사안 ${chronicles.length}건`;
+  document.getElementById("chronicleList").innerHTML = chronicles.map(chron => {
+    const liveIssueId = byChronicle.get(chron.chronicle_id) || "";
+    const narrative = chronicleNarrativeFor(chron.chronicle_id);
+    const events = chronicleEventsDesc(chron);
+    const title = liveIssueId
+      ? `<button type="button" class="issue-title-button" data-issue-id="${esc(liveIssueId)}">${esc(chron.title)}</button>`
+      : `<span>${esc(chron.title)}</span>`;
+    return `<article class="chronicle-card">
+      <h3>${title}</h3>
+      <p class="chronicle-scale">${esc(dateLabel(chron.first_seen))}부터 · 사건 ${events.length}건${liveIssueId ? "" : " · 추적 종료"}</p>
+      ${range ? flowSpanTrack(chron, range) : ""}
+      ${narrative?.phase_now ? `<p class="chronicle-phase"><strong>지금 국면 <span class="ai-badge">AI</span></strong>${esc(narrative.phase_now)}</p>` : ""}
+      ${narrative?.narrative?.length ? `<details class="chronicle-story"><summary>스토리 읽기</summary>
+        ${narrative.narrative.map(paragraph => `<p>${esc(paragraph)}</p>`).join("")}
+        ${(narrative.watchpoints || []).length ? `<p class="chronicle-watch"><strong>지켜볼 지점</strong>${narrative.watchpoints.map(esc).join(" · ")}</p>` : ""}
+      </details>` : ""}
+      <details class="chronicle-events"><summary>사건 ${events.length}건 펼치기</summary>
+        ${timelineList(events, { contextDate: chron.last_seen, stage: "지난 흐름", shownDetail: "", moreLabel: "이전 사건" })}
+      </details>
+    </article>`;
+  }).join("");
+}
+
 function clearBriefingFilters() {
   state.region = "전체";
   state.topic = "전체";
-  document.getElementById("topicSel").value = "전체";
-  setPressed(document.getElementById("regionTabs"), document.querySelector('#regionTabs [data-region="전체"]'));
+  // 홈 필터 바는 목차형 개편에서 걷혔다 — 요소가 없으면 건너뛴다.
+  const topicSel = document.getElementById("topicSel");
+  if (topicSel) topicSel.value = "전체";
+  const regionTabs = document.getElementById("regionTabs");
+  if (regionTabs) setPressed(regionTabs, regionTabs.querySelector('[data-region="전체"]'));
   renderBriefing();
   syncUrl();
 }
@@ -4575,6 +4899,7 @@ function clearArchiveFilters() {
   state.archiveEntity = "";
   state.archiveRegion = "전체";
   state.archiveTopic = "전체";
+  state.archiveDomain = "";
   state.archivePeriod = "all";
   state.archiveVerification = "전체";
   document.getElementById("globalSearch").value = "";
@@ -4602,6 +4927,7 @@ function handleHubAction(event) {
   state.archiveEntity = "";
   state.archiveRegion = "전체";
   state.archiveTopic = "전체";
+  state.archiveDomain = "";
   state.archivePeriod = "all";
   state.archiveVerification = "전체";
   document.getElementById("globalSearch").value = "";
@@ -4619,209 +4945,8 @@ function handleHubAction(event) {
   scrollToPageTop();
 }
 
-/* ── 장기 스토리 (Beta) ───────────────────────────────────────────────────
-   기존 "탐색" 화면(archiveScope === "stories")은 그대로 둔다. 그쪽 목록의
-   항목은 이슈이고 여기 항목은 그 이슈들을 여러 주에 걸쳐 하나로 묶은 상위
-   객체라, 같은 목록에 섞으면 단위가 다른 두 가지가 한 줄씩 번갈아 선다.
-
-   빌드가 `data/threads.json` 을 만들고, 그 파일이 스스로 "지금 보여도 되는가"를
-   들고 온다. 화면은 그 판정을 믿되 **한 번 더 잰다** — 배포가 멈춰 낡은 파일이
-   CDN 에 남는 경우는 빌드 시점 판정이 못 잡기 때문이다. */
-
-// 빌드가 계약을 바꾸면 이 화면은 뜨지 않는다. 모르는 모양을 그리려 애쓰는 것보다
-// 안 그리는 쪽이 안전하다 — 계약을 올릴 때 이 상수도 같이 올린다.
-const THREAD_CONTRACT = "thread-web-v1";
-
-function longTermVisible(payload, nowMs = Date.now()) {
-  if (!payload || typeof payload !== "object") return false;
-  if (String(payload.version || "") !== THREAD_CONTRACT) return false;
-  if (payload.visible !== true) return false;
-  if (!Array.isArray(payload.threads) || payload.threads.length === 0) return false;
-  // 빌드가 적어 둔 유효기한. 정기 빌드가 멈춘 채 배포본만 남아 있으면 여기서
-  // 걸린다 — 서버 판정은 그 파일이 만들어지던 순간의 사실일 뿐이다.
-  const hideAfter = Date.parse(String(payload.hide_after || ""));
-  if (Number.isFinite(hideAfter) && nowMs > hideAfter) return false;
-  return true;
-}
-
-function longTermReady() {
-  return longTermVisible(state.threads);
-}
-
-function longTermThreads() {
-  return (state.threads?.threads || []);
-}
-
-// 흡수된 스토리의 옛 주소로 들어온 링크를 살아 있는 쪽으로 넘긴다.
-function resolveThreadId(threadId) {
-  const redirects = state.threads?.redirects || {};
-  const seen = new Set();
-  let current = String(threadId || "");
-  while (current && redirects[current] && !seen.has(current)) {
-    seen.add(current);
-    current = redirects[current];
-  }
-  return current;
-}
-
-function longTermSorted() {
-  const rows = longTermThreads().slice();
-  const byRecent = (a, b) => String(b.last_seen).localeCompare(String(a.last_seen))
-    || (b.event_count - a.event_count);
-  if (state.longTermSort === "span") {
-    rows.sort((a, b) => (b.lifespan_days || 0) - (a.lifespan_days || 0) || byRecent(a, b));
-  } else if (state.longTermSort === "events") {
-    rows.sort((a, b) => (b.event_count - a.event_count) || byRecent(a, b));
-  } else {
-    rows.sort(byRecent);
-  }
-  return rows;
-}
-
-function threadPeriodText(thread) {
-  const span = thread.lifespan_days;
-  const days = Number.isFinite(span) ? `${span}일` : "기간 미상";
-  return `${dateLabel(thread.first_seen)} – ${dateLabel(thread.last_seen)} · ${days}`;
-}
-
-function threadChips(thread) {
-  // 호기가 가장 좁은 신호다. 먼저 세우고 엔티티는 뒤에 둔다.
-  const chips = [
-    ...(thread.unit_labels || []).map(label => ({ label, kind: "unit" })),
-    ...(thread.entity_labels || []).map(label => ({ label, kind: "entity" })),
-  ].slice(0, 6);
-  if (!chips.length) return "";
-  return `<div class="longterm-chips">${chips.map(chip =>
-    `<span class="topic-chip${chip.kind === "unit" ? " chip-unit" : ""}">${esc(chip.label)}</span>`).join("")}</div>`;
-}
-
-// 일정은 호기로 맞은 것과 발전소로 맞은 것의 무게가 다르다. 호기는 한 대상만
-// 가리키지만 발전소는 "월성 어딘가"라서, 월성 1호기 이야기에 월성 2·3·4호기의
-// 일정이 붙을 수 있다. 지우지 않고 **약한 쪽이라고 적는다** — 데이터는 맞고
-// 확신의 크기만 다르다.
-function threadMilestone(thread) {
-  const milestone = thread.next_milestone;
-  if (!milestone || !milestone.date) return "";
-  const weak = milestone.matched_by !== "unit";
-  const label = String(milestone.label || milestone.title || "").trim();
-  return `<p class="longterm-milestone${weak ? " is-weak" : ""}">
-    <strong>${weak ? "같은 발전소 일정" : "다음 관전점"}</strong>
-    <span>${esc(dateLabel(milestone.date))}</span>
-    <span>${esc(label)}</span></p>`;
-}
-
-function threadTimeline(thread) {
-  const events = thread.events || [];
-  if (!events.length) return "";
-  return `<ol class="timeline longterm-timeline">${events.map(event => `<li>
-    <div class="timeline-date"><span>${esc(dateLabel(event.date))}</span></div>
-    <div class="timeline-copy">
-      <button type="button" class="longterm-event" data-thread-event="${esc(event.event_id)}">${esc(event.title)}</button>
-      ${event.briefing_count > 1 ? `<small>브리핑 ${event.briefing_count}회</small>` : ""}
-    </div>
-  </li>`).join("")}</ol>`;
-}
-
-// 범위 밖 호기를 적는다. 자동 군집을 정직하게 보이는 자리다 — 같은 발전소의
-// 다른 호기는 어떤 기사를 경유해도 이 이야기가 아니라는 거부권이 실제로 서 있다.
-function threadScope(thread) {
-  const excluded = thread.excluded_unit_labels || [];
-  if (!excluded.length) return "";
-  return `<p class="longterm-scope">범위 밖 <span>${excluded.map(esc).join(" · ")}</span></p>`;
-}
-
-function threadCard(thread) {
-  return `<article class="longterm-card" id="${esc(thread.thread_id)}">
-    <div class="longterm-card-head">
-      <p class="longterm-period">${esc(threadPeriodText(thread))}</p>
-      <span class="longterm-count">사건 ${thread.event_count}건</span>
-    </div>
-    <h2><button type="button" class="longterm-title" data-thread="${esc(thread.thread_id)}">${esc(thread.title)}</button></h2>
-    ${threadChips(thread)}
-    ${threadMilestone(thread)}
-    ${threadTimeline(thread)}
-    ${threadScope(thread)}
-  </article>`;
-}
-
-function renderLongTerm() {
-  const list = document.getElementById("longTermList");
-  const more = document.getElementById("longTermMore");
-  const meta = document.getElementById("longTermMeta");
-  const note = document.getElementById("longTermNote");
-  const backAll = document.getElementById("longTermAll");
-  if (!list) return;
-  if (!longTermReady()) {
-    list.innerHTML = "";
-    if (more) more.hidden = true;
-    return;
-  }
-  const stats = state.threads.stats || {};
-  const focused = state.threadId
-    ? longTermThreads().find(thread => thread.thread_id === state.threadId)
-    : null;
-  if (backAll) backAll.hidden = !focused;
-  if (meta) {
-    meta.textContent = focused
-      ? `${stats.threads || 0}개 스토리 중 1개`
-      : `${stats.threads || 0}개 스토리 · 사건 ${stats.events || 0}건 · `
-        + `기간 중앙 ${stats.median_lifespan_days || 0}일 · 30일 넘게 이어진 것 ${stats.over_30_days || 0}개`;
-  }
-  if (note) {
-    note.textContent = "여러 주에 걸친 보도를 하나의 이야기로 이어 붙인 목록입니다. "
-      + "사람이 엮은 연재가 아니라 사건 기록에서 자동으로 묶은 것이라, 붙지 않아야 할 것이 "
-      + "섞이거나 한 이야기가 둘로 갈릴 수 있습니다. 기존 ‘탐색’ 화면은 그대로 있습니다.";
-  }
-  const rows = focused ? [focused] : longTermSorted();
-  const shown = focused ? rows : rows.slice(0, state.longTermLimit);
-  list.innerHTML = shown.length
-    ? shown.map(threadCard).join("")
-    : `<p class="empty">표시할 장기 스토리가 없습니다.</p>`;
-  if (more) {
-    more.hidden = focused || rows.length <= shown.length;
-    more.textContent = `더 보기 (${Math.max(0, rows.length - shown.length)}개 남음)`;
-  }
-}
-
-// 탭은 데이터가 살아 있을 때만 크롬에 걸린다. 빈 화면으로 가는 탭을 남기면
-// 사용자는 그것을 고장으로 읽는다.
-function syncLongTermChrome() {
-  // v3 에서는 탭을 내린다. 이슈의 흐름은 3단 시트의 타임라인이 맡는다.
-  //
-  // 탭만 내리고 화면은 살려 둔다 — 이미 공유된 `?view=longterm&th=` 링크가
-  // v3 에서 죽으면 안 된다. 그 주소로 들어오면 v3 는 비키고 기존 화면이 그대로
-  // 선다(renderV3 의 legacy 분기). threads.json 과 그 판정 코드는 손대지 않는다.
-  const ready = longTermReady() && state.ui !== "v3";
-  document.querySelectorAll('[data-view="longterm"]').forEach(button => {
-    button.hidden = !ready;
-  });
-  if (!longTermReady() && state.view === "longterm") switchView("news");
-}
-
-// v3 가 아직 제 화면을 갖지 않은 뷰. 여기서는 v3 가 비키고 구 골격이 선다 —
-// 링크를 깨뜨리지 않으려고 남겨 둔 통로이지 v3 의 화면이 아니다.
-function v3LegacyView() {
-  return state.view === "longterm";
-}
-
-function openThread(threadId, updateUrl = true) {
-  const resolved = resolveThreadId(threadId);
-  if (!longTermThreads().some(thread => thread.thread_id === resolved)) {
-    showToast("이 장기 스토리를 찾을 수 없습니다.");
-    return;
-  }
-  state.threadId = resolved;
-  if (state.view !== "longterm") switchView("longterm", false);
-  renderLongTerm();
-  if (updateUrl) syncUrl();
-  scrollToPageTop();
-}
-
 function switchView(view, updateUrl = true) {
   if (!VIEW_IDS.includes(view)) return;
-  // 딥링크·뒤로가기로도 닫힌 화면에 들어갈 수 없다. 게이트는 크롬 한 군데가
-  // 아니라 진입 경로 전부에 서 있어야 안전장치다.
-  if (view === "longterm" && !longTermReady()) view = "news";
   if (view !== state.view && state.issueId) closeIssueDialog(false);
   state.view = view;
   VIEW_IDS.forEach(id => {
@@ -4842,18 +4967,11 @@ function switchView(view, updateUrl = true) {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
-  // v3 는 제 컨테이너 하나에 탭별 화면을 그린다. 구 골격은 CSS 로 접혀 있어
-  // 아래 렌더러를 부르면 안 보이는 칸을 채우느라 같은 일을 두 번 한다.
-  if (state.ui === "v3") {
-    renderV3();
-    if (updateUrl) syncUrl();
-    return;
-  }
   if (view === "search") renderArchiveSearch();
   if (view === "trend") renderTrend();
   if (view === "search") renderSaved();
-  if (view === "longterm") renderLongTerm();
-  if (view === "report") { renderReportCandidates(); renderPubs(); }
+  if (view === "report") { renderReportCandidates(); renderAgendaBlock(); renderLibrary(); renderPubs(); }
+  if (view === "scrap") renderScraps();
   if (updateUrl) syncUrl();
   scrollToPageTop();
 }
@@ -4917,8 +5035,9 @@ function initFilterDrawers() {
     closeFilterDrawer(open);
   });
   narrowScreen.addEventListener("change", syncArchiveDrawer);
-  // 경계를 넘나들면 자리도 따라와야 한다 — 안 하면 리사이즈한 사람만 어긋난 채 본다.
   narrowScreen.addEventListener("change", placeTodayAgenda);
+  narrowScreen.addEventListener("change", placeCardStrip);
+  // 경계를 넘나들면 자리도 따라와야 한다 — 안 하면 리사이즈한 사람만 어긋난 채 본다.
   railScreen.addEventListener("change", () => { if (appReady) renderBriefing(); });
   syncArchiveDrawer();
 }
@@ -5180,6 +5299,7 @@ function applySearchResult(option) {
     state.archiveEntity = "";
     state.archiveRegion = "전체";
     state.archiveTopic = "전체";
+  state.archiveDomain = "";
     state.archivePeriod = "all";
     state.archiveVerification = "전체";
   };
@@ -5206,7 +5326,7 @@ function openGlobalSearch() {
 function applyTheme(theme, persist = false) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
-  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#1c3355" : "#12294c";
+  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#0d1613" : "#12251e";
   const button = document.getElementById("themeToggle");
   button.setAttribute("aria-label", theme === "dark" ? "라이트 모드 켜기" : "다크 모드 켜기");
   if (persist) localStorage.setItem("nuclens-theme", theme);
@@ -5241,12 +5361,45 @@ function handleIssueAction(event) {
     }
     return true;
   }
+  const agendaToggle = event.target.closest("[data-agenda-toggle]");
+  if (agendaToggle) {
+    const id = agendaToggle.dataset.agendaToggle;
+    state.agendaId = state.agendaId === id ? "" : id;
+    renderAgendaBlock();
+    syncUrl();
+    return true;
+  }
+  const openAgenda = event.target.closest("[data-open-agenda]");
+  if (openAgenda) { openAgendaInReport(openAgenda.dataset.openAgenda); return true; }
+  const openPrecedent = event.target.closest("[data-open-precedent]");
+  if (openPrecedent) {
+    const item = document.getElementById(`prec-${openPrecedent.dataset.openPrecedent}`);
+    if (item) {
+      item.open = true;
+      item.scrollIntoView({ block: "start", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    }
+    return true;
+  }
+  const agendaPack = event.target.closest("[data-copy-agenda]");
+  if (agendaPack) { copyAgendaPack(agendaPack, agendaPack.dataset.copyAgenda); return true; }
   const copy = event.target.closest("[data-copy-issue]");
   if (copy) { copyIssueReport(copy, copy.dataset.copyIssue); return true; }
   const pack = event.target.closest("[data-pack-issue]");
   if (pack) { copyIssuePack(pack, pack.dataset.packIssue); return true; }
   const savedPack = event.target.closest("[data-pack-saved]");
   if (savedPack) { copySavedPack(savedPack); return true; }
+  const weeklyOutline = event.target.closest("[data-copy-weekly]");
+  if (weeklyOutline) { copyWeeklyOutline(weeklyOutline); return true; }
+  // 먼저 볼 3건의 2단계 펼침. 안쪽 액션(data-issue-id 등)은 위에서 이미 걸러졌다.
+  const pick = event.target.closest(".pick-open");
+  if (pick) {
+    const open = pick.getAttribute("aria-expanded") === "true";
+    pick.setAttribute("aria-expanded", String(!open));
+    const panel = document.getElementById(pick.getAttribute("aria-controls"));
+    if (panel) panel.hidden = open;
+    pick.closest(".pick-card")?.classList.toggle("is-open", !open);
+    return true;
+  }
   const save = event.target.closest("[data-save-issue]");
   if (save) { toggleSaved(save.dataset.saveIssue); return true; }
   const share = event.target.closest("[data-share-issue]");
@@ -5330,39 +5483,15 @@ function bind() {
     }
     if (event.target.closest("[data-clear-briefing]")) clearBriefingFilters();
     if (event.target.closest("[data-clear-archive]")) clearArchiveFilters();
-    const scope = event.target.closest("[data-archive-scope]");
-    if (scope) setArchiveScope(scope.dataset.archiveScope);
   });
-  // briefingTitle: 기사 제목을 얹은 날의 h1 은 안에 상세 진입 버튼을 품는다.
-  // leadCard: 선두 카드 안의 버튼(타임라인·저장·공유)도 같은 위임을 탄다.
-  ["todayAgenda", "issueList", "changedList", "leadCard", "archiveIssueList", "savedIssueList", "reportCandidateList", "issueDialog",
-   "headlineEvidence", "weeklyReportBody", "insightList", "evidenceRail", "briefingTitle",
+  // 홈 목차(#tocList)는 이 위임을 타지 않는다 — 행이 통째로 <a href> 라 브라우저가
+  // 상세 페이지로 보낸다. 반면 '먼저 볼 3건'(#pickList)은 <button> 이라 위임이
+  // 필요하다(펼침·전체 내용 보기·저장). 나머지는 다이얼로그를 여는 화면들이다.
+  ["pickList",
+   "archiveIssueList", "savedIssueList", "reportCandidateList", "issueDialog", "thisWeekBody",
+   "weeklyReportBody", "insightList",
    "recentIssueList"].forEach(id => {
     document.getElementById(id).addEventListener("click", handleIssueAction);
-  });
-  // v3 는 제 컨테이너 하나에만 위임을 건다. 목록이 통째로 다시 그려져도 리스너가
-  // 살아 있어야 해서 컨테이너에 걸고, v3 전용 동작을 먼저 본 뒤 기존 위임으로
-  // 흘려보낸다(저장·공유 버튼은 기존 훅을 그대로 쓴다).
-  document.getElementById("v3Root")?.addEventListener("click", event => {
-    if (handleV3Action(event)) return;
-    handleIssueAction(event);
-  });
-  // 검색과 정렬은 클릭이 아니라 submit·change 다. 컨테이너에 걸어 두면 목록이
-  // 다시 그려져도 살아 있다.
-  document.getElementById("v3Root")?.addEventListener("submit", event => {
-    const form = event.target.closest("[data-v3-search]");
-    if (!form) return;
-    event.preventDefault();
-    state.archiveQuery = normalizedSearch(form.elements.q.value);
-    state.archiveLimit = 20;
-    renderV3();
-    syncUrl();
-  });
-  document.getElementById("v3Root")?.addEventListener("change", event => {
-    const sort = event.target.closest("[data-v3-sort]");
-    if (!sort) return;
-    state.archiveSort = sort.value;
-    renderV3();
   });
   document.getElementById("clearRecentIssues")?.addEventListener("click", () => {
     try { localStorage.removeItem("nuclens-recent-issues"); } catch { /* 무해 */ }
@@ -5385,6 +5514,22 @@ function bind() {
   });
   // 팔로우 패널 — 대상 열기(그 시점에 확인 처리)·해제. 저장 화면 진입만으로는
   // 확인 처리하지 않는다(주석 계약은 index.html 의 followPanel 에).
+  // 목차의 분류 칩 — 누르면 탐색 탭에서 같은 주제가 모인 목록으로 간다.
+  // handleHubAction 이 아카이브 필터를 초기화하고 주제를 걸므로 그대로 태우고,
+  // 홈에서 눌렀으니 화면만 옮겨 준다.
+  document.getElementById("tocList").addEventListener("click", event => {
+    const domainChip = event.target.closest("[data-hub-domain]");
+    if (domainChip) {
+      // 제자리 필터(토글). 지난 기사까지 보려면 꼬리의 '지난 기사까지' 링크.
+      const domain = domainChip.dataset.hubDomain;
+      homeDomainFilter = homeDomainFilter === domain ? "" : domain;
+      renderBriefing();
+      return;
+    }
+    if (!event.target.closest("[data-hub-topic]")) return;
+    handleHubAction(event);
+    switchView("search");
+  });
   document.getElementById("followPanel").addEventListener("click", event => {
     const unfollow = event.target.closest("[data-unfollow]");
     if (unfollow) { toggleFollow(unfollow.dataset.unfollow); return; }
@@ -5395,6 +5540,7 @@ function bind() {
     state.archiveEntity = open.dataset.followOpen;
     state.archiveRegion = "전체";
     state.archiveTopic = "전체";
+  state.archiveDomain = "";
     state.archivePeriod = "all";
     state.archiveVerification = "전체";
     switchView("search");
@@ -5412,22 +5558,10 @@ function bind() {
     switchView("news");
   });
 
-  document.getElementById("showChangedIssues").addEventListener("click", () => {
-    const section = document.getElementById("changedIssues");
-    (section.hidden ? document.getElementById("todayIssues") : section)
-      .scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth" });
-  });
   const briefAudio = document.getElementById("audioEl");
   document.getElementById("audioToggle").addEventListener("click", () => {
     if (briefAudio.paused) briefAudio.play().catch(() => {});
     else briefAudio.pause();
-  });
-  document.getElementById("audioModes").addEventListener("click", event => {
-    const button = event.target.closest("[data-audio-mode]");
-    if (!button || button.hidden) return;
-    state.audioMode = button.dataset.audioMode;
-    localStorage.setItem("nuclens-audio-mode", state.audioMode);
-    renderAudioBrief(currentBriefing());
   });
   document.getElementById("audioRates").addEventListener("click", event => {
     const button = event.target.closest("[data-rate]");
@@ -5437,6 +5571,13 @@ function bind() {
     localStorage.setItem("nuclens-audio-rate", String(rate));
     briefAudio.playbackRate = rate;
     syncAudioRateButtons();
+  });
+  document.getElementById("audioModes").addEventListener("click", event => {
+    const button = event.target.closest("[data-audio-mode]");
+    if (!button || button.hidden) return;
+    state.audioMode = button.dataset.audioMode;
+    localStorage.setItem("nuclens-audio-mode", state.audioMode);
+    renderAudioBrief(currentBriefing());
   });
   // playbackRate 는 src 교체 때 1.0 으로 돌아온다 — 재생 시작마다 다시 얹는다.
   briefAudio.addEventListener("play", () => {
@@ -5448,37 +5589,57 @@ function bind() {
   });
   briefAudio.addEventListener("pause", () => updateAudioToggle(false));
   briefAudio.addEventListener("ended", () => updateAudioToggle(false));
-  briefAudio.addEventListener("timeupdate", () => syncAudioProgress());
-  // duration 은 메타데이터가 붙어야 정확해진다. 그 전까지 막대는 manifest 의
-  // duration_sec 로 서 있다가 여기서 실측값으로 바뀐다.
-  // 버퍼가 늘거나 길이를 새로 알게 될 때마다 보류된 목표를 다시 시도한다.
-  // Range 가 서 있으면 첫 번째(loadedmetadata)에서 바로 끝난다.
-  const retryPendingSeek = () => {
-    if (audioPendingSeek != null) applyAudioSeek(audioPendingSeek);
-    syncAudioProgress();
-  };
-  ["loadedmetadata", "durationchange", "progress", "canplay", "canplaythrough"]
-    .forEach(name => briefAudio.addEventListener(name, retryPendingSeek));
-  briefAudio.addEventListener("seeked", () => {
-    audioPendingSeek = null;
-    document.getElementById("audioSeek")?.classList.remove("waiting");
-    syncAudioProgress();
-  });
-
   const audioSeek = document.getElementById("audioSeek");
-  // input = 끄는 중(값만 따라간다), change = 손을 뗀 순간(그때 실제로 옮긴다).
-  // 끄는 내내 currentTime 을 바꾸면 브라우저가 매 프레임 탐색을 걸어 버벅인다.
+  // preload="none" 은 데이터 요금을 아끼는 선택인데, 그 대가로 재생 전에는
+  // duration 이 없어 currentTime 대입이 조용히 무시된다. 바에는 메타 추정치
+  // max 가 이미 있어 핸들은 움직이므로, 첫 드래그가 사라지는 모양이 된다.
+  // 첫 상호작용에서만 메타데이터를 당겨 온다.
+  const ensureAudioMetadata = () => {
+    if (briefAudio.readyState === 0 && briefAudio.dataset.src) {
+      briefAudio.preload = "metadata";
+      briefAudio.load();
+    }
+  };
+  const audioMetaReady = () =>
+    Number.isFinite(briefAudio.duration) && briefAudio.duration > 0;
+  const replayPendingSeek = () => {
+    if (audioPendingSeek !== null && audioMetaReady()) {
+      briefAudio.currentTime = audioPendingSeek;
+      audioPendingSeek = null;
+    }
+  };
+  // 브라우저가 실측한 길이가 메타 추정치보다 정확하다 — 로드되면 갈아끼운다.
+  briefAudio.addEventListener("loadedmetadata", () => {
+    if (audioMetaReady()) audioSeek.max = String(Math.ceil(briefAudio.duration));
+    replayPendingSeek();
+  });
+  briefAudio.addEventListener("durationchange", replayPendingSeek);
+  briefAudio.addEventListener("canplay", replayPendingSeek);
+  // input = 드래그 중(잡음), change = 손을 뗀 순간(확정). 매 프레임 시크하면
+  // 디코더가 따라오느라 더듬거린다 — 확정에서만 실제로 옮긴다.
   audioSeek.addEventListener("input", () => {
     audioSeekHeld = true;
     ensureAudioMetadata();
-    syncAudioProgress(Number(audioSeek.value));
   });
   audioSeek.addEventListener("change", () => {
-    const target = Number(audioSeek.value);
     audioSeekHeld = false;
-    ensureAudioMetadata();
-    applyAudioSeek(target);
-    syncAudioProgress(target);
+    const target = Number(audioSeek.value);
+    if (audioMetaReady()) {
+      briefAudio.currentTime = target;
+    } else {
+      audioPendingSeek = target;
+      ensureAudioMetadata();
+    }
+  });
+  briefAudio.addEventListener("timeupdate", () => {
+    const total = Number.isFinite(briefAudio.duration) && briefAudio.duration > 0
+      ? briefAudio.duration : activeAudioVariant()?.duration_sec;
+    // 드래그 중에는 손 위치를 덮어쓰지 않는다
+    if (!audioSeekHeld) {
+      audioSeek.value = String(Math.floor(briefAudio.currentTime));
+    }
+    document.getElementById("audioTime").textContent =
+      `${fmtClock(briefAudio.currentTime)} / ${fmtClock(total)}${audioPartialSuffix()}`;
   });
   // 캐시 유실 등으로 한 variant의 mp3가 404여도 다른 브리핑까지 숨기지 않는다.
   // 날짜+모드 단위로 실패를 기억하고 즉시 다른 variant로 fallback한다.
@@ -5488,38 +5649,8 @@ function bind() {
     renderAudioBrief(briefing);
   });
 
-  document.getElementById("regionTabs").addEventListener("click", event => {
-    const button = event.target.closest("[data-region]");
-    if (!button) return;
-    state.region = button.dataset.region;
-    setPressed(event.currentTarget, button);
-    renderBriefing();
-    syncUrl();
-  });
-  document.getElementById("topicSel").addEventListener("change", event => {
-    state.topic = event.target.value;
-    renderBriefing();
-    syncUrl();
-  });
-  // 배경 로드가 실패했을 때의 두 번째 기회. 서랍을 여는 것이 "이 데이터를 지금
-  // 보겠다"는 유일한 신호라, 재시도 버튼을 따로 세우지 않는다.
-  document.getElementById("feedDrawer")?.addEventListener("toggle", event => {
-    if (!event.target.open || state.newsLoaded) return;
-    ensureNews().then(refreshNewsDependentViews);
-    renderNewsFeed();
-  });
-  document.getElementById("clearFilters").addEventListener("click", clearBriefingFilters);
-  document.getElementById("closeFilters").addEventListener("click", () => closeFilterDrawer(document.getElementById("briefingFilters")));
   document.getElementById("closeArchiveFilters").addEventListener("click", () => closeFilterDrawer(document.getElementById("archiveFilterDrawer")));
   initFilterDrawers();
-  document.getElementById("issueSort").addEventListener("change", event => { state.issueSort = event.target.value; renderBriefing(); });
-  document.getElementById("issueViewToggle").addEventListener("click", event => {
-    const button = event.target.closest("[data-issue-view]");
-    if (!button) return;
-    state.issueView = button.dataset.issueView;
-    setPressed(event.currentTarget, button);
-    renderBriefing();
-  });
   document.getElementById("dateSel").addEventListener("change", event => {
     state.briefingDate = event.target.value;
     renderDateSelect();
@@ -5542,43 +5673,8 @@ function bind() {
     renderArchiveSearch(true);
     syncUrl();
   });
-  document.getElementById("archiveScope").addEventListener("click", event => {
-    const button = event.target.closest("[data-scope]");
-    if (!button) return;
-    setArchiveScope(button.dataset.scope);
-  });
   document.getElementById("archiveClear").addEventListener("click", clearArchiveFilters);
   document.getElementById("archiveMore").addEventListener("click", () => { state.archiveLimit += 20; renderArchiveSearch(); });
-
-  // 장기 스토리(Beta). 요소가 hidden 이어도 리스너는 붙여 둔다 — 데이터가
-  // 늦게 살아나 크롬이 열릴 때 다시 붙이는 경로를 만들지 않기 위해서다.
-  document.getElementById("longTermSort")?.addEventListener("click", event => {
-    const button = event.target.closest("[data-sort]");
-    if (!button || button.dataset.sort === state.longTermSort) return;
-    state.longTermSort = button.dataset.sort;
-    state.longTermLimit = 20;
-    setPressed(event.currentTarget, button);
-    renderLongTerm();
-  });
-  document.getElementById("longTermMore")?.addEventListener("click", () => {
-    state.longTermLimit += 20;
-    renderLongTerm();
-  });
-  document.getElementById("longTermAll")?.addEventListener("click", () => {
-    state.threadId = "";
-    renderLongTerm();
-    syncUrl();
-    scrollToPageTop();
-  });
-  document.getElementById("longTermList")?.addEventListener("click", event => {
-    // 하위 사건은 기존 이슈 상세로 보낸다. 카탈로그 창(60일) 밖으로 나간
-    // 사건이면 openIssueDialog 가 보관본 경로로 알아서 떨어진다 — 장기
-    // 스토리는 정의상 옛 사건을 들고 있으므로 이 갈래가 정상 경로다.
-    const eventButton = event.target.closest("[data-thread-event]");
-    if (eventButton) { openIssueDialog(eventButton.dataset.threadEvent); return; }
-    const titleButton = event.target.closest("[data-thread]");
-    if (titleButton) openThread(titleButton.dataset.thread);
-  });
 
   // 워드 클라우드는 실제 글자 폭을 재서 싸므로 판이 화면에 서 있어야 한다.
   // 숨은 탭에서는 clientWidth 가 0 이라 첫 렌더가 아무것도 못 재고, 창 크기가
@@ -5752,7 +5848,7 @@ function renderLoadError(error) {
     willRetry ? `${Math.round(delay / 1000)}초 뒤 다시 시도합니다` : "'다시 시도'를 눌러 주세요"
   }</span></div>`;
   renderFailureCopy(lead, "브리핑을 불러오지 못했습니다");
-  // 오류 화면은 접혀 있는 격자 안(#issueList)에 그린다 — 여기서 안 걷으면
+  // 오류 화면은 목차 자리(#tocList)에 그린다 — 여기서 안 걷으면
   // 실패했는데 스켈레톤만 계속 도는 화면이 된다.
   document.body.classList.remove("booting");
   // 재시도가 끝났는데도 "잠시 후 다시 시도해 주세요"라고 하면 거짓말이 된다 —
@@ -5760,7 +5856,7 @@ function renderLoadError(error) {
   const guidance = willRetry
     ? `${Math.round(delay / 1000)}초 뒤 자동으로 다시 시도합니다.`
     : "자동 재시도를 5회 모두 실패했습니다. 아래 버튼으로 다시 시도해 주세요.";
-  document.getElementById("issueList").innerHTML = `<div class="error-state"><strong>데이터를 불러오지 못했습니다</strong><p>${guidance}</p><small>${esc(error.message)}</small><div><button type="button" id="retryInit">다시 시도</button><a href="mailto:policy174@naver.com">문의</a></div></div>`;
+  document.getElementById("tocList").innerHTML = `<div class="error-state"><strong>데이터를 불러오지 못했습니다</strong><p>${guidance}</p><small>${esc(error.message)}</small><div><button type="button" id="retryInit">다시 시도</button><a href="mailto:policy174@naver.com">문의</a></div></div>`;
   document.getElementById("retryInit")?.addEventListener("click", () => { initRetryCount = 0; init(); });
   if (willRetry) initRetryTimer = window.setTimeout(init, delay);
 }
@@ -5777,11 +5873,8 @@ async function init() {
   initLoading = true;
   try {
     await initializeDataBase();
-    // v3 는 하루치 한 벌로 오늘 화면을 먼저 세운다. 실패해도 아래가 평소대로 돈다.
-    if (v3Requested()) await v3FirstPaint().catch(() => false);
-    // news.json 은 여기 없다 — `ensureNews()` 가 첫 렌더 뒤에 받는다(정의부 주석).
-    [state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities, state.threads] = await Promise.all([
-      loadJSON("briefings.json"), loadJSON("issues.json"),
+    [state.news, state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities, state.scraps, state.reportDrafts, state.chronicles, state.chronicleNarratives, state.agendas, state.precedents] = await Promise.all([
+      loadJSON("news.json"), loadJSON("briefings.json"), loadJSON("issues.json"),
       loadJSON("trend.json"), loadJSON("meta.json"), loadJSON("insights.json"),
       // 발간물은 부가 데이터 — 없어도 사이트 전체가 죽으면 안 된다 (8/1 빈 화면 사고 계약)
       loadJSON("publications.json").catch(() => null),
@@ -5790,9 +5883,16 @@ async function init() {
       loadRootJSON("audio/audio.json", true).catch(() => null),
       // 엔티티 사전도 부가 데이터 — 없으면 허브의 대상 그룹만 비고 나머지는 산다.
       loadJSON("entities.json").catch(() => null),
-      // 장기 스토리(Beta)도 같은 계약이다. 없으면 그 탭만 안 뜬다 — 파일이
-      // 아직 배포되지 않은 회차(첫 병합 직후)가 실제로 그렇다.
-      loadJSON("threads.json").catch(() => null),
+      // 신문스크랩도 부가 데이터 — 없으면 스크랩 탭만 빈 상태로 뜬다.
+      loadJSON("scraps.json").catch(() => null),
+      // 보고서 초안(report_draft.py, 보고 후보만) — 없으면 템플릿 복사로 물러난다.
+      loadJSON("report_drafts.json").catch(() => null),
+      // 스토리 원장·서사 — 없으면 스토리 섹션만 숨는다(같은 비치명 계약).
+      loadJSON("chronicles.json").catch(() => null),
+      loadJSON("chronicle_narratives.json").catch(() => null),
+      // 정책의제·대응 자료실 — 없으면 보고서 탭의 해당 구역만 빈다(비치명).
+      loadJSON("agendas.json").catch(() => null),
+      loadJSON("precedents.json").catch(() => null),
     ]);
   } catch (error) {
     initLoading = false;
@@ -5813,18 +5913,12 @@ async function init() {
   const savedAudioMode = localStorage.getItem("nuclens-audio-mode");
   state.audioMode = ["fast", "expert"].includes(savedAudioMode) ? savedAudioMode : "fast";
   state.briefingDate = state.meta.latest_briefing_date || state.briefings[0]?.date || "";
-  syncLongTermChrome();
   restoreUrlState();
-  // 한 번 더 부른다. 위의 호출은 state.ui 가 정해지기 **전**이라 v3 규칙(장기 탭을
-  // 내린다)을 적용할 수 없다. 멱등이므로 구 경로에서는 같은 답을 두 번 낼 뿐이다.
-  syncLongTermChrome();
   renderTopicSelects();
-  document.getElementById("topicSel").value = state.topic;
   document.getElementById("archiveRegion").value = state.archiveRegion;
   document.getElementById("archiveTopic").value = state.archiveTopic;
   document.getElementById("archiveVerification").value = state.archiveVerification;
   document.getElementById("globalSearch").value = state.archiveQuery;
-  setPressed(document.getElementById("regionTabs"), document.querySelector(`#regionTabs [data-region="${state.region}"]`));
   setPressed(document.getElementById("archivePeriod"), document.querySelector(`#archivePeriod [data-period="${state.archivePeriod}"]`));
   const firstIssueDate = state.issues.reduce((oldest, issue) => !oldest || issue.first_seen < oldest ? issue.first_seen : oldest, "");
   // 이슈 수와 원문 수는 다른 단위다. 한 숫자로 뭉치면 규모를 오해한다.
@@ -5833,17 +5927,8 @@ async function init() {
     `${state.issues.length}개 이슈 · ${catalogArticles}개 원문 · ${dateLabel(firstIssueDate)}–${dateLabel(state.meta.latest_briefing_date)}`;
   renderDateSelect();
   renderBriefing();
-  // v3 는 비활성 탭을 부팅에서 그리지 않는다. switchView() 가 진입할 때마다 이미
-  // 다시 그리고 있으므로(아래 view === "search"/"trend"/"longterm" 분기), 부팅의
-  // 이 세 줄은 **숨어 있는 화면을 미리 그려 두는 것**이 전부다. v3 는 어차피 구
-  // 골격을 CSS 로 접으므로 그 비용이 통째로 낭비다.
-  //
-  // 구 경로의 호출 순서는 건드리지 않는다 — 플래그 없는 화면은 픽셀 단위로 같아야 한다.
-  if (state.ui !== "v3") {
-    renderArchiveSearch();
-    renderTrend();
-    renderLongTerm();
-  }
+  renderArchiveSearch();
+  renderTrend();
   renderSaved();
   renderSystemStatus();
   renderReturnNote();
@@ -5852,10 +5937,8 @@ async function init() {
   syncUrl();
   appReady = true;
   initLoading = false;
-  // 첫 렌더가 끝난 **뒤에** 수집 원문을 받는다. 여기가 부팅에서 news.json 이
-  // 사라진 자리다 — 화면은 이미 서 있고, 도착하면 그 칸만 다시 그린다.
-  ensureNews().then(refreshNewsDependentViews);
   if (!generationTimer) generationTimer = window.setInterval(checkForNewGeneration, 60000);
+  initPush().catch(() => {});   // 푸시 토글 — 화면이 다 선 뒤, 실패해도 조용히
 }
 
 initializeTheme();

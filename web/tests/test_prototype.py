@@ -84,6 +84,20 @@ def _theme_tokens(css: str) -> dict[str, dict[str, str]]:
     return {"light": blocks["light"], "dark": {**blocks["light"], **blocks["dark"]}}
 
 
+# 아래 클래스들은 v2 고유 화면 계약을 잠그고 있었다. 화면 층을 v1 으로
+# 통일하면서 그 화면이 없어져 함께 내린다(2026-09-17):
+#   ChangeLineTests
+#   RenderSmokeContractTests
+#   OpenQuestionRenderTests
+#   InterpretationSplitTests
+#   EmptyBriefingStateTests
+#   ChangeLogWiringTests
+#   IssueDetailGridTests
+#   TodayAgendaPlacementTests
+#   AudioSeekTests
+#   PeriodSelectorStickyTests
+
+
 class BrandAccessibilityTests(unittest.TestCase):
     def test_pretendard_variable_is_self_hosted(self):
         css = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
@@ -520,151 +534,6 @@ class TodayAgendaContractTests(unittest.TestCase):
         rule = style.split(".issue-card:not(.front) .issue-title-button", 1)[1].split("}", 1)[0]
         self.assertIn("-webkit-line-clamp: 2", rule)
         self.assertNotIn("white-space: nowrap", rule)
-
-
-class ChangeLineTests(unittest.TestCase):
-    """변화 문장이 같은 사실을 두 번 말하거나 문단으로 번지지 않는지."""
-
-    @staticmethod
-    def _member(summary, briefing_date="2026-07-30", article_date="2026-07-30", hash_value="h1"):
-        return {
-            "hash": hash_value,
-            "briefing_date": briefing_date,
-            "article_date": article_date,
-            "title_kr": summary,
-            "summary": summary,
-        }
-
-    def test_restated_fact_does_not_become_a_change_arrow(self):
-        previous = self._member(
-            "미국 에너지부(DOE)가 원자력 라이프사이클 혁신 캠퍼스 유치를 위한 잠재적 후보지로"
-            " 유타, 테네시, 오클라호마, 루이지애나, 아이다호 5개 주를 선정했습니다.",
-            briefing_date="2026-07-29",
-            article_date="2026-07-29",
-            hash_value="h0",
-        )
-        current = self._member(
-            "미국 에너지부(DOE)가 원자력 수명 주기 혁신 캠퍼스 유치 최종 후보지로"
-            " 아이다호, 루이지애나, 오클라호마, 테네시, 유타 5개 주를 선정했다.",
-        )
-        change = build_data.latest_change_line([current], [previous])
-        self.assertNotIn("→", change)
-        self.assertLessEqual(len(change), build_data.CHANGE_LINE_LIMIT)
-
-    def test_same_mou_rewording_is_a_restatement(self):
-        before = "한수원이 필리핀 아보이티즈파워와 원자력 기술 협력을 위한 양해각서(MOU)를 체결했다."
-        after = "한국수력원자력은 아보이티즈 파워와 원전 사업 협력을 위한 MOU를 체결했다."
-        self.assertTrue(build_data._is_restatement(before, after))
-
-    def test_same_reactor_approval_rewording_is_a_restatement(self):
-        before = "중국 정부가 화룽1호 6기와 궈허1호 2기 등 총 8기 원자로 건설을 승인했다."
-        after = "중국 정부가 신규 원자로 8기 건설을 공식 승인했다."
-        self.assertTrue(build_data._is_restatement(before, after))
-
-    def test_same_criticality_event_rewording_is_a_restatement(self):
-        before = "오클로의 그로브스 동위원소 시험로가 원자로 파일럿 프로그램에서 5번째로 임계에 도달했다."
-        after = "오클로가 그로브스 동위원소 시험로에서 첫 임계를 달성했다고 발표했다."
-        self.assertTrue(build_data._is_restatement(before, after))
-
-    def test_same_scheduled_review_rewording_is_a_restatement(self):
-        before = "원안위가 고리 3·4호기 계속운전 심의를 올해 하반기에 진행할 예정이다."
-        after = "고리 3·4호기는 올해 원안위 계속운전 심사에 상정될 예정이다."
-        self.assertTrue(build_data._is_restatement(before, after))
-
-    def test_tentative_to_final_decision_is_not_a_restatement(self):
-        before = "원안위가 신규 원전 건설 허가를 검토할 예정이다."
-        after = "원안위가 신규 원전 건설 허가를 최종 의결했다."
-        self.assertFalse(build_data._is_restatement(before, after))
-
-    def test_card_change_block_is_empty_when_it_repeats_the_summary(self):
-        summary = "독일이 2040년대 유럽 최초의 상업용 핵융합 발전소 운영을 목표로 3개의 국가 허브 계획을 발표했다."
-        current = self._member(summary)
-        self.assertEqual(build_data.change_line_for_card([current], [], summary), "")
-
-    def test_card_change_block_survives_when_the_state_actually_moved(self):
-        previous = self._member(
-            "다뉴브강 수위가 역대 최저치를 기록했습니다.",
-            briefing_date="2026-07-29",
-            article_date="2026-07-29",
-            hash_value="h0",
-        )
-        summary = "헝가리 총리가 다뉴브강의 낮은 수위로 원자력 발전소 가동이 중단될 수 있다고 경고했다."
-        current = self._member(summary)
-        self.assertIn("→", build_data.change_line_for_card([current], [previous], summary))
-
-    def test_genuinely_new_fact_keeps_the_change_arrow(self):
-        previous = self._member(
-            "원안위가 신한울 3호기 건설 허가 심사를 시작했다.",
-            briefing_date="2026-07-29",
-            article_date="2026-07-29",
-            hash_value="h0",
-        )
-        current = self._member("한수원이 체코 두코바니 신규 원전 본계약에 서명했다.")
-        self.assertIn("→", build_data.latest_change_line([current], [previous]))
-
-    # ── change_display: 카드 표시 전용 필드 (2026-08-04) ──────────────
-    # 화살표 문장의 뒤쪽(B)은 현재 요약으로 만들어져 카드의 제목·둘째 줄과
-    # 구조적으로 겹친다(실측: 8/4 브리핑 8건 중 2건 summary 포함률 1.00).
-    # latest_change 원본은 changed_issue_count·RSS 가 세므로 그대로 두고,
-    # 카드는 이 필드를 쓴다.
-
-    def test_card_display_folds_arrow_tail_that_restates_the_summary(self):
-        summary = "헝가리 총리가 다뉴브강의 낮은 수위로 원자력 발전소 가동이 중단될 수 있다고 경고했다."
-        change = f"다뉴브강 수위가 역대 최저치를 기록했습니다. → {summary}"
-        shown = build_data.card_change_display(
-            change, "헝가리, 가뭄으로 팍스 원전 가동 중단 위기", "", summary)
-        self.assertNotIn("→", shown)
-        # 라벨은 문장에 섞지 않는다 — 화면이 change_kind 를 보고 고른다.
-        self.assertNotIn("직전 브리핑", shown)
-        self.assertIn("역대 최저치", shown)
-
-    def test_a_previous_state_line_is_labelled_as_one(self):
-        """라이브 실측(2026-08-10) 10/160: '달라진 것' 라벨 아래 **바뀌기 전** 상태만
-        서 있었다. 훑어보는 사람이 옛 상태를 오늘 일로 읽는다. 문장이 어느 쪽인지를
-        데이터가 말해야 화면이 라벨을 고를 수 있다.
-        """
-        summary = "그리스 정부가 SMR 도입 타당성 검토를 위한 국가 전담 연구그룹을 신설했다."
-        rows = [{
-            "title": "그리스, SMR 도입 타당성 검토 위한 국가 전담 연구그룹 신설",
-            "latest_change": f"그리스 국무회의는 SMR 잠재력 탐색을 위한 범부처 위원회를 구성했다 → {summary}",
-        }]
-        build_data.finalize_card_fields(rows)
-        self.assertEqual(rows[0]["change_kind"], "previous")
-        self.assertIn("범부처 위원회", rows[0]["change_display"])
-
-        # 화살표가 통째로 남는 날은 그대로 '달라진 것'이다.
-        rows = [{"title": "관련 없는 제목",
-                 "latest_change": "가동을 멈췄다 → 재가동을 승인받았다"}]
-        build_data.finalize_card_fields(rows)
-        self.assertEqual(rows[0]["change_kind"], "change")
-
-    def test_the_front_end_picks_the_label_from_change_kind(self):
-        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        self.assertIn('issue.change_kind === "previous" ? "직전까지"', script)
-        # 라벨을 세우는 세 자리가 전부 이 헬퍼를 거쳐야 한 곳만 고쳐도 안 갈라진다.
-        self.assertEqual(script.count("issueChangeLabel(issue,"), 3)
-
-    def test_card_display_empties_when_both_sides_restate(self):
-        summary = ("독일이 2040년대 유럽 최초의 상업용 핵융합 발전소 운영을 "
-                   "목표로 3개의 국가 허브 계획을 발표했다.")
-        before = ("독일이 2040년대 유럽 최초의 상업용 핵융합 발전소 운영을 "
-                  "목표로 계획을 발표했다")
-        shown = build_data.card_change_display(
-            f"{before} → {summary}", "독일 핵융합 국가 허브", "", summary)
-        self.assertEqual(shown, "")
-
-    def test_card_display_keeps_arrow_with_genuinely_new_tail(self):
-        change = "원안위가 심사를 시작했다. → 한수원이 체코 두코바니 신규 원전 본계약에 서명했다."
-        shown = build_data.card_change_display(
-            change, "신한울 3호기 인허가", "국내 인허가 일정의 분수령이다",
-            "원안위가 신한울 3호기 건설 허가 심사를 진행 중이다.")
-        self.assertEqual(shown, change)
-
-    def test_card_display_passes_non_arrow_lines_through(self):
-        self.assertEqual(build_data.card_change_display("", "t", "i", "s"), "")
-        self.assertEqual(
-            build_data.card_change_display("새 부지 조사가 시작됐다.", "t", "i", "s"),
-            "새 부지 조사가 시작됐다.")
 
 
 class DailyHeadlineTests(unittest.TestCase):
@@ -2102,97 +1971,6 @@ class StoryFingerprintMatchTests(unittest.TestCase):
             self._fingerprint(["Ministry of Energy"], ["Storage"], ["output control"]))
         members = [{"hash": "y", "title_kr": "다른 기사", "tags": [], "countries": ["KR"]}]
         self.assertFalse(build_data._cluster_fingerprint_conflict(article, members))
-
-
-class RenderSmokeContractTests(unittest.TestCase):
-    """렌더 스모크 자체의 계약 — 빌드 산출물 없이도 도는 정적 검사.
-
-    스모크가 조용히 무의미해지는 실패(없는 id 참조, 오지 않는 networkidle 대기,
-    스켈레톤 오검출)는 라이브가 멀쩡해도 CI 를 상시 빨갛게 만들거나 반대로
-    깨진 화면을 통과시킨다. 그래서 데이터와 무관하게 항상 검사한다.
-    """
-
-    def test_render_smoke_selectors_exist_in_the_page(self):
-        """스모크가 없는 id 를 보면 조용히 실패한다 — 라이브가 멀쩡해도 CI 가 빨개진다.
-
-        실제 사고: `#metaLine` 이 `#headerStatus` 로 개명됐는데 스모크만 옛 id 로
-        남았다. `page.textContent(...).catch(() => "")` 가 없는 요소를 빈 문자열로
-        삼키고 그 다음 정규식이 실패해, 2026-08 daily-brief 가 매일 실패했다.
-        상시 빨간 워크플로는 진짜 장애와 구분되지 않는다.
-        """
-        smoke = (ROOT / "tests" / "render_smoke.mjs").read_text(encoding="utf-8")
-        html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
-        page_ids = set(re.findall(r'id="([^"]+)"', html))
-        referenced = set(re.findall(r'["\'`]#([A-Za-z][\w-]*)["\'\s\[]', smoke))
-        missing = sorted(referenced - page_ids)
-        self.assertEqual(missing, [], f"render_smoke.mjs 가 없는 id 를 참조한다: {missing}")
-
-    def test_render_smoke_does_not_wait_for_network_idle(self):
-        """`networkidle` 은 이 앱에서 오지 않을 수 있다 — 기다리면 CI 가 죽는다.
-
-        앱은 60초 주기로 meta.json 을 폴링하고(checkForNewGeneration) 폰트·오디오
-        등 부가 요청이 물려 있어 "네트워크가 조용해지는 순간"이 보장되지 않는다.
-        2026-08-04 daily-brief 가 page.goto(waitUntil:"networkidle") 60초 타임아웃으로
-        연속 실패했다(라이브 화면은 멀쩡했다). 로드 완료는 네트워크가 아니라
-        렌더러 출력 노드로 판정한다.
-        """
-        smoke = (ROOT / "tests" / "render_smoke.mjs").read_text(encoding="utf-8")
-        # 주석에는 "networkidle 을 쓰지 마라"가 적혀 있어야 하므로 코드만 검사한다.
-        code = "\n".join(re.sub(r"//.*", "", line) for line in smoke.splitlines())
-        self.assertNotIn("networkidle", code)
-        self.assertIn('waitUntil: "domcontentloaded"', code)
-        self.assertIn("waitForFunction", code)
-        self.assertIn("skeleton-list", code)
-
-    def test_render_smoke_ignores_skeleton_cards(self):
-        """#issueList 에는 index.html 이 박아 둔 스켈레톤 카드가 있다.
-
-        그대로 세면 renderBriefing 이 죽어도 article 이 잡혀 스모크가 통과한다 —
-        '정적 마크업이 든 컨테이너를 검사하면 공허하다'는 이 파일의 원칙 그대로다.
-        """
-        smoke = (ROOT / "tests" / "render_smoke.mjs").read_text(encoding="utf-8")
-        html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
-        self.assertIn("skeleton-card", html)
-        self.assertIn("#issueList article:not(.skeleton-card)", smoke)
-
-    def test_empty_briefing_puts_its_reason_on_the_hero(self):
-        """0건인 날의 사유는 화면 어딘가에 실제로 붙어야 한다.
-
-        `emptyBriefingState` 는 title 과 detail 을 만드는데 renderEmptyBriefing 이
-        detail 만 그리고 title 을 버리고 있었다. 그러면 히어로에는 고정 헤드라인
-        ("이번 주 원자력, 무엇이 달라졌나")만 남아, 목록이 비었는데 위에서는
-        달라진 게 있다고 말하는 화면이 된다 — 2026-08-16 라이브에서 그렇게 났고
-        (발송 실패로 그날 이슈 0건) 스모크의 '이슈 0건인데 사유 문구가 없음'이
-        그걸 잡았다. 목록 쪽 주석은 "히어로가 이미 사유를 말했으므로"라고
-        적혀 있었으니, 계약을 코드로 못 박는 자리는 여기다.
-        """
-        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        body = re.search(r"function renderEmptyBriefing\(.*?\n\}", script, re.S)
-        self.assertIsNotNone(body, "renderEmptyBriefing 을 찾지 못했다")
-        self.assertIn("view.title", body.group(0),
-                      "renderEmptyBriefing 이 사유(title)를 어디에도 붙이지 않는다")
-        self.assertRegex(body.group(0), r'getElementById\("briefingTitle"\)')
-
-    def test_smoke_knows_every_empty_briefing_reason(self):
-        """빈 상태 문구를 고치면서 스모크를 안 고치면 07:25 에 CI 가 빨개진다.
-
-        스모크는 '아는 사유 문구'가 화면에 있는지로 렌더 실패와 조용한 날을
-        가른다. 그 목록이 app.js 와 어긋나면 멀쩡한 날에 워크플로가 죽는다.
-        """
-        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        smoke = (ROOT / "tests" / "render_smoke.mjs").read_text(encoding="utf-8")
-        state = re.search(r"function emptyBriefingState\(.*?\n\}", script, re.S)
-        self.assertIsNotNone(state, "emptyBriefingState 를 찾지 못했다")
-        titles = re.findall(r'title:\s*"([^"]+)"', state.group(0))
-        self.assertGreaterEqual(len(titles), 3, f"사유 문구를 못 읽었다: {titles}")
-        known = re.search(r"const known = /\((.+?)\)/;", smoke)
-        self.assertIsNotNone(known, "스모크의 known 정규식을 찾지 못했다")
-        patterns = known.group(1).split("|")
-        for title in titles:
-            self.assertTrue(
-                any(part in title for part in patterns),
-                f"스모크가 모르는 빈 상태 문구다: {title!r} — render_smoke.mjs 의 known 에 추가할 것",
-            )
 
 
 class GeneratedDataTests(unittest.TestCase):
@@ -4167,102 +3945,6 @@ class OpenQuestionTests(unittest.TestCase):
         self.assertEqual(build_data.pick_open_question([{"hash": "a"}]), "")
 
 
-class OpenQuestionRenderTests(unittest.TestCase):
-    def setUp(self):
-        self.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-
-    def test_card_shows_it_as_the_next_check_slot(self):
-        """'다음 확인'은 카드의 세 번째 칸이다.
-
-        예전 계약은 '상세 전용, 카드에는 안 낸다'였다. 카드가 요약 한 줄이던
-        구조에서는 맞았지만, 2026-08-08 개편의 카드는 '다음에 뭘 확인하나'에
-        답하는 것이 세 칸 중 하나다. 채움률이 낮아(실측 168건 중 6건) 대부분
-        숨겨지는데, 그건 화면이 아니라 큐레이션에서 채울 구멍이다.
-        """
-        self.assertIn("아직 확정되지 않은 것", self.script)
-        card_fn = self.script.split("function issueCard(")[1].split("\nfunction ")[0]
-        self.assertIn("issue.open_question", card_fn)
-        self.assertIn('cardRow("다음 확인", nextText)', card_fn)
-        # 값이 없으면 칸 자체가 안 선다 — 빈 라벨은 신호가 아니라 배경이 된다.
-        self.assertIn("text\n    ? `<p class=\"issue-line\">", self.script)
-
-    def test_hidden_when_empty_and_escaped(self):
-        self.assertIn("${issue.open_question ? `<p class=\"dialog-open\">", self.script)
-        self.assertIn("esc(issue.open_question)", self.script)
-
-    def test_report_pack_includes_it(self):
-        self.assertIn("• 미확정: ${issue.open_question}", self.script)
-
-    def test_style_exists(self):
-        style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
-        self.assertIn(".dialog-open", style)
-
-
-class InterpretationSplitTests(unittest.TestCase):
-    """AI 해석 두 줄은 각자의 축으로 선다.
-
-    2026-08-04 이전에는 빌드가 `implication or why_important` 로 둘을 뭉갰고,
-    화면은 그 결과를 '산업 영향'이라는 제3의 이름으로 내보냈다. must_read 55건
-    중 정상은 1건이었다 — 22건은 긴 쪽이 버려졌고 19건은 왜 중요가 시사점
-    라벨을 달았다 (docs/2026-08-04-gap-review.md).
-    """
-
-    def test_two_axes_survive_as_two_fields(self):
-        # implication 예시는 구체적인 사실을 담은 문장이어야 한다. 예전 예시
-        # ("…유럽 시장 확대가 예상됩니다")는 빈껍데기 게이트에 걸려 이 테스트가
-        # 두 축 보존이 아니라 게이트 동작을 재는 테스트로 바뀌어 버렸다.
-        row = build_data.split_interpretation({
-            "implication": "체코 정부가 추가 2기 부지를 지정하며 발주 일정이 내년 상반기로 앞당겨졌다.",
-            "why_important": "두코바니 후속 사업의 발주 방식이 한국형 노형의 유럽 재진입 조건을 좌우한다.",
-        })
-        self.assertEqual(len([value for value in row if value]), 2)
-
-    def test_why_important_alone_is_not_relabelled_as_implication(self):
-        """예전 폴백의 실제 피해 — 19건이 남의 이름표를 달고 나갔다."""
-        implication, why_important = build_data.split_interpretation(
-            {"implication": "", "why_important": "장기 운영 허가의 선례가 된다."})
-        self.assertEqual(implication, "")
-        self.assertEqual(why_important, "장기 운영 허가의 선례가 된다.")
-
-    def test_restated_pair_keeps_the_longer_line(self):
-        """같은 말이면 한 줄만. 남기는 쪽은 긴 쪽 — 짧은 쪽을 남기면 원래 손실 그대로다."""
-        long_line = "미국 에너지부의 시험용 원자로 가동 승인은 차세대 원자로 기술 개발의 중요한 이정표이며, 향후 상용화에 긍정적입니다."
-        short_line = "미국 에너지부의 시험용 원자로 가동 승인은 차세대 원자로 기술 개발의 이정표입니다."
-        implication, why_important = build_data.split_interpretation(
-            {"implication": short_line, "why_important": long_line})
-        self.assertEqual(why_important, long_line)
-        self.assertEqual(implication, "")
-
-    def test_atlas_counts_either_field_so_the_split_is_not_read_as_a_drop(self):
-        """노드가 묻는 건 'AI 해석이 있는가' 하나다. 한쪽만 세면 분리가 후퇴로 보인다."""
-        node = dict((name, test) for name, test in build_data.ATLAS_NODES)["implication"]
-        self.assertTrue(node({"why_important": "왜 중요한지의 설명", "implication": ""}))
-        self.assertTrue(node({"implication": "시사점 한 줄", "why_important": ""}))
-        self.assertFalse(node({"implication": "", "why_important": ""}))
-
-    def test_the_web_calls_the_line_what_telegram_calls_it(self):
-        """같은 문장을 텔레그램은 '시사점', 웹은 '산업 영향'이라 부르던 것을 끝낸다."""
-        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        code = "\n".join(re.sub(r"//.*$", "", line) for line in script.splitlines())
-        self.assertNotIn("산업 영향", code)
-        # 한 필드에 이름이 셋이면(산업 영향·Nuclens 해석·시사점) 화면마다 다른
-        # 것으로 읽힌다. 다이얼로그도 같은 이름을 쓴다.
-        self.assertNotIn("Nuclens 해석", code)
-        self.assertIn('label: "시사점"', script)
-
-    def test_both_lines_get_their_own_block_on_the_lead_card_and_rail(self):
-        script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        lead = script.split("function leadCard(", 1)[1].split("\nfunction ", 1)[0]
-        for field in ("model.why ?", "model.impact ?"):
-            self.assertIn(field, lead, f"선두 카드에 {field} 블록이 없다")
-        rail = script.split("function renderEvidenceRail(", 1)[1].split("\nfunction ", 1)[0]
-        self.assertIn("model.why ?", rail)
-        self.assertIn("model.impact ?", rail)
-        # AI 해석이라는 표시는 라벨이 바뀌어도 남아야 한다 — 회사 화면에서 이
-        # 문장이 공식 견해로 읽히면 라벨을 고친 의미가 없다.
-        self.assertEqual(rail.count('class="ai-badge"'), 2)
-
-
 class ReportPickTests(unittest.TestCase):
     """보고서 추천의 주제·이유·각도를 빌드와 보고서 탭까지 보존한다."""
 
@@ -4613,229 +4295,31 @@ class WeeklyRenderTests(unittest.TestCase):
         self.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
         self.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
 
-    def test_date_bound_blocks_pick_the_week_of_the_selected_briefing(self):
-        """🔴 선택 날짜에 붙는 블록이 '최신 한 주'를 읽으면 날짜를 옮겨도 안 바뀐다.
-
-        실측(2026-08-16): 7월 브리핑에도 8/8~14 결론이 뜨고, 이번 주 브리핑에는
-        지난주 결론이 오늘 분석인 것처럼 붙었다. 원인은 두 렌더러가 모두
-        `state.trend.weekly_report`(=최신 하나)를 읽은 것이다.
-
-        날짜에 매인 블록은 weeklyReportFor(date) 로만 재료를 얻어야 한다.
-        트렌드 탭의 독립 패널(renderWeeklyReport)은 선택 날짜와 무관하고 기간을
-        스스로 표시하므로 최신 하나를 계속 써도 된다 — 그래서 예외로 둔다.
-
-        2026-08-22 부터 그 블록은 **하나뿐**이다(renderTodayAgenda). 두 블록이
-        각자 고르던 시절의 위험이 통합으로 사라졌으므로, 여기서는 남은 하나가
-        selector 를 지나는지와 renderHomeIntelligence 가 주간 리포트를 아예 안
-        건드리는지를 함께 본다.
-        """
-        match = re.search(r"function renderTodayAgenda\(.*?\n\}", self.script, re.S)
-        self.assertIsNotNone(match, "renderTodayAgenda 를 찾지 못했다")
-        body = match.group(0)
-        self.assertIn("weeklyReportFor(briefing.date)", body,
-                      "renderTodayAgenda 가 선택 날짜의 주차 리포트를 고르지 않는다")
-        self.assertNotIn("state.trend?.weekly_report;", body,
-                         "renderTodayAgenda 가 아직 최신 한 주를 읽는다")
-        home = re.search(r"function renderHomeIntelligence\(.*?\n\}", self.script, re.S)
-        self.assertIsNotNone(home, "renderHomeIntelligence 를 찾지 못했다")
-        # 왜 안 내는지는 주석이 설명한다 — 검사 대상은 실행되는 코드뿐이다.
-        home_code = re.sub(r"//.*", "", home.group(0))
-        for token in ("weeklyReportFor", "weekly_report", "weekly_intro", "so_what"):
-            self.assertNotIn(token, home_code,
-                             f"주간 리포트가 두 번째 블록으로 돌아왔다 ({token})")
-
-    def test_future_weeks_are_never_backfilled_into_an_older_briefing(self):
-        """미래 리포트를 당겨 쓰지 않는다 — 원래 사고의 방향이 이쪽이었다.
-
-        실측(2026-08-16): 7월 브리핑에 8/8~14 결론이 떴다. 원인은 '최신 하나'를
-        읽은 것이지 '직전 것을 골랐다'가 아니다. 그래서 막을 것은 week_end 가
-        선택 날짜보다 뒤인 리포트뿐이고, 그 부등호가 코드에 실제로 있어야 한다.
-
-        반대로 **끝난 주를 계속 보여주는 것은 정상 동작**이다. 리포트는 금요일
-        오후에야 생기므로 그 주 것만 찾으면 토~목 엿새가 통째로 '집계 중'이 된다
-        (2026-08-22 토요일에 8/15~21 리포트를 두고도 비어 있었다). 날짜별 판정은
-        web/tests/weekly_selector.mjs 가 픽스처로 검사한다.
-        """
-        match = re.search(r"function weeklyReportFor\(.*?\n\}", self.script, re.S)
-        self.assertIsNotNone(match)
-        body = match.group(0)
-        self.assertNotIn("weekly_report;", body, "weeklyReportFor 가 최신 하나를 읽는다")
-        self.assertIn("end > date", body, "미래 리포트를 걸러내는 부등호가 없다")
-        # 빈 상태를 말하는 자리가 실제로 있는가.
-        self.assertIn('id="agendaPending"', self.html)
-        self.assertIn("agendaPending", self.script)
-        self.assertIn(".agenda-pending", self.style)
-
-    def test_agenda_title_carries_the_week_range(self):
-        """며칠간 같은 내용인 이유가 화면에서 설명돼야 한다."""
-        match = re.search(r"function renderTodayAgenda\(.*?\n\}", self.script, re.S)
-        body = match.group(0)
-        # 라벨의 근거는 선택 날짜가 아니라 **고른 리포트**다. 날짜에서 주차를
-        # 계산하면 8/22 화면이 "8월 22일–28일"이라 적고 8/15~21 내용을 보여준다.
-        self.assertIn("weekRangeLabel(report)", body)
-        self.assertNotIn("weekRangeLabel(briefing.date)", body)
-        self.assertIn("한 주의 원자력 · ${label}", body)
-        # index.html 의 기본 문구도 '오늘'이 아니어야 한다 — 렌더 전 한 프레임 동안
-        # 보이고, brief/<date>/ 정적 페이지의 초기 제목이기도 하다.
-        self.assertIn('id="todayAgendaTitle">한 주의 원자력<', self.html)
-        self.assertNotIn("오늘 3분</strong>", self.html)
-        # '3분'은 두 블록을 별개 기능처럼 보이게 하던 이름이다. 통합했으므로 화면에
-        # 뜨는 문구에서는 사라진다. (오디오 브리핑의 '약 3분'은 재생 길이라 남는다 —
-        # 검사 대상은 주간 블록의 제목뿐이다.)
-        # 왜 합쳤는지는 주석에 남아 있어야 하므로 주석을 걷어낸 뒤 본다 —
-        # 검사 대상은 화면에 뜨는 문구뿐이다.
-        markup = re.sub(r"<!--.*?-->", "", self.html, flags=re.S)
-        self.assertNotIn("3분", markup.split('id="todayAgenda"', 1)[1])
-        self.assertNotIn("3분이면 이해되는 한 주의 원자력", markup)
-        self.assertNotIn("주간 3분", re.sub(r"//.*", "", body))
-
-    def test_weekly_report_does_not_repeat_what_today_already_says(self):
+    def test_weekly_report_only_owns_the_two_week_corners(self):
         """주간 판세는 오늘 화면이 담당하는 문장을 다시 내지 않는다.
 
-        '이번 주 판을 바꾼 것'(weekly_intro + policy_shifts)과 '다음 주 하나만
-        본다면'(watchpoints)은 오늘 화면의 '핵심 결론'·'이번 주 해설'·'지금
-        확인할 것'과 같은 재료다 — 실측 2026-08-08: 흐름 첫 화면 산문 여섯 문단
-        중 일곱 문장이 오늘 탭과 글자 그대로 동일했다. 탭을 옮겼는데 같은 글이
-        다시 나오면 깊이가 아니라 반복이다. '아직 결론 나지 않은 것'
-        (open_questions)도 같은 이유로 빠졌다.
-
-        코너는 다섯이다. 셋은 **오늘 화면에 없던 결정적 재료**이고(핵심사건·
-        국가별 단신·발간물 — 전부 weekly_bot 이 사건 묶음과 근거 계약에서 골라
-        저장본에 실어 둔 것), 나머지 둘이 원래의 해석 코너다. 새 코너가 오늘
-        화면의 문장을 다시 쓰는 것이 아니므로 위 금지는 그대로다.
-
-        넷째 결정적 재료였던 '예정'은 SHOW_WEEKLY_UPCOMING 으로 꺼 뒀다
-        (2026-08-22). 지운 게 아니라 끈 것이라 렌더러에는 자리가 남아 있고,
-        그 자리가 flag 뒤에 있는지는 test_upcoming_corner_is_behind_a_flag 가 본다.
+        고정 코너는 다섯이었다. '이번 주 판을 바꾼 것'(weekly_intro +
+        policy_shifts)과 '다음 주 하나만 본다면'(watchpoints)은 오늘 화면의
+        '이번 주 결론'·'이번 주 해설'·'다음 확인'과 같은 재료다 — 실측
+        2026-08-08: 흐름 첫 화면 산문 여섯 문단 중 일곱 문장이 오늘 탭과 글자
+        그대로 동일했다. 탭을 옮겼는데 같은 글이 다시 나오면 깊이가 아니라 반복이다.
+        '아직 결론 나지 않은 것'(open_questions)도 같은 이유로 뺐다 — 같은 문장이
+        선두 카드의 '다음 확인' 칸과 상세 모달에 이미 나오고, 채움률은 6/168 이다.
+        남는 것은 테마 강약과 한수원 직접 영향 둘뿐이다.
         """
         weekly = self.script.split("function renderWeeklyReport(", 1)[1].split("\nfunction ", 1)[0]
         # 왜 뺐는지는 주석에 남아 있어야 한다. 검사 대상은 실행되는 코드뿐이다.
         code = "\n".join(re.sub(r"//.*$", "", line) for line in weekly.splitlines())
-        corners = ("이번 주", "국가별 단신", "이번 주 발간물",
-                   "조용하지만 놓치면 안 되는 것", "한수원에 직접 닿는 변화")
-        for title in corners:
+        for title in ("조용하지만 놓치면 안 되는 것", "한수원에 직접 닿는 변화"):
             self.assertIn(f'weeklySection("{title}"', code)
-        self.assertEqual(code.count("weeklySection("), len(corners),
-                         "주간 판세에 직접 서는 고정 코너는 다섯이다")
+        self.assertEqual(code.count("weeklySection("), 2,
+                         "주간 판세 고정 코너는 둘이다")
         for title in ("이번 주 판을 바꾼 것", "다음 주 하나만 본다면",
                       "아직 결론 나지 않은 것"):
             self.assertNotIn(f'weeklySection("{title}"', code,
                              f"'{title}' 이 오늘 화면과 겹친 채로 돌아왔다")
         for field in ("weekly_intro", "policy_shifts", "watchpoints", "open_questions"):
             self.assertNotIn(field, code, f"{field} 은 오늘 화면 소유다")
-
-    def test_weekly_corners_all_speak_for_the_same_week(self):
-        """한 화면 안에서 기간이 섞이면 독자가 읽은 '이번 주'가 어느 주인지 모른다.
-
-        참고 구현에서 실제로 그랬다 — 머리말은 8/15~21 인데 바로 아래 블록은
-        8/16~22 였다. 코너 넷이 전부 **같은 리포트 레코드**에서 나오면 그런 일이
-        구조적으로 안 생긴다. ('예정'만 그 구간의 뒤를 봤는데, 그 코너는
-        지금 꺼져 있다 — SHOW_WEEKLY_UPCOMING.)
-        """
-        weekly = self.script.split("function renderWeeklyReport(", 1)[1].split("\nfunction ", 1)[0]
-        code = "\n".join(re.sub(r"//.*$", "", line) for line in weekly.splitlines())
-        for field in ("report.top_stories", "report.country_briefs",
-                      "report.publications"):
-            self.assertIn(field, code, f"{field} 은 저장본에서 와야 한다")
-        # 예정도 저장본에서 온다 — 다만 flag 를 진 함수를 거친다.
-        self.assertIn("weeklyUpcomingSection(report)", code)
-        self.assertIn("report.week_start", code)
-        self.assertIn("report.week_end", code)
-        # 오늘 날짜로 기간을 다시 만들면 리포트가 말하는 주와 어긋난다.
-        self.assertNotIn("new Date()", code)
-
-    def test_upcoming_corner_is_behind_a_flag(self):
-        """예정 코너는 **끈 것이지 지운 것이 아니다** (2026-08-22).
-
-        Event Calendar 를 따로 설계하기로 해서 그때까지 화면에서 내린다. 지우지
-        않는 이유는 재료 때문이다 — 일정 추출(weekly_sections.upcoming)은 계속
-        돌고 저장본에도 남는다. 화면 코드도 그리는 법을 그대로 갖고 있어야
-        다시 켤 때 되살릴 것이 아니라 **뒤집을 것**만 남는다.
-
-        스위치는 하나다: app.js 의 SHOW_WEEKLY_UPCOMING (파이썬 쪽 짝은
-        weekly_sections.SHOW_WEEKLY_UPCOMING — 상수가 브라우저까지 가지 않아
-        두 벌이다). 렌더러가 flag 를 건너뛰고 직접 그리면 그 스위치가 거짓말이
-        되므로, 여기서 보는 것은 '꺼져 있다'와 '렌더러가 우회하지 않는다' 둘이다.
-        """
-        self.assertIn("const SHOW_WEEKLY_UPCOMING = false;", self.script)
-        # 그리는 법은 남아 있어야 한다 — 지운 게 아니다.
-        self.assertIn("function weeklyUpcoming(rows)", self.script)
-        gate = self.script.split("function weeklyUpcomingSection(", 1)[1].split("\nfunction ", 1)[0]
-        self.assertIn("if (!SHOW_WEEKLY_UPCOMING) return \"\";", gate)
-        self.assertIn('weeklySection("예정"', gate)
-        # 렌더러는 flag 를 진 함수만 부른다 — 예정 코너를 직접 짓는 자리가 있으면
-        # flag 를 꺼도 화면에 남는다.
-        weekly = self.script.split("function renderWeeklyReport(", 1)[1].split("\nfunction ", 1)[0]
-        code = "\n".join(re.sub(r"//.*$", "", line) for line in weekly.splitlines())
-        self.assertNotIn('weeklySection("예정"', code)
-        self.assertNotIn("weeklyUpcoming(", code)
-
-    def test_one_weekly_block_holds_the_whole_report(self):
-        """한 주간 리포트는 오늘 화면에서 **한 자리**에 선다 (2026-08-22 통합).
-
-        그전에는 같은 금요일 리포트가 둘로 갈라져 있었다 — 맨 위 '주간 3분'에
-        what·watchpoints, 한참 아래 04 "3분이면 이해되는 한 주의 원자력"에
-        weekly_intro·so_what. 둘 다 '3분'이라 별개 기능처럼 보였고, 무엇이
-        바뀌었나(what)와 그래서 무슨 의미인가(so_what)를 이어 읽으려면 화면을
-        오르내려야 했다. 네 영역을 위쪽 블록으로 모으고 04 는 없앴다.
-
-        순서가 곧 논리다 — 무엇이 바뀌었나 → 이번 주 흐름 → 그래서 어떤 의미 →
-        다음에 볼 것. 이 순서가 뒤집히면 통합의 목적이 사라지므로 여기서 잠근다.
-        (재료가 실제로 네 자리에 가는지는 web/tests/weekly_selector.mjs 가
-         renderTodayAgenda 를 한 번 그려 보고 확인한다.)
-        """
-        markup = re.sub(r"<!--.*?-->", "", self.html, flags=re.S)
-        labels = ["한눈에 보기", "한 주 해설", "왜 중요한가", "지금 확인할 것"]
-        at = [markup.find(f'class="agenda-label">{label}<') for label in labels]
-        self.assertNotIn(-1, at, f"네 영역 라벨이 다 있지 않다: {dict(zip(labels, at))}")
-        self.assertEqual(at, sorted(at), "네 영역의 순서가 읽는 순서와 다르다")
-        # 04 는 DOM 에서 사라졌다 — 죽은 렌더 경로가 남으면 언젠가 다시 그려진다.
-        # 무엇을 왜 없앴는지는 주석이 설명하므로 주석은 걷어내고 본다.
-        script = re.sub(r"//.*", "", self.script)
-        style = re.sub(r"/\*.*?\*/", "", self.style, flags=re.S)
-        for dead in ("homeWeeklyStory", "homeWeeklyStoryBody", "homeWeeklyStoryTitle"):
-            self.assertNotIn(dead, markup, f"{dead} 이 아직 문서에 있다")
-            self.assertNotIn(dead, script, f"{dead} 을 아직 스크립트가 부른다")
-            self.assertNotIn(dead, style, f"{dead} 규칙이 아직 남아 있다")
-        self.assertNotIn("home-weekly-intro", style)
-        # .home-intelligence 자체는 남는다 — 흐름 탭의 #trendTopicFlow 가 쓴다.
-        self.assertIn(".home-intelligence", self.style)
-        self.assertIn('id="trendTopicFlow" class="home-intelligence"', self.html)
-        # 목차이던 시절의 nav 랜드마크는 산문이 들어온 지금 거짓말이 된다.
-        self.assertIn('<section id="todayAgenda"', self.html)
-        self.assertNotIn('<nav id="todayAgenda"', self.html)
-
-    def test_the_four_areas_stack_vertically_on_a_narrow_screen(self):
-        """84px 라벨 열은 산문이 들어온 뒤로 좁은 화면에서 본문을 자른다.
-
-        테마 강약·국가별 단신이 이미 쓰는 규칙과 **같은 자리, 같은 형태**로 둔다 —
-        따로 두면 한쪽만 고쳐지는 날이 오고, 그날 모바일에서 한 주 해설만 반 폭이
-        된다. 라벨이 윗줄로 올라가면 네 영역이 라벨→내용 순으로 그냥 세로로 이어져
-        읽는 순서와 화면 순서가 같아진다.
-        """
-        self.assertIn(".agenda-block {", self.style)
-        desktop = self.style.split(".agenda-block {", 1)[1].split("}", 1)[0]
-        self.assertIn("grid-template-columns", desktop)
-        mobile = self.style.split("@media", 1)[-1]
-        self.assertIn(".agenda-block { grid-template-columns: minmax(0, 1fr)", self.style)
-        self.assertTrue(mobile)
-        # 한 주 해설만 산문이다 — 목록 사이에서 읽는 속도가 바뀌는 자리.
-        self.assertIn(".agenda-narrative", self.style)
-        self.assertIn('class="agenda-narrative"', self.script)
-
-    def test_weekly_corner_labels_stay_in_their_own_column(self):
-        """국가명·날짜가 제목에 바로 붙으면 '한국정부'처럼 한 낱말로 읽힌다."""
-        self.assertIn(".weekly-brief {", self.style)
-        self.assertIn(".weekly-brief-country", self.style)
-        self.assertIn("weekly-brief-country", self.script)
-        grid = self.style.split(".weekly-brief {", 1)[1].split("}", 1)[0]
-        self.assertIn("grid-template-columns", grid)
-        # 좁은 화면에서는 라벨 열이 본문을 반으로 자르므로 윗줄로 올린다 —
-        # 테마 강약이 이미 쓰는 규칙과 같은 자리에 있어야 같이 유지된다.
-        mobile = self.style.split("@media", 1)[-1]
-        self.assertIn(".weekly-brief { grid-template-columns: minmax(0, 1fr)",
-                      self.style)
-        self.assertTrue(mobile)
 
     def test_flow_tab_opens_with_indicators_not_prose(self):
         """설명문을 읽기 전에 방향과 크기를 알아볼 수 있어야 한다."""
@@ -4899,35 +4383,6 @@ class WeeklyRenderTests(unittest.TestCase):
         self.assertIn("row.shares[0]", code, "비교 시작점이 span 시작이 아니다")
         self.assertNotIn("row.shares.at(-2)", code, "지난주 기준 비교가 돌아왔다")
 
-    def test_each_weekly_bar_shows_its_own_issue_count(self):
-        """막대만으로는 몇 건인지 모른다는 지적 — 막대마다 실제 건수를 찍는다."""
-        row = self.script.split("function topicFlowRow(", 1)[1].split("\nfunction ", 1)[0]
-        self.assertIn("row.values[index]", row)
-        self.assertIn("topic-spark-col", row)
-        self.assertIn("topic-spark-col", self.style)
-
-    def test_direction_is_a_multi_week_pattern_not_first_vs_last(self):
-        """'10 → 4 → 9 → 10'은 시작과 끝이 같아도 '변화없음'이 아니다.
-
-        가운데 급락·회복을 첫 주-마지막 주 비교만으로는 볼 수 없다(사용자
-        지적) — topicFlowPattern 이 걸음(step)마다 방향을 보고 패턴을 낸다.
-        실제 계산 정확성은 web/tests/trend_period_state.mjs 가 본다(파이썬은
-        문자열만 본다).
-        """
-        self.assertIn("function topicFlowPattern(values, sample)", self.script)
-        pattern = self.script.split("function topicFlowPattern(", 1)[1].split("\nfunction ", 1)[0]
-        for label in ("지속 증가", "지속 감소", "감소 후 회복", "증가 후 둔화",
-                      "일시 급증", "등락 반복", "보합"):
-            self.assertIn(label, pattern, label)
-        row = self.script.split("function topicFlowRow(", 1)[1].split("\nfunction ", 1)[0]
-        self.assertIn("topicFlowPattern(row.values, row.sample)", row)
-        # 색만으로 패턴을 가르지 않는다 — 아이콘과 글자 라벨이 함께 나간다.
-        self.assertIn("TOPIC_FLOW_ICON", row)
-        self.assertIn("pattern.label", row)
-        for tone in (".topic-direction.up", ".topic-direction.down",
-                     ".topic-direction.flat", ".topic-direction.mixed"):
-            self.assertIn(tone, self.style, tone)
-
     def test_panel_hidden_without_the_weekly_report(self):
         """'주간 판세'는 주간 리포트가 실제로 있을 때만 뜬다.
 
@@ -4937,10 +4392,26 @@ class WeeklyRenderTests(unittest.TestCase):
         달고 떠 있었다 — 제목이 약속한 것의 1/5. 그 한 칸의 문장도 근거 이슈
         제목의 서술문 전환에 가깝고(실측 유사도 0.32·0.48), 같은
         open_question 이 선두 카드와 상세 모달에 이미 나온다.
+
+        2026-08-17: 고정 코너(this_week)가 생기면서 가드가 한 칸 넓어졌다. 판세
+        리포트가 없어도 코너가 있으면 패널이 선다 — 그게 '그릇을 안 바꾼다'의
+        뜻이다. 위 사고가 재발하지 않는 근거는 가드가 아니라 **빌드**다:
+        `build_this_week` 는 채울 코너가 하나도 없으면 `{}` 를 돌려준다
+        (ThisWeekCornerTests.test_no_corners_means_no_block_at_all).
+        빈 코너를 세는 옛 가드(`questions.length`)로는 돌아가지 않는다.
         """
-        self.assertIn("if (!report) { panel.hidden = true; return; }", self.script)
+        self.assertIn("if (!report && !thisWeek) { panel.hidden = true; return; }", self.script)
         self.assertNotIn("if (!report && !questions.length)", self.script)
         self.assertIn('id="weeklyReport"', self.html)
+        self.assertIn('id="thisWeekBody"', self.html)
+
+    def test_this_week_corners_keep_their_fixed_order(self):
+        """코너 순서를 주마다 바꾸지 않는 것이 이 구조의 가치다(1440·DeBriefed)."""
+        body = self.script.split("function renderThisWeek()")[1].split("function ")[0]
+        order = [body.index(name) for name in
+                 ('weeklySection("이번 주"', 'weeklySection("국가별 단신"',
+                  'weeklySection("이번 주 발간물"', 'weeklySection("예정"')]
+        self.assertEqual(order, sorted(order))
 
     def test_renders_before_existing_trend_charts(self):
         """기존 키워드·slope 는 아래로 — 리포트가 먼저 온다."""
@@ -4957,7 +4428,8 @@ class WeeklyRenderTests(unittest.TestCase):
         필요한 것은 '이 id 들이 위임돼 있는가'이므로 개별로 확인한다.
         """
         block = self.script.split("].forEach(id => {")[0].rsplit("[", 1)[-1]
-        for container in ("weeklyReportBody", "insightList", "issueList", "evidenceRail"):
+        # 홈 목차(#tocList)는 위임을 타지 않는다 — 행이 링크라 브라우저가 상세로 보낸다.
+        for container in ("weeklyReportBody", "insightList", "archiveIssueList"):
             self.assertIn(f'"{container}"', block, f"{container} 가 위임 목록에 없다")
 
     def test_chip_is_readable_on_light_panel(self):
@@ -5031,37 +4503,6 @@ class SystemStatusTests(unittest.TestCase):
         out = build_data.system_status(self._records(1), {}, self.NOW)
         self.assertEqual(out["state"], "ok")
         self.assertTrue(out["watcher_running"])
-
-
-class EmptyBriefingStateTests(unittest.TestCase):
-    """이슈 0건의 세 갈래가 app.js 에 실제로 들어 있는지 고정."""
-
-    def setUp(self):
-        self.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-
-    def test_three_states_present(self):
-        self.assertIn("브리핑 데이터가 아직 갱신되지 않았습니다", self.script)
-        self.assertIn("오늘은 브리핑 기준을 넘는 이슈가 없습니다", self.script)
-        self.assertIn("오늘 새로 확인된 브리핑 이슈가 없습니다", self.script)
-
-    def test_hero_and_list_do_not_repeat_the_same_sentence(self):
-        """히어로 h1 이 사유를 말하므로 목록은 '어디로 가면 되는가'만 담당한다."""
-        self.assertIn('<div class="empty-state"><p>${view.detail}</p></div>', self.script)
-        self.assertIn('document.getElementById("showChangedIssues").hidden = true;',
-                      self.script)
-
-    def test_below_floor_wording_is_candidate_not_collected(self):
-        """below_floor_count 는 전체 수집 건수가 아니다 — '수집된 N건'은 거짓."""
-        self.assertIn("검토한 후보 ${below}건", self.script)
-        self.assertNotIn("수집된 ${below}건", self.script)
-
-    def test_status_checked_before_declaring_quiet_day(self):
-        self.assertIn("function pipelineTrouble()", self.script)
-        self.assertIn("const trouble = pipelineTrouble();", self.script)
-
-    def test_reuses_existing_view_switch_attribute(self):
-        self.assertIn('data-go-view="search"', self.script)
-        self.assertNotIn("data-goto-view", self.script)
 
 
 class ExploreHubTests(unittest.TestCase):
@@ -5143,29 +4584,10 @@ class ExploreHubTests(unittest.TestCase):
         chip = chip[:chip.index("}")]
         self.assertIn("min-height: 44px", chip)
 
-    def test_tab_labels_match_data_shape(self):
-        # 탐색 → 스토리 (2026-09-12) → 탐색 (2026-09-13).
-        #
-        # 되돌린 이유: 그 뒤에 장기 스토리(Beta)가 들어오면서 '스토리'가 두
-        # 화면을 가리키게 됐다. 이 탭은 issues.json 을 거르는 **이슈 카탈로그**고,
-        # 여러 이슈를 하나로 묶은 진짜 스토리는 longterm 뿐이다. 화면 안쪽 문구는
-        # 애초에 개명을 따라간 적이 없어("탐색에서 보기" 등 app.js 5곳) 되돌리는
-        # 쪽이 다수 표기와도 맞는다. 자격 바(기본 범위)는 이름과 무관하게 남는다.
+    def test_tab_labels_renamed(self):
         self.assertIn(">탐색</button>", self.html)
         self.assertIn(">오늘</button>", self.html)
         self.assertNotIn(">이슈 아카이브<", self.html)
-        # '스토리'는 장기 스토리(Beta) 한 곳에만 남는다 — 탭·H1·범위 어디에도
-        # 옛 이름이 돌아오면 안 된다.
-        self.assertNotIn(">스토리</button>", self.html)
-        self.assertNotIn("<span>스토리</span>", self.html)
-        self.assertIn('<h1 id="archiveTitle">이슈 탐색</h1>', self.html)
-        self.assertIn(">추적 중인 이슈</button>", self.html)
-        # 주석·태그를 걷어낸 **보이는 문구**에서 '스토리'는 장기 스토리에만
-        # 붙어야 한다. 탭 하나만 고치고 H1·범위·요약을 놓치면 여기서 걸린다.
-        visible = re.sub(r"<!--.*?-->", " ", self.html, flags=re.S)
-        visible = re.sub(r"<script[^>]*>.*?</script>", " ", visible, flags=re.S | re.I)
-        visible = re.sub(r"<[^>]+>", " ", visible)
-        self.assertEqual(visible.count("스토리"), visible.count("장기 스토리"))
 
 
 class SearchDialogTests(unittest.TestCase):
@@ -5341,17 +4763,9 @@ class SavedFollowTests(unittest.TestCase):
         self.assertIn('id="headerSaved"', self.html)
         self.assertIn('data-go-saved', self.html)
         self.assertIn('id="search-saved"', self.html)
-        # 저장은 탐색 안으로 합쳐졌다. 탭 **개수**는 박지 않는다 — 장기
-        # 스토리(Beta) 탭은 데이터가 살아 있을 때만 걸려서 4와 5를 오간다.
-        # 지켜야 할 것은 숫자가 아니라 "데스크톱에 있는 화면은 모바일에서도
-        # 닿는다"이므로, 두 목록이 같은 view 를 들고 있는지를 본다.
-        def views(nav):
-            return set(re.findall(r'data-view="([a-z]+)"', nav))
-
+        # 저장은 탐색 안으로 합쳐졌고 모바일 탭은 5개다(신문스크랩 포함).
         mobile_nav = self.html.split('id="mobileTabs"', 1)[1].split("</nav>", 1)[0]
-        desktop_nav = self.html.split('id="mainTabs"', 1)[1].split("</nav>", 1)[0]
-        self.assertEqual(views(mobile_nav), views(desktop_nav))
-        self.assertIn("longterm", views(mobile_nav))
+        self.assertEqual(mobile_nav.count("<button"), 5)
 
     def test_saved_meta_snapshot_and_tombstone(self):
         self.assertIn("nuclens-saved-meta", self.script)
@@ -5655,7 +5069,8 @@ class HardEdgeSystemTests(unittest.TestCase):
 
         상자가 하나면 위계지만 둘이 되는 순간 배경이 된다. 목록 행·배지가
         그림자를 얻으면 스캔 목록이 스티커 시트가 되고, 그게 이 방향이 실패하는
-        가장 흔한 방식이다. 행은 형제끼리 border-top 으로만 갈린다.
+        가장 흔한 방식이다. 소프트 전환 후에도 계약은 같다 — 카드는 헤어라인
+        패널이고, 그림자는 선두 카드(.lead-card) 하나만 갖는다.
         """
         for selector in (".issue-card", ".verification-badge", ".report-pick-badge"):
             match = re.search(rf"^\{selector} \{{([^}}]*)\}}", self.style, re.M)
@@ -5821,9 +5236,9 @@ class FirstScreenContentFirstTests(unittest.TestCase):
         title_line = next(line for line in lead.splitlines() if "issue-title-button" in line)
         self.assertNotIn("? ", title_line.split("<h3>")[0], "제목 렌더에 조건이 다시 붙었다")
 
-    def test_audio_sits_below_the_hero_actions(self):
-        """플레이어는 히어로의 마지막 줄이다 — 날짜와 콘텐츠 사이에 끼지 않는다."""
-        self.assertLess(self.html.index('class="hero-actions"'),
+    def test_audio_sits_below_the_brief_panel(self):
+        """플레이어는 브리핑 패널 뒤다 — 목차보다 먼저 서면 '읽을 것'이 밀린다."""
+        self.assertLess(self.html.index('id="tocList"'),
                         self.html.index('id="audioBrief"'))
 
     def test_audio_rates_stay_folded_until_playback_on_mobile(self):
@@ -6009,7 +5424,8 @@ class VisualSystemTests(unittest.TestCase):
         오버라인 어휘 자체는 TODAY·THIS WEEK 두 종으로 잠겨 있고(별도 테스트),
         여기서는 '한 화면에서 되풀이하지 않는다'를 지킨다.
         """
-        self.assertEqual(self.html.count('class="eyebrow">TODAY'), 1)
+        # 오늘 탭에는 오버라인이 없다 — 패널이 01번 행으로 바로 시작한다.
+        self.assertEqual(self.html.count('class="brief-kicker"'), 0)
         self.assertGreaterEqual(self.html.count('class="sec-no"'), 5)
         self.assertIn("font-family: var(--ff-mono)", self._rule(".sec-no"))
         # 구역 머리는 잉크 괘선으로 시작한다 — 번호만 붙이면 목록의 일부로 읽힌다.
@@ -6059,7 +5475,7 @@ class VisualSystemTests(unittest.TestCase):
 
         card = self._rule(".issue-card")
         pad = px(re.search(r"padding:\s*([^\s;]+)", card).group(1))
-        border = px(re.search(r"border-top:\s*([^\s;]+)\s+solid", card).group(1))
+        border = px(re.search(r"border:\s*([^\s;]+)\s+solid", card).group(1))
         title_size = px(re.search(r"--t-card:\s*([\d.]+px)", self.style).group(1))
         h3 = self._rule(".issue-card h3")
         gap = px(re.search(r"margin:\s*0 0 (\d+px)", h3).group(1))
@@ -6086,7 +5502,7 @@ class VisualSystemTests(unittest.TestCase):
         # 산술적으로 불가능하다. 계약을 완화한 게 아니라 새 구조로 다시 계산했다 —
         # 상한을 지우면 다음 사람이 네 번째 칸을 얹는다.
         title_lines, body_lines = 2, 3
-        height = (pad * 2 + border + title_size * title_lh * title_lines + gap
+        height = (pad * 2 + border * 2 + title_size * title_lh * title_lines + gap
                   + (body_size * body_lh + line_gap) * body_lines + chip_height)
         self.assertLessEqual(
             height, 220,
@@ -6094,14 +5510,21 @@ class VisualSystemTests(unittest.TestCase):
         )
         # 라벨 열이 접히면 역할 구분이 사라진다.
         self.assertIn("white-space: nowrap", self._rule(".issue-line-label"))
-        # 각 칸은 정확히 한 줄. 문단 두 개가 연달아 서는 것을 CSS 에서 막는다.
-        self.assertIn("-webkit-line-clamp: 1", self._rule(".issue-line-text"))
+        # 칸당 최대 세 줄. 한 줄 계약은 "문장이 한 줄짜리로 들어온다"는 전제 위에
+        # 있었는데 2026-08-16 실측에서 그 전제가 깨져 있었다 — 변화 문장 중앙값
+        # 139자 · 요약 73자인데 카드 한 줄은 약 32자라 100% 가 잘렸고, 화살표
+        # 문장은 잘린 자리에 **바뀌기 전 상태**만 남아 '달라진 것' 라벨과 어긋났다.
+        # 세 줄로 올린 뒤 실측: 잘린 줄 0/14(한 줄일 때 14/14, 두 줄일 때 8/14).
+        # 네 줄 이상은 금지 — 카드가 문단이 되면 목록이 아니라 읽을거리가 된다.
+        clamp = re.search(r"-webkit-line-clamp:\s*(\d+)", self._rule(".issue-line-text"))
+        self.assertIsNotNone(clamp, "카드 본문에 줄 수 상한이 없다")
+        self.assertLessEqual(int(clamp.group(1)), 3, "카드 한 칸이 네 줄 이상이 됐다")
 
         actions = self._rule(".issue-list .issue-card .issue-actions")
         self.assertIn("flex-direction: row", actions, "액션이 다시 세로로 쌓인다")
         # hover 는 세 값이 함께 움직인다 — 하나만 변하면 '켜졌나' 싶다.
         hover = self._rule(".issue-card:hover")
-        self.assertRegex(hover, r"border-top-color:\s*var\(--c-(primary|edge)\)")
+        self.assertRegex(hover, r"border-color:\s*var\(--c-(primary|edge)\)")
         self.assertIn("background:", hover)
         self.assertIn(".issue-card:hover .issue-index", self.style)
 
@@ -6218,103 +5641,6 @@ class ArticleDetailSurfacesTests(unittest.TestCase):
         self.assertIn(".timeline-detail", css)
 
 
-class ChangeLogWiringTests(unittest.TestCase):
-    """`issue_continuity` 의 판정이 delivery_log 를 지나 카탈로그 행까지 닿는가.
-
-    판정 자체의 게이트는 `tests/test_issue_change_log.py` 가 잠근다(그쪽은 PR
-    검사에서 돈다). 여기서 보는 것은 **배선**이다 — 이 길은 2026-09-12 까지
-    끊겨 있었다: build_data 의 멤버 조립부가 delivery_log 의 story 계약을 한 줄씩
-    옮겨 싣는데 `continuity` 만 빠져 있어, 이슈 타임라인이 기사를 날짜순으로
-    세우기만 하고 그중 어디가 단계가 넘어간 자리인지 말하지 못했다.
-    """
-
-    @staticmethod
-    def member(hash_, briefing_date, title, continuity=None):
-        return {
-            "hash": hash_, "article_date": briefing_date, "briefing_date": briefing_date,
-            "title_kr": title, "title": title, "summary": f"{title} 요약",
-            "detail": "", "topics": [], "canonical_tags": [],
-            "importance": "nice_to_know", "selection_score": 1.0,
-            "url": f"https://example.com/{hash_}", "domain": "example.com",
-            "continuity": continuity or {},
-        }
-
-    # 실측 쌍 (delivery_log 2026-09-05 → 09-06, story-d186fd7060c89e35).
-    PRIOR = "원안위, 새울 3호기 시운전 시험 재가동 승인"
-    FOLLOW = "원안위, 새울 3호기 재가동 승인…운전원 설정값 입력 오류 확인"
-    VERDICT = {
-        "prior_hash": "s1", "prior_date": "2026-09-05", "prior_title": PRIOR,
-        "days_ago": 1, "similarity": 0.714, "progression": "material",
-        "progression_kind": "stage_flip", "progression_detail": "정지·가동중단",
-        "identity_confirmed": True, "identity_method": "fingerprint_anchors",
-    }
-
-    def members(self):
-        return [self.member("s1", "2026-09-05", self.PRIOR),
-                self.member("s2", "2026-09-06", self.FOLLOW, self.VERDICT)]
-
-    def test_catalog_row_carries_the_change_log(self):
-        rows = build_data.build_issue_catalog(
-            [{"issue_id": "issue-x", "members": self.members(), "evidence_members": []}],
-            "2026-09-06", "2026-09-06T00:00:00+09:00")
-        log = rows[0]["change_log"]
-        self.assertEqual([entry["kind"] for entry in log], ["material"])
-        self.assertEqual(log[0]["prior_hash"], "s1")
-        self.assertEqual(log[0]["prior_title"], self.PRIOR)
-
-    def test_briefing_row_carries_the_day_it_was_true(self):
-        """과거 날짜를 열면 앱이 브리핑 행을 쓴다(currentIssueById). 그 행에 전체
-        이력을 실으면 그날 화면이 아직 없던 후속을 보여 준다."""
-        issue = {"issue_id": "issue-x", "first_seen": "2026-09-05",
-                 "members": self.members()}
-        briefings = build_data.build_briefings(
-            [{"briefing_date": day, "region": "국내"} for day in ("2026-09-05", "2026-09-06")],
-            [issue])
-        by_date = {row["date"]: row["issues"][0]["change_log"] for row in briefings}
-        self.assertEqual(by_date["2026-09-05"], [])
-        self.assertEqual([entry["kind"] for entry in by_date["2026-09-06"]], ["material"])
-
-    def test_a_prior_in_another_issue_never_reaches_the_screen(self):
-        rows = build_data.build_issue_catalog(
-            [{"issue_id": "issue-x",
-              "members": [self.member("s2", "2026-09-06", self.FOLLOW, self.VERDICT)],
-              "evidence_members": []}],
-            "2026-09-06", "2026-09-06T00:00:00+09:00")
-        self.assertEqual(rows[0]["change_log"], [])
-
-    def test_delivery_log_keeps_the_prior_hash(self):
-        """제목이 아니라 해시로 잇는다. `issue_ledger` 가 이동 판정에서 같은 결론에
-        이미 닿았다 — '판정 재료는 기사 해시뿐이다'."""
-        source = (ROOT.parent / "daily_brief.py").read_text(encoding="utf-8")
-        marker = source.index('meta["continuity"] = {k: cont.get(k) for k in')
-        self.assertIn('"prior_hash"', source[marker:marker + 400])
-
-    def test_screen_labels_never_use_the_stage_vocabulary(self):
-        """`progression_detail` 은 event_stage 의 어휘 라벨이라 사건 설명이 아니다 —
-        실측 2026-08-26 「정부, 호남 반도체 산단 전력·용수 인프라 예타 면제」에
-        '정지·가동중단'이 붙어 있었다('예비타당성'이 permit:심사 칸에 있다).
-        화면에 닿는 경로 어디에도 그 값이 없어야 한다."""
-        rows = build_data.build_issue_catalog(
-            [{"issue_id": "issue-x", "members": self.members(), "evidence_members": []}],
-            "2026-09-06", "2026-09-06T00:00:00+09:00")
-        self.assertNotIn("progression_detail", json.dumps(rows, ensure_ascii=False))
-        app = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        self.assertNotIn("progression_detail", app)
-        # 등급은 두 칸뿐이고, 라벨은 한 곳에서만 정해진다.
-        self.assertIn("const CHANGE_LOG_LABELS = { material:", app)
-
-    def test_the_block_and_the_timeline_below_it_use_the_same_day(self):
-        """변화 이력 바로 아래 타임라인은 기사일로 선다. 블록이 회차를 적으면 두
-        곳이 같은 사건을 하루 어긋나게 말한다 — 실측 그라블린(회차 8/28 · 기사일
-        8/27). 빌드는 둘 다 싣고, 화면은 기사일을 고른다."""
-        app = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        span = app[app.index("function changeLogSpan(entry)"):]
-        span = span[:span.index(chr(10) + "}")]
-        self.assertIn("entry.prior_article_date || entry.prior_date", span)
-        self.assertIn("entry.article_date || entry.date", span)
-        self.assertIn("changeLogSpan(entry)", app)
-
-
 class IssueDetailIsCardScopedTests(unittest.TestCase):
     """이슈 대표 설명('관련 기사 내용')은 **카드 멤버**에서만 온다.
 
@@ -6395,64 +5721,6 @@ class IssueDetailIsCardScopedTests(unittest.TestCase):
         source = (ROOT / "build_data.py").read_text(encoding="utf-8")
         self.assertIn("pick_detail(card_timeline, representative)", source)
         self.assertNotIn("pick_detail(all_timeline", source)
-
-
-class IssueDetailGridTests(unittest.TestCase):
-    """긴 본문이 128px 라벨 열로 흘러 세로로 길어지던 자리.
-
-    `.dialog-detail` 은 `128px minmax(0, 1fr)` 2열 격자이고 자식은 순서대로
-    <strong>(라벨) · <small>(출처, 선택) · <p>(본문)다. <small> 에만
-    `grid-column: 2` 가 걸려 있어서 명시 배치가 1행 2열을 먼저 차지했고, 남은
-    자동 항목인 <p> 가 다음 줄 1열 — 라벨 열 — 로 밀렸다. 출처 표기가 붙는
-    이슈에서만 나는 증상이라 오래 안 보였다.
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        cls.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
-        # 720px 미디어 블록은 파일에 여럿이다 — 이 격자를 정의한 자리에서 이어지는
-        # 블록만 잘라 온다.
-        grid = cls.style.index(".dialog-change,\n.dialog-detail,")
-        media = cls.style.index("@media (max-width: 720px)", grid)
-        cls.desktop = cls.style[grid:media]
-        cls.mobile = cls.style[media:cls.style.index("\n}\n", media)]
-
-    def test_desktop_pins_every_child_to_its_column(self):
-        for selector, column in ((".dialog-detail > strong", 1),
-                                 (".dialog-detail > small", 2),
-                                 (".dialog-detail > p", 2)):
-            index = self.desktop.index(selector + " {")
-            rule = self.desktop[index:self.desktop.index("}", index)]
-            self.assertIn(f"grid-column: {column};", rule,
-                          f"{selector} 가 {column}열에 고정돼 있지 않다: {rule!r}")
-
-    def test_the_body_shares_the_content_column_with_the_source_line(self):
-        """본문이 라벨 열로 흐르면 폭이 128px 로 좁아진다 — 그 조합을 금지한다.
-
-        출처 <small> 이 있든 없든 본문은 같은 열에 서야 한다. 둘이 갈리는 순간이
-        정확히 2026-08-22 의 그 화면이다.
-        """
-        columns = {}
-        for child in ("small", "p"):
-            index = self.desktop.index(f".dialog-detail > {child} {{")
-            rule = self.desktop[index:self.desktop.index("}", index)]
-            columns[child] = re.search(r"grid-column:\s*(\d+)", rule).group(1)
-        self.assertEqual(columns["p"], columns["small"])
-        self.assertNotEqual(columns["p"], "1")
-        # 라벨 열의 폭이 128px 라는 것이 이 검사의 전제다.
-        self.assertIn("grid-template-columns: 128px minmax(0, 1fr);", self.desktop)
-
-    def test_mobile_returns_all_three_to_one_column(self):
-        """모바일은 한 칸짜리 격자다 — 2열을 풀지 않으면 없는 열이 생긴다."""
-        self.assertIn("grid-template-columns: minmax(0, 1fr)", self.mobile)
-        index = self.mobile.index(".dialog-detail > strong,")
-        rule = self.mobile[index:self.mobile.index("}", index)]
-        for selector in (".dialog-detail > strong", ".dialog-detail > small",
-                         ".dialog-detail > p"):
-            self.assertIn(selector, rule)
-        self.assertIn("grid-column: 1;", rule)
-        # 데스크톱의 2열 고정이 모바일까지 새면 없는 열이 암묵 생성된다.
-        self.assertNotIn("grid-column: 2", self.mobile)
 
 
 class CollectionTimestampTests(unittest.TestCase):
@@ -6856,39 +6124,6 @@ class CountryRepairTests(unittest.TestCase):
         if not path.exists():
             return []
         return json.loads(path.read_text(encoding="utf-8"))
-
-
-class TodayAgendaPlacementTests(unittest.TestCase):
-    """좁은 화면에서 '오늘 3분'은 오늘의 선두 이슈 **아래**로 간다.
-
-    실측(2026-08-11) 블록 높이 / 선두 이슈 위치 — 1440×900 은 296px/733px 인데
-    375×812 은 700px/1,105px(1.36 화면)이다. 글이 좁은 폭에서 접히며 블록이 두 배
-    넘게 불어 첫 화면이 통째로 '이번 주' 요약이 됐다. 탭 이름은 '오늘'인데 안쪽은
-    한 주를 말한다 — 그래서 라벨에서 상대 표현을 뺐다(`핵심 결론`).
-    """
-
-    def setUp(self):
-        self.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-
-    def test_the_move_happens_only_on_narrow_screens(self):
-        self.assertIn("function placeTodayAgenda", self.script)
-        body = self.script.split("function placeTodayAgenda", 1)[1].split("\nfunction ", 1)[0]
-        self.assertIn("narrowScreen.matches", body)
-        # 내용을 숨기는 방식은 쓰지 않는다 — 주간 watchpoints 는 카드의
-        # open_question 이 비어 있어 화면에서 그 질문에 답하는 유일한 자리다.
-        self.assertNotIn("hidden = true", body)
-
-    def test_it_runs_after_the_lead_visibility_is_decided(self):
-        """앞에서 부르면 첫 렌더에서 leadIssue 가 아직 hidden 이라 조건이 늘 거짓이다
-        (실제로 그렇게 넣었다가 자리가 안 바뀌었다).
-        """
-        decided = self.script.index('document.getElementById("leadIssue").hidden = !lead;')
-        called = self.script.index("placeTodayAgenda();", decided)
-        self.assertGreater(called, decided)
-
-    def test_the_breakpoint_change_moves_it_back(self):
-        # 안 하면 리사이즈한 사람만 어긋난 채 본다.
-        self.assertIn('narrowScreen.addEventListener("change", placeTodayAgenda)', self.script)
 
 
 class WeeklyThemeLabelTests(unittest.TestCase):
@@ -7788,91 +7023,6 @@ class AdminConsoleTests(unittest.TestCase):
         self.assertGreater(scanned, 100, f"HTML 보간을 {scanned}개밖에 못 찾았다 — 스캐너가 깨졌다")
 
 
-class AudioSeekTests(unittest.TestCase):
-    """브리핑 듣기의 재생 위치 막대.
-
-    10분짜리 전문가 브리핑에 진행 바가 없어서 중간으로 되돌아갈 방법이 아예
-    없었다(사용자 지적). 막대는 있으면 되는 것이 아니라, 키보드로도 움직여야 하고
-    재생 전에도 제 길이를 알고 있어야 한다.
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
-        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        cls.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
-
-    def test_seek_bar_is_a_native_range_inside_the_player(self):
-        self.assertIn('id="audioSeek"', self.html)
-        # 직접 그린 막대는 키보드·스크린리더를 다시 만들어야 하고, 대개 안 만든다.
-        self.assertIn('type="range"', self.html)
-        self.assertIn('aria-label="재생 위치"', self.html)
-        # 플레이어 안에 있어야 audioBrief 가 숨을 때 같이 숨는다.
-        self.assertLess(self.html.index('id="audioBrief"'), self.html.index('id="audioSeek"'))
-        self.assertLess(self.html.index('id="audioSeek"'), self.html.index('id="audioEl"'))
-
-    def test_drag_moves_only_on_release(self):
-        """끄는 내내 currentTime 을 바꾸면 브라우저가 매 프레임 탐색을 건다."""
-        self.assertIn('audioSeek.addEventListener("input"', self.script)
-        self.assertIn('audioSeek.addEventListener("change"', self.script)
-        change = self.script[self.script.index('audioSeek.addEventListener("change"'):]
-        change = change[:change.index("});")]
-        self.assertIn("applyAudioSeek(target)", change)
-        held = self.script[self.script.index('audioSeek.addEventListener("input"'):]
-        held = held[:held.index("});")]
-        self.assertNotIn("applyAudioSeek", held)
-        self.assertNotIn("currentTime =", held)
-
-    def test_a_seek_is_never_silently_swallowed(self):
-        """아직 안 받은 지점으로는 못 옮긴다 — 조용히 제자리로 가면 고장으로 읽힌다.
-
-        실제 증상: 1.87MB 짜리 빠른 브리핑은 금세 다 받아져 잘 옮겨지는데,
-        8.85MB 짜리 전문가 브리핑만 커서가 원래 자리로 되돌아왔다.
-        """
-        apply_block = self.script[self.script.index("function applyAudioSeek("):]
-        apply_block = apply_block[:apply_block.index("\nfunction ")]
-        # seekable 을 실제로 본다 — duration 만 보면 '있다'와 '받았다'를 못 가른다.
-        self.assertIn("seekableCovers", apply_block)
-        self.assertIn("audioPendingSeek = target", apply_block)
-        self.assertIn('classList.add("waiting")', apply_block)
-        covers = self.script[self.script.index("function seekableCovers("):]
-        self.assertIn("audio.seekable", covers[:covers.index("\nfunction ")])
-
-    def test_a_held_seek_is_retried_as_the_file_arrives(self):
-        retry = self.script[self.script.index("const retryPendingSeek ="):]
-        retry = retry[:retry.index(".forEach(")]
-        self.assertIn("applyAudioSeek", retry)
-        for event in ("loadedmetadata", "durationchange", "progress", "canplay"):
-            self.assertIn(event, retry)
-
-    def test_the_bar_holds_the_requested_spot_while_waiting(self):
-        """재생 위치를 그리면 방금 옮긴 손잡이가 되돌아온 것처럼 보인다."""
-        sync = self.script[self.script.index("function syncAudioProgress("):]
-        sync = sync[:sync.index("\nfunction ")]
-        self.assertIn("audioPendingSeek", sync)
-        self.assertIn(".audio-seek.waiting", self.style)
-
-    def test_bar_knows_its_length_before_the_file_loads(self):
-        body = self.script[self.script.index("function audioDuration()"):]
-        body = body[:body.index("\n}")]
-        self.assertIn("duration_sec", body)
-
-    def test_default_stays_preload_none(self):
-        """첫 화면에 서는 플레이어다 — 아무도 안 듣는 날에도 받아 오면 그만큼 낭비다."""
-        self.assertIn('preload="none"', self.html)
-        self.assertIn("function ensureAudioMetadata()", self.script)
-
-    def test_switching_variant_clears_the_old_position(self):
-        block = self.script[self.script.index("function renderAudioBrief"):]
-        block = block[:block.index("\nfunction ")]
-        self.assertIn("audioPendingSeek = null", block)
-        self.assertIn("syncAudioProgress(0)", block)
-
-    def test_bar_is_styled_and_focusable(self):
-        self.assertIn(".audio-seek", self.style)
-        self.assertIn(".audio-seek:focus-visible", self.style)
-
-
 class AudioRangeFunctionTests(unittest.TestCase):
     """오디오에 Range 를 붙여 주는 엣지 창구.
 
@@ -7912,54 +7062,6 @@ class AudioRangeFunctionTests(unittest.TestCase):
     def test_stale_content_encoding_is_dropped(self):
         """arrayBuffer() 가 이미 압축을 풀었으므로 원래 인코딩 표시는 거짓이 된다."""
         self.assertIn('headers.delete("Content-Encoding")', self.source)
-
-
-class PeriodSelectorStickyTests(unittest.TestCase):
-    """흐름 탭 기간 토글(7일/30일/분기/반기/1년) — 여러 구역에 걸쳐 있는데
-    선택바가 맨 위에만 있으면 아래로 내려갈수록 계속 위로 스크롤해야 한다
-    (사용자 지적). sticky 로 상단바 바로 아래에 붙여 둔다.
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
-        cls.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
-
-    def test_period_row_is_sticky_below_the_topbar(self):
-        block = self.style[self.style.index(".period-row {"):]
-        block = block[:block.index("}") + 1]
-        self.assertIn("position: sticky", block)
-        self.assertIn("top: 60px", block, "상단바(60px) 바로 아래에 붙어야 한다")
-        self.assertIn("z-index: var(--z-period-bar)", block)
-        # 지나가는 콘텐츠가 비치지 않도록 불투명 배경이 있어야 한다.
-        self.assertIn("background: var(--c-bg)", block)
-
-    def test_mobile_offset_follows_the_shorter_topbar(self):
-        """모바일은 상단바가 56px 다 — 기간바가 그 아래 그대로 붙어야 한다."""
-        mobile = self.style[self.style.index(".topbar { height: 56px; }"):]
-        mobile = mobile[:600]
-        self.assertIn(".period-row { top: 56px;", mobile)
-
-    def test_stays_thin_no_shadow_no_layout_break(self):
-        """화면을 과도하게 가리거나 레이아웃을 깨지 않는다 — 얇게, 그림자 없이."""
-        block = self.style[self.style.index(".period-row {"):]
-        block = block[:block.index("}") + 1]
-        self.assertNotIn("box-shadow", block)
-        self.assertNotIn("height:", block, "고정 높이를 주면 버튼 크기가 바뀔 때 깨진다")
-
-    def test_period_tabs_sit_inside_the_sticky_row(self):
-        row = self.html[self.html.index('class="period-row"'):]
-        self.assertIn('id="periodTabs"', row[:200])
-
-    def test_slope_card_admits_it_ignores_the_toggle(self):
-        """'주제별 주간 변화'는 topic_series(항상 최근 두 주) 한 벌만 받는다 —
-        같은 trend-grid 안 다른 카드(국가·지역별 이슈 수 등)는 모두 기간
-        토글을 따르므로, 말하지 않으면 '분기'를 눌러 놓고 계속 같은 전주
-        대비 그림을 보게 된다.
-        """
-        note = self.html.split('id="topicChart"', 1)[0][-500:]
-        self.assertIn("전주 대비", note)
-        self.assertIn("무관", note)
 
 
 class WordCloudTests(unittest.TestCase):
