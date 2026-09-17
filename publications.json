@@ -1,6 +1,21 @@
 {
  "items": [
   {
+   "id": "b5d6f55cb32e",
+   "org": "OECD-NEA",
+   "org_kr": "OECD 원자력기구(NEA)",
+   "kind": "news_or_report",
+   "title": "New NEA-EPRI analysis finds electricity systems are becoming more diverse – and more costly",
+   "url": "https://www.oecd-nea.org/jcms/pl_121835/new-nea-epri-analysis-finds-electricity-systems-are-becoming-more-diverse-and-more-costly",
+   "date": "",
+   "fetched_at": "2026-09-18",
+   "title_kr": "전력 시스템의 다양화와 비용 상승에 관한 OECD-NEA·EPRI 신규 분석",
+   "gist": "전력망 구성 변화에 따른 시스템 다양성 확대와 그에 따른 비용 증가 추세 분석",
+   "off_topic": false,
+   "relevance": "market",
+   "translated_version": 3
+  },
+  {
    "id": "b3069b627519",
    "org": "OECD-NEA",
    "org_kr": "OECD 원자력기구(NEA)",
@@ -305,6 +320,21 @@
    "fetched_at": "2026-08-15",
    "title_kr": "가동 중인 원자력 발전소의 설비 신뢰성 프로그램 이행 모범 사례",
    "gist": "운영 중인 원전의 설비 신뢰성 향상을 위한 관리 체계 및 운영 전략 지침",
+   "off_topic": false,
+   "relevance": "policy",
+   "translated_version": 3
+  },
+  {
+   "id": "48c3eede5f26",
+   "org": "IAEA",
+   "org_kr": "국제원자력기구(IAEA)",
+   "kind": "publication",
+   "title": "Microreactors: Advances in Technology Development (2026 Outlook)",
+   "url": "http://www.iaea.org/publications/16125/microreactors-advances-in-technology-development-2026-outlook",
+   "date": "2026-08-10",
+   "fetched_at": "2026-09-18",
+   "title_kr": "마이크로리액터: 기술 개발 현황 및 2026년 전망",
+   "gist": "마이크로리액터 노형의 기술적 진보와 향후 개발 로드맵 및 시장 전망",
    "off_topic": false,
    "relevance": "policy",
    "translated_version": 3
@@ -895,42 +925,42 @@
   }
  ],
  "state": {
-  "nea_max_id": 121802,
+  "nea_max_id": 121835,
   "keei_max_list_no": 128168,
   "keei_pending_toc": []
  },
  "last_checked": {
   "iaea_publications": {
-   "at": "2026-09-17T00:46:41+09:00",
+   "at": "2026-09-18T00:47:13+09:00",
    "ok": true,
-   "new": 0,
+   "new": 1,
    "parsed": 15
   },
   "eia_today": {
-   "at": "2026-09-17T00:46:41+09:00",
+   "at": "2026-09-18T00:47:13+09:00",
    "ok": true,
    "new": 0,
    "parsed": 1
   },
   "eia_press": {
-   "at": "2026-09-17T00:46:41+09:00",
+   "at": "2026-09-18T00:47:13+09:00",
    "ok": true,
    "new": 0,
    "parsed": 0
   },
   "nea_news": {
-   "at": "2026-09-17T00:46:41+09:00",
+   "at": "2026-09-18T00:47:13+09:00",
    "ok": true,
    "new": 1,
    "parsed": 1
   },
   "iea_reports": {
-   "at": "2026-09-17T00:46:41+09:00",
+   "at": "2026-09-18T00:47:13+09:00",
    "ok": false,
    "error": "HTTPError: 403 Client Error: Forbidden for url: https://www.iea.org/analysis?type=report"
   },
   "keei_insight": {
-   "at": "2026-09-17T00:46:41+09:00",
+   "at": "2026-09-18T00:47:13+09:00",
    "ok": true,
    "new": 0,
    "parsed": 0

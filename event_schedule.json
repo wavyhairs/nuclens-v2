@@ -1,27 +1,6 @@
 {
- "generated_at": "2026-09-17T00:46:45+09:00",
+ "generated_at": "2026-09-18T00:47:18+09:00",
  "events": [
-  {
-   "id": "of-a7d307ff8c95",
-   "date": "2026-09-03",
-   "end_date": "2026-09-03",
-   "kind": "point",
-   "time": "14:00",
-   "label": "국가전력망 민간참여 본격화, 공공성 훼손 우려와 대응과제: 전력산업 공공성 강화를 위한 정책 연속세미나",
-   "host": "김주영 의원실, 혁신더하기연구소, 전기신문",
-   "organizer": "김주영 의원실, 혁신더하기연구소, 전기신문",
-   "place": "의원회관 제7간담회의실(210호)",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "국가전력망 민간참여 본격화, 공공성 훼손 우려와 대응과제: 전력산업 공공성 강화를 위한 정책 연속세미나",
-   "first_seen": "2026-08-29",
-   "topics": [
-    "power_market"
-   ],
-   "relevance": "전력산업",
-   "significance": "세미나"
-  },
   {
    "id": "of-089cd2074b9f",
    "date": "2026-09-04",
@@ -222,6 +201,27 @@
     "newbuild"
    ],
    "relevance": "new nuclear",
+   "significance": "세미나"
+  },
+  {
+   "id": "of-aa740eaac3d9",
+   "date": "2026-09-22",
+   "end_date": "2026-09-22",
+   "kind": "point",
+   "time": "14:00",
+   "label": "전력산업, 누가 어떤 원칙으로 감독할 것인가: Part 2. 전력산업 공공성 강화를 위한 정책 연속세미나",
+   "host": "김주영·김정호 의원실, 내일의 공공과 에너지·노동을 생각하는 의원모임, 혁신더하기연구소, 전기신문",
+   "organizer": "김주영·김정호 의원실, 내일의 공공과 에너지·노동을 생각하는 의원모임, 혁신더하기연구소, 전기신문",
+   "place": "국회도서관 소강당",
+   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
+   "source_id": "assembly_events",
+   "publisher": "국회",
+   "notice_title": "전력산업, 누가 어떤 원칙으로 감독할 것인가: Part 2. 전력산업 공공성 강화를 위한 정책 연속세미나",
+   "first_seen": "2026-09-18",
+   "topics": [
+    "power_market"
+   ],
+   "relevance": "전력산업",
    "significance": "세미나"
   },
   {
@@ -467,7 +467,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-09-17T00:46:45+09:00",
+   "at": "2026-09-18T00:47:18+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -475,7 +475,7 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-09-17T00:46:45+09:00",
+   "at": "2026-09-18T00:47:18+09:00",
    "ok": true,
    "parsed": 10,
    "kept": 3,
@@ -486,7 +486,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-09-17T00:46:45+09:00",
+   "at": "2026-09-18T00:47:18+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -499,7 +499,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-09-17T00:46:45+09:00",
+   "at": "2026-09-18T00:47:18+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -507,12 +507,18 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-09-17T00:46:45+09:00",
-   "ok": false,
-   "error": "ConnectTimeout: HTTPSConnectionPool(host='www.assembly.go.kr', port=443): Max retries exceeded with url: /portal/noti/seminar/scheduleSmn.do?menuNo=600102 (Caused by ConnectTimeoutError(<HTTPSConnecti"
+   "at": "2026-09-18T00:47:18+09:00",
+   "ok": true,
+   "parsed": 50,
+   "kept": 2,
+   "new": 1,
+   "dropped": {
+    "no_interest_match": 47,
+    "not_an_event": 1
+   }
   },
   "kpx_notice": {
-   "at": "2026-09-17T00:46:45+09:00",
+   "at": "2026-09-18T00:47:18+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 0,
