@@ -253,64 +253,7 @@ class RssGuidStabilityTests(unittest.TestCase):
                       build_data.build_rss([briefing], now).decode("utf-8"))
 
 
-class StoryScopeTests(unittest.TestCase):
-    """탐색 화면의 자격 바 — 카탈로그 전체를 '추적 중인 이슈'로 부르지 않는다.
+# StoryScopeTests 는 v2 의 장기 스토리 화면(#archiveScope · data-scope)을
+# 잠그고 있었다. 화면 층을 v1 으로 통일하면서 그 화면이 없어져 함께
+# 내린다(2026-09-17). 스토리 원장 자체(위 세 클래스)는 그대로 검사한다.
 
-    화면 라벨은 '추적 중인 이슈'이고 식별자만 story* 로 남아 있다(2026-09-13).
-
-    라이브 실측 2026-09-12: 525건 중 421건(80.2%)이 단 한 회차에만 나타났고
-    268건(51.0%)은 기사가 1건이다. 그런 이슈의 상세에는 타임라인도 변화도 설
-    자리가 없다. 바를 넘은 174건(33.1%)은 성질이 다르다 — 기사 2건 이상 100%,
-    서로 다른 날짜 3건 이상 83.9%, 검증 97.1%, 기사 수 중앙값 5.
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
-        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-
-    def test_scope_switch_defaults_to_stories(self):
-        self.assertIn('id="archiveScope"', self.html)
-        self.assertIn('data-scope="stories"', self.html)
-        self.assertIn('data-scope="all"', self.html)
-        self.assertIn('archiveScope: "stories"', self.script)
-
-    def test_eligibility_uses_both_briefings_and_distinct_dates(self):
-        """회차는 '우리가 며칠에 걸쳐 다뤘나'이고 날짜는 '사건이 며칠에 걸쳐
-        움직였나'다. 하나만 쓰면 한쪽 종류가 통째로 빠진다."""
-        self.assertIn("function storyEligible(", self.script)
-        self.assertIn("STORY_MIN_BRIEFINGS = 2", self.script)
-        self.assertIn("STORY_MIN_DATES = 3", self.script)
-
-    def test_empty_stories_offer_the_full_catalog(self):
-        """'추적 중인 이슈' 범위에서 0건이면 원인이 필터가 아니라 범위일 수 있다.
-        필터 해제만 안내하면 막다른 길이 된다."""
-        self.assertIn('data-archive-scope="all"', self.script)
-
-    def test_scope_is_only_written_to_the_url_when_it_is_not_the_default(self):
-        """공유된 주소가 기본값을 들고 다니면 나중에 기본이 바뀔 때 옛 링크가
-        옛 화면을 고집한다."""
-        self.assertIn('if (state.archiveScope !== "stories") params.set("as"', self.script)
-
-    def test_archived_issue_detail_is_rendered_not_silently_dropped(self):
-        """카탈로그에 없는 이슈를 열면 예전에는 조용히 아무 일도 안 했다
-        (`if (!issue) return`). 공유된 주소를 연 사람에게는 빈 화면이다."""
-        self.assertIn("function openArchivedIssueDialog(", self.script)
-        self.assertIn("function loadArchivedIssue(", self.script)
-        self.assertIn("/issue/${encodeURIComponent(issueId)}.json", self.script)
-
-    def test_the_catalog_tab_was_replaced_rather_than_added_as_a_fifth(self):
-        """탭을 하나 더 만들면 모바일 하단바가 다섯이 되고, 같은 데이터의
-        목록이 둘이 된다. 데스크톱 1 + 모바일 1 = 2.
-
-        **라벨은 여기서 보지 않는다.** 예전에는 이 자리에서도 탭 글자를 못
-        박았는데, 그 바람에 2026-09-13 개명이 test_prototype 만 고치고 여기서
-        배포가 깨졌다. 같은 계약을 두 파일에 두면 한쪽만 고쳐진다 — 라벨은
-        test_prototype.test_tab_labels_match_data_shape 한 곳이 갖는다.
-        여기가 지키는 것은 **개수**다.
-        """
-        self.assertEqual(self.html.count('data-view="search"'), 2)
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -7,6 +7,12 @@
   <meta name="description" content="Nuclens는 원자력 정책·산업 뉴스를 이슈 단위로 연결하고 중요한 변화를 근거와 함께 추적합니다.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#12294c">
+  <!-- 홈 화면 추가(PWA) + 웹 푸시. iOS 는 홈 화면에 추가한 뒤에만 알림이 된다(16.4+). -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Nuclens">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Nuclens">
   <meta property="og:locale" content="ko_KR">
@@ -46,8 +52,6 @@
     <a class="brand" href="/" aria-label="Nuclens 플러스 오늘 브리핑">
       <span class="brand-mark" aria-hidden="true">N</span>
       <span class="brand-copy">
-        <!-- v1(nuclens.pages.dev)과 같은 워드마크를 쓰면 어느 쪽을 보고 있는지
-             구분이 안 된다. 윗첨자 + 하나로 판본을 구분한다 — 마크·색은 그대로. -->
         <strong>NUCLENS<sup aria-hidden="true">+</sup></strong>
         <small>원자력 정책·산업 이슈 트래커</small>
       </span>
@@ -56,10 +60,8 @@
       <button class="main-tab active" data-view="news" aria-pressed="true">오늘</button>
       <button class="main-tab" data-view="trend" aria-pressed="false">흐름</button>
       <button class="main-tab" data-view="search" aria-pressed="false">탐색</button>
-      <!-- 장기 스토리(Beta). 데이터가 없거나 낡았으면 app.js 가 hidden 을 풀지
-           않는다 — 빈 화면으로 가는 탭을 크롬에 남기지 않는다. -->
-      <button class="main-tab" data-view="longterm" aria-pressed="false" hidden>장기 스토리<span class="beta-dot" aria-hidden="true">β</span></button>
       <button class="main-tab" data-view="report" aria-pressed="false">보고서</button>
+      <button class="main-tab" data-view="scrap" aria-pressed="false">신문스크랩</button>
     </nav>
     <div class="header-tools">
       <!-- 좁은 화면에서는 아래 span·kbd 가 CSS 로 접혀 아이콘만 남는다. 그러면
@@ -91,126 +93,81 @@
 </header>
 
 <main id="main" class="wrap page-shell" tabindex="-1">
-  <!-- 화면 v3 가 그리는 자리. 플래그가 없으면 이 칸은 비어 있고 CSS 로도 숨어
-       있어(style.css의 #v3Root) 기존 화면에 아무 영향이 없다. v3 일 때는 반대로
-       이 칸만 남고 아래 골격 전체가 body.ui-v3 아래에서 접힌다. -->
-  <div id="v3Root" hidden></div>
-  <section id="view-news" aria-labelledby="briefingTitle">
-    <!-- 히어로 전체가 aria-live 였다. 안에 칩·버튼이 다 들어 있어 날짜를 한 칸
-         옮길 때마다 스크린리더가 블록 전체를 다시 읽었다. 바뀌는 것은 헤드라인
-         하나뿐이므로 라이브 영역도 그 하나로 좁힌다. -->
-    <section class="briefing-hero" id="briefingHero">
-      <div class="hero-topline">
-        <div class="hero-stamp"><p class="eyebrow">THIS WEEK</p><span id="briefingDateLabel"></span></div>
+  <!-- 홈은 내용을 읽는 페이지가 아니라, 읽을 현안을 고르는 페이지다.
+       카드 격자(선두·달라진·오늘)를 9줄 목차 하나로 바꿨다 — 같은 이슈를
+       세 자리에 나눠 세우면 "무엇부터 볼까"가 아니라 "어디를 볼까"를 먼저
+       풀어야 한다. 정렬·보기·필터 도구도 걷었다: 9줄은 고르는 화면이지
+       다루는 화면이 아니다(거르고 싶으면 탐색 탭이 주인이다).
+
+       오디오 브리핑과 날짜 네비게이션은 남긴다. 둘은 "읽을 게 많다"의
+       원인이 아니라 별개 기능이라 개편과 함께 지울 이유가 없다. -->
+  <section id="view-news" aria-labelledby="todayTitle">
+    <header class="today-head">
+      <div class="today-head-row">
+        <h1 id="todayTitle">오늘의 원전 현안</h1>
         <div class="date-nav" aria-label="브리핑 날짜 선택">
           <button id="prevDay" type="button" aria-label="이전 브리핑">←</button>
           <select id="dateSel" aria-label="브리핑 날짜"></select>
           <button id="nextDay" type="button" aria-label="다음 브리핑">→</button>
         </div>
       </div>
-      <div class="hero-grid">
-        <div class="hero-copy">
-          <p class="hero-kicker" id="briefingKicker">주간 원자력 인텔리전스</p>
-          <h1 id="briefingTitle">이번 주 원자력, 무엇이 달라졌나</h1>
-          <p id="heroMetrics" class="hero-metrics" hidden></p>
-          <div class="hero-evidence" id="headlineEvidence" hidden role="group" aria-label="이 문장의 근거 이슈"></div>
-          <!-- 지난 확인 이후 무엇이 쌓였는지 — 방문 간격을 잇는 한 줄.
-               localStorage(nuclens-last-visit) 기준이라 첫 방문·같은 날
-               재방문에는 뜨지 않는다. 저장은 renderReturnNote 가 한다.
-               액션 줄보다 위: '무엇이 쌓였나'를 읽고 '어디로 갈까'를 고른다. -->
-          <div class="return-note" id="returnNote" hidden></div>
-          <div class="hero-actions">
-            <button id="showChangedIssues" type="button">달라진 이슈 보기 <span aria-hidden="true">→</span></button>
-            <button type="button" data-go-view="trend">흐름 <span aria-hidden="true">→</span></button>
-          </div>
-          <!-- 오디오 브리핑 — 출근길·이동 중 화면을 못 보는 시간대용. 파일이 있는
-               날짜에서만 보인다(audio/audio.json 의 date 와 대조). 버튼을 정적으로
-               두고 텍스트만 갱신한다 — innerHTML 재생성은 포커스를 날린다.
-               자리는 히어로의 마지막 줄이다: 첫 화면의 첫 콘텐츠가 플레이어면
-               '오늘 무엇이 있었나'보다 도구가 먼저 선다(사용자 지적 8/6). 읽을
-               것(선두 카드)이 먼저, 들을지는 그다음 선택. -->
-          <div class="hero-audio" id="audioBrief" hidden>
-            <div class="audio-mode-row" id="audioModes" role="group" aria-label="오디오 브리핑 종류">
-              <button type="button" data-audio-mode="fast" aria-pressed="true">
-                <strong>빠른 브리핑</strong><small>핵심 뉴스 · 약 3분</small>
-              </button>
-              <button type="button" data-audio-mode="expert" aria-pressed="false">
-                <strong>전문가 브리핑</strong><small>정책·기술 통합 해설 · 약 10분</small>
-              </button>
-            </div>
-            <div class="audio-control-row">
-              <button id="audioToggle" type="button" aria-pressed="false">▶ 브리핑 듣기</button>
-              <span class="hero-audio-time" id="audioTime" aria-hidden="true"></span>
-              <span class="hero-audio-label" aria-hidden="true">배속</span>
-              <div class="hero-audio-rates" id="audioRates" role="group" aria-label="재생 속도">
-                <button type="button" data-rate="1" aria-pressed="true">1×</button>
-                <button type="button" data-rate="1.25" aria-pressed="false">1.25×</button>
-                <button type="button" data-rate="1.5" aria-pressed="false">1.5×</button>
-                <button type="button" data-rate="2" aria-pressed="false">2×</button>
-              </div>
-            </div>
-            <!-- 진행 바. 없으면 10분짜리 전문가 브리핑에서 앞 3분을 다시 들을
-                 방법이 없다(사용자 지적). range 로 두는 이유는 키보드·스크린리더가
-                 그냥 되기 때문이다 — 직접 그린 막대는 그 둘을 다시 만들어야 한다.
-                 max 는 재생 시작 전에도 duration_sec 로 채워 둔다. -->
-            <div class="audio-seek-row">
-              <input id="audioSeek" class="audio-seek" type="range" min="0" max="0" step="0.1" value="0"
-                aria-label="재생 위치" aria-valuetext="0:00">
-            </div>
-            <p class="audio-description" id="audioDescription"></p>
-            <audio id="audioEl" preload="none"></audio>
-          </div>
-        </div>
+      <!-- 아카이브 검색 진입은 상단에 상시 노출한다 — 지난 자료를 찾는 것이
+           이 사이트의 업무 용도다. 접거나 아래로 내리지 말 것. -->
+      <div class="today-tools">
+        <button type="button" class="today-search" data-go-view="search">현안 검색 · 지난 자료 찾기</button>
+        <!-- 아침 브리핑 푸시. 지원 안 되는 브라우저에서는 JS 가 숨긴다. -->
+        <button type="button" class="push-toggle" id="pushToggle" hidden aria-pressed="false">🔔 아침 알림 받기</button>
       </div>
-      <!-- '데이터 상태' 블록은 제거했다. 실측: 히어로 329px 중 213px를 중복
-           표시에 쓰면서 1440×900 첫 화면에 이슈 카드가 1장만 보였다. 같은
-           숫자는 헤더 상태 버튼과 그 다이얼로그가 맡는다 — 정상인 날의 상태
-           스트립은 이제 걷힌다(style.css `.status-strip.ok`). -->
-    </section>
+      <p class="push-hint" id="pushHint" hidden></p>
+      <p class="today-date" id="briefingDateLabel"></p>
+      <!-- 한 줄 안내 — 몇 건 중 몇 건을 골랐고, 진행 중 이슈에 변화가 몇 건인지.
+           숫자를 먼저 말해야 아래 3건이 '고른 것'으로 읽힌다. -->
+      <p class="today-lede" id="todayLede"></p>
+    </header>
 
-    <!-- 부팅 스켈레톤. 예전에는 #issueList 안에 앉아 있었는데, 그 위의 세 섹션
-         ('한 주의 원자력'·가장 먼저 볼 이슈·지금 달라진 이슈)이 전부 hidden 으로 시작해
-         데이터가 오면 한꺼번에 펴졌다. 실측 2026-08-10: 그 순간 #todayIssues 가
-         442px → 1893px 로 **1451px** 밀려 CLS 0.90 이 찍혔다(good 기준 0.1).
-         화면에 이미 그려 놓은 것을 밀어내지 않으려면, 로딩 중에는 나중에
-         자리를 차지할 것들 위쪽에 아무것도 그리지 않아야 한다. 그래서 이 자리에
-         혼자 서고, 데이터가 오면 사라진다(사라지는 요소는 shift 로 세지 않는다).
-         .briefing-content-grid 는 body.booting 동안 통째로 접힌다(style.css). -->
     <div id="bootSkeleton" class="issue-list" role="status" aria-label="브리핑을 불러오고 있습니다">
       <article class="issue-card skeleton-card" aria-hidden="true"><i></i><i></i><i></i><i></i></article>
       <article class="issue-card skeleton-card" aria-hidden="true"><i></i><i></i><i></i><i></i></article>
     </div>
 
-    <!-- 한 주의 원자력 — 주간 리포트 **하나**가 통째로 서는 자리다. 기사 목차가
-         아니라 의사결정용 스캔 화면이라, 제목 나열은 카드에 맡기고 여기서는
-         한 리포트의 what → 서술 → so_what → watchpoint 를 순서대로 읽힌다.
+    <!-- 오늘 먼저 볼 3건 — 이 화면에서 유일하게 크게 쓰는 요소.
+         번호·분류·제목·'왜 중요한가' 한 줄·근거. 요약은 여기에도 안 쓴다
+         (지니 09-15) — 왜 골랐는지만 한 줄이다. 나머지는 아래 목차로 간다. -->
+    <ol class="pick3" id="pickList" aria-label="오늘 먼저 볼 3건"></ol>
 
-         2026-08-22 이전에는 이 리포트가 화면 두 곳으로 갈라져 있었다. 여기에
-         what(핵심 결론)·watchpoints 가, 한참 아래 04 "3분이면 이해되는 한 주의
-         원자력"에 weekly_intro·so_what 이 있었다. 같은 금요일 리포트인데 둘 다
-         '3분'이라 이름 붙어 별개 기능처럼 보였고, 무엇보다 **무엇이 바뀌었나와
-         그래서 무슨 의미인가가 서로 다른 화면 위치에 있었다.** 네 영역을 여기로
-         모으고 아래 04 는 없앴다.
+    <!-- 브리핑 패널 — 짙은 면 하나에 오늘의 목차를 세운다.
+         Codex 목업(work/home-brief-comparison.html, B안)의 구조를 따르되 면색은
+         브랜드 네이비(--c-primary). 번호·지역·대분류·제목·왜 중요한가·화살표. -->
+    <section id="briefPanel" class="brief-panel" aria-label="오늘의 현안 목차">
+      <!-- 패널 머리(킥커·제목·날짜·건수)는 없다 — 폰에서 첫 화면에 행이 1개만
+           보였다(2026-09-15 실측 375px). 날짜는 위 date-nav 가 이미 들고 있고,
+           건수는 꼬리 한 줄이면 충분하다. 패널은 01번 행으로 바로 시작한다. -->
+      <h2 class="brief-panel-title" id="briefPanelTitle">그 밖의 이슈</h2>
+      <nav id="tocList" class="toc" aria-label="오늘의 현안 목차"></nav>
+      <div class="brief-foot"><span id="briefPanelDate"></span><span class="brief-foot-actions"><a id="briefPanelArchive" class="brief-more" href="#" hidden>지난 기사까지 →</a><button type="button" id="briefPanelAll" class="brief-more" hidden>나머지 펼치기 →</button></span></div>
+    </section>
 
-         순서가 곧 논리다. 바꾸지 말 것:
-           한눈에 보기(무엇이 바뀌었나)     policy_shifts[].what   최대 3
-           한 주 해설(이번 주 흐름은)        weekly_intro
-           왜 중요한가(그래서 어떤 의미)     policy_shifts[].so_what 최대 3
-           지금 확인할 것(다음에 무엇을)     watchpoints[]          최대 3
+    <!-- 카드뉴스 — 텔레그램 앨범과 같은 PNG 를 사이트에서도 넘겨 본다(지니 09-16).
+         /cards/index.json 이 있는 날만 선다. 이미지는 daily-brief 가 커밋한다. -->
+    <section id="cardStrip" class="card-strip" aria-labelledby="cardStripTitle" hidden>
+      <div class="card-strip-head"><strong id="cardStripTitle">카드뉴스로 보기</strong><span id="cardStripMeta"></span></div>
+      <!-- 폰은 스와이프(가로 스크롤 + 스냅), 넓은 화면은 좌우 버튼(지니 09-17).
+           버튼은 터치 기기·좁은 화면에서 숨는다 — 거기선 손가락이 더 빠르다. -->
+      <div class="card-strip-viewport">
+        <button type="button" class="card-strip-nav prev" id="cardStripPrev" aria-label="이전 카드" aria-controls="cardStripTrack">‹</button>
+        <div class="card-strip-track" id="cardStripTrack"></div>
+        <button type="button" class="card-strip-nav next" id="cardStripNext" aria-label="다음 카드" aria-controls="cardStripTrack">›</button>
+      </div>
+    </section>
 
-         제목은 renderTodayAgenda 가 **화면에 띄운 리포트의 구간**으로 바꿔 쓴다
-         ("한 주의 원자력 · 8월 15일–21일"). 재료가 주간 리포트뿐이라 며칠간 내용이
-         같은데, '오늘 3분'이라는 이름이 매일 새 분석처럼 읽히게 만들고 있었다.
-         라벨도 상대 표현을 뺐다 — 토요일에 지난주 리포트를 보는 것이 정상 동작이라
-         '이번 주 결론'은 화면이 말하는 주와 어긋난다.
-
-         nav 였다가 section 이 됐다. 목차이던 시절의 흔적인데, 산문 두 영역이
-         들어오면서 이 블록은 더 이상 링크 묶음이 아니다 — 랜드마크 목록에
-         '탐색'으로 올라가면 스크린리더 사용자에게 거짓말이 된다. -->
+    <!-- 정책의제 '한 주의 원자력' — main 에 라이브인 블록. 목차형 개편(09-11)이
+         index.html 을 다시 쓰면서 빠뜨렸던 것을 되살렸다(2026-09-15). 렌더러
+         (renderTodayAgenda)·CSS 는 남아 있었고 마크업만 없었다. -->
     <section id="todayAgenda" class="today-agenda" aria-labelledby="todayAgendaTitle" hidden>
-      <div class="agenda-head"><strong id="todayAgendaTitle">한 주의 원자력</strong><span id="todayAgendaMeta"></span></div>
-      <!-- 완성된 리포트가 아직 하나도 없을 때만 뜬다. 미래 주차를 당겨 쓰지는
-           않는다 — 7월 브리핑에 8월 결론이 붙던 것이 원래 문제였다. -->
+      <!-- 접힌 채 시작한다 — 홈에 요약 문단이 너무 많다(지니 09-16). 머리 한 줄만
+           보이고, 누르면 결론·해설·확인할 것이 펼쳐진다. -->
+      <button type="button" class="agenda-head" id="agendaToggle" aria-expanded="false" aria-controls="agendaBody"><strong id="todayAgendaTitle">한 주의 원자력</strong><span id="todayAgendaMeta"></span></button>
+      <div id="agendaBody" hidden>
       <p class="agenda-pending" id="agendaPending" hidden></p>
       <div class="agenda-block" id="agendaConclusions" hidden>
         <span class="agenda-label">한눈에 보기</span>
@@ -228,103 +185,62 @@
         <span class="agenda-label">지금 확인할 것</span>
         <ul id="agendaWatchList"></ul>
       </div>
+      </div>
     </section>
 
-    <div class="briefing-content-grid">
-      <div class="briefing-main">
-        <!-- 상위 1건은 표의 한 행이 아니라 판단을 펼치는 자리다. 아래 두 목록이
-             '무엇이 있었나'를 담당한다면 여기는 '무엇부터 봐야 하나'를 담당한다. -->
-        <section id="leadIssue" class="issues-section lead-section" aria-labelledby="leadIssueTitle" hidden>
-          <div class="section-heading">
-            <div class="section-title">
-              <span class="sec-no" aria-hidden="true">01</span>
-              <h2 id="leadIssueTitle">가장 먼저 볼 이슈</h2>
+    <section id="continuingSection" class="cont" aria-labelledby="continuingTitle" hidden>
+      <h2 id="continuingTitle">진행 중 이슈의 변화</h2>
+      <p class="cont-sub">지난 브리핑 이후 새로 확인된 것만 적었습니다.</p>
+      <div id="continuingList"></div>
+    </section>
+
+    <p id="statusLine" class="today-status"></p>
+
+    <div class="hero-audio" id="audioBrief" hidden>
+            <div class="audio-mode-row" id="audioModes" role="group" aria-label="오디오 브리핑 종류">
+              <button type="button" data-audio-mode="fast" aria-pressed="true">
+                <strong>빠른 브리핑</strong><small>핵심 뉴스 · 약 3분</small>
+              </button>
+              <button type="button" data-audio-mode="expert" aria-pressed="false">
+                <strong>전문가 브리핑</strong><small>정책·기술 통합 해설 · 약 10분</small>
+              </button>
             </div>
+            <div class="audio-control-row">
+            <button id="audioToggle" type="button" aria-pressed="false">▶ 브리핑 듣기</button>
+            <span class="hero-audio-time" id="audioTime" aria-hidden="true"></span>
+            <!-- 시크 바 — 8~10분 음원에서 중간 이동이 필수가 됐다(사용자 요청
+                 8/16). preload=none 이라 재생 전 시킹은 신뢰할 수 없어 배속과
+                 같은 문법으로 재생 시작(.started) 후에만 펼친다. -->
+            <input type="range" class="hero-audio-seek" id="audioSeek"
+                   min="0" max="0" step="1" value="0" aria-label="재생 위치 이동">
+            <!-- 순환 버튼 하나("2×")로는 조절 가능하다는 게 안 읽힌다(사용자
+                 피드백 8/5). 선택지를 전부 펼치고 현재 값을 누른 상태로 표시 —
+                 regionTabs 와 같은 aria-pressed 세그먼트 문법. 좁은 화면에서는
+                 재생을 시작하기 전까지 CSS 가 접는다(.started) — 배속은 듣는
+                 중에만 의미가 있는 조절이다. -->
+            <span class="hero-audio-label" aria-hidden="true">배속</span>
+            <div class="hero-audio-rates" id="audioRates" role="group" aria-label="재생 속도">
+              <button type="button" data-rate="1" aria-pressed="true">1×</button>
+              <button type="button" data-rate="1.25" aria-pressed="false">1.25×</button>
+              <button type="button" data-rate="1.5" aria-pressed="false">1.5×</button>
+              <button type="button" data-rate="2" aria-pressed="false">2×</button>
+            </div>
+            </div>
+            <p class="audio-description" id="audioDescription"></p>
+            <audio id="audioEl" preload="none"></audio>
           </div>
-          <div id="leadCard"></div>
-        </section>
 
-        <section id="changedIssues" class="issues-section changed-section" aria-labelledby="changedIssuesTitle" hidden>
-          <div class="section-heading">
-            <div class="section-title">
-              <span class="sec-no" aria-hidden="true">02</span>
-              <h2 id="changedIssuesTitle">지금 달라진 이슈</h2>
-            </div>
-            <p id="changedCount" class="section-count"></p>
-          </div>
-          <div id="changedList" class="issue-list"></div>
-        </section>
-
-        <section id="todayIssues" class="issues-section" aria-labelledby="todayIssuesTitle">
-          <p class="eyebrow">TODAY</p>
-          <div class="section-heading issue-section-heading">
-            <div class="section-title">
-              <span class="sec-no" aria-hidden="true">03</span>
-              <h2 id="todayIssuesTitle">오늘 확인된 이슈</h2>
-            </div>
-            <div class="issue-section-tools">
-              <p id="issueCount" class="section-count"></p>
-              <label class="compact-select">정렬
-                <select id="issueSort">
-                  <option value="importance">중요도순</option>
-                  <option value="latest">최신순</option>
-                </select>
-              </label>
-              <div class="view-toggle" id="issueViewToggle" aria-label="보기 방식">
-                <button class="active" type="button" data-issue-view="card" aria-pressed="true">카드</button>
-                <button type="button" data-issue-view="list" aria-pressed="false">목록</button>
-              </div>
-              <details id="briefingFilters" class="briefing-filters filter-drawer">
-                <summary>필터 <span id="filterCount"></span></summary>
-                <div class="filter-sheet">
-                  <!-- 바텀시트가 결과를 덮으므로 적용 결과를 시트 안에서 읽을 수
-                       있어야 한다. 닫았다 열었다 하며 확인하게 두지 않는다. -->
-                  <div class="filter-sheet-head"><strong>오늘 이슈 필터</strong><span id="filterSheetCount" class="sheet-count" role="status" aria-live="polite"></span><button id="closeFilters" type="button">닫기</button></div>
-                  <nav class="filter-tabs" id="regionTabs" aria-label="지역 필터">
-                    <button class="filter-tab active" data-region="전체" aria-pressed="true">전체</button>
-                    <button class="filter-tab" data-region="국내" aria-pressed="false">국내</button>
-                    <button class="filter-tab" data-region="해외" aria-pressed="false">해외</button>
-                  </nav>
-                  <label class="topic-field"><span>주제</span><select id="topicSel"><option value="전체">전체 주제</option></select></label>
-                  <button id="clearFilters" class="clear-filters" type="button" hidden>필터 해제</button>
-                </div>
-              </details>
-            </div>
-          </div>
-          <div id="filterSummary" class="active-filter-row" aria-live="polite"></div>
-          <!-- 목록 자체는 라이브가 아니다. 카드 8장이 통째로 낭독되면 그 안의
-               '몇 건이 남았나'가 묻힌다. 개수 변화는 위 #filterSummary 가 말한다. -->
-          <div id="issueList" class="issue-list"></div>
-        </section>
-
-        <!-- 4주 주제 변화는 흐름 탭이 주인이다. 여기 같은 표를 또 두면 오늘 화면이
-             '오늘·이번 주'가 아니라 4주 추세까지 떠안고, 같은 숫자가 두 탭에 뜬다.
-             탭 이름이 이미 질문을 갈라놨다 — 오늘은 무슨 일, 흐름은 어느 방향. -->
-
-        <!-- 04 "3분이면 이해되는 한 주의 원자력"이 있던 자리 (2026-08-22 제거).
-             weekly_intro·so_what 은 지운 게 아니라 화면 맨 위 '한 주의 원자력'
-             블록으로 옮겼다 — 같은 리포트의 what·watchpoints 가 이미 거기 있었고,
-             무엇이 바뀌었나와 그래서 무슨 의미인가가 한 화면 안에서 멀리 떨어져
-             있을 이유가 없다. 흐름 탭으로 가는 길은 상단 내비게이션이 갖고 있다
-             (index.html 의 data-go-view="trend"). -->
-
-        <details class="feed-drawer" id="feedDrawer">
+    <details class="feed-drawer">
           <summary><span id="feedLabel">오늘 수집한 원문</span><small id="feedTitle"></small></summary>
           <div id="newsList" class="news-list"></div>
         </details>
-        <p class="notice">날짜·수치·기관명은 원문에서 확인하세요.</p>
-      </div>
-
-      <aside class="briefing-sidebar" aria-label="오늘 브리핑 보조 정보">
-        <section id="evidenceRail" class="evidence-rail" aria-label="선택한 이슈의 근거" aria-live="polite" hidden></section>
-        <section class="side-panel"><h2>오늘의 검증 상태</h2><div id="sideVerification" class="side-verification"></div></section>
-      </aside>
-    </div>
+    <button type="button" class="secondary-button" data-go-view="search">지난 수집 기록 전체 보기</button>
+    <p class="notice">날짜·수치·기관명은 원문에서 확인하세요.</p>
   </section>
 
   <section id="view-search" hidden aria-labelledby="archiveTitle">
     <div class="archive-intro">
-      <div><h1 id="archiveTitle">이슈 탐색</h1><p id="archiveCatalogMeta"></p></div>
+      <div><h1 id="archiveTitle">탐색</h1><p id="archiveCatalogMeta"></p></div>
       <button id="archiveSearchOpen" type="button" class="secondary-button">검색 <span aria-hidden="true">/</span></button>
     </div>
     <!-- 발견 허브 — 검색어·필터가 없는 랜딩에서만 보인다. 이 화면의 두 번째
@@ -365,14 +281,6 @@
         </div>
       </details>
       <div class="archive-results">
-        <!-- 목록 범위. 기본이 '추적 중인 이슈'인 것이 이 화면의 성격을 정한다 —
-             카탈로그 전체를 첫 화면에 깔면 기사 1건짜리 이슈가 절반이라(실측
-             2026-09-12: 525건 중 268건) 빈 껍데기가 대세가 된다. 자격을 넘은
-             것만 먼저 보이고, 전체는 한 번 더 눌러서 본다. -->
-        <div class="archive-scope segmented" id="archiveScope" role="group" aria-label="목록 범위">
-          <button class="active" type="button" data-scope="stories" aria-pressed="true">추적 중인 이슈</button>
-          <button type="button" data-scope="all" aria-pressed="false">모든 이슈</button>
-        </div>
         <div class="archive-result-head">
           <div><h2>검색 결과</h2><p id="archiveSummary" aria-live="polite"></p></div>
           <label class="compact-select">정렬
@@ -387,42 +295,6 @@
         <button id="archiveMore" class="archive-more" type="button" hidden>더 보기</button>
       </div>
     </div>
-  </section>
-
-  <!-- 장기 스토리(Beta) — 위의 "탐색" 화면과 **목록의 단위가 다르다.** 그쪽은
-       이슈를 거른 목록이고, 여기는 그 이슈들을 여러 주에 걸쳐 하나로 묶은 상위
-       객체다(docs/2026-09-13-long-term-story.md F12). 그래서 기존 화면을 바꾸지
-       않고 따로 세운다.
-
-       데이터가 없거나 낡았거나 판정 빌드가 반쪽으로 끝났으면 이 구역과 탭이
-       통째로 안 뜬다 — 판정은 자동이고 오병합이 남아 있어 '조용히 틀린 화면'
-       보다 '없는 화면'이 낫다. -->
-  <section id="view-longterm" hidden aria-labelledby="longTermTitle">
-    <div class="archive-intro">
-      <!-- 오버라인을 두지 않는다. 이 화면의 어휘는 TODAY·THIS WEEK 둘로 못
-           박혀 있고(test_p1_copy_overlines_and_card_hierarchy), 영문 오버라인을
-           쓰려면 'STORY' 가 들어가는데 그건 화면에 내보내지 않기로 한 파이프라인
-           내부 용어다(test_screen_copy_uses_no_internal_story_jargon). 제목과
-           Beta 표식이면 이 화면이 무엇인지 말하는 데 충분하다. -->
-      <div>
-        <h1 id="longTermTitle">장기 스토리 <span class="beta-badge">Beta</span></h1>
-        <p id="longTermMeta"></p>
-      </div>
-    </div>
-    <!-- 무엇을 보고 있는지 먼저 말한다. 이 목록은 사람이 엮은 것이 아니라
-         사건 원장에서 자동으로 이어 붙인 것이고, 그 사실을 숨기면 사용자는
-         편집된 연재물로 읽는다. -->
-    <p class="longterm-note" id="longTermNote"></p>
-    <div class="longterm-head">
-      <div class="segmented" id="longTermSort" role="group" aria-label="정렬">
-        <button class="active" type="button" data-sort="recent" aria-pressed="true">최근 움직인 순</button>
-        <button type="button" data-sort="span" aria-pressed="false">기간 긴 순</button>
-        <button type="button" data-sort="events" aria-pressed="false">사건 많은 순</button>
-      </div>
-      <button id="longTermAll" class="secondary-button" type="button" hidden>전체 목록</button>
-    </div>
-    <div id="longTermList" class="longterm-list"></div>
-    <button id="longTermMore" class="archive-more" type="button" hidden>더 보기</button>
   </section>
 
   <section id="view-trend" hidden aria-labelledby="trendTitle">
@@ -447,15 +319,19 @@
       </div>
       <div id="trendTopicFlowRows" class="home-topic-flow"></div>
     </section>
-    <!-- 주간 판세. 오늘 탭의 '한 주의 원자력'이 담당하는 것(한눈에 보기 =
-         policy_shifts.what, 한 주 해설 = weekly_intro, 왜 중요한가 = so_what,
-         지금 확인할 것 = watchpoints)은 여기서 내지 않는다. 흐름이 담당하는 것은 4주 관점 — 테마 강약, 한수원 직접 영향
+    <!-- 주간 판세. 오늘 탭이 담당하는 것(이번 주 결론 = policy_shifts.what,
+         해설 = weekly_intro·so_what, 다음 확인 = watchpoints)은 여기서 내지
+         않는다. 흐름이 담당하는 것은 4주 관점 — 테마 강약, 한수원 직접 영향
          둘뿐이다. 리포트가 없는 주에는 통째로 숨긴다. -->
     <section id="weeklyReport" class="weekly-report" aria-labelledby="weeklyReportHeading" hidden>
       <!-- 오버라인 없음. 영문 오버라인은 TODAY·THIS WEEK 두 종으로 줄인 결정이
            있고, 바로 아래 '이번 주 이어지는 흐름'이 이미 THIS WEEK 을 쓴다.
            같은 시간 범위에 라벨을 두 번 다는 건 신호가 아니라 잡음이다. -->
       <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="weeklyReportHeading">주간 판세</h2></div><span id="weeklyReportMeta" class="data-note"></span></div>
+      <!-- 고정 코너(①이번 주 ②국가별 ③발간물 ④예정). 1440·DeBriefed 의 '그릇을
+           안 바꾼다'. 빌드가 빈 코너의 키를 아예 안 보내므로 여기서 지우고
+           채우는 것 말고 할 일이 없다 — 빈칸 강제 금지(Axios). -->
+      <div id="thisWeekBody"></div>
       <div id="weeklyReportBody"></div>
     </section>
     <section class="flow-panel" aria-labelledby="flowHeading">
@@ -538,11 +414,7 @@
             <h2>주제별 주간 변화</h2>
             <!-- 단위는 이슈다(build_topic_weeks). 한 이슈가 주제 둘이면 둘 다에
                  1건씩 가므로 합계는 이슈 총수보다 클 수 있다. -->
-            <!-- 위 기간 토글을 따라가지 않는다 — 이 그래프는 topic_series
-                 (항상 최근 두 주간) 한 벌만 받는다. 나머지 카드는 전부 그
-                 토글을 따르므로 말 안 하면 '분기'를 눌러 놓고 계속 같은
-                 전주 대비 그림을 보게 된다. -->
-            <p class="data-note">상위 4개 주제와 기타 합계 · 완료된 주의 이슈 수 · 항상 전주 대비(위 기간 선택과 무관)</p>
+            <p class="data-note">상위 4개 주제와 기타 합계 · 완료된 주의 이슈 수</p>
             <div id="topicChart"></div>
             <p id="topicInterpretation" class="chart-interpretation"></p>
             <details class="data-evidence"><summary>근거 데이터 보기</summary><div id="topicEvidence"></div></details>
@@ -561,11 +433,8 @@
       </div>
       <div id="wordCloud" class="word-cloud"></div>
       <!-- 색 범례. 비교할 직전 구간이 없는 기간에는 색이 아무 말도 하지 않으므로
-           app.js 가 통째로 내린다. 점이 아니라 낱말 견본으로 보이는 이유는
-           구름에서 실제로 보게 되는 것이 색 입은 낱말이기 때문이다. -->
-      <!-- 기호는 낱말 자체에도 붙는다(app.js WORD_CLOUD_ICON) — 색 하나로만
-           가르면 구분이 옅어진다는 지적이라, 여기 범례와 같은 기호를 그대로
-           낱말 앞에도 찍는다. -->
+           app.js 가 통째로 내린다. 기호는 낱말 자체에도 붙는다(WORD_CLOUD_ICON) —
+           색 하나로만 가르면 구분이 옅어진다. -->
       <ul id="wordCloudLegend" class="word-cloud-legend" hidden>
         <li><span class="word-cloud-swatch new" aria-hidden="true">● 신규</span>직전 구간에 없던 말 중 큰 것</li>
         <li><span class="word-cloud-swatch up" aria-hidden="true">▲ 증가</span>더 많이 다뤄짐</li>
@@ -575,10 +444,9 @@
     </section>
     <!-- 앞으로 30일 — 흐름 탭이 뒤를 본 다음 앞을 본다.
          칸에 서는 이름은 기사 제목이 아니라 **그 날짜가 적힌 문장**에서 뽑은
-         일정 이름이다(event_calendar.py 머리말). 지난 '예정' 코너가 꺼진 이유가
-         날짜와 이름의 짝이 어긋난 것이었으므로, 그 짝을 같은 절에서 맺는다.
-         칩은 3단으로 읽힌다: 이름(상시) → 근거 문장(마우스) → 출처까지(클릭).
-         재료가 드문 화면이라(실측 30칸 중 9칸) 빈 칸을 채우려 하지 않는다. -->
+         일정 이름이다(event_calendar.py 머리말). 칩은 3단으로 읽힌다:
+         이름(상시) → 근거 문장(마우스) → 출처까지(클릭).
+         재료가 드문 화면이라 빈 칸을 채우려 하지 않는다. -->
     <section id="eventCalendar" class="event-calendar" aria-labelledby="eventCalendarHeading" hidden>
       <div class="section-heading compact">
         <div class="section-title"><span class="sec-no" aria-hidden="true">05</span><h2 id="eventCalendarHeading">앞으로 무엇이 있나</h2></div>
@@ -590,36 +458,46 @@
         <span><i class="cal-dot is-range"></i>기간</span>
       </div>
       <div id="eventCalendarGrid" class="cal-grid"></div>
-      <!-- 좁은 화면에서 격자 칩은 점으로 줄어 이름을 잃는다. 이름을 되살리려
-           글씨를 줄이는 길은 막혀 있다 — 칩에 남는 폭이 29px 인데 실측 일정
-           이름의 최단이 12자, 중앙값이 32자다. 게다가 3~5자로 자르면 22건 중
-           10건이 '2026 ', '에너지 산' 으로 겹쳐, 확대해도 어느 것인지 모른다.
-           (핀치 확대가 못 살리는 이유는 따로 있다: ellipsis 는 레이아웃 때
-           잘리므로 배율만 바뀌는 확대로는 글자가 돌아오지 않는다.)
-           그래서 폭이 있는 곳에 이름을 세운다. 격자는 '언제·얼마나'를, 이
-           목록은 '무엇'을 답한다 — 달 단위 일정을 격자 밖에 세우는 바로 아래
-           cal-months 와 같은 어법이다. -->
+      <!-- 좁은 화면에서 격자 칩은 점으로 줄어 이름을 잃는다. 그래서 폭이 있는
+           곳에 이름을 세운다. 격자는 '언제·얼마나'를, 이 목록은 '무엇'을 답한다. -->
       <section id="eventCalendarUpcoming" class="cal-upcoming" aria-labelledby="eventCalendarUpcomingTitle" hidden>
         <h3 id="eventCalendarUpcomingTitle">다가오는 일정</h3>
         <ul id="eventCalendarUpcomingList"></ul>
       </section>
       <!-- '9월 중'처럼 달까지만 적힌 일정. 날짜 칸에 넣으면 그 달 1일 일정이
-           되므로(실제로 그렇게 틀렸다) 격자 밖에 따로 세운다. -->
+           되므로 격자 밖에 따로 세운다. -->
       <section id="eventCalendarMonths" class="cal-months" aria-labelledby="eventCalendarMonthsTitle" hidden>
         <h3 id="eventCalendarMonthsTitle">날짜까지는 안 나온 것</h3>
         <ul id="eventCalendarMonthList"></ul>
       </section>
       <p class="data-note cal-note">기사 문장에 날짜가 적힌 일정만 세웁니다. 일정을 누르면 근거 문장과 출처를 봅니다.</p>
     </section>
+    <!-- 스토리(chronicle) — 이슈 60일 수명을 넘어 쌓이는 시간축 원장. 재료가
+         없으면 스스로 내려가고 renumberSections 가 번호를 당긴다. -->
+    <section id="chronicleSection" class="chronicle-panel" aria-labelledby="chronicleHeading" hidden>
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">05</span><h2 id="chronicleHeading">이어지는 사안</h2></div>
+        <span class="data-note" id="chronicleMeta"></span>
+      </div>
+      <div id="chronicleList" class="chronicle-list"></div>
+    </section>
     <!-- 지난 브리핑 — 흐름 탭의 시간 축. 점·세로선 없이 얇은 괘선과 날짜 정렬만
          쓴다(이 저장소의 괘선 어법). 행 클릭 = 그 날짜의 오늘 화면. -->
     <section id="briefingTimeline" class="briefing-timeline" aria-labelledby="briefingTimelineTitle">
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">06</span><h2 id="briefingTimelineTitle">지난 브리핑</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="briefingTimelineTitle">지난 브리핑</h2></div>
         <span class="data-note">날짜를 누르면 그날 브리핑으로 이동합니다</span>
       </div>
       <ol id="briefingTimelineList"></ol>
     </section>
+    <!-- Carbon Brief 관행(2026-08-16 슈퍼샘플 계획): 집계 기준을 화면에 상시 공개
+         한다 — "이 숫자 어디서 났냐"에 먼저 답해 두는 것이 신뢰 확보의 최저비용.
+         신규 박스를 세우지 않고 기존 .notice 문단 어법을 그대로 쓴다(디자인 불변). -->
+    <p class="notice"><strong>집계 방법</strong> — 등록 수집원
+      <span id="methodologySources">—</span>곳에서 3시간마다 수집하고, AI가 통제 태그
+      (주제 12·국가 10·유형 7)로 분류합니다. 통계는 기사가 아니라 이슈(사건) 단위이며
+      매일 갱신됩니다. 검증 상태는 공식 원문·독립 출처 수로 4단계 표시하고, 요약·해석
+      문장에는 AI 배지를 붙입니다.</p>
     <p class="notice">언급량은 중요도가 아닙니다. 흐름은 근거 기사와 함께 보세요.</p>
   </section>
 
@@ -650,14 +528,48 @@
       <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="reportCandidatesTitle">이번 주 보고 후보</h2></div></div>
       <div id="reportCandidateList"></div>
     </section>
+    <!-- 정책의제 대응 — 카드는 상황 인지용 최소 정보(제목·다음 확인·미니 통계),
+         판단에 필요한 전체(질문·병목·사례·자료팩)는 카드를 열어야 나온다. -->
+    <section class="report-agendas" aria-labelledby="agendaBlockTitle">
+      <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="agendaBlockTitle">정책의제 대응</h2></div></div>
+      <div id="agendaBlock"></div>
+    </section>
+    <!-- 대응 자료실 — 과거 사례 브리핑(종결된 사실만) + 부서 작성 문서 -->
+    <section class="report-library" aria-labelledby="libraryTitle">
+      <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="libraryTitle">대응 자료실</h2></div></div>
+      <div id="libraryList"></div>
+    </section>
     <section class="report-publications" aria-labelledby="pubsTitle">
-    <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="pubsTitle">참고 발간물</h2></div></div>
+    <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="pubsTitle">참고 발간물</h2></div></div>
     <p>IAEA · OECD NEA · IEA · EIA · 에너지경제연구원 — 제목과 원문 링크만 제공합니다.</p>
     <div class="pubs-filters" id="pubsFilters" role="group" aria-label="기관 필터"></div>
     <div id="pubsList" class="pubs-list"></div>
     </section>
   </section>
+
+  <section id="view-scrap" hidden aria-labelledby="scrapTitle">
+    <div class="archive-intro">
+      <div>
+        <h1 id="scrapTitle">신문스크랩</h1>
+        <p>사내 신문스크랩(조간·석간 보고)의 기사를 공개 원문으로 찾아 날짜·주제별로 모았습니다. 배지는 지면 매체이고, 온라인 발행처가 다르면 '원문'으로 병기합니다. 공개 원문을 못 찾은 기사는 실리지 않습니다.</p>
+      </div>
+    </div>
+    <section class="scrap-days" aria-labelledby="scrapListTitle">
+      <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="scrapListTitle">날짜별 스크랩</h2></div></div>
+      <div id="scrapList"></div>
+    </section>
+  </section>
 </main>
+
+<!-- 카드뉴스 크게 보기 — 띠에서 카드를 누르면 열린다. 좌우 버튼으로 다음 장,
+     터치는 스와이프(트랙이 scroll-snap). dialog 라서 Esc·배경 어둡게는 공짜다. -->
+<dialog id="cardViewer" class="card-viewer" aria-label="카드뉴스 크게 보기">
+  <button type="button" class="card-viewer-close" id="cardViewerClose" aria-label="닫기">×</button>
+  <button type="button" class="card-viewer-nav prev" id="cardViewerPrev" aria-label="이전 카드">‹</button>
+  <div class="card-viewer-track" id="cardViewerTrack"></div>
+  <button type="button" class="card-viewer-nav next" id="cardViewerNext" aria-label="다음 카드">›</button>
+  <p class="card-viewer-count" id="cardViewerCount" aria-live="polite"></p>
+</dialog>
 
 <dialog id="globalSearchDialog" class="search-dialog" aria-labelledby="globalSearchTitle">
   <form id="globalSearchForm" method="dialog">
@@ -676,8 +588,8 @@
 </dialog>
 
 <!-- 일정 상세. 이슈 다이얼로그를 쓰지 않는 이유는 재료가 다르기 때문이다 —
-     일정 기사 27건 중 이슈로 묶인 것은 4건뿐이라(실측 2026-08-29) 나머지는
-     열 이슈가 없다. 그래서 이 창은 스스로 근거를 갖는다: 근거 문장·출처. -->
+     일정 기사 대부분은 브리핑에 선정되지 않은 공지·예고라 열 이슈가 없다.
+     그래서 이 창은 스스로 근거를 갖는다: 근거 문장·출처. -->
 <dialog id="calendarDialog" class="calendar-dialog" aria-labelledby="calendarDialogTitle">
   <div class="issue-dialog-shell"><button id="calendarDialogClose" class="dialog-close" type="button" aria-label="일정 상세 닫기">×</button><div id="calendarDialogContent"></div></div>
 </dialog>
@@ -689,8 +601,8 @@
   <button class="active" type="button" data-view="news" aria-pressed="true"><span>오늘</span></button>
   <button type="button" data-view="trend" aria-pressed="false"><span>흐름</span></button>
   <button type="button" data-view="search" aria-pressed="false"><span>탐색</span></button>
-  <button type="button" data-view="longterm" aria-pressed="false" hidden><span>장기 β</span></button>
   <button type="button" data-view="report" aria-pressed="false"><span>보고서</span></button>
+  <button type="button" data-view="scrap" aria-pressed="false"><span>스크랩</span></button>
 </nav>
 
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
@@ -702,13 +614,9 @@
     <div><strong>AI 요약 정책</strong><p>날짜·수치·기관명은 원문에서 확인하세요.</p></div>
     <div><strong>출처·저작권</strong><p>원문 저작권은 각 언론사와 기관에 있습니다.</p></div>
   </div>
-  <div class="wrap foot-bottom"><p>Nuclens는 제목·요약·출처 링크만 제공합니다.</p><p id="footerStatus">서비스 상태 확인 중</p></div>
+  <div class="wrap foot-bottom"><p>Nuclens는 제목·요약·출처 링크만 제공합니다.</p><p>개인이 운영하는 비공식 프로젝트로, 한국수력원자력(KHNP)의 공식 서비스·입장이 아닙니다.</p><p id="footerStatus">서비스 상태 확인 중</p></div>
 </footer>
 
-<!-- 화면 v3 (?ui=v3). app.js **앞에** 온다 — app.js 가 분기에서 UI_V3 를 부르는데
-     뒤에 두면 그 상수가 app.js 파싱 시점에 아직 없다. 반대 방향 의존(v3 가 쓰는
-     esc·dateLabel·TOPIC_LABELS)은 전부 함수 안에서 참조하므로 호출 시점에 이미 있다. -->
-<script src="/ui-v3.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>
