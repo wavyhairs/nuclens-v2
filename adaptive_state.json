@@ -350,7 +350,7 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 6,
     "date": "2026-09-18"
   },
   "terms": {
@@ -465,9 +465,12 @@
       ],
       "expires_at": "2026-09-18T15:40:38.702049+00:00",
       "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-09-17T18:40:49.718361+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "queries_run": 0,
+      "planned_at": "2026-09-17T18:40:46.000177+00:00",
+      "queries_run": 1,
       "query": "LWA 원자력",
       "score": 3.6,
       "status": "tracking",
@@ -476,7 +479,7 @@
       "type": "company",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "xe100": {
       "articles": 3,
@@ -601,9 +604,12 @@
       ],
       "expires_at": "2026-09-18T15:40:38.702049+00:00",
       "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-09-17T18:40:49.718361+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "queries_run": 0,
+      "planned_at": "2026-09-17T18:40:46.000177+00:00",
+      "queries_run": 1,
       "query": "문무대왕과학연구소 원자력",
       "score": 3.7,
       "status": "tracking",
@@ -612,7 +618,7 @@
       "type": "org",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "안전건설위원회": {
       "articles": 3,
@@ -741,19 +747,24 @@
           "title": "정읍시, 바이오산업 육성 중장기 종합계획 수립 연구용역 중간보고회 개최"
         }
       ],
-      "expires_at": "2026-09-18T15:40:38.702049+00:00",
+      "expires_at": "2026-09-18T18:40:49.718361+00:00",
       "importance": "nice_to_know",
-      "new_articles": 0,
+      "last_result_count": 1,
+      "last_run": "2026-09-17T18:40:49.718361+00:00",
+      "new_articles": 1,
       "origin": "auto",
-      "queries_run": 0,
+      "planned_at": "2026-09-17T18:40:46.000177+00:00",
+      "queries_run": 1,
       "query": "첨단방사선연구소 원자력",
       "score": 3.62,
-      "status": "tracking",
+      "status": "extended",
       "term": "첨단방사선연구소",
       "ttl_hours": 24,
       "type": "org",
-      "yield_days": [],
-      "yields": 0,
+      "yield_days": [
+        "2026-09-18"
+      ],
+      "yields": 1,
       "zero_streak": 0
     },
     "태양광위원회": {
