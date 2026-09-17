@@ -31,80 +31,97 @@
  * 행 구분) / --bd-3 프레임(상자를 두르거나 구역을 연다). 3 은 아껴 쓴다.
  */
 :root {
-  --c-primary: #12251e;
-  --c-primary-strong: #0b1713;
-  --c-secondary: #1d725a;
-  --c-secondary-weak: #e2efe8;
-  --c-accent: #668d1d;       /* 표면 전용 3.78:1 — 텍스트는 --c-accent-text */
-  --c-accent-text: #4f7315;  /* 5.38:1 */
-  /* 종이와 표면을 벌린다. 이전 값(bg #f0f4f1 / surface #fbfcfa / border #cbd6cf)은
-     셋이 4% 명도 안에 몰려 있어 패널·입력·괘선이 배경에서 떨어지지 않았다 —
-     "차분함"이 아니라 흐림으로 읽혔다. 표면을 순백으로 올리고 괘선을 한 단
-     어둡게 내려 도형/바탕을 만든다. 대비 계산은 아래 각 줄에. */
-  --c-bg: #eef1ee;
+  --c-primary: #12294c;      /* 딥 네이비. 상단바·하단탭·근거 패널 머리의 '면' */
+  --c-primary-strong: #0b1c36;
+  --c-secondary: #204a8f;    /* 상호작용 전용 8.62:1 on --c-surface — 링크·활성탭·구역 번호 */
+  --c-secondary-weak: #eaf0f8;
+  --c-accent: #204a8f;       /* 강조는 상호작용과 같은 축으로 통합했다. 의미
+                                체계를 늘리지 않는다 — 뜻이 다른 색은 아래
+                                검증 틴트가 따로 나른다. */
+  --c-accent-text: #1a3a6b;  /* 10.06:1 on --c-surface */
+  /* 종이와 표면을 벌린다. 순백 종이를 쓰면 흰 패널과 명도차가 0 이 되어
+     패널·입력·괘선이 배경에서 떨어지지 않는다(가드 테스트가 0.08 을 요구).
+     쿨 그레이 종이 + 흰 패널은 네이버뉴스(#f4f6f8)·한경이 쓰는 한국 전문
+     지면의 표면 관습이기도 하다. 임직원이 흰 패널만 캡처해 흰 한글 문서에
+     붙이면 이음매가 안 보인다 — 이 서비스의 실제 유통 경로다. */
+  --c-bg: #eef1f4;
   --c-surface: #fff;
   --c-surface-raised: #fff;
-  --c-surface-sunken: #e3e8e4;
-  --c-border: #c3cec7;
-  --c-border-strong: #7d8f85;
-  /* 구조선·하드 그림자 전용 잉크. --c-primary(#12251e)는 상단바·잉크 크롬의
-     '면' 색이라 선의 색을 겸하면 크롬 위에 그은 선이 사라진다(1.4:1). 한 단
-     내린 값을 별도 이름으로 둔다 — hex 는 --c-primary-strong 과 같지만 용도가
-     다르므로 var() 참조가 아니라 자체 선언이다. 다크에서 뒤집힌다. */
-  --c-edge: #0b1713;         /* 16.10:1 on --c-bg */
-  --c-text: #12251e;
-  --c-text-secondary: #273b33;
-  --c-text-muted: #55645c;   /* 5.49:1 on --c-bg */
+  --c-surface-sunken: #e3e8ee;
+  --c-border: #d7dde4;
+  --c-border-strong: #b3bcc6;
+  /* 구조선·하드 그림자 전용 잉크. --c-primary 는 상단바·잉크 크롬의 '면'
+     색이라 선의 색을 겸하면 크롬 위에 그은 선이 사라진다. 지금은 hex 가
+     --c-primary 와 같지만 용도가 다르므로 var() 참조가 아니라 자체 선언으로
+     둔다 — 크롬 면 색만 바꾸고 싶을 때 선이 따라 움직이면 안 된다.
+     다크에서 뒤집힌다. */
+  --c-edge: #12294c;         /* 12.80:1 on --c-bg */
+  --c-text: #1a1c1f;         /* 15.06:1 on --c-bg */
+  --c-text-secondary: #4a5058; /* 7.18:1 — 요약문·본문 */
+  --c-text-muted: #656c74;   /* 4.69:1 on --c-bg. 한 단 밝은 #6d747c 는 4.17 로 미달 */
   --c-positive: #1e7a5a;
   --c-warning: #96620f;      /* 시안의 #a86f16 은 4.12:1 로 현행보다 나빠 어둡게 조정 */
   --c-critical: #df6c50;     /* 표면 전용 3.19:1 — 텍스트는 --c-critical-text.
                                 배경으로 쓸 땐 흰 글자(3.28:1) 금지, --c-primary(4.89:1) */
   --c-critical-text: #a84230;/* 5.85:1 */
-  --c-signal: #cce969;       /* 라임. 배경·강조 전용 — 밝은 배경 위 텍스트로 쓰지 말 것.
-                                종이 위 경계선은 1.20:1 이라 테두리·아웃라인 금지(1.4.11).
-                                블록으로만 쓰고 잉크 글자나 잉크 테두리를 반드시 동반한다. */
-  --c-signal-ink: #12251e;   /* 라임 슬래브 위 글자 전용 11.78:1 — --c-verified-on-primary
+  --c-signal: #e6edf7;       /* 옅은 네이비 워시. 배경·강조 전용 — 텍스트로 쓰지 말 것.
+                                옅은 표면색이라 테두리·아웃라인 금지(1.4.11).
+                                블록으로만 쓰고 잉크 글자를 반드시 동반한다. */
+  --c-signal-ink: #1a3a6b;   /* 워시 위 글자 전용 9.57:1 — --c-verified-on-primary
                                 와 같은 어법으로 테마 무관 고정이라 다크에 짝이 없다 */
-  --c-verified: #1d725a;
-  --c-unverified: #58675f;
-  /* 어두운 표면(--c-primary) 위 검증 배지 전용. --c-primary 는 두 테마 모두 딥
-     포레스트라(#12251e / #1a3329) 밝은 배경용 --c-verified(2.76:1)·
-     --c-unverified(2.69:1)가 그대로 오면 AA 에 못 미친다. 다크 팔레트의 같은
-     역할 색을 테마 무관 고정값으로 올린 것이라 다크에서는 렌더가 그대로다 —
-     그래서 아래 data-theme="dark" 블록에 짝이 없다. */
-  --c-verified-on-primary: #6cc0a2;   /* 7.41:1 on #12251e · 6.26:1 on #1a3329 */
-  --c-unverified-on-primary: #93a398; /* 6.06:1 on #12251e · 5.12:1 on #1a3329 */
+  --c-verified: #1a6b52;
+  --c-unverified: #656c74;
+  /* 어두운 표면(--c-primary) 위 검증 배지 전용. --c-primary 는 두 테마 모두
+     딥 네이비라(#12294c / #1c3355) 밝은 배경용 --c-verified·--c-unverified 가
+     그대로 오면 AA 에 못 미친다. 다크 팔레트의 같은 역할 색을 테마 무관
+     고정값으로 올린 것이라 다크에서는 렌더가 그대로다 — 그래서 아래
+     data-theme="dark" 블록에 짝이 없다. */
+  --c-verified-on-primary: #6cc0a2;   /* 6.70:1 on #12294c · 5.71:1 on #1c3355 */
+  --c-unverified-on-primary: #93a398; /* 5.48:1 on #12294c · 4.67:1 on #1c3355 */
   --c-focus: #7379dc;        /* 포커스링 전용 3.44:1 — 작은 링크 텍스트 금지 */
-  --c-chart-1: #1d725a;
-  --c-chart-2: #668d1d;
+  /* ── 분류 칩 — 색 묶음 일곱 ─────────────────────────────────────
+     주제 14개에 색을 하나씩 주면 목록이 형광펜이 된다. 성격이 같은 것끼리
+     묶어 일곱 벌로 줄였다(app.js TOPIC_FAMILY). 칩은 배경 위 잉크 글자라
+     "옅은 표면 + 짙은 잉크" 한 쌍으로만 쓴다 — 테두리를 두르지 않는다.
+     라벨은 정확한 주제명이고 색은 묶음이라, 색이 겹쳐도 글자가 가른다. */
+  --c-fam-safety: #fbe9e4;   --c-fam-safety-ink: #a84230;  /* 5.85:1 */
+  --c-fam-lto: #e2f0ea;      --c-fam-lto-ink: #14503d;     /* 7.51:1 */
+  --c-fam-build: #e6edf7;    --c-fam-build-ink: #1a3a6b;   /* 9.57:1 */
+  --c-fam-cycle: #eceaf8;    --c-fam-cycle-ink: #454bb0;   /* 6.31:1 */
+  --c-fam-market: #f6eddc;   --c-fam-market-ink: #7a4f0c;  /* 7.16:1 */
+  --c-fam-policy: #e3eff2;   --c-fam-policy-ink: #1f5f6e;  /* 6.02:1 */
+  --c-fam-etc: #e8ecef;      --c-fam-etc-ink: #43494f;     /* 8.62:1 */
+  --c-chart-1: #204a8f;
+  --c-chart-2: #1a6b52;
   --c-chart-3: #7379dc;
   --c-chart-4: #a86f16;
   --ff-base: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
   /* 시안의 IBM Plex Mono 는 추가하지 않는다(웹폰트 한 벌 더 = 로딩 비용).
      오버라인·번호·지표에만 쓰므로 시스템 모노 스택으로 충분하다. */
   --ff-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
-  /* ── 그림자 · 하드 오프셋 ─────────────────────────────────────────
-     blur 를 0 으로 두고 색을 --c-edge 로 잡는다. 커스텀 프로퍼티는 사용
-     시점에 해석되므로 다크가 --c-edge 한 줄만 뒤집으면 세 단이 통째로 밝은
-     오프셋으로 전환된다 — 그래서 다크 블록의 `--sh-*: none` 세 줄이 없다.
-     반복 요소(행·배지·칩)에는 절대 쓰지 않는다: 형제를 덮어 목록이 스티커가
-     된다. 상자형 표면에만. */
-  --sh-1: 2px 2px 0 var(--c-edge);
-  --sh-2: 4px 4px 0 var(--c-edge);
-  --sh-3: 6px 6px 0 var(--c-edge);
-  /* 시안 원칙: "카드·그림자·과도한 라운드를 줄이고 선과 타이포그래피로 위계를
-     표현한다." 시안 197줄에 border-radius 는 장식용 원 1건뿐이다. 토큰을 0 으로
-     두면 카드·버튼·입력이 한 번에 각지고, 되돌릴 때도 이 세 줄이면 된다. */
-  --r-1: 0;
-  --r-2: 0;
-  --r-3: 0;
-  /* ── 테두리 3단 ───────────────────────────────────────────────────
-     굵기 자체가 위계 신호다. 1 = 헤어라인(표 내부·메타), 2 = 구조선(구역
-     머리·행 구분), 3 = 프레임(상자를 두르거나 구역을 연다). 스캔 목록에
-     3px 를 여덟 줄 쌓으면 확신이 아니라 소음이 된다 — 3 은 아껴 쓴다. */
+  /* ── 그림자 · 소프트 워시 (B안 '정책 소프트', 2026-09) ──────────────
+     하드 오프셋(2px 2px 0)은 스티커 감성의 몸통이라 폐기했다. x 오프셋 0,
+     blur > 0, 잉크(--c-primary 계열) 저알파 rgba 만 허용 — 형식은
+     test_shadows_are_soft_low_alpha_washes 가 잠근다. 다크에서는 그림자가
+     종이에 묻혀 거의 사라지는데 그게 정상이다: 위계는 보더가 계속 든다.
+     반복 요소(행·배지·칩)에 쓰지 않는 규칙은 그대로다 — 상자형 표면에만. */
+  --sh-1: 0 1px 2px rgba(18, 41, 76, .06);
+  --sh-2: 0 2px 6px rgba(18, 41, 76, .08);
+  --sh-3: 0 6px 16px rgba(18, 41, 76, .12);
+  /* radius — 컨트롤 8 / 패널 12 / 다이얼로그 16 / 배지·칩 pill. 일괄
+     라운드는 클리셰라 표·히트맵 셀·잉크 크롬은 계속 각지다(토큰을 안
+     물렸으므로 자동). 되돌릴 때도 이 네 줄이면 된다. */
+  --r-1: 8px;
+  --r-2: 12px;
+  --r-3: 16px;
+  --r-4: 999px;
+  /* ── 테두리 — 전부 헤어라인 (B안 정책 소프트, 2026-09) ─────────────
+     위계 신호를 굵기에서 색으로 옮겼다: 구역·프레임은 잉크(--c-edge),
+     행·표 내부는 회색(--c-border). 세 토큰은 가드가 존재를 요구해 남긴다
+     — 값을 다시 벌리면 하드엣지로 되돌아가는 스위치다. */
   --bd-1: 1px;
-  --bd-2: 2px;
-  --bd-3: 3px;
+  --bd-2: 1px;
+  --bd-3: 1px;
   --fo-ring: 0 0 0 2px var(--c-bg), 0 0 0 4px var(--c-focus);
   --wrap: 1280px;
   /* ── 간격 · 4px 배수 ──────────────────────────────────────────────
@@ -119,10 +136,20 @@
      이 블록의 px·clamp 최소값을 같이 검사한다. --t-hero 는 3ff0907
      (히어로 축소 — 선두 카드에 첫 화면을 내준다)의 실측 결정을 박제한
      값이다. 58px 로 되돌리지 말 것. */
+  /* 본문을 15 → 16 으로 올린다. 한국 전문 지면 실측 대역이 연합 18/27 ·
+     korea.kr 18/28.8 · 한경 13/22 이고, 15px 는 그 아래였다. 정수로 두는 것은
+     취향이 아니라 계약이다 — 밀도 테스트의 파서가 `(\d+)px` 풀매치라 16.5 처럼
+     소수를 쓰면 카드 높이 계산이 통째로 죽는다.
+     활자를 키운 만큼 줄길이를 --measure 로 잡아 주지 않으면 한 줄 91자가
+     되므로 둘은 한 쌍이다. */
   --t-min: 12.5px;
-  --t-caption: 13.5px;
-  --t-body: 15px;
-  --t-body-lg: 16px;
+  --t-caption: 14px;
+  --t-body: 16px;
+  --t-body-lg: 17px;
+  /* 본문 흐름의 줄길이 상한. 64ch ≈ 한글 46자로, 연합 37자와 korea.kr 49자
+     사이다. ch 는 요소의 font-size 를 따라가므로 크기가 다른 블록에 같은
+     토큰을 걸어도 글자수 기준이 유지된다. */
+  --measure: 64ch;
   --t-card: 23px;
   --t-title: clamp(24px, 2.6vw, 32px);
   /* 선두 제목. 34px 은 두 줄에 85px 을 써서 카드 하나가 첫 화면을 다 먹는
@@ -141,51 +168,54 @@
   --mo-ease-out: cubic-bezier(0, 0, .2, 1);
   /* ── z ── 기존 리터럴의 서열을 그대로 옮긴 것. 새 층은 이 사이에만. */
   --z-pop: 30;
-  --z-period-bar: 80;
   --z-topbar: 90;
   --z-tabs: 100;
   --z-scrim: 119;
   --z-sheet: 120;
   --z-toast: 150;
   --z-skip: 1000;
-  color-scheme: light;
+  color-scheme: light;  --z-period-bar: 80;
 }
+
 
 /* 다크는 시안에 없다(시안은 라이트 단일). 같은 색상군에서 파생했고, OS 자동
  * 감지는 도입하지 않는다 — 라이브가 의도적으로 data-theme 토글만 쓴다.
  * 주의: test_muted_text_meets_wcag_aa_on_paper 의 dict() 는 나중 값이 앞을
  * 덮어쓰므로 실제로 검사하는 쌍은 여기 --c-text-muted / --c-bg 다. */
 :root[data-theme="dark"] {
-  --c-primary: #1a3329;
-  --c-primary-strong: #12251e;
-  --c-secondary: #6cc0a2;
-  --c-secondary-weak: #1b3a2e;
-  --c-accent: #9fc74a;
-  --c-accent-text: #bcdc78;  /* 10.91:1 */
+  --c-primary: #1c3355;
+  --c-primary-strong: #12294c;
+  --c-secondary: #8fb4e6;    /* 8.95:1 on --c-bg · 7.95:1 on --c-surface */
+  --c-secondary-weak: #1b2c47;
+  --c-accent: #8fb4e6;
+  --c-accent-text: #a8c6ea;  /* 10.85:1 */
   /* 라이트와 같은 벌림 — 바탕은 더 내리고 표면은 더 올린다. */
-  --c-bg: #0b1310;
-  --c-surface: #16221c;
-  --c-surface-raised: #1e2c25;
-  --c-surface-sunken: #101a15;
-  --c-border: #2b3c34;
-  --c-border-strong: #46594e;
-  /* 잉크를 뒤집는다 — 어두운 종이 위에서는 밝은 선이 잉크다. 16.08:1 로
-     라이트(16.10:1)와 사실상 같은 무게라 두 테마의 그림자가 같은 세기로
-     읽힌다. 이게 밝은 오프셋을 렌더링 버그가 아니라 반전으로 보이게 한다. */
-  --c-edge: #e7efe9;         /* 16.08:1 on --c-bg */
-  --c-text: #e7efe9;
-  --c-text-secondary: #b3c3b8;
-  --c-text-muted: #93a398;   /* 6.95:1 on --c-bg */
+  --c-bg: #0b1016;
+  --c-surface: #161d26;
+  --c-surface-raised: #1e2731;
+  --c-surface-sunken: #10161d;
+  --c-border: #2b3542;
+  --c-border-strong: #46525f;
+  /* 잉크를 뒤집는다 — 어두운 종이 위에서는 밝은 선이 잉크다. 16.07:1 로
+     라이트(12.80:1)보다 오히려 무겁다. 두 테마의 오프셋이 같은 세기로 읽혀야
+     밝은 오프셋이 렌더링 버그가 아니라 반전으로 보인다. */
+  --c-edge: #e7ecf2;         /* 16.07:1 on --c-bg */
+  --c-text: #e7ecf2;
+  --c-text-secondary: #b4c0cf; /* 10.35:1 */
+  --c-text-muted: #93a0ae;   /* 7.16:1 on --c-bg */
   --c-positive: #4fbb93;
   --c-warning: #d99a3e;
   --c-critical: #e0705a;
   --c-critical-text: #f0937f;/* 7.34:1 */
-  --c-signal: #cce969;       /* 어두운 배경 위에서는 텍스트로도 안전(11.78:1 대 primary) */
+  /* 라이트와 같은 값이다 — 워시는 블록 색이고 그 위 글자는 --c-signal-ink
+     하나로 고정이라(9.57:1) 테마를 타면 안 된다. 어두운 지면에서는 밝은
+     블록이 되어 오히려 신호가 세진다. */
+  --c-signal: #e6edf7;
   --c-verified: #6cc0a2;
-  --c-unverified: #93a398;
+  --c-unverified: #93a0ae;
   --c-focus: #9aa0e8;
-  --c-chart-1: #6cc0a2;
-  --c-chart-2: #9fc74a;
+  --c-chart-1: #8fb4e6;
+  --c-chart-2: #6cc0a2;
   --c-chart-3: #9aa0e8;
   --c-chart-4: #d99a3e;
   /* --sh-1/2/3 은 여기서 재정의하지 않는다. blur 그림자 시절엔 어두운 종이 위
@@ -330,8 +360,8 @@ button:disabled { cursor: not-allowed; opacity: .42; }
   border-radius: 0;
   background: var(--c-signal);
   color: var(--c-signal-ink);
-  /* 하드 그림자를 붙이지 않는다 — --c-edge(#0b1713)는 상단바의 --c-primary
-     (#12251e) 위에서 1.4:1 이라 아무것도 안 보인다. 잉크 크롬 안(.topbar ·
+  /* 하드 그림자를 붙이지 않는다 — --c-edge(#0b1c36)는 상단바의 --c-primary
+     (#12294c) 위에서 1.4:1 이라 아무것도 안 보인다. 잉크 크롬 안(.topbar ·
      .mobile-tabs · .status-strip · .rail-head)에서는 --sh-* 를 쓰지 말 것. */
   font-family: var(--ff-base);
   font-size: 19px;
@@ -851,7 +881,7 @@ kbd {
 .topic-direction.down { color: var(--c-critical); }
 /* 방향이 두 번 이상 바뀐 패턴(감소 후 회복·증가 후 둔화·일시 급증·등락 반복) —
    단순 증가·감소가 아니므로 그 둘과 같은 색을 쓰지 않는다. 처음엔 --c-secondary 를
-   썼는데 실측(스크린샷)해 보니 --c-positive(#1e7a5a)와 --c-secondary(#1d725a)가
+   썼는데 실측(스크린샷)해 보니 --c-positive(#1e7a5a)와 --c-secondary(#204a8f)가
    거의 같은 초록이라 '증가'와 구분이 안 됐다. --c-warning·--c-chart-3 는 이
    파일 다른 자리(위 --c-warning 주석)에서 이미 '텍스트 대비 미검증'이라 피한
    색이라 새로 쓰지 않는다. 대신 검증된 --c-text(본문 잉크)로 강한 대비를 준다 —
@@ -3213,10 +3243,10 @@ dialog::backdrop { background: rgb(18 37 30 / 48%); }
      를 파일 전체에 돌려 dict() 로 만든다. 나중 값이 앞을 덮어쓰므로 여기 hex 를
      두면 그 테스트가 재는 대비 쌍이 조용히 바뀐다. 단위 없는/px 토큰만 둔다. */
   :root {
-    --bd-3: 2px;
-    --sh-1: 2px 2px 0 var(--c-edge);
-    --sh-2: 3px 3px 0 var(--c-edge);
-    --sh-3: 4px 4px 0 var(--c-edge);
+    --bd-3: 1px;
+    --sh-1: 0 1px 2px rgba(18, 41, 76, .06);
+    --sh-2: 0 1px 4px rgba(18, 41, 76, .07);
+    --sh-3: 0 4px 10px rgba(18, 41, 76, .10);
   }
   /* 발간물 — 모바일은 1열 서가형 목록. 표지 비율을 풀고(aspect auto) 스파인
      달린 목록 카드로 강등한다. 2열 표지는 제목 5줄+gist 에서 세로로 무너진다. */
