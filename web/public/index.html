@@ -99,7 +99,16 @@
        다루는 화면이 아니다(거르고 싶으면 탐색 탭이 주인이다).
 
        오디오 브리핑과 날짜 네비게이션은 남긴다. 둘은 "읽을 게 많다"의
-       원인이 아니라 별개 기능이라 개편과 함께 지울 이유가 없다. -->
+       원인이 아니라 별개 기능이라 개편과 함께 지울 이유가 없다.
+
+       구역 순서는 읽는 순서다 (2026-09-18):
+         ① 카드뉴스      — 오늘을 그림 몇 장으로 먼저 훑는다
+         ② 먼저 볼 3건   — 반드시 확인할 핵심 기사
+         ③ 오디오 브리프 — 듣고 싶으면 오늘의 흐름을
+         ④ 그 밖의 이슈  — 나머지를 목차로 탐색
+       세 구역(①③④)은 ②보다 시각적으로 커지면 안 된다. 카드 띠는 300px 정사각
+       한 줄, 오디오는 기사 카드 1장 높이가 상한이다 — 각 블록의 CSS 주석에
+       그 예산이 적혀 있다. -->
   <section id="view-news" aria-labelledby="todayTitle">
     <header class="today-head">
       <div class="today-head-row">
@@ -121,28 +130,6 @@
       <p class="today-lede" id="todayLede"></p>
     </header>
 
-    <div id="bootSkeleton" class="issue-list" role="status" aria-label="브리핑을 불러오고 있습니다">
-      <article class="issue-card skeleton-card" aria-hidden="true"><i></i><i></i><i></i><i></i></article>
-      <article class="issue-card skeleton-card" aria-hidden="true"><i></i><i></i><i></i><i></i></article>
-    </div>
-
-    <!-- 오늘 먼저 볼 3건 — 이 화면에서 유일하게 크게 쓰는 요소.
-         번호·분류·제목·'왜 중요한가' 한 줄·근거. 요약은 여기에도 안 쓴다
-         (지니 09-15) — 왜 골랐는지만 한 줄이다. 나머지는 아래 목차로 간다. -->
-    <ol class="pick3" id="pickList" aria-label="오늘 먼저 볼 3건"></ol>
-
-    <!-- 브리핑 패널 — 짙은 면 하나에 오늘의 목차를 세운다.
-         Codex 목업(work/home-brief-comparison.html, B안)의 구조를 따르되 면색은
-         브랜드 네이비(--c-primary). 번호·지역·대분류·제목·왜 중요한가·화살표. -->
-    <section id="briefPanel" class="brief-panel" aria-label="오늘의 현안 목차">
-      <!-- 패널 머리(킥커·제목·날짜·건수)는 없다 — 폰에서 첫 화면에 행이 1개만
-           보였다(2026-09-15 실측 375px). 날짜는 위 date-nav 가 이미 들고 있고,
-           건수는 꼬리 한 줄이면 충분하다. 패널은 01번 행으로 바로 시작한다. -->
-      <h2 class="brief-panel-title" id="briefPanelTitle">그 밖의 이슈</h2>
-      <nav id="tocList" class="toc" aria-label="오늘의 현안 목차"></nav>
-      <div class="brief-foot"><span id="briefPanelDate"></span><span class="brief-foot-actions"><a id="briefPanelArchive" class="brief-more" href="#" hidden>지난 기사까지 →</a><button type="button" id="briefPanelAll" class="brief-more" hidden>나머지 펼치기 →</button></span></div>
-    </section>
-
     <!-- 카드뉴스 — 텔레그램 앨범과 같은 PNG 를 사이트에서도 넘겨 본다(지니 09-16).
          /cards/index.json 이 있는 날만 선다. 이미지는 daily-brief 가 커밋한다. -->
     <section id="cardStrip" class="card-strip" aria-labelledby="cardStripTitle" hidden>
@@ -154,6 +141,76 @@
         <div class="card-strip-track" id="cardStripTrack"></div>
         <button type="button" class="card-strip-nav next" id="cardStripNext" aria-label="다음 카드" aria-controls="cardStripTrack">›</button>
       </div>
+    </section>
+
+    <div id="bootSkeleton" class="issue-list" role="status" aria-label="브리핑을 불러오고 있습니다">
+      <article class="issue-card skeleton-card" aria-hidden="true"><i></i><i></i><i></i><i></i></article>
+      <article class="issue-card skeleton-card" aria-hidden="true"><i></i><i></i><i></i><i></i></article>
+    </div>
+
+    <!-- 오늘 먼저 볼 3건 — 이 화면에서 유일하게 크게 쓰는 요소.
+         번호·분류·제목·'왜 중요한가' 한 줄·근거. 요약은 여기에도 안 쓴다
+         (지니 09-15) — 왜 골랐는지만 한 줄이다. 나머지는 아래 목차로 간다. -->
+    <ol class="pick3" id="pickList" aria-label="오늘 먼저 볼 3건"></ol>
+
+    <!-- 오디오 브리프 — 카드뉴스와 '그 밖의 이슈' 사이. 두 브리핑은 독립
+         플레이어 둘이 아니라 하나의 <audio> 를 갈아 끼우는 **선택지**다. 그래서
+         카드처럼 보이되 role="group" + aria-pressed 세그먼트 문법은 그대로 둔다 —
+         보조기술에 '플레이어 두 대'로 들리면 화면이 거짓말을 하는 것이다.
+         면·테두리·모서리는 먼저 볼 3건(.pick-card)과 같은 값을 쓰고, 재생
+         글리프와 재생시간만으로 오디오라는 성격을 남긴다. -->
+    <section class="hero-audio" id="audioBrief" aria-labelledby="audioBriefTitle" hidden>
+      <div class="audio-head">
+        <strong id="audioBriefTitle">오디오 브리프</strong>
+        <span class="audio-head-meta">골라 들으세요</span>
+      </div>
+      <div class="audio-mode-row" id="audioModes" role="group" aria-label="오디오 브리핑 종류">
+        <button type="button" data-audio-mode="fast" aria-pressed="true">
+          <span class="audio-mode-glyph" aria-hidden="true">▶</span>
+          <strong>빠른 브리핑</strong><small>핵심 뉴스 · 약 3분</small>
+        </button>
+        <button type="button" data-audio-mode="expert" aria-pressed="false">
+          <span class="audio-mode-glyph" aria-hidden="true">▶</span>
+          <strong>전문가 브리핑</strong><small>정책·기술 해설 · 약 10분</small>
+        </button>
+      </div>
+      <div class="audio-control-row">
+        <button id="audioToggle" type="button" aria-pressed="false">▶ 브리핑 듣기</button>
+        <span class="hero-audio-time" id="audioTime" aria-hidden="true"></span>
+        <!-- 시크 바 — 8~10분 음원에서 중간 이동이 필수가 됐다(사용자 요청
+             8/16). preload=none 이라 재생 전 시킹은 신뢰할 수 없어 배속과
+             같은 문법으로 재생 시작(.started) 후에만 펼친다. -->
+        <input type="range" class="hero-audio-seek" id="audioSeek"
+               min="0" max="0" step="1" value="0" aria-label="재생 위치 이동">
+        <!-- 순환 버튼 하나("2×")로는 조절 가능하다는 게 안 읽힌다(사용자
+             피드백 8/5). 선택지를 전부 펼치고 현재 값을 누른 상태로 표시 —
+             regionTabs 와 같은 aria-pressed 세그먼트 문법. 좁은 화면에서는
+             재생을 시작하기 전까지 CSS 가 접는다(.started) — 배속은 듣는
+             중에만 의미가 있는 조절이다. -->
+        <span class="hero-audio-label" aria-hidden="true">배속</span>
+        <div class="hero-audio-rates" id="audioRates" role="group" aria-label="재생 속도">
+          <button type="button" data-rate="1" aria-pressed="true">1×</button>
+          <button type="button" data-rate="1.25" aria-pressed="false">1.25×</button>
+          <button type="button" data-rate="1.5" aria-pressed="false">1.5×</button>
+          <button type="button" data-rate="2" aria-pressed="false">2×</button>
+        </div>
+      </div>
+      <!-- 설명은 한 줄로 자른다. 위 카드의 <small> 이 이미 길이·성격을 말했고,
+           여기서 두세 줄을 더 쓰면 오디오 덩어리가 먼저 볼 3건 카드보다 커진다. -->
+      <p class="audio-description" id="audioDescription"></p>
+      <audio id="audioEl" preload="none"></audio>
+    </section>
+
+    <!-- 브리핑 패널 — 짙은 면 하나에 오늘의 목차를 세운다.
+         Codex 목업(work/home-brief-comparison.html, B안)의 구조를 따르되 면색은
+         브랜드 네이비(--c-primary). 번호·지역·대분류·제목·왜 중요한가·화살표. -->
+    <section id="briefPanel" class="brief-panel" aria-label="오늘의 현안 목차">
+      <!-- 패널 머리(킥커·제목·날짜·건수)는 없다 — 폰에서 첫 화면에 행이 1개만
+           보였다(2026-09-15 실측 375px). 날짜는 위 date-nav 가 이미 들고 있고,
+           건수는 꼬리 한 줄이면 충분하다. 패널은 01번 행으로 바로 시작한다. -->
+      <h2 class="brief-panel-title" id="briefPanelTitle">그 밖의 이슈</h2>
+      <nav id="tocList" class="toc" aria-label="오늘의 현안 목차"></nav>
+      <div class="brief-foot"><span id="briefPanelDate"></span><span class="brief-foot-actions"><a id="briefPanelArchive" class="brief-more" href="#" hidden>지난 기사까지 →</a><button type="button" id="briefPanelAll" class="brief-more" hidden>나머지 펼치기 →</button></span></div>
     </section>
 
     <!-- 정책의제 '한 주의 원자력' — main 에 라이브인 블록. 목차형 개편(09-11)이
@@ -192,39 +249,6 @@
 
     <p id="statusLine" class="today-status"></p>
 
-    <div class="hero-audio" id="audioBrief" hidden>
-            <div class="audio-mode-row" id="audioModes" role="group" aria-label="오디오 브리핑 종류">
-              <button type="button" data-audio-mode="fast" aria-pressed="true">
-                <strong>빠른 브리핑</strong><small>핵심 뉴스 · 약 3분</small>
-              </button>
-              <button type="button" data-audio-mode="expert" aria-pressed="false">
-                <strong>전문가 브리핑</strong><small>정책·기술 통합 해설 · 약 10분</small>
-              </button>
-            </div>
-            <div class="audio-control-row">
-            <button id="audioToggle" type="button" aria-pressed="false">▶ 브리핑 듣기</button>
-            <span class="hero-audio-time" id="audioTime" aria-hidden="true"></span>
-            <!-- 시크 바 — 8~10분 음원에서 중간 이동이 필수가 됐다(사용자 요청
-                 8/16). preload=none 이라 재생 전 시킹은 신뢰할 수 없어 배속과
-                 같은 문법으로 재생 시작(.started) 후에만 펼친다. -->
-            <input type="range" class="hero-audio-seek" id="audioSeek"
-                   min="0" max="0" step="1" value="0" aria-label="재생 위치 이동">
-            <!-- 순환 버튼 하나("2×")로는 조절 가능하다는 게 안 읽힌다(사용자
-                 피드백 8/5). 선택지를 전부 펼치고 현재 값을 누른 상태로 표시 —
-                 regionTabs 와 같은 aria-pressed 세그먼트 문법. 좁은 화면에서는
-                 재생을 시작하기 전까지 CSS 가 접는다(.started) — 배속은 듣는
-                 중에만 의미가 있는 조절이다. -->
-            <span class="hero-audio-label" aria-hidden="true">배속</span>
-            <div class="hero-audio-rates" id="audioRates" role="group" aria-label="재생 속도">
-              <button type="button" data-rate="1" aria-pressed="true">1×</button>
-              <button type="button" data-rate="1.25" aria-pressed="false">1.25×</button>
-              <button type="button" data-rate="1.5" aria-pressed="false">1.5×</button>
-              <button type="button" data-rate="2" aria-pressed="false">2×</button>
-            </div>
-            </div>
-            <p class="audio-description" id="audioDescription"></p>
-            <audio id="audioEl" preload="none"></audio>
-          </div>
 
     <details class="feed-drawer">
           <summary><span id="feedLabel">오늘 수집한 원문</span><small id="feedTitle"></small></summary>

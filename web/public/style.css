@@ -850,15 +850,27 @@ kbd {
   white-space: nowrap;
 }
 .hero-evidence-chip:hover { background: var(--c-surface-sunken); }
-/* 오디오 브리핑 — 출근길 청취용. 배속은 음원이 아니라 playbackRate 로 조절한다.
-   버튼 문법은 .hero-actions(밑줄 텍스트 버튼), 시간 표시는 모노 라벨을 따른다. */
+/* 오디오 브리프 — 출근길 청취용. 배속은 음원이 아니라 playbackRate 로 조절한다.
+   시간 표시는 모노 라벨을 따른다.
+
+   2026-09-18: 별도 색 블록처럼 튀던 가로 플렉스 줄을 걷고, 카드뉴스·먼저 볼
+   3건과 같은 계열의 세로 구역으로 세웠다. 면·테두리·모서리는 .pick-card 와
+   같은 값(--c-surface / --bd-1 --c-border / --r-3)이고 **그림자는 없다** —
+   팔레트 규칙 3: 지면에 박힌 카드는 프레임만 쓴다.
+
+   높이 예산(실측 기준 값): 머리 24 + 카드 56 + 컨트롤 40 + 설명 19 + 간격 24
+   ≈ 163px. 먼저 볼 3건 카드 1장이 163~189px 이라 두 카드를 합친 오디오 구역이
+   기사 카드 하나 정도로 보인다. 여기 패딩·줄 수를 늘리면 그 균형이 깨지고
+   오디오가 핵심 기사보다 커진다 — 늘리기 전에 pick-card 를 먼저 재 볼 것. */
 .hero-audio {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px;
-  margin-top: 16px;
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
 }
+/* 카드뉴스 띠 머리(.card-strip-head)와 같은 문법 — 두 구역이 형제로 읽힌다. */
+.audio-head { display: flex; align-items: baseline; gap: var(--sp-2); }
+.audio-head strong { font-size: var(--t-body); }
+.audio-head-meta { color: var(--c-text-muted); font-size: var(--t-caption); }
 .hero-audio > button {
   min-height: 40px;
   padding: 0 2px;
@@ -911,29 +923,51 @@ kbd {
   background: var(--c-text);
   color: var(--c-bg);
 }
-/* ── Audio v2: 빠른 브리핑 / 전문가 브리핑 이중 플레이어 ── */
+/* ── Audio v2: 빠른 브리핑 / 전문가 브리핑 ──
+   데스크톱 2열을 유지한다. 둘은 서로 배타적인 **선택지**라 나란히 놓여야
+   비교가 되고, 세로로 쌓으면 같은 높이를 두 배로 쓴다. 폰은 아래 767px
+   블록에서 1열로 떨어진다. */
 .audio-mode-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  flex-basis: 100%;
-  max-width: 560px;
+  gap: var(--sp-2);
 }
+/* 카드 골격은 .pick-card 와 같다. 다른 것은 왼쪽 재생 글리프 한 칸뿐 —
+   '기사 카드 복제'가 아니라 '같은 계열의 오디오 카드'로 읽히게 하는 표식이다. */
 .audio-mode-row button {
   display: grid;
-  gap: 2px;
-  min-height: 54px;
-  padding: 8px 12px;
-  border: 1px solid var(--c-border-strong);
-  border-radius: var(--r-1);
-  background: transparent;
+  grid-template-columns: 18px minmax(0, 1fr);
+  column-gap: var(--sp-2);
+  align-content: center;
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--bd-1) solid var(--c-border);
+  border-radius: var(--r-3);
+  background: var(--c-surface);
   color: var(--c-text);
   text-align: left;
+  cursor: pointer;
 }
-.audio-mode-row button strong { font-size: var(--t-caption); font-weight: 700; }
-.audio-mode-row button small { color: var(--c-text-muted); font-size: var(--t-min); font-weight: 500; }
-.audio-mode-row button[aria-pressed="true"] { border-color: var(--c-text); background: var(--c-surface-sunken); }
-.audio-control-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.audio-mode-glyph {
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--c-secondary);
+  font-size: 13px;
+  line-height: 1;
+}
+.audio-mode-row button strong { grid-column: 2; font-size: var(--t-caption); font-weight: 700; }
+.audio-mode-row button small { grid-column: 2; color: var(--c-text-muted); font-size: var(--t-min); font-weight: 500; }
+/* 고른 쪽은 잉크 테두리 — .pick-card:first-child 가 '먼저 볼 하나'를 표시하는
+   것과 같은 수단이다. 면색을 채우면 형광펜이 되고 화면당 색 셋 규칙을 넘는다. */
+.audio-mode-row button[aria-pressed="true"] { border-color: var(--c-edge); border-width: 2px; padding: 7px 11px; }
+.audio-mode-row button[aria-pressed="true"] .audio-mode-glyph { color: var(--c-edge); }
+.audio-mode-row button:hover { border-color: var(--c-border-strong); }
+.audio-mode-row button:focus-visible { outline: none; box-shadow: var(--fo-ring); }
+/* 한쪽 variant 가 없는 날(전문가만·빠른 것만) — updateAudioModeButtons 가 그
+   버튼에 hidden 을 건다. 2열을 그대로 두면 남은 카드가 반 칸에 혼자 서고 옆이
+   빈다. 한 장뿐인 날은 한 칸을 다 쓴다. */
+.audio-mode-row:has(> button[hidden]) { grid-template-columns: minmax(0, 1fr); }
+.audio-control-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
 .audio-control-row > #audioToggle {
   min-height: 40px;
   padding: 0 2px;
@@ -945,7 +979,13 @@ kbd {
   font-weight: 650;
 }
 .audio-control-row > #audioToggle:hover { border-bottom-color: var(--c-text); }
-.audio-description { flex-basis: 100%; max-width: 680px; margin: -4px 0 0; color: var(--c-text-muted); font-size: var(--t-min); line-height: 1.5; }
+/* 한 줄로 자른다 — 높이 예산의 마지막 19px. 위 카드의 <small> 이 이미 길이와
+   성격을 말했고, 여기가 세 줄이 되면 오디오가 기사 카드보다 커진다. */
+.audio-description {
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+  max-width: var(--measure); margin: 0;
+  color: var(--c-text-muted); font-size: var(--t-min); line-height: 1.5;
+}
 
 /* ── 장기 흐름: 7일/30일/분기/반기/연간 story timeline ── */
 .period-timeline-card { margin: var(--sp-5) 0 var(--sp-6); }
@@ -3032,7 +3072,12 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
 /* 기사 요지는 해석이 아니라 원문 내용이다 — 사용자가 원문(대개 영문)에 들어가지
    않으려고 읽는 문단이므로 본문 색·본문 크기로 세운다. 옆 라벨 열은 그대로 두어
    같은 어법을 유지한다. */
-.dialog-detail > p { margin: 0; color: var(--c-text); font-size: var(--t-body); line-height: 1.75; }
+/* 본문도 곁말과 같은 오른쪽 열에 못 박는다. 곁말(<small>)만 grid-column:2 로
+   고정돼 있으면 자동배치 커서가 1행 끝으로 밀리고, 뒤따르는 <p> 가 다음 행의
+   **첫 칸(128px 라벨 열)** 으로 떨어진다 — 출처 한 줄이 넓게 눕고 정작 기사
+   요지가 좁은 칸에서 세로로 흐르던 원인(detail_source 가 있는 이슈에서만
+   재현). 둘 다 2열에 두면 라벨 / 내용 두 단이 그대로 유지된다. */
+.dialog-detail > p { grid-column: 2; margin: 0; color: var(--c-text); font-size: var(--t-body); line-height: 1.75; }
 .dialog-detail > small { grid-column: 2; color: var(--c-text-muted); font-size: var(--t-min); }
 .dialog-change strong,
 .dialog-detail strong,
@@ -3056,6 +3101,7 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
   .dialog-detail strong,
   .dialog-meaning strong,
   .dialog-open strong { line-height: 1.5; }
+  .dialog-detail > p,
   .dialog-detail > small { grid-column: 1; }
   /* 제목과 곁말이 한 줄을 다투면 곁말이 잘린다(390px 실측: '브리핑에 선정된 2건'
      이 '브리핑에 선정'으로 끊겼다). 건수가 든 말이라 반쯤 잘리면 거짓이 된다 —
@@ -3299,12 +3345,14 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
      단, 재생 전에는 한 줄(듣기 버튼 + 길이)로 접는다: 배속 세그먼트까지 펼치면
      두 줄 ~130px 가 첫 화면의 첫 콘텐츠가 된다(실측 8/6). 배속은 듣는 중에만
      의미 있는 조절이라 재생 시작(.started) 후 펼친다. */
-  .hero-audio { gap: 12px; margin-top: 14px; }
+  .hero-audio { gap: var(--sp-2); margin-top: var(--sp-3); }
   .hero-audio button { min-height: 44px; }
   .hero-audio:not(.started) .hero-audio-label,
   .hero-audio:not(.started) .hero-audio-rates { display: none; }
+  /* 폰은 1열. 두 카드가 세로로 쌓이는 만큼 카드 높이를 터치 타깃 하한(44px)
+     까지 낮춘다 — 48px 로 두면 두 장만으로 기사 카드 한 장을 넘어선다. */
   .audio-mode-row { grid-template-columns: 1fr; width: 100%; }
-  .audio-mode-row button { min-height: 48px; }
+  .audio-mode-row button { min-height: 44px; }
   .audio-control-row { width: 100%; }
   .period-timeline-row { grid-template-columns: 1fr; gap: 6px; }
   /* '지난 확인 이후'도 hero-actions 와 달리 남는다 — 방문 간격은 모바일이
@@ -3769,6 +3817,10 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
   .pick-why { font-size: 14px; }
   .pick-badge { display: none; }   /* 근거는 펼친 안과 상세 화면이 든다 */
   .today-lede { display: none; }
+  /* 오디오 설명 한 줄도 접는다 — 카드의 <small>('핵심 뉴스 · 약 3분')이 같은
+     말을 이미 하고, 1열로 쌓인 두 카드 위에 이 줄까지 남기면 오디오 구역이
+     기사 카드 한 장을 넘는다. 넓은 화면에는 그대로 남는다. */
+  .audio-description { display: none; }
   .pick-open { grid-template-columns: 34px minmax(0, 1fr); }
   .pick-detail { padding: 0 var(--sp-3) var(--sp-3) calc(34px + var(--sp-2) + var(--sp-3));
     font-size: 14px; }
