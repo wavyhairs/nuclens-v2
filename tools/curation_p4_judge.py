@@ -338,6 +338,9 @@ def import_manual_calibration_answer(answer_path, manifest_path) -> list[dict]:
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
     if answer.get("policy") != EVALUATOR_POLICY or manifest.get("policy") != EVALUATOR_POLICY:
         raise JudgeValidationError("manual answer/manifest evaluator policy mismatch")
+    model_display = str(answer.get("judge_model_display") or "").strip()
+    if not model_display or model_display == "사용자가 ChatGPT UI에 표시된 모델명을 입력":
+        raise JudgeValidationError("judge_model_display must be filled from the ChatGPT UI")
     packet = next((item for item in manifest.get("packets") or []
                    if item.get("packet_id") == answer.get("packet_id")), None)
     if packet is None:
@@ -374,7 +377,7 @@ def import_manual_calibration_answer(answer_path, manifest_path) -> list[dict]:
             "provenance": {"mode": "manual_chatgpt", "packet_id": packet["packet_id"],
                            "packet_sha256": packet["packet_sha256"],
                            "answer_sha256": answer_sha,
-                           "judge_model_display": answer.get("judge_model_display") or "",
+                           "judge_model_display": model_display,
                            "imported_at": imported_at},
         })
     return rows
@@ -417,6 +420,9 @@ def import_manual_canary_answer(answer_path, manifest_path) -> list[dict]:
             or manifest.get("policy") != EVALUATOR_POLICY
             or answer.get("packet_id") != manifest.get("packet_id")):
         raise JudgeValidationError("manual canary policy/packet mismatch")
+    model_display = str(answer.get("judge_model_display") or "").strip()
+    if not model_display or model_display == "사용자가 ChatGPT UI에 표시된 모델명을 입력":
+        raise JudgeValidationError("judge_model_display must be filled from the ChatGPT UI")
     judgments = answer.get("judgments")
     if not isinstance(judgments, list):
         raise JudgeValidationError("manual judgments array missing")
@@ -437,7 +443,7 @@ def import_manual_canary_answer(answer_path, manifest_path) -> list[dict]:
             "provenance": {"mode": "manual_chatgpt", "packet_id": manifest["packet_id"],
                            "packet_sha256": manifest["packet_sha256"],
                            "answer_sha256": answer_sha,
-                           "judge_model_display": answer.get("judge_model_display") or "",
+                           "judge_model_display": model_display,
                            "imported_at": time.time()},
         })
     return rows
