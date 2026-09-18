@@ -78,7 +78,7 @@ jobs:
       - name: Make cards
         env:
           GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
-          GEMINI_MODEL: ${{ vars.CARDS_GEMINI_MODEL || 'gemini-2.5-flash' }}
+          GEMINI_MODEL: ${{ vars.CARDS_GEMINI_MODEL || vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
         run: |
           if [ -n "${{ inputs.date }}" ]; then python make_cards.py --date "${{ inputs.date }}"; else python make_cards.py --force; fi
 

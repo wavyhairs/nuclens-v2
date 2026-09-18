@@ -85,7 +85,7 @@ const COUNTRY_MAP_LABELS = [
 ];
 
 const OFFICIAL_HINTS = ["go.kr", "khnp", "kaeri", "iaea.org", "energy.gov", "nrc.gov"];
-const VIEW_IDS = ["news", "trend", "search", "report", "scrap"];
+const VIEW_IDS = ["news", "trend", "search", "report"];
 const ISSUE_ROUTE = /^\/issue\/([^/]+)\/?$/;
 const BRIEF_ROUTE = /^\/brief\/(\d{4}-\d{2}-\d{2})\/?$/;
 
@@ -1593,65 +1593,6 @@ function pushSupported() {
 function isStandalone() {
   return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 }
-async function initPush() {
-  const button = document.getElementById("pushToggle");
-  const hint = document.getElementById("pushHint");
-  if (!button) return;
-  const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if (!pushSupported()) {
-    // iOS Safari 는 홈 화면에 추가하기 전엔 PushManager 가 없다 — 그 안내만 남긴다.
-    if (isiOS && !isStandalone()) {
-      hint.textContent = "iPhone: 공유 → '홈 화면에 추가' 한 뒤, 그 앱에서 알림을 켜세요.";
-      hint.hidden = false;
-    }
-    return;
-  }
-  let reg;
-  try { reg = await navigator.serviceWorker.register("/sw.js"); }
-  catch { return; }
-  button.hidden = false;
-  const paint = async () => {
-    const sub = await reg.pushManager.getSubscription();
-    const on = !!sub && Notification.permission === "granted";
-    button.textContent = on ? "🔔 아침 알림 켜짐 · 끄기" : "🔔 아침 알림 받기";
-    button.setAttribute("aria-pressed", String(on));
-    button.classList.toggle("is-on", on);
-    return sub;
-  };
-  let current = await paint();
-  button.addEventListener("click", async () => {
-    button.disabled = true;
-    hint.hidden = true;
-    try {
-      if (current) {
-        await fetch("/push/subscribe", { method: "DELETE", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint: current.endpoint }) });
-        await current.unsubscribe();
-      } else {
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          hint.textContent = "브라우저에서 알림이 차단돼 있습니다. 사이트 설정에서 허용으로 바꿔 주세요.";
-          hint.hidden = false;
-          return;
-        }
-        const sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(PUSH_PUBLIC_KEY),
-        });
-        const res = await fetch("/push/subscribe", { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subscription: sub.toJSON() }) });
-        if (!res.ok) throw new Error(`subscribe ${res.status}`);
-        hint.textContent = "켜졌습니다. 다음 아침 브리핑부터 알림이 옵니다.";
-        hint.hidden = false;
-      }
-    } catch (error) {
-      hint.textContent = `알림 설정 실패: ${String(error).slice(0, 80)}`;
-      hint.hidden = false;
-    } finally {
-      button.disabled = false;
-      current = await paint();
-    }
-  });
-}
 
 function renderCardStrip(date) {
   const section = document.getElementById("cardStrip");
@@ -2576,35 +2517,6 @@ function renderAgendaBlock() {
   }).join("");
 }
 
-function renderLibrary() {
-  const box = document.getElementById("libraryList");
-  if (!box) return;
-  const entries = state.precedents?.entries || [];
-  if (!entries.length) {
-    box.innerHTML = `<p class="empty">${esc(STRINGS.libraryEmpty)}</p>`;
-    return;
-  }
-  box.innerHTML = entries.map(entry => {
-    if (entry.kind === "dossier") {
-      const url = safeUrl(entry.file ? `${location.origin}${entry.file}` : "");
-      return `<details class="library-item" id="prec-${esc(entry.id)}">
-        <summary><strong>${esc(entry.title)}</strong><small>${esc(entry.period || "")}</small></summary>
-        ${entry.one_liner ? `<p>${esc(entry.one_liner)}</p>` : ""}
-        ${entry.use_for ? `<p class="library-use"><strong>어디에 쓰나</strong> ${esc(entry.use_for)}</p>` : ""}
-        ${url ? `<a class="source-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">원문 PDF 열기 <span aria-hidden="true">↗</span></a>` : ""}
-      </details>`;
-    }
-    return `<details class="library-item" id="prec-${esc(entry.id)}">
-      <summary><strong>${esc(entry.title)}</strong><small>${esc(entry.period || "")}</small></summary>
-      ${entry.one_liner ? `<p>${esc(entry.one_liner)}</p>` : ""}
-      ${(entry.sections || []).map(section => `<h4>${esc(section.h || "")}</h4><p>${esc(section.body || "")}</p>`).join("")}
-      ${(entry.sources || []).length ? `<p class="library-sources">출처: ${entry.sources.map(src => {
-        const url = safeUrl(src.url);
-        return url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(src.label || url)}</a>` : esc(src.label || "");
-      }).join(" · ")}</p>` : ""}
-    </details>`;
-  }).join("");
-}
 
 // 대응 자료팩 — 관찰(현 상황·동향)→판단→대응의 3축을 명시한다. 문장은 원문
 // 그대로(개조식 변환은 khnp-report 몫), 판단 기록이 없으면 없다고 쓴다 —
@@ -2789,64 +2701,6 @@ function renderPubs() {
     : "");
 }
 
-function renderScraps() {
-  const listBox = document.getElementById("scrapList");
-  if (!listBox) return;
-  // 렌더러는 데이터를 신뢰하지 않는다 — renderPubs 와 같은 계약.
-  const rawDays = (state.scraps && Array.isArray(state.scraps.days)) ? state.scraps.days : [];
-  const days = rawDays
-    .filter(day => day && typeof day === "object" && typeof day.date === "string" && Array.isArray(day.items))
-    .map(day => ({
-      date: day.date,
-      items: day.items.filter(item => item && typeof item === "object" && item.title && item.url),
-    }))
-    .filter(day => day.items.length);
-  if (!days.length) {
-    listBox.innerHTML = '<div class="empty-state"><strong>아직 정리된 스크랩 기사가 없습니다</strong><p>매일 아침 사내 스크랩에서 확인된 기사의 공개 원문을 모읍니다.</p></div>';
-    return;
-  }
-  listBox.innerHTML = days.map(day => {
-    const cardHtml = (item) => {
-      const url = safeUrl(item.url);
-      // 이 탭의 정렬 키는 지면 매체다(빌드가 시드 순서 = 지면 가나다순 유지).
-      // 정렬 키가 회색 2순위면 목록에 순서가 있어도 안 보인다 — 지면 매체를
-      // pill 로 1순위에 세우고, 온라인 발행처가 다르면 '원문 …'으로 병기한다.
-      // 제목이 먼저다: 훑는 눈이 회색 메타부터 밟게 하지 않는다.
-      const paper = item.print_publisher || item.publisher || "출처 미상";
-      const online = item.publisher && item.publisher !== paper
-        ? `<span>원문 ${esc(item.publisher)}</span>` : "";
-      // 조간|석간 — 어느 보고에서 온 기사인지. 구 이력에는 없어 빈 값이 정상,
-      // 이 칩이 서고부터 '석간이 안 왔다'가 화면에서 보인다.
-      const edition = item.edition ? `<span>${esc(item.edition)}</span>` : "";
-      return `<article class="news-item">
-        <h3>${esc(item.title)}</h3>
-        <div class="news-meta"><span class="scrap-paper">${esc(paper)}</span>${online}${edition}</div>
-        ${item.summary ? `<p class="news-summary">${esc(item.summary)}</p>` : ""}
-        ${url ? `<a class="source-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">원문 확인 <span aria-hidden="true">↗</span></a>` : ""}
-      </article>`;
-    };
-    // 주제(topics[0])로 묶는다 — 카톡 스크랩 보고의 섹션 어법. 시드에는 분류가
-    // 없어(로컬 파서가 "[종합일간지]" 류 헤더를 버린다) 아카이브 조인이 주는
-    // 주제 분류를 대신 쓴다. 조인 실패 항목은 '기타'로 마지막에 선다.
-    const groups = new Map();
-    day.items.forEach(item => {
-      const key = (Array.isArray(item.topics) && item.topics[0]) || "etc";
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(item);
-    });
-    const sections = [...groups.entries()]
-      .sort((a, b) => (a[0] === "etc") - (b[0] === "etc") || b[1].length - a[1].length)
-      .map(([key, items]) => {
-        const label = key === "etc" ? "기타" : (TOPIC_LABELS[key] || key);
-        return `<div class="scrap-topic"><span>${esc(label)}</span><small>${items.length}건</small></div>`
-          + items.map(cardHtml).join("");
-      }).join("");
-    return `<section class="scrap-day">
-      <h3 class="scrap-day-date">${esc(dateWeekdayLabel(day.date))} <small>${day.items.length}건</small></h3>
-      ${sections}
-    </section>`;
-  }).join("");
-}
 
 function articleTimelineRow(article, briefingDate, currentStage = "이번 브리핑", shownDetail = "") {
   const url = safeUrl(article.url);
@@ -4815,8 +4669,6 @@ function renderTrend() {
   renderPeriodTimeline();
   // 지난 브리핑은 트렌드 집계 준비 여부와 무관하다 — 이른 return 앞에서 그린다.
   renderBriefingTimeline();
-  // 스토리도 번호가 붙은 구역 — renumberSections 앞에서 hidden 이 정해져야 한다.
-  renderChronicles();
   // 워드 클라우드는 번호가 붙은 구역이라 renumberSections 앞에서 hidden 이 정해져야
   // 한다. 그러지 않으면 숨은 구역이 번호를 한 칸 먹는다.
   renderWordCloud();
@@ -4844,43 +4696,6 @@ function renderTrend() {
 // 죽었어도 카드 자체는 남는다 — 그게 이 원장의 존재 이유다.
 const CHRONICLE_LIST_MAX = 6;
 
-function renderChronicles() {
-  const section = document.getElementById("chronicleSection");
-  if (!section) return;
-  const chronicles = Object.values(state.chronicles?.chronicles || {})
-    .filter(chron => (chron.events || []).length >= 2)
-    .sort((a, b) => String(b.last_seen || "").localeCompare(String(a.last_seen || "")))
-    .slice(0, CHRONICLE_LIST_MAX);
-  section.hidden = !chronicles.length;
-  if (!chronicles.length) return;
-  const byChronicle = new Map(
-    state.issues.filter(issue => issue.chronicle_id)
-      .map(issue => [issue.chronicle_id, issue.issue_id]));
-  const range = flowSpanRange();
-  document.getElementById("chronicleMeta").textContent =
-    `이슈 수명(60일)을 넘어 이어 붙인 사안 ${chronicles.length}건`;
-  document.getElementById("chronicleList").innerHTML = chronicles.map(chron => {
-    const liveIssueId = byChronicle.get(chron.chronicle_id) || "";
-    const narrative = chronicleNarrativeFor(chron.chronicle_id);
-    const events = chronicleEventsDesc(chron);
-    const title = liveIssueId
-      ? `<button type="button" class="issue-title-button" data-issue-id="${esc(liveIssueId)}">${esc(chron.title)}</button>`
-      : `<span>${esc(chron.title)}</span>`;
-    return `<article class="chronicle-card">
-      <h3>${title}</h3>
-      <p class="chronicle-scale">${esc(dateLabel(chron.first_seen))}부터 · 사건 ${events.length}건${liveIssueId ? "" : " · 추적 종료"}</p>
-      ${range ? flowSpanTrack(chron, range) : ""}
-      ${narrative?.phase_now ? `<p class="chronicle-phase"><strong>지금 국면 <span class="ai-badge">AI</span></strong>${esc(narrative.phase_now)}</p>` : ""}
-      ${narrative?.narrative?.length ? `<details class="chronicle-story"><summary>스토리 읽기</summary>
-        ${narrative.narrative.map(paragraph => `<p>${esc(paragraph)}</p>`).join("")}
-        ${(narrative.watchpoints || []).length ? `<p class="chronicle-watch"><strong>지켜볼 지점</strong>${narrative.watchpoints.map(esc).join(" · ")}</p>` : ""}
-      </details>` : ""}
-      <details class="chronicle-events"><summary>사건 ${events.length}건 펼치기</summary>
-        ${timelineList(events, { contextDate: chron.last_seen, stage: "지난 흐름", shownDetail: "", moreLabel: "이전 사건" })}
-      </details>
-    </article>`;
-  }).join("");
-}
 
 function clearBriefingFilters() {
   state.region = "전체";
@@ -4970,8 +4785,7 @@ function switchView(view, updateUrl = true) {
   if (view === "search") renderArchiveSearch();
   if (view === "trend") renderTrend();
   if (view === "search") renderSaved();
-  if (view === "report") { renderReportCandidates(); renderAgendaBlock(); renderLibrary(); renderPubs(); }
-  if (view === "scrap") renderScraps();
+  if (view === "report") { renderReportCandidates(); renderPubs(); }
   if (updateUrl) syncUrl();
   scrollToPageTop();
 }
@@ -5873,7 +5687,7 @@ async function init() {
   initLoading = true;
   try {
     await initializeDataBase();
-    [state.news, state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities, state.scraps, state.reportDrafts, state.chronicles, state.chronicleNarratives, state.agendas, state.precedents] = await Promise.all([
+    [state.news, state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities] = await Promise.all([
       loadJSON("news.json"), loadJSON("briefings.json"), loadJSON("issues.json"),
       loadJSON("trend.json"), loadJSON("meta.json"), loadJSON("insights.json"),
       // 발간물은 부가 데이터 — 없어도 사이트 전체가 죽으면 안 된다 (8/1 빈 화면 사고 계약)
@@ -5883,16 +5697,6 @@ async function init() {
       loadRootJSON("audio/audio.json", true).catch(() => null),
       // 엔티티 사전도 부가 데이터 — 없으면 허브의 대상 그룹만 비고 나머지는 산다.
       loadJSON("entities.json").catch(() => null),
-      // 신문스크랩도 부가 데이터 — 없으면 스크랩 탭만 빈 상태로 뜬다.
-      loadJSON("scraps.json").catch(() => null),
-      // 보고서 초안(report_draft.py, 보고 후보만) — 없으면 템플릿 복사로 물러난다.
-      loadJSON("report_drafts.json").catch(() => null),
-      // 스토리 원장·서사 — 없으면 스토리 섹션만 숨는다(같은 비치명 계약).
-      loadJSON("chronicles.json").catch(() => null),
-      loadJSON("chronicle_narratives.json").catch(() => null),
-      // 정책의제·대응 자료실 — 없으면 보고서 탭의 해당 구역만 빈다(비치명).
-      loadJSON("agendas.json").catch(() => null),
-      loadJSON("precedents.json").catch(() => null),
     ]);
   } catch (error) {
     initLoading = false;
@@ -5938,7 +5742,6 @@ async function init() {
   appReady = true;
   initLoading = false;
   if (!generationTimer) generationTimer = window.setInterval(checkForNewGeneration, 60000);
-  initPush().catch(() => {});   // 푸시 토글 — 화면이 다 선 뒤, 실패해도 조용히
 }
 
 initializeTheme();
