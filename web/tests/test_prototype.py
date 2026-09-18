@@ -4765,7 +4765,8 @@ class SavedFollowTests(unittest.TestCase):
         self.assertIn('id="search-saved"', self.html)
         # 저장은 탐색 안으로 합쳐졌고 모바일 탭은 5개다(신문스크랩 포함).
         mobile_nav = self.html.split('id="mobileTabs"', 1)[1].split("</nav>", 1)[0]
-        self.assertEqual(mobile_nav.count("<button"), 5)
+        # 신문스크랩은 v2 에 생성기가 없어 탭째 내렸다(2026-09-18) — 4칸이다.
+        self.assertEqual(mobile_nav.count("<button"), 4)
 
     def test_saved_meta_snapshot_and_tombstone(self):
         self.assertIn("nuclens-saved-meta", self.script)

@@ -3564,7 +3564,7 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
     bottom: 0;
     left: 0;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     min-height: 60px;
     padding-bottom: env(safe-area-inset-bottom);
     border-top: 1px solid var(--c-primary-strong);

@@ -61,7 +61,6 @@
       <button class="main-tab" data-view="trend" aria-pressed="false">흐름</button>
       <button class="main-tab" data-view="search" aria-pressed="false">탐색</button>
       <button class="main-tab" data-view="report" aria-pressed="false">보고서</button>
-      <button class="main-tab" data-view="scrap" aria-pressed="false">신문스크랩</button>
     </nav>
     <div class="header-tools">
       <!-- 좁은 화면에서는 아래 span·kbd 가 CSS 로 접혀 아이콘만 남는다. 그러면
@@ -115,10 +114,7 @@
            이 사이트의 업무 용도다. 접거나 아래로 내리지 말 것. -->
       <div class="today-tools">
         <button type="button" class="today-search" data-go-view="search">현안 검색 · 지난 자료 찾기</button>
-        <!-- 아침 브리핑 푸시. 지원 안 되는 브라우저에서는 JS 가 숨긴다. -->
-        <button type="button" class="push-toggle" id="pushToggle" hidden aria-pressed="false">🔔 아침 알림 받기</button>
       </div>
-      <p class="push-hint" id="pushHint" hidden></p>
       <p class="today-date" id="briefingDateLabel"></p>
       <!-- 한 줄 안내 — 몇 건 중 몇 건을 골랐고, 진행 중 이슈에 변화가 몇 건인지.
            숫자를 먼저 말해야 아래 3건이 '고른 것'으로 읽힌다. -->
@@ -472,15 +468,6 @@
       </section>
       <p class="data-note cal-note">기사 문장에 날짜가 적힌 일정만 세웁니다. 일정을 누르면 근거 문장과 출처를 봅니다.</p>
     </section>
-    <!-- 스토리(chronicle) — 이슈 60일 수명을 넘어 쌓이는 시간축 원장. 재료가
-         없으면 스스로 내려가고 renumberSections 가 번호를 당긴다. -->
-    <section id="chronicleSection" class="chronicle-panel" aria-labelledby="chronicleHeading" hidden>
-      <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">05</span><h2 id="chronicleHeading">이어지는 사안</h2></div>
-        <span class="data-note" id="chronicleMeta"></span>
-      </div>
-      <div id="chronicleList" class="chronicle-list"></div>
-    </section>
     <!-- 지난 브리핑 — 흐름 탭의 시간 축. 점·세로선 없이 얇은 괘선과 날짜 정렬만
          쓴다(이 저장소의 괘선 어법). 행 클릭 = 그 날짜의 오늘 화면. -->
     <section id="briefingTimeline" class="briefing-timeline" aria-labelledby="briefingTimelineTitle">
@@ -528,37 +515,14 @@
       <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="reportCandidatesTitle">이번 주 보고 후보</h2></div></div>
       <div id="reportCandidateList"></div>
     </section>
-    <!-- 정책의제 대응 — 카드는 상황 인지용 최소 정보(제목·다음 확인·미니 통계),
-         판단에 필요한 전체(질문·병목·사례·자료팩)는 카드를 열어야 나온다. -->
-    <section class="report-agendas" aria-labelledby="agendaBlockTitle">
-      <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="agendaBlockTitle">정책의제 대응</h2></div></div>
-      <div id="agendaBlock"></div>
-    </section>
-    <!-- 대응 자료실 — 과거 사례 브리핑(종결된 사실만) + 부서 작성 문서 -->
-    <section class="report-library" aria-labelledby="libraryTitle">
-      <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">03</span><h2 id="libraryTitle">대응 자료실</h2></div></div>
-      <div id="libraryList"></div>
-    </section>
     <section class="report-publications" aria-labelledby="pubsTitle">
-    <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">04</span><h2 id="pubsTitle">참고 발간물</h2></div></div>
+    <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">02</span><h2 id="pubsTitle">참고 발간물</h2></div></div>
     <p>IAEA · OECD NEA · IEA · EIA · 에너지경제연구원 — 제목과 원문 링크만 제공합니다.</p>
     <div class="pubs-filters" id="pubsFilters" role="group" aria-label="기관 필터"></div>
     <div id="pubsList" class="pubs-list"></div>
     </section>
   </section>
 
-  <section id="view-scrap" hidden aria-labelledby="scrapTitle">
-    <div class="archive-intro">
-      <div>
-        <h1 id="scrapTitle">신문스크랩</h1>
-        <p>사내 신문스크랩(조간·석간 보고)의 기사를 공개 원문으로 찾아 날짜·주제별로 모았습니다. 배지는 지면 매체이고, 온라인 발행처가 다르면 '원문'으로 병기합니다. 공개 원문을 못 찾은 기사는 실리지 않습니다.</p>
-      </div>
-    </div>
-    <section class="scrap-days" aria-labelledby="scrapListTitle">
-      <div class="section-heading compact"><div class="section-title"><span class="sec-no" aria-hidden="true">01</span><h2 id="scrapListTitle">날짜별 스크랩</h2></div></div>
-      <div id="scrapList"></div>
-    </section>
-  </section>
 </main>
 
 <!-- 카드뉴스 크게 보기 — 띠에서 카드를 누르면 열린다. 좌우 버튼으로 다음 장,
@@ -602,7 +566,6 @@
   <button type="button" data-view="trend" aria-pressed="false"><span>흐름</span></button>
   <button type="button" data-view="search" aria-pressed="false"><span>탐색</span></button>
   <button type="button" data-view="report" aria-pressed="false"><span>보고서</span></button>
-  <button type="button" data-view="scrap" aria-pressed="false"><span>스크랩</span></button>
 </nav>
 
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
