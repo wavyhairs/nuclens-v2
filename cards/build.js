@@ -205,6 +205,15 @@ function editorialFromStep(slide) {
     image = "assets/korea-us-flags-editorial.png";
     stamp = "KOREA · U.S.\nNUCLEAR COOPERATION";
     headline = "MOU 서명 [[연기]]";
+  } else if (/사용후핵연료|방폐|방사성폐기물|핵연료주기|해체|폐로/.test(haystack)) {
+    image = "assets/fuel-cycle-waste-editorial.png";
+    stamp = "FUEL CYCLE · WASTE";
+  } else if (/핵융합|마이크로원자로|동위원소|비발전 활용|연구|실증|첨단 원자로/.test(haystack)) {
+    image = "assets/research-technology-editorial.png";
+    stamp = "NUCLEAR RESEARCH · TECHNOLOGY";
+  } else if (/계속운전|재가동|원전 운영|정비|안전|사고|규제|인허가|신규 건설|신규 원전/.test(haystack)) {
+    image = "assets/reactor-operations-editorial.png";
+    stamp = "NUCLEAR OPERATIONS · SAFETY";
   }
   return {
     ...slide,
@@ -737,6 +746,9 @@ function selfCheck() {
   assert.deepStrictEqual(parseArgs(["preview.json", "--out-dir", "previews/new"]), {
     input: "preview.json", outDir: "previews/new", sample: false, check: false,
   });
+  assert.ok(editorialFromStep({ stepLabel: "사용후핵연료·방폐", headline: "저장시설 확충" }).image.includes("fuel-cycle-waste"));
+  assert.ok(editorialFromStep({ stepLabel: "계속운전·재가동", headline: "심사 착수" }).image.includes("reactor-operations"));
+  assert.ok(editorialFromStep({ stepLabel: "핵융합", headline: "실증 연구" }).image.includes("research-technology"));
   console.log("build.js self-check OK");
 }
 
