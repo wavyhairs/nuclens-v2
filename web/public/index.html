@@ -124,7 +124,13 @@
            이 사이트의 업무 용도다. 접거나 아래로 내리지 말 것. -->
       <div class="today-tools">
         <button type="button" class="today-search" data-go-view="search">현안 검색 · 지난 자료 찾기</button>
+        <!-- 아침 브리핑 푸시. 브라우저가 못 하거나(iOS 홈화면 앱 전) 서버에
+             공개키가 없으면 initPush 가 끝까지 숨긴 채로 둔다 — 눌러도 되는
+             게 없는 버튼을 보이는 것이 가장 나쁜 잔재다(ab9e706 이 이 버튼을
+             내린 이유가 그것이다). -->
+        <button type="button" class="push-toggle" id="pushToggle" hidden aria-pressed="false">🔔 아침 알림 받기</button>
       </div>
+      <p class="push-hint" id="pushHint" hidden></p>
       <p class="today-date" id="briefingDateLabel"></p>
       <!-- 한 줄 안내 — 몇 건 중 몇 건을 골랐고, 진행 중 이슈에 변화가 몇 건인지.
            숫자를 먼저 말해야 아래 3건이 '고른 것'으로 읽힌다. -->
@@ -302,6 +308,18 @@
         </div>
       </details>
       <div class="archive-results">
+        <!-- 목록 범위. 기본이 '추적 중인 이슈'인 것이 이 화면의 성격을 정한다 —
+             카탈로그 전체를 첫 화면에 깔면 기사 1건짜리 이슈가 절반이라(실측
+             2026-09-12: 525건 중 268건) 빈 껍데기가 대세가 된다. 자격을 넘은
+             것만 먼저 보이고, 전체는 한 번 더 눌러서 본다.
+
+             아래 필터 서랍과 자리를 나눈 이유: 범위는 **목록의 성격**이고
+             필터는 그 안에서의 교집합이다. 같은 서랍에 넣으면 '모든 이슈'가
+             필터 하나로 읽혀 해제 버튼에 딸려 들어간다. -->
+        <div class="archive-scope segmented" id="archiveScope" role="group" aria-label="목록 범위">
+          <button class="active" type="button" data-scope="stories" aria-pressed="true">추적 중인 이슈</button>
+          <button type="button" data-scope="all" aria-pressed="false">모든 이슈</button>
+        </div>
         <div class="archive-result-head">
           <div><h2>검색 결과</h2><p id="archiveSummary" aria-live="polite"></p></div>
           <label class="compact-select">정렬
@@ -833,6 +851,11 @@
   <button type="button" data-view="trend" aria-pressed="false"><span>흐름</span></button>
   <button type="button" data-view="search" aria-pressed="false"><span>탐색</span></button>
   <button type="button" data-view="report" aria-pressed="false"><span>보고서</span></button>
+  <!-- 장기 스토리. 상단 탭에만 두면 폰에서는 **존재 자체가 안 보인다** —
+       .main-tabs 는 좁은 화면에서 display:none 이고, 이 하단 탭이 그 화면의
+       유일한 통로다. hidden 은 syncLongTermChrome 이 데이터 게이트를 보고
+       벗긴다(상단 탭과 같은 선택자로 잡힌다). -->
+  <button type="button" data-view="longterm" aria-pressed="false" hidden><span>장기 스토리</span></button>
 </nav>
 
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
