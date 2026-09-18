@@ -5502,6 +5502,67 @@ class DomainChipStaysBlankTests(unittest.TestCase):
         self.assertIn("state.archiveDomain", self.script)
 
 
+class SavedIssueAliasTests(unittest.TestCase):
+    """저장한 이슈가 옮겨 가도 사용자는 그것을 잃지 않는다 (2026-09-19 복구).
+
+    `issue_id` 는 예전에 클러스터 재계산마다 옮겨 다녔다(실측 2026-09-12: 11일에
+    16.8%). 원장이 그 이동을 `issue_aliases.json` 에 적어 매일 굽는데(라이브 212건),
+    2026-09-17 화면 층 교체 때 **읽는 코드가 구현과 함께 내려갔다.**
+
+    그 사이 증상: 저장해 둔 이슈가 옮겨 가면 앱 안에서는 묘비로만 남았다.
+    정적 `/issue/<id>/` 는 빌드가 만든 리다이렉트 페이지가 살리지만
+    localStorage 에 키로 박힌 값과 `?issue=` 딥링크는 그것으로 구해지지 않는다.
+
+    실측(라이브 별칭표로 브라우저 재현, 옛 id `issue-02e1bb4b…`):
+        before  묘비 1 · 카드 0 · 저장값은 옛 주소 그대로
+        after   묘비 0 · 카드 1 · 저장값이 현재 주소로 옮겨짐
+
+    순수 함수 쪽 규칙(사슬·고리·덮어쓰기 순서)은 web/tests/saved_alias_migration.mjs
+    16건이 잠근다. 여기서는 **그 함수가 실제로 불리는가**만 본다 — 되살릴 때 가장
+    빠지기 쉬운 것이 배선이다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+
+    def test_the_pure_functions_are_back(self):
+        self.assertIn("const ALIAS_CHAIN_LIMIT = 8;", self.script)
+        self.assertIn("function resolveAlias(", self.script)
+        self.assertIn("function migrateSavedIds(", self.script)
+
+    def test_the_saved_list_tries_the_ledger_before_erecting_a_tombstone(self):
+        saved = self.script.split("function renderSaved(", 1)[1].split("\n}", 1)[0]
+        self.assertIn("restoreSavedFromAliases()", saved)
+        # 되살아나면 목록을 다시 그린다. 안 그리면 복구는 됐는데 화면은 묘비다.
+        self.assertIn("if (restored) renderSaved()", saved)
+        # 묘비는 그 뒤에 남은 것만 세운다.
+        self.assertIn("const tombstones = missing.map(", saved)
+
+    def test_the_dialog_resolves_an_old_address_too(self):
+        """`?issue=<옛 id>` 는 종전에 조용히 아무 일도 안 일어났다."""
+        opener = self.script.split("function openIssueDialog(", 1)[1].split("\n}", 1)[0]
+        self.assertIn("reopenViaAlias(issueId, updateUrl)", opener)
+        via = self.script.split("function reopenViaAlias(", 1)[1].split("\n}", 1)[0]
+        # 사슬 끝이 지금 카탈로그에 있을 때만 연다 — 없으면 빈 다이얼로그가 뜬다.
+        self.assertIn("!currentIssueById(target)", via)
+        self.assertIn("openIssueDialog(target, updateUrl)", via)
+
+    def test_the_alias_table_is_fetched_lazily_and_once(self):
+        """원장은 계속 자란다. 첫 화면에서 통째로 받는 파일에 넣지 않는다."""
+        self.assertIn('loadRootJSON("issue_aliases.json", true)', self.script)
+        saved = self.script.split("function renderSaved(", 1)[1].split("\n}", 1)[0]
+        self.assertIn("missing.length && !issueAliases", saved)
+        loader = self.script.split("async function loadIssueAliases(", 1)[1].split("\n}", 1)[0]
+        self.assertIn("if (issueAliases) return issueAliases;", loader)
+
+    def test_the_contract_check_actually_runs(self):
+        """안 도는 검사는 없는 검사인데 초록불은 있는 검사처럼 보인다."""
+        self.assertTrue((ROOT / "tests" / "saved_alias_migration.mjs").is_file())
+        deploy = (ROOT.parent / ".github" / "workflows" / "deploy-web.yml").read_text(encoding="utf-8")
+        self.assertIn("node web/tests/saved_alias_migration.mjs", deploy)
+
+
 class RevisitPathTests(unittest.TestCase):
     """재방문 가치 — 최근 본 이슈 · '지난 확인 이후' 요약 · 행 전체 클릭.
 
