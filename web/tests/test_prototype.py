@@ -5455,6 +5455,53 @@ class TwoPhaseBootTests(unittest.TestCase):
         self.assertIn("today.briefing && today.issues", init)
 
 
+class DomainChipStaysBlankTests(unittest.TestCase):
+    """분류 칩은 값이 없으면 **빈칸**이다. 근사하지 않는다.
+
+    2026-09-11 에 topics 로 칩을 근사한 적이 있고, 그 근사가 '에너지안보·통상'
+    같은 틀린 칩을 맞는 척 세웠다(지니 09-15). 되돌린 결론이 "빈칸이 틀린 칩보다
+    낫다"였다.
+
+    그 결론이 지금 시험대에 있다 — v2 의 빌더는 khnp_domain 을 만들지 않아서
+    (라이브 issues.json 587건 중 보유 0건, 2026-09-19 실측) 칩이 **늘** 빈다.
+    빈 자리를 본 다음 사람이 "topics 라도 쓰자"로 돌아가는 것이 이 코드의 가장
+    그럴듯한 고장 방식이라, 그 길을 여기서 막는다.
+
+    되살리는 길은 근사가 아니라 **12개 현안 대분류 어휘를 정하고 이슈마다 값을
+    매기는 것**이다. 그건 제품 결정이라 코드가 혼자 고를 수 없다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        cls.chip = cls.script.split("function tocChips(", 1)[1].split("\n}", 1)[0]
+
+    def test_the_chip_reads_only_the_domain_field(self):
+        self.assertIn("issue.khnp_domain", self.chip)
+        self.assertNotIn("topics", self.chip, "칩이 topics 로 근사하고 있다 — 되돌린 길이다")
+        self.assertNotIn("TOPIC_LABELS", self.chip)
+
+    def test_an_issue_without_a_domain_renders_nothing(self):
+        """`if (!domain) return "";` 한 줄이 이 계약의 전부다."""
+        self.assertRegex(self.chip, r'if \(!domain\) return "";')
+        # :empty 로 접히는 CSS 가 그 빈칸을 자리까지 걷는다.
+        css = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+        self.assertIn(".toc-chips:empty { display: none; }", css)
+
+    def test_the_comment_says_the_field_is_absent_today(self):
+        """'가끔 빈다'와 '늘 빈다'는 다른 말이다 — 다음 사람이 다시 재지 않게."""
+        self.assertIn("587건 중 보유 0건", self.script)
+
+    def test_the_filter_that_the_chip_feeds_is_still_wired(self):
+        """칩·홈 필터·탐색 필터는 한 기능이다. 칩이 살아나면 셋이 같이 산다.
+
+        빈칸이라고 아래 둘을 걷어내면, 값을 내기 시작한 날 화면 절반만 살아난다.
+        """
+        self.assertIn("data-hub-domain", self.script)
+        self.assertIn("homeDomainFilter", self.script)
+        self.assertIn("state.archiveDomain", self.script)
+
+
 class RevisitPathTests(unittest.TestCase):
     """재방문 가치 — 최근 본 이슈 · '지난 확인 이후' 요약 · 행 전체 클릭.
 

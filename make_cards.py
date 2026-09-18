@@ -180,11 +180,16 @@ def plausible_event_date(raw: str, brief_date: str) -> str:
 def topic_label(meta: dict) -> str:
     """기사 분류 표시명 — **사이트 칩과 같은 값**을 쓴다.
 
-    1순위는 khnp_domain(현안 분류를 LLM 이 매긴 값, 사이트가 칩으로 보여 주는 그것).
-    카드가 topics 규칙값을 쓰던 동안 사이트 칩은 '안전성'인데 카드는 '규제·인허가'로
-    나갔다(09-16 한수원 복합재난 훈련 실측). 카드는 사이트를 따라간다.
-    khnp_domain 이 비면(분류 대기) topics 의 첫 값으로 물러난다 — topics 는
+    1순위는 khnp_domain(현안 분류를 LLM 이 매긴 값). 카드가 topics 규칙값을 쓰던
+    동안 사이트 칩은 '안전성'인데 카드는 '규제·인허가'로 나갔다(09-16 한수원
+    복합재난 훈련 실측). 카드는 사이트를 따라간다.
+    khnp_domain 이 비면 topics 의 첫 값으로 물러난다 — topics 는
     web/build_data.py 의 _TOPIC_RULES 순서라 첫 값이 가장 구체적인 축이다.
+
+    **지금은 늘 그 폴백을 탄다.** v2 의 빌더는 khnp_domain 을 만들지 않는다
+    (라이브 issues.json 587건 중 보유 0건, 2026-09-19 실측). 사이트 칩도 같은
+    이유로 빈칸이라, 카드와 사이트가 어긋날 자리가 지금은 없다. 빌더가 그 값을
+    내기 시작하면 이 1순위가 저절로 살아난다 — 그때 둘이 다시 맞물린다.
     """
     domain = str(meta.get("khnp_domain") or "").strip()
     if domain:
