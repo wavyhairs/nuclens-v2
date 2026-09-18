@@ -647,15 +647,17 @@ jobs:
         working-directory: cards
         run: npm ci
 
-      # 34자 헤드라인 게이트는 gemini-2.5-flash 에서 통과율이 검증된 값이다.
-      # v2 기본 모델(flash-lite 계열)로 굽고 싶으면 vars.CARDS_GEMINI_MODEL 로 바꾼다.
+      # 모델은 v2 의 기본값(gemini_client.MODEL)을 따른다. v1 에서 검증됐던
+      # gemini-2.5-flash 로 핀했다가 2026-09-17 첫 실행이 HTTP 404 로 죽었다 —
+      # 'no longer available to new users'. 특정 모델로 굽고 싶으면
+      # vars.CARDS_GEMINI_MODEL 에 넣는다(빈 값이면 기본값으로 떨어진다).
       - name: Make cards
         id: make-cards
         if: always() && steps.cards-npm.outcome == 'success'
         continue-on-error: true
         env:
           GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
-          GEMINI_MODEL: ${{ vars.CARDS_GEMINI_MODEL || 'gemini-2.5-flash' }}
+          GEMINI_MODEL: ${{ vars.CARDS_GEMINI_MODEL || vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
         run: python make_cards.py
 
       # 텔레그램 앨범 발송은 **기본 꺼짐**. 채널은 이 repo 소유자의 자산이라

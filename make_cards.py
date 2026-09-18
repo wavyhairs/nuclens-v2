@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -74,7 +75,10 @@ BODY_CHARS_FOR_PROMPT = 1200
 
 MIN_PNG_BYTES = 20_000  # 1080×1440 그라디언트 빈 카드가 대략 20KB. 그 아래면 빈 렌더.
 
-SITE = "nuclens.pages.dev"
+# 카드 하단 핸들·캡션에 박히는 주소. 워크플로가 SITE_URL 을 이미 들고 있으므로
+# 그것을 먼저 본다 — v1 에서 가져온 상수를 그대로 두면 v2 카드가 v1 사이트를
+# 광고한다.
+SITE = (os.environ.get("SITE_URL") or "https://nuclens-v2.pages.dev").split("//")[-1].strip("/")
 DELIVERY_NOTE = "크롤 완료 직후 발송"  # cron 고정 시각이 아니다 (daily-brief.yml 주 경로 = workflow_run)
 
 # 카드 분류는 **사이트가 쓰는 그 분류**다. 기사마다 파이프라인이 이미 topics 를
