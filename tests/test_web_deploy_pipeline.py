@@ -117,6 +117,8 @@ class BrowserContractTests(unittest.TestCase):
         script = (web_snapshot.ROOT / "web" / "public" / "app.js").read_text(encoding="utf-8")
         self.assertIn("const DATA_CONTRACT_VERSION = 1;", script)
         self.assertIn("data contract mismatch", script)
+        self.assertIn("async function loadNewsPayload()", script)
+        self.assertIn("loadNewsPayload(), loadJSON(\"briefings.json\")", script)
 
 
 class CachePruningTests(unittest.TestCase):
