@@ -56,6 +56,7 @@ connect-ai의 `_quickLLMCall` 패턴을 차용 — 단일 system+user 메시지,
 
 from __future__ import annotations
 
+import copy
 import json
 import itertools
 import os
@@ -467,6 +468,7 @@ def call_json(
     thinking_level: str | None = None,
     model: str | None = None,
     label: str = "unlabeled",
+    trace_sink=None,
 ) -> dict:
     """system+user 한 쌍을 Gemini에 보내고 JSON 객체로 파싱해 반환.
 
@@ -578,16 +580,14 @@ def call_json(
                 if _finish_reason(payload) == "MAX_TOKENS":
                     raise GeminiTruncated(_truncation_detail(payload)) from e
                 raise GeminiError(f"응답 구조 비정상: {payload}") from e
+            parser_mode = "json"
             try:
                 result = json.loads(text)
-                _record_detail(**detail)
-                return result
             except json.JSONDecodeError:
                 try:
                     # 깨진 응답 복구 시도 (펜스·잡텍스트·문자열 내 줄바꿈)
                     result = _salvage_json(text)
-                    _record_detail(**detail)
-                    return result
+                    parser_mode = "salvage_json"
                 except json.JSONDecodeError:
                     # 예산 초과로 잘린 것이면 아래 재시도 절로 흘려보내지 않는다 —
                     # 같은 maxOutputTokens 로 3번 더 불러도 같은 자리에서 잘리고
@@ -595,6 +595,30 @@ def call_json(
                     if _finish_reason(payload) == "MAX_TOKENS":
                         raise GeminiTruncated(_truncation_detail(payload)) from None
                     raise
+            _record_detail(**detail)
+            if trace_sink is not None:
+                # 평가/capture 모드 전용 in-memory seam. 헤더/API key는 애초에
+                # event에 넣지 않는다. sink가 실패하면 조용히 불완전 evidence를
+                # 만드는 대신 호출자에게 전파한다. 기본값 None인 production 경로는
+                # 이 분기 자체 외에 요청·응답 동작이 달라지지 않는다.
+                trace_sink(copy.deepcopy({
+                    "schema_version": 1,
+                    "captured_at_epoch": time.time(),
+                    "endpoint": url,
+                    "request_payload": body,
+                    "provider_response": payload,
+                    "raw_model_output": text,
+                    "parsed_output": result,
+                    "parser_result": {"status": "PASS", "mode": parser_mode},
+                    "detail": detail,
+                    "request_options": {
+                        "timeout": timeout,
+                        "retries": retries,
+                        "temperature": temperature,
+                        "max_output_tokens": max_output_tokens,
+                    },
+                }))
+            return result
         except GeminiTruncated:
             detail["truncated"] = True
             _record_detail(**detail)

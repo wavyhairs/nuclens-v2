@@ -20,7 +20,7 @@ import sys
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -498,11 +498,12 @@ def risk_buckets(title: str, description: str, body: str, output: str = "") -> l
     return sorted(buckets)
 
 
-def select_balanced_candidates(candidates: Iterable[dict], target: int = 24) -> list[dict]:
+def select_balanced_candidates(candidates: Iterable[dict], target: int = 24, *,
+                               initial_counts: Mapping[str, int] | None = None) -> list[dict]:
     """Deterministic risk balancing; selection metadata never contains an answer."""
     remaining = [dict(row) for row in candidates]
     selected: list[dict] = []
-    counts: Counter[str] = Counter()
+    counts: Counter[str] = Counter(initial_counts or {})
     while remaining and len(selected) < target:
         def rank(row: dict) -> tuple[float, str]:
             buckets = set(row.get("risk_buckets") or ())

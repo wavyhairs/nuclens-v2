@@ -38,7 +38,7 @@
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `DONE` — curation PROVEN, dedup/dedup_final NOT_PROVEN (2026-09-19) |
 | P3 | Independent Gold | 0 | `DONE` — 47건 판정 완료, 재라벨 대상 0 (97019a6) |
-| P4 | Sequential reasoning evaluation | 최소 | `HALTED(source-complete protocol 완료, eligible 0/20~30)` |
+| P4 | Sequential reasoning evaluation | 최소 | `HALTED(source-complete producer 완료, eligible 0/20~30)` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
 
@@ -46,10 +46,12 @@
 
 ## 3. 다음 한 줄
 
-> **P2 판정 유지. P4 source-complete protocol은 구현됐고 live 호출은 여전히 0이다.**
+> **P2 판정 유지. P4 source-complete producer까지 구현됐고 live 호출은 여전히 0이다.**
 >
-> 다음 재개 지점: future evaluation capture에서 exact article/context/request/output/parser state를
-> 함께 보존한 `SOURCE_COMPLETE_CALIBRATION_ELIGIBLE` case를 risk-balanced 20~30건 축적한다.
+> 다음 재개 지점: 제한된 로컬/비공개 저장 위치와 해당 회차의 정상 curation 예상 호출 수·token·비용·
+> hard cap을 먼저 보고하고 명시적 승인을 받는다. 그 뒤 opt-in capture에서 exact
+> article/context/request/output/parser state를 함께 보존한
+> `SOURCE_COMPLETE_CALIBRATION_ELIGIBLE` case를 risk-balanced 20~30건 축적한다.
 > 현재 eligible은 0건이다. 기존 20 Gold는 `HISTORICAL_ONLY` 및
 > `UNSCORABLE_MISSING_EVIDENCE`로 보존되며 active calibration/export/canary gate를 열 수 없다.
 > source-complete fixture는 자동 Gold가 아니므로, 별도 승인된 독립 reference truth protocol까지
@@ -117,6 +119,9 @@
 - [x] false PASS 16행 전수 감사 — 6 case, ① 1 case/3행, ② 0, ③ 5 case/13행;
       당시 원문 및 5개 canonical Gold 근거 복원 불가
 - [x] source-complete evidence protocol + content-addressed dedup + completeness fail-closed 구현
+- [x] 동일 curation 실행의 exact transport/curation state를 결합하는 evaluation-only producer 구현;
+      기본 off, 추가 API 호출 0, 불완전 candidate는 디스크 쓰기 전 거부
+- [x] 기존 risk coverage를 반영하는 최대 30건 통합 명령과 공개 workflow 업로드 방지 회귀 구현
 - [x] 기존 20 Gold를 `HISTORICAL_ONLY`/`UNSCORABLE_MISSING_EVIDENCE`로 분리;
       default calibration export 0건, historical PASS도 canary unlock 불가
 - [ ] source-complete calibration case 20~30건 축적 — 현재 0건
@@ -211,6 +216,32 @@ source-complete는 판정 가능한 evidence이지 자동 Gold가 아니다. fut
 별도 승인된 independent reference truth protocol 없이는 judge calibration과 Gemini canary를
 실행하지 않는다. Human 신규 리뷰 0, Gemini/OpenAI live API 호출 0이며 production 동작과
 cache는 변경하지 않았다.
+
+## 4-L. Source-complete evidence producer (2026-09-19)
+
+`gemini_client.call_json(trace_sink=None)`과 `news_bot.curate_batch(evidence_sink=None)`에 기본
+비활성 in-memory seam을 추가했다. 명시적 `NUCLENS_SOURCE_COMPLETE_CAPTURE=on`일 때만 같은
+production-equivalent curation 호출의 serialized request, provider response, raw/parsed output과
+exact article/body/reports/batch position, normalized output, validation, regeneration/split lifecycle을
+결합한다. capture는 이미 예정된 curation 호출을 관측하므로 추가 Gemini/OpenAI 호출은 0이다.
+
+candidate는 먼저 메모리에서 `completeness_gate()`와 secret 검사를 통과해야 하며, 통과하지
+못하면 body/request/response를 포함한 파일을 전혀 만들지 않는다. 통과 case 중 기존 store의
+risk bucket 부족분을 우선하는 case만 `promote_case()`로 저장한다. 여러 제한 실행의 임시
+store는 `tools/source_complete_producer.py consolidate`로 다시 검증·중복 제거·균형 선발해
+최종 최대 30건으로 합칠 수 있다. 정상 synthetic 1건의 실제 `curate_batch()` 경로가
+`SOURCE_COMPLETE_CALIBRATION_ELIGIBLE`로 저장되고 store 재검증을 통과함을 확인했다.
+
+저장소가 public이므로 원문 body가 든 store를 GitHub Actions artifact로 업로드하지 않는다.
+workflow/repository variable 배선은 추가하지 않았고, 공개 workflow에 source-complete 활성화가
+없음을 회귀로 고정했다. 실제 수집 전 제한된 로컬/비공개 또는 승인된 client-side 암호화 저장
+방식을 먼저 정해야 한다. 이어 해당 실행의 정상 curation 예상 호출 수·token·비용·hard cap을
+보고하고 명시적 승인을 받은 뒤에만 capture를 켠다.
+
+현재 실제 eligible은 여전히 0/20~30이며 P4는 `HALTED`다. Gold 판정, judge calibration,
+Gemini canary, threshold, judge prompt/model, production reasoning,
+`FAST_SEMANTIC_GATE_ENABLED`, 실제 서비스 동작은 변경하거나 실행하지 않았다. 상세 설계와
+명령은 `docs/2026-09-19-gemini-reasoning-source-complete-producer.md`에 있다.
 
 ## 4-G. P2 자연 capture 및 fidelity 결과 (2026-09-19)
 
@@ -459,3 +490,5 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-19 | P4 | false PASS 16행(6 case) 전수 감사. ① 1 case/3행, ② 0, ③ 5 case/13행. 저장소→archive→cache→log에 당시 원문 없음, 5개 canonical Gold 근거 없음으로 동일 조건 유효 재실행 불가. calibration/canary/API 호출 0 | 이번 문서 커밋 |
 | 2026-09-19 | P4 | source-complete evidence protocol·content-addressed dedup·fail-closed gate 구현. 기존 20 Gold historical/unscorable 격리, active eligible 0. capture 2,366표본 용량 실측: 20건 0.262 MiB, 30건 0.393 MiB, dedup 83.0%. Human/Gemini/OpenAI 호출 0 | 이번 문서 커밋 |
 | 2026-09-19 | P4 | source-complete 관련 76 passed/100 subtests. 전체 2693 passed/10 skipped/1 failed/487 subtests — 실패는 기존 live web data 주별 합계 비율 3.77 > 2 gate로 P4 무관, 수정하지 않음 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | 동일 `curate_batch` 실행에서 transport/curation state를 결합하는 opt-in source-complete producer, fail-closed in-memory gate, 기존 coverage 반영 risk-balanced 최대 30건 통합 명령 구현. public workflow 업로드 없음. 실제 eligible 0, Gemini/OpenAI 호출 0 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | producer 관련 200 passed/94 subtests, 비-web 전체 2134 passed/9 skipped/489 subtests. 전체 실행은 2610 passed/12 skipped 후 격리 worktree에 비추적 `web/public/data/*.json`이 없어 4 failed/114 setup errors; 생성물을 복사하거나 gate를 변경하지 않음 | 이번 문서 커밋 |

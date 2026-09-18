@@ -80,6 +80,21 @@ class CaptureSafetyTests(unittest.TestCase):
             self.assertEqual(record["response"], PAYLOAD)
             self.assertEqual(record["detail"]["requested_thinking"], "unspecified")
 
+    def test_in_memory_trace_exposes_exact_success_path_without_headers(self):
+        traces = []
+        result = gemini_client.call_json(
+            "s", "u", retries=0, label="test", trace_sink=traces.append)
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual(len(traces), 1)
+        trace = traces[0]
+        self.assertEqual(trace["provider_response"], PAYLOAD)
+        self.assertEqual(trace["raw_model_output"], '{"ok": true}')
+        self.assertEqual(trace["parsed_output"], {"ok": True})
+        self.assertEqual(trace["parser_result"], {"status": "PASS", "mode": "json"})
+        self.assertEqual(trace["request_payload"]["contents"][0]["parts"][0]["text"], "u")
+        self.assertNotIn("headers", trace)
+        self.assertNotIn("api_key", json.dumps(trace).lower())
+
     def test_capture_failure_never_fails_the_production_call(self):
         # 쓸 수 없는 경로. 훅이 예외를 흘리면 여기서 호출이 죽는다.
         gemini_client._CAPTURE_DIR = "\0invalid"
