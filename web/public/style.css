@@ -3049,6 +3049,50 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
 .dialog-update h3,
 .dialog-history h3 { margin: 0 0 8px; font-size: 17px; }
 .dialog-update > p { color: var(--c-text-secondary); }
+/* ── 변화 이력 ─────────────────────────────────────────────────────────────
+   회차와 회차의 **짝**을 세운다. 아래 타임라인은 같은 기사들을 날짜순 한 줄씩
+   세우므로, 여기까지 목록 모양이면 두 블록이 같은 것으로 읽힌다. 앞 상태를 한 단
+   흐리게 두고 뒤 상태를 본문 색으로 세워 방향이 먼저 보이게 한다.
+   등급은 색만으로 가르지 않는다(1.4.1) — 라벨 문구가 먼저고 색은 거든다. */
+.dialog-changelog { margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: 1px solid var(--c-border); }
+.dialog-changelog h3 { margin: 0 0 var(--sp-2); font-size: 17px; }
+.change-log { margin: 0; padding: 0; list-style: none; }
+.change-log > li { padding: var(--sp-3) 0; border-top: 1px solid var(--c-border); }
+.change-log > li:first-child { border-top: 0; }
+.change-log-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-3);
+  color: var(--c-text-muted);
+  font-size: var(--t-min);
+  font-variant-numeric: tabular-nums;
+}
+.change-log-kind {
+  padding: 2px var(--sp-2);
+  border: var(--bd-1) solid currentColor;
+  border-radius: var(--r-1);
+  color: var(--c-text-muted);
+  font-weight: 700;
+}
+.change-log > li.t-material .change-log-kind { color: var(--c-accent-text); }
+.change-log-before,
+.change-log-after { margin: var(--sp-2) 0 0; font-size: var(--t-body); line-height: 1.6; }
+.change-log-before { color: var(--c-text-muted); }
+/* 화살표는 ::before 로 세운다 — 본문에 넣으면 복사·읽기 순서에 기호가 섞인다.
+   자료 팩 쪽 텍스트는 제 화살표를 따로 적는다. */
+.change-log-after { color: var(--c-text); }
+.change-log-after::before { margin-right: var(--sp-2); color: var(--c-accent-text); content: "→"; }
+/* 타임라인 행의 같은 판정. 출처 줄 끝에 붙으므로 그 줄의 크기를 따른다. */
+.timeline-change {
+  margin-left: var(--sp-2);
+  padding: 1px var(--sp-1);
+  border: var(--bd-1) solid currentColor;
+  border-radius: var(--r-1);
+  color: var(--c-text-muted);
+  font-weight: 700;
+}
+.timeline-change.t-material { color: var(--c-accent-text); }
 /* ── 상세의 해석 블록 = 홈 선두 카드와 같은 어법 ───────────────────────
    같은 축(무슨 일 / 왜 중요한가 / 시사점 / 변화 / 미확정)을 홈은 라벨 열 dl 로
    세우는데 상세만 회색 상자·점선 상자·좌측 색막대 셋으로 따로 그리고 있었다.
