@@ -400,6 +400,32 @@ function issueSourceText(issue) {
   return names.length > 1 ? `${names[0]} 외 ${names.length - 1}` : names[0];
 }
 
+// ── 변화 이력 ─────────────────────────────────────────────────────────────
+//
+// 발송 **전에** 내려진 판정이다. `issue_continuity` 가 "어제 대비 단계가 넘어갔나"를
+// 보고 material/minor/none 을 매기고, build_data 가 그중 **같은 이슈 안에서 확인된
+// 것만** change_log 로 싣는다(issue_change_log.py 에 게이트의 실측 근거가 있다).
+//
+// 이 화면이 하는 일은 라벨 두 칸뿐이다. 빌드가 함께 실어 보내는 `reason`
+// (stage_flip·scale_advance…)과 판정 문구는 **쓰지 않는다** — 그건 event_stage 의
+// 어휘 라벨이라 사건 설명이 아니고, 실측에서 「예타 면제」기사에 '정지·가동중단'이
+// 붙어 있었다. 여기서 말할 수 있는 것은 "그 회차에 단계가 움직였다"까지다.
+const CHANGE_LOG_LABELS = { material: "단계 이동", minor: "후속 보도" };
+
+function changeLog(issue) {
+  return (issue.change_log || []).filter(entry => CHANGE_LOG_LABELS[entry.kind]);
+}
+
+// 판정은 회차와 회차 사이에서 내려지지만 **기사일로 적는다.** 바로 아래 타임라인이
+// 기사일로 서 있어서다 — 회차를 적으면 두 블록이 같은 사건을 하루 어긋나게 말하고
+// (실측 그라블린: 회차 8/28 · 기사일 8/27), 읽는 사람은 가리키는 줄을 못 찾는다.
+// 회차는 payload(date·prior_date)에 그대로 남아 감사에서 쓰인다.
+function changeLogSpan(entry) {
+  const before = entry.prior_article_date || entry.prior_date;
+  const after = entry.article_date || entry.date;
+  return `${dateLabel(before)} → ${dateLabel(after)}`;
+}
+
 function issueEvidenceText(issue) {
   const state = verificationState(issue);
   const articleCount = issue.article_count || (issue.related_articles || []).length;
@@ -3415,6 +3441,27 @@ function reopenViaAlias(issueId, updateUrl) {
   }).catch(() => { /* 복구 실패가 화면을 죽이면 안 된다 */ });
 }
 
+function changeLogSection(issue) {
+  const entries = changeLog(issue);
+  if (!entries.length) return "";
+  const moves = entries.filter(entry => entry.kind === "material").length;
+  // 0건짜리 칸은 세지 않는다 — '후속 0건' 은 정보가 아니라 빈 자리의 이름이다.
+  const note = [moves ? `단계 이동 ${moves}건` : "",
+                entries.length - moves ? `후속 ${entries.length - moves}건` : ""]
+    .filter(Boolean).join(" · ");
+  return `<section class="dialog-changelog" aria-labelledby="issueChangeLogTitle">
+    <div class="dialog-section-head"><h3 id="issueChangeLogTitle">변화 이력</h3><span>${esc(note)}</span></div>
+    <ol class="change-log">${entries.map(entry => `<li class="t-${esc(entry.kind)}">
+      <div class="change-log-head">
+        <span class="change-log-kind">${esc(CHANGE_LOG_LABELS[entry.kind])}</span>
+        <span class="change-log-span">${esc(changeLogSpan(entry))}</span>
+      </div>
+      <p class="change-log-before">${esc(entry.prior_title)}</p>
+      <p class="change-log-after">${esc(entry.title)}</p>
+    </li>`).join("")}</ol>
+  </section>`;
+}
+
 function openIssueDialog(issueId, updateUrl = true) {
   const issue = currentIssueById(issueId);
   if (!issue) { reopenViaAlias(issueId, updateUrl); return; }
@@ -3489,6 +3536,7 @@ function openIssueDialog(issueId, updateUrl = true) {
         moreLabel: "이전 근거",
       })}
     </details>` : ""}
+    ${changeLogSection(issue)}
     ${chronicleDialogSection(issue, contextDate)}
     ${related.length ? `<section class="dialog-related" aria-labelledby="issueRelatedTitle">
       <div class="dialog-section-head"><h3 id="issueRelatedTitle">관련 이슈</h3><span>같은 주제로 연결된 이슈입니다</span></div>

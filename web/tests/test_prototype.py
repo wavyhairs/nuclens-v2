@@ -5563,6 +5563,77 @@ class SavedIssueAliasTests(unittest.TestCase):
         self.assertIn("node web/tests/saved_alias_migration.mjs", deploy)
 
 
+class ChangeLogHistoryTests(unittest.TestCase):
+    """변화 이력 여러 건을 상세에서 다시 보인다 (2026-09-19 복구).
+
+    한 줄(`change_display` · `change_kind` · '직전까지')은 v1 도 읽고 있었다.
+    **여러 건을 목록으로 세우는 코드만** 2026-09-17 화면 층 교체 때 내려갔고,
+    그 CSS 도 함께 빠지면서 web/tests/test_change_log_arrow.py 가 그때부터
+    빨간불이었다(이 커밋이 그것을 고친다).
+
+    라이브 커버리지는 낮다 — 이슈 587건 중 change_log 보유 16건(2.7%),
+    그중 2건 이상은 4건(2026-09-19 실측). 게이트가 '같은 이슈 안에서 확인된
+    것만' 싣기 때문이고, 낮은 것이 정상이다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        cls.css = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+        cls.section = cls.script.split("function changeLogSection(", 1)[1].split("\n}", 1)[0]
+
+    def test_the_section_is_wired_into_the_dialog(self):
+        """되살릴 때 가장 빠지기 쉬운 것이 배선이다."""
+        self.assertIn("${changeLogSection(issue)}", self.script)
+        self.assertIn('class="dialog-changelog"', self.script)
+
+    def test_an_empty_history_renders_nothing(self):
+        """0건짜리 칸은 세지 않는다 — '후속 0건'은 정보가 아니라 빈 자리의 이름이다."""
+        self.assertIn("if (!entries.length) return \"\";", self.section)
+        # 0 인 쪽은 꼬리 문구에서도 빠진다.
+        self.assertIn('moves ? `단계 이동 ${moves}건` : ""', self.section)
+
+    def test_only_the_two_judged_kinds_are_labelled(self):
+        """material/minor 만 싣는다. 모르는 kind 가 라벨 없이 새어 나가면 안 된다."""
+        self.assertIn('const CHANGE_LOG_LABELS = { material: "단계 이동", minor: "후속 보도" };',
+                      self.script)
+        picker = self.script.split("function changeLog(issue) {", 1)[1].split("\n}", 1)[0]
+        self.assertIn("filter(entry => CHANGE_LOG_LABELS[entry.kind])", picker)
+
+    def test_the_span_is_written_in_article_days(self):
+        """판정은 회차 사이에서 내려지지만 **기사일로** 적는다.
+
+        바로 아래 타임라인이 기사일로 서 있어서다 — 회차를 적으면 두 블록이 같은
+        사건을 하루 어긋나게 말하고(실측 그라블린: 회차 8/28 · 기사일 8/27),
+        읽는 사람은 가리키는 줄을 못 찾는다.
+        """
+        span = self.script.split("function changeLogSpan(entry) {", 1)[1].split("\n}", 1)[0]
+        self.assertIn("entry.prior_article_date || entry.prior_date", span)
+        self.assertIn("entry.article_date || entry.date", span)
+
+    def test_the_stage_vocabulary_never_reaches_the_screen(self):
+        """빌드가 함께 싣는 reason(stage_flip·scale_advance…)은 쓰지 않는다.
+
+        그건 event_stage 의 어휘 라벨이라 사건 설명이 아니다 — 실측에서
+        「예타 면제」 기사에 '정지·가동중단'이 붙어 있었다. 여기서 말할 수 있는
+        것은 "그 회차에 단계가 움직였다"까지다.
+        """
+        self.assertNotIn("entry.reason", self.section)
+        self.assertNotIn("entry.similarity", self.section)
+
+    def test_both_ends_of_the_pair_are_printed(self):
+        """짝의 두 끝이 곧 정보다 — 오늘 상태 하나만 놓고 '달라졌다'고 하지 않는다."""
+        self.assertIn("change-log-before", self.section)
+        self.assertIn("entry.prior_title", self.section)
+        self.assertIn("change-log-after", self.section)
+
+    def test_the_arrow_is_a_pseudo_element_not_body_text(self):
+        """본문에 넣으면 복사·읽기 순서에 기호가 섞인다."""
+        self.assertIn('.change-log-after::before', self.css)
+        self.assertIn('content: "→";', self.css)
+        self.assertNotIn("→", self.section)
+
+
 class RevisitPathTests(unittest.TestCase):
     """재방문 가치 — 최근 본 이슈 · '지난 확인 이후' 요약 · 행 전체 클릭.
 
