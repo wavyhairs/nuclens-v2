@@ -176,7 +176,10 @@ class TestWorkflowsSelectTheKey(unittest.TestCase):
                 found += 1
                 self.assertEqual(SELECT_LINE, text,
                                  f"{name}:{number} 가 선택 식을 안 쓴다")
-        self.assertEqual(17, found, "Gemini 스텝 수가 달라졌다 — 새 스텝을 확인할 것")
+        # 16 = 17 - 1. daily-brief 의 "Make cards" 를 cards.yml 로 옮겼다
+        # (2026-09-18). 같은 스텝이 cards.yml 에 이미 세어지고 있었으므로
+        # 옮긴 만큼 순감이다 — 카드가 Gemini 를 두 곳에서 부르지 않는다.
+        self.assertEqual(16, found, "Gemini 스텝 수가 달라졌다 — 새 스텝을 확인할 것")
 
     def test_no_step_reaches_a_secret_directly(self):
         """시크릿을 직접 집는 곳은 검증 스텝뿐이다. 나머지는 선택 식만 본다.

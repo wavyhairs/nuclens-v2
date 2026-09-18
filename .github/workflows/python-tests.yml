@@ -41,6 +41,12 @@ on:
       # 재현되지 않아(그 PR 의 분기점에는 그 항목이 없다) 원인을 찾는 데 반나절이 들었다.
       - "admin_overrides.json"
       - ".github/workflows/python-tests.yml"
+      # 카드뉴스 실행 구조는 tests/test_cards_workflow.py 가 지킨다 — 실패가
+      # Cards 에는 남고 Daily Brief 에는 안 남는다는 계약. 그 계약을 깨는 변경은
+      # 대개 .py 를 한 줄도 안 건드리므로(continue-on-error 한 줄, 스텝 하나),
+      # 여기 없으면 검사가 통째로 안 돈다.
+      - ".github/workflows/cards.yml"
+      - ".github/workflows/daily-brief.yml"
   push:
     branches: [main]
     # 앵커(&python_paths)로 묶고 싶지만 Actions 파서가 YAML 앵커를 받지
@@ -69,6 +75,12 @@ on:
       # 재현되지 않아(그 PR 의 분기점에는 그 항목이 없다) 원인을 찾는 데 반나절이 들었다.
       - "admin_overrides.json"
       - ".github/workflows/python-tests.yml"
+      # 카드뉴스 실행 구조는 tests/test_cards_workflow.py 가 지킨다 — 실패가
+      # Cards 에는 남고 Daily Brief 에는 안 남는다는 계약. 그 계약을 깨는 변경은
+      # 대개 .py 를 한 줄도 안 건드리므로(continue-on-error 한 줄, 스텝 하나),
+      # 여기 없으면 검사가 통째로 안 돈다.
+      - ".github/workflows/cards.yml"
+      - ".github/workflows/daily-brief.yml"
   workflow_dispatch:
 
 # 자동 수집물(curated.json·sent.json·delivery_log.jsonl·discovery_state.json·
