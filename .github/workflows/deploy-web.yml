@@ -260,6 +260,12 @@ jobs:
       # 내려갔다가 2026-09-19 에 되살렸다).
       - name: Saved issue alias migration (app.js)
         run: node web/tests/saved_alias_migration.mjs
+      # 장기 스토리(Beta)의 **두 번째 안전장치**. 첫 번째는 빌드가 쥐고 있는데
+      # 그 판정은 파일이 만들어지던 순간의 사실이라, 배포가 멈춰 낡은 파일이
+      # CDN 에 남는 경우를 못 잡는다. 회귀가 나면 조용하다 — 탭이 떠 있고 그 안에
+      # 몇 주 된 이야기가 '최신'인 척 선다.
+      - name: Long-term story gate (app.js)
+        run: node web/tests/long_term_gate.mjs
       - name: Admin gate contract
         run: node web/tests/admin_gate.mjs
 
