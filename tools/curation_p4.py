@@ -399,6 +399,14 @@ def main() -> int:
 
     if args.phase == "preflight":
         report = build_preflight(records, selection, gold)
+        calibration_summary_path = args.out / "calibration-summary.json"
+        if calibration_summary_path.exists():
+            calibration = json.loads(calibration_summary_path.read_text(encoding="utf-8"))
+            report["judge_calibration"]["result"] = calibration
+            report["gate"] = (
+                "READY_FOR_EXPLICIT_GEMINI_APPROVAL"
+                if calibration.get("status") == "PASS"
+                else "HALTED_JUDGE_CALIBRATION_NOT_PROVEN")
         (args.out / "preflight.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(report, ensure_ascii=False, indent=2))

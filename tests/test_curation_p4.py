@@ -88,6 +88,16 @@ class JudgeFailClosedTests(unittest.TestCase):
         with self.assertRaises(judge.JudgeValidationError):
             judge.validate_judgment(value, ("A", "B"))
 
+    def test_block_is_allowed_only_for_complete_evidence_abstention(self):
+        value = valid_judgment()
+        value["candidates"][0]["final_verdict"] = "BLOCK"
+        for dimension in value["candidates"][0]["dimensions"]:
+            dimension.update(status="NOT_EVALUABLE", severity="NONE")
+        self.assertIs(judge.validate_judgment(value, ("A", "B")), value)
+        value["candidates"][0]["dimensions"][0]["status"] = "PASS"
+        with self.assertRaises(judge.JudgeValidationError):
+            judge.validate_judgment(value, ("A", "B"))
+
     def test_judge_contract_has_no_api_transport(self):
         self.assertFalse(hasattr(judge, "call_judge"))
 
@@ -131,6 +141,19 @@ class ProductionRunnerTests(unittest.TestCase):
         gemini.assert_not_called()
         after = {path: (path.stat().st_size, path.stat().st_mtime_ns) for path in tracked}
         self.assertEqual(before, after)
+
+    def test_not_proven_calibration_blocks_gemini_canary(self):
+        with tempfile.TemporaryDirectory(dir=".") as temp_dir:
+            out = Path(temp_dir)
+            (out / "calibration-summary.json").write_text(
+                json.dumps({"status": "NOT_PROVEN"}), encoding="utf-8")
+            with patch.object(curation_p4, "run_gemini_canary") as run, \
+                    patch("sys.argv", ["curation_p4.py", "--out", temp_dir,
+                                       "--phase", "canary", "--approve-live-calls",
+                                       "--max-gemini-calls-per-arm", "1"]):
+                with self.assertRaises(SystemExit):
+                    curation_p4.main()
+            run.assert_not_called()
 
 
 class CalibrationContractTests(unittest.TestCase):

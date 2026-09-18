@@ -179,6 +179,7 @@ def validate_judgment(value: dict, aliases: Iterable[str]) -> dict:
         if {item.get("name") for item in dimensions if isinstance(item, dict)} != set(DIMENSIONS):
             raise JudgeValidationError("dimension names missing or duplicated")
         has_error = False
+        all_not_evaluable = True
         for item in dimensions:
             status, severity = item.get("status"), item.get("severity")
             if status not in {"PASS", "ERROR", "NOT_EVALUABLE"}:
@@ -188,10 +189,19 @@ def validate_judgment(value: dict, aliases: Iterable[str]) -> dict:
             if (status == "ERROR") != (severity != "NONE"):
                 raise JudgeValidationError("status/severity inconsistency")
             has_error |= status == "ERROR"
+            all_not_evaluable &= status == "NOT_EVALUABLE"
         if row["final_verdict"] == "PASS" and has_error:
             raise JudgeValidationError("PASS candidate contains an error")
-        if row["final_verdict"] != "PASS" and not has_error:
-            raise JudgeValidationError("intervention verdict has no error")
+        if row["final_verdict"] == "REPAIR" and not has_error:
+            raise JudgeValidationError("REPAIR candidate has no repairable error")
+        # The fixed prompt requires missing evidence to be NOT_EVALUABLE rather
+        # than an invented ERROR.  When *every* dimension is unevaluable, BLOCK
+        # is the only fail-closed publish decision available in the three-value
+        # verdict contract.  Mixed PASS/NOT_EVALUABLE without an ERROR is not
+        # granted this abstention exception.
+        if (row["final_verdict"] == "BLOCK" and not has_error
+                and not all_not_evaluable):
+            raise JudgeValidationError("BLOCK candidate has neither an error nor full abstention")
     expected = {tuple(pair) for pair in combinations(aliases, 2)}
     actual: set[tuple[str, str]] = set()
     for pair in pairs:

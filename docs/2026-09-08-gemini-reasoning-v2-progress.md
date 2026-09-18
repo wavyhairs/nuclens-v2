@@ -38,7 +38,7 @@
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `DONE` — curation PROVEN, dedup/dedup_final NOT_PROVEN (2026-09-19) |
 | P3 | Independent Gold | 0 | `DONE` — 47건 판정 완료, 재라벨 대상 0 (97019a6) |
-| P4 | Sequential reasoning evaluation | 최소 | `IN_PROGRESS` — production-faithful 생성 + 수동 blind ChatGPT judge 계약 구현, calibration 답변 대기 |
+| P4 | Sequential reasoning evaluation | 최소 | `HALTED(judge calibration NOT_PROVEN: agreement 0.633, false/unsafe PASS 16)` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
 
@@ -46,12 +46,12 @@
 
 ## 3. 다음 한 줄
 
-> **P2 판정 유지. P4 독립 평가계약 offline 구현 완료, live 호출은 여전히 0이다.**
+> **P2 판정 유지. P4 judge calibration은 NOT_PROVEN, live 호출은 여전히 0이다.**
 >
-> 다음 재개 지점: `.eval/gemini-reasoning-v2/p4-curation/manual-calibration/`의
-> `calibration-repeat-{0,1,2}.md`를 각각 **서로 다른 새 ChatGPT 대화**에서 실행하고,
-> 받은 JSON 3개를 업로드한다. importer가 calibration PASS를 내기 전에는 Gemini
-> canary를 실행하지 않는다. OpenAI API key/호출은 사용하지 않는다.
+> 다음 재개 지점: 기존 Curation Gold 20건에 대응하는 **독립 source evidence**
+> (당시 description/body/source excerpt)를 복원할 수 있는지 확인한다. 현재 archive에는
+> 생성 output만 있고 원 source evidence는 없다. 신규 Human Review 금지 조건을 유지하는 한,
+> threshold 하향·사후 case 제외·Gemini canary 실행은 하지 않는다.
 
 ## 4. Phase별 체크리스트
 
@@ -110,7 +110,8 @@
 - [x] 수동 ChatGPT judge 질문지/export + strict JSON importer + policy namespace
 - [x] calibration 기준 사전 고정(20 Gold × 3 repeat), 새 Human Review 0
 - [x] full-size 15건 canary 입력·4 distinct arm·비용/호출 preflight 고정
-- [ ] judge calibration — 질문지 3개 답변 import 대기(OpenAI API 0)
+- [x] judge calibration 실행 — 60/60 strict import, repeat stability/TIE 1.0
+- [ ] judge calibration PROVEN — **NOT_PROVEN:** agreement 0.633, false/unsafe PASS 16
 - [ ] full-size batch canary — calibration PASS 및 명시적 Gemini 호출 승인 전 금지
 - [ ] dominated config 제거 → paired dev → finalist repeat → time-block holdout
 
@@ -137,6 +138,18 @@ medium → low → high → current다. 자연 capture 기준 예상 Gemini logi
 
 현재 live Gemini 0회, OpenAI API 0회, 새 Human Review 0건이다. production reasoning,
 `FAST_SEMANTIC_GATE_ENABLED`, model routing, 서비스 동작, production cache는 바꾸지 않았다.
+
+## 4-I. P4 manual judge calibration 결과 (2026-09-19)
+
+`GPT-5.6 Sol` UI에서 세 독립 packet을 실행했고 20 case × 3 repeat = 60행이 모두 strict
+schema와 provenance를 통과했다. 모든 case의 modal stability, identical-pair TIE,
+duplicate consistency는 1.0이고 position bias는 0이었다. 그러나 PASS 대 intervention
+일치율은 0.633(38/60), false PASS와 unsafe PASS는 각각 16으로 사전 기준을 실패했다.
+
+Gold source packet이 title/date만 보존하고 원 description/body를 보존하지 않아 제목 밖의
+오류를 judge가 `NOT_EVALUABLE`로 둔 것이 주요 한계다. threshold를 낮추거나 결과를 본 뒤
+case를 제외하지 않는다. `JUDGE_CALIBRATION_NOT_PROVEN`으로 P4를 HALT하고 Gemini canary는
+실행하지 않았다. 상세 결과는 `docs/2026-09-19-gemini-reasoning-p4-calibration.md`다.
 
 ## 4-G. P2 자연 capture 및 fidelity 결과 (2026-09-19)
 
@@ -381,3 +394,4 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-19 | P4 | curation 생성 응답(`items`)과 `llm_eval` 판정 응답(`verdict`) 계약 충돌을 API 호출 전에 확인. TASKS 연결·canary 금지, §6-5/7 HALT | — |
 | 2026-09-19 | P4 | actual `curate_batch` + deterministic hard gate + 수동 blind ChatGPT judge로 계약 분리. 20 Gold × 3 repeat 질문지·strict importer·15건 canary preflight 구현. live Gemini/OpenAI API/신규 Human Review 모두 0. calibration JSON 3개 대기 | `159dcc7` |
 | 2026-09-19 | P4 | 대상 회귀 57 passed. 전체 suite 2670 passed/10 skipped/1 failed — 실패는 기존 live web data 주별 합계 비율 3.77 > 2인 데이터 gate 1건으로 P4 무관, 수정하지 않음 | `159dcc7` |
+| 2026-09-19 | P4 | 수동 judge 60/60 strict import. stability/TIE/duplicate 1.0, position bias 0이나 PASS-vs-intervention 0.633·false/unsafe PASS 16으로 NOT_PROVEN. source evidence 부족 확인, canary 차단 회귀 포함 59 passed | — |
