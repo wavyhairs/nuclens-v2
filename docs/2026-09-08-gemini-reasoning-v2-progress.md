@@ -36,9 +36,9 @@
 | P0 | Evaluator lockdown | 0 | `DONE` (fb25171) |
 | P0.5 | Behavior-neutral seam refactor | 0 | `DONE` (ca39d89) |
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
-| P2 | Capture + recorded-response fidelity | 0 | `IN_PROGRESS` — 배선 완료, 스위치 대기 |
+| P2 | Capture + recorded-response fidelity | 0 | `DONE` — curation PROVEN, dedup/dedup_final NOT_PROVEN (2026-09-19) |
 | P3 | Independent Gold | 0 | `DONE` — 47건 판정 완료, 재라벨 대상 0 (97019a6) |
-| P4 | Sequential reasoning evaluation | 최소 | `IN_PROGRESS` — 준비 완료, P2/P3 대기 |
+| P4 | Sequential reasoning evaluation | 최소 | `HALTED(§6-5/7: curation 생성 계약과 verdict 평가 계약 불일치)` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
 
@@ -46,17 +46,13 @@
 
 ## 3. 다음 한 줄
 
-> **사람 판정은 전부 끝났다(47건). 남은 것은 자연 데이터와 머지 하나다.**
+> **P2 판정 완료. P4는 API 호출 전에 계약 충돌로 정지했다.**
 >
-> 1. 브랜치를 main 에 머지한 뒤 repo variable `NUCLENS_LLM_CAPTURE=on`.
->    (워크플로 변경이 브랜치에만 있어 머지 전에 켜면 아무 일도 안 일어난다.)
-> 2. 7~14일 뒤 capture artifact 를 받아
->    `python tools/fidelity_gate.py --capture <llm_capture.jsonl>`
-> 3. `REPLAY_FIDELITY_PROVEN` 이 나온 profile 만 `llm_eval.TASKS` 에
->    request_builder 와 evaluator_policy 를 꽂는다. 그 전에는 P4 가 열리지 않는다.
->
-> **코드로 더 할 수 있는 일은 없다.** P0~P4 준비가 모두 끝났고, 다음 단계는
-> 자연 production 데이터가 쌓이기를 기다리는 것이다.
+> 다음 재개 지점: curation production 생성 응답(`items`)을 기존 출력의
+> `PASS|REPAIR|BLOCK` 판정(`verdict`)으로 바꾸지 않고 평가할 계약을 먼저 확정한다.
+> 현재 `llm_eval` 인터페이스에 curation request builder를 꽂으면 prediction이
+> `None`이 되고, 별도 judge를 만들면 P0 봉쇄를 위반한다. 이 의미 선택 전에는
+> `llm_eval.TASKS`를 열거나 P4 canary/API 호출을 하지 않는다.
 
 ## 4. Phase별 체크리스트
 
@@ -90,13 +86,13 @@
       는 늘어난다. 옳은 불변식은 `call_log_delta == replayed_calls` (transport 를
       우회한 호출이 없다) + repo 파일 변경 0 이다. 앞서 적은 '증가 0' 은 offline
       **capture 검증**에는 맞고 replay 에는 맞지 않았다.
-- [ ] profile별 판정 실행 — **실데이터 대기**. 도구는 준비 완료:
-      `python tools/fidelity_gate.py --capture <llm_capture.jsonl>`
+- [x] profile별 판정 실행 (2026-09-19) — curation `REPLAY_FIDELITY_PROVEN`,
+      dedup/dedup_final `REPLAY_FIDELITY_NOT_PROVEN`; live Gemini 호출 0
 - [x] 입력 재구성기 `tools/replay_inputs.py` + provenance 판정 (1311a11)
 - [x] dedup 재구성기 (6b9019a) — 15개 필드 중 13개가 저장소 복원 가능
 - [x] fidelity gate `tools/fidelity_gate.py` — 캡처 → profile 판정 (다음 커밋)
 - [ ] issue_review 재구성기 — **이번 범위 제외**(사양 §5: 후순위)
-- [ ] 자연 데이터 축적 대기 (7~14일) — 이 항목은 시간 대기이며 HALT 아님
+- [x] 자연 데이터 축적 8일 21시간 확인 (artifact 91개, JSONL 840줄, 파싱 오류 0)
 
 ### P3 — Independent Gold (API 0)
 - [x] #92 Gold 도입 + `HUMAN_REVIEWED_AI_ASSISTED` 재분류 (9b089fb)
@@ -110,8 +106,38 @@
 ### P4 — Sequential evaluation (최소 API)
 - [x] case-major 루프 + config 순서 randomize — `plan_jobs()` (21d18a4)
 - [x] 지연 분해 `latency_seconds`(API) / `wall_clock_seconds` / `overhead_seconds` (21d18a4)
-- [ ] full-size batch canary
+- [ ] full-size batch canary — **HALTED:** curation production 생성 계약과
+      `llm_eval` verdict 평가 계약의 의미가 다름. API 호출 전 발견, 신규 live 호출 0
 - [ ] dominated config 제거 → paired dev → finalist repeat → time-block holdout
+
+## 4-G. P2 자연 capture 및 fidelity 결과 (2026-09-19)
+
+repo variable `NUCLENS_LLM_CAPTURE=on`을 확인했다. 2026-09-09 이후 만료되지 않은
+artifact 91개(11,805,298 bytes)를 전부 내려받았고, 빈 파일·JSON 파싱 오류는 0이었다.
+artifact 생성 범위는 2026-09-09 15:57:17Z ~ 2026-09-18 13:17:59Z다.
+
+| profile | 캡처 호출 | orchestration | artifact | 캡처 시각 범위(UTC) | 판정 |
+|---|---:|---:|---:|---|---|
+| `curation` | 580 (최초 337 + 재생성 243) | 337 | 91 | 09-09 15:42:45 ~ 09-18 12:44:01 | `REPLAY_FIDELITY_PROVEN` |
+| `dedup` | 20 | 20 | 9 | 09-09 21:03:12 ~ 09-17 19:17:16 | `REPLAY_FIDELITY_NOT_PROVEN` |
+| `dedup_final` | 18 | 18 | 9 | 09-09 21:03:17 ~ 09-17 19:17:20 | `REPLAY_FIDELITY_NOT_PROVEN` |
+
+판정은 artifact를 만든 정확한 run commit에서 실행했다. 최신 dedup 포함 brief
+artifact `10516558990` / run commit `9e7c9bf`에서 curation은 2/2 orchestration
+(3 calls) PROVEN, dedup과 dedup_final은 각각 0/2 (2 calls) NOT_PROVEN이었다.
+최신 curation 표본도 별도로 확인했다: brief `10522931660` / `9782592a`는 3/3
+(5 calls), crawl `10548691668` / `59abee75`는 4/4 (7 calls) PROVEN이다.
+해당 run commit과 현재 `origin/main` 사이 curation 계약 파일 변경은 0이다.
+
+dedup 두 profile은 재구성한 user message가 녹화본과 달랐다. §5-B에 따라 P4에서
+제외한다. curation의 `description`/`body` prompt-derived 순환 경계와 429/5xx 미포착
+한계는 §4-A의 기존 제한 그대로다.
+
+`llm_eval.TASKS` 연결은 0개다. PROVEN인 curation profile은 새 curation을 생성하는
+production 계약(`items`)인 반면 `CURATION` Gold/평가기 계약은 기존 `current_output`의
+등급을 판정하는 계약(`verdict`)이다. 둘을 같은 task로 연결하는 것은 active contract
+모순이고, 새 judge를 임의 도입하는 것은 P0 봉쇄 및 새로운 product semantics 선택이다.
+따라서 §6-5/§6-7로 P4를 정지했다.
 
 ### P5 — Decision (API 0)
 - [ ] config-dependent failure vs provider noise 분류 적용
@@ -323,3 +349,5 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-09 | P3 | **2회차 10건 반영. PASS 층 9/13 뒤집힘. 안전/등급 근거 분리.** 전체 1728 passed | `97019a6` |
 | 2026-09-09 | — | daily-brief 34279339893 완료 확인 후 rebase → push | — |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
+| 2026-09-19 | P2 | capture artifact 91개·840호출·8일 21시간 확인. 정확한 run commit replay에서 curation PROVEN, dedup/dedup_final NOT_PROVEN. live Gemini 0회 | — |
+| 2026-09-19 | P4 | curation 생성 응답(`items`)과 `llm_eval` 판정 응답(`verdict`) 계약 충돌을 API 호출 전에 확인. TASKS 연결·canary 금지, §6-5/7 HALT | — |
