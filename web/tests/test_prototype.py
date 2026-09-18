@@ -5634,6 +5634,90 @@ class ChangeLogHistoryTests(unittest.TestCase):
         self.assertNotIn("→", self.section)
 
 
+class LongTermStoryScreenTests(unittest.TestCase):
+    """장기 스토리(Beta) 화면을 되살린다 (2026-09-19).
+
+    `threads.json` 은 그동안에도 매일 구워졌고 판정에 LLM 까지 태웠다(회차당
+    asked 7 · candidates 3472 · events 388). 그런데 2026-09-17 화면 층 교체 때
+    `VIEW_IDS` 에서 longterm 이 빠지면서 탭도 `?view=longterm&th=` 딥링크도
+    오늘 화면으로 떨어졌다 — **매일 값을 치르면서 아무도 못 보는 상태**였다.
+
+    내린 이유는 "이슈의 흐름은 v3 의 3단 시트가 맡는다"였는데, 그 시트도
+    ui-v3.js 와 함께 사라졌다. 대체재가 없어진 셈이라 되살린다.
+
+    데이터 정합성은 backlog 기록(2026-09-13: 101건 중 97건 불일치)보다 크게
+    나아졌다. 2026-09-19 라이브 실측: 사건 링크 263개 중 카탈로그에 없는 것
+    25개(9.5%), 스토리 89건 중 19건(21.3%). 그중 **유령 중복은 1개**뿐이고
+    나머지 24개는 그냥 정리된 사건이다 — PR #107·#110 이 한 일이다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        cls.css = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+
+    def test_the_view_is_reachable_again(self):
+        self.assertIn('"report", "longterm"]', self.script)
+        self.assertIn('id="view-longterm"', self.html)
+        self.assertIn('data-view="longterm"', self.html)
+        self.assertIn('if (view === "longterm") renderLongTerm();', self.script)
+
+    def test_the_payload_is_optional(self):
+        """threads.json 이 없거나 깨져도 나머지 화면은 산다."""
+        self.assertIn('loadJSON("threads.json").catch(() => null)', self.script)
+
+    def test_every_entrance_passes_the_same_gate(self):
+        """탭·딥링크·뒤로가기 어느 쪽으로도 닫힌 화면에 못 들어간다.
+
+        게이트가 크롬 한 군데에만 있으면 안전장치가 아니다.
+        """
+        self.assertIn('if (view === "longterm" && !longTermReady()) view = "news";', self.script)
+        self.assertIn('if (state.view === "longterm" && !longTermReady())', self.script)
+        chrome = self.script.split("function syncLongTermChrome(", 1)[1].split("\n}", 1)[0]
+        self.assertIn("const ready = longTermReady();", chrome)
+        # v3 잔재가 남으면 탭이 영영 안 뜬다 — ui-v3.js 는 이 저장소에 없다.
+        self.assertNotIn('state.ui !== "v3"', self.script)
+
+    def test_an_event_the_catalog_dropped_is_text_not_a_button(self):
+        """누르면 아무 일도 안 일어나는 버튼은 고장으로 읽힌다.
+
+        스토리는 사건을 **기록**으로 들고 있지만 카탈로그는 흡수·정리로 그 id 를
+        놓을 수 있다(실측 263개 중 25개). 기록은 남기되 열 수 있을 때만 버튼이다.
+        브라우저 실측: 버튼 238 + 글자 25 = 263.
+        """
+        helper = self.script.split("function threadEventOpenable(", 1)[1].split("\n}", 1)[0]
+        self.assertIn("currentIssueById(event.event_id)", helper)
+        timeline = self.script.split("function threadTimeline(", 1)[1].split("\n}", 1)[0]
+        self.assertIn("threadEventOpenable(event)", timeline)
+        self.assertIn('class="longterm-event is-closed"', timeline)
+        # 흐리게만 둔다 — 사건이 취소된 게 아니라 여는 길이 없을 뿐이다.
+        self.assertIn(".longterm-event.is-closed", self.css)
+        self.assertNotIn("line-through", self.css.split(".longterm-event.is-closed", 1)[1][:400])
+
+    def test_the_count_matches_what_is_listed(self):
+        """저장된 event_count 는 카탈로그가 놓은 것까지 세어 목록보다 클 수 있다.
+
+        실측: 89건 중 19건이 어긋난다. 머리에 8건이라 적고 8줄을 세우는 것이
+        맞지, 8건이라 적고 6줄을 세우면 화면이 제 목록을 부정한다.
+        """
+        card = self.script.split("function threadCard(", 1)[1].split("\n}", 1)[0]
+        self.assertIn("(thread.events || []).length}건", card)
+        self.assertNotIn("thread.event_count", card)
+
+    def test_the_gate_check_actually_runs(self):
+        """회귀가 나면 조용하다 — 탭이 떠 있고 몇 주 된 이야기가 '최신'인 척 선다."""
+        self.assertTrue((ROOT / "tests" / "long_term_gate.mjs").is_file())
+        deploy = (ROOT.parent / ".github" / "workflows" / "deploy-web.yml").read_text(encoding="utf-8")
+        self.assertIn("node web/tests/long_term_gate.mjs", deploy)
+
+    def test_the_screen_says_what_it_is(self):
+        """사람이 엮은 연재가 아니라 자동 군집이라는 것을 화면이 먼저 말한다."""
+        self.assertIn('id="longTermNote"', self.html)
+        self.assertIn("자동으로 묶은 것이라", self.script)
+        self.assertIn("beta-badge", self.html)
+
+
 class RevisitPathTests(unittest.TestCase):
     """재방문 가치 — 최근 본 이슈 · '지난 확인 이후' 요약 · 행 전체 클릭.
 
