@@ -171,15 +171,20 @@ body는 exact text hash로만 dedup하며 fidelity를 위해 유사도 기반 �
 - production Gemini model/reasoning/prompt/routing 변경 없음
 - `FAST_SEMANTIC_GATE_ENABLED` 변경 없음
 - crawl/daily/weekly/cache/deployment 변경 없음
-- production hot path에 새 write hook 없음
+- production 기본 경로의 write/call 동작 변경 없음
+- 명시적 evaluation capture mode에만 동일 실행의 in-memory producer hook 존재
+- public workflow/repository variable 배선 및 source body artifact 업로드 없음
 - Human 신규 리뷰 0
 - Gemini live API 호출 0
 - OpenAI live API 호출 0
 - 실제 source-complete eligible case 0
 
-이번 구현은 explicit input JSON을 받는 evaluation-only promotion helper다. future caller는
-호출 시점의 exact article/context/request/output/parser state를 함께 넘겨야 한다. 과거
-capture에서 빠진 값을 archive나 현재 웹으로 추정해 채울 수 없다.
+promotion helper에 더해 `tools/source_complete_producer.py`가 실제 `curate_batch()` 호출 시점의
+exact article/context/request/output/parser state를 in-memory로 직접 전달한다. producer는
+기본 off이고 이미 예정된 curation 호출을 관측할 뿐 추가 API 호출을 만들지 않는다. 불완전
+candidate는 디스크에 쓰기 전에 거부한다. 과거 capture에서 빠진 값을 archive나 현재 웹으로
+추정해 채우는 경로는 여전히 없다. 공개 저장소에는 body 포함 artifact를 올리지 않으며,
+실제 수집 전 제한된 저장 위치와 호출 수·token·비용·hard cap 보고 및 명시적 승인이 필요하다.
 
 ## 10. P4 상태와 다음 재개 조건
 
@@ -206,3 +211,17 @@ P4를 열지 않는다.
 - Gemini/OpenAI API 호출: 각 0
 
 테스트를 통과시키기 위해 live data gate를 약화하거나 unrelated 사용자 파일을 수정하지 않았다.
+
+## 12. producer 구현 후 검증
+
+같은 curation 실행에서 exact state를 넘기는 producer는
+`docs/2026-09-19-gemini-reasoning-source-complete-producer.md`에 기록했다.
+
+- producer·evidence·capture·curation request 관련: 200 passed, 94 subtests passed
+- 비-web 전체: 2,134 passed, 9 skipped, 489 subtests passed
+- 전체 suite: 2,610 passed, 12 skipped 후 4 failed, 114 setup errors
+- 전체 suite의 실패/error는 격리 worktree에 Git 비추적 생성물인
+  `web/public/data/news.json`, `issue_audit.json`, `issues.json`, `publications.json`이 없는 데서 발생
+- 생성물을 다른 worktree에서 복사하거나 web gate를 약화하지 않음
+- `py_compile` 및 API 0회인 `source_complete_producer.py plan` 통과
+- 실제 source-complete eligible은 여전히 0, Gemini/OpenAI API 호출 각 0

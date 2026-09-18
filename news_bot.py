@@ -2109,7 +2109,8 @@ def append_open_question_stats(verdicts: dict[str, dict],
 
 def curate_batch(articles: list[dict], reports_kb: list[dict],
                  bodies: dict[str, str] | None = None,
-                 client=None, log_path: Path | None = None) -> dict[str, dict]:
+                 client=None, log_path: Path | None = None,
+                 evidence_sink=None) -> dict[str, dict]:
     """새 기사 목록을 chunk 단위 배치 호출로 큐레이션. {hash: cur_dict} 반환.
 
     ``client``/``log_path`` 는 오프라인 replay 전용 이음매다. 기본값은 예전과
@@ -2146,7 +2147,8 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
     # 오류는 여기 들어와도 재생성에서 정상화되면 관리자 경고 대상이 아니다.
     final_integrity_quarantines: dict[str, dict] = {}
 
-    def run_chunk(chunk: list[dict], error_notes: dict[str, list[str]] | None = None):
+    def run_chunk(chunk: list[dict], error_notes: dict[str, list[str]] | None = None,
+                  *, split: bool = False):
         blocks = []
         # 위치가 아니라 **표식**으로 되찾는다. 실측(2026-08-07): 8건을 넣었더니
         # 모델이 한 건(로컬 소식 묶음)을 빼고 **남은 것의 idx 를 다시 매겨서**
@@ -2200,6 +2202,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
 
         valid: dict[str, dict] = {}
         failures: dict[str, list[str]] = {}
+        matched_by: dict[str, str] = {}
         seen_hashes: set[str] = set()
         tagless_multi_response = False
         for item in items:
@@ -2215,6 +2218,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 art = tags.get(tag)
                 if art is None:
                     continue
+                matched_by[art["hash"]] = "id"
             else:
                 # 여러 기사 응답에서 위치(idx)는 신원이 아니다. 모델이 한 항목을
                 # 생략한 뒤 번호를 다시 매긴 실사고가 있어, id 없는 다건 응답을
@@ -2227,6 +2231,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 if not isinstance(idx, int) or not (0 <= idx < len(chunk)):
                     continue
                 art = chunk[idx]
+                matched_by[art["hash"]] = "idx"
             if art["hash"] in seen_hashes:
                 failures[art["hash"]] = ["response:duplicate_idx"]
                 valid.pop(art["hash"], None)
@@ -2269,6 +2274,32 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                     "response:id_missing" if tagless_multi_response
                     else "response:idx_missing"
                 ]
+        if evidence_sink is not None and valid:
+            try:
+                evidence_sink({
+                    "schema_version": 1,
+                    "transport_trace": getattr(
+                        result, "_source_complete_trace", None),
+                    "articles": chunk,
+                    "reports_context": reports_kb,
+                    "bodies": {
+                        art["hash"]: (bodies or {}).get(art["hash"], "")
+                        for art in chunk
+                    },
+                    "parsed_output": result,
+                    "normalized_outputs": valid,
+                    "validation_errors": failures,
+                    "matched_by": matched_by,
+                    "lifecycle": {
+                        "regenerated": bool(error_notes),
+                        "split": split,
+                        "quarantined": False,
+                        "lost": False,
+                    },
+                })
+            except Exception as exc:  # noqa: BLE001 — evidence는 서비스 결과를 바꾸지 않는다
+                print(f"  ! source-complete evidence capture 실패 → 서비스 계속: "
+                      f"{type(exc).__name__}: {exc}")
         return valid, failures
 
     out: dict[str, dict] = {}
@@ -2276,10 +2307,10 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
     oq_verdicts: dict[str, dict] = {}  # hash → open_question 게이트 판정 (계측용)
     split_budget = BATCH_SPLIT_BUDGET
 
-    def process(chunk: list[dict], label: str) -> None:
+    def process(chunk: list[dict], label: str, *, split: bool = False) -> None:
         """chunk 하나를 큐레이션해 out/lost 를 채운다."""
         nonlocal split_budget
-        valid, failures = run_chunk(chunk)
+        valid, failures = run_chunk(chunk, split=split)
         out.update(valid)
 
         reason = request_failure_reason(failures, chunk)
@@ -2292,9 +2323,9 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 mid = len(chunk) // 2
                 print(f"  ! {label} 호출 실패({reason}) → "
                       f"{len(chunk)}건을 {mid}/{len(chunk) - mid} 로 분할 재시도")
-                process(chunk[:mid], f"{label}a")
+                process(chunk[:mid], f"{label}a", split=True)
                 time.sleep(1)
-                process(chunk[mid:], f"{label}b")
+                process(chunk[mid:], f"{label}b", split=True)
                 return
             global QUOTA_EXHAUSTED, CONFIG_ERROR
             if reason == "quota":
@@ -2319,7 +2350,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
         ]
         if retryable:
             print(f"  ! 품질 게이트 재생성: {len(retryable)}건")
-            repaired, remaining = run_chunk(retryable, failures)
+            repaired, remaining = run_chunk(retryable, failures, split=split)
             out.update(repaired)
             for art in retryable:
                 if art["hash"] in remaining:
@@ -3412,7 +3443,38 @@ def main() -> None:
             print(f"[body] 본문 수집 실패 (제목·요약만으로 계속): "
                   f"{type(exc).__name__}: {exc}")
 
-    batch_results = curate_batch(new_articles, reports_kb, bodies)
+    # Source-complete evidence는 명시적 evaluation/capture 모드에서만 켠다.
+    # 기본 경로는 예전과 같은 client/sink=None이다. 켠 경우에도 이미 예정된
+    # production curation 호출을 관측할 뿐 추가 Gemini 호출은 만들지 않는다.
+    source_complete_producer = None
+    source_complete_client = None
+    if os.environ.get("NUCLENS_SOURCE_COMPLETE_CAPTURE", "").strip().lower() == "on":
+        try:
+            from tools.source_complete_producer import producer_from_environment
+            source_complete_producer = producer_from_environment(new_articles, bodies)
+            if source_complete_producer is not None:
+                source_complete_client = source_complete_producer.traced_client(
+                    gemini_call_json)
+        except Exception as exc:  # noqa: BLE001 — evidence 실패가 서비스를 바꾸면 안 된다
+            print(f"[source-complete] capture 비활성화 — "
+                  f"{type(exc).__name__}: {exc}")
+            source_complete_producer = None
+            source_complete_client = None
+
+    batch_results = curate_batch(
+        new_articles, reports_kb, bodies,
+        client=source_complete_client,
+        evidence_sink=(source_complete_producer.record_curation_event
+                       if source_complete_producer is not None else None),
+    )
+    if source_complete_producer is not None:
+        try:
+            source_complete_report = source_complete_producer.finalize()
+            print("[source-complete] " + json.dumps(
+                source_complete_report, ensure_ascii=False, sort_keys=True))
+        except Exception as exc:  # noqa: BLE001 — evidence 실패가 서비스를 바꾸면 안 된다
+            print(f"[source-complete] promotion 실패 → 서비스 계속: "
+                  f"{type(exc).__name__}: {exc}")
 
     # 후속·반복 보도 판정 재료. 아카이브를 못 읽어도 크롤은 계속한다(빈 목록이면
     # prior_coverage 0 → 전부 신규 취급).
