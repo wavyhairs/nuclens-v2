@@ -134,6 +134,7 @@ class ProductionRunnerTests(unittest.TestCase):
         before = {path: (path.stat().st_size, path.stat().st_mtime_ns) for path in tracked}
         with tempfile.TemporaryDirectory(dir=".") as temp_dir, \
                 patch.object(curation_p4.gemini_client, "call_json") as gemini, \
+                patch.object(curation_p4, "load_capture_records", return_value=[]), \
                 patch("sys.argv", ["curation_p4.py", "--out", temp_dir]):
             self.assertEqual(curation_p4.main(), 0)
             report = json.loads((Path(temp_dir) / "preflight.json").read_text(encoding="utf-8"))
@@ -141,6 +142,7 @@ class ProductionRunnerTests(unittest.TestCase):
         self.assertEqual(report["judge_calibration"]["gold_cases"], 0)
         self.assertEqual(report["judge_calibration"]["historical_only_cases"], 20)
         self.assertEqual(report["judge_calibration"]["manual_packets"], 0)
+        self.assertEqual(report["canary"]["status"], "UNAVAILABLE_NO_ELIGIBLE_CAPTURE")
         self.assertEqual(report["gate"], "HALTED_SOURCE_COMPLETE_CALIBRATION_POOL_EMPTY")
         gemini.assert_not_called()
         after = {path: (path.stat().st_size, path.stat().st_mtime_ns) for path in tracked}

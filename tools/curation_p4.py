@@ -297,7 +297,8 @@ def _historical_usage(records: list[tuple[Path, dict]]) -> dict:
     }
 
 
-def build_preflight(records: list[tuple[Path, dict]], selection: dict, gold: dict) -> dict:
+def build_preflight(records: list[tuple[Path, dict]], selection: dict | None,
+                    gold: dict) -> dict:
     historical = _historical_usage(records)
     expected_per_arm = 1 + historical["regeneration_rate_per_orchestration"]
     expected_calls = round(expected_per_arm * len(ARMS), 1)
@@ -307,18 +308,26 @@ def build_preflight(records: list[tuple[Path, dict]], selection: dict, gold: dic
         + output_tokens / 1_000_000 * GEMINI_PRICE["output"]
     calibration = judge.calibration_requests(gold)
     historical_calibration = judge.historical_calibration_requests(gold)
-    canary_judging = estimated_canary_judge_requests(selection)
+    canary_judging = estimated_canary_judge_requests(selection) if selection else []
+    canary = ({
+        "artifact": str(selection["path"].relative_to(ROOT)),
+        "capture_seq": selection["record"].get("seq"),
+        "captured_at": selection["captured_at"],
+        "items": len(selection["input"]["articles"]),
+        "batch_chunk": news_bot.BATCH_CHUNK,
+        "arms": list(ARMS),
+        "execution_order": arm_order(selection["path"].parent.name),
+        "risk_coverage": selection["risk_coverage"],
+    } if selection else {
+        "status": "UNAVAILABLE_NO_ELIGIBLE_CAPTURE",
+        "items": 0,
+        "batch_chunk": news_bot.BATCH_CHUNK,
+        "arms": list(ARMS),
+    })
     return {
         "generated_at_epoch": time.time(), "live_calls_made": {"openai": 0, "gemini": 0},
         "production_changes": False,
-        "canary": {
-            "artifact": str(selection["path"].relative_to(ROOT)),
-            "capture_seq": selection["record"].get("seq"),
-            "captured_at": selection["captured_at"], "items": len(selection["input"]["articles"]),
-            "batch_chunk": news_bot.BATCH_CHUNK, "arms": list(ARMS),
-            "execution_order": arm_order(selection["path"].parent.name),
-            "risk_coverage": selection["risk_coverage"],
-        },
+        "canary": canary,
         "judge_calibration": {
             "policy": judge.EVALUATOR_POLICY,
             "channel": "manual ChatGPT UI (model display name recorded on import)",
@@ -400,14 +409,16 @@ def main() -> int:
     if args.phase == "canary" and not args.approve_live_calls:
         parser.error("Gemini live canary requires --approve-live-calls")
 
-    records = load_capture_records()
-    index = replay_inputs.load_article_index(
-        archive_dir=ROOT / "archive", curated=ROOT / "curated.json")
-    selection = select_canary(records, index)
     gold = json.loads(GOLD_PATH.read_text(encoding="utf-8"))
     args.out.mkdir(parents=True, exist_ok=True)
 
     if args.phase == "preflight":
+        records = load_capture_records()
+        index = replay_inputs.load_article_index(
+            archive_dir=ROOT / "archive", curated=ROOT / "curated.json")
+        choices = candidate_captures(records, index)
+        selection = max(choices, key=lambda row: (
+            row["risk_floor"], row["risk_total"], row["captured_at"])) if choices else None
         report = build_preflight(records, selection, gold)
         calibration_summary_path = args.out / "calibration-summary.json"
         if calibration_summary_path.exists():
@@ -466,6 +477,10 @@ def main() -> int:
     if (calibration_state.get("status") != "PASS"
             or calibration_state.get("calibration_scope") != "source_complete"):
         parser.error("Gemini canary refused: current-policy GPT calibration has not passed")
+    records = load_capture_records()
+    index = replay_inputs.load_article_index(
+        archive_dir=ROOT / "archive", curated=ROOT / "curated.json")
+    selection = select_canary(records, index)
     if args.phase == "canary":
         if args.max_gemini_calls_per_arm <= 0:
             parser.error("canary requires --max-gemini-calls-per-arm > 0")
