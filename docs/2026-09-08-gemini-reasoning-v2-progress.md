@@ -38,7 +38,7 @@
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `DONE` — curation PROVEN, dedup/dedup_final NOT_PROVEN (2026-09-19) |
 | P3 | Independent Gold | 0 | `DONE` — 47건 판정 완료, 재라벨 대상 0 (97019a6) |
-| P4 | Sequential reasoning evaluation | 최소 | `HALTED(judge calibration NOT_PROVEN: agreement 0.633, false/unsafe PASS 16)` |
+| P4 | Sequential reasoning evaluation | 최소 | `HALTED(judge calibration NOT_PROVEN: false PASS 감사 완료, 동일 조건 유효 재실행 불가)` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
 
@@ -48,10 +48,12 @@
 
 > **P2 판정 유지. P4 judge calibration은 NOT_PROVEN, live 호출은 여전히 0이다.**
 >
-> 다음 재개 지점: 기존 Curation Gold 20건에 대응하는 **독립 source evidence**
-> (당시 description/body/source excerpt)를 복원할 수 있는지 확인한다. 현재 archive에는
-> 생성 output만 있고 원 source evidence는 없다. 신규 Human Review 금지 조건을 유지하는 한,
-> threshold 하향·사후 case 제외·Gemini canary 실행은 하지 않는다.
+> 다음 재개 지점: `docs/2026-09-19-gemini-reasoning-p4-false-pass-audit.md`의 결론을
+> 검토한다. false PASS 16행(6 case)은 ① title-only miss 3행(1 case), ③ Human Gold/근거
+> 불명확 13행(5 case)이며, 저장소·archive·cache·log 어디에도 당시 description/body가 없다.
+> **기존 calibration의 동일 조건 유효 재실행은 불가**하다. 별도 승인으로 source-complete 새
+> evidence protocol 및 이유를 보존하는 독립 Human Gold 재판정을 허용하기 전에는 calibration
+> 재실행, threshold/Gold/prompt/model/gate 변경, Gemini canary 실행을 하지 않는다.
 
 ## 4. Phase별 체크리스트
 
@@ -112,6 +114,8 @@
 - [x] full-size 15건 canary 입력·4 distinct arm·비용/호출 preflight 고정
 - [x] judge calibration 실행 — 60/60 strict import, repeat stability/TIE 1.0
 - [ ] judge calibration PROVEN — **NOT_PROVEN:** agreement 0.633, false/unsafe PASS 16
+- [x] false PASS 16행 전수 감사 — 6 case, ① 1 case/3행, ② 0, ③ 5 case/13행;
+      당시 원문 및 5개 canonical Gold 근거 복원 불가
 - [ ] full-size batch canary — calibration PASS 및 명시적 Gemini 호출 승인 전 금지
 - [ ] dominated config 제거 → paired dev → finalist repeat → time-block holdout
 
@@ -150,6 +154,26 @@ Gold source packet이 title/date만 보존하고 원 description/body를 보존�
 오류를 judge가 `NOT_EVALUABLE`로 둔 것이 주요 한계다. threshold를 낮추거나 결과를 본 뒤
 case를 제외하지 않는다. `JUDGE_CALIBRATION_NOT_PROVEN`으로 P4를 HALT하고 Gemini canary는
 실행하지 않았다. 상세 결과는 `docs/2026-09-19-gemini-reasoning-p4-calibration.md`다.
+
+## 4-J. P4 false PASS 16건 전수 감사 (2026-09-19)
+
+calibration을 재실행하지 않고 false PASS 16행을 6개 고유 case로 환원해 전수 조사했다.
+Gold 근거가 명확한 `curation-f158b9b4c01d6732` 3행은 source title과 생성 summary의 중심
+scope 차이를 judge가 놓친 ①이다. 나머지 13행(5 case)은 canonical label이 `PASS→REPAIR`로
+바뀌었지만 모든 human dimension이 `PASS`이고 `human_notes`와 `required_repair`도 비어 있어,
+Human Gold의 실패 근거 자체를 복원할 수 없는 ③이다. ②로 단독 확정할 case는 0개다.
+
+각 case의 저장소(`curated.json` 및 Gold 이력), archive 전체 revision, production/eval cache,
+delivery/eval log를 순서대로 확인했다. 당시 description/body/source excerpt의 실제 텍스트는
+없었다. 4건은 빈 문자열의 source excerpt 해시만, 2건은 preimage 없는 비어 있지 않은 해시만
+남았다. Sol 보조 판정의 rationale과 source URL은 원문 evidence가 아니며, blind sidecar는
+label만 저장한다.
+
+따라서 기존 packet의 기계적 replay는 가능하지만 결손과 불명확한 Gold를 그대로 반복할 뿐,
+`NOT_PROVEN`을 해소하는 **동일 조건의 유효한 calibration 재실행은 불가**하다. P4 `HALTED`와
+Gemini canary 차단을 유지한다. 상세 표와 경로는
+`docs/2026-09-19-gemini-reasoning-p4-false-pass-audit.md`에 기록했다. API 호출 0회이며 불변
+설정과 실제 서비스 동작은 변경하지 않았다.
 
 ## 4-G. P2 자연 capture 및 fidelity 결과 (2026-09-19)
 
@@ -395,3 +419,4 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-19 | P4 | actual `curate_batch` + deterministic hard gate + 수동 blind ChatGPT judge로 계약 분리. 20 Gold × 3 repeat 질문지·strict importer·15건 canary preflight 구현. live Gemini/OpenAI API/신규 Human Review 모두 0. calibration JSON 3개 대기 | `159dcc7` |
 | 2026-09-19 | P4 | 대상 회귀 57 passed. 전체 suite 2670 passed/10 skipped/1 failed — 실패는 기존 live web data 주별 합계 비율 3.77 > 2인 데이터 gate 1건으로 P4 무관, 수정하지 않음 | `159dcc7` |
 | 2026-09-19 | P4 | 수동 judge 60/60 strict import. stability/TIE/duplicate 1.0, position bias 0이나 PASS-vs-intervention 0.633·false/unsafe PASS 16으로 NOT_PROVEN. source evidence 부족 확인, canary 차단 회귀 포함 59 passed | `2748072` |
+| 2026-09-19 | P4 | false PASS 16행(6 case) 전수 감사. ① 1 case/3행, ② 0, ③ 5 case/13행. 저장소→archive→cache→log에 당시 원문 없음, 5개 canonical Gold 근거 없음으로 동일 조건 유효 재실행 불가. calibration/canary/API 호출 0 | 이번 문서 커밋 |
