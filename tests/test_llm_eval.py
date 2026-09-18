@@ -30,6 +30,17 @@ class EvaluatorLockdownTests(unittest.TestCase):
             with self.subTest(task=task):
                 self.assertGreater(len(entry.blocked_reason), 20)
 
+    def test_only_fidelity_proven_profile_is_registered_for_p4(self):
+        registered = {entry.production_profile: entry for entry in llm_eval.TASKS.values()
+                      if entry.production_profile}
+        self.assertEqual(set(registered), {"curation"})
+        self.assertEqual(registered["curation"].replay_fidelity,
+                         "REPLAY_FIDELITY_PROVEN")
+        self.assertEqual(registered["curation"].external_runner,
+                         "tools.curation_p4")
+        self.assertNotIn("dedup", registered)
+        self.assertNotIn("dedup_final", registered)
+
 
 class CheckpointNamespaceTests(unittest.TestCase):
     """무효 평가기의 결과가 새 평가를 건너뛰게 만들지 않음을 고정한다."""
