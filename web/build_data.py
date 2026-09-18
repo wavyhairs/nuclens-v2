@@ -4,7 +4,7 @@
 결과를 쓴다. ``BOT_DIR`` 환경 변수로 원본 봇 저장소 위치를 지정할 수 있다.
 
 출력:
-  - news.json: 기사 발행일 기준 전체 피드
+  - news-manifest.json + news/*.json: 기사 발행일 기준 전체 피드 shard
   - briefings.json: 발송일 기준 브리핑 + 이슈 묶음
   - issues.json: 전체 기간에서 중복 제거한 고유 이슈 카탈로그
   - trend.json: 집계 데이터
@@ -113,6 +113,8 @@ def pages_dir() -> Path:
     override = str(os.environ.get(PAGES_OUTPUT_DIR_ENV) or "").strip()
     return Path(override) if override else (SITE_DIR / "public")
 GENERATION_ID = os.environ.get("GENERATION_ID", "")
+DATA_CONTRACT_VERSION = 1
+NEWS_SHARD_MAX_BYTES = 6 * 1024 * 1024
 
 # Diagnostic-only controls.  Production keeps using the real KST clock and writes no
 # benchmark artifacts unless these variables are explicitly supplied.
@@ -3777,6 +3779,52 @@ def build_today_payload(briefings: list[dict], issue_catalog: list[dict],
     }
 
 
+# 알림 한 줄의 재료. **여기서 문장을 새로 짓지 않는다** — 이미 고른 헤드라인을
+# 그대로 쓴다. 알림이 화면과 다른 말을 하면 누른 뒤에 배신당한 기분이 든다.
+PUSH_CARD_VERSION = "push-card-v1"
+PUSH_FALLBACK_BODY = "오늘의 원전 현안이 올라왔습니다."
+
+
+def build_push_card(briefings: list[dict], now: datetime) -> dict:
+    """아침 알림이 읽는 한 장 → push.json.
+
+    왜 파일로 굽는가
+    ----------------
+    웹 푸시로 **본문**을 실으려면 구독마다 본문을 암호화해야 한다(RFC 8291).
+    그 구현을 배포 경로에 두지 않기로 했고(functions/push/send.js 머리말),
+    대신 빈 알림을 보낸 뒤 서비스워커가 이 파일을 읽어 제목을 붙인다.
+
+    그래서 이 파일은 **서비스워커가 푸시를 받은 순간** 받는다. today.json(87KB)
+    으로도 되지만 알림 하나에 그만큼을 받을 이유가 없다 — 여기 실리는 것은
+    제목 한 줄·본문 한 줄·주소 하나다(1KB 미만).
+
+    날짜는 브리핑 날짜다. 알림이 도착한 날이 아니라 **무엇이 올라왔는지**를
+    말해야 한다 — 발송이 하루 밀리면 그 사실이 알림에 보여야 한다.
+    """
+    latest = briefings[0] if briefings else {}
+    brief_date = str(latest.get("date") or "")
+    headline = str(latest.get("headline") or "").strip()
+    label = ""
+    if brief_date:
+        try:
+            parsed = date.fromisoformat(brief_date)
+            label = f"{parsed.month}월 {parsed.day}일"
+        except ValueError:
+            label = brief_date
+    return {
+        "version": PUSH_CARD_VERSION,
+        "generated_at": now.isoformat(),
+        "date": brief_date,
+        "title": f"{label} 브리핑" if label else "Nuclens 오늘 브리핑",
+        # 헤드라인이 비는 회차가 있다(headline_kind 가 안 서는 날). 그때는 알림을
+        # 거르는 대신 일반 문구로 나간다 — 알림이 오는 날과 안 오는 날이 갈리면
+        # 사용자는 그것을 고장으로 읽는다.
+        "body": headline or PUSH_FALLBACK_BODY,
+        "url": "/?src=push",
+        "tag": "nuclens-brief",
+    }
+
+
 def _is_primary_source(article: dict) -> bool:
     return article.get("evidence_role") == "primary" or article.get("source_tier") == 1
 
@@ -5564,6 +5612,135 @@ def build_brief_pages(briefings: list[dict]) -> int:
     return generated
 
 
+def build_render_manifest(issue_catalog: list[dict], ledger: dict,
+                          briefings: list[dict]) -> dict:
+    """Semantic page metadata, without a copy of the current HTML shell."""
+    live_ids: set[str] = set()
+    issues: list[dict] = []
+    for issue in issue_catalog:
+        issue_id = str(issue.get("issue_id") or "")
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", issue_id):
+            continue
+        live_ids.add(issue_id)
+        issues.append({
+            "id": issue_id,
+            "kind": "live",
+            "title": str(issue.get("title") or "Nuclens 이슈"),
+            "description": _issue_meta_description(issue),
+            "published": str(issue.get("first_seen") or ""),
+            "modified": str(issue.get("last_seen") or ""),
+        })
+    for entry in issue_ledger.archived(ledger, live_ids):
+        issue_id = str(entry.get("issue_id") or "")
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", issue_id) or issue_id in live_ids:
+            continue
+        issues.append({
+            "id": issue_id,
+            "kind": "archived",
+            "title": str(entry.get("title") or "Nuclens 이슈"),
+            "description": _issue_meta_description(entry),
+            "published": str(entry.get("first_seen") or ""),
+            "modified": str(entry.get("last_seen") or ""),
+        })
+    for issue_id, target in issue_ledger.redirects(ledger, live_ids).items():
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", issue_id) or issue_id in live_ids:
+            continue
+        entry = ledger.get("issues", {}).get(issue_id) or {}
+        issues.append({
+            "id": issue_id,
+            "kind": "moved",
+            "title": str(entry.get("title") or "Nuclens 이슈"),
+            "target": target,
+        })
+    briefs = []
+    for briefing in briefings:
+        briefing_date = str(briefing.get("date") or "")
+        try:
+            date.fromisoformat(briefing_date)
+        except ValueError:
+            continue
+        rows = briefing.get("issues") or []
+        headline = str(briefing.get("headline") or "이번 주 원자력, 무엇이 달라졌나")
+        briefs.append({
+            "date": briefing_date,
+            "title": f"{briefing_date} 원자력 브리프",
+            "description": str((rows[0] if rows else {}).get("summary") or headline)[:180],
+        })
+    return {
+        "schema": "nuclens-render-pages-v1",
+        "data_contract_version": DATA_CONTRACT_VERSION,
+        "issues": sorted(issues, key=lambda row: (str(row["id"]), str(row["kind"]))),
+        "briefs": sorted(briefs, key=lambda row: str(row["date"]), reverse=True),
+    }
+
+
+def write_news_payload(news_items: list[dict], out_dir: Path = OUT_DIR,
+                       max_bytes: int = NEWS_SHARD_MAX_BYTES) -> dict:
+    """Write bounded news shards and a small manifest (Cloudflare: 25 MiB/file)."""
+    if max_bytes < 1024:
+        raise ValueError("news shard max_bytes is unreasonably small")
+    shard_dir = out_dir / "news"
+    if shard_dir.exists():
+        shutil.rmtree(shard_dir)
+    shard_dir.mkdir(parents=True, exist_ok=True)
+    legacy = out_dir / "news.json"
+    if legacy.exists():
+        legacy.unlink()
+
+    shards: list[dict] = []
+    current: list[bytes] = []
+    current_bytes = 2
+
+    def flush() -> None:
+        nonlocal current, current_bytes
+        if not current:
+            return
+        name = f"{len(shards):03d}.json"
+        payload = b"[" + b",".join(current) + b"]"
+        (shard_dir / name).write_bytes(payload)
+        shards.append({"file": f"news/{name}", "count": len(current), "bytes": len(payload)})
+        current = []
+        current_bytes = 2
+
+    for row in news_items:
+        encoded = json.dumps(row, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        projected = current_bytes + len(encoded) + (1 if current else 0)
+        if current and projected > max_bytes:
+            flush()
+        if len(encoded) + 2 > max_bytes:
+            raise ValueError(f"single news row exceeds shard limit: {row.get('hash', '?')}")
+        current.append(encoded)
+        current_bytes += len(encoded) + (1 if len(current) > 1 else 0)
+    flush()
+    manifest = {
+        "schema": "nuclens-news-shards-v1",
+        "data_contract_version": DATA_CONTRACT_VERSION,
+        "count": len(news_items),
+        "shards": shards,
+    }
+    (out_dir / "news-manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+    )
+    return manifest
+
+
+def load_news_payload(data_dir: Path = OUT_DIR) -> list[dict]:
+    """Read current sharded output, with a legacy news.json fallback."""
+    manifest_path = data_dir / "news-manifest.json"
+    if manifest_path.is_file():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        rows: list[dict] = []
+        for shard in manifest.get("shards") or []:
+            value = json.loads((data_dir / str(shard["file"])).read_text(encoding="utf-8"))
+            if not isinstance(value, list):
+                raise ValueError(f"news shard is not a list: {shard['file']}")
+            rows.extend(value)
+        if len(rows) != int(manifest.get("count") or 0):
+            raise ValueError("news shard count mismatch")
+        return rows
+    return json.loads((data_dir / "news.json").read_text(encoding="utf-8"))
+
+
 def build_period_trends(all_items: list[dict], end_date: str) -> dict[str, dict]:
     """7/30/90/180/365일 장기 흐름을 *선정된 briefing story* 단위로 집계한다.
 
@@ -6737,6 +6914,14 @@ def build() -> None:
     if os.environ.get(DISABLE_BUILD_CACHE_ENV) != "1":
         _ACTIVE_BUILD_CACHE = _BuildLocalCache()
     match_overrides = load_match_overrides()
+    cached_approved, cached_rejected, cached_refresh = issue_review.preload_cached_overrides(
+        news_items
+    )
+    match_overrides = {
+        **match_overrides,
+        "llm_approved": set(match_overrides.get("llm_approved") or ()) | cached_approved,
+        "llm_rejected": set(match_overrides.get("llm_rejected") or ()) | cached_rejected,
+    }
     entity_registry = load_entity_registry()
     facility_entities = facility_entities_by_hash(
         news_items, facility_alias_entries(entity_registry)
@@ -6778,8 +6963,12 @@ def build() -> None:
     # 1차 묶음에서 나온 회색지대 쌍을 LLM 에 한 번 물어보고, 같은 사건으로
     # 판정된 것만 오버라이드로 넣어 다시 묶는다. 클러스터링은 순수 계산이라
     # 두 번 돌려도 비용이 없다. 판정이 0건이면 2차 실행 자체를 건너뛴다.
-    progress("llm_review:start", candidates=len(review_candidates))
-    llm_verdicts, llm_stats = issue_review.review_pairs(review_candidates)
+    # Soft-stale cache refresh rows are adjudication inputs, not clustering audit
+    # rows.  Keeping them out of ``review_candidates`` preserves the shipped audit
+    # contract (real candidate dates/method/state only).
+    review_inputs = [*review_candidates, *cached_refresh]
+    progress("llm_review:start", candidates=len(review_inputs))
+    llm_verdicts, llm_stats = issue_review.review_pairs(review_inputs)
     progress(
         "llm_review:done",
         asked=llm_stats.get("asked", 0),
@@ -6790,11 +6979,20 @@ def build() -> None:
     # 유사도만으로 붙는 경로가 그대로 살아 과병합이 난다(위 거부권 주석 참고).
     # ``same`` 이 None 인 실패 건은 어느 쪽으로도 쓰지 않는다.
     llm_rejected = {pair_id for pair_id, same in llm_verdicts.items() if same is False}
-    if llm_approved or llm_rejected:
+    # Cached verdicts were already active during pass 1.  Policy refreshes that return
+    # the same answer must not trigger another full evidence pass.
+    verdict_changed = any(
+        (same and pair_id not in cached_approved)
+        or (not same and pair_id not in cached_rejected)
+        for pair_id, same in llm_verdicts.items()
+    )
+    if verdict_changed:
+        next_approved = (cached_approved | llm_approved) - llm_rejected
+        next_rejected = (cached_rejected | llm_rejected) - llm_approved
         match_overrides = {
             **match_overrides,
-            "llm_approved": llm_approved,
-            "llm_rejected": llm_rejected,
+            "llm_approved": next_approved,
+            "llm_rejected": next_rejected,
         }
         review_candidates = []
         # 계수기도 같이 비운다. 안 그러면 1차와 2차가 겹쳐 세어져 방문 수가
@@ -7154,6 +7352,7 @@ def build() -> None:
         if issue.get("previous_article_count", 0) > 0
     )
     meta = {
+        "data_contract_version": DATA_CONTRACT_VERSION,
         "generation_id": generation_id,
         "generated_at": now.isoformat(),
         "archive_total": len(records),
@@ -7356,7 +7555,6 @@ def build() -> None:
     shipped_audit = shipped_issue_audit(issue_audit)
     outputs = (
         ("today.json", build_today_payload(briefings, issue_catalog, meta)),
-        ("news.json", news_items),
         ("briefings.json", briefings),
         ("issues.json", issue_catalog),
         ("trend.json", trend),
@@ -7367,6 +7565,7 @@ def build() -> None:
         # 원본이 아니라 사본을 싣는다 — 아래 admin_outputs 는 전수를 봐야 한다.
         ("issue_audit.json", shipped_audit),
         ("threads.json", threads_payload),
+        ("push.json", build_push_card(briefings, now)),
         ("manifest.json", manifest),
         ("status.json", status),
     )
@@ -7380,6 +7579,7 @@ def build() -> None:
             json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
             encoding="utf-8",
         )
+    write_news_payload(news_items)
     full_audit_path = write_full_issue_audit(issue_audit)
     publish_artifact_ready(shipped_audit, full_audit_path, candidate_diagnostics)
     for name, payload in admin_outputs:
@@ -7391,6 +7591,13 @@ def build() -> None:
     # 갔는지 알아야 그 주소에 넘길 쪽지를 세울 수 있다.
     ledger_result = issue_ledger.run(issue_catalog, today=now.date().isoformat())
     issue_page_counts = build_issue_pages(issue_catalog, ledger_result["store"])
+    (OUT_DIR / "_pages.json").write_text(
+        json.dumps(
+            build_render_manifest(issue_catalog, ledger_result["store"], briefings),
+            ensure_ascii=False, separators=(",", ":"),
+        ),
+        encoding="utf-8",
+    )
     issue_page_count = issue_page_counts["live"]
     brief_page_count = build_brief_pages(briefings)
     rss_dir = pages_dir()

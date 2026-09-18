@@ -38,6 +38,9 @@ ALBUM_FILE = CARDS_DIR / "album.json"
 OUTBOX_FILE = ROOT / "outbox.json"
 # 사이트가 매일 굽는 순위. web/build_data.py 가 배포 스텝에서 만든다(gitignore).
 BRIEFINGS_FILE = ROOT / "web" / "public" / "data" / "briefings.json"
+# 게시된 카드. publish_cards.py 가 여기에 날짜 폴더와 index.json 을 남기고,
+# 그 둘은 **커밋된다** — 그래서 다음 실행이 체크아웃만으로 "이미 했는가"를 안다.
+CARDS_SITE_DIR = ROOT / "web" / "public" / "cards"
 
 KST = timezone(timedelta(hours=9))
 
@@ -177,11 +180,16 @@ def plausible_event_date(raw: str, brief_date: str) -> str:
 def topic_label(meta: dict) -> str:
     """기사 분류 표시명 — **사이트 칩과 같은 값**을 쓴다.
 
-    1순위는 khnp_domain(현안 분류를 LLM 이 매긴 값, 사이트가 칩으로 보여 주는 그것).
-    카드가 topics 규칙값을 쓰던 동안 사이트 칩은 '안전성'인데 카드는 '규제·인허가'로
-    나갔다(09-16 한수원 복합재난 훈련 실측). 카드는 사이트를 따라간다.
-    khnp_domain 이 비면(분류 대기) topics 의 첫 값으로 물러난다 — topics 는
+    1순위는 khnp_domain(현안 분류를 LLM 이 매긴 값). 카드가 topics 규칙값을 쓰던
+    동안 사이트 칩은 '안전성'인데 카드는 '규제·인허가'로 나갔다(09-16 한수원
+    복합재난 훈련 실측). 카드는 사이트를 따라간다.
+    khnp_domain 이 비면 topics 의 첫 값으로 물러난다 — topics 는
     web/build_data.py 의 _TOPIC_RULES 순서라 첫 값이 가장 구체적인 축이다.
+
+    **지금은 늘 그 폴백을 탄다.** v2 의 빌더는 khnp_domain 을 만들지 않는다
+    (라이브 issues.json 587건 중 보유 0건, 2026-09-19 실측). 사이트 칩도 같은
+    이유로 빈칸이라, 카드와 사이트가 어긋날 자리가 지금은 없다. 빌더가 그 값을
+    내기 시작하면 이 1순위가 저절로 살아난다 — 그때 둘이 다시 맞물린다.
     """
     domain = str(meta.get("khnp_domain") or "").strip()
     if domain:
@@ -657,6 +665,28 @@ def build_caption(slides: list[dict], date: str) -> str:
 # ---- main ---------------------------------------------------------------------
 
 
+def already_published(date: str) -> int:
+    """그날 카드가 이미 사이트에 올라가 있으면 장수, 아니면 0.
+
+    index.json 의 말만 믿지 않고 PNG 가 실제로 있는지까지 본다 — 커밋이 반쯤
+    들어간 날(index 는 갱신됐는데 폴더가 없다)에 "이미 했다"고 넘기면 그 날은
+    영영 안 고쳐진다. 깊은 무결성(바이트·IEND)은 tools/verify_cards.py 의 몫이다.
+    """
+    index_file = CARDS_SITE_DIR / "index.json"
+    if not index_file.exists():
+        return 0
+    try:
+        index = json.loads(index_file.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return 0
+    names = ((index.get("dates") or {}).get(date)) or []
+    if not names:
+        return 0
+    if not all((CARDS_SITE_DIR / date / name).exists() for name in names):
+        return 0
+    return len(names)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true",
@@ -679,9 +709,26 @@ def main() -> int:
         if outbox.get("status") not in ("sent", "partial"):
             print(f"[cards] 텍스트 브리핑 상태 '{outbox.get('status')}' — 카드 스킵")
             return 0
-    if not (args.force or args.date) and (outbox.get("cards") or {}).get("date") == date:
-        print(f"[cards] {date} 카드는 이미 발송됨 — 스킵")
-        return 0
+    if not (args.force or args.date):
+        # 두 가지 '이미 했다'를 본다.
+        #
+        # ① 발송 기록 — send_album.py 가 텔레그램 성공 뒤에만 남긴다.
+        # ② 게시본 — publish_cards.py 가 web/public/cards 에 남기고 커밋한다.
+        #
+        # 예전엔 ①만 봤다. 그런데 텔레그램 발송은 CARDS_SEND 가 켜진 날에만
+        # 도는 **선택 기능**이라, 꺼 둔 상태(기본값)에서는 ①이 영원히 비고
+        # 재실행마다 Gemini 를 새로 태우고 같은 PNG 를 다시 구웠다. 카드를
+        # 별도 워크플로로 떼면서 재실행이 쉬워졌으니 여기서 막는다.
+        #
+        # 손으로 다시 굽고 싶으면 --force (cards.yml 의 수동 실행이 그걸 쓴다).
+        if (outbox.get("cards") or {}).get("date") == date:
+            print(f"[cards] {date} 카드는 이미 발송됨 — 스킵")
+            return 0
+        made = already_published(date)
+        if made:
+            print(f"[cards] {date} 카드 {made}장이 이미 사이트에 있다 — 스킵 "
+                  "(다시 구우려면 --force)")
+            return 0
 
     rows = load_site_ranking(date)
     if rows is None:

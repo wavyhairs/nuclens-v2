@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 6,
-    "date": "2026-09-18"
+    "count": 3,
+    "date": "2026-09-19"
   },
   "retired": {
     "ap1000vsapr1400": {
@@ -20,6 +20,22 @@
       "type": "company",
       "until": "2026-09-09T16:20:49.804704+00:00"
     },
+    "epri": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-09-18T18:40:53.632345+00:00",
+      "term": "EPRI",
+      "type": "company",
+      "until": "2026-10-02T18:40:53.632345+00:00"
+    },
+    "gda": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-18T15:40:41.667920+00:00",
+      "term": "GDA",
+      "type": "company",
+      "until": "2026-10-02T15:40:41.667920+00:00"
+    },
     "gvh": {
       "new_articles": 1,
       "reason": "기간 만료",
@@ -35,6 +51,14 @@
       "term": "LOI",
       "type": "company",
       "until": "2026-09-24T15:41:04.650135+00:00"
+    },
+    "lwa": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-18T15:40:41.667920+00:00",
+      "term": "LWA",
+      "type": "company",
+      "until": "2026-10-02T15:40:41.667920+00:00"
     },
     "marad": {
       "new_articles": 4,
@@ -75,6 +99,14 @@
       "term": "Urenco",
       "type": "company",
       "until": "2026-09-05T21:25:00.366862+00:00"
+    },
+    "xe100": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-18T15:40:41.667920+00:00",
+      "term": "Xe-100",
+      "type": "tech",
+      "until": "2026-10-02T15:40:41.667920+00:00"
     },
     "가스복합발전소및": {
       "new_articles": 15,
@@ -131,6 +163,14 @@
       "term": "만에 탈",
       "type": "plant",
       "until": "2026-09-30T18:40:25.514802+00:00"
+    },
+    "문무대왕과학연구소": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-18T15:40:41.667920+00:00",
+      "term": "문무대왕과학연구소",
+      "type": "org",
+      "until": "2026-10-02T15:40:41.667920+00:00"
     },
     "미사일방어사령부": {
       "new_articles": 0,
@@ -268,6 +308,14 @@
       "type": "plant",
       "until": "2026-09-21T15:40:33.794849+00:00"
     },
+    "첨단방사선연구소": {
+      "new_articles": 1,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-18T18:40:49.780254+00:00",
+      "term": "첨단방사선연구소",
+      "type": "org",
+      "until": "2026-10-02T18:40:49.780254+00:00"
+    },
     "체코수소협회": {
       "new_articles": 12,
       "reason": "성과 없음",
@@ -291,6 +339,14 @@
       "term": "카자흐스탄 발하쉬",
       "type": "plant",
       "until": "2026-09-18T09:40:37.636483+00:00"
+    },
+    "태양광위원회": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-18T15:40:41.667920+00:00",
+      "term": "태양광위원회",
+      "type": "org",
+      "until": "2026-10-02T15:40:41.667920+00:00"
     },
     "포툼": {
       "new_articles": 2,
@@ -340,6 +396,14 @@
       "type": "org",
       "until": "2026-09-29T18:40:41.379779+00:00"
     },
+    "한국원자력환경공단을방문해": {
+      "new_articles": 7,
+      "reason": "성과 없음",
+      "retired_at": "2026-09-18T18:40:53.632345+00:00",
+      "term": "한국원자력환경공단을 방문해",
+      "type": "plant",
+      "until": "2026-10-02T18:40:53.632345+00:00"
+    },
     "한국원전수출산업협회": {
       "new_articles": 5,
       "reason": "질의 횟수 소진",
@@ -366,228 +430,107 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-09-18"
+    "count": 9,
+    "date": "2026-09-19"
   },
   "terms": {
-    "epri": {
-      "articles": 6,
-      "created_at": "2026-09-16T21:18:09.029830+00:00",
-      "domains": [
-        "khnp.co.kr",
-        "energydaily.co.kr",
-        "ytn.co.kr",
-        "nocutnews.co.kr",
-        "lawissue.co.kr",
-        "newscj.com"
-      ],
-      "evidence": [
-        {
-          "domain": "khnp.co.kr",
-          "hash": "219e1b6525cba8db",
-          "importance": "nice_to_know",
-          "title": "한수원, 미국 전력연구소(EPRI) 기술이전상 수상"
-        },
-        {
-          "domain": "energydaily.co.kr",
-          "hash": "cc86ac87ddaca364",
-          "importance": "nice_to_know",
-          "title": "한수원, 머신러닝 기반 풍력발전 성능진단 기술로 EPRI 기술이전상 수상"
-        },
-        {
-          "domain": "ytn.co.kr",
-          "hash": "01ae8c5924f2b26d",
-          "importance": "nice_to_know",
-          "title": "한수원, AI 활용 풍력 터빈 진단 기술로 EPRI 기술이전 상 수상"
-        }
-      ],
-      "expires_at": "2026-09-18T21:18:09.029830+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-09-17T21:21:27.395064+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-09-17T21:21:24.250114+00:00",
-      "queries_run": 2,
-      "query": "EPRI 원자력",
-      "score": 5.46,
-      "status": "tracking",
-      "term": "EPRI",
-      "ttl_hours": 48,
-      "type": "company",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
-    "gda": {
-      "articles": 3,
-      "created_at": "2026-09-17T15:40:38.702049+00:00",
-      "domains": [
-        "world-nuclear-news.org",
-        "theguru.co.kr",
-        "g-enews.com"
-      ],
-      "evidence": [
-        {
-          "domain": "world-nuclear-news.org",
-          "hash": "c3de2b9a5fc71ff5",
-          "importance": "nice_to_know",
-          "title": "영국 규제당국, X-energy Xe-100 SMR 설계 평가 착수"
-        },
-        {
-          "domain": "theguru.co.kr",
-          "hash": "50f556b178143a2a",
-          "importance": "nice_to_know",
-          "title": "미국 엑스에너지(X-energy), 영국 SMR 설계 인허가 심사 착수"
-        },
-        {
-          "domain": "g-enews.com",
-          "hash": "34cb66d426b037c9",
-          "importance": "nice_to_know",
-          "title": "태국·영국, 미국산 SMR 도입 타당성 조사 및 설계 심사 착수"
-        }
-      ],
-      "expires_at": "2026-09-18T15:40:38.702049+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-09-18T00:40:46.590754+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-09-18T00:40:42.878263+00:00",
-      "queries_run": 2,
-      "query": "GDA 원자력",
-      "score": 3.82,
-      "status": "tracking",
-      "term": "GDA",
-      "ttl_hours": 24,
-      "type": "company",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
-    "lwa": {
+    "규모의나트륨": {
       "articles": 1,
-      "created_at": "2026-09-17T15:40:38.702049+00:00",
+      "created_at": "2026-09-18T15:40:41.667920+00:00",
       "domains": [
-        "g-enews.com"
+        "press9.kr"
       ],
       "evidence": [
         {
-          "domain": "g-enews.com",
-          "hash": "3d67923b7d733157",
+          "domain": "press9.kr",
+          "hash": "8efc86ce47ad1b25",
           "importance": "must_read",
-          "title": "美 NRC, 팰리세이즈 SMR 부지 기초 토목공사 예외 승인"
+          "title": "테라파워, 메타와 나트륨 원전 8기 개발 협력 및 SK 참여 확대"
         }
       ],
-      "expires_at": "2026-09-18T15:40:38.702049+00:00",
+      "expires_at": "2026-09-19T15:40:41.667920+00:00",
       "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-09-17T18:40:49.718361+00:00",
+      "last_run": "2026-09-18T21:40:49.875253+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-09-17T18:40:46.000177+00:00",
-      "queries_run": 1,
-      "query": "LWA 원자력",
+      "planned_at": "2026-09-18T21:40:45.774332+00:00",
+      "queries_run": 2,
+      "query": "규모의 나트륨 원전",
       "score": 3.6,
       "status": "tracking",
-      "term": "LWA",
+      "term": "규모의 나트륨",
       "ttl_hours": 24,
-      "type": "company",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 1
-    },
-    "xe100": {
-      "articles": 3,
-      "created_at": "2026-09-17T15:40:38.702049+00:00",
-      "domains": [
-        "world-nuclear-news.org",
-        "theguru.co.kr",
-        "g-enews.com"
-      ],
-      "evidence": [
-        {
-          "domain": "world-nuclear-news.org",
-          "hash": "c3de2b9a5fc71ff5",
-          "importance": "nice_to_know",
-          "title": "영국 규제당국, X-energy Xe-100 SMR 설계 평가 착수"
-        },
-        {
-          "domain": "theguru.co.kr",
-          "hash": "50f556b178143a2a",
-          "importance": "nice_to_know",
-          "title": "미국 엑스에너지(X-energy), 영국 SMR 설계 인허가 심사 착수"
-        },
-        {
-          "domain": "g-enews.com",
-          "hash": "34cb66d426b037c9",
-          "importance": "nice_to_know",
-          "title": "태국·영국, 미국산 SMR 도입 타당성 조사 및 설계 심사 착수"
-        }
-      ],
-      "expires_at": "2026-09-18T15:40:38.702049+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-09-18T00:40:46.590754+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-09-18T00:40:42.878263+00:00",
-      "queries_run": 2,
-      "query": "Xe-100 원자력",
-      "score": 4.0,
-      "status": "tracking",
-      "term": "Xe-100",
-      "ttl_hours": 24,
-      "type": "tech",
+      "type": "plant",
       "yield_days": [],
       "yields": 0,
       "zero_streak": 2
     },
-    "문무대왕과학연구소": {
-      "articles": 3,
-      "created_at": "2026-09-17T15:40:38.702049+00:00",
+    "메타와나트륨": {
+      "articles": 1,
+      "created_at": "2026-09-18T15:40:41.667920+00:00",
       "domains": [
-        "yna.co.kr",
-        "segye.com",
-        "metroseoul.co.kr"
+        "press9.kr"
       ],
       "evidence": [
         {
-          "domain": "yna.co.kr",
-          "hash": "4496b82e400a7ff8",
-          "importance": "nice_to_know",
-          "title": "경북도·경주시, SMR 국가산단 등 미래 에너지 기반 글로벌 도시 육성 논의"
-        },
-        {
-          "domain": "segye.com",
-          "hash": "956105bcc2dede9b",
-          "importance": "nice_to_know",
-          "title": "경북도·경주시, 원자력 연구개발 거점 및 글로벌 비즈니스 도시 육성"
-        },
-        {
-          "domain": "metroseoul.co.kr",
-          "hash": "b1e9715b173f600e",
-          "importance": "nice_to_know",
-          "title": "경북도·경주시, 미래 원자력산업 육성 및 글로벌 비즈니스 도시 전략 추진"
+          "domain": "press9.kr",
+          "hash": "8efc86ce47ad1b25",
+          "importance": "must_read",
+          "title": "테라파워, 메타와 나트륨 원전 8기 개발 협력 및 SK 참여 확대"
         }
       ],
-      "expires_at": "2026-09-18T15:40:38.702049+00:00",
-      "importance": "nice_to_know",
+      "expires_at": "2026-09-19T15:40:41.667920+00:00",
+      "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-09-17T18:40:49.718361+00:00",
+      "last_run": "2026-09-18T21:40:49.875253+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-09-17T18:40:46.000177+00:00",
-      "queries_run": 1,
-      "query": "문무대왕과학연구소 원자력",
-      "score": 3.7,
+      "planned_at": "2026-09-18T21:40:45.774332+00:00",
+      "queries_run": 2,
+      "query": "메타와 나트륨 원전",
+      "score": 3.6,
       "status": "tracking",
-      "term": "문무대왕과학연구소",
+      "term": "메타와 나트륨",
       "ttl_hours": 24,
-      "type": "org",
+      "type": "plant",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
+    },
+    "발생한국형": {
+      "articles": 1,
+      "created_at": "2026-09-18T15:40:41.667920+00:00",
+      "domains": [
+        "kaif.or.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "kaif.or.kr",
+          "hash": "57fcd5e63f4731db",
+          "importance": "must_read",
+          "title": "한미 원전 협력 MOU 체결 연기…한국형 원전 지식재산권 이견 발생"
+        }
+      ],
+      "expires_at": "2026-09-19T21:40:49.875253+00:00",
+      "importance": "must_read",
+      "last_result_count": 1,
+      "last_run": "2026-09-18T21:40:49.875253+00:00",
+      "new_articles": 2,
+      "origin": "auto",
+      "planned_at": "2026-09-18T21:40:45.774332+00:00",
+      "queries_run": 2,
+      "query": "발생 한국형 원전",
+      "score": 3.6,
+      "status": "extended",
+      "term": "발생 한국형",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [
+        "2026-09-19"
+      ],
+      "yields": 2,
+      "zero_streak": 0
     },
     "전력연구소": {
       "articles": 6,
@@ -620,172 +563,25 @@
           "title": "한수원, AI 활용 풍력 터빈 진단 기술로 EPRI 기술이전 상 수상"
         }
       ],
-      "expires_at": "2026-09-18T21:18:09.029830+00:00",
+      "expires_at": "2026-09-19T18:40:53.632249+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-09-17T21:21:27.395064+00:00",
-      "new_articles": 0,
+      "last_result_count": 1,
+      "last_run": "2026-09-18T18:40:53.632249+00:00",
+      "new_articles": 1,
       "origin": "auto",
-      "planned_at": "2026-09-17T21:21:24.250114+00:00",
-      "queries_run": 2,
+      "planned_at": "2026-09-18T18:40:49.780254+00:00",
+      "queries_run": 3,
       "query": "전력연구소 원자력",
       "score": 5.31,
-      "status": "tracking",
+      "status": "extended",
       "term": "전력연구소",
       "ttl_hours": 48,
       "type": "org",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
-    "첨단방사선연구소": {
-      "articles": 5,
-      "created_at": "2026-09-17T15:40:38.702049+00:00",
-      "domains": [
-        "kaeri.re.kr",
-        "dongascience.com",
-        "jeonmae.co.kr",
-        "eroun.net",
-        "sjbnews.com"
-      ],
-      "evidence": [
-        {
-          "domain": "kaeri.re.kr",
-          "hash": "bafe6d20fb0207c6",
-          "importance": "nice_to_know",
-          "title": "원자력연 첨단방사선연구소, IAEA 국제협력센터 4차 연속 재지정"
-        },
-        {
-          "domain": "dongascience.com",
-          "hash": "36238ea0d559feb3",
-          "importance": "noise",
-          "title": "한국원자력연구원, IAEA 협력센터 4회 연속 지정"
-        },
-        {
-          "domain": "jeonmae.co.kr",
-          "hash": "a7ebca20cd9e15ad",
-          "importance": "noise",
-          "title": "정읍시, 바이오산업 육성 중장기 종합계획 수립 연구용역 중간보고회 개최"
-        }
-      ],
-      "expires_at": "2026-09-18T18:40:49.718361+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 1,
-      "last_run": "2026-09-17T18:40:49.718361+00:00",
-      "new_articles": 1,
-      "origin": "auto",
-      "planned_at": "2026-09-17T18:40:46.000177+00:00",
-      "queries_run": 1,
-      "query": "첨단방사선연구소 원자력",
-      "score": 3.62,
-      "status": "extended",
-      "term": "첨단방사선연구소",
-      "ttl_hours": 24,
-      "type": "org",
       "yield_days": [
-        "2026-09-18"
+        "2026-09-19"
       ],
       "yields": 1,
       "zero_streak": 0
-    },
-    "태양광위원회": {
-      "articles": 7,
-      "created_at": "2026-09-17T15:40:38.702049+00:00",
-      "domains": [
-        "news1.kr",
-        "asiae.co.kr",
-        "mcnews.co.kr",
-        "enewstoday.co.kr",
-        "srtimes.kr",
-        "snmnews.com"
-      ],
-      "evidence": [
-        {
-          "domain": "news1.kr",
-          "hash": "2c39f29c8a626d89",
-          "importance": "noise",
-          "title": "한국철강협회, 태양광위원회 발족"
-        },
-        {
-          "domain": "asiae.co.kr",
-          "hash": "47c627182b0bf380",
-          "importance": "nice_to_know",
-          "title": "철강협회, 태양광위원회 출범 및 국산 강재 공급 확대 추진"
-        },
-        {
-          "domain": "mcnews.co.kr",
-          "hash": "fd9c3f2e048bc2a8",
-          "importance": "noise",
-          "title": "철강협회, 태양광위원회 발족…국산 강재 공급망 강화"
-        }
-      ],
-      "expires_at": "2026-09-18T15:40:38.702049+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-09-18T00:40:46.590754+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-09-18T00:40:42.878263+00:00",
-      "queries_run": 2,
-      "query": "태양광위원회 원자력",
-      "score": 4.45,
-      "status": "tracking",
-      "term": "태양광위원회",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
-    "한국원자력환경공단을방문해": {
-      "articles": 3,
-      "created_at": "2026-09-14T15:40:10.418027+00:00",
-      "domains": [
-        "wikitree.co.kr",
-        "breaknews.com",
-        "kbsm.net"
-      ],
-      "evidence": [
-        {
-          "domain": "wikitree.co.kr",
-          "hash": "006913c84346dd48",
-          "importance": "nice_to_know",
-          "title": "경주시의회, 월성원자력본부 및 한국원자력환경공단 현장 방문"
-        },
-        {
-          "domain": "breaknews.com",
-          "hash": "1aa9220420c502a4",
-          "importance": "nice_to_know",
-          "title": "경주시의회, 월성원전 및 방폐장 현장 점검…안전관리 강화 당부"
-        },
-        {
-          "domain": "kbsm.net",
-          "hash": "882f575c6d0d69f4",
-          "importance": "nice_to_know",
-          "title": "경주시의회, 월성원전 및 한국원자력환경공단 현장 점검"
-        }
-      ],
-      "expires_at": "2026-09-17T15:40:31.875072+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-09-17T21:21:27.395064+00:00",
-      "new_articles": 7,
-      "origin": "auto",
-      "planned_at": "2026-09-17T21:21:24.250114+00:00",
-      "queries_run": 6,
-      "query": "한국원자력환경공단을 방문해",
-      "score": 4.6,
-      "status": "promote_candidate",
-      "term": "한국원자력환경공단을 방문해",
-      "ttl_hours": 48,
-      "type": "plant",
-      "yield_days": [
-        "2026-09-15",
-        "2026-09-16",
-        "2026-09-17"
-      ],
-      "yields": 4,
-      "zero_streak": 2
     }
   },
   "version": 1

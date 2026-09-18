@@ -1,7 +1,32 @@
-# 카드뉴스만 다시 만든다 — 아침 브리핑에서 카드가 빠진 날(쿼터 소진·렌더 실패) 수동으로.
-# daily-brief 의 카드 스텝과 같은 스크립트를 쓴다. 텍스트 브리핑은 건드리지 않는다.
-# 실행: Actions → "Cards (카드뉴스 재생성)" → date 비우면 outbox 의 오늘 날짜.
-name: Cards (카드뉴스 재생성)
+# 카드뉴스 — 굽고 · 검사하고 · 커밋하고 · 사이트에 올린다.
+#
+# 왜 별도 워크플로인가
+# ---------------------------------------------------------------------------
+# 예전에는 daily-brief.yml 안의 스텝 다섯 개였고 전부 `continue-on-error: true`
+# 였다. 카드가 죽어도 텍스트 브리핑은 나가야 하니 그 자체는 옳은 선택이었는데,
+# 대가로 **실패가 어디에도 안 남았다** — make_cards.py 가 exit 1 로 정직하게
+# 알려도 Daily Brief 는 초록불이라, 카드가 빠진 날을 사람이 사이트를 열어 보고서야
+# 알았다.
+#
+# 그래서 책임을 갈랐다. 카드 실패는 여기서 **빨간불**이고, Daily Brief 는 이
+# 워크플로를 깨우기만 하므로 카드가 죽어도 여전히 초록불이다. 둘 다 사실이다.
+#
+# 언제 도는가
+# ---------------------------------------------------------------------------
+#   자동 — Daily Brief 가 배포하고 **그날의 검증 snapshot 을 저장한 뒤**
+#          `gh workflow run` 으로 깨운다. 배포 뒤여야 카드가 읽을 재료(사이트의
+#          briefings.json)가 라이브에 있고, snapshot 저장 뒤여야 아래 FAST 배포가
+#          어제 snapshot 과 경주하지 않는다.
+#   수동 — Actions → "Cards (카드뉴스)". 쿼터 소진·렌더 실패로 카드가 빠진 날의
+#          복구용. 날짜를 지정할 수 있고, 텔레그램 발송 여부를 고를 수 있다.
+#
+# 자동 실행은 멱등하다. 같은 날 카드가 이미 사이트에 있으면 make_cards.py 가
+# Gemini 를 부르지 않고 빠지고, 커밋할 변경이 없으면 배포도 깨우지 않는다.
+# 손으로 부른 실행은 기본이 force 라 늘 다시 굽는다(복구가 그 목적이다).
+#
+# 배포는 FAST 다 — build_data 를 다시 돌리지 않는다. 이유는 deploy_mode 입력의
+# 주석에 있다(낭비가 아니라 **화면과 카드가 갈라질 수 있다**는 쪽이 본론이다).
+name: Cards (카드뉴스)
 
 on:
   workflow_dispatch:
@@ -14,6 +39,34 @@ on:
         description: "텔레그램 앨범도 보낸다 (기본 꺼짐 — 채널은 repo 소유자 자산)"
         type: boolean
         default: false
+      force:
+        description: "이미 만들어 둔 날도 다시 굽는다 (Gemini 재호출). 자동 호출은 false 로 넘긴다"
+        type: boolean
+        default: true
+      deploy_mode:
+        # fast 가 기본이다 (2026-09-19). full 은 카드만 바뀐 날에 **해로웠다**:
+        #
+        #   ① 낭비 — deploy-web 의 full 은 web/build_data.py 를 다시 돌린다.
+        #      6~19분짜리 빌드이고, 이슈 병합 회색지대 판정이 Gemini 를 부른다.
+        #      Daily Brief 가 몇 분 전에 같은 계산을 이미 했다.
+        #   ② 더 나쁜 것 — 그 재계산은 **결정적이지 않다.** 카드는 첫 배포의
+        #      briefings.json 순위로 구워졌는데, 두 번째 full 빌드가 순위를
+        #      다시 정하면 화면과 카드가 다른 얘기를 한다. 카드가 사이트 순위를
+        #      그대로 받아 쓰는 이유가 바로 그걸 막으려는 것이었다.
+        #
+        # fast 는 그 둘이 구조적으로 불가능하다. build_data 를 안 돌리고,
+        # 검증된 snapshot 의 데이터를 복원한 뒤 `guard-live --policy equal` 로
+        # **그 세대가 라이브와 같을 때만** 올린다. 다르면 올리지 않고 실패한다.
+        # 카드 PNG 는 snapshot 복원 대상이 아니라(data/ · admin/data · rss.xml
+        # 뿐) 이번에 커밋한 것이 그대로 실린다. 화면 계약 검사(app.js 파스·
+        # admin DOM·web 테스트·스모크)는 full 과 똑같이 전부 돈다.
+        #
+        # full 은 오늘치 snapshot 이 없을 때의 길이다 — Daily Brief 가 저장에
+        # 실패한 날 그쪽이 full 을 넘긴다. 손으로도 고를 수 있다.
+        description: "사이트 배포 모드 (fast=검증된 snapshot 재사용, full=전체 재계산)"
+        type: choice
+        default: fast
+        options: [fast, full]
 
 concurrency:
   group: cards
@@ -29,6 +82,11 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 자동 호출은 Daily Brief 가 outbox.json(status=sent)을 push 한 뒤에
+          # 온다. 그 커밋을 봐야 make_cards 가 "오늘 브리핑이 나갔다"를 안다 —
+          # dispatch 이벤트의 SHA 로는 그게 안 보일 수 있다.
+          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -75,13 +133,38 @@ jobs:
       # 이슈 병합이 로컬 폴백으로 떨어져 crawl 이 만든 것과 클러스터가 달라진다.
       # 읽기만 하고 저장하지 않는다 — 캐시의 주인은 crawl.yml 이다.
 
+      # `--force` 는 손으로 부를 때의 기본값이다. 자동 호출(force=false)에서는
+      # make_cards 가 스스로 멱등하다 — 같은 날 카드가 이미 web/public/cards 에
+      # 있으면 Gemini 를 안 부르고 빠진다.
+      #
+      # 모델은 v2 의 기본값(gemini_client.MODEL)을 따른다. v1 에서 검증됐던
+      # gemini-2.5-flash 로 핀했다가 2026-09-17 첫 실행이 HTTP 404 로 죽었다 —
+      # 'no longer available to new users'. 특정 모델로 굽고 싶으면
+      # vars.CARDS_GEMINI_MODEL 에 넣는다(빈 값이면 기본값으로 떨어진다).
       - name: Make cards
         env:
           GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_MODEL: ${{ vars.CARDS_GEMINI_MODEL || vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          CARDS_DATE: ${{ inputs.date }}
+          CARDS_FORCE: ${{ inputs.force }}
         run: |
-          if [ -n "${{ inputs.date }}" ]; then python make_cards.py --date "${{ inputs.date }}"; else python make_cards.py --force; fi
+          if [ -n "$CARDS_DATE" ]; then
+            python make_cards.py --date "$CARDS_DATE"
+          elif [ "$CARDS_FORCE" = "true" ]; then
+            python make_cards.py --force
+          else
+            python make_cards.py
+          fi
 
+      # 텔레그램 앨범 발송은 **기본 꺼짐**. 채널은 이 repo 소유자의 자산이라
+      # 스위치를 켜는 것도 소유자 몫이다.
+      #   자동 — Daily Brief 가 vars.CARDS_SEND 를 읽어 send= 로 넘긴다.
+      #          즉 계약은 그대로다: CARDS_SEND=true 인 날에만 나간다.
+      #   수동 — 실행 화면의 체크박스가 정한다.
+      # 사이트 게시(아래)는 어느 쪽이든 스위치와 무관하게 돈다.
+      #
+      # make_cards 가 멱등 스킵을 하면 album.json 이 없다 — 그때는 보낼 것도
+      # 없으므로 여기서도 조용히 빠진다(send_album.py 가 스스로 판단).
       - name: Send card album
         if: inputs.send
         env:
@@ -89,25 +172,45 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python send_album.py
 
+      - name: Publish cards to site
+        run: python publish_cards.py
+
+      # 커밋 **전에** 결과물 자체를 본다. publish_cards 는 album.json 이 없으면
+      # "스킵"하고 0 을 돌려주고, 렌더가 반쯤 끝난 PNG 도 파일로는 존재한다 —
+      # 종료 코드만으로는 '볼 수 있는 카드가 올라갔는가'를 모른다.
+      - name: Verify cards contract
+        run: python tools/verify_cards.py ${{ inputs.date && format('--date {0}', inputs.date) || '' }}
+
       # 여기서 wrangler 로 직접 올리면 안 된다 — 이 잡에는 build_data 산출물(issue/·brief/·
       # data/)이 없어 Pages 가 라이브의 그 파일들을 지운다. 커밋 뒤 deploy-web 을 깨운다
       # (봇 push 는 워크플로를 못 깨우지만 workflow_dispatch API 호출은 된다).
-      - name: Publish cards to site + commit
+      - name: Commit cards
+        id: commit
         run: |
-          python publish_cards.py
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           for i in 1 2 3; do
             git add outbox.json web/public/cards
-            if git diff --cached --quiet; then echo "기록할 변경 없음"; exit 0; fi
+            if git diff --cached --quiet; then
+              echo "기록할 변경 없음 — 이미 올라가 있는 카드와 같다"
+              echo "committed=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
             git commit -m "chore: cards regenerated"
-            if git push origin HEAD:main; then exit 0; fi
+            if git push origin HEAD:main; then
+              echo "committed=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
             git fetch origin main && git reset --hard origin/main
             python publish_cards.py
           done
-          echo "push 실패 — 카드 PNG 미게시"; exit 1
+          echo "::error::push 3회 실패 — 카드 PNG 미게시"
+          exit 1
 
+      # 커밋이 없었으면 배포도 깨우지 않는다. 같은 파일을 다시 올리려고 Pages
+      # 배포 횟수(무료 500회/월)를 쓰지 않는다.
       - name: Trigger site deploy
+        if: steps.commit.outputs.committed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run deploy-web.yml -R ${{ github.repository }}
+        run: gh workflow run deploy-web.yml -R ${{ github.repository }} -f mode_hint=${{ inputs.deploy_mode || 'fast' }}

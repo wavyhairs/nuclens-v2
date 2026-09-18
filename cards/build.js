@@ -172,6 +172,11 @@ function editorialIcon(kind) {
 function factPresentation(text, index) {
   const value = String(text || "");
   const rules = [
+    [/재가동|원안위/, ["재가동 심사", "승인", "atom"]],
+    [/2\.8GW|원전 8기/, ["사업 규모", "8기", "atom"]],
+    [/690MW|개발자금/, ["초기 물량", "690MW", "control"]],
+    [/국정감사|상임위/, ["국회 검증", "출석", "vote"]],
+    [/체코 원전|방폐물/, ["핵심 쟁점", "점검", "control"]],
     [/417표|가결|하원/, ["하원 표결", "가결", "vote"]],
     [/100MW|증설 비용/, ["적용 대상", "비용 부담", "grid"]],
     [/MOU.*연기|서명 연기/, ["MOU 서명", "연기", "mou"]],
@@ -205,10 +210,13 @@ function editorialFromStep(slide) {
     image = "assets/korea-us-flags-editorial.png";
     stamp = "KOREA · U.S.\nNUCLEAR COOPERATION";
     headline = "MOU 서명 [[연기]]";
+  } else if (/국정감사|상임위/.test(haystack)) {
+    image = "assets/reactor-operations-editorial.png";
+    stamp = "POLICY OVERSIGHT · OPERATIONS";
   } else if (/사용후핵연료|방폐|방사성폐기물|핵연료주기|해체|폐로/.test(haystack)) {
     image = "assets/fuel-cycle-waste-editorial.png";
     stamp = "FUEL CYCLE · WASTE";
-  } else if (/핵융합|마이크로원자로|동위원소|비발전 활용|연구|실증|첨단 원자로/.test(haystack)) {
+  } else if (/SMR|나트륨 원전|핵융합|마이크로원자로|동위원소|비발전 활용|연구|실증|첨단 원자로/.test(haystack)) {
     image = "assets/research-technology-editorial.png";
     stamp = "NUCLEAR RESEARCH · TECHNOLOGY";
   } else if (/계속운전|재가동|원전 운영|정비|안전|사고|규제|인허가|신규 건설|신규 원전/.test(haystack)) {

@@ -55,6 +55,38 @@ def verdict_response(count, same=True):
     return {"items": [{"idx": i, "same_event": same, "reason": "테스트"} for i in range(count)]}
 
 
+class PreloadCacheTests(unittest.TestCase):
+    def test_preloads_current_cached_verdicts_before_expensive_pass(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "reviews.json"
+            issue_review.save_cache({
+                "a--b": {
+                    "same_event": True,
+                    "left_title": "A 원전 계속운전",
+                    "right_title": "B 원전 계속운전",
+                    "embedding_similarity": 0.88,
+                    "prompt_version": issue_review.PROMPT_VERSION,
+                },
+                "a--c": {
+                    "same_event": False,
+                    "left_title": "A 원전 계속운전",
+                    "right_title": "별도 송전망 건설",
+                    "embedding_similarity": 0.87,
+                    "prompt_version": issue_review.PROMPT_VERSION,
+                },
+            }, path)
+            rows = [
+                {"hash": "a", "title": "A 원전 계속운전"},
+                {"hash": "b", "title": "B 원전 계속운전"},
+                {"hash": "c", "title": "별도 송전망 건설"},
+            ]
+            approved, rejected, _ = issue_review.preload_cached_overrides(
+                rows, cache_path=path
+            )
+            self.assertEqual(approved, {"a--b"})
+            self.assertEqual(rejected, {"a--c"})
+
+
 class BandTests(unittest.TestCase):
     def test_band_is_low_inclusive_high_exclusive(self):
         self.assertTrue(issue_review.in_review_band({"embedding_similarity": 0.84}))

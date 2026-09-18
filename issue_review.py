@@ -263,6 +263,55 @@ def save_cache(cache: dict, path: Path = CACHE_FILE) -> None:
                    comment=CACHE_COMMENT)
 
 
+def preload_cached_overrides(news_items: list[dict], *,
+                             cache_path: Path = CACHE_FILE) -> tuple[set[str], set[str], list[dict]]:
+    """Load active verdicts before clustering and return soft-stale refresh rows.
+
+    A cached rejection whose current titles moved enough is omitted so the normal
+    candidate path can re-ask it.  Soft-stale verdicts remain active while their
+    synthetic candidate lets ``review_pairs`` refresh the policy in the background.
+    """
+    cache = load_cache(cache_path)
+    by_hash = {str(row.get("hash") or ""): row for row in news_items if row.get("hash")}
+    policy = llm_policy.profile("issue_review")
+    policy_fingerprint = llm_policy.generation_policy_fingerprint(policy, PROMPT_VERSION)
+    approved: set[str] = set()
+    rejected: set[str] = set()
+    refresh: list[dict] = []
+    for pair_id, entry in cache.items():
+        if not isinstance(entry, dict):
+            continue
+        left_hash, separator, right_hash = str(pair_id).partition("--")
+        if not separator or left_hash not in by_hash or right_hash not in by_hash:
+            continue
+        left, right = by_hash[left_hash], by_hash[right_hash]
+        left_title = left.get("title_kr") or left.get("title")
+        right_title = right.get("title_kr") or right.get("title")
+        verdict = cached_verdict(cache, pair_id, left_title, right_title)
+        if verdict is None:
+            continue
+        (approved if verdict else rejected).add(pair_id)
+        if llm_cache.freshness(entry, PROMPT_VERSION, policy_fingerprint) == llm_cache.SOFT_STALE:
+            try:
+                score = float(entry.get("embedding_similarity"))
+            except (TypeError, ValueError):
+                continue
+            refresh.append({
+                "candidate_id": pair_id,
+                "left_hash": left_hash,
+                "right_hash": right_hash,
+                "left_title": left_title,
+                "right_title": right_title,
+                "left_story_fingerprint": left.get("story_fingerprint") or {},
+                "right_story_fingerprint": right.get("story_fingerprint") or {},
+                "candidate_method": "cached_policy_refresh",
+                "candidate_score": score,
+                "diagnostics": {"embedding_similarity": score},
+                "review_state": "cached_policy_refresh",
+            })
+    return approved, rejected, refresh
+
+
 _TITLE_TOKEN = re.compile(r"[0-9A-Za-z가-힣·]+")
 
 
