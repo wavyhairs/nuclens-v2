@@ -88,6 +88,28 @@ class DailyBriefHandsCardsOffTest(unittest.TestCase):
                         self.blocks.index(trigger),
                         "배포 스텝보다 앞에서 깨운다")
 
+    def test_cards_are_woken_after_todays_snapshot_is_saved(self):
+        """FAST 배포가 어제 snapshot 과 경주하지 않게 (2026-09-19).
+
+        Cards 의 마지막 배포는 캐시에 저장된 **가장 최근 검증 snapshot** 을
+        복원하고 `guard-live --policy equal` 로 라이브와 같은 세대일 때만
+        올린다. 오늘 snapshot 이 아직 저장 전이면 어제 것이 복원되고 — 낡은
+        데이터가 올라가지는 않지만 Cards 가 애먼 빨간불이 된다.
+        """
+        trigger = self.blocks.index(step(self.blocks, "Trigger cards workflow"))
+        self.assertLess(index_of(self.blocks, "id: production-snapshot-save"), trigger)
+
+    def test_the_deploy_mode_follows_whether_that_snapshot_exists(self):
+        """오늘 snapshot 이 저장됐으면 fast, 아니면 full.
+
+        full 은 build_data 를 다시 돌린다 — 6~19분에 Gemini 호출까지. 오늘
+        snapshot 이 있는 날 그 값을 치를 이유가 없고, 없는 날은 그게 유일한 길이다.
+        """
+        trigger = step(self.blocks, "Trigger cards workflow")
+        self.assertIn("steps.production-snapshot-save.outcome == 'success' "
+                      "&& 'fast' || 'full'", trigger)
+        self.assertIn('-f deploy_mode="$DEPLOY_MODE"', trigger)
+
     def test_waking_cards_can_never_fail_the_brief(self):
         """API 가 한 번 흔들렸다고 아침 브리핑을 실패로 만들지 않는다."""
         self.assertIn("continue-on-error: true", step(self.blocks, "Trigger cards workflow"))
@@ -154,16 +176,25 @@ class CardsWorkflowShowsItsFailuresTest(unittest.TestCase):
         self.assertIn("if: steps.commit.outputs.committed == 'true'",
                       step(self.blocks, "Trigger site deploy"))
 
-    def test_the_fast_deploy_path_is_one_line_away(self):
-        """카드만 바뀐 날의 Fast Deploy 는 아직 안 켠다 — 자리만 만들어 둔다.
+    def test_the_card_deploy_reuses_the_verified_snapshot(self):
+        """카드만 바뀐 날은 FAST 로 올린다 (2026-09-19).
 
-        deploy-web 의 fast 는 검증된 production snapshot 을 재사용하는 경로인데
-        이 호출자에서 한 번도 안 돌려 봤다. 기본은 full 이고, 바꿀 자리는 한 곳이다.
+        full 은 낭비이기 전에 **위험**이었다. deploy-web 의 full 은
+        web/build_data.py 를 다시 돌리는데, 그 이슈 병합 회색지대 판정은 Gemini 를
+        부르고 결정적이지 않다. 카드는 첫 배포의 briefings.json 순위로 구워졌으므로,
+        두 번째 full 빌드가 순위를 다시 정하면 화면과 카드가 다른 얘기를 한다 —
+        카드가 사이트 순위를 그대로 받아 쓰는 이유가 바로 그걸 막으려는 것이었다.
+
+        fast 는 build_data 를 안 돌리고, snapshot 세대가 라이브와 다르면 올리지
+        않고 실패한다. 그래서 그 갈라짐이 구조적으로 불가능하다.
         """
         mode = self.text.split("      deploy_mode:", 1)[1].split("concurrency:", 1)[0]
-        self.assertIn("default: full", mode)
-        self.assertIn("options: [full, fast]", mode)
-        self.assertIn("mode_hint=", step(self.blocks, "Trigger site deploy"))
+        self.assertIn("default: fast", mode)
+        self.assertIn("options: [fast, full]", mode)
+        deploy = step(self.blocks, "Trigger site deploy")
+        self.assertIn("mode_hint=", deploy)
+        # 입력이 비어 오는 경로에서도 full 로 떨어지지 않는다.
+        self.assertIn("inputs.deploy_mode || 'fast'", deploy)
 
 
 class WorkflowShapeTest(unittest.TestCase):
