@@ -2452,6 +2452,13 @@ dialog[open] { animation: dialog-in var(--mo-2) var(--mo-ease-out); }
 .archive-filters legend { margin-bottom: 6px; color: var(--c-text-muted); font-size: var(--t-min); }
 .archive-filters .segmented { display: grid; grid-template-columns: repeat(3, 1fr); }
 /* 결과 머리도 구역 머리다 — 홈·흐름과 같은 2px 잉크 괘선으로 연다. */
+/* 목록 범위 — 결과 머리 위에 선다. 필터 서랍과 붙이지 않는 이유는 index.html
+   의 주석에 있다(범위는 목록의 성격, 필터는 그 안의 교집합).
+   좁은 화면에서는 두 칸이 폭을 반씩 나눠 갖는다 — inline-flex 로 두면
+   '추적 중인 이슈'가 줄바꿈되면서 버튼 높이가 서로 달라진다. */
+.archive-scope { display: inline-flex; margin-bottom: var(--sp-3); }
+.archive-scope button { white-space: nowrap; }
+@media (max-width: 560px) { .archive-scope { display: flex; width: 100%; } .archive-scope button { flex: 1; } }
 .archive-result-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding-top: var(--sp-3); padding-bottom: var(--sp-3); border-top: var(--bd-3) solid var(--c-edge); }
 .archive-result-head h2 { margin: 0; font-size: 20px; letter-spacing: -.022em; }
 .archive-result-head p { margin: 3px 0 0; color: var(--c-text-muted); font-size: var(--t-min); }
@@ -3779,7 +3786,10 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
     bottom: 0;
     left: 0;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    /* 칸 수를 상수로 박지 않는다. 장기 스토리 탭은 데이터 게이트가 열렸을 때만
+       서므로(4칸 또는 5칸), repeat(N, 1fr) 로 두면 닫힌 날 빈 칸이 하나 남는다. */
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     min-height: 60px;
     padding-bottom: env(safe-area-inset-bottom);
     border-top: 1px solid var(--c-primary-strong);
@@ -3797,6 +3807,16 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
     font-weight: 650;
     transition: color var(--mo-1);
   }
+  /* 아래 `.mobile-tabs button { display: grid }` 는 UA 스타일시트의
+     `[hidden] { display: none }` 을 특정도로 이긴다. 명시하지 않으면 게이트가
+     닫힌 장기 스토리 탭이 그대로 서서 빈 화면으로 가는 칸이 된다. */
+  .mobile-tabs button[hidden] { display: none; }
+  /* 라벨을 줄바꿈하지 않는다 — 다섯 칸이 설 때 '장기 스토리'가 두 줄로 접히면
+     그 칸만 키가 커져 하단 탭 전체가 흔들린다. 글자를 줄이는 방법은 쓸 수 없다:
+     이 저장소는 렌더 텍스트 최소 12.5px 를 계약으로 잠가 뒀다
+     (BrandAccessibilityTests.test_rendered_text_has_12_5px_minimum).
+     360px 에서 칸당 72px, 라벨 실측 약 66px 로 들어간다. */
+  .mobile-tabs button span { white-space: nowrap; }
   .mobile-tabs button.active { color: #fff; }
   .mobile-tabs button.active::before { position: absolute; top: 0; right: 20%; left: 20%; height: var(--bd-3); background: var(--c-signal); content: ""; }
   .home-topic-row { grid-template-columns: minmax(0, 1fr) 82px; gap: var(--sp-2) var(--sp-3); padding: var(--sp-2) 0; }

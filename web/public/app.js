@@ -116,6 +116,7 @@ const state = {
   agendas: null, precedents: null, agendaId: "",
   threads: null, threadId: "", longTermSort: "recent", longTermLimit: 20,
   archiveQuery: "", archiveRegion: "전체", archiveTopic: "전체", archiveDomain: "",
+  archiveScope: "stories",
   archivePeriod: "all", archiveVerification: "전체", archiveSort: "updated", archiveLimit: 20,
   archiveEntity: "", entities: null,
   period: "7", keywordSort: "mentions", audioMode: "fast", audioFailures: new Set(), savedIds: new Set(), savedMeta: {}, follows: new Set(), followSeen: {},
@@ -990,6 +991,7 @@ function syncUrl(mode = "replace") {
   if (state.archiveEntity) params.set("ent", state.archiveEntity);
   if (state.agendaId) params.set("agenda", state.agendaId);
   if (state.view === "longterm" && state.threadId) params.set("th", state.threadId);
+  if (state.archiveScope !== "stories") params.set("as", state.archiveScope);
   if (state.archiveRegion !== "전체") params.set("ar", state.archiveRegion);
   if (state.archiveTopic !== "전체") params.set("at", state.archiveTopic);
   if (state.archiveDomain) params.set("ad", state.archiveDomain);
@@ -1027,6 +1029,7 @@ function restoreUrlState() {
   state.threadId = resolveThreadId(params.get("th") || "");
   if (state.threadId && !params.get("view") && longTermReady()) state.view = "longterm";
   if (state.view === "longterm" && !longTermReady()) { state.view = "news"; state.threadId = ""; }
+  state.archiveScope = params.get("as") === "all" ? "all" : "stories";
   state.archiveRegion = ["전체", "국내", "해외"].includes(params.get("ar")) ? params.get("ar") : "전체";
   state.archiveTopic = params.get("at") || "전체";
   state.archiveDomain = params.get("ad") || "";
@@ -1698,9 +1701,22 @@ function cardIndex() {
   return cardIndexPromise;
 }
 // ── 웹 푸시 ───────────────────────────────────────────────────────────
-// 아침 브리핑 뒤 push_notify.py 가 /push/list 의 구독자에게 한 번 보낸다.
-// 공개키는 비밀이 아니다(구독을 이 서버로 묶는 식별자). 개인키는 GitHub Secrets.
-const PUSH_PUBLIC_KEY = "BOshdtsrxCv_P4mecLbxVjl9KM2-OW1nsXn9VoR7i4HupiS7oU2u1lS5ZDx6Ll0vQhVE5SSKp68_pWfEHMZRgZA";
+//
+// 아침 07:00 KST 에 워크플로가 /push/send 를 부르고, 엣지가 구독자에게 한 번
+// 보낸다(.github/workflows/push-notify.yml · functions/push/send.js).
+//
+// 공개키를 상수로 박지 않는다. 박아 두면 키를 갈 때 앱을 다시 배포해야 하고,
+// 더 나쁘게는 **서버에 키가 없는 배포에서도 버튼이 뜬다** — 눌러도 되는 게 없는
+// 버튼이 정확히 2026-09-18 에 이 기능을 통째로 내리게 한 이유다. /push/key 가
+// 404 면 버튼은 끝까지 숨어 있고, 그래서 '설정 안 함'과 '고장'이 갈린다.
+let pushKeyPromise = null;
+function pushPublicKey() {
+  pushKeyPromise = pushKeyPromise || fetch("/push/key")
+    .then(response => (response.ok ? response.json() : null))
+    .then(payload => (payload && typeof payload.key === "string" ? payload.key : ""))
+    .catch(() => "");
+  return pushKeyPromise;
+}
 function urlBase64ToUint8Array(base64) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
   const raw = atob((base64 + padding).replace(/-/g, "+").replace(/_/g, "/"));
@@ -1711,6 +1727,99 @@ function pushSupported() {
 }
 function isStandalone() {
   return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+// 버튼은 **켤 수 있을 때만** 뜬다. 그 조건이 넷이라 하나씩 확인한다:
+// 브라우저가 푸시를 하는가 · 서버에 공개키가 있는가 · 서비스워커가 붙었는가 ·
+// 그리고 지금 켜져 있는가. 하나라도 아니면 아무것도 보이지 않는다 — iOS 만
+// 예외로, 홈 화면에 추가하면 된다는 사실은 알려 줄 가치가 있다.
+async function initPush() {
+  const button = document.getElementById("pushToggle");
+  const hint = document.getElementById("pushHint");
+  if (!button || !hint) return;
+  const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (!pushSupported()) {
+    // iOS Safari 는 홈 화면에 추가하기 전엔 PushManager 가 없다 — 그 안내만 남긴다.
+    if (isiOS && !isStandalone()) {
+      hint.textContent = "iPhone: 공유 → '홈 화면에 추가' 한 뒤, 그 앱에서 알림을 켜세요.";
+      hint.hidden = false;
+    }
+    return;
+  }
+  const publicKey = await pushPublicKey();
+  if (!publicKey) return;          // 이 배포에는 푸시 설정이 없다. 조용히 없다.
+  let registration;
+  try { registration = await navigator.serviceWorker.register("/sw.js"); }
+  catch { return; }
+  button.hidden = false;
+
+  // `on` 은 구독 객체의 유무가 아니라 **실제로 올 수 있는가**다. 사이트 설정에서
+  // 권한만 철회한 브라우저는 구독 객체를 그대로 들고 있어서, 그것만 보면 화면이
+  // '켜짐'이라 말하는데 알림은 영영 안 온다. 그 상태의 버튼은 끄기가 아니라
+  // 다시 켜기여야 한다.
+  let subscription = null;
+  let on = false;
+  const paint = async () => {
+    subscription = await registration.pushManager.getSubscription();
+    on = !!subscription && Notification.permission === "granted";
+    button.textContent = on ? "🔔 아침 알림 켜짐 · 끄기" : "🔔 아침 알림 받기";
+    button.setAttribute("aria-pressed", String(on));
+    button.classList.toggle("is-on", on);
+  };
+  await paint();
+
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    hint.hidden = true;
+    try {
+      if (on) {
+        // 서버에서 먼저 지운다. 브라우저 쪽만 끊으면 서버에 죽은 구독이 남아
+        // 매일 실패를 한 번씩 더 산다(발송이 404 로 걷기 전까지).
+        await fetch("/push/subscribe", {
+          method: "DELETE", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: subscription.endpoint }),
+        });
+        await subscription.unsubscribe();
+        hint.textContent = "껐습니다. 이 브라우저로는 더 이상 보내지 않습니다.";
+        hint.hidden = false;
+      } else {
+        // 권한이 철회된 채 남아 있던 구독은 먼저 물린다 — 그 위에 다시
+        // subscribe 하면 브라우저가 옛 구독을 그대로 돌려줘서 서버에 있는
+        // 죽은 endpoint 가 되살아난다.
+        if (subscription) {
+          await subscription.unsubscribe().catch(() => {});
+          subscription = null;
+        }
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          hint.textContent = "브라우저에서 알림이 차단돼 있습니다. 사이트 설정에서 허용으로 바꿔 주세요.";
+          hint.hidden = false;
+          return;
+        }
+        const created = await registration.pushManager.subscribe({
+          userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+        const response = await fetch("/push/subscribe", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription: created.toJSON() }),
+        });
+        // 서버가 안 받았으면 브라우저 구독도 물린다. 남겨 두면 화면은 '켜짐'을
+        // 말하는데 아무것도 오지 않는 상태가 된다 — 가장 나쁜 거짓말이다.
+        if (!response.ok) {
+          await created.unsubscribe().catch(() => {});
+          throw new Error(`subscribe ${response.status}`);
+        }
+        hint.textContent = "켜졌습니다. 내일 아침 7시 브리핑부터 알림이 옵니다.";
+        hint.hidden = false;
+      }
+    } catch (error) {
+      hint.textContent = `알림 설정 실패: ${String(error).slice(0, 80)}`;
+      hint.hidden = false;
+    } finally {
+      button.disabled = false;
+      await paint();
+    }
+  });
 }
 
 // 카드뉴스 띠. 자리는 index.html 의 마크업 순서가 정한다 — 넓은 화면에서는
@@ -2350,8 +2459,53 @@ function renderNewsFeed() {
     : '<p class="empty">이 날짜에 발행된 수집 기사가 없습니다.</p>';
 }
 
+// 추적 자격 — "시간이 지나며 실제로 쌓였는가".
+//
+// 화면에는 '추적 중인 이슈'로 나간다. 식별자만 story* 로 남아 있다(2026-09-13
+// 개명) — '스토리'는 이제 장기 스토리(Beta) 화면 하나를 가리키는 말이라, 같은
+// 단어를 이 목록에도 쓰면 사용자가 두 화면을 구분할 수 없다.
+//
+// 카탈로그 전체를 자격 있는 것으로 볼 수는 없다. 실측(라이브 2026-09-12, 525건):
+// 421건(80.2%)이 단 한 회차에만 나타났고 268건(51.0%)은 기사가 1건이다. 그런
+// 이슈의 상세에는 타임라인도 변화도 설 자리가 없다.
+//
+// 두 조건을 OR 로 두는 이유: 회차는 '우리가 며칠에 걸쳐 다뤘나'이고 날짜는
+// '사건이 며칠에 걸쳐 움직였나'다. 한 회차에만 실렸어도 서로 다른 날짜의 근거가
+// 셋이면 타임라인이 선이 된다.
+const STORY_MIN_BRIEFINGS = 2;
+const STORY_MIN_DATES = 3;
+const storyEligibility = new WeakMap();
+
+function storyEligible(issue) {
+  if (!issue) return false;
+  const cached = storyEligibility.get(issue);
+  if (cached !== undefined) return cached;
+  let eligible = (issue.briefing_count || 0) >= STORY_MIN_BRIEFINGS;
+  if (!eligible) {
+    const days = new Set();
+    (issue.related_articles || []).forEach(article => {
+      if (article.article_date) days.add(article.article_date);
+    });
+    eligible = days.size >= STORY_MIN_DATES;
+  }
+  storyEligibility.set(issue, eligible);
+  return eligible;
+}
+
+// 범위 전환은 필터 변경이 아니라 **화면 이동에 가깝다** — 목록의 단위가 바뀐다.
+// 그래서 다른 탭에서 눌러도(빈 목록의 '모든 이슈 보기') 탐색으로 데려간다.
+function setArchiveScope(scope) {
+  if (!["stories", "all"].includes(scope) || state.archiveScope === scope) return;
+  state.archiveScope = scope;
+  if (state.view !== "search") switchView("search");
+  else renderArchiveSearch(true);
+  syncUrl();
+}
+
 function archiveIssueMatches(issue) {
-  // 엔티티 필터가 맨 앞 — 엔티티 페이지는 "이 대상의 이슈"가 전제고,
+  // 범위가 맨 앞 — '추적 중인 이슈'는 목록의 성격이고, 아래 필터는 그 안에서의 교집합이다.
+  if (state.archiveScope === "stories" && !storyEligible(issue)) return false;
+  // 엔티티 필터가 그 다음 — 엔티티 페이지는 "이 대상의 이슈"가 전제고,
   // 나머지 필터(주제·기간·검색어)는 그 안에서의 교집합이다.
   if (state.archiveEntity && !(issue.entity_ids || []).includes(state.archiveEntity)) return false;
   if (state.archiveRegion !== "전체" && !(issue.regions || []).includes(state.archiveRegion)) return false;
@@ -2482,10 +2636,22 @@ function renderArchiveSearch(resetLimit = false) {
   document.getElementById("archiveSummary").textContent = activeFilters.length
     ? `${activeFilters.join(" · ")} — ${scale}`
     : scale;
+  setPressed(document.getElementById("archiveScope"),
+    document.querySelector(`#archiveScope [data-scope="${state.archiveScope}"]`));
   document.getElementById("archiveQueryDisplay").textContent = state.archiveQuery ? `검색어 · ${state.archiveQuery}` : "검색어 없음";
+  // '추적 중인 이슈' 범위에서 0건이면 원인이 필터가 아니라 **범위**일 수 있다. 그때는
+  // 필터 해제보다 '모든 이슈 보기'가 맞는 출구다 — 필터를 다 풀어도 자격을
+  // 못 넘은 이슈는 계속 안 보이므로, 그 안내만 주면 막다른 길이 된다.
+  const emptyState = state.archiveScope === "stories"
+    ? `<div class="empty-state"><strong>조건에 맞는 이슈가 없습니다</strong>
+        <p>추적 중인 이슈는 여러 회차에 걸쳐 다뤘거나 서로 다른 날짜의 근거가 3건 이상인 이슈입니다.
+        조건을 넓히거나 전체 이슈에서 찾아보세요.</p>
+        <button type="button" data-archive-scope="all">모든 이슈 보기</button>
+        ${activeFilters.length ? '<button type="button" data-clear-archive>필터 해제</button>' : ""}</div>`
+    : '<div class="empty-state"><strong>조건에 맞는 이슈가 없습니다</strong><p>기간을 30일로 넓히거나 주제 필터를 해제해 보세요.</p><button type="button" data-clear-archive>필터 해제</button></div>';
   document.getElementById("archiveIssueList").innerHTML = visible.length
     ? visible.map((issue, index) => issueCard(issue, index, true)).join("")
-    : '<div class="empty-state"><strong>조건에 맞는 이슈가 없습니다</strong><p>기간을 30일로 넓히거나 주제 필터를 해제해 보세요.</p><button type="button" data-clear-archive>필터 해제</button></div>';
+    : emptyState;
   const more = document.getElementById("archiveMore");
   more.hidden = visible.length >= matches.length;
   more.textContent = more.hidden ? "더 보기" : `더 보기 · ${matches.length - visible.length}개 남음`;
@@ -5725,6 +5891,8 @@ function bind() {
       switchView("search");
     }
     if (event.target.closest("[data-clear-briefing]")) clearBriefingFilters();
+    const scope = event.target.closest("[data-archive-scope]");
+    if (scope) setArchiveScope(scope.dataset.archiveScope);
     if (event.target.closest("[data-clear-archive]")) clearArchiveFilters();
   });
   // 홈 목차(#tocList)는 이 위임을 타지 않는다 — 행이 통째로 <a href> 라 브라우저가
@@ -5937,6 +6105,11 @@ function bind() {
     setPressed(event.currentTarget, button);
     renderArchiveSearch(true);
     syncUrl();
+  });
+  document.getElementById("archiveScope").addEventListener("click", event => {
+    const button = event.target.closest("[data-scope]");
+    if (!button) return;
+    setArchiveScope(button.dataset.scope);
   });
   document.getElementById("archiveClear").addEventListener("click", clearArchiveFilters);
   document.getElementById("archiveMore").addEventListener("click", () => { state.archiveLimit += 20; renderArchiveSearch(); });
@@ -6268,6 +6441,7 @@ function finishBoot(painted) {
   document.getElementById("archiveVerification").value = state.archiveVerification;
   document.getElementById("globalSearch").value = state.archiveQuery;
   setPressed(document.getElementById("archivePeriod"), document.querySelector(`#archivePeriod [data-period="${state.archivePeriod}"]`));
+  setPressed(document.getElementById("archiveScope"), document.querySelector(`#archiveScope [data-scope="${state.archiveScope}"]`));
   const firstIssueDate = state.issues.reduce((oldest, issue) => !oldest || issue.first_seen < oldest ? issue.first_seen : oldest, "");
   // 이슈 수와 원문 수는 다른 단위다. 한 숫자로 뭉치면 규모를 오해한다.
   const catalogArticles = state.issues.reduce((sum, issue) => sum + (issue.article_count || 0), 0);
@@ -6347,3 +6521,6 @@ async function init() {
 
 initializeTheme();
 init();
+// 첫 화면과 경쟁시키지 않는다 — 알림 버튼 하나 때문에 브리핑이 늦게 서면 안 된다.
+// 실패해도 아무 일도 일어나지 않아야 하므로 여기서 사슬을 끊는다.
+initPush().catch(() => {});

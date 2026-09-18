@@ -1,0 +1,71 @@
+# 아침 알림 — 웹 푸시를 하루 한 번 보낸다.
+#
+# 왜 Daily Brief 안의 스텝이 아닌가
+# ---------------------------------------------------------------------------
+# Daily Brief 는 04:25 KST 예약이고 **도착이 흔들린다**(이 저장소 실측: 대기
+# 15~66분, 잡 자체 13분 → 04:45~05:40 사이). 그 끝에 발송을 붙이면 알림 시각이
+# 그 흔들림을 그대로 물려받는다. 알림은 "브리핑이 끝난 순간"이 아니라 **사람이
+# 정한 시각**에 와야 하는 것이라 예약을 따로 둔다.
+#
+# 언제 도는가
+# ---------------------------------------------------------------------------
+#   cron '0 22 * * *' UTC = 07:00 KST. GitHub cron 은 예약대로 뜨지 않으므로
+#   (같은 실측) 실제 도착은 07:00~08:00 사이로 흔들린다. tools/push_notify.py 가
+#   07:00~09:30 KST 창 밖이면 **보내지 않고 조용히 끝낸다** — 점심에 오는
+#   '아침 알림'은 알림이 아니라 방해다.
+#
+#   그리고 오늘 브리핑이 아직 라이브에 없으면(빌드 실패·배포 지연) 역시 보내지
+#   않는다. 어제 것을 오늘 아침 알림으로 보내느니 건너뛰는 쪽이 낫다.
+#
+# 설정이 없으면 아무 일도 없다
+# ---------------------------------------------------------------------------
+# PUSH_SEND_TOKEN 이 없으면 이 워크플로는 실패한다 — 설정을 깜빡한 것이 조용히
+# '알림 없는 서비스'가 되면 안 된다. 다만 발송 창구(/push/send)와 화면 버튼은
+# 각각 503·숨김으로 물러나므로, 설정 전에도 사이트는 멀쩡하다.
+#
+#   Cloudflare Pages → Settings → Variables and Secrets
+#     VAPID_PUBLIC_KEY · VAPID_PRIVATE_KEY(Secret) · VAPID_SUBJECT · PUSH_SEND_TOKEN(Secret)
+#   GitHub → Settings → Secrets → Actions
+#     PUSH_SEND_TOKEN (Cloudflare 와 같은 값)
+#
+#   값은 `node web/tools/gen_vapid_keys.mjs` 가 낸다.
+name: Push notify (아침 알림)
+
+on:
+  schedule:
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "시각·날짜 판단을 무시하고 보낸다 (복구·점검용)"
+        type: boolean
+        default: false
+      dry_run:
+        description: "판단만 하고 보내지 않는다"
+        type: boolean
+        default: false
+
+# 같은 시각에 두 번 돌면 알림도 두 번 간다. 예약과 수동 실행이 겹치는 날을 막는다.
+concurrency:
+  group: push-notify
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # requirements.txt 를 설치하지 않는다 — 이 스크립트는 표준 라이브러리만 쓴다.
+      # 설치를 붙이면 알림 하나에 매일 1분을 더 쓰고, 의존성 사고가 알림을 멈춘다.
+      - name: Send
+        env:
+          PUSH_SEND_TOKEN: ${{ secrets.PUSH_SEND_TOKEN }}
+          SITE_URL: https://nuclens-v2.pages.dev
+        run: |
+          python tools/push_notify.py \
+            ${{ inputs.force && '--force' || '' }} \
+            ${{ inputs.dry_run && '--dry-run' || '' }}

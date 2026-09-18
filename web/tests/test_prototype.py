@@ -4778,10 +4778,13 @@ class SavedFollowTests(unittest.TestCase):
         self.assertIn('id="headerSaved"', self.html)
         self.assertIn('data-go-saved', self.html)
         self.assertIn('id="search-saved"', self.html)
-        # 저장은 탐색 안으로 합쳐졌고 모바일 탭은 5개다(신문스크랩 포함).
+        # 저장은 탐색 안으로 합쳐졌다. 하단 탭은 마크업에 5칸 — 신문스크랩을
+        # 내려 4칸이 됐다가(2026-09-18), 장기 스토리가 들어와 다시 5칸이다
+        # (2026-09-19). 다섯 번째는 `hidden` 으로 서 있고 데이터 게이트가
+        # 열릴 때만 걸린다. **그리는 칸 수는 4 또는 5로 런타임에 오간다** —
+        # CSS 가 열 수를 박지 않는 이유가 그것이다(아래 전용 검사).
         mobile_nav = self.html.split('id="mobileTabs"', 1)[1].split("</nav>", 1)[0]
-        # 신문스크랩은 v2 에 생성기가 없어 탭째 내렸다(2026-09-18) — 4칸이다.
-        self.assertEqual(mobile_nav.count("<button"), 4)
+        self.assertEqual(mobile_nav.count("<button"), 5)
 
     def test_saved_meta_snapshot_and_tombstone(self):
         self.assertIn("nuclens-saved-meta", self.script)
@@ -5662,6 +5665,44 @@ class LongTermStoryScreenTests(unittest.TestCase):
         self.assertIn('id="view-longterm"', self.html)
         self.assertIn('data-view="longterm"', self.html)
         self.assertIn('if (view === "longterm") renderLongTerm();', self.script)
+
+    def test_the_phone_can_reach_it_at_all(self):
+        """상단 탭에만 두면 폰에서는 **기능이 없는 것과 같다**.
+
+        `.main-tabs` 는 좁은 화면에서 `display: none` 이라, 되살린 탭이 상단에만
+        있으면 폰 사용자는 화면의 존재 자체를 모른다 — 2026-09-19 사용자 보고가
+        정확히 그것이었다. 게이트는 선택자 하나가 상·하단을 함께 잡는다.
+        """
+        self.assertIn(".main-tabs { display: none; }",
+                      self.css.split("@media (max-width: 767px)", 1)[1][:4000])
+        mobile_nav = self.html.split('id="mobileTabs"', 1)[1].split("</nav>", 1)[0]
+        self.assertIn('data-view="longterm"', mobile_nav)
+        # 기본은 닫힘 — 데이터가 죽은 날 빈 화면으로 가는 칸을 남기지 않는다.
+        row = [line for line in mobile_nav.splitlines() if 'data-view="longterm"' in line][0]
+        self.assertIn("hidden", row)
+        chrome = self.script.split("function syncLongTermChrome(", 1)[1].split("\n}", 1)[0]
+        self.assertIn("""document.querySelectorAll('[data-view="longterm"]')""", chrome)
+
+    def test_the_bottom_bar_does_not_hardcode_its_column_count(self):
+        """칸 수가 런타임에 4와 5를 오간다 — 상수로 박으면 한쪽이 깨진다.
+
+        `repeat(4, 1fr)` 이면 다섯 번째가 둘째 줄로 떨어져 하단 탭이 두 층이
+        되고, `repeat(5, 1fr)` 이면 게이트가 닫힌 날 빈 칸이 하나 남는다.
+
+        그리고 `.mobile-tabs button` 이 `display: grid` 라 UA 의
+        `[hidden] { display: none }` 을 특정도로 이긴다 — 명시하지 않으면
+        `hidden` 이 아무 일도 하지 않는다(이 저장소에서 실제로 겪은 함정).
+        """
+        tabs = self.css.split("@media (max-width: 767px)", 1)[1]
+        tabs = tabs[tabs.index(".mobile-tabs {"):]
+        block = tabs[:tabs.index("}")]
+        self.assertIn("grid-auto-flow: column", block)
+        self.assertIn("grid-auto-columns: 1fr", block)
+        self.assertNotRegex(block, r"grid-template-columns:\s*repeat\(")
+        self.assertIn(".mobile-tabs button[hidden] { display: none; }", self.css)
+        # 라벨을 줄여서 맞추면 안 된다 — 최소 12.5px 계약이 따로 있다.
+        # 360px 에서 칸당 72px, '장기 스토리' 실측 57px 로 들어간다.
+        self.assertIn(".mobile-tabs button span { white-space: nowrap; }", self.css)
 
     def test_the_payload_is_optional(self):
         """threads.json 이 없거나 깨져도 나머지 화면은 산다."""
@@ -7918,6 +7959,154 @@ class EventCalendarSectionTests(unittest.TestCase):
         block = self.style[self.style.index("/* ── 앞으로 30일 달력"):]
         block = block[:block.index(".briefing-timeline {")]
         self.assertNotRegex(block, r"font-size:\s*(?:[0-9]|1[0-2])(?:\.\d+)?px")
+
+
+class ArchiveScopeTests(unittest.TestCase):
+    """탐색의 '목록 범위' 두 칸을 되살린다 (2026-09-19).
+
+    2026-09-17 화면 층 교체(df3e4ae)가 `#archiveScope` 를 통째로 걷으면서 탐색은
+    **첫 화면에 카탈로그 전체**를 깔게 됐다. 그 목록의 성질이 문제다 — 라이브
+    실측(2026-09-19): 587건 중 추적 자격을 넘은 것은 237건(40.4%)이고, 나머지는
+    상세를 열어도 타임라인도 변화도 설 자리가 없는 한 회차·한 기사짜리다.
+
+    범위는 필터가 아니라 **목록의 단위**다. 그래서 필터 서랍 밖에 서고,
+    '필터 해제'에 딸려 들어가지 않으며, 랜딩 판정(발견 허브)에도 안 낀다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        cls.css = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+
+    def test_the_two_choices_stand_above_the_results(self):
+        results = self.html.split('class="archive-results"', 1)[1].split('id="archiveIssueList"', 1)[0]
+        self.assertIn('id="archiveScope"', results)
+        self.assertIn('data-scope="stories"', results)
+        self.assertIn('data-scope="all"', results)
+        # 필터 서랍 안이 아니다 — 범위가 필터로 읽히면 '필터 해제'가 목록의
+        # 단위까지 되돌리는 것으로 오해된다.
+        drawer = self.html.split('id="archiveFilterDrawer"', 1)[1].split("</details>", 1)[0]
+        self.assertNotIn('id="archiveScope"', drawer)
+        self.assertIn(".archive-scope {", self.css)
+
+    def test_the_default_is_the_tracked_list(self):
+        self.assertIn('archiveScope: "stories",', self.script)
+        self.assertIn('state.archiveScope = params.get("as") === "all" ? "all" : "stories";', self.script)
+        self.assertIn('if (state.archiveScope !== "stories") params.set("as", state.archiveScope);', self.script)
+
+    def test_scope_is_the_first_gate_not_another_filter(self):
+        """범위를 필터 뒤에 두면 '자격 없는 이슈에 필터를 건' 교집합이 된다."""
+        matches = self.script.split("function archiveIssueMatches(", 1)[1].split("\n}", 1)[0]
+        first = matches.index('state.archiveScope === "stories"')
+        self.assertLess(first, matches.index("state.archiveEntity"))
+        # 두 조건의 OR — 회차(우리가 며칠 다뤘나)와 날짜(사건이 며칠 움직였나).
+        eligible = self.script.split("function storyEligible(", 1)[1].split("\n}", 1)[0]
+        self.assertIn("issue.briefing_count", eligible)
+        self.assertIn("article.article_date", eligible)
+        self.assertIn("STORY_MIN_BRIEFINGS", eligible)
+        self.assertIn("STORY_MIN_DATES", eligible)
+
+    def test_clearing_filters_does_not_reset_the_scope(self):
+        clear = self.script.split("function clearArchiveFilters(", 1)[1].split("\n}", 1)[0]
+        self.assertNotIn("archiveScope", clear)
+        landing = self.script.split("const isLanding =", 1)[1].split(";", 1)[0]
+        self.assertNotIn("archiveScope", landing)
+
+    def test_an_empty_tracked_list_offers_the_scope_not_just_the_filters(self):
+        """필터를 다 풀어도 자격을 못 넘은 이슈는 계속 안 보인다 — '필터 해제'만
+        주면 막다른 길이다."""
+        render = self.script.split("function renderArchiveSearch(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn('const emptyState = state.archiveScope === "stories"', render)
+        self.assertIn('data-archive-scope="all"', render)
+        # 그 버튼은 목록 밖(위임)에서 받는다.
+        self.assertIn('event.target.closest("[data-archive-scope]")', self.script)
+
+    def test_switching_scope_lands_on_the_explore_view(self):
+        """빈 목록의 '모든 이슈 보기'는 다른 화면에서도 눌릴 수 있다."""
+        setter = self.script.split("function setArchiveScope(", 1)[1].split("\n}", 1)[0]
+        self.assertIn('if (state.view !== "search") switchView("search");', setter)
+        self.assertIn("renderArchiveSearch(true)", setter)
+        self.assertIn("syncUrl()", setter)
+
+
+class MorningPushTests(unittest.TestCase):
+    """아침 알림을 되살린다 (2026-09-19).
+
+    2026-09-18 `ab9e706` 이 이 버튼을 내린 이유는 "v2 에 functions/push/* 가
+    없다 — 버튼은 보이는데 눌러도 되는 게 없었다"였다. 그 판단은 옳았다. 그래서
+    이번에는 **창구부터 짓고** 버튼을 되살린다.
+
+    이 검사가 지키는 한 가지: 버튼은 **켤 수 있을 때만 뜬다.** 브라우저가
+    못 하거나, 서버에 공개키가 없거나, 서비스워커가 안 붙으면 아무것도 안 보인다.
+    그 조건이 하나라도 새면 우리는 같은 자리로 돌아온다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        cls.worker = (ROOT / "public" / "sw.js").read_text(encoding="utf-8")
+        cls.init = cls.script.split("async function initPush(", 1)[1].split("\n}", 1)[0]
+
+    def test_the_toggle_is_back_where_it_was(self):
+        tools = self.html.split('class="today-tools"', 1)[1].split("</div>", 1)[0]
+        self.assertIn('id="pushToggle"', tools)
+        self.assertIn("hidden", tools.split('id="pushToggle"', 1)[1].split(">", 1)[0])
+        self.assertIn('id="pushHint"', self.html)
+        # 켜짐/끄기 두 상태를 한 버튼이 말한다.
+        self.assertIn("🔔 아침 알림 켜짐 · 끄기", self.script)
+        self.assertIn("🔔 아침 알림 받기", self.script)
+
+    def test_the_public_key_comes_from_the_server(self):
+        """상수로 박으면 키가 없는 배포에서도 버튼이 뜬다 — 그게 지난번 실패다."""
+        self.assertNotIn("const PUSH_PUBLIC_KEY", self.script)
+        self.assertIn('fetch("/push/key")', self.script)
+        # 키를 못 받으면 **버튼을 세우기 전에** 돌아간다.
+        before = self.init.index("const publicKey = await pushPublicKey();")
+        self.assertLess(before, self.init.index("button.hidden = false;"),
+                        "공개키를 확인하기 전에 버튼이 선다")
+        self.assertIn("if (!publicKey) return;", self.init)
+
+    def test_an_unsupported_browser_sees_nothing_but_the_ios_hint(self):
+        self.assertIn("if (!pushSupported()) {", self.init)
+        self.assertIn("홈 화면에 추가", self.init)
+        # 안내만 띄우고 버튼은 세우지 않는다.
+        head = self.init.split("const publicKey", 1)[0]
+        self.assertNotIn("button.hidden = false", head)
+
+    def test_the_screen_never_claims_an_on_state_the_server_did_not_take(self):
+        """서버가 안 받았는데 '켜짐'이라 말하면 알림은 영영 안 온다."""
+        self.assertIn("await created.unsubscribe()", self.init)
+        self.assertIn("throw new Error(`subscribe ${response.status}`)", self.init)
+        # 끌 때는 서버부터. 브라우저만 끊으면 죽은 구독이 서버에 남는다.
+        off = self.init.split("if (on) {", 1)[1].split("} else {", 1)[0]
+        self.assertLess(off.index('"/push/subscribe"'), off.index("unsubscribe()"))
+
+    def test_a_revoked_permission_reads_as_off_not_on(self):
+        """사이트 설정에서 권한만 철회한 브라우저는 구독 객체를 그대로 들고 있다.
+        그것만 보면 화면이 '켜짐'이라 말하는데 알림은 안 온다."""
+        self.assertIn('Notification.permission === "granted"', self.init)
+        self.assertIn("let on = false;", self.init)
+        # 다시 켤 때 옛 구독을 먼저 물린다 — 안 물리면 죽은 endpoint 가 되살아난다.
+        on_path = self.init.split("} else {", 1)[1]
+        self.assertLess(on_path.index("subscription.unsubscribe()"),
+                        on_path.index("Notification.requestPermission()"))
+
+    def test_the_toggle_never_blocks_the_briefing(self):
+        """알림 버튼 하나 때문에 첫 화면이 늦으면 안 된다."""
+        self.assertIn("initPush().catch(() => {});", self.script)
+        init_call = self.script.index("\ninit();")
+        self.assertLess(init_call, self.script.index("initPush().catch"))
+
+    def test_the_worker_fills_the_text_itself(self):
+        """발송은 본문 없는 알림을 보낸다(RFC 8291 암호화를 안 싣는다).
+        제목은 서비스워커가 받는 순간 읽어 온다 — 못 읽어도 알림은 뜬다."""
+        self.assertIn("/data/push.json", self.worker)
+        self.assertIn("Nuclens 오늘 브리핑", self.worker)
+        self.assertIn("오늘의 원전 현안이 올라왔습니다.", self.worker)
+        # 본문이 실려 오면 그쪽이 우선이다 — 나중에 암호화를 붙여도 이 핸들러는 산다.
+        self.assertIn("if (!data.title && !data.body) data = await briefCard();", self.worker)
 
 
 if __name__ == "__main__":
