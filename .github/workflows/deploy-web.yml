@@ -254,6 +254,12 @@ jobs:
         run: node web/tests/date_window.mjs
       - name: Trend period state (app.js)
         run: node web/tests/trend_period_state.mjs
+      # 저장한 이슈의 옛 주소 복구. 이 자리는 **사용자의 의도(저장)** 를 다룬다 —
+      # 조용히 잃거나 남의 저장을 덮으면 되돌릴 방법이 없다. 순수 함수로 떼어 둔
+      # 이유가 여기서 돌리기 위해서다(2026-09-17 화면 층 교체 때 구현과 함께
+      # 내려갔다가 2026-09-19 에 되살렸다).
+      - name: Saved issue alias migration (app.js)
+        run: node web/tests/saved_alias_migration.mjs
       - name: Admin gate contract
         run: node web/tests/admin_gate.mjs
 
