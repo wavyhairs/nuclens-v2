@@ -70,6 +70,24 @@ function loadTheme() {
   }
 }
 
+function parseArgs(argv) {
+  const out = { input: "slides.json", outDir: "out", sample: false, check: false };
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === "--sample") out.sample = true;
+    else if (arg === "--check") out.check = true;
+    else if (arg === "--out-dir") {
+      if (!argv[i + 1]) throw new Error("--out-dir requires a path");
+      out.outDir = argv[++i];
+    } else if (arg.startsWith("--")) {
+      throw new Error(`Unknown option: ${arg}`);
+    } else {
+      out.input = arg;
+    }
+  }
+  return out;
+}
+
 // 저장소에 박제된 폰트 — family → woff2. 외부 CDN 의존 0(지니 09-17: "미리 받아서
 // 박제"). Pretendard 는 사이트가 web/public/fonts 에 이미 든 원본을 그대로 쓴다
 // (서브셋본은 KS X 1001 2350자라 기사 속 드문 음절이 빠질 수 있다).
@@ -128,6 +146,78 @@ function accentize(text, cls) {
     const keep = [...inner].length <= 8 ? " keep" : "";
     return `<span class="${cls}${keep}">${inner}</span>`;
   });
+}
+
+function imageData(relativePath) {
+  if (!relativePath) return "";
+  const file = path.resolve(process.cwd(), relativePath);
+  if (!fs.existsSync(file)) throw new Error(`image asset missing: ${file}`);
+  const ext = path.extname(file).toLowerCase() === ".jpg" ? "jpeg" : "png";
+  return `data:image/${ext};base64,${fs.readFileSync(file).toString("base64")}`;
+}
+
+function editorialIcon(kind) {
+  const icons = {
+    control: `<path d="M18 6h28v36H18zM24 14h16M24 22h16M24 30h10"/><path d="M32 6V2"/>`,
+    grid: `<path d="M8 46h48M15 46l7-34h20l7 34M19 25h26M17 35h30M27 12v34M37 12v34"/>`,
+    vote: `<path d="M10 21h44v30H10zM17 21l15-13 15 13M19 29v14M29 29v14M39 29v14M49 29v14"/>`,
+    atom: `<ellipse cx="32" cy="28" rx="25" ry="9"/><ellipse cx="32" cy="28" rx="25" ry="9" transform="rotate(60 32 28)"/><ellipse cx="32" cy="28" rx="25" ry="9" transform="rotate(120 32 28)"/><circle cx="32" cy="28" r="3"/>`,
+    globe: `<circle cx="32" cy="28" r="23"/><path d="M9 28h46M32 5c8 7 12 14 12 23S40 44 32 51M32 5C24 12 20 19 20 28s4 16 12 23"/>`,
+    mou: `<path d="M14 46V20l18-10 18 10v26M10 46h44M20 26h4v12h-4M30 26h4v12h-4M40 26h4v12h-4M12 20h40"/>`,
+  };
+  const paths = icons[kind] || icons.mou;
+  return `<svg viewBox="0 0 64 56" aria-hidden="true">${paths}</svg>`;
+}
+
+function factPresentation(text, index) {
+  const value = String(text || "");
+  const rules = [
+    [/417표|가결|하원/, ["하원 표결", "가결", "vote"]],
+    [/100MW|증설 비용/, ["적용 대상", "비용 부담", "grid"]],
+    [/MOU.*연기|서명 연기/, ["MOU 서명", "연기", "mou"]],
+    [/노형 배분|기술 통제권|의결권/, ["핵심 쟁점", "협의", "control"]],
+    [/협력 대화|정례 채널|대화 합의/, ["협력 채널", "합의", "globe"]],
+    [/SMR|전력망/, ["핵심 분야", "확대", "atom"]],
+    [/발의|회부/, ["입법 절차", "진행", "control"]],
+  ];
+  for (const [pattern, meta] of rules) {
+    if (pattern.test(value)) return { label: meta[0], text: value, state: meta[1], icon: meta[2], tone: meta[1] === "연기" ? "" : "active" };
+  }
+  return { label: `확인 사실 ${String(index + 1).padStart(2, "0")}`, text: value, state: "확인", icon: "control", tone: "active" };
+}
+
+function editorialFromStep(slide) {
+  const points = Array.isArray(slide.points) ? slide.points : [];
+  const why = Array.isArray(slide.why) ? slide.why : [];
+  const haystack = [slide.stepLabel, slide.headline, ...points].join(" ");
+  let image = "assets/energy-cooperation-editorial.png";
+  let stamp = "ENERGY INFRASTRUCTURE";
+  let headline = slide.headline;
+  if (/데이터센터|100MW|417표|GRID Savings/.test(haystack)) {
+    image = "assets/data-center-grid-editorial.png";
+    stamp = "DATA CENTER · POWER GRID";
+    headline = "전력망 비용 부담 법안 [[가결]]";
+  } else if (/휴스턴|474GW|협력 정례 채널|협력 대화/.test(haystack)) {
+    image = "assets/energy-cooperation-editorial.png";
+    stamp = "GRID · SMR COOPERATION";
+    headline = "한미 에너지 협력 [[채널 신설]]";
+  } else if (/대미|웨스팅하우스|MOU|한미/.test(haystack)) {
+    image = "assets/korea-us-flags-editorial.png";
+    stamp = "KOREA · U.S.\nNUCLEAR COOPERATION";
+    headline = "MOU 서명 [[연기]]";
+  }
+  return {
+    ...slide,
+    type: "editorial",
+    headline,
+    image,
+    stamp,
+    context: Array.isArray(slide.meta) ? slide.meta.join(" · ").replaceAll("#", "") : "",
+    deck: points[0] || "",
+    statusRows: points.slice(0, 2).map(factPresentation),
+    whyLead: why[0] || "",
+    whyChecks: why.slice(1, 3),
+  };
 }
 
 function shell(inner, theme, dark) {
@@ -299,11 +389,142 @@ ${fontLinks(theme)}
     border-radius: 0; border: 2px solid ${accent}; color: ${accent};
     font-family: ${theme.fonts.heading.css}; font-weight: 700; font-size: 34px;
     letter-spacing: 1px; }
+
+  /* 상태형 카드. 불릿을 한 줄로 쌓는 대신 사건 판단 → 규모 → 협상 상태 → 의미의
+     순서로 읽힌다. 장식 그래픽이 아니라 원고 안에 실제로 있는 구조만 면으로 만든다. */
+  .status-card { padding: 0; display: grid; grid-template-rows: 414px 578px 88px; }
+  .status-card::after { display: none; }
+  .status-hero { padding: 48px 54px 40px; background:
+    radial-gradient(90% 140% at 100% 0%, rgba(90,160,232,.34) 0%, transparent 55%),
+    ${c.bgDark}; color: ${c.inkOnDark}; }
+  .status-hero .hd { color: rgba(238,241,244,.55); }
+  .status-hero .hd .brand { color: ${c.accentBright}; }
+  .status-eyebrow { margin-top: 68px; display: flex; align-items: center; gap: 18px;
+    color: ${c.accentBright}; font-size: 24px; font-weight: 800; letter-spacing: -.3px; }
+  .status-eyebrow .serial { min-width: 58px; padding: 9px 12px 8px;
+    border: 1px solid rgba(90,160,232,.55); text-align: center; font-size: 21px;
+    letter-spacing: 1px; }
+  .status-hero h1 { margin-top: 25px; max-width: 900px; font-family: ${theme.fonts.heading.css};
+    font-size: 74px; line-height: 1.12; letter-spacing: -3px; font-weight: 820;
+    word-break: keep-all; }
+  .status-hero h1 .em { color: ${c.accentBright}; }
+  .status-content { padding: 34px 54px 28px; display: grid;
+    grid-template-rows: 246px 1fr; gap: 28px; min-height: 0; }
+  .status-overview { display: grid; grid-template-columns: 344px 1fr; gap: 38px; }
+  .amount-block { border-right: 1px solid ${c.rule}; padding-right: 34px; }
+  .micro-label { color: ${inkMute}; font-size: 18px; font-weight: 800;
+    letter-spacing: 2.4px; }
+  .amount-line { margin-top: 20px; color: ${accent}; display: flex; align-items: baseline;
+    gap: 10px; font-family: ${theme.fonts.heading.css}; white-space: nowrap; }
+  .amount-line .value { font-size: 86px; line-height: .9; font-weight: 900;
+    letter-spacing: -5px; }
+  .amount-line .unit { font-size: 35px; font-weight: 850; letter-spacing: -1px; }
+  .amount-caption { margin-top: 24px; color: ${inkDim}; font-size: 25px;
+    line-height: 1.3; font-weight: 650; }
+  .deal-status { display: grid; grid-template-rows: repeat(2, 1fr); }
+  .deal-row { display: grid; grid-template-columns: 116px 1fr; align-items: center;
+    border-top: 1px solid rgba(18,41,76,.2); }
+  .deal-row:last-child { border-bottom: 1px solid rgba(18,41,76,.2); }
+  .deal-row .key { color: ${accent}; font-size: 20px; font-weight: 850;
+    letter-spacing: 1px; }
+  .deal-row .copy { color: ${ink}; font-size: 27px; line-height: 1.32;
+    font-weight: 650; word-break: keep-all; }
+  .implications { border-top: 5px solid ${ink}; padding-top: 20px; }
+  .implication-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .implication-head strong { color: ${ink}; font-size: 23px; font-weight: 850; }
+  .implication-head span { color: ${inkMute}; font-size: 17px; font-weight: 700;
+    letter-spacing: 1.5px; }
+  .implication-grid { margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 24px; }
+  .implication { display: grid; grid-template-columns: 32px 1fr; gap: 12px;
+    color: ${ink}; font-size: 24px; line-height: 1.42; font-weight: 620;
+    word-break: keep-all; }
+  .implication .n { color: ${accent}; font-family: ${theme.fonts.heading.css};
+    font-size: 19px; font-weight: 900; padding-top: 4px; }
+  .status-footer { margin: 0 54px; display: flex; justify-content: space-between;
+    align-items: center; border-top: 1px solid ${c.rule}; color: ${inkMute};
+    font-size: 22px; font-weight: 700; }
+  .status-footer .src { color: ${inkDim}; font-weight: 850; }
+
+  /* 편집형 카드. 사용자가 고른 레퍼런스의 핵심인 사진 히어로, 상태 카드 둘,
+     흰 해설면, 다크 출처 푸터를 코드로 재구성한다. */
+  .editorial-card { padding: 0; display: grid; grid-template-rows: 570px 422px 88px;
+    background: ${c.bg}; }
+  .editorial-card::after { display: none; }
+  .editorial-hero { position: relative; overflow: hidden; padding: 40px 48px 38px;
+    color: ${c.inkOnDark}; background: ${c.bgDark}; }
+  .editorial-photo { position: absolute; inset: 0; background-size: cover;
+    background-position: center; }
+  .editorial-photo::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(9,22,40,.98) 0%, rgba(9,22,40,.91) 35%,
+      rgba(9,22,40,.46) 62%, rgba(9,22,40,.20) 100%); }
+  .editorial-hero .hd, .editorial-copy { position: relative; z-index: 1; }
+  .editorial-hero .hd { color: rgba(238,241,244,.72); }
+  .editorial-hero .hd .brand { color: ${c.inkOnDark}; letter-spacing: 2.5px; }
+  .editorial-copy { margin-top: 92px; width: 58%; }
+  .editorial-kicker { color: rgba(238,241,244,.82); font-size: 20px; font-weight: 700;
+    letter-spacing: .2px; }
+  .editorial-kicker strong { color: ${c.inkOnDark}; font-weight: 850; }
+  .editorial-title { margin-top: 22px; font-family: ${theme.fonts.heading.css};
+    font-size: 72px; line-height: 1.08; letter-spacing: -3.2px; font-weight: 850;
+    word-break: keep-all; }
+  .editorial-title .em { display: block; color: ${c.accentBright}; font-size: 1.13em; }
+  .editorial-deck { margin-top: 24px; max-width: 520px; color: rgba(238,241,244,.88);
+    font-size: 25px; line-height: 1.42; font-weight: 520; word-break: keep-all; }
+  .editorial-stamp { position: absolute; right: 46px; bottom: 28px; z-index: 1;
+    color: rgba(238,241,244,.8); font-size: 14px; line-height: 1.45;
+    font-weight: 750; font-style: italic; letter-spacing: 4px; text-align: right; }
+  .editorial-body { padding: 25px 48px 22px; background: #F4F7FA; }
+  .editorial-section-head { display: flex; align-items: baseline; gap: 12px;
+    color: ${accent}; font-size: 18px; font-weight: 900; letter-spacing: .5px; }
+  .editorial-section-head span { color: ${inkDim}; font-size: 16px; font-weight: 650;
+    letter-spacing: 0; }
+  .event-grid { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .event-card { min-height: 116px; border: 1px solid rgba(18,41,76,.18);
+    border-radius: 12px; display: grid; grid-template-columns: 76px 1fr auto;
+    align-items: center; gap: 14px; padding: 14px 16px; background: rgba(255,255,255,.5); }
+  .event-icon { width: 64px; height: 64px; border-radius: 50%; background: #DCE9F7;
+    display: flex; align-items: center; justify-content: center; color: ${c.signalInk}; }
+  .event-icon svg { width: 40px; height: 40px; fill: none; stroke: currentColor;
+    stroke-width: 3.5; stroke-linecap: square; stroke-linejoin: miter; }
+  .event-copy strong { display: block; color: ${ink}; font-size: 25px; font-weight: 820; }
+  .event-copy span { display: block; margin-top: 5px; color: ${inkDim};
+    font-size: 18px; font-weight: 550; }
+  .event-state { align-self: end; margin-bottom: 3px; min-width: 76px; padding: 7px 13px;
+    border-radius: 999px; background: #F8D8D4; color: #A83D36; text-align: center;
+    font-size: 18px; font-weight: 850; }
+  .event-state.active { background: #DCE9F7; color: ${accent}; }
+  .why-editorial { margin-top: 20px; padding-top: 17px; border-top: 2px solid rgba(18,41,76,.35); }
+  .why-layout { margin-top: 11px; display: grid; grid-template-columns: 1.25fr .85fr;
+    gap: 30px; align-items: center; }
+  .why-lead { color: ${ink}; font-size: 31px; line-height: 1.32; font-weight: 780;
+    letter-spacing: -1px; word-break: keep-all; }
+  .why-checks { border-left: 1px solid ${c.rule}; padding-left: 24px;
+    display: flex; flex-direction: column; gap: 10px; }
+  .why-check { display: grid; grid-template-columns: 24px 1fr; gap: 10px;
+    color: ${inkDim}; font-size: 18px; line-height: 1.35; font-weight: 620; }
+  .why-check::before { content: "✓"; width: 22px; height: 22px; border-radius: 50%;
+    background: ${accent}; color: white; display: flex; align-items: center;
+    justify-content: center; font-size: 14px; font-weight: 900; }
+  .editorial-footer { padding: 0 48px; display: flex; justify-content: space-between;
+    align-items: center; background: ${c.bgDark}; color: rgba(238,241,244,.72); }
+  .editorial-cta { display: grid; grid-template-columns: 46px auto; column-gap: 14px;
+    align-items: center; font-size: 17px; line-height: 1.35; }
+  .editorial-arrow { grid-row: span 2; width: 42px; height: 42px; border: 1px solid rgba(238,241,244,.28);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    color: ${c.inkOnDark}; font-size: 27px; }
+  .editorial-site { color: rgba(238,241,244,.52); }
+  .editorial-source { text-align: right; font-size: 17px; line-height: 1.45; }
+  .editorial-source strong { color: ${c.inkOnDark}; }
 </style></head><body>${inner}</body></html>`;
 }
 
 function renderSlide(s, theme) {
-  const type = s.type || "step";
+  let type = s.type || "step";
+  if (type === "step") {
+    s = editorialFromStep(s);
+    type = "editorial";
+  }
   const site = esc(s.handle || "");
   const num = esc(s.slideNum || "");
 
@@ -347,6 +568,77 @@ function renderSlide(s, theme) {
       </div>`,
       theme,
       true
+    );
+  }
+
+  if (type === "status") {
+    const rows = Array.isArray(s.statusRows) ? s.statusRows.slice(0, 2) : [];
+    const implications = Array.isArray(s.why) ? s.why.slice(0, 3) : [];
+    return shell(
+      `<div class="card status-card">
+        <section class="status-hero">
+          <div class="hd"><span class="brand">NUCLENS</span><span>${num}</span></div>
+          <div class="status-eyebrow"><span class="serial">${esc(s.idx || "01")}</span><span>${esc(s.stepLabel || "")}</span></div>
+          <h1>${accentize(s.headline, "em")}</h1>
+        </section>
+        <section class="status-content">
+          <div class="status-overview">
+            <div class="amount-block">
+              <div class="micro-label">${esc(s.heroLabel || "핵심 수치")}</div>
+              <div class="amount-line"><span class="value">${esc(s.heroStat || "")}</span><span class="unit">${esc(s.heroUnit || "")}</span></div>
+              <div class="amount-caption">${esc(s.heroCaption || "")}</div>
+            </div>
+            <div class="deal-status">${rows.map((row) =>
+              `<div class="deal-row"><div class="key">${esc(row.label)}</div><div class="copy">${esc(row.text)}</div></div>`
+            ).join("")}</div>
+          </div>
+          <div class="implications">
+            <div class="implication-head"><strong>${esc(s.whyLabel || "왜 중요한가")}</strong><span>WHAT TO WATCH</span></div>
+            <div class="implication-grid">${implications.map((text, i) =>
+              `<div class="implication"><span class="n">0${i + 1}</span><span>${esc(text)}</span></div>`
+            ).join("")}</div>
+          </div>
+        </section>
+        <footer class="status-footer"><span>${site}</span><span class="src">${esc(s.footer || "")}</span></footer>
+      </div>`,
+      theme,
+      false
+    );
+  }
+
+  if (type === "editorial") {
+    const rows = Array.isArray(s.statusRows) ? s.statusRows.slice(0, 2) : [];
+    const checks = Array.isArray(s.whyChecks) ? s.whyChecks.slice(0, 2) : [];
+    const photo = imageData(s.image);
+    return shell(
+      `<div class="card editorial-card">
+        <section class="editorial-hero">
+          <div class="editorial-photo" style="background-image:url('${photo}')"></div>
+          <div class="hd"><span class="brand">NUCLENS</span><span>${num}</span></div>
+          <div class="editorial-copy">
+            <div class="editorial-kicker"><strong>${esc(s.stepLabel || "")}</strong>${s.context ? ` &nbsp;|&nbsp; ${esc(s.context)}` : ""}</div>
+            <h1 class="editorial-title">${accentize(s.headline, "em")}</h1>
+            <p class="editorial-deck">${esc(s.deck || "")}</p>
+          </div>
+          <div class="editorial-stamp">${esc(s.stamp || "EDITORIAL BRIEF").replaceAll("\n", "<br>")}</div>
+        </section>
+        <section class="editorial-body">
+          <div class="editorial-section-head">WHAT HAPPENED <span>확인된 사실</span></div>
+          <div class="event-grid">${rows.map((row, i) =>
+            `<div class="event-card"><div class="event-icon">${editorialIcon(row.icon || (i ? "control" : "mou"))}</div><div class="event-copy"><strong>${esc(row.label)}</strong><span>${esc(row.text)}</span></div><div class="event-state ${esc(row.tone || "")}">${esc(row.state)}</div></div>`
+          ).join("")}</div>
+          <div class="why-editorial">
+            <div class="editorial-section-head">WHY IT MATTERS <span>${esc(s.whyLabel || "왜 중요한가")}</span></div>
+            <div class="why-layout"><div class="why-lead">${esc(s.whyLead || "")}</div><div class="why-checks">${checks.map((text) => `<div class="why-check">${esc(text)}</div>`).join("")}</div></div>
+          </div>
+        </section>
+        <footer class="editorial-footer">
+          <div class="editorial-cta"><span class="editorial-arrow">↗</span><span>더 자세한 원문 보기</span><span class="editorial-site">${site}</span></div>
+          <div class="editorial-source">출처&nbsp; <strong>${esc(s.footer || "")}</strong><br>${esc(s.date || "")}</div>
+        </footer>
+      </div>`,
+      theme,
+      false
     );
   }
 
@@ -442,20 +734,22 @@ function selfCheck() {
   assert.ok(t.fonts.heading.css.includes("Pretendard"),
     "SUIT 는 ㎾·㎿·㎸ 가 없다 — Pretendard 를 폴백으로 세워야 한다");
   assert.strictEqual(fontLinks(t), "", "박제 서체만 쓸 때 외부 링크가 없어야 한다");
+  assert.deepStrictEqual(parseArgs(["preview.json", "--out-dir", "previews/new"]), {
+    input: "preview.json", outDir: "previews/new", sample: false, check: false,
+  });
   console.log("build.js self-check OK");
 }
 
 (async () => {
   const theme = loadTheme();
-  const arg = process.argv[2];
-  if (arg === "--check") return selfCheck();
+  const args = parseArgs(process.argv.slice(2));
+  if (args.check) return selfCheck();
 
   let slides;
-  if (arg === "--sample") {
+  if (args.sample) {
     slides = SAMPLE_SLIDES;
   } else {
-    const input = arg || "slides.json";
-    const inputPath = path.resolve(process.cwd(), input);
+    const inputPath = path.resolve(process.cwd(), args.input);
     if (!fs.existsSync(inputPath)) {
       console.error(`No input file at ${inputPath}. Create slides.json first, or run: node build.js --sample`);
       process.exit(1);
@@ -470,7 +764,7 @@ function selfCheck() {
 
   console.log(`Theme: ${theme.name} | ${theme.fonts.heading.family}`);
 
-  const outDir = path.resolve(process.cwd(), "out");
+  const outDir = path.resolve(process.cwd(), args.outDir);
   fs.mkdirSync(outDir, { recursive: true });
 
   const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox"] });
@@ -594,5 +888,5 @@ function selfCheck() {
   }
 
   await browser.close();
-  console.log(`\nDone. ${slides.length} slides in ./out`);
+  console.log(`\nDone. ${slides.length} slides in ${outDir}`);
 })();

@@ -574,6 +574,7 @@ def build_slides(raw: dict, items: list[dict], date: str,
             "whyLabel": "왜 중요한가",
             "why": copy["why"],
             "meta": [m for m in (item["event_date"], item["tag"]) if m],
+            "date": date.replace("-", "."),
             "handle": SITE, "footer": item["source"],
             "url": item["link"],   # build.js 는 안 쓴다 — 캡션·검증용
         })
