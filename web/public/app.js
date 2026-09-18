@@ -131,10 +131,14 @@ let issueHistoryOwned = false;
 let toastTimer = 0;
 const briefRouteOwned = BRIEF_ROUTE.test(location.pathname);
 
-function issueIdFromLocation() {
-  const match = location.pathname.match(ISSUE_ROUTE);
+function issueIdFromPath(pathname) {
+  const match = pathname.match(ISSUE_ROUTE);
   if (!match) return "";
   try { return decodeURIComponent(match[1]); } catch { return ""; }
+}
+
+function issueIdFromLocation() {
+  return issueIdFromPath(location.pathname);
 }
 
 function issuePath(issueId) {
@@ -1609,6 +1613,11 @@ function isStandalone() {
   return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 }
 
+// 카드뉴스 띠. 자리는 index.html 의 마크업 순서가 정한다 — 넓은 화면에서는
+// 먼저 볼 3건 위로, 좁은 화면에서는 목차 뒤로 옮기던 그 함수를
+// 걷었다(2026-09-18). 폭에 따라 읽는 순서가 갈리면 같은 화면을 두 벌로
+// 설명해야 하고, 실제로 폰 사용자만 카드뉴스를 '그 밖의 이슈' 아래에서
+// 만났다. 순서는 하나다: 카드뉴스 → 먼저 볼 3건 → 오디오 → 그 밖의 이슈.
 function renderCardStrip(date) {
   const section = document.getElementById("cardStrip");
   if (!section) return;
@@ -1626,7 +1635,6 @@ function renderCardStrip(date) {
     section.hidden = false;
     bindCardStripNav();
     bindCardViewer(pick, files);
-    placeCardStrip();
   });
 }
 
@@ -1726,18 +1734,6 @@ function bindCardStripNav() {
 // 세로가 남아 가로 띠가 위에 있어도 3건을 밀어내지 않는데, 원래 자리(목차 아래)
 // 에서는 1,238px 아래라 사실상 안 보였다. 폰은 원래 자리 그대로 — 거기서는 띠가
 // 위에 오면 3건이 첫 화면 밖으로 나간다.
-function placeCardStrip() {
-  const strip = document.getElementById("cardStrip");
-  const picks = document.getElementById("pickList");
-  const panel = document.getElementById("briefPanel");
-  if (!strip || !picks || !panel) return;
-  if (!narrowScreen.matches) {
-    if (strip.nextElementSibling !== picks) picks.before(strip);
-  } else if (strip.previousElementSibling !== panel) {
-    panel.after(strip);          // 원래 자리 — 목차 다음
-  }
-}
-
 function renderTodayAgenda(briefing) {
   const agenda = document.getElementById("todayAgenda");
   const toggle = document.getElementById("agendaToggle");
@@ -4865,7 +4861,6 @@ function initFilterDrawers() {
   });
   narrowScreen.addEventListener("change", syncArchiveDrawer);
   narrowScreen.addEventListener("change", placeTodayAgenda);
-  narrowScreen.addEventListener("change", placeCardStrip);
   // 경계를 넘나들면 자리도 따라와야 한다 — 안 하면 리사이즈한 사람만 어긋난 채 본다.
   railScreen.addEventListener("change", () => { if (appReady) renderBriefing(); });
   syncArchiveDrawer();
@@ -5342,6 +5337,28 @@ function bind() {
     document.getElementById(id).addEventListener("click", handleHubAction);
   });
   // 팔로우 패널 — 대상 열기(그 시점에 확인 처리)·해제. 저장 화면 진입만으로는
+  // 목차('그 밖의 이슈')와 변화 행의 제목은 진짜 <a href="/issue/…/"> 다 —
+  // 새 탭·주소 복사·크롤러가 쓰는 주소라 버튼으로 바꾸지 않는다. 다만 평범한
+  // 좌클릭까지 **통째 페이지 이동**으로 보내면, 그 정적 페이지도 index.html
+  // 사본이라 앱이 처음부터 다시 부팅한다. 그러면 닫고 나올 때 issueHistoryOwned
+  // 가 false 라 history.back() 없이 replaceState("/") 만 하고, 사용자는 갓
+  // 부팅한 홈에 떨어진다 — '나머지 N건 펼치기'로 펼쳐 둔 목차가 도로 접히고
+  // 스크롤도 최상단이다(사용자 보고 2026-09-18).
+  //
+  // 같은 문서 안에서 다이얼로그를 열고 pushState 로만 주소를 바꾸면, 닫기가
+  // history.back() 을 타서 눌렀던 그 자리로 그대로 돌아온다. 수식 클릭
+  // (ctrl/cmd/shift/alt·가운데 버튼)과 모르는 이슈 주소는 손대지 않고 서버로
+  // 보낸다 — 새 탭으로 여는 길과 딥링크는 그대로 살아 있어야 한다.
+  document.body.addEventListener("click", event => {
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = event.target.closest('a[href^="/issue/"]');
+    if (!link || link.target === "_blank") return;
+    const issueId = issueIdFromPath(new URL(link.href, location.origin).pathname);
+    if (!issueId || !currentIssueById(issueId)) return;
+    event.preventDefault();
+    openIssueDialog(issueId);
+  });
   // 확인 처리하지 않는다(주석 계약은 index.html 의 followPanel 에).
   // 목차의 분류 칩 — 누르면 탐색 탭에서 같은 주제가 모인 목록으로 간다.
   // handleHubAction 이 아카이브 필터를 초기화하고 주제를 걸므로 그대로 태우고,

@@ -5252,10 +5252,89 @@ class FirstScreenContentFirstTests(unittest.TestCase):
         title_line = next(line for line in lead.splitlines() if "issue-title-button" in line)
         self.assertNotIn("? ", title_line.split("<h3>")[0], "제목 렌더에 조건이 다시 붙었다")
 
-    def test_audio_sits_below_the_brief_panel(self):
-        """플레이어는 브리핑 패널 뒤다 — 목차보다 먼저 서면 '읽을 것'이 밀린다."""
-        self.assertLess(self.html.index('id="tocList"'),
-                        self.html.index('id="audioBrief"'))
+    def test_home_reads_in_one_decided_order(self):
+        """홈의 읽는 순서는 마크업 순서 하나로 정한다 (2026-09-18).
+
+        카드뉴스 → 먼저 볼 3건 → 오디오 브리프 → 그 밖의 이슈.
+        그림으로 훑고 · 핵심을 읽고 · 듣고 싶으면 듣고 · 나머지를 탐색한다.
+
+        앞 계약(오디오는 목차 뒤)은 플레이어가 날짜 바로 아래 첫 콘텐츠로
+        섰던 시절의 것이다. 지금은 오디오 위에 카드뉴스와 3건이 먼저 서므로
+        '읽을 것이 밀린다'는 조건이 성립하지 않는다 — 대신 순서 전체를 잠근다.
+
+        런타임 재배치는 금지다. placeCardStrip() 이 넓은 화면에서는 띠를 3건
+        위로, 좁은 화면에서는 목차 뒤로 옮겨서 폰 사용자만 카드뉴스를 '그 밖의
+        이슈' 아래에서 만났다. 폭에 따라 읽는 순서가 갈리면 같은 화면을 두
+        벌로 설명해야 한다.
+        """
+        order = ['id="cardStrip"', 'id="pickList"', 'id="audioBrief"', 'id="tocList"']
+        seen = [self.html.index(marker) for marker in order]
+        self.assertEqual(seen, sorted(seen),
+                         "홈 순서: 카드뉴스 → 먼저 볼 3건 → 오디오 → 그 밖의 이슈")
+        self.assertNotIn("function placeCardStrip", self.script)
+        self.assertNotIn("placeCardStrip()", self.script)
+        self.assertNotIn('"change", placeCardStrip', self.script)
+
+    def test_audio_block_stays_within_one_article_card(self):
+        """오디오 두 카드는 기사 카드 1장 정도로 보인다 — 예산은 CSS 가 든다.
+
+        실측(1280px, 2026-09-18): pick-card 156px · 오디오 구역 173px.
+        이 균형을 지키는 값 셋만 잠근다 — 데스크톱 2열, 카드 최소 높이,
+        설명 한 줄. 셋 중 하나만 풀려도 오디오가 핵심 기사보다 커진다.
+        """
+        block = self.style.split(".audio-mode-row {", 1)[1].split("}", 1)[0]
+        self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", block)
+        button = self.style.split(".audio-mode-row button {", 1)[1].split("}", 1)[0]
+        self.assertIn("min-height: 56px", button)
+        desc = self.style.split(".audio-description {", 1)[1].split("}", 1)[0]
+        self.assertIn("-webkit-line-clamp: 1", desc)
+        # 폰은 1열 — 두 카드를 나란히 두면 제목이 끊긴다.
+        mobile = self.style.split("@media (max-width: 767px)", 1)[1]
+        self.assertIn(".audio-mode-row { grid-template-columns: 1fr", mobile)
+
+    def test_audio_cards_borrow_the_article_card_surface(self):
+        """오디오 카드의 면·테두리·모서리는 먼저 볼 3건과 같은 토큰을 쓴다.
+
+        회색 면(--c-surface-sunken)·4px 모서리로 따로 놀던 것을 맞췄다. 그림자는
+        얹지 않는다 — 팔레트 규칙 3(지면에 박힌 카드는 프레임만).
+        """
+        pick = self.style.split(".pick-card {", 1)[1].split("}", 1)[0]
+        audio = self.style.split(".audio-mode-row button {", 1)[1].split("}", 1)[0]
+        for token in ("background: var(--c-surface)",
+                      "border: var(--bd-1) solid var(--c-border)",
+                      "border-radius: var(--r-3)"):
+            self.assertIn(token, pick)
+            self.assertIn(token, audio)
+        self.assertNotIn("box-shadow", audio)
+
+    def test_issue_links_open_in_page_instead_of_reloading_the_app(self):
+        """목차 행을 눌러도 문서는 그대로다 — 펼친 목차와 스크롤이 살아남는다.
+
+        `.toc-link` 는 진짜 <a href="/issue/…/"> 라 평범한 좌클릭이 통째 페이지
+        이동이었다. 그 정적 페이지도 index.html 사본이라 앱이 처음부터 부팅하고,
+        닫기는 history.back() 없이 replaceState("/") 만 해서 사용자는 갓 부팅한
+        홈에 떨어졌다 — '나머지 N건 펼치기'가 도로 접히고 스크롤은 최상단.
+
+        실측(2026-09-18, 1280px·390px): 고친 뒤 15행이 닫은 뒤에도 15행이고
+        링크의 화면 위치가 2595px 로 같다.
+
+        앵커 자체는 남긴다 — 새 탭·주소 복사·크롤러가 쓰는 주소다. 수식 클릭과
+        모르는 이슈 id 는 가로채지 않는다.
+        """
+        selector = 'a[href^="/issue/"]'
+        self.assertIn(selector, self.script)
+        self.assertIn("function issueIdFromPath(", self.script)
+        at = self.script.index(selector)
+        handler = self.script[at - 500:at + 500]
+        self.assertIn("openIssueDialog(issueId)", handler)
+        # 앱이 모르는 이슈 주소는 가로채지 않고 서버로 보낸다.
+        self.assertIn("currentIssueById(issueId)", handler)
+        # 새 탭으로 여는 길은 살아 있어야 한다 — 수식 클릭·가운데 버튼은 통과.
+        for modifier in ("event.button !== 0", "event.metaKey", "event.ctrlKey",
+                         "event.shiftKey", "event.altKey"):
+            self.assertIn(modifier, handler)
+        # 목차 행은 여전히 진짜 링크다(공유·크롤러).
+        self.assertIn('<a class="toc-link" href="/issue/', self.script)
 
     def test_audio_rates_stay_folded_until_playback_on_mobile(self):
         """좁은 화면의 배속 세그먼트는 재생 시작 후에만 펼쳐진다.
@@ -5655,6 +5734,26 @@ class ArticleDetailSurfacesTests(unittest.TestCase):
         # 타임라인 각 기사도 자기 요지를 펼칠 수 있어야 한다.
         self.assertIn("timeline-detail", app)
         self.assertIn(".timeline-detail", css)
+
+    def test_the_detail_body_sits_in_the_content_column(self):
+        """요지 본문은 출처 곁말과 같은 오른쪽 열에 선다.
+
+        `.dialog-detail` 은 `128px | 1fr` 2열이고 곁말(<small>)만 grid-column:2
+        로 못 박혀 있었다. 그러면 자동배치 커서가 1행 끝으로 밀려 뒤따르는 <p>
+        가 다음 행 **첫 칸(128px 라벨 열)** 으로 떨어진다 — 출처 한 줄이 넓게
+        눕고 정작 기사 요지는 좁은 칸에서 한 줄에 대여섯 글자로 흘렀다
+        (2026-09-18 사용자 보고, detail_source 가 있는 이슈에서만 재현).
+
+        실측(1100px): 고치기 전 본문 left=292 width=128 → 고친 뒤 left=440
+        width=503 으로 곁말과 같은 열.
+        """
+        css = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
+        body = css.split(".dialog-detail > p {", 1)[1].split("}", 1)[0]
+        self.assertIn("grid-column: 2", body)
+        # 1열로 접히는 폭에서는 둘 다 1열로 되돌린다 — 안 그러면 암시적 2열이 생긴다.
+        mobile = css.split("@media (max-width: 720px)", 1)[1]
+        reset = mobile.split(".dialog-detail > p,", 1)[1].split("}", 1)[0]
+        self.assertIn("grid-column: 1", reset)
 
 
 class IssueDetailIsCardScopedTests(unittest.TestCase):
