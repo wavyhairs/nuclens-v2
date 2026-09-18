@@ -394,4 +394,4 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-19 | P4 | curation 생성 응답(`items`)과 `llm_eval` 판정 응답(`verdict`) 계약 충돌을 API 호출 전에 확인. TASKS 연결·canary 금지, §6-5/7 HALT | — |
 | 2026-09-19 | P4 | actual `curate_batch` + deterministic hard gate + 수동 blind ChatGPT judge로 계약 분리. 20 Gold × 3 repeat 질문지·strict importer·15건 canary preflight 구현. live Gemini/OpenAI API/신규 Human Review 모두 0. calibration JSON 3개 대기 | `159dcc7` |
 | 2026-09-19 | P4 | 대상 회귀 57 passed. 전체 suite 2670 passed/10 skipped/1 failed — 실패는 기존 live web data 주별 합계 비율 3.77 > 2인 데이터 gate 1건으로 P4 무관, 수정하지 않음 | `159dcc7` |
-| 2026-09-19 | P4 | 수동 judge 60/60 strict import. stability/TIE/duplicate 1.0, position bias 0이나 PASS-vs-intervention 0.633·false/unsafe PASS 16으로 NOT_PROVEN. source evidence 부족 확인, canary 차단 회귀 포함 59 passed | — |
+| 2026-09-19 | P4 | 수동 judge 60/60 strict import. stability/TIE/duplicate 1.0, position bias 0이나 PASS-vs-intervention 0.633·false/unsafe PASS 16으로 NOT_PROVEN. source evidence 부족 확인, canary 차단 회귀 포함 59 passed | `2748072` |
