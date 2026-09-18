@@ -235,7 +235,8 @@ def estimate_tokens(requests: Iterable[BlindRequest]) -> dict:
     }
 
 
-def calibration_requests(gold: dict) -> list[BlindRequest]:
+def historical_calibration_requests(gold: dict) -> list[BlindRequest]:
+    """Reconstruct the archived title-only calibration; never use as new Gold."""
     eligible = {"USER_SPECIFIED", "HUMAN_LABELLED", "HUMAN_BLIND_CONFIRMED",
                 "HUMAN_BLIND_CORRECTED"}
     requests = []
@@ -249,6 +250,32 @@ def calibration_requests(gold: dict) -> list[BlindRequest]:
             "NOT_EVALUABLE; do not fill them from memory or the URL."
         )
         candidates = {"primary": case["current_output"], "identical_control": case["current_output"]}
+        for repeat in range(CALIBRATION_THRESHOLDS["repeats"]):
+            requests.append(build_blind_request(case["id"], source, candidates, repeat))
+    return requests
+
+
+def calibration_requests(gold: dict) -> list[BlindRequest]:
+    """Build only source-complete calibration requests.
+
+    The existing fixture intentionally has no ``source_complete_evidence`` field,
+    so it yields zero active requests.  Historical reproduction is available via
+    :func:`historical_calibration_requests` but cannot silently become a current
+    calibration pool.
+    """
+    requests = []
+    for case in gold.get("cases") or []:
+        evidence = case.get("source_complete_evidence") or {}
+        if (evidence.get("status") != "SOURCE_COMPLETE_CALIBRATION_ELIGIBLE"
+                or not case.get("human_label")):
+            continue
+        source = evidence.get("judge_evidence")
+        if not isinstance(source, dict) or not all(
+                str(source.get(field) or "").strip()
+                for field in ("title", "description", "body")):
+            continue
+        candidates = {"primary": case["current_output"],
+                      "identical_control": case["current_output"]}
         for repeat in range(CALIBRATION_THRESHOLDS["repeats"]):
             requests.append(build_blind_request(case["id"], source, candidates, repeat))
     return requests
@@ -305,13 +332,18 @@ def manual_packet_text(packet_id: str, requests: list[BlindRequest]) -> str:
 """
 
 
-def export_manual_calibration_packets(gold: dict, out_dir, *, repeats: int | None = None) -> list[dict]:
+def export_manual_calibration_packets(gold: dict, out_dir, *, repeats: int | None = None,
+                                      historical_only: bool = False) -> list[dict]:
     """Write one independent ChatGPT packet per repeat plus a private import manifest."""
     from pathlib import Path
 
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    all_requests = calibration_requests(gold)
+    all_requests = (historical_calibration_requests(gold) if historical_only
+                    else calibration_requests(gold))
+    if not all_requests:
+        raise JudgeValidationError(
+            "no source-complete calibration cases; historical incomplete Gold is ineligible")
     repeat_count = repeats if repeats is not None else CALIBRATION_THRESHOLDS["repeats"]
     exported, manifest_rows = [], []
     for repeat in range(repeat_count):
@@ -329,12 +361,15 @@ def export_manual_calibration_packets(gold: dict, out_dir, *, repeats: int | Non
                          for request in requests],
         })
     (out / "calibration-manifest.private.json").write_text(json.dumps({
-        "policy": EVALUATOR_POLICY, "packets": manifest_rows,
+        "policy": EVALUATOR_POLICY,
+        "calibration_scope": "historical_only" if historical_only else "source_complete",
+        "packets": manifest_rows,
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return exported
 
 
-def import_manual_calibration_answer(answer_path, manifest_path) -> list[dict]:
+def import_manual_calibration_answer(answer_path, manifest_path, *,
+                                     historical_only: bool = False) -> list[dict]:
     """Validate a whole manual packet atomically and convert it to calibration rows."""
     from pathlib import Path
     import time
@@ -348,6 +383,15 @@ def import_manual_calibration_answer(answer_path, manifest_path) -> list[dict]:
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
     if answer.get("policy") != EVALUATOR_POLICY or manifest.get("policy") != EVALUATOR_POLICY:
         raise JudgeValidationError("manual answer/manifest evaluator policy mismatch")
+    expected_scope = "historical_only" if historical_only else "source_complete"
+    manifest_scope = manifest.get("calibration_scope")
+    if historical_only:
+        # Archived manifests predate the explicit scope field.
+        if manifest_scope not in (None, expected_scope):
+            raise JudgeValidationError("manual calibration scope mismatch")
+    elif manifest_scope != expected_scope:
+        raise JudgeValidationError(
+            "historical/incomplete calibration answers cannot enter the source-complete pool")
     model_display = str(answer.get("judge_model_display") or "").strip()
     if not model_display or model_display == "사용자가 ChatGPT UI에 표시된 모델명을 입력":
         raise JudgeValidationError("judge_model_display must be filled from the ChatGPT UI")
@@ -459,12 +503,16 @@ def import_manual_canary_answer(answer_path, manifest_path) -> list[dict]:
     return rows
 
 
-def calibration_summary(gold: dict, rows: list[dict]) -> dict:
+def calibration_summary(gold: dict, rows: list[dict], *, historical_only: bool = False) -> dict:
     """Score only current-policy complete rows. Missing/malformed data fails closed."""
     cases = {case["id"]: case for case in gold.get("cases") or []}
+    planned = (historical_calibration_requests(gold) if historical_only
+               else calibration_requests(gold))
+    eligible_case_ids = {request.case_id for request in planned}
     latest = {str(row.get("key")): row for row in rows}
     accepted = [row for row in latest.values() if row.get("status") == "ok"
-                and str(row.get("key", "")).startswith(f"{EVALUATOR_POLICY}|")]
+                and str(row.get("key", "")).startswith(f"{EVALUATOR_POLICY}|")
+                and row.get("case_id") in eligible_case_ids]
     predictions: dict[str, list[str]] = {}
     binary_correct = false_pass = unsafe_pass = ties = duplicate_same = logic_errors = 0
     position_choices = {"left": 0, "right": 0}
@@ -508,7 +556,7 @@ def calibration_summary(gold: dict, rows: list[dict]) -> dict:
         "schema_or_logic_errors": logic_errors,
     }
     t = CALIBRATION_THRESHOLDS
-    passed = (expected == len(calibration_requests(gold))
+    passed = (bool(planned) and expected == len(planned)
               and metrics["binary_pass_vs_intervention_agreement"] >= t["binary_pass_vs_intervention_agreement_min"]
               and false_pass <= t["false_pass_max"]
               and unsafe_pass <= t["unsafe_pass_max"]
@@ -517,7 +565,9 @@ def calibration_summary(gold: dict, rows: list[dict]) -> dict:
               and metrics["identical_pair_position_bias_rate"] <= t["identical_pair_position_bias_max"]
               and metrics["duplicate_verdict_consistency"] >= t["duplicate_verdict_consistency_min"]
               and logic_errors <= t["schema_or_logic_errors_max"])
-    return {"policy": EVALUATOR_POLICY, "status": "PASS" if passed else "NOT_PROVEN",
+    return {"policy": EVALUATOR_POLICY,
+            "calibration_scope": "historical_only" if historical_only else "source_complete",
+            "status": "PASS" if passed else "NOT_PROVEN",
             "thresholds": CALIBRATION_THRESHOLDS, "metrics": metrics,
             "denominators": denominators,
             "case_stability": {

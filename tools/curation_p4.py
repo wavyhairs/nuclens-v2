@@ -306,6 +306,7 @@ def build_preflight(records: list[tuple[Path, dict]], selection: dict, gold: dic
     gemini_cost = input_tokens / 1_000_000 * GEMINI_PRICE["input"] \
         + output_tokens / 1_000_000 * GEMINI_PRICE["output"]
     calibration = judge.calibration_requests(gold)
+    historical_calibration = judge.historical_calibration_requests(gold)
     canary_judging = estimated_canary_judge_requests(selection)
     return {
         "generated_at_epoch": time.time(), "live_calls_made": {"openai": 0, "gemini": 0},
@@ -322,11 +323,19 @@ def build_preflight(records: list[tuple[Path, dict]], selection: dict, gold: dic
             "policy": judge.EVALUATOR_POLICY,
             "channel": "manual ChatGPT UI (model display name recorded on import)",
             "gold_cases": len(calibration) // judge.CALIBRATION_THRESHOLDS["repeats"],
+            "historical_only_cases": (
+                len(historical_calibration) // judge.CALIBRATION_THRESHOLDS["repeats"]),
             "repeats": judge.CALIBRATION_THRESHOLDS["repeats"],
             "thresholds": judge.CALIBRATION_THRESHOLDS,
-            "manual_packets": 3, "openai_api_calls": 0, "incremental_api_cost_usd": 0,
+            "manual_packets": (judge.CALIBRATION_THRESHOLDS["repeats"]
+                               if calibration else 0),
+            "openai_api_calls": 0, "incremental_api_cost_usd": 0,
             "approximate_prompt_and_answer_volume": judge.estimate_tokens(calibration),
-            "instruction": "Run each repeat packet in a separate fresh ChatGPT conversation.",
+            "instruction": (
+                "Run each repeat packet in a separate fresh ChatGPT conversation."
+                if calibration else
+                "Do not run a judge: no source-complete calibration cases are eligible."
+            ),
         },
         "gemini_canary_estimate": {
             "logical_calls_minimum": len(ARMS), "logical_calls_expected": expected_calls,
@@ -345,7 +354,8 @@ def build_preflight(records: list[tuple[Path, dict]], selection: dict, gold: dic
                 judge.estimate_tokens(canary_judging) if canary_judging else None),
             "note": "One upload/paste packet; recomputed from actual outputs after the hard gate.",
         },
-        "gate": "BLOCKED_PENDING_MANUAL_CHATGPT_CALIBRATION_IMPORT",
+        "gate": ("HALTED_SOURCE_COMPLETE_CALIBRATION_POOL_EMPTY"
+                 if not calibration else "BLOCKED_PENDING_MANUAL_CHATGPT_CALIBRATION_IMPORT"),
     }
 
 
@@ -402,19 +412,24 @@ def main() -> int:
         calibration_summary_path = args.out / "calibration-summary.json"
         if calibration_summary_path.exists():
             calibration = json.loads(calibration_summary_path.read_text(encoding="utf-8"))
-            report["judge_calibration"]["result"] = calibration
-            report["gate"] = (
-                "READY_FOR_EXPLICIT_GEMINI_APPROVAL"
-                if calibration.get("status") == "PASS"
-                else "HALTED_JUDGE_CALIBRATION_NOT_PROVEN")
+            report["judge_calibration"]["historical_result"] = calibration
+            if report["judge_calibration"]["gold_cases"]:
+                report["gate"] = (
+                    "READY_FOR_EXPLICIT_GEMINI_APPROVAL"
+                    if (calibration.get("status") == "PASS"
+                        and calibration.get("calibration_scope") == "source_complete")
+                    else "HALTED_JUDGE_CALIBRATION_NOT_PROVEN")
         (args.out / "preflight.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0
 
     if args.phase == "export-calibration":
-        exported = judge.export_manual_calibration_packets(
-            gold, args.out / "manual-calibration")
+        try:
+            exported = judge.export_manual_calibration_packets(
+                gold, args.out / "manual-calibration")
+        except judge.JudgeValidationError as exc:
+            parser.error(f"calibration export refused: {exc}")
         report = {"policy": judge.EVALUATOR_POLICY, "openai_api_calls": 0,
                   "packets": exported,
                   "instruction": "Use one fresh ChatGPT conversation per packet; upload the three JSON answers."}
@@ -446,7 +461,10 @@ def main() -> int:
         return 0 if summary["status"] == "PASS" else 2
 
     calibration_path = args.out / "calibration-summary.json"
-    if not calibration_path.exists() or json.loads(calibration_path.read_text(encoding="utf-8")).get("status") != "PASS":
+    calibration_state = (json.loads(calibration_path.read_text(encoding="utf-8"))
+                         if calibration_path.exists() else {})
+    if (calibration_state.get("status") != "PASS"
+            or calibration_state.get("calibration_scope") != "source_complete"):
         parser.error("Gemini canary refused: current-policy GPT calibration has not passed")
     if args.phase == "canary":
         if args.max_gemini_calls_per_arm <= 0:

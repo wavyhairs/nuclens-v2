@@ -138,6 +138,10 @@ class ProductionRunnerTests(unittest.TestCase):
             self.assertEqual(curation_p4.main(), 0)
             report = json.loads((Path(temp_dir) / "preflight.json").read_text(encoding="utf-8"))
         self.assertEqual(report["live_calls_made"], {"openai": 0, "gemini": 0})
+        self.assertEqual(report["judge_calibration"]["gold_cases"], 0)
+        self.assertEqual(report["judge_calibration"]["historical_only_cases"], 20)
+        self.assertEqual(report["judge_calibration"]["manual_packets"], 0)
+        self.assertEqual(report["gate"], "HALTED_SOURCE_COMPLETE_CALIBRATION_POOL_EMPTY")
         gemini.assert_not_called()
         after = {path: (path.stat().st_size, path.stat().st_mtime_ns) for path in tracked}
         self.assertEqual(before, after)
@@ -155,13 +159,49 @@ class ProductionRunnerTests(unittest.TestCase):
                     curation_p4.main()
             run.assert_not_called()
 
+    def test_historical_pass_cannot_unlock_gemini_canary(self):
+        with tempfile.TemporaryDirectory(dir=".") as temp_dir:
+            out = Path(temp_dir)
+            (out / "calibration-summary.json").write_text(json.dumps({
+                "status": "PASS", "calibration_scope": "historical_only",
+            }), encoding="utf-8")
+            with patch.object(curation_p4, "run_gemini_canary") as run, \
+                    patch("sys.argv", ["curation_p4.py", "--out", temp_dir,
+                                       "--phase", "canary", "--approve-live-calls",
+                                       "--max-gemini-calls-per-arm", "1"]):
+                with self.assertRaises(SystemExit):
+                    curation_p4.main()
+            run.assert_not_called()
+
 
 class CalibrationContractTests(unittest.TestCase):
-    def test_real_gold_yields_twenty_cases_three_repeats(self):
+    def test_real_gold_is_historical_only_not_source_complete(self):
         gold = json.loads(curation_p4.GOLD_PATH.read_text(encoding="utf-8"))
+        historical = judge.historical_calibration_requests(gold)
+        self.assertEqual(len(historical), 60)
+        self.assertEqual(len({row.case_id for row in historical}), 20)
+        self.assertEqual(judge.calibration_requests(gold), [])
+
+    def test_source_complete_case_can_enter_active_calibration_pool(self):
+        gold = {"cases": [{
+            "id": "source-complete-case", "human_label": "PASS",
+            "current_output": {"summary": "supported"},
+            "source_complete_evidence": {
+                "status": "SOURCE_COMPLETE_CALIBRATION_ELIGIBLE",
+                "judge_evidence": {
+                    "title": "title", "description": "description", "body": "full body",
+                },
+            },
+        }]}
         requests = judge.calibration_requests(gold)
-        self.assertEqual(len(requests), 60)
-        self.assertEqual(len({row.case_id for row in requests}), 20)
+        self.assertEqual(len(requests), 3)
+        self.assertTrue(all("full body" in request.body["input"] for request in requests))
+        with tempfile.TemporaryDirectory(dir=".") as temp_dir:
+            exported = judge.export_manual_calibration_packets(gold, temp_dir)
+            manifest = json.loads((Path(temp_dir) / "calibration-manifest.private.json")
+                                  .read_text(encoding="utf-8"))
+        self.assertEqual(len(exported), 3)
+        self.assertEqual(manifest["calibration_scope"], "source_complete")
 
     def test_thresholds_are_fixed_before_results(self):
         self.assertEqual(judge.CALIBRATION_THRESHOLDS["false_pass_max"], 0)
@@ -169,10 +209,17 @@ class CalibrationContractTests(unittest.TestCase):
         self.assertEqual(judge.CALIBRATION_THRESHOLDS["identical_pair_position_bias_max"], 0.05)
         self.assertEqual(judge.CALIBRATION_THRESHOLDS["repeats"], 3)
 
-    def test_manual_packets_export_without_internal_candidate_names(self):
+    def test_default_export_refuses_historical_incomplete_gold(self):
         gold = json.loads(curation_p4.GOLD_PATH.read_text(encoding="utf-8"))
         with tempfile.TemporaryDirectory(dir=".") as temp_dir:
-            exported = judge.export_manual_calibration_packets(gold, temp_dir)
+            with self.assertRaises(judge.JudgeValidationError):
+                judge.export_manual_calibration_packets(gold, temp_dir)
+
+    def test_explicit_historical_export_preserves_old_reproduction_only(self):
+        gold = json.loads(curation_p4.GOLD_PATH.read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory(dir=".") as temp_dir:
+            exported = judge.export_manual_calibration_packets(
+                gold, temp_dir, historical_only=True)
             self.assertEqual(len(exported), 3)
             text = Path(exported[0]["path"]).read_text(encoding="utf-8")
             self.assertNotIn('"primary"', text)
@@ -182,7 +229,7 @@ class CalibrationContractTests(unittest.TestCase):
     def test_manual_answer_import_is_atomic_and_schema_checked(self):
         gold = json.loads(curation_p4.GOLD_PATH.read_text(encoding="utf-8"))
         with tempfile.TemporaryDirectory(dir=".") as temp_dir:
-            judge.export_manual_calibration_packets(gold, temp_dir)
+            judge.export_manual_calibration_packets(gold, temp_dir, historical_only=True)
             manifest_path = Path(temp_dir) / "calibration-manifest.private.json"
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             packet = manifest["packets"][0]
@@ -197,14 +244,16 @@ class CalibrationContractTests(unittest.TestCase):
                 answer["judgments"].append({"case_id": request["case_id"], **value})
             answer_path = Path(temp_dir) / "answer.json"
             answer_path.write_text(json.dumps(answer, ensure_ascii=False), encoding="utf-8")
-            rows = judge.import_manual_calibration_answer(answer_path, manifest_path)
+            rows = judge.import_manual_calibration_answer(
+                answer_path, manifest_path, historical_only=True)
             self.assertEqual(len(rows), 20)
             self.assertTrue(all(row["provenance"]["mode"] == "manual_chatgpt"
                                 for row in rows))
             answer["judgments"][0]["candidates"][0]["dimensions"].pop()
             answer_path.write_text(json.dumps(answer, ensure_ascii=False), encoding="utf-8")
             with self.assertRaises(judge.JudgeValidationError):
-                judge.import_manual_calibration_answer(answer_path, manifest_path)
+                judge.import_manual_calibration_answer(
+                    answer_path, manifest_path, historical_only=True)
 
 
 if __name__ == "__main__":

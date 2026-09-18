@@ -38,7 +38,7 @@
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `DONE` — curation PROVEN, dedup/dedup_final NOT_PROVEN (2026-09-19) |
 | P3 | Independent Gold | 0 | `DONE` — 47건 판정 완료, 재라벨 대상 0 (97019a6) |
-| P4 | Sequential reasoning evaluation | 최소 | `HALTED(judge calibration NOT_PROVEN: false PASS 감사 완료, 동일 조건 유효 재실행 불가)` |
+| P4 | Sequential reasoning evaluation | 최소 | `HALTED(source-complete protocol 완료, eligible 0/20~30)` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
 
@@ -46,14 +46,14 @@
 
 ## 3. 다음 한 줄
 
-> **P2 판정 유지. P4 judge calibration은 NOT_PROVEN, live 호출은 여전히 0이다.**
+> **P2 판정 유지. P4 source-complete protocol은 구현됐고 live 호출은 여전히 0이다.**
 >
-> 다음 재개 지점: `docs/2026-09-19-gemini-reasoning-p4-false-pass-audit.md`의 결론을
-> 검토한다. false PASS 16행(6 case)은 ① title-only miss 3행(1 case), ③ Human Gold/근거
-> 불명확 13행(5 case)이며, 저장소·archive·cache·log 어디에도 당시 description/body가 없다.
-> **기존 calibration의 동일 조건 유효 재실행은 불가**하다. 별도 승인으로 source-complete 새
-> evidence protocol 및 이유를 보존하는 독립 Human Gold 재판정을 허용하기 전에는 calibration
-> 재실행, threshold/Gold/prompt/model/gate 변경, Gemini canary 실행을 하지 않는다.
+> 다음 재개 지점: future evaluation capture에서 exact article/context/request/output/parser state를
+> 함께 보존한 `SOURCE_COMPLETE_CALIBRATION_ELIGIBLE` case를 risk-balanced 20~30건 축적한다.
+> 현재 eligible은 0건이다. 기존 20 Gold는 `HISTORICAL_ONLY` 및
+> `UNSCORABLE_MISSING_EVIDENCE`로 보존되며 active calibration/export/canary gate를 열 수 없다.
+> source-complete fixture는 자동 Gold가 아니므로, 별도 승인된 독립 reference truth protocol까지
+> 확정되기 전에는 judge 실행, Gemini canary, threshold/prompt/model/gate 변경을 하지 않는다.
 
 ## 4. Phase별 체크리스트
 
@@ -116,6 +116,11 @@
 - [ ] judge calibration PROVEN — **NOT_PROVEN:** agreement 0.633, false/unsafe PASS 16
 - [x] false PASS 16행 전수 감사 — 6 case, ① 1 case/3행, ② 0, ③ 5 case/13행;
       당시 원문 및 5개 canonical Gold 근거 복원 불가
+- [x] source-complete evidence protocol + content-addressed dedup + completeness fail-closed 구현
+- [x] 기존 20 Gold를 `HISTORICAL_ONLY`/`UNSCORABLE_MISSING_EVIDENCE`로 분리;
+      default calibration export 0건, historical PASS도 canary unlock 불가
+- [ ] source-complete calibration case 20~30건 축적 — 현재 0건
+- [ ] 독립 reference truth protocol 승인 및 동일 evidence calibration dry-run
 - [ ] full-size batch canary — calibration PASS 및 명시적 Gemini 호출 승인 전 금지
 - [ ] dominated config 제거 → paired dev → finalist repeat → time-block holdout
 
@@ -174,6 +179,38 @@ label만 저장한다.
 Gemini canary 차단을 유지한다. 상세 표와 경로는
 `docs/2026-09-19-gemini-reasoning-p4-false-pass-audit.md`에 기록했다. API 호출 0회이며 불변
 설정과 실제 서비스 동작은 변경하지 않았다.
+
+## 4-K. Source-complete evidence protocol (2026-09-19)
+
+`tools/source_complete_evidence.py`에 평가용 case만 영구 승격하는 source-complete 계약을
+구현했다. title/description/exact prompt body와 provenance, 호출 당시 article/context/batch,
+serialized request, raw/parsed/normalized output, parser·regeneration·split·quarantine·lost 상태,
+judge-visible evidence subset이 모두 있어야 한다. 하나라도 없거나 서로 대응하지 않으면
+`UNSCORABLE_MISSING_EVIDENCE`이며 case manifest를 만들지 않는다. API key/token/cookie 패턴도
+쓰기 전에 거부한다.
+
+body/request/response/raw model output은 SHA-256 content-addressed blob으로 저장한다. 동일
+batch request/response 및 동일 body는 한 번만 저장하되 exact bytes를 정규화하거나 유사도로
+합치지 않는다. HTML·이미지·DOM은 저장하지 않는다. 일반 capture와 evidence store는 분리하며,
+기존 capture retention 14일은 변경하지 않았다. 임시 evidence 후보의 protocol 권장 retention은
+21일이고, 실제 calibration/P4에 채택된 case만 영구 보존한다.
+
+기존 20 Gold는 별도 registry에서 `HISTORICAL_ONLY`이자
+`UNSCORABLE_MISSING_EVIDENCE`로 고정했다. 기본 judge calibration request/export는 이들을 0건으로
+취급하며, 명시적 `historical_only` 모드만 과거 재현에 사용한다. canary gate는 calibration
+`PASS` 외에 `calibration_scope=source_complete`도 요구하므로 historical PASS로 열리지 않는다.
+threshold, Gold label, judge prompt/model은 바꾸지 않았다.
+
+9/9 이후 capture 중 body/description/output이 있는 2,366개 표본은 저장용량 측정에만 사용했다.
+exact article object와 parser lifecycle이 없으므로 eligible로 승격하지 않았다. dedup 후 평균
+0.0131 MiB/case, 20건 0.262 MiB, 30건 0.393 MiB, 100건 1.311 MiB 예상이며, body 비중
+17.12%, dedup 절감률 83.0%다. 현재 source-complete eligible은 0건이고 P4는 `HALTED`다.
+상세 계약은 `docs/2026-09-19-gemini-reasoning-source-complete-evidence.md`에 있다.
+
+source-complete는 판정 가능한 evidence이지 자동 Gold가 아니다. future case 20~30건 축적과
+별도 승인된 independent reference truth protocol 없이는 judge calibration과 Gemini canary를
+실행하지 않는다. Human 신규 리뷰 0, Gemini/OpenAI live API 호출 0이며 production 동작과
+cache는 변경하지 않았다.
 
 ## 4-G. P2 자연 capture 및 fidelity 결과 (2026-09-19)
 
@@ -420,3 +457,5 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-19 | P4 | 대상 회귀 57 passed. 전체 suite 2670 passed/10 skipped/1 failed — 실패는 기존 live web data 주별 합계 비율 3.77 > 2인 데이터 gate 1건으로 P4 무관, 수정하지 않음 | `159dcc7` |
 | 2026-09-19 | P4 | 수동 judge 60/60 strict import. stability/TIE/duplicate 1.0, position bias 0이나 PASS-vs-intervention 0.633·false/unsafe PASS 16으로 NOT_PROVEN. source evidence 부족 확인, canary 차단 회귀 포함 59 passed | `2748072` |
 | 2026-09-19 | P4 | false PASS 16행(6 case) 전수 감사. ① 1 case/3행, ② 0, ③ 5 case/13행. 저장소→archive→cache→log에 당시 원문 없음, 5개 canonical Gold 근거 없음으로 동일 조건 유효 재실행 불가. calibration/canary/API 호출 0 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | source-complete evidence protocol·content-addressed dedup·fail-closed gate 구현. 기존 20 Gold historical/unscorable 격리, active eligible 0. capture 2,366표본 용량 실측: 20건 0.262 MiB, 30건 0.393 MiB, dedup 83.0%. Human/Gemini/OpenAI 호출 0 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | source-complete 관련 76 passed/100 subtests. 전체 2693 passed/10 skipped/1 failed/487 subtests — 실패는 기존 live web data 주별 합계 비율 3.77 > 2 gate로 P4 무관, 수정하지 않음 | 이번 문서 커밋 |
