@@ -88,7 +88,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.sha }}
-          fetch-depth: 2
+          # A push may contain multiple commits; github.event.before can be farther
+          # back than HEAD^.  The classifier must be able to diff that exact range.
+          fetch-depth: 0
       - name: Classify web deployment
         id: mode
         run: |
