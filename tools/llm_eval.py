@@ -45,6 +45,12 @@ class TaskContract:
     evaluator_policy: str | None = None
     request_builder: Callable[[dict], tuple[str, str, dict]] | None = None
     blocked_reason: str = ""
+    # Curation is fidelity-proven but its production contract is batch orchestration,
+    # not this legacy one-case call interface.  Record that proof here without
+    # reopening ``call_contract`` with a fake verdict-producing request.
+    production_profile: str | None = None
+    replay_fidelity: str | None = None
+    external_runner: str | None = None
 
     def require(self) -> None:
         if self.request_builder is None or not self.evaluator_policy:
@@ -69,6 +75,19 @@ TASKS: dict[str, TaskContract] = {
         ("SYNTHESIS", "no production contract and no task Gold"),
     )
 }
+
+# P2 proved only curation.  The actual P4 runner preserves curate_batch's
+# batch/regeneration/split/quarantine semantics and uses a separate blind judge.
+# dedup/dedup_final remain NOT_PROVEN and are intentionally absent.
+TASKS["CURATION"] = TaskContract(
+    task="CURATION",
+    evaluator_policy="curation-blind-chatgpt-v1",
+    blocked_reason=("production replay is proven, but the generic one-case request "
+                    "interface is incompatible; use the registered batch runner"),
+    production_profile="curation",
+    replay_fidelity="REPLAY_FIDELITY_PROVEN",
+    external_runner="tools.curation_p4",
+)
 
 
 def contract(task: str) -> TaskContract:

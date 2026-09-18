@@ -36,9 +36,9 @@
 | P0 | Evaluator lockdown | 0 | `DONE` (fb25171) |
 | P0.5 | Behavior-neutral seam refactor | 0 | `DONE` (ca39d89) |
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
-| P2 | Capture + recorded-response fidelity | 0 | `IN_PROGRESS` — 배선 완료, 스위치 대기 |
+| P2 | Capture + recorded-response fidelity | 0 | `DONE` — curation PROVEN, dedup/dedup_final NOT_PROVEN (2026-09-19) |
 | P3 | Independent Gold | 0 | `DONE` — 47건 판정 완료, 재라벨 대상 0 (97019a6) |
-| P4 | Sequential reasoning evaluation | 최소 | `IN_PROGRESS` — 준비 완료, P2/P3 대기 |
+| P4 | Sequential reasoning evaluation | 최소 | `HALTED(source-complete protocol 완료, eligible 0/20~30)` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
 
@@ -46,17 +46,14 @@
 
 ## 3. 다음 한 줄
 
-> **사람 판정은 전부 끝났다(47건). 남은 것은 자연 데이터와 머지 하나다.**
+> **P2 판정 유지. P4 source-complete protocol은 구현됐고 live 호출은 여전히 0이다.**
 >
-> 1. 브랜치를 main 에 머지한 뒤 repo variable `NUCLENS_LLM_CAPTURE=on`.
->    (워크플로 변경이 브랜치에만 있어 머지 전에 켜면 아무 일도 안 일어난다.)
-> 2. 7~14일 뒤 capture artifact 를 받아
->    `python tools/fidelity_gate.py --capture <llm_capture.jsonl>`
-> 3. `REPLAY_FIDELITY_PROVEN` 이 나온 profile 만 `llm_eval.TASKS` 에
->    request_builder 와 evaluator_policy 를 꽂는다. 그 전에는 P4 가 열리지 않는다.
->
-> **코드로 더 할 수 있는 일은 없다.** P0~P4 준비가 모두 끝났고, 다음 단계는
-> 자연 production 데이터가 쌓이기를 기다리는 것이다.
+> 다음 재개 지점: future evaluation capture에서 exact article/context/request/output/parser state를
+> 함께 보존한 `SOURCE_COMPLETE_CALIBRATION_ELIGIBLE` case를 risk-balanced 20~30건 축적한다.
+> 현재 eligible은 0건이다. 기존 20 Gold는 `HISTORICAL_ONLY` 및
+> `UNSCORABLE_MISSING_EVIDENCE`로 보존되며 active calibration/export/canary gate를 열 수 없다.
+> source-complete fixture는 자동 Gold가 아니므로, 별도 승인된 독립 reference truth protocol까지
+> 확정되기 전에는 judge 실행, Gemini canary, threshold/prompt/model/gate 변경을 하지 않는다.
 
 ## 4. Phase별 체크리스트
 
@@ -90,13 +87,13 @@
       는 늘어난다. 옳은 불변식은 `call_log_delta == replayed_calls` (transport 를
       우회한 호출이 없다) + repo 파일 변경 0 이다. 앞서 적은 '증가 0' 은 offline
       **capture 검증**에는 맞고 replay 에는 맞지 않았다.
-- [ ] profile별 판정 실행 — **실데이터 대기**. 도구는 준비 완료:
-      `python tools/fidelity_gate.py --capture <llm_capture.jsonl>`
+- [x] profile별 판정 실행 (2026-09-19) — curation `REPLAY_FIDELITY_PROVEN`,
+      dedup/dedup_final `REPLAY_FIDELITY_NOT_PROVEN`; live Gemini 호출 0
 - [x] 입력 재구성기 `tools/replay_inputs.py` + provenance 판정 (1311a11)
 - [x] dedup 재구성기 (6b9019a) — 15개 필드 중 13개가 저장소 복원 가능
 - [x] fidelity gate `tools/fidelity_gate.py` — 캡처 → profile 판정 (다음 커밋)
 - [ ] issue_review 재구성기 — **이번 범위 제외**(사양 §5: 후순위)
-- [ ] 자연 데이터 축적 대기 (7~14일) — 이 항목은 시간 대기이며 HALT 아님
+- [x] 자연 데이터 축적 8일 21시간 확인 (artifact 91개, JSONL 840줄, 파싱 오류 0)
 
 ### P3 — Independent Gold (API 0)
 - [x] #92 Gold 도입 + `HUMAN_REVIEWED_AI_ASSISTED` 재분류 (9b089fb)
@@ -110,8 +107,139 @@
 ### P4 — Sequential evaluation (최소 API)
 - [x] case-major 루프 + config 순서 randomize — `plan_jobs()` (21d18a4)
 - [x] 지연 분해 `latency_seconds`(API) / `wall_clock_seconds` / `overhead_seconds` (21d18a4)
-- [ ] full-size batch canary
+- [x] 계약 충돌 해소 — actual `curate_batch` 생성과 독립 blind judge를 분리;
+      generic `llm_eval.call_contract`는 계속 닫힘
+- [x] 수동 ChatGPT judge 질문지/export + strict JSON importer + policy namespace
+- [x] calibration 기준 사전 고정(20 Gold × 3 repeat), 새 Human Review 0
+- [x] full-size 15건 canary 입력·4 distinct arm·비용/호출 preflight 고정
+- [x] judge calibration 실행 — 60/60 strict import, repeat stability/TIE 1.0
+- [ ] judge calibration PROVEN — **NOT_PROVEN:** agreement 0.633, false/unsafe PASS 16
+- [x] false PASS 16행 전수 감사 — 6 case, ① 1 case/3행, ② 0, ③ 5 case/13행;
+      당시 원문 및 5개 canonical Gold 근거 복원 불가
+- [x] source-complete evidence protocol + content-addressed dedup + completeness fail-closed 구현
+- [x] 기존 20 Gold를 `HISTORICAL_ONLY`/`UNSCORABLE_MISSING_EVIDENCE`로 분리;
+      default calibration export 0건, historical PASS도 canary unlock 불가
+- [ ] source-complete calibration case 20~30건 축적 — 현재 0건
+- [ ] 독립 reference truth protocol 승인 및 동일 evidence calibration dry-run
+- [ ] full-size batch canary — calibration PASS 및 명시적 Gemini 호출 승인 전 금지
 - [ ] dominated config 제거 → paired dev → finalist repeat → time-block holdout
+
+## 4-H. P4 독립 평가계약 preflight (2026-09-19)
+
+`tools/curation_p4.py`는 실제 `news_bot.curate_batch`와 production prompt/parser/schema,
+`BATCH_CHUNK=15`, regeneration/split/quarantine을 그대로 사용한다. wrapper가 바꾸는 것은
+비교 arm의 `thinking_level`뿐이며 production reasoning이 나중에 활성화되면 덮어쓰지 않고
+실패한다. `tools/curation_p4_judge.py`는 candidate를 A/B/C/D로 익명화하고 case/repeat별
+결정적 순서, 10차원 고정 rubric, `PASS|REPAIR|BLOCK`, 모든 pairwise를 요구한다.
+
+judge는 OpenAI API가 아니라 수동 ChatGPT UI packet/import 방식이다. evaluator policy는
+`curation-blind-chatgpt-v1`이고 API transport가 코드에 없다. calibration 질문지 3개가
+생성됐으며 각각 20 case를 담는다. UI 표시 모델명과 packet/answer SHA-256을 provenance로
+저장한다. malformed, case/dimension/pair 누락, verdict-dimension 모순은 packet 전체를
+fail-closed로 거부한다.
+
+Canary는 capture `10526987340` sequence 4의 source-backed 15건으로 고정했다. 위험 차원
+coverage는 event boundary 13, scope 12, stage 12, date 15, causality 11이다. arm은
+current/low/medium/high 4개이고 baseline과 중복된 minimal은 제외했다. 실행 순서는
+medium → low → high → current다. 자연 capture 기준 예상 Gemini logical call은 7.0회,
+승인 제안 cap은 arm당 3회(총 12회), 예상 비용은 USD 0.089다. 상세 보고서는
+`docs/2026-09-19-gemini-reasoning-p4-preflight.md`다.
+
+현재 live Gemini 0회, OpenAI API 0회, 새 Human Review 0건이다. production reasoning,
+`FAST_SEMANTIC_GATE_ENABLED`, model routing, 서비스 동작, production cache는 바꾸지 않았다.
+
+## 4-I. P4 manual judge calibration 결과 (2026-09-19)
+
+`GPT-5.6 Sol` UI에서 세 독립 packet을 실행했고 20 case × 3 repeat = 60행이 모두 strict
+schema와 provenance를 통과했다. 모든 case의 modal stability, identical-pair TIE,
+duplicate consistency는 1.0이고 position bias는 0이었다. 그러나 PASS 대 intervention
+일치율은 0.633(38/60), false PASS와 unsafe PASS는 각각 16으로 사전 기준을 실패했다.
+
+Gold source packet이 title/date만 보존하고 원 description/body를 보존하지 않아 제목 밖의
+오류를 judge가 `NOT_EVALUABLE`로 둔 것이 주요 한계다. threshold를 낮추거나 결과를 본 뒤
+case를 제외하지 않는다. `JUDGE_CALIBRATION_NOT_PROVEN`으로 P4를 HALT하고 Gemini canary는
+실행하지 않았다. 상세 결과는 `docs/2026-09-19-gemini-reasoning-p4-calibration.md`다.
+
+## 4-J. P4 false PASS 16건 전수 감사 (2026-09-19)
+
+calibration을 재실행하지 않고 false PASS 16행을 6개 고유 case로 환원해 전수 조사했다.
+Gold 근거가 명확한 `curation-f158b9b4c01d6732` 3행은 source title과 생성 summary의 중심
+scope 차이를 judge가 놓친 ①이다. 나머지 13행(5 case)은 canonical label이 `PASS→REPAIR`로
+바뀌었지만 모든 human dimension이 `PASS`이고 `human_notes`와 `required_repair`도 비어 있어,
+Human Gold의 실패 근거 자체를 복원할 수 없는 ③이다. ②로 단독 확정할 case는 0개다.
+
+각 case의 저장소(`curated.json` 및 Gold 이력), archive 전체 revision, production/eval cache,
+delivery/eval log를 순서대로 확인했다. 당시 description/body/source excerpt의 실제 텍스트는
+없었다. 4건은 빈 문자열의 source excerpt 해시만, 2건은 preimage 없는 비어 있지 않은 해시만
+남았다. Sol 보조 판정의 rationale과 source URL은 원문 evidence가 아니며, blind sidecar는
+label만 저장한다.
+
+따라서 기존 packet의 기계적 replay는 가능하지만 결손과 불명확한 Gold를 그대로 반복할 뿐,
+`NOT_PROVEN`을 해소하는 **동일 조건의 유효한 calibration 재실행은 불가**하다. P4 `HALTED`와
+Gemini canary 차단을 유지한다. 상세 표와 경로는
+`docs/2026-09-19-gemini-reasoning-p4-false-pass-audit.md`에 기록했다. API 호출 0회이며 불변
+설정과 실제 서비스 동작은 변경하지 않았다.
+
+## 4-K. Source-complete evidence protocol (2026-09-19)
+
+`tools/source_complete_evidence.py`에 평가용 case만 영구 승격하는 source-complete 계약을
+구현했다. title/description/exact prompt body와 provenance, 호출 당시 article/context/batch,
+serialized request, raw/parsed/normalized output, parser·regeneration·split·quarantine·lost 상태,
+judge-visible evidence subset이 모두 있어야 한다. 하나라도 없거나 서로 대응하지 않으면
+`UNSCORABLE_MISSING_EVIDENCE`이며 case manifest를 만들지 않는다. API key/token/cookie 패턴도
+쓰기 전에 거부한다.
+
+body/request/response/raw model output은 SHA-256 content-addressed blob으로 저장한다. 동일
+batch request/response 및 동일 body는 한 번만 저장하되 exact bytes를 정규화하거나 유사도로
+합치지 않는다. HTML·이미지·DOM은 저장하지 않는다. 일반 capture와 evidence store는 분리하며,
+기존 capture retention 14일은 변경하지 않았다. 임시 evidence 후보의 protocol 권장 retention은
+21일이고, 실제 calibration/P4에 채택된 case만 영구 보존한다.
+
+기존 20 Gold는 별도 registry에서 `HISTORICAL_ONLY`이자
+`UNSCORABLE_MISSING_EVIDENCE`로 고정했다. 기본 judge calibration request/export는 이들을 0건으로
+취급하며, 명시적 `historical_only` 모드만 과거 재현에 사용한다. canary gate는 calibration
+`PASS` 외에 `calibration_scope=source_complete`도 요구하므로 historical PASS로 열리지 않는다.
+threshold, Gold label, judge prompt/model은 바꾸지 않았다.
+
+9/9 이후 capture 중 body/description/output이 있는 2,366개 표본은 저장용량 측정에만 사용했다.
+exact article object와 parser lifecycle이 없으므로 eligible로 승격하지 않았다. dedup 후 평균
+0.0131 MiB/case, 20건 0.262 MiB, 30건 0.393 MiB, 100건 1.311 MiB 예상이며, body 비중
+17.12%, dedup 절감률 83.0%다. 현재 source-complete eligible은 0건이고 P4는 `HALTED`다.
+상세 계약은 `docs/2026-09-19-gemini-reasoning-source-complete-evidence.md`에 있다.
+
+source-complete는 판정 가능한 evidence이지 자동 Gold가 아니다. future case 20~30건 축적과
+별도 승인된 independent reference truth protocol 없이는 judge calibration과 Gemini canary를
+실행하지 않는다. Human 신규 리뷰 0, Gemini/OpenAI live API 호출 0이며 production 동작과
+cache는 변경하지 않았다.
+
+## 4-G. P2 자연 capture 및 fidelity 결과 (2026-09-19)
+
+repo variable `NUCLENS_LLM_CAPTURE=on`을 확인했다. 2026-09-09 이후 만료되지 않은
+artifact 91개(11,805,298 bytes)를 전부 내려받았고, 빈 파일·JSON 파싱 오류는 0이었다.
+artifact 생성 범위는 2026-09-09 15:57:17Z ~ 2026-09-18 13:17:59Z다.
+
+| profile | 캡처 호출 | orchestration | artifact | 캡처 시각 범위(UTC) | 판정 |
+|---|---:|---:|---:|---|---|
+| `curation` | 580 (최초 337 + 재생성 243) | 337 | 91 | 09-09 15:42:45 ~ 09-18 12:44:01 | `REPLAY_FIDELITY_PROVEN` |
+| `dedup` | 20 | 20 | 9 | 09-09 21:03:12 ~ 09-17 19:17:16 | `REPLAY_FIDELITY_NOT_PROVEN` |
+| `dedup_final` | 18 | 18 | 9 | 09-09 21:03:17 ~ 09-17 19:17:20 | `REPLAY_FIDELITY_NOT_PROVEN` |
+
+판정은 artifact를 만든 정확한 run commit에서 실행했다. 최신 dedup 포함 brief
+artifact `10516558990` / run commit `9e7c9bf`에서 curation은 2/2 orchestration
+(3 calls) PROVEN, dedup과 dedup_final은 각각 0/2 (2 calls) NOT_PROVEN이었다.
+최신 curation 표본도 별도로 확인했다: brief `10522931660` / `9782592a`는 3/3
+(5 calls), crawl `10548691668` / `59abee75`는 4/4 (7 calls) PROVEN이다.
+해당 run commit과 현재 `origin/main` 사이 curation 계약 파일 변경은 0이다.
+
+dedup 두 profile은 재구성한 user message가 녹화본과 달랐다. §5-B에 따라 P4에서
+제외한다. curation의 `description`/`body` prompt-derived 순환 경계와 429/5xx 미포착
+한계는 §4-A의 기존 제한 그대로다.
+
+`llm_eval.TASKS` 연결은 0개다. PROVEN인 curation profile은 새 curation을 생성하는
+production 계약(`items`)인 반면 `CURATION` Gold/평가기 계약은 기존 `current_output`의
+등급을 판정하는 계약(`verdict`)이다. 둘을 같은 task로 연결하는 것은 active contract
+모순이고, 새 judge를 임의 도입하는 것은 P0 봉쇄 및 새로운 product semantics 선택이다.
+따라서 §6-5/§6-7로 P4를 정지했다.
 
 ### P5 — Decision (API 0)
 - [ ] config-dependent failure vs provider noise 분류 적용
@@ -323,3 +451,11 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-09 | P3 | **2회차 10건 반영. PASS 층 9/13 뒤집힘. 안전/등급 근거 분리.** 전체 1728 passed | `97019a6` |
 | 2026-09-09 | — | daily-brief 34279339893 완료 확인 후 rebase → push | — |
 | 2026-09-09 | P1 | 관측 baseline 확정 — `expert_dossiers`/`expert_verify` 는 `budget:0`(명시적 OFF), 나머지는 필드 없음. contract fingerprint 신설. 전체 1589 passed | `83942f7` |
+| 2026-09-19 | P2 | capture artifact 91개·840호출·8일 21시간 확인. 정확한 run commit replay에서 curation PROVEN, dedup/dedup_final NOT_PROVEN. live Gemini 0회 | — |
+| 2026-09-19 | P4 | curation 생성 응답(`items`)과 `llm_eval` 판정 응답(`verdict`) 계약 충돌을 API 호출 전에 확인. TASKS 연결·canary 금지, §6-5/7 HALT | — |
+| 2026-09-19 | P4 | actual `curate_batch` + deterministic hard gate + 수동 blind ChatGPT judge로 계약 분리. 20 Gold × 3 repeat 질문지·strict importer·15건 canary preflight 구현. live Gemini/OpenAI API/신규 Human Review 모두 0. calibration JSON 3개 대기 | `159dcc7` |
+| 2026-09-19 | P4 | 대상 회귀 57 passed. 전체 suite 2670 passed/10 skipped/1 failed — 실패는 기존 live web data 주별 합계 비율 3.77 > 2인 데이터 gate 1건으로 P4 무관, 수정하지 않음 | `159dcc7` |
+| 2026-09-19 | P4 | 수동 judge 60/60 strict import. stability/TIE/duplicate 1.0, position bias 0이나 PASS-vs-intervention 0.633·false/unsafe PASS 16으로 NOT_PROVEN. source evidence 부족 확인, canary 차단 회귀 포함 59 passed | `2748072` |
+| 2026-09-19 | P4 | false PASS 16행(6 case) 전수 감사. ① 1 case/3행, ② 0, ③ 5 case/13행. 저장소→archive→cache→log에 당시 원문 없음, 5개 canonical Gold 근거 없음으로 동일 조건 유효 재실행 불가. calibration/canary/API 호출 0 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | source-complete evidence protocol·content-addressed dedup·fail-closed gate 구현. 기존 20 Gold historical/unscorable 격리, active eligible 0. capture 2,366표본 용량 실측: 20건 0.262 MiB, 30건 0.393 MiB, dedup 83.0%. Human/Gemini/OpenAI 호출 0 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | source-complete 관련 76 passed/100 subtests. 전체 2693 passed/10 skipped/1 failed/487 subtests — 실패는 기존 live web data 주별 합계 비율 3.77 > 2 gate로 P4 무관, 수정하지 않음 | 이번 문서 커밋 |
