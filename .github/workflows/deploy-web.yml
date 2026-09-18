@@ -10,8 +10,9 @@ env:
 # (Pages 무료 500회/월). 그래서 화면 코드를 main 에 병합해도 최대 2시간 동안
 # 라이브가 옛 화면이고, 그 사이 "왜 반영이 안 되지"를 매번 다시 확인하게 된다.
 #
-# 이 워크플로는 **화면 파일이 바뀔 때만** 돈다. 수집·큐레이션이 없어서 3~4분이면
-# 끝나고, 배포 횟수도 화면을 고친 날에만 늘어난다
+# 이 워크플로는 변경 파일을 SKIP/FAST/FULL로 분류한다. 화면·Function만 바뀌면
+# 검증된 production 데이터 snapshot을 재사용해 수분 내 배포하고, 데이터 계약이나
+# builder가 바뀐 경우에만 전체 데이터를 다시 계산한다. 배포 횟수도 화면을 고친 날에만 늘어난다
 # (실측: 화면 커밋은 많아야 하루 몇 건 → 월 20~30회 추가).
 #
 # 'LLM 호출이 전혀 없다'고 적혀 있었는데 사실이 아니다 — build_data 의 이슈 병합
@@ -30,6 +31,11 @@ on:
         description: "배포할 commit SHA (자동 생성 데이터 commit 포함)"
         required: false
         type: string
+      mode_hint:
+        description: "auto|fast|full (workflow_call은 기본 full)"
+        required: false
+        type: string
+        default: full
   push:
     branches: [main]
     paths:
@@ -48,20 +54,52 @@ on:
       # 화면은 저장했다고 말하는데 엣지가 "알 수 없는 판정 종류입니다"로 되돌린다
       # (2026-08-16 issue_group_split 을 더하며 발견).
       - "functions/**"
+      - "tools/render_static_pages.py"
+      - "tools/web_deploy_mode.py"
+      - "tools/web_snapshot.py"
       - ".github/workflows/deploy-web.yml"
-  workflow_dispatch:      # 데이터는 그대로 두고 화면만 다시 올리고 싶을 때
+  workflow_dispatch:
+    inputs:
+      mode_hint:
+        description: "배포 모드 (auto는 변경 목록이 없어 안전하게 full)"
+        required: false
+        type: choice
+        default: full
+        options: [full, fast, auto]
 
 permissions:
   contents: read          # 상태를 커밋하지 않는다 — 배포만 한다
+  actions: write          # 검증된 production snapshot 저장
 
 concurrency:
   # crawl 과 같은 그룹에 두면 매시 크롤이 이 배포를 취소한다. 별도 그룹이되
-  # 이 워크플로끼리는 최신 것만 남긴다(연속 커밋 시 중간 배포는 의미 없음).
+  # 같은 워크플로끼리는 직렬화한다. 진행 중인 전체 빌드는 취소하지 않는다.
   group: deploy-web
-  cancel-in-progress: true
+  # 거의 끝난 20분 빌드를 새 UI push가 취소하고 처음부터 다시 계산한 실사고
+  # (2026-09-18)를 막는다. 최신 세대 가드는 publish 직전에 별도로 적용한다.
+  cancel-in-progress: false
 
 jobs:
+  classify:
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 2
+      - name: Classify web deployment
+        id: mode
+        run: |
+          python tools/web_deploy_mode.py \
+            --base "${{ github.event.before }}" \
+            --head "${{ inputs.ref || github.sha }}" \
+            --mode-hint "${{ inputs.mode_hint || 'auto' }}"
+
   deploy:
+    needs: classify
+    if: needs.classify.outputs.mode != 'skip'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -74,6 +112,39 @@ jobs:
           cache: pip
 
       - run: pip install -r requirements.txt
+
+      - name: Restore latest production web snapshot
+        if: needs.classify.outputs.mode == 'fast'
+        id: production-snapshot-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: web/_production_snapshot
+          key: ${{ runner.os }}-nuclens-web-production-never-matches
+          restore-keys: |
+            ${{ runner.os }}-nuclens-web-production-
+
+      - name: Inspect production snapshot
+        if: needs.classify.outputs.mode == 'fast' && steps.production-snapshot-cache.outputs.cache-hit != ''
+        id: production-snapshot
+        run: python tools/web_snapshot.py inspect
+
+      - name: Resolve effective deploy mode
+        id: effective-mode
+        env:
+          REQUESTED_MODE: ${{ needs.classify.outputs.mode }}
+          SNAPSHOT_COMPATIBLE: ${{ steps.production-snapshot.outputs.compatible }}
+        run: |
+          mode="$REQUESTED_MODE"
+          if [ "$mode" = "fast" ] && [ "$SNAPSHOT_COMPATIBLE" != "true" ]; then
+            echo "::warning::검증된 호환 snapshot 없음 — 이번 한 번은 FULL로 self-healing"
+            mode=full
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Effective deploy mode: ${mode^^}"
+
+      - name: Restore production data into current shell
+        if: steps.effective-mode.outputs.mode == 'fast'
+        run: python tools/web_snapshot.py restore
 
       # ── Gemini 키 모드 (이 잡의 유일한 확인 지점) ───────────────────────
       #
@@ -95,6 +166,7 @@ jobs:
       #
       # 키 값은 어디에도 안 찍는다. 비교만 하고 라벨(free/paid)만 남긴다.
       - name: Verify Gemini key selection
+        if: steps.effective-mode.outputs.mode == 'full'
         env:
           PAID_MODE: ${{ vars.GEMINI_PAID_MODE }}
           SELECTED: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
@@ -120,6 +192,7 @@ jobs:
       # 이슈 병합이 로컬 폴백으로 떨어져 crawl 이 만든 것과 클러스터가 달라진다.
       # 읽기만 하고 저장하지 않는다 — 캐시의 주인은 crawl.yml 이다.
       - name: Restore embeddings cache
+        if: steps.effective-mode.outputs.mode == 'full'
         uses: actions/cache/restore@v4
         with:
           path: embeddings.json
@@ -130,6 +203,7 @@ jobs:
       # 오디오 브리핑 mp3 도 캐시에만 산다 — 없이 배포하면 라이브에서 사라진다.
       # 역시 읽기만 한다 (주인은 daily-brief.yml).
       - name: Restore audio cache
+        if: steps.effective-mode.outputs.mode == 'full'
         uses: actions/cache/restore@v4
         with:
           path: web/public/data/audio
@@ -141,6 +215,7 @@ jobs:
       # 상태 파일을 커밋하지 않는다) — 콘솔 화면이 자기 편집을 그대로 되비추게 하는
       # 것이 목적이고, 저장소 기록은 crawl·daily-brief 가 남긴다.
       - name: Sync admin console judgments
+        if: steps.effective-mode.outputs.mode == 'full'
         continue-on-error: true
         run: python tools/sync_admin_overrides.py
         env:
@@ -148,6 +223,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Build site data
+        if: steps.effective-mode.outputs.mode == 'full'
         env:
           # crawl·daily-brief 와 같은 이유로 필요하다 — build_data 의 이슈 병합
           # 회색지대 판정이 LLM 을 부른다. 키가 없으면 판정이 '병합 안 함'으로
@@ -164,6 +240,9 @@ jobs:
           GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
         run: python web/build_data.py
+
+      - name: Render static entry pages with current shell
+        run: python tools/render_static_pages.py
 
       # app.js 파스 에러는 콘솔에 안 잡히고 화면만 "불러오고 있습니다"에서 얼어
       # 데이터 문제로 오진하게 만든다(2026-08-01 실사고). 배포 전에 막는다.
@@ -207,6 +286,11 @@ jobs:
             echo "::error::CLOUDFLARE_API_TOKEN 미설정 — 배포할 수 없다"
             exit 1
           fi
+          if [ "${{ steps.effective-mode.outputs.mode }}" = "fast" ]; then
+            python tools/web_snapshot.py guard-live --site-url "$SITE_URL" --policy equal
+          else
+            python tools/web_snapshot.py guard-live --site-url "$SITE_URL" --policy not-older
+          fi
           npx --yes wrangler@4 pages deploy web/public \
             --project-name="$CLOUDFLARE_PAGES_PROJECT" --branch=main --commit-dirty=true
 
@@ -227,6 +311,29 @@ jobs:
       # 폴더가 업로드에서 빠져도 배포는 조용히 성공하고 /admin 은 그냥 열린다.
       - name: Verify admin console is locked
         run: bash web/tools/verify_admin_gate.sh "$SITE_URL"
+
+      - name: Create verified production snapshot
+        if: steps.effective-mode.outputs.mode == 'full'
+        id: web-snapshot
+        run: |
+          python tools/web_snapshot.py create \
+            --site-url "$SITE_URL" \
+            --source-commit "$(git rev-parse HEAD)"
+
+      - name: Save verified production snapshot
+        if: steps.effective-mode.outputs.mode == 'full'
+        id: production-snapshot-save
+        uses: actions/cache/save@v4
+        with:
+          path: web/_production_snapshot
+          key: ${{ runner.os }}-nuclens-web-production-${{ steps.web-snapshot.outputs.generation_id }}
+
+      - name: Prune old production snapshots
+        if: steps.production-snapshot-save.outcome == 'success'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python tools/prune_actions_caches.py --prefix "${RUNNER_OS}-nuclens-web-production-" --keep 2
 
       # 배포가 깨졌을 때만 전수 audit 을 건져 둔다. 러너가 사라지면 그 회차의
       # 진단 재료도 같이 사라지는데, 하필 그때가 재료가 가장 필요한 때다

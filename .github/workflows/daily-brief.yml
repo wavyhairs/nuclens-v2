@@ -61,6 +61,7 @@ on:
 
 permissions:
   contents: write   # outbox/큐/delivery_log 커밋
+  actions: write    # 검증된 production snapshot 저장
 
 concurrency:
   # crawl과 sent.json을 동시에 고치면 관리자 알림의 발송 완료 표식이 유실될 수 있다.
@@ -692,17 +693,43 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN 미설정 — 웹 배포 스킵"; exit 0; fi
+          python tools/web_snapshot.py guard-live --site-url "$SITE_URL" --policy not-older
           npx --yes wrangler@4 pages deploy web/public --project-name="$CLOUDFLARE_PAGES_PROJECT" --branch=main --commit-dirty=true
           # 배포 후 라이브 스모크 (crawl.yml과 동일 기준)
           sleep 15
           base="$SITE_URL"; cb=$(date +%s)
-          count=$(curl -sf --max-time 30 "$base/data/news.json?cb=$cb" | python -c "import json,sys; print(len(json.load(sys.stdin)))") \
-            || { echo "::error::스모크 실패 — news.json이 JSON이 아니거나 접근 불가"; exit 1; }
+          news_result=$(python tools/check_live_news.py "$base") \
+            || { echo "::error::스모크 실패 — news manifest/shard 접근 불가"; exit 1; }
+          count="${news_result##*=}"
           [ "$count" -gt 0 ] || { echo "::error::스모크 실패 — 기사 0건"; exit 1; }
           echo "스모크 OK — 기사 ${count}건"
           # 운영 콘솔이 인증 없이 열려 있지 않은지 확인한다. Function 폴더가 업로드
           # 에서 빠져도 배포는 조용히 성공하므로, 살아 있는 사이트에 직접 물어야 안다.
           bash web/tools/verify_admin_gate.sh "$base"
+
+      - name: Create verified production snapshot
+        id: web-snapshot
+        if: steps.web-deploy.outcome == 'success'
+        continue-on-error: true
+        run: |
+          python tools/web_snapshot.py create \
+            --site-url "$SITE_URL" \
+            --source-commit "$(git rev-parse HEAD)"
+
+      - name: Save verified production snapshot
+        if: steps.web-snapshot.outcome == 'success'
+        id: production-snapshot-save
+        uses: actions/cache/save@v4
+        with:
+          path: web/_production_snapshot
+          key: ${{ runner.os }}-nuclens-web-production-${{ steps.web-snapshot.outputs.generation_id }}
+
+      - name: Prune old production snapshots
+        if: steps.production-snapshot-save.outcome == 'success'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python tools/prune_actions_caches.py --prefix "${RUNNER_OS}-nuclens-web-production-" --keep 2
 
       # 관리자 secret은 이 짧은 전용 프로세스에만 노출한다. Deploy/audio/wrangler는
       # TELEGRAM_ADMIN_CHAT_ID를 상속하지 않는다. 미발송 경고는 익일에도 재시도된다.

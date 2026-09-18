@@ -1,5 +1,7 @@
 "use strict";
 
+const DATA_CONTRACT_VERSION = 1;
+
 const TOPIC_LABELS = {
   smr: "SMR", newbuild: "신규 건설", restart_lto: "계속운전·재가동",
   fuel_cycle: "핵연료주기", waste: "사용후핵연료·방폐", finance: "원전금융·투자",
@@ -164,6 +166,19 @@ async function loadRootJSON(name, optional = false) {
   try { return await response.json(); } catch (error) {
     if (optional) return null;
     throw error;
+  }
+}
+
+async function loadNewsPayload() {
+  try {
+    const manifest = await loadJSON("news-manifest.json");
+    const parts = await Promise.all(
+      (manifest?.shards || []).map(row => loadJSON(row.file))
+    );
+    return parts.flat();
+  } catch (error) {
+    // One rolling-deploy generation may still expose the legacy payload.
+    return loadJSON("news.json");
   }
 }
 
@@ -5688,7 +5703,7 @@ async function init() {
   try {
     await initializeDataBase();
     [state.news, state.briefings, state.issues, state.trend, state.meta, state.insights, state.pubs, state.audio, state.entities] = await Promise.all([
-      loadJSON("news.json"), loadJSON("briefings.json"), loadJSON("issues.json"),
+      loadNewsPayload(), loadJSON("briefings.json"), loadJSON("issues.json"),
       loadJSON("trend.json"), loadJSON("meta.json"), loadJSON("insights.json"),
       // 발간물은 부가 데이터 — 없어도 사이트 전체가 죽으면 안 된다 (8/1 빈 화면 사고 계약)
       loadJSON("publications.json").catch(() => null),
@@ -5698,6 +5713,11 @@ async function init() {
       // 엔티티 사전도 부가 데이터 — 없으면 허브의 대상 그룹만 비고 나머지는 산다.
       loadJSON("entities.json").catch(() => null),
     ]);
+    if (Number(state.meta?.data_contract_version) !== DATA_CONTRACT_VERSION) {
+      throw new Error(
+        `data contract mismatch: UI=${DATA_CONTRACT_VERSION}, data=${state.meta?.data_contract_version ?? "missing"}`
+      );
+    }
   } catch (error) {
     initLoading = false;
     initRetryCount += 1;

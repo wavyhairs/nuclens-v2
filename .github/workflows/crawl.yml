@@ -34,6 +34,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   # sent.json(수집 이력+운영 알림 상태)을 함께 쓰는 daily-brief와 직렬화한다.
@@ -501,11 +502,38 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
+          python tools/web_snapshot.py guard-live --site-url "$SITE_URL" --policy not-older
           npx --yes wrangler@4 pages deploy web/public --project-name="$CLOUDFLARE_PAGES_PROJECT" --branch=main --commit-dirty=true
           # 운영 콘솔이 인증 없이 열려 있지 않은지 확인한다. Function 폴더가 업로드
           # 에서 빠져도 배포는 조용히 성공하므로, 살아 있는 사이트에 직접 물어야 안다.
           sleep 15
           bash web/tools/verify_admin_gate.sh "$SITE_URL"
+
+      # 마지막 성공 빌드가 아니라 **실제로 production에 올라가 확인된 세대**만
+      # UI-only 배포가 재사용한다. 라이브 generation이 다르면 create가 실패한다.
+      - name: Create verified production snapshot
+        id: web-snapshot
+        if: steps.web-deploy.outcome == 'success'
+        continue-on-error: true
+        run: |
+          python tools/web_snapshot.py create \
+            --site-url "$SITE_URL" \
+            --source-commit "$(git rev-parse HEAD)"
+
+      - name: Save verified production snapshot
+        if: steps.web-snapshot.outcome == 'success'
+        id: production-snapshot-save
+        uses: actions/cache/save@v4
+        with:
+          path: web/_production_snapshot
+          key: ${{ runner.os }}-nuclens-web-production-${{ steps.web-snapshot.outputs.generation_id }}
+
+      - name: Prune old production snapshots
+        if: steps.production-snapshot-save.outcome == 'success'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python tools/prune_actions_caches.py --prefix "${RUNNER_OS}-nuclens-web-production-" --keep 2
 
       # 이슈 병합 회색지대 LLM 판정 캐시. 커밋하지 않으면 빌드마다(하루 8회+)
       # 같은 쌍을 다시 물어보게 되고, 판정이 흔들리면 이슈 묶음도 같이 흔들린다.
@@ -555,6 +583,9 @@ jobs:
           sleep 15
           code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$SITE_URL/data/__missing__.json?cb=$(date +%s)")
           [ "$code" = "404" ] || { echo "::error::스모크 실패 — SPA 폴백 재발 의심 (미존재 파일이 $code 응답)"; exit 1; }
+          news_result=$(python tools/check_live_news.py "$SITE_URL") \
+            || { echo "::error::스모크 실패 — news manifest/shard 접근 불가"; exit 1; }
+          export NEWS_COUNT="${news_result##*=}"
           python - <<'EOF'
           import json, sys, time, urllib.error, urllib.request
           base = __import__("os").environ.get("SITE_URL", "https://nuclens-v2.pages.dev").rstrip("/") + "/data/"
@@ -563,7 +594,7 @@ jobs:
           # 같은 URL 이 curl 로는 200 인데 이 블록만 6종 전부 HTTPError 로 죽어
           # 스모크가 상시 실패하고 있었다(2026-08-02 규명). UA 를 명시한다.
           UA = {"User-Agent": "nuclens-smoke/1.0"}
-          names = ["news.json", "briefings.json", "issues.json", "trend.json", "meta.json", "insights.json", "publications.json", "threads.json"]
+          names = ["briefings.json", "issues.json", "trend.json", "meta.json", "insights.json", "publications.json", "threads.json"]
           # 새로 추가된 파일은 첫 배포 전까지 라이브에 없다. 간격 미달 회차는 배포를
           # 건너뛰고 '직전 배포본'을 검사하므로, 필수로 두면 병합 직후 한 번은
           # 무조건 빨갛게 뜬다. 빌드가 항상 생성한다는 보장은 웹 단위 테스트가
@@ -587,8 +618,9 @@ jobs:
                   fails.append(f"{n}: HTTP {e.code}")
               except Exception as e:
                   fails.append(f"{n}: {type(e).__name__}")
-          if not data.get("news.json"):
-              fails.append("news.json 0건")
+          news_count = int(__import__("os").environ.get("NEWS_COUNT", "0"))
+          if news_count <= 0:
+              fails.append("news shard 0건")
           m = data.get("meta.json") or {}
           b = data.get("briefings.json") or []
           if b and m and b[0].get("date") != m.get("latest_briefing_date"):
@@ -603,7 +635,7 @@ jobs:
               print("::error::스모크 실패 — " + " | ".join(fails)); sys.exit(1)
           threads_note = ("장기 스토리 숨김" if not (t or {}).get("visible")
                           else f"장기 스토리 {((t or {}).get('stats') or {}).get('threads', 0)}개")
-          print(f"스모크 OK — 기사 {len(data['news.json'])}건, 최신 브리핑 {m.get('latest_briefing_date')}, "
+          print(f"스모크 OK — 기사 {news_count}건, 최신 브리핑 {m.get('latest_briefing_date')}, "
                 f"JSON {len(data)}종 정상, {threads_note}")
           EOF
 

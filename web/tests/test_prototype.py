@@ -1750,7 +1750,7 @@ class DeployablePayloadTests(unittest.TestCase):
         full = {**audit, "review_candidates": list(audit.get("review_candidates") or [])}
         capped = build_data.shipped_issue_audit(full)
         now = datetime.now(timezone(timedelta(hours=9)))
-        news = json.loads((DATA_DIR / "news.json").read_text(encoding="utf-8"))
+        news = build_data.load_news_payload(DATA_DIR)
         issues = json.loads((DATA_DIR / "issues.json").read_text(encoding="utf-8"))
         self.assertEqual(
             build_data.build_admin_merges(news, issues, capped, now)["issue"]["borderline"],
@@ -1977,7 +1977,7 @@ class GeneratedDataTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         data_dir = DATA_DIR
-        cls.news = json.loads((data_dir / "news.json").read_text(encoding="utf-8"))
+        cls.news = build_data.load_news_payload(data_dir)
         cls.briefings = json.loads((data_dir / "briefings.json").read_text(encoding="utf-8"))
         cls.meta = json.loads((data_dir / "meta.json").read_text(encoding="utf-8"))
         cls.issue_audit = json.loads((data_dir / "issue_audit.json").read_text(encoding="utf-8"))
@@ -6121,10 +6121,10 @@ class CountryRepairTests(unittest.TestCase):
 
     @staticmethod
     def _news():
-        path = ROOT / "public" / "data" / "news.json"
-        if not path.exists():
+        data_dir = ROOT / "public" / "data"
+        if not (data_dir / "news-manifest.json").exists() and not (data_dir / "news.json").exists():
             return []
-        return json.loads(path.read_text(encoding="utf-8"))
+        return build_data.load_news_payload(data_dir)
 
 
 class WeeklyThemeLabelTests(unittest.TestCase):
@@ -6429,7 +6429,7 @@ class AdminConsoleTests(unittest.TestCase):
         cls.script = (cls.ADMIN / "admin.js").read_text(encoding="utf-8")
         cls.style = (cls.ADMIN / "admin.css").read_text(encoding="utf-8")
         now = datetime.now(timezone(timedelta(hours=9)))
-        news = json.loads((DATA_DIR / "news.json").read_text(encoding="utf-8"))
+        news = build_data.load_news_payload(DATA_DIR)
         issues = json.loads((DATA_DIR / "issues.json").read_text(encoding="utf-8"))
         audit = json.loads((DATA_DIR / "issue_audit.json").read_text(encoding="utf-8"))
         cls.merges = build_data.build_admin_merges(news, issues, audit, now)

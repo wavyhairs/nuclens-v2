@@ -18,7 +18,7 @@
 
 ## 데이터 계약
 
-- 빌드는 `news.json`·`briefings.json`·`issues.json`·`trend.json`·`meta.json`·
+- 빌드는 `news-manifest.json` + `news/*.json`·`briefings.json`·`issues.json`·`trend.json`·`meta.json`·
   `insights.json`·`publications.json`·`entities.json`·`issue_audit.json`·
   `manifest.json`·`status.json` 을 **항상** 쓴다. 수집 결과가 0건이어도 빈 구조로 쓴다 — 앱이 없는 JSON 을
   만나면 화면 전체가 죽는다(2026-08-01 실사고).
