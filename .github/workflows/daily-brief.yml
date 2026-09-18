@@ -623,66 +623,6 @@ jobs:
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
         run: python channel_queue.py --publish
 
-      # ── 카드뉴스 ───────────────────────────────────────────────────────
-      # 사이트가 정한 순위(briefings.json)를 **그대로** 받아 PNG 를 굽는다. 카드가
-      # 따로 고르면 화면과 카드가 다른 얘기를 하게 된다. 바로 위 Build web data 가
-      # 같은 잡에서 briefings.json 을 만들어 두므로 라이브에서 받아올 필요가 없다.
-      #
-      # 전부 비치명이다 — 텍스트 브리핑은 이미 나갔고, 카드가 죽어도 그건 막지
-      # 않는다. make_cards.py 는 실패를 exit 1 로 정직하게 알리고, 여기서
-      # continue-on-error 로 받는다(종료 코드를 0 으로 만들지 말 것).
-      - name: Install card renderer (node)
-        id: cards-node
-        if: always() && steps.web-build.outcome == 'success'
-        continue-on-error: true
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: cards/package-lock.json
-
-      - name: Install card renderer (npm ci)
-        id: cards-npm
-        if: always() && steps.cards-node.outcome == 'success'
-        continue-on-error: true
-        working-directory: cards
-        run: npm ci
-
-      # 모델은 v2 의 기본값(gemini_client.MODEL)을 따른다. v1 에서 검증됐던
-      # gemini-2.5-flash 로 핀했다가 2026-09-17 첫 실행이 HTTP 404 로 죽었다 —
-      # 'no longer available to new users'. 특정 모델로 굽고 싶으면
-      # vars.CARDS_GEMINI_MODEL 에 넣는다(빈 값이면 기본값으로 떨어진다).
-      - name: Make cards
-        id: make-cards
-        if: always() && steps.cards-npm.outcome == 'success'
-        continue-on-error: true
-        env:
-          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
-          GEMINI_MODEL: ${{ vars.CARDS_GEMINI_MODEL || vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
-        run: python make_cards.py
-
-      # 텔레그램 앨범 발송은 **기본 꺼짐**. 채널은 이 repo 소유자의 자산이라
-      # 스위치를 켜는 것도 소유자 몫이다 — repo Variables 에 CARDS_SEND=true 를
-      # 넣으면 그날부터 나간다. 사이트 게시(아래)는 스위치와 무관하게 돈다.
-      - name: Send card album (vars.CARDS_SEND=true 일 때만)
-        id: send-cards
-        if: always() && steps.make-cards.outcome == 'success' && vars.CARDS_SEND == 'true'
-        continue-on-error: true
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python send_album.py
-
-      # PNG 를 web/public/cards 로 옮긴다. 아래 배포가 web/public 을 통째로 올리므로
-      # 이 스텝이 배포보다 앞에 서야 그날 카드가 사이트에 실린다. 커밋은 맨 아래
-      # 캐시 커밋 스텝이 함께 싣는다 — crawl 배포가 매시 web/public 을 다시 올려서
-      # 커밋에 없는 파일은 다음 배포에서 사라진다.
-      - name: Publish cards to site
-        id: publish-cards
-        if: always() && steps.make-cards.outcome == 'success'
-        continue-on-error: true
-        run: python publish_cards.py
-
       # 아침 브리핑·흐름 해석을 nuclens.pages.dev에 즉시 반영 (하루 1회 확정 배포)
       - name: Deploy web to Cloudflare Pages
         id: web-deploy
@@ -706,6 +646,37 @@ jobs:
           # 운영 콘솔이 인증 없이 열려 있지 않은지 확인한다. Function 폴더가 업로드
           # 에서 빠져도 배포는 조용히 성공하므로, 살아 있는 사이트에 직접 물어야 안다.
           bash web/tools/verify_admin_gate.sh "$base"
+
+      # ── 카드뉴스 ───────────────────────────────────────────────────────
+      # 카드는 이제 이 잡이 만들지 않는다. cards.yml 이 굽고·검사하고·커밋하고·
+      # 사이트에 올린다. 여기서는 **깨우기만** 한다.
+      #
+      # 왜 뗐는가: 예전 카드 스텝 다섯 개는 전부 continue-on-error 였다. 카드가
+      # 죽어도 텍스트 브리핑은 나가야 하니 그 자체는 옳았는데, 대가로 실패가
+      # 어디에도 안 남았다 — make_cards.py 가 exit 1 로 알려도 이 워크플로는
+      # 초록불이라 카드가 빠진 날을 사람이 사이트를 열어 보고서야 알았다.
+      # 이제 카드 실패는 Cards 워크플로의 빨간불이고, 이 워크플로는 그대로
+      # 초록불이다. 둘 다 사실이다.
+      #
+      # 자리가 곧 계약이다. 카드는 **사이트의 순위(briefings.json)를 라이브에서
+      # 받아** 굽는다 — 화면과 카드가 다른 얘기를 하지 않으려면 그 파일이 이미
+      # 올라가 있어야 한다. 그래서 web-build 와 web-deploy 가 **둘 다 성공한
+      # 뒤**에만 깨운다.
+      #
+      # 깨우기 자체는 비치명이다 — API 가 한 번 흔들렸다고 아침 브리핑을 실패로
+      # 만들지 않는다. 그 경우 Actions 에서 손으로 Cards 를 돌리면 된다.
+      - name: Trigger cards workflow
+        if: steps.web-deploy.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # 발송 계약은 여기 남는다 — 텔레그램 앨범은 CARDS_SEND=true 인 날에만
+          # 나간다. cards.yml 은 넘겨받은 값을 그대로 따르므로, 손으로 돌리는
+          # 실행은 그쪽 체크박스가 따로 정한다.
+          SEND: ${{ vars.CARDS_SEND == 'true' && 'true' || 'false' }}
+        run: |
+          gh workflow run cards.yml -R "${{ github.repository }}" -f force=false -f send="$SEND"
+          echo "Cards 워크플로 호출 (send=$SEND) — 결과는 Actions 의 Cards 에서 본다"
 
       - name: Create verified production snapshot
         id: web-snapshot
@@ -849,9 +820,6 @@ jobs:
           for f in issue_llm_reviews.json keei_llm_matches.json issue_insights.json issue_ledger.json thread_ledger.json thread_llm_reviews.json delivery_log.jsonl sent.json channel_outbox.json; do
             if [ -f "$f" ]; then git add "$f"; fi
           done
-          # 카드뉴스 PNG 와 그 기록. 커밋에 없으면 다음 crawl 배포가 web/public 을
-          # 다시 올리면서 그날 카드가 사이트에서 사라진다.
-          if [ -d web/public/cards ]; then git add web/public/cards; fi
           if [ -f outbox.json ]; then git add outbox.json; fi
           git diff --cached --quiet && exit 0
           git config user.name "github-actions[bot]"
