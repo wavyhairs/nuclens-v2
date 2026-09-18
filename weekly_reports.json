@@ -1661,6 +1661,397 @@
         },
         "confirmed_at": "2026-09-11T21:48:02.294418+09:00"
       }
+    },
+    "2026-W38": {
+      "week_id": "2026-W38",
+      "week_start": "2026-09-12",
+      "week_end": "2026-09-18",
+      "generated_at": "2026-09-18T19:06:49.158002+09:00",
+      "timezone": "Asia/Seoul",
+      "schema_version": 1,
+      "source_issue_count": 1016,
+      "article_count": 1395,
+      "weekly_intro": "이번 주는 대미 투자 패키지 협상에서 원전 노형 배분과 지식재산권 이견으로 서명과 국회 보고가 연기되며 정책 불확실성이 증대되었다. 한편 국내에서는 한빛원전 1·2호기 가동 중단과 맞물려 서남권 반도체 클러스터 전력 공급 우려가 대두되었고, 정부는 송전망 건설 수용성 제고 방안을 발표하며 인프라 적기 구축에 주력하고 있다. 해외에서는 IAEA 총회를 계기로 글로벌 원전 용량 확대 전망이 강화되는 동시에 주요국의 SMR 인허가 및 규제 정비가 가속화되는 흐름을 보였다.",
+      "policy_shifts": [
+        {
+          "what": "정부가 송전망 건설 시 신설 철탑을 최대 40% 감축하고 주민 소득보장제를 도입하는 수용성 제고 방안을 발표했다.",
+          "so_what": "메가프로젝트 전력 공급을 위한 송전망 확충 과정에서 발생하는 주민 갈등을 완화하고 적기 구축을 도모하기 위한 조치다.",
+          "evidence_hashes": [
+            "fad35251",
+            "980c9a9e",
+            "8e0e0826"
+          ]
+        },
+        {
+          "what": "한미 간 3500억 달러 규모의 대미 투자 협상에서 원전 노형 배분과 웨스팅하우스 지분 인수 조건 이견으로 MOU 체결 및 국회 보고가 연기되었다.",
+          "so_what": "원전 수출 및 기자재 공급 명문화 과정에서 양국 간 세부 조율이 난항을 겪으며 리스크 요인으로 작용하고 있다.",
+          "evidence_hashes": [
+            "ea8adab7",
+            "090c6bca",
+            "2a34ab5c"
+          ]
+        }
+      ],
+      "theme_moves": [
+        {
+          "theme": "전력망",
+          "direction": "강화",
+          "why": "정부의 송전망 수용성 제고 방안 발표와 계절별 송전용량 시범사업 시행 등 전력망 효율화 및 확충 조치가 이어졌다.",
+          "evidence_hashes": [
+            "fad35251",
+            "980c9a9e",
+            "527b2e1d"
+          ]
+        },
+        {
+          "theme": "수출",
+          "direction": "약화",
+          "why": "대미 투자 협상에서 원전 노형과 지분 인수 조건에 대한 이견으로 계약 체결이 연기되며 수출 가시화에 제동이 걸렸다.",
+          "evidence_hashes": [
+            "8b74f32f",
+            "ea8adab7",
+            "2a34ab5c"
+          ]
+        },
+        {
+          "theme": "SMR",
+          "direction": "강화",
+          "why": "SMR 특별법 시행과 함께 미국 내 부지 사전 공사 승인 및 글로벌 SMR 상용화·설계 평가가 본격화되었다.",
+          "evidence_hashes": [
+            "eff231f6",
+            "31319919",
+            "3d67923b"
+          ]
+        },
+        {
+          "theme": "공급망",
+          "direction": "유지",
+          "why": "러시아산 우라늄 배제 우려와 대미 투자 협상 진통이 지속되는 한편, 한-프랑스 및 중앙아시아와의 공급망 다변화 협력이 병행되고 있다.",
+          "evidence_hashes": [
+            "ce9acb18",
+            "6ce15bf6",
+            "ea8adab7"
+          ]
+        },
+        {
+          "theme": "규제",
+          "direction": "강화",
+          "why": "미국 NRC의 규제 현대화 제안과 원안위의 관련 법령 의결 등 국내외 원자력 안전 및 인허가 체계 개편이 활발히 진행되었다.",
+          "evidence_hashes": [
+            "51c2f914",
+            "63f4116f",
+            "31319919"
+          ]
+        },
+        {
+          "theme": "핵연료",
+          "direction": "유지",
+          "why": "러시아의 핵심 광물 수출 제한 검토로 조달 리스크가 부각된 반면, 국내 핵연료 물질 사용 허가 등 제도적 정비가 병행되었다.",
+          "evidence_hashes": [
+            "6ce15bf6",
+            "51c2f914",
+            "090c6bca"
+          ]
+        },
+        {
+          "theme": "전력수요",
+          "direction": "강화",
+          "why": "AI 데이터센터와 반도체 메가프로젝트 확산으로 12차 전기본 전력수요 전망치가 상향 조정되고 관련 입법 논의가 가속화되고 있다.",
+          "evidence_hashes": [
+            "9945bfdd",
+            "5aac3f66",
+            "28a42f8e"
+          ]
+        },
+        {
+          "theme": "신규건설",
+          "direction": "유지",
+          "why": "미국 내 원전 8기 건설 협상이 지연되고 있으나, 국내외 신규 원전 및 SMR 건설을 위한 제도적 기반과 부지 선정 절차는 계속 추진되고 있다.",
+          "evidence_hashes": [
+            "fff85560",
+            "905260c3",
+            "ea8adab7"
+          ]
+        },
+        {
+          "theme": "방폐",
+          "direction": "유지",
+          "why": "대전 및 원전 소재 지자체들을 중심으로 사용후핵연료 건식저장시설 설치에 따른 지원 대책 마련 요구가 지속되고 있다.",
+          "evidence_hashes": [
+            "351dddfc",
+            "edd38745",
+            "8d9f3600"
+          ]
+        },
+        {
+          "theme": "계속운전",
+          "direction": "약화",
+          "why": "한빛원전 1·2호기 계속운전을 위한 사고관리계획서 심의가 보류되고 재검토 절차에 들어가며 일정 지연 우려가 현실화되었다.",
+          "evidence_hashes": [
+            "db7075a7",
+            "f17c3e63",
+            "56d12fdf"
+          ]
+        }
+      ],
+      "khnp_direct": "한수원은 한빛원전 1·2호기의 가동 중단 및 사고관리계획서 재검토 결정에 대응해야 하며, 대미 투자 원전 프로젝트 내 APR1400 도입 협상과 웨스팅하우스 지분 인수 관련 조건 조율에 역량을 집중하고 있다.",
+      "watchpoints": [
+        "한미 대미 투자 MOU 재협상 및 웨스팅하우스 지분 인수 협상 진척 상황을 확인해야 한다.",
+        "한빛원전 1·2호기 사고관리계획서 심의 재개 및 서남권 전력수급 영향을 점검해야 한다.",
+        "제12차 전력수급기본계획상 AI 및 반도체 전력 수요 반영 추이를 모니터링해야 한다.",
+        "SMR 특별법 시행에 따른 후속 하위법령 정비 및 R&D 추진 현장을 확인해야 한다."
+      ],
+      "report_candidates": [
+        {
+          "topic": "대미 원전 투자 협상 지연에 따른 수출 전략 재점검",
+          "basis": "한미 대미투자 MOU 서명이 원전 노형 배분 및 지식재산권 이견으로 연기된 상황을 분석할 필요가 있다."
+        },
+        {
+          "topic": "한빛원전 가동 중단에 따른 서남권 전력수급 리스크 분석",
+          "basis": "한빛원전 1·2호기 가동 중단이 서남권 반도체 클러스터 전력 공급에 미치는 영향을 진단해야 한다."
+        }
+      ],
+      "key_events": [
+        {
+          "hash": "ea8adab7",
+          "headline": "한미 원전 노형 배분 등 이견으로 대미 투자 MOU 서명 연기",
+          "implication": "원전 기자재 공급 명문화와 지식재산권 문제로 대미 투자 협상이 진통을 겪고 있다."
+        },
+        {
+          "hash": "db7075a7",
+          "headline": "한빛원전 1·2호기 가동 중단…서남권 반도체 클러스터 전력공급 불확실성 증대",
+          "implication": "설계수명 만료에 따른 가동 중단이 지역 전력 공급 계획에 차질을 빚고 있다."
+        },
+        {
+          "hash": "fad35251",
+          "headline": "정부, 송전망 철탑 40% 감축 및 전력 적기 공급 총력",
+          "implication": "메가프로젝트 전력 공급을 위해 주민 수용성 제고와 송전망 인프라 확충을 병행한다."
+        },
+        {
+          "hash": "6ce15bf6",
+          "headline": "러시아, 우라늄 등 핵심 광물 수출 제한 검토…국내 핵연료 공급망 리스크",
+          "implication": "농축 시설이 없는 국내 원전 산업의 핵연료 조달 다변화 시급성이 증대되었다."
+        },
+        {
+          "hash": "eff231f6",
+          "headline": "정부, SMR 특별법 및 시행령 시행…2035년 상용화 목표",
+          "implication": "SMR 특별법 시행으로 범정부 지원 체계가 본격 가동되며 상용화 기반이 마련되었다."
+        }
+      ],
+      "top_stories": [
+        {
+          "key": "ea8adab7",
+          "hash": "ea8adab7243470d9",
+          "title": "한미 원전 노형 배분 등 이견으로 대미 투자 MOU 서명 연기",
+          "summary": "정부가 2000억 달러 규모의 대미 투자 MOU 서명을 연기했으며, 이는 원전 노형 배분 및 웨스팅하우스 의결권 등 핵심 쟁점에 대한 입장 차이 때문으로 확인되었다.",
+          "link": "https://www.chosun.com/economy/economy_general/2026/09/17/WN627DZXL5EW7CESWBECPON3AU",
+          "articles": 5,
+          "outlets": 5,
+          "published_at": "2026-09-16T20:01:00+00:00",
+          "score": 13.4
+        },
+        {
+          "key": "5da600fe",
+          "hash": "5da600fef839df85",
+          "title": "한수원, 웨스팅하우스 지분 인수 및 미국 내 원전 8기 건설 협상 추진",
+          "summary": "정부가 미국 웨스팅하우스 지분 인수와 미국 내 원전 8기 건설을 포함한 협력 방안을 미국 측과 협상 중이며, 18일 최종 합의문에 관련 내용이 담길 예정이다.",
+          "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=486707",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-09-14T02:12:00+00:00",
+          "score": 12.6
+        },
+        {
+          "key": "bb9449ab",
+          "hash": "bb9449abc3de8062",
+          "title": "한미, 3500억 달러 규모 대미 투자 1차 프로젝트 합의문 발표 예정",
+          "summary": "한미 양국이 3500억 달러 규모의 대미 투자 1차 프로젝트 합의문을 18일경 발표할 예정이며, 외교·국방 고위급 회의를 통해 현안을 조율 중이다.",
+          "link": "https://www.mt.co.kr/politics/2026/09/13/2026091312424219813",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-09-13T05:26:00+00:00",
+          "score": 12.6
+        }
+      ],
+      "country_briefs": [
+        {
+          "key": "9360d66f",
+          "hash": "9360d66f16d4cff4",
+          "title": "한-미, 웨스팅하우스 지분 인수 협상…의결권 확보 두고 이견",
+          "summary": "정부가 웨스팅하우스 지분 15% 확보를 통한 이사회 의결권 확보를 추진 중이나, 미국 측이 5~10% 수준을 제시하며 협상 막판 진통을 겪고 있다.",
+          "link": "https://www.seoul.co.kr/news/economy/2026/09/16/20260916006006?wlog_tag3=naver",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-09-15T20:03:00+00:00",
+          "country": "KR",
+          "country_kr": "한국",
+          "score": 12.6
+        },
+        {
+          "key": "3d67923b",
+          "hash": "3d67923b7d733157",
+          "title": "美 NRC, 팰리세이즈 SMR 부지 기초 토목공사 예외 승인",
+          "summary": "미국 NRC가 팰리세이즈 SMR 2기 건설을 위해 정식 제한공사허가(LWA) 전 지반 토목 공사를 허용하는 규제 면제를 승인했다.",
+          "link": "https://www.g-enews.com/view.php?ud=202609171247331755fbbec65dfb_1",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-09-17T03:50:00+00:00",
+          "country": "US",
+          "country_kr": "미국",
+          "score": 11.5
+        },
+        {
+          "key": "5279bd49",
+          "hash": "5279bd491a828ad6",
+          "title": "일본, 대미 투자 패키지 3차 후보로 차세대 SMR 및 전력망 낙점",
+          "summary": "일본 정부는 대미 투자 패키지의 3차 핵심 분야로 SMR 및 전력망을 선정하고, 미국 내 AI 전력난 해소를 위한 원자력 협력을 공식화했다.",
+          "link": "https://www.g-enews.com/view.php?ud=2026091400383231160c8c1c064d_1",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-09-13T21:26:00+00:00",
+          "country": "JP",
+          "country_kr": "일본",
+          "score": 9.4
+        },
+        {
+          "key": "6598a050",
+          "hash": "6598a050aa80e87c",
+          "title": "유럽투자은행(EIB), 소형모듈원전(SMR)에 첫 투자 단행",
+          "summary": "유럽투자은행(EIB)이 소형모듈원전(SMR) 분야에 대한 첫 투자를 결정했다.",
+          "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxOLVpSS1FwN3RPRTJpLUVqcnZWcmYtZUVYaHdfNjhGZ2pOQU9KS2htTVhFSUt0dVdvaGFRTERyMVp6NjVDZ0ZxaV9MNU50eko3OTE2OXNHSnpWOTVtdlp2N2hqTkF3SV96OTFsZ3l0UlBxSkRSTEVDN2lEdF9nMGdLNFhZeGszZzdwZGFpemVRamlFbFFGNmljZXJ0UUZLQmpINGF1RWd3?oc=5",
+          "articles": 4,
+          "outlets": 4,
+          "published_at": "2026-09-15T05:33:00+00:00",
+          "country": "FI",
+          "country_kr": "핀란드",
+          "score": 8.7
+        },
+        {
+          "key": "34cb66d4",
+          "hash": "34cb66d426b037c9",
+          "title": "태국·영국, 미국산 SMR 도입 타당성 조사 및 설계 심사 착수",
+          "summary": "태국이 미국산 SMR 도입 타당성 조사를 시작하고, 영국은 엑스에너지의 Xe-100 설계평가(GDA)에 돌입했다.",
+          "link": "https://www.g-enews.com/view.php?ud=202609171254231591fbbec65dfb_1",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-09-17T03:58:00+00:00",
+          "country": "GB",
+          "country_kr": "영국",
+          "score": 8.6
+        },
+        {
+          "key": "8a5bd763",
+          "hash": "8a5bd763d3b79395",
+          "title": "러시아 로사톰, 카자흐스탄 발하슈 원전 EPC 본계약 체결",
+          "summary": "러시아 로사톰이 카자흐스탄과 2400MW 규모 발하슈 원전 건설을 위한 EPC 본계약을 체결했다.",
+          "link": "https://www.g-enews.com/view.php?ud=202609141329038409fbbec65dfb_1",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-09-14T04:38:00+00:00",
+          "country": "KZ",
+          "country_kr": "카자흐스탄",
+          "score": 7.9
+        }
+      ],
+      "publications": [
+        {
+          "org": "국제원자력기구(IAEA)",
+          "title": "금속 재활용 및 관련 공정 내 방사성 물질의 부주의한 유입 예방·탐지·대응 전략",
+          "url": "http://www.iaea.org/publications/16074/strategy-for-the-prevention-detection-and-response-to-the-inadvertent-presence-of-radioactive-material-in-metal-recycling-and-other-associated-processes",
+          "date": "2026-09-11",
+          "gist": "금속 재활용 산업 내 방사성 물질 유입 방지를 위한 국제 안전 지침 및 규제 대응 체계",
+          "relevance": "policy"
+        },
+        {
+          "org": "국제원자력기구(IAEA)",
+          "title": "금속 재활용 및 관련 공정 내 방사성 물질의 부주의한 유입 방지, 탐지 및 대응 전략",
+          "url": "http://www.iaea.org/publications/16074/strategy-for-the-prevention-detection-and-response-to-the-inadvertent-presence-of-radioactive-material-in-metal-recycling-and-other-associated-processes-0",
+          "date": "2026-09-11",
+          "gist": "금속 재활용 과정의 방사성 물질 유입 사고 예방을 위한 규제 및 관리 지침",
+          "relevance": "policy"
+        },
+        {
+          "org": "에너지경제연구원(KEEI)",
+          "title": "[격주간] 세계 원전시장 인사이트(2026.09.11.)",
+          "url": "https://www.keei.re.kr/board.es?act=view&bid=0002&list_no=128168&mid=a10102050000",
+          "date": "2026-09-11",
+          "gist": "",
+          "relevance": ""
+        },
+        {
+          "org": "국제원자력기구(IAEA)",
+          "title": "마이크로리액터: 기술 개발 현황 및 2026년 전망",
+          "url": "http://www.iaea.org/publications/16125/microreactors-advances-in-technology-development-2026-outlook",
+          "date": "2026-08-10",
+          "gist": "마이크로리액터 노형의 기술적 진보와 향후 개발 로드맵 및 시장 전망",
+          "relevance": "policy"
+        },
+        {
+          "org": "국제원자력기구(IAEA)",
+          "title": "우라늄 생산 주기 프로그램 국가 인프라 현황 평가",
+          "url": "http://www.iaea.org/publications/16072/evaluation-of-the-status-of-national-infrastructure-for-a-uranium-production-cycle-programme",
+          "date": "2026-07-17",
+          "gist": "우라늄 생산 및 핵연료 주기 도입을 위한 국가별 인프라 구축 수준 및 정책적 고려사항 평가",
+          "relevance": "market"
+        }
+      ],
+      "upcoming": [
+        {
+          "key": "4745eb4e",
+          "hash": "4745eb4ef2a86613",
+          "title": "킨텍스, 10월 14일 '해체산업선진화 컨퍼런스' 개최…원전 해체 전망 논의",
+          "summary": "킨텍스가 10월 14일부터 16일까지 '2026 한국건설·안전박람회'를 개최하며, 개막일에 원전 및 플랜트 해체 전망을 포함한 해체산업 컨퍼런스를 진행한다.",
+          "link": "https://www.cstimes.com/news/articleView.html?idxno=721198",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-09-17T19:10:00+00:00",
+          "date": "2026-10-14",
+          "precision": "day"
+        }
+      ],
+      "repeat_filter": {
+        "previous_week": "2026-W37",
+        "excluded": [
+          {
+            "hash": "f17816265d41c54a",
+            "title": "한빛 2호기, 규제 심사 지연으로 설계수명 만료 후 발전 정지",
+            "prior_hash": "4d181084fd09b33f",
+            "progression": "minor"
+          },
+          {
+            "hash": "01029b4ebd425c61",
+            "title": "원안위, 고리원전 3·4호기 계속운전 심의 착수",
+            "prior_hash": "a6bf269f3d5aa561",
+            "progression": "minor"
+          },
+          {
+            "hash": "dbadbcc80f2571b1",
+            "title": "한수원, 프랑스 오라노와 우라늄 농축 협력의향서 체결",
+            "prior_hash": "b20c5c35c84b1fd3",
+            "progression": "none"
+          },
+          {
+            "hash": "f361bec4a2ed1906",
+            "title": "한미, 미국 내 원전 8기 건설 노형 선정 두고 이견",
+            "prior_hash": "a3e57010d24635a7",
+            "progression": "minor"
+          }
+        ],
+        "material_progress": []
+      },
+      "_automation": {
+        "created_at": "2026-09-18T19:06:49.158002+09:00",
+        "message_html": "📅 <b>9/12-9/18 원자력 주간 판세</b>\n<i>총 1395건 검토 · must_read 53건</i>\n\n<b>이번 주 핵심</b>\n이번 주는 대미 투자 패키지 협상에서 원전 노형 배분과 지식재산권 이견으로 서명과 국회 보고가 연기되며 정책 불확실성이 증대되었다. 한편 국내에서는 한빛원전 1·2호기 가동 중단과 맞물려 서남권 반도체 클러스터 전력 공급 우려가 대두되었고, 정부는 송전망 건설 수용성 제고 방안을 발표하며 인프라 적기 구축에 주력하고 있다. 해외에서는 IAEA 총회를 계기로 글로벌 원전 용량 확대 전망이 강화되는 동시에 주요국의 SMR 인허가 및 규제 정비가 가속화되는 흐름을 보였다.\n\n━━ <b>📌 이번 주</b> (9월 12일–9월 18일 · 주요 사건) ━━\n• <b>한미 원전 노형 배분 등 이견으로 대미 투자 MOU 서명 연기</b>\n  정부가 2000억 달러 규모의 대미 투자 MOU 서명을 연기했으며, 이는 원전 노형 배분 및 웨스팅하우스 의결권 등 핵심 쟁점에 대한 입장 차이 때문으로 확인되었다.\n  이어지는 이슈 · 5건 · 매체 5곳\n  🔗 https://www.chosun.com/economy/economy_general/2026/09/17/WN627DZXL5EW7CESWBECPON3AU\n• <b>한수원, 웨스팅하우스 지분 인수 및 미국 내 원전 8기 건설 협상 추진</b>\n  정부가 미국 웨스팅하우스 지분 인수와 미국 내 원전 8기 건설을 포함한 협력 방안을 미국 측과 협상 중이며, 18일 최종 합의문에 관련 내용이 담길 예정이다.\n  이어지는 이슈 · 3건 · 매체 3곳\n  🔗 https://www.pinpointnews.co.kr/news/articleView.html?idxno=486707\n• <b>한미, 3500억 달러 규모 대미 투자 1차 프로젝트 합의문 발표 예정</b>\n  한미 양국이 3500억 달러 규모의 대미 투자 1차 프로젝트 합의문을 18일경 발표할 예정이며, 외교·국방 고위급 회의를 통해 현안을 조율 중이다.\n  이어지는 이슈 · 3건 · 매체 3곳\n  🔗 https://www.mt.co.kr/politics/2026/09/13/2026091312424219813\n\n━━ <b>🌍 국가별 단신</b> ━━\n• <b>한국</b> — 한-미, 웨스팅하우스 지분 인수 협상…의결권 확보 두고 이견\n• <b>미국</b> — 美 NRC, 팰리세이즈 SMR 부지 기초 토목공사 예외 승인\n• <b>일본</b> — 일본, 대미 투자 패키지 3차 후보로 차세대 SMR 및 전력망 낙점\n• <b>핀란드</b> — 유럽투자은행(EIB), 소형모듈원전(SMR)에 첫 투자 단행\n• <b>영국</b> — 태국·영국, 미국산 SMR 도입 타당성 조사 및 설계 심사 착수\n• <b>카자흐스탄</b> — 러시아 로사톰, 카자흐스탄 발하슈 원전 EPC 본계약 체결\n\n━━ <b>📚 이번 주 발간물</b> ━━\n• 국제원자력기구(IAEA) · <b>금속 재활용 및 관련 공정 내 방사성 물질의 부주의한 유입 예방·탐지·대응 전략</b>\n  🔗 http://www.iaea.org/publications/16074/strategy-for-the-prevention-detection-and-response-to-the-inadvertent-presence-of-radioactive-material-in-metal-recycling-and-other-associated-processes\n• 국제원자력기구(IAEA) · <b>금속 재활용 및 관련 공정 내 방사성 물질의 부주의한 유입 방지, 탐지 및 대응 전략</b>\n  🔗 http://www.iaea.org/publications/16074/strategy-for-the-prevention-detection-and-response-to-the-inadvertent-presence-of-radioactive-material-in-metal-recycling-and-other-associated-processes-0\n• 에너지경제연구원(KEEI) · <b>[격주간] 세계 원전시장 인사이트(2026.09.11.)</b>\n  🔗 https://www.keei.re.kr/board.es?act=view&bid=0002&list_no=128168&mid=a10102050000\n• 국제원자력기구(IAEA) · <b>마이크로리액터: 기술 개발 현황 및 2026년 전망</b>\n  🔗 http://www.iaea.org/publications/16125/microreactors-advances-in-technology-development-2026-outlook\n• 국제원자력기구(IAEA) · <b>우라늄 생산 주기 프로그램 국가 인프라 현황 평가</b>\n  🔗 http://www.iaea.org/publications/16072/evaluation-of-the-status-of-national-infrastructure-for-a-uranium-production-cycle-programme\n\n━━ <b>🏛 정책 변화</b> ━━\n• <b>정부가 송전망 건설 시 신설 철탑을 최대 40% 감축하고 주민 소득보장제를 도입하는 수용성 제고 방안을 발표했다.</b>\n  → 메가프로젝트 전력 공급을 위한 송전망 확충 과정에서 발생하는 주민 갈등을 완화하고 적기 구축을 도모하기 위한 조치다.\n• <b>한미 간 3500억 달러 규모의 대미 투자 협상에서 원전 노형 배분과 웨스팅하우스 지분 인수 조건 이견으로 MOU 체결 및 국회 보고가 연기되었다.</b>\n  → 원전 수출 및 기자재 공급 명문화 과정에서 양국 간 세부 조율이 난항을 겪으며 리스크 요인으로 작용하고 있다.\n\n━━ <b>주제별 강약</b> ━━\n▲ <b>전력망</b> — 정부의 송전망 수용성 제고 방안 발표와 계절별 송전용량 시범사업 시행 등 전력망 효율화 및 확충 조치가 이어졌다.\n▼ <b>수출</b> — 대미 투자 협상에서 원전 노형과 지분 인수 조건에 대한 이견으로 계약 체결이 연기되며 수출 가시화에 제동이 걸렸다.\n▲ <b>SMR</b> — SMR 특별법 시행과 함께 미국 내 부지 사전 공사 승인 및 글로벌 SMR 상용화·설계 평가가 본격화되었다.\n― <b>공급망</b> — 러시아산 우라늄 배제 우려와 대미 투자 협상 진통이 지속되는 한편, 한-프랑스 및 중앙아시아와의 공급망 다변화 협력이 병행되고 있다.\n\n━━ <b>🇰🇷 한국·한수원 직접 영향</b> ━━\n한수원은 한빛원전 1·2호기의 가동 중단 및 사고관리계획서 재검토 결정에 대응해야 하며, 대미 투자 원전 프로젝트 내 APR1400 도입 협상과 웨스팅하우스 지분 인수 관련 조건 조율에 역량을 집중하고 있다.\n\n━━ <b>📌 그 밖에 짚어 둘 사건</b> ━━\n• <b>한빛원전 1·2호기 가동 중단…서남권 반도체 클러스터 전력공급 불확실성 증대</b>\n  → 설계수명 만료에 따른 가동 중단이 지역 전력 공급 계획에 차질을 빚고 있다.\n  🔗 https://news.google.com/rss/articles/CBMia0FVX3lxTE83ckFVaTZHNW5ucHpPUl9tSGpJNUYzOWk5bTVDZGdIZlZHYzU5d2M0TGpUaEpta2xBY1F3M1NFUEJwZzh4ZzUzYTNNUl9LYnJmTFpSTnIxTllxRDFVMFNsMVdmTVY5MjZvZmgw?oc=5\n• <b>정부, 송전망 철탑 40% 감축 및 전력 적기 공급 총력</b>\n  → 메가프로젝트 전력 공급을 위해 주민 수용성 제고와 송전망 인프라 확충을 병행한다.\n  🔗 https://www.yna.co.kr/view/AKR20260915045451001?input=1195m\n• <b>러시아, 우라늄 등 핵심 광물 수출 제한 검토…국내 핵연료 공급망 리스크</b>\n  → 농축 시설이 없는 국내 원전 산업의 핵연료 조달 다변화 시급성이 증대되었다.\n  🔗 https://www.g-enews.com/view.php?ud=202609130848498070fbbec65dfb_1\n• <b>정부, SMR 특별법 및 시행령 시행…2035년 상용화 목표</b>\n  → SMR 특별법 시행으로 범정부 지원 체계가 본격 가동되며 상용화 기반이 마련되었다.\n  🔗 http://www.knpnews.com/news/articleView.html?idxno=34469\n\n━━ <b>📝 보고서 검토 후보</b> ━━\n• <b>대미 원전 투자 협상 지연에 따른 수출 전략 재점검</b> — 한미 대미투자 MOU 서명이 원전 노형 배분 및 지식재산권 이견으로 연기된 상황을 분석할 필요가 있다.\n• <b>한빛원전 가동 중단에 따른 서남권 전력수급 리스크 분석</b> — 한빛원전 1·2호기 가동 중단이 서남권 반도체 클러스터 전력 공급에 미치는 영향을 진단해야 한다.\n\n📋 <b>다음 주 모니터링 포인트</b>\n• 한미 대미 투자 MOU 재협상 및 웨스팅하우스 지분 인수 협상 진척 상황을 확인해야 한다.\n• 한빛원전 1·2호기 사고관리계획서 심의 재개 및 서남권 전력수급 영향을 점검해야 한다.\n• 제12차 전력수급기본계획상 AI 및 반도체 전력 수요 반영 추이를 모니터링해야 한다.\n• SMR 특별법 시행에 따른 후속 하위법령 정비 및 R&amp;D 추진 현장을 확인해야 한다.\n\n🔁 <b>반복 등장</b>: #데이터센터 (276회), #SMR (205회), #전력망 (158회), #AI (107회), #에너지안보 (79회)\n🕳 <b>이번 주 소스 공백</b>: OECD NEA, US NRC, 산업통상자원부, 한국원자력안전기술원, 한국원자력환경공단, World Nuclear Association",
+        "telegram": {
+          "status": "sent",
+          "confirmed_at": "2026-09-18T19:07:40.076655+09:00"
+        },
+        "channel": {
+          "status": "sent",
+          "confirmed_at": "2026-09-18T19:07:40.076655+09:00"
+        },
+        "confirmed_at": "2026-09-18T19:07:40.076655+09:00"
+      }
     }
   }
 }
