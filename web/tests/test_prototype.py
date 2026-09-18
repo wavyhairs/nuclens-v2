@@ -5359,6 +5359,102 @@ class FirstScreenContentFirstTests(unittest.TestCase):
         self.assertIn("display: block", brand_small)
 
 
+class TwoPhaseBootTests(unittest.TestCase):
+    """첫 화면은 today.json 한 벌로 먼저 선다 (2026-09-19).
+
+    종전에는 아홉 개 payload 를 **전부 받은 뒤에야** 첫 렌더를 했다. 실측
+    (라이브 데이터로 measure_ui.mjs): 첫 렌더 차단 바이트 45,776 KB →
+    1,174 KB. 압축 전 값이고, gzip 기준으로는 6.01 MB → 87 KB 다.
+
+    이 검사가 지키는 것은 속도 자체가 아니라 **축약본으로 말하면 안 되는 것을
+    말하지 않는가**이다. today.json 에는 최신 회차와 그 이슈만 있으므로,
+    전체 카탈로그를 훑어야 맞는 수(변화·수집 원문)와 다른 날짜·다른 탭은
+    2단계가 도착할 때까지 미뤄야 한다. 적은 수를 먼저 보였다가 조용히 늘리면
+    그 사이에 본 사람에게는 그냥 거짓말이다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+
+    def slice_fn(self, name):
+        """최상위 함수 하나만 잘라낸다. 다음 함수가 async 일 수도, 파일 끝일 수도 있다."""
+        start = self.script.index(f"function {name}(")
+        nxt = re.compile(r"^(?:async )?function ", re.M).search(self.script, start + 1)
+        return self.script[start:nxt.start() if nxt else len(self.script)]
+
+    def test_the_first_paint_waits_only_for_today_json(self):
+        """1단계가 받는 것은 today.json 과 오디오뿐이다.
+
+        loadFullData() 를 await 하고 나서 그리면 이 개편은 통째로 무의미해진다.
+        """
+        init = self.slice_fn("init")
+        paint = init.index("renderBriefing()")
+        started = init.index("loadFullData()")
+        self.assertLess(started, paint, "2단계는 첫 페인트 전에 **띄우기만** 한다")
+        self.assertNotIn("await loadFullData()", init[:paint],
+                         "첫 페인트가 전체 데이터를 기다리고 있다")
+        self.assertIn('loadJSON("today.json")', init)
+
+    def test_only_a_plain_home_takes_the_short_path(self):
+        """딥링크·다른 탭·검색·다른 날짜는 축약본으로 답할 수 없다."""
+        gate = self.slice_fn("firstScreenPossible")
+        self.assertIn("ISSUE_ROUTE.test(location.pathname)", gate)
+        for key in ("view", "issue", "q", "ent", "agenda", "ar", "at", "ad", "ap", "av"):
+            self.assertIn(f'"{key}"', gate, f"{key} 파라미터를 거르지 않는다")
+        # 날짜는 today.json 을 받아야 비길 수 있으므로 판정이 둘로 갈린다.
+        self.assertIn("briefDateFromLocation()", self.slice_fn("firstScreenMatchesDate"))
+
+    def test_the_change_column_never_shows_a_partial_count(self):
+        """'변화 N건'은 전체 카탈로그를 훑어야 맞는 수다 — 1단계에서는 안 그린다."""
+        self.assertIn("state.partial ? [] : weeklyChangedIssues(briefing)", self.script)
+        # 2단계가 이 칸만 다시 그린다. 목록까지 다시 그리면 펼쳐 둔 목차가 접힌다.
+        finish = self.slice_fn("finishBoot")
+        self.assertIn("renderContinuing(briefing)", finish)
+        self.assertNotIn("renderBriefing();\n    renderArchiveSearch", finish)
+
+    def test_the_collected_feed_waits_for_the_news_payload(self):
+        """state.news 가 빈 채로 그리면 접힌 서랍 제목이 '원문 0건'이 된다."""
+        self.assertIn("if (!state.partial) renderNewsFeed();", self.script)
+
+    def test_other_tabs_do_not_render_on_partial_data(self):
+        """흐름·탐색·보고서는 1단계에 없는 payload 를 읽는다 — 빈 화면을 그리지 않는다."""
+        switch = self.slice_fn("switchView")
+        self.assertIn("if (!state.partial) {", switch)
+        for call in ("renderArchiveSearch()", "renderTrend()", "renderPubs()"):
+            self.assertIn(call, switch.split("if (!state.partial) {", 1)[1])
+
+    def test_the_date_picker_is_locked_until_the_full_set_lands(self):
+        """축약본에는 최신 회차만 있다. 다른 날짜를 고를 수 있게 두면 빈 화면이 뜬다."""
+        picker = self.slice_fn("renderDateSelect")
+        self.assertIn("const locked = state.partial;", picker)
+        self.assertIn("select.disabled = locked", picker)
+        self.assertIn("locked ||", picker)
+
+    def test_the_issue_number_is_counted_from_the_date_list(self):
+        """state.briefings 로 세면 1단계에서 60호가 '제1호'로 나온다."""
+        self.assertNotIn("state.briefings.length - state.briefings.indexOf(briefing)", self.script)
+        self.assertIn("allDates.length - allDates.indexOf(briefing.date)", self.script)
+        dates = self.slice_fn("briefingDates")
+        self.assertIn("state.briefingDates.length", dates)
+
+    def test_the_article_count_means_this_round_not_the_lifetime(self):
+        """'원문 N건'은 그 회차에 나간 기사 수다.
+
+        같은 이름(article_count)이 회차 스냅샷에서는 그날치, 카탈로그에서는
+        누적을 나른다(실측 2026-09-19: 34 vs 187). 1단계는 카탈로그 행을 쓰므로
+        그대로 두면 화면이 다섯 배 넘는 수를 말한다. card_article_count 가 그
+        회차분이고 두 값은 최신 회차에서 정확히 같다(18건 대조 불일치 0).
+        """
+        self.assertIn("issue.card_article_count ?? issue.article_count ?? 0", self.script)
+
+    def test_a_missing_today_payload_falls_back_instead_of_dying(self):
+        """today.json 이 없거나 깨진 세대에서도 사이트는 서야 한다."""
+        init = self.slice_fn("init")
+        self.assertIn('loadJSON("today.json").catch(() => null)', init)
+        self.assertIn("today.briefing && today.issues", init)
+
+
 class RevisitPathTests(unittest.TestCase):
     """재방문 가치 — 최근 본 이슈 · '지난 확인 이후' 요약 · 행 전체 클릭.
 
