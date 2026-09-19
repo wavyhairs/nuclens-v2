@@ -246,6 +246,67 @@ def live_entries(store: dict) -> list[dict]:
     return [entry for entry in entries.values() if not entry.get("moved_to")]
 
 
+# 화면이 쓸 수 있는 관계 이름. 판정이 이 셋 중 하나를 말하지 않았으면 화면은
+# 두 사건 사이에 아무 말도 하지 않는다 — 빈칸을 '관련' 으로 채우는 순간 투영이
+# 없는 근거를 주장한다.
+RELATION_LABELS = {
+    "stage_progress": "다음 단계",
+    "cause_effect": "이어진 결과",
+    "same_matter": "같은 사안",
+}
+
+
+def _flow(members: list, links: list[dict]) -> list[dict]:
+    """**시간순** 흐름. 목록(`events`)과 방향이 반대인 것이 요점이다.
+
+    목록은 "지금 어디까지 왔나"를 먼저 보여 주려고 최신을 위에 둔다. 흐름은
+    "어떻게 여기까지 왔나"를 묻는 자리라 처음부터 읽어야 한다 — 착수 → 보류 →
+    결정이 위에서 아래로 읽혀야 흐름이다. 한 화면에 둘 다 두는 대신 칸을 나눈다.
+
+    관계는 `thread_judge` 가 그 쌍을 보고 고른 값만 쓴다. 판정이 없으면 빈칸이다.
+    """
+    named = {}
+    for link in links or ():
+        key = tuple(sorted((str(link.get("from") or ""), str(link.get("to") or ""))))
+        relation = str(link.get("relationship") or "")
+        if relation in RELATION_LABELS:
+            named[key] = relation
+
+    # 제목이 같은 사본을 **화면에서** 한 칸으로 접는다. 판정 계층의 접기
+    # (`thread_identity.fold_duplicates`)는 고리를 만들 때만 쓰이고 구성원은
+    # 실제 사건 id 그대로 남으므로, 흐름에 그대로 실으면 같은 줄이 두 번 뜬다.
+    # 라이브 실측: 「정부, 2040년 전력수요 최대 885TWh 전망」이 8/24·8/29 두 칸을
+    # 차지하고 그 사이에 '다음 단계' 가 붙었다 — 같은 문장 사이에 단계가 넘어갔다는
+    # 말이 된다. 신원은 건드리지 않는다. 접는 것은 보이는 줄뿐이다.
+    runs: list[list] = []
+    for event in members:
+        key = "".join(str(event.title or "").split())
+        if runs and "".join(str(runs[-1][-1].title or "").split()) == key:
+            runs[-1].append(event)
+            continue
+        runs.append([event])
+
+    rows = []
+    for index, run in enumerate(runs):
+        head, tail = run[0], run[-1]
+        nxt = runs[index + 1][0] if index + 1 < len(runs) else None
+        relation = ""
+        if nxt is not None:
+            # 접힌 사본 어느 쪽에서든 다음 칸으로 가는 판정이 있으면 그것을 쓴다.
+            for event in run:
+                relation = named.get(tuple(sorted((event.issue_id, nxt.issue_id))), "")
+                if relation:
+                    break
+        rows.append({
+            "event_id": tail.issue_id,
+            "title": tail.title,
+            "date": head.first_seen.isoformat() if head.first_seen else "",
+            "relation_to_next": relation,
+            "relation_label": RELATION_LABELS.get(relation, ""),
+        })
+    return rows
+
+
 def _thread_view(entry: dict, by_id: dict, labels: tuple[dict, dict],
                  milestones: list[dict]) -> dict:
     entity_names, plant_names = labels
@@ -306,6 +367,9 @@ def _thread_view(entry: dict, by_id: dict, labels: tuple[dict, dict],
             "last_seen": event.last_seen.isoformat() if event.last_seen else "",
             "briefing_count": event.briefing_count,
         } for event in reversed(members)],
+        # 같은 사건들을 **시간순**으로 한 번 더 싣는다. 목록은 최신순이라
+        # 흐름으로 읽을 수 없다(위 주석). 중복이지만 두 칸의 질문이 다르다.
+        "flow": _flow(members, entry.get("links") or []),
     }
     view["next_milestone"] = next_milestone({"units": units}, milestones)
     return view

@@ -1,0 +1,958 @@
+{
+ "_comment": "2026-09-19 라이브에서 그대로 뜬 오병합 두 건. 제목·요약·판정 문구를 손대지 않는다 — 손대면 재현이 아니다.\nsignals 는 **888건 전체 색인**에서 계산한 값이다. 픽스처 12건으로 다시 계산하면 IDF 가 달라져 어휘 문턱이 다른 척도가 된다(log(12/df) vs log(888/df)).",
+ "source": {
+  "issue_ledger": "issue_ledger.json",
+  "judgments": "thread_llm_reviews.json",
+  "index_events": 888,
+  "captured_at": "2026-09-19"
+ },
+ "issues": {
+  "issue-79643a341ee815a2": {
+   "title": "미국의 러시아산 우라늄 수입 금지법과 예외 조항의 실태",
+   "summary": "미국이 러시아산 저농축 우라늄 수입 금지법을 발효했으나, 예외 허가 조항을 통해 웨스팅하우스 등 서방 기업들이 러시아산 우라늄을 지속적으로 반입하고 있다.",
+   "first_seen": "2026-08-19",
+   "last_seen": "2026-08-19",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "westinghouse"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "US Department of Energy Westinghouse",
+    "assets": "",
+    "event_family": "policy_decision"
+   },
+   "topics": [
+    "fuel_cycle",
+    "security_trade"
+   ],
+   "briefing_count": 1
+  },
+  "story-224aef821c084125": {
+   "title": "웨스팅하우스 지분 확보 시나리오와 국내 원전 수출 영향 분석",
+   "summary": "한국의 웨스팅하우스 지분 확보가 현실화될 경우, 기존 지식재산권 분쟁 합의 재협상 및 기술 사용료 조정 등 해외 원전 사업 구조에 상당한 변화가 예상된다.",
+   "first_seen": "2026-08-28",
+   "last_seen": "2026-08-28",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "kepco",
+    "westinghouse"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "",
+    "assets": "",
+    "event_family": ""
+   },
+   "topics": [
+    "newbuild",
+    "security_trade"
+   ],
+   "briefing_count": 1
+  },
+  "story-2eba66f067fdc974": {
+   "title": "한수원-웨스팅하우스, 미국 내 원전 8기 건설 협력 잠정 합의",
+   "summary": "한수원과 웨스팅하우스가 1200억 달러 규모의 미국 원전 8기 건설 사업 중 2기에 APR1400을 적용하기로 잠정 합의했다.",
+   "first_seen": "2026-09-10",
+   "last_seen": "2026-09-10",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "khnp",
+    "westinghouse"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "",
+    "assets": "",
+    "event_family": ""
+   },
+   "topics": [],
+   "briefing_count": 1
+  },
+  "story-a3e57010d24635a7": {
+   "title": "한·미 원전 협력, 1200억 달러 규모 원전 8기 건설 관련 절충안 논의",
+   "summary": "한·미 양국이 1200억 달러 규모의 원전 8기 건설 사업과 관련해 '2기+2기' 방식의 절충안을 논의 중이다.",
+   "first_seen": "2026-09-08",
+   "last_seen": "2026-09-14",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "khnp",
+    "kepco",
+    "doosan",
+    "westinghouse",
+    "terrapower"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "Government of South Korea Government of USA",
+    "assets": "Nuclear power plants",
+    "event_family": "policy_decision"
+   },
+   "topics": [
+    "newbuild",
+    "security_trade"
+   ],
+   "briefing_count": 3
+  },
+  "issue-40c55eaaa3e1c6e4": {
+   "title": "한미, 웨스팅하우스 지분 5~10% 투자 및 의결권 확보 협상",
+   "summary": "한국과 미국이 웨스팅하우스 지분 5~10% 투자 및 의결권 확보를 두고 막판 협상을 진행 중이다.",
+   "first_seen": "2026-08-28",
+   "last_seen": "2026-09-16",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "khnp",
+    "kepco",
+    "westinghouse"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "Westinghouse",
+    "assets": "Nuclear power",
+    "event_family": "corporate_negotiation"
+   },
+   "topics": [
+    "newbuild",
+    "security_trade",
+    "finance"
+   ],
+   "briefing_count": 4
+  },
+  "story-7524648ff8032947": {
+   "title": "정부, 대미 투자 1호 사업 22억 달러 이달 말 송금 및 웨스팅하우스 지분 인수 추진",
+   "summary": "정부가 22억 달러 규모의 대미 투자 1호 사업 자금을 이달 말 송금하며, 웨스팅하우스 지분 인수를 포함한 원전 프레임워크 서명을 준비 중이다.",
+   "first_seen": "2026-09-09",
+   "last_seen": "2026-09-09",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "westinghouse"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "",
+    "assets": "",
+    "event_family": ""
+   },
+   "topics": [],
+   "briefing_count": 1
+  },
+  "story-d5217cd852b861bd": {
+   "title": "한미 원전 협력 MOU 체결 연기…한국형 원전 지식재산권 이견 발생",
+   "summary": "한국형 원전의 지식재산권 문제를 둘러싼 한미 간 이견으로 당초 예정되었던 대미 투자 관련 MOU 체결이 연기됨.",
+   "first_seen": "2026-08-26",
+   "last_seen": "2026-09-19",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "khnp",
+    "westinghouse",
+    "team-korea"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "",
+    "assets": "",
+    "event_family": ""
+   },
+   "topics": [
+    "security_trade",
+    "newbuild",
+    "fuel_cycle"
+   ],
+   "briefing_count": 8
+  },
+  "story-4e1bbcf5fe2a6b99": {
+   "title": "한미 원전 노형 배분 등 이견으로 대미 투자 MOU 서명 연기",
+   "summary": "정부가 2000억 달러 규모의 대미 투자 MOU 서명을 연기했으며, 이는 원전 노형 배분 및 웨스팅하우스 의결권 등 핵심 쟁점에 대한 입장 차이 때문으로 확인되었다.",
+   "first_seen": "2026-08-30",
+   "last_seen": "2026-09-18",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "khnp",
+    "westinghouse"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "Government Westinghouse",
+    "assets": "APR1400 AP1000",
+    "event_family": "policy_negotiation"
+   },
+   "topics": [
+    "security_trade",
+    "newbuild",
+    "smr"
+   ],
+   "briefing_count": 2
+  },
+  "issue-bccf5f15f321ec1b": {
+   "title": "SMR 입지·거래 규제, 향후 2년간의 중요성 강조",
+   "summary": "원자력안전위원회의 SMR 사전검토 세부 기준은 올해 안에, 인허가 체계 개편은 2028년까지, 전체 체계 완성은 2030년까지 진행될 예정이다.",
+   "first_seen": "2026-08-07",
+   "last_seen": "2026-08-07",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "nssc"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "",
+    "assets": "",
+    "event_family": ""
+   },
+   "topics": [
+    "smr",
+    "regulation"
+   ],
+   "briefing_count": 1
+  },
+  "story-87c6c33c04c22365": {
+   "title": "원안위, 2027년 예산 3,030억 편성…SMR 규제체계 및 상시검사 강화",
+   "summary": "원안위가 2027년 예산 3,030억 원을 편성해 국회에 제출하며, SMR 규제기술 개발과 원전 상시검사 체계 도입에 집중 투자한다.",
+   "first_seen": "2026-09-02",
+   "last_seen": "2026-09-03",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "nssc"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "정부 원안위 과기부",
+    "assets": "SMR R&D",
+    "event_family": "budget_announcement"
+   },
+   "topics": [
+    "smr",
+    "regulation"
+   ],
+   "briefing_count": 2
+  },
+  "story-706bd2b20f78dfa3": {
+   "title": "원안위, 2027년 예산 3,030억 편성…SMR 규제체계 및 상시검사 강화",
+   "summary": "원안위가 2027년 예산 3,030억 원을 편성해 국회에 제출하며, SMR 규제기술 개발과 원전 상시검사 체계 도입에 집중 투자한다.",
+   "first_seen": "2026-09-03",
+   "last_seen": "2026-09-03",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "nssc"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "",
+    "assets": "",
+    "event_family": ""
+   },
+   "topics": [],
+   "briefing_count": 1
+  },
+  "story-51c2f9141fbf7dee": {
+   "title": "원안위, 오르비텍 핵연료물질 사용 허가 및 생활방사선법 개정안 의결",
+   "summary": "원안위가 오르비텍의 핵연료물질 사용 허가와 생활방사선법 하위규정 개정안을 의결했다.",
+   "first_seen": "2026-09-15",
+   "last_seen": "2026-09-15",
+   "units": [],
+   "plants": [],
+   "entity_ids": [
+    "nssc"
+   ],
+   "facts": {
+    "action": "",
+    "actors": "원안위 오르비텍",
+    "assets": "",
+    "event_family": "regulatory_action"
+   },
+   "topics": [
+    "regulation"
+   ],
+   "briefing_count": 1
+  }
+ },
+ "judgments": {
+  "issue-79643a341ee815a2--story-224aef821c084125": {
+   "verdict": "same_thread",
+   "relationship": "cause_effect",
+   "reason": "웨스팅하우스 지분 확보 시나리오와 영향 분석",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 2.036,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "security",
+     "trade",
+     "웨스팅하우스"
+    ]
+   }
+  },
+  "issue-79643a341ee815a2--story-a3e57010d24635a7": {
+   "verdict": "different_thread",
+   "relationship": "same_matter",
+   "reason": "우라늄 수입 금지법 실태와 원전 8기 건설 협력 합의는 별개임.",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 1,
+    "lexical": 1.82,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "of",
+     "security",
+     "trade"
+    ]
+   }
+  },
+  "issue-40c55eaaa3e1c6e4--issue-79643a341ee815a2": {
+   "verdict": "different_thread",
+   "relationship": "same_matter",
+   "reason": "지분 인수설과 러시아산 우라늄 규제는 다른 사안",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 1,
+    "lexical": 4.833,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "security",
+     "trade",
+     "westinghouse",
+     "미국이",
+     "웨스팅하우스"
+    ]
+   }
+  },
+  "issue-79643a341ee815a2--story-d5217cd852b861bd": {
+   "verdict": "different_thread",
+   "relationship": "",
+   "reason": "우라늄 수입 규제와 대미 원전 투자 협상은 별개의 사안임",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 2.455,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "cycle",
+     "fuel",
+     "security",
+     "trade"
+    ]
+   }
+  },
+  "issue-79643a341ee815a2--story-4e1bbcf5fe2a6b99": {
+   "verdict": "different_thread",
+   "relationship": "same_matter",
+   "reason": "우라늄 규제와 대미 투자 MOU는 별개 사안",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 1,
+    "lexical": 3.074,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "security",
+     "trade",
+     "westinghouse",
+     "웨스팅하우스"
+    ]
+   }
+  },
+  "story-224aef821c084125--story-2eba66f067fdc974": {
+   "verdict": "different_thread",
+   "relationship": "same_matter",
+   "reason": "지분 분석 전망과 실제 건설 협력 합의는 별개임",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 1.969,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "웨스팅하우스",
+     "합의"
+    ]
+   }
+  },
+  "story-224aef821c084125--story-a3e57010d24635a7": {
+   "verdict": "same_thread",
+   "relationship": "cause_effect",
+   "reason": "지분 확보 시나리오가 원전 건설 협력으로 구체화",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 1.676,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "newbuild",
+     "security",
+     "trade"
+    ]
+   }
+  },
+  "issue-40c55eaaa3e1c6e4--story-224aef821c084125": {
+   "verdict": "different_thread",
+   "relationship": "same_matter",
+   "reason": "지분 인수설 부인과 지분 확보 시나리오 전망은 별개 사안",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 5.273,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "newbuild",
+     "security",
+     "trade",
+     "웨스팅하우스",
+     "지분",
+     "확보"
+    ]
+   }
+  },
+  "story-224aef821c084125--story-7524648ff8032947": {
+   "verdict": "same_thread",
+   "relationship": "stage_progress",
+   "reason": "웨스팅하우스 지분 인수 분석에서 실제 추진으로 진행",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 2.102,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "웨스팅하우스",
+     "지분"
+    ]
+   }
+  },
+  "story-224aef821c084125--story-d5217cd852b861bd": {
+   "verdict": "same_thread",
+   "relationship": "same_matter",
+   "reason": "웨스팅하우스 지분 확보와 관련한 시나리오 및 협상 진행",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 2.963,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "newbuild",
+     "security",
+     "trade",
+     "지식재산권"
+    ]
+   }
+  },
+  "story-224aef821c084125--story-4e1bbcf5fe2a6b99": {
+   "verdict": "same_thread",
+   "relationship": "cause_effect",
+   "reason": "웨스팅하우스 관련 지분 및 쟁점이 대미 투자 MOU 연기의 원인.",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 2.654,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "newbuild",
+     "security",
+     "trade",
+     "웨스팅하우스"
+    ]
+   }
+  },
+  "story-2eba66f067fdc974--story-a3e57010d24635a7": {
+   "verdict": "same_thread",
+   "relationship": "same_matter",
+   "reason": "동일 원전 건설 협력 잠정 합의",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 5.88,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "1200억",
+     "8기",
+     "건설",
+     "규모의",
+     "달러"
+    ]
+   }
+  },
+  "issue-40c55eaaa3e1c6e4--story-2eba66f067fdc974": {
+   "verdict": "same_thread",
+   "relationship": "stage_progress",
+   "reason": "웨스팅하우스 지분설 부인 이후 건설 협력 잠정 합의",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 1.109,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "웨스팅하우스"
+    ]
+   }
+  },
+  "story-2eba66f067fdc974--story-7524648ff8032947": {
+   "verdict": "same_thread",
+   "relationship": "same_matter",
+   "reason": "한수원-웨스팅하우스 협력 및 지분 인수 관련 사안",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 3.212,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "규모의",
+     "달러",
+     "웨스팅하우스"
+    ]
+   }
+  },
+  "story-2eba66f067fdc974--story-d5217cd852b861bd": {
+   "verdict": "same_thread",
+   "relationship": "stage_progress",
+   "reason": "한미 대미 에너지 투자 및 원전 8기 건설 협상 과정",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 0.0,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": []
+   }
+  },
+  "story-2eba66f067fdc974--story-4e1bbcf5fe2a6b99": {
+   "verdict": "same_thread",
+   "relationship": "cause_effect",
+   "reason": "한미 원전 협력 잠정 합의와 쟁점으로 인한 MOU 서명 연기",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 3.212,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "규모의",
+     "달러",
+     "웨스팅하우스"
+    ]
+   }
+  },
+  "issue-40c55eaaa3e1c6e4--story-a3e57010d24635a7": {
+   "verdict": "same_thread",
+   "relationship": "same_matter",
+   "reason": "한미 원전 협력 및 투자 관련 사안",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 3,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 2.898,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "newbuild",
+     "security",
+     "trade",
+     "중이다"
+    ]
+   }
+  },
+  "story-7524648ff8032947--story-a3e57010d24635a7": {
+   "verdict": "same_thread",
+   "relationship": "stage_progress",
+   "reason": "대미 투자 및 지분 인수와 원전 건설 협력 진전",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 2.692,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "규모의",
+     "달러",
+     "중이다"
+    ]
+   }
+  },
+  "story-a3e57010d24635a7--story-d5217cd852b861bd": {
+   "verdict": "same_thread",
+   "relationship": "stage_progress",
+   "reason": "대미 원전 협력 협상의 진전 과정",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 1.778,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "newbuild",
+     "security",
+     "trade"
+    ]
+   }
+  },
+  "story-4e1bbcf5fe2a6b99--story-a3e57010d24635a7": {
+   "verdict": "same_thread",
+   "relationship": "same_matter",
+   "reason": "한미 대미 투자 및 원전 건설 협력 프레임워크의 연장선",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 1,
+    "lexical": 3.492,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "government",
+     "newbuild",
+     "security",
+     "trade",
+     "규모의",
+     "달러"
+    ]
+   }
+  },
+  "issue-40c55eaaa3e1c6e4--story-7524648ff8032947": {
+   "verdict": "same_thread",
+   "relationship": "stage_progress",
+   "reason": "지분 인수설 부인에서 실제 추진 및 송금으로 진행",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 4.173,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "웨스팅하우스",
+     "중이다",
+     "지분",
+     "투자"
+    ]
+   }
+  },
+  "issue-40c55eaaa3e1c6e4--story-d5217cd852b861bd": {
+   "verdict": "same_thread",
+   "relationship": "same_matter",
+   "reason": "대미 투자 및 웨스팅하우스 지분 인수 협상 과정",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 3.967,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "newbuild",
+     "security",
+     "trade",
+     "투자",
+     "한미"
+    ]
+   }
+  },
+  "issue-40c55eaaa3e1c6e4--story-4e1bbcf5fe2a6b99": {
+   "verdict": "same_thread",
+   "relationship": "same_matter",
+   "reason": "대미 투자 및 웨스팅하우스 지분 인수 협상",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 1,
+    "lexical": 7.756,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "newbuild",
+     "security",
+     "trade",
+     "westinghouse",
+     "웨스팅하우스",
+     "의결권",
+     "투자",
+     "한미"
+    ]
+   }
+  },
+  "story-7524648ff8032947--story-d5217cd852b861bd": {
+   "verdict": "same_thread",
+   "relationship": "stage_progress",
+   "reason": "대미 에너지 투자 및 웨스팅하우스 지분 인수 협상 과정",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 1.874,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "대미",
+     "투자"
+    ]
+   }
+  },
+  "story-4e1bbcf5fe2a6b99--story-7524648ff8032947": {
+   "verdict": "same_thread",
+   "relationship": "stage_progress",
+   "reason": "대미 투자 및 웨스팅하우스 협상 과정의 진전",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 5.487,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "규모의",
+     "달러",
+     "대미",
+     "서명을",
+     "웨스팅하우스",
+     "정부가",
+     "투자"
+    ]
+   }
+  },
+  "story-4e1bbcf5fe2a6b99--story-d5217cd852b861bd": {
+   "verdict": "same_thread",
+   "relationship": "cause_effect",
+   "reason": "대미 투자 협상 난항과 한미 에너지 투자 막판 조율",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 2,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 7.125,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "mou",
+     "newbuild",
+     "security",
+     "trade",
+     "대미",
+     "연기",
+     "이견으로",
+     "투자"
+    ]
+   }
+  },
+  "issue-bccf5f15f321ec1b--story-87c6c33c04c22365": {
+   "verdict": "same_thread",
+   "relationship": "stage_progress",
+   "reason": "SMR 규제 체계 정비와 조직 개편",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 2.029,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "regulation",
+     "smr",
+     "체계"
+    ]
+   }
+  },
+  "issue-bccf5f15f321ec1b--story-706bd2b20f78dfa3": {
+   "verdict": "different_thread",
+   "relationship": "same_matter",
+   "reason": "연도 및 예산 관련 다른 사안",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 1.522,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "smr",
+     "체계"
+    ]
+   }
+  },
+  "story-706bd2b20f78dfa3--story-87c6c33c04c22365": {
+   "verdict": "same_thread",
+   "relationship": "same_matter",
+   "reason": "원안위 SMR 규제 조직 및 예산 편성",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 25.675,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "030억",
+     "2027년",
+     "smr",
+     "강화",
+     "개발과",
+     "국회에",
+     "규제기술",
+     "규제체계"
+    ]
+   }
+  },
+  "story-51c2f9141fbf7dee--story-87c6c33c04c22365": {
+   "verdict": "different_thread",
+   "relationship": "",
+   "reason": "개별 허가 의결과 예산 편성은 다른 사안임",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 1,
+    "lexical": 3.394,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "regulation",
+     "원안위",
+     "원안위가"
+    ]
+   }
+  },
+  "story-51c2f9141fbf7dee--story-706bd2b20f78dfa3": {
+   "verdict": "same_thread",
+   "relationship": "same_matter",
+   "reason": "원자력안전위원회의 규제 및 예산 관련 활동임",
+   "prompt_version": 1,
+   "signals": {
+    "unit": 0,
+    "entity": 1,
+    "plant": 0,
+    "assets": 0,
+    "actors": 0,
+    "lexical": 2.754,
+    "action": 0,
+    "unit_conflict": false,
+    "shared_tokens": [
+     "원안위",
+     "원안위가"
+    ]
+   }
+  }
+ }
+}

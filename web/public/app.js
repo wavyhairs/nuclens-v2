@@ -1155,10 +1155,22 @@ function keeiDialogSection(issue) {
   </section>`;
 }
 
+// 카드에 거는 제목. `issue.title` 은 **신원**이라 건드리지 않는다 — dedup·
+// event_stage·issue_continuity·story_fingerprint·asset_alias·thread_judge 가
+// 전부 그 문자열에서 판정을 읽는다(issue_headline.py 의 docstring).
+// build_data 가 `headline_display` 를 항상 채우므로 여기서 고를 것은 없다.
+// `|| issue.title` 은 **낡은 페이로드**만을 위한 것이다 — 이 필드가 없던
+// 빌드가 CDN 에 남아 있는 동안 제목 칸이 비지 않게 한다.
+function issueHeadline(issue) {
+  return String(issue.headline_display || issue.title || "");
+}
+
 function issueCard(issue, index, archive = false, front = false) {
   const topic = primaryTopicLabel(issue);
   const selectionReason = (issue.selection_reasons || []).find(reason => String(reason || "").trim());
-  const title = archive ? markMatch(issue.title, state.archiveQuery) : esc(issue.title);
+  const title = archive
+    ? markMatch(issueHeadline(issue), state.archiveQuery)
+    : esc(issueHeadline(issue));
   // '변화' 줄(= 직전 브리핑 문장)은 카드에서 뺐다. 사용자 지적(2026-08-05):
   // "직전 브리핑 내용이 왜 들어가, 그럴거면 그 전꺼를 보겠지 당연히." 맞는 말이다 —
   // 카드가 답해야 하는 것은 '이 뉴스가 무슨 뜻인가'이지 '어제 뭐라고 했나'가
@@ -1292,7 +1304,7 @@ function leadCard(issue, briefing) {
       ${verificationBadge(issue)}
       ${reportPickBadge(issue)}
     </div>
-    <h3><button type="button" class="issue-title-button" data-issue-id="${esc(issue.issue_id)}">${esc(issue.title)}</button></h3>
+    <h3><button type="button" class="issue-title-button" data-issue-id="${esc(issue.issue_id)}">${esc(issueHeadline(issue))}</button></h3>
     <dl class="lead-blocks">${shown.map(block => `<div class="lead-block${block.tone ? ` tone-${block.tone}` : ""}">
       <dt>${esc(block.label)}</dt><dd>${esc(block.text)}</dd>
     </div>`).join("")}</dl>
@@ -5246,6 +5258,30 @@ function threadEventOpenable(event) {
   return Boolean(currentIssueById(event.event_id));
 }
 
+// 흐름 — **시간순**으로 "어떻게 여기까지 왔나". 카드 제목이 이미 최신 사건의
+// 이름을 걸고 있어서(thread_web 이 members[-1] 을 쓴다) "지금 어디까지 왔나"는
+// 머리에서 답이 끝난다. 그래서 본문은 처음부터 읽는 쪽으로 둔다 — 착수 → 보류
+// → 결정이 위에서 아래로 읽혀야 흐름이다.
+//
+// 이음매의 말은 `thread_judge` 가 그 쌍을 보고 고른 관계뿐이다. 판정이 없는
+// 자리는 화살표만 남는다. '관련' 같은 말로 채우면 화면이 없는 근거를 주장한다.
+function threadFlow(thread) {
+  const steps = thread.flow || [];
+  if (!steps.length) return threadTimeline(thread);
+  return `<ol class="timeline longterm-timeline longterm-flow">${steps.map((step, index) => `<li>
+    <div class="timeline-date"><span>${esc(dateLabel(step.date))}</span></div>
+    <div class="timeline-copy">
+      ${threadEventOpenable(step)
+        ? `<button type="button" class="longterm-event" data-thread-event="${esc(step.event_id)}">${esc(step.title)}</button>`
+        : `<span class="longterm-event is-closed" title="이 사건은 현재 이슈 목록에 없습니다">${esc(step.title)}</span>`}
+      ${index + 1 < steps.length
+        ? `<p class="longterm-relation"><span aria-hidden="true">↓</span>${
+            step.relation_label ? ` ${esc(step.relation_label)}` : ""}</p>`
+        : ""}
+    </div>
+  </li>`).join("")}</ol>`;
+}
+
 function threadTimeline(thread) {
   const events = thread.events || [];
   if (!events.length) return "";
@@ -5276,8 +5312,8 @@ function threadCard(thread) {
     </div>
     <h2><button type="button" class="longterm-title" data-thread="${esc(thread.thread_id)}">${esc(thread.title)}</button></h2>
     ${threadChips(thread)}
+    ${threadFlow(thread)}
     ${threadMilestone(thread)}
-    ${threadTimeline(thread)}
     ${threadScope(thread)}
   </article>`;
 }

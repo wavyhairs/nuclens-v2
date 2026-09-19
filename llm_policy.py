@@ -91,6 +91,9 @@ _PROFILES: dict[str, TaskProfile] = {
     "trend_insights": _entry(CONTEXT_SYNTHESIS, _synthesis_model),
     "weekly_bot": _entry(CONTEXT_SYNTHESIS, _synthesis_model),
     "daily_lead": _entry(NARRATIVE_GENERATION, _synthesis_model),
+    # 이슈 카드의 표시 제목. **신원이 아니다** — `issue.title` 은 그대로 두고
+    # 화면이 읽을 칸을 따로 만든다(`issue_headline` 의 docstring).
+    "issue_headline": _entry(NARRATIVE_GENERATION, _synthesis_model),
     "audio_brief": _entry(NARRATIVE_GENERATION, _script_model),
     "pubs_translate": _entry(SIMPLE_EXTRACT, _main_model),
     "expert_dossiers": _entry(SIMPLE_EXTRACT, _main_model),
