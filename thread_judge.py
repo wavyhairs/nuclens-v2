@@ -170,6 +170,21 @@ def _text(event) -> str:
     return f"{getattr(event, 'title', '')} {getattr(event, 'summary', '')}"
 
 
+def hard_reject(left, right) -> tuple[str, str] | None:
+    """**구조적 모순**. 판정이 무엇이라고 했든 이쪽이 이긴다.
+
+    고리 2호기와 고리 3호기는 같은 스토리일 수 없다. 이것은 값싼 거부가 아니라
+    사실 판정이고, 별칭표가 자라면서 **나중에** 알아보게 되는 모순도 있다 —
+    모델이 놓친 것을 표가 잡는 자리다.
+
+    아래 `rule_verdict` 의 나머지 절반(`no_shared_identity`)과 성질이 다르므로
+    떼어 둔다. 그쪽은 "볼 것이 없어 묻지 않는다"는 **비용 절약**이다.
+    """
+    if asset_alias.conflict(_text(left), _text(right)):
+        return "different_thread", REJECT_UNIT_CONFLICT
+    return None
+
+
 def rule_verdict(left, right, signals: dict | None = None) -> tuple[str, str] | None:
     """LLM 없이 끝나는 자리. **거부만** 한다.
 
@@ -179,8 +194,9 @@ def rule_verdict(left, right, signals: dict | None = None) -> tuple[str, str] | 
     Returns:
         (verdict, reason) 또는 None(= LLM 에게 물어야 한다).
     """
-    if asset_alias.conflict(_text(left), _text(right)):
-        return "different_thread", REJECT_UNIT_CONFLICT
+    hard = hard_reject(left, right)
+    if hard is not None:
+        return hard
     shared = (
         (left.units & right.units)
         | (left.entities & right.entities)
@@ -264,20 +280,42 @@ def judge(pairs: list[dict], *, cache_path: Path | None = None, client=None,
     todo: list[dict] = []
     cache = load_cache(cache_path)
 
+    def reject(key: str, verdict: str, reason: str) -> None:
+        verdicts[key] = {"verdict": verdict, "reason": reason,
+                         "relationship": "", "method": "rule"}
+        stats["rule_rejected"] += 1
+        stats["rule_reasons"][reason] = stats["rule_reasons"].get(reason, 0) + 1
+
     for row in pairs:
         key = row["key"]
-        ruled = rule_verdict(row["left"], row["right"], row.get("signals"))
-        if ruled is not None:
-            verdict, reason = ruled
-            verdicts[key] = {"verdict": verdict, "reason": reason,
-                             "relationship": "", "method": "rule"}
-            stats["rule_rejected"] += 1
-            stats["rule_reasons"][reason] = stats["rule_reasons"].get(reason, 0) + 1
+        # 순서가 중요하다. **구조적 모순 → 캐시 → 값싼 거부 → 질문.**
+        #
+        # 종전에는 값싼 거부가 캐시보다 앞이었다. 그래서 한 번 판정한 쌍이 나중에
+        # 통째로 버려졌다 — `no_shared_identity` 는 "구조화 칸이 비어 있고 어휘도
+        # 문턱 아래"라는 뜻인데, lexical 은 IDF 가중이라 **원장이 자라면 같은 쌍의
+        # 점수가 내려간다.** 판정할 때는 6.0 위였던 쌍이 몇 주 뒤 5.9 가 되고,
+        # 그 순간 "묻지 않는다"가 "판정을 버린다"로 바뀐다.
+        #
+        # 실측 2026-09-20(원장 888건·캐시 3,170쌍): 살아있는 고리 67개와 거부권
+        # 57개가 이 줄에서 사라지고 있었다. 예: 「호남권 반도체 클러스터 전력·용수
+        # 공급 경로 확정」↔「정부, 호남 반도체 산단 전력·용수 인프라 예타 면제」
+        # (lex 5.98 — 판정은 same_thread).
+        #
+        # 규칙은 **값싼 거부**이지 최종 판단이 아니다(이 모듈 머리말). 이미 답이
+        # 있으면 아낄 비용이 없으므로 답을 쓴다. 구조적 모순만 예외다 — 그것은
+        # 비용이 아니라 사실이고, 별칭표가 자라며 나중에 알아보기도 한다.
+        hard = hard_reject(row["left"], row["right"])
+        if hard is not None:
+            reject(key, *hard)
             continue
         hit = cached_verdict(cache, key)
         if hit is not None:
             verdicts[key] = {**hit, "method": "cache"}
             stats["from_cache"] += 1
+            continue
+        ruled = rule_verdict(row["left"], row["right"], row.get("signals"))
+        if ruled is not None:
+            reject(key, *ruled)
             continue
         todo.append(row)
 

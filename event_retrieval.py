@@ -215,7 +215,24 @@ def candidates(index: Index, event: Event, *, limit: int = 12,
     # 달라지고(PYTHONHASHSEED), idf 가 같은 낱말이 흔해서 상위 12칸의 내용이 실행마다
     # 바뀐다. 실측 2026-09-19: 같은 원장으로 후보가 3,595 / 3,602 / 3,615쌍으로 갈렸다.
     # 후보가 흔들리면 판정·묶음·thread_id 까지 전부 흔들린다.
-    ranked_tokens = sorted(event.tokens,
+    #
+    # **자기 혼자만 가진 낱말은 순위에서 뺀다.** idf 가 가장 높은 것이 바로 그런
+    # 낱말이라(df=1 → idf 최대) 예산 12칸을 앞에서부터 먹는데, 그 낱말의 역색인
+    # 항목은 `{자기 자신}` 뿐이라 **구조적으로 아무것도 찾아오지 못한다.**
+    #
+    # 2026-09-20 SAR 실측이 이 줄의 이유다. 9/18 「기후부, 전북 진안·충남 금산서
+    # 계절별 송전용량(SAR) 시범사업 시행」은 진안·금산·1년간·탄력적으로 같은
+    # df=1 낱말이 13개라 12칸을 다 먹었고, 정작 8월 사건과 이어 주는 `sar`·
+    # `계절별`·`송전용량`(df=2)이 잘려 **후보 풀이 0건**이었다. 그 쌍이 살아난
+    # 것은 8월 사건 쪽이 짧아서 반대 방향에서 끌어왔기 때문이다 — 운이었다.
+    #
+    # 제목이 길고 고유명사가 많을수록 스스로를 고립시킨다. 후속 사건일수록
+    # 구체적이라 길어지므로, 이 버그는 정확히 추적하고 싶은 쪽을 때린다.
+    # 실측(원장 888건): 12칸 중 평균 4.5칸이 죽어 있고, 35건은 12칸 전부가
+    # 죽어 있었다. 자기 후보가 0건인 사건이 66건(7.4%)에서 16건으로 준다.
+    live_tokens = [token for token in event.tokens
+                   if len(index.postings.get(f"t:{token}", ())) > 1]
+    ranked_tokens = sorted(live_tokens,
                            key=lambda token: (-index.idf.get(token, 0.0), token))
     for token in ranked_tokens[:12]:
         pool |= index.postings.get(f"t:{token}", set())
@@ -239,6 +256,18 @@ def candidates(index: Index, event: Event, *, limit: int = 12,
                      "signals": parts})
     rows.sort(key=lambda row: (-row["score"], row["issue_id"]))
     return rows[:limit]
+
+
+def score_pair(index: Index, left: Event, right: Event) -> dict:
+    """검색을 거치지 않고 **이 두 사건만** 잰다.
+
+    `candidates()` 는 역색인으로 풀을 좁힌 뒤 점수를 매기지만, 이미 판정이 있는
+    쌍은 풀에 들지 않아도 그래프에 남아야 한다(`tools/build_threads.gather_pairs`).
+    그때 쓰는 자리다 — 같은 척도를 두 번 구현하지 않으려고 여기 둔다.
+    """
+    score, signals = _overlap_score(index, left, right)
+    return {"score": round(score, 3), "gap_days": _gap_days(left, right),
+            "signals": signals}
 
 
 def _gap_days(left: Event, right: Event) -> int | None:
