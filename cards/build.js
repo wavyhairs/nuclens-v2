@@ -71,7 +71,11 @@ function loadTheme() {
 }
 
 function parseArgs(argv) {
-  const out = { input: "slides.json", outDir: "out", sample: false, check: false };
+  // 스토리 카드는 같은 렌더러를 다른 폴더로 뽑는다(같은 out 을 쓰면 나중에 도는
+  // 쪽이 앞 앨범 PNG 를 지운다). v1 은 CARDS_OUT 환경변수로, v2 는 --out-dir
+  // 플래그로 했다 — 둘 다 받는다. 플래그가 있으면 그것이 이긴다.
+  const out = { input: "slides.json", outDir: process.env.CARDS_OUT || "out",
+    sample: false, check: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--sample") out.sample = true;
@@ -585,11 +589,307 @@ ${fontLinks(theme)}
   .editorial-site { color: rgba(238,241,244,.52); }
   .editorial-source { text-align: right; font-size: 26px; line-height: 1.45; }
   .editorial-source strong { color: ${c.inkOnDark}; }
+
+  /* ── 스토리 카드(v1 이식) ─────────────────────────────────────────
+     일일 카드와 다른 트랙이다. 밝은 크림 판형에 이슈 하나를 5장으로 푼다 —
+     같은 앨범이 아니라 별도 앨범으로 나가므로 판형이 달라도 된다. */
+  .card.st::after { display: none; }
+
+  /* ── 스토리 카드뉴스(5장) ────────────────────────────────────────────────
+     이슈 하나를 표지·사실·쟁점·의미·체크리스트로 푸는 판형. 일일 카드와 달리
+     장마다 역할이 다르고, 재료는 chronicle(이벤트·서사·관전포인트)에서 온다.
+     밝은 아이보리 바탕 + 네이비 잉크 + 블루 포인트(연두는 폐기 팔레트라 안 쓴다). */
+  .card.st { padding: 0; display: flex; flex-direction: column;
+    background: #F6F2E9; color: #12294C; }
+  /* 장마다 바탕을 달리해 넘길 때 리듬을 준다(시안). 쟁점 장만 옅은 블루 판. */
+  .card.st.st-blue { background: #E6EEFA; }
+  .st-hd { padding: 36px 44px 0; display: flex; justify-content: space-between;
+    align-items: flex-start; flex: 0 0 auto; }
+  .st-hd .brand { font-family: ${theme.fonts.heading.css}; font-size: 29px;
+    font-weight: 900; letter-spacing: 3px; }
+  .st-hd .tagline { display: block; margin-top: 7px; font-size: 16px; font-weight: 750;
+    letter-spacing: 2.4px; color: #8A93A1; }
+  .st-hd .num { font-size: 21px; font-weight: 800; letter-spacing: 2px; color: #8A93A1; }
+  .st-body { flex: 1; padding: 24px 44px 34px; display: flex; flex-direction: column;
+    min-height: 0; }
+  .st-chip { align-self: flex-start; padding: 13px 26px; border-radius: 999px;
+    background: #DDE8F6; color: #1F5FA8; font-size: 30px; font-weight: 850; }
+  .st-q { margin-top: 20px; font-family: ${theme.fonts.heading.css}; font-size: 46px;
+    font-weight: 850; line-height: 1.26; letter-spacing: -1.8px; word-break: keep-all; }
+  .st-q .em { color: #1F5FA8; }
+  .st-row { display: flex; align-items: center; gap: 20px; }
+  .st-row .st-q { margin-top: 0; font-size: 50px; }
+
+  /* 표지 */
+  .st-photo { position: relative; height: 470px; flex: 0 0 auto; background-size: cover;
+    background-position: center; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 86%); }
+  .st-photo::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(18,41,76,.46) 0%, rgba(18,41,76,.12) 40%,
+      rgba(18,41,76,.06) 100%); }
+  .st-photo .st-hd { position: relative; z-index: 1; color: #F7F5EF; }
+  .st-photo .st-hd .tagline, .st-photo .st-hd .num { color: rgba(247,245,239,.78); }
+  .st-cover .st-body { padding-top: 34px; }
+  .st-title { margin-top: 20px; font-family: ${theme.fonts.heading.css}; font-size: 78px;
+    font-weight: 850; line-height: 1.16; letter-spacing: -2.6px; word-break: keep-all; }
+  .st-title .em { color: #1F5FA8; }
+  .st-desc { margin-top: 24px; font-size: 33px; line-height: 1.48; font-weight: 600;
+    color: #41506B; word-break: keep-all; }
+  /* 표지 배지 — 그 이슈의 핵심 숫자. 원문에 있는 값이 있을 때만 붙는다. */
+  .st-badge { margin: auto 0; align-self: stretch; display: flex; align-items: baseline;
+    gap: 22px; background: #E6EEFA; border-left: 10px solid #1F5FA8; padding: 30px 34px; }
+  .st-badge .v { font-family: ${theme.fonts.heading.css}; font-size: 72px; font-weight: 900;
+    letter-spacing: -2px; color: #12294C; }
+  .st-badge .l { font-size: 29px; font-weight: 700; color: #41506B; word-break: keep-all; }
+  .st-credit { margin-top: auto; font-size: 16px; font-weight: 600; color: #9AA3B0; }
+  .st-slogan { margin-top: 14px; display: flex; justify-content: space-between;
+    align-items: baseline; }
+  .st-slogan strong { font-family: ${theme.fonts.heading.css}; font-size: 24px;
+    font-weight: 900; letter-spacing: 2px; }
+  .st-slogan span { font-size: 19px; font-weight: 650; color: #8A93A1; }
+
+  .st-lede { margin-top: 26px; font-family: ${theme.fonts.heading.css}; font-size: 54px;
+    font-weight: 850; line-height: 1.3; letter-spacing: -1.6px; word-break: keep-all; }
+  .st-lede .em { color: #1F5FA8; }
+
+  /* 사실 정리 — 세로 타임라인 */
+  .st-tl { flex: 1; margin: 26px 0 0; display: flex; flex-direction: column;
+    justify-content: space-evenly; }
+  .st-tl .tl-row { position: relative; display: grid; grid-template-columns: 34px 236px 1fr;
+    gap: 24px; align-items: center; padding-bottom: 26px; }
+  .st-tl .tl-row:last-child { padding-bottom: 0; }
+  /* 연결선은 행마다 긋지 않고 한 줄로 관통시킨다 — 행 간격이 가변이라 토막난다. */
+  .st-tl { position: relative; }
+  .st-tl::before { content: ""; position: absolute; left: 15px; top: 26px; bottom: 26px;
+    width: 2px; background: #D7DEE8; }
+  .st-tl .dot { position: relative; z-index: 1; width: 24px; height: 24px; margin-left: 4px;
+    border-radius: 50%; border: 6px solid #8FB8E4; background: #F6F2E9; box-sizing: border-box; }
+  .st-tl .tl-row.now .dot { border-color: #12294C; background: #12294C; }
+  .st-tl .when { font-size: 32px; font-weight: 800; color: #1F5FA8; word-break: keep-all; }
+  .st-tl .tl-row.now .when { color: #12294C; }
+  .st-tl .what { background: #E6EEFA; padding: 26px 30px; font-size: 33px;
+    line-height: 1.34; font-weight: 700; color: #12294C; word-break: keep-all; }
+  .st-tl .tl-row.now .what { background: #DCE8F8; }
+  .st-note { margin-top: 20px; display: grid; grid-template-columns: 36px 1fr; gap: 18px;
+    align-items: center; background: #EFEADC; padding: 28px 30px; font-size: 29px;
+    line-height: 1.4; font-weight: 650; color: #1F3D6B; word-break: keep-all; }
+  .st-note .ic { width: 32px; height: 32px; color: #1F5FA8; display: block; }
+  .st-note .ic svg { width: 100%; height: 100%; fill: none; stroke: currentColor;
+    stroke-width: 3; stroke-linejoin: round; }
+
+  /* 핵심 쟁점 — 번호 카드 */
+  .st-cards { flex: 1; margin: 26px 0 0; display: flex; flex-direction: column;
+    justify-content: space-evenly; gap: 20px; }
+  .st-icard { background: #FFFFFF; border: 1px solid #D3E0F2; padding: 30px 32px;
+    display: grid; grid-template-columns: 104px 1fr; gap: 28px; align-items: center; }
+  .st-icard .lead { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .st-icard .n { font-family: ${theme.fonts.heading.css}; font-size: 26px; font-weight: 900;
+    color: #1F5FA8; letter-spacing: 1px; }
+  .st-icard .ic { width: 84px; height: 84px; border-radius: 50%; background: #E7EEF8;
+    color: #1F5FA8; display: flex; align-items: center; justify-content: center; }
+  .st-icard .ic svg { width: 46px; height: 46px; fill: none; stroke: currentColor;
+    stroke-width: 3; stroke-linejoin: round; }
+  .st-icard h3 { font-size: 37px; font-weight: 850; word-break: keep-all; }
+  .st-icard ul { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+  .st-icard li { list-style: none; display: grid; grid-template-columns: 14px 1fr; gap: 12px;
+    font-size: 28px; line-height: 1.4; font-weight: 650; color: #35455F;
+    word-break: keep-all; }
+  .st-icard li::before { content: ""; width: 9px; height: 9px; margin-top: 12px;
+    border-radius: 50%; background: #1F5FA8; }
+
+  /* 왜 중요한가 */
+  .st-msg { margin-top: 24px; font-family: ${theme.fonts.heading.css}; font-size: 56px;
+    font-weight: 850; line-height: 1.3; letter-spacing: -1.8px; word-break: keep-all; }
+  .st-msg .em { color: #1F5FA8; }
+  .st-three { flex: 1; margin: 34px 0; display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px; align-content: center; }
+  .st-three .cell { background: #FFFDF7; border: 1px solid #E6E0D2; padding: 34px 22px;
+    text-align: center; }
+  .st-three .ic { width: 96px; height: 96px; margin: 0 auto 20px; border-radius: 50%;
+    background: #E7EEF8; color: #1F5FA8; display: flex; align-items: center;
+    justify-content: center; }
+  .st-three .ic svg { width: 52px; height: 52px; fill: none; stroke: currentColor;
+    stroke-width: 3.5; }
+  .st-three h4 { font-size: 32px; font-weight: 850; word-break: keep-all; }
+  .st-three p { margin-top: 14px; font-size: 26px; line-height: 1.44; font-weight: 620;
+    color: #41506B; word-break: keep-all; }
+  .st-quotes { margin-top: auto; display: flex; flex-direction: column; gap: 14px; }
+  .st-quote { background: #FFFDF7; border: 1px solid #E6E0D2; padding: 20px 24px;
+    display: grid; grid-template-columns: 40px 1fr; gap: 18px; font-size: 29px;
+    line-height: 1.42; font-weight: 650; color: #35455F; word-break: keep-all; }
+  .st-quote::before { content: "C"; font-family: ${theme.fonts.heading.css};
+    font-size: 46px; font-weight: 900; color: #A9C4E6; line-height: .9; }
+
+  /* 앞으로 볼 것 */
+  /* 인용을 옆 칸에 세우면 세로로 긴 빈 면에 작은 글씨가 갇힌다(지니 09-19).
+     체크리스트가 폭을 다 쓰고, 인용은 그 아래 가로 띠로 깐다. */
+  .st-check { flex: 1; margin-top: 26px; display: flex; flex-direction: column;
+    justify-content: space-evenly; gap: 16px; }
+  .st-check .item { display: grid; grid-template-columns: 42px 1fr; gap: 18px;
+    align-items: center; background: #FFFDF7; border: 1px solid #E6E0D2;
+    padding: 26px 24px; font-size: 30px; font-weight: 700; color: #35455F;
+    word-break: keep-all; }
+  .st-check .item.on { background: #E6EEFA; border-color: #CFDFF4; }
+  .st-check .box { width: 38px; height: 38px; border: 2px solid #C3CDDB; color: #FFFDF7;
+    display: flex; align-items: center; justify-content: center; font-size: 19px;
+    font-weight: 900; }
+  .st-check .item.on .box { background: #1F5FA8; border-color: #1F5FA8; }
+  .st-check .item.on { color: #12294C; }
+  .st-aside { margin-top: 20px; background: #E6EEFA; padding: 26px 30px; font-size: 31px;
+    line-height: 1.4; font-weight: 700; color: #1F3D6B; word-break: keep-all;
+    display: grid; grid-template-columns: 70px 1fr; gap: 24px; align-items: center; }
+  .st-aside .ic { display: block; width: 64px; height: 64px; color: #1F5FA8; }
+  .st-aside .ic svg { width: 100%; height: 100%; fill: none; stroke: currentColor;
+    stroke-width: 3; stroke-linejoin: round; }
+  .st-cta { margin-top: 26px; align-self: flex-start; background: #12294C; color: #F6F2E9;
+    padding: 22px 40px; border-radius: 999px; font-size: 30px; font-weight: 800; }
 </style></head><body>${inner}</body></html>`;
+}
+
+
+
+const PHOTO_DIR = path.resolve(__dirname, "photos");
+let PHOTO_META = {};
+try {
+  PHOTO_META = JSON.parse(fs.readFileSync(path.join(PHOTO_DIR, "photos.json"), "utf8"));
+} catch (e) {}
+
+function photoKey(label) {
+  const t = String(label || "");
+  return /해외|수출|협력|통상|외교/.test(t) ? "link"
+    : /전력|계통|수급|에너지/.test(t) ? "grid"
+    : /규제|인허가|정책|법|국회/.test(t) ? "doc"
+    : /SMR|원자로|신규|건설/.test(t) ? "atom"
+    : "wave";
+}
+
+function photoData(key) {
+  const file = path.join(PHOTO_DIR, `${key}.jpg`);
+  if (!fs.existsSync(file)) return "";
+  return `data:image/jpeg;base64,${fs.readFileSync(file).toString("base64")}`;
+}
+
+function photoCredit(key) {
+  const m = PHOTO_META[key];
+  if (!m) return "";
+  const who = (m.author || "").replace(/\s+/g, " ").trim();
+  return ["사진", who, m.license, "via Wikimedia Commons"].filter(Boolean).join(" · ");
+}
+
+
+
+
+
+function storyHead(s, tagline) {
+  return `<div class="st-hd"><div><span class="brand">NUCLENS</span>
+      <span class="tagline">${esc(tagline || "")}</span></div>
+    <span class="num">${esc(s.slideNum || "")}</span></div>`;
+}
+
+const STORY_ICONS = {
+  market: `<path d="M8 38h10v10H8zM19 26h10v22H19zM30 14h10v34H30z"/><path d="M6 8h36"/>`,
+  shield: `<path d="M24 5l17 7v13c0 11-7 18-17 22C14 43 7 36 7 25V12z"/><path d="M16 24l6 6 11-12"/>`,
+  network: `<circle cx="24" cy="11" r="6"/><circle cx="10" cy="37" r="6"/><circle cx="38" cy="37" r="6"/><path d="M20 16L13 31M28 16l7 15M16 37h16"/>`,
+  clip: `<path d="M20 6h14l8 8v28H20z"/><path d="M26 20h12M26 28h12M26 36h8"/>`,
+  coins: `<ellipse cx="24" cy="13" rx="15" ry="6"/><path d="M9 13v8c0 3.3 6.7 6 15 6s15-2.7 15-6v-8"/><path d="M9 21v8c0 3.3 6.7 6 15 6s15-2.7 15-6v-8"/><path d="M9 29v8c0 3.3 6.7 6 15 6s15-2.7 15-6v-8"/>`,
+  plant: `<path d="M6 42V22l12-7v7l12-7v27z"/><path d="M30 42V14h12v28"/><path d="M12 28v6M20 28v6M34 22v6"/>`,
+  doc: `<path d="M13 6h16l8 8v28H13z"/><path d="M29 6v9h8"/><path d="M19 22h12M19 29h12M19 36h8"/>`,
+  scope: `<path d="M6 30l24-13 5 9-24 13z"/><path d="M30 17l9-5 5 9-9 5"/><path d="M15 36l4 8M19 44h-8"/><circle cx="38" cy="30" r="3"/>`,
+};
+
+function storyIcon(kind) {
+  return `<svg viewBox="0 0 48 48">${STORY_ICONS[kind] || STORY_ICONS.market}</svg>`;
+}
+
+function renderStory(s, theme, type) {
+  const num = esc(s.slideNum || "");
+  const chip = s.chip ? `<div class="st-chip">${esc(s.chip)}</div>` : "";
+
+  if (type === "story-cover") {
+    const key = s.photo || photoKey(s.topic);
+    const data = photoData(key);
+    return shell(
+      `<div class="card st st-cover">
+        <div class="st-photo" style="background-image:url('${data}')">
+          ${storyHead(s, s.tagline || "NEWS FOR A BRIGHTER TOMORROW")}
+        </div>
+        <div class="st-body">
+          <div class="st-row">${chip}${s.topic ? `<span class="st-desc" style="margin:0;font-size:24px;font-weight:700;color:#12294C">${esc(s.topic)}</span>` : ""}</div>
+          <h1 class="st-title">${accentize(s.headline, "em")}</h1>
+          <p class="st-desc">${esc(s.deck || "")}</p>
+          ${s.badge ? `<div class="st-badge"><span class="v">${esc(s.badge.value)}</span>
+            <span class="l">${esc(s.badge.label)}</span></div>` : ""}
+          <div class="st-credit">${esc(photoCredit(key))}</div>
+          <div class="st-slogan"><strong>NUCLENS</strong><span>${esc(s.slogan || "원전을 넘어, 더 나은 내일로")}</span></div>
+        </div>
+      </div>`, theme, false);
+  }
+
+  if (type === "story-facts") {
+    const rows = (s.timeline || []).slice(0, 5).map((r, i, arr) =>
+      `<div class="tl-row${i === arr.length - 1 ? " now" : ""}"><div class="dot"></div>
+        <div class="when">${esc(r.when)}</div><div class="what">${esc(r.what)}</div></div>`).join("");
+    return shell(
+      `<div class="card st">
+        ${storyHead(s, s.tagline || "GLOBAL NUCLEAR INSIGHT")}
+        <div class="st-body">
+          <div class="st-row">${chip}<h2 class="st-q">${accentize(s.headline, "em")}</h2></div>
+          ${s.lede ? `<p class="st-lede">${accentize(s.lede, "em")}</p>` : ""}
+          <div class="st-tl">${rows}</div>
+          ${s.note ? `<div class="st-note"><span class="ic">${storyIcon("clip")}</span><span>${esc(s.note)}</span></div>` : ""}
+        </div>
+      </div>`, theme, false);
+  }
+
+  if (type === "story-issues") {
+    const cards = (s.issues || []).slice(0, 3).map((it, i) =>
+      `<div class="st-icard"><div class="lead"><span class="n">${String(i + 1).padStart(2, "0")}</span>
+          <span class="ic">${storyIcon(it.icon || ["coins", "plant", "doc"][i] || "doc")}</span></div>
+        <div><h3>${esc(it.title)}</h3>
+          <ul>${(it.points || []).slice(0, 2).map((t) => `<li><span>${esc(t)}</span></li>`).join("")}</ul>
+        </div></div>`).join("");
+    return shell(
+      `<div class="card st st-blue">
+        ${storyHead(s, s.tagline || "FOCUS ON WHAT MATTERS")}
+        <div class="st-body">
+          <div class="st-row">${chip}<h2 class="st-q">${accentize(s.headline, "em")}</h2></div>
+          <div class="st-cards">${cards}</div>
+        </div>
+      </div>`, theme, false);
+  }
+
+  if (type === "story-why") {
+    const cells = (s.pillars || []).slice(0, 3).map((c) =>
+      `<div class="cell"><div class="ic">${storyIcon(c.icon)}</div><h4>${esc(c.title)}</h4><p>${esc(c.text)}</p></div>`).join("");
+    return shell(
+      `<div class="card st">
+        ${storyHead(s, s.tagline || "BIGGER PICTURE, CLEARER INSIGHTS")}
+        <div class="st-body">
+          ${chip}
+          <h2 class="st-msg">${accentize(s.headline, "em")}</h2>
+          <div class="st-three">${cells}</div>
+          <div class="st-quotes">${(s.quotes || []).slice(0, 2).map((q) => `<p class="st-quote">${esc(q)}</p>`).join("")}</div>
+        </div>
+      </div>`, theme, false);
+  }
+
+  // story-check
+  const items = (s.checks || []).slice(0, 5).map((c) =>
+    `<div class="item${c.done ? " on" : ""}"><span class="box">${c.done ? "✓" : ""}</span><span>${esc(c.text)}</span></div>`).join("");
+  return shell(
+    `<div class="card st">
+      ${storyHead(s, s.tagline || "NEXT STEP FOR A SUSTAINABLE TOMORROW")}
+      <div class="st-body">
+        <div class="st-row">${chip}<h2 class="st-q">${accentize(s.headline, "em")}</h2></div>
+        <div class="st-check">${items}</div>
+        ${s.aside ? `<div class="st-aside"><span class="ic">${storyIcon("scope")}</span><span>${esc(s.aside)}</span></div>` : ""}
+        <div class="st-cta">${esc(s.cta || "지금 이슈를 계속 업데이트합니다")} →</div>
+      </div>
+    </div>`, theme, false);
 }
 
 function renderSlide(s, theme) {
   let type = s.type || "step";
+  if (type.startsWith("story-")) return renderStory(s, theme, type);
   if (type === "step" || type === "editorial") {
     // step 은 여기서 editorial 로 바뀌고, 이미 editorial 인 심층 카드는
     // 사진만 물려받는다(editorialFromStep 이 둘 다 처리한다).
