@@ -94,6 +94,20 @@ curl -s -H "Authorization: Bearer $PUSH_ADMIN_TOKEN" \
 `/push/key` 가 200 이면 사이트의 '오늘' 화면에 🔔 버튼이 뜬다. 한 번 눌러 켜고,
 `/push/list` 가 그 구독을 돌려주면 창구는 다 선 것이다.
 
+| 응답 | 뜻 |
+|---|---|
+| `200 {"count":0,…}` | 창구 정상 · 아직 아무도 안 켰다 |
+| `200 {"count":1,…}` | 구독 있음 |
+| `401 unauthorized` | 토큰 불일치 — Cloudflare·GitHub 값이 같은지 |
+| `503 push_admin_token_missing` | Cloudflare 에 토큰 미설정 |
+| `503 push_store_missing` | KV 바인딩 없음 |
+
+**토큰 없이 보려면 운영 콘솔을 연다.** `/admin` 의 맨 윗줄에 구독 수가 함께
+뜬다("· 아침 알림 구독 3명"). 콘솔은 `/push/list` 를 부르지 않는다 — 그 토큰은
+구독자 전원에게 알림을 보낼 수 있는 열쇠라 화면으로 내리지 않고, 전용 창구
+(`/admin/api/push`)가 **숫자만** 낸다. endpoint 는 그 브라우저를 특정하는
+주소이므로 화면에는 오지 않는다.
+
 발송만 따로 시험하려면 로컬에서:
 
 ```bash

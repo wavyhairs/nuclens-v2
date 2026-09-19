@@ -2222,6 +2222,43 @@ async function loadJSON(name) {
   return response.json();
 }
 
+// 아침 알림 구독 수. 콘솔에서 이걸 보고 싶은 이유는 하나다 — **알림을 켠 사람이
+// 있는지**를 아는 길이 지금은 토큰을 들고 curl 을 치는 것뿐이기 때문이다.
+//
+// 숫자만 받는다(functions/admin/api/push.js). endpoint 는 그 브라우저를 특정하는
+// 주소라 화면까지 내려올 이유가 없다.
+//
+// **실패해도 조용하다.** 이건 진단 화면의 곁다리고, 창구가 없는 배포(아직 배포
+// 전이거나 KV 미연결)에서 빨간 줄을 하나 더 만들 이유가 없다. 다만 저장소가 아예
+// 안 붙은 것은 운영자가 알아야 하므로 그 경우만 말한다 — '0명'과 '셀 수 없음'은
+// 다른 사실이고, 둘을 같은 화면으로 보여 주면 설정 누락이 '아무도 안 켰다'로 읽힌다.
+async function paintPushSubscribers() {
+  const slot = document.getElementById("pushSubs");
+  if (!slot) return;
+  let response;
+  try {
+    response = await fetch(`/admin/api/push?cb=${Date.now()}`, { cache: "no-store" });
+  } catch {
+    return;
+  }
+  if (response.status === 503) {
+    slot.innerHTML = " · <strong>아침 알림: 구독 저장소 미연결</strong>";
+    return;
+  }
+  if (!response.ok) return;
+  let payload;
+  try {
+    payload = await response.json();
+  } catch {
+    return;
+  }
+  const count = Number(payload?.count);
+  if (!Number.isFinite(count)) return;
+  slot.textContent = count
+    ? ` · 아침 알림 구독 ${count}명${payload.capped ? "+" : ""}`
+    : " · 아침 알림 구독 없음";
+}
+
 async function start() {
   const status = document.getElementById("adminStatus");
   try {
@@ -2250,7 +2287,10 @@ async function start() {
   status.className = "readiness-panel ready";
   status.innerHTML = `<div><strong>병합 ${esc((totals.merge || 0) + (totals.duplicate || 0))}건 · 연결된 이슈 ${esc(clusters)}개</strong>
     <p>같은 날 병합은 기사 ${esc(totals.folded_articles || 0)}건을 접었습니다. 위험한 쪽은 누락이 아니라 오병합입니다.${
-      writable ? "" : " <strong>판정 저장은 지금 쓸 수 없습니다</strong> — KV 연결을 확인하세요."}</p></div>`;
+      writable ? "" : " <strong>판정 저장은 지금 쓸 수 없습니다</strong> — KV 연결을 확인하세요."}
+      <span id="pushSubs"></span></p></div>`;
+  // 구독 수는 늦게, 따로 붙인다 — 이 한 줄 때문에 진단 화면이 늦어지면 안 된다.
+  paintPushSubscribers().catch(() => {});
   document.getElementById("adminGenerated").textContent =
     `생성 ${String(state.merges?.generated_at || "").slice(0, 16).replace("T", " ")}`;
 
