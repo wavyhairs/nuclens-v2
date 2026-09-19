@@ -109,6 +109,9 @@ const responses = {
   "/admin/data/config.json": () => fs.readFileSync(path.join(dataDir, "config.json"), "utf8"),
   // KV 는 로컬에 없다. 판정이 하나도 없는 상태가 콘솔의 기본이므로 그것으로 답한다.
   "/admin/api/overrides": () => JSON.stringify({ version: 1, rev: 0, updated_at: "", entries: [] }),
+  // 아침 알림 구독 수. 콘솔은 숫자만 받는다 — endpoint 는 그 브라우저를 특정하는
+  // 주소라 화면까지 올 이유가 없다(functions/admin/api/push.js).
+  "/admin/api/push": () => JSON.stringify({ count: 3, capped: false }),
 };
 
 const requested = [];
@@ -149,11 +152,22 @@ await new Promise(resolve => setTimeout(resolve, 50));
 
 // ── 검사 ───────────────────────────────────────────────────────────────────
 
+// 부르는 곳을 허용 목록으로 못박는다. 콘솔이 조용히 새 경로를 타기 시작하면
+// — 특히 독자 화면이 쓰는 /data 나 토큰이 필요한 창구를 — 배포 뒤에야 안다.
 assert.deepEqual(
   [...new Set(requested)].sort(),
-  ["/admin/api/overrides", "/admin/data/config.json", "/admin/data/merges.json"],
+  ["/admin/api/overrides", "/admin/api/push",
+   "/admin/data/config.json", "/admin/data/merges.json"],
   `콘솔이 예상 밖의 경로를 불렀다: ${[...new Set(requested)].join(", ")}`,
 );
+// 그 중 하나는 /push/list 가 **아니다.** 그쪽 토큰은 구독자 전원에게 알림을
+// 보낼 수 있는 열쇠라, 숫자를 띄우자고 화면으로 내리지 않는다.
+assert.ok(!requested.some(path => path.startsWith("/push/")),
+  "콘솔이 발송 창구를 직접 불렀다");
+
+// 받은 숫자가 실제로 화면에 앉는가. 창구만 서고 화면이 안 쓰면 증상이
+// '아무 일도 안 일어남' 하나다.
+assert.match(byId("pushSubs").textContent, /아침 알림 구독 3명/);
 
 // 상태 줄이 오류 문구로 끝나면 데이터를 못 읽은 것이다.
 const status = written.get("adminStatus") || "";
