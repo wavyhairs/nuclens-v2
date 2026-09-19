@@ -20,10 +20,12 @@
 from __future__ import annotations
 
 import base64
+import io
 import json
 import sys
 import threading
 import unittest
+from contextlib import redirect_stdout
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -242,6 +244,9 @@ class EndToEndTests(unittest.TestCase):
         self.server.state = {"token": self.TOKEN, "list_status": 200, "subscriptions": [],
                              "endpoint_status": {}, "delivered": [], "pruned": []}
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        # shutdown 은 serve_forever 를 멈출 뿐 소켓을 안 닫는다 — 둘 다 걸지
+        # 않으면 검사마다 ResourceWarning 이 하나씩 쌓인다.
+        self.addCleanup(self.server.server_close)
         self.addCleanup(self.server.shutdown)
         self.site = f"http://127.0.0.1:{self.server.server_address[1]}"
 
@@ -266,12 +271,23 @@ class EndToEndTests(unittest.TestCase):
         return endpoint, private, auth_raw
 
     def run_main(self, *argv, **env):
+        """발송기를 돌리고, 찍은 것은 `self.log` 에 담는다.
+
+        **stdout 을 삼키는 것이 핵심이다.** 발송기는 운영 사고를 `::error::` 로
+        찍는데, 그것을 그대로 흘리면 GitHub Actions 가 검사 실행의 어노테이션으로
+        집어 올린다 — 파이썬을 건드리는 모든 PR 에 빨간 줄이 하나씩 붙고,
+        그 표식이 뜻하기로 한 '아침 알림이 misconfigured' 가 묻힌다
+        (2026-09-19 실측: PR #136 의 통과한 잡에 error 하나).
+        """
         environ = {"SITE_URL": self.site, "PUSH_ADMIN_TOKEN": self.TOKEN,
                    "VAPID_PRIVATE_KEY": self.vapid_b64,
                    "VAPID_SUBJECT": "mailto:ops@example.test"}
         environ.update(env)
-        with patch.dict("os.environ", environ, clear=False):
-            return push_notify.main(list(argv))
+        captured = io.StringIO()
+        with patch.dict("os.environ", environ, clear=False), redirect_stdout(captured):
+            code = push_notify.main(list(argv))
+        self.log = captured.getvalue()
+        return code
 
     def test_the_phone_can_read_what_the_briefing_said(self):
         """서비스워커는 `event.data.json()` 한 줄이다. 여기서 풀리는 것이 곧
@@ -293,6 +309,8 @@ class EndToEndTests(unittest.TestCase):
                          "1. 원안위 하나로 재가동 승인\n2. 테라파워 협력\n3. 국정감사 대응")
         self.assertEqual(opened["url"], "/?src=push")
         self.assertEqual(opened["tag"], "nuclens-brief-2026-09-19")
+        # 잘 간 날의 로그에는 등급 표식이 없다.
+        self.assertNotIn("::", self.log)
 
     def test_a_dead_subscription_is_swept_and_the_rest_still_go(self):
         """404·410 은 '이 구독은 이제 없다'는 뜻이다. 남겨 두면 매일 같은
@@ -313,16 +331,22 @@ class EndToEndTests(unittest.TestCase):
         self.server.state["endpoint_status"] = {"/ep/a": 500, "/ep/b": 500}
         self.assertEqual(self.run_main(), 1)
         self.assertEqual(self.server.state["pruned"], [], "500 은 정리 대상이 아니다")
+        self.assertIn("::error::", self.log)
 
     def test_a_partial_failure_is_not_a_red_light(self):
         self.add_subscriber("a")
         self.add_subscriber("b")
         self.server.state["endpoint_status"] = {"/ep/b": 500}
         self.assertEqual(self.run_main(), 0)
+        self.assertIn("::warning::", self.log)
+        self.assertNotIn("::error::", self.log, "폰 하나가 꺼진 날을 사고로 올리면 안 된다")
 
     def test_nobody_subscribed_is_normal(self):
         self.assertEqual(self.run_main(), 0)
         self.assertEqual(self.server.state["delivered"], [])
+        # 평문이다. 구독자가 없는 것은 사고가 아니다.
+        self.assertIn("구독자 0명", self.log)
+        self.assertNotIn("::", self.log)
 
     def test_a_wrong_token_is_loud(self):
         """토큰이 어긋난 배포는 '구독자 0명'과 로그에서 구분이 안 되면
@@ -330,17 +354,23 @@ class EndToEndTests(unittest.TestCase):
         self.add_subscriber("a")
         self.assertEqual(self.run_main(PUSH_ADMIN_TOKEN="wrong"), 1)
         self.assertEqual(self.server.state["delivered"], [])
+        self.assertIn("::error::", self.log)
+        self.assertIn("401", self.log, "어느 쪽이 막았는지가 로그에 남아야 한다")
 
     def test_an_unconfigured_site_is_loud(self):
         self.add_subscriber("a")
         self.server.state["list_status"] = 503
         self.assertEqual(self.run_main(), 1)
+        self.assertIn("::error::", self.log)
 
     def test_missing_secrets_are_loud(self):
         """설정을 깜빡한 것이 조용히 '알림 없는 서비스'가 되면 안 된다."""
         self.add_subscriber("a")
         self.assertEqual(self.run_main(PUSH_ADMIN_TOKEN=""), 1)
+        self.assertIn("PUSH_ADMIN_TOKEN", self.log)
         self.assertEqual(self.run_main(VAPID_PRIVATE_KEY=""), 1)
+        self.assertIn("VAPID_PRIVATE_KEY", self.log)
+        self.assertIn("::error::", self.log)
         self.assertEqual(self.server.state["delivered"], [])
 
     def test_a_broken_key_never_reaches_the_subscribers(self):
