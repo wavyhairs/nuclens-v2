@@ -291,6 +291,9 @@ def build_cards(pairs: list[tuple[str, dict]], *, self_check: bool = True) -> li
             "what": s.get("what"),
             "why": s.get("why"),
             "kr_takeaway": s.get("kr_takeaway"),
+            # 합성 프롬프트가 이 칸에 '한수원 관점'을 직접 요구한다 — daily_brief 의
+            # implication 과 달리 라벨과 생성기가 같은 것을 말한다.
+            "khnp_direct": True,
             "cred": credibility(cluster),
         })
     return cards
@@ -375,10 +378,19 @@ def format_cards_message(cards: list[dict], *, header: str = "오늘의 원자�
         lines.append(f"<b>📌 {i}. {escape(card['headline'])}</b>{official_badge(card)}")
         if card.get("what"):
             lines.append(f"   • <b>무슨 일:</b> {escape(card['what'])}")
-        if card.get("why"):
-            lines.append(f"   • <b>왜 중요:</b> {escape(card['why'])}")
-        if card.get("kr_takeaway"):
-            lines.append(f"   • <b>🇰🇷 한수원 시사점:</b> {escape(card['kr_takeaway'])}")
+        why = card.get("why")
+        if why:
+            lines.append(f"   • <b>왜 중요:</b> {escape(why)}")
+        takeaway = card.get("kr_takeaway")
+        if takeaway:
+            if card.get("khnp_direct", True):
+                lines.append(f"   • <b>🇰🇷 한수원 시사점:</b> {escape(takeaway)}")
+            elif not why:
+                # 한수원 접점이 없다고 판정된 해석은 `왜 중요` 로 나간다. 억지로
+                # 한수원 라벨을 붙이면 "한수원은 대응이 필요하다" 류의 빈 권고와
+                # 구분되지 않는다 — 라벨이 내용보다 앞서면 그때부터 라벨이 거짓말을 한다.
+                lines.append(f"   • <b>왜 중요:</b> {escape(takeaway)}")
+            # `왜 중요` 가 이미 있으면 같은 축을 두 번 쓰지 않고 버린다.
 
         cluster = card.get("cluster") or {}
         url = cluster.get("url")

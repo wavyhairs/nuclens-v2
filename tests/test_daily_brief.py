@@ -142,11 +142,56 @@ class TestWhyImportantDropsCliches(unittest.TestCase):
         from synthesize import format_cards_message
         art = qitem()
         art["why_important"] = "원자력 산업에 중요하다."
+        art["implication"] = ""           # 이 줄이 대신 채우지 않도록 비운다
         card = db.item_to_card(art)
         self.assertIsNone(card["why"])
         message = format_cards_message([card], header="국내")
         self.assertNotIn("왜 중요", message)
         self.assertIn("무슨 일", message)
+
+
+class TestTakeawayLabelFollowsContent(unittest.TestCase):
+    """`implication` 은 한수원 접점이 있을 때만 한수원 라벨을 단다.
+
+    이 값을 만드는 수집 프롬프트에는 한수원이라는 말이 없다(원인·다음 절차·수치·
+    영향 대상을 요구한다). 그래서 라벨을 무조건 붙이면 한수원이 한 글자도 없는
+    문장이 `🇰🇷 한수원 시사점` 으로 나간다 — 2026-09-19 실측 6건 중 4건이 그랬다.
+    """
+
+    def _render(self, **over):
+        from synthesize import format_cards_message
+        art = qitem(**over)
+        return format_cards_message([db.item_to_card(art)], header="국내")
+
+    def test_direct_khnp_article_keeps_the_khnp_label(self):
+        msg = self._render(implication="한수원의 재생에너지 사업 다각화 사례이다.",
+                           implication_requirement="required")
+        self.assertIn("🇰🇷 한수원 시사점", msg)
+        self.assertNotIn("왜 중요", msg)
+
+    def test_indirect_article_renders_it_as_why(self):
+        msg = self._render(implication="AI 전력수요가 원자로 조달 방식을 제품 반복 생산으로 옮기고 있다.",
+                           implication_requirement="expected")
+        self.assertIn("왜 중요", msg)
+        self.assertNotIn("한수원 시사점", msg)
+
+    def test_the_axis_is_not_written_twice(self):
+        # why_important 가 이미 `왜 중요` 를 채웠으면 간접 해석은 버린다.
+        msg = self._render(
+            why_important="정부 검토 단계였던 지원이 예산 프로그램으로 전환됐다.",
+            implication="중복으로 실리면 안 되는 두 번째 해석 문장이다.",
+            implication_requirement="optional")
+        self.assertEqual(msg.count("왜 중요"), 1)
+        self.assertIn("예산 프로그램으로 전환", msg)
+        self.assertNotIn("두 번째 해석", msg)
+
+    def test_social_cards_keep_the_khnp_label(self):
+        # 소셜 합성 프롬프트는 이 칸에 한수원 관점을 직접 요구한다.
+        from synthesize import format_cards_message
+        card = {"headline": "제목", "what": "무슨 일.", "why": None,
+                "kr_takeaway": "한국이 참고할 대목이다.", "khnp_direct": True,
+                "cluster": {"url": "https://x.example/a", "sources": ["x"]}, "cred": {}}
+        self.assertIn("🇰🇷 한수원 시사점", format_cards_message([card], header="소셜"))
 
 
 class TestOfficialBadge(unittest.TestCase):

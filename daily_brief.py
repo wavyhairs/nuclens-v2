@@ -561,6 +561,26 @@ def _change_or_none(s: str | None) -> str | None:
     return text
 
 
+def _khnp_direct(art: dict) -> bool:
+    """`implication` 에 한수원 라벨을 달아도 되는 기사인가.
+
+    이 값을 만드는 수집 단계 프롬프트에는 한수원이라는 말이 없다 — 요구하는 것은
+    원인·다음 절차·수치·영향 대상이고, 그것은 내용상 `왜 중요` 다. 그런데 카드는
+    이 칸을 늘 `🇰🇷 한수원 시사점` 으로 불렀다. 2026-09-19 실측 6건 중 4건에
+    한수원도 한국도 주어가 아니었다("AI 데이터센터 수요가 원자력 산업의 비즈니스
+    모델을 …로 전환하는 기폭제가 되고 있다"). 라벨이 내용보다 앞서면 그때부터
+    라벨이 거짓말을 한다 — 이 어긋남은 khnp_relevance 머리말이 이미 적어 둔 것이다.
+
+    판정기를 새로 만들지 않고 그 모듈의 등급을 그대로 쓴다. `complete_required_fields`
+    가 선정분에 이미 붙여 두지만, **없으면 여기서 직접 계산한다** — 호출 순서가
+    바뀌었을 때 조용히 전부 '한수원 아님'이 되는 쪽이 더 나쁘다.
+    """
+    level = art.get("implication_requirement")
+    if not level:
+        level = khnp_relevance.relevance(art).get("level")
+    return level == "required"
+
+
 def item_to_card(art: dict) -> dict:
     """curated 항목을 synthesize.format_cards_message 호환 카드로."""
     link = art.get("link", "")
@@ -580,6 +600,7 @@ def item_to_card(art: dict) -> dict:
         "what": _korean_or_none(art.get("summary")),
         "why": _change_or_none(art.get("why_important")),
         "kr_takeaway": (art.get("implication") or "").strip() or None,
+        "khnp_direct": _khnp_direct(art),
         "cred": credibility(cluster),
     }
 
