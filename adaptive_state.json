@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-09-20"
   },
   "retired": {
@@ -292,6 +292,14 @@
       "type": "plant",
       "until": "2026-09-14T00:39:41.728913+00:00"
     },
+    "전력연구소": {
+      "new_articles": 1,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-19T18:40:53.720696+00:00",
+      "term": "전력연구소",
+      "type": "org",
+      "until": "2026-10-03T18:40:53.720696+00:00"
+    },
     "전력연구원": {
       "new_articles": 12,
       "reason": "기간 만료",
@@ -446,10 +454,58 @@
     }
   },
   "spent": {
-    "count": 2,
+    "count": 3,
     "date": "2026-09-20"
   },
   "terms": {
+    "dmg": {
+      "articles": 5,
+      "created_at": "2026-09-19T18:40:53.720696+00:00",
+      "domains": [
+        "busan.com",
+        "newscj.com",
+        "hankookilbo.com",
+        "mtnews.net",
+        "newstown.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "busan.com",
+          "hash": "34d8806ba21c17a6",
+          "importance": "nice_to_know",
+          "title": "DMG그룹, 경남에 1000억 투자해 전력 변압기 생산 공장 신설"
+        },
+        {
+          "domain": "newscj.com",
+          "hash": "ac91d6bbd584ad98",
+          "importance": "nice_to_know",
+          "title": "경남도, DMG그룹과 1000억 규모 국내복귀 투자협약 체결"
+        },
+        {
+          "domain": "hankookilbo.com",
+          "hash": "f036d69dc9bffb6e",
+          "importance": "nice_to_know",
+          "title": "DMG그룹, 경남에 1000억 투자해 생산공장 신설 및 150명 고용"
+        }
+      ],
+      "expires_at": "2026-09-20T18:40:53.720696+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-09-19T18:40:55.299311+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-19T18:40:53.720696+00:00",
+      "queries_run": 1,
+      "query": "DMG 원자력",
+      "score": 3.32,
+      "status": "tracking",
+      "term": "DMG",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "발생한국형": {
       "articles": 1,
       "created_at": "2026-09-18T15:40:41.667920+00:00",
@@ -483,57 +539,6 @@
       ],
       "yields": 2,
       "zero_streak": 1
-    },
-    "전력연구소": {
-      "articles": 6,
-      "created_at": "2026-09-16T21:18:09.029830+00:00",
-      "domains": [
-        "khnp.co.kr",
-        "energydaily.co.kr",
-        "ytn.co.kr",
-        "nocutnews.co.kr",
-        "lawissue.co.kr",
-        "newscj.com"
-      ],
-      "evidence": [
-        {
-          "domain": "khnp.co.kr",
-          "hash": "219e1b6525cba8db",
-          "importance": "nice_to_know",
-          "title": "한수원, 미국 전력연구소(EPRI) 기술이전상 수상"
-        },
-        {
-          "domain": "energydaily.co.kr",
-          "hash": "cc86ac87ddaca364",
-          "importance": "nice_to_know",
-          "title": "한수원, 머신러닝 기반 풍력발전 성능진단 기술로 EPRI 기술이전상 수상"
-        },
-        {
-          "domain": "ytn.co.kr",
-          "hash": "01ae8c5924f2b26d",
-          "importance": "nice_to_know",
-          "title": "한수원, AI 활용 풍력 터빈 진단 기술로 EPRI 기술이전 상 수상"
-        }
-      ],
-      "expires_at": "2026-09-19T18:40:53.632249+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-09-19T15:40:54.093837+00:00",
-      "new_articles": 1,
-      "origin": "auto",
-      "planned_at": "2026-09-19T15:40:51.525686+00:00",
-      "queries_run": 5,
-      "query": "전력연구소 원자력",
-      "score": 5.31,
-      "status": "extended",
-      "term": "전력연구소",
-      "ttl_hours": 48,
-      "type": "org",
-      "yield_days": [
-        "2026-09-19"
-      ],
-      "yields": 1,
-      "zero_streak": 2
     }
   },
   "version": 1
