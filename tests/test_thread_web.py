@@ -4,23 +4,31 @@
 검사의 무게도 "무엇을 그리는가"보다 "언제 안 그리는가"에 있다.
 """
 
+import re
 import unittest
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 
 import thread_web
 from event_retrieval import Event
+
+ROOT = Path(__file__).resolve().parents[1]
 
 KST = timezone(timedelta(hours=9))
 NOW = datetime(2026, 9, 13, 12, 0, tzinfo=KST)
 
 
-def _event(issue_id, title, first, last, *, briefing_count=1, moved_to=""):
+def _event(issue_id, title, first, last, *, briefing_count=1, moved_to="", hashes=None):
     return Event(
         issue_id=issue_id, title=title, summary="",
         first_seen=date.fromisoformat(first), last_seen=date.fromisoformat(last),
         units=frozenset(), plants=frozenset(), entities=frozenset(),
         assets=frozenset(), actors=frozenset(), action="", tokens=frozenset(),
-        briefing_count=briefing_count, raw={"moved_to": moved_to},
+        briefing_count=briefing_count,
+        # 근거 해시는 원장 행의 것이다. 기본값을 사건 id 에서 만들어 두면
+        # 검사마다 적지 않아도 "이 행의 근거" 가 서로 다르다는 사실이 유지된다.
+        raw={"moved_to": moved_to,
+             "hashes": list(hashes) if hashes is not None else [f"h-{issue_id}"]},
     )
 
 
@@ -331,6 +339,94 @@ class ClientHandoffTests(unittest.TestCase):
     def test_the_contract_version_is_declared(self):
         payload = _payload(_store(_many(thread_web.MIN_THREADS)))
         self.assertEqual(payload["version"], thread_web.CONTRACT_VERSION)
+
+
+class IdentityContractTests(unittest.TestCase):
+    """v2 가 늘린 것 — **라우트 주소와 사건 신원을 가른다.**
+
+    `event_id` 는 지금 열리는 주소라 흡수된 사건이 전부 같은 값으로 접힌다.
+    그 값으로 "이 근거는 누구 것인가"를 물으면 8월 사건의 기사가 9월 사건의
+    근거가 된다. 그래서 행마다 `source_event_id` 와 `evidence_hashes` 를 싣고,
+    근거를 묶는 쪽은 그 둘만 쓴다.
+    """
+
+    def _story(self):
+        moved = [_event("issue-m", "한빛 2호기 심사 지연으로 가동 중단",
+                        "2026-09-11", "2026-09-12", moved_to="issue-c")]
+        store = _store(_many(thread_web.MIN_THREADS)
+                       + [_thread("story", ["issue-a", "issue-c", "issue-m"])])
+        payload = thread_web.build_payload(store=store, events=EVENTS + moved,
+                                           milestones=[], now=NOW)
+        return next(row for row in payload["threads"] if row["thread_id"] == "story")
+
+    def test_an_absorbed_event_keeps_its_own_identity_while_the_link_moves(self):
+        row = self._story()
+        newest = row["events"][0]
+        self.assertEqual(newest["title"], "한빛 2호기 심사 지연으로 가동 중단")
+        self.assertEqual(newest["event_id"], "issue-c")        # 열리는 주소
+        self.assertEqual(newest["source_event_id"], "issue-m")  # 그날의 사건
+
+    def test_evidence_belongs_to_the_event_that_reported_it(self):
+        """흡수됐다고 근거가 흡수한 쪽으로 옮겨 가지 않는다."""
+        row = self._story()
+        by_source = {event["source_event_id"]: event for event in row["events"]}
+        self.assertEqual(by_source["issue-m"]["evidence_hashes"], ["h-issue-m"])
+        self.assertEqual(by_source["issue-c"]["evidence_hashes"], ["h-issue-c"])
+        self.assertNotIn("h-issue-m", by_source["issue-c"]["evidence_hashes"])
+
+    def test_flow_and_events_speak_the_same_id_language(self):
+        """예전에는 `flow` 만 원본 id 를 내보내 두 칸을 join 할 수 없었다.
+
+        그 상태에서는 흐름 쪽 링크가 죽은 주소를 가리킬 수도 있었다 — 흡수된
+        이슈는 보관 스냅샷을 받지 못하기 때문이다.
+        """
+        row = self._story()
+        self.assertTrue(row["flow"])
+        events_routes = {event["event_id"] for event in row["events"]}
+        for flow_row in row["flow"]:
+            self.assertIn(flow_row["event_id"], events_routes)
+            self.assertIn("source_event_id", flow_row)
+            self.assertIn("evidence_hashes", flow_row)
+
+    def test_a_collapsed_run_keeps_every_source_it_folded(self):
+        """제목이 같아 한 줄로 접힌 사본들도 원장에 남은 사건이다."""
+        twin = [_event("issue-m", "한빛 2호기 운영허가 만료로 가동 정지",
+                       "2026-09-12", "2026-09-12", moved_to="issue-c")]
+        store = _store(_many(thread_web.MIN_THREADS)
+                       + [_thread("story", ["issue-a", "issue-c", "issue-m"])])
+        payload = thread_web.build_payload(store=store, events=EVENTS + twin,
+                                           milestones=[], now=NOW)
+        row = next(row for row in payload["threads"] if row["thread_id"] == "story")
+        folded = next(f for f in row["flow"] if f["date"] == "2026-09-09")
+        self.assertEqual(folded["source_event_ids"], ["issue-c", "issue-m"])
+        self.assertEqual(folded["evidence_hashes"], ["h-issue-c", "h-issue-m"])
+
+    def test_the_screen_pins_the_same_contract_this_module_emits(self):
+        """**계약을 올릴 때 화면 상수도 같이 올린다.**
+
+        `app.js` 의 `THREAD_CONTRACT` 는 정확히 일치할 때만 장기 스토리 화면과
+        이슈 상세의 타임라인을 그린다(`longTermVisible`). 여기만 올리고 저쪽을
+        두면 배포 순간 **두 화면이 통째로 사라진다** — 모르는 모양을 그리려
+        애쓰는 것보다 안 그리는 쪽이 안전하다는 게 그 가드의 뜻이므로, 가드가
+        아니라 이 검사가 그 실수를 잡아야 한다.
+        """
+        app_js = (ROOT / "web" / "public" / "app.js").read_text(encoding="utf-8")
+        pinned = re.search(r'THREAD_CONTRACT\s*=\s*"([^"]+)"', app_js)
+        self.assertIsNotNone(pinned, "app.js 에서 THREAD_CONTRACT 를 못 찾았다")
+        self.assertEqual(pinned.group(1), thread_web.CONTRACT_VERSION)
+
+    def test_the_date_kind_is_declared_so_nobody_mixes_two_calendars(self):
+        """이 파일의 날짜는 전부 **첫 등장일**이다.
+
+        2026-09-20 SAR 실측이 이 검사의 이유다. 같은 사건을 두고 기사 보도일은
+        8/23, 원장의 첫 등장일은 8/24 였고 다음 사건은 9/18 과 9/19 로 갈렸다.
+        한 타임라인에 8/23 → 9/19 를 세우면 두 종류의 날짜가 한 축에 섞인다.
+        """
+        payload = _payload(_store(_many(thread_web.MIN_THREADS)))
+        self.assertEqual(payload["date_kind"], "first_seen")
+        for thread in payload["threads"]:
+            for row in (*thread["events"], *thread["flow"]):
+                self.assertEqual(row["date_kind"], "first_seen")
 
 
 if __name__ == "__main__":

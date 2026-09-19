@@ -5178,7 +5178,12 @@ function handleHubAction(event) {
 
 // 빌드가 계약을 바꾸면 이 화면은 뜨지 않는다. 모르는 모양을 그리려 애쓰는 것보다
 // 안 그리는 쪽이 안전하다 — 계약을 올릴 때 이 상수도 같이 올린다.
-const THREAD_CONTRACT = "thread-web-v1";
+//
+// v2 (2026-09-20): 행마다 `source_event_id`·`evidence_hashes`·`date_kind` 가
+// 늘었다. **더하기만 했다** — 이 화면이 읽는 `event_id`·`title`·`date`·
+// `relation_label` 은 의미까지 그대로라, 여기서 그리는 것은 달라지지 않는다.
+// 늘어난 칸을 쓰는 것은 카드 쪽이다(사건마다 자기 근거만 인용하게 하려고).
+const THREAD_CONTRACT = "thread-web-v2";
 
 function longTermVisible(payload, nowMs = Date.now()) {
   if (!payload || typeof payload !== "object") return false;

@@ -27,6 +27,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import card_context
 import gemini_client
 import sources
 
@@ -210,14 +211,25 @@ def source_name(link: str) -> str:
     return hit or sources.registered_domain(link) or ""
 
 
+def load_site_data(date: str) -> card_context.SiteData | None:
+    """그날 카드의 재료 한 세대. 없으면 None.
+
+    정상 당일은 `today.json` 을 탄다 — **`thread_id` 가 거기에만 있다.** 순위는
+    두 파일이 같으므로(today.json 이 그날 briefing 의 이슈를 그대로 싣는다)
+    일일 카드가 보는 것은 달라지지 않고, 스토리 카드가 이슈를 제목이 아니라
+    id 로 스레드에 이을 수 있게 된다(`card_context` 모듈 주석 ②).
+    """
+    try:
+        return card_context.load_site_data(date)
+    except card_context.ContextError as exc:
+        print(f"[cards] {exc}")
+        return None
+
+
 def load_site_ranking(date: str) -> list[dict] | None:
     """그날 브리핑의 이슈 목록을 **사이트가 정한 순서 그대로**. 없으면 None."""
-    if not BRIEFINGS_FILE.exists():
-        return None
-    for briefing in json.loads(BRIEFINGS_FILE.read_text(encoding="utf-8")):
-        if briefing.get("date") == date:
-            return briefing.get("issues") or []
-    return None
+    data = load_site_data(date)
+    return None if data is None else data.issues
 
 
 def pick_items(issue_rows: list[dict], k: int = MAX_CARDS, brief_date: str = "") -> list[dict]:
@@ -240,6 +252,9 @@ def pick_items(issue_rows: list[dict], k: int = MAX_CARDS, brief_date: str = "")
             "hash": rep.get("hash", ""),
             # 홈의 '먼저 볼 3건' 카드가 이 카피를 issue_id 로 되찾아 간다(album.json lines)
             "issue_id": row.get("issue_id", ""),
+            # 스토리 카드가 이 칸으로 스레드를 찾는다. 제목이 아니라 id 다 —
+            # 표시 제목은 움직이는 값이라 열쇠가 될 수 없다(card_context ②).
+            "thread_id": row.get("thread_id", ""),
             "title": row.get("title", ""),
             "summary": row.get("summary", ""),
             # 큐레이션이 본문에서 뽑아둔 결과. 카드의 주 재료다.
@@ -740,8 +755,8 @@ def main() -> int:
     if rows is None:
         # 사이트 데이터가 없거나 오늘 날짜가 아니다. 배포 스텝(build_data)이 먼저
         # 돌아야 한다. 어제 순위로 카드를 만드는 것보다 안 만드는 게 낫다.
-        print(f"[cards] 사이트 순위 없음 — {BRIEFINGS_FILE.relative_to(ROOT)} 에 {date} 브리핑이 없다. "
-              "배포 스텝(web/build_data.py)이 먼저 돌아야 한다")
+        print(f"[cards] 사이트 순위 없음 — {date} 브리핑이 today.json 에도 "
+              "briefings.json 에도 없다. 배포 스텝(web/build_data.py)이 먼저 돌아야 한다")
         return 1
     items = pick_items(rows, brief_date=date)
     if not items:

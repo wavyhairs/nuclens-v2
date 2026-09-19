@@ -52,7 +52,25 @@ import thread_ledger
 ROOT = Path(__file__).resolve().parent
 KST = timezone(timedelta(hours=9))
 
-CONTRACT_VERSION = "thread-web-v1"
+# v2 에서 늘어난 것은 **신원 한 칸**이다(`source_event_id`)와 그 사건에 실제로
+# 속한 기사 목록(`evidence_hashes`). `event_id` 의 의미는 바꾸지 않았다 — 프런트가
+# 링크 주소로 쓰고 있고, 그 값은 여전히 "지금 열리는 주소"다.
+#
+# 왜 칸을 늘렸나: `event_id` 는 `surviving_id()` 를 거친 **라우트** 주소라 흡수된
+# 사건이 전부 같은 값으로 접힌다. 실측 2026-09-20 라이브: 사건 229건이 라우트
+# id 171개로 접혔고, **36개 id 를 둘 이상(최대 넷)의 스토리가 동시에 주장했다.**
+# 그 값으로 "이 이슈는 어느 스토리인가"를 풀면 답이 하나로 정해지지 않는다.
+# 원장의 사건 id 로 풀면 정해진다 — 같은 날 실측에서 살아 있는 스토리 128개의
+# 사건 378건이 **전부 고유**했다.
+CONTRACT_VERSION = "thread-web-v2"
+
+# 이 투영이 내보내는 날짜가 무엇인지 소비자가 추측하지 않게 한다.
+#
+# 2026-09-20 SAR 실측이 이 상수의 이유다. 같은 사건을 두고 지시서는 8/23(기사
+# 보도일)을, 원장은 8/24(브리핑 첫 등장일)를 말했고, 다음 사건은 9/18(보도)과
+# 9/19(첫 등장)로 갈렸다. 한 타임라인에 8/23 → 9/19 를 나란히 세우면 **두 종류의
+# 날짜를 한 축에 섞은** 그림이 된다. 여기서 나가는 date 는 전부 첫 등장일이다.
+DATE_KIND = "first_seen"
 
 # 원장이 이만큼 낡으면 화면을 내린다. 판정 빌드는 하루 1회라 사흘은 세 번을
 # 내리 놓쳤다는 뜻이다 — 그 정도면 고장이지 한산한 날이 아니다.
@@ -206,7 +224,25 @@ def surviving_id(event_id: str, by_id: dict) -> str:
     return current
 
 
-def _collapse_ghosts(members: list, by_id: dict) -> list:
+def evidence_hashes(events: list) -> list[str]:
+    """이 사건(들)에 **실제로 속한** 기사 해시. 순서를 보존하고 중복만 접는다.
+
+    원장의 `hashes` 가 유일한 출처다. 흡수된 사건의 해시를 흡수한 쪽으로 옮겨
+    주지 않는다 — 옮기면 8월 사건의 기사가 9월 사건의 근거가 되어, 그 사건만
+    인용해야 하는 타임라인 한 행이 다른 날의 기사를 들고 선다.
+    """
+    out: list[str] = []
+    seen: set[str] = set()
+    for event in events:
+        for value in (getattr(event, "raw", None) or {}).get("hashes") or ():
+            article_hash = str(value or "").strip()
+            if article_hash and article_hash not in seen:
+                seen.add(article_hash)
+                out.append(article_hash)
+    return out
+
+
+def _collapse_ghosts(members: list, by_id: dict) -> tuple[list, dict]:
     """같은 이슈로 흡수되면서 **제목까지 같은** 행은 한 번만 세운다.
 
     위에서 행을 지키기로 했지만, 한 가지는 지워야 한다: 흡수 전후의 두 항목이
@@ -214,17 +250,33 @@ def _collapse_ghosts(members: list, by_id: dict) -> list:
     입고 나란히 선 것이라, 읽는 사람에게는 같은 줄이 두 번 찍힌 것으로만 보인다
     (실측 2026-09-13: 101개 스토리 중 77개에서 101행 — 317행이 216행이 됐다).
     제목이 다르면 남긴다.
+
+    **접은 행의 근거는 버리지 않는다.** 한 장면이 id 두 개를 입은 것이라면 그
+    두 id 에 달린 기사는 **같은 장면의 근거**다. 줄만 접고 근거까지 같이 버리면
+    그 행이 실제보다 얇은 출처로 선다. 그래서 접힌 쪽을 `folded` 로 돌려주고,
+    호출자가 `evidence_hashes()` 에 함께 넘긴다.
+
+    Returns:
+        (남긴 사건들, 남긴 사건 id → 그 아래로 접힌 사건들)
     """
-    seen: set[tuple[str, str]] = set()
-    out = []
+    seen: dict[tuple[str, str], str] = {}
+    out: list = []
+    folded: dict[str, list] = {}
     for event in members:
         key = (surviving_id(event.issue_id, by_id),
                " ".join(str(event.title or "").split()))
-        if key in seen:
+        kept = seen.get(key)
+        if kept is not None:
+            folded.setdefault(kept, []).append(event)
             continue
-        seen.add(key)
+        seen[key] = event.issue_id
         out.append(event)
-    return out
+    return out, folded
+
+
+def _with_folded(event, folded: dict) -> list:
+    """이 사건과 그 아래로 접힌 사본들. 근거를 셀 때 쓰는 단위다."""
+    return [event, *folded.get(event.issue_id, ())]
 
 
 # ── 살아 있는 스토리 ──────────────────────────────────────────────────────
@@ -256,7 +308,8 @@ RELATION_LABELS = {
 }
 
 
-def _flow(members: list, links: list[dict]) -> list[dict]:
+def _flow(members: list, links: list[dict], by_id: dict | None = None,
+          folded: dict | None = None) -> list[dict]:
     """**시간순** 흐름. 목록(`events`)과 방향이 반대인 것이 요점이다.
 
     목록은 "지금 어디까지 왔나"를 먼저 보여 주려고 최신을 위에 둔다. 흐름은
@@ -298,9 +351,23 @@ def _flow(members: list, links: list[dict]) -> list[dict]:
                 if relation:
                     break
         rows.append({
-            "event_id": tail.issue_id,
+            # 목록(`events`)과 **같은 규칙**을 쓴다. 예전에는 이 줄만 원본 id 를
+            # 내보내 흐름과 목록이 다른 id 공간에 살았다 — 흡수된 사건에서 두
+            # 값이 갈리므로 두 칸을 join 할 수 없었고, 흐름 쪽 링크는 죽은
+            # 주소를 가리킬 수 있었다.
+            "event_id": surviving_id(tail.issue_id, by_id or {}),
+            "source_event_id": tail.issue_id,
+            # 접힌 사본들도 원장에 남은 사건이다. 신원은 대표(tail) 하나로 두되
+            # 어느 사건들이 이 한 줄로 접혔는지는 남긴다.
+            "source_event_ids": [event.issue_id
+                                 for member in run
+                                 for event in _with_folded(member, folded or {})],
+            "evidence_hashes": evidence_hashes(
+                [event for member in run
+                 for event in _with_folded(member, folded or {})]),
             "title": tail.title,
             "date": head.first_seen.isoformat() if head.first_seen else "",
+            "date_kind": DATE_KIND,
             "relation_to_next": relation,
             "relation_label": RELATION_LABELS.get(relation, ""),
         })
@@ -313,7 +380,7 @@ def _thread_view(entry: dict, by_id: dict, labels: tuple[dict, dict],
     members = [by_id[event_id] for event_id in (entry.get("event_ids") or ())
                if event_id in by_id]
     members.sort(key=lambda event: (event.first_seen or "", event.issue_id))
-    members = _collapse_ghosts(members, by_id)
+    members, folded = _collapse_ghosts(members, by_id)
     first = next((event.first_seen for event in members if event.first_seen), None)
     last = max((event.last_seen for event in members if event.last_seen), default=None)
     # 원장의 first_seen 은 단조 감소만 하는 값이라(신원이 왕복하지 않게) 현재
@@ -362,14 +429,20 @@ def _thread_view(entry: dict, by_id: dict, labels: tuple[dict, dict],
             # 제목·날짜는 그날의 기록이고, id 는 **지금 열리는 주소**다. 흡수된
             # 사건은 둘이 갈리므로 링크 쪽만 현재 주소로 옮긴다(위 주석).
             "event_id": surviving_id(event.issue_id, by_id),
+            # 그리고 **그날의 기록 쪽에도 신원을 준다.** 제목·날짜·근거가
+            # 가리키는 사건은 라우트가 아니라 이쪽이다. 근거를 묶을 때 라우트를
+            # 쓰면 흡수된 다른 날의 기사가 섞인다(CONTRACT_VERSION 주석).
+            "source_event_id": event.issue_id,
+            "evidence_hashes": evidence_hashes(_with_folded(event, folded)),
             "title": event.title,
             "date": event.first_seen.isoformat() if event.first_seen else "",
+            "date_kind": DATE_KIND,
             "last_seen": event.last_seen.isoformat() if event.last_seen else "",
             "briefing_count": event.briefing_count,
         } for event in reversed(members)],
         # 같은 사건들을 **시간순**으로 한 번 더 싣는다. 목록은 최신순이라
         # 흐름으로 읽을 수 없다(위 주석). 중복이지만 두 칸의 질문이 다르다.
-        "flow": _flow(members, entry.get("links") or []),
+        "flow": _flow(members, entry.get("links") or [], by_id, folded),
     }
     view["next_milestone"] = next_milestone({"units": units}, milestones)
     return view
@@ -445,6 +518,9 @@ def build_payload(*, store: dict | None = None, events: list | None = None,
     stamped = _parse_ts(source)
     return {
         "version": CONTRACT_VERSION,
+        # 행마다 적는 것과 같은 값을 한 번 더 선언한다. 소비자가 행을 하나도
+        # 읽기 전에 "이 파일의 날짜는 무슨 날짜인가"를 단언할 수 있어야 한다.
+        "date_kind": DATE_KIND,
         "generated_at": now.isoformat(timespec="seconds"),
         "source_generated_at": source,
         "visible": visible,

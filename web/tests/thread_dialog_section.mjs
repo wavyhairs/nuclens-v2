@@ -58,7 +58,7 @@ const SEP_SHOWN = SAR_SEP_TITLE;
 
 function threadsPayload(overrides = {}) {
   return {
-    version: "thread-web-v1",
+    version: "thread-web-v2",
     visible: true,
     hide_after: "2026-09-23T00:45:16+09:00",
     redirects: {},
@@ -267,7 +267,7 @@ check("스토리 화면이 숨겨지면 타임라인도 같이 사라진다", ()
 });
 
 check("판정 계약 판본이 다르면 그리지 않는다", () => {
-  const future = threadsPayload({ version: "thread-web-v2" });
+  const future = threadsPayload({ version: "thread-web-v3" });
   assert.equal(build(defaultState({ threads: future })).threadDialogSection(sepIssue()), "");
 });
 
