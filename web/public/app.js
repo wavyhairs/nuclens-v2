@@ -1702,8 +1702,10 @@ function cardIndex() {
 }
 // ── 웹 푸시 ───────────────────────────────────────────────────────────
 //
-// 아침 07:00 KST 에 워크플로가 /push/send 를 부르고, 엣지가 구독자에게 한 번
-// 보낸다(.github/workflows/push-notify.yml · functions/push/send.js).
+// 아침 브리핑이 나가고 사이트가 배포된 뒤, 그 워크플로가 이어서 보낸다
+// (.github/workflows/daily-brief.yml 의 'Web push' 스텝 · tools/push_notify.py).
+// 전용 07:00 cron 은 걷었다 — 알림이 와야 하는 때는 사람이 정한 시각이 아니라
+// **오늘 브리핑이 실제로 올라온 때**다.
 //
 // 공개키를 상수로 박지 않는다. 박아 두면 키를 갈 때 앱을 다시 배포해야 하고,
 // 더 나쁘게는 **서버에 키가 없는 배포에서도 버튼이 뜬다** — 눌러도 되는 게 없는
@@ -1809,7 +1811,7 @@ async function initPush() {
           await created.unsubscribe().catch(() => {});
           throw new Error(`subscribe ${response.status}`);
         }
-        hint.textContent = "켜졌습니다. 내일 아침 7시 브리핑부터 알림이 옵니다.";
+        hint.textContent = "켜졌습니다. 내일 아침 브리핑부터 알림이 옵니다.";
         hint.hidden = false;
       }
     } catch (error) {

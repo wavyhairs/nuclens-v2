@@ -3,39 +3,23 @@
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 
-// 오늘 무엇이 올라왔는지는 **여기서 받아 온다.**
+// 오늘 무엇이 올라왔는지는 **푸시 본문에 실려 온다.**
 //
-// 보내는 쪽(functions/push/send.js)은 본문 없는 알림을 보낸다 — 본문을 실으려면
-// 구독마다 암호화를 돌려야 하고(RFC 8291), 그 구현을 검증 없이 배포 경로에 두지
-// 않기로 했다. 대신 알림이 도착한 순간 1KB 짜리 push.json 한 장을 읽는다.
-// 못 읽어도 알림은 뜬다 — 아래 기본 문구가 그 자리를 지킨다.
-async function briefCard() {
-  try {
-    const response = await fetch(`/data/push.json?cb=${Date.now()}`, { cache: "no-store" });
-    if (!response.ok) return {};
-    const card = await response.json();
-    return card && typeof card === "object" ? card : {};
-  } catch {
-    return {};
-  }
-}
-
+// 예전엔 보내는 쪽이 본문 없는 알림을 보냈고 여기서 `/data/push.json` 을 다시
+// 읽었다. 그 왕복이 실패하면(폰이 지하철에 있거나 배포가 늦으면) 알림은 매번
+// 일반 문구로만 떴다 — 조용한 퇴화였고, 로그에는 '보냄'으로 남았다.
+// 지금은 tools/push_notify.py 가 pywebpush 로 제목·본문을 암호화해 실어 보낸다.
 self.addEventListener("push", (event) => {
-  event.waitUntil((async () => {
-    let data = {};
-    try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data && event.data.text() }; }
-    // 본문이 실려 오면 그것이 우선이다 — 나중에 암호화를 붙여도 이 핸들러는
-    // 그대로 산다. 비어 있을 때만 오늘 카드를 읽는다.
-    if (!data.title && !data.body) data = await briefCard();
-    await self.registration.showNotification(data.title || "Nuclens 오늘 브리핑", {
-      body: data.body || "오늘의 원전 현안이 올라왔습니다.",
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
-      tag: data.tag || "nuclens-brief",
-      renotify: false,
-      data: { url: data.url || "/?src=push" },
-    });
-  })());
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data && event.data.text() }; }
+  event.waitUntil(self.registration.showNotification(data.title || "Nuclens 오늘 브리핑", {
+    body: data.body || "오늘의 원전 현안이 올라왔습니다.",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    tag: data.tag || "nuclens-brief",
+    renotify: false,
+    data: { url: data.url || "/?src=push" },
+  }));
 });
 
 self.addEventListener("notificationclick", (event) => {
