@@ -44,7 +44,8 @@ SHADOW_DIR = ROOT / "web" / "_shadow"
 
 
 def gather_pairs(index: event_retrieval.Index, *, per_event: int,
-                 min_score: float, cap: int | None) -> list[dict]:
+                 min_score: float, cap: int | None,
+                 cache: dict | None = None) -> list[dict]:
     """후보를 모은다. **recall 중심** — 거르는 것은 판정의 일이다."""
     seen: set[str] = set()
     rows: list[dict] = []
@@ -64,7 +65,54 @@ def gather_pairs(index: event_retrieval.Index, *, per_event: int,
                          "signals": candidate["signals"]})
     # 점수가 높은 쌍부터 묻는다. 예산이 걸리면 약한 쌍이 다음 회차로 밀린다.
     rows.sort(key=lambda row: (-row["score"], row["key"]))
-    return rows[:cap] if cap else rows
+    if cap:
+        rows = rows[:cap]
+    return rows + sticky_pairs(index, seen, cache)
+
+
+def sticky_pairs(index: event_retrieval.Index, seen: set[str],
+                 cache: dict | None) -> list[dict]:
+    """**이미 판정한 쌍은 검색에서 밀려나도 그래프에 남는다.**
+
+    후보 생성은 회차마다 흔들린다. 원장이 자라면 IDF 가 움직이고, 어제 상위
+    12칸에 들던 낱말이 오늘 밀려난다(실측 2026-09-19: 같은 원장으로 3,595 /
+    3,602 / 3,615쌍). 밀려난 쌍의 판정은 `verdicts` 에 실리지 않고, 그러면
+
+        같은 스토리 고리가 사라져     → 스토리가 쪼개진다
+        `different_thread` 거부권이   → PR #147 이 막던 오병합이 되살아난다
+        사라져
+
+    둘 다 조용한 고장이다. 화면은 멀쩡히 뜨고 목록도 그럴듯하다.
+
+    고치는 방법은 동점 정렬을 더 단단히 고정하는 것이 아니다 — 점수 경계는
+    남는다. **이미 답을 아는 쌍은 다시 찾지 못해도 답이 유효하다**는 쪽이
+    맞다. 판정 그래프가 단조(monotonic)가 되어 재빌드·부분빌드가 스토리를
+    흔들지 못한다.
+
+    비용은 0 이다. 여기서 되살리는 쌍은 전부 캐시 적중이라 LLM 을 부르지 않는다.
+    캐시에 있어도 **쓸 수 있는 판정**이 아니면(계약 판본이 다르거나 값이 깨졌으면)
+    넣지 않는다 — 그건 되살리는 것이 아니라 새로 묻는 것이다.
+
+    양쪽 사건이 원장에 살아 있을 때만 되살린다. 한쪽이 사라진 쌍은 고리를 걸
+    자리가 없다.
+    """
+    if not cache:
+        return []
+    rows: list[dict] = []
+    for key in sorted(cache):
+        if key in seen:
+            continue
+        if thread_judge.cached_verdict(cache, key) is None:
+            continue
+        left_id, _, right_id = str(key).partition("--")
+        left, right = index.by_id.get(left_id), index.by_id.get(right_id)
+        if left is None or right is None:
+            continue
+        scored = event_retrieval.score_pair(index, left, right)
+        rows.append({"key": key, "left": left, "right": right,
+                     "score": scored["score"], "gap_days": scored["gap_days"],
+                     "signals": scored["signals"], "sticky": True})
+    return rows
 
 
 def build_edges(pairs: list[dict], verdicts: dict, roots: dict[str, str]) -> tuple:
@@ -217,8 +265,11 @@ def build(args) -> int:
           f"{event_retrieval.index_size_bytes(index) / 1024:.0f} KB")
 
     pairs = gather_pairs(index, per_event=args.per_event,
-                         min_score=args.min_score, cap=args.cap)
-    print(f"[threads] 후보 {len(pairs)}쌍")
+                         min_score=args.min_score, cap=args.cap,
+                         cache=thread_judge.load_cache())
+    sticky = sum(1 for row in pairs if row.get("sticky"))
+    print(f"[threads] 후보 {len(pairs)}쌍 (검색 {len(pairs) - sticky} · "
+          f"판정 유지 {sticky})")
 
     verdicts, judge_stats = thread_judge.judge(
         pairs, client=None if args.live_llm else _OfflineClient(),
@@ -390,7 +441,11 @@ class _OfflineClient:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="장기 스토리 그림자 빌드")
-    parser.add_argument("--per-event", type=int, default=8)
+    # 8 → 12. 죽은 낱말이 빠지면서 풀이 넓어졌고(`event_retrieval.candidates`),
+    # 상한을 그대로 두면 새로 들어온 쌍이 **기존 쌍을 밀어낸다.** 실측(원장 888건,
+    # 2026-09-20): 8 이면 기존 고리 10개가 밀려나고 12 면 1개다. 그 1개도
+    # `sticky_pairs` 가 되살리므로 실제 유실은 0 이다.
+    parser.add_argument("--per-event", type=int, default=12)
     parser.add_argument("--min-score", type=float, default=3.0)
     parser.add_argument("--cap", type=int, default=0, help="0 이면 전수")
     parser.add_argument("--max-new-pairs", type=int, default=None,
