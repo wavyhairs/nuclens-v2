@@ -190,7 +190,7 @@ class CardRenderTests(unittest.TestCase):
         article = {**ESS_ARTICLE,
                    "implication": "재생에너지 100GW 확대로 무탄소 기저 전원인 "
                                   "원전의 역할 규정이 12차 전기본의 쟁점이 된다."}
-        card = daily_brief.item_to_card(article, None)
+        card = daily_brief.item_to_card(article)
         message = format_cards_message([card], header="국내")
         self.assertIn("🇰🇷 한수원 시사점", message)
         self.assertIn("12차 전기본", message)
@@ -198,7 +198,7 @@ class CardRenderTests(unittest.TestCase):
     def test_blank_implication_omits_the_line(self):
         from synthesize import format_cards_message
 
-        card = daily_brief.item_to_card(dict(UNRELATED_ARTICLE), None)
+        card = daily_brief.item_to_card(dict(UNRELATED_ARTICLE))
         self.assertNotIn("한수원 시사점", format_cards_message([card], header="국내"))
 
 

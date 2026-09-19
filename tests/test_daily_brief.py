@@ -88,64 +88,242 @@ class TestRegion(unittest.TestCase):
                                     "title": "BWXT plans fuel hub"}), "해외")
 
 
-class TestInvestment(unittest.TestCase):
-    def test_weak_evidence_omitted(self):
-        # confidence 0 / theme none / mechanism 없음 → 전부 생략
-        self.assertIsNone(db.render_investment(None))
-        self.assertIsNone(db.render_investment(db._sanitize_invest(
-            {"theme": "none", "mechanism": "뭔가", "confidence": 2})))
-        self.assertIsNone(db.render_investment(db._sanitize_invest(
-            {"theme": "smr", "mechanism": "", "confidence": 2})))
-        self.assertIsNone(db.render_investment(db._sanitize_invest(
-            {"theme": "smr", "mechanism": "근거 약함", "confidence": 0})))
+class TestInvestmentSurfaceIsGone(unittest.TestCase):
+    """텔레그램 카드에서 투자 관점이 다시 생기지 않는지 지킨다.
 
-    def test_render_full(self):
-        txt = db.render_investment(db._sanitize_invest({
-            "theme": "grid_demand", "mechanism": "데이터센터 PPA로 재가동 원전의 장기 판매가가 고정된다",
-            "beneficiary_type": "utility", "risk_side": "가스 피크발전",
-            "time_horizon": "mid", "confidence": 2}))
-        self.assertIn("발전사업자 수혜", txt)
-        self.assertIn("가스 피크발전 부담", txt)
-        self.assertIn("전력수요", txt)
-        self.assertNotIn("확신 낮음", txt)
+    예전에는 선별 뒤에 투자 분석 LLM 을 한 번 더 불러(`enrich_investment`)
+    `💰 투자 관점` 줄을 붙였다. 이 브리핑의 독자는 투자자가 아니라 정책·산업
+    실무자다 — 카드는 무슨 일이 있었고 무엇이 달라졌는지만 말한다.
+    """
 
-    def test_low_confidence_hedged(self):
-        txt = db.render_investment(db._sanitize_invest({
-            "theme": "uranium", "mechanism": "감산이 이어지면 현물가 상방",
-            "beneficiary_type": "uranium_miner", "time_horizon": "near",
-            "confidence": 1}))
-        self.assertIn("확신 낮음", txt)
+    def test_investment_helpers_are_removed(self):
+        for name in ("enrich_investment", "render_investment", "_sanitize_invest",
+                     "INVEST_SYSTEM_PROMPT", "INVEST_THEMES"):
+            self.assertFalse(hasattr(db, name), f"{name} 이 되살아났다")
 
-    def test_sanitize_bad_values(self):
-        s = db._sanitize_invest({"theme": "meme_stocks", "mechanism": "x" * 500,
-                                 "beneficiary_type": "tesla", "time_horizon": "tomorrow",
-                                 "confidence": "high"})
-        self.assertEqual(s["theme"], "none")
-        self.assertEqual(s["beneficiary_type"], "none")
-        self.assertEqual(s["time_horizon"], "mid")
-        self.assertEqual(s["confidence"], 0)
-        self.assertLessEqual(len(s["mechanism"]), 180)
+    def test_card_has_no_investment_field(self):
+        card = db.item_to_card(qitem())
+        self.assertNotIn("investment", card)
 
-    def test_enrich_gemini_error_returns_empty(self):
-        orig_call, orig_avail = db.call_json, db.is_available
-        db.is_available = lambda: True
+    def test_rendered_card_has_no_investment_expression(self):
+        from synthesize import format_cards_message
+        # 카드에 investment 키를 억지로 넣어도 렌더러가 그 줄을 만들지 않는다.
+        card = db.item_to_card(qitem())
+        card["investment"] = "SMR 밸류체인 수혜 / 가스 피크발전 부담 (SMR·중기)"
+        message = format_cards_message([card], header="국내")
+        for banned in ("투자 관점", "💰", "수혜", "부담", "밸류체인"):
+            self.assertNotIn(banned, message, f"발송문에 {banned} 이 남아 있다")
 
-        def boom(*a, **k):
-            raise db.GeminiError("429 (모의)")
-        db.call_json = boom
-        try:
-            self.assertEqual(db.enrich_investment([qitem()]), {})
-        finally:
-            db.call_json, db.is_available = orig_call, orig_avail
 
-    def test_enrich_malformed_response_returns_empty(self):
-        orig_call, orig_avail = db.call_json, db.is_available
-        db.is_available = lambda: True
-        db.call_json = lambda *a, **k: [{"idx": 0}]
-        try:
-            self.assertEqual(db.enrich_investment([qitem()]), {})
-        finally:
-            db.call_json, db.is_available = orig_call, orig_avail
+class TestWhyImportantDropsCliches(unittest.TestCase):
+    """`왜 중요` 는 의미 부여가 아니라 상태 변화를 말해야 한다."""
+
+    def test_cliche_ending_drops_the_line(self):
+        for cliche in ("원자력 산업에 중요하다.",
+                       "관련 산업의 관심이 필요하다.",
+                       "향후 시장 확대가 전망된다.",
+                       "정책적 의지를 보여준다."):
+            self.assertIsNone(db._change_or_none(cliche), cliche)
+
+    def test_change_sentence_survives(self):
+        text = "정부 검토 단계였던 신규 원전 지원이 실제 예산 프로그램으로 전환됐다."
+        self.assertEqual(db._change_or_none(text), text)
+
+    def test_quantity_rescues_a_soft_ending(self):
+        # 상투적 어미라도 '언제·얼마'가 실려 있으면 정보다 — 기존 게이트의 판단.
+        text = "2028년 착공을 목표로 인허가 전 단계가 열릴 전망이다."
+        self.assertEqual(db._change_or_none(text), text)
+
+    def test_empty_stays_empty(self):
+        self.assertIsNone(db._change_or_none(""))
+        self.assertIsNone(db._change_or_none(None))
+
+    def test_card_without_why_still_renders(self):
+        from synthesize import format_cards_message
+        art = qitem()
+        art["why_important"] = "원자력 산업에 중요하다."
+        art["implication"] = ""           # 이 줄이 대신 채우지 않도록 비운다
+        card = db.item_to_card(art)
+        self.assertIsNone(card["why"])
+        message = format_cards_message([card], header="국내")
+        self.assertNotIn("왜 중요", message)
+        self.assertIn("무슨 일", message)
+
+
+class TestTakeawayLabelFollowsContent(unittest.TestCase):
+    """`implication` 은 한수원 접점이 있을 때만 한수원 라벨을 단다.
+
+    이 값을 만드는 수집 프롬프트에는 한수원이라는 말이 없다(원인·다음 절차·수치·
+    영향 대상을 요구한다). 그래서 라벨을 무조건 붙이면 한수원이 한 글자도 없는
+    문장이 `🇰🇷 한수원 시사점` 으로 나간다 — 2026-09-19 실측 6건 중 4건이 그랬다.
+    """
+
+    def _render(self, **over):
+        from synthesize import format_cards_message
+        art = qitem(**over)
+        return format_cards_message([db.item_to_card(art)], header="국내")
+
+    def test_direct_khnp_article_keeps_the_khnp_label(self):
+        msg = self._render(implication="한수원의 재생에너지 사업 다각화 사례이다.",
+                           implication_requirement="required")
+        self.assertIn("🇰🇷 한수원 시사점", msg)
+        self.assertNotIn("왜 중요", msg)
+
+    def test_indirect_article_renders_it_as_why(self):
+        msg = self._render(implication="AI 전력수요가 원자로 조달 방식을 제품 반복 생산으로 옮기고 있다.",
+                           implication_requirement="expected")
+        self.assertIn("왜 중요", msg)
+        self.assertNotIn("한수원 시사점", msg)
+
+    def test_the_axis_is_not_written_twice(self):
+        # why_important 가 이미 `왜 중요` 를 채웠으면 간접 해석은 버린다.
+        msg = self._render(
+            why_important="정부 검토 단계였던 지원이 예산 프로그램으로 전환됐다.",
+            implication="중복으로 실리면 안 되는 두 번째 해석 문장이다.",
+            implication_requirement="optional")
+        self.assertEqual(msg.count("왜 중요"), 1)
+        self.assertIn("예산 프로그램으로 전환", msg)
+        self.assertNotIn("두 번째 해석", msg)
+
+    def test_social_cards_keep_the_khnp_label(self):
+        # 소셜 합성 프롬프트는 이 칸에 한수원 관점을 직접 요구한다.
+        from synthesize import format_cards_message
+        card = {"headline": "제목", "what": "무슨 일.", "why": None,
+                "kr_takeaway": "한국이 참고할 대목이다.", "khnp_direct": True,
+                "cluster": {"url": "https://x.example/a", "sources": ["x"]}, "cred": {}}
+        self.assertIn("🇰🇷 한수원 시사점", format_cards_message([card], header="소셜"))
+
+
+class TestUnfoundedKoreanBeneficiaryIsDropped(unittest.TestCase):
+    """기사에 없는 한국 수혜 주체를 만들어 낸 해석은 텔레그램에서 뺀다.
+
+    세 조건이 모두 맞을 때만 버린다 — 낱말 하나로 지우면 정상 문장이 함께 날아간다.
+    실측 1629건 중 걸리는 것은 2건이다.
+    """
+
+    def _drop(self, implication, **art):
+        return db._invents_korean_beneficiary(implication, {"implication": implication, **art})
+
+    def test_invented_beneficiary_in_a_foreign_event_is_dropped(self):
+        # 튀르키예 재생에너지 기사 — 원문 어디에도 한국 기업이 없다.
+        self.assertTrue(self._drop(
+            "대규모 송전망 확충 정책은 초고압 전력기기 기술력을 보유한 한국 기업들에 "
+            "새로운 해외 시장 진출 기회가 될 수 있다.",
+            title_kr="튀르키예, 2035년까지 1080억 달러 투입해 재생에너지 120GW 구축",
+            summary="튀르키예 정부가 발전 설비와 송전망에 1080억 달러를 투자한다.",
+            source_excerpt="튀르키예 정부가 2035년까지 1080억 달러를 투입한다.",
+            scope="overseas", section="international"))
+
+    def test_the_articles_own_korean_subject_is_kept(self):
+        # '국내 조선 3사' 기사 — 그 주체는 해석이 데려온 것이 아니라 기사의 주어다.
+        self.assertFalse(self._drop(
+            "국내 조선업계가 단순 선박 건조를 넘어 해양 에너지 인프라 솔루션 시장으로 "
+            "사업 영역을 확장하고 있다.",
+            title_kr="국내 조선 3사, 가스텍 2026서 차세대 해양 에너지 솔루션 기술 인증 획득",
+            summary="HD현대·삼성중공업·한화오션이 선급 기본인증을 획득했다.",
+            scope="kr", section="domestic"))
+
+    def test_a_korean_event_grounds_its_own_beneficiary(self):
+        # 표지 목록은 기업 이름을 모른다 — 사건이 한국 것이면 지우지 않는다.
+        self.assertFalse(self._drop(
+            "국내 기업의 수주 확대로 이어지고 있다.",
+            title_kr="효성중공업, 초고압변압기 수주", summary="수주했다.",
+            scope="kr", section="domestic"))
+
+    def test_a_factual_sentence_is_not_inference(self):
+        # 수혜·기회 표현이 없으면 한국 주체가 있어도 건드리지 않는다.
+        self.assertFalse(self._drop(
+            "국내 기업 3곳이 이번 입찰에 참여한다고 공시했다.",
+            title_kr="해외 입찰 공고", summary="입찰이 공고됐다.", scope="overseas"))
+
+    def test_inference_without_a_korean_subject_is_not_this_guard(self):
+        # 이 guard 는 '한국 수혜 주체'만 본다. 다른 빈껍데기는 다른 게이트 몫이다.
+        self.assertFalse(self._drop(
+            "유럽 전력기기 공급사의 수주 확대로 이어질 수 있다.",
+            title_kr="유럽 송전망 확충", summary="확충한다.", scope="overseas"))
+
+    def test_the_card_omits_the_line_entirely(self):
+        from synthesize import format_cards_message
+        art = qitem(implication="한국 기업들에 새로운 시장 진출 기회가 될 수 있다.",
+                    title_kr="튀르키예, 재생에너지 120GW 구축",
+                    summary="튀르키예가 투자한다.", source_excerpt="튀르키예가 투자한다.",
+                    scope="overseas", section="international")
+        card = db.item_to_card(art)
+        self.assertIsNone(card["kr_takeaway"])
+        msg = format_cards_message([card], header="해외")
+        self.assertNotIn("진출 기회", msg)
+        self.assertIn("무슨 일", msg)
+
+
+class TestKhnpLabelNeedsKoreanContact(unittest.TestCase):
+    """한수원 라벨은 등급만으로 붙지 않는다 — 한국 접점이 함께 있어야 한다."""
+
+    def _direct(self, **art):
+        return db._khnp_direct({"implication_requirement": "required", **art})
+
+    def test_topic_only_foreign_article_is_not_khnp(self):
+        # SMR·AI 전력수요는 국적이 없는 축이라 해외 기사도 required 가 된다.
+        self.assertFalse(self._direct(
+            title_kr="오펜하이머 CEO, 원전 반복 생산 강조", summary="주장했다.",
+            scope="overseas", section="international"))
+
+    def test_domestic_article_is_khnp(self):
+        self.assertTrue(self._direct(
+            title_kr="산업부, 원전 수출 지원 확대", summary="확대한다.",
+            scope="kr", section="domestic"))
+
+    def test_khnp_export_deal_keeps_the_label_without_repeating_the_name(self):
+        # '한수원 체코 두코바니 계약' — 해석 문장에 한수원이 다시 없어도 유지된다.
+        self.assertTrue(self._direct(
+            title_kr="한수원, 체코 두코바니 신규원전 본계약 체결",
+            summary="본계약을 체결했다.", implication="후속 호기 협상 시점이 앞당겨진다.",
+            section="khnp"))
+
+    def test_foreign_article_naming_korea_keeps_the_label(self):
+        self.assertTrue(self._direct(
+            title_kr="미국, 한국산 원전 기자재 인증 절차 간소화",
+            summary="간소화한다.", scope="overseas", section="international"))
+
+    def test_below_required_is_never_khnp(self):
+        self.assertFalse(db._khnp_direct({
+            "implication_requirement": "expected", "title_kr": "한수원 소식",
+            "scope": "kr", "section": "khnp"}))
+
+
+class TestOfficialBadge(unittest.TestCase):
+    """✅ 는 '신뢰하는 매체'가 아니라 '기관이 낸 원문'에만 붙는다.
+
+    2026-09-19 실측: 국내·해외 17건에 배지가 7개 붙었고 **7개가 전부 오판**이었다.
+    ✅ 에너지신문·✅ KBS 뉴스(일반 매체), ✅ ANS·✅ NEI(전문지), 그리고 IAEA 를
+    인용한 Reuters 기사의 ✅ IAEA(제목에서 기관명을 주워 온 것).
+    """
+
+    def _badge(self, url, title=""):
+        from sources import credibility
+        from synthesize import official_badge
+        return official_badge({"cred": credibility({"url": url, "title": title, "meta": ""})}).strip()
+
+    def test_official_domain_keeps_the_badge(self):
+        self.assertEqual(self._badge("https://www.iaea.org/newscenter/x"), "✅ IAEA")
+        self.assertEqual(self._badge("https://www.nssc.go.kr/board/x"), "✅ 원자력안전위원회")
+        self.assertEqual(self._badge("https://www.khnp.co.kr/board/x"), "✅ 한국수력원자력")
+
+    def test_trusted_media_do_not_get_an_official_badge(self):
+        # tier1·tier2 에 들어 있어도 기관 발표가 아니면 공식출처가 아니다.
+        for url in ("https://www.reuters.com/world/x",
+                    "https://www.yna.co.kr/view/x",
+                    "https://www.world-nuclear-news.org/articles/x",
+                    "https://www.ans.org/news/x"):
+            self.assertEqual(self._badge(url), "", url)
+
+    def test_quoting_an_agency_is_not_being_one(self):
+        # URL 로 확인 못 하면 제목에서 기관명을 주워 배지를 달지 않는다.
+        self.assertEqual(
+            self._badge("https://news.google.com/rss/articles/CBMi",
+                        "IAEA, 러시아 쿠르스크 원전 냉각탑 드론 피격 확인"), "")
+        self.assertEqual(
+            self._badge("https://www.reuters.com/world/x",
+                        "IAEA says Kursk cooling tower was hit"), "")
 
 
 class TestRequiredFieldBackfill(unittest.TestCase):
@@ -583,19 +761,11 @@ class TestOutboxFlow(OutboxBase):
             summary="검증된 사실입니다.",
             why_important="근거 없는 중요성입니다.",
             implication="근거 없는 시사점입니다.",
-            investment_struct={
-                "theme": "smr",
-                "mechanism": "근거 없는 투자 문장",
-                "beneficiary_type": "none",
-                "risk_side": "",
-                "time_horizon": "mid",
-                "confidence": 1,
-            },
         )
-        cleaned = db.item_to_card(article, "근거 없는 투자 문장")
-        cleaned.update({"why": None, "investment": None, "kr_takeaway": None})
+        cleaned = db.item_to_card(article)
+        cleaned.update({"why": None, "kr_takeaway": None})
         result = db.article_quality_gate.GateResult(
-            cleaned, "sanitize", ("why", "investment", "kr_takeaway"), ()
+            cleaned, "sanitize", ("why", "kr_takeaway"), ()
         )
         original = db.article_quality_gate.validate_final_card
         db.article_quality_gate.validate_final_card = lambda *args, **kwargs: result
@@ -608,7 +778,6 @@ class TestOutboxFlow(OutboxBase):
         self.assertEqual(cards[0]["what"], "검증된 사실입니다.")
         self.assertEqual(article["why_important"], "")
         self.assertEqual(article["implication"], "")
-        self.assertIsNone(article["investment_struct"])
 
     def test_incompatible_pending_outbox_is_replanned_instead_of_deadlocking(self):
         """구버전 claim 때문에 36시간 동안 새 계획까지 막히면 안 된다."""

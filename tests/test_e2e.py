@@ -1,6 +1,6 @@
 """E2E 모의 실행 — 외부 호출 0 으로 전체 파이프라인 검증.
 
-fixture 큐 → 랭킹 feature 계산 → 국내/해외 top-k → 투자 관점(모의 Gemini) →
+fixture 큐 → 랭킹 feature 계산 → 국내/해외 top-k → 한수원 시사점 보완(모의 Gemini) →
 보고서 추천 → 카드 렌더링(키보드 포함) → outbox claim → 발송(모의 텔레그램) →
 delivery_log → weekly 집계.
 """
@@ -130,25 +130,11 @@ FIXTURE_QUEUE = [
 
 
 def mock_call_json(system_prompt, user_message, **kw):
-    """Gemini 모의 — 프롬프트 종류를 보고 스키마에 맞는 응답 반환."""
-    if "investments" in system_prompt:
-        n = len(user_message.strip().splitlines())
-        inv = []
-        for i in range(n):
-            if i == 0:
-                inv.append({"idx": 0, "theme": "export",
-                            "mechanism": "본계약 체결로 유럽 수주 파이프라인의 실현 확률이 올라간다",
-                            "beneficiary_type": "reactor_vendor", "risk_side": "none",
-                            "time_horizon": "mid", "confidence": 2})
-            elif i == n - 1:
-                inv.append({"idx": i, "theme": "none", "mechanism": "",
-                            "confidence": 0})  # 근거 약함 → 생략돼야 함
-            else:
-                inv.append({"idx": i, "theme": "smr",
-                            "mechanism": "인허가 진전이 SMR 밸류체인 자본지출을 앞당긴다",
-                            "beneficiary_type": "smr_developer", "risk_side": "none",
-                            "time_horizon": "mid", "confidence": 1})
-        return {"investments": inv}
+    """Gemini 모의 — 프롬프트 종류를 보고 스키마에 맞는 응답 반환.
+
+    투자 분석 분기는 없다. 그 호출 자체가 사라졌으므로, 여기에 남겨 두면
+    '아무도 부르지 않는 모의'가 통과의 근거처럼 보인다.
+    """
     if "보고서 후보" in system_prompt:
         return {"reports": [{"idx": 0, "topic": "두코바니 본계약의 전략적 함의",
                              "why": "유럽 첫 본계약.", "angles": ["후속 입찰", "리스크"]}]}
@@ -211,13 +197,13 @@ class TestE2E(unittest.TestCase):
         self.assertEqual(len(fake_tg.sent_messages), 3)
         dom_msg = next(m for m in fake_tg.sent_messages if "국내 브리핑" in m["text"])
         self.assertIn("두코바니", dom_msg["text"])
-        self.assertIn("💰 투자 관점", dom_msg["text"])   # confidence 2 → 표기
-        self.assertIn("원자로 공급사 수혜", dom_msg["text"])
+        # 투자 표현은 어느 브리핑에도 없어야 한다 (§ 정책·산업 브리핑으로 재설계).
+        forn_msg = next(m for m in fake_tg.sent_messages if "해외 브리핑" in m["text"])
+        for surface in (dom_msg["text"], forn_msg["text"]):
+            for banned in ("투자 관점", "💰", "수혜", "밸류체인", "확신 낮음"):
+                self.assertNotIn(banned, surface)
         # 피드백 버튼 비활성(2026-07-15 사용자 결정) — 키보드 미부착
         self.assertIsNone(dom_msg["reply_markup"])
-        # 근거 약한 항목(마지막 idx=legacy)의 투자 줄은 생략됨
-        forn_msg = next(m for m in fake_tg.sent_messages if "해외 브리핑" in m["text"])
-        self.assertIn("확신 낮음", forn_msg["text"])  # confidence 1 헤지 표기
         rep_msg = next(m for m in fake_tg.sent_messages if "보고서 검토 추천" in m["text"])
         self.assertIn("두코바니 본계약의 전략적 함의", rep_msg["text"])
 
