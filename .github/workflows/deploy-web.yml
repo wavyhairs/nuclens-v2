@@ -266,6 +266,10 @@ jobs:
       # 몇 주 된 이야기가 '최신'인 척 선다.
       - name: Long-term story gate (app.js)
         run: node web/tests/long_term_gate.mjs
+      # 스토리 원장이 **개별 이슈 상세**까지 닿는가. 장기 스토리 화면만 보면
+      # 통과하는 회귀라(원장·목록은 멀쩡했다) 따로 잠근다 — 2026-09-20 SAR 실측.
+      - name: Issue detail reads the thread ledger (app.js)
+        run: node web/tests/thread_dialog_section.mjs
       - name: Admin gate contract
         run: node web/tests/admin_gate.mjs
 

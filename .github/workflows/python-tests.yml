@@ -162,12 +162,17 @@ jobs:
       #
       # app.js 검사는 반대로 여기 있어야 한다 — 데이터를 안 읽고, 회귀가 나면
       # '집계 중'만 뜨는 조용한 실패라 눈으로는 안 잡힌다.
+      # 이슈 상세의 「주요 사건 타임라인」이 같은 이슈의 기사가 아니라 **같은
+      # 스토리의 다른 사건**을 세우는가. 이 회귀도 조용하다 — 상세는 멀쩡히 뜨고
+      # 근거 기사도 다 있고, 없는 것은 "이 사건 앞에 무엇이 있었나" 하나뿐이다.
+      # 데이터를 안 읽는 검사라 여기서 돈다.
       - name: Front-end date/selector tests
         run: |
           node --check web/public/app.js
           node web/tests/date_window.mjs
           node web/tests/report_format.mjs
           node web/tests/trend_period_state.mjs
+          node web/tests/thread_dialog_section.mjs
       # 푸시는 **틀려도 조용하다.** 창구가 목록을 안 내주거나 토큰 검사가
       # 헐거워져도 예외도 빨간불도 없다 — 사용자는 "알림이 안 온다"만 안다.
       # 그래서 여기서 잠근다(빌드 산출물이 필요 없어 데이터 없이 돈다).

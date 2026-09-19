@@ -6711,6 +6711,48 @@ def build_rss(briefings: list[dict], generated_at: datetime) -> bytes:
     return ET.tostring(rss, encoding="utf-8", xml_declaration=True)
 
 
+def stamp_thread_ids(issue_catalog: list[dict], threads_payload: dict) -> int:
+    """이슈에 **스토리 주소 한 칸**을 찍는다. 사건 본문은 옮기지 않는다.
+
+    왜 id 하나뿐인가
+    ----------------
+    `threads.json` 이 이미 사건 목록·흐름·관계 라벨을 다 싣고 있고 화면도 그
+    파일을 읽는다. 그래서 이슈가 알아야 할 것은 "어느 스토리에 속하는가" 뿐이다.
+    사건 본문을 `issues.json` 에 복제하면 같은 사실이 두 파일에 앉아, 한쪽만
+    갱신되는 날 조용히 어긋난다.
+
+    **`related_articles` 를 건드리지 않는다.** 8월 사건의 기사가 9월 이슈의
+    근거로 섞이면 그 이슈의 검증 수치가 거짓이 된다 — 사건 계층(thread)과
+    기사 계층(evidence)을 가르는 것이 이 투영의 요점이다.
+
+    페이로드가 숨김이면(`visible=False`) `threads` 가 빈 목록이라 아무 이슈도
+    주소를 받지 못한다. 그 상태에서 화면이 타임라인 구역을 세우지 않는 것이
+    맞는 동작이라, 여기서 따로 분기하지 않는다 — `thread_web.gate()` 의 판정이
+    이슈 상세까지 그대로 미친다.
+
+    Returns:
+        주소를 받은 이슈 수. 호출부가 로그에 싣는다.
+    """
+    thread_of: dict[str, str] = {}
+    for thread in threads_payload.get("threads") or ():
+        thread_id = str(thread.get("thread_id") or "")
+        if not thread_id:
+            continue
+        for event in thread.get("events") or ():
+            event_id = str(event.get("event_id") or "")
+            if event_id:
+                thread_of[event_id] = thread_id
+    stamped = 0
+    for issue in issue_catalog:
+        thread_id = thread_of.get(str(issue.get("issue_id") or ""), "")
+        # 빈 문자열이라도 칸은 채운다. 없는 칸과 빈 칸을 화면이 구분할 필요가
+        # 없고, 칸이 늘 있으면 계약 검사가 한 줄로 끝난다.
+        issue["thread_id"] = thread_id
+        if thread_id:
+            stamped += 1
+    return stamped
+
+
 def build() -> None:
     global _ACTIVE_BUILD_CACHE, _ACTIVE_BUILD_PROFILE
     build_started = time.monotonic()
@@ -7552,6 +7594,11 @@ def build() -> None:
     print(f"[build_data:threads] 장기 스토리 {threads_payload['stats'].get('threads', 0)}개 · "
           f"{'노출' if threads_payload['visible'] else '숨김'}"
           f"{'' if threads_payload['visible'] else ' — ' + ', '.join(threads_payload['reasons'])}")
+
+    # 스토리 주소를 이슈에 찍는다. **outputs 를 만들기 전**이어야 `issues.json`·
+    # `today.json`·`/data/issue/<id>.json`(정적 상세) 셋이 한 번에 같은 값을 받는다.
+    threaded = stamp_thread_ids(issue_catalog, threads_payload)
+    print(f"[build_data:threads] 스토리에 속한 이슈 {threaded}건에 thread_id 투영")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ADMIN_OUT_DIR.mkdir(parents=True, exist_ok=True)
