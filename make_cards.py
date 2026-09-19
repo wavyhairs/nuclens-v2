@@ -691,11 +691,242 @@ def already_published(date: str) -> int:
     return len(names)
 
 
+
+# ---- E. 심층 카드 ------------------------------------------------------------
+# 하루 브리핑 뒤에 **이슈 하나를 파고드는 3장**을 덧붙인다. 앞의 카드가 "오늘
+# 무엇이 있었나"라면 이쪽은 "그 하나가 어떻게 여기까지 왔나"다.
+#
+# 아무 이슈나 파면 안 된다 — 오늘 처음 뜬 단발 기사는 팔 게 없다(실측 09-19:
+# 그날 1위 이슈는 기사 1건·브리핑 1회라 타임라인이 한 줄도 안 나온다).
+# 추적 이력이 쌓인 이슈만 고르고, 없으면 심층을 아예 붙이지 않는다.
+DEEP_MIN_SCORE = 12          # 브리핑 3회 + 기사 3건 수준
+# 브리핑 카드는 18자(72px 2줄)인데 심층 표지는 이슈 이름을 통째로 이고 간다 —
+# 실측상 모델이 18자로는 못 줄인다(두 번 다 25자). 렌더 축소(하한 52px)가 2줄로
+# 앉히는 한계인 24자까지 연다. 그 위는 버리고 재료로 만든다.
+DEEP_HEADLINE_MAX = 24
+DEEP_LINE_MAX = 34
+DEEP_LEAD_MAX = 30
+DEEP_DATE_MAX = 7            # "8.25" 같은 짧은 날짜 라벨
+
+
+def deep_score(row: dict) -> int:
+    """심층으로 팔 만한가. 브리핑 회차를 가장 무겁게 본다 — 며칠에 걸쳐 다시
+    올라온 이슈라야 '경과'가 성립한다."""
+    return ((row.get("tracked_briefings") or 0) * 3
+            + (row.get("article_count") or 0)
+            + len(row.get("change_log") or []) * 2)
+
+
+def pick_deep(issue_rows: list[dict], used_hashes: set[str]) -> dict | None:
+    """카드로 이미 낸 이슈는 빼고, 이력이 가장 두꺼운 하나."""
+    best, best_score = None, 0
+    for row in issue_rows:
+        rep = row.get("representative_article") or {}
+        if rep.get("hash") in used_hashes:
+            continue
+        score = deep_score(row)
+        if score > best_score:
+            best, best_score = row, score
+    return best if best_score >= DEEP_MIN_SCORE else None
+
+
+def _short_date(value: str) -> str:
+    m = re.match(r"^(\d{4})-(\d{2})-(\d{2})$", str(value or ""))
+    return f"{int(m.group(2))}.{int(m.group(3))}" if m else ""
+
+
+def deep_material(row: dict) -> dict:
+    """LLM 에 줄 재료. 날짜가 붙은 사건만 추린다 — 타임라인의 뼈대다."""
+    seen, events = set(), []
+    for entry in (row.get("change_log") or []):
+        day = _short_date(entry.get("article_date") or entry.get("date"))
+        title = str(entry.get("title") or "").strip()
+        if day and title and title not in seen:
+            seen.add(title)
+            events.append({"date": day, "title": title})
+    for art in sorted(row.get("related_articles") or [],
+                      key=lambda a: str(a.get("article_date") or "")):
+        day = _short_date(art.get("article_date"))
+        title = str(art.get("title_kr") or "").strip()
+        if day and title and title not in seen:
+            seen.add(title)
+            events.append({"date": day, "title": title, "source": art.get("publisher") or ""})
+    events.sort(key=lambda e: [int(x) for x in e["date"].split(".")])
+    ver = row.get("verification") or {}
+    rep = row.get("representative_article") or {}
+    return {
+        "title": row.get("title", ""),
+        "summary": row.get("summary", ""),
+        "detail": row.get("detail") or "",
+        "implication": row.get("implication") or "",
+        "why_important": row.get("why_important") or "",
+        "open_question": row.get("open_question") or "",
+        "events": events[:8],
+        "first_seen": row.get("first_seen") or "",
+        "briefings": row.get("tracked_briefings") or 0,
+        "sources": ver.get("source_count") or row.get("article_count") or 0,
+        "link": (rep.get("url") or "").strip(),
+        "publisher": rep.get("publisher") or source_name((rep.get("url") or "").strip()),
+        "topic": topic_label(row),
+        "hash": rep.get("hash", ""),
+    }
+
+
+DEEP_PROMPT = f"""너는 원자력 정책 브리핑의 심층 카드를 쓴다. 이슈 하나의 경과와
+쟁점을 카드 3장으로 정리한다. 입력에 없는 사실을 지어내지 않는다.
+
+출력은 JSON 하나:
+{{"headline": "...", "core": ["...", "..."], "why_lead": "...", "why_check": "...",
+  "timeline": [{{"date": "8.25", "text": "..."}}, ...],
+  "now_lead": "...", "now_check": "...",
+  "stake": ["...", "..."], "next_lead": "...", "next_checks": ["...", "..."]}}
+
+- headline: 이 이슈를 한 줄로. 한글 {DEEP_HEADLINE_MAX}자 이내(넘기면 버려진다).
+  강조할 구간 한 곳을 `[[대괄호]]`로 감싼다 — 뒤쪽 짧은 구간에 건다.
+- core: **무엇이 걸려 있나** 2개, 각 {DEEP_LINE_MAX}자 이내. 사실·수치 위주.
+- why_lead: 왜 이 이슈를 파는가 한 줄, {DEEP_LEAD_MAX}자 이내.
+- why_check: 그 근거 한 줄, {DEEP_LINE_MAX}자 이내.
+- timeline: 입력 events 에서 **3개**를 고른다. 처음·전환·최근으로 흐름이 보이게.
+  date 는 입력 그대로, text 는 그날 무슨 일이 있었나 {DEEP_LEAD_MAX}자 이내.
+- now_lead: 지금 상태 {DEEP_LEAD_MAX}자, now_check: 덧붙일 사실 {DEEP_LINE_MAX}자.
+- stake: 쟁점 2개, 각 {DEEP_LINE_MAX}자. 서로 다른 축이어야 한다.
+- next_lead: 앞으로의 관전 포인트 {DEEP_LEAD_MAX}자, next_checks: 확인할 것 1~2개
+  각 {DEEP_LINE_MAX}자.
+- 전부 개조식 체언 종결. 서술형 종결·형용사·감탄 금지.
+- 숫자·기관명·날짜는 입력 그대로 옮긴다."""
+
+
+def ask_deep(material: dict, problems: list[str] | None = None) -> dict:
+    payload = dict(material)
+    if problems:
+        # 본문 카드와 같은 방식 — 무엇이 틀렸는지 그대로 돌려주고 한 번 더 시킨다.
+        payload["fix_these"] = problems
+    return gemini_client.call_json(
+        DEEP_PROMPT,
+        json.dumps(payload, ensure_ascii=False, indent=1),
+        temperature=0.3,
+        max_output_tokens=4096,
+        thinking_budget=0,
+        # v2 의 gemini_client 는 폴백 체인을 안으로 흡수했다 — 인자를 받지 않는다.
+        label="cards-deep",
+    )
+
+
+def deep_fallback(material: dict) -> dict:
+    """LLM 없이 재료만으로. 카드가 비는 것보다 낫다."""
+    ev = material["events"]
+    pick = [ev[0], ev[len(ev) // 2], ev[-1]] if len(ev) >= 3 else ev
+    facts = _sentences(material.get("detail"), material.get("summary"))
+    return {
+        "headline": clip(terse(material["title"]), DEEP_HEADLINE_MAX),
+        # 자른 줄(…)보다 통째로 들어가는 짧은 문장이 낫다 — pick_lines 와 같은 판단.
+        "core": pick_lines(facts, DEEP_LINE_MAX, 2),
+        "why_lead": clip(terse(material.get("implication")), DEEP_LEAD_MAX),
+        "why_check": clip(terse(material.get("why_important")), DEEP_LINE_MAX),
+        "timeline": [{"date": e["date"], "text": clip(terse(e["title"]), DEEP_LEAD_MAX)}
+                     for e in pick],
+        "now_lead": clip(terse(facts[0] if facts else material["title"]), DEEP_LEAD_MAX),
+        "now_check": clip(terse(material.get("summary")), DEEP_LINE_MAX),
+        "stake": pick_lines(facts[1:], DEEP_LINE_MAX, 2),
+        "next_lead": clip(terse(material.get("open_question")
+                                or material.get("implication")), DEEP_LEAD_MAX),
+        "next_checks": ([clip(terse(material.get("open_question")), DEEP_LINE_MAX)]
+                        if material.get("open_question") else []),
+    }
+
+
+# 모델은 상한 근처에서 1~2자를 넘긴다(실측: 25/24, 35/34, 31/30 — 재시도해도
+# 같은 값). 그 한 글자 때문에 LLM 카피를 통째로 버리고 재료 폴백으로 가면
+# 품질이 더 나빠진다. 렌더가 2줄에 맞춰 줄여 주므로 검증에만 여유를 둔다.
+# 여유를 넘는 것은 여전히 버린다 — 두 배로 긴 줄은 줄여도 안 들어간다.
+DEEP_SLACK = 2
+
+
+def validate_deep(copy: dict) -> list[str]:
+    problems: list[str] = []
+    _check_line(problems, "deep.headline", copy.get("headline"), DEEP_HEADLINE_MAX + DEEP_SLACK, True)
+    for key, want in (("core", 2), ("stake", 2)):
+        rows = copy.get(key) or []
+        if len(rows) < want:
+            problems.append(f"deep.{key}: {len(rows)}개 — {want}개여야 한다")
+        for i, line in enumerate(rows[:want]):
+            _check_line(problems, f"deep.{key}[{i}]", line, DEEP_LINE_MAX + DEEP_SLACK, True)
+    timeline = copy.get("timeline") or []
+    if len(timeline) < 2:
+        problems.append(f"deep.timeline: {len(timeline)}개 — 최소 2개")
+    for i, row in enumerate(timeline[:3]):
+        _check_line(problems, f"deep.timeline[{i}].text", (row or {}).get("text"),
+                    DEEP_LEAD_MAX + DEEP_SLACK, True)
+        _check_line(problems, f"deep.timeline[{i}].date", (row or {}).get("date"),
+                    DEEP_DATE_MAX, True)
+    for key in ("why_lead", "now_lead", "next_lead"):
+        _check_line(problems, f"deep.{key}", copy.get(key), DEEP_LEAD_MAX + DEEP_SLACK, True)
+    return problems
+
+
+def _at(rows, i: int) -> str:
+    """없으면 빈 문자열. 줄이 모자란 날 카드 전체를 죽이지 않는다."""
+    rows = rows or []
+    return rows[i] if i < len(rows) else ""
+
+
+def _deep_rows(pairs) -> list[dict]:
+    """editorial 카드의 사실 줄. 라벨이 비면 문장이 그 폭을 다 가져간다."""
+    return [{"label": label, "text": text, "state": "", "tone": "active"}
+            for label, text in pairs if text]
+
+
+def build_deep_slides(copy: dict, material: dict, date: str) -> list[dict]:
+    """심층 3장. 레이아웃은 본문 카드(editorial)를 그대로 쓴다 — 같은 앨범이다."""
+    tl = copy.get("timeline") or []
+    span = _short_date(material.get("first_seen"))
+    deck_bits = [f"{span}부터 추적" if span else "",
+                 f"브리핑 {material['briefings']}회" if material.get("briefings") else "",
+                 f"기사 {material['sources']}건" if material.get("sources") else ""]
+    # handle 이 없으면 푸터의 사이트 주소 칸이 빈다(브리핑 카드는 build_slides 가 넣는다).
+    common = {"type": "editorial", "handle": SITE,
+              "footer": material.get("publisher") or material.get("topic") or "심층",
+              "date": date.replace("-", "."), "url": material.get("link", "")}
+    return [
+        {**common, "stepLabel": "이슈 심층", "context": "1 / 3",
+         "headline": copy.get("headline", ""),
+         "deck": " · ".join(b for b in deck_bits if b),
+         "sectionA": "THE ISSUE", "sectionAKr": "무엇이 걸렸나",
+         "statusRows": _deep_rows([("", _at(copy.get("core"), 0)), ("", _at(copy.get("core"), 1))]),
+         "sectionB": "WHY THIS ONE", "whyLabel": "왜 이 이슈인가",
+         "whyLead": copy.get("why_lead", ""),
+         "whyChecks": [copy["why_check"]] if copy.get("why_check") else []},
+        {**common, "stepLabel": "이슈 심층", "context": "2 / 3",
+         "headline": "여기까지 온 [[경과]]", "deck": "",
+         "sectionA": "TIMELINE", "sectionAKr": "경과",
+         "statusRows": _deep_rows([(r.get("date", ""), r.get("text", "")) for r in tl[:3]]),
+         "sectionB": "NOW", "whyLabel": "지금",
+         "whyLead": copy.get("now_lead", ""),
+         "whyChecks": [copy["now_check"]] if copy.get("now_check") else []},
+        {**common, "stepLabel": "이슈 심층", "context": "3 / 3",
+         "headline": "무엇이 [[쟁점인가]]", "deck": "",
+         "sectionA": "AT STAKE", "sectionAKr": "쟁점",
+         "statusRows": _deep_rows([("", _at(copy.get("stake"), 0)), ("", _at(copy.get("stake"), 1))]),
+         "sectionB": "WHAT'S NEXT", "whyLabel": "다음",
+         "whyLead": copy.get("next_lead", ""),
+         "whyChecks": (copy.get("next_checks") or [])[:2]},
+    ]
+
+
+def renumber(slides: list[dict]) -> list[dict]:
+    """장수가 바뀌면 모든 장의 'NN / 총' 을 다시 쓴다."""
+    total = len(slides)
+    for i, slide in enumerate(slides, start=1):
+        slide["slideNum"] = f"{i:02d} / {total:02d}"
+    return slides
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true",
                     help="오늘 이미 카드를 보냈어도 다시 만든다")
     ap.add_argument("--date", help="outbox 대신 이 날짜의 사이트 순위로 만든다(로컬 검증용, --force 포함)")
+    ap.add_argument("--no-deep", action="store_true",
+                    help="심층 3장을 붙이지 않는다(브리핑 카드만)")
     ap.add_argument("--no-llm", action="store_true",
                     help="Gemini 를 부르지 않고 사이트 문장(detail·why_important)으로 카피를 짠다")
     ap.add_argument("--copy-file", type=Path,
@@ -797,6 +1028,37 @@ def main() -> int:
     rest_rows = [r for r in rows
                  if (r.get("representative_article") or {}).get("hash") not in taken]
     slides = build_slides(raw, items, date, collected, rest_rows)
+
+    # ── 심층 3장 ────────────────────────────────────────────────────────
+    # 추적 이력이 두꺼운 이슈 하나를 판다. 조건에 맞는 이슈가 없으면 그냥 안
+    # 붙인다 — 팔 게 없는 이슈로 세 장을 채우면 그게 더 나쁘다.
+    deep_row = None if args.no_deep else pick_deep(rows, taken)
+    if deep_row is not None:
+        material = deep_material(deep_row)
+        deep_copy = None
+        if not args.no_llm:
+            problems: list[str] = []
+            for attempt in (1, 2):
+                try:
+                    candidate = ask_deep(material, problems or None)
+                except Exception as exc:                  # noqa: BLE001 — 심층은 비치명
+                    print(f"[cards] 심층 LLM 실패 ({attempt}/2) — {type(exc).__name__}: {exc}")
+                    break
+                problems = validate_deep(candidate)
+                if not problems:
+                    deep_copy = candidate
+                    break
+                print(f"[cards] 심층 카피 검증 실패 ({attempt}/2): {'; '.join(problems[:3])}")
+        if deep_copy is None:
+            deep_copy = deep_fallback(material)
+            if validate_deep(deep_copy):
+                print("[cards] 심층 재료가 얇다 — 심층 건너뜀")
+                deep_copy = None
+        if deep_copy is not None:
+            slides += build_deep_slides(deep_copy, material, date)
+            print(f"[cards] 심층 3장 — {material['title'][:30]} "
+                  f"(브리핑 {material['briefings']}회 · 기사 {material['sources']}건)")
+    renumber(slides)
     render(slides)
     files = gate(len(slides))
 
@@ -933,6 +1195,35 @@ def _self_check() -> None:
     built = build_slides(ok, items, "2026-09-14", 645, [])
     assert [s["type"] for s in built] == ["hook", "step"], built
     assert built[0]["slideNum"] == "01 / 02" and built[1]["slideNum"] == "02 / 02", built
+    # ── 심층 카드 ──────────────────────────────────────────────────
+    thin = {"title": "단발 기사", "tracked_briefings": 1, "article_count": 1, "change_log": [],
+            "representative_article": {"hash": "h1"}}
+    thick = {"title": "한미 원전 협력 MOU 연기", "tracked_briefings": 8, "article_count": 9,
+             "change_log": [{"date": "2026-09-18", "article_date": "2026-09-17", "title": "MOU 서명 연기"}],
+             "related_articles": [
+                 {"article_date": "2026-08-25", "title_kr": "지분 인수설 부인", "publisher": "산업통상부"},
+                 {"article_date": "2026-09-11", "title_kr": "막판 조율", "publisher": "서울신문"}],
+             "first_seen": "2026-08-25", "summary": "요약 문장이다.",
+             "detail": "노형 배분 이견이 확인됐다. 의결권 협상은 계속된다. 서명은 연기됐다.",
+             "implication": "함의.", "verification": {"source_count": 62},
+             "representative_article": {"hash": "h2", "url": "http://x", "publisher": "한국원자력산업협회"},
+             "topics": []}
+    # 이력이 얇으면 안 판다 — 팔 게 없는 이슈로 세 장을 채우는 것이 더 나쁘다.
+    assert pick_deep([thin], set()) is None
+    assert pick_deep([thin, thick], set())["title"] == thick["title"]
+    # 이미 카드로 낸 이슈는 다시 파지 않는다.
+    assert pick_deep([thick], {"h2"}) is None
+    mat = deep_material(thick)
+    assert [e["date"] for e in mat["events"]] == ["8.25", "9.11", "9.17"], mat["events"]
+    assert mat["sources"] == 62 and mat["briefings"] == 8
+    deep = build_deep_slides(deep_fallback(mat), mat, "2026-09-19")
+    assert len(deep) == 3 and [d["context"] for d in deep] == ["1 / 3", "2 / 3", "3 / 3"]
+    assert all(d["type"] == "editorial" and d["handle"] == SITE for d in deep)
+    assert deep[1]["statusRows"][0]["label"] == "8.25", deep[1]["statusRows"]
+    # 장수가 바뀌면 모든 장의 쪽번호를 다시 쓴다.
+    numbered = renumber([{"slideNum": "01 / 05"}, {"slideNum": "02 / 05"}, {"slideNum": "03 / 05"}])
+    assert [x["slideNum"] for x in numbered] == ["01 / 03", "02 / 03", "03 / 03"], numbered
+
     # LLM 없는 폴백 — 긴 제목·긴 문장도 상한 안으로 절 단위 절단, 검증 통과
     long_item = {"title": "日 하마오카 원전, 내진 데이터 조작 사실로 드러나 경영진 사임 그리고 추가 조사 착수",
                  "detail": "주부전력은 9월 15일 하마오카 원전의 내진 평가 자료 일부가 조작됐다고 인정했다. "

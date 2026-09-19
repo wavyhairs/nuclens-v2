@@ -193,13 +193,10 @@ function factPresentation(text, index) {
   return { label: "", text: value, state: "", icon: "control", tone: "active" };
 }
 
-function editorialFromStep(slide) {
-  const points = Array.isArray(slide.points) ? slide.points : [];
-  const why = Array.isArray(slide.why) ? slide.why : [];
-  const haystack = [slide.stepLabel, slide.headline, ...points].join(" ");
+function pickEditorialArt(haystack, headline) {
   let image = "assets/energy-cooperation-editorial.png";
   let stamp = "ENERGY INFRASTRUCTURE";
-  let headline = slide.headline;
+  // 몇몇 주제는 제목까지 고정 문구로 덮는다(기존 동작 유지).
   if (/데이터센터|100MW|417표|GRID Savings/.test(haystack)) {
     image = "assets/data-center-grid-editorial.png";
     stamp = "DATA CENTER · POWER GRID";
@@ -225,6 +222,22 @@ function editorialFromStep(slide) {
     image = "assets/reactor-operations-editorial.png";
     stamp = "NUCLEAR OPERATIONS · SAFETY";
   }
+  return { image, stamp, headline };
+}
+
+function editorialFromStep(slide) {
+  // 심층 카드는 make_cards 가 editorial 형태로 완성해 보낸다 — 손대지 않는다.
+  if (slide.type === "editorial") {
+    if (slide.image) return slide;
+    const hs = [slide.stepLabel, slide.headline,
+      ...(slide.statusRows || []).map((r) => r.text)].join(" ");
+    return { ...slide, image: pickEditorialArt(hs, slide.headline).image };
+  }
+  const points = Array.isArray(slide.points) ? slide.points : [];
+  const why = Array.isArray(slide.why) ? slide.why : [];
+  const haystack = [slide.stepLabel, slide.headline, ...points].join(" ");
+  const art = pickEditorialArt(haystack, slide.headline);
+  const { image, stamp, headline } = art;
   return {
     ...slide,
     type: "editorial",
@@ -577,7 +590,9 @@ ${fontLinks(theme)}
 
 function renderSlide(s, theme) {
   let type = s.type || "step";
-  if (type === "step") {
+  if (type === "step" || type === "editorial") {
+    // step 은 여기서 editorial 로 바뀌고, 이미 editorial 인 심층 카드는
+    // 사진만 물려받는다(editorialFromStep 이 둘 다 처리한다).
     s = editorialFromStep(s);
     type = "editorial";
   }
@@ -628,7 +643,7 @@ function renderSlide(s, theme) {
   }
 
   if (type === "status") {
-    const rows = Array.isArray(s.statusRows) ? s.statusRows.slice(0, 2) : [];
+    const rows = Array.isArray(s.statusRows) ? s.statusRows.slice(0, 3) : [];   // 심층 타임라인은 3줄
     const implications = Array.isArray(s.why) ? s.why.slice(0, 3) : [];
     return shell(
       `<div class="card status-card">
@@ -663,7 +678,7 @@ function renderSlide(s, theme) {
   }
 
   if (type === "editorial") {
-    const rows = Array.isArray(s.statusRows) ? s.statusRows.slice(0, 2) : [];
+    const rows = Array.isArray(s.statusRows) ? s.statusRows.slice(0, 3) : [];   // 심층 타임라인은 3줄
     const checks = Array.isArray(s.whyChecks) ? s.whyChecks.slice(0, 2) : [];
     const photo = imageData(s.image);
     return shell(
@@ -680,12 +695,12 @@ function renderSlide(s, theme) {
           <div class="editorial-stamp">${esc(s.stamp || "EDITORIAL BRIEF").replaceAll("\n", "<br>")}</div>
         </section>
         <section class="editorial-body">
-          <div class="editorial-section-head">WHAT HAPPENED <span>확인된 사실</span></div>
+          <div class="editorial-section-head">${esc(s.sectionA || "WHAT HAPPENED")} <span>${esc(s.sectionAKr || "확인된 사실")}</span></div>
           <div class="event-grid">${rows.map((row) =>
             `<div class="event-card"><div class="event-copy">${row.label ? `<strong>${esc(row.label)}</strong>` : ""}<span>${esc(row.text)}</span></div>${row.state ? `<div class="event-state ${esc(row.tone || "")}">${esc(row.state)}</div>` : ""}</div>`
           ).join("")}</div>
           <div class="why-editorial">
-            <div class="editorial-section-head">WHY IT MATTERS <span>${esc(s.whyLabel || "왜 중요한가")}</span></div>
+            <div class="editorial-section-head">${esc(s.sectionB || "WHY IT MATTERS")} <span>${esc(s.whyLabel || "왜 중요한가")}</span></div>
             <div class="why-layout"><div class="why-lead">${esc(s.whyLead || "")}</div><div class="why-checks">${checks.map((text) => `<div class="why-check">${esc(text)}</div>`).join("")}</div></div>
           </div>
         </section>
@@ -924,6 +939,40 @@ function selfCheck() {
       });
       if (fsInfo) console.log("[title]", JSON.stringify(fsInfo));
     }
+
+    // 에디토리얼 카드의 넘침 안전망. 아래 구 카드용 축소기는 `.card > .body` 를
+    // 찾는데 이쪽 구조는 `.editorial-body` 라 **한 번도 걸린 적이 없었다**(가드가
+    // 그냥 throw 했다). 재료가 긴 날에도 카드를 살리려면 여기서 줄여야 한다.
+    // 하한은 폰 실효 12px(34px)·11px(30px) — 그 아래로는 줄이느니 안 만든다.
+    await page.evaluate(() => {
+      const body = document.querySelector(".editorial-body");
+      if (!body) return;
+      const over = () => {
+        const br = body.getBoundingClientRect();
+        return [...body.children].some((el) => el.getBoundingClientRect().bottom > br.bottom - 2);
+      };
+      const shrink = (sel, floor) => {
+        const nodes = [...body.querySelectorAll(sel)];
+        for (let guard = 0; guard < 30 && over(); guard++) {
+          let moved = false;
+          for (const el of nodes) {
+            const size = parseFloat(getComputedStyle(el).fontSize);
+            if (size > floor) { el.style.fontSize = size - 1 + "px"; moved = true; }
+          }
+          if (!moved) break;
+        }
+      };
+      shrink(".why-check", 30);
+      shrink(".event-copy span", 34);
+      shrink(".why-lead", 36);
+      // 하한까지 줄였는데도 넘치면 **줄을 버린다**. 폰에서 못 읽을 크기로
+      // 밀어 넣느니 확인점 한 줄을 접는 쪽이 낫다(같은 판단을 마지막 장에서도 썼다).
+      const checks = [...body.querySelectorAll(".why-check")];
+      while (over() && checks.length > 1) checks.pop().remove();
+      // 그래도 넘치면 사실 줄을 하나 접는다 — 여기까지 오는 날은 재료가 비정상이다.
+      const rows = [...body.querySelectorAll(".event-card")];
+      while (over() && rows.length > 1) rows.pop().remove();
+    });
 
     // 본문이 칸을 넘으면 불릿 글자를 함께 줄인다. 사실 3 + 의미 2 가 각각 40자로
     // 꽉 차면 993px 가 필요한데 가용 높이는 903px 다(검토 09-17 계산) — 가드가
