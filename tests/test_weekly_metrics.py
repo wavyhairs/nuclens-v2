@@ -1459,6 +1459,23 @@ class TestWeeklyWorkflow(unittest.TestCase):
         self.assertIn("python weekly_bot.py --confirm", yml)
         self.assertIn('workflows: ["Nuclear news crawl"]', yml)
 
+    def test_only_a_manual_dispatch_bypasses_the_delivery_gate(self):
+        """자동 호출자는 자기를 밝히고, 그러면 schedule 과 같은 취급을 받는다.
+
+        이 세 줄이 함께 있어야 계약이 선다. 입력만 있고 게이트에 안 넘기면
+        Worker 의 호출이 '사람의 수동 실행'으로 읽혀 이미 나간 주차를 다시
+        집고, 잡 조건을 안 고치면 AUTOMATION_ENABLED 를 내려 둔 구간에도
+        발송이 뚫린다.
+        """
+        root = Path(__file__).parent.parent
+        yml = (root / ".github" / "workflows" / "weekly.yml").read_text(encoding="utf-8")
+        self.assertIn("trigger_source:", yml)
+        self.assertIn('default: "manual"', yml)
+        self.assertIn("TRIGGER_SOURCE: ${{ inputs.trigger_source }}", yml)
+        self.assertIn(
+            "github.event_name == 'workflow_dispatch' && inputs.trigger_source == 'manual'",
+            yml)
+
     def test_workflow_deploys_the_committed_weekly_report(self):
         root = Path(__file__).parent.parent
         weekly = (root / ".github" / "workflows" / "weekly.yml").read_text(encoding="utf-8")

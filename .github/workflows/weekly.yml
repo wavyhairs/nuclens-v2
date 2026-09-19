@@ -9,6 +9,16 @@ on:
     workflows: ["Nuclear news crawl"]
     types: [completed]
   workflow_dispatch:
+    inputs:
+      trigger_source:
+        # 사람이 손으로 돌리는 실행은 이 값을 그대로 둔다 — 그런 실행은 '이미
+        # 나갔는가'를 묻지 않고 지나간다(다시 돌려 보는 것이 목적이므로).
+        # 자동 안전망이 부를 때만 backup_watchdog 으로 밝힌다. 그러면 schedule·
+        # crawl 복구와 똑같이 미발송일 때만 돌고, AUTOMATION_ENABLED 스위치도
+        # 함께 지킨다. crawl.yml 의 독립 Worker 가 쓰는 규약과 같다.
+        description: "호출자 식별 (수동 실행은 manual 유지)"
+        type: string
+        default: "manual"
 
 permissions:
   contents: write
@@ -39,13 +49,17 @@ jobs:
         env:
           TRIGGER_WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
           CHANNEL_REQUIRED: ${{ secrets.TELEGRAM_CHANNEL_ID != '' }}
+          TRIGGER_SOURCE: ${{ inputs.trigger_source }}
         run: python tools/weekly_trigger_gate.py
 
   weekly:
     needs: preflight
+    # 수동 실행만 자동화 스위치를 우회한다. 자동 안전망(backup_watchdog)이 부른
+    # 실행은 schedule 과 같은 취급이어야 한다 — 그러지 않으면 AUTOMATION_ENABLED
+    # 를 내려 둔 구간에 Worker 가 발송을 뚫는다.
     if: >-
       needs.preflight.outputs.should_run == 'true' &&
-      (github.event_name == 'workflow_dispatch' ||
+      ((github.event_name == 'workflow_dispatch' && inputs.trigger_source == 'manual') ||
        (vars.AUTOMATION_ENABLED == 'true' && vars.BRIEFING_ENABLED == 'true'))
     runs-on: ubuntu-latest
     outputs:
