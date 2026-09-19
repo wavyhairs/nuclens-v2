@@ -160,6 +160,26 @@ def record_notified(path: Path, brief_date: str, *, sent: int, total: int) -> No
         print(f"[push] outbox 기록 실패({type(exc).__name__}) — 발송은 끝났다")
 
 
+def clean_subject(raw: str) -> str:
+    """VAPID `sub` 클레임 — 푸시 서비스가 문제 생겼을 때 연락할 곳.
+
+    `mailto:<이메일>` 이거나 `https://<주소>` 여야 한다. **앞뒤 공백을 걷는다** —
+    설정 화면에 붙여넣을 때 딸려 들어온 스페이스 하나로 `py_vapid` 가
+    "Missing 'sub' from claims" 를 던지고, 그 예외는 구독자마다 한 번씩 쌓여
+    '전원 발송 실패'로만 보인다. 공백 하나를 그 증상에서 역추적하는 것은 비싸다
+    (2026-09-19 실측: ' mailto:…' · 'mailto:https://…' 둘 다 서명 단계에서 사망).
+
+    모양이 아예 틀리면 빈 문자열을 낸다 — 부르는 쪽이 **구독자를 부르기 전에**
+    멈추고 무엇이 잘못됐는지 말한다.
+    """
+    value = str(raw or "").strip()
+    if value.startswith("mailto:") and "@" in value[7:]:
+        return value
+    if value.startswith("https://") and len(value) > len("https://"):
+        return value
+    return ""
+
+
 def load_vapid_key(private_key: str):
     """시크릿에 담긴 개인키를 pywebpush 가 받는 모양으로.
 
@@ -201,7 +221,11 @@ def main(argv: list[str] | None = None) -> int:
     site = (os.environ.get("SITE_URL") or DEFAULT_SITE).rstrip("/")
     token = os.environ.get("PUSH_ADMIN_TOKEN") or ""
     private_key = os.environ.get("VAPID_PRIVATE_KEY") or ""
-    subject = os.environ.get("VAPID_SUBJECT") or DEFAULT_SUBJECT
+    # 변수가 비어 있으면 기본값으로 물러난다. 하지만 **값이 있는데 모양이 틀린 것**은
+    # 물러날 자리가 아니다 — 운영자가 설정했다고 믿고 있는 값이라, 조용히 다른 값으로
+    # 보내면 그 사실이 영영 안 드러난다.
+    raw_subject = os.environ.get("VAPID_SUBJECT") or ""
+    subject = clean_subject(raw_subject) if raw_subject.strip() else DEFAULT_SUBJECT
 
     briefings = _read_json(BRIEFINGS_FILE, [])
     payload = build_payload(briefings if isinstance(briefings, list) else [])
@@ -222,6 +246,14 @@ def main(argv: list[str] | None = None) -> int:
                              (("PUSH_ADMIN_TOKEN", token), ("VAPID_PRIVATE_KEY", private_key))
                              if not value)
         print(f"::error::[push] {missing} 미설정 — 아침 알림이 나가지 않는다")
+        return 1
+
+    # 구독자를 부르기 **전에** 본다. 여기서 안 막으면 py_vapid 가 서명 단계에서
+    # 구독마다 예외를 던지고, 로그에는 '전원 발송 실패'만 남는다 — 공백 하나가
+    # 원인인 것을 그 증상에서 되짚는 데 시간이 든다.
+    if not subject:
+        print(f"::error::[push] VAPID_SUBJECT 가 {raw_subject!r} 다 — "
+              f"'mailto:<이메일>' 또는 'https://<주소>' 여야 한다")
         return 1
 
     from pywebpush import WebPushException, webpush  # noqa: PLC0415 — 로컬엔 없을 수 있다
