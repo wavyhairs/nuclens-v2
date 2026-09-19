@@ -129,6 +129,9 @@ def merge(store: dict, threads: list[dict], relations: list[dict]) -> dict:
             "scope": row.get("scope") or {},
             "identity_origin": str(row.get("identity_origin") or ""),
             "identity_evidence": list(row.get("identity_evidence") or []),
+            # 시간순 이웃 사이의 관계. 화면의 흐름이 읽고, 여기 없으면 화면은
+            # 관계를 적지 않는다 — 투영이 추정을 하면 안 되기 때문이다.
+            "links": [dict(link) for link in (row.get("links") or [])],
         }
         if existing is None:
             entries[thread_id] = {**payload, "moved_to": "", "relations": []}

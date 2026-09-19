@@ -220,7 +220,7 @@ class GenericEntityTests(unittest.TestCase):
                   "signals": {"lexical": 0.0}}]
         verdicts = {"x--y": {"verdict": "same_thread", "relationship": "same_matter",
                              "method": "cache"}}
-        accepted, negative, _stats = build_edges(
+        accepted, negative, _relations, _stats = build_edges(
             pairs, verdicts, {"x": "x", "y": "y"})
         self.assertEqual(accepted, [])
         self.assertEqual(negative, {})
@@ -236,18 +236,18 @@ class RuleRejectTests(unittest.TestCase):
         return build_edges(pairs, {"x--y": verdict}, {"x": "x", "y": "y"})
 
     def test_rule_rejects_never_become_negative_edges(self):
-        _accepted, negative, _stats = self._pair(
+        _accepted, negative, _relations, _stats = self._pair(
             {"verdict": "different_thread", "reason": "no_shared_identity",
              "method": "rule"})
         self.assertEqual(negative, {}, "값싼 규칙 거부가 거부권이 됐다")
 
     def test_model_rejects_do_become_negative_edges(self):
-        _accepted, negative, _stats = self._pair(
+        _accepted, negative, _relations, _stats = self._pair(
             {"verdict": "different_thread", "reason": "다른 사안이다", "method": "cache"})
         self.assertEqual(negative, {"x": {"y"}, "y": {"x"}})
 
     def test_uncertain_is_not_a_negative_edge(self):
-        accepted, negative, _stats = self._pair(
+        accepted, negative, _relations, _stats = self._pair(
             {"verdict": "uncertain", "method": "cache"})
         self.assertEqual((accepted, negative), ([], {}))
 
@@ -289,10 +289,10 @@ class LiveMisjoinReplayTests(unittest.TestCase):
         nodes = {event_id: event for event_id, event in self.index.by_id.items()
                  if roots[event_id] == event_id}
         if gate:
-            accepted, negative, stats = build_edges(pairs, verdicts, roots)
+            accepted, negative, _relations, stats = build_edges(pairs, verdicts, roots)
         else:
             with mock.patch.object(thread_evidence, "gate", return_value=(True, "")):
-                accepted, negative, stats = build_edges(pairs, verdicts, roots)
+                accepted, negative, _relations, stats = build_edges(pairs, verdicts, roots)
         groups, cluster_stats = thread_identity.cluster(nodes, accepted, negative)
         return expand_folds(groups, roots), stats, cluster_stats
 

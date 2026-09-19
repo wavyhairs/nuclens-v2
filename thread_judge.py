@@ -74,6 +74,20 @@ SPLIT_BUDGET = 4
 
 VERDICTS = ("same_thread", "different_thread", "uncertain")
 
+# `relationship` 이 가질 수 있는 값. 캐시에는 그렇지 않은 것이 섞여 있다 —
+# 2026-09-19 실측 3,170건에서 ' same_matter'(앞 공백) 30건 · 'null' 13건 ·
+# 'uncertain' 7건, 그리고 `different_thread` 행에도 채워져 있다. 화면이 이
+# 칸을 읽기 시작하면 그 잡음이 그대로 문장이 되므로 읽는 자리를 하나로 모은다.
+RELATIONSHIPS = ("stage_progress", "cause_effect", "same_matter")
+
+
+def relationship_of(verdict: dict) -> str:
+    """같은 스토리일 때만 의미가 있다. 아니면 빈 문자열."""
+    if (verdict or {}).get("verdict") != "same_thread":
+        return ""
+    value = str((verdict or {}).get("relationship") or "").strip()
+    return value if value in RELATIONSHIPS else ""
+
 # 규칙이 거부하는 이유. 판정 분포를 보면 어디서 후보가 죽는지 바로 보인다.
 REJECT_UNIT_CONFLICT = "unit_conflict"
 REJECT_NO_SHARED_IDENTITY = "no_shared_identity"

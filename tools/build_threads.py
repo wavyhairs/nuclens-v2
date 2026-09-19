@@ -35,8 +35,8 @@ sys.path.insert(0, str(ROOT))
 
 import event_retrieval  # noqa: E402
 import thread_evidence  # noqa: E402
-import thread_identity  # noqa: E402
 import thread_judge  # noqa: E402
+import thread_identity  # noqa: E402
 import thread_ledger  # noqa: E402
 import thread_web  # noqa: E402
 
@@ -94,10 +94,13 @@ def build_edges(pairs: list[dict], verdicts: dict, roots: dict[str, str]) -> tup
             고리를 접힌 노드 기준으로 만든다.
 
     Returns:
-        (accepted, negative, stats)
+        (accepted, negative, relationships, stats). `relationships` 는 **실제 사건
+        id 쌍** 기준이다 — 접힌 노드가 아니라. 화면의 흐름은 사건을 시간순으로
+        세우고 그 사이에 이 관계를 적는다(`thread_web` 의 `flow`).
     """
     accepted: list[tuple[str, str]] = []
     negative: dict[str, set] = defaultdict(set)
+    relationships: dict[str, str] = {}
     stats = Counter()
     for row in pairs:
         verdict = verdicts.get(row["key"]) or {}
@@ -111,6 +114,10 @@ def build_edges(pairs: list[dict], verdicts: dict, roots: dict[str, str]) -> tup
                 stats[f"gated_{reason}"] += 1
                 continue
             stats["links"] += 1
+            relation_name = thread_judge.relationship_of(verdict)
+            if relation_name:
+                relationships[thread_judge.pair_id(
+                    row["left"].issue_id, row["right"].issue_id)] = relation_name
             if left_root == right_root:
                 stats["link_within_fold"] += 1
                 continue
@@ -123,7 +130,7 @@ def build_edges(pairs: list[dict], verdicts: dict, roots: dict[str, str]) -> tup
             negative[left_root].add(right_root)
             negative[right_root].add(left_root)
             stats["negatives"] += 1
-    return accepted, dict(negative), dict(stats)
+    return accepted, dict(negative), relationships, dict(stats)
 
 
 def expand_folds(groups: list[set], roots: dict[str, str]) -> list[set]:
@@ -133,6 +140,31 @@ def expand_folds(groups: list[set], roots: dict[str, str]) -> list[set]:
         members[root].append(event_id)
     return [{event_id for node in group for event_id in members.get(node, [node])}
             for group in groups]
+
+
+def derive_links(thread: dict, index: event_retrieval.Index,
+                 relationships: dict[str, str]) -> list[dict]:
+    """시간순으로 이웃한 두 사건 사이에 **판정이 이미 말한 관계**를 적는다.
+
+    화면의 흐름이 읽을 재료다. 여기서 새 인과를 만들지 않는다 — `relationship` 은
+    `thread_judge` 가 그 쌍을 보고 고른 값이고, 판정이 없는 자리는 빈칸으로 둔다.
+    빈칸을 '관련' 같은 말로 채우면 그 순간 화면이 없는 근거를 주장한다.
+
+    이웃 쌍만 적는다. 전부 적으면 원장이 사건 수의 제곱으로 자라고, 흐름이
+    읽는 것은 어차피 이웃뿐이다.
+    """
+    members = [index.by_id[event_id] for event_id in thread["event_ids"]
+               if event_id in index.by_id]
+    members.sort(key=lambda event: (event.first_seen or date.min, event.issue_id))
+    links = []
+    for left, right in zip(members, members[1:]):
+        links.append({
+            "from": left.issue_id,
+            "to": right.issue_id,
+            "relationship": relationships.get(
+                thread_judge.pair_id(left.issue_id, right.issue_id), ""),
+        })
+    return links
 
 
 def derive_scope(thread: dict, index: event_retrieval.Index) -> dict:
@@ -201,7 +233,7 @@ def build(args) -> int:
     nodes = {event_id: event for event_id, event in index.by_id.items()
              if roots.get(event_id, event_id) == event_id}
     folded = len(index.by_id) - len(nodes)
-    accepted, negative, link_stats = build_edges(pairs, verdicts, roots)
+    accepted, negative, relationships, link_stats = build_edges(pairs, verdicts, roots)
     print(f"[threads] 노드 {len(nodes)} (중복 {folded}건 접힘) · "
           f"고리 {len(accepted)} · 거부권 {link_stats.get('negatives', 0)}쌍 · "
           f"게이트 거부 {sum(value for key, value in link_stats.items() if key.startswith('gated_'))}")
@@ -227,6 +259,7 @@ def build(args) -> int:
     relations: list[dict] = []
     for thread in threads:
         thread["scope"] = derive_scope(thread, index)
+        thread["links"] = derive_links(thread, index, relationships)
         for event_id in thread["event_ids"]:
             previous = owners.get(event_id)
             if previous == thread["thread_id"]:

@@ -1095,6 +1095,17 @@ kbd {
    않는다: 사건이 취소된 게 아니라 여는 길이 없을 뿐이다. */
 .longterm-event.is-closed { display: block; color: var(--c-text-muted); cursor: default; }
 .longterm-event.is-closed:hover { color: var(--c-text-muted); text-decoration: none; }
+/* 흐름의 이음매. 화살표는 늘 있고 말은 판정이 있을 때만 붙는다 — 빈칸이
+   보이는 것이 없는 근거를 지어내는 것보다 낫다. 본문보다 한 단 물러선
+   무게로 두어 사건 제목이 계속 주역이게 한다. */
+.longterm-relation {
+  margin: var(--sp-2) 0 0;
+  color: var(--c-text-muted);
+  font-size: var(--t-caption);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+.longterm-relation span { margin-right: 0.15em; }
 /* 무엇이 닮았지만 들어오지 않는가. 자동 군집을 정직하게 보이는 자리라
    본문보다 물러서 있되 지워지지는 않는 무게로 둔다. */
 .longterm-scope {

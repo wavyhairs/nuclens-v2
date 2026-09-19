@@ -61,6 +61,7 @@ import event_identity  # noqa: E402
 import event_ledger  # noqa: E402
 import issue_candidate_stats  # noqa: E402
 import issue_change_log  # noqa: E402
+import issue_headline  # noqa: E402
 import issue_insight  # noqa: E402
 import issue_ledger  # noqa: E402
 import issue_review  # noqa: E402
@@ -873,6 +874,14 @@ def apply_display_headline_repairs(payload: object) -> object:
         if "headline" in payload:
             payload["headline"] = article_quality_gate.separate_mixed_event_headline(
                 payload.get("headline"))
+        # `headline_display` is a display-only field and belongs to this boundary
+        # for the same reason ``title`` does.  Skipping it left the card headline
+        # one repair behind the canonical title it was generated from (live
+        # 2026-09-19: "…자동정지 및 사업기간 연장" survived on the card after the
+        # title had been split back to "…자동정지").
+        if "headline_display" in payload:
+            payload["headline_display"] = article_quality_gate.separate_mixed_event_headline(
+                payload.get("headline_display"))
         for item in payload.values():
             apply_display_headline_repairs(item)
     return payload
@@ -3661,6 +3670,38 @@ def card_change_display(change: str, title: str, implication: str, why_important
     if not before or _is_restatement(visible, before):
         return ""
     return before
+
+
+def apply_headline_display(catalog: list[dict], briefings: list[dict]) -> dict:
+    """화면이 읽을 **표시 전용 제목**을 마지막에 한 번 정한다.
+
+    `title` 을 건드리지 않는다. 그 칸은 dedup·event_stage·issue_continuity·
+    story_fingerprint·asset_alias·thread_judge 의 판정 입력이라, 한 글자만 바꿔도
+    사건 신원과 장기 스토리가 같이 움직인다(`issue_headline` 의 docstring).
+
+    생성은 **카탈로그 행에서만** 한다. 브리핑 행은 같은 이슈의 날짜별 부분집합이라
+    거기서 또 물으면 같은 이슈를 날짜 수만큼 중복 질의한다 — `issue_insight` 가
+    같은 이유로 같은 순서를 쓴다.
+    """
+    requests = [{
+        "issue_id": str(row.get("issue_id") or ""),
+        "title": str(row.get("title") or ""),
+        "change": str(row.get("latest_change") or ""),
+        "detail": str(row.get("detail") or row.get("summary") or ""),
+    } for row in catalog]
+    headlines, stats = issue_headline.build(requests)
+
+    def _apply(rows: list[dict]) -> None:
+        for row in rows:
+            title = str(row.get("title") or "")
+            # 폴백이 두 겹이다. 캐시·판정이 무엇을 하든 이 칸이 비지 않는다.
+            row["headline_display"] = headlines.get(
+                str(row.get("issue_id") or "")) or title
+
+    _apply(catalog)
+    for briefing in briefings:
+        _apply(briefing.get("issues") or [])
+    return stats
 
 
 def finalize_card_fields(rows: list[dict]) -> None:
@@ -7050,6 +7091,14 @@ def build() -> None:
     finalize_card_fields(issue_catalog)
     for briefing in briefings:
         finalize_card_fields(briefing.get("issues") or [])
+    # 표시 제목은 변화 문장이 확정된 **뒤에** 정한다 — 입력 하나가 latest_change 다.
+    headline_stats = apply_headline_display(issue_catalog, briefings)
+    print(f"[build_data] 표시 제목: 캐시 {headline_stats['from_cache']} · "
+          f"신규 {headline_stats['asked']} (호출 {headline_stats['calls']}회) · "
+          f"원제목 유지 {headline_stats['fell_back']} "
+          f"[{headline_stats['status']}]"
+          + (f" 거부 {headline_stats['reject_reasons']}"
+             if headline_stats["reject_reasons"] else ""))
     print(f"[build_data] 이슈 해석: 후보 {insight_stats['candidates']}건 "
           f"(캐시 {insight_stats['from_cache']} / 신규 {insight_stats['asked']} / "
           f"호출 {insight_stats['calls']}회) → 적용 {applied}건 "
