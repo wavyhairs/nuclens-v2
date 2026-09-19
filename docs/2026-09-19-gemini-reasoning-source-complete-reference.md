@@ -59,3 +59,35 @@ python tools/curation_p4.py `
 strict import 결과가 `PASS`이고 `calibration_scope=source_complete`일 때만 canary 비용·호출량을
 다시 보고한다. `NOT_PROVEN`, malformed, incomplete이면 P4는 계속 HALTED이며 Gemini canary는
 실행하지 않는다.
+
+## 실제 calibration 결과
+
+사용자가 제공한 세 JSON을 strict import했다. 세 packet 모두 UI 표시 모델은
+`GPT-5.6 Sol`이며 26건 × 3회, 총 78 judgment가 schema/logic error 0으로 수락됐다.
+
+| 지표 | 결과 | 고정 기준 | 판정 |
+|---|---:|---:|---|
+| PASS vs intervention agreement | 0.461538 | >= 0.85 | 실패 |
+| false PASS | 3 | 0 | 실패 |
+| unsafe PASS | 3 | 0 | 실패 |
+| repeat modal stability | 1.0 | >= 0.90 | 통과 |
+| identical-pair TIE | 1.0 | >= 0.95 | 통과 |
+| position bias | 0.0 | <= 0.05 | 통과 |
+| duplicate verdict consistency | 1.0 | >= 0.95 | 통과 |
+| schema/logic errors | 0 | 0 | 통과 |
+
+case-major modal 비교는 reference PASS→judge REPAIR 14건, PASS→PASS 5건,
+REPAIR→REPAIR 6건, REPAIR→PASS 1건이다. false/unsafe PASS 3행은 동일한 FDC case
+`curation-c779c3bae51f041f-bae8001b5a9a`의 세 반복이다. judge는 모두 source 범위 안의
+전망으로 보아 PASS했지만 reference는 시장 형성 전망의 certainty를 REPAIR로 두었다.
+
+반대로 reference PASS 중 judge가 일관되게 REPAIR한 case가 많고, 예를 들어 첫 case에서는
+한국형 SMR의 1997년 개발 착수를 두산에너빌리티 자체 이력처럼 연결한 factual support 오류를
+세 번 모두 지적했다. 따라서 이 결과만으로 judge가 나쁘다고 단정할 수 없고, Codex 단독
+reference truth의 신뢰성도 입증되지 않았다. 결과를 본 뒤 Gold, threshold, prompt, model을
+바꾸지 않았으며 canary gate는 닫힌 상태다.
+
+최종 calibration status는 `NOT_PROVEN`이다. Gemini canary 호출은 0회다. 다음 재개는 고정된
+26건 evidence와 disagreement 15건(14 false intervention case + 1 unsafe PASS case)에 대한
+별도 승인된 독립 adjudication protocol이 먼저이며, 기존 결과를 덮어쓰거나 같은 judge로
+재실행해서는 안 된다.

@@ -38,7 +38,7 @@
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `DONE` — curation PROVEN, dedup/dedup_final NOT_PROVEN (2026-09-19) |
 | P3 | Independent Gold | 0 | `DONE` — 47건 판정 완료, 재라벨 대상 0 (97019a6) |
-| P4 | Sequential reasoning evaluation | 최소 | `BLOCKED_HUMAN(ChatGPT UI calibration answer 3개 대기; eligible 26)` |
+| P4 | Sequential reasoning evaluation | 최소 | `HALTED(source-complete calibration NOT_PROVEN: agreement 0.4615, false/unsafe PASS 3)` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
 
@@ -46,13 +46,13 @@
 
 ## 3. 다음 한 줄
 
-> **P2 판정 유지. P4 source-complete evidence 26건과 reference truth(PASS 19/REPAIR 7)를 확정했다.**
+> **P2 판정 유지. P4 source-complete calibration은 78/78 strict import 후 NOT_PROVEN이다.**
 >
-> 다음 재개 지점: `.eval/gemini-reasoning-v2/p4-source-complete/calibration/manual-calibration/`의
-> repeat 0/1/2 질문지를 각각 새 ChatGPT 대화에서 실행한 JSON 3개를 strict import한다.
-> 현재 Codex 세션에는 browser surface와 OpenAI API key가 없어 UI 실행만 외부 대기다.
-> calibration이 고정 threshold를 PASS하고 scope가 source_complete일 때만 P4 canary 예상 호출 수와
-> 비용을 다시 보고한다. 그 전에는 canary, threshold/prompt/model/gate 변경을 금지한다.
+> 결과는 agreement 0.461538, false PASS 3, unsafe PASS 3으로 고정 기준을 실패했다.
+> repeat stability/TIE/duplicate consistency는 1.0, position bias와 schema/logic error는 0이다.
+> 다음 재개 지점은 고정 evidence의 disagreement 15건에 대한 별도 승인된 독립 adjudication
+> protocol이다. 결과를 보고 Gold/threshold/prompt/model을 바꾸거나 동일 judge를 재실행하지 않는다.
+> calibration PASS 전까지 Gemini canary와 P5/P6 reasoning 선택은 금지한다.
 
 ## 4. Phase별 체크리스트
 
@@ -125,7 +125,9 @@
 - [x] fingerprint-bound independent reference truth protocol 및 Gold 생성 — Codex review
       PASS 19/REPAIR 7, 사람 판정으로 오인하지 않도록 provenance 명시
 - [x] 동일 evidence calibration dry-run/export — 26건 × 3 repeat, OpenAI API 0
-- [ ] ChatGPT UI calibration strict import — browser surface 없음, answer JSON 3개 대기
+- [x] ChatGPT UI calibration strict import — GPT-5.6 Sol, 78/78, schema/logic errors 0
+- [ ] judge calibration PROVEN — **NOT_PROVEN:** agreement 0.461538, false/unsafe PASS 3;
+      reference PASS→judge REPAIR modal 14건, reference REPAIR→judge PASS 1건
 - [ ] full-size batch canary — calibration PASS 및 명시적 Gemini 호출 승인 전 금지
 - [ ] dominated config 제거 → paired dev → finalist repeat → time-block holdout
 
@@ -495,3 +497,4 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-19 | P4 | 승인된 로컬 source-complete 수집 2회 성공: Gemini 8 calls, 125,011 tokens, USD 0.06818475, eligible 26/26. 진단 회차 포함 보수적 상한 16 calls/약 USD 0.14. production disposable output은 HEAD 복원 | 이번 문서 커밋 |
 | 2026-09-19 | P4 | fingerprint-bound reference truth 도구와 Codex 독립 검토 PASS 19/REPAIR 7. 고정 policy의 26×3 ChatGPT UI packet 생성. OpenAI API 0; 사용자 전송 승인 후 browser surface 부재로 answer 3개 대기. canary 차단 유지 | 이번 문서 커밋 |
 | 2026-09-19 | P4 | source-complete reference/producer targeted 56 passed/11 subtests, 비-web 전체 2085 passed/9 skipped/489 subtests. production data/cache 변경 0, py_compile·diff check 통과 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | source-complete ChatGPT calibration 78/78 strict import(GPT-5.6 Sol). stability/TIE/duplicate 1.0, bias/error 0이나 agreement 0.461538·false/unsafe PASS 3으로 NOT_PROVEN. Gemini canary 0, Gold/threshold/prompt/model/gate 불변 | 이번 문서 커밋 |
