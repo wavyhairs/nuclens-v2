@@ -7308,10 +7308,17 @@ class AdminConsoleTests(unittest.TestCase):
         self.assertEqual(set(posts), {"POST"}, f"예상 밖의 메서드: {posts}")
         fetches = {re.split(r"[?$]", url)[0]
                    for url in re.findall(r'fetch\(\s*[`"\']([^`"\']+)', self.script)}
-        # 읽기는 /admin/data/, 쓰기는 /admin/api/overrides. 둘 다 엣지 자물쇠
-        # 안쪽이고, 그 밖의 주소가 생기면 인증이 닿지 않는 경로가 열린 것이다.
-        self.assertEqual(fetches, {"/admin/data/", "/admin/api/overrides"},
+        # 읽기는 /admin/data/ 와 /admin/api/push(구독 수), 쓰기는
+        # /admin/api/overrides. 셋 다 엣지 자물쇠 안쪽이고, 그 밖의 주소가 생기면
+        # 인증이 닿지 않는 경로가 열린 것이다.
+        self.assertEqual(fetches,
+                         {"/admin/data/", "/admin/api/overrides", "/admin/api/push"},
                          f"콘솔이 예상 밖의 경로를 부른다: {fetches}")
+        # 특히 /push/list 는 아니다. 그 창구는 PUSH_ADMIN_TOKEN 으로 열리고, 그
+        # 토큰은 구독자 전원에게 알림을 보낼 수 있는 열쇠다 — 숫자 하나를 띄우자고
+        # 화면으로 내리면, 콘솔 비밀번호 하나가 발송 권한으로 번진다.
+        self.assertFalse([url for url in fetches if url.startswith("/push/")],
+                         "콘솔이 발송 창구를 직접 부른다")
 
         # ② 쓰기 창구는 엣지 자물쇠 **안쪽**에 있어야 한다. functions/admin/ 밖에
         #    두면 미들웨어가 닿지 않아 인증 없이 판정을 심을 수 있다.
