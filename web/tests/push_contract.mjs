@@ -261,4 +261,64 @@ const listRequest = (token) => new Request("https://site.test/push/list", {
   assert.ok(kv.store.has("push:sub:deadbeef"), "목록 조회가 KV 를 지웠다");
 }
 
+// ── 콘솔의 구독 수 — 숫자만, 그리고 값을 읽지 않는다 ───────────────────────
+//
+// 접근 통제는 /admin 미들웨어가 이미 했다(이 창구에 도달했다는 것은 서명된 세션이
+// 있다는 뜻). 여기서 잠글 것은 **무엇을 내보내는가**다.
+const pushApi = await import("../../functions/admin/api/push.js");
+
+{
+  const kv = fakeKv();
+  const env = { PUSH_KV: kv };
+  for (let i = 0; i < 5; i += 1) {
+    await subscribe.onRequestPost({
+      request: post({ subscription: {
+        endpoint: "https://fcm.googleapis.com/fcm/send/" + i, keys: goodKeys(),
+      } }, "10.5.0." + i), env,
+    });
+  }
+
+  // 세는 데에는 키 이름만 있으면 된다. 콘솔은 열 때마다 이걸 부르므로, 구독마다
+  // get 을 때리면 읽기 횟수가 구독자 수만큼 붙는다.
+  let gets = 0;
+  const counting = { ...kv, list: kv.list, async get(key) { gets += 1; return kv.get(key); } };
+  const response = await pushApi.onRequestGet({ env: { PUSH_KV: counting } });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.count, 5, "커서를 안 따라가 " + body.count + "건만 셌다");
+  assert.equal(body.capped, false);
+  assert.equal(gets, 0, "세기만 하면 되는데 값을 " + gets + "번 읽었다");
+
+  // endpoint 는 그 브라우저를 특정하는 주소다. 숫자를 띄우자고 화면까지 내리지 않는다.
+  assert.deepEqual(Object.keys(body).sort(), ["capped", "count"]);
+  assert.ok(!JSON.stringify(body).includes("fcm.googleapis.com"),
+    "콘솔 응답이 구독 주소를 흘렸다");
+}
+
+// '0명'과 '셀 수 없음'은 다른 사실이다. 둘을 같은 답으로 뭉치면 설정 누락이
+// 화면에서 '아무도 안 켰다'로 읽힌다.
+{
+  const empty = await pushApi.onRequestGet({ env: { PUSH_KV: fakeKv() } });
+  assert.equal(empty.status, 200);
+  assert.equal((await empty.json()).count, 0);
+
+  const unset = await pushApi.onRequestGet({ env: {} });
+  assert.equal(unset.status, 503);
+}
+
+// 콘솔 화면이 그 숫자를 받을 자리를 실제로 들고 있는가 — 창구만 서고 화면이
+// 안 부르면 증상이 '아무 일도 안 일어남' 하나다.
+{
+  const { readFile } = await import("node:fs/promises");
+  const { fileURLToPath } = await import("node:url");
+  const here = fileURLToPath(new URL(".", import.meta.url));
+  const adminJs = await readFile(here + "../public/admin/admin.js", "utf8");
+  assert.match(adminJs, /fetch\(`\/admin\/api\/push\?cb=/);
+  assert.ok(adminJs.includes('id="pushSubs"'), "숫자를 넣을 자리가 화면에 없다");
+  assert.ok(adminJs.includes("아침 알림 구독 없음"), "0명일 때의 문구가 없다");
+  // 콘솔이 발송 토큰을 만질 일은 없다. 그 토큰은 구독자 전원에게 보낼 수 있는 열쇠다.
+  assert.ok(!adminJs.includes("PUSH_ADMIN_TOKEN"), "콘솔 화면이 발송 토큰을 들고 있다");
+  assert.ok(!adminJs.includes("/push/list"), "콘솔이 목록 창구를 직접 부른다");
+}
+
 console.log("push contract: ok");
