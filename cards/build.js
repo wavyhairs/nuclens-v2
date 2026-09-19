@@ -188,7 +188,9 @@ function factPresentation(text, index) {
   for (const [pattern, meta] of rules) {
     if (pattern.test(value)) return { label: meta[0], text: value, state: meta[1], icon: meta[2], tone: meta[1] === "연기" ? "" : "active" };
   }
-  return { label: `확인 사실 ${String(index + 1).padStart(2, "0")}`, text: value, state: "확인", icon: "control", tone: "active" };
+  // 규칙에 안 걸리면 라벨·상태를 **비운다**. "확인 사실 02 / 확인" 은 정보가 0인데
+  // 자리는 본문만큼 차지했다. 빈 값이면 문장이 그 폭을 가져간다.
+  return { label: "", text: value, state: "", icon: "control", tone: "active" };
 }
 
 function editorialFromStep(slide) {
@@ -229,8 +231,16 @@ function editorialFromStep(slide) {
     headline,
     image,
     stamp,
-    context: Array.isArray(slide.meta) ? slide.meta.join(" · ").replaceAll("#", "") : "",
-    deck: points[0] || "",
+    // meta 가 stepLabel 과 같은 말이면 키커에 두 번 찍힌다("SMR | smr").
+    // 대소문자·공백만 다른 경우까지 같은 것으로 본다.
+    context: (() => {
+      const meta = Array.isArray(slide.meta) ? slide.meta.join(" · ").replaceAll("#", "") : "";
+      const norm = (t) => String(t || "").replace(/\s+/g, "").toLowerCase();
+      return norm(meta) === norm(slide.stepLabel) ? "" : meta;
+    })(),
+    // 덱이 points[0] 이면 바로 아래 첫 사실 줄과 글자까지 같다(3장 전수 확인).
+    // 히어로의 60px 짜리 자리를 중복에 쓰지 않는다 — 세 번째 사실을 올린다.
+    deck: points[2] || why[0] || "",
     statusRows: points.slice(0, 2).map(factPresentation),
     whyLead: why[0] || "",
     whyChecks: why.slice(1, 3),
@@ -465,20 +475,43 @@ ${fontLinks(theme)}
 
   /* 편집형 카드. 사용자가 고른 레퍼런스의 핵심인 사진 히어로, 상태 카드 둘,
      흰 해설면, 다크 출처 푸터를 코드로 재구성한다. */
-  .editorial-card { padding: 0; display: grid; grid-template-rows: 570px 422px 88px;
-    background: ${c.bg}; }
+  /* B안 — 사진이 카드 전체의 바탕이다. 글 있는 칸까지 사진 위에 얹되,
+     스크림을 아래로 갈수록 짙게 깔아 본문 구간의 배경 알파를 .93 이상으로
+     잠근다(레퍼런스 실측: 사진 위 텍스트는 배경 휘도 L≤30 = 대비 12:1 이상). */
+  .editorial-card { padding: 0; display: grid; grid-template-rows: 430px 562px 88px;
+    background: ${c.bgDark}; isolation: isolate; }
+  /* 피사체가 하단에 있으면 본문 스크림에 묻힌다 — 위쪽으로 당겨 히어로 칸에 세운다. */
+  .card-photo { position: absolute; inset: 0; z-index: -2;
+    background-size: cover; background-position: center 26%; }
+  .card-scrim { position: absolute; inset: 0; z-index: -1;
+    background:
+      linear-gradient(180deg, rgba(9,22,40,.22) 0%, rgba(9,22,40,.30) 26%,
+        rgba(9,22,40,.58) 41%, rgba(9,22,40,.80) 50%, rgba(9,22,40,.86) 72%,
+        rgba(9,22,40,.88) 100%),
+      linear-gradient(90deg, rgba(9,22,40,.94) 0%, rgba(9,22,40,.88) 30%,
+        rgba(9,22,40,.58) 52%, rgba(9,22,40,.16) 74%, rgba(9,22,40,0) 100%); }
+  /* 밝은 사진 가드가 붙으면 아래 절반을 한 단 더 누른다(렌더 스크립트가 실측). */
+  /* 표지·마지막 장은 격자 없이 배경 레이어만 빌린다. */
+  .card.has-photo { isolation: isolate; }
+  .bright-photo > .card-scrim {
+    background:
+      linear-gradient(180deg, rgba(9,22,40,.34) 0%, rgba(9,22,40,.46) 26%,
+        rgba(9,22,40,.76) 41%, rgba(9,22,40,.91) 50%, rgba(9,22,40,.94) 72%,
+        rgba(9,22,40,.95) 100%),
+      linear-gradient(90deg, rgba(9,22,40,.96) 0%, rgba(9,22,40,.92) 30%,
+        rgba(9,22,40,.70) 52%, rgba(9,22,40,.28) 74%, rgba(9,22,40,.10) 100%); }
   .editorial-card::after { display: none; }
-  .editorial-hero { position: relative; overflow: hidden; padding: 40px 48px 38px;
-    color: ${c.inkOnDark}; background: ${c.bgDark}; }
-  .editorial-photo { position: absolute; inset: 0; background-size: cover;
-    background-position: center; }
-  .editorial-photo::after { content: ""; position: absolute; inset: 0;
-    background: linear-gradient(90deg, rgba(9,22,40,.98) 0%, rgba(9,22,40,.91) 35%,
-      rgba(9,22,40,.46) 62%, rgba(9,22,40,.20) 100%); }
+  .editorial-hero { position: relative; overflow: hidden; padding: 40px 76px 38px;
+    color: ${c.inkOnDark}; background: transparent; }
+  .editorial-photo { display: none; }
   .editorial-hero .hd, .editorial-copy { position: relative; z-index: 1; }
   .editorial-hero .hd { color: rgba(238,241,244,.72); }
+  /* 쪽번호는 오버레이가 옅은 우측(α.20)에 선다 — 사진이 밝으면 사라진다.
+     불투명도를 올리고 어두운 그림자로 받친다. */
+  .editorial-hero .hd span:not(.brand) { color: rgba(238,241,244,.95);
+    text-shadow: 0 1px 6px rgba(9,22,40,.85); }
   .editorial-hero .hd .brand { color: ${c.inkOnDark}; letter-spacing: 2.5px; }
-  .editorial-copy { margin-top: 92px; width: 58%; }
+  .editorial-copy { margin-top: 44px; width: 58%; }
   .editorial-kicker { color: rgba(238,241,244,.82); font-size: 20px; font-weight: 700;
     letter-spacing: .2px; }
   .editorial-kicker strong { color: ${c.inkOnDark}; font-weight: 850; }
@@ -488,50 +521,56 @@ ${fontLinks(theme)}
   .editorial-title .em { display: block; color: ${c.accentBright}; font-size: 1.13em; }
   .editorial-deck { margin-top: 24px; max-width: 520px; color: rgba(238,241,244,.88);
     font-size: 25px; line-height: 1.42; font-weight: 520; word-break: keep-all; }
-  .editorial-stamp { position: absolute; right: 46px; bottom: 28px; z-index: 1;
-    color: rgba(238,241,244,.8); font-size: 14px; line-height: 1.45;
-    font-weight: 750; font-style: italic; letter-spacing: 4px; text-align: right; }
-  .editorial-body { padding: 25px 48px 22px; background: #F4F7FA; }
-  .editorial-section-head { display: flex; align-items: baseline; gap: 12px;
-    color: ${accent}; font-size: 18px; font-weight: 900; letter-spacing: .5px; }
-  .editorial-section-head span { color: ${inkDim}; font-size: 16px; font-weight: 650;
-    letter-spacing: 0; }
-  .event-grid { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .event-card { min-height: 116px; border: 1px solid rgba(18,41,76,.18);
-    border-radius: 12px; display: grid; grid-template-columns: 76px 1fr auto;
-    align-items: center; gap: 14px; padding: 14px 16px; background: rgba(255,255,255,.5); }
-  .event-icon { width: 64px; height: 64px; border-radius: 50%; background: #DCE9F7;
-    display: flex; align-items: center; justify-content: center; color: ${c.signalInk}; }
-  .event-icon svg { width: 40px; height: 40px; fill: none; stroke: currentColor;
-    stroke-width: 3.5; stroke-linecap: square; stroke-linejoin: miter; }
-  .event-copy strong { display: block; color: ${ink}; font-size: 25px; font-weight: 820; }
-  .event-copy span { display: block; margin-top: 5px; color: ${inkDim};
-    font-size: 18px; font-weight: 550; }
-  .event-state { align-self: end; margin-bottom: 3px; min-width: 76px; padding: 7px 13px;
-    border-radius: 999px; background: #F8D8D4; color: #A83D36; text-align: center;
-    font-size: 18px; font-weight: 850; }
-  .event-state.active { background: #DCE9F7; color: ${accent}; }
-  .why-editorial { margin-top: 20px; padding-top: 17px; border-top: 2px solid rgba(18,41,76,.35); }
-  .why-layout { margin-top: 11px; display: grid; grid-template-columns: 1.25fr .85fr;
-    gap: 30px; align-items: center; }
-  .why-lead { color: ${ink}; font-size: 31px; line-height: 1.32; font-weight: 780;
-    letter-spacing: -1px; word-break: keep-all; }
-  .why-checks { border-left: 1px solid ${c.rule}; padding-left: 24px;
-    display: flex; flex-direction: column; gap: 10px; }
-  .why-check { display: grid; grid-template-columns: 24px 1fr; gap: 10px;
-    color: ${inkDim}; font-size: 18px; line-height: 1.35; font-weight: 620; }
-  .why-check::before { content: "✓"; width: 22px; height: 22px; border-radius: 50%;
-    background: ${accent}; color: white; display: flex; align-items: center;
-    justify-content: center; font-size: 14px; font-weight: 900; }
-  .editorial-footer { padding: 0 48px; display: flex; justify-content: space-between;
-    align-items: center; background: ${c.bgDark}; color: rgba(238,241,244,.72); }
+  /* 사진 우하단 영문 스탬프는 14px(폰 5.1px) 라 읽히지 않고, 오버레이가 옅은
+     구간이라 사진마다 대비가 흔들렸다. 장식이므로 뺀다. */
+  .editorial-stamp { display: none; }
+  /* 글을 박스에 가두지 않는다. 카드 안의 카드(테두리·아이콘 원·상태칩)가
+     텍스트 폭을 273px 로 졸라매 본문이 18px 에 갇혀 있었다(폰에서 6.5px).
+     박스를 풀어 폭을 928px 로 열고, 그 폭을 글자 크기로 환산한다.
+     기준: 폰(390px)에서 14px 이상 = 1080 기준 39px 이상. */
+  .editorial-body { padding: 30px 76px 26px; background: transparent; }
+  .editorial-section-head { display: flex; align-items: baseline; gap: 14px;
+    color: #8FC2F2; font-size: 26px; font-weight: 900; letter-spacing: 1.2px; }
+  /* 한글이 영문 라벨보다 커야 한다 — 읽는 쪽은 한글이다(레퍼런스 실측: 33 vs 22). */
+  .editorial-section-head span { color: #EEF1F4; font-size: 32px; font-weight: 800;
+    letter-spacing: -.6px; }
+  .event-grid { margin-top: 18px; display: flex; flex-direction: column; gap: 14px; }
+  /* 행. 왼쪽 잉크 괘선 하나로 목록임을 표시한다 — 테두리 상자보다 싸고, 폭을 안 먹는다. */
+  .event-card { display: grid; grid-template-columns: 1fr auto; align-items: baseline;
+    gap: 18px; padding: 2px 0 2px 22px; border-left: 5px solid #5AA0E8; }
+  .event-copy strong { display: inline; color: rgba(238,241,244,.72); font-size: 27px;
+    font-weight: 750; letter-spacing: -.4px; }
+  .event-copy strong::after { content: "·"; margin: 0 9px; color: ${c.rule}; font-weight: 700; }
+  /* 어두운 바탕에서는 같은 굵기가 더 가늘어 보인다 — 600 → 650 으로 받친다. */
+  .event-copy span { display: inline; color: #FFFFFF; font-size: 42px; line-height: 1.4;
+    font-weight: 650; letter-spacing: -1px; word-break: keep-all; }
+  .event-state { align-self: center; min-width: 0; padding: 6px 16px;
+    border-radius: 999px; background: rgba(223,108,80,.22); color: #F2B5A3;
+    border: 1px solid rgba(242,181,163,.45); text-align: center;
+    font-size: 26px; font-weight: 850; white-space: nowrap; }
+  .event-state.active { background: rgba(90,160,232,.20); color: #8FC2F2;
+    border-color: rgba(143,194,242,.45); }
+  .why-editorial { margin-top: 26px; padding-top: 20px; border-top: 2px solid rgba(238,241,244,.30); }
+  .why-layout { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .why-lead { color: #FFFFFF; font-size: 44px; line-height: 1.3; font-weight: 780;
+    letter-spacing: -1.4px; word-break: keep-all; }
+  .why-checks { display: flex; flex-direction: column; gap: 10px; }
+  .why-check { display: grid; grid-template-columns: 30px 1fr; gap: 12px;
+    align-items: baseline; color: rgba(238,241,244,.90); font-size: 36px; line-height: 1.38;
+    font-weight: 660; letter-spacing: -.8px; word-break: keep-all; }
+  .why-check::before { content: "✓"; width: 28px; height: 28px; border-radius: 50%;
+    background: #5AA0E8; color: #0B1C36; display: flex; align-items: center;
+    justify-content: center; font-size: 19px; font-weight: 900; }
+  .editorial-footer { padding: 0 76px; display: flex; justify-content: space-between;
+    align-items: center; background: transparent; color: rgba(238,241,244,.72);
+    border-top: 1px solid rgba(238,241,244,.18); }
   .editorial-cta { display: grid; grid-template-columns: 46px auto; column-gap: 14px;
-    align-items: center; font-size: 17px; line-height: 1.35; }
+    align-items: center; font-size: 26px; line-height: 1.35; }
   .editorial-arrow { grid-row: span 2; width: 42px; height: 42px; border: 1px solid rgba(238,241,244,.28);
     border-radius: 8px; display: flex; align-items: center; justify-content: center;
     color: ${c.inkOnDark}; font-size: 27px; }
   .editorial-site { color: rgba(238,241,244,.52); }
-  .editorial-source { text-align: right; font-size: 17px; line-height: 1.45; }
+  .editorial-source { text-align: right; font-size: 26px; line-height: 1.45; }
   .editorial-source strong { color: ${c.inkOnDark}; }
 </style></head><body>${inner}</body></html>`;
 }
@@ -547,7 +586,7 @@ function renderSlide(s, theme) {
 
   if (type === "hook") {
     return shell(
-      `<div class="card cover">
+      `<div class="card cover has-photo">${s.image ? `<div class="card-photo ghost" style="background-image:url('${imageData(s.image)}')"></div><div class="card-scrim ghost"></div>` : ""}
         <div class="hd"><span class="brand">${esc(s.stepLabel || "NUCLENS")}</span><span>${num}</span></div>
         <div class="body">
           <div class="datehead">
@@ -572,7 +611,7 @@ function renderSlide(s, theme) {
 
   if (type === "cta") {
     return shell(
-      `<div class="card end">
+      `<div class="card end has-photo">${s.image ? `<div class="card-photo ghost" style="background-image:url('${imageData(s.image)}')"></div><div class="card-scrim ghost"></div>` : ""}
         <div class="hd"><span class="brand">${esc(s.stepLabel || "NUCLENS")}</span><span>${num}</span></div>
         <div class="body">
           <h1 class="headline">${accentize(s.headline, "em")}</h1>
@@ -629,8 +668,9 @@ function renderSlide(s, theme) {
     const photo = imageData(s.image);
     return shell(
       `<div class="card editorial-card">
+        <div class="card-photo ghost" style="background-image:url('${photo}')"></div>
+        <div class="card-scrim ghost"></div>
         <section class="editorial-hero">
-          <div class="editorial-photo" style="background-image:url('${photo}')"></div>
           <div class="hd"><span class="brand">NUCLENS</span><span>${num}</span></div>
           <div class="editorial-copy">
             <div class="editorial-kicker"><strong>${esc(s.stepLabel || "")}</strong>${s.context ? ` &nbsp;|&nbsp; ${esc(s.context)}` : ""}</div>
@@ -641,8 +681,8 @@ function renderSlide(s, theme) {
         </section>
         <section class="editorial-body">
           <div class="editorial-section-head">WHAT HAPPENED <span>확인된 사실</span></div>
-          <div class="event-grid">${rows.map((row, i) =>
-            `<div class="event-card"><div class="event-icon">${editorialIcon(row.icon || (i ? "control" : "mou"))}</div><div class="event-copy"><strong>${esc(row.label)}</strong><span>${esc(row.text)}</span></div><div class="event-state ${esc(row.tone || "")}">${esc(row.state)}</div></div>`
+          <div class="event-grid">${rows.map((row) =>
+            `<div class="event-card"><div class="event-copy">${row.label ? `<strong>${esc(row.label)}</strong>` : ""}<span>${esc(row.text)}</span></div>${row.state ? `<div class="event-state ${esc(row.tone || "")}">${esc(row.state)}</div>` : ""}</div>`
           ).join("")}</div>
           <div class="why-editorial">
             <div class="editorial-section-head">WHY IT MATTERS <span>${esc(s.whyLabel || "왜 중요한가")}</span></div>
@@ -792,7 +832,12 @@ function selfCheck() {
   page.setDefaultTimeout(60000);
   await page.setViewport({ width: theme.canvas.width, height: theme.canvas.height, deviceScaleFactor: 1 });
 
+  // 표지·마지막 장은 그날 첫 카드의 사진을 물려받는다 — 앨범이 한 벌로 보인다.
+  const heroImage = (slides.map(editorialFromStep).find((x) => x.image) || {}).image;
   for (let i = 0; i < slides.length; i++) {
+    if (heroImage && (slides[i].type === "hook" || slides[i].type === "cta") && !slides[i].image) {
+      slides[i] = { ...slides[i], image: heroImage };
+    }
     await page.setContent(renderSlide(slides[i], theme), { waitUntil: "load", timeout: 60000 });
     try {
       await page.evaluate(() => document.fonts.ready);
@@ -814,6 +859,71 @@ function selfCheck() {
       }
       for (const el of rows) el.style.fontSize = smallest + "px";
     });
+
+    // ── 밝은 사진 가드 ──────────────────────────────────────────────
+    // B안(사진 전면)은 스크림 농도가 사진 밝기에 물려 있다. 지금 자산 6장은
+    // 전부 야간·실내라 어둡지만, 밝은 사진(설경·흰 외벽·주간 하늘)이 들어오면
+    // 본문 뒤가 밝아져 흰 글자가 깨진다. 고정값으로는 못 막으므로 **글자가 앉는
+    // 아래 55% 구간의 평균 휘도를 실제로 재서** 임계를 넘으면 스크림을 올린다.
+    // 임계 0.28: 현행 자산 실측 상단값이 0.19, 12:1 을 지키는 한계가 0.30 이다.
+    await page.evaluate(async () => {
+      const card = document.querySelector(".card");
+      const photo = card && card.querySelector(".card-photo");
+      if (!photo) return;
+      const url = (photo.style.backgroundImage || "").slice(5, -2);
+      if (!url) return;
+      const img = new Image();
+      await new Promise((ok) => { img.onload = ok; img.onerror = ok; img.src = url; });
+      if (!img.naturalWidth) return;
+      const cv = document.createElement("canvas");
+      cv.width = 64; cv.height = 64;
+      const ctx = cv.getContext("2d");
+      // background-position: center 26% 와 같은 자리를 본다 — 위 26% 를 버리고 그린다.
+      ctx.drawImage(img, 0, img.naturalHeight * 0.26, img.naturalWidth,
+        img.naturalHeight * 0.74, 0, 0, 64, 64);
+      const px = ctx.getImageData(0, 35, 64, 29).data;   // 아래 55% = 글자 구간
+      let sum = 0;
+      for (let p = 0; p < px.length; p += 4) {
+        const f = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+        sum += 0.2126 * f(px[p]) + 0.7152 * f(px[p + 1]) + 0.0722 * f(px[p + 2]);
+      }
+      const mean = sum / (px.length / 4);
+      card.dataset.photoLum = mean.toFixed(3);
+      if (mean > 0.28) card.classList.add("bright-photo");
+    });
+
+    // ── 제목 2줄 ────────────────────────────────────────────────────
+    // 3줄 제목은 히어로를 다 먹고도 정보가 안 늘어난다("테라파워·메타, 나트륨
+    // 원전 8기 협력" — 지니 09-20). 글자를 줄여 2줄에 앉힌다. 강조 구간(.em)은
+    // 자기 줄을 갖게 돼 있으므로 앞부분이 1줄이면 전체가 2줄이다.
+    await page.evaluate(() => {
+      const title = document.querySelector(".editorial-title");
+      if (!title) return;
+      const lead = title.firstChild && title.firstChild.nodeType === 3 ? title : null;
+      const em = title.querySelector(".em");
+      const lineCount = () => {
+        const fs = parseFloat(getComputedStyle(title).fontSize);
+        const lh = fs * 1.08;
+        // .em 은 1.13em 이라 한 줄이 더 높다. 2줄 = 앞 1줄 + em 1줄.
+        const budget = lh + (em ? fs * 1.13 * 1.08 : lh);
+        return title.getBoundingClientRect().height > budget + 6 ? 3 : 2;
+      };
+      let fs = parseFloat(getComputedStyle(title).fontSize);
+      for (let guard = 0; guard < 24 && lineCount() > 2 && fs > 52; guard++) {
+        fs -= 2;
+        title.style.fontSize = fs + "px";
+      }
+      void lead;
+      title.dataset.finalFs = String(fs);   // 진단용 — 몇 px 로 앉았는지
+    });
+    if (process.env.CARD_DEBUG) {
+      const fsInfo = await page.evaluate(() => {
+        const t = document.querySelector(".editorial-title");
+        const c = document.querySelector(".card");
+        return t ? { fs: t.dataset.finalFs, h: Math.round(t.getBoundingClientRect().height), lum: c && c.dataset.photoLum, bright: c && c.classList.contains("bright-photo") } : null;
+      });
+      if (fsInfo) console.log("[title]", JSON.stringify(fsInfo));
+    }
 
     // 본문이 칸을 넘으면 불릿 글자를 함께 줄인다. 사실 3 + 의미 2 가 각각 40자로
     // 꽉 차면 993px 가 필요한데 가용 높이는 903px 다(검토 09-17 계산) — 가드가
