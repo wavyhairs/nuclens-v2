@@ -38,6 +38,7 @@ from typing import Callable, Iterable, Mapping, Sequence
 
 STATE_VERSION = 1
 DEFAULT_ALERT_COOLDOWN = timedelta(hours=24)
+KST = timezone(timedelta(hours=9))
 _SEVERITY_RANK = {"info": 0, "warning": 1, "critical": 2}
 
 
@@ -910,6 +911,66 @@ def web_identity_signals(build_mode: str | None, *, quarantined_count: int = 0,
         fingerprint=f"quarantined={count}",
         observation_id=str(observation_id).strip(), min_occurrences=1,
     )]
+
+
+# 주간 판세가 금요일 저녁까지 안 나갔는가.
+#
+# 이 판정은 **Weekly 워크플로 밖에서** 해야 한다. 2026-09-18 deploy-web.yml 의
+# 권한 한 줄이 어긋났을 때 Weekly 는 열한 번 연속 startup_failure 로 죽었는데,
+# 그 죽음은 잡이 뜨기 전이라 워크플로 안의 어떤 스텝도, `if: always()` 도 돌지
+# 않았다. 자기가 죽은 것을 스스로 알릴 수 있는 워크플로는 없다. 그래서 3시간마다
+# 도는 crawl 이 대신 본다.
+#
+# 창을 금요일 21:00 KST 에 여는 이유: 실측 배달 시각은 18:58·19:06·20:31 이었다
+# (전부 crawl 복구 경로). 21시면 정상 복구가 이미 한두 번 지나간 뒤다. 한 번은
+# 토요일 00:01 에 나갔는데, 그 주는 알림이 떴어야 맞다 — 7시간 늦은 것이다.
+# 창을 일요일 12:00 KST 에 닫는 것은 게이트의 복구 창과 같다.
+WEEKLY_DEADLINE_HOUR = 21
+WEEKLY_SCOPE = "weekly_delivery"
+
+
+def weekly_delivery_window(now: datetime | None = None) -> bool:
+    """금요일 21:00 ~ 일요일 12:00 KST. 이 밖에서는 아예 판정하지 않는다."""
+    local = _utc_now(now).astimezone(KST)
+    weekday = local.weekday()  # Monday=0
+    return ((weekday == 4 and local.hour >= WEEKLY_DEADLINE_HOUR)
+            or weekday == 5
+            or (weekday == 6 and local.hour < 12))
+
+
+def weekly_delivery_signals(snapshot: Mapping | None, *, now: datetime | None = None,
+                            observation_id: str = "") -> tuple[list[AlertSignal], set[str]]:
+    """주간 판세 미발송 신호와, 이번 회차가 그 scope 를 판정했는지.
+
+    창 밖이면 scope 를 비워 돌려준다 — 판정하지 않은 것과 '이상 없음'은 다르다.
+    빈 scope 는 앞선 사건을 해소하지도, 새로 만들지도 않는다.
+    """
+    if not isinstance(snapshot, Mapping) or not weekly_delivery_window(now):
+        return [], set()
+    if snapshot.get("complete"):
+        return [], {WEEKLY_SCOPE}
+
+    week = str(snapshot.get("week_id") or "이번 주")
+    dm = str(snapshot.get("dm") or "missing")
+    channel = str(snapshot.get("channel") or "missing")
+    # 운영자 문장에는 상태 코드가 새면 안 된다(tests/test_operator_alert_contract.py).
+    # 사람 말로 어디까지 갔는지만 적고, 코드는 technical 로 내린다.
+    reached = "받는 분께 전달된 기록이 없습니다" if dm != "sent" else (
+        "개인 알림은 나갔지만 구독 채널 공개가 확인되지 않았습니다")
+    return [AlertSignal(
+        key=f"weekly:delivery-missing:{week}", scope=WEEKLY_SCOPE,
+        severity="critical", level=LEVEL_ACTION, min_occurrences=1,
+        title="금요일 주간 판세가 발송되지 않았습니다",
+        detail=f"{week} 주간 판세가 금요일 밤까지 {reached}",
+        impact=("이번 주 주간 판세를 받지 못합니다. 매일 아침 브리핑과 사이트는 "
+                "그대로 정상입니다."),
+        action=("GitHub 의 Weekly report 워크플로를 확인해 주세요. 일요일 낮까지는 "
+                "수집이 끝날 때마다 자동으로 다시 시도합니다."),
+        # 마지막 줄에만 값이 나온다 — 나머지 넷은 사람 말이다.
+        technical=(f"{week} 개인알림={dm} 채널={channel}. "
+                   "Weekly report 워크플로 로그를 확인해 주세요."),
+        observation_id=str(observation_id).strip(),
+    )], {WEEKLY_SCOPE}
 
 
 def collection_pipeline_signals(outcome: str | None, *,
