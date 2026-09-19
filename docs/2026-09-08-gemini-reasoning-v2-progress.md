@@ -26,7 +26,7 @@
 | 분기 기준 | `1a9eb7f` (main) |
 | production reasoning | 전 profile 미활성 — 이 작업이 끝날 때까지 유지 |
 | Fast semantic gate | `FAST_SEMANTIC_GATE_ENABLED = False` 유지 |
-| 누적 신규 live API 호출 | **0** (P0/P0.5 확인, `_CALL_LOG` 불변식 테스트로 강제) |
+| 누적 신규 live API 호출 | P4 source collection 성공 회차 **Gemini 8**; 진단 회차 포함 보수적 상한 **16**. OpenAI API 0 |
 | PR #92 | 별도 브랜치. 이 작업은 main에서 새로 시작한다(§5-D 참조) |
 
 ## 2. Phase 상태
@@ -38,7 +38,7 @@
 | P1 | Observed baseline audit | 0 | `DONE` (83942f7) |
 | P2 | Capture + recorded-response fidelity | 0 | `DONE` — curation PROVEN, dedup/dedup_final NOT_PROVEN (2026-09-19) |
 | P3 | Independent Gold | 0 | `DONE` — 47건 판정 완료, 재라벨 대상 0 (97019a6) |
-| P4 | Sequential reasoning evaluation | 최소 | `HALTED(source-complete producer 완료, eligible 0/20~30)` |
+| P4 | Sequential reasoning evaluation | 최소 | `HALTED(source-complete calibration NOT_PROVEN: agreement 0.4615, false/unsafe PASS 3)` |
 | P5 | Safety / operational decision | 0 | `PENDING` |
 | P6 | Integration → activation | 최소 | `PENDING` |
 
@@ -46,16 +46,13 @@
 
 ## 3. 다음 한 줄
 
-> **P2 판정 유지. P4 source-complete producer까지 구현됐고 live 호출은 여전히 0이다.**
+> **P2 판정 유지. P4 source-complete calibration은 78/78 strict import 후 NOT_PROVEN이다.**
 >
-> 다음 재개 지점: 제한된 로컬/비공개 저장 위치와 해당 회차의 정상 curation 예상 호출 수·token·비용·
-> hard cap을 먼저 보고하고 명시적 승인을 받는다. 그 뒤 opt-in capture에서 exact
-> article/context/request/output/parser state를 함께 보존한
-> `SOURCE_COMPLETE_CALIBRATION_ELIGIBLE` case를 risk-balanced 20~30건 축적한다.
-> 현재 eligible은 0건이다. 기존 20 Gold는 `HISTORICAL_ONLY` 및
-> `UNSCORABLE_MISSING_EVIDENCE`로 보존되며 active calibration/export/canary gate를 열 수 없다.
-> source-complete fixture는 자동 Gold가 아니므로, 별도 승인된 독립 reference truth protocol까지
-> 확정되기 전에는 judge 실행, Gemini canary, threshold/prompt/model/gate 변경을 하지 않는다.
+> 결과는 agreement 0.461538, false PASS 3, unsafe PASS 3으로 고정 기준을 실패했다.
+> repeat stability/TIE/duplicate consistency는 1.0, position bias와 schema/logic error는 0이다.
+> 다음 재개 지점은 고정 evidence의 disagreement 15건에 대한 별도 승인된 독립 adjudication
+> protocol이다. 결과를 보고 Gold/threshold/prompt/model을 바꾸거나 동일 judge를 재실행하지 않는다.
+> calibration PASS 전까지 Gemini canary와 P5/P6 reasoning 선택은 금지한다.
 
 ## 4. Phase별 체크리스트
 
@@ -124,8 +121,13 @@
 - [x] 기존 risk coverage를 반영하는 최대 30건 통합 명령과 공개 workflow 업로드 방지 회귀 구현
 - [x] 기존 20 Gold를 `HISTORICAL_ONLY`/`UNSCORABLE_MISSING_EVIDENCE`로 분리;
       default calibration export 0건, historical PASS도 canary unlock 불가
-- [ ] source-complete calibration case 20~30건 축적 — 현재 0건
-- [ ] 독립 reference truth protocol 승인 및 동일 evidence calibration dry-run
+- [x] source-complete calibration case 20~30건 축적 — 26/26 eligible, store integrity PASS
+- [x] fingerprint-bound independent reference truth protocol 및 Gold 생성 — Codex review
+      PASS 19/REPAIR 7, 사람 판정으로 오인하지 않도록 provenance 명시
+- [x] 동일 evidence calibration dry-run/export — 26건 × 3 repeat, OpenAI API 0
+- [x] ChatGPT UI calibration strict import — GPT-5.6 Sol, 78/78, schema/logic errors 0
+- [ ] judge calibration PROVEN — **NOT_PROVEN:** agreement 0.461538, false/unsafe PASS 3;
+      reference PASS→judge REPAIR modal 14건, reference REPAIR→judge PASS 1건
 - [ ] full-size batch canary — calibration PASS 및 명시적 Gemini 호출 승인 전 금지
 - [ ] dominated config 제거 → paired dev → finalist repeat → time-block holdout
 
@@ -492,3 +494,7 @@ dedup 쪽 MERGE 8건은 merge recall 을 재기에 얇다 — coverage·붕괴 �
 | 2026-09-19 | P4 | source-complete 관련 76 passed/100 subtests. 전체 2693 passed/10 skipped/1 failed/487 subtests — 실패는 기존 live web data 주별 합계 비율 3.77 > 2 gate로 P4 무관, 수정하지 않음 | 이번 문서 커밋 |
 | 2026-09-19 | P4 | 동일 `curate_batch` 실행에서 transport/curation state를 결합하는 opt-in source-complete producer, fail-closed in-memory gate, 기존 coverage 반영 risk-balanced 최대 30건 통합 명령 구현. public workflow 업로드 없음. 실제 eligible 0, Gemini/OpenAI 호출 0 | 이번 문서 커밋 |
 | 2026-09-19 | P4 | producer 관련 200 passed/94 subtests, 비-web 전체 2134 passed/9 skipped/489 subtests. 전체 실행은 2610 passed/12 skipped 후 격리 worktree에 비추적 `web/public/data/*.json`이 없어 4 failed/114 setup errors; 생성물을 복사하거나 gate를 변경하지 않음 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | 승인된 로컬 source-complete 수집 2회 성공: Gemini 8 calls, 125,011 tokens, USD 0.06818475, eligible 26/26. 진단 회차 포함 보수적 상한 16 calls/약 USD 0.14. production disposable output은 HEAD 복원 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | fingerprint-bound reference truth 도구와 Codex 독립 검토 PASS 19/REPAIR 7. 고정 policy의 26×3 ChatGPT UI packet 생성. OpenAI API 0; 사용자 전송 승인 후 browser surface 부재로 answer 3개 대기. canary 차단 유지 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | source-complete reference/producer targeted 56 passed/11 subtests, 비-web 전체 2085 passed/9 skipped/489 subtests. production data/cache 변경 0, py_compile·diff check 통과 | 이번 문서 커밋 |
+| 2026-09-19 | P4 | source-complete ChatGPT calibration 78/78 strict import(GPT-5.6 Sol). stability/TIE/duplicate 1.0, bias/error 0이나 agreement 0.461538·false/unsafe PASS 3으로 NOT_PROVEN. Gemini canary 0, Gold/threshold/prompt/model/gate 불변 | 이번 문서 커밋 |

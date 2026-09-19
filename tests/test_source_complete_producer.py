@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -186,6 +187,34 @@ class ProducerEndToEndTests(unittest.TestCase):
 
 
 class ProducerActivationTests(unittest.TestCase):
+    def test_snapshot_tags_datetime_without_losing_type_or_value(self):
+        value = datetime(2026, 9, 19, 1, 2, 3, tzinfo=timezone.utc)
+        self.assertEqual(producer._json_snapshot({"pub": value}), {
+            "pub": {
+                "__source_complete_type__": "datetime",
+                "iso8601": "2026-09-19T01:02:03+00:00",
+            },
+        })
+
+    def test_trace_client_blocks_before_seventh_live_delegate_call(self):
+        delegated = []
+
+        def delegate(_system, _user, *, trace_sink, **_kwargs):
+            delegated.append(True)
+            trace_sink({"parsed_output": {"items": []}})
+            return {"items": []}
+
+        prod = producer.SourceCompleteProducer(Path(".eval/test"), max_calls=6)
+        client = prod.traced_client(delegate)
+        for _ in range(6):
+            client("s", "u")
+        with self.assertRaisesRegex(
+                producer.GeminiError, "call budget exhausted"):
+            client("s", "u")
+        self.assertEqual(len(delegated), 6)
+        self.assertEqual(client.calls, 6)
+        self.assertEqual(client.blocked_calls, 1)
+
     def test_capture_is_off_unless_explicit_flag_is_on(self):
         with patch.dict(os.environ, {
             producer.STORE_ENV: ".eval/gemini-reasoning-v2/source-complete",
@@ -209,6 +238,8 @@ class ProducerActivationTests(unittest.TestCase):
         self.assertEqual(report["incremental_api_calls"], {"gemini": 0, "openai": 0})
         self.assertEqual(report["remaining"], 30)
         self.assertEqual(report["minimum_future_successful_batches"], 2)
+        self.assertEqual(
+            report["activation"][producer.MAX_CALLS_ENV], "6")
         self.assertIn("Gold judgment", report["forbidden_in_this_stage"])
 
     def test_public_workflows_do_not_upload_source_bodies(self):

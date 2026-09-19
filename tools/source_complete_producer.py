@@ -35,13 +35,17 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from gemini_client import GeminiError
 from tools import source_complete_evidence as evidence
 
 CAPTURE_FLAG = "NUCLENS_SOURCE_COMPLETE_CAPTURE"
 STORE_ENV = "NUCLENS_SOURCE_COMPLETE_STORE"
 TARGET_ENV = "NUCLENS_SOURCE_COMPLETE_TARGET"
+MAX_CALLS_ENV = "NUCLENS_SOURCE_COMPLETE_MAX_CALLS"
 DEFAULT_TARGET = 30
 MAX_TARGET = 30
+DEFAULT_MAX_CALLS = 6
+MAX_CALLS_LIMIT = 22
 SELECTION_POLICY = "risk-balanced-v1"
 
 
@@ -60,14 +64,23 @@ class _TracedResult(dict):
 class ProductionTraceClient:
     """Delegate to the real transport while attaching its one successful trace."""
 
-    def __init__(self, delegate: Callable[..., dict]):
+    def __init__(self, delegate: Callable[..., dict], *, max_calls: int):
         self.delegate = delegate
+        self.max_calls = max_calls
         self.calls = 0
+        self.blocked_calls = 0
         self.trace_failures = 0
+        self.prompt_tokens = 0
+        self.candidate_tokens = 0
+        self.total_tokens = 0
 
     def __call__(self, system_prompt: str, user_message: str, **kwargs) -> dict:
         if "trace_sink" in kwargs:
             raise ProducerConfigurationError("trace_sink is owned by ProductionTraceClient")
+        if self.calls >= self.max_calls:
+            self.blocked_calls += 1
+            raise GeminiError(
+                f"source-complete evaluation call budget exhausted: {self.max_calls}")
         traces: list[dict] = []
         self.calls += 1
         result = self.delegate(
@@ -75,6 +88,11 @@ class ProductionTraceClient:
         trace = traces[0] if len(traces) == 1 else None
         if trace is None:
             self.trace_failures += 1
+        else:
+            detail = trace.get("detail") or {}
+            self.prompt_tokens += int(detail.get("prompt_tokens") or 0)
+            self.candidate_tokens += int(detail.get("candidate_tokens") or 0)
+            self.total_tokens += int(detail.get("total_tokens") or 0)
         return _TracedResult(result, trace)
 
 
@@ -128,6 +146,42 @@ def _domain(article: dict, canonical_url: str) -> str:
     return str(article.get("domain") or urlparse(canonical_url).netloc).strip()
 
 
+def _json_snapshot(value: Any) -> Any:
+    """Losslessly tag non-JSON Python values in an exact evaluation snapshot."""
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, datetime):
+        return {
+            "__source_complete_type__": "datetime",
+            "iso8601": value.isoformat(),
+        }
+    if isinstance(value, Path):
+        return {
+            "__source_complete_type__": "path",
+            "value": str(value),
+        }
+    if isinstance(value, dict):
+        if not all(isinstance(key, str) for key in value):
+            raise TypeError("source-complete snapshot requires string mapping keys")
+        return {key: _json_snapshot(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_snapshot(item) for item in value]
+    if isinstance(value, tuple):
+        return {
+            "__source_complete_type__": "tuple",
+            "items": [_json_snapshot(item) for item in value],
+        }
+    if isinstance(value, (set, frozenset)):
+        items = [_json_snapshot(item) for item in value]
+        items.sort(key=lambda item: json.dumps(
+            item, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+        return {
+            "__source_complete_type__": "set",
+            "items": items,
+        }
+    raise TypeError(f"unsupported source-complete snapshot type: {type(value).__name__}")
+
+
 def _safe_rejection(case_id: str, reason: str, gate: dict | None = None) -> dict:
     row: dict[str, Any] = {"case_id": case_id, "reason": reason}
     if gate:
@@ -162,12 +216,17 @@ class SourceCompleteProducer:
     """Build candidates in memory and promote only balanced, complete cases."""
 
     def __init__(self, store: Path, *, target: int = DEFAULT_TARGET,
-                 body_provenance: dict[str, dict] | None = None):
+                 body_provenance: dict[str, dict] | None = None,
+                 max_calls: int = DEFAULT_MAX_CALLS):
         if not 1 <= target <= MAX_TARGET:
             raise ProducerConfigurationError(
                 f"target must be between 1 and {MAX_TARGET}; got {target}")
+        if not 1 <= max_calls <= MAX_CALLS_LIMIT:
+            raise ProducerConfigurationError(
+                f"max_calls must be between 1 and {MAX_CALLS_LIMIT}; got {max_calls}")
         self.store = Path(store)
         self.target = target
+        self.max_calls = max_calls
         self.body_provenance = copy.deepcopy(body_provenance or {})
         self.candidates: list[dict] = []
         self.rejections: list[dict] = []
@@ -175,7 +234,7 @@ class SourceCompleteProducer:
         self.trace_client: ProductionTraceClient | None = None
 
     def traced_client(self, delegate: Callable[..., dict]) -> ProductionTraceClient:
-        client = ProductionTraceClient(delegate)
+        client = ProductionTraceClient(delegate, max_calls=self.max_calls)
         self.trace_client = client
         return client
 
@@ -259,10 +318,11 @@ class SourceCompleteProducer:
                         provenance.get("body_extraction_version") or ""),
                 },
                 "production": {
-                    "article": copy.deepcopy(article),
-                    "reports_context": copy.deepcopy(reports),
+                    "article": _json_snapshot(article),
+                    "reports_context": _json_snapshot(reports),
                     "batch": {"article_hashes": article_hashes, "position": position},
                     "request_builder_fingerprint": request_builder_fingerprint(),
+                    "snapshot_encoding": "tagged-json-v1",
                 },
                 "request_payload": copy.deepcopy(request),
                 "output": {
@@ -335,7 +395,16 @@ class SourceCompleteProducer:
             "risk_counts_after": dict(sorted(after["risk_counts"].items())),
             "observed_production_curation_calls": (
                 self.trace_client.calls if self.trace_client else 0),
+            "blocked_by_call_budget": (
+                self.trace_client.blocked_calls if self.trace_client else 0),
+            "logical_call_hard_cap": self.max_calls,
             "trace_failures": self.trace_client.trace_failures if self.trace_client else 0,
+            "observed_token_usage": {
+                "prompt_tokens": self.trace_client.prompt_tokens if self.trace_client else 0,
+                "candidate_tokens": (
+                    self.trace_client.candidate_tokens if self.trace_client else 0),
+                "total_tokens": self.trace_client.total_tokens if self.trace_client else 0,
+            },
             "incremental_api_calls": {"gemini": 0, "openai": 0},
             "production_behavior_changed": False,
         }
@@ -360,8 +429,12 @@ def producer_from_environment(articles: list[dict], bodies: dict[str, str]) -> S
         target = int(os.environ.get(TARGET_ENV, str(DEFAULT_TARGET)))
     except ValueError as exc:
         raise ProducerConfigurationError(f"{TARGET_ENV} must be an integer") from exc
+    try:
+        max_calls = int(os.environ.get(MAX_CALLS_ENV, str(DEFAULT_MAX_CALLS)))
+    except ValueError as exc:
+        raise ProducerConfigurationError(f"{MAX_CALLS_ENV} must be an integer") from exc
     return SourceCompleteProducer(
-        store, target=target,
+        store, target=target, max_calls=max_calls,
         body_provenance=production_body_provenance(articles, bodies))
 
 
@@ -395,6 +468,7 @@ def collection_plan(store: Path, target: int) -> dict:
             CAPTURE_FLAG: "on",
             STORE_ENV: str(store),
             TARGET_ENV: str(target),
+            MAX_CALLS_ENV: str(DEFAULT_MAX_CALLS),
         },
         "forbidden_in_this_stage": [
             "Gold judgment", "judge calibration", "Gemini reasoning canary",

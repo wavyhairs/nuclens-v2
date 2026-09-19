@@ -15,6 +15,9 @@ production-equivalent `curate_batch()` 실행에서 다음 두 관측점을 in-m
 - `news_bot.curate_batch`: exact article object, reports/context, batch 순서/position,
   body, normalized output, validation, regeneration/split lifecycle
 
+article/context의 `datetime`, tuple, set, `Path`처럼 JSON에 직접 들어가지 않는 Python 값은
+`tagged-json-v1` marker로 원래 타입과 값을 함께 보존한다. 문자열로 조용히 평탄화하지 않는다.
+
 기본 인자는 모두 `None`이며 capture mode가 꺼진 production 요청·응답은 바뀌지 않는다.
 producer는 production 호출에 편승하므로 추가 Gemini 호출을 만들지 않는다.
 
@@ -42,13 +45,16 @@ capture는 다음 세 환경변수가 명시됐을 때만 생성된다.
 $env:NUCLENS_SOURCE_COMPLETE_CAPTURE='on'
 $env:NUCLENS_SOURCE_COMPLETE_STORE='.eval/gemini-reasoning-v2/source-complete-candidates'
 $env:NUCLENS_SOURCE_COMPLETE_TARGET='30'
+$env:NUCLENS_SOURCE_COMPLETE_MAX_CALLS='6'
 python news_bot.py
 ```
 
-store는 저장소의 `.eval` 아래만 허용한다. target은 1~30만 허용한다. 위 명령은 실제
+store는 저장소의 `.eval` 아래만 허용한다. target은 1~30만 허용한다. capture mode의
+logical Gemini call hard cap 기본값은 6이며 7번째 delegate 호출 전에 로컬에서 차단된다.
+위 명령은 실제
 production-equivalent 수집 실행이므로 **실행 전에 해당 회차의 정상 curation 예상 호출 수,
-token, 비용, hard cap을 보고하고 명시적 승인을 받아야 한다.** 이번 구현·검증에서는 실행하지
-않았다.
+token, 비용, hard cap을 보고하고 명시적 승인을 받아야 한다.** 구현 시점에는 실행하지 않았고,
+아래 §9의 승인된 로컬 수집에서만 활성화했다.
 
 사전 상태 확인은 API 0회다.
 
@@ -130,3 +136,38 @@ producer는 다음 bucket을 answer/Gold 없이 계산한다.
 
 P4 canary, threshold, Gold, judge prompt/model, production reasoning,
 `FAST_SEMANTIC_GATE_ENABLED`는 변경하지 않았다.
+
+## 9. 승인된 실제 수집 결과 (2026-09-19)
+
+사용자가 유료 API 사용과 기사 본문·context의 Google Gemini 전송을 명시적으로 승인한 뒤,
+격리 worktree의 disposable service output과 로컬 `.eval` store에서만 두 번의 성공 수집을
+실행했다. 첫 성공 회차는 30개 article/본문 13개에서 logical call 4회로 10건을, 두 번째는
+23개 article/본문 18개에서 call 4회로 16건을 승격했다. 두 회차 모두 hard cap 이내였고
+budget 차단은 0회다.
+
+| 항목 | 성공 1회차 | 성공 2회차 | 합계 |
+|---|---:|---:|---:|
+| logical Gemini calls | 4 | 4 | 8 |
+| eligible cases | 10 | 16 | 26 |
+| prompt tokens | 45,932 | 49,531 | 95,463 |
+| candidate tokens | 15,385 | 14,163 | 29,548 |
+| total tokens | 61,317 | 63,694 | 125,011 |
+| 비용 (USD) | 0.0345575 | 0.03362725 | 0.06818475 |
+
+비용은 실행 전 고정한 Gemini 3.1 Flash-Lite 단가(input USD 0.25/M, output USD 1.50/M)로
+계산했다. 앞선 진단 중 serialization 결함으로 eligible을 만들지 못한 확인 가능 4 calls와,
+stdout이 분리되어 token telemetry를 남기지 못한 최대 4 calls도 보수적으로 포함하면 전체
+상한은 16 calls, 약 USD 0.14다. missing Naver credential로 production 진입 전에 실패한
+첫 시도는 Gemini 0 calls다.
+
+최종 store `C:\AI\nuclens-v2\.eval\gemini-reasoning-v2\source-complete-candidates`는
+`validate-store`에서 26/26 `SOURCE_COMPLETE_CALIBRATION_ELIGIBLE`이다. risk metadata 집계는
+event_boundary 26, scope 23, stage 15, date 26, causality 18,
+unsupported_inference 26, historical_error_prone 26이다. `omission`과 `normal_pass_like`의
+휴리스틱 집계는 0이므로 이 두 값은 coverage 증명으로 사용하지 않는다. 대신 독립 reference
+review에서 19 PASS/7 REPAIR를 분리했고, 위험 분류 metadata는 Gold에 입력하지 않았다.
+
+수집 과정에서 드러난 `datetime` JSON serialization 결손은 `tagged-json-v1` snapshot으로
+수정했고, 7번째 호출 전에 차단하는 기본 6-call hard cap과 실제 token telemetry를 추가했다.
+disposable archive/cache/delivery output은 수집 후 HEAD로 복원했다. production reasoning,
+prompt/model, `FAST_SEMANTIC_GATE_ENABLED`, 서비스 설정은 바꾸지 않았다.
