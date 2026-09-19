@@ -3202,61 +3202,73 @@ function reportDraftFor(issueId) {
   return state.reportDrafts?.drafts?.[issueId]?.draft || "";
 }
 
-// 스토리(chronicle) — 이슈의 60일 수명을 넘어 쌓이는 시간축 원장(chronicles.json).
-// 원장이 없거나 이슈가 스토리에 속하지 않으면 null — 호출부가 블록을 통째로
-// 숨긴다(발간물·오디오와 같은 비치명 계약).
-function chronicleFor(issue) {
-  const cid = issue?.chronicle_id || "";
-  return (cid && state.chronicles?.chronicles?.[cid]) || null;
+/* ── 같은 스토리의 다른 사건 ──────────────────────────────────────────────
+   이슈 상세의 「주요 사건 타임라인」이 읽는 자리. 원장은 `thread_ledger.json`
+   이고 화면 계약은 `data/threads.json` 이다 — 이슈는 `thread_id` 한 칸만 들고
+   와서 그 파일을 찾아본다(`build_data.stamp_thread_ids`).
+
+   **여기가 유일한 장기 흐름 계층이다.** 종전에 같은 자리를 노리던
+   `chronicleDialogSection()` 은 생산자(`chronicles.json`)가 사라진 뒤로
+   `state.chronicles` 가 어디에서도 채워지지 않아 항상 빈 문자열을 돌려주는
+   죽은 코드였다(라이브 `/data/chronicles.json` 404). 두 계층을 나란히 두면
+   어느 쪽이 정본인지 다음 사람이 알 수 없으므로 그쪽을 지우고 이 자리로 모았다.
+
+   무엇을 하지 않는가
+   ------------------
+   **다른 사건의 기사를 이 이슈로 옮기지 않는다.** 사건(thread)과 근거(evidence)는
+   다른 계층이다 — 8월 사건의 기사가 9월 이슈의 `related_articles` 로 섞이면
+   그 이슈의 검증 수치가 거짓이 된다. 여기서 세우는 것은 **다른 사건으로 가는
+   링크**뿐이고, 그 사건의 근거는 그 사건의 상세에 있다.
+
+   **관계 문구를 새로 만들지 않는다.** 이음매의 말은 `thread_judge` 가 그 쌍을
+   보고 고른 관계를 `thread_web.RELATION_LABELS` 가 옮긴 것뿐이다. 판정이 없는
+   자리는 화살표만 남는다 — 빈칸을 '관련' 같은 말로 채우는 순간 화면이 없는
+   근거를 주장한다. */
+
+function threadForIssue(issue) {
+  // 화면이 스스로 다시 재는 가시성 판정을 그대로 탄다. 판정 그래프가 반쪽인
+  // 회차·배포가 멈춘 CDN 에서는 장기 스토리 화면과 **같이** 사라진다.
+  if (!longTermVisible(state.threads)) return null;
+  const threadId = resolveThreadId(issue?.thread_id || "");
+  if (!threadId) return null;
+  return longTermThreads().find(thread => thread.thread_id === threadId) || null;
 }
 
-// 국면형 서사(chronicle_narrative.py 산출). 없으면 null — 타임라인만 선다.
-function chronicleNarrativeFor(chronicleId) {
-  return state.chronicleNarratives?.narratives?.[chronicleId] || null;
+// 흐름 한 줄. 지금 보고 있는 사건은 링크가 아니라 제자리 표시다 — 자기 자신을
+// 여는 버튼은 누르면 아무 일도 안 일어나는 것으로 읽힌다.
+// 인자를 구조분해로 받지 않는다 — web/tests 의 함수 추출기가 매개변수의 중괄호를
+// 본문 시작으로 오해해서 블록을 반 토막 낸다(long_term_gate.mjs 와 같은 추출기).
+function threadStepRow(step, currentId, isLast) {
+  const isCurrent = step.event_id === currentId;
+  const title = isCurrent || !threadEventOpenable(step)
+    ? `<span class="longterm-event${isCurrent ? " is-current" : " is-closed"}"${
+        isCurrent ? "" : ' title="이 사건은 현재 이슈 목록에 없습니다"'}>${esc(step.title)}</span>`
+    : `<button type="button" class="longterm-event" data-issue-id="${esc(step.event_id)}" data-force-dialog="1">${esc(step.title)}</button>`;
+  return `<li${isCurrent ? ' class="is-current"' : ""}>
+    <div class="timeline-date"><span>${esc(dateLabel(step.date))}</span></div>
+    <div class="timeline-copy">
+      ${title}
+      ${isCurrent ? '<small>이번 사건</small>' : ""}
+      ${isLast ? "" : `<p class="longterm-relation"><span aria-hidden="true">↓</span>${
+        step.relation_label ? ` ${esc(step.relation_label)}` : ""}</p>`}
+    </div>
+  </li>`;
 }
 
-// 원장 이벤트는 기사 뷰의 부분집합 필드만 갖는다 — 타임라인 부품이 기대하는
-// 형태로 그대로 통과시킨다(publisher 만 있으면 sourceLabel 이 처리).
-function chronicleEventsDesc(chron) {
-  return (chron.events || []).slice()
-    .sort((a, b) => String(b.article_date || "").localeCompare(String(a.article_date || "")));
-}
-
-// 이슈 다이얼로그의 스토리 구역. 핵심 차별점: 현 다이얼로그 타임라인은 60일 창
-// 안만 보이는데, 스토리는 그 밖으로 밀려난 과거 사건까지 이어 보여준다.
-//
-// 그래서 **타임라인이 못 보여주는 게 있을 때만** 선다 — ①원장에 현재 이슈
-// 밖의 과거 사건이 있거나 ②서사가 생성돼 있을 때. 원장이 이슈와 같은 내용뿐인
-// 날(전진 축적 첫날이 그렇다)에 세우면 같은 목록을 두 번 보여주는 소음이 된다
-// ("같은 문단을 한 화면에 두 번 두지 않는다" — dropTextsAlreadyOnCards 와
-// 같은 계약, 실제로 '타임라인이랑 뭐가 다르냐' 판정을 받았다 '26.9.7).
-function chronicleDialogSection(issue, contextDate) {
-  const chron = chronicleFor(issue);
-  if (!chron || (chron.events || []).length < 2) return "";
-  const narrative = chronicleNarrativeFor(chron.chronicle_id);
-  const issueHashes = new Set(
-    (issue.related_articles || []).map(article => article.hash).filter(Boolean));
-  const pastEvents = (chron.events || []).filter(event => !issueHashes.has(event.hash));
-  if (!pastEvents.length && !narrative) return "";
-  const range = flowSpanRange();
-  const narrativeBlock = narrative ? `
-      <div class="chronicle-narrative">
-        ${narrative.phase_now ? `<p class="chronicle-phase"><strong>지금 국면 <span class="ai-badge">AI</span></strong>${esc(narrative.phase_now)}</p>` : ""}
-        ${(narrative.narrative || []).map(paragraph => `<p>${esc(paragraph)}</p>`).join("")}
-        ${(narrative.watchpoints || []).length ? `<p class="chronicle-watch"><strong>지켜볼 지점</strong>${narrative.watchpoints.map(esc).join(" · ")}</p>` : ""}
-      </div>` : "";
-  return `<section class="dialog-chronicle" aria-labelledby="issueChronicleTitle">
-      <div class="dialog-section-head"><h3 id="issueChronicleTitle">스토리</h3><span>${esc(dateLabel(chron.first_seen))}부터 사건 ${(chron.events || []).length}건</span></div>
-      ${range ? flowSpanTrack(chron, range) : ""}
-      ${narrativeBlock}
-      ${pastEvents.length ? `<p class="dialog-evidence-note">위 타임라인에 없는 과거 사건 — 이슈가 갈리거나 수집 창(60일) 밖으로 밀려난 기록입니다.</p>
-      ${timelineList(pastEvents.slice()
-        .sort((a, b) => String(b.article_date || "").localeCompare(String(a.article_date || ""))), {
-        contextDate,
-        stage: "지난 흐름",
-        shownDetail: "",
-        moreLabel: "이전 사건",
-      })}` : ""}
+function threadDialogSection(issue) {
+  const thread = threadForIssue(issue);
+  if (!thread) return "";
+  // `flow` 는 시간순이고 `events` 는 최신순이다. 흐름은 처음부터 읽어야 흐름이라
+  // 앞쪽을 쓰고, 계약이 바뀌어 비어 있으면 구역을 세우지 않는다.
+  const steps = thread.flow || [];
+  const others = steps.filter(step => step.event_id !== issue.issue_id).length;
+  // 이 이슈 하나뿐인 스토리는 보여 줄 흐름이 없다. 같은 목록을 두 번 두지 않는다.
+  if (steps.length < 2 || !others) return "";
+  return `<section class="dialog-history dialog-thread" aria-labelledby="issueHistoryTitle">
+      <div class="dialog-section-head"><h3 id="issueHistoryTitle">주요 사건 타임라인</h3><span>같은 흐름의 사건 ${steps.length}건 · ${esc(threadPeriodText(thread))}</span></div>
+      <ol class="timeline longterm-timeline longterm-flow">${steps.map((step, index) =>
+        threadStepRow(step, issue.issue_id, index + 1 >= steps.length)).join("")}</ol>
+      <p class="dialog-evidence-note">서로 다른 사건이 시간에 따라 이어진 흐름입니다. 각 사건의 근거 기사는 그 사건의 상세에 있습니다.</p>
     </section>`;
 }
 
@@ -3281,17 +3293,20 @@ function draftSourceLines(issue) {
 // 종결로 바꾸는 것은 사람이나 khnp-report 스킬이 할 일이고, 여기서 어미를
 // 기계적으로 자르면 근거 없는 문장이 된다. AI 가 쓴 문장에는 라벨을 남긴다.
 function issueReportText(issue) {
-  // 스토리 소속이면 경과 한 문단을 재료로 붙인다 — 보고서의 '경과' 칸이
-  // 60일 창 밖 발단까지 물고 들어가게 하는 최소 연결(v1).
-  const chron = chronicleFor(issue);
-  const narrative = chron ? chronicleNarrativeFor(chron.chronicle_id) : null;
-  const chronicleLines = narrative?.phase_now
-    ? ["", ` ○ (경과·AI) ${narrative.phase_now}`
-       + ` (${dateLabel(chron.first_seen)}부터 사건 ${(chron.events || []).length}건)`]
+  // 스토리 소속이면 경과 한 줄을 재료로 붙인다 — 보고서의 '경과' 칸이 이 이슈
+  // 하나가 아니라 **그 앞의 사건들**까지 물고 들어가게 하는 최소 연결.
+  //
+  // 종전에는 `chronicle_narrative` 의 AI 문단을 붙였는데, 그 생산자가 사라진
+  // 뒤로 늘 빈 줄이었다. 여기서는 지어내지 않고 원장이 아는 사실만 적는다 —
+  // 언제부터 몇 건이 이어졌는가. 없는 해석에 AI 라벨을 달아 내보내지 않는다.
+  const thread = threadForIssue(issue);
+  const threadLines = thread
+    ? ["", ` ○ (경과) ${dateLabel(thread.first_seen)}부터 이어진 사건 ${(thread.events || []).length}건`
+       + ` — 「${thread.title || ""}」`]
     : [];
   const draft = reportDraftFor(issue.issue_id);
   if (draft) {
-    return [`□ ${issue.title || ""}`, "", draft, ...chronicleLines,
+    return [`□ ${issue.title || ""}`, "", draft, ...threadLines,
             ...draftSourceLines(issue), "", STRINGS.draftAiNote].join("\n");
   }
   const notes = footnoteBook();
@@ -3308,7 +3323,7 @@ function issueReportText(issue) {
   add("시사점·AI", issue.implication);
   add("남은 확인", issue.open_question);
   add("검증", `${(VERIFICATION_VIEW[verState.status] || VERIFICATION_VIEW.unverified).label} — ${issueEvidenceText(issue)}`);
-  return [...lines, ...chronicleLines, ...notes.lines()].join("\n");
+  return [...lines, ...threadLines, ...notes.lines()].join("\n");
 }
 
 // 공백·문장부호 차이를 무시한 포함 판정 — 중복 줄 제거 전용.
@@ -3703,8 +3718,9 @@ function openIssueDialog(issueId, updateUrl = true) {
       ${draftPreviewBlock(issue)}
     </section>
     ${keeiDialogSection(issue)}
-    <section class="dialog-history" aria-labelledby="issueHistoryTitle">
-      <div class="dialog-section-head"><h3 id="issueHistoryTitle">주요 사건 타임라인</h3><span>브리핑에 선정된 ${cardArticles.length}건</span></div>
+    ${threadDialogSection(issue)}
+    <section class="dialog-history dialog-basis" aria-labelledby="issueBasisTitle">
+      <div class="dialog-section-head"><h3 id="issueBasisTitle">이 사건의 근거</h3><span>브리핑에 선정된 ${cardArticles.length}건</span></div>
       ${cardArticles.length
         ? timelineList(cardArticles, {
             contextDate,
@@ -3725,7 +3741,6 @@ function openIssueDialog(issueId, updateUrl = true) {
       })}
     </details>` : ""}
     ${changeLogSection(issue)}
-    ${chronicleDialogSection(issue, contextDate)}
     ${related.length ? `<section class="dialog-related" aria-labelledby="issueRelatedTitle">
       <div class="dialog-section-head"><h3 id="issueRelatedTitle">관련 이슈</h3><span>같은 주제로 연결된 이슈입니다</span></div>
       <ul>${related.map(item => `<li>
@@ -5088,13 +5103,6 @@ function renderTrend() {
     : "국가별로 비교할 이슈가 아직 충분하지 않습니다.";
   renderSlopeGraph();
 }
-
-// 흐름 탭의 '이어지는 사안' — 스토리 원장에서 최근 갱신 순으로 몇 건.
-// 살아있는 이슈(카탈로그에 chronicle_id 로 연결)가 있으면 제목 클릭이 그 이슈
-// 다이얼로그를 연다(data-issue-id 전역 위임 재사용). 이슈가 60일 창 밖으로
-// 죽었어도 카드 자체는 남는다 — 그게 이 원장의 존재 이유다.
-const CHRONICLE_LIST_MAX = 6;
-
 
 function clearBriefingFilters() {
   state.region = "전체";

@@ -3190,6 +3190,21 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
 .dialog-update h3,
 .dialog-history h3 { margin: 0 0 8px; font-size: 17px; }
 .dialog-update > p { color: var(--c-text-secondary); }
+/* ── 주요 사건 타임라인(같은 스토리의 다른 사건) ──────────────────────────
+   흐름 목록은 장기 스토리 화면과 **같은 부품**을 쓴다(.longterm-flow). 한 사실을
+   두 모양으로 그리면 두 화면이 서로 다른 말을 하기 시작한다.
+
+   지금 보고 있는 사건만 여기서 더한다 — 읽는 사람이 "내가 어디에 서 있나"를
+   찾느라 제목을 대조하지 않게 한다. 링크가 아니므로 본문 색으로 세우되 왼쪽
+   표시로만 구분한다. */
+.dialog-thread .longterm-event.is-current {
+  display: block;
+  color: var(--c-text);
+  font-weight: 600;
+  cursor: default;
+}
+.dialog-thread li.is-current { border-left: 2px solid var(--c-secondary); margin-left: -10px; padding-left: 8px; }
+.dialog-thread li.is-current small { color: var(--c-secondary); font-size: var(--t-min); }
 /* ── 변화 이력 ─────────────────────────────────────────────────────────────
    회차와 회차의 **짝**을 세운다. 아래 타임라인은 같은 기사들을 날짜순 한 줄씩
    세우므로, 여기까지 목록 모양이면 두 블록이 같은 것으로 읽힌다. 앞 상태를 한 단

@@ -2788,8 +2788,16 @@ class GeneratedDataTests(unittest.TestCase):
         script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
         style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
         for heading in ("한 줄 결론", "이번에 달라진 점", "왜 중요한가", "시사점",
-                        "주요 사건 타임라인", "추가 근거 원문", "관련 이슈"):
+                        "주요 사건 타임라인", "이 사건의 근거", "추가 근거 원문",
+                        "관련 이슈"):
             self.assertIn(heading, script)
+        # 문자열이 있다는 것만으로는 부족하다 — 「주요 사건 타임라인」은 한때
+        # 같은 이슈의 기사 목록에 붙은 이름이었고, 그 사실은 이 검사를 통과했다.
+        # 지금 그 제목이 걸린 자리는 **다른 사건**을 세우는 구역이어야 한다.
+        self.assertIn("function threadDialogSection", script)
+        self.assertRegex(script, r'issueHistoryTitle">주요 사건 타임라인')
+        self.assertRegex(script, r'issueBasisTitle">이 사건의 근거')
+        self.assertIn("${threadDialogSection(issue)}", script)
         self.assertIn("function relatedIssues", script)
         # 제목이 상세 진입점이므로 좁은 화면에서 타임라인 버튼을 숨겨도 길이 남는다.
         self.assertIn("issue-title-button", script)
