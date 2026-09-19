@@ -202,6 +202,9 @@ jobs:
   deploy:
     needs: weekly
     if: always() && needs.weekly.outputs.report_ref != ''
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/deploy-web.yml
     with:
       ref: ${{ needs.weekly.outputs.report_ref }}
