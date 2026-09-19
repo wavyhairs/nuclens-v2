@@ -1354,6 +1354,99 @@ class TestWeeklyDeliveryClaim(unittest.TestCase):
                 self.assertEqual(weekly_bot.cmd_confirm(self.NOW), 0)
                 self.assertEqual(send.call_count, 1)
 
+    # ── 늦게 들어온 트리거가 '언제 닿았나'를 지우지 못하게 한다 ────────────
+    #
+    # 실제로 일어난 일(delivery_log.jsonl, 2026-09-11):
+    #
+    #   18:59  workflow_run / schedule_missing_recovery  → DM·채널 sent
+    #   21:48  schedule     / schedule_trigger_created   → 같은 주차를 다시 확정
+    #
+    # 발송은 한 번뿐이었는데(멱등 경로가 막았다) 저장된 confirmed_at 은 21:48 이
+    # 됐다. 사용자가 실제로 받은 시각은 어디에도 안 남는다. 09-04 도 같은 모양이다.
+    def _week_fixture(self, base, *, dm="pending", channel="pending", now=None):
+        reports = base / "weekly_reports.json"
+        channel_file = base / "channel_outbox.json"
+        stamp = (now or self.NOW).isoformat()
+        reports.write_text(json.dumps({"schema_version": 1, "reports": {
+            "2026-W35": {
+                "week_id": "2026-W35", "week_end": "2026-08-28",
+                "_automation": {
+                    "created_at": stamp,
+                    "message_html": "<b>W35</b>",
+                    "telegram": {"status": dm},
+                },
+            }
+        }}), encoding="utf-8")
+        channel_file.write_text(json.dumps({"schema_version": 1, "batches": [{
+            "id": "weekly-2026-W35", "kind": "weekly", "date": "2026-W35",
+            "created_at": stamp, "status": channel,
+            "items": [{"kind": "text", "name": "주간판세",
+                       "text": "<b>W35</b>", "status": channel}],
+        }]}), encoding="utf-8")
+        return reports, channel_file
+
+    def _automation(self, reports):
+        store = json.loads(reports.read_text(encoding="utf-8"))
+        return store["reports"]["2026-W35"]["_automation"]
+
+    def test_late_trigger_does_not_move_the_first_delivery_time(self):
+        import channel_queue
+
+        delivered = datetime.fromisoformat("2026-08-28T18:59:07+09:00")
+        late = datetime.fromisoformat("2026-08-28T21:48:02+09:00")
+        with TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            reports, channel = self._week_fixture(base, channel="sent")
+            with (patch.object(weekly_bot, "WEEKLY_REPORTS_FILE", reports),
+                  patch.object(weekly_bot, "WEEKLY_RESULT_FILE", base / "weekly_result.json"),
+                  patch.object(weekly_bot, "DELIVERY_LOG_FILE", base / "delivery_log.jsonl"),
+                  patch.object(channel_queue, "QUEUE_FILE", channel),
+                  patch("telegram_send.send_long_text", return_value=[{"ok": True}])):
+                self.assertEqual(weekly_bot.cmd_send(delivered), 0)
+                self.assertEqual(weekly_bot.cmd_confirm(delivered), 0)
+                first = self._automation(reports)["confirmed_at"]
+
+                # 4시간 반 밀린 schedule 이 같은 주차로 들어온다.
+                self.assertEqual(weekly_bot.cmd_send(late), 0)
+                self.assertEqual(weekly_bot.cmd_confirm(late), 0)
+
+            automation = self._automation(reports)
+            self.assertEqual(first, delivered.isoformat())
+            self.assertEqual(automation["confirmed_at"], delivered.isoformat())
+            self.assertEqual(automation["telegram"]["confirmed_at"], delivered.isoformat())
+            # 재확인 자체는 지우지 않는다 — 따로 남긴다.
+            self.assertEqual(automation["last_checked_at"], late.isoformat())
+            self.assertEqual(automation["telegram"]["last_checked_at"], late.isoformat())
+
+    def test_failed_recheck_does_not_pull_a_sent_week_back_to_failed(self):
+        """상태 하향은 곧 재발송 문이다 — 다음 recovery 가 다시 집는다."""
+        import channel_queue
+
+        delivered = datetime.fromisoformat("2026-08-28T18:59:07+09:00")
+        late = datetime.fromisoformat("2026-08-28T21:48:02+09:00")
+        with TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            reports, channel = self._week_fixture(base, channel="sent")
+            with (patch.object(weekly_bot, "WEEKLY_REPORTS_FILE", reports),
+                  patch.object(weekly_bot, "WEEKLY_RESULT_FILE", base / "weekly_result.json"),
+                  patch.object(weekly_bot, "DELIVERY_LOG_FILE", base / "delivery_log.jsonl"),
+                  patch.object(channel_queue, "QUEUE_FILE", channel),
+                  patch("telegram_send.send_long_text", return_value=[{"ok": True}])):
+                self.assertEqual(weekly_bot.cmd_send(delivered), 0)
+                self.assertEqual(weekly_bot.cmd_confirm(delivered), 0)
+                self.assertEqual(self._automation(reports)["channel"]["status"], "sent")
+
+                # 늦은 런에서 채널 공개가 예외로 떨어진다(권한·설정·일시 장애).
+                with patch.object(channel_queue, "publish",
+                                  side_effect=RuntimeError("channel down")):
+                    weekly_bot.cmd_send(late)
+                    self.assertEqual(weekly_bot.cmd_confirm(late), 0)
+
+            automation = self._automation(reports)
+            self.assertEqual(automation["channel"]["status"], "sent")
+            self.assertEqual(automation["channel"]["confirmed_at"], delivered.isoformat())
+            self.assertEqual(automation["telegram"]["status"], "sent")
+
 
 class TestWeeklyWorkflow(unittest.TestCase):
     def test_workflow_claims_before_send_and_recovers_on_conflict(self):
