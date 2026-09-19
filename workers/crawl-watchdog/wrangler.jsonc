@@ -11,6 +11,9 @@
     "GITHUB_OWNER": "wavyhairs",
     "GITHUB_REPO": "nuclens-v2",
     "GITHUB_WORKFLOW": "crawl.yml",
+    // 같은 Worker 가 금요일 주간 판세도 본다. cron 을 더 거는 대신 이쪽에 얹은
+    // 이유는 이 저장소의 GitHub cron 이 4시간 반씩 밀리거나 아예 안 뜨기 때문이다.
+    "GITHUB_WEEKLY_WORKFLOW": "weekly.yml",
     "BACKUP_GRACE_MINUTES": "25"
   },
   "observability": {

@@ -125,8 +125,146 @@ export async function checkAndRecover(env, now = new Date()) {
   return log;
 }
 
+
+// ── 주간 판세 ───────────────────────────────────────────────────────────────
+//
+// 금요일 cron 은 이 저장소에서 배달자가 아니었다. 2026-08-21~09-18 의 예약은
+// 08:07Z 인데 실제로는 08:46Z · (미발생) · 12:41Z · 12:47Z · 12:55Z 에 떴다.
+// 네 주 연속 실제 발송을 끝낸 것은 전부 3시간마다 도는 crawl 의 복구 경로였고,
+// 도착은 18:58~21:41, 한 번은 토요일 00:01 이었다.
+//
+// cron 을 더 거는 것은 답이 아니다 — 같은 지연을 똑같이 먹는다. 크롤에서 이미
+// 쓰고 있는 이 Worker 가 15분마다 직접 확인해서 부른다.
+const WEEKLY_MIN_GAP_MS = 30 * 60_000;
+const WEEKLY_MAX_DISPATCHES = 6;
+const KST_OFFSET_MS = 9 * 3_600_000;
+
+function kst(now) {
+  return new Date(now.getTime() + KST_OFFSET_MS);
+}
+
+/** KST 날짜 기준 ISO 주차. weekly_bot 의 `{year}-W{week:02d}` 와 같은 값이어야 한다. */
+export function isoWeekId(now) {
+  const local = kst(now);
+  const date = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(),
+                                local.getUTCDate()));
+  const weekday = date.getUTCDay() || 7;            // 월=1 … 일=7
+  date.setUTCDate(date.getUTCDate() + 4 - weekday); // 그 주의 목요일이 연도를 정한다
+  const year = date.getUTCFullYear();
+  const jan1 = Date.UTC(year, 0, 1);
+  const week = Math.ceil(((date.getTime() - jan1) / 86_400_000 + 1) / 7);
+  return `${year}-W${String(week).padStart(2, "0")}`;
+}
+
+/** 금요일 17:10 ~ 일요일 12:00 KST. 게이트의 복구 창과 같은 자리에 선다. */
+export function weeklyWindow(now) {
+  const local = kst(now);
+  const day = local.getUTCDay();          // 일=0 … 금=5, 토=6
+  const hour = local.getUTCHours();
+  const minute = local.getUTCMinutes();
+  if (day === 5) return hour > 17 || (hour === 17 && minute >= 10);
+  if (day === 6) return true;
+  return day === 0 && hour < 12;
+}
+
+/** 이번 주 개인 알림이 나갔는가. 채널은 보지 않는다 — 아래 주석 참고. */
+export function weeklyDelivered(reports, week) {
+  const automation = reports?.reports?.[week]?._automation;
+  return String(automation?.telegram?.status || "") === "sent";
+}
+
+export function evaluateWeekly(runs, reports, now = new Date()) {
+  if (!weeklyWindow(now)) return { shouldDispatch: false, state: "outside_window" };
+  const week = isoWeekId(now);
+  // 판정을 **개인 알림 하나로** 좁힌 것은 의도다. 채널까지 보면, 채널 배치가
+  // partial 로 굳었는데 게이트는(채널 미설정이면) 완료로 읽는 조합에서 Worker 가
+  // 창이 닫힐 때까지 호출을 반복한다. 사용자가 받는 것은 개인 알림이고, 채널
+  // 잔여분은 crawl 복구가 게이트의 온전한 규칙으로 계속 집는다.
+  if (weeklyDelivered(reports, week)) {
+    return { shouldDispatch: false, state: "delivery_confirmed", week };
+  }
+
+  const recent = runs.filter((run) => weeklyWindowStart(now) <= new Date(run.created_at || 0));
+  if (recent.some((run) => run.status === "queued" || run.status === "in_progress")) {
+    return { shouldDispatch: false, state: "workflow_active", week };
+  }
+  const last = recent
+    .map((run) => new Date(run.created_at || 0).getTime())
+    .sort((a, b) => b - a)[0];
+  if (last !== undefined && now.getTime() - last < WEEKLY_MIN_GAP_MS) {
+    return { shouldDispatch: false, state: "within_retry_gap", week };
+  }
+  // 워크플로가 통째로 깨진 주에는(2026-09-18 의 startup_failure 처럼) 아무리
+  // 불러도 안 산다. 창이 닫힐 때까지 15분마다 부르는 대신 여섯 번에서 멈추고,
+  // 나머지는 crawl 복구와 운영 알림에 넘긴다.
+  const dispatched = recent.filter((run) => run.event === "workflow_dispatch").length;
+  if (dispatched >= WEEKLY_MAX_DISPATCHES) {
+    return { shouldDispatch: false, state: "retry_budget_spent", week };
+  }
+  return { shouldDispatch: true, state: last === undefined ? "trigger_missing" : "delivery_unconfirmed", week };
+}
+
+export function weeklyWindowStart(now) {
+  // 이번 창이 열린 금요일 17:10 KST. 지난 주 실행이 예산에 섞이지 않게 한다.
+  const local = kst(now);
+  const day = local.getUTCDay();
+  const back = day === 5 ? 0 : (day === 6 ? 1 : 2);   // 금 0 · 토 1 · 일 2
+  const start = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(),
+                                  local.getUTCDate() - back, 17, 10));
+  return new Date(start.getTime() - KST_OFFSET_MS);
+}
+
+export async function checkAndRecoverWeekly(env, now = new Date()) {
+  if (!env.GITHUB_TOKEN) throw new Error("GITHUB_TOKEN Worker secret is missing");
+  const owner = env.GITHUB_OWNER || "wavyhairs";
+  const repo = env.GITHUB_REPO || "nuclens-v2";
+  const workflow = env.GITHUB_WEEKLY_WORKFLOW || "weekly.yml";
+  const base = `/repos/${owner}/${repo}/actions/workflows/${workflow}`;
+  if (!weeklyWindow(now)) {
+    return { weekly_state: "outside_window", checked_at: now.toISOString(), dispatched: false };
+  }
+
+  const [data, reports] = await Promise.all([
+    github(env, `${base}/runs?branch=main&per_page=30`),
+    // raw 로 받는다. contents API 의 base64 는 1MB 에서 빈 값이 되는데
+    // weekly_reports.json 은 주마다 커진다.
+    github(env, `/repos/${owner}/${repo}/contents/weekly_reports.json?ref=main`,
+           { headers: { Accept: "application/vnd.github.raw" } }),
+  ]);
+  const runs = Array.isArray(data?.workflow_runs) ? data.workflow_runs : [];
+  const decision = evaluateWeekly(runs, reports, now);
+  const log = {
+    weekly_state: decision.state,
+    week: decision.week || "",
+    checked_at: now.toISOString(),
+    dispatched: false,
+  };
+  if (decision.shouldDispatch) {
+    await github(env, `${base}/dispatches`, {
+      method: "POST",
+      body: JSON.stringify({
+        ref: "main",
+        inputs: { trigger_source: "backup_watchdog" },
+      }),
+    });
+    log.dispatched = true;
+  }
+  console.log(JSON.stringify(log));
+  return log;
+}
+
+
 export default {
   async scheduled(_controller, env, ctx) {
-    ctx.waitUntil(checkAndRecover(env));
+    // 둘을 갈라 둔다. 주간 쪽이 터져도 크롤 복구는 돌아야 한다 — 이 Worker 의
+    // 첫 임무는 3시간 수집이고, 주간은 그 위에 얹은 것이다.
+    ctx.waitUntil(Promise.all([
+      checkAndRecover(env).catch((error) => {
+        console.log(JSON.stringify({ watchdog_error: String(error) }));
+      }),
+      checkAndRecoverWeekly(env).catch((error) => {
+        console.log(JSON.stringify({ weekly_error: String(error) }));
+      }),
+    ]));
   },
 };
