@@ -399,6 +399,8 @@ def run_gemini_canary(selection: dict, out: Path, *, max_calls_per_arm: int) -> 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--gold", type=Path, default=GOLD_PATH,
+                        help="reference Gold JSON (defaults to the historical fixture)")
     parser.add_argument("--phase", choices=[
         "preflight", "export-calibration", "import-calibration", "canary",
         "export-canary-judge", "import-canary-judge"], default="preflight")
@@ -409,7 +411,7 @@ def main() -> int:
     if args.phase == "canary" and not args.approve_live_calls:
         parser.error("Gemini live canary requires --approve-live-calls")
 
-    gold = json.loads(GOLD_PATH.read_text(encoding="utf-8"))
+    gold = json.loads(args.gold.read_text(encoding="utf-8"))
     args.out.mkdir(parents=True, exist_ok=True)
 
     if args.phase == "preflight":
