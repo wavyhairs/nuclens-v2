@@ -58,8 +58,12 @@ TELEGRAM_ALBUM_MAX = 10
 # 들어간다(본문 칸 1190px 중 헤드라인 283 + 불릿 218 + 칩 60). **진짜 한계는
 # 이 숫자가 아니라 build.js 의 넘침 가드다** — 실제 사각형을 재서 넘치면 죽인다.
 # 여기 숫자는 렌더를 낭비하지 않기 위한 사전 거름망이다.
-HEADLINE_TARGET = 20
-HEADLINE_MAX = 34
+# 카드 제목은 사진 위 히어로에 **2줄로** 앉아야 한다. 히어로 글상자가 58%(626px)
+# 폭이라 72px 에서 한 줄에 9자, 강조줄(1.13em)은 7자다 — 16자를 넘기면 3줄이 되고
+# 렌더가 글자를 줄여 제목이 작아진다(지니 09-20: "3줄일 필요가 있나, 자리만 차지").
+# 목표 14자, 상한 18자(72px 2줄의 실측 한계). 22자까지는 렌더 축소(하한 52px)가 2줄로 앉힌다.
+HEADLINE_TARGET = 14
+HEADLINE_MAX = 18
 SUBLINE_MAX = 50   # 표지 부제
 # 34자는 실측에서 두 번 연속 넘겼다(09-16: "2035년 경수형 SMR 상용화 목표…" 36자) —
 # 두 번 실패면 카드가 통째로 빠진다. 진짜 한계는 렌더 가드(넘침 사각형)이므로
@@ -687,6 +691,8 @@ def already_published(date: str) -> int:
     return len(names)
 
 
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true",
@@ -793,6 +799,7 @@ def main() -> int:
     rest_rows = [r for r in rows
                  if (r.get("representative_article") or {}).get("hash") not in taken]
     slides = build_slides(raw, items, date, collected, rest_rows)
+
     render(slides)
     files = gate(len(slides))
 

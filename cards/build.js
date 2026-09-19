@@ -71,7 +71,11 @@ function loadTheme() {
 }
 
 function parseArgs(argv) {
-  const out = { input: "slides.json", outDir: "out", sample: false, check: false };
+  // 스토리 카드는 같은 렌더러를 다른 폴더로 뽑는다(같은 out 을 쓰면 나중에 도는
+  // 쪽이 앞 앨범 PNG 를 지운다). v1 은 CARDS_OUT 환경변수로, v2 는 --out-dir
+  // 플래그로 했다 — 둘 다 받는다. 플래그가 있으면 그것이 이긴다.
+  const out = { input: "slides.json", outDir: process.env.CARDS_OUT || "out",
+    sample: false, check: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--sample") out.sample = true;
@@ -188,16 +192,15 @@ function factPresentation(text, index) {
   for (const [pattern, meta] of rules) {
     if (pattern.test(value)) return { label: meta[0], text: value, state: meta[1], icon: meta[2], tone: meta[1] === "연기" ? "" : "active" };
   }
-  return { label: `확인 사실 ${String(index + 1).padStart(2, "0")}`, text: value, state: "확인", icon: "control", tone: "active" };
+  // 규칙에 안 걸리면 라벨·상태를 **비운다**. "확인 사실 02 / 확인" 은 정보가 0인데
+  // 자리는 본문만큼 차지했다. 빈 값이면 문장이 그 폭을 가져간다.
+  return { label: "", text: value, state: "", icon: "control", tone: "active" };
 }
 
-function editorialFromStep(slide) {
-  const points = Array.isArray(slide.points) ? slide.points : [];
-  const why = Array.isArray(slide.why) ? slide.why : [];
-  const haystack = [slide.stepLabel, slide.headline, ...points].join(" ");
+function pickEditorialArt(haystack, headline) {
   let image = "assets/energy-cooperation-editorial.png";
   let stamp = "ENERGY INFRASTRUCTURE";
-  let headline = slide.headline;
+  // 몇몇 주제는 제목까지 고정 문구로 덮는다(기존 동작 유지).
   if (/데이터센터|100MW|417표|GRID Savings/.test(haystack)) {
     image = "assets/data-center-grid-editorial.png";
     stamp = "DATA CENTER · POWER GRID";
@@ -223,14 +226,38 @@ function editorialFromStep(slide) {
     image = "assets/reactor-operations-editorial.png";
     stamp = "NUCLEAR OPERATIONS · SAFETY";
   }
+  return { image, stamp, headline };
+}
+
+function editorialFromStep(slide) {
+  // 심층 카드는 make_cards 가 editorial 형태로 완성해 보낸다 — 손대지 않는다.
+  if (slide.type === "editorial") {
+    if (slide.image) return slide;
+    const hs = [slide.stepLabel, slide.headline,
+      ...(slide.statusRows || []).map((r) => r.text)].join(" ");
+    return { ...slide, image: pickEditorialArt(hs, slide.headline).image };
+  }
+  const points = Array.isArray(slide.points) ? slide.points : [];
+  const why = Array.isArray(slide.why) ? slide.why : [];
+  const haystack = [slide.stepLabel, slide.headline, ...points].join(" ");
+  const art = pickEditorialArt(haystack, slide.headline);
+  const { image, stamp, headline } = art;
   return {
     ...slide,
     type: "editorial",
     headline,
     image,
     stamp,
-    context: Array.isArray(slide.meta) ? slide.meta.join(" · ").replaceAll("#", "") : "",
-    deck: points[0] || "",
+    // meta 가 stepLabel 과 같은 말이면 키커에 두 번 찍힌다("SMR | smr").
+    // 대소문자·공백만 다른 경우까지 같은 것으로 본다.
+    context: (() => {
+      const meta = Array.isArray(slide.meta) ? slide.meta.join(" · ").replaceAll("#", "") : "";
+      const norm = (t) => String(t || "").replace(/\s+/g, "").toLowerCase();
+      return norm(meta) === norm(slide.stepLabel) ? "" : meta;
+    })(),
+    // 덱이 points[0] 이면 바로 아래 첫 사실 줄과 글자까지 같다(3장 전수 확인).
+    // 히어로의 60px 짜리 자리를 중복에 쓰지 않는다 — 세 번째 사실을 올린다.
+    deck: points[2] || why[0] || "",
     statusRows: points.slice(0, 2).map(factPresentation),
     whyLead: why[0] || "",
     whyChecks: why.slice(1, 3),
@@ -465,20 +492,43 @@ ${fontLinks(theme)}
 
   /* 편집형 카드. 사용자가 고른 레퍼런스의 핵심인 사진 히어로, 상태 카드 둘,
      흰 해설면, 다크 출처 푸터를 코드로 재구성한다. */
-  .editorial-card { padding: 0; display: grid; grid-template-rows: 570px 422px 88px;
-    background: ${c.bg}; }
+  /* B안 — 사진이 카드 전체의 바탕이다. 글 있는 칸까지 사진 위에 얹되,
+     스크림을 아래로 갈수록 짙게 깔아 본문 구간의 배경 알파를 .93 이상으로
+     잠근다(레퍼런스 실측: 사진 위 텍스트는 배경 휘도 L≤30 = 대비 12:1 이상). */
+  .editorial-card { padding: 0; display: grid; grid-template-rows: 430px 562px 88px;
+    background: ${c.bgDark}; isolation: isolate; }
+  /* 피사체가 하단에 있으면 본문 스크림에 묻힌다 — 위쪽으로 당겨 히어로 칸에 세운다. */
+  .card-photo { position: absolute; inset: 0; z-index: -2;
+    background-size: cover; background-position: center 26%; }
+  .card-scrim { position: absolute; inset: 0; z-index: -1;
+    background:
+      linear-gradient(180deg, rgba(9,22,40,.22) 0%, rgba(9,22,40,.30) 26%,
+        rgba(9,22,40,.58) 41%, rgba(9,22,40,.80) 50%, rgba(9,22,40,.86) 72%,
+        rgba(9,22,40,.88) 100%),
+      linear-gradient(90deg, rgba(9,22,40,.94) 0%, rgba(9,22,40,.88) 30%,
+        rgba(9,22,40,.58) 52%, rgba(9,22,40,.16) 74%, rgba(9,22,40,0) 100%); }
+  /* 밝은 사진 가드가 붙으면 아래 절반을 한 단 더 누른다(렌더 스크립트가 실측). */
+  /* 표지·마지막 장은 격자 없이 배경 레이어만 빌린다. */
+  .card.has-photo { isolation: isolate; }
+  .bright-photo > .card-scrim {
+    background:
+      linear-gradient(180deg, rgba(9,22,40,.34) 0%, rgba(9,22,40,.46) 26%,
+        rgba(9,22,40,.76) 41%, rgba(9,22,40,.91) 50%, rgba(9,22,40,.94) 72%,
+        rgba(9,22,40,.95) 100%),
+      linear-gradient(90deg, rgba(9,22,40,.96) 0%, rgba(9,22,40,.92) 30%,
+        rgba(9,22,40,.70) 52%, rgba(9,22,40,.28) 74%, rgba(9,22,40,.10) 100%); }
   .editorial-card::after { display: none; }
-  .editorial-hero { position: relative; overflow: hidden; padding: 40px 48px 38px;
-    color: ${c.inkOnDark}; background: ${c.bgDark}; }
-  .editorial-photo { position: absolute; inset: 0; background-size: cover;
-    background-position: center; }
-  .editorial-photo::after { content: ""; position: absolute; inset: 0;
-    background: linear-gradient(90deg, rgba(9,22,40,.98) 0%, rgba(9,22,40,.91) 35%,
-      rgba(9,22,40,.46) 62%, rgba(9,22,40,.20) 100%); }
+  .editorial-hero { position: relative; overflow: hidden; padding: 40px 76px 38px;
+    color: ${c.inkOnDark}; background: transparent; }
+  .editorial-photo { display: none; }
   .editorial-hero .hd, .editorial-copy { position: relative; z-index: 1; }
   .editorial-hero .hd { color: rgba(238,241,244,.72); }
+  /* 쪽번호는 오버레이가 옅은 우측(α.20)에 선다 — 사진이 밝으면 사라진다.
+     불투명도를 올리고 어두운 그림자로 받친다. */
+  .editorial-hero .hd span:not(.brand) { color: rgba(238,241,244,.95);
+    text-shadow: 0 1px 6px rgba(9,22,40,.85); }
   .editorial-hero .hd .brand { color: ${c.inkOnDark}; letter-spacing: 2.5px; }
-  .editorial-copy { margin-top: 92px; width: 58%; }
+  .editorial-copy { margin-top: 44px; width: 58%; }
   .editorial-kicker { color: rgba(238,241,244,.82); font-size: 20px; font-weight: 700;
     letter-spacing: .2px; }
   .editorial-kicker strong { color: ${c.inkOnDark}; font-weight: 850; }
@@ -488,57 +538,361 @@ ${fontLinks(theme)}
   .editorial-title .em { display: block; color: ${c.accentBright}; font-size: 1.13em; }
   .editorial-deck { margin-top: 24px; max-width: 520px; color: rgba(238,241,244,.88);
     font-size: 25px; line-height: 1.42; font-weight: 520; word-break: keep-all; }
-  .editorial-stamp { position: absolute; right: 46px; bottom: 28px; z-index: 1;
-    color: rgba(238,241,244,.8); font-size: 14px; line-height: 1.45;
-    font-weight: 750; font-style: italic; letter-spacing: 4px; text-align: right; }
-  .editorial-body { padding: 25px 48px 22px; background: #F4F7FA; }
-  .editorial-section-head { display: flex; align-items: baseline; gap: 12px;
-    color: ${accent}; font-size: 18px; font-weight: 900; letter-spacing: .5px; }
-  .editorial-section-head span { color: ${inkDim}; font-size: 16px; font-weight: 650;
-    letter-spacing: 0; }
-  .event-grid { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .event-card { min-height: 116px; border: 1px solid rgba(18,41,76,.18);
-    border-radius: 12px; display: grid; grid-template-columns: 76px 1fr auto;
-    align-items: center; gap: 14px; padding: 14px 16px; background: rgba(255,255,255,.5); }
-  .event-icon { width: 64px; height: 64px; border-radius: 50%; background: #DCE9F7;
-    display: flex; align-items: center; justify-content: center; color: ${c.signalInk}; }
-  .event-icon svg { width: 40px; height: 40px; fill: none; stroke: currentColor;
-    stroke-width: 3.5; stroke-linecap: square; stroke-linejoin: miter; }
-  .event-copy strong { display: block; color: ${ink}; font-size: 25px; font-weight: 820; }
-  .event-copy span { display: block; margin-top: 5px; color: ${inkDim};
-    font-size: 18px; font-weight: 550; }
-  .event-state { align-self: end; margin-bottom: 3px; min-width: 76px; padding: 7px 13px;
-    border-radius: 999px; background: #F8D8D4; color: #A83D36; text-align: center;
-    font-size: 18px; font-weight: 850; }
-  .event-state.active { background: #DCE9F7; color: ${accent}; }
-  .why-editorial { margin-top: 20px; padding-top: 17px; border-top: 2px solid rgba(18,41,76,.35); }
-  .why-layout { margin-top: 11px; display: grid; grid-template-columns: 1.25fr .85fr;
-    gap: 30px; align-items: center; }
-  .why-lead { color: ${ink}; font-size: 31px; line-height: 1.32; font-weight: 780;
-    letter-spacing: -1px; word-break: keep-all; }
-  .why-checks { border-left: 1px solid ${c.rule}; padding-left: 24px;
-    display: flex; flex-direction: column; gap: 10px; }
-  .why-check { display: grid; grid-template-columns: 24px 1fr; gap: 10px;
-    color: ${inkDim}; font-size: 18px; line-height: 1.35; font-weight: 620; }
-  .why-check::before { content: "✓"; width: 22px; height: 22px; border-radius: 50%;
-    background: ${accent}; color: white; display: flex; align-items: center;
-    justify-content: center; font-size: 14px; font-weight: 900; }
-  .editorial-footer { padding: 0 48px; display: flex; justify-content: space-between;
-    align-items: center; background: ${c.bgDark}; color: rgba(238,241,244,.72); }
+  /* 사진 우하단 영문 스탬프는 14px(폰 5.1px) 라 읽히지 않고, 오버레이가 옅은
+     구간이라 사진마다 대비가 흔들렸다. 장식이므로 뺀다. */
+  .editorial-stamp { display: none; }
+  /* 글을 박스에 가두지 않는다. 카드 안의 카드(테두리·아이콘 원·상태칩)가
+     텍스트 폭을 273px 로 졸라매 본문이 18px 에 갇혀 있었다(폰에서 6.5px).
+     박스를 풀어 폭을 928px 로 열고, 그 폭을 글자 크기로 환산한다.
+     기준: 폰(390px)에서 14px 이상 = 1080 기준 39px 이상. */
+  .editorial-body { padding: 30px 76px 26px; background: transparent; }
+  .editorial-section-head { display: flex; align-items: baseline; gap: 14px;
+    color: #8FC2F2; font-size: 26px; font-weight: 900; letter-spacing: 1.2px; }
+  /* 한글이 영문 라벨보다 커야 한다 — 읽는 쪽은 한글이다(레퍼런스 실측: 33 vs 22). */
+  .editorial-section-head span { color: #EEF1F4; font-size: 32px; font-weight: 800;
+    letter-spacing: -.6px; }
+  .event-grid { margin-top: 18px; display: flex; flex-direction: column; gap: 14px; }
+  /* 행. 왼쪽 잉크 괘선 하나로 목록임을 표시한다 — 테두리 상자보다 싸고, 폭을 안 먹는다. */
+  .event-card { display: grid; grid-template-columns: 1fr auto; align-items: baseline;
+    gap: 18px; padding: 2px 0 2px 22px; border-left: 5px solid #5AA0E8; }
+  .event-copy strong { display: inline; color: rgba(238,241,244,.72); font-size: 27px;
+    font-weight: 750; letter-spacing: -.4px; }
+  .event-copy strong::after { content: "·"; margin: 0 9px; color: ${c.rule}; font-weight: 700; }
+  /* 어두운 바탕에서는 같은 굵기가 더 가늘어 보인다 — 600 → 650 으로 받친다. */
+  .event-copy span { display: inline; color: #FFFFFF; font-size: 42px; line-height: 1.4;
+    font-weight: 650; letter-spacing: -1px; word-break: keep-all; }
+  .event-state { align-self: center; min-width: 0; padding: 6px 16px;
+    border-radius: 999px; background: rgba(223,108,80,.22); color: #F2B5A3;
+    border: 1px solid rgba(242,181,163,.45); text-align: center;
+    font-size: 26px; font-weight: 850; white-space: nowrap; }
+  .event-state.active { background: rgba(90,160,232,.20); color: #8FC2F2;
+    border-color: rgba(143,194,242,.45); }
+  .why-editorial { margin-top: 26px; padding-top: 20px; border-top: 2px solid rgba(238,241,244,.30); }
+  .why-layout { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .why-lead { color: #FFFFFF; font-size: 44px; line-height: 1.3; font-weight: 780;
+    letter-spacing: -1.4px; word-break: keep-all; }
+  .why-checks { display: flex; flex-direction: column; gap: 10px; }
+  .why-check { display: grid; grid-template-columns: 30px 1fr; gap: 12px;
+    align-items: baseline; color: rgba(238,241,244,.90); font-size: 36px; line-height: 1.38;
+    font-weight: 660; letter-spacing: -.8px; word-break: keep-all; }
+  .why-check::before { content: "✓"; width: 28px; height: 28px; border-radius: 50%;
+    background: #5AA0E8; color: #0B1C36; display: flex; align-items: center;
+    justify-content: center; font-size: 19px; font-weight: 900; }
+  .editorial-footer { padding: 0 76px; display: flex; justify-content: space-between;
+    align-items: center; background: transparent; color: rgba(238,241,244,.72);
+    border-top: 1px solid rgba(238,241,244,.18); }
   .editorial-cta { display: grid; grid-template-columns: 46px auto; column-gap: 14px;
-    align-items: center; font-size: 17px; line-height: 1.35; }
+    align-items: center; font-size: 26px; line-height: 1.35; }
   .editorial-arrow { grid-row: span 2; width: 42px; height: 42px; border: 1px solid rgba(238,241,244,.28);
     border-radius: 8px; display: flex; align-items: center; justify-content: center;
     color: ${c.inkOnDark}; font-size: 27px; }
   .editorial-site { color: rgba(238,241,244,.52); }
-  .editorial-source { text-align: right; font-size: 17px; line-height: 1.45; }
+  .editorial-source { text-align: right; font-size: 26px; line-height: 1.45; }
   .editorial-source strong { color: ${c.inkOnDark}; }
+
+  /* ── 스토리 카드(v1 이식) ─────────────────────────────────────────
+     일일 카드와 다른 트랙이다. 밝은 크림 판형에 이슈 하나를 5장으로 푼다 —
+     같은 앨범이 아니라 별도 앨범으로 나가므로 판형이 달라도 된다. */
+  .card.st::after { display: none; }
+
+  /* ── 스토리 카드뉴스(5장) ────────────────────────────────────────────────
+     이슈 하나를 표지·사실·쟁점·의미·체크리스트로 푸는 판형. 일일 카드와 달리
+     장마다 역할이 다르고, 재료는 chronicle(이벤트·서사·관전포인트)에서 온다.
+     밝은 아이보리 바탕 + 네이비 잉크 + 블루 포인트(연두는 폐기 팔레트라 안 쓴다). */
+  .card.st { padding: 0; display: flex; flex-direction: column;
+    background: #F6F2E9; color: #12294C; }
+  /* 장마다 바탕을 달리해 넘길 때 리듬을 준다(시안). 쟁점 장만 옅은 블루 판. */
+  .card.st.st-blue { background: #E6EEFA; }
+  .st-hd { padding: 36px 44px 0; display: flex; justify-content: space-between;
+    align-items: flex-start; flex: 0 0 auto; }
+  .st-hd .brand { font-family: ${theme.fonts.heading.css}; font-size: 29px;
+    font-weight: 900; letter-spacing: 3px; }
+  .st-hd .tagline { display: block; margin-top: 7px; font-size: 16px; font-weight: 750;
+    letter-spacing: 2.4px; color: #8A93A1; }
+  .st-hd .num { font-size: 21px; font-weight: 800; letter-spacing: 2px; color: #8A93A1; }
+  .st-body { flex: 1; padding: 24px 44px 34px; display: flex; flex-direction: column;
+    min-height: 0; }
+  .st-chip { align-self: flex-start; padding: 13px 26px; border-radius: 999px;
+    background: #DDE8F6; color: #1F5FA8; font-size: 30px; font-weight: 850; }
+  .st-q { margin-top: 20px; font-family: ${theme.fonts.heading.css}; font-size: 46px;
+    font-weight: 850; line-height: 1.26; letter-spacing: -1.8px; word-break: keep-all; }
+  .st-q .em { color: #1F5FA8; }
+  .st-row { display: flex; align-items: center; gap: 20px; }
+  .st-row .st-q { margin-top: 0; font-size: 50px; }
+
+  /* 표지 */
+  .st-photo { position: relative; height: 470px; flex: 0 0 auto; background-size: cover;
+    background-position: center; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 86%); }
+  .st-photo::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(18,41,76,.46) 0%, rgba(18,41,76,.12) 40%,
+      rgba(18,41,76,.06) 100%); }
+  .st-photo .st-hd { position: relative; z-index: 1; color: #F7F5EF; }
+  .st-photo .st-hd .tagline, .st-photo .st-hd .num { color: rgba(247,245,239,.78); }
+  .st-cover .st-body { padding-top: 34px; }
+  .st-title { margin-top: 20px; font-family: ${theme.fonts.heading.css}; font-size: 78px;
+    font-weight: 850; line-height: 1.16; letter-spacing: -2.6px; word-break: keep-all; }
+  .st-title .em { color: #1F5FA8; }
+  .st-desc { margin-top: 24px; font-size: 33px; line-height: 1.48; font-weight: 600;
+    color: #41506B; word-break: keep-all; }
+  /* 표지 배지 — 그 이슈의 핵심 숫자. 원문에 있는 값이 있을 때만 붙는다. */
+  .st-badge { margin: auto 0; align-self: stretch; display: flex; align-items: baseline;
+    gap: 22px; background: #E6EEFA; border-left: 10px solid #1F5FA8; padding: 30px 34px; }
+  .st-badge .v { font-family: ${theme.fonts.heading.css}; font-size: 72px; font-weight: 900;
+    letter-spacing: -2px; color: #12294C; }
+  .st-badge .l { font-size: 29px; font-weight: 700; color: #41506B; word-break: keep-all; }
+  .st-credit { margin-top: auto; font-size: 16px; font-weight: 600; color: #9AA3B0; }
+  .st-slogan { margin-top: 14px; display: flex; justify-content: space-between;
+    align-items: baseline; }
+  .st-slogan strong { font-family: ${theme.fonts.heading.css}; font-size: 24px;
+    font-weight: 900; letter-spacing: 2px; }
+  .st-slogan span { font-size: 19px; font-weight: 650; color: #8A93A1; }
+
+  .st-lede { margin-top: 26px; font-family: ${theme.fonts.heading.css}; font-size: 54px;
+    font-weight: 850; line-height: 1.3; letter-spacing: -1.6px; word-break: keep-all; }
+  .st-lede .em { color: #1F5FA8; }
+
+  /* 사실 정리 — 세로 타임라인 */
+  .st-tl { flex: 1; margin: 26px 0 0; display: flex; flex-direction: column;
+    justify-content: space-evenly; }
+  .st-tl .tl-row { position: relative; display: grid; grid-template-columns: 34px 236px 1fr;
+    gap: 24px; align-items: center; padding-bottom: 26px; }
+  .st-tl .tl-row:last-child { padding-bottom: 0; }
+  /* 연결선은 행마다 긋지 않고 한 줄로 관통시킨다 — 행 간격이 가변이라 토막난다. */
+  .st-tl { position: relative; }
+  .st-tl::before { content: ""; position: absolute; left: 15px; top: 26px; bottom: 26px;
+    width: 2px; background: #D7DEE8; }
+  .st-tl .dot { position: relative; z-index: 1; width: 24px; height: 24px; margin-left: 4px;
+    border-radius: 50%; border: 6px solid #8FB8E4; background: #F6F2E9; box-sizing: border-box; }
+  .st-tl .tl-row.now .dot { border-color: #12294C; background: #12294C; }
+  .st-tl .when { font-size: 32px; font-weight: 800; color: #1F5FA8; word-break: keep-all; }
+  .st-tl .tl-row.now .when { color: #12294C; }
+  .st-tl .what { background: #E6EEFA; padding: 26px 30px; font-size: 33px;
+    line-height: 1.34; font-weight: 700; color: #12294C; word-break: keep-all; }
+  .st-tl .tl-row.now .what { background: #DCE8F8; }
+  .st-note { margin-top: 20px; display: grid; grid-template-columns: 36px 1fr; gap: 18px;
+    align-items: center; background: #EFEADC; padding: 28px 30px; font-size: 29px;
+    line-height: 1.4; font-weight: 650; color: #1F3D6B; word-break: keep-all; }
+  .st-note .ic { width: 32px; height: 32px; color: #1F5FA8; display: block; }
+  .st-note .ic svg { width: 100%; height: 100%; fill: none; stroke: currentColor;
+    stroke-width: 3; stroke-linejoin: round; }
+
+  /* 핵심 쟁점 — 번호 카드 */
+  .st-cards { flex: 1; margin: 26px 0 0; display: flex; flex-direction: column;
+    justify-content: space-evenly; gap: 20px; }
+  .st-icard { background: #FFFFFF; border: 1px solid #D3E0F2; padding: 30px 32px;
+    display: grid; grid-template-columns: 104px 1fr; gap: 28px; align-items: center; }
+  .st-icard .lead { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .st-icard .n { font-family: ${theme.fonts.heading.css}; font-size: 26px; font-weight: 900;
+    color: #1F5FA8; letter-spacing: 1px; }
+  .st-icard .ic { width: 84px; height: 84px; border-radius: 50%; background: #E7EEF8;
+    color: #1F5FA8; display: flex; align-items: center; justify-content: center; }
+  .st-icard .ic svg { width: 46px; height: 46px; fill: none; stroke: currentColor;
+    stroke-width: 3; stroke-linejoin: round; }
+  .st-icard h3 { font-size: 37px; font-weight: 850; word-break: keep-all; }
+  .st-icard ul { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+  .st-icard li { list-style: none; display: grid; grid-template-columns: 14px 1fr; gap: 12px;
+    font-size: 28px; line-height: 1.4; font-weight: 650; color: #35455F;
+    word-break: keep-all; }
+  .st-icard li::before { content: ""; width: 9px; height: 9px; margin-top: 12px;
+    border-radius: 50%; background: #1F5FA8; }
+
+  /* 왜 중요한가 */
+  .st-msg { margin-top: 24px; font-family: ${theme.fonts.heading.css}; font-size: 56px;
+    font-weight: 850; line-height: 1.3; letter-spacing: -1.8px; word-break: keep-all; }
+  .st-msg .em { color: #1F5FA8; }
+  .st-three { flex: 1; margin: 34px 0; display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px; align-content: center; }
+  .st-three .cell { background: #FFFDF7; border: 1px solid #E6E0D2; padding: 34px 22px;
+    text-align: center; }
+  .st-three .ic { width: 96px; height: 96px; margin: 0 auto 20px; border-radius: 50%;
+    background: #E7EEF8; color: #1F5FA8; display: flex; align-items: center;
+    justify-content: center; }
+  .st-three .ic svg { width: 52px; height: 52px; fill: none; stroke: currentColor;
+    stroke-width: 3.5; }
+  .st-three h4 { font-size: 32px; font-weight: 850; word-break: keep-all; }
+  .st-three p { margin-top: 14px; font-size: 26px; line-height: 1.44; font-weight: 620;
+    color: #41506B; word-break: keep-all; }
+  .st-quotes { margin-top: auto; display: flex; flex-direction: column; gap: 14px; }
+  .st-quote { background: #FFFDF7; border: 1px solid #E6E0D2; padding: 20px 24px;
+    display: grid; grid-template-columns: 40px 1fr; gap: 18px; font-size: 29px;
+    line-height: 1.42; font-weight: 650; color: #35455F; word-break: keep-all; }
+  .st-quote::before { content: "C"; font-family: ${theme.fonts.heading.css};
+    font-size: 46px; font-weight: 900; color: #A9C4E6; line-height: .9; }
+
+  /* 앞으로 볼 것 */
+  /* 인용을 옆 칸에 세우면 세로로 긴 빈 면에 작은 글씨가 갇힌다(지니 09-19).
+     체크리스트가 폭을 다 쓰고, 인용은 그 아래 가로 띠로 깐다. */
+  .st-check { flex: 1; margin-top: 26px; display: flex; flex-direction: column;
+    justify-content: space-evenly; gap: 16px; }
+  .st-check .item { display: grid; grid-template-columns: 42px 1fr; gap: 18px;
+    align-items: center; background: #FFFDF7; border: 1px solid #E6E0D2;
+    padding: 26px 24px; font-size: 30px; font-weight: 700; color: #35455F;
+    word-break: keep-all; }
+  .st-check .item.on { background: #E6EEFA; border-color: #CFDFF4; }
+  .st-check .box { width: 38px; height: 38px; border: 2px solid #C3CDDB; color: #FFFDF7;
+    display: flex; align-items: center; justify-content: center; font-size: 19px;
+    font-weight: 900; }
+  .st-check .item.on .box { background: #1F5FA8; border-color: #1F5FA8; }
+  .st-check .item.on { color: #12294C; }
+  .st-aside { margin-top: 20px; background: #E6EEFA; padding: 26px 30px; font-size: 31px;
+    line-height: 1.4; font-weight: 700; color: #1F3D6B; word-break: keep-all;
+    display: grid; grid-template-columns: 70px 1fr; gap: 24px; align-items: center; }
+  .st-aside .ic { display: block; width: 64px; height: 64px; color: #1F5FA8; }
+  .st-aside .ic svg { width: 100%; height: 100%; fill: none; stroke: currentColor;
+    stroke-width: 3; stroke-linejoin: round; }
+  .st-cta { margin-top: 26px; align-self: flex-start; background: #12294C; color: #F6F2E9;
+    padding: 22px 40px; border-radius: 999px; font-size: 30px; font-weight: 800; }
 </style></head><body>${inner}</body></html>`;
+}
+
+
+
+const PHOTO_DIR = path.resolve(__dirname, "photos");
+let PHOTO_META = {};
+try {
+  PHOTO_META = JSON.parse(fs.readFileSync(path.join(PHOTO_DIR, "photos.json"), "utf8"));
+} catch (e) {}
+
+function photoKey(label) {
+  const t = String(label || "");
+  return /해외|수출|협력|통상|외교/.test(t) ? "link"
+    : /전력|계통|수급|에너지/.test(t) ? "grid"
+    : /규제|인허가|정책|법|국회/.test(t) ? "doc"
+    : /SMR|원자로|신규|건설/.test(t) ? "atom"
+    : "wave";
+}
+
+function photoData(key) {
+  const file = path.join(PHOTO_DIR, `${key}.jpg`);
+  if (!fs.existsSync(file)) return "";
+  return `data:image/jpeg;base64,${fs.readFileSync(file).toString("base64")}`;
+}
+
+function photoCredit(key) {
+  const m = PHOTO_META[key];
+  if (!m) return "";
+  const who = (m.author || "").replace(/\s+/g, " ").trim();
+  return ["사진", who, m.license, "via Wikimedia Commons"].filter(Boolean).join(" · ");
+}
+
+
+
+
+
+function storyHead(s, tagline) {
+  return `<div class="st-hd"><div><span class="brand">NUCLENS</span>
+      <span class="tagline">${esc(tagline || "")}</span></div>
+    <span class="num">${esc(s.slideNum || "")}</span></div>`;
+}
+
+const STORY_ICONS = {
+  market: `<path d="M8 38h10v10H8zM19 26h10v22H19zM30 14h10v34H30z"/><path d="M6 8h36"/>`,
+  shield: `<path d="M24 5l17 7v13c0 11-7 18-17 22C14 43 7 36 7 25V12z"/><path d="M16 24l6 6 11-12"/>`,
+  network: `<circle cx="24" cy="11" r="6"/><circle cx="10" cy="37" r="6"/><circle cx="38" cy="37" r="6"/><path d="M20 16L13 31M28 16l7 15M16 37h16"/>`,
+  clip: `<path d="M20 6h14l8 8v28H20z"/><path d="M26 20h12M26 28h12M26 36h8"/>`,
+  coins: `<ellipse cx="24" cy="13" rx="15" ry="6"/><path d="M9 13v8c0 3.3 6.7 6 15 6s15-2.7 15-6v-8"/><path d="M9 21v8c0 3.3 6.7 6 15 6s15-2.7 15-6v-8"/><path d="M9 29v8c0 3.3 6.7 6 15 6s15-2.7 15-6v-8"/>`,
+  plant: `<path d="M6 42V22l12-7v7l12-7v27z"/><path d="M30 42V14h12v28"/><path d="M12 28v6M20 28v6M34 22v6"/>`,
+  doc: `<path d="M13 6h16l8 8v28H13z"/><path d="M29 6v9h8"/><path d="M19 22h12M19 29h12M19 36h8"/>`,
+  scope: `<path d="M6 30l24-13 5 9-24 13z"/><path d="M30 17l9-5 5 9-9 5"/><path d="M15 36l4 8M19 44h-8"/><circle cx="38" cy="30" r="3"/>`,
+};
+
+function storyIcon(kind) {
+  return `<svg viewBox="0 0 48 48">${STORY_ICONS[kind] || STORY_ICONS.market}</svg>`;
+}
+
+function renderStory(s, theme, type) {
+  const num = esc(s.slideNum || "");
+  const chip = s.chip ? `<div class="st-chip">${esc(s.chip)}</div>` : "";
+
+  if (type === "story-cover") {
+    const key = s.photo || photoKey(s.topic);
+    const data = photoData(key);
+    return shell(
+      `<div class="card st st-cover">
+        <div class="st-photo" style="background-image:url('${data}')">
+          ${storyHead(s, s.tagline || "NEWS FOR A BRIGHTER TOMORROW")}
+        </div>
+        <div class="st-body">
+          <div class="st-row">${chip}${s.topic ? `<span class="st-desc" style="margin:0;font-size:24px;font-weight:700;color:#12294C">${esc(s.topic)}</span>` : ""}</div>
+          <h1 class="st-title">${accentize(s.headline, "em")}</h1>
+          <p class="st-desc">${esc(s.deck || "")}</p>
+          ${s.badge ? `<div class="st-badge"><span class="v">${esc(s.badge.value)}</span>
+            <span class="l">${esc(s.badge.label)}</span></div>` : ""}
+          <div class="st-credit">${esc(photoCredit(key))}</div>
+          <div class="st-slogan"><strong>NUCLENS</strong><span>${esc(s.slogan || "원전을 넘어, 더 나은 내일로")}</span></div>
+        </div>
+      </div>`, theme, false);
+  }
+
+  if (type === "story-facts") {
+    const rows = (s.timeline || []).slice(0, 5).map((r, i, arr) =>
+      `<div class="tl-row${i === arr.length - 1 ? " now" : ""}"><div class="dot"></div>
+        <div class="when">${esc(r.when)}</div><div class="what">${esc(r.what)}</div></div>`).join("");
+    return shell(
+      `<div class="card st">
+        ${storyHead(s, s.tagline || "GLOBAL NUCLEAR INSIGHT")}
+        <div class="st-body">
+          <div class="st-row">${chip}<h2 class="st-q">${accentize(s.headline, "em")}</h2></div>
+          ${s.lede ? `<p class="st-lede">${accentize(s.lede, "em")}</p>` : ""}
+          <div class="st-tl">${rows}</div>
+          ${s.note ? `<div class="st-note"><span class="ic">${storyIcon("clip")}</span><span>${esc(s.note)}</span></div>` : ""}
+        </div>
+      </div>`, theme, false);
+  }
+
+  if (type === "story-issues") {
+    const cards = (s.issues || []).slice(0, 3).map((it, i) =>
+      `<div class="st-icard"><div class="lead"><span class="n">${String(i + 1).padStart(2, "0")}</span>
+          <span class="ic">${storyIcon(it.icon || ["coins", "plant", "doc"][i] || "doc")}</span></div>
+        <div><h3>${esc(it.title)}</h3>
+          <ul>${(it.points || []).slice(0, 2).map((t) => `<li><span>${esc(t)}</span></li>`).join("")}</ul>
+        </div></div>`).join("");
+    return shell(
+      `<div class="card st st-blue">
+        ${storyHead(s, s.tagline || "FOCUS ON WHAT MATTERS")}
+        <div class="st-body">
+          <div class="st-row">${chip}<h2 class="st-q">${accentize(s.headline, "em")}</h2></div>
+          <div class="st-cards">${cards}</div>
+        </div>
+      </div>`, theme, false);
+  }
+
+  if (type === "story-why") {
+    const cells = (s.pillars || []).slice(0, 3).map((c) =>
+      `<div class="cell"><div class="ic">${storyIcon(c.icon)}</div><h4>${esc(c.title)}</h4><p>${esc(c.text)}</p></div>`).join("");
+    return shell(
+      `<div class="card st">
+        ${storyHead(s, s.tagline || "BIGGER PICTURE, CLEARER INSIGHTS")}
+        <div class="st-body">
+          ${chip}
+          <h2 class="st-msg">${accentize(s.headline, "em")}</h2>
+          <div class="st-three">${cells}</div>
+          <div class="st-quotes">${(s.quotes || []).slice(0, 2).map((q) => `<p class="st-quote">${esc(q)}</p>`).join("")}</div>
+        </div>
+      </div>`, theme, false);
+  }
+
+  // story-check
+  const items = (s.checks || []).slice(0, 5).map((c) =>
+    `<div class="item${c.done ? " on" : ""}"><span class="box">${c.done ? "✓" : ""}</span><span>${esc(c.text)}</span></div>`).join("");
+  return shell(
+    `<div class="card st">
+      ${storyHead(s, s.tagline || "NEXT STEP FOR A SUSTAINABLE TOMORROW")}
+      <div class="st-body">
+        <div class="st-row">${chip}<h2 class="st-q">${accentize(s.headline, "em")}</h2></div>
+        <div class="st-check">${items}</div>
+        ${s.aside ? `<div class="st-aside"><span class="ic">${storyIcon("scope")}</span><span>${esc(s.aside)}</span></div>` : ""}
+        <div class="st-cta">${esc(s.cta || "지금 이슈를 계속 업데이트합니다")} →</div>
+      </div>
+    </div>`, theme, false);
 }
 
 function renderSlide(s, theme) {
   let type = s.type || "step";
-  if (type === "step") {
+  if (type.startsWith("story-")) return renderStory(s, theme, type);
+  if (type === "step" || type === "editorial") {
+    // step 은 여기서 editorial 로 바뀌고, 이미 editorial 인 심층 카드는
+    // 사진만 물려받는다(editorialFromStep 이 둘 다 처리한다).
     s = editorialFromStep(s);
     type = "editorial";
   }
@@ -547,7 +901,7 @@ function renderSlide(s, theme) {
 
   if (type === "hook") {
     return shell(
-      `<div class="card cover">
+      `<div class="card cover has-photo">${s.image ? `<div class="card-photo ghost" style="background-image:url('${imageData(s.image)}')"></div><div class="card-scrim ghost"></div>` : ""}
         <div class="hd"><span class="brand">${esc(s.stepLabel || "NUCLENS")}</span><span>${num}</span></div>
         <div class="body">
           <div class="datehead">
@@ -572,7 +926,7 @@ function renderSlide(s, theme) {
 
   if (type === "cta") {
     return shell(
-      `<div class="card end">
+      `<div class="card end has-photo">${s.image ? `<div class="card-photo ghost" style="background-image:url('${imageData(s.image)}')"></div><div class="card-scrim ghost"></div>` : ""}
         <div class="hd"><span class="brand">${esc(s.stepLabel || "NUCLENS")}</span><span>${num}</span></div>
         <div class="body">
           <h1 class="headline">${accentize(s.headline, "em")}</h1>
@@ -589,7 +943,7 @@ function renderSlide(s, theme) {
   }
 
   if (type === "status") {
-    const rows = Array.isArray(s.statusRows) ? s.statusRows.slice(0, 2) : [];
+    const rows = Array.isArray(s.statusRows) ? s.statusRows.slice(0, 3) : [];   // 심층 타임라인은 3줄
     const implications = Array.isArray(s.why) ? s.why.slice(0, 3) : [];
     return shell(
       `<div class="card status-card">
@@ -624,13 +978,14 @@ function renderSlide(s, theme) {
   }
 
   if (type === "editorial") {
-    const rows = Array.isArray(s.statusRows) ? s.statusRows.slice(0, 2) : [];
+    const rows = Array.isArray(s.statusRows) ? s.statusRows.slice(0, 3) : [];   // 심층 타임라인은 3줄
     const checks = Array.isArray(s.whyChecks) ? s.whyChecks.slice(0, 2) : [];
     const photo = imageData(s.image);
     return shell(
       `<div class="card editorial-card">
+        <div class="card-photo ghost" style="background-image:url('${photo}')"></div>
+        <div class="card-scrim ghost"></div>
         <section class="editorial-hero">
-          <div class="editorial-photo" style="background-image:url('${photo}')"></div>
           <div class="hd"><span class="brand">NUCLENS</span><span>${num}</span></div>
           <div class="editorial-copy">
             <div class="editorial-kicker"><strong>${esc(s.stepLabel || "")}</strong>${s.context ? ` &nbsp;|&nbsp; ${esc(s.context)}` : ""}</div>
@@ -640,12 +995,12 @@ function renderSlide(s, theme) {
           <div class="editorial-stamp">${esc(s.stamp || "EDITORIAL BRIEF").replaceAll("\n", "<br>")}</div>
         </section>
         <section class="editorial-body">
-          <div class="editorial-section-head">WHAT HAPPENED <span>확인된 사실</span></div>
-          <div class="event-grid">${rows.map((row, i) =>
-            `<div class="event-card"><div class="event-icon">${editorialIcon(row.icon || (i ? "control" : "mou"))}</div><div class="event-copy"><strong>${esc(row.label)}</strong><span>${esc(row.text)}</span></div><div class="event-state ${esc(row.tone || "")}">${esc(row.state)}</div></div>`
+          <div class="editorial-section-head">${esc(s.sectionA || "WHAT HAPPENED")} <span>${esc(s.sectionAKr || "확인된 사실")}</span></div>
+          <div class="event-grid">${rows.map((row) =>
+            `<div class="event-card"><div class="event-copy">${row.label ? `<strong>${esc(row.label)}</strong>` : ""}<span>${esc(row.text)}</span></div>${row.state ? `<div class="event-state ${esc(row.tone || "")}">${esc(row.state)}</div>` : ""}</div>`
           ).join("")}</div>
           <div class="why-editorial">
-            <div class="editorial-section-head">WHY IT MATTERS <span>${esc(s.whyLabel || "왜 중요한가")}</span></div>
+            <div class="editorial-section-head">${esc(s.sectionB || "WHY IT MATTERS")} <span>${esc(s.whyLabel || "왜 중요한가")}</span></div>
             <div class="why-layout"><div class="why-lead">${esc(s.whyLead || "")}</div><div class="why-checks">${checks.map((text) => `<div class="why-check">${esc(text)}</div>`).join("")}</div></div>
           </div>
         </section>
@@ -792,7 +1147,12 @@ function selfCheck() {
   page.setDefaultTimeout(60000);
   await page.setViewport({ width: theme.canvas.width, height: theme.canvas.height, deviceScaleFactor: 1 });
 
+  // 표지·마지막 장은 그날 첫 카드의 사진을 물려받는다 — 앨범이 한 벌로 보인다.
+  const heroImage = (slides.map(editorialFromStep).find((x) => x.image) || {}).image;
   for (let i = 0; i < slides.length; i++) {
+    if (heroImage && (slides[i].type === "hook" || slides[i].type === "cta") && !slides[i].image) {
+      slides[i] = { ...slides[i], image: heroImage };
+    }
     await page.setContent(renderSlide(slides[i], theme), { waitUntil: "load", timeout: 60000 });
     try {
       await page.evaluate(() => document.fonts.ready);
@@ -813,6 +1173,105 @@ function selfCheck() {
         smallest = Math.min(smallest, size);
       }
       for (const el of rows) el.style.fontSize = smallest + "px";
+    });
+
+    // ── 밝은 사진 가드 ──────────────────────────────────────────────
+    // B안(사진 전면)은 스크림 농도가 사진 밝기에 물려 있다. 지금 자산 6장은
+    // 전부 야간·실내라 어둡지만, 밝은 사진(설경·흰 외벽·주간 하늘)이 들어오면
+    // 본문 뒤가 밝아져 흰 글자가 깨진다. 고정값으로는 못 막으므로 **글자가 앉는
+    // 아래 55% 구간의 평균 휘도를 실제로 재서** 임계를 넘으면 스크림을 올린다.
+    // 임계 0.28: 현행 자산 실측 상단값이 0.19, 12:1 을 지키는 한계가 0.30 이다.
+    await page.evaluate(async () => {
+      const card = document.querySelector(".card");
+      const photo = card && card.querySelector(".card-photo");
+      if (!photo) return;
+      const url = (photo.style.backgroundImage || "").slice(5, -2);
+      if (!url) return;
+      const img = new Image();
+      await new Promise((ok) => { img.onload = ok; img.onerror = ok; img.src = url; });
+      if (!img.naturalWidth) return;
+      const cv = document.createElement("canvas");
+      cv.width = 64; cv.height = 64;
+      const ctx = cv.getContext("2d");
+      // background-position: center 26% 와 같은 자리를 본다 — 위 26% 를 버리고 그린다.
+      ctx.drawImage(img, 0, img.naturalHeight * 0.26, img.naturalWidth,
+        img.naturalHeight * 0.74, 0, 0, 64, 64);
+      const px = ctx.getImageData(0, 35, 64, 29).data;   // 아래 55% = 글자 구간
+      let sum = 0;
+      for (let p = 0; p < px.length; p += 4) {
+        const f = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+        sum += 0.2126 * f(px[p]) + 0.7152 * f(px[p + 1]) + 0.0722 * f(px[p + 2]);
+      }
+      const mean = sum / (px.length / 4);
+      card.dataset.photoLum = mean.toFixed(3);
+      if (mean > 0.28) card.classList.add("bright-photo");
+    });
+
+    // ── 제목 2줄 ────────────────────────────────────────────────────
+    // 3줄 제목은 히어로를 다 먹고도 정보가 안 늘어난다("테라파워·메타, 나트륨
+    // 원전 8기 협력" — 지니 09-20). 글자를 줄여 2줄에 앉힌다. 강조 구간(.em)은
+    // 자기 줄을 갖게 돼 있으므로 앞부분이 1줄이면 전체가 2줄이다.
+    await page.evaluate(() => {
+      const title = document.querySelector(".editorial-title");
+      if (!title) return;
+      const lead = title.firstChild && title.firstChild.nodeType === 3 ? title : null;
+      const em = title.querySelector(".em");
+      const lineCount = () => {
+        const fs = parseFloat(getComputedStyle(title).fontSize);
+        const lh = fs * 1.08;
+        // .em 은 1.13em 이라 한 줄이 더 높다. 2줄 = 앞 1줄 + em 1줄.
+        const budget = lh + (em ? fs * 1.13 * 1.08 : lh);
+        return title.getBoundingClientRect().height > budget + 6 ? 3 : 2;
+      };
+      let fs = parseFloat(getComputedStyle(title).fontSize);
+      for (let guard = 0; guard < 24 && lineCount() > 2 && fs > 52; guard++) {
+        fs -= 2;
+        title.style.fontSize = fs + "px";
+      }
+      void lead;
+      title.dataset.finalFs = String(fs);   // 진단용 — 몇 px 로 앉았는지
+    });
+    if (process.env.CARD_DEBUG) {
+      const fsInfo = await page.evaluate(() => {
+        const t = document.querySelector(".editorial-title");
+        const c = document.querySelector(".card");
+        return t ? { fs: t.dataset.finalFs, h: Math.round(t.getBoundingClientRect().height), lum: c && c.dataset.photoLum, bright: c && c.classList.contains("bright-photo") } : null;
+      });
+      if (fsInfo) console.log("[title]", JSON.stringify(fsInfo));
+    }
+
+    // 에디토리얼 카드의 넘침 안전망. 아래 구 카드용 축소기는 `.card > .body` 를
+    // 찾는데 이쪽 구조는 `.editorial-body` 라 **한 번도 걸린 적이 없었다**(가드가
+    // 그냥 throw 했다). 재료가 긴 날에도 카드를 살리려면 여기서 줄여야 한다.
+    // 하한은 폰 실효 12px(34px)·11px(30px) — 그 아래로는 줄이느니 안 만든다.
+    await page.evaluate(() => {
+      const body = document.querySelector(".editorial-body");
+      if (!body) return;
+      const over = () => {
+        const br = body.getBoundingClientRect();
+        return [...body.children].some((el) => el.getBoundingClientRect().bottom > br.bottom - 2);
+      };
+      const shrink = (sel, floor) => {
+        const nodes = [...body.querySelectorAll(sel)];
+        for (let guard = 0; guard < 30 && over(); guard++) {
+          let moved = false;
+          for (const el of nodes) {
+            const size = parseFloat(getComputedStyle(el).fontSize);
+            if (size > floor) { el.style.fontSize = size - 1 + "px"; moved = true; }
+          }
+          if (!moved) break;
+        }
+      };
+      shrink(".why-check", 30);
+      shrink(".event-copy span", 34);
+      shrink(".why-lead", 36);
+      // 하한까지 줄였는데도 넘치면 **줄을 버린다**. 폰에서 못 읽을 크기로
+      // 밀어 넣느니 확인점 한 줄을 접는 쪽이 낫다(같은 판단을 마지막 장에서도 썼다).
+      const checks = [...body.querySelectorAll(".why-check")];
+      while (over() && checks.length > 1) checks.pop().remove();
+      // 그래도 넘치면 사실 줄을 하나 접는다 — 여기까지 오는 날은 재료가 비정상이다.
+      const rows = [...body.querySelectorAll(".event-card")];
+      while (over() && rows.length > 1) rows.pop().remove();
     });
 
     // 본문이 칸을 넘으면 불릿 글자를 함께 줄인다. 사실 3 + 의미 2 가 각각 40자로
