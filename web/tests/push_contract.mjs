@@ -1,4 +1,4 @@
-// 푸시 창구 계약 — 열린 쓰기와 열린 발송을 실제로 돌려 본다.
+// 푸시 창구 계약 — 열린 쓰기와 토큰으로 막은 목록을 실제로 돌려 본다.
 //
 //     node web/tests/push_contract.mjs
 //
@@ -9,7 +9,11 @@
 // 그 좁힘이 실제로 서 있는지는 여기서만 확인된다.
 //
 // 특히 endpoint 검증은 SSRF 방어다. 임의의 주소를 받아 저장하면 매일 아침
-// 이 서버가 남의 서버로 POST 를 날려 주는 도구가 된다.
+// 발송기가 남의 서버로 POST 를 날려 주는 도구가 된다.
+//
+// `/push/list` 는 반대쪽이다. endpoint 는 그 브라우저를 특정하는 주소라,
+// 목록은 **토큰 없이는 한 줄도 나가면 안 된다.** 발송이 엣지에서 파이썬으로
+// 옮겨 오면서(2026-09-19) 생긴 창구고, 그래서 여기서 잠근다.
 
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
@@ -17,9 +21,13 @@ import { webcrypto } from "node:crypto";
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
 const subscribe = await import("../../functions/push/subscribe.js");
-const send = await import("../../functions/push/send.js");
+const list = await import("../../functions/push/list.js");
 
 // ── 흉내 KV ────────────────────────────────────────────────────────────────
+// 한 장에 최대 둘만 돌려준다. 실제 KV 도 limit 보다 적게 주면서 list_complete
+// 를 false 로 두는 일이 있고, 그 경우 커서를 안 따라가는 구현은 **조용히 일부
+// 구독자에게만 보낸다** — 증상이 "어떤 폰은 알림이 온다" 하나뿐인 종류다.
+const PAGE_CAP = 2;
 function fakeKv() {
   const store = new Map();
   return {
@@ -28,13 +36,11 @@ function fakeKv() {
     async put(key, value) { store.set(key, value); },
     async delete(key) { store.delete(key); },
     // 커서는 **위치가 아니라 마지막 키 이름**이다. KV 의 커서가 그렇게 동작하고,
-    // 그 차이가 여기서 실제로 드러난다: 발송은 돌면서 죽은 구독을 지우므로,
-    // 커서가 위치(0,2,4…)면 한 건 지워질 때마다 뒤 페이지가 한 칸씩 밀려
-    // **매번 한 건씩 건너뛴다.** 이름 기준이면 지워도 밀리지 않는다.
+    // 이름 기준이면 도는 중에 한 건이 지워져도 뒤 페이지가 밀리지 않는다.
     async list({ prefix, limit = 1000, cursor }) {
       const names = [...store.keys()].filter(key => key.startsWith(prefix)).sort();
       const rest = cursor ? names.filter(name => name > cursor) : names;
-      const page = rest.slice(0, limit);
+      const page = rest.slice(0, Math.min(limit, PAGE_CAP));
       const complete = page.length >= rest.length;
       return {
         keys: page.map(name => ({ name })),
@@ -71,9 +77,10 @@ const post = (payload, ip = "1.2.3.4") => new Request("https://site.test/push/su
   assert.equal(ok.status, 200);
   assert.equal(subs(kv), 1, "구독 하나가 저장돼야 한다");
   const stored = oneSub(kv);
-  // 지금 보내는 알림에는 본문이 없어 이 키들을 쓰지 않는다. 그래도 저장한다 —
-  // 나중에 본문 암호화를 붙일 때 구독자 전원에게 다시 켜 달라고 할 수는 없다.
-  assert.equal(stored.keys.p256dh, POINT, "p256dh 를 버리면 나중에 되돌릴 수 없다");
+  // 본문을 실어 보내는 지금은 이 둘이 **발송에 직접 쓰인다**(RFC 8291 암호화).
+  // 예전 판은 쓰지 않으면서도 저장했는데, 그 판단이 지금 구독자 전원을 살렸다 —
+  // 키를 안 받아 뒀다면 여기서 다시 켜 달라고 해야 했다.
+  assert.equal(stored.keys.p256dh, POINT, "p256dh 없이는 본문을 못 싣는다");
   assert.equal(stored.keys.auth, AUTH);
 }
 
@@ -132,7 +139,7 @@ for (const keys of [
     const response = await subscribe.onRequestPost({ request: post(payload), env });
     assert.equal(response.status, 200, i + "번째 재등록이 막혔다");
   }
-  assert.equal(subs(kv), 1);
+  assert.equal(subs(kv), 1, "같은 endpoint 는 한 칸이다(SHA-256 키)");
 }
 
 // ── 해지 ───────────────────────────────────────────────────────────────────
@@ -166,142 +173,92 @@ for (const keys of [
   assert.equal(response.status, 503, "저장소가 없으면 받았다고 말하면 안 된다");
 }
 
-// ── 발송은 토큰 없이는 한 통도 안 나간다 ───────────────────────────────────
-const VAPID = {
-  VAPID_PUBLIC_KEY: "BMIWNB0a2cBKAOwhl-UUJCMW_CbRXhk3CIt4sy_yqbZAOhF4eCQEpuPNp0fZ1Q5uhnSb3igw8svjy9I8AzVw3o8",
-  VAPID_PRIVATE_KEY: "--PsIvxbqCidsn2i7MRyUaxeWHvvKQYZuG1jb9N83s8",
-  VAPID_SUBJECT: "mailto:ops@example.test",
-  PUSH_SEND_TOKEN: "x".repeat(32),
-};
-const sendRequest = (token) => new Request("https://site.test/push/send", {
-  method: "POST",
-  headers: token ? { Authorization: "Bearer " + token } : {},
-  body: JSON.stringify({ limit: 10 }),
+// ── 목록: 토큰 없이는 한 줄도 안 나간다 ────────────────────────────────────
+const TOKEN = "t".repeat(32);
+const listRequest = (token) => new Request("https://site.test/push/list", {
+  method: "GET", headers: token === null ? {} : { Authorization: "Bearer " + token },
 });
 
 {
   const kv = fakeKv();
-  let calls = 0;
-  globalThis.fetch = async () => { calls += 1; return new Response("", { status: 201 }); };
-  for (const token of ["", "wrong", "x".repeat(31)]) {
-    const response = await send.onRequestPost({
-      request: sendRequest(token), env: { PUSH_KV: kv, ...VAPID },
-    });
-    assert.equal(response.status, 401, (token || "(없음)") + " 로 발송이 열렸다");
-  }
-  assert.equal(calls, 0, "인증 전에 한 통이라도 나가면 안 된다");
-  // 설정이 덜 된 배포는 401 이 아니라 503 이다 — 운영자가 어디를 볼지 갈린다.
-  const unset = await send.onRequestPost({
-    request: sendRequest(VAPID.PUSH_SEND_TOKEN),
-    env: { PUSH_KV: kv, PUSH_SEND_TOKEN: VAPID.PUSH_SEND_TOKEN },
+  await subscribe.onRequestPost({
+    request: post({ subscription: {
+      endpoint: "https://fcm.googleapis.com/fcm/send/secret", keys: goodKeys(),
+    } }), env: { PUSH_KV: kv },
   });
-  assert.equal(unset.status, 503);
+  const env = { PUSH_KV: kv, PUSH_ADMIN_TOKEN: TOKEN };
+
+  for (const token of [null, "", "wrong", TOKEN.slice(0, 31), TOKEN + "x", "T".repeat(32)]) {
+    const response = await list.onRequestGet({ request: listRequest(token), env });
+    assert.equal(response.status, 401, JSON.stringify(token) + " 로 목록이 열렸다");
+    const body = await response.text();
+    assert.ok(!body.includes("fcm.googleapis.com"),
+      "401 응답이 endpoint 를 흘렸다 — 그 자체가 목록이다");
+  }
 }
 
-// ── 발송: 죽은 구독을 걷고, 커서로 끊어 돈다 ───────────────────────────────
+// ── 목록: '설정 안 함'과 '틀린 열쇠'는 다른 답이다 ─────────────────────────
+// 운영자가 어디를 볼지 갈린다. 401 만 보면 토큰을 다시 넣어 보다가 시간을 쓴다.
 {
   const kv = fakeKv();
-  const env = { PUSH_KV: kv, ...VAPID };
-  for (let i = 0; i < 5; i += 1) {
+  for (const env of [{ PUSH_KV: kv }, { PUSH_KV: kv, PUSH_ADMIN_TOKEN: "" },
+                     { PUSH_KV: kv, PUSH_ADMIN_TOKEN: "short" }]) {
+    const response = await list.onRequestGet({ request: listRequest(TOKEN), env });
+    assert.equal(response.status, 503, "토큰 미설정은 503 이어야 한다");
+  }
+  // 토큰은 맞는데 저장소가 안 붙은 배포. 이것도 401 이 아니다.
+  const noStore = await list.onRequestGet({
+    request: listRequest(TOKEN), env: { PUSH_ADMIN_TOKEN: TOKEN },
+  });
+  assert.equal(noStore.status, 503);
+}
+
+// ── 목록: 발송기가 받는 모양, 그리고 커서를 끝까지 따라간다 ────────────────
+{
+  const kv = fakeKv();
+  const env = { PUSH_KV: kv, PUSH_ADMIN_TOKEN: TOKEN };
+  const total = 7;                    // PAGE_CAP(2) 로 네 장 이상 나온다
+  for (let i = 0; i < total; i += 1) {
     await subscribe.onRequestPost({
       request: post({ subscription: {
         endpoint: "https://fcm.googleapis.com/fcm/send/" + i, keys: goodKeys(),
-      } }, "10.0.0." + i), env,
+      } }, "192.168.1." + i), env,
     });
   }
-  assert.equal(subs(kv), 5);
+  assert.equal(subs(kv), total);
 
-  const seen = [];
-  globalThis.fetch = async (url, init) => {
-    seen.push({ url: String(url), headers: init.headers });
-    // 가운데 하나는 이미 사라진 구독이고, 하나는 그냥 실패다.
-    if (String(url).endsWith("/2")) return new Response("", { status: 410 });
-    if (String(url).endsWith("/3")) return new Response("", { status: 500 });
-    return new Response("", { status: 201 });
-  };
+  const response = await list.onRequestGet({ request: listRequest(TOKEN), env });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.count, total, "커서를 안 따라가 " + body.count + "건만 나왔다");
+  assert.equal(body.subscriptions.length, total);
 
-  let cursor = "";
-  let sent = 0;
-  let pruned = 0;
-  let failed = 0;
-  let rounds = 0;
-  do {
-    const response = await send.onRequestPost({
-      request: new Request("https://site.test/push/send", {
-        method: "POST", headers: { Authorization: "Bearer " + VAPID.PUSH_SEND_TOKEN },
-        body: JSON.stringify({ limit: 2, cursor, topic: "nuclens-brief" }),
-      }), env,
-    });
-    assert.equal(response.status, 200);
-    const result = await response.json();
-    sent += result.sent; pruned += result.pruned; failed += result.failed;
-    cursor = result.cursor;
-    rounds += 1;
-    assert.ok(rounds < 10, "커서가 안 줄고 있다");
-  } while (cursor);
-
-  assert.equal(sent, 3, "201 셋이 보낸 것으로 세어져야 한다");
-  assert.equal(pruned, 1, "410 은 걷어야 한다");
-  assert.equal(failed, 1, "500 은 실패지 정리가 아니다");
-  assert.ok(rounds >= 3, "limit 2 인데 한 번에 다 돌았다 — 커서가 안 먹는다");
-  assert.equal(subs(kv), 4, "410 이 난 구독만 사라져야 한다");
-
-  // 보내는 모양 — 여기가 틀리면 푸시 서비스가 조용히 401·400 을 낸다.
-  const headers = seen[0].headers;
-  assert.match(headers.Authorization, /^vapid t=[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+, k=[A-Za-z0-9_-]+$/);
-  assert.ok(Number(headers.TTL) > 0, "TTL 없이 보내면 일부 서비스가 400 을 낸다");
-  assert.equal(headers["Content-Length"], "0", "본문 없는 알림이다");
-  assert.equal(headers.Topic, "nuclens-brief");
-  assert.equal(headers["Content-Encoding"], undefined,
-    "본문이 없는데 Content-Encoding 을 붙이면 서비스가 거절한다");
-
+  // 발송기(tools/push_notify.py)가 쓰는 두 칸. 이름이 바뀌면 발송은 조용히
+  // 0건이 되고, 로그에는 '구독자 0명 — 정상'만 남는다.
+  for (const row of body.subscriptions) {
+    assert.ok(row.endpoint.startsWith("https://"), "endpoint 가 없다");
+    assert.equal(row.keys.p256dh, POINT);
+    assert.equal(row.keys.auth, AUTH);
+  }
+  // 저장해 둔 나머지(seen_at 등)까지 내보낼 이유는 없다.
+  assert.deepEqual(Object.keys(body.subscriptions[0]).sort(), ["endpoint", "keys"]);
 }
 
-// ── 서명은 구독자마다가 아니라 **출처마다** 한 번이다 ──────────────────────
-//
-// 무료 플랜의 Worker 는 요청당 CPU 10ms 다. VAPID 서명은 그 예산에서 가장 비싼
-// 한 줄이라, 구독자 수에 비례해 붙으면 구독이 늘수록 발송이 통째로 죽는다.
-// (ECDSA 는 같은 내용을 서명해도 매번 다른 값이 나오므로, 헤더가 같다는 것은
-//  곧 **서명을 다시 하지 않았다**는 뜻이다.)
+// ── 목록: 깨진 항목 하나가 나머지를 막지 않는다 ────────────────────────────
 {
   const kv = fakeKv();
-  const env = { PUSH_KV: kv, ...VAPID };
-  const endpoints = [
-    "https://fcm.googleapis.com/fcm/send/a",
-    "https://fcm.googleapis.com/fcm/send/b",
-    "https://fcm.googleapis.com/fcm/send/c",
-    "https://web.push.apple.com/x",
-  ];
-  for (const [index, endpoint] of endpoints.entries()) {
-    await subscribe.onRequestPost({
-      request: post({ subscription: { endpoint, keys: goodKeys() } }, "172.16.0." + index), env,
-    });
-  }
-  const seen = [];
-  globalThis.fetch = async (url, init) => {
-    seen.push({ url: String(url), auth: init.headers.Authorization });
-    return new Response("", { status: 201 });
-  };
-  const response = await send.onRequestPost({
-    request: new Request("https://site.test/push/send", {
-      method: "POST", headers: { Authorization: "Bearer " + VAPID.PUSH_SEND_TOKEN },
-      body: JSON.stringify({ limit: 50 }),
-    }), env,
+  const env = { PUSH_KV: kv, PUSH_ADMIN_TOKEN: TOKEN };
+  await subscribe.onRequestPost({
+    request: post({ subscription: {
+      endpoint: "https://fcm.googleapis.com/fcm/send/ok", keys: goodKeys(),
+    } }), env,
   });
-  assert.equal((await response.json()).sent, 4);
-  assert.equal(seen.length, 4);
-  const byOrigin = new Map();
-  for (const row of seen) {
-    const origin = new URL(row.url).origin;
-    if (!byOrigin.has(origin)) byOrigin.set(origin, new Set());
-    byOrigin.get(origin).add(row.auth);
-  }
-  assert.equal(byOrigin.size, 2, "출처 둘을 준비했다");
-  for (const [origin, tokens] of byOrigin) {
-    assert.equal(tokens.size, 1, origin + " 에 구독자마다 다시 서명했다");
-  }
-  // 그리고 출처가 다르면 토큰도 달라야 한다 — aud 를 안 갈면 상대가 401 을 낸다.
-  assert.equal(new Set(seen.map(row => row.auth)).size, 2, "출처가 달라도 같은 토큰을 썼다");
+  await kv.put("push:sub:deadbeef", "{not json");
+  const response = await list.onRequestGet({ request: listRequest(TOKEN), env });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).count, 1, "깨진 한 줄이 목록을 죽였다");
+  // 읽기 창구는 쓰기를 하지 않는다 — 토큰 하나로 목록을 지울 수 있게 된다.
+  assert.ok(kv.store.has("push:sub:deadbeef"), "목록 조회가 KV 를 지웠다");
 }
 
 console.log("push contract: ok");

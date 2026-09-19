@@ -671,6 +671,35 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python tools/prune_actions_caches.py --prefix "${RUNNER_OS}-nuclens-web-production-" --keep 2
 
+      # ── 아침 알림(웹 푸시) ─────────────────────────────────────────────
+      #
+      # 왜 여기인가 (2026-09-19)
+      # ------------------------------------------------------------------
+      # 예전엔 전용 워크플로(push-notify.yml)가 07:00 KST 에 따로 돌았다. 알림은
+      # 사람이 정한 시각에 와야 한다는 생각이었는데, 그러려면 "지금이 아침인가 ·
+      # 오늘 브리핑이 라이브에 있는가"를 발송기가 매번 되물어야 했고 — 둘 다
+      # **여기서는 이미 아는 사실**이다. 브리핑은 나갔고(claim), 데이터는 지어졌고
+      # (web-build), 사이트는 배포되어 스모크까지 통과했다(web-deploy).
+      #
+      # 그래서 배포 성공에 건다. 이 조건은 claim 성공을 이미 포함한다(web-deploy
+      # 자신의 if 가 그렇다) — 브리핑이 안 나간 날에는 알림도 안 간다.
+      # 알림이 가리키는 /?src=push 가 오늘 것을 보여 주는 것도 이 자리라야 참이다.
+      #
+      # 비치명이다. 알림이 실패해도 텔레그램 브리핑·카드·웹은 이미 나갔다.
+      # 다만 조용히 넘기지는 않는다 — 설정 누락·전원 실패는 push_notify.py 가
+      # ::error:: 로 남긴다(로그에서 '구독자 0명'과 갈린다).
+      - name: Web push (아침 알림)
+        id: web-push
+        if: steps.web-deploy.outcome == 'success'
+        continue-on-error: true
+        env:
+          # Cloudflare Pages 시크릿과 **같은 값**이어야 한다 — /push/list 가 이걸로 막힌다.
+          PUSH_ADMIN_TOKEN: ${{ secrets.PUSH_ADMIN_TOKEN }}
+          # 이미 Cloudflare 에 넣어 둔 것과 **같은 키**. 갈면 기존 구독이 전부 죽는다.
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ vars.VAPID_SUBJECT || 'mailto:nuclens@users.noreply.github.com' }}
+        run: python tools/push_notify.py
+
       # ── 카드뉴스 ───────────────────────────────────────────────────────
       # 카드는 이제 이 잡이 만들지 않는다. cards.yml 이 굽고·검사하고·커밋하고·
       # 사이트에 올린다. 여기서는 **깨우기만** 한다.
@@ -820,6 +849,9 @@ jobs:
           # channel_outbox.json 은 오디오 스텝이 file_id 를 붙이고 공개 스텝이
           # 발송 상태를 적은 뒤다. 여기서 싣지 않으면 러너와 함께 사라지고,
           # 같은 날 재실행이 이미 나간 자료를 다시 채널에 올린다.
+          # outbox.json 의 `push` 칸도 같은 성질이다 — 아침 알림이 나간 날짜를
+          # push_notify.py 가 적는다. 여기서 싣지 않으면 같은 날 재실행이
+          # 구독자에게 알림을 한 번 더 보낸다.
           # issue_ledger.json 은 이슈 주소의 영속성 기록이다. build_data 가
           # 카탈로그를 만들 때마다 갱신하므로 여기서 실어야 살아남는다 —
           # deploy-web.yml 에는 커밋 스텝이 아예 없어서 그쪽 갱신분은 러너와

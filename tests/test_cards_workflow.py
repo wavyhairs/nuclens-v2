@@ -14,8 +14,9 @@ Daily Brief 는 초록불이라 카드가 빠진 날을 사람이 사이트를 �
 이 파일은 그 갈라짐이 도로 붙지 않게 지킨다. 되붙는 방식은 늘 같다 —
 '잠깐 넘기려고' continue-on-error 를 하나 얹는 것.
 
-YAML 파서를 안 쓴다. requirements.txt 는 런타임 의존성 셋뿐이고(requests ·
-google-genai · feedparser), 검사 하나를 위해 PyYAML 을 거기 얹지 않는다.
+YAML 파서를 안 쓴다. requirements.txt 는 런타임에 실제로 필요한 것만 담고
+(requests · google-genai · feedparser · pywebpush), 검사 하나를 위해 PyYAML 을
+거기 얹지 않는다.
 대신 **주석을 걷은 원문**을 본다 — 이 파일의 계약은 대부분 "무엇을 하지
 않는가"라, 하지 않는 이유를 적어 둔 주석이 그대로 오탐이 되기 때문이다.
 """

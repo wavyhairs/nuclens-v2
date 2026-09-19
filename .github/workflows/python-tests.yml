@@ -154,11 +154,12 @@ jobs:
           node web/tests/date_window.mjs
           node web/tests/report_format.mjs
           node web/tests/trend_period_state.mjs
-      # 푸시는 **틀려도 조용하다.** 서명이 어긋나면 푸시 서비스가 401 을 내고
-      # 발송 로그에 실패 숫자 하나가 늘 뿐, 예외도 빨간불도 없다. 사용자는
-      # "알림이 안 온다"만 안다. 그래서 여기서 잠근다 — 둘 다 빌드 산출물이
-      # 필요 없어 데이터 없이 돈다.
+      # 푸시는 **틀려도 조용하다.** 창구가 목록을 안 내주거나 토큰 검사가
+      # 헐거워져도 예외도 빨간불도 없다 — 사용자는 "알림이 안 온다"만 안다.
+      # 그래서 여기서 잠근다(빌드 산출물이 필요 없어 데이터 없이 돈다).
+      #
+      # 서명 검사(vapid_token.mjs)는 걷었다. 엣지가 더 이상 서명하지 않는다 —
+      # 발송은 pywebpush 몫이고, 그쪽은 tests/test_push_notify.py 가 실제
+      # 암호화까지 돌려 본다(루트 검사에 포함).
       - name: Web push contracts
-        run: |
-          node web/tests/vapid_token.mjs
-          node web/tests/push_contract.mjs
+        run: node web/tests/push_contract.mjs

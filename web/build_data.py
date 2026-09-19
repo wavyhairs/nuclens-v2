@@ -3779,52 +3779,6 @@ def build_today_payload(briefings: list[dict], issue_catalog: list[dict],
     }
 
 
-# 알림 한 줄의 재료. **여기서 문장을 새로 짓지 않는다** — 이미 고른 헤드라인을
-# 그대로 쓴다. 알림이 화면과 다른 말을 하면 누른 뒤에 배신당한 기분이 든다.
-PUSH_CARD_VERSION = "push-card-v1"
-PUSH_FALLBACK_BODY = "오늘의 원전 현안이 올라왔습니다."
-
-
-def build_push_card(briefings: list[dict], now: datetime) -> dict:
-    """아침 알림이 읽는 한 장 → push.json.
-
-    왜 파일로 굽는가
-    ----------------
-    웹 푸시로 **본문**을 실으려면 구독마다 본문을 암호화해야 한다(RFC 8291).
-    그 구현을 배포 경로에 두지 않기로 했고(functions/push/send.js 머리말),
-    대신 빈 알림을 보낸 뒤 서비스워커가 이 파일을 읽어 제목을 붙인다.
-
-    그래서 이 파일은 **서비스워커가 푸시를 받은 순간** 받는다. today.json(87KB)
-    으로도 되지만 알림 하나에 그만큼을 받을 이유가 없다 — 여기 실리는 것은
-    제목 한 줄·본문 한 줄·주소 하나다(1KB 미만).
-
-    날짜는 브리핑 날짜다. 알림이 도착한 날이 아니라 **무엇이 올라왔는지**를
-    말해야 한다 — 발송이 하루 밀리면 그 사실이 알림에 보여야 한다.
-    """
-    latest = briefings[0] if briefings else {}
-    brief_date = str(latest.get("date") or "")
-    headline = str(latest.get("headline") or "").strip()
-    label = ""
-    if brief_date:
-        try:
-            parsed = date.fromisoformat(brief_date)
-            label = f"{parsed.month}월 {parsed.day}일"
-        except ValueError:
-            label = brief_date
-    return {
-        "version": PUSH_CARD_VERSION,
-        "generated_at": now.isoformat(),
-        "date": brief_date,
-        "title": f"{label} 브리핑" if label else "Nuclens 오늘 브리핑",
-        # 헤드라인이 비는 회차가 있다(headline_kind 가 안 서는 날). 그때는 알림을
-        # 거르는 대신 일반 문구로 나간다 — 알림이 오는 날과 안 오는 날이 갈리면
-        # 사용자는 그것을 고장으로 읽는다.
-        "body": headline or PUSH_FALLBACK_BODY,
-        "url": "/?src=push",
-        "tag": "nuclens-brief",
-    }
-
-
 def _is_primary_source(article: dict) -> bool:
     return article.get("evidence_role") == "primary" or article.get("source_tier") == 1
 
@@ -7565,7 +7519,6 @@ def build() -> None:
         # 원본이 아니라 사본을 싣는다 — 아래 admin_outputs 는 전수를 봐야 한다.
         ("issue_audit.json", shipped_audit),
         ("threads.json", threads_payload),
-        ("push.json", build_push_card(briefings, now)),
         ("manifest.json", manifest),
         ("status.json", status),
     )

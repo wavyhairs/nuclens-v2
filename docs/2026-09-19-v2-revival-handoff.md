@@ -338,12 +338,18 @@ chrome --headless=new --disable-gpu --hide-scrollbars \
 - **khnp_domain 판단**은 아직 남아 있다. 이번 작업에서 건드리지 않았다 —
   `archiveIssueMatches` 의 `state.archiveDomain` 분기는 여전히 도달 불가다.
 
-### 남은 판단 하나
+### 남은 판단 하나 — 닫혔다 (2026-09-19)
 
-푸시 알림에 **본문을 싣지 않는다**(RFC 8291 암호화 없음). 서비스워커가
-`/data/push.json` 을 읽어 제목을 붙이는 것으로 대신했고, 그 이유와 되돌리는
-방법은 `functions/push/send.js` 머리말에 적어 뒀다. 구독 저장에 `p256dh`·`auth`
-를 이미 넣어 두었으므로 나중에 붙여도 구독자는 그대로 간다.
+푸시 알림에 **본문을 싣지 않는다**(RFC 8291 암호화 없음)는 판단이었다.
+서비스워커가 `/data/push.json` 을 읽어 제목을 붙이는 것으로 대신했고, 구독
+저장에 `p256dh`·`auth` 를 이미 넣어 두었으므로 나중에 붙여도 구독자는 그대로
+간다고 적어 두었다.
+
+그 "나중"이 같은 날이었다. 발송을 엣지에서 파이썬(`pywebpush`)으로 옮기면서
+본문이 푸시 안에 실린다 — CPU 예산이 문제였는데 러너에는 그 예산이 없다.
+받아 둔 `p256dh`·`auth` 가 그대로 쓰였고, 구독자는 한 명도 다시 켜지 않았다.
+`functions/push/send.js` 와 `/data/push.json` 은 사라졌다. 지금 구조는
+`docs/2026-09-19-web-push-setup.md` 5절에 있다.
 
 ---
 

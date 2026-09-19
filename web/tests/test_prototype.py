@@ -8047,6 +8047,11 @@ class MorningPushTests(unittest.TestCase):
         cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
         cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
         cls.worker = (ROOT / "public" / "sw.js").read_text(encoding="utf-8")
+        # 주석을 걷은 원문. 이 클래스의 계약은 대부분 "무엇을 하지 않는가"라,
+        # 걷어 낸 이유를 적어 둔 주석이 그대로 오탐이 된다
+        # (tests/test_cards_workflow.py 가 같은 함정에서 같은 결론에 닿았다).
+        cls.worker_code = "\n".join(
+            line for line in cls.worker.splitlines() if not line.lstrip().startswith("//"))
         cls.init = cls.script.split("async function initPush(", 1)[1].split("\n}", 1)[0]
 
     def test_the_toggle_is_back_where_it_was(self):
@@ -8099,14 +8104,36 @@ class MorningPushTests(unittest.TestCase):
         init_call = self.script.index("\ninit();")
         self.assertLess(init_call, self.script.index("initPush().catch"))
 
-    def test_the_worker_fills_the_text_itself(self):
-        """발송은 본문 없는 알림을 보낸다(RFC 8291 암호화를 안 싣는다).
-        제목은 서비스워커가 받는 순간 읽어 온다 — 못 읽어도 알림은 뜬다."""
-        self.assertIn("/data/push.json", self.worker)
-        self.assertIn("Nuclens 오늘 브리핑", self.worker)
-        self.assertIn("오늘의 원전 현안이 올라왔습니다.", self.worker)
-        # 본문이 실려 오면 그쪽이 우선이다 — 나중에 암호화를 붙여도 이 핸들러는 산다.
-        self.assertIn("if (!data.title && !data.body) data = await briefCard();", self.worker)
+    def test_the_worker_shows_what_it_was_sent(self):
+        """제목·본문은 **푸시 본문에 실려 온다**(tools/push_notify.py + pywebpush).
+
+        예전엔 빈 알림을 받고 서비스워커가 `/data/push.json` 을 다시 읽었다.
+        그 왕복이 실패하면 — 폰이 지하철에 있거나 배포가 늦으면 — 알림은 매번
+        일반 문구로만 떴고, 발송 로그에는 '보냄'으로 남았다. 조용한 퇴화다.
+        """
+        self.assertIn("event.data.json()", self.worker_code)
+        self.assertNotIn("/data/push.json", self.worker_code,
+                         "알림을 받고 다시 조회하면 그 왕복이 새 실패 지점이다")
+        self.assertNotIn("fetch(", self.worker_code, "서비스워커는 아무것도 받아 오지 않는다")
+        # 실린 값이 그대로 뜬다.
+        for field in ("data.title", "data.body", "data.tag", "data.url"):
+            self.assertIn(field, self.worker_code)
+        # 본문이 깨져 와도 알림은 뜬다.
+        self.assertIn("Nuclens 오늘 브리핑", self.worker_code)
+        self.assertIn("오늘의 원전 현안이 올라왔습니다.", self.worker_code)
+
+    def test_the_worker_does_not_cache_the_site(self):
+        """이 사이트는 매시 데이터가 바뀐다. 캐시를 붙이면 옛 화면을 보는
+        사고로 돌아간다(2026-09-15 style.css)."""
+        self.assertNotIn("caches", self.worker_code)
+
+    def test_a_tapped_notification_lands_on_the_open_tab(self):
+        """열려 있는 Nuclens 창이 있으면 새 창을 또 열지 않는다."""
+        click = self.worker_code.split('addEventListener("notificationclick"', 1)[1]
+        self.assertIn("event.notification.close();", click)
+        self.assertIn("clients.matchAll(", click)
+        self.assertLess(click.index("focus()"), click.index("openWindow"))
+        self.assertIn('"navigate" in w', click)
 
 
 if __name__ == "__main__":
