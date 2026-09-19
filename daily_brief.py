@@ -561,24 +561,101 @@ def _change_or_none(s: str | None) -> str | None:
     return text
 
 
+# 기사 근거에서 '한국이 걸려 있다'를 읽는 표지. 한수원 라벨의 두 번째 조건이다.
+_KOREA_MARKERS = ("한수원", "한국수력원자력", "khnp", "한국", "국내", "우리나라",
+                  "한전", "한국전력", "kepco", "산업통상", "원안위", "기후에너지환경부",
+                  "korea", "korean")
+
+
+def _korea_in_evidence(art: dict) -> bool:
+    """기사 데이터(제목·요약·해석·태그)에 한국 접점이 실제로 적혀 있는가."""
+    blob = " ".join(str(art.get(k) or "") for k in
+                    ("title_kr", "title", "summary", "implication", "detail",
+                     "source_excerpt", "section")).lower()
+    blob += " " + " ".join(str(t) for t in (art.get("tags") or []))
+    return any(marker in blob for marker in _KOREA_MARKERS)
+
+
+# 해석 문장이 **기사에 없는 한국 수혜 주체**를 만들어 내는 꼴. 세 조건이 모두
+# 맞을 때만 줄을 버린다 — 낱말 하나로 지우면 정상 문장이 함께 날아간다.
+#
+#   ① 한국 기업·업계를 주체로 세우고
+#   ② 그 주체가 기사 근거(제목·요약·본문)에 없고
+#   ③ 수혜·기회·진출 같은 추론성 표현으로 끝난다
+#
+# 실측(2026-09-19): 튀르키예 재생에너지 120GW 기사에 "초고압 전력기기 기술력을
+# 보유한 한국 기업들에 새로운 해외 시장 진출 기회가 될 수 있다"가 붙었다. 원문
+# 어디에도 한국 기업이 없다. 반대로 '국내 조선 3사' 기사의 "국내 조선업계가 사업
+# 영역을 확장하고 있다"는 ②에 걸리지 않으므로 남는다 — 그 주체는 기사의 주어다.
+_KR_BENEFICIARY_RE = re.compile(
+    r"(?:한국|국내|우리)\s*(?:의\s*)?"
+    r"(?:기업|업체|산업|업계|제조사|공급사|사업자|중소기업|대기업|"
+    r"[가-힣]{1,6}(?:업계|업체|산업|기업))"
+)
+_INFERRED_BENEFIT_RE = re.compile(
+    r"수혜"
+    r"|반사이익"
+    r"|기회(?:가|를|로)?\s*(?:될\s*수\s*있|열리|생기|작용)"
+    r"|진출\s*(?:기회|확대|발판|교두보)"
+    r"|(?:시장|판로|사업\s*영역|사업\s*범위)\s*(?:을|를|이|가)?\s*"
+    r"(?:확대|확장|넓히|넓어|다변화)"
+    r"|수주(?:가|를)?\s*(?:확대|늘어|기대|전망)"
+)
+
+
+def _invents_korean_beneficiary(text: str, art: dict) -> bool:
+    """이 해석이 기사에 없는 한국 수혜 주체를 새로 만들어 냈는가."""
+    if not _KR_BENEFICIARY_RE.search(text) or not _INFERRED_BENEFIT_RE.search(text):
+        return False
+    # 근거는 **사건을 적은 칸**만 본다: 원제목·한국어 제목·요약·원문 발췌.
+    #
+    # `detail` 은 일부러 뺀다. 그 칸이 바로 같은 모델이 본문을 늘려 쓰는 자리라
+    # 근거로 세우면 해석이 스스로를 정당화한다. 실측이 정확히 그 꼴이었다 —
+    # 튀르키예 기사의 detail 에 "HVDC 분야에서 한국 기업의 수출 기회가 확대될
+    # 것으로 관측된다"가 이미 들어 있었고, 시사점은 그것을 받아 적었을 뿐이다.
+    # 원문 발췌에는 한국이 한 번도 나오지 않는다.
+    evidence = " ".join(str(art.get(k) or "") for k in
+                        ("title_kr", "title", "summary", "source_excerpt")).lower()
+    if any(marker in evidence for marker in _KOREA_MARKERS):
+        return False
+    # 표지 목록은 기업 이름을 모른다. '효성중공업, 미국 빅테크 대상 초고압변압기
+    # 수주'는 한국 기업 기사인데 제목에 '한국'도 '국내'도 없다 — 여기서 멈추면
+    # 정상 문장을 지운다(실측 4건 중 3건이 그 꼴이었다). 사건 자체가 한국 것이면
+    # 한국 주체는 해석이 데려온 것이 아니다. 그 판정은 region() 이 이미 한다.
+    return region(art) == "해외"
+
+
+def _takeaway_or_none(art: dict) -> str | None:
+    """카드에 실을 해석 문장. 근거 없는 한국 수혜 추론이면 None (줄 생략)."""
+    text = (art.get("implication") or "").strip()
+    if not text or _invents_korean_beneficiary(text, art):
+        return None
+    return text
+
+
 def _khnp_direct(art: dict) -> bool:
     """`implication` 에 한수원 라벨을 달아도 되는 기사인가.
 
-    이 값을 만드는 수집 단계 프롬프트에는 한수원이라는 말이 없다 — 요구하는 것은
-    원인·다음 절차·수치·영향 대상이고, 그것은 내용상 `왜 중요` 다. 그런데 카드는
-    이 칸을 늘 `🇰🇷 한수원 시사점` 으로 불렀다. 2026-09-19 실측 6건 중 4건에
-    한수원도 한국도 주어가 아니었다("AI 데이터센터 수요가 원자력 산업의 비즈니스
-    모델을 …로 전환하는 기폭제가 되고 있다"). 라벨이 내용보다 앞서면 그때부터
-    라벨이 거짓말을 한다 — 이 어긋남은 khnp_relevance 머리말이 이미 적어 둔 것이다.
+    조건이 둘이다. **등급**과 **한국 접점**을 함께 본다.
 
-    판정기를 새로 만들지 않고 그 모듈의 등급을 그대로 쓴다. `complete_required_fields`
-    가 선정분에 이미 붙여 두지만, **없으면 여기서 직접 계산한다** — 호출 순서가
-    바뀌었을 때 조용히 전부 '한수원 아님'이 되는 쪽이 더 나쁘다.
+    1) `khnp_relevance` 등급이 `required`. 이 판정은 '한수원의 사업 환경에 걸리는
+       주제인가'를 본다 — 그런데 그 축(SMR·AI 전력수요·전력시장)은 **국적이 없다.**
+       그래서 순수 해외 기사도 required 가 된다(실측: 오펜하이머 CEO 발언 기사).
+    2) 그래서 한국 접점을 따로 확인한다. `region()` 이 국내로 본 기사이거나,
+       제목·요약·해석·태그 어디든 한국 표지가 적혀 있어야 한다.
+
+    `region()` 을 쓰는 이유는 한수원의 해외 사업을 놓치지 않기 위해서다 — 그 함수는
+    `section='khnp'` 를 출처 불문 국내로 본다. 그래서 '한수원 체코 두코바니 계약'은
+    해외 기사처럼 생겼어도 국내로 잡히고, **해석 문장 안에 '한수원'이 다시 나오지
+    않아도** 라벨을 유지한다. 반대로 문장에 한국 낱말이 있는지만 보는 규칙은 그
+    기사를 떨어뜨린다 — 그래서 쓰지 않았다.
     """
     level = art.get("implication_requirement")
     if not level:
         level = khnp_relevance.relevance(art).get("level")
-    return level == "required"
+    if level != "required":
+        return False
+    return region(art) == "국내" or _korea_in_evidence(art)
 
 
 def item_to_card(art: dict) -> dict:
@@ -599,7 +676,7 @@ def item_to_card(art: dict) -> dict:
         "headline": art.get("title_kr") or art.get("title", ""),
         "what": _korean_or_none(art.get("summary")),
         "why": _change_or_none(art.get("why_important")),
-        "kr_takeaway": (art.get("implication") or "").strip() or None,
+        "kr_takeaway": _takeaway_or_none(art),
         "khnp_direct": _khnp_direct(art),
         "cred": credibility(cluster),
     }

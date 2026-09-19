@@ -194,6 +194,102 @@ class TestTakeawayLabelFollowsContent(unittest.TestCase):
         self.assertIn("🇰🇷 한수원 시사점", format_cards_message([card], header="소셜"))
 
 
+class TestUnfoundedKoreanBeneficiaryIsDropped(unittest.TestCase):
+    """기사에 없는 한국 수혜 주체를 만들어 낸 해석은 텔레그램에서 뺀다.
+
+    세 조건이 모두 맞을 때만 버린다 — 낱말 하나로 지우면 정상 문장이 함께 날아간다.
+    실측 1629건 중 걸리는 것은 2건이다.
+    """
+
+    def _drop(self, implication, **art):
+        return db._invents_korean_beneficiary(implication, {"implication": implication, **art})
+
+    def test_invented_beneficiary_in_a_foreign_event_is_dropped(self):
+        # 튀르키예 재생에너지 기사 — 원문 어디에도 한국 기업이 없다.
+        self.assertTrue(self._drop(
+            "대규모 송전망 확충 정책은 초고압 전력기기 기술력을 보유한 한국 기업들에 "
+            "새로운 해외 시장 진출 기회가 될 수 있다.",
+            title_kr="튀르키예, 2035년까지 1080억 달러 투입해 재생에너지 120GW 구축",
+            summary="튀르키예 정부가 발전 설비와 송전망에 1080억 달러를 투자한다.",
+            source_excerpt="튀르키예 정부가 2035년까지 1080억 달러를 투입한다.",
+            scope="overseas", section="international"))
+
+    def test_the_articles_own_korean_subject_is_kept(self):
+        # '국내 조선 3사' 기사 — 그 주체는 해석이 데려온 것이 아니라 기사의 주어다.
+        self.assertFalse(self._drop(
+            "국내 조선업계가 단순 선박 건조를 넘어 해양 에너지 인프라 솔루션 시장으로 "
+            "사업 영역을 확장하고 있다.",
+            title_kr="국내 조선 3사, 가스텍 2026서 차세대 해양 에너지 솔루션 기술 인증 획득",
+            summary="HD현대·삼성중공업·한화오션이 선급 기본인증을 획득했다.",
+            scope="kr", section="domestic"))
+
+    def test_a_korean_event_grounds_its_own_beneficiary(self):
+        # 표지 목록은 기업 이름을 모른다 — 사건이 한국 것이면 지우지 않는다.
+        self.assertFalse(self._drop(
+            "국내 기업의 수주 확대로 이어지고 있다.",
+            title_kr="효성중공업, 초고압변압기 수주", summary="수주했다.",
+            scope="kr", section="domestic"))
+
+    def test_a_factual_sentence_is_not_inference(self):
+        # 수혜·기회 표현이 없으면 한국 주체가 있어도 건드리지 않는다.
+        self.assertFalse(self._drop(
+            "국내 기업 3곳이 이번 입찰에 참여한다고 공시했다.",
+            title_kr="해외 입찰 공고", summary="입찰이 공고됐다.", scope="overseas"))
+
+    def test_inference_without_a_korean_subject_is_not_this_guard(self):
+        # 이 guard 는 '한국 수혜 주체'만 본다. 다른 빈껍데기는 다른 게이트 몫이다.
+        self.assertFalse(self._drop(
+            "유럽 전력기기 공급사의 수주 확대로 이어질 수 있다.",
+            title_kr="유럽 송전망 확충", summary="확충한다.", scope="overseas"))
+
+    def test_the_card_omits_the_line_entirely(self):
+        from synthesize import format_cards_message
+        art = qitem(implication="한국 기업들에 새로운 시장 진출 기회가 될 수 있다.",
+                    title_kr="튀르키예, 재생에너지 120GW 구축",
+                    summary="튀르키예가 투자한다.", source_excerpt="튀르키예가 투자한다.",
+                    scope="overseas", section="international")
+        card = db.item_to_card(art)
+        self.assertIsNone(card["kr_takeaway"])
+        msg = format_cards_message([card], header="해외")
+        self.assertNotIn("진출 기회", msg)
+        self.assertIn("무슨 일", msg)
+
+
+class TestKhnpLabelNeedsKoreanContact(unittest.TestCase):
+    """한수원 라벨은 등급만으로 붙지 않는다 — 한국 접점이 함께 있어야 한다."""
+
+    def _direct(self, **art):
+        return db._khnp_direct({"implication_requirement": "required", **art})
+
+    def test_topic_only_foreign_article_is_not_khnp(self):
+        # SMR·AI 전력수요는 국적이 없는 축이라 해외 기사도 required 가 된다.
+        self.assertFalse(self._direct(
+            title_kr="오펜하이머 CEO, 원전 반복 생산 강조", summary="주장했다.",
+            scope="overseas", section="international"))
+
+    def test_domestic_article_is_khnp(self):
+        self.assertTrue(self._direct(
+            title_kr="산업부, 원전 수출 지원 확대", summary="확대한다.",
+            scope="kr", section="domestic"))
+
+    def test_khnp_export_deal_keeps_the_label_without_repeating_the_name(self):
+        # '한수원 체코 두코바니 계약' — 해석 문장에 한수원이 다시 없어도 유지된다.
+        self.assertTrue(self._direct(
+            title_kr="한수원, 체코 두코바니 신규원전 본계약 체결",
+            summary="본계약을 체결했다.", implication="후속 호기 협상 시점이 앞당겨진다.",
+            section="khnp"))
+
+    def test_foreign_article_naming_korea_keeps_the_label(self):
+        self.assertTrue(self._direct(
+            title_kr="미국, 한국산 원전 기자재 인증 절차 간소화",
+            summary="간소화한다.", scope="overseas", section="international"))
+
+    def test_below_required_is_never_khnp(self):
+        self.assertFalse(db._khnp_direct({
+            "implication_requirement": "expected", "title_kr": "한수원 소식",
+            "scope": "kr", "section": "khnp"}))
+
+
 class TestOfficialBadge(unittest.TestCase):
     """✅ 는 '신뢰하는 매체'가 아니라 '기관이 낸 원문'에만 붙는다.
 
