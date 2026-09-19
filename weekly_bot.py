@@ -1449,6 +1449,34 @@ def _append_weekly_delivery(result: dict, report: dict,
     return True
 
 
+def _merge_delivery(previous: object, status: str, checked_at: str) -> dict:
+    """목적지 상태를 병합한다. **이미 sent 면 되돌리지도, 시각을 옮기지도 않는다.**
+
+    같은 주차를 두 번 확정하는 일은 예외가 아니라 상례다. 2026-09-04 와 09-11 은
+    둘 다 저녁 recovery 가 발송을 끝낸 뒤, 4시간 반 밀린 금요일 schedule 이
+    21시대에 들어와 같은 주차를 다시 확정했다. 그때 이 함수가 없으면 둘이 무너진다.
+
+      ① confirmed_at 이 재실행 시각으로 덮여 **실제 전달 시각이 사라진다.**
+         09-11 은 18:59 에 나갔는데 저장된 값은 21:48 이다. "언제 사용자에게
+         닿았나"는 되돌릴 수 없는 사실인데 운영 기록에서 지워진다.
+
+      ② 재확인 중 채널 공개가 예외로 떨어지면 status 가 sent → failed 로
+         내려간다. 그러면 다음 recovery 가 그 주차를 '미발송'으로 읽고 **다시
+         집는다.** 상태 하향은 곧 재발송 문이다.
+
+    그래서 sent 는 종착역으로 둔다. 재확인 시각이 필요하면 last_checked_at 에
+    따로 남긴다 — confirmed_at 은 언제나 '최초로 사용자에게 닿은 시각'이다.
+    """
+    previous = previous if isinstance(previous, dict) else {}
+    if str(previous.get("status") or "") != "sent":
+        return {"status": status, "confirmed_at": checked_at}
+    merged = {"status": "sent",
+              "confirmed_at": previous.get("confirmed_at") or checked_at}
+    if checked_at and checked_at != merged["confirmed_at"]:
+        merged["last_checked_at"] = checked_at
+    return merged
+
+
 def cmd_confirm(now: datetime | None = None) -> int:
     """임시 발송 결과를 저장본에 멱등 병합하고 운영 delivery log를 남긴다."""
     try:
@@ -1468,15 +1496,16 @@ def cmd_confirm(now: datetime | None = None) -> int:
     # 중복방지에 필요한 상태와 시각만 남기고 원응답은 untracked result에서 끝낸다.
     telegram_result = result.get("telegram") or {}
     channel_result = result.get("channel") or {}
-    automation["telegram"] = {
-        "status": telegram_result.get("status", "failed"),
-        "confirmed_at": result.get("confirmed_at"),
-    }
-    automation["channel"] = {
-        "status": channel_result.get("status", "unknown"),
-        "confirmed_at": result.get("confirmed_at"),
-    }
-    automation["confirmed_at"] = result.get("confirmed_at")
+    checked_at = result.get("confirmed_at")
+    automation["telegram"] = _merge_delivery(
+        automation.get("telegram"), telegram_result.get("status", "failed"), checked_at)
+    automation["channel"] = _merge_delivery(
+        automation.get("channel"), channel_result.get("status", "unknown"), checked_at)
+    # 주차 수준의 confirmed_at 은 DM 이 처음 나간 시각을 따른다 — 사용자가 실제로
+    # 받은 시각이 그것이고, gate 가 완료로 읽는 신호도 그것이다.
+    automation["confirmed_at"] = automation["telegram"].get("confirmed_at") or checked_at
+    if checked_at and checked_at != automation["confirmed_at"]:
+        automation["last_checked_at"] = checked_at
     WEEKLY_REPORTS_FILE.write_text(
         json.dumps(store, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -1496,9 +1525,12 @@ def cmd_confirm(now: datetime | None = None) -> int:
                 sent = by_name.get(str(item.get("name") or ""))
                 if not sent:
                     continue
+                # 항목도 같다 — 이미 나간 것은 되돌리지 않고 시각도 옮기지 않는다.
+                if item.get("status") == "sent":
+                    continue
                 item["status"] = sent.get("status", item.get("status"))
                 if item["status"] == "sent":
-                    item["sent_at"] = result.get("confirmed_at")
+                    item["sent_at"] = checked_at
             batch["status"] = channel_queue._batch_status(batch)
             break
         channel_queue.save_queue(queue)
