@@ -87,7 +87,7 @@ const COUNTRY_MAP_LABELS = [
 ];
 
 const OFFICIAL_HINTS = ["go.kr", "khnp", "kaeri", "iaea.org", "energy.gov", "nrc.gov"];
-const VIEW_IDS = ["news", "trend", "search", "report", "longterm"];
+const VIEW_IDS = ["news", "trend", "search", "longterm", "report"];
 const ISSUE_ROUTE = /^\/issue\/([^/]+)\/?$/;
 const BRIEF_ROUTE = /^\/brief\/(\d{4}-\d{2}-\d{2})\/?$/;
 
@@ -1840,7 +1840,8 @@ async function initPush() {
 // 먼저 볼 3건 위로, 좁은 화면에서는 목차 뒤로 옮기던 그 함수를
 // 걷었다(2026-09-18). 폭에 따라 읽는 순서가 갈리면 같은 화면을 두 벌로
 // 설명해야 하고, 실제로 폰 사용자만 카드뉴스를 '그 밖의 이슈' 아래에서
-// 만났다. 순서는 하나다: 카드뉴스 → 먼저 볼 3건 → 오디오 → 그 밖의 이슈.
+// 만났다. 순서는 하나다: 카드뉴스 → 오디오 → 먼저 볼 3건 → 그 밖의 이슈
+// (2026-09-19). 읽지 않고 오늘을 아는 두 경로를 읽기 앞에 세운다.
 function renderCardStrip(date) {
   const section = document.getElementById("cardStrip");
   if (!section) return;

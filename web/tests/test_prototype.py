@@ -4337,8 +4337,15 @@ class WeeklyRenderTests(unittest.TestCase):
             self.assertNotIn(field, code, f"{field} 은 오늘 화면 소유다")
 
     def test_flow_tab_opens_with_indicators_not_prose(self):
-        """설명문을 읽기 전에 방향과 크기를 알아볼 수 있어야 한다."""
+        """설명문을 읽기 전에 방향과 크기를 알아볼 수 있어야 한다.
+
+        흐름 탭의 첫 구역은 2026-09-19 부터 워드 클라우드다. 산문 금지 계약은
+        그 앞에도 그대로 선다 — 탭을 열고 처음 만나는 것이 그림·지표여야 하고,
+        되돌아보는 구역들(주제 흐름 → 주간 판세)의 상대 순서도 그대로다.
+        """
         self.assertIn('id="trendTopicFlow"', self.html)
+        self.assertLess(self.html.index('id="trendWordCloud"'),
+                        self.html.index('id="trendTopicFlow"'))
         self.assertLess(self.html.index('id="trendTopicFlow"'),
                         self.html.index('id="weeklyReport"'))
         trend_fn = self.script.split("function renderTrend()", 1)[1].split("\nfunction ", 1)[0]
@@ -5256,24 +5263,28 @@ class FirstScreenContentFirstTests(unittest.TestCase):
         self.assertNotIn("? ", title_line.split("<h3>")[0], "제목 렌더에 조건이 다시 붙었다")
 
     def test_home_reads_in_one_decided_order(self):
-        """홈의 읽는 순서는 마크업 순서 하나로 정한다 (2026-09-18).
+        """홈의 읽는 순서는 마크업 순서 하나로 정한다 (2026-09-19).
 
-        카드뉴스 → 먼저 볼 3건 → 오디오 브리프 → 그 밖의 이슈.
-        그림으로 훑고 · 핵심을 읽고 · 듣고 싶으면 듣고 · 나머지를 탐색한다.
+        카드뉴스 → 오디오 브리프 → 먼저 볼 3건 → 그 밖의 이슈.
+        훑고 · 듣고 · 핵심을 읽고 · 나머지를 탐색한다.
 
-        앞 계약(오디오는 목차 뒤)은 플레이어가 날짜 바로 아래 첫 콘텐츠로
-        섰던 시절의 것이다. 지금은 오디오 위에 카드뉴스와 3건이 먼저 서므로
-        '읽을 것이 밀린다'는 조건이 성립하지 않는다 — 대신 순서 전체를 잠근다.
+        오디오가 3건 앞으로 올라온 이유: 카드뉴스와 오디오는 둘 다 '읽지 않고
+        오늘을 아는' 경로다. 그 둘을 읽는 구역 뒤에 두면 이미 읽은 사람에게만
+        보인다. 훑기·듣기를 먼저 세우고, 읽기는 그 아래에 둔다.
+
+        더 앞선 계약(오디오는 목차 뒤)은 플레이어가 날짜 바로 아래 첫 콘텐츠로
+        섰던 시절의 것이다. 지금은 오디오 위에 카드뉴스가 먼저 서고 크기 예산도
+        기사 카드 1장으로 묶여 있어 '읽을 것이 밀린다'는 조건이 성립하지 않는다.
 
         런타임 재배치는 금지다. placeCardStrip() 이 넓은 화면에서는 띠를 3건
         위로, 좁은 화면에서는 목차 뒤로 옮겨서 폰 사용자만 카드뉴스를 '그 밖의
         이슈' 아래에서 만났다. 폭에 따라 읽는 순서가 갈리면 같은 화면을 두
         벌로 설명해야 한다.
         """
-        order = ['id="cardStrip"', 'id="pickList"', 'id="audioBrief"', 'id="tocList"']
+        order = ['id="cardStrip"', 'id="audioBrief"', 'id="pickList"', 'id="tocList"']
         seen = [self.html.index(marker) for marker in order]
         self.assertEqual(seen, sorted(seen),
-                         "홈 순서: 카드뉴스 → 먼저 볼 3건 → 오디오 → 그 밖의 이슈")
+                         "홈 순서: 카드뉴스 → 오디오 → 먼저 볼 3건 → 그 밖의 이슈")
         self.assertNotIn("function placeCardStrip", self.script)
         self.assertNotIn("placeCardStrip()", self.script)
         self.assertNotIn('"change", placeCardStrip', self.script)
@@ -5637,6 +5648,71 @@ class ChangeLogHistoryTests(unittest.TestCase):
         self.assertNotIn("→", self.section)
 
 
+class MainNavOrderTests(unittest.TestCase):
+    """탭 차례는 화면 다섯 개가 서로에게 갖는 관계다 (2026-09-19).
+
+    오늘 → 흐름 → 탐색 → 장기 스토리 → 보고서.
+    앞 셋은 시간 축(오늘 · 이번 주 · 지난 전부)이고, 뒤 둘은 그 위에 얹는
+    가공물이다. 장기 스토리가 보고서 앞에 서는 이유는 그것이 원장에서 자동으로
+    이어 붙인 **재료**이고 보고서는 사람이 들고 나가는 **결과**이기 때문이다.
+    차례를 잃으면 "보고서 옆에 또 다른 보고서"로 읽힌다.
+
+    상단(.main-tabs)과 하단(#mobileTabs)은 같은 차례여야 한다. 폭에 따라
+    차례가 갈리면 같은 사이트를 두 벌로 설명해야 한다 — 홈의 읽는 순서를
+    마크업 하나로 못 박은 것과 같은 이유다.
+    """
+
+    ORDER = ["news", "trend", "search", "longterm", "report"]
+
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+        cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+
+    def _views(self, block):
+        return re.findall(r'data-view="([a-z]+)"', block)
+
+    def test_the_top_tabs_run_in_the_decided_order(self):
+        top = self.html.split('id="mainTabs"', 1)[1].split("</nav>", 1)[0]
+        self.assertEqual(self._views(top), self.ORDER)
+
+    def test_the_phone_tabs_run_in_the_same_order(self):
+        bottom = self.html.split('id="mobileTabs"', 1)[1].split("</nav>", 1)[0]
+        self.assertEqual(self._views(bottom), self.ORDER)
+
+    def test_the_view_list_is_written_in_that_order_too(self):
+        """VIEW_IDS 의 순서는 동작에 쓰이지 않는다 — 그래서 더 잘 어긋난다.
+
+        `includes` 와 `forEach(hidden)` 뿐이라 틀려도 아무것도 안 깨지고,
+        그 상태로 남으면 다음 사람이 어느 쪽을 사실로 읽어야 할지 모른다.
+        """
+        listed = self.script.split("const VIEW_IDS = ", 1)[1].split("]", 1)[0]
+        self.assertEqual(re.findall(r'"([a-z]+)"', listed), self.ORDER)
+
+
+class ViewSectionsAreNotDuplicatedTests(unittest.TestCase):
+    """화면 구역은 한 벌씩만 있어야 한다 (2026-09-19).
+
+    `id="view-trend"` 와 `id="search-saved"` 가 각각 두 벌로 실려 있었다.
+    `getElementById` 는 첫째만 잡으므로 둘째 벌은 화면에 서지도 않고 렌더러가
+    건드리지도 않는 죽은 마크업이었는데, 두 벌의 내용이 **서로 달랐다** —
+    둘째 벌에는 `thisWeekBody` 도 '집계 방법' 문단도 없었다. 즉 "화면에서
+    사라진 것 같다"를 조사할 때 파일에서 먼저 눈에 띄는 쪽이 거짓말을 한다.
+
+    구역 순서를 고칠 때도 같은 함정이다 — 한 벌만 고치면 파일 안에 옛 차례와
+    새 차례가 공존한다. 중복 자체를 계약으로 막는다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
+
+    def test_every_element_id_appears_once(self):
+        ids = re.findall(r'\sid="([A-Za-z0-9_-]+)"', self.html)
+        dupes = sorted(name for name, count in Counter(ids).items() if count > 1)
+        self.assertEqual(dupes, [], f"id 가 두 번 이상 쓰였다: {dupes}")
+
+
 class LongTermStoryScreenTests(unittest.TestCase):
     """장기 스토리(Beta) 화면을 되살린다 (2026-09-19).
 
@@ -5661,7 +5737,7 @@ class LongTermStoryScreenTests(unittest.TestCase):
         cls.css = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
 
     def test_the_view_is_reachable_again(self):
-        self.assertIn('"report", "longterm"]', self.script)
+        self.assertIn('"search", "longterm", "report"]', self.script)
         self.assertIn('id="view-longterm"', self.html)
         self.assertIn('data-view="longterm"', self.html)
         self.assertIn('if (view === "longterm") renderLongTerm();', self.script)
@@ -7604,10 +7680,18 @@ class WordCloudTests(unittest.TestCase):
         block = self.script[self.script.index(f"function {name}("):]
         return block[:block.index("\nfunction ")]
 
-    def test_sits_between_the_charts_and_the_briefing_timeline(self):
+    def test_opens_the_flow_tab_above_the_period_toggle(self):
+        """흐름 탭의 첫 구역(2026-09-19). 정량 카드와 지난 브리핑보다 앞이다.
+
+        기간 토글은 `#trendData` 안에 남아 구름보다 **아래**에 선다. 토글만
+        밖으로 빼서 위로 올리면 집계가 준비되지 않은 날 다스릴 대상 없이
+        토글만 남으므로, 대신 `#wordCloudMeta` 가 기간을 글자로 말한다.
+        """
         self.assertIn('id="trendWordCloud"', self.html)
-        self.assertLess(self.html.index('id="trendData"'), self.html.index('id="trendWordCloud"'))
+        self.assertLess(self.html.index('id="trendWordCloud"'), self.html.index('id="trendData"'))
         self.assertLess(self.html.index('id="trendWordCloud"'), self.html.index('id="briefingTimeline"'))
+        self.assertIn("wordCloudMeta", self.script,
+                      "토글이 아래로 내려간 만큼 기간은 글자로 남아야 한다")
 
     def test_it_is_a_numbered_section(self):
         section = self.html[self.html.index('id="trendWordCloud"'):]
@@ -7855,12 +7939,18 @@ class EventCalendarSectionTests(unittest.TestCase):
         cls.script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
         cls.style = (ROOT / "public" / "style.css").read_text(encoding="utf-8")
 
-    def test_it_sits_after_the_word_cloud_and_before_the_timeline(self):
-        """뒤를 보는 구역들 다음, 지난 브리핑 앞. 순서가 곧 '뒤 → 앞'이다."""
+    def test_it_sits_after_the_word_cloud_and_before_the_look_back(self):
+        """'무엇이 컸나' 바로 다음이 '무엇이 오나'다 (2026-09-19).
+
+        지금과 앞을 먼저 말하고, 되돌아보는 구역(주제 흐름·주간 판세·이번 주
+        움직인 이슈·정량 카드·지난 브리핑)은 전부 그 뒤에 선다.
+        """
         self.assertLess(self.html.index('id="trendWordCloud"'),
                         self.html.index('id="eventCalendar"'))
-        self.assertLess(self.html.index('id="eventCalendar"'),
-                        self.html.index('id="briefingTimeline"'))
+        for later in ('id="trendTopicFlow"', 'id="weeklyReport"',
+                      'id="trendData"', 'id="briefingTimeline"'):
+            self.assertLess(self.html.index('id="eventCalendar"'),
+                            self.html.index(later), f"{later} 가 달력 앞으로 올라왔다")
 
     def test_it_is_a_numbered_section(self):
         section = self.html[self.html.index('id="eventCalendar"'):]
