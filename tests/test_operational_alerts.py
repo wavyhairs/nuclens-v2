@@ -166,6 +166,60 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertTrue(recovered["sent"])
         self.assertIn("해결됨", messages[-1])
 
+    # ── 주간 판세: Weekly 워크플로 밖에서 보는 유일한 눈 ──────────────────
+    #
+    # 2026-09-18 Weekly 는 열한 번 연속 startup_failure 로 죽었다. 잡이 뜨기 전에
+    # 죽으므로 그 안의 어떤 스텝도 안 돌았고, 사람이 "금요일에 왜 안 왔지"를
+    # 물을 때까지 아무 데도 안 남았다. 3시간마다 도는 crawl 이 대신 본다.
+    FRI_2110 = datetime(2026, 9, 18, 12, 10, tzinfo=timezone.utc)   # 21:10 KST 금
+
+    def write_weekly(self, dm, channel):
+        reports = Path(self.tmp.name) / "weekly_reports.json"
+        outbox = Path(self.tmp.name) / "channel_outbox.json"
+        reports.write_text(json.dumps({"reports": {"2026-W38": {
+            "week_id": "2026-W38",
+            "_automation": {"telegram": {"status": dm}},
+        }}}, ensure_ascii=False), encoding="utf-8")
+        outbox.write_text(json.dumps({"batches": [
+            {"id": "weekly-2026-W38", "status": channel}]}, ensure_ascii=False),
+            encoding="utf-8")
+        return reports, outbox
+
+    def test_an_undelivered_friday_report_reaches_the_operator(self):
+        self.write_sent()
+        reports, outbox = self.write_weekly("missing", "missing")
+        seen = []
+        result = cli.run(sent_path=self.sent, log_path=self.log, now=self.FRI_2110,
+                         expected_sources={}, sender=seen.append,
+                         weekly_channel_required=True,
+                         weekly_reports_path=reports, weekly_channel_path=outbox)
+        self.assertEqual(result["due"], 1)
+        self.assertTrue(result["sent"])
+        self.assertIn("2026-W38", seen[0])
+        self.assertIn("Weekly report", seen[0], "운영자가 어디를 볼지 말해야 한다")
+        # 값은 마지막 '상세' 줄에만 있고, 앞의 네 줄은 사람 말이다.
+        head = seen[0].split("  상세:")[0]
+        self.assertNotIn("=", head, "운영자 문장에 상태 코드가 새면 안 된다")
+
+    def test_a_delivered_friday_report_raises_nothing(self):
+        self.write_sent()
+        reports, outbox = self.write_weekly("sent", "sent")
+        result = cli.run(sent_path=self.sent, log_path=self.log, now=self.FRI_2110,
+                         expected_sources={}, weekly_channel_required=True,
+                         weekly_reports_path=reports, weekly_channel_path=outbox)
+        self.assertEqual(result["due"], 0)
+
+    def test_a_caller_that_cannot_see_the_channel_does_not_judge_the_week(self):
+        """기준이 다른 둘이 같은 scope 를 나눠 쓰면, 한쪽이 올린 사건을 다른 쪽이 지운다."""
+        self.write_sent()
+        reports, outbox = self.write_weekly("missing", "missing")
+        result = cli.run(sent_path=self.sent, log_path=self.log, now=self.FRI_2110,
+                         expected_sources={},
+                         weekly_reports_path=reports, weekly_channel_path=outbox)
+        self.assertEqual(result["due"], 0)
+        state = json.loads(self.sent.read_text(encoding="utf-8"))
+        self.assertEqual(state["operational_alerts"].get("items", {}), {})
+
     def test_audio_outcomes_omitted_leaves_no_audio_alert(self):
         """오디오가 예정되지 않은 회차는 판정하지 않는다 (크롤 경로 등)."""
         self.write_sent()

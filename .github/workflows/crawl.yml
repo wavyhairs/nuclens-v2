@@ -243,6 +243,10 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+          # 값이 아니라 "채널이 설정돼 있는가"만 넘긴다. 이 한 줄이 있는 스텝만
+          # 주간 판세 미발송을 판정한다 - Weekly 워크플로는 startup_failure 로
+          # 죽으면 자기가 죽은 것을 못 알리므로, 3시간마다 도는 이쪽이 대신 본다.
+          CHANNEL_REQUIRED: ${{ secrets.TELEGRAM_CHANNEL_ID != '' }}
         run: >-
           python operational_alerts.py --notify
           --collect-outcome "${{ steps.collect.outcome }}"
@@ -662,6 +666,10 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+          # 값이 아니라 "채널이 설정돼 있는가"만 넘긴다. 이 한 줄이 있는 스텝만
+          # 주간 판세 미발송을 판정한다 - Weekly 워크플로는 startup_failure 로
+          # 죽으면 자기가 죽은 것을 못 알리므로, 3시간마다 도는 이쪽이 대신 본다.
+          CHANNEL_REQUIRED: ${{ secrets.TELEGRAM_CHANNEL_ID != '' }}
         run: >-
           python operational_alerts.py --notify
           --web-build-outcome "${{ steps.web-build.outcome }}"
