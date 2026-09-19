@@ -100,12 +100,40 @@ jobs:
         working-directory: cards
         run: npm ci
 
-      # 사이트 순위(web/public/data/briefings.json)가 재료다 — 라이브에서 받는다.
-      # build_data 를 다시 돌리면 쿼터를 또 쓴다.
-      - name: Fetch live site ranking
+      # 사이트가 만든 재료를 라이브에서 받는다 — build_data 를 다시 돌리면
+      # 쿼터를 또 쓰고, 두 번째 계산이 순위를 다시 정하면 화면과 카드가 갈린다.
+      #
+      # **네 파일을 받는다.** 예전에는 briefings.json 하나였는데, 그 파일의 이슈
+      # 행에는 `thread_id` 칸이 아예 없다(라이브 실측 2026-09-20: 61일치 전부).
+      # 스토리 카드가 이슈를 스레드에 이으려면 그 칸이 있는 today.json 이
+      # 필요하고, 사건 본문은 issues.json, 사건 목록·관계는 threads.json 에 있다.
+      # briefings.json 은 과거 날짜 재생성용으로 남긴다.
+      #
+      # **같은 세대인지 검사한다.** 네 파일은 build_data 가 한 루프에서 쓰므로
+      # 같은 `generation_id` 를 들고 배포된다. 받는 도중에 배포가 한 번 더 돌면
+      # 오늘 순위 위에 어제 사건이 앉을 수 있다 — manifest 를 앞뒤로 두 번 받아
+      # 비교하고, 다르면 한 번 다시 받는다. 두 번째도 다르면 스토리만 빼고
+      # 일일 카드는 그대로 간다(일일 카드는 threads 를 안 본다).
+      - name: Fetch live site data (한 세대)
         run: |
           mkdir -p web/public/data
-          curl -fsS "https://nuclens-v2.pages.dev/data/briefings.json?cb=$(date +%s)" -o web/public/data/briefings.json
+          base="https://nuclens-v2.pages.dev/data"
+          fetch_generation() {
+            before=$(curl -fsS "$base/manifest.json?cb=$(date +%s)" | python -c 'import json,sys; print(json.load(sys.stdin).get("generation_id",""))')
+            for f in manifest today issues threads briefings; do
+              curl -fsS "$base/$f.json?cb=$(date +%s)" -o "web/public/data/$f.json"
+            done
+            after=$(curl -fsS "$base/manifest.json?cb=$(date +%s)" | python -c 'import json,sys; print(json.load(sys.stdin).get("generation_id",""))')
+            [ -n "$before" ] && [ "$before" = "$after" ]
+          }
+          if fetch_generation; then
+            echo "generation 일치 — 네 파일이 같은 배포 세대다"
+          elif fetch_generation; then
+            echo "generation 일치 (재시도 1회)"
+          else
+            echo "::warning::배포 세대가 받는 중에 바뀌었다 — 스토리는 건너뛴다"
+            echo "STORY_SKIP=true" >> "$GITHUB_ENV"
+          fi
 
       - name: Verify Gemini key selection
         env:
@@ -218,7 +246,7 @@ jobs:
       # 이미 올라가 있고, 스토리 실패는 실패대로 빨갛게 남는다.
       - name: Make story cards (스토리 있는 날만)
         id: make-story
-        if: vars.STORY_CARDS_ENABLED != 'off'
+        if: vars.STORY_CARDS_ENABLED != 'off' && env.STORY_SKIP != 'true'
         env:
           GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           # 스토리 카드는 폴백이 없다 — 카피 검증에 걸리면 그날 0장이다. 로컬 실측에서

@@ -4,9 +4,15 @@
 일일 카드(make_cards.py)가 그날 상위 3건을 한 장씩 훑는 물건이라면, 이건 **며칠에
 걸쳐 이어진 이슈 하나**를 표지·타임라인·쟁점·의미·체크리스트로 끝까지 따라간다.
 
-재료는 전부 chronicle 이다. 타임라인은 `events[]`(실제 기사 날짜·제목), 쟁점·의미는
-`narrative`(국면 서사), 체크리스트는 `watchpoints`. 그래서 **없는 날짜를 지어낼 자리가
-없다** — 프롬프트가 아니라 검증이 그걸 막는다(validate 의 when/숫자 대조).
+재료는 전부 원장에서 온다. 어느 이슈가 어느 스토리인지, 그 스토리가 자격을
+갖췄는지는 `card_context` 가 정하고 — **제목이 아니라 id 로 정한다** — 이 파일은
+거기서 받은 사건 목록에 카피를 입힌다. 타임라인은 그 사건들의 날짜·제목,
+쟁점·의미는 각 사건의 `implication`·`summary`, 체크리스트는 `open_question`·
+`why_important` 다. 그래서 **없는 날짜를 지어낼 자리가 없다** — 프롬프트가 아니라
+검증이 그걸 막는다(validate 의 when/숫자 대조).
+
+사건 하나의 재료는 그 사건의 `source_event_id` 에서만 온다. 다른 사건의 기사를
+끌어와 한 행을 채우지 않는다(`card_context` 모듈 주석 ③).
 
     python story_cards.py --date 2026-09-18        # 그날 사이트 순위로 고른다
     python story_cards.py --date ... --dry         # 렌더 없이 카피만 본다
@@ -23,15 +29,11 @@ import re
 import sys
 from pathlib import Path
 
+import card_context
 import gemini_client
 import make_cards as mc
 
 ROOT = mc.ROOT
-# v1 은 chronicles.json + chronicle_narratives.json 을 먹었다. v2 에는 그 둘이
-# 없고, 같은 역할을 **threads**(장기 스토리 원장)가 한다. 아래 로더가 threads 를
-# chronicle 모양으로 바꿔 끼운다 — 이 파일의 나머지(검증·카피·렌더)는 손대지 않는다.
-THREADS = ROOT / "web" / "public" / "data" / "threads.json"
-BRIEFINGS = mc.BRIEFINGS_FILE
 ALBUM_FILE = ROOT / "cards" / "story_album.json"
 # 일일 카드와 PNG 폴더를 나눈다. 같은 cards/out 을 쓰면 나중에 도는 쪽이 앞 앨범을
 # 지우고, 그러면 게시·재시도 순서에 따라 엉뚱한 PNG 가 사이트로 간다.
@@ -39,8 +41,15 @@ OUT_DIR = ROOT / "cards" / "out-story"
 os.environ.setdefault("CARDS_OUT", OUT_DIR.name)
 mc.OUT_DIR = OUT_DIR
 
-MIN_EVENTS = 3          # 이보다 적으면 타임라인이 안 선다
-TIMELINE_ROWS = 4
+# `MIN_EVENTS = 3` 은 여기 없다. **자격은 사건 수가 아니라 관계가 정한다** —
+# 발표 → 시행처럼 단계가 넘어간 두 칸은 이야기이고, 같은 사안을 다섯 번 되풀이한
+# 다섯 칸은 이야기가 아니다. 판정은 `card_context.eligibility` 한 곳에 있다.
+#
+# 남은 숫자들은 **재료의 상한**이다. 프롬프트에 원문을 무한히 밀어 넣지 않는다.
+MAX_EVENTS = 8          # 타임라인 후보로 넘기는 사건 상한
+MAX_EVIDENCE = 3        # 사건당 근거 해시 상한
+DETAIL_MAX = 800        # 사건 본문 요지 상한(글자)
+TIMELINE_ROWS = 4       # 카드에 그리는 행 상한. 사건이 적으면 그 수만큼만 그린다
 ISSUE_COUNT = 3
 PILLAR_COUNT = 3
 CHECK_COUNT = 5
@@ -110,126 +119,110 @@ JSON 만 출력한다. 스키마:
 # ---- A. 재료 ------------------------------------------------------------------
 
 
-def load_chronicles() -> dict:
-    """threads.json → chronicle 모양. 이벤트는 (날짜·제목)만 쓰므로 변환이 얇다."""
-    if not THREADS.exists():
-        return {}
-    data = json.loads(THREADS.read_text(encoding="utf-8"))
-    out: dict[str, dict] = {}
-    for thread in data.get("threads") or []:
-        events = [
-            {"article_date": e.get("date"), "title_kr": e.get("title"),
-             "hash": str(e.get("event_id") or "")}
-            for e in (thread.get("events") or []) if e.get("date") and e.get("title")
-        ]
-        if not events:
-            continue
-        out[thread["thread_id"]] = {
-            "chronicle_id": thread["thread_id"],
-            "title": thread.get("title") or events[-1]["title_kr"],
-            "events": events,
-            "first_seen": thread.get("first_seen"),
-            "briefing_count": thread.get("briefing_count") or 0,
-            "lifespan_days": thread.get("lifespan_days") or 0,
-            # flow 는 국면 사이의 관계 라벨이다. 서사를 만들 때 순서의 근거로 쓴다.
-            "flow": thread.get("flow") or [],
-        }
-    return out
+def load_issue_index(data_dir: Path | None = None) -> dict[str, dict]:
+    """issue_id → 그 이슈의 구조화 결과. Evidence Packet 의 본문 재료다.
 
+    **왜 issues.json 인가**: 사건 하나하나의 `summary`·`detail`·`why_important`·
+    `implication`·`open_question` 이 거기에 있고, 열쇠가 `issue_id` 라
+    `source_event_id` 로 바로 찾을 수 있다. 예전에는 지난 브리핑 전체를 훑어
+    **제목을 열쇠로** 같은 것을 모았는데, 제목은 움직이는 값이라 그 색인은
+    조용히 빗나갔다(card_context 모듈 주석 ②).
 
-def _briefing_index() -> dict[str, dict]:
-    """지난 브리핑 전체에서 '이슈 제목 → 그날 쓴 문장'. 서사의 재료다.
-
-    v2 에는 국면 서사(chronicle_narratives)가 없다. 없는 것을 LLM 에 지어내게 하는
-    대신, **이미 발간된 그날의 요약·함의**를 모아 넣는다. 날짜와 문장이 전부
-    출처가 있는 것이 이 카드의 전제다(검증이 날짜를 events 와 대조한다).
+    라이브 실측 2026-09-20: 스레드 사건 229건 중 207건(90%)이 여기서 풀린다.
+    안 풀리는 것은 흡수되어 현재 카탈로그에 없는 옛 사건이다 — 그 행은 근거
+    해시와 제목·날짜만으로 서고, 본문이 비면 자격 검사가 아니라 카피가 얇아지는
+    것으로 끝난다.
     """
-    if not BRIEFINGS.exists():
+    path = (data_dir or card_context.DATA_DIR) / "issues.json"
+    if not path.exists():
         return {}
-    index: dict[str, dict] = {}
-    for brief in json.loads(BRIEFINGS.read_text(encoding="utf-8")):
-        for row in brief.get("issues") or []:
-            title = (row.get("title") or "").strip()
-            if title and title not in index:
-                index[title] = {
-                    "date": brief.get("date"),
-                    "summary": row.get("summary") or "",
-                    "detail": row.get("detail") or "",
-                    "why_important": row.get("why_important") or "",
-                    "implication": row.get("implication") or "",
-                    "open_question": row.get("open_question") or "",
-                }
-    return index
+    try:
+        rows = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {str(row.get("issue_id") or ""): row for row in rows if row.get("issue_id")}
 
 
-def load_narratives() -> dict:
-    """v2 엔 미리 만들어 둔 서사가 없다 — 빈 채로 두고 payload 에서 만든다."""
-    return {}
+def pick_story(date: str) -> card_context.StoryCandidate | None:
+    """일일 카드가 고른 **그 상위 3건 안에서** 스토리가 되는 첫 이슈.
 
+    두 가지가 예전과 다르다.
 
-def pick_story(date: str) -> tuple[dict, dict] | None:
-    """그날 사이트 순위 위에서부터 내려가며 **스토리가 붙은 첫 이슈**를 고른다.
-
-    순위를 다시 매기지 않는다 — 카드가 사이트와 다른 걸 1위로 세우면 둘이 갈린다.
+    ① **순위를 공유한다.** 예전에는 사이트 순위 전체를 위에서부터 훑어 스토리가
+       붙은 첫 이슈를 골랐다. 그러면 일일 카드 3건과 스토리 1건이 서로 다른
+       이슈를 가리킬 수 있고, 같은 날 두 산출물이 다른 1위를 말한다.
+    ② **id 로 잇는다.** 예전에는 이슈 제목과 thread 이벤트 제목의 exact match
+       였다. `mc.pick_items` 가 넘겨주는 `thread_id` 를 쓴다.
     """
-    rows = mc.load_site_ranking(date)
-    if not rows:
+    data = card_context.load_site_data(date)
+    for line in data.warnings:
+        print(f"[story] {line}")
+    items = mc.pick_items(data.issues, brief_date=date)
+    if not items:
         return None
-    chron, nar = load_chronicles(), load_narratives()
-    if not chron:
-        return None
-    # v1 은 기사 hash 로 이었다. v2 의 thread 이벤트는 기사가 아니라 **이슈**를
-    # 가리키고(event_id="issue-…"), 그 id 는 지금 발간되는 issue_id("story-…")와
-    # 세대가 다르다(실측 교집합 0). 남는 확실한 열쇠가 제목이라 제목으로 잇는다.
-    by_title: dict[str, dict] = {}
-    for c in chron.values():
-        for ev in c.get("events") or []:
-            by_title.setdefault((ev.get("title_kr") or "").strip(), c)
-    for row in rows:
-        c = by_title.get((row.get("title") or "").strip())
-        if not c or len(c.get("events") or []) < MIN_EVENTS:
-            continue
-        return row, {"chronicle": c, "narrative": {}}
-    return None
+    return card_context.pick_story_candidate(data, items)
 
 
-def build_payload(row: dict, story: dict, date: str) -> dict:
-    c = story["chronicle"]
-    events = sorted(c.get("events") or [], key=lambda e: str(e.get("article_date") or ""))
-    rep = row.get("representative_article") or {}
-    # 서사·관전 포인트는 그 이슈가 브리핑에 실렸던 날들의 문장에서 모은다.
-    # 최신 것이 마지막에 오게 둬 phase_now 가 '지금'을 가리키게 한다.
-    index = _briefing_index()
-    narrative, watchpoints, seen_w = [], [], set()
-    for ev in events:
-        past = index.get((ev.get("title_kr") or "").strip())
-        if not past:
-            continue
-        line = (past.get("implication") or past.get("summary") or "").strip()
+def _clip(text: object, limit: int) -> str:
+    value = " ".join(str(text or "").split())
+    return value[:limit]
+
+
+def build_payload(candidate: card_context.StoryCandidate, date: str) -> dict:
+    """Evidence Packet — 사건마다 **자기 근거만** 들고 선다.
+
+    한 행의 재료는 그 행의 `source_event_id` 하나에서만 온다. 다른 사건의
+    기사·문장을 끌어와 채우지 않는다 — 그러면 타임라인 한 줄이 다른 날의 근거로
+    선다(`card_context` 모듈 주석 ③). 스토리 전체의 '왜 중요한가'만 여러 사건을
+    함께 인용할 수 있고, 그 자리는 아래 `narrative`·`watchpoints` 다.
+    """
+    thread = candidate.thread
+    index = load_issue_index()
+    events, narrative, watchpoints, seen_w = [], [], [], set()
+    for row in candidate.events[-MAX_EVENTS:]:
+        source_id = str(row.get("source_event_id") or "")
+        detail = index.get(source_id) or {}
+        hashes = [str(value) for value in (row.get("evidence_hashes") or ())][:MAX_EVIDENCE]
+        events.append({
+            "date": row.get("date"),
+            # 이 파일의 날짜가 무슨 날짜인지 카피가 추측하지 않게 한다.
+            "date_kind": row.get("date_kind") or "first_seen",
+            "title": row.get("title"),
+            "source_event_id": source_id,
+            "relation_to_next": row.get("relation_to_next") or "",
+            "evidence_hashes": hashes,
+            "summary": _clip(detail.get("summary"), 200),
+            "detail": _clip(detail.get("detail"), DETAIL_MAX),
+        })
+        line = _clip(detail.get("implication") or detail.get("summary"), 160)
         if line and line not in narrative:
             narrative.append(line)
-        for w in (past.get("open_question"), past.get("why_important")):
-            w = (w or "").strip()
-            if w and w not in seen_w:
-                seen_w.add(w)
-                watchpoints.append(w)
-    for w in ((row.get("open_question") or "").strip(),):
-        if w and w not in seen_w:
-            watchpoints.append(w)
+        for question in (detail.get("open_question"), detail.get("why_important")):
+            question = _clip(question, 160)
+            if question and question not in seen_w:
+                seen_w.add(question)
+                watchpoints.append(question)
+
+    issue = candidate.issue
+    tail = _clip(issue.get("open_question"), 160)
+    if tail and tail not in seen_w:
+        watchpoints.append(tail)
+    rep = issue.get("representative_article") or {}
     return {
         "date": date,
-        "issue_title": row.get("title") or c.get("title"),
-        "topic": mc.topic_label(row),
-        "events": [{"date": e.get("article_date"), "title": e.get("title_kr")}
-                   for e in events[-12:] if e.get("article_date")],
+        "thread_id": candidate.thread_id,
+        "issue_id": str(issue.get("issue_id") or ""),
+        "issue_title": issue.get("title") or thread.get("title"),
+        "topic": mc.topic_label(issue),
+        "events": events,
         "narrative": narrative[-5:],
-        "phase_now": narrative[-1] if narrative else (row.get("summary") or ""),
+        "phase_now": narrative[-1] if narrative else (issue.get("summary") or ""),
         "watchpoints": watchpoints[:6],
-        "summary": rep.get("summary") or row.get("summary") or "",
-        "why_important": row.get("why_important") or "",
+        "summary": rep.get("summary") or issue.get("summary") or "",
+        "why_important": issue.get("why_important") or "",
         # 표지 통계 — 지어내지 않고 원장이 센 값을 그대로 쓴다.
-        "briefing_count": c.get("briefing_count") or 0,
-        "lifespan_days": c.get("lifespan_days") or 0,
+        "briefing_count": thread.get("briefing_count") or 0,
+        "lifespan_days": thread.get("lifespan_days") or 0,
     }
 
 
@@ -496,13 +489,21 @@ def main() -> int:
         return 0
 
     date = args.date or mc.datetime.now(mc.KST).strftime("%Y-%m-%d")
-    hit = pick_story(date)
-    if not hit:
-        print(f"[story] {date}: 스토리가 붙은 이슈 없음 — 카드 안 만든다")
+    try:
+        candidate = pick_story(date)
+    except card_context.ContextError as exc:
+        # 재료를 믿을 수 없는 날. 스토리만 빠진다 — 일일 카드는 이미 나갔고,
+        # 이 스크립트는 그쪽을 건드리지 않는다.
+        print(f"[story] {date}: {exc} — 스토리 카드 건너뜀")
         return 0
-    row, story = hit
-    payload = build_payload(row, story, date)
-    print(f"[story] {payload['issue_title'][:40]} | 이벤트 {len(payload['events'])}건 "
+    if not candidate:
+        print(f"[story] {date}: 상위 {mc.MAX_CARDS}건 안에 자격을 갖춘 스토리 없음 — 카드 안 만든다")
+        return 0
+    for line in candidate.warnings:
+        print(f"[story] {line}")
+    payload = build_payload(candidate, date)
+    print(f"[story] #{candidate.rank} {payload['issue_title'][:36]} "
+          f"| thread={candidate.thread_id} | 사건 {len(payload['events'])}건 "
           f"| 관전 {len(payload['watchpoints'])}건")
 
     raw, problems = None, []
@@ -542,7 +543,8 @@ def main() -> int:
     ALBUM_FILE.write_text(json.dumps({
         "date": date, "issue": payload["issue_title"],
         "caption": caption,
-        "chronicle_id": story["chronicle"].get("chronicle_id"),
+        "thread_id": candidate.thread_id,
+        "issue_id": payload["issue_id"],
         "files": [str(f.relative_to(ROOT)).replace("\\", "/") for f in files],
     }, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"[story] {len(files)}장 준비 완료 → {ALBUM_FILE.name}")

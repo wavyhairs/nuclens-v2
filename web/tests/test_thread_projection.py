@@ -40,9 +40,14 @@ SAR_AUG_TITLE = "기후부, 전력망 효율 위해 9월부터 '계절별 송전
 SAR_SEP_TITLE = "기후부, 전북 진안·충남 금산서 계절별 송전용량(SAR) 시범사업 시행"
 
 
+SAR_SEP_HASHES = ["9e227f9daff25cd5", "9a94d3be8028be9e", "527b2e1db7613a88"]
+SAR_AUG_HASHES = ["099ce0d43f46036a", "eead02e2334a6e47", "4602974590c8de51"]
+
+
 def threads_payload(**overrides) -> dict:
     payload = {
-        "version": "thread-web-v1",
+        "version": "thread-web-v2",
+        "date_kind": "first_seen",
         "visible": True,
         "threads": [{
             "thread_id": SAR_THREAD,
@@ -52,13 +57,21 @@ def threads_payload(**overrides) -> dict:
             "lifespan_days": 26,
             "event_count": 2,
             "events": [
-                {"event_id": SAR_SEP, "title": SAR_SEP_TITLE, "date": "2026-09-19"},
-                {"event_id": SAR_AUG, "title": SAR_AUG_TITLE, "date": "2026-08-24"},
+                {"event_id": SAR_SEP, "source_event_id": SAR_SEP, "title": SAR_SEP_TITLE,
+                 "date": "2026-09-19", "date_kind": "first_seen",
+                 "evidence_hashes": SAR_SEP_HASHES},
+                {"event_id": SAR_AUG, "source_event_id": SAR_AUG, "title": SAR_AUG_TITLE,
+                 "date": "2026-08-24", "date_kind": "first_seen",
+                 "evidence_hashes": SAR_AUG_HASHES},
             ],
             "flow": [
-                {"event_id": SAR_AUG, "title": SAR_AUG_TITLE, "date": "2026-08-24",
+                {"event_id": SAR_AUG, "source_event_id": SAR_AUG,
+                 "source_event_ids": [SAR_AUG], "evidence_hashes": SAR_AUG_HASHES,
+                 "title": SAR_AUG_TITLE, "date": "2026-08-24", "date_kind": "first_seen",
                  "relation_to_next": "stage_progress", "relation_label": "다음 단계"},
-                {"event_id": SAR_SEP, "title": SAR_SEP_TITLE, "date": "2026-09-19",
+                {"event_id": SAR_SEP, "source_event_id": SAR_SEP,
+                 "source_event_ids": [SAR_SEP], "evidence_hashes": SAR_SEP_HASHES,
+                 "title": SAR_SEP_TITLE, "date": "2026-09-19", "date_kind": "first_seen",
                  "relation_to_next": "", "relation_label": ""},
             ],
         }],
@@ -173,6 +186,84 @@ class StampThreadIdsTests(unittest.TestCase):
             with self.subTest(payload=broken):
                 self.assertEqual(build_data.stamp_thread_ids(issues, broken), 0)
                 self.assertTrue(all(issue["thread_id"] == "" for issue in issues))
+
+
+class ContestedEventTests(unittest.TestCase):
+    """**한 사건을 둘 이상의 스토리가 주장하면 주소를 비운다.**
+
+    왜 이 검사가 생겼나 (실측 2026-09-20 라이브)
+    --------------------------------------------
+    투영은 오래 `event_id` 로 풀었다. 그런데 그 값은 `thread_web.surviving_id()`
+    를 거친 **라우트** 주소라 흡수된 사건이 전부 같은 값으로 접힌다 — 사건
+    229건이 라우트 id 171개로 접혔고, 36개 id 를 둘 이상(최대 넷)의 스토리가
+    동시에 주장했다. 예전 코드는 `thread_of[event_id] = thread_id` 로 덮어써서
+    **마지막으로 순회한 스토리가 조용히 이겼다.** 즉 주소가 붙어 있어도 맞다는
+    보장이 없었고, 목록 순서가 바뀌면 답도 바뀌었다.
+
+    원장의 사건 id(`source_event_id`)로 풀면 정해진다 — 같은 날 살아 있는
+    스토리 128개의 사건 378건이 전부 고유했다. 그래도 이 분기를 남기는 이유는,
+    판정이 한 사건을 두 스토리에 넣는 날 **틀린 주소보다 빈칸이 낫기** 때문이다.
+    빈칸은 타임라인이 안 서는 것으로 끝나지만, 틀린 주소는 다른 이야기의 근거를
+    이 이슈의 것이라고 주장한다.
+    """
+
+    def _contested(self) -> dict:
+        payload = threads_payload()
+        other = copy.deepcopy(payload["threads"][0])
+        other["thread_id"] = "thread-다른이야기"
+        # 같은 사건을 두 스토리가 주장한다.
+        payload["threads"].append(other)
+        return payload
+
+    def test_a_contested_event_gets_an_empty_slot_not_a_coin_flip(self):
+        issues = catalog()
+        build_data.stamp_thread_ids(issues, self._contested())
+        by_id = {issue["issue_id"]: issue for issue in issues}
+        self.assertEqual(by_id[SAR_SEP]["thread_id"], "")
+        self.assertEqual(by_id[SAR_AUG]["thread_id"], "")
+
+    def test_the_answer_does_not_depend_on_thread_order(self):
+        """순서를 뒤집어도 같은 답. 예전 코드는 여기서 답이 갈렸다."""
+        forward, backward = self._contested(), self._contested()
+        backward["threads"].reverse()
+        first, second = catalog(), catalog()
+        build_data.stamp_thread_ids(first, forward)
+        build_data.stamp_thread_ids(second, backward)
+        self.assertEqual([issue["thread_id"] for issue in first],
+                         [issue["thread_id"] for issue in second])
+
+    def test_route_id_collisions_alone_do_not_contest_anything(self):
+        """흡수로 **라우트** id 만 같아진 경우는 충돌이 아니다.
+
+        v2 가 사건 신원을 따로 싣는 이유가 정확히 이것이다. 두 스토리의 서로
+        다른 사건이 같은 주소로 열릴 수는 있어도, 그것이 "같은 사건"이라는
+        뜻은 아니다.
+        """
+        payload = threads_payload()
+        other = copy.deepcopy(payload["threads"][0])
+        other["thread_id"] = "thread-다른이야기"
+        for row in other["events"]:
+            row["source_event_id"] = row["source_event_id"] + "-원본"
+        for row in other["flow"]:
+            row["source_event_id"] = row["source_event_id"] + "-원본"
+            row["source_event_ids"] = [row["source_event_id"]]
+        payload["threads"].append(other)
+
+        issues = catalog()
+        build_data.stamp_thread_ids(issues, payload)
+        by_id = {issue["issue_id"]: issue for issue in issues}
+        self.assertEqual(by_id[SAR_SEP]["thread_id"], SAR_THREAD)
+        self.assertEqual(by_id[SAR_AUG]["thread_id"], SAR_THREAD)
+
+    def test_v1_payload_still_resolves_through_event_id(self):
+        """옛 스냅샷을 읽는 빌드가 여기서 통째로 비지 않는다."""
+        payload = threads_payload(version="thread-web-v1")
+        for thread in payload["threads"]:
+            for row in (*thread["events"], *thread["flow"]):
+                row.pop("source_event_id", None)
+                row.pop("source_event_ids", None)
+        issues = catalog()
+        self.assertEqual(build_data.stamp_thread_ids(issues, payload), 2)
 
 
 if __name__ == "__main__":

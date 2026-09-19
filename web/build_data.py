@@ -6733,23 +6733,48 @@ def stamp_thread_ids(issue_catalog: list[dict], threads_payload: dict) -> int:
     Returns:
         주소를 받은 이슈 수. 호출부가 로그에 싣는다.
     """
+    # **`source_event_id` 로 푼다 — `event_id` 로 풀면 답이 하나가 아니다.**
+    #
+    # `event_id` 는 `thread_web.surviving_id()` 를 거친 라우트 주소라 흡수된
+    # 사건이 전부 같은 값으로 접힌다. 실측 2026-09-20 라이브: 사건 229건이 라우트
+    # id 171개로 접혔고 36개 id 를 둘 이상(최대 넷)의 스토리가 동시에 주장했다.
+    # 예전 코드는 `thread_of[event_id] = thread_id` 로 덮어써서 **마지막으로 순회한
+    # 스토리가 조용히 이겼다** — 즉 `thread_id` 가 붙어 있어도 그 값이 맞다는
+    # 보장이 없었고, 스토리 목록의 순서가 바뀌면 답도 바뀌었다.
+    #
+    # 원장의 사건 id 로 풀면 정해진다. 같은 날 실측에서 살아 있는 스토리 128개의
+    # 사건 378건이 전부 고유했다. 그래도 충돌 분기를 남기는 이유는, 판정이
+    # 한 사건을 두 스토리에 넣는 날 **틀린 주소를 조용히 찍는 것보다 빈칸이
+    # 낫기** 때문이다. 빈칸은 화면에서 타임라인이 안 서는 것으로 끝나지만,
+    # 틀린 주소는 다른 이야기의 근거를 이 이슈의 것이라고 주장한다.
     thread_of: dict[str, str] = {}
+    contested: set[str] = set()
     for thread in threads_payload.get("threads") or ():
         thread_id = str(thread.get("thread_id") or "")
         if not thread_id:
             continue
         for event in thread.get("events") or ():
-            event_id = str(event.get("event_id") or "")
-            if event_id:
-                thread_of[event_id] = thread_id
+            # v1 페이로드에는 `source_event_id` 가 없다. 그때는 `event_id` 가
+            # 곧 사건 id 였으므로 그것으로 떨어진다 — 옛 스냅샷을 읽는 빌드가
+            # 여기서 통째로 비지 않게 한다.
+            source_id = str(event.get("source_event_id")
+                            or event.get("event_id") or "")
+            if not source_id:
+                continue
+            if thread_of.setdefault(source_id, thread_id) != thread_id:
+                contested.add(source_id)
     stamped = 0
     for issue in issue_catalog:
-        thread_id = thread_of.get(str(issue.get("issue_id") or ""), "")
+        issue_id = str(issue.get("issue_id") or "")
+        thread_id = "" if issue_id in contested else thread_of.get(issue_id, "")
         # 빈 문자열이라도 칸은 채운다. 없는 칸과 빈 칸을 화면이 구분할 필요가
         # 없고, 칸이 늘 있으면 계약 검사가 한 줄로 끝난다.
         issue["thread_id"] = thread_id
         if thread_id:
             stamped += 1
+    if contested:
+        print(f"[build_data:threads] 사건 {len(contested)}건이 스토리 둘 이상에 "
+              f"걸려 thread_id 를 비웠다 — {sorted(contested)[:3]}")
     return stamped
 
 

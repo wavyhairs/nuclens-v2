@@ -100,7 +100,7 @@ check("유효기한이 없거나 깨졌으면 그 검사만 건너뛴다", () =>
 });
 
 check("모르는 계약 판본은 그리지 않는다", () => {
-  assert.equal(longTermVisible(payload({ version: "thread-web-v2" }), NOW), false);
+  assert.equal(longTermVisible(payload({ version: "thread-web-v3" }), NOW), false);
   assert.equal(longTermVisible(payload({ version: undefined }), NOW), false);
 });
 

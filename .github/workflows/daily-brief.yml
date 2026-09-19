@@ -700,48 +700,6 @@ jobs:
           VAPID_SUBJECT: ${{ vars.VAPID_SUBJECT || 'mailto:nuclens@users.noreply.github.com' }}
         run: python tools/push_notify.py
 
-      # ── 카드뉴스 ───────────────────────────────────────────────────────
-      # 카드는 이제 이 잡이 만들지 않는다. cards.yml 이 굽고·검사하고·커밋하고·
-      # 사이트에 올린다. 여기서는 **깨우기만** 한다.
-      #
-      # 왜 뗐는가: 예전 카드 스텝 다섯 개는 전부 continue-on-error 였다. 카드가
-      # 죽어도 텍스트 브리핑은 나가야 하니 그 자체는 옳았는데, 대가로 실패가
-      # 어디에도 안 남았다 — make_cards.py 가 exit 1 로 알려도 이 워크플로는
-      # 초록불이라 카드가 빠진 날을 사람이 사이트를 열어 보고서야 알았다.
-      # 이제 카드 실패는 Cards 워크플로의 빨간불이고, 이 워크플로는 그대로
-      # 초록불이다. 둘 다 사실이다.
-      #
-      # 왜 **snapshot 저장 뒤**인가 (2026-09-19)
-      # ------------------------------------------------------------------
-      # 카드는 사이트의 순위(briefings.json)를 라이브에서 받아 굽는다. 그래서
-      # 배포 뒤여야 한다는 것까지는 처음부터 맞았는데, 자리를 배포 **직후**에
-      # 두면 Cards 의 마지막 배포가 오늘치 snapshot 과 경주를 한다.
-      #
-      # Cards 는 FAST 로 배포한다(아래). FAST 는 캐시에 저장된 **가장 최근
-      # 검증 snapshot** 을 복원하고, `guard-live --policy equal` 로 그 세대가
-      # 라이브와 같을 때만 올린다. 오늘 snapshot 이 아직 캐시에 없으면 어제 것이
-      # 복원되고 — 낡은 데이터가 올라가지는 않지만(가드가 막는다) Cards 가
-      # 애먼 빨간불이 된다. 저장이 끝난 뒤에 깨우면 그 경주가 없어진다.
-      #
-      # 저장이 실패·생략된 날은 full 로 넘긴다. 그 경우 Cards 의 배포가
-      # build_data 를 다시 돌리지만, 그건 '오늘 snapshot 이 없다'는 사실에
-      # 대한 정직한 대가다.
-      #
-      # 깨우기 자체는 비치명이다 — API 가 한 번 흔들렸다고 아침 브리핑을 실패로
-      # 만들지 않는다. 그 경우 Actions 에서 손으로 Cards 를 돌리면 된다.
-      - name: Trigger cards workflow
-        if: steps.web-deploy.outcome == 'success'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-          # 발송 계약은 여기 남는다 — 텔레그램 앨범은 CARDS_SEND=true 인 날에만
-          # 나간다. cards.yml 은 넘겨받은 값을 그대로 따르므로, 손으로 돌리는
-          # 실행은 그쪽 체크박스가 따로 정한다.
-          SEND: ${{ vars.CARDS_SEND == 'true' && 'true' || 'false' }}
-          DEPLOY_MODE: ${{ steps.production-snapshot-save.outcome == 'success' && 'fast' || 'full' }}
-        run: |
-          gh workflow run cards.yml -R "${{ github.repository }}" -f force=false -f send="$SEND" -f deploy_mode="$DEPLOY_MODE"
-          echo "Cards 워크플로 호출 (send=$SEND · deploy=$DEPLOY_MODE) — 결과는 Actions 의 Cards 에서 본다"
 
       # 관리자 secret은 이 짧은 전용 프로세스에만 노출한다. Deploy/audio/wrangler는
       # TELEGRAM_ADMIN_CHAT_ID를 상속하지 않는다. 미발송 경고는 익일에도 재시도된다.
@@ -875,6 +833,76 @@ jobs:
             git rebase origin/main || { git rebase --abort || true; exit 0; }
           done
           echo "캐시 push 실패 — 비치명, 다음 빌드에서 재시도"
+
+      # ── 카드뉴스 ───────────────────────────────────────────────────────
+      # 카드는 이제 이 잡이 만들지 않는다. cards.yml 이 굽고·검사하고·커밋하고·
+      # 사이트에 올린다. 여기서는 **깨우기만** 한다.
+      #
+      # 왜 뗐는가: 예전 카드 스텝 다섯 개는 전부 continue-on-error 였다. 카드가
+      # 죽어도 텍스트 브리핑은 나가야 하니 그 자체는 옳았는데, 대가로 실패가
+      # 어디에도 안 남았다 — make_cards.py 가 exit 1 로 알려도 이 워크플로는
+      # 초록불이라 카드가 빠진 날을 사람이 사이트를 열어 보고서야 알았다.
+      # 이제 카드 실패는 Cards 워크플로의 빨간불이고, 이 워크플로는 그대로
+      # 초록불이다. 둘 다 사실이다.
+      #
+      # 왜 **snapshot 저장 뒤**인가 (2026-09-19)
+      # ------------------------------------------------------------------
+      # 카드는 사이트의 순위(briefings.json)를 라이브에서 받아 굽는다. 그래서
+      # 배포 뒤여야 한다는 것까지는 처음부터 맞았는데, 자리를 배포 **직후**에
+      # 두면 Cards 의 마지막 배포가 오늘치 snapshot 과 경주를 한다.
+      #
+      # Cards 는 FAST 로 배포한다(아래). FAST 는 캐시에 저장된 **가장 최근
+      # 검증 snapshot** 을 복원하고, `guard-live --policy equal` 로 그 세대가
+      # 라이브와 같을 때만 올린다. 오늘 snapshot 이 아직 캐시에 없으면 어제 것이
+      # 복원되고 — 낡은 데이터가 올라가지는 않지만(가드가 막는다) Cards 가
+      # 애먼 빨간불이 된다. 저장이 끝난 뒤에 깨우면 그 경주가 없어진다.
+      #
+      # 저장이 실패·생략된 날은 full 로 넘긴다. 그 경우 Cards 의 배포가
+      # build_data 를 다시 돌리지만, 그건 '오늘 snapshot 이 없다'는 사실에
+      # 대한 정직한 대가다.
+      #
+      # 깨우기 자체는 비치명이다 — API 가 한 번 흔들렸다고 아침 브리핑을 실패로
+      # 만들지 않는다. 그 경우 Actions 에서 손으로 Cards 를 돌리면 된다.
+      #
+      # 왜 **장기 스토리 판정과 원장 커밋 뒤**인가 (2026-09-20)
+      # ------------------------------------------------------------------
+      # 이 스텝은 오래 snapshot 저장 **직후**에 있었다. 그 자리에서는 카드가
+      # 오늘의 스토리를 영영 볼 수 없다 — 아래 순서를 보면 이유가 한 줄이다:
+      #
+      #     Deploy web            build_data 가 threads.json 을 만든다
+      #     Trigger cards         ← 예전 자리
+      #     Build long-term stories   오늘 사건의 스레드 **판정이 여기서 시작**
+      #     Commit review cache       thread_ledger.json 이 여기서 커밋된다
+      #
+      # 즉 카드는 오늘 판정이 시작되기 **전에** 깨어났다. 게다가 Deploy 스텝은
+      # `git reset --hard origin/main` 으로 시작하므로 그때 배포되는
+      # threads.json 은 구조적으로 **어제 원장**이다.
+      #
+      # 라이브 실측 2026-09-20: 05:43 에 만들어진 threads.json 에 그날 날짜의
+      # 사건이 **0건**이었고, today.json 이슈 15건 중 thread_id 를 가진 것은
+      # 2건, 카드가 쓰는 상위 3건 중에는 0건이었다. 지난 30 브리핑일을 카드
+      # 굽는 시점의 원장으로 되짚으면 상위 3건에 스토리 후보가 있는 날이
+      # 13/30(43%)이다. 판정·커밋 뒤로 옮기면 20/30 이 된다.
+      #
+      # 치르는 값은 **카드 게시가 20~25분 늦어지는 것**이다(위 판정 스텝의
+      # timeout 이 20분). 텍스트 브리핑은 이미 나간 뒤라 늦는 쪽이 낫다고 봤다 —
+      # 카드가 오늘의 스토리를 못 보는 것은 늦는 문제가 아니라 없는 문제다.
+      #
+      # 위 커밋 스텝이 실패한 날은 원장이 main 에 없어 카드가 어제 판정으로
+      # 떨어진다. 그래도 깨운다 — 일일 카드는 스토리와 무관하게 나가야 한다.
+      - name: Trigger cards workflow
+        if: steps.web-deploy.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # 발송 계약은 여기 남는다 — 텔레그램 앨범은 CARDS_SEND=true 인 날에만
+          # 나간다. cards.yml 은 넘겨받은 값을 그대로 따르므로, 손으로 돌리는
+          # 실행은 그쪽 체크박스가 따로 정한다.
+          SEND: ${{ vars.CARDS_SEND == 'true' && 'true' || 'false' }}
+          DEPLOY_MODE: ${{ steps.production-snapshot-save.outcome == 'success' && 'fast' || 'full' }}
+        run: |
+          gh workflow run cards.yml -R "${{ github.repository }}" -f force=false -f send="$SEND" -f deploy_mode="$DEPLOY_MODE"
+          echo "Cards 워크플로 호출 (send=$SEND · deploy=$DEPLOY_MODE) — 결과는 Actions 의 Cards 에서 본다"
 
       # 하루 1회 실제 브라우저 렌더링 검증 — API 정상인데 app.js 오류로 화면만
       # 깨지는 경우(2026-08-01 빈 화면 사고 유형)를 잡는다. 브라우저 설치 비용

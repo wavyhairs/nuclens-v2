@@ -100,6 +100,37 @@ class DailyBriefHandsCardsOffTest(unittest.TestCase):
         trigger = self.blocks.index(step(self.blocks, "Trigger cards workflow"))
         self.assertLess(index_of(self.blocks, "id: production-snapshot-save"), trigger)
 
+    def test_cards_are_woken_after_todays_stories_have_been_judged(self):
+        """**카드는 오늘의 스토리가 판정된 뒤에 깨어난다** (2026-09-20).
+
+        이 스텝은 오래 snapshot 저장 직후에 있었고, 그 자리에서는 카드가 오늘의
+        스토리를 영영 볼 수 없었다. 순서가 이랬기 때문이다:
+
+            Deploy web                build_data 가 threads.json 을 만든다
+            Trigger cards             ← 예전 자리
+            Build long-term stories   오늘 사건의 판정이 **여기서 시작**
+            Commit review cache       thread_ledger.json 이 여기서 커밋된다
+
+        즉 카드는 오늘 판정이 시작되기 전에 깨어났다. 게다가 Deploy 스텝은
+        `git reset --hard origin/main` 으로 시작하므로 그때 배포되는
+        threads.json 은 구조적으로 어제 원장이다.
+
+        라이브 실측 2026-09-20: 05:43 에 만들어진 threads.json 에 그날 날짜의
+        사건이 0건이었고, today.json 이슈 15건 중 thread_id 를 가진 것은 2건,
+        카드가 쓰는 상위 3건 중에는 0건이었다. 지난 30 브리핑일을 카드 굽는
+        시점의 원장으로 되짚으면 상위 3건에 후보가 있는 날이 13/30 이다.
+        판정·커밋 뒤로 옮기면 20/30 이 된다.
+
+        치르는 값은 카드 게시가 20~25분 늦어지는 것이다. 카드가 오늘의 스토리를
+        못 보는 것은 늦는 문제가 아니라 없는 문제라 그쪽을 골랐다.
+        """
+        trigger = self.blocks.index(step(self.blocks, "Trigger cards workflow"))
+        self.assertLess(self.blocks.index(step(self.blocks, "Build long-term stories")),
+                        trigger, "오늘 스토리 판정보다 앞에서 깨운다")
+        self.assertLess(
+            self.blocks.index(step(self.blocks, "Commit issue review cache + data gate metrics")),
+            trigger, "원장이 main 에 커밋되기 전에 깨운다 — 카드 체크아웃이 못 본다")
+
     def test_the_deploy_mode_follows_whether_that_snapshot_exists(self):
         """오늘 snapshot 이 저장됐으면 fast, 아니면 full.
 
@@ -152,6 +183,31 @@ class CardsWorkflowShowsItsFailuresTest(unittest.TestCase):
                  for needle in ("make_cards.py", "publish_cards.py",
                                 "tools/verify_cards.py", "git commit")]
         self.assertEqual(order, sorted(order))
+
+    def test_the_material_is_fetched_as_one_deployment_generation(self):
+        """네 파일을 받고, **같은 세대인지 확인한다** (2026-09-20).
+
+        예전에는 briefings.json 하나만 받았다. 그 파일의 이슈 행에는
+        `thread_id` 칸이 아예 없어서(라이브 실측: 61일치 전부) 스토리 카드가
+        이슈를 스레드에 이을 길이 없었다. `thread_id` 는 today.json 에 있다.
+
+        받는 도중에 배포가 한 번 더 돌면 오늘 순위 위에 어제 사건이 앉을 수
+        있다 — manifest 를 앞뒤로 받아 비교하고, 계속 갈리면 스토리만 뺀다.
+        """
+        fetch = step(self.blocks, "Fetch live site data (한 세대)")
+        wanted = fetch.split("for f in ", 1)[1].split(";", 1)[0].split()
+        self.assertEqual(sorted(wanted),
+                         sorted(["manifest", "today", "issues", "threads", "briefings"]))
+        self.assertIn('-o "web/public/data/$f.json"', fetch)
+        self.assertIn("generation_id", fetch)
+        self.assertIn('[ "$before" = "$after" ]', fetch)
+        self.assertIn("STORY_SKIP=true", fetch)
+
+    def test_a_generation_mismatch_drops_the_story_not_the_daily_card(self):
+        """일일 카드는 threads 를 안 본다 — 스토리 때문에 빠질 이유가 없다."""
+        story = step(self.blocks, "Make story cards (스토리 있는 날만)")
+        self.assertIn("env.STORY_SKIP != 'true'", story)
+        self.assertNotIn("STORY_SKIP", step(self.blocks, "Make cards"))
 
     def test_the_manual_rerun_keeps_its_two_switches(self):
         """수동 재생성은 날짜를 고를 수 있고 텔레그램 발송 여부를 고를 수 있다."""
