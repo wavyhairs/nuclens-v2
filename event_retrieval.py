@@ -211,7 +211,12 @@ def candidates(index: Index, event: Event, *, limit: int = 12,
         pool |= index.postings.get(f"p:{plant}", set())
     # 어휘는 **판별력이 높은 낱말만** 역색인에서 꺼낸다. 흔한 낱말까지 펼치면
     # 후보 풀이 카탈로그 전체가 된다.
-    ranked_tokens = sorted(event.tokens, key=lambda token: -index.idf.get(token, 0.0))
+    # 동점은 **낱말 자체로** 깬다. `event.tokens` 는 집합이라 순회 순서가 프로세스마다
+    # 달라지고(PYTHONHASHSEED), idf 가 같은 낱말이 흔해서 상위 12칸의 내용이 실행마다
+    # 바뀐다. 실측 2026-09-19: 같은 원장으로 후보가 3,595 / 3,602 / 3,615쌍으로 갈렸다.
+    # 후보가 흔들리면 판정·묶음·thread_id 까지 전부 흔들린다.
+    ranked_tokens = sorted(event.tokens,
+                           key=lambda token: (-index.idf.get(token, 0.0), token))
     for token in ranked_tokens[:12]:
         pool |= index.postings.get(f"t:{token}", set())
     if exclude_self:

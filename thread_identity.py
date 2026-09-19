@@ -55,6 +55,67 @@ GROWTH_BRAKE_SIZE = 4
 # 호기 앵커가 **하나도 없는** 묶음의 상한. 대상이 없으면 무엇으로 묶였는지 말할 수
 # 없고, 실측에서 그런 묶음은 예외 없이 주제였다(테라파워 협력사 전반 21건).
 MAX_EVENTS_WITHOUT_UNIT = 8
+# 거부권이 어느 쌍 때문에 발동했는지 남기는 칸의 상한.
+MAX_BLOCK_DIAGNOSTICS = 40
+
+
+# 제목이 글자까지 같은 사건을 **thread 계층에서만** 한 노드로 본다. 이 창을 넘어
+# 같은 제목이 다시 나오면 다른 사건이다(연례 발표·반복 정비).
+FOLD_MAX_GAP_DAYS = 14
+
+
+def fold_duplicates(events, *, max_gap_days: int = FOLD_MAX_GAP_DAYS) -> dict[str, str]:
+    """제목이 같고 기간이 맞닿는 사건들을 한 노드로 접는다 → ``{event_id: root_id}``.
+
+    **원장을 건드리지 않는다.** `issue_id` 도 `moved_to` 도 그대로다. 접는 것은 이
+    계층이 판정을 읽을 때뿐이고, 묶음 결과는 다시 실제 사건 id 로 펴서 내보낸다.
+
+    왜 필요한가
+    -----------
+    원장에는 제목이 **글자까지 같은** 사건이 남아 있다(2026-09-19 실측 107건).
+    Event 신원이 못 붙인 자리이고 그 자체로도 결함이지만, 더 나쁜 것은 이 둘이
+    같은 제3의 사건에 대해 **서로 반대 판정**을 받는다는 점이다 —
+
+        story-87c6c33c 「원안위, 2027년 예산 3,030억…」 ↔ 오르비텍 = different_thread
+        story-706bd2b0 「원안위, 2027년 예산 3,030억…」 ↔ 오르비텍 = same_thread
+
+    이 모순은 두 방향으로 샌다. 거부권이 없으면 뒤쪽 고리가 오병합을 만들고,
+    거부권을 걸면 앞쪽이 **같은 제목의 두 사건을 서로 다른 스토리로 갈라놓는다.**
+    실측에서 거부권만 걸었을 때 그런 분리가 9건에서 14건으로 늘었다(자포리자
+    '7번째 국지적 휴전' 두 건이 다른 스토리로 갈리는 식). 접고 나면 0이 된다.
+
+    왜 제목 완전일치인가
+    --------------------
+    느슨하게 잡을 이유가 없다. 여기서 잘못 접으면 서로 다른 사건이 한 노드가 되어
+    **거부권을 통째로 우회한다** — 정확히 이 파일이 막으려는 것을 스스로 하는 꼴이다.
+    유사도 문턱은 이미 `issue_continuity` 하나가 갖고 있고, 그 판정은 감점용이라
+    넓게 잡혀 있어 여기에 쓸 수 없다(`issue_change_log` 가 같은 이유로 그 문턱을
+    빌려 쓰지 않는다).
+    """
+    buckets: dict[str, list] = defaultdict(list)
+    for event in events:
+        key = "".join(str(event.title or "").split())
+        if key:
+            buckets[key].append(event)
+
+    roots = {event.issue_id: event.issue_id for event in events}
+    for _key, bucket in sorted(buckets.items()):
+        if len(bucket) < 2:
+            continue
+        bucket.sort(key=lambda event: (_first_seen(event), event.issue_id))
+        root = bucket[0]
+        chain_end = root.last_seen or root.first_seen
+        for event in bucket[1:]:
+            start = event.first_seen
+            if chain_end and start and (start - chain_end).days > max_gap_days:
+                # 창이 끊겼다. 여기서부터 새 사슬이다.
+                root, chain_end = event, (event.last_seen or event.first_seen)
+                continue
+            roots[event.issue_id] = root.issue_id
+            end = event.last_seen or event.first_seen
+            if end and (chain_end is None or end > chain_end):
+                chain_end = end
+    return roots
 
 
 def mint_id(anchor_event_id: str) -> str:
@@ -95,16 +156,25 @@ def _text(event) -> str:
     return f"{event.title} {event.summary}"
 
 
-def cluster(events_by_id: dict, accepted: list[tuple[str, str]]) -> tuple[list[set], dict]:
+def cluster(events_by_id: dict, accepted: list[tuple[str, str]],
+            negative: dict[str, set] | None = None) -> tuple[list[set], dict]:
     """승인된 고리로 사건을 묶는다. 오염 방지는 여기서 건다.
 
     Args:
         accepted: (event_id, event_id) — 판정이 같은 스토리라고 한 쌍.
+        negative: ``{event_id: {event_id, ...}}`` — 판정이 **다른 스토리라고 명시한**
+            쌍. 주면 거부권으로 쓴다. 없으면 종전과 같이 돈다.
     """
+    negative = negative or {}
     stats = {"links": len(accepted), "joined": 0, "blocked_conflict": 0,
              "blocked_scope": 0, "blocked_weak_link": 0, "blocked_growth": 0,
              "blocked_incoherent": 0, "blocked_anchorless": 0,
-             "blocked_anchor_mismatch": 0, "blocked_size": 0}
+             "blocked_anchor_mismatch": 0, "blocked_size": 0,
+             "blocked_negative_edge": 0, "negative_pairs": sum(
+                 len(value) for value in negative.values()) // 2}
+    # 어느 쌍 때문에 막혔는지. 사람이 스토리를 의심할 때 제일 먼저 묻는 것이고,
+    # 통계만으로는 영영 답할 수 없다. 상한을 둔다 — 진단이지 원장이 아니다.
+    blocked_by: list[dict] = []
     link_count: dict[tuple[str, str], int] = defaultdict(int)
     for left, right in accepted:
         link_count[tuple(sorted((left, right)))] += 1
@@ -120,6 +190,28 @@ def cluster(events_by_id: dict, accepted: list[tuple[str, str]]) -> tuple[list[s
         if left_root == right_root:
             continue
         left_side, right_side = members[left_root], members[right_root]
+
+        # **거부권이 가장 먼저다.** positive 고리 하나가 이미 나와 있는 negative
+        # 증거를 우회하지 못하게 하는 것이 이 검사의 전부다. 쌍 단위로 보면 안
+        # 된다 — 지금 이으려는 두 사건 사이에는 모순이 없어도, 그 두 **묶음**
+        # 사이에는 있을 수 있다. 실측의 오병합 두 건이 정확히 그 모양이었다.
+        #
+        #     Left = {우라늄, 지분시나리오}   Right = {원전8기}
+        #     지분시나리오 ↔ 원전8기 = different_thread  → 여기서 막힌다
+        #
+        # 집합 조회라 `_cluster_conflict` 의 정규식보다 싸다. 그래서 앞에 둔다.
+        conflicting = [(left_id, right_id)
+                       for left_id in sorted(left_side)
+                       for right_id in sorted(right_side)
+                       if right_id in negative.get(left_id, ())]
+        if conflicting:
+            stats["blocked_negative_edge"] += 1
+            if len(blocked_by) < MAX_BLOCK_DIAGNOSTICS:
+                blocked_by.append({"left": left, "right": right,
+                                   "left_size": len(left_side),
+                                   "right_size": len(right_side),
+                                   "pairs": conflicting[:3]})
+            continue
 
         if len(left_side) + len(right_side) > MAX_EVENTS_PER_THREAD:
             stats["blocked_size"] += 1
@@ -190,6 +282,9 @@ def cluster(events_by_id: dict, accepted: list[tuple[str, str]]) -> tuple[list[s
         members[new_root] = merged
         stats["joined"] += 1
 
+    # 이름이 `blocked_` 로 시작하지 않는다 — 그 접두사는 **세는 칸**의 것이고,
+    # 호출부가 전부 더해서 쓴다(tests/test_thread_identity.py 가 못 박는다).
+    stats["negative_block_samples"] = blocked_by
     groups = [group for group in union.groups().values() if len(group) > 1]
     groups.sort(key=lambda group: (min(group), len(group)))
     return groups, stats

@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import event_retrieval  # noqa: E402
+import thread_evidence  # noqa: E402
 import thread_identity  # noqa: E402
 import thread_judge  # noqa: E402
 import thread_ledger  # noqa: E402
@@ -64,6 +65,74 @@ def gather_pairs(index: event_retrieval.Index, *, per_event: int,
     # 점수가 높은 쌍부터 묻는다. 예산이 걸리면 약한 쌍이 다음 회차로 밀린다.
     rows.sort(key=lambda row: (-row["score"], row["key"]))
     return rows[:cap] if cap else rows
+
+
+def build_edges(pairs: list[dict], verdicts: dict, roots: dict[str, str]) -> tuple:
+    """판정을 **고리 두 종류**로 나눈다 — 잇는 것과, 잇지 못하게 막는 것.
+
+    여기가 이번 수정의 핵심이다. 종전에는 이 자리가 한 줄이었다 —
+
+        accepted = [... if verdict == "same_thread"]
+
+    `different_thread` 판정 2,368건이 그 줄에서 통째로 버려졌다. `cluster()` 는
+    positive 고리만 받으므로, A≠C 라는 정확한 판정이 있어도 A=B·B=C 두 고리가
+    있으면 A·B·C 가 한 스토리가 된다. 이 함수가 그 증거를 살려서 넘긴다.
+
+    **규칙 거부를 negative 로 쓰지 않는다.**
+    `thread_judge.rule_verdict` 도 `different_thread` 를 돌려주지만 그것은 값싼
+    거부지 판정이 아니다. 대부분이 `no_shared_identity` — "구조화 칸이 비어 있어
+    볼 것이 없었다"는 뜻이다(실측 3,620쌍 중 1,390쌍). 그걸 거부권으로 쓰면
+    엔티티가 비어 있는 옛 사건이 무엇과도 못 합쳐진다. 거부권은 모델이 **보고
+    나서 다르다고 한** 쌍만 갖는다. `unit_conflict` 쪽은 이미 `cluster()` 의
+    `_cluster_conflict` 가 묶음 전체에 걸고 있어 여기서 또 셀 필요가 없다.
+
+    `uncertain` 도 쓰지 않는다. 판단이 안 선 것과 다르다고 판정한 것은 다르다.
+
+    Args:
+        roots: `thread_identity.fold_duplicates` 의 결과. 제목이 같은 중복 사건
+            둘이 같은 제3의 사건에 **반대 판정**을 남기는 일이 실제로 있어서,
+            고리를 접힌 노드 기준으로 만든다.
+
+    Returns:
+        (accepted, negative, stats)
+    """
+    accepted: list[tuple[str, str]] = []
+    negative: dict[str, set] = defaultdict(set)
+    stats = Counter()
+    for row in pairs:
+        verdict = verdicts.get(row["key"]) or {}
+        left_root = roots.get(row["left"].issue_id, row["left"].issue_id)
+        right_root = roots.get(row["right"].issue_id, row["right"].issue_id)
+        kind = verdict.get("verdict")
+        if kind == "same_thread":
+            ok, reason = thread_evidence.gate(verdict, row["left"], row["right"],
+                                              row.get("signals"))
+            if not ok:
+                stats[f"gated_{reason}"] += 1
+                continue
+            stats["links"] += 1
+            if left_root == right_root:
+                stats["link_within_fold"] += 1
+                continue
+            accepted.append((left_root, right_root))
+        elif kind == "different_thread" and verdict.get("method") in ("cache", "llm"):
+            if left_root == right_root:
+                # 같은 사건의 두 사본이 서로 다르다고 판정됐다. 증거가 아니라 잡음이다.
+                stats["negative_within_fold"] += 1
+                continue
+            negative[left_root].add(right_root)
+            negative[right_root].add(left_root)
+            stats["negatives"] += 1
+    return accepted, dict(negative), dict(stats)
+
+
+def expand_folds(groups: list[set], roots: dict[str, str]) -> list[set]:
+    """접힌 노드를 실제 사건 id 로 되편다. 원장·화면은 실제 id 만 본다."""
+    members: dict[str, list[str]] = defaultdict(list)
+    for event_id, root in roots.items():
+        members[root].append(event_id)
+    return [{event_id for node in group for event_id in members.get(node, [node])}
+            for group in groups]
 
 
 def derive_scope(thread: dict, index: event_retrieval.Index) -> dict:
@@ -127,12 +196,24 @@ def build(args) -> int:
           f"(호출 {judge_stats['calls']}) · 실패 {judge_stats['failed']} "
           f"[{judge_stats['status']}]")
 
-    accepted = [(row["left"].issue_id, row["right"].issue_id) for row in pairs
-                if (verdicts.get(row["key"]) or {}).get("verdict") == "same_thread"]
-    groups, cluster_stats = thread_identity.cluster(index.by_id, accepted)
+    # 제목이 같은 중복 사건을 **이 계층에서만** 한 노드로 본다. 원장은 그대로다.
+    roots = thread_identity.fold_duplicates(index.events)
+    nodes = {event_id: event for event_id, event in index.by_id.items()
+             if roots.get(event_id, event_id) == event_id}
+    folded = len(index.by_id) - len(nodes)
+    accepted, negative, link_stats = build_edges(pairs, verdicts, roots)
+    print(f"[threads] 노드 {len(nodes)} (중복 {folded}건 접힘) · "
+          f"고리 {len(accepted)} · 거부권 {link_stats.get('negatives', 0)}쌍 · "
+          f"게이트 거부 {sum(value for key, value in link_stats.items() if key.startswith('gated_'))}")
+
+    groups, cluster_stats = thread_identity.cluster(nodes, accepted, negative)
+    groups = expand_folds(groups, roots)
+    cluster_stats["gate"] = link_stats
+    cluster_stats["folded_events"] = folded
     print(f"[threads] 묶음 {len(groups)}개 · 고리 {cluster_stats['links']} → "
           f"결합 {cluster_stats['joined']} · 거부(호기 {cluster_stats['blocked_conflict']} / "
-          f"약한고리 {cluster_stats['blocked_weak_link']} / 크기 {cluster_stats['blocked_size']})")
+          f"약한고리 {cluster_stats['blocked_weak_link']} / 크기 {cluster_stats['blocked_size']} / "
+          f"**거부권 {cluster_stats['blocked_negative_edge']}**)")
 
     store = thread_ledger.load_store()
     owners = thread_ledger.owner_index(store)
