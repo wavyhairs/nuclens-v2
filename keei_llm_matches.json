@@ -17,11 +17,11 @@
     },
     "issue-01083ffbfa10992b--8fce4c09fa": {
       "generation_policy_fingerprint": "04fca2b5691281bc",
-      "issue_title": "美 원전 투자 재시동 및 국내 전력수요 급증, 건설사 수주 기대감 상승",
+      "issue_title": "미국, 원전 기자재 조달에 24조원 대출…韓 기업 기회",
       "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
       "prompt_version": 1,
-      "reason": "투자 환경과 특정 대출 약정은 다름",
-      "same_event": false
+      "reason": "동일한 미 에너지부의 대출 지원 정책임",
+      "same_event": true
     },
     "issue-01083ffbfa10992b--d7e636e0b2": {
       "issue_title": "美 원전 투자 재시동 및 국내 전력수요 급증, 건설사 수주 기대감 상승",
@@ -143,10 +143,11 @@
       "same_event": false
     },
     "issue-07ef074eb438fd8a--dcf5909f44": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
       "issue_title": "노스 애나 원전, 부지 조기 허가(ESP) 갱신 신청",
       "keei_item": "미 NRC, AP1000 설계 인증 갱신 조기 신청 승인",
       "prompt_version": 1,
-      "reason": "대상 원전과 허가 종류 다름",
+      "reason": "대상 원전과 안건이 서로 다름",
       "same_event": false
     },
     "issue-09bf8e63f8773688--4fe7b05f50": {
@@ -1106,6 +1107,14 @@
       "reason": "대상 국가와 프로젝트가 서로 다름",
       "same_event": false
     },
+    "issue-410bd72bfb8cf04f--8fce4c09fa": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "美 원전 투자 재시동 및 국내 전력수요 급증, 건설사 수주 기대감 상승",
+      "keei_item": "미 에너지부, 원전 공급망 재건 위한 26조 원 규모의 조건부 대출 약정 발표",
+      "prompt_version": 1,
+      "reason": "A는 건설사 기대감, B는 정부 대출 정책임",
+      "same_event": false
+    },
     "issue-4113d294aea75ee0--23a6f604ae": {
       "generation_policy_fingerprint": "04fca2b5691281bc",
       "issue_title": "이 대통령, 해남 청정에너지로 미래 산업 성장 동력 강조",
@@ -1756,6 +1765,22 @@
       "reason": "주체·국가·사안이 다름",
       "same_event": false
     },
+    "issue-63c61266bb0dc771--77d959ece5": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원안위, 부산 기장군 혁신형 SMR 안전성 심사 착수",
+      "keei_item": "한국 원안위, i-SMR 표준설계인가 안전성 심사 착수",
+      "prompt_version": 1,
+      "reason": "동일한 i-SMR 안전성 심사 착수 건임",
+      "same_event": true
+    },
+    "issue-63c61266bb0dc771--d65bac9c4d": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "원안위, 부산 기장군 혁신형 SMR 안전성 심사 착수",
+      "keei_item": "한수원, 신규 대형원전 및 SMR 부지로 각각 경북 영덕군과 부산 기장군 선정",
+      "prompt_version": 1,
+      "reason": "심사 착수와 부지 선정은 다른 사건임",
+      "same_event": false
+    },
     "issue-64e9af97c5aec46c--249f1333d0": {
       "issue_title": "한국 SMR 동력 컨테이너선 개념 설계, 미국선급협회(ABS)로부터 기본승인(AIP) 획득",
       "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
@@ -1824,10 +1849,11 @@
       "same_event": false
     },
     "issue-6a25f94bf83612cd--23a6f604ae": {
-      "issue_title": "김주영 의원, AI 시대 전력산업 구조개편 국회 심포지엄 개최",
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "AI 시대 전력수요 대응 위한 한전 중심 전력산업 재편 논의 본격화",
       "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
       "prompt_version": 1,
-      "reason": "주체와 안건이 다름",
+      "reason": "한국과 일본의 서로 다른 정책임",
       "same_event": false
     },
     "issue-6a25f94bf83612cd--8fce4c09fa": {
@@ -2234,6 +2260,14 @@
       "prompt_version": 1,
       "reason": "폭염으로 인한 원전 가동 영향 동일",
       "same_event": true
+    },
+    "issue-91479bf4a11beb13--a50cc0c8f8": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "독일, 프라마톰의 러시아 설계 핵연료봉 제조 승인",
+      "keei_item": "미 NRC, Framatome에 최대 10% 농축 연료 제조 승인",
+      "prompt_version": 1,
+      "reason": "독일과 미국의 서로 다른 승인 건임",
+      "same_event": false
     },
     "issue-91479bf4a11beb13--dcf5909f44": {
       "issue_title": "독일, 프라마톰의 러시아 설계 핵연료봉 제조 승인",
@@ -3492,6 +3526,14 @@
       "reason": "국제 표준화 논의와 특정 기업 사업은 다름",
       "same_event": false
     },
+    "issue-db89d389ada4d697--10aeef51d9": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "IAEA, 해상원자력 국제협력체 'ATLAS' 출범",
+      "keei_item": "IAEA, 해상 원자력 이용 촉진 위한 국제협력체계 ‘ATLAS’ 출범",
+      "prompt_version": 1,
+      "reason": "동일한 ATLAS 출범 사건임",
+      "same_event": true
+    },
     "issue-db89d389ada4d697--ddd33cac84": {
       "issue_title": "IAEA, 해상원자력 국제협력체 'ATLAS' 출범",
       "keei_item": "일본 니가타현, 원전 재가동에 따른 도쿄전력 지원금 활용 방안 마련",
@@ -3577,6 +3619,14 @@
       "keei_item": "미 에너지부, Diablo Canyon 1호기 계속운전에 약 3,800억 원 지급",
       "prompt_version": 1,
       "reason": "정책 홍보와 개별 원전 지원",
+      "same_event": false
+    },
+    "issue-ddf89f92aa789c8a--249f1333d0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "한수원, 필리핀과 원자력 협력 MOU 체결로 아시아 시장 확대",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "한-필리핀 협력과 미-한-일 협력은 다름",
       "same_event": false
     },
     "issue-e0c2d46c6a2b5c2a--249f1333d0": {
@@ -3993,6 +4043,14 @@
       "reason": "서로 다른 국가와 사안임",
       "same_event": false
     },
+    "story-0aaa2fb5b006150b--c2b8808fe0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "정부, 2030년 재생에너지 100GW 달성 위한 범정부 TF 운영",
+      "keei_item": "스페인 정부, Almaraz 원전 운영허가 2030년까지 갱신",
+      "prompt_version": 1,
+      "reason": "재생에너지 TF와 원전 운영허가는 다름",
+      "same_event": false
+    },
     "story-10b0434dfdbd3b5c--0b3993f90d": {
       "generation_policy_fingerprint": "04fca2b5691281bc",
       "issue_title": "미국 레이븐-플린트, 우라늄 전환 시설 인허가 신청서 NRC 접수",
@@ -4242,6 +4300,14 @@
       "keei_item": "미 NRC, 원전 인허가 관련 의무 공청회 개최 시점 및 절차 개편",
       "prompt_version": 1,
       "reason": "개편 대상과 범위가 서로 다른 별개의 사안임",
+      "same_event": false
+    },
+    "story-59f1875f61c9d8fe--23a6f604ae": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "일본, GX 전략지구 지정 및 원전 안전 신뢰 위기 직면",
+      "keei_item": "일본, 원전 전력 기반 AI 데이터센터 등 GX 산업단지 조성 본격화",
+      "prompt_version": 1,
+      "reason": "GX 전략지구와 산업단지 조성은 다름",
       "same_event": false
     },
     "story-603a7c13853cd80b--0b3993f90d": {
@@ -4527,6 +4593,14 @@
       "reason": "인도 데이터센터와 일본 GX 단지는 다른 사건임",
       "same_event": false
     },
+    "story-bda5f625aa462afc--249f1333d0": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "미 농무부(USDA), 농촌 전력협동조합 대상 1.75억 달러 원전 지원 프로그램 신설",
+      "keei_item": "미국, 아시아 지역 SMR 도입 위해 한국·일본과 협력각서 체결 및 지원 확대",
+      "prompt_version": 1,
+      "reason": "미국 내 지원과 아시아 지원은 다름",
+      "same_event": false
+    },
     "story-c13d41dd8a54217c--3afede2c57": {
       "generation_policy_fingerprint": "04fca2b5691281bc",
       "issue_title": "고준위 방폐장 부지 공모, 1단계 선정 시 최대 200억 지원",
@@ -4580,6 +4654,22 @@
       "keei_item": "일본 정부, 에너지 수급구조 강화 정책 패키지 발표…원전 최대한 활용",
       "prompt_version": 1,
       "reason": "서로 다른 정책 및 협력 사안임",
+      "same_event": false
+    },
+    "story-c3de2b9a5fc71ff5--063ee0f56f": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "태국·영국, 미국산 SMR 도입 타당성 조사 및 설계 심사 착수",
+      "keei_item": "필리핀 Meralco, 미국 USTDA 지원 SMR 도입 타당성 조사 수행기관 선정",
+      "prompt_version": 1,
+      "reason": "대상 국가와 프로젝트 주체가 다름",
+      "same_event": false
+    },
+    "story-c3de2b9a5fc71ff5--77d959ece5": {
+      "generation_policy_fingerprint": "04fca2b5691281bc",
+      "issue_title": "태국·영국, 미국산 SMR 도입 타당성 조사 및 설계 심사 착수",
+      "keei_item": "한국 원안위, i-SMR 표준설계인가 안전성 심사 착수",
+      "prompt_version": 1,
+      "reason": "SMR 타당성 조사와 i-SMR 심사는 다름",
       "same_event": false
     },
     "story-c5a7f5394e4063a7--ddd33cac84": {
