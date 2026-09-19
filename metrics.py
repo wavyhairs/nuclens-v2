@@ -13,8 +13,7 @@
 지표:
     delivered_per_day     하루 평균 발송 카드 수
     source_diversity      고유 도메인 수 / 발송 수
-    topic_diversity       고유 theme(없으면 section) 수 / 발송 수
-    invest_omission_rate  투자 관점이 생략된 카드 비율 (theme 없음)
+    topic_diversity       고유 section 수 / 발송 수
     report_rec_count      보고서 추천 발송 건수
 
 (피드백 기반 지표(positive/noise/precision/nDCG)는 2026-07-16 피드백 기능
@@ -76,14 +75,14 @@ def compute_metrics(delivered: list[dict], days: int) -> dict:
 
     if len(delivered) >= MIN_DELIVERED:
         domains = {(r.get("domain") or "").lower() for r in delivered if r.get("domain")}
+        # `theme` 은 투자 구조화 필드가 만들던 값이라 더는 생산되지 않는다. 옛
+        # delivery_log 줄에는 남아 있으므로 계속 읽어 과거 구간의 수치를 지킨다.
         topics = {(r.get("theme") or r.get("section") or "") for r in delivered}
         topics.discard("")
         m["source_diversity"] = round(len(domains) / len(delivered), 3)
         m["topic_diversity"] = round(len(topics) / len(delivered), 3)
-        m["invest_omission_rate"] = round(
-            sum(1 for r in delivered if not r.get("theme")) / len(delivered), 3)
     else:
-        m["source_diversity"] = m["topic_diversity"] = m["invest_omission_rate"] = INSUFFICIENT
+        m["source_diversity"] = m["topic_diversity"] = INSUFFICIENT
 
     m["report_rec_count"] = sum(1 for r in delivered if r.get("region") == "보고서추천")
 

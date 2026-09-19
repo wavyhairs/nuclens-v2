@@ -52,37 +52,41 @@ _CHECK_BODY_LIMIT = 1200
 
 # ---- 프롬프트 1: 카드 합성 ---------------------------------------------------
 
-SYNTH_SYSTEM_PROMPT = """당신은 원자력·에너지를 투자 관점으로 번역하는 뉴스 큐레이터입니다.
-독자는 원자력 업계를 잘 아는 투자자(한수원 정책실 실무자이기도 함)입니다.
+SYNTH_SYSTEM_PROMPT = """당신은 한국수력원자력 정책실의 원자력 정책·산업 분석관입니다.
+독자는 원자력 정책·산업 실무자입니다. 투자자가 아닙니다.
 
 원자력·에너지 뉴스 항목 N개를 받습니다. 각 항목을 아침에 빠르게 훑을 수 있는 '카드'로
-정리하세요. 톤: 사실 중심, 결론 먼저, 과장·홍보·클리셰 금지. Doomberg 같은 냉정한
-에너지-투자 번역체.
+정리하세요. 톤: 사실 중심, 결론 먼저, 과장·홍보·클리셰 금지.
 
 ⚠️ 출력은 정확히 아래 JSON. 다른 텍스트(설명, 펜스 ```, 머리말)는 단 한 글자도 금지.
 
-{"cards": [{"idx": 0, "headline": "한국어 헤드라인", "what": "한국어 1문장", "why": "한국어 1문장 또는 null", "investment": "한국어 1문장 또는 null", "kr_takeaway": "한국어 1문장 또는 null"}]}
+{"cards": [{"idx": 0, "headline": "한국어 헤드라인", "what": "한국어 1문장", "why": "한국어 1문장 또는 null", "kr_takeaway": "한국어 1문장 또는 null"}]}
 
-세 칸(why·investment·kr_takeaway)은 역할이 다릅니다. 절대 같은 말을 반복하지 마세요:
-  - why         = 업계/세상 관점 (이 사건이 원자력·에너지 산업에 왜 큰일인가)
-  - investment  = 투자 관점 (이 뉴스가 가리키는 투자 테마·방향 + 수혜/피해 섹터)
+세 칸은 역할이 다릅니다. 절대 같은 말을 반복하지 마세요:
+  - what        = 이번 기사에서 새로 확인된 사실
+  - why         = 이 사건이 **무엇을 바꾸는가** (기존 상태 → 이번 변화)
   - kr_takeaway = 한수원 관점 (한국·KEPCO가 이걸 보고 뭘 챙기거나 활용하나)
+
+⚠️ **투자 관점은 쓰지 않습니다.** 수혜·피해 기업, 수혜 업종, 투자 테마, 주가·시장
+반응, 투자 시계는 어느 칸에도 넣지 마세요. 근거 없이 산업 수혜·피해를 추론하는 문장도
+금지입니다. 이 브리핑은 투자 뉴스가 아니라 정책·산업 동향 브리핑입니다.
 
 작성 규칙 (★ 환각 방지가 최우선):
 1. headline: 한국어 한 줄(40자 이내). 핵심 고유명사 포함. 영문 약어·기업명
    (SMR, NRC, IAEA, PPA, KEPCO, CEG 등)은 영문 그대로.
 2. what(무슨 일): 한국어 1문장. **제공된 제목·본문에 실제로 있는 사실만.**
    본문이 '(본문 없음 — 제목만)' 이면 제목을 한국어로 옮기는 수준까지만.
-3. why(왜 중요): 한국어 1문장. 업계 관점. **본문에 근거가 있을 때만**, 없으면 null.
-4. investment(투자 관점): 한국어 1문장. 이 뉴스가 가리키는 **투자 테마·방향과
-   수혜/피해 섹터·테마**를 짚음 (예: "데이터센터 전력수요 테마 강화, 원전 재가동·
-   SMR 밸류체인 수혜 / 천연가스 피크발전 상대적 압박").
-   ⚠️ **매수·매도·목표가 같은 투자 권유 절대 금지.** 특정 종목 추천 아님, 테마·방향만.
-   본문에 투자적으로 해석할 근거가 없으면 절대 지어내지 말고 null.
-5. kr_takeaway(한수원 시사점): 한국어 1문장. **본문에 한국·KEPCO·수출·SMR·핵연료·
-   규제 관련 직접 근거가 있을 때만.** 근거 없으면 null.
-6. 모든 idx 가 정확히 한 번씩. 빠지거나 중복 금지.
-7. 확신 없으면 null. null 을 두려워하지 말 것 — 틀린 문장보다 빈 칸이 낫다.
+3. why(왜 중요): 한국어 1문장. **무엇이 달라졌는지**를 쓴다 — 기존 상태에서 이번에
+   무엇이 바뀌었고 어느 정책·사업 단계로 넘어갔는지. **본문에 근거가 있을 때만**,
+   없으면 null. 막연한 의미 부여는 null 과 같다:
+   나쁨: "원자력 산업에 중요한 의미가 있다" / "향후 시장에 영향을 미칠 수 있다"
+   좋음: "정부 검토 단계였던 신규 원전 지원이 실제 예산 프로그램으로 전환됐다."
+4. kr_takeaway(한수원 시사점): 한국어 1문장. **본문에 한국·KEPCO·수출·SMR·핵연료·
+   규제 관련 직접 근거가 있을 때만.** 근거 없으면 null. 억지로 대응방향을 만들지 말 것 —
+   "적극 대응이 필요하다"·"면밀한 모니터링이 필요하다" 류의 권고는 금지다.
+   쓸 수 있으면 **어떤 제도·사업·지표를 봐야 하는지**를 구체적으로 쓴다.
+5. 모든 idx 가 정확히 한 번씩. 빠지거나 중복 금지.
+6. 확신 없으면 null. null 을 두려워하지 말 것 — 틀린 문장보다 빈 칸이 낫다.
 
 입력 형식: 각 항목이
 [idx] 제목
@@ -95,7 +99,7 @@ BODY: 본문 또는 '(본문 없음 — 제목만)'"""
 CHECK_SYSTEM_PROMPT = """당신은 사실 검증기입니다. 뉴스 카드의 문장이 제공된 원문으로
 뒷받침되는지 엄격히 판정합니다.
 
-why·invest·kr 는 본질적으로 BODY(원문) 사실 위에 쌓은 '해석'입니다. 해석 자체는
+why·kr 는 본질적으로 BODY(원문) 사실 위에 쌓은 '해석'입니다. 해석 자체는
 정상이며, 글자 그대로 본문에 없다고 쳐내면 안 됩니다. 당신이 잡아낼 것은 오직
 **환각(날조)** 입니다.
 
@@ -111,16 +115,16 @@ why·invest·kr 는 본질적으로 BODY(원문) 사실 위에 쌓은 '해석'�
    (단, "한국도 ~를 검토할 만하다" 류의 일반적 시사점·제언은 해석이므로 통과.)
 
 통과(목록에 넣지 않음):
-- 본문 사실에서 합리적으로 도출되는 업계적 의미(why), 투자 테마·수혜/피해 방향(invest),
-  정책적 제언(kr). 새로운 사실을 끌어오지 않는 한 모두 정상.
+- 본문 사실에서 합리적으로 도출되는 업계적 의미(why)와 정책적 제언(kr).
+  새로운 사실을 끌어오지 않는 한 모두 정상.
 
 규칙:
-- fields 값은 "why", "invest", "kr" 중에서만.
+- fields 값은 "why", "kr" 중에서만.
 - 한 카드에 날조가 없으면 그 idx 는 등장하지 않음. 전부 정상이면 {"unsupported": []}.
 - 애매하면 통과시킨다 (해석을 존중). 명백한 날조만 잡는다.
 
 입력 형식: 각 카드가
-[idx] WHY: ... | INVEST: ... | KR: ...
+[idx] WHY: ... | KR: ...
 BODY: 원문"""
 
 
@@ -182,8 +186,6 @@ def _synthesize(clusters: list[dict]) -> dict[int, dict]:
             "headline": str(item.get("headline") or "").strip()[:120],
             "what": str(item.get("what") or "").strip()[:300] or None,
             "why": (str(item.get("why")).strip()[:300] if item.get("why") else None),
-            "investment": (str(item.get("investment")).strip()[:300]
-                           if item.get("investment") else None),
             "kr_takeaway": (str(item.get("kr_takeaway")).strip()[:300]
                             if item.get("kr_takeaway") else None),
         }
@@ -199,10 +201,9 @@ def _format_check_input(clusters: list[dict], cards: dict[int, dict]) -> str:
         if not card:
             continue
         why = card.get("why") or "(없음)"
-        inv = card.get("investment") or "(없음)"
         kr = card.get("kr_takeaway") or "(없음)"
         body = (c.get("fulltext") or "").strip()[:_CHECK_BODY_LIMIT] or "(본문 없음 — 제목만)"
-        blocks.append(f"[{i}] WHY: {why} | INVEST: {inv} | KR: {kr}\nBODY: {body}")
+        blocks.append(f"[{i}] WHY: {why} | KR: {kr}\nBODY: {body}")
     return "\n\n---\n\n".join(blocks)
 
 
@@ -212,7 +213,7 @@ def _self_check(clusters: list[dict], cards: dict[int, dict]) -> int:
     검증할 필드가 하나도 없거나 키 없으면 검사 스킵(0).
     검사 자체 실패 시: 보수적으로 원본 유지(제거 안 함) — degrade 우선.
     """
-    has_claims = any((cards.get(i, {}).get("why") or cards.get(i, {}).get("investment")
+    has_claims = any((cards.get(i, {}).get("why")
                       or cards.get(i, {}).get("kr_takeaway")) for i in cards)
     if not has_claims or not is_available():
         return 0
@@ -235,7 +236,7 @@ def _self_check(clusters: list[dict], cards: dict[int, dict]) -> int:
         return 0
 
     # field 키 → 카드 필드명 매핑
-    field_map = {"why": "why", "invest": "investment", "kr": "kr_takeaway"}
+    field_map = {"why": "why", "kr": "kr_takeaway"}
 
     removed = 0
     for item in unsupported:
@@ -289,7 +290,6 @@ def build_cards(pairs: list[tuple[str, dict]], *, self_check: bool = True) -> li
             "headline": s["headline"],
             "what": s.get("what"),
             "why": s.get("why"),
-            "investment": s.get("investment"),
             "kr_takeaway": s.get("kr_takeaway"),
             "cred": credibility(cluster),
         })
@@ -338,6 +338,30 @@ def verify_cards(cards: list[dict]) -> tuple[list[dict], list[dict]]:
 
 # ---- 텔레그램 메시지 포맷 (카드 + 링크 부록) ---------------------------------
 
+def official_badge(card: dict) -> str:
+    """제목 옆 ✅ 배지 — **공식기관 원문일 때만**.
+
+    예전에는 `cred["tier"]` 만 보고 붙였다. tier 는 '이 매체를 신뢰하는가'라서
+    tier1·tier2 에는 통신사·전문지가 함께 들어 있다. 그 결과 `✅ 연합뉴스`·
+    `✅ KBS 뉴스`처럼 **기관 발표가 아닌 기사에 공식출처 표시**가 붙었다
+    (2026-09-19 실측: 국내 8건 중 3건).
+
+    공식 여부를 문장으로 추정하지도 않는다. `credibility()` 는 URL 도메인으로 맞히지
+    못하면 **제목·메타에서 기관명을 찾아**(`via="mention"`) 같은 등급을 준다. 그 경로로는
+    "IAEA 가 …라고 밝혔다"는 Reuters 기사가 `✅ IAEA` 를 달았다(2026-09-19 실측, 해외 1번).
+    기관을 **인용한** 기사와 기관이 **낸** 문서는 다르다 — 배지는 URL 이 그 기관을
+    가리킬 때(`via="domain"`)만 붙인다.
+
+    Google News 경유 링크처럼 도메인을 확인할 수 없으면 배지가 빠진다. 공식 원문에
+    배지가 없는 쪽이, 아닌 기사에 붙는 쪽보다 낫다.
+    """
+    cred = card.get("cred") or {}
+    if cred.get("source_type") != "official" or cred.get("via") != "domain":
+        return ""
+    name = str(cred.get("name") or "").strip()
+    return f"  ✅ {escape(name)}" if name else ""
+
+
 def format_cards_message(cards: list[dict], *, header: str = "오늘의 원자력 브리핑",
                          show_header: bool = True) -> str:
     """카드 리스트 → 텔레그램 HTML 메시지. show_header=False면 섹션용(날짜 헤더 생략)."""
@@ -348,15 +372,11 @@ def format_cards_message(cards: list[dict], *, header: str = "오늘의 원자�
         lines = [f"<b>{escape(header)}</b>", ""]
 
     for i, card in enumerate(cards, 1):
-        cred = card.get("cred") or {}
-        badge = f"  ✅ {escape(cred['name'])}" if cred.get("tier") else ""
-        lines.append(f"<b>📌 {i}. {escape(card['headline'])}</b>{badge}")
+        lines.append(f"<b>📌 {i}. {escape(card['headline'])}</b>{official_badge(card)}")
         if card.get("what"):
             lines.append(f"   • <b>무슨 일:</b> {escape(card['what'])}")
         if card.get("why"):
             lines.append(f"   • <b>왜 중요:</b> {escape(card['why'])}")
-        if card.get("investment"):
-            lines.append(f"   • <b>💰 투자 관점:</b> {escape(card['investment'])}")
         if card.get("kr_takeaway"):
             lines.append(f"   • <b>🇰🇷 한수원 시사점:</b> {escape(card['kr_takeaway'])}")
 

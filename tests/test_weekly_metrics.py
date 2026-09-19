@@ -133,14 +133,15 @@ class TestMetrics(unittest.TestCase):
     def test_insufficient_data(self):
         m = metrics.compute_metrics([], 30)
         self.assertEqual(m["source_diversity"], "insufficient_data")
-        self.assertEqual(m["invest_omission_rate"], "insufficient_data")
+        # 투자 구조화 필드를 걷어내며 이 지표의 입력이 사라졌다 — 키 자체가 없어야 한다.
+        self.assertNotIn("invest_omission_rate", m)
 
     def test_computed_when_enough(self):
         delivered = [{"date": "2026-07-10", "hash": f"h{i:02d}" + "x" * 6,
                       "region": "해외", "domain": f"d{i}.com", "theme": "smr",
                       "section": "smr"} for i in range(20)]
         m = metrics.compute_metrics(delivered, 30)
-        self.assertEqual(m["invest_omission_rate"], 0.0)
+        self.assertNotIn("invest_omission_rate", m)
         self.assertIsInstance(m["source_diversity"], float)
         self.assertEqual(m["report_rec_count"], 0)
 

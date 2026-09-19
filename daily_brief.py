@@ -1,16 +1,15 @@
 """
-일일 통합 브리핑 (daily_brief) — digest_queue 를 투자 관점 카드로 발송.
+일일 통합 브리핑 (daily_brief) — digest_queue 를 정책·산업 브리핑 카드로 발송.
 
 배경:
     news_bot 이 RSS(WNN·IAEA·정책 피드 등)를 매시간 긁어 분석해 digest_queue.json 에
-    쌓는다. 이 봇이 그 큐를 '무슨 일 / 왜 중요 / 💰 투자 관점 / 🇰🇷 한수원 시사점'
-    카드로 하루 1회 발송한다.
+    쌓는다. 이 봇이 그 큐를 '무슨 일 / 왜 중요 / 🇰🇷 한수원 시사점' 카드로 하루 1회
+    발송한다. 독자는 투자자가 아니라 원자력 정책·산업 실무자다 — 카드는 무슨 일이
+    있었고, 무엇이 달라졌고, 국내 원자력에서 무엇을 볼지만 말한다.
 
 2026-07 개편 (설명 가능한 랭킹 + 발송 원자성):
     - 랭킹: ranking.py (LLM feature × ranking_config.json 가중치, 내역 로깅).
       features 없는 옛 큐 항목은 기존 rank_item 공식으로 하위 호환.
-    - 투자 관점: 문장 생성이 아니라 구조화 필드(theme/mechanism/수혜유형/시계/확신)를
-      뽑고 Python 이 문장을 조립. 근거 약하면(confidence 0) 줄 생략.
     - 보고서 추천: features 로 Python 이 후보를 먼저 거른 뒤에만 LLM 호출 (0건이 정상).
     - 발송 원자성 (outbox 패턴):
         --plan    선별→브리핑 생성→outbox.json(pending) 기록→큐에서 해당 항목 제거
@@ -21,7 +20,7 @@
 
 가드레일:
     stdlib + gemini_client(REST) + ranking + sources + telegram_send.
-    GEMINI 실패 시: 투자 줄 없이 발송(graceful). 큐 비었으면 발송 스킵.
+    GEMINI 실패 시: 해석 줄 없이 발송(graceful). 큐 비었으면 발송 스킵.
     telegram_send 는 lazy import (--plan 은 토큰 없이 동작해야 함).
 """
 
@@ -166,142 +165,6 @@ def get_importance(item: dict) -> str:
         return item["importance"]
     cat = item.get("category", "")
     return cat if cat in {"must_read", "nice_to_know", "market", "noise"} else "nice_to_know"
-
-
-# ---- 투자 관점 (구조화 추출 → Python 이 문장 조립) ----------------------------
-#
-# 제목+요약만으로 깊은 분석은 불가능 → 문장을 길게 만들지 않고 구조를 강제한다.
-# LLM 은 '어떤 메커니즘으로 돈의 흐름이 바뀌는지'만 답하고, 렌더링·생략 판단은 Python.
-
-INVEST_THEMES = {"uranium", "smr", "export", "life_extension", "fuel_cycle", "waste",
-                 "regulation", "supply_chain", "construction", "financing",
-                 "decommissioning", "safety", "grid_demand", "none"}
-INVEST_BENEFICIARIES = {"reactor_vendor", "epc", "fuel_supplier", "utility",
-                        "uranium_miner", "smr_developer", "grid_equipment", "none"}
-INVEST_HORIZONS = {"near", "mid", "long"}
-
-_THEME_KR = {"uranium": "우라늄", "smr": "SMR", "export": "수출", "life_extension": "계속운전",
-             "fuel_cycle": "핵연료주기", "waste": "방폐물", "regulation": "규제",
-             "supply_chain": "공급망", "construction": "신규건설", "financing": "자금조달",
-             "decommissioning": "해체", "safety": "안전", "grid_demand": "전력수요"}
-_BEN_KR = {"reactor_vendor": "원자로 공급사", "epc": "EPC", "fuel_supplier": "핵연료 공급사",
-           "utility": "발전사업자", "uranium_miner": "우라늄 생산자",
-           "smr_developer": "SMR 개발사", "grid_equipment": "전력기기"}
-_HORIZON_KR = {"near": "단기", "mid": "중기", "long": "장기"}
-
-INVEST_SYSTEM_PROMPT = """당신은 원자력·에너지 뉴스를 투자 관점으로 번역하는 분석가입니다.
-독자는 원자력 업계를 아는 투자자(한수원 실무자)입니다. Doomberg 같은 냉정한 톤.
-
-기사 항목 N개를 받습니다. 각 항목에 대해 **구조화된 투자 판단 필드**만 답하세요.
-문장 생성은 시스템이 합니다 — 당신은 필드만.
-
-⚠️ 출력은 정확히 아래 JSON. 다른 텍스트(설명, 펜스 ```)는 금지.
-{"investments": [{"idx": 0, "theme": "...", "mechanism": "...", "beneficiary_type": "...", "risk_side": "...", "time_horizon": "...", "confidence": 0}]}
-
-필드 규칙:
-1. theme: uranium|smr|export|life_extension|fuel_cycle|waste|regulation|supply_chain|construction|financing|decommissioning|safety|grid_demand|none
-   — 투자적으로 해석할 게 없으면 반드시 "none" (지어내지 말 것).
-2. mechanism: **돈의 흐름이 왜 바뀌는지** 한국어 1문장(90자 이내). 비용·수주·공급 제약·
-   규제·자본지출·연료 수요·프로젝트 일정 중 무엇을 통해 경제적 영향이 생기는지.
-   "테마 강화" 같은 추상어 금지. 제목·요약에서 확인 안 되는 인과는 금지.
-3. beneficiary_type: reactor_vendor|epc|fuel_supplier|utility|uranium_miner|smr_developer|grid_equipment|none
-   — 기업명 아님, 유형만. ⚠️ 특정 종목·매수·매도 언급 절대 금지.
-4. risk_side: 불리해지는 쪽(한국어 짧게, 예: "가스 피크발전") 또는 "none".
-5. time_horizon: near(1년 내)|mid(1~3년)|long(3년+).
-6. confidence: 2=확정 사실 기반 / 1=합리적 해석 / 0=근거 약함(이 항목은 발송에서 생략됨).
-7. 모든 idx 가 정확히 한 번씩.
-
-입력: 각 줄이 `[idx] 한국어제목 | 왜중요 | 요약`."""
-
-
-def _sanitize_invest(raw: dict) -> dict | None:
-    """투자 구조화 필드 방어적 파싱. 쓸 수 없으면 None."""
-    if not isinstance(raw, dict):
-        return None
-    theme = raw.get("theme")
-    theme = theme if isinstance(theme, str) and theme in INVEST_THEMES else "none"
-    mech = str(raw.get("mechanism") or "").strip()[:180]
-    ben = raw.get("beneficiary_type")
-    ben = ben if isinstance(ben, str) and ben in INVEST_BENEFICIARIES else "none"
-    risk = str(raw.get("risk_side") or "").strip()[:60]
-    if risk.lower() == "none":
-        risk = ""
-    hor = raw.get("time_horizon")
-    hor = hor if isinstance(hor, str) and hor in INVEST_HORIZONS else "mid"
-    try:
-        conf = int(raw.get("confidence"))
-    except (TypeError, ValueError):
-        conf = 0
-    conf = max(0, min(2, conf))
-    return {"theme": theme, "mechanism": mech, "beneficiary_type": ben,
-            "risk_side": risk, "time_horizon": hor, "confidence": conf}
-
-
-def render_investment(struct: dict | None) -> str | None:
-    """구조화 필드 → 한국어 투자 관점 한 줄. 근거 약하면 None (줄 생략).
-
-    생략 조건: struct 없음 / theme none / mechanism 비어있음 / confidence 0.
-    confidence 1 이면 단정 대신 관찰 수준임을 표기.
-    """
-    if not struct:
-        return None
-    if struct["theme"] == "none" or not struct["mechanism"] or struct["confidence"] == 0:
-        return None
-    parts = [struct["mechanism"].rstrip(".")]
-    if struct["beneficiary_type"] != "none":
-        parts.append(f"— {_BEN_KR[struct['beneficiary_type']]} 수혜")
-    if struct["risk_side"]:
-        parts.append(f"/ {struct['risk_side']} 부담")
-    tail = f"({_THEME_KR.get(struct['theme'], struct['theme'])}·{_HORIZON_KR[struct['time_horizon']]}"
-    if struct["confidence"] == 1:
-        tail += "·확신 낮음"
-    tail += ")"
-    parts.append(tail)
-    return " ".join(parts)[:300]
-
-
-def enrich_investment(items: list[dict]) -> dict[int, dict]:
-    """선별된 항목들에 구조화 투자 필드 부여. 실패/키없음 시 빈 dict(보강 없이 진행)."""
-    if not is_available() or not items:
-        if not is_available():
-            print("[daily_brief] GEMINI_API_KEY 없음 → 투자 관점 보강 건너뜀")
-        return {}
-
-    lines = []
-    for i, art in enumerate(items):
-        title = (art.get("title_kr") or art.get("title") or "").replace("\n", " ")[:120]
-        why = (art.get("why_important") or art.get("implication") or "").replace("\n", " ")[:160]
-        summ = (art.get("summary") or "").replace("\n", " ")[:80]
-        lines.append(f"[{i}] {title} | {why} | {summ}")
-
-    try:
-        policy = llm_policy.profile("daily_brief")
-        result = call_json(
-            INVEST_SYSTEM_PROMPT, "\n".join(lines),
-            temperature=0.2, max_output_tokens=4096, timeout=120.0,
-            model=policy.model(),
-            label="daily_brief",
-            **policy.reasoning_kwargs(),
-        )
-    except GeminiError as e:
-        print(f"[daily_brief] 투자 보강 실패 → 투자 줄 없이 발송: {e}")
-        return {}
-
-    if not isinstance(result, dict) or not isinstance(result.get("investments"), list):
-        print("[daily_brief] 투자 보강 응답 형식 오류 → 투자 줄 없이 발송")
-        return {}
-
-    out: dict[int, dict] = {}
-    for it in result["investments"]:
-        if not isinstance(it, dict):
-            continue
-        idx = it.get("idx")
-        if not isinstance(idx, int) or not (0 <= idx < len(items)):
-            continue
-        struct = _sanitize_invest(it)
-        if struct:
-            out[idx] = struct
-    return out
 
 
 # ---- 조건부 필수 항목 보완 (한수원 시사점) ------------------------------------
@@ -679,7 +542,26 @@ def _korean_or_none(s: str | None) -> str | None:
     return s if s and any("가" <= c <= "힣" for c in s) else None
 
 
-def item_to_card(art: dict, investment: str | None) -> dict:
+def _change_or_none(s: str | None) -> str | None:
+    """`왜 중요` 로 쓸 수 있는 문장만 반환. 상투적 종결부뿐이면 None (줄 생략).
+
+    이 줄은 '무엇이 달라졌는가'를 말해야 한다. "…중요하다"·"…전망된다"·"…요구된다"
+    로 끝나는 문장은 제목을 바꿔 말한 것이지 변화를 말한 것이 아니다.
+
+    판정기를 새로 만들지 않고 `implication_is_hollow` 를 그대로 쓴다 — 같은 종류의
+    문장을 두 규칙이 서로 다르게 판정하면 "왜 이 카드만 두 줄인가"에 답할 수 없게
+    된다(한수원 시사점은 이미 이 게이트를 통과한 문장만 남는다). 수량·시점이 실린
+    문장은 그 게이트가 이미 살려 준다 — "언제·얼마"는 전망이라도 정보다.
+    """
+    from data_quality import clean_text, implication_is_hollow
+
+    text = clean_text(s)
+    if not text or implication_is_hollow(text):
+        return None
+    return text
+
+
+def item_to_card(art: dict) -> dict:
     """curated 항목을 synthesize.format_cards_message 호환 카드로."""
     link = art.get("link", "")
     # 매체명(전기신문)이 있으면 도메인보다 우선 — Google News 경유 기사는 도메인만
@@ -696,8 +578,7 @@ def item_to_card(art: dict, investment: str | None) -> dict:
         "cluster": cluster,
         "headline": art.get("title_kr") or art.get("title", ""),
         "what": _korean_or_none(art.get("summary")),
-        "why": (art.get("why_important") or "").strip() or None,
-        "investment": investment,
+        "why": _change_or_none(art.get("why_important")),
         "kr_takeaway": (art.get("implication") or "").strip() or None,
         "cred": credibility(cluster),
     }
@@ -747,7 +628,7 @@ def verify_final_cards(articles: list[dict]) -> tuple[list[dict], list[dict], li
     cards: list[dict] = []
     audits: list[dict] = []
     for art in articles:
-        card = item_to_card(art, render_investment(art.get("investment_struct")))
+        card = item_to_card(art)
         result = article_quality_gate.validate_final_card(
             card, art, source=_quality_source(art))
         audits.append({
@@ -764,8 +645,6 @@ def verify_final_cards(articles: list[dict]) -> tuple[list[dict], list[dict], li
         art["summary"] = cleaned_card.get("what") or ""
         art["why_important"] = cleaned_card.get("why") or ""
         art["implication"] = cleaned_card.get("kr_takeaway") or ""
-        if cleaned_card.get("investment") is None:
-            art["investment_struct"] = None
         safe_articles.append(art)
         cards.append(cleaned_card)
     return safe_articles, cards, audits
@@ -1002,18 +881,13 @@ def plan_briefs(queue: list[dict],
           f"연속일 반복 {len(dom_diag.get('dropped_repeat') or []) + len(forn_diag.get('dropped_repeat') or [])}건 제외 "
           f"/ 감점 {dom_cont['matched'] + forn_cont['matched']}건 판정)")
 
-    # 투자 보강 — 양쪽 선별분 한 번에 (무료 티어 호출 절감)
     allsel = dom + forn
-    inv = enrich_investment(allsel)
-    for i, art in enumerate(allsel):
-        art["investment_struct"] = inv.get(i)  # 다양성·weekly 집계에서도 사용
 
     # 조건부 필수 항목 보완 — '한수원 시사점이 있어야 하는데 빈' 카드만.
-    # 투자 보강 뒤에 두는 이유는 없다(서로 독립). 카드 조립 **앞**이어야 한다는
-    # 것만이 조건이다 — item_to_card 가 implication 을 읽어 카드를 만든다.
+    # 카드 조립 **앞**이어야 한다 — item_to_card 가 implication 을 읽어 카드를 만든다.
     field_diag = complete_required_fields(allsel)
 
-    # 투자·조건부 필수 항목까지 모두 조립된 **최종 카드**를 다시 원문 근거와 대조한다.
+    # 조건부 필수 항목까지 모두 조립된 **최종 카드**를 다시 원문 근거와 대조한다.
     # 핵심 headline/what 충돌은 카드 전체를 빼고, 선택 해석 필드의 새 주장은 그 줄만 뺀다.
     dom, dom_cards, dom_card_audits = verify_final_cards(dom)
     forn, forn_cards, forn_card_audits = verify_final_cards(forn)
@@ -1028,9 +902,6 @@ def plan_briefs(queue: list[dict],
         print(f"[daily_brief] 최종 카드 사실검증: 카드 격리 {len(final_quarantine_hashes)}건 / "
               f"근거 없는 선택 필드 {sanitized_fields}개 제거")
     allsel = dom + forn
-    n_omitted = sum(1 for card in (dom_cards + forn_cards) if not card.get("investment"))
-    if allsel:
-        print(f"[daily_brief] 투자 관점: {len(allsel) - n_omitted}건 표기 / {n_omitted}건 근거 부족 생략")
 
     briefs: list[dict] = []
     social_card_audits: list[dict] = []
@@ -1100,7 +971,10 @@ def plan_briefs(queue: list[dict],
             # LLM 판정 scope (없으면 region()이 휴리스틱으로 결정한 것 — 오분류 추적용)
             "scope": a.get("scope", ""),
             "domain": a.get("domain", ""),
-            "theme": (a.get("investment_struct") or {}).get("theme", ""),
+            # `theme` 은 투자 구조화 필드에서만 나오던 값이다. 투자 분석을 걷어내며
+            # 생산자가 사라졌으므로 키도 뺀다 — 늘 빈 문자열인 키는 '주제가 없다'는
+            # 사실처럼 읽혀서 metrics 를 조용히 거짓말하게 만든다. 주제 축은
+            # section 이 그대로 맡는다(metrics.topic_diversity 가 이미 그 폴백을 쓴다).
             "score": diag["scores"].get(h),
             "breakdown": diag["breakdowns"].get(h),
         }
