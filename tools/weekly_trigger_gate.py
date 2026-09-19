@@ -1,9 +1,20 @@
-"""Gate the Weekly workflow's crawl-completion recovery trigger.
+"""Gate every Weekly workflow trigger against "did this week already go out?".
 
-The primary Friday schedule and manual dispatch always run.  A successful crawl
-completion may recover Friday evening through Sunday morning, but only while the
-current ISO week's Telegram delivery is not confirmed.  The channel state is
-also required when a channel is configured.
+사람이 손으로 돌린 실행만 무조건 지나간다. **나머지는 전부 — 금요일 schedule 도 —
+현재 ISO 주차의 Telegram 발송이 확인되지 않았을 때만 실행한다.**
+
+schedule 을 예외로 둘 수 없는 이유는 이 저장소의 cron 이 제시간에 안 오기
+때문이다. 2026-09-04 와 09-11 은 둘 다 저녁 crawl recovery 가 발송을 끝낸 뒤,
+4시간 반 밀린 금요일 schedule 이 21시대에 들어와 이미 끝난 주차를 다시 확정했다.
+발송 자체는 멱등 경로가 막았지만 상태·시각·운영 로그가 흔들렸고, 무엇보다 몇 분과
+한 번의 웹 배포를 매주 헛으로 태웠다.
+
+자동 호출자는 자기를 밝힌다(``trigger_source``). crawl.yml 의 backup_watchdog 과
+같은 규약이다 — 사람의 workflow_dispatch 와 Worker 의 workflow_dispatch 를 가르는
+것은 이벤트 이름이 아니라 그 한 줄이다.
+
+crawl 완료 recovery 는 금요일 저녁~일요일 오전만 열어 낡은 발송을 막는다. 채널
+상태는 채널이 설정돼 있을 때만 함께 본다.
 """
 
 from __future__ import annotations
@@ -16,6 +27,10 @@ from pathlib import Path
 
 
 KST = timezone(timedelta(hours=9))
+
+# 이 값으로 자기를 밝힌 workflow_dispatch 는 '사람의 수동 실행'이 아니라 자동
+# 안전망이다. crawl.yml 의 독립 Worker 가 쓰는 이름을 그대로 쓴다.
+BACKUP_TRIGGER_SOURCE = "backup_watchdog"
 
 
 def _week_id(now: datetime) -> str:
@@ -59,23 +74,27 @@ def _in_recovery_window(now: datetime) -> bool:
 
 def decide(*, event_name: str, workflow_conclusion: str, now: datetime,
            reports_path: Path, channel_path: Path,
-           channel_required: bool = True) -> tuple[bool, str, str]:
+           channel_required: bool = True,
+           trigger_source: str = "") -> tuple[bool, str, str]:
     complete, detail = delivery_state(
         now=now, reports_path=reports_path, channel_path=channel_path,
         channel_required=channel_required)
-    if event_name in {"schedule", "workflow_dispatch"}:
-        state = "schedule_trigger_created" if event_name == "schedule" else "manual_trigger"
-        return True, state, f"primary trigger: {event_name}; {detail}"
-    if event_name != "workflow_run":
+    # 사람의 수동 실행만 질문 없이 지나간다 — 그것이 수동 실행의 목적이다.
+    if event_name == "workflow_dispatch" and trigger_source != BACKUP_TRIGGER_SOURCE:
+        return True, "manual_trigger", f"primary trigger: {event_name}; {detail}"
+    if event_name not in {"schedule", "workflow_run", "workflow_dispatch"}:
         return False, "unsupported_trigger", f"unsupported trigger: {event_name or 'missing'}"
-    if workflow_conclusion != "success":
+    # **모든 자동 트리거가 같은 문 앞에 선다.** 늦은 schedule 도 예외가 아니다.
+    if complete:
+        return False, "delivery_already_confirmed", detail
+    if event_name == "schedule":
+        return True, "schedule_trigger_created", f"primary trigger: schedule; {detail}"
+    if event_name == "workflow_run" and workflow_conclusion != "success":
         return False, "recovery_source_failed", (
             f"crawl conclusion is {workflow_conclusion or 'missing'}")
     if not _in_recovery_window(now):
         return False, "outside_recovery_window", (
             f"outside Friday 17:00-Sunday 12:00 KST; {detail}")
-    if complete:
-        return False, "delivery_already_confirmed", detail
     if "dm=failed" in detail:
         state = "delivery_failed_recovery"
     elif "dm=pending" in detail:
@@ -96,6 +115,8 @@ def main() -> int:
     parser.add_argument("--channel-outbox", type=Path, default=Path("channel_outbox.json"))
     parser.add_argument("--channel-required", action="store_true",
                         default=os.environ.get("CHANNEL_REQUIRED", "").lower() == "true")
+    parser.add_argument("--trigger-source",
+                        default=os.environ.get("TRIGGER_SOURCE", ""))
     parser.add_argument("--now")
     args = parser.parse_args()
     now = datetime.fromisoformat(args.now) if args.now else datetime.now(timezone.utc)
@@ -106,6 +127,7 @@ def main() -> int:
         reports_path=args.reports,
         channel_path=args.channel_outbox,
         channel_required=args.channel_required,
+        trigger_source=args.trigger_source,
     )
     value = str(should_run).lower()
     print(f"[weekly-gate] should_run={value} state={state} — {reason}")
