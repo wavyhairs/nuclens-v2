@@ -144,6 +144,37 @@ class DuplicateTests(unittest.TestCase):
             push_notify.record_notified(Path(tmp) / "nope.json", "2026-09-19", sent=1, total=1)
 
 
+class SubjectTests(unittest.TestCase):
+    """VAPID `sub` — 푸시 서비스가 문제 생겼을 때 연락할 곳.
+
+    이 한 칸이 틀리면 **서명 단계에서** 죽는다. 구독이 몇 명이든 한 통도 안 나가고,
+    로그에는 '전원 발송 실패'만 남는다 — 원인이 공백 하나일 때 그 증상에서
+    되짚는 것은 비싸다. 두 번 다 실제로 났다(2026-09-19).
+    """
+
+    def test_a_pasted_space_does_not_kill_the_morning(self):
+        """설정 화면에 붙여넣을 때 딸려 온 스페이스. 실측으로 죽었다."""
+        self.assertEqual(push_notify.clean_subject(" mailto:ops@example.test"),
+                         "mailto:ops@example.test")
+        self.assertEqual(push_notify.clean_subject("mailto:ops@example.test\n"),
+                         "mailto:ops@example.test")
+
+    def test_both_shapes_the_spec_allows(self):
+        self.assertEqual(push_notify.clean_subject("mailto:ops@example.test"),
+                         "mailto:ops@example.test")
+        self.assertEqual(push_notify.clean_subject("https://nuclens-v2.pages.dev"),
+                         "https://nuclens-v2.pages.dev")
+
+    def test_the_two_shapes_are_not_mixed(self):
+        """`mailto:https://…` — 실제로 들어갔던 값이다. 둘 중 하나만 써야 한다."""
+        self.assertEqual(push_notify.clean_subject("mailto:https://nuclens-v2.pages.dev"), "")
+
+    def test_a_shape_it_cannot_sign_is_refused_not_guessed(self):
+        for bad in ("", "   ", "ops@example.test", "http://nuclens-v2.pages.dev",
+                    "mailto:", "https://", "nuclens"):
+            self.assertEqual(push_notify.clean_subject(bad), "", repr(bad))
+
+
 @needs_webpush
 class KeyFormatTests(unittest.TestCase):
     """시크릿에 무엇이 들어 있든 발송이 서야 한다.
@@ -372,6 +403,26 @@ class EndToEndTests(unittest.TestCase):
         self.assertIn("VAPID_PRIVATE_KEY", self.log)
         self.assertIn("::error::", self.log)
         self.assertEqual(self.server.state["delivered"], [])
+
+    def test_a_broken_subject_never_reaches_the_subscribers(self):
+        """py_vapid 는 서명 단계에서 죽는다. 그 전에 막지 않으면 구독자마다
+        예외가 쌓이고 로그에는 '전원 발송 실패'만 남는다."""
+        self.add_subscriber("a")
+        self.assertEqual(self.run_main(VAPID_SUBJECT=" mailto:ops@example.test"), 0,
+                         "붙여넣은 공백 하나로 아침을 통째로 잃으면 안 된다")
+        self.assertEqual(len(self.server.state["delivered"]), 1)
+
+        self.assertEqual(self.run_main("--force", VAPID_SUBJECT="mailto:https://x.test"), 1)
+        self.assertIn("::error::", self.log)
+        self.assertIn("VAPID_SUBJECT", self.log)
+        self.assertEqual(len(self.server.state["delivered"]), 1,
+                         "모양이 틀린 채로 구독자에게 갔다")
+
+    def test_an_unset_subject_falls_back_quietly(self):
+        """변수가 비어 있는 것은 사고가 아니다 — 기본값으로 나간다."""
+        self.add_subscriber("a")
+        self.assertEqual(self.run_main(VAPID_SUBJECT=""), 0)
+        self.assertNotIn("::", self.log)
 
     def test_a_broken_key_never_reaches_the_subscribers(self):
         self.add_subscriber("a")
