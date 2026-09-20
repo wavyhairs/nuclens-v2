@@ -133,6 +133,11 @@ V1 에서 가져온 빠른 제목 중복 알고리즘에는 단계 개념이 없
 
 회귀 테스트: `python -m unittest tests.test_event_stage tests.test_ranking tests.test_story_dedup`
 
+**사건 신원을 바꾸자는 제안이 다시 나오면 먼저 볼 것** —
+`docs/2026-09-20-event-identity-decision-record.md`. "Object 를 넣으면", "숫자가 같으면 묶으면",
+"actor 쌍으로 보면", "절차어·회차로 가르면" 을 2026-09-20 에 실데이터(3,168건 · 쌍 21.8k)로 재서
+전부 기각한 기록이다. 다시 열 조건 셋이 그 문서 §4 에 있다.
+
 ## 반복·누락·순서 (2026-08-17)
 
 세 가지 다른 증상이었는데 뿌리가 같았다 — **파이프라인이 어제를 안 본다**, 그리고
