@@ -795,6 +795,55 @@ class IssueSimilarityTests(unittest.TestCase):
         self.assertEqual([row["hash"] for row in prepared["items"][0]["evidence"]], ["kept"])
         self.assertEqual(prepared["items"][0]["region_scope"], "국내")
 
+    def test_prepare_insights_skips_abstained_flow_without_direction_or_evidence(self):
+        # trend_insights.py 는 근거가 빈약하면 direction="" 으로 기권한다(정상).
+        # 그 행은 공개 insights.items 에 실리면 안 된다 — takeaway="" 가 남는다.
+        news = [{
+            "hash": "kept", "region": "국내", "countries": ["KR"],
+            "topics": ["정책"], "publisher": "산업통상자원부", "domain": "motie.go.kr",
+        }]
+        insights = {
+            "generated_at": "2026-09-21T04:14:53+09:00",
+            "window": "7d",
+            "items": [
+                {
+                    "keyword": "에너지안보", "count_now": 82, "count_prev": 53,
+                    "direction": "", "evidence": [],
+                },
+                {
+                    "keyword": "SMR", "count_now": 209, "count_prev": 199,
+                    "direction": "  정부가 SMR 상용화 목표를 제시했습니다.  ",
+                    "evidence": [{"hash": "kept"}],
+                },
+            ],
+        }
+        prepared = build_data.prepare_insights(insights, news)
+        self.assertEqual([item["keyword"] for item in prepared["items"]], ["SMR"])
+        kept = prepared["items"][0]
+        self.assertEqual(kept["direction"], "정부가 SMR 상용화 목표를 제시했습니다.")
+        self.assertEqual(kept["takeaway"], "정부가 SMR 상용화 목표를 제시했습니다.")
+        self.assertEqual(kept["count_now"], 209)
+        self.assertTrue(all(item["takeaway"].endswith((".", "!", "?")) for item in prepared["items"]))
+        # 봇 원본은 건드리지 않는다 — 키워드와 집계는 그대로 남아야 한다.
+        self.assertEqual(insights["items"][0]["keyword"], "에너지안보")
+        self.assertEqual(insights["items"][0]["count_now"], 82)
+        self.assertEqual(prepared["generated_at"], insights["generated_at"])
+
+    def test_prepare_insights_skips_direction_whose_evidence_all_left_public_news(self):
+        # 해석은 있지만 근거 기사가 전부 공개 뉴스에서 빠진 경우도 근거 없는 흐름이다.
+        insights = {
+            "items": [
+                {"keyword": "원전수출", "direction": "수출 논의가 이어졌습니다.",
+                 "evidence": [{"hash": "removed"}]},
+                {"keyword": "전력망", "direction": "", "evidence": [{"hash": "kept"}]},
+            ],
+        }
+        news = [{"hash": "kept", "region": "해외", "countries": ["US"],
+                 "topics": [], "publisher": "", "domain": ""}]
+        prepared = build_data.prepare_insights(insights, news)
+        self.assertEqual(prepared["items"], [])
+        self.assertEqual(prepared["featured_items"], [])
+
     def test_unrelated_safety_events_stay_separate(self):
         left = {
             "title_kr": "다뉴브강 저수위로 헝가리 원전 가동 중단",
