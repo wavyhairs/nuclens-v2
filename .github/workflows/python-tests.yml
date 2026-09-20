@@ -19,6 +19,12 @@ on:
   pull_request:
     paths:
       - "**.py"
+      # 프런트·렌더러도 여기서 지킨다. `node --check app.js` 와
+      # cards/tests/renderer_contract.mjs 가 이 잡 안에 있는데, 목록에 .js 가
+      # 없어서 **JS 만 바꾼 PR 은 아무 검사도 안 돌았다**(2026-09-20 실측:
+      # app.js + build.js 만 바꾼 PR 에 체크 0개). 위 워크플로 교훈과 같은 종류다.
+      - "**.js"
+      - "**.mjs"
       - "tests/**"
       - "web/tests/**"
       - "requirements.txt"
@@ -60,6 +66,12 @@ on:
     # 않는다 — 위 목록과 **함께** 고쳐야 한다.
     paths:
       - "**.py"
+      # 프런트·렌더러도 여기서 지킨다. `node --check app.js` 와
+      # cards/tests/renderer_contract.mjs 가 이 잡 안에 있는데, 목록에 .js 가
+      # 없어서 **JS 만 바꾼 PR 은 아무 검사도 안 돌았다**(2026-09-20 실측:
+      # app.js + build.js 만 바꾼 PR 에 체크 0개). 위 워크플로 교훈과 같은 종류다.
+      - "**.js"
+      - "**.mjs"
       - "tests/**"
       - "web/tests/**"
       - "requirements.txt"
