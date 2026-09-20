@@ -98,6 +98,36 @@ check("스토리의 디자인용 영문 도장은 그대로다", () => {
     "도장 문구까지 같이 걷어냈다 — 걷을 것은 본문 구역 머리뿐이다");
 });
 
+console.log("\n제목 맞춤은 먼저 맞는 배치가 아니라 크게 앉는 배치를 고른다");
+
+// 이 검사가 있는 이유도 실제 사고다. 예전 맞춤은 강조를 제 줄에 세우는 배치로
+// 먼저 줄여 보고 **그게 실패할 때만** 인라인으로 내렸다. 그래서 블록이 작은
+// 크기에서 우연히 두 줄에 들어맞으면 거기서 멈췄고, 더 크게 앉는 인라인은
+// 시도조차 되지 않았다 — 칸이 넓어질수록 제목이 작아지는 구간이 생긴다
+// (실측 09-20 `미 에너지부 … 긴급명령`: 칸 612px 에서 70px, 649px 에서 52px).
+//
+// 렌더 가드는 이걸 못 잡는다. 52px 로 앉은 제목은 넘치지 않기 때문이다.
+check("두 배치를 모두 재고 큰 쪽을 고른다", () => {
+  const start = source.indexOf("const fit = (inline)");
+  assert.ok(start > 0, "제목 맞춤(fit)을 못 찾았다");
+  const body = source.slice(start, source.indexOf("title.dataset.finalFs", start));
+  assert.ok(/const asBlock = fit\(false\)/.test(body), "블록 배치를 안 잰다");
+  assert.ok(/fit\(true\)/.test(body), "인라인 배치를 안 잰다");
+  assert.ok(/asInline\.fs > asBlock\.fs/.test(body),
+    "크기로 고르지 않는다 — 먼저 맞는 배치에서 멈추면 칸이 넓어질수록 제목이 작아진다");
+});
+
+check("제목 칸은 오버레이가 짙은 구간 안에 있다", () => {
+  const width = source.match(/\.editorial-copy \{[^}]*width: (\d+)%/);
+  assert.ok(width, "제목 칸 폭을 못 찾았다");
+  // 가로 그라디언트가 74% 에서 α.28 까지 옅어진다. 칸은 좌우 패딩 76px 안쪽이라
+  // 카드 기준 오른쪽 끝 = (76 + 928 * width) / 1080. 그 자리가 74% 를 넘으면
+  // 밝은 사진에서 제목이 배경에 묻는다.
+  const edge = (76 + 928 * (Number(width[1]) / 100)) / 1080;
+  assert.ok(edge <= 0.74,
+    `제목 칸이 카드의 ${(edge * 100).toFixed(1)}% 까지 간다 — 오버레이가 옅어지는 74% 안쪽이어야 한다`);
+});
+
 if (process.exitCode) {
   console.error("\n실패");
 } else {
