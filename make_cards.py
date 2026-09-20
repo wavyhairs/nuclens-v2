@@ -74,6 +74,12 @@ TELEGRAM_ALBUM_MAX = 10
 # 목표 14자, 상한 18자(72px 2줄의 실측 한계). 22자까지는 렌더 축소(하한 52px)가 2줄로 앉힌다.
 HEADLINE_TARGET = 14
 HEADLINE_MAX = 18
+# 18자는 **취향**(72px 2줄)이고, 28자는 **렌더 한계**(축소 하한 52px 2줄)다. 이 둘을
+# 같은 숫자로 쓰다 09-20 아침에 앨범을 통째로 날렸다 — 24자 제목 하나에 카피가
+# 반려되고 5장 전부 폴백(줄글·"…" 토막·강조 없는 흰 제목)으로 나갔다. 프롬프트는
+# 계속 18자를 요구하되 **반려는 렌더가 못 앉히는 길이부터** 한다. 그 사이는
+# normalize() 가 다듬고 build.js 의 축소 루프가 2줄로 앉힌다(실측 24·26자).
+HEADLINE_HARD = 28
 SUBLINE_MAX = 50   # 표지 부제
 # 34자는 실측에서 두 번 연속 넘겼다(09-16: "2035년 경수형 SMR 상용화 목표…" 36자) —
 # 두 번 실패면 카드가 통째로 빠진다. 진짜 한계는 렌더 가드(넘침 사각형)이므로
@@ -393,6 +399,50 @@ def ask_writer(brief: dict, items: list[dict], date: str, *, with_story: bool,
 # ---- B2. 편집 오케스트레이션 ---------------------------------------------------
 
 
+def _fit_accent(text, limit: int):
+    """제목을 상한 안으로. **낱말 경계에서만** 줄인다.
+
+    제목은 본문 불릿과 달리 절 구분자가 없어서 clip() 을 쓰면 "RISE AS…" 처럼
+    낱말 한가운데가 잘린다 — 지니가 09-20 에 지적한 "문장이 끊긴다"가 그것이다.
+    뒤 낱말을 통째로 덜어내고, 그래도 넘치면(한 낱말이 상한보다 길면) 그때만 자른다.
+    `[[ ]]` 짝이 깨지면 마크업을 버린다 — 색보다 문장이 먼저다.
+    """
+    if not isinstance(text, str) or visible_len(text) <= limit:
+        return text
+    words = text.split()
+    while len(words) > 1 and visible_len(" ".join(words)) > limit:
+        words.pop()
+    cut = " ".join(words).rstrip(" ,·-–")
+    if visible_len(cut) > limit:
+        cut = clip(text, limit)
+    return cut if cut.count("[[") == cut.count("]]") else cut.replace("[[", "").replace("]]", "")
+
+
+def normalize(raw: dict, headline_max: int = HEADLINE_HARD,
+              fact_max: int = FACT_MAX, why_max: int = WHY_MAX) -> dict:
+    """검증 앞에 한 겹. **길이는 고치고, 구조는 건드리지 않는다.**
+
+    글자 수는 모델이 못 세는 것이고(다섯 번 실측), 그 때문에 그날 카피를 통째로
+    떨어뜨리면 남는 건 사이트 문장 폴백이다 — 09-20 아침에 그게 나갔다. 반대로
+    개수·타입·강조 규칙·중복 QA 는 손대지 않는다. 그건 재료가 모자라거나 판단이
+    틀린 것이라 repair 나 폴백이 받아야 한다.
+    """
+    if not isinstance(raw, dict):
+        return raw
+    hook = raw.get("hook")
+    if isinstance(hook, dict):
+        hook["headline"] = _fit_accent(hook.get("headline"), headline_max)
+    for slide in (raw.get("steps") or []):
+        if not isinstance(slide, dict):
+            continue
+        slide["headline"] = _fit_accent(slide.get("headline"), headline_max)
+        for key, limit in (("facts", fact_max), ("why", why_max)):
+            rows = slide.get(key)
+            if isinstance(rows, list):
+                slide[key] = [clip(b, limit) if isinstance(b, str) else b for b in rows]
+    return raw
+
+
 def review(raw: dict, items: list[dict], **kwargs) -> list[str]:
     """규격 검증 + 편집 QA 를 한 번에. **둘 다 통과해야 카드가 나간다.**
 
@@ -400,7 +450,7 @@ def review(raw: dict, items: list[dict], **kwargs) -> list[str]:
     하지 않는가" 를 본다. 경고는 실패로 세지 않되 목록에는 실어 보낸다 —
     repair 는 경고까지 같이 고칠 기회가 있어야 한다.
     """
-    problems = validate(raw, items, **kwargs)
+    problems = validate(normalize(raw), items, **kwargs)
     report = card_qa.review_daily(raw, items)
     return problems + [str(f) for f in report.failures]
 
@@ -433,6 +483,19 @@ def log_calls(call_log: list[dict]) -> None:
         print(f"[cards] {row['task']} model={row['model']} calls=1 "
               f"max_http={row['max_http_attempts']}" + (" (repair)" if row["repair"] else ""))
     print(f"[cards] 논리 호출 {len(call_log)}회 · HTTP 최악 상한 {worst}회")
+
+
+def _daily_of(candidate: dict) -> dict:
+    """card_daily_writer 응답에서 일일 카피를 꺼낸다.
+
+    응답은 `{brief, daily, story}` 봉투다. **봉투째 검증하면 늘 떨어진다** —
+    09-20 실측: "hook 없음; steps 가 배열이 아님" 이 뜨고 repair 까지 같은 말을
+    한 뒤 사이트 문장 폴백으로 내려갔다(`_writer_round` 는 이미 풀어서 본다).
+    봉투가 아닌 응답(카피 파일·옛 형식)은 그대로 돌려준다.
+    """
+    if isinstance(candidate, dict) and isinstance(candidate.get("daily"), dict):
+        return candidate["daily"]
+    return candidate
 
 
 def _apply_and_review(candidate: dict, items: list[dict]) -> list[str]:
@@ -486,9 +549,10 @@ def run_editorial(items: list[dict], date: str, collected: int,
     except Exception as exc:  # noqa: BLE001
         print(f"[cards] card_daily_writer 실패 — {type(exc).__name__}: {exc}")
         return None, None
-    problems = _apply_and_review(candidate, items)
+    daily_copy = _daily_of(candidate)
+    problems = _apply_and_review(daily_copy, items)
     if not problems:
-        return candidate, None
+        return daily_copy, None
     print(f"[cards] 편집 QA 실패: {'; '.join(problems[:6])}")
     try:
         repaired = card_editorial.call(
@@ -500,11 +564,12 @@ def run_editorial(items: list[dict], date: str, collected: int,
     except Exception as exc:  # noqa: BLE001
         print(f"[cards] repair 실패 — {type(exc).__name__}: {exc}")
         return None, None
-    problems = _apply_and_review(repaired, items)
+    repaired_daily = _daily_of(repaired)
+    problems = _apply_and_review(repaired_daily, items)
     if problems:
         print(f"[cards] repair 뒤에도 실패: {'; '.join(problems[:6])}")
         return None, None
-    return repaired, None
+    return repaired_daily, None
 
 
 def _writer_round(brief: dict, items: list[dict], date: str,
@@ -663,7 +728,7 @@ def _check_bullets(problems: list[str], where: str, bullets, limit: int,
 
 
 def validate(raw: dict, items: list[dict], bullets_min: int = BULLETS_MIN,
-             line_max: int | None = None, headline_max: int = HEADLINE_MAX,
+             line_max: int | None = None, headline_max: int = HEADLINE_HARD,
              why_min: int | None = None) -> list[str]:
     """LLM 출력 검증. 문제 목록을 반환 — 비어 있으면 통과.
 
@@ -676,7 +741,7 @@ def validate(raw: dict, items: list[dict], bullets_min: int = BULLETS_MIN,
     if not isinstance(hook, dict):
         problems.append("hook 없음")
     else:
-        _check_line(problems, "hook.headline", hook.get("headline"), HEADLINE_MAX, True)
+        _check_line(problems, "hook.headline", hook.get("headline"), HEADLINE_HARD, True)
     if not isinstance(steps, list):
         return problems + ["steps 가 배열이 아님"]
     if len(steps) != len(items):
@@ -1057,7 +1122,7 @@ def _self_check() -> None:
     def mutate(**kw):
         return {**ok, "steps": [{**ok["steps"][0], **kw}]}
 
-    assert any("headline" in p for p in validate(mutate(headline="가" * (HEADLINE_MAX + 1)), items))
+    assert any("headline" in p for p in validate(mutate(headline="가" * (HEADLINE_HARD + 1)), items))
     assert any("facts" in p for p in validate(mutate(facts=["가" * (FACT_MAX + 1), "나"]), items))
     assert any("facts" in p for p in validate(mutate(facts=["하나뿐"]), items)), "불릿 최소 개수"
     assert any("facts" in p for p in validate(mutate(facts=["가", "나", "다", "라"]), items)), "불릿 최대 개수"
@@ -1072,9 +1137,23 @@ def _self_check() -> None:
     assert strip_accent_on_sensitive(copy.deepcopy(ok), items) == 0
 
     # [[ ]] 는 글자 수에서 빠진다 — 정확히 한계면 통과해야 한다
-    edge = mutate(headline="[[" + "가" * HEADLINE_MAX + "]]")
+    edge = mutate(headline="[[" + "가" * HEADLINE_HARD + "]]")
     assert validate(edge, items) == [], validate(edge, items)
     assert visible_len("[[가나]]다") == 3
+
+    # 길이만 넘긴 카피는 **버리지 않고 다듬어** 통과시킨다(09-20 실사고).
+    long_one = {**ok, "steps": [{**ok["steps"][0],
+                                 "headline": "아시아 에너지 협력체 [[RISE ASIA]] 출범 합의",
+                                 "facts": ["가" * (FACT_MAX + 4), "나"]}]}
+    assert validate(long_one, items), "다듬기 전에는 반려 대상"
+    assert validate(normalize(long_one), items) == [], validate(normalize(long_one), items)
+    assert visible_len(long_one["steps"][0]["headline"]) <= HEADLINE_HARD
+    assert "RISE ASIA" in long_one["steps"][0]["headline"], "낱말 가운데를 자르지 않는다"
+    assert "[[" not in _fit_accent("[[" + "가" * 30 + "]]", 10), "짝이 깨지면 색을 버린다"
+
+    # Writer 응답 봉투를 풀어야 검증이 성립한다(09-20: 풀지 않아 늘 폴백)
+    assert _daily_of({"brief": [], "daily": ok, "story": None}) is ok
+    assert _daily_of(ok) is ok, "봉투가 아니면 그대로"
 
     # 폴백 카피 — 서술형을 체언으로, 한 줄 길이로
     assert terse("MOU 13건에 서명했다") == "MOU 13건에 서명"
