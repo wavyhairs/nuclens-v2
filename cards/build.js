@@ -559,7 +559,7 @@ ${fontLinks(theme)}
   .editorial-hero .hd span:not(.brand) { color: rgba(238,241,244,.95);
     text-shadow: 0 1px 6px rgba(9,22,40,.85); }
   .editorial-hero .hd .brand { color: ${c.inkOnDark}; letter-spacing: 2.5px; }
-  .editorial-copy { margin-top: 44px; width: 58%; }
+  .editorial-copy { margin-top: 44px; width: 66%; }
   .editorial-kicker { color: rgba(238,241,244,.82); font-size: 20px; font-weight: 700;
     letter-spacing: .2px; }
   .editorial-kicker strong { color: ${c.inkOnDark}; font-weight: 850; }
@@ -1279,24 +1279,45 @@ function selfCheck() {
         const budget = lh + (em ? fs * 1.13 * 1.08 : lh);
         return title.getBoundingClientRect().height > budget + 6 ? 3 : 2;
       };
-      const shrink = () => {
-        let fs = parseFloat(getComputedStyle(title).fontSize);
-        for (let guard = 0; guard < 24 && lineCount() > 2 && fs > 52; guard++) {
-          fs -= 2;
-          title.style.fontSize = fs + "px";
-        }
-        return fs;
-      };
-      let fs = shrink();
-      // 하한까지 줄여도 3줄이면 **강조를 자기 줄에서 내린다**. 블록 강조는 앞줄이
-      // 1줄일 때만 성립하는 구성이라, 긴 제목에서는 그 한 줄이 통째로 초과분이
-      // 된다(09-20 실측: 52px 3줄). 색은 지키고 줄만 줄인다 — 52px 3줄보다
-      // 60px 2줄이 읽힌다.
-      if (em && lineCount() > 2) {
-        em.classList.add("inline");
+      // 강조를 제 줄에 세우는 배치(블록)와 문장 안에 두는 배치(인라인)를 **둘 다
+      // 재보고 크게 앉는 쪽**을 쓴다.
+      //
+      // 예전에는 블록으로 먼저 줄여 보고 그게 **실패할 때만** 인라인으로 내렸다.
+      // 그러면 블록이 작은 크기에서 우연히 두 줄에 들어맞을 때 거기서 멈춘다 —
+      // 더 큰 인라인 배치는 시도조차 안 된다. 칸이 넓어질수록 제목이 작아지는
+      // 구간이 그래서 생겼다(실측 09-20 `미 에너지부 … 긴급명령`):
+      //
+      //     칸 612px   블록 52px(3줄, 실패) → 인라인 70px
+      //     칸 649px   블록 52px(2줄, 성공) → **거기서 멈춰 52px**
+      //     칸 649px   인라인이라면 72px 이었다
+      //
+      // 먼저 맞는 배치가 아니라 크게 앉는 배치를 고른다.
+      const fit = (inline) => {
+        if (em) em.classList.toggle("inline", inline);
         title.style.fontSize = "";
-        fs = shrink();
-      }
+        let value = parseFloat(getComputedStyle(title).fontSize);
+        for (let guard = 0; guard < 24 && lineCount() > 2 && value > 52; guard++) {
+          value -= 2;
+          title.style.fontSize = value + "px";
+        }
+        return { fs: value, lines: lineCount(),
+                 h: title.getBoundingClientRect().height };
+      };
+      const asBlock = fit(false);
+      const asInline = em ? fit(true) : asBlock;
+      // 같은 크기면 블록이 이긴다 — 강조를 제 줄에 세우는 것이 원래 구성이고,
+      // 크기가 같다면 양보할 이유가 없다. 인라인은 **더 크게 앉을 때**, 그리고
+      // 크기가 같은데 **블록이 줄 수를 못 지킬 때**만 이긴다. 뒤쪽이 예전 폴백이
+      // 보던 경우다(52px 3줄보다 52px 2줄이 읽힌다). 둘 다 못 지키면 그중
+      // 낮은 쪽을 쓴다 — 하한까지 줄인 제목은 더 넘칠수록 본문을 밀어낸다.
+      const useInline = Boolean(em) && (
+        asInline.fs > asBlock.fs
+        || (asInline.fs === asBlock.fs && asBlock.lines > 2
+            && (asInline.lines <= 2 || asInline.h < asBlock.h)));
+      const chosen = useInline ? asInline : asBlock;
+      if (em) em.classList.toggle("inline", useInline);
+      title.style.fontSize = chosen.fs + "px";
+      const fs = chosen.fs;
       void lead;
       title.dataset.finalFs = String(fs);   // 진단용 — 몇 px 로 앉았는지
     });
