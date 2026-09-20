@@ -1,0 +1,912 @@
+{
+ "continuity": {
+  "cards": 941,
+  "pairs_in_window": 170894,
+  "label_pool": {
+   "labeled": 2522,
+   "silver_same": 358,
+   "gold_same": 1
+  },
+  "production": {
+   "pairs": 674,
+   "silver": {
+    "labeled": 258,
+    "same": 82,
+    "precision": 0.318
+   },
+   "gold": {
+    "labeled": 2,
+    "same": 0,
+    "distinct": 0,
+    "material": 2,
+    "precision_same_vs_distinct": null
+   },
+   "recall": {
+    "silver_same_matched": 82,
+    "silver_same_total": 358,
+    "gold_same_matched": 0,
+    "gold_same_total": 1
+   }
+  },
+  "variants": {
+   "Q": {
+    "pairs": 28,
+    "silver": {
+     "labeled": 8,
+     "same": 6,
+     "precision": 0.75
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "recall_gain": {
+     "silver_same_recovered": 6,
+     "silver_same_missed_by_production": 276,
+     "gold_same_recovered": 0,
+     "gold_same_missed_by_production": 1
+    }
+   },
+   "Qs": {
+    "pairs": 11,
+    "silver": {
+     "labeled": 3,
+     "same": 3,
+     "precision": 1.0
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "recall_gain": {
+     "silver_same_recovered": 3,
+     "silver_same_missed_by_production": 276,
+     "gold_same_recovered": 0,
+     "gold_same_missed_by_production": 1
+    }
+   },
+   "Qs+ctx": {
+    "pairs": 6,
+    "silver": {
+     "labeled": 3,
+     "same": 3,
+     "precision": 1.0
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "recall_gain": {
+     "silver_same_recovered": 3,
+     "silver_same_missed_by_production": 276,
+     "gold_same_recovered": 0,
+     "gold_same_missed_by_production": 1
+    }
+   },
+   "A1": {
+    "pairs": 921,
+    "silver": {
+     "labeled": 211,
+     "same": 26,
+     "precision": 0.123
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "recall_gain": {
+     "silver_same_recovered": 26,
+     "silver_same_missed_by_production": 276,
+     "gold_same_recovered": 0,
+     "gold_same_missed_by_production": 1
+    }
+   },
+   "A2": {
+    "pairs": 0,
+    "silver": {
+     "labeled": 0,
+     "same": 0,
+     "precision": null
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "recall_gain": {
+     "silver_same_recovered": 0,
+     "silver_same_missed_by_production": 276,
+     "gold_same_recovered": 0,
+     "gold_same_missed_by_production": 1
+    }
+   },
+   "Q+A1": {
+    "pairs": 0,
+    "silver": {
+     "labeled": 0,
+     "same": 0,
+     "precision": null
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "recall_gain": {
+     "silver_same_recovered": 0,
+     "silver_same_missed_by_production": 276,
+     "gold_same_recovered": 0,
+     "gold_same_missed_by_production": 1
+    }
+   },
+   "Q|A2": {
+    "pairs": 28,
+    "silver": {
+     "labeled": 8,
+     "same": 6,
+     "precision": 0.75
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "recall_gain": {
+     "silver_same_recovered": 6,
+     "silver_same_missed_by_production": 276,
+     "gold_same_recovered": 0,
+     "gold_same_missed_by_production": 1
+    }
+   },
+   "Q+ctx": {
+    "pairs": 18,
+    "silver": {
+     "labeled": 8,
+     "same": 6,
+     "precision": 0.75
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "recall_gain": {
+     "silver_same_recovered": 6,
+     "silver_same_missed_by_production": 276,
+     "gold_same_recovered": 0,
+     "gold_same_missed_by_production": 1
+    }
+   },
+   "A1+ctx": {
+    "pairs": 357,
+    "silver": {
+     "labeled": 117,
+     "same": 21,
+     "precision": 0.179
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "recall_gain": {
+     "silver_same_recovered": 21,
+     "silver_same_missed_by_production": 276,
+     "gold_same_recovered": 0,
+     "gold_same_missed_by_production": 1
+    }
+   }
+  },
+  "by_family": {
+   "none": {
+    "production": {
+     "n": 21
+    },
+    "Q": {
+     "n": 2
+    },
+    "Q|A2": {
+     "n": 2
+    },
+    "Q+ctx": {
+     "n": 2
+    },
+    "A1": {
+     "n": 45
+    },
+    "A1+ctx": {
+     "n": 11
+    }
+   },
+   "regulatory_action": {
+    "A1": {
+     "n": 258,
+     "labeled": 87,
+     "silver_same": 6
+    },
+    "Q": {
+     "n": 2
+    },
+    "Q|A2": {
+     "n": 2
+    },
+    "Q+ctx": {
+     "n": 2
+    },
+    "A1+ctx": {
+     "n": 91,
+     "labeled": 38,
+     "silver_same": 5
+    },
+    "production": {
+     "n": 102
+    }
+   },
+   "policy_decision": {
+    "A1": {
+     "n": 342,
+     "labeled": 59,
+     "silver_same": 10
+    },
+    "A1+ctx": {
+     "n": 136,
+     "labeled": 33,
+     "silver_same": 6
+    },
+    "production": {
+     "n": 321
+    },
+    "Q": {
+     "n": 12,
+     "labeled": 5,
+     "silver_same": 4
+    },
+    "Qs": {
+     "n": 8,
+     "labeled": 3,
+     "silver_same": 3
+    },
+    "Qs+ctx": {
+     "n": 4,
+     "labeled": 3,
+     "silver_same": 3
+    },
+    "Q|A2": {
+     "n": 12,
+     "labeled": 5,
+     "silver_same": 4
+    },
+    "Q+ctx": {
+     "n": 6,
+     "labeled": 5,
+     "silver_same": 4
+    }
+   },
+   "corporate_move": {
+    "production": {
+     "n": 47
+    },
+    "A1": {
+     "n": 72,
+     "labeled": 20,
+     "silver_same": 3
+    },
+    "A1+ctx": {
+     "n": 36,
+     "labeled": 15,
+     "silver_same": 3
+    },
+    "Q": {
+     "n": 2,
+     "labeled": 2,
+     "silver_same": 2
+    },
+    "Q|A2": {
+     "n": 2,
+     "labeled": 2,
+     "silver_same": 2
+    },
+    "Q+ctx": {
+     "n": 2,
+     "labeled": 2,
+     "silver_same": 2
+    }
+   },
+   "opinion": {
+    "A1": {
+     "n": 10,
+     "labeled": 5,
+     "silver_same": 0
+    },
+    "A1+ctx": {
+     "n": 1,
+     "labeled": 1,
+     "silver_same": 0
+    }
+   },
+   "project_milestone": {
+    "production": {
+     "n": 32
+    },
+    "A1": {
+     "n": 45,
+     "labeled": 7,
+     "silver_same": 1
+    },
+    "A1+ctx": {
+     "n": 20,
+     "labeled": 4,
+     "silver_same": 1
+    },
+    "Q": {
+     "n": 5,
+     "labeled": 1,
+     "silver_same": 0
+    },
+    "Q|A2": {
+     "n": 5,
+     "labeled": 1,
+     "silver_same": 0
+    },
+    "Q+ctx": {
+     "n": 3,
+     "labeled": 1,
+     "silver_same": 0
+    }
+   },
+   "incident_safety": {
+    "production": {
+     "n": 66
+    },
+    "A1": {
+     "n": 46,
+     "labeled": 9,
+     "silver_same": 0
+    },
+    "A1+ctx": {
+     "n": 7,
+     "labeled": 2,
+     "silver_same": 0
+    },
+    "Q": {
+     "n": 1
+    },
+    "Q|A2": {
+     "n": 1
+    },
+    "Q+ctx": {
+     "n": 1
+    }
+   },
+   "contract_award": {
+    "A1": {
+     "n": 100,
+     "labeled": 24,
+     "silver_same": 6
+    },
+    "production": {
+     "n": 79
+    },
+    "A1+ctx": {
+     "n": 55,
+     "labeled": 24,
+     "silver_same": 6
+    },
+    "Q": {
+     "n": 4
+    },
+    "Q|A2": {
+     "n": 4
+    },
+    "Qs": {
+     "n": 3
+    },
+    "Qs+ctx": {
+     "n": 2
+    },
+    "Q+ctx": {
+     "n": 2
+    }
+   },
+   "market_signal": {
+    "production": {
+     "n": 6
+    }
+   },
+   "research_report": {
+    "A1": {
+     "n": 3
+    }
+   }
+  }
+ },
+ "web": {
+  "pairs": 21835,
+  "silver_same_total": 4518,
+  "gold_same_total": 52,
+  "lexical_matched_by_production": {
+   "n": 76,
+   "silver_same": 13
+  },
+  "variants": {
+   "Q": {
+    "pairs": 181,
+    "silver": {
+     "labeled": 181,
+     "same": 155,
+     "precision": 0.856
+    },
+    "gold": {
+     "labeled": 1,
+     "same": 0,
+     "distinct": 0,
+     "material": 1,
+     "precision_same_vs_distinct": null
+    },
+    "share_of_silver_same_covered": 0.034,
+    "silver_diff_merged": 26
+   },
+   "Qs": {
+    "pairs": 47,
+    "silver": {
+     "labeled": 47,
+     "same": 43,
+     "precision": 0.915
+    },
+    "gold": {
+     "labeled": 1,
+     "same": 0,
+     "distinct": 0,
+     "material": 1,
+     "precision_same_vs_distinct": null
+    },
+    "share_of_silver_same_covered": 0.01,
+    "silver_diff_merged": 4
+   },
+   "Qs+ctx": {
+    "pairs": 47,
+    "silver": {
+     "labeled": 47,
+     "same": 43,
+     "precision": 0.915
+    },
+    "gold": {
+     "labeled": 1,
+     "same": 0,
+     "distinct": 0,
+     "material": 1,
+     "precision_same_vs_distinct": null
+    },
+    "share_of_silver_same_covered": 0.01,
+    "silver_diff_merged": 4
+   },
+   "A1": {
+    "pairs": 1405,
+    "silver": {
+     "labeled": 1400,
+     "same": 400,
+     "precision": 0.286
+    },
+    "gold": {
+     "labeled": 8,
+     "same": 0,
+     "distinct": 2,
+     "material": 6,
+     "precision_same_vs_distinct": 0.0
+    },
+    "share_of_silver_same_covered": 0.089,
+    "silver_diff_merged": 1000
+   },
+   "A2": {
+    "pairs": 13,
+    "silver": {
+     "labeled": 13,
+     "same": 13,
+     "precision": 1.0
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "share_of_silver_same_covered": 0.003,
+    "silver_diff_merged": 0
+   },
+   "Q+A1": {
+    "pairs": 14,
+    "silver": {
+     "labeled": 14,
+     "same": 14,
+     "precision": 1.0
+    },
+    "gold": {
+     "labeled": 0,
+     "same": 0,
+     "distinct": 0,
+     "material": 0,
+     "precision_same_vs_distinct": null
+    },
+    "share_of_silver_same_covered": 0.003,
+    "silver_diff_merged": 0
+   },
+   "Q|A2": {
+    "pairs": 193,
+    "silver": {
+     "labeled": 193,
+     "same": 167,
+     "precision": 0.865
+    },
+    "gold": {
+     "labeled": 1,
+     "same": 0,
+     "distinct": 0,
+     "material": 1,
+     "precision_same_vs_distinct": null
+    },
+    "share_of_silver_same_covered": 0.037,
+    "silver_diff_merged": 26
+   },
+   "Q+ctx": {
+    "pairs": 181,
+    "silver": {
+     "labeled": 181,
+     "same": 155,
+     "precision": 0.856
+    },
+    "gold": {
+     "labeled": 1,
+     "same": 0,
+     "distinct": 0,
+     "material": 1,
+     "precision_same_vs_distinct": null
+    },
+    "share_of_silver_same_covered": 0.034,
+    "silver_diff_merged": 26
+   },
+   "A1+ctx": {
+    "pairs": 1354,
+    "silver": {
+     "labeled": 1349,
+     "same": 398,
+     "precision": 0.295
+    },
+    "gold": {
+     "labeled": 8,
+     "same": 0,
+     "distinct": 2,
+     "material": 6,
+     "precision_same_vs_distinct": 0.0
+    },
+    "share_of_silver_same_covered": 0.088,
+    "silver_diff_merged": 951
+   }
+  },
+  "by_family": {
+   "_by_kind": {
+    "n:개<10": {
+     "n": 2,
+     "silver_same": 2
+    },
+    "n:기<10": {
+     "n": 89,
+     "silver_same": 73
+    },
+    "krw": {
+     "n": 15,
+     "silver_same": 11
+    },
+    "n:사<10": {
+     "n": 39,
+     "silver_same": 34
+    },
+    "pct": {
+     "n": 12,
+     "silver_same": 12
+    },
+    "mw": {
+     "n": 5,
+     "silver_same": 5
+    },
+    "n:건>=10": {
+     "n": 1,
+     "silver_same": 1
+    },
+    "usd": {
+     "n": 11,
+     "silver_same": 11
+    },
+    "mwh": {
+     "n": 1,
+     "silver_same": 1
+    },
+    "n:곳<10": {
+     "n": 1,
+     "silver_same": 1
+    },
+    "n:개국<10": {
+     "n": 3,
+     "silver_same": 2
+    },
+    "n:대>=10": {
+     "n": 2,
+     "silver_same": 2
+    }
+   },
+   "policy_decision": {
+    "Q": {
+     "n": 80,
+     "labeled": 80,
+     "silver_same": 74
+    },
+    "Q|A2": {
+     "n": 82,
+     "labeled": 82,
+     "silver_same": 76
+    },
+    "Q+ctx": {
+     "n": 80,
+     "labeled": 80,
+     "silver_same": 74
+    },
+    "A1": {
+     "n": 132,
+     "labeled": 131,
+     "silver_same": 38
+    },
+    "A1+ctx": {
+     "n": 128,
+     "labeled": 127,
+     "silver_same": 38
+    },
+    "Qs": {
+     "n": 23,
+     "labeled": 23,
+     "silver_same": 23
+    },
+    "Qs+ctx": {
+     "n": 23,
+     "labeled": 23,
+     "silver_same": 23
+    },
+    "Q+A1": {
+     "n": 5,
+     "labeled": 5,
+     "silver_same": 5
+    },
+    "A2": {
+     "n": 2,
+     "labeled": 2,
+     "silver_same": 2
+    }
+   },
+   "mixed": {
+    "A1": {
+     "n": 838,
+     "labeled": 837,
+     "silver_same": 250
+    },
+    "A1+ctx": {
+     "n": 813,
+     "labeled": 812,
+     "silver_same": 250
+    },
+    "Q": {
+     "n": 74,
+     "labeled": 74,
+     "silver_same": 60
+    },
+    "Q|A2": {
+     "n": 84,
+     "labeled": 84,
+     "silver_same": 70
+    },
+    "Q+ctx": {
+     "n": 74,
+     "labeled": 74,
+     "silver_same": 60
+    },
+    "Qs": {
+     "n": 11,
+     "labeled": 11,
+     "silver_same": 8
+    },
+    "Qs+ctx": {
+     "n": 11,
+     "labeled": 11,
+     "silver_same": 8
+    },
+    "Q+A1": {
+     "n": 5,
+     "labeled": 5,
+     "silver_same": 5
+    },
+    "A2": {
+     "n": 11,
+     "labeled": 11,
+     "silver_same": 11
+    }
+   },
+   "corporate_move": {
+    "A1": {
+     "n": 136,
+     "labeled": 134,
+     "silver_same": 69
+    },
+    "A1+ctx": {
+     "n": 134,
+     "labeled": 132,
+     "silver_same": 69
+    },
+    "Q": {
+     "n": 10,
+     "labeled": 10,
+     "silver_same": 10
+    },
+    "Qs": {
+     "n": 4,
+     "labeled": 4,
+     "silver_same": 4
+    },
+    "Qs+ctx": {
+     "n": 4,
+     "labeled": 4,
+     "silver_same": 4
+    },
+    "Q+A1": {
+     "n": 4,
+     "labeled": 4,
+     "silver_same": 4
+    },
+    "Q|A2": {
+     "n": 10,
+     "labeled": 10,
+     "silver_same": 10
+    },
+    "Q+ctx": {
+     "n": 10,
+     "labeled": 10,
+     "silver_same": 10
+    }
+   },
+   "regulatory_action": {
+    "A1": {
+     "n": 206,
+     "labeled": 205,
+     "silver_same": 26
+    },
+    "A1+ctx": {
+     "n": 186,
+     "labeled": 185,
+     "silver_same": 24
+    }
+   },
+   "contract_award": {
+    "A1": {
+     "n": 68,
+     "labeled": 68,
+     "silver_same": 15
+    },
+    "A1+ctx": {
+     "n": 68,
+     "labeled": 68,
+     "silver_same": 15
+    },
+    "Q": {
+     "n": 15,
+     "labeled": 15,
+     "silver_same": 9
+    },
+    "Qs": {
+     "n": 8,
+     "labeled": 8,
+     "silver_same": 7
+    },
+    "Qs+ctx": {
+     "n": 8,
+     "labeled": 8,
+     "silver_same": 7
+    },
+    "Q|A2": {
+     "n": 15,
+     "labeled": 15,
+     "silver_same": 9
+    },
+    "Q+ctx": {
+     "n": 15,
+     "labeled": 15,
+     "silver_same": 9
+    }
+   },
+   "incident_safety": {
+    "Q": {
+     "n": 1,
+     "labeled": 1,
+     "silver_same": 1
+    },
+    "Q|A2": {
+     "n": 1,
+     "labeled": 1,
+     "silver_same": 1
+    },
+    "Q+ctx": {
+     "n": 1,
+     "labeled": 1,
+     "silver_same": 1
+    },
+    "A1": {
+     "n": 5,
+     "labeled": 5,
+     "silver_same": 0
+    },
+    "A1+ctx": {
+     "n": 5,
+     "labeled": 5,
+     "silver_same": 0
+    }
+   },
+   "project_milestone": {
+    "A1": {
+     "n": 20,
+     "labeled": 20,
+     "silver_same": 2
+    },
+    "A1+ctx": {
+     "n": 20,
+     "labeled": 20,
+     "silver_same": 2
+    }
+   },
+   "market_signal": {
+    "Q": {
+     "n": 1,
+     "labeled": 1,
+     "silver_same": 1
+    },
+    "Qs": {
+     "n": 1,
+     "labeled": 1,
+     "silver_same": 1
+    },
+    "Qs+ctx": {
+     "n": 1,
+     "labeled": 1,
+     "silver_same": 1
+    },
+    "Q|A2": {
+     "n": 1,
+     "labeled": 1,
+     "silver_same": 1
+    },
+    "Q+ctx": {
+     "n": 1,
+     "labeled": 1,
+     "silver_same": 1
+    }
+   }
+  }
+ }
+}
