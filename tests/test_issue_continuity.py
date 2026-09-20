@@ -336,6 +336,92 @@ class ProgressionTests(unittest.TestCase):
         self.assertEqual(continuity.scale_tier(article("한빛 3호기 재가동"), "permit"), -1)
 
 
+class CalendarDateIsNotAQuantityTests(unittest.TestCase):
+    """달력 날짜가 '새 수치'로 읽혀 재보도가 minor 로 새던 자리.
+
+    `_QUANTITY_RE` 의 `일` 단위가 '며칠에 열린다'를 규모로 읽었다. 규칙 ⑤
+    (new_quantities)는 요약에 없던 숫자가 하나만 있어도 minor 를 내므로, 날짜를
+    적는 재보도는 예외 없이 감점이 절반이 되고 창도 7일에서 3일로 줄었다.
+
+    아래 넷은 2026-08-17~09-20 발송분 전수 replay 에서 실제로 갈린 쌍이다.
+    """
+
+    def quantities(self, text):
+        return continuity._quantities({"title_kr": "", "summary": text})
+
+    # ---- 달력 날짜는 수치가 아니다 ----
+
+    def test_day_of_month_is_not_a_quantity(self):
+        """실측 9/14 ← 9/10 제12차 전기본 제7차 토론회. 같은 토론회다."""
+        self.assertEqual(self.quantities("정부가 오는 18일 제7차 토론회를 개최한다."), set())
+
+    def test_bare_day_before_verb_is_not_a_quantity(self):
+        """실측 8/24 ← 8/22 새울 1호기 재가동 승인."""
+        self.assertEqual(self.quantities("원자로 임계를 21일 허용했다."), set())
+
+    def test_month_and_day_is_not_a_quantity_but_year_survives(self):
+        """실측 9/15 ← 9/12 크레인 기지 SMR. `2028년` 은 목표연도라 수치로 남는다.
+
+        연도까지 지우면 new_numbers 가 비어 none 이 되는데, none 은 감점을 늘리는
+        방향이라 이 모듈의 보수성(면제는 넓게)과 반대다.
+        """
+        self.assertEqual(
+            self.quantities("2028년 9월 30일까지 가동을 목표로 한다."), {"2028년"})
+
+    # ---- 기간은 수치다 ----
+
+    def test_duration_suffix_keeps_the_quantity(self):
+        """실측 8/30 자포리자 `연료 비축량이 10일분뿐`. 드론 피격 → 블랙아웃 경고로
+        넘어간 진짜 후속이라, 여기서 `10일` 을 지우면 중요한 속보가 죽는다."""
+        self.assertEqual(
+            self.quantities("연료 비축량이 10일분뿐이라 블랙아웃 위기다."), {"10일"})
+
+    def test_span_suffix_keeps_the_quantity(self):
+        self.assertEqual(self.quantities("공기를 30일간 단축했다."), {"30일"})
+
+    def test_months_and_weeks_and_years_are_untouched(self):
+        self.assertEqual(
+            self.quantities("3개월 내 착공, 2040년 목표수요 158.4GW, 2주 연장"),
+            {"3개월", "2040년", "158.4GW", "2주"})
+
+    # ---- 판정까지 이어지는가 ----
+
+    def test_rescheduled_forum_recap_is_none(self):
+        """실측 2026-09-14. 지문 event_date 가 양쪽 다 2026-09-18 인 같은 토론회인데
+        요약의 `오는 18일` 하나로 minor 가 되어 감점이 5.0 대신 0.625 였다."""
+        verdict = continuity.progression(
+            sent("제12차 전기본 토론회 개최…석탄발전 조기 폐지 논의",
+                 summary="기후에너지환경부가 제12차 전력수급기본계획 수립을 위한"
+                         " 토론회를 열고 석탄화력발전소 조기 폐지 방안을 논의한다."),
+            article("정부, 제12차 전력수급기본계획 수립 위한 토론회 개최",
+                    summary="정부가 오는 18일 제12차 전력수급기본계획 수립을 위한"
+                            " 제7차 토론회를 개최하여 석탄화력 조기 폐지 방안을 논의한다."))
+        self.assertEqual(verdict["verdict"], "none")
+
+    def test_reapproval_recap_is_none(self):
+        """실측 2026-08-24 ← 08-22. 같은 새울 1호기 재가동 승인."""
+        verdict = continuity.progression(
+            sent("원안위, 새울 1호기 정기검사 완료 및 재가동 승인",
+                 summary="원자력안전위원회는 정기검사를 마친 새울 1호기의 원자로"
+                         " 임계를 허용하고 재가동을 승인했다."),
+            article("원안위, 정기검사 마친 새울원전 1호기 재가동 허용",
+                    summary="원자력안전위원회가 정기검사를 마친 새울원전 1호기의"
+                            " 재가동(임계)을 21일 허용했다."))
+        self.assertEqual(verdict["verdict"], "none")
+
+    def test_fuel_reserve_follow_up_stays_minor(self):
+        """반대 방향의 보호. 날짜를 지우는 규칙이 진짜 수치를 삼키면 안 된다."""
+        verdict = continuity.progression(
+            sent("IAEA, 자포리자 원전 부지 드론 피격 사건 발생 확인",
+                 summary="IAEA는 우크라이나 자포리자 원전 부지가 3차례 드론 공격을"
+                         " 받았으며, 직원 2명이 부상했다고 밝혔다."),
+            article("IAEA, 자포리자 원전 외부 전력 차단 장기화에 블랙아웃 경고",
+                    summary="IAEA는 자포리자 원전의 외부 전력 공급이 일주일 이상"
+                            " 끊겨 비상 디젤 발전기에 의존 중이며, 연료 비축량이"
+                            " 10일분뿐이라 블랙아웃 위기에 처했다고 경고했다."))
+        self.assertEqual(verdict["verdict"], "minor")
+
+
 # ---- ③ 점수에 실제로 반영되는가 -------------------------------------------------
 
 class ScoreEffectTests(unittest.TestCase):
