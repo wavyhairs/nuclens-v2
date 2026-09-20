@@ -340,6 +340,37 @@ _TOKEN_RE = re.compile(r"[\w가-힣]+")
 # 수치 — '규모 확대·신규 품목'을 잡는 약한 신호. ranking._QUANTITY_RE 와 같은 축.
 _QUANTITY_RE = re.compile(
     r"\d[\d,.]*\s*(?:기|호기|GW|MW|㎿|kW|억|조|만|%|퍼센트|달러|유로|원|년|개월|주|일)")
+# 달력 날짜 — **수치가 아니다.** 위 표의 `일` 이 '며칠에 열린다'를 규모로 읽는다.
+#
+# 실측 2026-08-17~09-20 발송분 전수 replay. 규칙 ⑤(new_quantities)가 minor 를 낸
+# 판정 중 새 수치가 날짜뿐이라 갈린 것이 4건이었고, 전부 같은 사건의 재보도였다.
+#
+#     9/14 `정부, 제12차 전력수급기본계획 수립 위한 토론회 개최`
+#       ← 9/10 `제12차 전기본 토론회 개최…석탄발전 조기 폐지 논의`
+#          같은 제7차 토론회다(양쪽 지문 event_date 가 똑같이 2026-09-18).
+#          요약의 `오는 18일` 하나로 minor 가 되어 감점이 5.0 대신 0.625 였다.
+#     8/24 `원안위, 정기검사 마친 새울원전 1호기 재가동 허용` ← 8/22 같은 승인
+#          (`재가동(임계)을 21일 허용했다`)
+#     9/15 `미 해군, … 2028년 9월까지 SMR 설치 확정` ← 9/12 같은 배치 확정
+#          (`2028년 9월 30일까지`. `2028년` 은 목표연도라 그대로 둔다 — 양쪽이
+#           공유하므로 새 수치도 아니다)
+#
+# 기간은 날짜가 아니다. 접미사가 붙은 것(`10일분`·`30일간`·`사흘째`)은 실제 규모다 —
+# 실측 8/30 자포리자 `연료 비축량이 10일분뿐`이 그 자리다. 그 건은 드론 피격에서
+# 블랙아웃 경고로 넘어간 **진짜 후속**이고, 여기서 `10일` 을 지우면 죽는다.
+# 그래서 지우는 것은 `일` 단위 전체가 아니라 **달력 날짜 표현만**이다.
+#
+# 방향의 비대칭에 주의할 것 — 수치를 지나치게 지우면 ⑤ 가 안 걸려 none 이 되고,
+# none 은 감점을 **늘리는** 쪽이다. 이 파일의 보수성은 반대 방향이므로(면제는 넓게)
+# 아래 두 패턴은 '달력 날짜임이 분명한 것'으로 좁게 둔다. `년`·`개월`·`주` 는
+# 손대지 않는다.
+_CALENDAR_DATE_RE = re.compile(
+    # ① 월일: `9월 30일`. **연도는 삼키지 않는다** — `2028년 9월 30일까지 가동`의
+    #    `2028년`은 목표연도라 수치다. 지우면 new_numbers 가 비어 none 으로
+    #    내려앉는데, 그쪽은 감점을 **늘리는** 방향이라 이 파일의 보수성과 반대다.
+    r"\d{1,2}\s*월\s*\d{1,2}\s*일"
+    # ② 단독 일자: `오는 18일`, `21일 허용`. 기간 접미사가 붙으면 수치이므로 남긴다.
+    r"|\d{1,2}\s*일(?!\s*(?:분|간|째|치|여|동안|정도|가량|만에))")
 # 고유명사 앵커 — 대문자 약어·한글 3자 이상 명사. 표기가 갈린 이름을 붙이려는
 # 것이 아니라, 상투어만으로 두 기사가 붙는 것을 막는 데 쓴다.
 _ANCHOR_RE = re.compile(r"[A-Z][A-Za-z0-9\-]{1,}|[가-힣]{3,}")
@@ -493,9 +524,15 @@ def scale_tiers(row: dict) -> dict[str, int]:
     return {name: scale_tier(row, name) for name in PROGRESSION_SCALES}
 
 
+def _strip_calendar_dates(text: str) -> str:
+    """달력 날짜 표현을 지운 본문. `_CALENDAR_DATE_RE` 주석에 실측이 있다."""
+    return _CALENDAR_DATE_RE.sub(" ", text)
+
+
 def _quantities(row: dict) -> set[str]:
-    return {_SPACE_RE.sub("", m) for m in _QUANTITY_RE.findall(_text_of(row))} | {
-        _SPACE_RE.sub("", m.group(0)) for m in _QUANTITY_RE.finditer(_text_of(row))}
+    text = _strip_calendar_dates(_text_of(row))
+    return {_SPACE_RE.sub("", m) for m in _QUANTITY_RE.findall(text)} | {
+        _SPACE_RE.sub("", m.group(0)) for m in _QUANTITY_RE.finditer(text)}
 
 
 def progression(prior: dict, candidate: dict, *,
