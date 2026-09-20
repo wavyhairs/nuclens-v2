@@ -1239,6 +1239,30 @@ function selfCheck() {
       if (mean > 0.28) card.classList.add("bright-photo");
     });
 
+    // ── 스토리 표지 넘침 ────────────────────────────────────────────
+    // 덱이 긴 날이면 배지·출처·슬로건이 본문 칸 밖으로 밀려 렌더 가드가 카드를
+    // 통째로 죽인다(09-19 재생성 실측: overflow=st-badge,st-credit,st-slogan).
+    // 상한 안에 든 카피인데도 그렇다 — 길이는 글자 수로 재고 넘침은 픽셀로
+    // 나기 때문이다. 일일 카드에 있는 안전망과 같은 것을 여기에도 둔다.
+    await page.evaluate(() => {
+      const body = document.querySelector(".st-cover .st-body");
+      if (!body) return;
+      const over = () => {
+        const br = body.getBoundingClientRect();
+        return [...body.children].some((el) => el.getBoundingClientRect().bottom > br.bottom - 1);
+      };
+      const shrink = (sel, floor) => {
+        const el = body.querySelector(sel);
+        for (let guard = 0; el && guard < 24 && over(); guard++) {
+          const size = parseFloat(getComputedStyle(el).fontSize);
+          if (size <= floor) break;
+          el.style.fontSize = size - 1 + "px";
+        }
+      };
+      shrink(".st-desc", 26);    // 폰 9.4px 까지. 덱은 부연이라 먼저 양보한다
+      shrink(".st-title", 58);   // 표지 제목은 마지막에, 조금만
+    });
+
     // ── 제목 2줄 ────────────────────────────────────────────────────
     // 3줄 제목은 히어로를 다 먹고도 정보가 안 늘어난다("테라파워·메타, 나트륨
     // 원전 8기 협력" — 지니 09-20). 글자를 줄여 2줄에 앉힌다. 강조 구간(.em)은
