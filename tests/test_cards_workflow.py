@@ -184,6 +184,23 @@ class CardsWorkflowShowsItsFailuresTest(unittest.TestCase):
                                 "tools/verify_cards.py", "git commit")]
         self.assertEqual(order, sorted(order))
 
+    def test_todays_ledger_is_reprojected_before_cards_are_made(self):
+        """받은 재료에 체크아웃 원장을 다시 찍는다 — 받은 직후, 굽기 전에 (2026-09-21).
+
+        Daily Brief 는 배포 뒤에 스토리를 판정하므로 라이브 today.json 은 오늘
+        판정을 모른다. 그날 새 id 로 조폐된 1위는 thread_id 가 빈칸이라 스토리가
+        조용히 빠졌다. 순서가 `Fetch → Re-project → Make cards` 여야 굽는 쪽이
+        오늘 원장을 본다.
+        """
+        fetch = self.blocks.index(step(self.blocks, "Fetch live site data (한 세대)"))
+        reproject = self.blocks.index(
+            step(self.blocks, "Re-project today's story ledger onto the fetched data"))
+        make = self.blocks.index(step(self.blocks, "Make cards"))
+        self.assertLess(fetch, reproject, "재료를 받기 전에 투영한다")
+        self.assertLess(reproject, make, "카드를 구운 뒤에 투영한다 — 소용없다")
+        self.assertIn("python tools/reproject_threads.py",
+                      step(self.blocks, "Re-project today's story ledger onto the fetched data"))
+
     def test_the_material_is_fetched_as_one_deployment_generation(self):
         """네 파일을 받고, **같은 세대인지 확인한다** (2026-09-20).
 

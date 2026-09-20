@@ -20,6 +20,8 @@
 #   수동 — Actions → "Cards (카드뉴스)". 쿼터 소진·렌더 실패로 카드가 빠진 날의
 #          복구용. 날짜를 지정할 수 있고, 텔레그램 발송 여부를 고를 수 있다.
 #
+# 받은 재료에는 체크아웃 원장의 오늘 판정을 다시 투영한다(아래 스텝 주석).
+#
 # 자동 실행은 멱등하다. 같은 날 카드가 이미 사이트에 있으면 make_cards.py 가
 # Gemini 를 부르지 않고 빠지고, 커밋할 변경이 없으면 배포도 깨우지 않는다.
 # 손으로 부른 실행은 기본이 force 라 늘 다시 굽는다(복구가 그 목적이다).
@@ -134,6 +136,21 @@ jobs:
             echo "::warning::배포 세대가 받는 중에 바뀌었다 — 스토리는 건너뛴다"
             echo "STORY_SKIP=true" >> "$GITHUB_ENV"
           fi
+
+      # 받은 재료는 **오늘 판정이 실리기 전의 배포본**이다. Daily Brief 는
+      # `Build web data → Deploy → Build long-term stories → 원장 커밋 → 여기`
+      # 순서라, 카드가 깨어날 때 체크아웃(main)의 thread_ledger.json 에는 오늘
+      # 판정이 있지만 라이브 today.json 의 thread_id 에는 없다. 어제부터 이어진
+      # 이슈면 상관없지만, **그날 새 id 로 조폐된 이슈**가 1위면 빈칸이다 —
+      # 2026-09-21 실사고(대미투자 협상 결과 국회 보고): 원장은 그 id 를 사건
+      # 2건짜리 스레드에 붙였는데 카드는 빈칸을 보고 후보 없음으로 빠졌다.
+      #
+      # 그래서 사이트와 **같은 투영 함수**로 체크아웃 원장을 받은 파일에 다시
+      # 찍는다. 순위·id·본문·세대는 건드리지 않고 LLM 도 안 부른다. 체크아웃
+      # 원장이 사이트 것보다 새로울 때만 손대므로, 크롤 빌드가 이미 오늘 판정을
+      # 실은 뒤의 수동 실행에서는 아무것도 바뀌지 않는다.
+      - name: Re-project today's story ledger onto the fetched data
+        run: python tools/reproject_threads.py
 
       - name: Verify Gemini key selection
         env:
