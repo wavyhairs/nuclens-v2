@@ -234,6 +234,37 @@ class CandidateTests(unittest.TestCase):
         top = [issue(SAR_SEP, SAR_SEP_TITLE, thread_id=SAR_THREAD)]
         self.assertIsNone(card_context.pick_story_candidate(data, top))
 
+    def test_no_candidate_still_says_why_for_every_rank(self):
+        """2026-09-21: 상위 3건이 전부 빠졌는데 로그에는 이유가 없었다.
+
+        1위는 그날 새 id 로 조폐되어 thread_id 가 빈칸, 2위는 원래 스레드 없음,
+        3위는 자격 미달 — 세 가지가 다 다른 원인인데 밖으로는 같은 None 이었다.
+        """
+        thread = sar_thread()
+        thread["flow"][0]["relation_to_next"] = "same_matter"
+        data = card_context.SiteData(date="2026-09-21", issues=[], source="today",
+                                     generation_id="g", threads=threads(thread))
+        top = [issue("story-fc64f50e257b3a0a", "정부, 2000억 달러 규모 대미투자 협상"),
+               issue("story-5b2aa08eeeb78c3e", "북한, IAEA 결의안 거부", thread_id="thread-ghost"),
+               issue(SAR_SEP, SAR_SEP_TITLE, thread_id=SAR_THREAD)]
+        reasons: list[str] = []
+        self.assertIsNone(card_context.pick_story_candidate(data, top, reasons))
+        self.assertEqual(len(reasons), 3)
+        self.assertIn("#1 정부, 2000억 달러 규모 대미투자 → 스레드 없음", reasons[0])
+        self.assertIn("issue_id=story-fc64f50e257b3a0a", reasons[0])
+        self.assertIn("thread_id=빈칸", reasons[0])
+        self.assertIn("thread_id=thread-ghost — 원장에 없는 스레드", reasons[1])
+        self.assertIn(f"#3 {SAR_SEP_TITLE[:20]} → {SAR_THREAD}: 진행 관계 없음", reasons[2])
+
+    def test_reasons_are_optional_and_a_found_candidate_leaves_them_short(self):
+        top = [issue("story-1", "스토리 없는 1위"),
+               issue(SAR_SEP, SAR_SEP_TITLE, thread_id=SAR_THREAD)]
+        reasons: list[str] = []
+        found = card_context.pick_story_candidate(self._data(top), top, reasons)
+        self.assertIsNotNone(found)
+        self.assertEqual(len(reasons), 1)  # 1위가 왜 아닌지만 남는다
+        self.assertIsNotNone(card_context.pick_story_candidate(self._data(top), top))
+
     def test_a_hidden_payload_raises_so_the_caller_can_split_domains(self):
         data = card_context.SiteData(date="2026-09-20", issues=[], source="today",
                                      generation_id="g", threads=threads(visible=False))

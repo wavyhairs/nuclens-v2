@@ -473,12 +473,17 @@ def review(raw: dict, items: list[dict], **kwargs) -> list[str]:
 
 
 def find_story(data, items: list[dict]):
-    """오늘 스토리 후보. 재료가 못 믿을 상태면 조용히 없는 것으로 친다."""
+    """오늘 스토리 후보. 재료가 못 믿을 상태면 없는 것으로 치되 **이유는 남긴다.**"""
+    reasons: list[str] = []
     try:
-        return card_context.pick_story_candidate(data, items)
+        found = card_context.pick_story_candidate(data, items, reasons)
     except card_context.ContextError as exc:
         print(f"[cards] 스토리 재료 제외 — {exc}")
         return None
+    if found is None:
+        # 2026-09-21: 이 줄이 없어서 "오늘 스토리 카피가 없다" 만 남았다.
+        print("[cards] 스토리 후보 없음 — " + ("; ".join(reasons) if reasons else "상위 목록이 비었다"))
+    return found
 
 
 def story_material(story, date: str) -> dict:

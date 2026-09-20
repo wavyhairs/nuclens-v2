@@ -260,25 +260,42 @@ def eligibility(thread: dict) -> tuple[bool, str]:
     return True, f"사건 {len(events)}건 · 진행 관계 {'/'.join(sorted(set(progress)))}"
 
 
-def pick_story_candidate(data: SiteData, top: list[dict]) -> StoryCandidate | None:
+def pick_story_candidate(data: SiteData, top: list[dict],
+                         reasons: list[str] | None = None) -> StoryCandidate | None:
     """일일 카드 대상 **그 목록 안에서** 순서대로 첫 스토리를 고른다.
 
     순위를 다시 매기지 않고 LLM 도 부르지 않는다. 일일 카드와 스토리 카드가
     서로 다른 중요도 판단을 만들면 같은 날 두 산출물이 다른 1위를 말한다.
+
+    `reasons` 를 넘기면 **후보가 없을 때도** 순위별로 왜 빠졌는지가 남는다.
+    2026-09-21 실측: 상위 3건이 전부 스레드에 안 이어져 None 이 돌아왔는데
+    로그에는 "오늘 스토리 카피가 없다" 한 줄뿐이라, 원인(1위가 그날 새 id 로
+    조폐되어 원장이 모름)을 되짚는 데 빌드 재현 두 번이 들었다.
     """
     blocked = story_blocked(data.threads)
     if blocked:
         raise ContextError(blocked)
     index = data.thread_index()
     warnings = thread_warnings(data.threads)
+    if reasons is not None:
+        reasons.extend(warnings)
     for rank, issue in enumerate(top, 1):
+        title = str(issue.get("title") or "")[:20]
         thread = resolve_thread(issue, index)
         if thread is None:
+            if reasons is not None:
+                slot = str(issue.get("thread_id") or "").strip()
+                reasons.append(
+                    f"#{rank} {title} → 스레드 없음 (issue_id={issue.get('issue_id') or '?'}, "
+                    f"thread_id={slot or '빈칸'}"
+                    f"{' — 원장에 없는 스레드' if slot else ''})")
             continue
         ok, reason = eligibility(thread)
         if not ok:
-            warnings.append(f"#{rank} {str(issue.get('title') or '')[:20]} → "
-                            f"{thread.get('thread_id')}: {reason}")
+            line = f"#{rank} {title} → {thread.get('thread_id')}: {reason}"
+            warnings.append(line)
+            if reasons is not None:
+                reasons.append(line)
             continue
         return StoryCandidate(issue=issue, thread=thread, rank=rank,
                               events=_display_events(thread), warnings=warnings)
