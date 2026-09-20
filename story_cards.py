@@ -39,8 +39,23 @@ ALBUM_FILE = ROOT / "cards" / "story_album.json"
 # 일일 카드와 PNG 폴더를 나눈다. 같은 cards/out 을 쓰면 나중에 도는 쪽이 앞 앨범을
 # 지우고, 그러면 게시·재시도 순서에 따라 엉뚱한 PNG 가 사이트로 간다.
 OUT_DIR = ROOT / "cards" / "out-story"
-os.environ.setdefault("CARDS_OUT", OUT_DIR.name)
-mc.OUT_DIR = OUT_DIR
+
+
+def use_story_out_dir() -> None:
+    """렌더 대상을 스토리 폴더로 돌린다. **import 시점이 아니라 여기서 한다.**
+
+    예전에는 이 두 줄이 모듈 맨 위에 있었다. 이 파일이 별도 프로세스로만 불릴
+    때는 맞는 자리였는데, `make_cards` 가 스토리 카피를 검증하려고 이 모듈을
+    지연 import 하기 시작하면서 **import 만으로 일일 카드의 렌더 대상이 바뀌었다.**
+
+    2026-09-20 실측: 일일 슬라이드가 `cards/out-story/` 로 구워졌고, 장수 게이트는
+    빈 `cards/out/` 을 보고 `PNG 장수 불일치: 0 ≠ 5` 로 죽었다. 카피는 논리 2회로
+    멀쩡히 나왔는데 워크플로는 빨간불이었다.
+
+    모듈 import 는 다른 모듈의 전역을 건드리지 않는다.
+    """
+    os.environ.setdefault("CARDS_OUT", OUT_DIR.name)
+    mc.OUT_DIR = OUT_DIR
 
 # `MIN_EVENTS = 3` 은 여기 없다. **자격은 사건 수가 아니라 관계가 정한다** —
 # 발표 → 시행처럼 단계가 넘어간 두 칸은 이야기이고, 같은 사안을 다섯 번 되풀이한
@@ -400,6 +415,7 @@ def main() -> int:
     if args.dry:
         print(json.dumps(slides, ensure_ascii=False, indent=1))
         return 0
+    use_story_out_dir()
     mc.render(slides)
     files = mc.gate(len(slides))
     plain = raw["cover"]["headline"].replace("[[", "").replace("]]", "")

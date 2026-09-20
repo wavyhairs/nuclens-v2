@@ -356,6 +356,43 @@ class WhyCountTests(unittest.TestCase):
             self._card(["송전용량이 계절 기준으로 전환", "정책적 의미가 큽니다"]), ITEMS))
 
 
+class ImportSideEffectTests(unittest.TestCase):
+    """**모듈 import 는 다른 모듈의 전역을 건드리지 않는다.**
+
+    `make_cards` 는 스토리 카피를 검증하려고 `story_cards` 를 지연 import 한다.
+    그 파일은 오래 맨 위에서 `mc.OUT_DIR` 을 스토리 폴더로 바꿔 왔는데, 별도
+    프로세스로만 불릴 때는 맞는 자리였다. 지연 import 가 생기면서 **import 만으로
+    일일 카드의 렌더 대상이 바뀌었다.**
+
+    2026-09-20 실측: 일일 슬라이드가 `cards/out-story/` 로 구워졌고 장수 게이트가
+    빈 `cards/out/` 을 보고 `PNG 장수 불일치: 0 ≠ 5` 로 죽었다. 카피는 논리 2회로
+    멀쩡히 나왔는데 워크플로는 빨간불이었다.
+    """
+
+    def test_importing_story_cards_does_not_move_the_daily_render_target(self):
+        import importlib
+        before = make_cards.OUT_DIR
+        import story_cards
+        importlib.reload(story_cards)
+        self.assertEqual(make_cards.OUT_DIR, before)
+        self.assertEqual(make_cards.OUT_DIR.name, "out")
+
+    def test_the_story_path_still_renders_to_its_own_folder(self):
+        import story_cards
+        before = make_cards.OUT_DIR
+        try:
+            story_cards.use_story_out_dir()
+            self.assertEqual(make_cards.OUT_DIR.name, "out-story")
+        finally:
+            make_cards.OUT_DIR = before
+
+    def test_validating_a_story_copy_leaves_the_target_alone(self):
+        """`story_problems` 가 부르는 지연 import 도 마찬가지다."""
+        before = make_cards.OUT_DIR
+        make_cards.story_problems({"cover": {}}, {"events": []})
+        self.assertEqual(make_cards.OUT_DIR, before)
+
+
 class CallLogTests(unittest.TestCase):
     def test_the_log_separates_logical_calls_from_http_attempts(self):
         rows = []
