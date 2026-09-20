@@ -146,10 +146,28 @@ function esc(value) {
 function accentize(text, cls) {
   // 8자 이하 강조만 줄바꿈을 막는다. 긴 구절에 nowrap 을 걸면 헤드라인이 캔버스를
   // 넘어가 가로 가드에 걸린다(검토 09-17). 그 이상은 색만 입힌다.
-  return esc(text).replace(/\[\[(.+?)\]\]/g, (_, inner) => {
+  // 강조 뒤에 글이 더 있으면 **줄을 차지하지 않게** 한다. 에디토리얼 제목의
+  // .em 은 display:block 이라, 문장 가운데 강조가 오면 뒤 말이 셋째 줄로 밀려
+  // 히어로가 넘치고 렌더 가드가 카드를 통째로 죽인다(실측 09-20: 26자 제목).
+  const html = esc(text);
+  return html.replace(/\[\[(.+?)\]\]/g, (hit, inner, at) => {
     const keep = [...inner].length <= 8 ? " keep" : "";
-    return `<span class="${cls}${keep}">${inner}</span>`;
+    const mid = at + hit.length < html.length ? " inline" : "";
+    return `<span class="${cls}${keep}${mid}">${inner}</span>`;
   });
+}
+
+function autoAccent(text) {
+  // 모델이 `[[ ]]` 를 빼먹는 날이 있다(09-20: 본문 3장 전부). 그러면 제목이
+  // 흰 글씨 한 덩어리로 나가 지니가 본 "제목이 그냥 하얗다" 가 된다. 프롬프트가
+  // 요구하는 자리(뒤쪽 짧은 구간)에 코드가 대신 건다 — 색은 규격이지 판단이 아니다.
+  const t = String(text || "").trim();
+  if (!t || t.includes("[[")) return text;
+  const words = t.split(/\s+/);
+  if (words.length < 2) return text;
+  const span = [words.pop()];
+  while (words.length > 1 && span.join(" ").length < 4) span.unshift(words.pop());
+  return `${words.join(" ")} [[${span.join(" ")}]]`;
 }
 
 function imageData(relativePath) {
@@ -550,6 +568,7 @@ ${fontLinks(theme)}
     font-size: 72px; line-height: 1.08; letter-spacing: -3.2px; font-weight: 850;
     word-break: keep-all; }
   .editorial-title .em { display: block; color: ${c.accentBright}; font-size: 1.13em; }
+  .editorial-title .em.inline { display: inline; font-size: 1em; }
   .editorial-deck { margin-top: 24px; max-width: 520px; color: rgba(238,241,244,.88);
     font-size: 25px; line-height: 1.42; font-weight: 520; word-break: keep-all; }
   /* 사진 우하단 영문 스탬프는 14px(폰 5.1px) 라 읽히지 않고, 오버레이가 옅은
@@ -1008,7 +1027,7 @@ function renderSlide(s, theme) {
           <div class="hd"><span class="brand">NUCLENS</span><span>${num}</span></div>
           <div class="editorial-copy">
             <div class="editorial-kicker"><strong>${esc(s.stepLabel || "")}</strong>${s.context ? ` &nbsp;|&nbsp; ${esc(s.context)}` : ""}</div>
-            <h1 class="editorial-title">${accentize(s.headline, "em")}</h1>
+            <h1 class="editorial-title">${accentize(autoAccent(s.headline), "em")}</h1>
             ${s.deck ? `<p class="editorial-deck">${esc(s.deck)}</p>` : ""}
           </div>
           <div class="editorial-stamp">${esc(s.stamp || "EDITORIAL BRIEF").replaceAll("\n", "<br>")}</div>
@@ -1242,10 +1261,23 @@ function selfCheck() {
         const budget = lh + (em ? fs * 1.13 * 1.08 : lh);
         return title.getBoundingClientRect().height > budget + 6 ? 3 : 2;
       };
-      let fs = parseFloat(getComputedStyle(title).fontSize);
-      for (let guard = 0; guard < 24 && lineCount() > 2 && fs > 52; guard++) {
-        fs -= 2;
-        title.style.fontSize = fs + "px";
+      const shrink = () => {
+        let fs = parseFloat(getComputedStyle(title).fontSize);
+        for (let guard = 0; guard < 24 && lineCount() > 2 && fs > 52; guard++) {
+          fs -= 2;
+          title.style.fontSize = fs + "px";
+        }
+        return fs;
+      };
+      let fs = shrink();
+      // 하한까지 줄여도 3줄이면 **강조를 자기 줄에서 내린다**. 블록 강조는 앞줄이
+      // 1줄일 때만 성립하는 구성이라, 긴 제목에서는 그 한 줄이 통째로 초과분이
+      // 된다(09-20 실측: 52px 3줄). 색은 지키고 줄만 줄인다 — 52px 3줄보다
+      // 60px 2줄이 읽힌다.
+      if (em && lineCount() > 2) {
+        em.classList.add("inline");
+        title.style.fontSize = "";
+        fs = shrink();
       }
       void lead;
       title.dataset.finalFs = String(fs);   // 진단용 — 몇 px 로 앉았는지
