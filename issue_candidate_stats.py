@@ -357,7 +357,7 @@ def _ratio(diagnostics: dict, key: str) -> float:
 PREFILTERS: tuple[tuple[str, str, object], ...] = (
     (
         "fingerprint_identity_conflict",
-        "지문의 신원 축(행위자·대상·행위·원인)이 어긋난 쌍",
+        "지문의 신원 축(행위자·대상·원인)이 어긋난 쌍",
         lambda diag, facilities: bool(_axes(diag, "story_fingerprint_contested")),
     ),
     (

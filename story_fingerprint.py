@@ -39,12 +39,33 @@ _SPACE_RE = re.compile(r"\s+")
 # 키를 여러 개 두는 것은 LLM 이 같은 뜻을 다른 이름으로 쓰기 때문이다. 프롬프트가
 # 정한 이름을 **반드시 첫 번째로** 둔다 — 별칭만 적고 본명을 빠뜨린 것이 위
 # `drivers` 사고였다.
+#
+# 그리고 **표에 있는 축은 프롬프트가 실제로 내놓는 것이어야 한다.** 위 사고를
+# 고치며 이 표를 만든 날(2026-08-21) `action` 축을 함께 넣었는데, 그 이름을
+# 내놓는 생산자가 없었다 — 위 계약은 여섯 칸뿐이고 거기에 `action` 은 없다.
+#
+# 실측 2026-09-20, 발송 이력 전 기간(7/14~9/20)의 지문 495건:
+#
+#     event_family 100.0%   countries 99.8%   actors 99.8%   assets 99.8%
+#     drivers       98.4%   event_date 78.0%  topic 0.2%(1건, 모델 일탈)
+#     action · decision · stage   ← **0건**
+#
+# 지문 쌍 122,265 건에서 `action` 축이 비교에 참여한 횟수도 0 이다. 빈 축은
+# 무해하게 놀고 있는 게 아니라 **조용히 기운다**: 읽지 못한 축은 `compared` 에서
+# 빠지므로 `IDENTITY_AXES` 는 명목 4개·실질 3개였고, "신원 축 둘 이상"이
+# 사실상 "`actors` 와 `assets` 를 **둘 다**"로 좁아져 있었다.
+#
+# 그래서 뺀다. 다시 넣으려면 **프롬프트 계약을 먼저 고치고** 채워지는 비율을 잰
+# 다음이다. 그때도 신원 축인지는 따로 판단할 것 — 아래 SCOPE/IDENTITY 기준대로
+# 값이 적은 닫힌 어휘는 신원이 아니라 범위이고, 행위 표식을 닫힌 어휘로 만들면
+# `event_family` 와 같은 칸이 된다. 상태 전환 자체는 이미 `event_stage` 가
+# 제목에서 결정적으로 뽑아(실측 발송분의 64.3%) `issue_continuity.progression`
+# 이 쓰고 있다 — LLM 에 다시 물을 이유가 없는 값이다.
 AXES: dict[str, tuple[tuple[str, ...], float]] = {
     "countries": (("countries", "country"), 1.0),
     "actors": (("actors", "actor", "operator", "organization"), 1.4),
     "assets": (("assets", "asset", "facility", "project", "plant"), 1.8),
     "event": (("event_family", "event_type", "event"), 1.5),
-    "action": (("action", "decision", "stage"), 1.3),
     "cause": (("drivers", "driver", "cause"), 0.8),
 }
 
@@ -53,7 +74,7 @@ AXES: dict[str, tuple[tuple[str, ...], float]] = {
 # 범위(scope) — 닫힌 어휘다. 같은 값을 공유해도 '같은 사건'의 근거가 못 된다.
 #   실측 71건: `event_family` 는 값이 15종뿐이고 `policy_decision` 하나가 45%,
 #   `countries` 는 `south korea` 48% · `usa` 45%.
-# 신원(identity) — 구체적인 당사자·대상·원인·행위.
+# 신원(identity) — 구체적인 당사자·대상·원인.
 #   실측 71건: `actors` 77종 · `assets` 59종 · `drivers` 84종.
 #
 # 기관명이 `actors` 에 들어오면 그것도 범위에 가깝다(`DOE` 8.5% · `government`
@@ -61,7 +82,7 @@ AXES: dict[str, tuple[tuple[str, ...], float]] = {
 # build_data.FOLLOW_UP_ENTITY_TYPES 주석의 실측(기관 포함 시 40건 중 3건)과
 # issue_continuity.same_issue 의 `anchor_min_shared=2` 가 이미 말하고 있다.
 SCOPE_AXES: tuple[str, ...] = ("countries", "event")
-IDENTITY_AXES: tuple[str, ...] = ("actors", "assets", "action", "cause")
+IDENTITY_AXES: tuple[str, ...] = ("actors", "assets", "cause")
 
 # `event_date` 는 축이 **아니다** — 그리고 그 상태로 믿을 수 없다.
 #

@@ -27,6 +27,7 @@ except (OSError, KeyError, json.JSONDecodeError):
     DATA_DIR = DATA_ROOT
 
 import build_data  # noqa: E402
+import dedup  # noqa: E402
 import embedding_pipeline  # noqa: E402
 import event_calendar  # noqa: E402
 import issue_candidate_stats  # noqa: E402
@@ -1826,6 +1827,48 @@ class StoryFingerprintMatchTests(unittest.TestCase):
         for axis, (keys, _weight) in story_fingerprint.AXES.items():
             self.assertTrue(keys, f"{axis} 축에 키가 없다")
         self.assertEqual(story_fingerprint.AXES["cause"][0][0], "drivers")
+
+    @staticmethod
+    def _prompt_fingerprint_contract():
+        """`ARTICLE_STORY_PROMPT` 의 예시 JSON 이 약속하는 지문 칸 이름."""
+        prompt = dedup.ARTICLE_STORY_PROMPT
+        start = prompt.index('"fingerprint": {')
+        depth, end = 0, None
+        for index in range(prompt.index("{", start), len(prompt)):
+            if prompt[index] == "{":
+                depth += 1
+            elif prompt[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    end = index
+                    break
+        assert end is not None, "프롬프트에서 fingerprint 블록을 못 찾았다"
+        return set(re.findall(r'"(\w+)"\s*:', prompt[start:end]))
+
+    def test_every_axis_has_a_producer_in_the_prompt(self):
+        """축 표에 이름만 있고 **내놓는 쪽이 없는 축**을 막는다.
+
+        위 별칭 테스트는 순서만 봤지 그 이름을 누가 만드는지는 안 봤다. 그래서
+        `action` 축(`action`·`decision`·`stage`)이 2026-08-21 부터 한 달간
+        표에 남아 있었다 — 프롬프트 계약에 그런 칸이 없으므로 발송 이력
+        전 기간의 지문 495건에서 **0건**, 지문 쌍 122,265 건에서 비교 0회.
+
+        빈 축은 조용히 기운다: `compared` 에서 빠지므로 `IDENTITY_AXES` 가
+        명목 4개·실질 3개가 되고, "신원축 둘 이상"이 사실상 "actors 와 assets
+        를 둘 다"로 좁아져 있었다.
+        """
+        contract = self._prompt_fingerprint_contract()
+        for axis, (keys, _weight) in story_fingerprint.AXES.items():
+            self.assertIn(
+                keys[0], contract,
+                f"{axis} 축의 본명 {keys[0]!r} 을 프롬프트가 내놓지 않는다. "
+                f"축을 넣기 전에 ARTICLE_STORY_PROMPT 의 계약부터 고칠 것 "
+                f"(현재 계약: {sorted(contract)})")
+
+    def test_identity_axes_are_all_real_axes(self):
+        """신원 축 목록이 `AXES` 에 없는 이름을 들고 있으면 조용히 무시된다."""
+        for axis in story_fingerprint.IDENTITY_AXES + story_fingerprint.SCOPE_AXES:
+            self.assertIn(axis, story_fingerprint.AXES, f"{axis} 는 축 표에 없다")
 
     def test_drivers_is_actually_compared(self):
         """복수형을 못 읽으면 이 축이 통째로 분모에서 빠져 유사도가 1.0 이 된다."""
