@@ -88,6 +88,18 @@ FACT_MAX = 40      # 사실 불릿
 WHY_MAX = 40       # 의미 불릿 한 줄
 # 한 장에 둘 다 들어가므로 각각 3개까지. 넘치는지는 build.js 넘침 가드가 잰다.
 BULLETS_MIN, BULLETS_MAX = 2, 3
+# **의미 불릿만 하한이 1 이다.** 프롬프트는 계속 2~3 을 요구하지만, 한 줄만
+# 나왔다고 그날 앨범을 떨어뜨리지 않는다.
+#
+# 2026-09-20 실측이 이 값의 이유다. 브리프가 `so_what` 을 둘 주었는데도 첫 카드의
+# `why` 가 한 줄로 나왔고, repair 도 같은 한 줄을 냈다 — 두 번 더 부르고 결국
+# 사이트 문장 폴백으로 떨어졌다. 토큰 예산 때문이 아니었다(1,354/12,288).
+#
+# 둘을 채우라고 계속 밀면 모델이 채우는 방법은 하나뿐이다: 없는 의미를 지어내는
+# 것. 그건 이 카드가 가장 피하려는 실패이고(`card_qa` 의 추상 표현 판정이 그걸
+# 잡는다), 근거 있는 한 줄이 근거 없는 두 줄보다 낫다. 길이 한 자에 앨범이
+# 떨어지던 문제와 같은 종류라 같은 방식으로 푼다 — 규격이 아니라 재료를 따른다.
+WHY_MIN = 1
 # 마지막 장 '오늘 더 있었던 일' 한 줄. 첫 장 목차와 같은 자리다. 실측(09-18)은
 # 33자가 들어가고 34자에서 렌더가 말줄임으로 잘랐다 — 글자 폭이 제각각이라
 # 경계에 붙이지 않고 여유를 둔다. 자를 바에는 그 줄을 안 쓴다(closing_lines).
@@ -389,10 +401,14 @@ def ask_writer(brief: dict, items: list[dict], date: str, *, with_story: bool,
                "sensitive": [it.get("issue_id", "") for it in items if it["sensitive"]]}
     if with_story and story_events:
         payload["story_events"] = story_events
+    # 스토리가 붙는 날은 한 응답에 일일 3장 + 스토리 5장이 들어간다. 예산을
+    # 8192 로 두되 **부족해서 생긴 문제는 아니다** — 실측 2026-09-20 에 12288 을
+    # 줘도 실제 사용은 1,354 토큰이었다(로그의 tokens=… 가 그것을 보여 준다).
     return card_editorial.call(
         task,
         card_editorial.writer_system(**_writer_limits(), with_story=with_story),
-        payload, fix_these=problems, max_output_tokens=6144, log=log)
+        payload, fix_these=problems,
+        max_output_tokens=8192 if with_story else 6144, log=log)
 
 
 
@@ -450,6 +466,7 @@ def review(raw: dict, items: list[dict], **kwargs) -> list[str]:
     하지 않는가" 를 본다. 경고는 실패로 세지 않되 목록에는 실어 보낸다 —
     repair 는 경고까지 같이 고칠 기회가 있어야 한다.
     """
+    kwargs.setdefault("why_min", WHY_MIN)
     problems = validate(normalize(raw), items, **kwargs)
     report = card_qa.review_daily(raw, items)
     return problems + [str(f) for f in report.failures]
@@ -481,7 +498,11 @@ def log_calls(call_log: list[dict]) -> None:
     worst = sum(row["max_http_attempts"] for row in call_log)
     for row in call_log:
         print(f"[cards] {row['task']} model={row['model']} calls=1 "
-              f"max_http={row['max_http_attempts']}" + (" (repair)" if row["repair"] else ""))
+              f"max_http={row['max_http_attempts']} "
+              f"tokens={row.get('candidate_tokens')}/{row.get('budget')} "
+              f"thoughts={row.get('thought_tokens')} "
+              f"finish={row.get('finish_reason')}"
+              + (" (repair)" if row["repair"] else ""))
     print(f"[cards] 논리 호출 {len(call_log)}회 · HTTP 최악 상한 {worst}회")
 
 
@@ -523,11 +544,21 @@ def run_editorial(items: list[dict], date: str, collected: int,
             print(f"[cards] Narrator 실패 — {type(exc).__name__}: {exc}")
             brief = None
         if brief is not None:
-            problems = card_editorial.validate_brief(
+            card_editorial.normalize_brief(brief)
+            fatal, story_bad, warnings = card_editorial.validate_brief(
                 brief, items, story_payload.get("thread_id"))
-            if problems:
-                print(f"[cards] 편집 브리프 거부: {'; '.join(problems[:4])}")
+            for line in warnings:
+                print(f"[cards] 브리프 경고: {line}")
+            if fatal:
+                # 이 브리프로는 일일 카드를 쓸 수 없다. 스토리도 같이 빠진다.
+                print(f"[cards] 편집 브리프 거부: {'; '.join(fatal[:4])}")
                 brief = None
+            elif story_bad:
+                # **스토리만 못 쓴다.** 일일 판단은 멀쩡하므로 그대로 쓴다 —
+                # 여기서 브리프를 통째로 버리면 Narrator 를 부른 값이 사라지고
+                # 호출이 계약(2회)보다 한 번 더 나간다(2026-09-20 실측).
+                print(f"[cards] 스토리만 제외: {'; '.join(story_bad[:2])}")
+                story_payload = None
     if brief is None and story_payload is not None:
         # Narrator 가 없으면 스토리도 없다 — 판단 없이 5장을 쓰면 규격만 맞는
         # 이야기가 나온다. 일일 카드는 아래 폴백 한 번으로 살린다.
@@ -537,9 +568,7 @@ def run_editorial(items: list[dict], date: str, collected: int,
     if brief is not None:
         raw = _writer_round(brief, items, date, story_payload, call_log)
         if raw is not None:
-            daily = raw.get("daily") or {}
-            story_copy = raw.get("story") or None
-            return daily, story_copy
+            return _daily_of(raw), raw.get("story") or None
         print("[cards] Writer 실패 — 일일 카드를 단독 호출로 다시 만든다")
         story_payload = None
 
@@ -572,29 +601,61 @@ def run_editorial(items: list[dict], date: str, collected: int,
     return repaired_daily, None
 
 
+def story_problems(copy: object, payload: dict) -> list[str]:
+    """스토리 카피가 규격과 근거를 지키는가. 렌더 쪽 검증기를 그대로 쓴다.
+
+    **지연 import 다.** `story_cards` 가 이 모듈을 읽으므로 맨 위에서 부르면
+    순환한다. 그렇다고 검증기를 두 벌 두면 한쪽만 고치는 날이 온다 — 스토리
+    카피를 실제로 거르는 것은 저쪽이므로, 여기서도 같은 자를 쓴다.
+    """
+    if not isinstance(copy, dict):
+        return ["story: 객체가 아님"]
+    import story_cards
+    return story_cards.validate(story_cards.normalize(copy, payload), payload)
+
+
 def _writer_round(brief: dict, items: list[dict], date: str,
                   story_payload: dict | None, call_log: list[dict]) -> dict | None:
     """Writer 1회 + 필요하면 repair 1회. **Narrator 는 다시 부르지 않는다.**
 
-    실패 도메인을 가른다 — 일일이 통과하고 스토리만 깨졌으면 **일일 결과를
-    그대로 두고** 스토리만 뺀다. 스토리 때문에 멀쩡한 일일 카피를 버리지 않는다.
+    **두 도메인을 같이 본다.** 예전에는 일일만 검증하고 스토리 카피는 검증 없이
+    저장했다 — 그래서 잘못된 스토리는 한참 뒤 렌더 단계에서 처음 걸렸고, 그때는
+    고칠 기회가 없었다(story_cards 는 LLM 을 안 부른다). 실측 2026-09-20: 모델이
+    **일일 브리프의 숫자를 스토리 표지 배지로 가져왔는데**(165.0GW — 스토리
+    재료 어디에도 없다) 그 사실이 렌더 직전에야 드러났다.
+
+    도메인은 여전히 갈라져 있다 — 스토리만 깨졌으면 **일일 결과를 그대로 두고**
+    스토리만 뺀다. 스토리 때문에 멀쩡한 일일 카피를 버리지 않는다.
     """
     events = (story_payload or {}).get("events")
-    last_problems: list[str] | None = None
+    with_story = story_payload is not None
+    daily_bad: list[str] = []
+    story_bad: list[str] = []
+    raw: dict | None = None
     for task in ("card_writer", "card_writer_repair"):
         try:
-            raw = ask_writer(brief, items, date, with_story=story_payload is not None,
-                             problems=last_problems, story_events=events,
-                             log=call_log, task=task)
+            raw = ask_writer(brief, items, date, with_story=with_story,
+                             problems=(daily_bad + story_bad) or None,
+                             story_events=events, log=call_log, task=task)
         except Exception as exc:  # noqa: BLE001
             print(f"[cards] Writer({task}) 실패 — {type(exc).__name__}: {exc}")
             return None
-        daily = raw.get("daily") or {}
-        last_problems = _apply_and_review(daily, items)
-        if not last_problems:
+        daily_bad = _apply_and_review(_daily_of(raw), items)
+        story_bad = (story_problems(raw.get("story"), story_payload)
+                     if with_story else [])
+        if not daily_bad and not story_bad:
             return raw
-        print(f"[cards] 편집 QA 실패({task}): {'; '.join(last_problems[:6])}")
-    return None
+        for label, problems in (("일일", daily_bad), ("스토리", story_bad)):
+            if problems:
+                print(f"[cards] 편집 QA 실패({task}·{label}): "
+                      f"{'; '.join(problems[:5])}")
+    if daily_bad:
+        return None
+    # 일일은 통과했고 스토리만 끝내 안 됐다. **일일을 살린다.**
+    print("[cards] 스토리 카피만 제외 — 일일 카드는 이 회차 결과로 간다")
+    raw = dict(raw or {})
+    raw["story"] = None
+    return raw
 
 
 _SENT_SPLIT_RE = re.compile(r"(?<=[.!?。])\s+|\n+")
