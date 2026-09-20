@@ -191,6 +191,18 @@ function editorialIcon(kind) {
   return `<svg viewBox="0 0 64 56" aria-hidden="true">${paths}</svg>`;
 }
 
+function topicIcon(label) {
+  // 아이콘은 **분류**에서 고른다. 문장에서 키워드를 찾으면 틀린 라벨이 붙는다
+  // (09-20 "확대" 사고). 분류는 사이트가 정한 값이라 카드가 지어내지 않는다.
+  const t = String(label || "");
+  if (/전력|송전|수급|요금/.test(t)) return "grid";
+  if (/SMR|원전|기술|연료/.test(t)) return "atom";
+  if (/규제|인허가|국회|법/.test(t)) return "vote";
+  if (/수출|협력|외교|통상/.test(t)) return "mou";
+  if (/국제|해외/.test(t)) return "globe";
+  return "control";
+}
+
 function factPresentation(text, index) {
   // 예전에는 키워드 표(`/SMR|전력망/ → ["핵심 분야","확대"]` 같은)로 라벨과 칩을
   // 붙였다. 프로토타입 문장에 맞춰 손으로 쓴 표라 **오늘 문장에는 거의 틀린다** —
@@ -565,44 +577,39 @@ ${fontLinks(theme)}
      텍스트 폭을 273px 로 졸라매 본문이 18px 에 갇혀 있었다(폰에서 6.5px).
      박스를 풀어 폭을 928px 로 열고, 그 폭을 글자 크기로 환산한다.
      기준: 폰(390px)에서 14px 이상 = 1080 기준 39px 이상. */
-  .editorial-body { padding: 30px 76px 26px; background: transparent; }
-  /* 구역 머리. 영문 라벨("WHAT HAPPENED" · "WHY IT MATTERS")을 걷었다 (2026-09-20).
-     그 자리는 정보가 0 인데 한글 라벨 앞자리를 차지했고, 읽는 쪽은 한글이었다 —
-     예전 값도 한글이 더 컸다(33 vs 22). 영문을 빼면서 남은 한 줄을 그 자리의
-     주인으로 세운다: 26/32 두 크기를 32 하나로 합치고, 영문 때문에 벌려 둔
-     자간(1.2px)과 gap(14px)을 거둔다.
-
-     빈 문자열을 넘겨 숨기지 않는다. 마크업에서 실제로 없앤다 — 숨기는 방식은
-     그 한 줄이 걷힌 어느 날 영문이 되살아나게 두는 것이다. */
-  .editorial-section-head { color: #EEF1F4; font-size: 32px; font-weight: 800;
-    letter-spacing: -.6px; }
-  .event-grid { margin-top: 18px; display: flex; flex-direction: column; gap: 14px; }
-  /* 행. 왼쪽 잉크 괘선 하나로 목록임을 표시한다 — 테두리 상자보다 싸고, 폭을 안 먹는다. */
-  .event-card { display: grid; grid-template-columns: 1fr auto; align-items: baseline;
-    gap: 18px; padding: 2px 0 2px 22px; border-left: 5px solid #5AA0E8; }
-  .event-copy strong { display: inline; color: rgba(238,241,244,.72); font-size: 27px;
-    font-weight: 750; letter-spacing: -.4px; }
-  .event-copy strong::after { content: "·"; margin: 0 9px; color: ${c.rule}; font-weight: 700; }
-  /* 어두운 바탕에서는 같은 굵기가 더 가늘어 보인다 — 600 → 650 으로 받친다. */
-  .event-copy span { display: inline; color: #FFFFFF; font-size: 42px; line-height: 1.4;
-    font-weight: 650; letter-spacing: -1px; word-break: keep-all; }
-  .event-state { align-self: center; min-width: 0; padding: 6px 16px;
-    border-radius: 999px; background: rgba(223,108,80,.22); color: #F2B5A3;
-    border: 1px solid rgba(242,181,163,.45); text-align: center;
-    font-size: 26px; font-weight: 850; white-space: nowrap; }
-  .event-state.active { background: rgba(90,160,232,.20); color: #8FC2F2;
-    border-color: rgba(143,194,242,.45); }
-  .why-editorial { margin-top: 26px; padding-top: 20px; border-top: 2px solid rgba(238,241,244,.30); }
-  .why-layout { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
-  .why-lead { color: #FFFFFF; font-size: 44px; line-height: 1.3; font-weight: 780;
-    letter-spacing: -1.4px; word-break: keep-all; }
-  .why-checks { display: flex; flex-direction: column; gap: 10px; }
+  /* 09-18 판형으로 되돌리되(밝은 패널·박스·아이콘) **글자를 키운다**.
+     예전 실패는 박스 자체가 아니라 **2열**이었다 — 한 칸이 273px 로 졸아들어
+     문장이 18px(폰 6.5px)에 갇혔다. 1열로 펴면 같은 박스 안에서 폭이 850px 라
+     36px(폰 13px)까지 올라간다. 대신 한 장에 담는 줄 수가 줄어든다. */
+  .editorial-body { padding: 28px 56px 22px; background: #F4F7FA; color: #12294C; }
+  .editorial-section-head { color: ${accent}; font-size: 30px; font-weight: 900;
+    letter-spacing: -.4px; }
+  .editorial-section-head span { display: none; }
+  .event-grid { margin-top: 16px; display: grid; grid-template-columns: 1fr; gap: 13px; }
+  .event-card { border: 1px solid rgba(18,41,76,.16); border-radius: 14px;
+    background: #FFFFFF; display: grid; grid-template-columns: 62px 1fr;
+    align-items: center; gap: 18px; padding: 17px 20px; }
+  .event-icon { width: 58px; height: 58px; border-radius: 50%; background: #DCE9F7;
+    display: flex; align-items: center; justify-content: center; color: ${c.signalInk}; }
+  .event-icon svg { width: 34px; height: 34px; fill: none; stroke: currentColor;
+    stroke-width: 3.5; stroke-linecap: square; stroke-linejoin: miter; }
+  .event-copy strong { display: block; color: ${ink}; font-size: 24px; font-weight: 820; }
+  .event-copy span { display: block; color: #12294C; font-size: 38px; line-height: 1.32;
+    font-weight: 700; letter-spacing: -.8px; word-break: keep-all; }
+  .event-state { display: none; }
+  .why-editorial { margin-top: 20px; padding-top: 16px;
+    border-top: 2px solid rgba(18,41,76,.30); }
+  /* 의미 칸도 1열이다. 예전에는 1.25fr/.85fr 로 갈라 확인점이 18px 였다. */
+  .why-layout { margin-top: 10px; display: block; }
+  .why-lead { color: #12294C; font-size: 40px; line-height: 1.28; font-weight: 820;
+    letter-spacing: -1.2px; word-break: keep-all; }
+  .why-checks { margin-top: 12px; display: flex; flex-direction: column; gap: 9px; }
   .why-check { display: grid; grid-template-columns: 30px 1fr; gap: 12px;
-    align-items: baseline; color: rgba(238,241,244,.90); font-size: 36px; line-height: 1.38;
-    font-weight: 660; letter-spacing: -.8px; word-break: keep-all; }
-  .why-check::before { content: "✓"; width: 28px; height: 28px; border-radius: 50%;
-    background: #5AA0E8; color: #0B1C36; display: flex; align-items: center;
-    justify-content: center; font-size: 19px; font-weight: 900; }
+    align-items: start; color: #2A4368; font-size: 33px; line-height: 1.3;
+    font-weight: 660; word-break: keep-all; }
+  .why-check::before { content: "✓"; width: 28px; height: 28px; margin-top: 6px;
+    border-radius: 50%; background: ${accent}; color: white; display: flex;
+    align-items: center; justify-content: center; font-size: 18px; font-weight: 900; }
   .editorial-footer { padding: 0 76px; display: flex; justify-content: space-between;
     align-items: center; background: transparent; color: rgba(238,241,244,.72);
     border-top: 1px solid rgba(238,241,244,.18); }
@@ -1022,7 +1029,7 @@ function renderSlide(s, theme) {
         <section class="editorial-body">
           <div class="editorial-section-head">${esc(s.factsLabel || "확인된 사실")}</div>
           <div class="event-grid">${rows.map((row) =>
-            `<div class="event-card"><div class="event-copy">${row.label ? `<strong>${esc(row.label)}</strong>` : ""}<span>${esc(row.text)}</span></div>${row.state ? `<div class="event-state ${esc(row.tone || "")}">${esc(row.state)}</div>` : ""}</div>`
+            `<div class="event-card"><div class="event-icon">${editorialIcon(topicIcon(s.stepLabel))}</div><div class="event-copy">${row.label ? `<strong>${esc(row.label)}</strong>` : ""}<span>${esc(row.text)}</span></div></div>`
           ).join("")}</div>
           ${(s.whyLead || checks.length) ? `<div class="why-editorial">
             <div class="editorial-section-head">${esc(s.whyLabel || "왜 중요한가")}</div>
@@ -1314,7 +1321,8 @@ function selfCheck() {
       // 꼬리 한 낱말만 다음 줄에 남는 것을 막는다. 줄이 넘치지 않아도 보기
       // 나쁘다 — "…전환 로드맵 / 추진" 처럼 한 낱말이 한 줄을 차지한다.
       // inline 요소의 getClientRects() 가 줄마다 사각형을 준다는 점을 쓴다.
-      // 하한은 38px(폰 13.7px) — 그 아래로 줄이느니 두 줄로 둔다.
+      // 하한은 34px(폰 12.3px) — 그 아래로 줄이느니 두 줄로 둔다. 본문 기본값이
+      // 38px 이라 하한을 같은 값으로 두면 가드가 한 번도 못 움직인다.
       for (const span of body.querySelectorAll(".event-copy span")) {
         const width = span.parentElement.getBoundingClientRect().width;
         for (let guard = 0; guard < 6; guard++) {
@@ -1322,7 +1330,7 @@ function selfCheck() {
           const tail = rects[rects.length - 1];
           if (rects.length < 2 || !tail || tail.width > width * 0.28) break;
           const size = parseFloat(getComputedStyle(span).fontSize);
-          if (size <= 38) break;
+          if (size <= 34) break;
           span.style.fontSize = size - 2 + "px";
         }
       }
