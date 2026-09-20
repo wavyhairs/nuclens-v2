@@ -2604,7 +2604,16 @@ def prepare_insights(insights: dict, news_items: list[dict]) -> dict:
                 "publisher": article.get("publisher", ""),
                 "domain": article.get("domain", ""),
             })
+        direction = str(item.get("direction") or "").strip()
+        takeaway = flow_takeaway(direction)
+        # 공개 흐름 인사이트는 해석과 근거가 모두 있어야 한다. trend_insights.py 는
+        # 근거가 빈약하면 direction="" 으로 기권하는데(정상 동작), 그 행을 그대로
+        # 실으면 takeaway="" 가 화면 데이터에 남는다. 키워드·집계(count_now 등)는
+        # 봇 원본 trend_insights.json 에 그대로 있으므로 여기서만 제외한다.
+        if not direction or not evidence or not takeaway:
+            continue
         regions = {row["region"] for row in evidence if row.get("region") in {"국내", "해외"}}
+        item["direction"] = direction
         item["evidence"] = evidence
         item["evidence_regions"] = sorted(regions, key=lambda value: (value != "국내", value))
         item["domestic_evidence_count"] = sum(1 for row in evidence if row.get("region") == "국내")
@@ -2613,7 +2622,7 @@ def prepare_insights(insights: dict, news_items: list[dict]) -> dict:
             "국내·해외" if regions == {"국내", "해외"}
             else next(iter(regions), "범위 미분류")
         )
-        item["takeaway"] = flow_takeaway(item.get("direction"))
+        item["takeaway"] = takeaway
         item["signal_score"] = round(_insight_signal_score(item), 3)
         items.append(item)
 
