@@ -197,22 +197,30 @@ function factPresentation(text, index) {
   return { label: "", text: value, state: "", icon: "control", tone: "active" };
 }
 
-function pickEditorialArt(haystack, headline) {
+// **렌더러는 의미를 만들지 않는다.** 그림과 도장만 고른다.
+//
+// 예전에는 세 분기가 `headline` 까지 시연용 고정 문구로 덮었다 — 법안 가결,
+// 협력 채널 신설, MOU 서명 연기 세 가지였다(문구를 글자 그대로 옮겨 적지
+// 않는다. 되살리기 쉬워진다). 걸리는 조건이
+// `/대미|웨스팅하우스|MOU|한미/` 처럼 **매우 넓다.** 한미 협력 기사는 거의
+// 매주 나오므로, 그 주제의 카드는 그날 무슨 일이 있었든 "MOU 서명 연기" 라고
+// 적힌 채 나갈 수 있었다. 검증·QA 는 전부 이 앞 단계에 있어서 아무도 못 잡는다
+// — 검증한 문장과 인쇄된 문장이 다른 것이 문제의 본질이다.
+//
+// 이제 이 함수는 headline 을 받지도 돌려주지도 않는다. 되살리려면 시그니처를
+// 바꿔야 하고, 그 순간 `test_renderer_never_rewrites_meaning` 가 걸린다.
+function pickEditorialArt(haystack) {
   let image = "assets/energy-cooperation-editorial.png";
   let stamp = "ENERGY INFRASTRUCTURE";
-  // 몇몇 주제는 제목까지 고정 문구로 덮는다(기존 동작 유지).
   if (/데이터센터|100MW|417표|GRID Savings/.test(haystack)) {
     image = "assets/data-center-grid-editorial.png";
     stamp = "DATA CENTER · POWER GRID";
-    headline = "전력망 비용 부담 법안 [[가결]]";
   } else if (/휴스턴|474GW|협력 정례 채널|협력 대화/.test(haystack)) {
     image = "assets/energy-cooperation-editorial.png";
     stamp = "GRID · SMR COOPERATION";
-    headline = "한미 에너지 협력 [[채널 신설]]";
   } else if (/대미|웨스팅하우스|MOU|한미/.test(haystack)) {
     image = "assets/korea-us-flags-editorial.png";
     stamp = "KOREA · U.S.\nNUCLEAR COOPERATION";
-    headline = "MOU 서명 [[연기]]";
   } else if (/국정감사|상임위/.test(haystack)) {
     image = "assets/reactor-operations-editorial.png";
     stamp = "POLICY OVERSIGHT · OPERATIONS";
@@ -226,7 +234,7 @@ function pickEditorialArt(haystack, headline) {
     image = "assets/reactor-operations-editorial.png";
     stamp = "NUCLEAR OPERATIONS · SAFETY";
   }
-  return { image, stamp, headline };
+  return { image, stamp };
 }
 
 function editorialFromStep(slide) {
@@ -235,17 +243,16 @@ function editorialFromStep(slide) {
     if (slide.image) return slide;
     const hs = [slide.stepLabel, slide.headline,
       ...(slide.statusRows || []).map((r) => r.text)].join(" ");
-    return { ...slide, image: pickEditorialArt(hs, slide.headline).image };
+    return { ...slide, image: pickEditorialArt(hs).image };
   }
   const points = Array.isArray(slide.points) ? slide.points : [];
   const why = Array.isArray(slide.why) ? slide.why : [];
   const haystack = [slide.stepLabel, slide.headline, ...points].join(" ");
-  const art = pickEditorialArt(haystack, slide.headline);
-  const { image, stamp, headline } = art;
+  const { image, stamp } = pickEditorialArt(haystack);
   return {
     ...slide,
     type: "editorial",
-    headline,
+    // headline 은 들어온 그대로다. 위 주석을 볼 것.
     image,
     stamp,
     // meta 가 stepLabel 과 같은 말이면 키커에 두 번 찍힌다("SMR | smr").
@@ -257,7 +264,14 @@ function editorialFromStep(slide) {
     })(),
     // 덱이 points[0] 이면 바로 아래 첫 사실 줄과 글자까지 같다(3장 전수 확인).
     // 히어로의 60px 짜리 자리를 중복에 쓰지 않는다 — 세 번째 사실을 올린다.
-    deck: points[2] || why[0] || "",
+    // 아래 statusRows 가 앞의 둘만 그리므로, 그러지 않으면 셋째 사실은 카드
+    // 어디에도 안 나온다.
+    //
+    // **`why[0]` 폴백은 걷었다 (2026-09-20).** 사실이 둘뿐인 날 그 줄이 덱과
+    // whyLead 두 자리에 같은 글자로 찍혔다 — 한 카드 안의 같은 문장이다.
+    // 셋째 사실이 없으면 덱은 비우고, 마크업이 그 줄을 아예 안 그린다.
+    // 히어로가 조금 성긴 것이 같은 말을 두 번 하는 것보다 낫다.
+    deck: points[2] || "",
     statusRows: points.slice(0, 2).map(factPresentation),
     whyLead: why[0] || "",
     whyChecks: why.slice(1, 3),
@@ -546,10 +560,15 @@ ${fontLinks(theme)}
      박스를 풀어 폭을 928px 로 열고, 그 폭을 글자 크기로 환산한다.
      기준: 폰(390px)에서 14px 이상 = 1080 기준 39px 이상. */
   .editorial-body { padding: 30px 76px 26px; background: transparent; }
-  .editorial-section-head { display: flex; align-items: baseline; gap: 14px;
-    color: #8FC2F2; font-size: 26px; font-weight: 900; letter-spacing: 1.2px; }
-  /* 한글이 영문 라벨보다 커야 한다 — 읽는 쪽은 한글이다(레퍼런스 실측: 33 vs 22). */
-  .editorial-section-head span { color: #EEF1F4; font-size: 32px; font-weight: 800;
+  /* 구역 머리. 영문 라벨("WHAT HAPPENED" · "WHY IT MATTERS")을 걷었다 (2026-09-20).
+     그 자리는 정보가 0 인데 한글 라벨 앞자리를 차지했고, 읽는 쪽은 한글이었다 —
+     예전 값도 한글이 더 컸다(33 vs 22). 영문을 빼면서 남은 한 줄을 그 자리의
+     주인으로 세운다: 26/32 두 크기를 32 하나로 합치고, 영문 때문에 벌려 둔
+     자간(1.2px)과 gap(14px)을 거둔다.
+
+     빈 문자열을 넘겨 숨기지 않는다. 마크업에서 실제로 없앤다 — 숨기는 방식은
+     그 한 줄이 걷힌 어느 날 영문이 되살아나게 두는 것이다. */
+  .editorial-section-head { color: #EEF1F4; font-size: 32px; font-weight: 800;
     letter-spacing: -.6px; }
   .event-grid { margin-top: 18px; display: flex; flex-direction: column; gap: 14px; }
   /* 행. 왼쪽 잉크 괘선 하나로 목록임을 표시한다 — 테두리 상자보다 싸고, 폭을 안 먹는다. */
@@ -990,19 +1009,19 @@ function renderSlide(s, theme) {
           <div class="editorial-copy">
             <div class="editorial-kicker"><strong>${esc(s.stepLabel || "")}</strong>${s.context ? ` &nbsp;|&nbsp; ${esc(s.context)}` : ""}</div>
             <h1 class="editorial-title">${accentize(s.headline, "em")}</h1>
-            <p class="editorial-deck">${esc(s.deck || "")}</p>
+            ${s.deck ? `<p class="editorial-deck">${esc(s.deck)}</p>` : ""}
           </div>
           <div class="editorial-stamp">${esc(s.stamp || "EDITORIAL BRIEF").replaceAll("\n", "<br>")}</div>
         </section>
         <section class="editorial-body">
-          <div class="editorial-section-head">${esc(s.sectionA || "WHAT HAPPENED")} <span>${esc(s.sectionAKr || "확인된 사실")}</span></div>
+          <div class="editorial-section-head">${esc(s.factsLabel || "확인된 사실")}</div>
           <div class="event-grid">${rows.map((row) =>
             `<div class="event-card"><div class="event-copy">${row.label ? `<strong>${esc(row.label)}</strong>` : ""}<span>${esc(row.text)}</span></div>${row.state ? `<div class="event-state ${esc(row.tone || "")}">${esc(row.state)}</div>` : ""}</div>`
           ).join("")}</div>
-          <div class="why-editorial">
-            <div class="editorial-section-head">${esc(s.sectionB || "WHY IT MATTERS")} <span>${esc(s.whyLabel || "왜 중요한가")}</span></div>
+          ${(s.whyLead || checks.length) ? `<div class="why-editorial">
+            <div class="editorial-section-head">${esc(s.whyLabel || "왜 중요한가")}</div>
             <div class="why-layout"><div class="why-lead">${esc(s.whyLead || "")}</div><div class="why-checks">${checks.map((text) => `<div class="why-check">${esc(text)}</div>`).join("")}</div></div>
-          </div>
+          </div>` : ""}
         </section>
         <footer class="editorial-footer">
           <div class="editorial-cta"><span class="editorial-arrow">↗</span><span>더 자세한 원문 보기</span><span class="editorial-site">${site}</span></div>

@@ -283,3 +283,98 @@ def pick_story_candidate(data: SiteData, top: list[dict]) -> StoryCandidate | No
         return StoryCandidate(issue=issue, thread=thread, rank=rank,
                               events=_display_events(thread), warnings=warnings)
     return None
+
+
+# ── Evidence Packet ────────────────────────────────────────────────────────
+#
+# 프롬프트에 원문을 무한히 밀어 넣지 않는다. 아래는 **재료의 상한**이다.
+MAX_EVENTS = 8          # 타임라인 후보로 넘기는 사건 상한
+MAX_EVIDENCE = 3        # 사건당 근거 해시 상한
+DETAIL_MAX = 800        # 사건 본문 요지 상한(글자)
+
+
+def load_issue_index(data_dir: Path | None = None) -> dict[str, dict]:
+    """issue_id → 그 이슈의 구조화 결과. Evidence Packet 의 본문 재료다.
+
+    **왜 issues.json 인가**: 사건 하나하나의 `summary`·`detail`·`why_important`·
+    `implication`·`open_question` 이 거기에 있고, 열쇠가 `issue_id` 라
+    `source_event_id` 로 바로 찾을 수 있다. 예전에는 지난 브리핑 전체를 훑어
+    **제목을 열쇠로** 같은 것을 모았는데, 제목은 움직이는 값이라 그 색인은
+    조용히 빗나갔다(card_context 모듈 주석 ②).
+
+    라이브 실측 2026-09-20: 스레드 사건 229건 중 207건(90%)이 여기서 풀린다.
+    안 풀리는 것은 흡수되어 현재 카탈로그에 없는 옛 사건이다 — 그 행은 근거
+    해시와 제목·날짜만으로 서고, 본문이 비면 자격 검사가 아니라 카피가 얇아지는
+    것으로 끝난다.
+    """
+    path = (data_dir or DATA_DIR) / "issues.json"
+    if not path.exists():
+        return {}
+    try:
+        rows = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {str(row.get("issue_id") or ""): row for row in rows if row.get("issue_id")}
+
+
+def _clip(text: object, limit: int) -> str:
+    value = " ".join(str(text or "").split())
+    return value[:limit]
+
+
+def evidence_packet(candidate: StoryCandidate, date: str, *, topic: str = "") -> dict:
+    """Evidence Packet — 사건마다 **자기 근거만** 들고 선다.
+
+    한 행의 재료는 그 행의 `source_event_id` 하나에서만 온다. 다른 사건의
+    기사·문장을 끌어와 채우지 않는다 — 그러면 타임라인 한 줄이 다른 날의 근거로
+    선다(`card_context` 모듈 주석 ③). 스토리 전체의 '왜 중요한가'만 여러 사건을
+    함께 인용할 수 있고, 그 자리는 아래 `narrative`·`watchpoints` 다.
+    """
+    thread = candidate.thread
+    index = load_issue_index()
+    events, narrative, watchpoints, seen_w = [], [], [], set()
+    for row in candidate.events[-MAX_EVENTS:]:
+        source_id = str(row.get("source_event_id") or "")
+        detail = index.get(source_id) or {}
+        hashes = [str(value) for value in (row.get("evidence_hashes") or ())][:MAX_EVIDENCE]
+        events.append({
+            "date": row.get("date"),
+            # 이 파일의 날짜가 무슨 날짜인지 카피가 추측하지 않게 한다.
+            "date_kind": row.get("date_kind") or "first_seen",
+            "title": row.get("title"),
+            "source_event_id": source_id,
+            "relation_to_next": row.get("relation_to_next") or "",
+            "evidence_hashes": hashes,
+            "summary": _clip(detail.get("summary"), 200),
+            "detail": _clip(detail.get("detail"), DETAIL_MAX),
+        })
+        line = _clip(detail.get("implication") or detail.get("summary"), 160)
+        if line and line not in narrative:
+            narrative.append(line)
+        for question in (detail.get("open_question"), detail.get("why_important")):
+            question = _clip(question, 160)
+            if question and question not in seen_w:
+                seen_w.add(question)
+                watchpoints.append(question)
+
+    issue = candidate.issue
+    tail = _clip(issue.get("open_question"), 160)
+    if tail and tail not in seen_w:
+        watchpoints.append(tail)
+    rep = issue.get("representative_article") or {}
+    return {
+        "date": date,
+        "thread_id": candidate.thread_id,
+        "issue_id": str(issue.get("issue_id") or ""),
+        "issue_title": issue.get("title") or thread.get("title"),
+        "topic": topic,
+        "events": events,
+        "narrative": narrative[-5:],
+        "phase_now": narrative[-1] if narrative else (issue.get("summary") or ""),
+        "watchpoints": watchpoints[:6],
+        "summary": rep.get("summary") or issue.get("summary") or "",
+        "why_important": issue.get("why_important") or "",
+        # 표지 통계 — 지어내지 않고 원장이 센 값을 그대로 쓴다.
+        "briefing_count": thread.get("briefing_count") or 0,
+        "lifespan_days": thread.get("lifespan_days") or 0,
+    }
