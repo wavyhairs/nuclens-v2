@@ -192,27 +192,14 @@ function editorialIcon(kind) {
 }
 
 function factPresentation(text, index) {
-  const value = String(text || "");
-  const rules = [
-    [/재가동|원안위/, ["재가동 심사", "승인", "atom"]],
-    [/2\.8GW|원전 8기/, ["사업 규모", "8기", "atom"]],
-    [/690MW|개발자금/, ["초기 물량", "690MW", "control"]],
-    [/국정감사|상임위/, ["국회 검증", "출석", "vote"]],
-    [/체코 원전|방폐물/, ["핵심 쟁점", "점검", "control"]],
-    [/417표|가결|하원/, ["하원 표결", "가결", "vote"]],
-    [/100MW|증설 비용/, ["적용 대상", "비용 부담", "grid"]],
-    [/MOU.*연기|서명 연기/, ["MOU 서명", "연기", "mou"]],
-    [/노형 배분|기술 통제권|의결권/, ["핵심 쟁점", "협의", "control"]],
-    [/협력 대화|정례 채널|대화 합의/, ["협력 채널", "합의", "globe"]],
-    [/SMR|전력망/, ["핵심 분야", "확대", "atom"]],
-    [/발의|회부/, ["입법 절차", "진행", "control"]],
-  ];
-  for (const [pattern, meta] of rules) {
-    if (pattern.test(value)) return { label: meta[0], text: value, state: meta[1], icon: meta[2], tone: meta[1] === "연기" ? "" : "active" };
-  }
-  // 규칙에 안 걸리면 라벨·상태를 **비운다**. "확인 사실 02 / 확인" 은 정보가 0인데
-  // 자리는 본문만큼 차지했다. 빈 값이면 문장이 그 폭을 가져간다.
-  return { label: "", text: value, state: "", icon: "control", tone: "active" };
+  // 예전에는 키워드 표(`/SMR|전력망/ → ["핵심 분야","확대"]` 같은)로 라벨과 칩을
+  // 붙였다. 프로토타입 문장에 맞춰 손으로 쓴 표라 **오늘 문장에는 거의 틀린다** —
+  // 09-20 실물: "석탄발전 퇴출 및 SMR·LNG 전환 로드맵 추진" 에 "확대" 칩이 붙었다.
+  // 게다가 라벨+칩이 200px 가까이 먹어 문장이 두 줄로 밀리고 "추진" 한 낱말만
+  // 다음 줄에 남았다(지니 09-20: "확대 때문에 추진이 밑으로 내려와 이상하다").
+  // 재료에서 나오지 않는 라벨은 붙이지 않는다. 문장이 그 폭을 가져간다.
+  void index;
+  return { label: "", text: String(text || ""), state: "", icon: "control", tone: "active" };
 }
 
 // **렌더러는 의미를 만들지 않는다.** 그림과 도장만 고른다.
@@ -1323,6 +1310,22 @@ function selfCheck() {
       // 그래도 넘치면 사실 줄을 하나 접는다 — 여기까지 오는 날은 재료가 비정상이다.
       const rows = [...body.querySelectorAll(".event-card")];
       while (over() && rows.length > 1) rows.pop().remove();
+
+      // 꼬리 한 낱말만 다음 줄에 남는 것을 막는다. 줄이 넘치지 않아도 보기
+      // 나쁘다 — "…전환 로드맵 / 추진" 처럼 한 낱말이 한 줄을 차지한다.
+      // inline 요소의 getClientRects() 가 줄마다 사각형을 준다는 점을 쓴다.
+      // 하한은 38px(폰 13.7px) — 그 아래로 줄이느니 두 줄로 둔다.
+      for (const span of body.querySelectorAll(".event-copy span")) {
+        const width = span.parentElement.getBoundingClientRect().width;
+        for (let guard = 0; guard < 6; guard++) {
+          const rects = [...span.getClientRects()];
+          const tail = rects[rects.length - 1];
+          if (rects.length < 2 || !tail || tail.width > width * 0.28) break;
+          const size = parseFloat(getComputedStyle(span).fontSize);
+          if (size <= 38) break;
+          span.style.fontSize = size - 2 + "px";
+        }
+      }
     });
 
     // 본문이 칸을 넘으면 불릿 글자를 함께 줄인다. 사실 3 + 의미 2 가 각각 40자로
