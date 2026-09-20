@@ -1,0 +1,2897 @@
+{
+ "generated_for": "docs/2026-09-20-object-event-identity-experiment.md",
+ "population": {
+  "hashes": 3225,
+  "items_in_archive": 3168,
+  "date_range": [
+   "2026-07-17",
+   "2026-09-20"
+  ],
+  "ledger_issues": 911,
+  "ledger_hashes": 3200,
+  "owner_index_hashes": 2577,
+  "tie_dropped_filled_from_live": 608,
+  "live_hashes": 3026,
+  "ledger_vs_live_disagreements": 11
+ },
+ "signal_coverage": {
+  "items": 3168,
+  "v0_plant": 88,
+  "v0x_plant": 74,
+  "stage_known": 1859,
+  "event_date_gated": 382,
+  "full_key_v0": 212,
+  "full_key_v0x": 459,
+  "v0_none": 2770,
+  "v0x_none": 2364,
+  "v0_unit": 123,
+  "v0x_unit": 123,
+  "v0x_lexicon": 420,
+  "v0_project": 187,
+  "v0x_project": 187
+ },
+ "gold": {
+  "pairs": 374,
+  "by_relation": {
+   "RELATED_DISTINCT_EVENT": 147,
+   "FOLLOW_UP_NEW_ACTION": 80,
+   "UNRELATED": 95,
+   "FOLLOW_UP_NO_NEW_ACTION": 32,
+   "SAME_EVENT": 20
+  },
+  "by_source": {
+   "claude_blind": 352,
+   "human": 22
+  },
+  "by_stratum": {
+   "w28→w35": 117,
+   "w35→w42": 116,
+   "w21→w28": 119,
+   "human_labeled": 22
+  }
+ },
+ "silver_pairs": 21502,
+ "production": {
+  "pairs": {
+   "pairs_in_population": 343,
+   "outside_population": 31,
+   "distinct_pairs": 222,
+   "false_merge": 44,
+   "false_merge_rate": 0.1982,
+   "same_pairs": 48,
+   "false_split": 38,
+   "false_split_rate": 0.7917,
+   "material_pairs": 73,
+   "material_collapsed": 13,
+   "material_preserved_rate": 0.8219
+  },
+  "structure": {
+   "label": "production",
+   "groups": 660,
+   "singletons": 278,
+   "singleton_rate": 0.4212,
+   "largest": 70,
+   "unit_conflict_pairs_inside_groups": 1,
+   "groups_spanning_over_21_days": 80,
+   "material_pairs_collapsed_inside_groups": 159
+  },
+  "silver": {
+   "pairs": 14661,
+   "agreement": 0.8512,
+   "silver_same_but_split": 2088,
+   "silver_diff_but_merged": 93
+  }
+ },
+ "arms": {
+  "v0-spec": {
+   "config": {
+    "use_lexicon": false,
+    "gate_entities": false,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial"
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": false,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial",
+    "items": 3168,
+    "events": 891,
+    "grades": {
+     "lexical": 2770,
+     "object": 310,
+     "entity": 88
+    },
+    "reasons": {
+     "production_issue": 2011,
+     "new:no_object": 775,
+     "key_match": 130,
+     "production_bridge": 115,
+     "new:stage_split": 82,
+     "new:no_candidate": 34,
+     "title_join": 20,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 13,
+    "false_merge_rate": 0.0586,
+    "same_pairs": 48,
+    "false_split": 44,
+    "false_split_rate": 0.9167,
+    "material_pairs": 73,
+    "material_collapsed": 6,
+    "material_preserved_rate": 0.9178
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 2,
+    "recovery_rate": 0.0526,
+    "new_false_merges_introduced": 2,
+    "production_false_merges_fixed": 33,
+    "material_recovered_from_production_collapse": 7,
+    "material_newly_collapsed": 0
+   },
+   "structure": {
+    "label": "v0-spec",
+    "groups": 891,
+    "singletons": 372,
+    "singleton_rate": 0.4175,
+    "largest": 47,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 60,
+    "material_pairs_collapsed_inside_groups": 116
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 64,
+    "rate": 0.4025,
+    "object_grade_pairs": 24,
+    "object_grade_kept": 23,
+    "object_grade_rate": 0.9583
+   },
+   "object_grade_structure": {
+    "label": "v0-spec:object",
+    "groups": 92,
+    "singletons": 36,
+    "singleton_rate": 0.3913,
+    "largest": 37,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 10,
+    "material_pairs_collapsed_inside_groups": 8
+   },
+   "structure_by_kind": {
+    "plant": {
+     "events": 40,
+     "articles": 182,
+     "singletons": 12,
+     "production_issues_joined": 3,
+     "span_over_21": 3,
+     "max_span": 43,
+     "largest": 16,
+     "stage_splits": 23
+    },
+    "project:basic-plan": {
+     "events": 39,
+     "articles": 297,
+     "singletons": 9,
+     "production_issues_joined": 55,
+     "span_over_21": 7,
+     "max_span": 44,
+     "largest": 43,
+     "stage_splits": 29
+    },
+    "project:pocheon-psh": {
+     "events": 4,
+     "articles": 12,
+     "singletons": 2,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 6,
+     "largest": 8,
+     "stage_splits": 2
+    },
+    "unit": {
+     "events": 49,
+     "articles": 162,
+     "singletons": 13,
+     "production_issues_joined": 11,
+     "span_over_21": 5,
+     "max_span": 40,
+     "largest": 11,
+     "stage_splits": 28
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.797,
+    "silver_same_but_split": 2866,
+    "silver_diff_but_merged": 110
+   },
+   "silver_object_grade": {
+    "pairs": 1024,
+    "agreement": 0.5459,
+    "silver_same_but_split": 428,
+    "silver_diff_but_merged": 37
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 226,
+     "material": 51,
+     "material_collapsed": 6,
+     "prod_material_collapsed": 10,
+     "distinct": 155,
+     "false_merge": 10,
+     "prod_false_merge": 35,
+     "same": 20,
+     "false_split": 19,
+     "prod_false_split": 17
+    },
+    "object": {
+     "pairs": 117,
+     "distinct": 67,
+     "false_merge": 3,
+     "prod_false_merge": 9,
+     "material": 22,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 28,
+     "false_split": 25,
+     "prod_false_split": 21
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 2,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 24,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 1,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0-spec-b14": {
+   "config": {
+    "use_lexicon": false,
+    "gate_entities": false,
+    "bucket_days": 14,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial"
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 14,
+    "use_lexicon": false,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial",
+    "items": 3168,
+    "events": 897,
+    "grades": {
+     "lexical": 2770,
+     "object": 310,
+     "entity": 88
+    },
+    "reasons": {
+     "production_issue": 2014,
+     "new:no_object": 775,
+     "key_match": 124,
+     "production_bridge": 112,
+     "new:stage_split": 84,
+     "new:no_candidate": 38,
+     "title_join": 20,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 13,
+    "false_merge_rate": 0.0586,
+    "same_pairs": 48,
+    "false_split": 44,
+    "false_split_rate": 0.9167,
+    "material_pairs": 73,
+    "material_collapsed": 6,
+    "material_preserved_rate": 0.9178
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 2,
+    "recovery_rate": 0.0526,
+    "new_false_merges_introduced": 2,
+    "production_false_merges_fixed": 33,
+    "material_recovered_from_production_collapse": 7,
+    "material_newly_collapsed": 0
+   },
+   "structure": {
+    "label": "v0-spec-b14",
+    "groups": 897,
+    "singletons": 376,
+    "singleton_rate": 0.4192,
+    "largest": 47,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 57,
+    "material_pairs_collapsed_inside_groups": 116
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 64,
+    "rate": 0.4025,
+    "object_grade_pairs": 24,
+    "object_grade_kept": 23,
+    "object_grade_rate": 0.9583
+   },
+   "object_grade_structure": {
+    "label": "v0-spec-b14:object",
+    "groups": 98,
+    "singletons": 41,
+    "singleton_rate": 0.4184,
+    "largest": 37,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 6,
+    "material_pairs_collapsed_inside_groups": 8
+   },
+   "structure_by_kind": {
+    "plant": {
+     "events": 40,
+     "articles": 182,
+     "singletons": 12,
+     "production_issues_joined": 3,
+     "span_over_21": 3,
+     "max_span": 43,
+     "largest": 16,
+     "stage_splits": 23
+    },
+    "project:basic-plan": {
+     "events": 43,
+     "articles": 297,
+     "singletons": 12,
+     "production_issues_joined": 52,
+     "span_over_21": 6,
+     "max_span": 44,
+     "largest": 43,
+     "stage_splits": 33
+    },
+    "project:pocheon-psh": {
+     "events": 4,
+     "articles": 12,
+     "singletons": 2,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 6,
+     "largest": 8,
+     "stage_splits": 2
+    },
+    "unit": {
+     "events": 51,
+     "articles": 162,
+     "singletons": 14,
+     "production_issues_joined": 10,
+     "span_over_21": 3,
+     "max_span": 40,
+     "largest": 11,
+     "stage_splits": 26
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.797,
+    "silver_same_but_split": 2866,
+    "silver_diff_but_merged": 110
+   },
+   "silver_object_grade": {
+    "pairs": 1024,
+    "agreement": 0.5459,
+    "silver_same_but_split": 428,
+    "silver_diff_but_merged": 37
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 226,
+     "material": 51,
+     "material_collapsed": 6,
+     "prod_material_collapsed": 10,
+     "distinct": 155,
+     "false_merge": 10,
+     "prod_false_merge": 35,
+     "same": 20,
+     "false_split": 19,
+     "prod_false_split": 17
+    },
+    "object": {
+     "pairs": 117,
+     "distinct": 67,
+     "false_merge": 3,
+     "prod_false_merge": 9,
+     "material": 22,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 28,
+     "false_split": 25,
+     "prod_false_split": 21
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 2,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 24,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 1,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0-spec-b60": {
+   "config": {
+    "use_lexicon": false,
+    "gate_entities": false,
+    "bucket_days": 60,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial"
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 60,
+    "use_lexicon": false,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial",
+    "items": 3168,
+    "events": 890,
+    "grades": {
+     "lexical": 2770,
+     "object": 310,
+     "entity": 88
+    },
+    "reasons": {
+     "production_issue": 2011,
+     "new:no_object": 775,
+     "key_match": 131,
+     "production_bridge": 115,
+     "new:stage_split": 81,
+     "new:no_candidate": 34,
+     "title_join": 20,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 13,
+    "false_merge_rate": 0.0586,
+    "same_pairs": 48,
+    "false_split": 44,
+    "false_split_rate": 0.9167,
+    "material_pairs": 73,
+    "material_collapsed": 6,
+    "material_preserved_rate": 0.9178
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 2,
+    "recovery_rate": 0.0526,
+    "new_false_merges_introduced": 2,
+    "production_false_merges_fixed": 33,
+    "material_recovered_from_production_collapse": 7,
+    "material_newly_collapsed": 0
+   },
+   "structure": {
+    "label": "v0-spec-b60",
+    "groups": 890,
+    "singletons": 372,
+    "singleton_rate": 0.418,
+    "largest": 47,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 61,
+    "material_pairs_collapsed_inside_groups": 117
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 64,
+    "rate": 0.4025,
+    "object_grade_pairs": 24,
+    "object_grade_kept": 23,
+    "object_grade_rate": 0.9583
+   },
+   "object_grade_structure": {
+    "label": "v0-spec-b60:object",
+    "groups": 91,
+    "singletons": 36,
+    "singleton_rate": 0.3956,
+    "largest": 37,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 11,
+    "material_pairs_collapsed_inside_groups": 9
+   },
+   "structure_by_kind": {
+    "plant": {
+     "events": 40,
+     "articles": 182,
+     "singletons": 12,
+     "production_issues_joined": 3,
+     "span_over_21": 3,
+     "max_span": 43,
+     "largest": 16,
+     "stage_splits": 23
+    },
+    "project:basic-plan": {
+     "events": 39,
+     "articles": 297,
+     "singletons": 9,
+     "production_issues_joined": 55,
+     "span_over_21": 7,
+     "max_span": 44,
+     "largest": 43,
+     "stage_splits": 29
+    },
+    "project:pocheon-psh": {
+     "events": 4,
+     "articles": 12,
+     "singletons": 2,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 6,
+     "largest": 8,
+     "stage_splits": 2
+    },
+    "unit": {
+     "events": 48,
+     "articles": 162,
+     "singletons": 13,
+     "production_issues_joined": 12,
+     "span_over_21": 6,
+     "max_span": 40,
+     "largest": 11,
+     "stage_splits": 27
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.797,
+    "silver_same_but_split": 2866,
+    "silver_diff_but_merged": 110
+   },
+   "silver_object_grade": {
+    "pairs": 1024,
+    "agreement": 0.5459,
+    "silver_same_but_split": 428,
+    "silver_diff_but_merged": 37
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 226,
+     "material": 51,
+     "material_collapsed": 6,
+     "prod_material_collapsed": 10,
+     "distinct": 155,
+     "false_merge": 10,
+     "prod_false_merge": 35,
+     "same": 20,
+     "false_split": 19,
+     "prod_false_split": 17
+    },
+    "object": {
+     "pairs": 117,
+     "distinct": 67,
+     "false_merge": 3,
+     "prod_false_merge": 9,
+     "material": 22,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 28,
+     "false_split": 25,
+     "prod_false_split": 21
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 2,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 24,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 1,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0-loose": {
+   "config": {
+    "use_lexicon": false,
+    "gate_entities": false,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": false,
+    "production_bridge": true
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": false,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": false,
+    "production_bridge": true,
+    "items": 3168,
+    "events": 818,
+    "grades": {
+     "lexical": 2770,
+     "object": 310,
+     "entity": 88
+    },
+    "reasons": {
+     "production_issue": 2016,
+     "new:no_object": 769,
+     "key_match": 187,
+     "production_bridge": 129,
+     "new:no_candidate": 35,
+     "title_join": 17,
+     "new:stage_split": 14,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 63,
+    "false_merge_rate": 0.2838,
+    "same_pairs": 48,
+    "false_split": 33,
+    "false_split_rate": 0.6875,
+    "material_pairs": 73,
+    "material_collapsed": 17,
+    "material_preserved_rate": 0.7671
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 10,
+    "recovery_rate": 0.2632,
+    "new_false_merges_introduced": 47,
+    "production_false_merges_fixed": 28,
+    "material_recovered_from_production_collapse": 4,
+    "material_newly_collapsed": 8
+   },
+   "structure": {
+    "label": "v0-loose",
+    "groups": 818,
+    "singletons": 347,
+    "singleton_rate": 0.4242,
+    "largest": 190,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 55,
+    "material_pairs_collapsed_inside_groups": 143
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 41,
+    "rate": 0.2579,
+    "object_grade_pairs": 24,
+    "object_grade_kept": 7,
+    "object_grade_rate": 0.2917
+   },
+   "object_grade_structure": {
+    "label": "v0-loose:object",
+    "groups": 39,
+    "singletons": 15,
+    "singleton_rate": 0.3846,
+    "largest": 120,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 6,
+    "material_pairs_collapsed_inside_groups": 33
+   },
+   "structure_by_kind": {
+    "plant": {
+     "events": 25,
+     "articles": 178,
+     "singletons": 7,
+     "production_issues_joined": 7,
+     "span_over_21": 3,
+     "max_span": 62,
+     "largest": 41,
+     "stage_splits": 9
+    },
+    "project:basic-plan": {
+     "events": 10,
+     "articles": 296,
+     "singletons": 2,
+     "production_issues_joined": 32,
+     "span_over_21": 4,
+     "max_span": 44,
+     "largest": 190,
+     "stage_splits": 0
+    },
+    "project:pocheon-psh": {
+     "events": 3,
+     "articles": 12,
+     "singletons": 1,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 6,
+     "largest": 8,
+     "stage_splits": 1
+    },
+    "unit": {
+     "events": 26,
+     "articles": 175,
+     "singletons": 4,
+     "production_issues_joined": 14,
+     "span_over_21": 4,
+     "max_span": 41,
+     "largest": 30,
+     "stage_splits": 4
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.7957,
+    "silver_same_but_split": 2615,
+    "silver_diff_but_merged": 380
+   },
+   "silver_object_grade": {
+    "pairs": 1024,
+    "agreement": 0.5264,
+    "silver_same_but_split": 249,
+    "silver_diff_but_merged": 236
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 226,
+     "material": 51,
+     "material_collapsed": 6,
+     "prod_material_collapsed": 10,
+     "distinct": 155,
+     "false_merge": 30,
+     "prod_false_merge": 35,
+     "same": 20,
+     "false_split": 18,
+     "prod_false_split": 17
+    },
+    "object": {
+     "pairs": 117,
+     "distinct": 67,
+     "false_merge": 33,
+     "prod_false_merge": 9,
+     "material": 22,
+     "material_collapsed": 11,
+     "prod_material_collapsed": 3,
+     "same": 28,
+     "false_split": 15,
+     "prod_false_split": 21
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 32,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 10,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 15,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 0,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0-loose-nobridge": {
+   "config": {
+    "use_lexicon": false,
+    "gate_entities": false,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": false,
+    "production_bridge": false
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": false,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": false,
+    "production_bridge": false,
+    "items": 3168,
+    "events": 868,
+    "grades": {
+     "lexical": 2770,
+     "object": 310,
+     "entity": 88
+    },
+    "reasons": {
+     "production_issue": 2002,
+     "new:no_object": 768,
+     "key_match": 187,
+     "title_join": 110,
+     "new:no_candidate": 80,
+     "new:stage_split": 20,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 32,
+    "false_merge_rate": 0.1441,
+    "same_pairs": 48,
+    "false_split": 43,
+    "false_split_rate": 0.8958,
+    "material_pairs": 73,
+    "material_collapsed": 8,
+    "material_preserved_rate": 0.8904
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 3,
+    "recovery_rate": 0.0789,
+    "new_false_merges_introduced": 17,
+    "production_false_merges_fixed": 29,
+    "material_recovered_from_production_collapse": 6,
+    "material_newly_collapsed": 1
+   },
+   "structure": {
+    "label": "v0-loose-nobridge",
+    "groups": 868,
+    "singletons": 367,
+    "singleton_rate": 0.4228,
+    "largest": 91,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 54,
+    "material_pairs_collapsed_inside_groups": 137
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 45,
+    "rate": 0.283,
+    "object_grade_pairs": 24,
+    "object_grade_kept": 9,
+    "object_grade_rate": 0.375
+   },
+   "object_grade_structure": {
+    "label": "v0-loose-nobridge:object",
+    "groups": 64,
+    "singletons": 32,
+    "singleton_rate": 0.5,
+    "largest": 51,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 7,
+    "material_pairs_collapsed_inside_groups": 29
+   },
+   "structure_by_kind": {
+    "plant": {
+     "events": 36,
+     "articles": 154,
+     "singletons": 11,
+     "production_issues_joined": 5,
+     "span_over_21": 0,
+     "max_span": 20,
+     "largest": 22,
+     "stage_splits": 12
+    },
+    "project:basic-plan": {
+     "events": 32,
+     "articles": 305,
+     "singletons": 10,
+     "production_issues_joined": 50,
+     "span_over_21": 5,
+     "max_span": 40,
+     "largest": 91,
+     "stage_splits": 2
+    },
+    "project:pocheon-psh": {
+     "events": 3,
+     "articles": 11,
+     "singletons": 1,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 2,
+     "largest": 7,
+     "stage_splits": 1
+    },
+    "unit": {
+     "events": 29,
+     "articles": 148,
+     "singletons": 8,
+     "production_issues_joined": 15,
+     "span_over_21": 3,
+     "max_span": 41,
+     "largest": 27,
+     "stage_splits": 5
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.7956,
+    "silver_same_but_split": 2752,
+    "silver_diff_but_merged": 245
+   },
+   "silver_object_grade": {
+    "pairs": 1024,
+    "agreement": 0.5625,
+    "silver_same_but_split": 316,
+    "silver_diff_but_merged": 132
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 226,
+     "material": 51,
+     "material_collapsed": 7,
+     "prod_material_collapsed": 10,
+     "distinct": 155,
+     "false_merge": 16,
+     "prod_false_merge": 35,
+     "same": 20,
+     "false_split": 19,
+     "prod_false_split": 17
+    },
+    "object": {
+     "pairs": 117,
+     "distinct": 67,
+     "false_merge": 16,
+     "prod_false_merge": 9,
+     "material": 22,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 3,
+     "same": 28,
+     "false_split": 24,
+     "prod_false_split": 21
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 15,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 23,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 1,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0-strict-bridge": {
+   "config": {
+    "use_lexicon": false,
+    "gate_entities": false,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": true
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": false,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": true,
+    "items": 3168,
+    "events": 890,
+    "grades": {
+     "lexical": 2770,
+     "object": 310,
+     "entity": 88
+    },
+    "reasons": {
+     "production_issue": 2012,
+     "new:no_object": 775,
+     "key_match": 130,
+     "production_bridge": 115,
+     "new:stage_split": 82,
+     "new:no_candidate": 33,
+     "title_join": 20,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 13,
+    "false_merge_rate": 0.0586,
+    "same_pairs": 48,
+    "false_split": 44,
+    "false_split_rate": 0.9167,
+    "material_pairs": 73,
+    "material_collapsed": 6,
+    "material_preserved_rate": 0.9178
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 2,
+    "recovery_rate": 0.0526,
+    "new_false_merges_introduced": 2,
+    "production_false_merges_fixed": 33,
+    "material_recovered_from_production_collapse": 7,
+    "material_newly_collapsed": 0
+   },
+   "structure": {
+    "label": "v0-strict-bridge",
+    "groups": 890,
+    "singletons": 372,
+    "singleton_rate": 0.418,
+    "largest": 47,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 60,
+    "material_pairs_collapsed_inside_groups": 116
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 64,
+    "rate": 0.4025,
+    "object_grade_pairs": 24,
+    "object_grade_kept": 23,
+    "object_grade_rate": 0.9583
+   },
+   "object_grade_structure": {
+    "label": "v0-strict-bridge:object",
+    "groups": 92,
+    "singletons": 36,
+    "singleton_rate": 0.3913,
+    "largest": 37,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 10,
+    "material_pairs_collapsed_inside_groups": 8
+   },
+   "structure_by_kind": {
+    "plant": {
+     "events": 40,
+     "articles": 182,
+     "singletons": 12,
+     "production_issues_joined": 3,
+     "span_over_21": 3,
+     "max_span": 43,
+     "largest": 16,
+     "stage_splits": 23
+    },
+    "project:basic-plan": {
+     "events": 39,
+     "articles": 297,
+     "singletons": 9,
+     "production_issues_joined": 55,
+     "span_over_21": 7,
+     "max_span": 44,
+     "largest": 43,
+     "stage_splits": 29
+    },
+    "project:pocheon-psh": {
+     "events": 4,
+     "articles": 12,
+     "singletons": 2,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 6,
+     "largest": 8,
+     "stage_splits": 2
+    },
+    "unit": {
+     "events": 49,
+     "articles": 164,
+     "singletons": 13,
+     "production_issues_joined": 11,
+     "span_over_21": 5,
+     "max_span": 40,
+     "largest": 11,
+     "stage_splits": 28
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.7971,
+    "silver_same_but_split": 2865,
+    "silver_diff_but_merged": 110
+   },
+   "silver_object_grade": {
+    "pairs": 1024,
+    "agreement": 0.5459,
+    "silver_same_but_split": 428,
+    "silver_diff_but_merged": 37
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 226,
+     "material": 51,
+     "material_collapsed": 6,
+     "prod_material_collapsed": 10,
+     "distinct": 155,
+     "false_merge": 10,
+     "prod_false_merge": 35,
+     "same": 20,
+     "false_split": 19,
+     "prod_false_split": 17
+    },
+    "object": {
+     "pairs": 117,
+     "distinct": 67,
+     "false_merge": 3,
+     "prod_false_merge": 9,
+     "material": 22,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 28,
+     "false_split": 25,
+     "prod_false_split": 21
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 2,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 24,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 1,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0-strict-nobridge": {
+   "config": {
+    "use_lexicon": false,
+    "gate_entities": false,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": false
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": false,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": false,
+    "items": 3168,
+    "events": 922,
+    "grades": {
+     "lexical": 2770,
+     "object": 310,
+     "entity": 88
+    },
+    "reasons": {
+     "production_issue": 1997,
+     "new:no_object": 773,
+     "key_match": 132,
+     "title_join": 116,
+     "new:stage_split": 79,
+     "new:no_candidate": 70,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 11,
+    "false_merge_rate": 0.0495,
+    "same_pairs": 48,
+    "false_split": 44,
+    "false_split_rate": 0.9167,
+    "material_pairs": 73,
+    "material_collapsed": 6,
+    "material_preserved_rate": 0.9178
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 2,
+    "recovery_rate": 0.0526,
+    "new_false_merges_introduced": 1,
+    "production_false_merges_fixed": 34,
+    "material_recovered_from_production_collapse": 7,
+    "material_newly_collapsed": 0
+   },
+   "structure": {
+    "label": "v0-strict-nobridge",
+    "groups": 922,
+    "singletons": 386,
+    "singleton_rate": 0.4187,
+    "largest": 47,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 59,
+    "material_pairs_collapsed_inside_groups": 111
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 66,
+    "rate": 0.4151,
+    "object_grade_pairs": 24,
+    "object_grade_kept": 24,
+    "object_grade_rate": 1.0
+   },
+   "object_grade_structure": {
+    "label": "v0-strict-nobridge:object",
+    "groups": 104,
+    "singletons": 45,
+    "singleton_rate": 0.4327,
+    "largest": 22,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 11,
+    "material_pairs_collapsed_inside_groups": 8
+   },
+   "structure_by_kind": {
+    "plant": {
+     "events": 45,
+     "articles": 147,
+     "singletons": 15,
+     "production_issues_joined": 3,
+     "span_over_21": 0,
+     "max_span": 20,
+     "largest": 11,
+     "stage_splits": 26
+    },
+    "project:basic-plan": {
+     "events": 50,
+     "articles": 295,
+     "singletons": 14,
+     "production_issues_joined": 66,
+     "span_over_21": 9,
+     "max_span": 52,
+     "largest": 32,
+     "stage_splits": 25
+    },
+    "project:pocheon-psh": {
+     "events": 4,
+     "articles": 11,
+     "singletons": 2,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 2,
+     "largest": 7,
+     "stage_splits": 2
+    },
+    "unit": {
+     "events": 50,
+     "articles": 152,
+     "singletons": 16,
+     "production_issues_joined": 12,
+     "span_over_21": 4,
+     "max_span": 40,
+     "largest": 11,
+     "stage_splits": 26
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.7962,
+    "silver_same_but_split": 2888,
+    "silver_diff_but_merged": 100
+   },
+   "silver_object_grade": {
+    "pairs": 1024,
+    "agreement": 0.5586,
+    "silver_same_but_split": 429,
+    "silver_diff_but_merged": 23
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 226,
+     "material": 51,
+     "material_collapsed": 6,
+     "prod_material_collapsed": 10,
+     "distinct": 155,
+     "false_merge": 10,
+     "prod_false_merge": 35,
+     "same": 20,
+     "false_split": 19,
+     "prod_false_split": 17
+    },
+    "object": {
+     "pairs": 117,
+     "distinct": 67,
+     "false_merge": 1,
+     "prod_false_merge": 9,
+     "material": 22,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 28,
+     "false_split": 25,
+     "prod_false_split": 21
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 0,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 24,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 1,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0-loose-title": {
+   "config": {
+    "use_lexicon": false,
+    "gate_entities": false,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": true,
+    "production_bridge": true
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": false,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": true,
+    "production_bridge": true,
+    "items": 3168,
+    "events": 718,
+    "grades": {
+     "lexical": 2770,
+     "object": 310,
+     "entity": 88
+    },
+    "reasons": {
+     "production_issue": 2120,
+     "new:no_object": 671,
+     "production_bridge": 216,
+     "key_match": 81,
+     "new:no_candidate": 41,
+     "title_join": 32,
+     "new:stage_split": 6,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 55,
+    "false_merge_rate": 0.2477,
+    "same_pairs": 48,
+    "false_split": 31,
+    "false_split_rate": 0.6458,
+    "material_pairs": 73,
+    "material_collapsed": 14,
+    "material_preserved_rate": 0.8082
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 9,
+    "recovery_rate": 0.2368,
+    "new_false_merges_introduced": 36,
+    "production_false_merges_fixed": 25,
+    "material_recovered_from_production_collapse": 5,
+    "material_newly_collapsed": 6
+   },
+   "structure": {
+    "label": "v0-loose-title",
+    "groups": 718,
+    "singletons": 292,
+    "singleton_rate": 0.4067,
+    "largest": 126,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 66,
+    "material_pairs_collapsed_inside_groups": 141
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 37,
+    "rate": 0.2327,
+    "object_grade_pairs": 24,
+    "object_grade_kept": 6,
+    "object_grade_rate": 0.25
+   },
+   "object_grade_structure": {
+    "label": "v0-loose-title:object",
+    "groups": 46,
+    "singletons": 15,
+    "singleton_rate": 0.3261,
+    "largest": 96,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 8,
+    "material_pairs_collapsed_inside_groups": 32
+   },
+   "structure_by_kind": {
+    "plant": {
+     "events": 22,
+     "articles": 184,
+     "singletons": 5,
+     "production_issues_joined": 7,
+     "span_over_21": 2,
+     "max_span": 62,
+     "largest": 26,
+     "stage_splits": 2
+    },
+    "project:basic-plan": {
+     "events": 17,
+     "articles": 315,
+     "singletons": 2,
+     "production_issues_joined": 28,
+     "span_over_21": 9,
+     "max_span": 51,
+     "largest": 126,
+     "stage_splits": 0
+    },
+    "project:pocheon-psh": {
+     "events": 2,
+     "articles": 12,
+     "singletons": 0,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 12,
+     "largest": 9,
+     "stage_splits": 0
+    },
+    "unit": {
+     "events": 27,
+     "articles": 170,
+     "singletons": 4,
+     "production_issues_joined": 11,
+     "span_over_21": 3,
+     "max_span": 41,
+     "largest": 30,
+     "stage_splits": 4
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.823,
+    "silver_same_but_split": 2343,
+    "silver_diff_but_merged": 252
+   },
+   "silver_object_grade": {
+    "pairs": 1024,
+    "agreement": 0.6611,
+    "silver_same_but_split": 227,
+    "silver_diff_but_merged": 120
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 226,
+     "material": 51,
+     "material_collapsed": 7,
+     "prod_material_collapsed": 10,
+     "distinct": 155,
+     "false_merge": 22,
+     "prod_false_merge": 35,
+     "same": 20,
+     "false_split": 17,
+     "prod_false_split": 17
+    },
+    "object": {
+     "pairs": 117,
+     "distinct": 67,
+     "false_merge": 33,
+     "prod_false_merge": 9,
+     "material": 22,
+     "material_collapsed": 7,
+     "prod_material_collapsed": 3,
+     "same": 28,
+     "false_split": 14,
+     "prod_false_split": 21
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 32,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 6,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 14,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 0,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0e-spec": {
+   "config": {
+    "use_lexicon": false,
+    "gate_entities": true,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial"
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": false,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial",
+    "items": 3168,
+    "events": 929,
+    "grades": {
+     "lexical": 2541,
+     "object": 397,
+     "entity": 230
+    },
+    "reasons": {
+     "production_issue": 1851,
+     "new:no_object": 730,
+     "key_match": 186,
+     "production_bridge": 170,
+     "new:stage_split": 151,
+     "new:no_candidate": 48,
+     "title_join": 31,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 8,
+    "false_merge_rate": 0.036,
+    "same_pairs": 48,
+    "false_split": 45,
+    "false_split_rate": 0.9375,
+    "material_pairs": 73,
+    "material_collapsed": 5,
+    "material_preserved_rate": 0.9315
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 1,
+    "recovery_rate": 0.0263,
+    "new_false_merges_introduced": 1,
+    "production_false_merges_fixed": 37,
+    "material_recovered_from_production_collapse": 8,
+    "material_newly_collapsed": 0
+   },
+   "structure": {
+    "label": "v0e-spec",
+    "groups": 929,
+    "singletons": 395,
+    "singleton_rate": 0.4252,
+    "largest": 45,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 60,
+    "material_pairs_collapsed_inside_groups": 111
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 74,
+    "rate": 0.4654,
+    "object_grade_pairs": 28,
+    "object_grade_kept": 27,
+    "object_grade_rate": 0.9643
+   },
+   "object_grade_structure": {
+    "label": "v0e-spec:object",
+    "groups": 105,
+    "singletons": 40,
+    "singleton_rate": 0.381,
+    "largest": 26,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 15,
+    "material_pairs_collapsed_inside_groups": 11
+   },
+   "structure_by_kind": {
+    "plant": {
+     "events": 134,
+     "articles": 558,
+     "singletons": 43,
+     "production_issues_joined": 12,
+     "span_over_21": 6,
+     "max_span": 43,
+     "largest": 38,
+     "stage_splits": 84
+    },
+    "project:basic-plan": {
+     "events": 53,
+     "articles": 423,
+     "singletons": 11,
+     "production_issues_joined": 105,
+     "span_over_21": 13,
+     "max_span": 50,
+     "largest": 36,
+     "stage_splits": 38
+    },
+    "project:pocheon-psh": {
+     "events": 4,
+     "articles": 12,
+     "singletons": 2,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 6,
+     "largest": 8,
+     "stage_splits": 2
+    },
+    "unit": {
+     "events": 48,
+     "articles": 149,
+     "singletons": 15,
+     "production_issues_joined": 11,
+     "span_over_21": 5,
+     "max_span": 40,
+     "largest": 11,
+     "stage_splits": 27
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.789,
+    "silver_same_but_split": 2996,
+    "silver_diff_but_merged": 98
+   },
+   "silver_object_grade": {
+    "pairs": 1341,
+    "agreement": 0.6033,
+    "silver_same_but_split": 499,
+    "silver_diff_but_merged": 33
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 216,
+     "material": 51,
+     "material_collapsed": 5,
+     "prod_material_collapsed": 10,
+     "distinct": 145,
+     "false_merge": 6,
+     "prod_false_merge": 33,
+     "same": 20,
+     "false_split": 19,
+     "prod_false_split": 17
+    },
+    "object": {
+     "pairs": 127,
+     "distinct": 77,
+     "false_merge": 2,
+     "prod_false_merge": 11,
+     "material": 22,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 28,
+     "false_split": 26,
+     "prod_false_split": 21
+    },
+    "object:project:basic-plan": {
+     "pairs": 123,
+     "distinct": 76,
+     "false_merge": 1,
+     "prod_false_merge": 11,
+     "material": 20,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 25,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 1,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0e-loose": {
+   "config": {
+    "use_lexicon": false,
+    "gate_entities": true,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": false,
+    "production_bridge": true
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": false,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": false,
+    "production_bridge": true,
+    "items": 3168,
+    "events": 807,
+    "grades": {
+     "lexical": 2541,
+     "object": 397,
+     "entity": 230
+    },
+    "reasons": {
+     "production_issue": 1869,
+     "new:no_object": 721,
+     "key_match": 253,
+     "production_bridge": 212,
+     "new:no_candidate": 53,
+     "new:stage_split": 33,
+     "title_join": 26,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 37,
+    "false_merge_rate": 0.1667,
+    "same_pairs": 48,
+    "false_split": 36,
+    "false_split_rate": 0.75,
+    "material_pairs": 73,
+    "material_collapsed": 17,
+    "material_preserved_rate": 0.7671
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 8,
+    "recovery_rate": 0.2105,
+    "new_false_merges_introduced": 26,
+    "production_false_merges_fixed": 33,
+    "material_recovered_from_production_collapse": 4,
+    "material_newly_collapsed": 8
+   },
+   "structure": {
+    "label": "v0e-loose",
+    "groups": 807,
+    "singletons": 350,
+    "singleton_rate": 0.4337,
+    "largest": 246,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 49,
+    "material_pairs_collapsed_inside_groups": 147
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 47,
+    "rate": 0.2956,
+    "object_grade_pairs": 28,
+    "object_grade_kept": 10,
+    "object_grade_rate": 0.3571
+   },
+   "object_grade_structure": {
+    "label": "v0e-loose:object",
+    "groups": 42,
+    "singletons": 14,
+    "singleton_rate": 0.3333,
+    "largest": 117,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 6,
+    "material_pairs_collapsed_inside_groups": 39
+   },
+   "structure_by_kind": {
+    "plant": {
+     "events": 93,
+     "articles": 634,
+     "singletons": 22,
+     "production_issues_joined": 15,
+     "span_over_21": 9,
+     "max_span": 43,
+     "largest": 93,
+     "stage_splits": 27
+    },
+    "project:basic-plan": {
+     "events": 13,
+     "articles": 466,
+     "singletons": 2,
+     "production_issues_joined": 69,
+     "span_over_21": 5,
+     "max_span": 51,
+     "largest": 246,
+     "stage_splits": 0
+    },
+    "project:pocheon-psh": {
+     "events": 3,
+     "articles": 12,
+     "singletons": 1,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 6,
+     "largest": 8,
+     "stage_splits": 1
+    },
+    "unit": {
+     "events": 26,
+     "articles": 143,
+     "singletons": 6,
+     "production_issues_joined": 14,
+     "span_over_21": 4,
+     "max_span": 41,
+     "largest": 29,
+     "stage_splits": 5
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.7926,
+    "silver_same_but_split": 2498,
+    "silver_diff_but_merged": 543
+   },
+   "silver_object_grade": {
+    "pairs": 1341,
+    "agreement": 0.5138,
+    "silver_same_but_split": 356,
+    "silver_diff_but_merged": 296
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 216,
+     "material": 51,
+     "material_collapsed": 8,
+     "prod_material_collapsed": 10,
+     "distinct": 145,
+     "false_merge": 17,
+     "prod_false_merge": 33,
+     "same": 20,
+     "false_split": 15,
+     "prod_false_split": 17
+    },
+    "object": {
+     "pairs": 127,
+     "distinct": 77,
+     "false_merge": 20,
+     "prod_false_merge": 11,
+     "material": 22,
+     "material_collapsed": 9,
+     "prod_material_collapsed": 3,
+     "same": 28,
+     "false_split": 21,
+     "prod_false_split": 21
+    },
+    "object:project:basic-plan": {
+     "pairs": 123,
+     "distinct": 76,
+     "false_merge": 19,
+     "prod_false_merge": 11,
+     "material": 20,
+     "material_collapsed": 8,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 21,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 0,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0x-spec": {
+   "config": {
+    "use_lexicon": true,
+    "gate_entities": false,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial"
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": true,
+    "process_hint": false,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial",
+    "items": 3168,
+    "events": 955,
+    "grades": {
+     "lexical": 2364,
+     "object": 730,
+     "entity": 74
+    },
+    "reasons": {
+     "production_issue": 1677,
+     "new:no_object": 717,
+     "key_match": 260,
+     "production_bridge": 231,
+     "new:stage_split": 168,
+     "new:no_candidate": 70,
+     "title_join": 44,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 16,
+    "false_merge_rate": 0.0721,
+    "same_pairs": 48,
+    "false_split": 45,
+    "false_split_rate": 0.9375,
+    "material_pairs": 73,
+    "material_collapsed": 1,
+    "material_preserved_rate": 0.9863
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 1,
+    "recovery_rate": 0.0263,
+    "new_false_merges_introduced": 6,
+    "production_false_merges_fixed": 34,
+    "material_recovered_from_production_collapse": 12,
+    "material_newly_collapsed": 0
+   },
+   "structure": {
+    "label": "v0x-spec",
+    "groups": 955,
+    "singletons": 419,
+    "singleton_rate": 0.4387,
+    "largest": 49,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 53,
+    "material_pairs_collapsed_inside_groups": 108
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 78,
+    "rate": 0.4906,
+    "object_grade_pairs": 36,
+    "object_grade_kept": 32,
+    "object_grade_rate": 0.8889
+   },
+   "object_grade_structure": {
+    "label": "v0x-spec:object",
+    "groups": 236,
+    "singletons": 115,
+    "singleton_rate": 0.4873,
+    "largest": 45,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 20,
+    "material_pairs_collapsed_inside_groups": 18
+   },
+   "structure_by_kind": {
+    "lexicon": {
+     "events": 146,
+     "articles": 744,
+     "singletons": 45,
+     "production_issues_joined": 85,
+     "span_over_21": 15,
+     "max_span": 48,
+     "largest": 33,
+     "stage_splits": 97
+    },
+    "plant": {
+     "events": 32,
+     "articles": 136,
+     "singletons": 12,
+     "production_issues_joined": 2,
+     "span_over_21": 2,
+     "max_span": 38,
+     "largest": 16,
+     "stage_splits": 15
+    },
+    "project:basic-plan": {
+     "events": 37,
+     "articles": 247,
+     "singletons": 10,
+     "production_issues_joined": 55,
+     "span_over_21": 6,
+     "max_span": 43,
+     "largest": 49,
+     "stage_splits": 26
+    },
+    "project:pocheon-psh": {
+     "events": 4,
+     "articles": 12,
+     "singletons": 2,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 6,
+     "largest": 8,
+     "stage_splits": 2
+    },
+    "unit": {
+     "events": 49,
+     "articles": 160,
+     "singletons": 13,
+     "production_issues_joined": 11,
+     "span_over_21": 5,
+     "max_span": 40,
+     "largest": 11,
+     "stage_splits": 28
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.779,
+    "silver_same_but_split": 3081,
+    "silver_diff_but_merged": 159
+   },
+   "silver_object_grade": {
+    "pairs": 2621,
+    "agreement": 0.5742,
+    "silver_same_but_split": 1019,
+    "silver_diff_but_merged": 97
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 196,
+     "material": 43,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 7,
+     "distinct": 137,
+     "false_merge": 8,
+     "prod_false_merge": 29,
+     "same": 16,
+     "false_split": 15,
+     "prod_false_split": 13
+    },
+    "object": {
+     "pairs": 147,
+     "distinct": 85,
+     "false_merge": 8,
+     "prod_false_merge": 15,
+     "material": 30,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 6,
+     "same": 32,
+     "false_split": 30,
+     "prod_false_split": 25
+    },
+    "object:lexicon": {
+     "pairs": 21,
+     "distinct": 9,
+     "false_merge": 3,
+     "prod_false_merge": 3,
+     "material": 8,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 3,
+     "same": 4,
+     "false_split": 4,
+     "prod_false_split": 4
+    },
+    "object:object_mixed_kind": {
+     "pairs": 9,
+     "distinct": 9,
+     "false_merge": 0,
+     "prod_false_merge": 3
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 4,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 25,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 1,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0x-loose": {
+   "config": {
+    "use_lexicon": true,
+    "gate_entities": false,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": false,
+    "production_bridge": true
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": true,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": false,
+    "production_bridge": true,
+    "items": 3168,
+    "events": 793,
+    "grades": {
+     "lexical": 2364,
+     "object": 730,
+     "entity": 74
+    },
+    "reasons": {
+     "production_issue": 1691,
+     "new:no_object": 705,
+     "key_match": 411,
+     "production_bridge": 243,
+     "new:no_candidate": 70,
+     "title_join": 29,
+     "new:stage_split": 18,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 61,
+    "false_merge_rate": 0.2748,
+    "same_pairs": 48,
+    "false_split": 29,
+    "false_split_rate": 0.6042,
+    "material_pairs": 73,
+    "material_collapsed": 16,
+    "material_preserved_rate": 0.7808
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 14,
+    "recovery_rate": 0.3684,
+    "new_false_merges_introduced": 46,
+    "production_false_merges_fixed": 29,
+    "material_recovered_from_production_collapse": 7,
+    "material_newly_collapsed": 10
+   },
+   "structure": {
+    "label": "v0x-loose",
+    "groups": 793,
+    "singletons": 355,
+    "singleton_rate": 0.4477,
+    "largest": 184,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 55,
+    "material_pairs_collapsed_inside_groups": 146
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 47,
+    "rate": 0.2956,
+    "object_grade_pairs": 36,
+    "object_grade_kept": 10,
+    "object_grade_rate": 0.2778
+   },
+   "object_grade_structure": {
+    "label": "v0x-loose:object",
+    "groups": 97,
+    "singletons": 40,
+    "singleton_rate": 0.4124,
+    "largest": 138,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 15,
+    "material_pairs_collapsed_inside_groups": 53
+   },
+   "structure_by_kind": {
+    "lexicon": {
+     "events": 57,
+     "articles": 771,
+     "singletons": 8,
+     "production_issues_joined": 80,
+     "span_over_21": 19,
+     "max_span": 54,
+     "largest": 86,
+     "stage_splits": 7
+    },
+    "plant": {
+     "events": 23,
+     "articles": 127,
+     "singletons": 6,
+     "production_issues_joined": 4,
+     "span_over_21": 2,
+     "max_span": 25,
+     "largest": 16,
+     "stage_splits": 6
+    },
+    "project:basic-plan": {
+     "events": 11,
+     "articles": 250,
+     "singletons": 4,
+     "production_issues_joined": 29,
+     "span_over_21": 4,
+     "max_span": 44,
+     "largest": 184,
+     "stage_splits": 0
+    },
+    "project:pocheon-psh": {
+     "events": 3,
+     "articles": 12,
+     "singletons": 1,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 6,
+     "largest": 8,
+     "stage_splits": 1
+    },
+    "unit": {
+     "events": 26,
+     "articles": 170,
+     "singletons": 5,
+     "production_issues_joined": 14,
+     "span_over_21": 4,
+     "max_span": 41,
+     "largest": 29,
+     "stage_splits": 4
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.7859,
+    "silver_same_but_split": 2396,
+    "silver_diff_but_merged": 743
+   },
+   "silver_object_grade": {
+    "pairs": 2621,
+    "agreement": 0.5975,
+    "silver_same_but_split": 526,
+    "silver_diff_but_merged": 529
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 196,
+     "material": 43,
+     "material_collapsed": 2,
+     "prod_material_collapsed": 7,
+     "distinct": 137,
+     "false_merge": 22,
+     "prod_false_merge": 29,
+     "same": 16,
+     "false_split": 11,
+     "prod_false_split": 13
+    },
+    "object": {
+     "pairs": 147,
+     "distinct": 85,
+     "false_merge": 39,
+     "prod_false_merge": 15,
+     "material": 30,
+     "material_collapsed": 14,
+     "prod_material_collapsed": 6,
+     "same": 32,
+     "false_split": 18,
+     "prod_false_split": 25
+    },
+    "object:lexicon": {
+     "pairs": 21,
+     "distinct": 9,
+     "false_merge": 3,
+     "prod_false_merge": 3,
+     "material": 8,
+     "material_collapsed": 3,
+     "prod_material_collapsed": 3,
+     "same": 4,
+     "false_split": 3,
+     "prod_false_split": 4
+    },
+    "object:object_mixed_kind": {
+     "pairs": 9,
+     "distinct": 9,
+     "false_merge": 0,
+     "prod_false_merge": 3
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 35,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 10,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 15,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 0,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0x-loose-nobridge": {
+   "config": {
+    "use_lexicon": true,
+    "gate_entities": false,
+    "bucket_days": 30,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": false,
+    "production_bridge": false
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": true,
+    "process_hint": false,
+    "strict_transition": false,
+    "title_only_stages": false,
+    "production_bridge": false,
+    "items": 3168,
+    "events": 896,
+    "grades": {
+     "lexical": 2364,
+     "object": 730,
+     "entity": 74
+    },
+    "reasons": {
+     "production_issue": 1660,
+     "new:no_object": 704,
+     "key_match": 409,
+     "title_join": 202,
+     "new:no_candidate": 171,
+     "new:stage_split": 21,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 27,
+    "false_merge_rate": 0.1216,
+    "same_pairs": 48,
+    "false_split": 37,
+    "false_split_rate": 0.7708,
+    "material_pairs": 73,
+    "material_collapsed": 7,
+    "material_preserved_rate": 0.9041
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 8,
+    "recovery_rate": 0.2105,
+    "new_false_merges_introduced": 20,
+    "production_false_merges_fixed": 37,
+    "material_recovered_from_production_collapse": 11,
+    "material_newly_collapsed": 5
+   },
+   "structure": {
+    "label": "v0x-loose-nobridge",
+    "groups": 896,
+    "singletons": 409,
+    "singleton_rate": 0.4565,
+    "largest": 88,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 48,
+    "material_pairs_collapsed_inside_groups": 151
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 56,
+    "rate": 0.3522,
+    "object_grade_pairs": 36,
+    "object_grade_kept": 16,
+    "object_grade_rate": 0.4444
+   },
+   "object_grade_structure": {
+    "label": "v0x-loose-nobridge:object",
+    "groups": 162,
+    "singletons": 89,
+    "singleton_rate": 0.5494,
+    "largest": 73,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 20,
+    "material_pairs_collapsed_inside_groups": 53
+   },
+   "structure_by_kind": {
+    "lexicon": {
+     "events": 99,
+     "articles": 721,
+     "singletons": 31,
+     "production_issues_joined": 91,
+     "span_over_21": 15,
+     "max_span": 62,
+     "largest": 51,
+     "stage_splits": 6
+    },
+    "plant": {
+     "events": 30,
+     "articles": 115,
+     "singletons": 9,
+     "production_issues_joined": 4,
+     "span_over_21": 0,
+     "max_span": 21,
+     "largest": 11,
+     "stage_splits": 7
+    },
+    "project:basic-plan": {
+     "events": 31,
+     "articles": 250,
+     "singletons": 14,
+     "production_issues_joined": 47,
+     "span_over_21": 4,
+     "max_span": 29,
+     "largest": 88,
+     "stage_splits": 2
+    },
+    "project:pocheon-psh": {
+     "events": 3,
+     "articles": 11,
+     "singletons": 1,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 2,
+     "largest": 7,
+     "stage_splits": 1
+    },
+    "unit": {
+     "events": 29,
+     "articles": 144,
+     "singletons": 9,
+     "production_issues_joined": 15,
+     "span_over_21": 3,
+     "max_span": 41,
+     "largest": 27,
+     "stage_splits": 5
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.7759,
+    "silver_same_but_split": 2894,
+    "silver_diff_but_merged": 391
+   },
+   "silver_object_grade": {
+    "pairs": 2621,
+    "agreement": 0.5826,
+    "silver_same_but_split": 839,
+    "silver_diff_but_merged": 255
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 196,
+     "material": 43,
+     "material_collapsed": 3,
+     "prod_material_collapsed": 7,
+     "distinct": 137,
+     "false_merge": 7,
+     "prod_false_merge": 29,
+     "same": 16,
+     "false_split": 12,
+     "prod_false_split": 13
+    },
+    "object": {
+     "pairs": 147,
+     "distinct": 85,
+     "false_merge": 20,
+     "prod_false_merge": 15,
+     "material": 30,
+     "material_collapsed": 4,
+     "prod_material_collapsed": 6,
+     "same": 32,
+     "false_split": 25,
+     "prod_false_split": 25
+    },
+    "object:lexicon": {
+     "pairs": 21,
+     "distinct": 9,
+     "false_merge": 1,
+     "prod_false_merge": 3,
+     "material": 8,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 3,
+     "same": 4,
+     "false_split": 4,
+     "prod_false_split": 4
+    },
+    "object:object_mixed_kind": {
+     "pairs": 9,
+     "distinct": 9,
+     "false_merge": 0,
+     "prod_false_merge": 3
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 18,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 3,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 20,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 1,
+     "prod_false_split": 0
+    }
+   }
+  },
+  "v0x-spec-process": {
+   "config": {
+    "use_lexicon": true,
+    "gate_entities": false,
+    "bucket_days": 30,
+    "process_hint": true,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial"
+   },
+   "stats": {
+    "version": "object-event-identity-exp-1",
+    "bucket_days": 30,
+    "use_lexicon": true,
+    "process_hint": true,
+    "strict_transition": true,
+    "title_only_stages": false,
+    "production_bridge": "partial",
+    "items": 3168,
+    "events": 957,
+    "grades": {
+     "lexical": 2364,
+     "object": 730,
+     "entity": 74
+    },
+    "reasons": {
+     "production_issue": 1677,
+     "new:no_object": 717,
+     "key_match": 257,
+     "production_bridge": 232,
+     "new:stage_split": 170,
+     "new:no_candidate": 70,
+     "title_join": 44,
+     "human_approved": 1
+    }
+   },
+   "idempotence": 1.0,
+   "pairs": {
+    "pairs_in_population": 343,
+    "outside_population": 31,
+    "distinct_pairs": 222,
+    "false_merge": 16,
+    "false_merge_rate": 0.0721,
+    "same_pairs": 48,
+    "false_split": 45,
+    "false_split_rate": 0.9375,
+    "material_pairs": 73,
+    "material_collapsed": 1,
+    "material_preserved_rate": 0.9863
+   },
+   "vs_production": {
+    "production_false_splits": 38,
+    "recovered_by_resolver": 1,
+    "recovery_rate": 0.0263,
+    "new_false_merges_introduced": 6,
+    "production_false_merges_fixed": 34,
+    "material_recovered_from_production_collapse": 12,
+    "material_newly_collapsed": 0
+   },
+   "structure": {
+    "label": "v0x-spec-process",
+    "groups": 957,
+    "singletons": 421,
+    "singleton_rate": 0.4399,
+    "largest": 49,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 53,
+    "material_pairs_collapsed_inside_groups": 108
+   },
+   "material_vs_production": {
+    "production_material_pairs": 159,
+    "kept_as_distinct_events": 78,
+    "rate": 0.4906,
+    "object_grade_pairs": 36,
+    "object_grade_kept": 32,
+    "object_grade_rate": 0.8889
+   },
+   "object_grade_structure": {
+    "label": "v0x-spec-process:object",
+    "groups": 238,
+    "singletons": 118,
+    "singleton_rate": 0.4958,
+    "largest": 45,
+    "unit_conflict_pairs_inside_groups": 0,
+    "groups_spanning_over_21_days": 20,
+    "material_pairs_collapsed_inside_groups": 18
+   },
+   "structure_by_kind": {
+    "lexicon": {
+     "events": 147,
+     "articles": 744,
+     "singletons": 46,
+     "production_issues_joined": 84,
+     "span_over_21": 15,
+     "max_span": 48,
+     "largest": 33,
+     "stage_splits": 98
+    },
+    "plant": {
+     "events": 32,
+     "articles": 136,
+     "singletons": 12,
+     "production_issues_joined": 2,
+     "span_over_21": 2,
+     "max_span": 38,
+     "largest": 16,
+     "stage_splits": 15
+    },
+    "project:basic-plan": {
+     "events": 38,
+     "articles": 247,
+     "singletons": 11,
+     "production_issues_joined": 53,
+     "span_over_21": 6,
+     "max_span": 43,
+     "largest": 49,
+     "stage_splits": 27
+    },
+    "project:pocheon-psh": {
+     "events": 4,
+     "articles": 12,
+     "singletons": 2,
+     "production_issues_joined": 0,
+     "span_over_21": 0,
+     "max_span": 6,
+     "largest": 8,
+     "stage_splits": 2
+    },
+    "unit": {
+     "events": 49,
+     "articles": 160,
+     "singletons": 13,
+     "production_issues_joined": 11,
+     "span_over_21": 5,
+     "max_span": 40,
+     "largest": 11,
+     "stage_splits": 28
+    }
+   },
+   "silver": {
+    "pairs": 14661,
+    "agreement": 0.779,
+    "silver_same_but_split": 3081,
+    "silver_diff_but_merged": 159
+   },
+   "silver_object_grade": {
+    "pairs": 2621,
+    "agreement": 0.5742,
+    "silver_same_but_split": 1019,
+    "silver_diff_but_merged": 97
+   },
+   "pairs_by_grade": {
+    "mixed_or_lexical": {
+     "pairs": 196,
+     "material": 43,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 7,
+     "distinct": 137,
+     "false_merge": 8,
+     "prod_false_merge": 29,
+     "same": 16,
+     "false_split": 15,
+     "prod_false_split": 13
+    },
+    "object": {
+     "pairs": 147,
+     "distinct": 85,
+     "false_merge": 8,
+     "prod_false_merge": 15,
+     "material": 30,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 6,
+     "same": 32,
+     "false_split": 30,
+     "prod_false_split": 25
+    },
+    "object:lexicon": {
+     "pairs": 21,
+     "distinct": 9,
+     "false_merge": 3,
+     "prod_false_merge": 3,
+     "material": 8,
+     "material_collapsed": 1,
+     "prod_material_collapsed": 3,
+     "same": 4,
+     "false_split": 4,
+     "prod_false_split": 4
+    },
+    "object:object_mixed_kind": {
+     "pairs": 9,
+     "distinct": 9,
+     "false_merge": 0,
+     "prod_false_merge": 3
+    },
+    "object:project:basic-plan": {
+     "pairs": 113,
+     "distinct": 66,
+     "false_merge": 4,
+     "prod_false_merge": 9,
+     "material": 20,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 3,
+     "same": 27,
+     "false_split": 25,
+     "prod_false_split": 21
+    },
+    "object:unit": {
+     "pairs": 4,
+     "material": 2,
+     "material_collapsed": 0,
+     "prod_material_collapsed": 0,
+     "distinct": 1,
+     "false_merge": 1,
+     "prod_false_merge": 0,
+     "same": 1,
+     "false_split": 1,
+     "prod_false_split": 0
+    }
+   }
+  }
+ },
+ "review_table": {
+  "rows": 180,
+  "by_category": {
+   "A.human_labeled": 15,
+   "B.gold_systems_disagree": 50,
+   "C.resolver_vs_gold": 51,
+   "D.resolver_joined_production_split_long_gap": 4,
+   "E.resolver_joined_production_split_short_gap": 15,
+   "F.stage_split_inside_production_issue": 25,
+   "G.other_split_inside_production_issue": 20
+  },
+  "main_arm": "v0-spec"
+ }
+}
