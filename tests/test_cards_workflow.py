@@ -209,6 +209,28 @@ class CardsWorkflowShowsItsFailuresTest(unittest.TestCase):
         self.assertIn("env.STORY_SKIP != 'true'", story)
         self.assertNotIn("STORY_SKIP", step(self.blocks, "Make cards"))
 
+    def test_the_story_step_no_longer_calls_a_model(self):
+        """**편집 데스크는 하루 한 번만 연다** (2026-09-20).
+
+        스토리 카피는 앞의 "Make cards" 스텝이 같은 편집 판단으로 이미 썼다
+        (cards/story_copy.json). 여기서 다시 부르면 같은 날 두 산출물이 서로
+        다른 판단 위에 선다 — 일일 카드는 A 가 중요하다 하고 스토리는 B 가
+        중요하다 하는 날이 생긴다. 키가 없는 것이 그 계약이다.
+        """
+        story = step(self.blocks, "Make story cards (스토리 있는 날만)")
+        self.assertNotIn("GEMINI_API_KEY", story)
+        self.assertNotIn("GEMINI_MODEL", story)
+        self.assertNotIn("STORY_GEMINI_MODEL", self.text)
+        # 그 기본값도 같이 걷었다 — 근거가 한 줄짜리 실측뿐이었다.
+        self.assertNotIn("flash-preview", self.text)
+
+    def test_the_card_models_come_from_the_policy_not_from_scattered_env(self):
+        make = step(self.blocks, "Make cards")
+        for name in ("CARD_EDITORIAL_NARRATOR_MODEL", "CARD_WRITER_MODEL"):
+            self.assertIn(name, make)
+        # 논리 호출 1회가 몇 번의 HTTP 요청이 되는지를 워크플로가 못 박는다.
+        self.assertIn("CARD_LLM_RETRIES", make)
+
     def test_the_manual_rerun_keeps_its_two_switches(self):
         """수동 재생성은 날짜를 고를 수 있고 텔레그램 발송 여부를 고를 수 있다."""
         inputs = self.text.split("workflow_dispatch:", 1)[1].split("concurrency:", 1)[0]

@@ -50,12 +50,12 @@ class IdempotentSkipTest(unittest.TestCase):
             json.dumps({"latest": day, "dates": {day: list(names)}}), encoding="utf-8")
 
     def run_main(self, *argv):
-        """main() 을 돌리고 (종료 코드, 순위를 읽었는가) 를 돌려준다.
+        """main() 을 돌리고 (종료 코드, 재료를 읽었는가) 를 돌려준다.
 
-        load_site_ranking 이 불렸는지가 곧 'Gemini 를 태울 길로 들어갔는가'다 —
+        load_site_data 가 불렸는지가 곧 'Gemini 를 태울 길로 들어갔는가'다 —
         그 앞에서 멈추면 LLM 호출도 렌더도 없다.
         """
-        with mock.patch.object(make_cards, "load_site_ranking",
+        with mock.patch.object(make_cards, "load_site_data",
                                return_value=None) as ranking:
             with mock.patch.object(sys, "argv", ["make_cards.py", *argv]):
                 code = make_cards.main()

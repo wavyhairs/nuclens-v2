@@ -28,6 +28,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import card_context
+import card_editorial
+import card_qa
 import gemini_client
 import sources
 
@@ -36,6 +38,13 @@ CARDS_DIR = ROOT / "cards"
 OUT_DIR = CARDS_DIR / "out"
 SLIDES_FILE = CARDS_DIR / "slides.json"
 ALBUM_FILE = CARDS_DIR / "album.json"
+# 스토리 카피. **make_cards 가 쓰고 story_cards 가 읽는다.**
+#
+# 두 스크립트가 각자 LLM 을 부르면 그날 편집 판단이 둘로 갈린다 — 일일 카드는
+# A 가 중요하다 하고 스토리는 B 가 중요하다 하는 날이 생긴다. 스토리가 있는
+# 날은 편집 데스크를 한 번만 부르고, 그 결과로 두 산출물을 다 쓴다. 그래서
+# story_cards 는 정상 경로에서 **LLM 을 부르지 않는다** — 렌더와 검증만 한다.
+STORY_COPY_FILE = CARDS_DIR / "story_copy.json"
 OUTBOX_FILE = ROOT / "outbox.json"
 # 사이트가 매일 굽는 순위. web/build_data.py 가 배포 스텝에서 만든다(gitignore).
 BRIEFINGS_FILE = ROOT / "web" / "public" / "data" / "briefings.json"
@@ -309,44 +318,218 @@ def visible_len(text: str) -> int:
     return len(text.replace("[[", "").replace("]]", ""))
 
 
-def ask_llm(items: list[dict], date: str, total_collected: int,
-            problems: list[str] | None = None) -> dict:
-    payload = {
-        "date": date,
-        "collected_today": total_collected,
-        "articles": [
-            {k: v for k, v in {
-                "n": i + 1,
-                "title": it["title"],
-                "summary": it["summary"],
-                "detail": it["detail"],
-                "why_important": it["why_important"],
-                "implication": it["implication"],
-                "open_question": it["open_question"],
-                "body": it.get("body", ""),
-                "sensitive": it["sensitive"],
-            }.items() if v not in ("", None)}
-            for i, it in enumerate(items)
-        ],
-    }
+def _article_payload(items: list[dict]) -> list[dict]:
+    """카드가 보는 이슈 재료. 빈 칸은 싣지 않는다(토큰을 먹고 모델을 헷갈린다)."""
+    return [
+        {k: v for k, v in {
+            "issue_id": it.get("issue_id", ""),
+            "n": i + 1,
+            "title": it["title"],
+            "summary": it["summary"],
+            "detail": it["detail"],
+            "why_important": it["why_important"],
+            "implication": it["implication"],
+            "open_question": it["open_question"],
+            "body": it.get("body", ""),
+            "sensitive": it["sensitive"],
+        }.items() if v not in ("", None, False)}
+        for i, it in enumerate(items)
+    ]
+
+
+def _writer_limits() -> dict:
+    return {"bullets_min": BULLETS_MIN, "bullets_max": BULLETS_MAX,
+            "headline_max": HEADLINE_MAX, "fact_max": FACT_MAX, "why_max": WHY_MAX}
+
+
+def ask_daily_writer(items: list[dict], date: str, total_collected: int,
+                     problems: list[str] | None = None,
+                     log: list[dict] | None = None) -> dict:
+    """스토리 없는 날 — 판단과 카피를 **한 응답 안에서** 받는다.
+
+    호출을 둘로 늘리지 않으면서도 모델이 글자 수부터 맞추러 가지 않게, 스키마
+    앞자리에 `brief` 를 둔다(`card_editorial.daily_writer_system` 주석).
+    """
+    return card_editorial.call(
+        "card_daily_writer",
+        card_editorial.daily_writer_system(**_writer_limits()),
+        {"date": date, "collected_today": total_collected,
+         "articles": _article_payload(items)},
+        fix_these=problems, log=log)
+
+
+def ask_narrator(items: list[dict], date: str, story: dict | None,
+                 log: list[dict] | None = None) -> dict:
+    """편집 데스크. 오늘 카드 전체의 **무엇을 말할지**를 한 번에 정한다.
+
+    스토리 후보가 아닌 두 이슈에는 과거 사건을 싣지 않는다 — 그쪽은 오늘
+    달라진 것만 말하면 되고, 넣으면 TPM 만 먹는다.
+    """
+    payload = {"date": date, "issues": _article_payload(items)}
+    if story:
+        payload["story"] = story
+    return card_editorial.call(
+        "card_editorial_narrator", card_editorial.NARRATOR_SYSTEM, payload,
+        max_output_tokens=6144, log=log)
+
+
+def ask_writer(brief: dict, items: list[dict], date: str, *, with_story: bool,
+               problems: list[str] | None = None, story_events: list[dict] | None = None,
+               log: list[dict] | None = None, task: str = "card_writer") -> dict:
+    """카피라이터. 브리프를 규격에 맞게 적는다 — 기사를 다시 해석하지 않는다."""
+    payload = {"date": date, "brief": brief,
+               # 민감 이슈 표시는 카피 규칙(강조 금지)이라 브리프가 아니라
+               # 여기에 싣는다. 편집 판단의 대상이 아니다.
+               "sensitive": [it.get("issue_id", "") for it in items if it["sensitive"]]}
+    if with_story and story_events:
+        payload["story_events"] = story_events
+    return card_editorial.call(
+        task,
+        card_editorial.writer_system(**_writer_limits(), with_story=with_story),
+        payload, fix_these=problems, max_output_tokens=6144, log=log)
+
+
+
+# ---- B2. 편집 오케스트레이션 ---------------------------------------------------
+
+
+def review(raw: dict, items: list[dict], **kwargs) -> list[str]:
+    """규격 검증 + 편집 QA 를 한 번에. **둘 다 통과해야 카드가 나간다.**
+
+    규격(`validate`)은 "깨지지 않는가" 를, QA(`card_qa`)는 "같은 말을 두 번
+    하지 않는가" 를 본다. 경고는 실패로 세지 않되 목록에는 실어 보낸다 —
+    repair 는 경고까지 같이 고칠 기회가 있어야 한다.
+    """
+    problems = validate(raw, items, **kwargs)
+    report = card_qa.review_daily(raw, items)
+    return problems + [str(f) for f in report.failures]
+
+
+def find_story(data, items: list[dict]):
+    """오늘 스토리 후보. 재료가 못 믿을 상태면 조용히 없는 것으로 친다."""
+    try:
+        return card_context.pick_story_candidate(data, items)
+    except card_context.ContextError as exc:
+        print(f"[cards] 스토리 재료 제외 — {exc}")
+        return None
+
+
+def story_material(story, date: str) -> dict:
+    return card_context.evidence_packet(story, date, topic=topic_label(story.issue))
+
+
+def log_calls(call_log: list[dict]) -> None:
+    """**논리 호출과 HTTP 요청을 갈라 남긴다.**
+
+    예전에는 이 수가 어디에도 안 남았다. 바깥 `for attempt in (1, 2)` 루프와
+    `call_json(retries=3)` 이 곱해져 "1회" 가 최악 8번의 HTTP 요청이었는데,
+    로그만 보면 한 번 부른 것처럼 보였다. 쿼터를 재려면 두 수가 다 필요하다.
+    """
+    if not call_log:
+        print("[cards] LLM 호출 없음")
+        return
+    worst = sum(row["max_http_attempts"] for row in call_log)
+    for row in call_log:
+        print(f"[cards] {row['task']} model={row['model']} calls=1 "
+              f"max_http={row['max_http_attempts']}" + (" (repair)" if row["repair"] else ""))
+    print(f"[cards] 논리 호출 {len(call_log)}회 · HTTP 최악 상한 {worst}회")
+
+
+def _apply_and_review(candidate: dict, items: list[dict]) -> list[str]:
+    stripped = strip_accent_on_sensitive(candidate, items)
+    if stripped:
+        print(f"[cards] sensitive 기사 강조 {stripped}곳 제거")
+    return review(candidate, items)
+
+
+def run_editorial(items: list[dict], date: str, collected: int,
+                  story_payload: dict | None,
+                  call_log: list[dict]) -> tuple[dict | None, dict | None]:
+    """오늘의 카피를 만든다. 돌려주는 것은 (일일 카피, 스토리 카피).
+
+    호출 계약은 `card_editorial` 모듈 주석에 있다. 여기서 지키는 것은
+    **실패 도메인 분리**다 — 스토리가 깨져도 일일 카드는 그대로 나가고,
+    Narrator 가 죽으면 스토리만 빠진 채 일일 폴백 한 번으로 떨어진다.
+    """
+    daily, story_copy, brief = None, None, None
+
+    if story_payload is not None:
+        try:
+            brief = ask_narrator(items, date, story_payload, log=call_log)
+        except Exception as exc:  # noqa: BLE001 — 부가 계층, 원인만 남기고 내려간다
+            print(f"[cards] Narrator 실패 — {type(exc).__name__}: {exc}")
+            brief = None
+        if brief is not None:
+            problems = card_editorial.validate_brief(
+                brief, items, story_payload.get("thread_id"))
+            if problems:
+                print(f"[cards] 편집 브리프 거부: {'; '.join(problems[:4])}")
+                brief = None
+    if brief is None and story_payload is not None:
+        # Narrator 가 없으면 스토리도 없다 — 판단 없이 5장을 쓰면 규격만 맞는
+        # 이야기가 나온다. 일일 카드는 아래 폴백 한 번으로 살린다.
+        print("[cards] 스토리 건너뜀 — 일일 카드는 card_daily_writer 로 간다")
+        story_payload = None
+
+    if brief is not None:
+        raw = _writer_round(brief, items, date, story_payload, call_log)
+        if raw is not None:
+            daily = raw.get("daily") or {}
+            story_copy = raw.get("story") or None
+            return daily, story_copy
+        print("[cards] Writer 실패 — 일일 카드를 단독 호출로 다시 만든다")
+        story_payload = None
+
+    # 스토리 없는 날(그리고 위 경로가 떨어진 날) — 판단과 카피를 한 응답에서.
+    try:
+        candidate = ask_daily_writer(items, date, collected, log=call_log)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[cards] card_daily_writer 실패 — {type(exc).__name__}: {exc}")
+        return None, None
+    problems = _apply_and_review(candidate, items)
+    if not problems:
+        return candidate, None
+    print(f"[cards] 편집 QA 실패: {'; '.join(problems[:6])}")
+    try:
+        repaired = card_editorial.call(
+            "card_writer_repair",
+            card_editorial.daily_writer_system(**_writer_limits()),
+            {"date": date, "collected_today": collected,
+             "articles": _article_payload(items)},
+            fix_these=problems, log=call_log)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[cards] repair 실패 — {type(exc).__name__}: {exc}")
+        return None, None
+    problems = _apply_and_review(repaired, items)
     if problems:
-        # 재시도에 실패 사유를 그대로 돌려준다. LLM 은 한글 글자 수를 못 세므로
-        # "짧게 써라" 를 반복하는 것보다 "이 문장이 29자였다" 가 훨씬 잘 듣는다.
-        payload["fix_these"] = problems
-    # thinking_budget=0 — 정형 출력이라 사고가 필요 없고, thinking 토큰이 출력
-    # 예산을 잠식하면 MAX_TOKENS 로 잘린다 (gemini_client 주석 참고).
-    return gemini_client.call_json(
-        SYSTEM_PROMPT,
-        json.dumps(payload, ensure_ascii=False, indent=1),
-        temperature=0.3,
-        max_output_tokens=4096,
-        thinking_budget=0,
-        # v1 은 여기서 fallback_model 을 직접 건넸다. v2 의 gemini_client 는
-        # 폴백 체인을 안으로 흡수해 그 인자를 받지 않는다 — 체인은 v2 소관이므로
-        # 넘기지 않는다. 대신 카드의 모델은 워크플로가 GEMINI_MODEL 로 핀한다
-        # (34자 헤드라인 게이트는 gemini-2.5-flash 에서 통과율이 검증돼 있다).
-        label="cards",
-    )
+        print(f"[cards] repair 뒤에도 실패: {'; '.join(problems[:6])}")
+        return None, None
+    return repaired, None
+
+
+def _writer_round(brief: dict, items: list[dict], date: str,
+                  story_payload: dict | None, call_log: list[dict]) -> dict | None:
+    """Writer 1회 + 필요하면 repair 1회. **Narrator 는 다시 부르지 않는다.**
+
+    실패 도메인을 가른다 — 일일이 통과하고 스토리만 깨졌으면 **일일 결과를
+    그대로 두고** 스토리만 뺀다. 스토리 때문에 멀쩡한 일일 카피를 버리지 않는다.
+    """
+    events = (story_payload or {}).get("events")
+    last_problems: list[str] | None = None
+    for task in ("card_writer", "card_writer_repair"):
+        try:
+            raw = ask_writer(brief, items, date, with_story=story_payload is not None,
+                             problems=last_problems, story_events=events,
+                             log=call_log, task=task)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[cards] Writer({task}) 실패 — {type(exc).__name__}: {exc}")
+            return None
+        daily = raw.get("daily") or {}
+        last_problems = _apply_and_review(daily, items)
+        if not last_problems:
+            return raw
+        print(f"[cards] 편집 QA 실패({task}): {'; '.join(last_problems[:6])}")
+    return None
 
 
 _SENT_SPLIT_RE = re.compile(r"(?<=[.!?。])\s+|\n+")
@@ -440,8 +623,15 @@ def draft_copy(items: list[dict]) -> dict:
                                      FALLBACK_LINE_MAX, FALLBACK_BULLETS) if w not in facts]
         if not facts and it.get("title"):
             facts.append(clip(terse(it["title"]), FALLBACK_LINE_MAX))
-        if not why:
-            why = [f for f in facts[1:2]] or [clip(it.get("title", ""), FALLBACK_LINE_MAX)]
+        # **의미 재료가 없으면 비운다.** 예전에는 `facts[1:2]` 를 그대로 옮겨
+        # 담았다 — 그 카드의 "왜 중요한가" 가 바로 위 "확인된 사실" 과 글자까지
+        # 같았다는 뜻이다. 독자에게 "그래서 무엇이 달라지는가" 를 말하지 않고
+        # 말한 척하는 쪽이, 그 칸이 비어 있는 것보다 나쁘다.
+        #
+        # 실측(라이브 2026-09-20, 지난 30일 상위 3건 90건): why_important ·
+        # implication · open_question 이 셋 다 비어 재료가 아예 없는 이슈가
+        # 5건(5.6%)이다. 드문 일이 아니라 그날 카드를 통째로 빼지는 않고,
+        # 렌더가 그 구역을 세우지 않는 쪽으로 간다(build.js 의 why-editorial).
         steps.append({"headline": clip(it.get("title", ""), FALLBACK_HEADLINE_MAX),
                       "facts": facts, "why": why})
     return {"hook": {"headline": f"오늘 먼저 볼 원자력 현안 {len(items)}건"}, "steps": steps}
@@ -473,7 +663,8 @@ def _check_bullets(problems: list[str], where: str, bullets, limit: int,
 
 
 def validate(raw: dict, items: list[dict], bullets_min: int = BULLETS_MIN,
-             line_max: int | None = None, headline_max: int = HEADLINE_MAX) -> list[str]:
+             line_max: int | None = None, headline_max: int = HEADLINE_MAX,
+             why_min: int | None = None) -> list[str]:
     """LLM 출력 검증. 문제 목록을 반환 — 비어 있으면 통과.
 
     "JSON only" 라고 써도 LLM 은 글자 수를 못 세고 태그를 지어낸다. 코드로 잰다.
@@ -498,7 +689,11 @@ def validate(raw: dict, items: list[dict], bullets_min: int = BULLETS_MIN,
             continue
         _check_line(problems, f"{tag}.headline", slide.get("headline"), headline_max, True)
         _check_bullets(problems, f"{tag}.facts", slide.get("facts"), line_max or FACT_MAX, bullets_min)
-        _check_bullets(problems, f"{tag}.why", slide.get("why"), line_max or WHY_MAX, bullets_min)
+        # 의미 칸만 하한을 따로 받는다. 결정적 폴백은 재료가 없으면 이 칸을
+        # 비우는데(draft_copy 주석), 그때 사실을 베껴 채우는 것보다 비는 편이
+        # 낫다는 판단이 이미 서 있다.
+        _check_bullets(problems, f"{tag}.why", slide.get("why"), line_max or WHY_MAX,
+                       bullets_min if why_min is None else why_min)
     return problems
 
 
@@ -751,7 +946,10 @@ def main() -> int:
                   "(다시 구우려면 --force)")
             return 0
 
-    rows = load_site_ranking(date)
+    data = load_site_data(date)
+    rows = None if data is None else data.issues
+    for line in (data.warnings if data else ()):
+        print(f"[cards] {line}")
     if rows is None:
         # 사이트 데이터가 없거나 오늘 날짜가 아니다. 배포 스텝(build_data)이 먼저
         # 돌아야 한다. 어제 순위로 카드를 만드는 것보다 안 만드는 게 낫다.
@@ -774,41 +972,52 @@ def main() -> int:
         collected = sum(int(r.get("article_count") or 0) for r in rows)
 
     raw = None
-    last_problems: list[str] = []
+    call_log: list[dict] = []
     if args.copy_file:
         candidate = json.loads(args.copy_file.read_text(encoding="utf-8"))
         strip_accent_on_sensitive(candidate, items)
-        problems = validate(candidate, items)
+        problems = review(candidate, items)
         if problems:
             print(f"[cards] --copy-file 검증 실패: {'; '.join(problems[:8])}")
             return 1
         print(f"[cards] 카피 파일 사용 — {args.copy_file}")
         raw = candidate
-    for attempt in (() if (args.no_llm or raw) else (1, 2)):
-        try:
-            candidate = ask_llm(items, date, collected, problems=last_problems)
-        except Exception as exc:  # noqa: BLE001 — 카드는 부가 기능, 원인만 남긴다
-            print(f"[cards] LLM 호출 실패 ({attempt}/2) — {type(exc).__name__}: {exc}")
-            continue
-        stripped = strip_accent_on_sensitive(candidate, items)
-        if stripped:
-            print(f"[cards] sensitive 기사 강조 {stripped}곳 제거")
-        last_problems = validate(candidate, items)
-        if not last_problems:
-            raw = candidate
-            break
-        print(f"[cards] 카피 검증 실패 ({attempt}/2): {'; '.join(last_problems[:6])}")
+
+    # 오늘 스토리가 있는가. **일일 카드 대상 그 3건 안에서만** 찾는다 —
+    # 순위를 다시 매기면 같은 날 두 산출물이 다른 1위를 말한다.
+    story = None if (args.no_llm or raw) else find_story(data, items)
+    story_payload = None
+    if story is not None:
+        story_payload = story_material(story, date)
+        print(f"[cards] 스토리 후보 #{story.rank} {story.thread_id} "
+              f"사건 {len(story_payload['events'])}건")
+
+    if raw is None and not args.no_llm:
+        raw, story_copy = run_editorial(items, date, collected, story_payload, call_log)
+        if story_copy is not None:
+            STORY_COPY_FILE.write_text(json.dumps(
+                {"date": date, "thread_id": story.thread_id,
+                 "issue_id": story.issue.get("issue_id", ""),
+                 "payload": story_payload, "copy": story_copy},
+                ensure_ascii=False, indent=1), encoding="utf-8")
+            print(f"[cards] 스토리 카피 저장 → {STORY_COPY_FILE.name} "
+                  "(story_cards.py 가 LLM 없이 렌더한다)")
+        elif story is not None:
+            STORY_COPY_FILE.unlink(missing_ok=True)
+            print("[cards] 스토리 카피 실패 — 스토리만 건너뛴다. 일일 카드는 그대로 간다")
+
     if raw is None:
-        # LLM 이 없거나(쿼터 0) 두 번 다 틀렸다 — 사이트 문장으로 대체한다. 거칠어도
-        # 카드가 안 나가는 것보다 낫다(09-16 아침 실사고). 렌더 넘침 가드는 그대로.
+        # LLM 이 없거나(쿼터 0) 카피가 끝내 안 나왔다 — 사이트 문장으로 대체한다.
+        # 거칠어도 카드가 안 나가는 것보다 낫다(09-16 아침 실사고).
         candidate = draft_copy(items)
-        problems = validate(candidate, items, bullets_min=1, line_max=FALLBACK_LINE_MAX,
+        problems = validate(candidate, items, bullets_min=1, why_min=0, line_max=FALLBACK_LINE_MAX,
                             headline_max=FALLBACK_HEADLINE_MAX)
         if problems:
             print(f"[cards] LLM 없이도 못 만듦: {'; '.join(problems[:6])} — 카드 건너뜀")
             return 1
-        print("[cards] " + ("--no-llm" if args.no_llm else "LLM 2회 실패") + " → 사이트 문장으로 카피 대체")
+        print("[cards] " + ("--no-llm" if args.no_llm else "LLM 실패") + " → 사이트 문장으로 카피 대체")
         raw = candidate
+    log_calls(call_log)
 
     taken = {i["hash"] for i in items if i.get("hash")}
     rest_rows = [r for r in rows
@@ -958,7 +1167,7 @@ def _self_check() -> None:
                  "why_important": "일본 원전 재가동 심사 전반의 신뢰 문제로 번질 수 있다.",
                  "implication": "", "open_question": "", "summary": ""}
     fb = draft_copy([long_item])
-    assert validate(fb, [long_item], bullets_min=1, line_max=FALLBACK_LINE_MAX,
+    assert validate(fb, [long_item], bullets_min=1, why_min=0, line_max=FALLBACK_LINE_MAX,
                     headline_max=FALLBACK_HEADLINE_MAX) == [], fb
     assert visible_len(fb["steps"][0]["headline"]) <= FALLBACK_HEADLINE_MAX
     assert clip("가나다라", 34) == "가나다라"

@@ -64,6 +64,28 @@ def _script_model() -> str:
         "GEMINI_SCRIPT_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
 
 
+def _card_narrator_model() -> str:
+    """카드 편집 데스크. **무엇을 말할지** 고르는 자리라 한 단 위를 쓴다."""
+    return gemini_client._resolve(
+        "CARD_EDITORIAL_NARRATOR_MODEL", _synthesis_model()) or _synthesis_model()
+
+
+def _card_writer_model() -> str:
+    """카드 카피라이터. Narrator 가 고른 것을 규격에 맞게 적는 자리다.
+
+    예전 스토리 카드는 `gemini-3-flash-preview` 를 기본값으로 박아 뒀는데,
+    그 선택의 근거는 워크플로 주석의 "로컬 실측에서 기본 flash-lite 가 표지
+    제목 길이로 세 번 연속 걸렸다" 한 줄뿐이었다. 길이 문제는 모델을 올려
+    푸는 문제가 아니라 재시도에 실패 사유를 돌려주면 되는 문제다(일일 카드는
+    그렇게 한다). 카드 기본선(`CARDS_GEMINI_MODEL` → `GEMINI_MODEL`)으로
+    되돌린다.
+    """
+    return gemini_client._resolve(
+        "CARD_WRITER_MODEL",
+        gemini_client._resolve("CARDS_GEMINI_MODEL", _main_model()) or _main_model(),
+    ) or _main_model()
+
+
 def _verify_model() -> str:
     # Independent selection is available for offline Semantic Gold evaluation.
     # The unset production default remains the current curation model.
@@ -95,6 +117,20 @@ _PROFILES: dict[str, TaskProfile] = {
     # 화면이 읽을 칸을 따로 만든다(`issue_headline` 의 docstring).
     "issue_headline": _entry(NARRATIVE_GENERATION, _synthesis_model),
     "audio_brief": _entry(NARRATIVE_GENERATION, _script_model),
+    # 카드뉴스. 네 자리로 나눈 이유는 **하는 일이 다르기** 때문이다.
+    #
+    #   card_editorial_narrator  무엇을 말할 것인가 (편집 판단)
+    #   card_writer              그것을 어떻게 적을 것인가 (카피)
+    #   card_daily_writer        스토리 없는 날 — 위 둘을 한 응답에서
+    #   card_writer_repair       걸린 곳만 다시 (재해석 금지)
+    #
+    # 스토리가 없는 날까지 호출을 둘로 늘리지 않는다. 그런 날은 편집 판단의
+    # 재료가 오늘치 3건뿐이라 한 응답 안에서 판단과 카피를 같이 받아도
+    # 맥락이 끊기지 않는다.
+    "card_editorial_narrator": _entry(CONTEXT_SYNTHESIS, _card_narrator_model),
+    "card_writer": _entry(NARRATIVE_GENERATION, _card_writer_model),
+    "card_daily_writer": _entry(NARRATIVE_GENERATION, _card_writer_model),
+    "card_writer_repair": _entry(NARRATIVE_GENERATION, _card_writer_model),
     "pubs_translate": _entry(SIMPLE_EXTRACT, _main_model),
     "expert_dossiers": _entry(SIMPLE_EXTRACT, _main_model),
     "expert_plan": _entry(CONTEXT_SYNTHESIS, _synthesis_model),
