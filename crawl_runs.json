@@ -2255,12 +2255,13 @@
       "attempt_id": "35487059283",
       "attempts": 1,
       "claimed_at": "2026-09-20T03:37:42.560075Z",
-      "finished_at": null,
+      "finished_at": "2026-09-20T03:43:08.127235Z",
       "event_name": "workflow_dispatch",
       "trigger_source": "backup_watchdog",
       "trigger_state": "schedule_missing_recovery",
-      "status": "running",
-      "new_article_count": null
+      "status": "success_with_articles",
+      "new_article_count": 28,
+      "collect_outcome": "success"
     }
   }
 }
