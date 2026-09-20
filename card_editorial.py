@@ -19,7 +19,7 @@
     Evidence → Narrator(무엇을) → Editorial Brief → Writer(어떻게) → QA
 
 Narrator 는 카피라이터가 아니다. 글자 수를 세지 않고, `core_change`·
-`must_know_facts`·`why_it_matters`·`avoid_repeating` 만 고른다. Writer 는
+`must_know_facts`·`so_what`·`avoid_repeating` 만 고른다. Writer 는
 그것을 규격에 맞게 적을 뿐 기사를 다시 해석하지 않는다.
 
 호출 수 계약
@@ -131,8 +131,8 @@ JSON 만 출력한다. 스키마:
    "core_change": 오늘 이 이슈에서 새롭게 확인된 변화 한 문장,
    "headline_angle": 제목에서 가장 앞세울 것 한 구절,
    "must_know_facts": [독자가 반드시 알아야 할 **서로 다른** 사실 2~3개],
-   "why_it_matters": [{{"type": "policy_effect"|"khnp_implication"|"industry_implication",
-                       "text": 그 사실 때문에 실제로 달라지는 것}}] 1~2개,
+   "so_what": [{{"type": "policy_effect"|"khnp_implication"|"industry_implication",
+               "text": 그 사실 때문에 실제로 달라지는 것}}] 1~2개,
    "watchpoint": 아직 확정되지 않아 앞으로 확인해야 할 것 (없으면 ""),
    "avoid_repeating": [사실과 의미에서 되풀이하면 안 되는 문구 1~3개]
  }}] — 입력 issues 와 **같은 개수·같은 순서**,
@@ -145,7 +145,7 @@ JSON 만 출력한다. 스키마:
    "turning_point": 흐름이 바뀐 지점 (없으면 ""),
    "key_change": 이 스토리의 핵심 변화,
    "core_issues": [현재 해결·결정되지 않은 것 2~3개],
-   "why_it_matters": [정책·시장·사업에서 달라지는 것 2~3개],
+   "so_what": [정책·시장·사업에서 달라지는 것 2~3개],
    "confirmed_facts": [입력 events 로 확인된 사실 2~4개],
    "unknowns": [아직 모르는 것 1~3개],
    "watchpoints": [다음에 확인해야 할 결정·실증·승인 2~5개]
@@ -166,7 +166,7 @@ def _writer_card_schema(bullets_min: int, bullets_max: int,
      "issue_id": 브리프의 issue_id 를 **그대로**,
      "headline": {headline_max}자 이내. 브리프의 headline_angle·core_change 로 쓴다,
      "facts": [{fact_max}자 이내] {bullets_min}~{bullets_max}개. 브리프의 must_know_facts 에서 고른다,
-     "why": [{why_max}자 이내] {bullets_min}~{bullets_max}개. 브리프의 why_it_matters·watchpoint 로 쓴다
+     "why": [{why_max}자 이내] {bullets_min}~{bullets_max}개. 브리프의 so_what·watchpoint 로 쓴다
    }}] — 브리프 issues 와 **같은 개수·같은 순서·같은 issue_id**
  }},"""
 
@@ -240,12 +240,12 @@ JSON 만 출력한다. 스키마:
    "core_change": 오늘 새롭게 확인된 변화 한 문장,
    "headline_angle": 제목에서 앞세울 것,
    "must_know_facts": [서로 다른 사실 2~3개],
-   "why_it_matters": [{{"type": "policy_effect"|"khnp_implication"|"industry_implication",
-                       "text": 실제로 달라지는 것}}] 1~2개,
+   "so_what": [{{"type": "policy_effect"|"khnp_implication"|"industry_implication",
+               "text": 실제로 달라지는 것}}] 1~2개,
    "watchpoint": 앞으로 확인할 것 (없으면 ""),
    "avoid_repeating": [되풀이하면 안 되는 문구 1~3개]
  }}] — 입력 articles 와 같은 개수·순서,
-{_writer_card_schema(bullets_min, bullets_max, headline_max, fact_max, why_max).rstrip(',')}
+{_writer_card_schema(bullets_min, bullets_max, headline_max, fact_max, why_max)}
  "story": null
 }}"""
 
@@ -268,6 +268,16 @@ def call(task: str, system_prompt: str, payload: dict, *,
         # 재시도에 **구체적인 지적**을 돌려준다. LLM 은 한글 글자 수를 못 세므로
         # "짧게 써라" 를 되풀이하는 것보다 "이 문장이 29자였다" 가 훨씬 잘 듣는다.
         body["fix_these"] = fix_these
+    # 실제로 쓴 토큰을 받아 둔다. **응답 본문은 버린다** — 기사 원문이 그 안에
+    # 있고, 그것을 로그나 디버그 산출물에 남기지 않는 것이 계약이다.
+    usage: dict = {}
+
+    def _usage(event: dict) -> None:
+        detail = event.get("detail") or {}
+        usage.update({key: detail.get(key) for key in
+                      ("prompt_tokens", "candidate_tokens", "thought_tokens",
+                       "total_tokens", "finish_reason")})
+
     result = gemini_client.call_json(
         system_prompt,
         json.dumps(body, ensure_ascii=False, indent=1),
@@ -276,63 +286,123 @@ def call(task: str, system_prompt: str, payload: dict, *,
         retries=CARD_LLM_RETRIES,
         model=profile.model(),
         label=f"cards:{task}",
+        trace_sink=_usage,
         **profile.reasoning_kwargs(),
     )
     if log is not None:
         log.append({"task": task, "model": profile.model(),
                     "max_http_attempts": CARD_LLM_RETRIES + 1,
-                    "repair": bool(fix_these)})
+                    "budget": max_output_tokens,
+                    "repair": bool(fix_these), **usage})
     return result
 
 
 # ── 브리프 검증 ────────────────────────────────────────────────────────────
 
-def validate_brief(brief: dict, items: list[dict],
-                   thread_id: str | None = None) -> list[str]:
-    """편집 판단을 믿어도 되는가. **문자열 모음이 아니라 계약으로 본다.**
+# 모델이 이 칸을 부를 때 실제로 쓴 이름들. **정본은 `so_what` 이다.**
+#
+# 처음에는 이 칸 이름이 `why_it_matters` 였는데, 2026-09-20 첫 프로덕션 실행에서
+# 세 이슈와 스토리 블록 **전부**가 대신 `why_important` 를 냈다. 잘린 것도,
+# 사고가 예산을 먹은 것도 아니었다(실측: finish=STOP · output 1441/6144 ·
+# thoughts=0). 원인은 이름 충돌이다 — 입력 기사 칸에 `why_important` 가 있고,
+# 모델이 출력 스키마 이름보다 **눈앞의 입력 이름**을 따라 적었다.
+#
+# 그래서 이름을 입력 어디에도 없는 `so_what` 으로 바꿨다(편집 질문 자체이기도
+# 하다). 그래도 별칭을 받는 이유는, 동의어로 흔들리는 것이 모델의 정상 동작이고
+# **낱말 하나로 그날 스토리를 통째로 버리는 것이 더 나쁘기** 때문이다.
+_SO_WHAT_ALIASES = ("so_what", "why_it_matters", "why_important", "impact",
+                    "implications", "matters")
 
-    여기서 걸리면 스토리를 빼고 일일 폴백으로 떨어진다 — 판단이 틀린 채로
-    카피를 입히면 규격만 맞는 거짓말이 나온다.
-    """
-    problems: list[str] = []
+
+def _so_what(row: dict) -> object:
+    for name in _SO_WHAT_ALIASES:
+        value = row.get(name)
+        if value:
+            return value
+    return None
+
+
+def normalize_brief(brief: dict) -> dict:
+    """별칭을 정본 이름으로 모은다. 검증 **전에** 돈다."""
     if not isinstance(brief, dict):
-        return ["브리프가 객체가 아님"]
+        return brief
+    for row in brief.get("issues") or ():
+        if isinstance(row, dict):
+            row["so_what"] = _so_what(row)
+    story = brief.get("story")
+    if isinstance(story, dict):
+        story["why_it_matters"] = _so_what(story) or story.get("why_it_matters")
+    return brief
+
+
+def _so_what_texts(value: object) -> list[str]:
+    """`[{type, text}]` 도 `["..."]` 도 받는다. 모양까지 틀렸다고 버리지 않는다."""
+    out: list[str] = []
+    for item in value or ():
+        if isinstance(item, dict):
+            out.append(str(item.get("text") or "").strip())
+        else:
+            out.append(str(item or "").strip())
+    return [text for text in out if text]
+
+
+def validate_brief(brief: dict, items: list[dict],
+                   thread_id: str | None = None) -> tuple[list[str], list[str], list[str]]:
+    """편집 판단을 믿어도 되는가. **판정을 세 갈래로 돌려준다.**
+
+        daily_fatal   이 브리프로는 일일 카드를 쓸 수 없다 → 단독 호출로 물러난다
+        story_fatal   스토리만 못 쓴다 → 스토리만 빼고 일일은 이 브리프로 간다
+        warnings      쓸 수는 있다. 로그에 남기고 QA·repair 가 받는다
+
+    처음에는 한 목록이었다. 그래서 2026-09-20 실행에서 **일일 쪽 칸 하나가
+    비었다는 이유로 멀쩡한 스토리 브리프까지 통째로 버렸고**, 호출도 계약(2회)
+    보다 한 번 더 나갔다. 다른 모든 자리에서 "일일과 스토리의 실패를 가른다"고
+    해 놓고 여기서만 안 갈랐던 것이 문제였다.
+    """
+    daily_fatal: list[str] = []
+    story_fatal: list[str] = []
+    warnings: list[str] = []
+    if not isinstance(brief, dict):
+        return ["브리프가 객체가 아님"], [], []
     version = str(brief.get("schema_version") or "")
     if version and version != BRIEF_SCHEMA_VERSION:
-        problems.append(f"schema_version={version} — {BRIEF_SCHEMA_VERSION} 여야 한다")
+        warnings.append(f"schema_version={version} — {BRIEF_SCHEMA_VERSION} 를 기대했다")
 
     issues = brief.get("issues")
     if not isinstance(issues, list):
-        return problems + ["brief.issues 가 배열이 아님"]
+        return ["brief.issues 가 배열이 아님"], [], warnings
     want = [str(item.get("issue_id") or "") for item in items]
     got = [str((row or {}).get("issue_id") or "") for row in issues]
     if got != want:
-        # 누락·추가·재정렬을 한 줄로 거부한다. 순서가 틀리면 Writer 가 A 이슈의
+        # 누락·추가·재정렬은 **치명적이다.** 순서가 틀리면 Writer 가 A 이슈의
         # 판단으로 B 카드를 쓴다.
-        problems.append(f"brief.issues 의 issue_id 가 입력과 다르다: {got} ≠ {want}")
+        daily_fatal.append(f"brief.issues 의 issue_id 가 입력과 다르다: {got} ≠ {want}")
 
     for index, row in enumerate(issues, start=1):
         tag = f"brief.issues[{index}]"
         if not isinstance(row, dict):
-            problems.append(f"{tag}: 객체가 아님")
+            daily_fatal.append(f"{tag}: 객체가 아님")
             continue
+        # **사실이 없으면 카드를 쓸 수 없다.** Writer 에게는 브리프밖에 없다.
+        facts = [str(text or "").strip() for text in (row.get("must_know_facts") or ())]
+        if not [text for text in facts if text]:
+            daily_fatal.append(f"{tag}.must_know_facts: 비어 있음")
+        elif len(facts) > 4:
+            warnings.append(f"{tag}.must_know_facts: {len(facts)}개 — 앞의 넷만 쓴다")
+        # 아래 둘은 **경고다.** 얇으면 카드가 얇아지지만 QA 와 repair 가 받는다.
+        # 여기서 죽이면 그 대가로 스토리까지 같이 빠진다.
         if not str(row.get("core_change") or "").strip():
-            problems.append(f"{tag}.core_change: 비어 있음")
-        facts = row.get("must_know_facts")
-        if not isinstance(facts, list) or not 1 <= len(facts) <= 4:
-            problems.append(f"{tag}.must_know_facts: 1~4개여야 한다")
-        matters = row.get("why_it_matters")
-        if not isinstance(matters, list) or not matters:
-            problems.append(f"{tag}.why_it_matters: 비어 있음")
-        elif any(not str((m or {}).get("text") or "").strip() for m in matters):
-            problems.append(f"{tag}.why_it_matters: text 가 빈 항목이 있다")
+            warnings.append(f"{tag}.core_change: 비어 있음 — 제목 각이 없다")
+        if not _so_what_texts(row.get("so_what")):
+            warnings.append(f"{tag}.so_what: 비어 있음 — 의미 불릿이 얇아진다")
 
     story = brief.get("story")
     if thread_id:
         if not isinstance(story, dict):
-            problems.append("brief.story: 스토리 후보가 있는데 story 가 없다")
+            story_fatal.append("brief.story: 스토리 후보가 있는데 story 가 없다")
         elif str(story.get("thread_id") or "") != thread_id:
-            problems.append(f"brief.story.thread_id={story.get('thread_id')} ≠ {thread_id}")
+            story_fatal.append(
+                f"brief.story.thread_id={story.get('thread_id')} ≠ {thread_id}")
     elif story not in (None, {}):
-        problems.append("brief.story: 후보가 없는데 story 를 만들었다")
-    return problems
+        story_fatal.append("brief.story: 후보가 없는데 story 를 만들었다")
+    return daily_fatal, story_fatal, warnings

@@ -41,7 +41,7 @@ def brief(issue_ids=("issue-a",), story_thread=None) -> dict:
             "core_change": "계획 단계였던 SAR 이 현장 실증으로 넘어갔다",
             "headline_angle": "계획 넘어 현장",
             "must_know_facts": ["진안·금산에서 착수", "실증기간 1년"],
-            "why_it_matters": [{"type": "policy_effect", "text": "계절 기준으로 전환"}],
+            "so_what": [{"type": "policy_effect", "text": "계절 기준으로 전환"}],
             "watchpoint": "실증 결과",
             "avoid_repeating": ["시범사업 착수"],
         } for issue_id in issue_ids],
@@ -49,7 +49,8 @@ def brief(issue_ids=("issue-a",), story_thread=None) -> dict:
     }
     if story_thread:
         out["story"] = {"thread_id": story_thread, "story_subject": "SAR",
-                        "key_change": "계획 → 시행"}
+                        "key_change": "계획 → 시행",
+                        "so_what": ["계절 기준으로 전환"]}
     return out
 
 
@@ -109,40 +110,107 @@ class ModelPolicyTests(unittest.TestCase):
 
 
 class BriefContractTests(unittest.TestCase):
-    """브리프는 문자열 모음이 아니라 계약이다."""
+    """브리프는 문자열 모음이 아니라 계약이다. **판정은 세 갈래다.**"""
+
+    def check(self, brief_obj, items=None, thread_id=None):
+        card_editorial.normalize_brief(brief_obj)
+        return card_editorial.validate_brief(brief_obj, items or ITEMS, thread_id)
 
     def test_a_good_brief_passes(self):
-        self.assertEqual(card_editorial.validate_brief(brief(), ITEMS), [])
+        self.assertEqual(self.check(brief()), ([], [], []))
 
-    def test_a_missing_issue_is_refused(self):
-        problems = card_editorial.validate_brief(brief(issue_ids=()), ITEMS)
-        self.assertTrue(any("issue_id" in p for p in problems))
+    def test_a_missing_issue_is_fatal_for_the_daily_card(self):
+        fatal, story_bad, _ = self.check(brief(issue_ids=()))
+        self.assertTrue(any("issue_id" in p for p in fatal))
+        self.assertEqual(story_bad, [])
 
-    def test_a_reordered_brief_is_refused(self):
+    def test_a_reordered_brief_is_fatal(self):
         """순서가 틀리면 Writer 가 A 이슈의 판단으로 B 카드를 쓴다."""
         items = ITEMS + [dict(ITEMS[0], issue_id="issue-b")]
-        problems = card_editorial.validate_brief(
-            brief(issue_ids=("issue-b", "issue-a")), items)
-        self.assertTrue(any("issue_id" in p for p in problems))
+        fatal, _, _ = self.check(brief(issue_ids=("issue-b", "issue-a")), items)
+        self.assertTrue(any("issue_id" in p for p in fatal))
 
-    def test_a_story_for_a_thread_we_did_not_ask_about_is_refused(self):
-        problems = card_editorial.validate_brief(
-            brief(story_thread="thread-다른것"), ITEMS, "thread-우리것")
-        self.assertTrue(any("thread_id" in p for p in problems))
+    def test_missing_facts_are_fatal_because_the_writer_has_nothing_else(self):
+        payload = brief()
+        payload["issues"][0]["must_know_facts"] = []
+        fatal, _, _ = self.check(payload)
+        self.assertTrue(any("must_know_facts" in p for p in fatal))
 
-    def test_a_story_invented_without_a_candidate_is_refused(self):
-        problems = card_editorial.validate_brief(brief(story_thread="thread-x"), ITEMS)
-        self.assertTrue(any("후보가 없는데" in p for p in problems))
+    def test_a_story_for_a_thread_we_did_not_ask_about_drops_only_the_story(self):
+        fatal, story_bad, _ = self.check(
+            brief(story_thread="thread-다른것"), thread_id="thread-우리것")
+        self.assertEqual(fatal, [])
+        self.assertTrue(any("thread_id" in p for p in story_bad))
 
-    def test_a_missing_story_when_we_had_a_candidate_is_refused(self):
-        problems = card_editorial.validate_brief(brief(), ITEMS, "thread-우리것")
-        self.assertTrue(any("story 가 없다" in p for p in problems))
+    def test_a_story_invented_without_a_candidate_drops_only_the_story(self):
+        fatal, story_bad, _ = self.check(brief(story_thread="thread-x"))
+        self.assertEqual(fatal, [])
+        self.assertTrue(any("후보가 없는데" in p for p in story_bad))
+
+    def test_a_missing_story_when_we_had_a_candidate_drops_only_the_story(self):
+        fatal, story_bad, _ = self.check(brief(), thread_id="thread-우리것")
+        self.assertEqual(fatal, [])
+        self.assertTrue(any("story 가 없다" in p for p in story_bad))
+
+    def test_a_thin_so_what_is_a_warning_not_a_failure(self):
+        """**이 한 줄이 2026-09-20 스토리를 죽였다.**
+
+        일일 쪽 칸 하나가 비었다는 이유로 멀쩡한 스토리 브리프까지 통째로
+        버렸고, 호출도 계약(2회)보다 한 번 더 나갔다. 얇으면 카드가 얇아지지만
+        QA 와 repair 가 받는다 — 여기서 죽이면 그 대가로 스토리까지 빠진다.
+        """
+        payload = brief()
+        payload["issues"][0]["so_what"] = []
+        fatal, story_bad, warnings = self.check(payload)
+        self.assertEqual((fatal, story_bad), ([], []))
+        self.assertTrue(any("so_what" in w for w in warnings))
+
+
+class AliasTests(unittest.TestCase):
+    """**모델은 출력 스키마 이름보다 눈앞의 입력 이름을 따라 적는다.**
+
+    2026-09-20 첫 프로덕션 실행에서 세 이슈와 스토리 블록 전부가 `why_it_matters`
+    대신 `why_important` 를 냈다. 잘린 것도 사고가 예산을 먹은 것도 아니었다
+    (finish=STOP · output 1441/6144 · thoughts=0). 입력 기사 칸에 `why_important`
+    가 있었던 것이 원인이다. 이름을 입력 어디에도 없는 `so_what` 으로 바꾸고,
+    그래도 동의어로 흔들릴 때를 위해 별칭을 받는다.
+    """
+
+    def test_the_canonical_name_appears_in_no_input_field(self):
+        article_fields = set(ITEMS[0])
+        self.assertNotIn("so_what", article_fields)
+        # 예전 이름은 입력에 실제로 있었다 — 그것이 충돌의 원인이다.
+        self.assertIn("why_important", article_fields)
+
+    def test_the_prompt_asks_for_the_canonical_name_only(self):
+        for prompt in (card_editorial.NARRATOR_SYSTEM,
+                       card_editorial.daily_writer_system(2, 3, 18, 40, 40)):
+            with self.subTest(prompt=prompt[:20]):
+                self.assertIn('"so_what"', prompt)
+                self.assertNotIn('"why_it_matters"', prompt)
+
+    def test_the_observed_alias_is_accepted(self):
+        payload = brief()
+        row = payload["issues"][0]
+        row["why_important"] = row.pop("so_what")
+        self.assertEqual(self.check(payload), ([], [], []))
+
+    def check(self, payload):
+        card_editorial.normalize_brief(payload)
+        return card_editorial.validate_brief(payload, ITEMS, None)
+
+    def test_a_list_of_plain_strings_also_counts(self):
+        """모양까지 틀렸다고 버리지 않는다 — 내용이 있으면 쓴다."""
+        payload = brief()
+        payload["issues"][0]["so_what"] = ["계절 기준으로 전환"]
+        self.assertEqual(self.check(payload), ([], [], []))
 
 
 class CallCountTests(unittest.TestCase):
-    def _run(self, story_payload, responses):
+    def _run(self, story_payload, responses, story_bad=()):
         calls: list[dict] = []
-        with mock.patch.object(make_cards, "card_editorial") as fake:
+        with mock.patch.object(make_cards, "story_problems",
+                               side_effect=lambda *_: list(story_bad)),                 mock.patch.object(make_cards, "card_editorial") as fake:
             fake.validate_brief = card_editorial.validate_brief
             fake.daily_writer_system = lambda **_: "sys"
             fake.writer_system = lambda **_: "sys"
@@ -201,6 +269,91 @@ class CallCountTests(unittest.TestCase):
         daily, story, call = self._run(None, [bad, bad])
         self.assertIsNone(daily)      # 호출자가 결정적 폴백으로 떨어진다
         self.assertEqual(call.call_count, 2)
+
+
+class StoryDomainTests(unittest.TestCase):
+    """스토리 카피도 **저장 전에** 검증받고 repair 기회를 갖는다.
+
+    PR #155 는 일일만 검증하고 스토리 카피는 그대로 저장했다. 그래서 잘못된
+    스토리는 한참 뒤 렌더 단계에서 처음 걸렸고, 그때는 고칠 길이 없었다
+    (story_cards 는 LLM 을 안 부른다). 실측 2026-09-20: 모델이 **일일 브리프의
+    숫자를 스토리 표지 배지로 가져왔는데**(165.0GW — 스토리 재료 어디에도 없다)
+    그 사실이 렌더 직전에야 드러나 그날 스토리가 0 장이었다.
+    """
+
+    def _run(self, responses, story_bad_sequence):
+        calls: list[dict] = []
+        seq = iter(story_bad_sequence)
+        with mock.patch.object(make_cards, "story_problems",
+                               side_effect=lambda *_: list(next(seq, []))),                 mock.patch.object(make_cards, "card_editorial") as fake:
+            fake.validate_brief = card_editorial.validate_brief
+            fake.normalize_brief = card_editorial.normalize_brief
+            fake.daily_writer_system = lambda **_: "sys"
+            fake.writer_system = lambda **_: "sys"
+            fake.NARRATOR_SYSTEM = "sys"
+            fake.call = mock.Mock(side_effect=responses)
+            payload = {"thread_id": "thread-x", "events": [{"date": "2026-09-19"}]}
+            daily, story = make_cards.run_editorial(ITEMS, "2026-09-20", 10,
+                                                    payload, calls)
+        return daily, story, fake.call
+
+    def test_a_bad_story_copy_is_caught_at_the_writer_not_at_the_renderer(self):
+        daily, story, call = self._run(
+            [brief(story_thread="thread-x"), copy(with_story=True),
+             copy(with_story=True)],
+            [["cover.badge.value: 입력에 없는 숫자"], []])
+        self.assertIsNotNone(story)
+        self.assertEqual([c.args[0] for c in call.call_args_list],
+                         ["card_editorial_narrator", "card_writer", "card_writer_repair"])
+
+    def test_a_story_that_survives_the_repair_is_dropped_and_the_daily_kept(self):
+        """**일일 카드는 살린다.** 스토리 때문에 멀쩡한 일일 카피를 버리지 않는다."""
+        daily, story, call = self._run(
+            [brief(story_thread="thread-x"), copy(with_story=True),
+             copy(with_story=True)],
+            [["안 됨"], ["여전히 안 됨"]])
+        self.assertIsNotNone(daily)
+        self.assertIsNone(story)
+        # Narrator 를 다시 부르지 않는다. 일일 단독 호출로도 안 내려간다.
+        self.assertEqual([c.args[0] for c in call.call_args_list],
+                         ["card_editorial_narrator", "card_writer", "card_writer_repair"])
+
+
+class WhyCountTests(unittest.TestCase):
+    """**의미 불릿 하한은 1 이다.** 규격이 아니라 재료를 따른다.
+
+    2026-09-20 실측: 브리프가 `so_what` 을 둘 주었는데도 첫 카드의 `why` 가 한
+    줄로 나왔고 repair 도 같은 한 줄을 냈다 — 두 번 더 부르고 결국 사이트 문장
+    폴백으로 떨어졌다. 토큰 예산 때문이 아니었다(1,354/12,288). 둘을 채우라고
+    계속 밀면 모델이 채우는 방법은 없는 의미를 지어내는 것뿐이고, 그건 이 카드가
+    가장 피하려는 실패다.
+    """
+
+    def _card(self, why):
+        return {"hook": {"headline": "오늘 먼저 볼 현안"},
+                "steps": [{"issue_id": "issue-a", "headline": "SAR 현장 적용",
+                           "facts": ["진안·금산에서 착수", "실증기간 1년"],
+                           "why": why}]}
+
+    def test_one_grounded_why_is_accepted(self):
+        self.assertEqual(
+            make_cards.review(self._card(["송전용량이 계절 기준으로 전환"]), ITEMS), [])
+
+    def test_an_empty_why_is_still_refused(self):
+        self.assertTrue(make_cards.review(self._card([]), ITEMS))
+
+    def test_the_prompt_still_asks_for_two_or_three(self):
+        """하한만 낮췄다. 모델에게는 계속 2~3 을 요구한다."""
+        prompt = card_editorial.writer_system(
+            make_cards.BULLETS_MIN, make_cards.BULLETS_MAX, 18, 40, 40,
+            with_story=False)
+        self.assertIn("2~3개", prompt)
+        self.assertEqual(make_cards.WHY_MIN, 1)
+
+    def test_padding_is_still_caught(self):
+        """한 줄을 허용한다고 억지 두 줄이 통과하지는 않는다."""
+        self.assertTrue(make_cards.review(
+            self._card(["송전용량이 계절 기준으로 전환", "정책적 의미가 큽니다"]), ITEMS))
 
 
 class CallLogTests(unittest.TestCase):
