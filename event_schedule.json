@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-21T00:44:06+09:00",
+ "generated_at": "2026-09-22T00:43:48+09:00",
  "events": [
   {
    "id": "of-556efe52f0da",
@@ -229,6 +229,49 @@
    "significance": "세미나"
   },
   {
+   "id": "of-bb143ed5ac92",
+   "date": "2026-09-29",
+   "end_date": "2026-09-29",
+   "kind": "point",
+   "time": "10:00~12:00",
+   "label": "첨단산업 전력수요 급증, 원전이 해답인가?",
+   "host": "우원식·최기상·김주영·곽상언 의원실, 국회 기후위기 탈탄소 경제포럼, 에너지전환포럼",
+   "organizer": "우원식·최기상·김주영·곽상언 의원실, 국회 기후위기 탈탄소 경제포럼, 에너지전환포럼",
+   "place": "의원회관 제5간담회의실(208호)",
+   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
+   "source_id": "assembly_events",
+   "publisher": "국회",
+   "notice_title": "첨단산업 전력수요 급증, 원전이 해답인가?",
+   "first_seen": "2026-09-22",
+   "topics": [
+    "power_market",
+    "carbon_free"
+   ],
+   "relevance": "전력수요",
+   "significance": "포럼"
+  },
+  {
+   "id": "of-5de35584127e",
+   "date": "2026-09-30",
+   "end_date": "2026-09-30",
+   "kind": "point",
+   "time": "10:00",
+   "label": "탄소중립 성과관리를 위한 기후정책 성과감사 세미나",
+   "host": "김용태 의원실, 한국에너지공단",
+   "organizer": "김용태 의원실, 한국에너지공단",
+   "place": "의원회관 제6간담회의실(209호)",
+   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
+   "source_id": "assembly_events",
+   "publisher": "국회",
+   "notice_title": "탄소중립 성과관리를 위한 기후정책 성과감사 세미나",
+   "first_seen": "2026-09-22",
+   "topics": [
+    "carbon_free"
+   ],
+   "relevance": "탄소중립",
+   "significance": "세미나"
+  },
+  {
    "id": "of-e84de075fb02",
    "date": "2026-10-04",
    "end_date": "2026-10-09",
@@ -410,7 +453,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-09-21T00:44:06+09:00",
+   "at": "2026-09-22T00:43:48+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -418,18 +461,18 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-09-21T00:44:06+09:00",
+   "at": "2026-09-22T00:43:48+09:00",
    "ok": true,
    "parsed": 10,
    "kept": 3,
    "new": 0,
    "dropped": {
-    "low_significance": 3,
-    "not_an_event": 4
+    "not_an_event": 4,
+    "low_significance": 3
    }
   },
   "kaif_calendar": {
-   "at": "2026-09-21T00:44:06+09:00",
+   "at": "2026-09-22T00:43:48+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -442,7 +485,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-09-21T00:44:06+09:00",
+   "at": "2026-09-22T00:43:48+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -450,19 +493,25 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-09-21T00:44:06+09:00",
-   "ok": false,
-   "error": "ConnectTimeout: HTTPSConnectionPool(host='www.assembly.go.kr', port=443): Max retries exceeded with url: /portal/noti/seminar/scheduleSmn.do?menuNo=600102 (Caused by ConnectTimeoutError(<HTTPSConnecti"
+   "at": "2026-09-22T00:43:48+09:00",
+   "ok": true,
+   "parsed": 54,
+   "kept": 4,
+   "new": 2,
+   "dropped": {
+    "no_interest_match": 49,
+    "not_an_event": 1
+   }
   },
   "kpx_notice": {
-   "at": "2026-09-21T00:44:06+09:00",
+   "at": "2026-09-22T00:43:48+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 0,
    "new": 0,
    "dropped": {
-    "not_an_event": 7,
-    "no_interest_match": 6,
+    "no_interest_match": 7,
+    "not_an_event": 6,
     "low_significance": 2,
     "no_event_date": 4,
     "unreadable_event_date": 1
