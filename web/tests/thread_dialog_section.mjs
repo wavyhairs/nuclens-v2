@@ -123,10 +123,22 @@ function augIssue(overrides = {}) {
   };
 }
 
+// 픽스처를 떠 온 날. threadForIssue() 는 longTermVisible() 을 기본 인자로
+// 불러 실제 Date.now() 로 hide_after 를 재므로, 벽시계를 그대로 두면 픽스처의
+// 유효기한(09-23 00:45 KST)이 지나는 순간 스토리 화면이 숨고 타임라인 검사
+// 10건이 한꺼번에 깨진다 — 2026-09-23 deploy web 이 그렇게 죽었다. 검사는
+// 판정 논리를 재는 것이지 오늘 날짜를 재는 것이 아니라, 시계를 여기에 고정한다.
+const NOW = Date.parse("2026-09-20T12:00:00+09:00");
+
 // state 를 읽는 함수들이라 잘라낸 블록에 주입한다. 카탈로그에 두 이슈가 다 있는
 // 것이 기본값 — 그래야 8/23 이 '누를 수 있는' 쪽으로 간다.
 function build(state) {
-  return new Function("state", `
+  return new Function("state", "NOW", `
+    // 잘라 온 함수들이 보는 Date 만 가린다 — now() 는 픽스처 날짜, 나머지는 그대로.
+    const Date = class extends globalThis.Date {
+      static now() { return NOW; }
+      static parse(text) { return globalThis.Date.parse(text); }
+    };
     ${extractConst("THREAD_CONTRACT")}
     ${extract("esc")}
     ${extract("dateLabel")}
@@ -140,7 +152,7 @@ function build(state) {
     ${extract("threadStepRow")}
     ${extract("threadDialogSection")}
     return { threadDialogSection, threadForIssue };
-  `)(state);
+  `)(state, NOW);
 }
 
 function defaultState(overrides = {}) {
