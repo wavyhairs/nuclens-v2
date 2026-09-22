@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 4,
     "date": "2026-09-22"
   },
   "retired": {
@@ -470,7 +470,7 @@
     }
   },
   "spent": {
-    "count": 2,
+    "count": 5,
     "date": "2026-09-22"
   },
   "terms": {
@@ -509,6 +509,109 @@
       "yields": 4,
       "zero_streak": 0
     },
+    "georgiapower": {
+      "articles": 2,
+      "created_at": "2026-09-22T03:40:37.312957+00:00",
+      "domains": [
+        "ft.com",
+        "powermag.com"
+      ],
+      "evidence": [
+        {
+          "domain": "ft.com",
+          "hash": "da44796dfec6dc78",
+          "importance": "nice_to_know",
+          "title": "Georgia Power, 구글과 원전 전력 공급 계약 체결"
+        },
+        {
+          "domain": "powermag.com",
+          "hash": "686dd56a0788308d",
+          "importance": "must_read",
+          "title": "구글, 조지아주 원전 출력 상향 지원 협약 체결"
+        }
+      ],
+      "expires_at": "2026-09-24T03:40:37.312957+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-09-22T03:40:40.603389+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-22T03:40:37.312957+00:00",
+      "queries_run": 1,
+      "query": "Georgia Power 원자력",
+      "score": 4.7,
+      "status": "tracking",
+      "term": "Georgia Power",
+      "ttl_hours": 48,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "hatch": {
+      "articles": 1,
+      "created_at": "2026-09-22T03:40:37.312957+00:00",
+      "domains": [
+        "powermag.com"
+      ],
+      "evidence": [
+        {
+          "domain": "powermag.com",
+          "hash": "686dd56a0788308d",
+          "importance": "must_read",
+          "title": "구글, 조지아주 원전 출력 상향 지원 협약 체결"
+        }
+      ],
+      "expires_at": "2026-09-23T03:40:37.312957+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-09-22T03:40:40.603389+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-22T03:40:37.312957+00:00",
+      "queries_run": 1,
+      "query": "Hatch 원자력",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "Hatch",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "uprate": {
+      "articles": 1,
+      "created_at": "2026-09-22T03:40:37.312957+00:00",
+      "domains": [
+        "powermag.com"
+      ],
+      "evidence": [
+        {
+          "domain": "powermag.com",
+          "hash": "686dd56a0788308d",
+          "importance": "must_read",
+          "title": "구글, 조지아주 원전 출력 상향 지원 협약 체결"
+        }
+      ],
+      "expires_at": "2026-09-23T03:40:37.312957+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-09-22T03:40:40.603389+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-22T03:40:37.312957+00:00",
+      "queries_run": 1,
+      "query": "Uprate 원자력",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "Uprate",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "가스복합화력발전소내": {
       "articles": 1,
       "created_at": "2026-09-20T06:41:21.330108+00:00",
@@ -543,6 +646,35 @@
       ],
       "yields": 5,
       "zero_streak": 1
+    },
+    "조지아주": {
+      "articles": 1,
+      "created_at": "2026-09-22T03:40:37.312957+00:00",
+      "domains": [
+        "powermag.com"
+      ],
+      "evidence": [
+        {
+          "domain": "powermag.com",
+          "hash": "686dd56a0788308d",
+          "importance": "must_read",
+          "title": "구글, 조지아주 원전 출력 상향 지원 협약 체결"
+        }
+      ],
+      "expires_at": "2026-09-23T03:40:37.312957+00:00",
+      "importance": "must_read",
+      "new_articles": 0,
+      "origin": "auto",
+      "queries_run": 0,
+      "query": "조지아주 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "조지아주",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 0
     }
   },
   "version": 1
