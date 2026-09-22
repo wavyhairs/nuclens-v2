@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 2,
+    "count": 4,
     "date": "2026-09-23"
   },
   "retired": {
@@ -470,7 +470,7 @@
     }
   },
   "spent": {
-    "count": 6,
+    "count": 9,
     "date": "2026-09-23"
   },
   "terms": {
@@ -509,6 +509,38 @@
       "yields": 5,
       "zero_streak": 1
     },
+    "bechtel": {
+      "articles": 1,
+      "created_at": "2026-09-22T21:18:22.357974+00:00",
+      "domains": [
+        "world-nuclear-news.org"
+      ],
+      "evidence": [
+        {
+          "domain": "world-nuclear-news.org",
+          "hash": "1a5d92dbd0371e7c",
+          "importance": "must_read",
+          "title": "테라파워(TerraPower), 나트륨(Natrium) 원전 EPC 계약 재입찰 추진"
+        }
+      ],
+      "expires_at": "2026-09-23T21:18:22.357974+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-09-22T21:18:25.644292+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-22T21:18:22.357974+00:00",
+      "queries_run": 1,
+      "query": "Bechtel 원자력",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "Bechtel",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "georgiapower": {
       "articles": 2,
       "created_at": "2026-09-22T03:40:37.312957+00:00",
@@ -532,12 +564,12 @@
       ],
       "expires_at": "2026-09-24T03:40:37.312957+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-09-22T09:40:47.217392+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-09-22T21:18:25.644292+00:00",
       "new_articles": 1,
       "origin": "auto",
-      "planned_at": "2026-09-22T09:40:43.541959+00:00",
-      "queries_run": 2,
+      "planned_at": "2026-09-22T21:18:22.357974+00:00",
+      "queries_run": 3,
       "query": "Georgia Power 원자력",
       "score": 4.7,
       "status": "extended",
@@ -548,7 +580,7 @@
         "2026-09-22"
       ],
       "yields": 1,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "hatch": {
       "articles": 1,
@@ -740,6 +772,40 @@
       ],
       "yields": 1,
       "zero_streak": 1
+    },
+    "나트륨실증": {
+      "articles": 1,
+      "created_at": "2026-09-22T21:18:22.357974+00:00",
+      "domains": [
+        "world-nuclear-news.org"
+      ],
+      "evidence": [
+        {
+          "domain": "world-nuclear-news.org",
+          "hash": "1a5d92dbd0371e7c",
+          "importance": "must_read",
+          "title": "테라파워(TerraPower), 나트륨(Natrium) 원전 EPC 계약 재입찰 추진"
+        }
+      ],
+      "expires_at": "2026-09-23T21:18:25.644292+00:00",
+      "importance": "must_read",
+      "last_result_count": 1,
+      "last_run": "2026-09-22T21:18:25.644292+00:00",
+      "new_articles": 1,
+      "origin": "auto",
+      "planned_at": "2026-09-22T21:18:22.357974+00:00",
+      "queries_run": 1,
+      "query": "나트륨 실증 원전",
+      "score": 3.6,
+      "status": "extended",
+      "term": "나트륨 실증",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [
+        "2026-09-23"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     },
     "보고한한미": {
       "articles": 1,
