@@ -541250,32 +541250,52 @@
     "published_at": "2026-09-22T14:46:00+00:00"
   },
   "79f92086669e7af4": {
-    "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
+    "features": {
+      "event_type": "opinion",
+      "korea_relevance": 2,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
     "section": "domestic",
-    "category": "정책",
-    "title_kr": "\"추석 전 현금 20% 챙겨라\"…김구라 채널서 제안한 포트폴리오 재편",
-    "summary": "아울러 원전이나 건설 등 대미 투자 관련 수혜주 역시 소액으로 접근해볼 가치가 있다고 조언했다.",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "opinion",
+    "title_kr": "전문가, 대미 투자 수혜주 관련 주의 당부",
+    "summary": "유튜브 채널에서 추석 연휴를 앞두고 대미 투자 수혜주에 대한 신중한 접근과 뉴스 모니터링을 권고함.",
+    "detail": "김종효 알파경제 이사는 대미 투자 수혜주인 원전 관련주 보유자들에게 연휴 기간 뉴스에 긴장감을 가질 것을 당부했다. SK하이닉스의 해외 투자는 첨단 기술 생산을 위한 국가 허가 신호일 가능성이 있다고 분석했다.",
     "implication": "",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#원전주",
+      "#대미투자"
+    ],
     "related_reports": [],
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "cached_at": "2026-09-22T15:38:24.350261+00:00",
+    "event_date": "2026-09-22",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
     "title": "\"추석 전 현금 20% 챙겨라\"…김구라 채널서 제안한 포트폴리오 재편",
     "link": "https://www.newsis.com/view/NISX20260922_0003799798",
     "feed": "정책",
     "domain": "newsis.com",
     "matched": "원전 수출",
-    "source_excerpt": "아울러 원전이나 건설 등 대미 투자 관련 수혜주 역시 소액으로 접근해볼 가치가 있다고 조언했다. 다만 대미... 김 이사는 알테오젠을 꼽으며 \"기업 가치 평가(밸류에이션)가 다소 비싸더라도 지속적으로 기술 수출을...",
-    "published_at": "2026-09-22T15:00:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "79f92086669e7af4",
@@ -541323,35 +541343,56 @@
       "source_excerpt": "d08c60c78b3d81529d3b98e3197119bfd3fb8d7aa6f608efe3c75a905c1ebbdd",
       "published_at": "576772408cc96ff4af0af220e2cf7824d5d56ffdd9870a8b720848be886e6d53"
     },
-    "hash": "79f92086669e7af4"
+    "hash": "79f92086669e7af4",
+    "published_at": "2026-09-22T15:00:00+00:00"
   },
   "cea41ae6f4af7237": {
-    "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "[심층분석] 하반기 증시 이끌 유망 업종·핵심 주도주 전망",
-    "summary": "셋째, 친환경 에너지 및 전력 인프라 분야는 글로벌 전력망 재편 및 AI 데이터센터 증설에 따른 전력 수요 증가의 직접적인 수혜를 입고 있다.",
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "power_market",
+      "datacenter_ai"
+    ],
+    "countries": [],
+    "article_type": "analysis",
+    "title_kr": "증권가, 하반기 전력 인프라 및 친환경 에너지 업종 유망 전망",
+    "summary": "증권가는 AI 데이터센터 증설과 전력망 재편에 따른 전력 수요 증가로 전력기기 및 친환경 에너지 업종이 수혜를 입을 것으로 전망함.",
+    "detail": "",
     "implication": "",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#전력망",
+      "#데이터센터"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-09-22T15:38:24.350261+00:00",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
     "title": "[심층분석] 하반기 증시 이끌 유망 업종·핵심 주도주 전망",
     "link": "https://www.thefairnews.co.kr/news/articleView.html?idxno=88869",
     "feed": "정책",
     "domain": "thefairnews.co.kr",
     "matched": "데이터센터 전력",
-    "source_excerpt": "셋째, 친환경 에너지 및 전력 인프라 분야는 글로벌 전력망 재편 및 AI 데이터센터 증설에 따른 전력 수요 증가의 직접적인 수혜를 입고 있다. 초고압 변압기 및 전력기기 공급을 주도하는 HD현대일렉트릭과 글로벌 풍력...",
-    "published_at": "2026-09-22T15:00:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "cea41ae6f4af7237",
@@ -541378,35 +541419,55 @@
       "source_excerpt": "3b6d06bee3b5fe38829efa728118829c6d2d4afae36f2abb1d172ae57c7aa6e0",
       "published_at": "576772408cc96ff4af0af220e2cf7824d5d56ffdd9870a8b720848be886e6d53"
     },
-    "hash": "cea41ae6f4af7237"
+    "hash": "cea41ae6f4af7237",
+    "published_at": "2026-09-22T15:00:00+00:00"
   },
   "38e6fa092f1c52ba": {
-    "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "[Biz & Now] 포스코퓨처엠, SK온에 양극재 공급",
-    "summary": "최근 보급형 전기차와 인공지능(AI) 데이터센터 확대로 전력 수요가 급증해 에너지저장장치(ESS)용 LFP 배터리 수요가 늘고 있다.",
+    "features": {
+      "event_type": "contract_award",
+      "korea_relevance": 2,
+      "market_materiality": 2,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "corporate",
+    "title_kr": "포스코퓨처엠, SK온에 양극재 공급 계약 체결",
+    "summary": "포스코퓨처엠이 SK온에 양극재를 공급하는 계약을 체결하여 국내 배터리 3사 모두에 양·음극재를 공급하게 됨.",
+    "detail": "",
     "implication": "",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#배터리",
+      "#공급계약"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-09-22T15:38:24.350261+00:00",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
     "title": "[Biz & Now] 포스코퓨처엠, SK온에 양극재 공급",
     "link": "https://www.joongang.co.kr/article/25464231",
     "feed": "정책",
     "domain": "joongang.co.kr",
     "matched": "데이터센터 전력",
-    "source_excerpt": "최근 보급형 전기차와 인공지능(AI) 데이터센터 확대로 전력 수요가 급증해 에너지저장장치(ESS)용 LFP 배터리 수요가 늘고 있다. 포스코퓨처엠은 이번 계약으로 국내 배터리 3사 모두에 양·음극재를 공급하게...",
-    "published_at": "2026-09-22T15:02:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "38e6fa092f1c52ba",
@@ -541422,26 +541483,10 @@
       "topics": [
         "grid"
       ],
-      "stages": [
-        "contract"
-      ],
-      "claims": [
-        "2029년",
-        "1000억원",
-        "22일"
-      ],
-      "quantities": {
-        "년": [
-          "2029"
-        ],
-        "억원": [
-          "1000"
-        ],
-        "일": [
-          "22"
-        ]
-      },
-      "manifest_fingerprint": "0aed5b886a292315f2e0c2af556b3c87251f5906849618e7d799b423fefc4efa"
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "71a4177873914542ef0ff64efffb40657fcdaf1dafea0ea52c58678d4355d705"
     },
     "verified_source_components": {
       "article_hash": "38e6fa092f1c52ba",
@@ -541449,35 +541494,58 @@
       "source_excerpt": "7c98047c118473951141fb5dca96155b38e7f5a6dd2e815cb4034b332af20273",
       "published_at": "5568612efa53d5127457a395da11d49a11e56afd279640e47785d38aa9205dcc"
     },
-    "hash": "38e6fa092f1c52ba"
+    "hash": "38e6fa092f1c52ba",
+    "published_at": "2026-09-22T15:02:00+00:00"
   },
   "29d87c86c8dbe0e3": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 2,
+      "market_materiality": 2,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "반도체 아닌 냉각·전력 기술로…LG·MS ‘AI 동맹’",
-    "summary": "고성능 서버가 늘수록 냉각·전력 공급 설비를 갖춰야 한다....",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "LG-마이크로소프트, AI 데이터센터 냉각·전력 기술 협력",
+    "summary": "LG와 마이크로소프트가 AI 데이터센터의 급증하는 전력 소비와 냉각 수요에 대응하기 위해 기술 협력을 추진함.",
+    "detail": "",
     "implication": "",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#데이터센터",
+      "#전력수요"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-09-22T15:38:24.350261+00:00",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
     "title": "반도체 아닌 냉각·전력 기술로…LG·MS ‘AI 동맹’",
     "link": "https://www.joongang.co.kr/article/25464240",
     "feed": "정책",
     "domain": "joongang.co.kr",
     "matched": "데이터센터 전력",
-    "source_excerpt": "블룸버그 뉴에너지파이낸스(BNEF)에 따르면 미국 데이터센터의 전력 소비량은 지난해 180테라와트시(TWh)에서 2030년 391TWh로 두 배 이상 늘어날 전망이다. 고성능 서버가 늘수록 냉각·전력 공급 설비를 갖춰야 한다....",
-    "published_at": "2026-09-22T15:02:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "29d87c86c8dbe0e3",
@@ -541493,15 +541561,10 @@
         "US"
       ],
       "topics": [],
-      "stages": [
-        "approval"
-      ],
+      "stages": [],
       "claims": [
         "2030년",
-        "391twh",
-        "21일",
-        "22일",
-        "12월"
+        "391twh"
       ],
       "quantities": {
         "mwh": [
@@ -541509,16 +541572,9 @@
         ],
         "년": [
           "2030"
-        ],
-        "월": [
-          "12"
-        ],
-        "일": [
-          "21",
-          "22"
         ]
       },
-      "manifest_fingerprint": "591b66aafc74961375ef4736d78363a28b2e2591e3e5e14ecf0345fab112b3cc"
+      "manifest_fingerprint": "8f18a44c0d9b65bd7cc63b0b47d95498e23a91170a212ba459b70c20e17598e7"
     },
     "verified_source_components": {
       "article_hash": "29d87c86c8dbe0e3",
@@ -541526,7 +541582,8 @@
       "source_excerpt": "1920087b97b351aa98121ec9b1c04e18c56bf6cf7cfc8f13906700c1a14afa09",
       "published_at": "5568612efa53d5127457a395da11d49a11e56afd279640e47785d38aa9205dcc"
     },
-    "hash": "29d87c86c8dbe0e3"
+    "hash": "29d87c86c8dbe0e3",
+    "published_at": "2026-09-22T15:02:00+00:00"
   },
   "0f9e33fdcaefb516": {
     "features": {
@@ -546074,5 +546131,4312 @@
     },
     "hash": "042e8899dcf1bcba",
     "published_at": "2026-09-22T14:48:00+00:00"
+  },
+  "f37606c3c42752d6": {
+    "features": {
+      "event_type": "contract_award",
+      "korea_relevance": 0,
+      "market_materiality": 2,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "조지아 파워, 구글과 원전 전력 공급 계약 체결",
+    "summary": "조지아 파워가 구글 데이터센터에 원자력 전력을 공급하는 계약을 체결하여 고객에게 약 9억 달러의 혜택을 제공할 전망이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#데이터센터",
+      "#전력공급"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Georgia Power agreement with Google to provide approximately $900 million in projected benefits for customers and advance nuclear energy in Georgia – Company Announcement - FT.com",
+    "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPd1VKUjA0T19JRUpiSVRHU1hjUXRrX3M0ZTBodkRFNXpsdGdIek0wVmpjTDI5eWtsZVU0UUxGUFZ2ZVlUUmJVTEdSSHVxS21PdTQ3MkhKVFM4ckhheFFEbHRUY1l6bTdjcXI5a3dibDNGLUs5SEtWVnBDM21PaHZnWURpNk9ad0IzRXN1amFQVnNYclF6bGc?oc=5",
+    "feed": "정책",
+    "domain": "ft.com",
+    "matched": "FT 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "f37606c3c42752d6",
+      "source_components": {
+        "article_hash": "f37606c3c42752d6",
+        "title": "a9ca902e191ba6b6acf63a9864f7d797c6f0f6f7bd7fd669883c13a1798dd927",
+        "source_excerpt": "28877c4b8966dda60f063fa337e77cb2f76957b7a5b91b65c9ac7cc8563a742c",
+        "published_at": "d6fc966a6b0d7d22d4620db045ce4fd3465c10b28e7969d94c1ccd053a5546c0"
+      },
+      "source_fingerprint": "7b44d4c6ad885f74e0f6d270c6f41554e6f482a8c6da6ed15e67bf78cce8b392",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {
+        "달러": [
+          "900000000"
+        ]
+      },
+      "manifest_fingerprint": "e3b56f6be2abb475cd48361adc0f3a7db483db81abac92436cd94cdb70ef33b7"
+    },
+    "verified_source_components": {
+      "article_hash": "f37606c3c42752d6",
+      "title": "a9ca902e191ba6b6acf63a9864f7d797c6f0f6f7bd7fd669883c13a1798dd927",
+      "source_excerpt": "28877c4b8966dda60f063fa337e77cb2f76957b7a5b91b65c9ac7cc8563a742c",
+      "published_at": "d6fc966a6b0d7d22d4620db045ce4fd3465c10b28e7969d94c1ccd053a5546c0"
+    },
+    "hash": "f37606c3c42752d6",
+    "published_at": "2026-09-21T20:50:00+00:00"
+  },
+  "f5ac78222ba733e0": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "MGAV.F 주식 시세 정보",
+    "summary": "MGAV.F 종목의 주식 시장 시세 정보이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "MGAV.F",
+    "link": "https://news.google.com/rss/articles/CBMidkFVX3lxTE5fVHQ4bnhRcGNmMlVKWmZqejI1TDZSNkFBekFrS3oxWDR0MDc4bGJsUHppYmdLb1VERGxRa3lMeXdUcUNhYndUNzhGVTE3QmlHSzdyWkZXNFlVeVhzUF9IRVFERzREbGlKYzlWWGpBNlEydkF1RVE?oc=5",
+    "feed": "정책",
+    "domain": "reuters.com",
+    "matched": "Reuters 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "f5ac78222ba733e0",
+      "source_components": {
+        "article_hash": "f5ac78222ba733e0",
+        "title": "994a26dd295588d4fe63212daf444723bb19dadb84f2ba708334581c3f9ca40c",
+        "source_excerpt": "e57fa52d7c155833396a72c7a348202c4843352c9a21e0d63484db0777c04df9",
+        "published_at": "c7e01f7ae299ceefa8d24e0e191155793f52bec60f09f2e18b074c86d8cfaa14"
+      },
+      "source_fingerprint": "dd9c88276788c9e9ec468d90a9b499ea5bdb4d2b655085144bfa004ac5cd03d4",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "66dca6df52985cb554020b888345b41acd10feb1d161a533d427852b272f7e26"
+    },
+    "verified_source_components": {
+      "article_hash": "f5ac78222ba733e0",
+      "title": "994a26dd295588d4fe63212daf444723bb19dadb84f2ba708334581c3f9ca40c",
+      "source_excerpt": "e57fa52d7c155833396a72c7a348202c4843352c9a21e0d63484db0777c04df9",
+      "published_at": "c7e01f7ae299ceefa8d24e0e191155793f52bec60f09f2e18b074c86d8cfaa14"
+    },
+    "hash": "f5ac78222ba733e0",
+    "published_at": "2026-09-21T20:54:04+00:00"
+  },
+  "caf98344f3e05553": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 2
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "newbuild",
+      "power_market"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "policy",
+    "title_kr": "정부, 제12차 전기본 수립 위한 원전 공론화 착수",
+    "summary": "정부가 제12차 전력수급기본계획 반영을 위해 9년 만에 시민참여단을 구성하여 원전 역할과 추가 건설 필요성에 대한 공론화 절차에 돌입한다.",
+    "detail": "기후에너지환경부는 22일 국무회의에서 원전 공론화 추진계획을 보고했다. 11명 이내의 공론화위원회를 구성하고 시민참여단을 통해 3개월간 숙의·토론을 진행한다. 이번 공론화는 신규 원전 건설 찬반뿐만 아니라 미래 전력수급에서 원전의 역할을 논의하며, 결과는 12월께 12차 전기본에 반영될 예정이다. 공론화위원회는 자문기구로서 권고안을 제출하며, 최종 건설 규모는 정부와 위원회가 결정한다.",
+    "implication": "공론화 결과가 12월로 예정됨에 따라 제12차 전기본의 정부안 마련 시점이 기존 10월에서 12월로 조정되었다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#전력수급기본계획",
+      "#원전공론화"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "원전 더 지을지 시민참여단에 묻는다…9년 만에 원전 공론화",
+    "link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE8tVnB1TXNMZjR3RXZBMGs2dkVGeEI4Y1ZQOUZJVlFueVpzTkVQeTVBZVd1MEg0ZG5EQUtqOWNIckZSZWhkSVgwU05BNV9wekdzOHfSAVNBVV95cUxPQ3FjeXZBY2duenBqNXV0dHhIaUtfQWFydFpkd082U0tnMVpRaTZPQnFVeWVxTlVTWkxNSFZRYjBVLThTOUx3WWFWQVVScG45ZzBPUQ?oc=5",
+    "feed": "정책",
+    "domain": "sedaily.com",
+    "matched": "국내 원자력 보도",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "caf98344f3e05553",
+      "source_components": {
+        "article_hash": "caf98344f3e05553",
+        "title": "c4ba6f8412dab6c26781804a4abbd6cba61b2689ad56200d22d9fe1a212448a8",
+        "source_excerpt": "f8c343833dc33a1a510b65eb57aff3016f567c09e108697f1daddc337e7fb60a",
+        "published_at": "c309f130af4d2e31f33468c4860b96bee3a68cf41775681cf7515ae280202a4d"
+      },
+      "source_fingerprint": "12defe26f0c07843a1eadeeccdee1077d128d43e00cf5e67bf68d3dec2352a5e",
+      "entities": [
+        "basic-plan",
+        "shin-kori"
+      ],
+      "countries": [],
+      "topics": [
+        "fuel_supply",
+        "reactor_project",
+        "waste"
+      ],
+      "stages": [
+        "approval",
+        "restart"
+      ],
+      "claims": [
+        "9년",
+        "22일",
+        "11명",
+        "2017년",
+        "6호기",
+        "471명",
+        "59.5%",
+        "3개월",
+        "10월",
+        "12월"
+      ],
+      "quantities": {
+        "%": [
+          "40.5",
+          "59.5"
+        ],
+        "개": [
+          "3"
+        ],
+        "년": [
+          "2017",
+          "9"
+        ],
+        "명": [
+          "11",
+          "471"
+        ],
+        "월": [
+          "10",
+          "12"
+        ],
+        "일": [
+          "22",
+          "33"
+        ],
+        "호기": [
+          "5",
+          "6"
+        ]
+      },
+      "manifest_fingerprint": "44689739007d7424519f8eb50ff13fbcf69dcfb845023ef116ba6b6e1a0bd5f4"
+    },
+    "verified_source_components": {
+      "article_hash": "caf98344f3e05553",
+      "title": "c4ba6f8412dab6c26781804a4abbd6cba61b2689ad56200d22d9fe1a212448a8",
+      "source_excerpt": "f8c343833dc33a1a510b65eb57aff3016f567c09e108697f1daddc337e7fb60a",
+      "published_at": "c309f130af4d2e31f33468c4860b96bee3a68cf41775681cf7515ae280202a4d"
+    },
+    "hash": "caf98344f3e05553",
+    "published_at": "2026-09-22T00:34:23+00:00"
+  },
+  "7571f1f2fc220304": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "GENRF.PK 주식 시세 정보",
+    "summary": "GENRF.PK 종목의 주식 시장 시세 정보이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "GENRF.PK",
+    "link": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxPdHhfLVNDNDR1X2dRQ2VJVnY1LUVsUjVlbTJ0eW1iM3dyTUljTFBrVHRvTVBkaEs3MWhicnNaNDlOV0VjQy1fbGNzSjBsaGVJLWxpQ25MQ3pQczhTMFdpekJpQk5KajZBRm5ZYzBEZm1WMXZZSkRjZzR1VjE0UUVqZnFyYU9ZcVhv?oc=5",
+    "feed": "정책",
+    "domain": "reuters.com",
+    "matched": "Reuters 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "7571f1f2fc220304",
+      "source_components": {
+        "article_hash": "7571f1f2fc220304",
+        "title": "d60d2d7e498c84419fa57d97eedf4c7a170d5e8f81a42a958d82440ffebcb789",
+        "source_excerpt": "9f8924eae2278d8227fbd3757126df61c46f6276634ae888fbf189e7b183c2ae",
+        "published_at": "d8132c445e44ca2dcd9812b1074f652b3084dc9ef4a5e75228626991731f547c"
+      },
+      "source_fingerprint": "04aaa81e4773d59ca16e0e946d1ef772afd5677d2cd5f0be302e6b014ead703f",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "36fecee1ec9a5f1f62612c7a2b8cc5be34642e9628c3ae6fba1dceca44d99abe"
+    },
+    "verified_source_components": {
+      "article_hash": "7571f1f2fc220304",
+      "title": "d60d2d7e498c84419fa57d97eedf4c7a170d5e8f81a42a958d82440ffebcb789",
+      "source_excerpt": "9f8924eae2278d8227fbd3757126df61c46f6276634ae888fbf189e7b183c2ae",
+      "published_at": "d8132c445e44ca2dcd9812b1074f652b3084dc9ef4a5e75228626991731f547c"
+    },
+    "hash": "7571f1f2fc220304",
+    "published_at": "2026-09-22T03:46:50+00:00"
+  },
+  "6d1691ea310b85b0": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "기술 분야 자영업자의 AI 활용 소득 증대 현황",
+    "summary": "기술 분야 자영업자는 AI를 통해 소득을 높이고 있으나 일반 근로자는 그렇지 못하다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Les travailleurs indépendants de la tech dopent leurs revenus grâce à l'IA, pas les salariés",
+    "link": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxNVTRBOURPQlhIYlF3VEMyZU9aaVNZdkppVVM5cTlTb3ZkLXQxd25VMHFINkJNRWVRMGlXVi0xMXBBSGo1THdfR1NUTi1xUERHWG1zUFd6NTdNa1hmeEdhS2FPOHdQNmVXUlF1cWNxR1VjUVQzQzJ5U0NrQnZNb0M1XzVKU3ROZmVRSUhrNzBZRzZrOFBjRjFaTkhFRWJ4bXZ3Y0k5dzNiZG5Edl9RR21TcUlEWC1MU0c0ZEJZR3VxbUUxeEo5SXVjYUpuOHY0anA4eVlFdGhmY3p6NUt4ZzZxYlFZQlc2Ql9fNzJ0Nk1FY1hzTUh5MnIyUExtVTN3dw?oc=5",
+    "feed": "정책",
+    "domain": "latribune.fr",
+    "matched": "La Tribune 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "6d1691ea310b85b0",
+      "source_components": {
+        "article_hash": "6d1691ea310b85b0",
+        "title": "bd559649cccee22d5a5ac2c4e3ee847936b1d335d2758495ac26696fe584efd9",
+        "source_excerpt": "d87fddb8b8e300a894bf9e543032bbfdc1554b73c7e7a68986b8ad33a7cc04e9",
+        "published_at": "af2a0980b34322651868aa3a132983a118bf07eba0fec31c0a13e856ebced347"
+      },
+      "source_fingerprint": "59c9c2ec01e1dcaa793eece9f32544a7c012899deaebd61d84ef36cf32a49811",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "3eb04d89619ae24a54deebea7cca36ef95df2d54eca90bab810e5870e36e9aa5"
+    },
+    "verified_source_components": {
+      "article_hash": "6d1691ea310b85b0",
+      "title": "bd559649cccee22d5a5ac2c4e3ee847936b1d335d2758495ac26696fe584efd9",
+      "source_excerpt": "d87fddb8b8e300a894bf9e543032bbfdc1554b73c7e7a68986b8ad33a7cc04e9",
+      "published_at": "af2a0980b34322651868aa3a132983a118bf07eba0fec31c0a13e856ebced347"
+    },
+    "hash": "6d1691ea310b85b0",
+    "published_at": "2026-09-22T05:00:03+00:00"
+  },
+  "e7abb7d2031c3dad": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "corporate",
+    "title_kr": "프랑스 바이오리베이트, 생명과학 분야 AI 산업화 추진",
+    "summary": "프랑스 기업 바이오리베이트가 생명과학 분야에서 AI 산업화를 추진한다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "French Tech : Biolevate veut industrialiser l'IA dans les sciences de la vie",
+    "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNUlFBbF9ON1hMYWluTmo2Q2tvQnZDMUgxLUhnaGV3eURXNXlMY2NBR1E0Qk1GVDdycktDZi0wQkc1V3Q1cXd3Wm9nTlJQTGtGSEV3elMzb3poVW5WRl9mTjliVk9xUUlqczllQmxoaFdfQkhjOWhSX3BJZ280Ul80b3I3WGhpQTFCSXBYQi1PekxSNk1HTXZMVnVNdWluaDhpSWlCRTZvYllNN09MWHU0T3B5V0tfQTdkOTNuZg?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "e7abb7d2031c3dad",
+      "source_components": {
+        "article_hash": "e7abb7d2031c3dad",
+        "title": "10edd8ca172cdfc62730ec6765fbc47b6ae71c286455fb3dc33bde050bd0a2cf",
+        "source_excerpt": "8c6dd926c53294ad0ed4b50dbe62133d26ddcbcab8b9e82258ef5707c86be49d",
+        "published_at": "a8a5ace69fd1bf3f6d68263950efa5219b1fc7f22def61a267d7b12bd9445cc5"
+      },
+      "source_fingerprint": "947e66d0d0970eb754aea4bce0afe6c86f7deefc7e07fec610f9af54f2eb7124",
+      "entities": [],
+      "countries": [
+        "FR"
+      ],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "06c6c704f2fabe05697ecb4e16c985f2ebb005be25edff28a1d3edef9af11388"
+    },
+    "verified_source_components": {
+      "article_hash": "e7abb7d2031c3dad",
+      "title": "10edd8ca172cdfc62730ec6765fbc47b6ae71c286455fb3dc33bde050bd0a2cf",
+      "source_excerpt": "8c6dd926c53294ad0ed4b50dbe62133d26ddcbcab8b9e82258ef5707c86be49d",
+      "published_at": "a8a5ace69fd1bf3f6d68263950efa5219b1fc7f22def61a267d7b12bd9445cc5"
+    },
+    "hash": "e7abb7d2031c3dad",
+    "published_at": "2026-09-22T05:30:08+00:00"
+  },
+  "b7e638d2c873a4e7": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "2026년 프랑스 은퇴자 생활 여건 악화",
+    "summary": "2026년 프랑스 은퇴자들의 전반적인 생활 여건이 악화되었다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": "2026-01-01",
+    "event_date_type": "occurrence",
+    "event_date_precision": "year",
+    "event_date_source": "title",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Retraite : les conditions de vie des retraités français se sont globalement dégradées en 2026",
+    "link": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxQajN6Y1ZudmszaTVrUmxCMFdCQkRtQnZ5SFJZcV84UHdlVHBJYVdnV0hNeUU2Wjk0MDhBZ1BJc1ZuWVdfaEI1VWNRVkpTYzFMZE9oY09CTmpMWnFjOUtNQi04bDQ4dlZQQUNmWDlPdjNWYTNEZlY0eFBuclQtdm04eDhWNlNIZ0lMTGR0YkFpcFJkU2JOU3N1ZmxwLVlNLWVwSmhsXzR5dXo4VFZtSm5yUmlqcVljcWNYOW1hRFl5eG9jVDh1T1VTTE5ieEhsVDlWZlBYOVI0bi1IcFE?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "b7e638d2c873a4e7",
+      "source_components": {
+        "article_hash": "b7e638d2c873a4e7",
+        "title": "a3c01fda6fe832436fa7ab20e4366e1447b25e4e9a02e1acd0bf9be204502fb0",
+        "source_excerpt": "465f4f2eabfff9a7ca054788b4e93bd0d724868cf4ee6dc49c9eaba57cb74040",
+        "published_at": "f858ff4a36799b7f624ff355fc22d3e46b4cd6ec96f9e1d1a9522cdcfcde8958"
+      },
+      "source_fingerprint": "7df63a35f1f8ff7e3e32e6189ecb0e97333b51e48b8108434ea95236ef0f0c71",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "en2026"
+      ],
+      "quantities": {},
+      "manifest_fingerprint": "8f60497f850f2b647f56b145a6b1767b3466c213b0691498f43c3e49187947a9"
+    },
+    "verified_source_components": {
+      "article_hash": "b7e638d2c873a4e7",
+      "title": "a3c01fda6fe832436fa7ab20e4366e1447b25e4e9a02e1acd0bf9be204502fb0",
+      "source_excerpt": "465f4f2eabfff9a7ca054788b4e93bd0d724868cf4ee6dc49c9eaba57cb74040",
+      "published_at": "f858ff4a36799b7f624ff355fc22d3e46b4cd6ec96f9e1d1a9522cdcfcde8958"
+    },
+    "hash": "b7e638d2c873a4e7",
+    "published_at": "2026-09-22T07:00:27+00:00"
+  },
+  "74ed912c751a2468": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "소비 습관을 재정의하는 예상치 못한 나비효과",
+    "summary": "소비 습관을 변화시키는 예상치 못한 나비효과에 대한 분석이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Coupe-faim : ces « effets papillon » inattendus qui redéfinissent les habitudes de consommation",
+    "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxNNk9PZlBFaWdVWE50TW5kYnNSR1A1Zk5nczE0UlBmRHI1Z2gxTE5kczJYaWNMdS04TjVwQWh3RV9VZDFybTFyb2J6X1hzZ3JSNm1NQUVfbWRXcTRESG5TMmd5RHZjQTRaaXZZVmhiWkFDVDQtemotcEFnNWtialNQc3hrWGZZMXF1SVN3U2J0ZGZrdGNzaFNHR1A5b0UySEt1eUNHN2ZNc1NISmd3NmtjaUQ4d0RPTllpT0FTRVZsLWpFTE5EcFlwbFl6bw?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "74ed912c751a2468",
+      "source_components": {
+        "article_hash": "74ed912c751a2468",
+        "title": "c6281c70bc42958ee197873904b55a681997ee76523078bcb394678d9e1abe0f",
+        "source_excerpt": "5373ca975fb3e90f669a8b5ed6bbc6b47839427aea2aca566a5a87cc6acbf506",
+        "published_at": "f1e9383580ca595908df454494909e363acac3ff1459cf1382b871f949fde1a7"
+      },
+      "source_fingerprint": "d237197508a6516b2def97f8da99c9daa6c2081f9e765f67a223b2c0a00fadeb",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "eae06e3c699e1f907b63fd0cb95b424b6ded9866f613197096370cab271fd962"
+    },
+    "verified_source_components": {
+      "article_hash": "74ed912c751a2468",
+      "title": "c6281c70bc42958ee197873904b55a681997ee76523078bcb394678d9e1abe0f",
+      "source_excerpt": "5373ca975fb3e90f669a8b5ed6bbc6b47839427aea2aca566a5a87cc6acbf506",
+      "published_at": "f1e9383580ca595908df454494909e363acac3ff1459cf1382b871f949fde1a7"
+    },
+    "hash": "74ed912c751a2468",
+    "published_at": "2026-09-22T07:45:08+00:00"
+  },
+  "8de7c0c399ad9dc8": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "불안 해소를 위한 최면의 활용 방안",
+    "summary": "과도한 노력과 불안을 줄이기 위한 최면의 심리적 도움 방안을 다룬다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Trop d'efforts, trop d'exigence, trop d'anticipation anxieuse : comment l'hypnose peut nous aider à lâcher prise",
+    "link": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxNX3BiVkx0NE0tbHhGZV9LODN0Y2JJcFBoWGJHU3BmdnpqeFNCRjRqdVpOUDRMakxVNTVfVk1ZT3NSN0Q3Uy1kX2tGT0ZXaDFZdEh3RDRfdjc1SHdUY1g1N2I2SXU5Ql9LNXYtSHdjZjQtb1VWTWVBbTdHOXRmb2NDd0ZIX2dodDBMc0oyVVVZRWdvTGJDWmlsWEV2Z185Zk5RdzB0UVFsYWcxN1BEQ3EyZWZOb3E4WGVhMW42Vzg5elZqSk4zWUZVZ0t0ZmFtNnZjb0NoRVNsMWJIeFExQ19nVkdwZ0p3a1BmYjFSM2YtSEJLd1QySEltOW56VEU4dw?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "8de7c0c399ad9dc8",
+      "source_components": {
+        "article_hash": "8de7c0c399ad9dc8",
+        "title": "91e42a3635686d72df4ca6fbe453547e7d9bcefaa249eae1a972bbb8a40c39bc",
+        "source_excerpt": "b4f74aa1ea243b0679785b765131251a84a8db3eeb242f8e7a5bed501f5f82a3",
+        "published_at": "84832c51f9c681acaa028e0f58b85fa7a771aefca37faeb23fa3f482651e3589"
+      },
+      "source_fingerprint": "1d143b396d037dc86acab7acb8aa127f0b710f910bd2d4d9337b65ada3a5664c",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "8fc80858204f870df5502a22cdd8059f0aca98f75813ea05a22bb1c1f8269253"
+    },
+    "verified_source_components": {
+      "article_hash": "8de7c0c399ad9dc8",
+      "title": "91e42a3635686d72df4ca6fbe453547e7d9bcefaa249eae1a972bbb8a40c39bc",
+      "source_excerpt": "b4f74aa1ea243b0679785b765131251a84a8db3eeb242f8e7a5bed501f5f82a3",
+      "published_at": "84832c51f9c681acaa028e0f58b85fa7a771aefca37faeb23fa3f482651e3589"
+    },
+    "hash": "8de7c0c399ad9dc8",
+    "published_at": "2026-09-22T08:05:08+00:00"
+  },
+  "66cf2a75a5979c6b": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "power_market"
+    ],
+    "countries": [
+      "ZA"
+    ],
+    "article_type": "news",
+    "title_kr": "남아공, 신규 LNG 터미널 건설 입찰 공고",
+    "summary": "남아프리카공화국이 신규 LNG 터미널 건설을 위한 입찰을 시작했다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#에너지인프라"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Énergie : l’Afrique du Sud lance un appel d’offres pour un nouveau terminal GNL",
+    "link": "https://news.google.com/rss/articles/CBMizgFBVV95cUxNeUpGeV9NWmlFanVJRHZ3YmVQQ1A3SXZYWW5WbkJsQzZEeld5WlA1REdCVVJvZ0NPd1I3TWdtUWtHSnU2RVBtYU9rd25USUE4N2FfRzkzOGZFQTFoaVN6dlJHMUtnUUJsOWlVcWcycVozZ1BVWXhBaXBranpBUDdxY3J1V1djYU5xa3Q3SWNpMWgxODM3OXY5LVZIb0VoaWlkc003MjRhZmc2QTlLQzFGQlc2b3VkYzB6YkFISXMzbmc1amkteDlGbkRRZlp4dw?oc=5",
+    "feed": "정책",
+    "domain": "latribune.fr",
+    "matched": "La Tribune 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "66cf2a75a5979c6b",
+      "source_components": {
+        "article_hash": "66cf2a75a5979c6b",
+        "title": "6a87556878600b293db0a8f110448ac4c3dda41779c425c88e99e802638dece1",
+        "source_excerpt": "63019bcaba286bea0c13ba7c868abc0b84d8f24264be5aa4bb1c1fa05fef8420",
+        "published_at": "9f85e51d41847e7c549e41d2afa8b9b853fed79cf373d01109560973ba4a1e8c"
+      },
+      "source_fingerprint": "9e3ccb19551b77c97e8c74c14c2bc5f835899091028bc853289921651ca8c4ec",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "413591c3986dc6d22097c889670b2f9f81a71256fe1820a07ca678c6bd08119c"
+    },
+    "verified_source_components": {
+      "article_hash": "66cf2a75a5979c6b",
+      "title": "6a87556878600b293db0a8f110448ac4c3dda41779c425c88e99e802638dece1",
+      "source_excerpt": "63019bcaba286bea0c13ba7c868abc0b84d8f24264be5aa4bb1c1fa05fef8420",
+      "published_at": "9f85e51d41847e7c549e41d2afa8b9b853fed79cf373d01109560973ba4a1e8c"
+    },
+    "hash": "66cf2a75a5979c6b",
+    "published_at": "2026-09-22T09:00:01+00:00"
+  },
+  "a540987c902fc43e": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "프랑스 소기업의 성장 지상주의에 대한 저항 동향",
+    "summary": "프랑스 소기업들이 무조건적인 성장을 강요하는 사회적 분위기에 저항하는 흐름을 보임.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Microentreprises : résister à l'injonction de la croissance à tout prix",
+    "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQOXIxY0syalVKeVZQdG1CVlRPWmFMTFRUaVVBUmZLYk9yQVlUMzNhUXRVRkdEZTludDBFRmRYRl9zSF9Qc0pQRUs4ZktJUV9GaUpVeDdLb0MzTmluS0NCMkhJVUVxSnNaV2Z4TTdoZjJWXzRkcHVQbnp5MHZOc0hEWUNKMGV1dlJxdUwtclM3dnQxY0c1c0ZGRE5UaDVjM2p1UUFQWGxadmR0OVFyeTNhREp4cFFQNGhUM3dv?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "a540987c902fc43e",
+      "source_components": {
+        "article_hash": "a540987c902fc43e",
+        "title": "8951b3df628dd7d78be1ca09e57be91e58c62609b5fc1d836fcbfa63e6310c5d",
+        "source_excerpt": "af7bef6cef3c3ed2c73f0f1661ec93601e40379d7c27c7a5698cce0d4513097e",
+        "published_at": "6a49cd110f12f0458ac5a8f0c60b6667ce2b072c2370e2eb9f0a4c139f7b7b5c"
+      },
+      "source_fingerprint": "e6db17ac32b7050097865b9e51dbfe8ac120465e770100bec58a0cc38aaf09ec",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "b05e9dd704b794c7fcab9f6a442d0fc92fe401cd3a9201dce1317ea6e9902de7"
+    },
+    "verified_source_components": {
+      "article_hash": "a540987c902fc43e",
+      "title": "8951b3df628dd7d78be1ca09e57be91e58c62609b5fc1d836fcbfa63e6310c5d",
+      "source_excerpt": "af7bef6cef3c3ed2c73f0f1661ec93601e40379d7c27c7a5698cce0d4513097e",
+      "published_at": "6a49cd110f12f0458ac5a8f0c60b6667ce2b072c2370e2eb9f0a4c139f7b7b5c"
+    },
+    "hash": "a540987c902fc43e",
+    "published_at": "2026-09-22T10:05:11+00:00"
+  },
+  "0ed7746b7e170f18": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "NG"
+    ],
+    "article_type": "policy",
+    "title_kr": "나이지리아, 오프그리드 전력 접근성 확대 펀드 조성",
+    "summary": "나이지리아 정부가 오프그리드 전력 보급을 위해 3억 달러 규모의 펀드를 조성함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Énergie : le Nigeria lance un fonds de 300 millions de dollars pour accélérer l’accès à l’électricité hors réseau",
+    "link": "https://news.google.com/rss/articles/CBMi-gFBVV95cUxNVjQ2bF9sTWU1SXpQR2d2Tkc2U05abXYwQWx3NW9qcmlTTW9xSWdOZnEtdU0tT3NyZU9USnFaOFY2Y1NKd291cGszWC1hZGZocnpKRlMwM2tqU3p6RzJtbVJIVVRGM3pZRXFpMmNvdjhRSnZHdTlqaFc5NWN1dFFuTGNyQURvb3BuZnpKbTJSWXBveldjR293UGplNVJMVXVfcmszWWI2UnM0ZFFCVEF1X1NQcHM1cGtxQldFZ1oxY0tHTGJsV0ZyeGtFaG1aRDN4MDRkQlpjMFM5eVI2eDZILW52WjJVWFluU1JoTXN0V1RaNW9jR3Exejln?oc=5",
+    "feed": "정책",
+    "domain": "latribune.fr",
+    "matched": "La Tribune 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "0ed7746b7e170f18",
+      "source_components": {
+        "article_hash": "0ed7746b7e170f18",
+        "title": "3e345e7d68b828ffe7d5c585f0b0cfd6eb7587c23b280263c4a41d2e3c468cee",
+        "source_excerpt": "cf1cfb99aa47f9de54b6ef35c835963a6549736e2a1c32b110161bc1b09393c1",
+        "published_at": "ad98f72c0be8f2d4478e4a266a9ac0a4799d439ead2946eebeb2294befbe7139"
+      },
+      "source_fingerprint": "abf23fa998c6562b9149b046cc4ca4cbe253f4aa2c6518848df84370a1b29831",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "de300"
+      ],
+      "quantities": {
+        "달러": [
+          "300000000"
+        ]
+      },
+      "manifest_fingerprint": "4df43b12b6773a2e27f464404131adcf3f49b2bb12c8b19bddccf66842cbe6e7"
+    },
+    "verified_source_components": {
+      "article_hash": "0ed7746b7e170f18",
+      "title": "3e345e7d68b828ffe7d5c585f0b0cfd6eb7587c23b280263c4a41d2e3c468cee",
+      "source_excerpt": "cf1cfb99aa47f9de54b6ef35c835963a6549736e2a1c32b110161bc1b09393c1",
+      "published_at": "ad98f72c0be8f2d4478e4a266a9ac0a4799d439ead2946eebeb2294befbe7139"
+    },
+    "hash": "0ed7746b7e170f18",
+    "published_at": "2026-09-22T10:40:01+00:00"
+  },
+  "bd43be56990f2ce1": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "corporate",
+    "title_kr": "소제트렐, 엘토 프랑스와 전기차 충전소 사업 협력",
+    "summary": "프랑스 기업 소제트렐이 엘토 프랑스와 협력하여 전기차 충전소 사업을 확대함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Bornes de recharge électrique : avec Elto France, Sogetrel « franchit une étape »",
+    "link": "https://news.google.com/rss/articles/CBMizAFBVV95cUxNSWJVX1VfX1RzTF9BRVRUb2U3b1BJdjl4TGItcGxTcThXUkRhQlppVVZzaW5XenVTeW8zZTVzNHlOc2xZd0Q5ZXJGcDVDNnJUN2lLV2RYV01mQ0UzdXN5T0RhU0tNWXhrMDV4alhhSEtQTkdFcHREVlA4c0hBSTF4SUx4bWM4anYxTkRlYUlFLWlRYUJNVExQTmhmQVltLTdNTENMQkk5cnVJaFdMbEx6c2VYaFNtX0pSOTdhTUdBQW5abmxmMTFlaV9BZFQ?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "bd43be56990f2ce1",
+      "source_components": {
+        "article_hash": "bd43be56990f2ce1",
+        "title": "a1ee1903e4b751af1c659d607df7411f3966305b952c03c446753bc967eac86a",
+        "source_excerpt": "90a80786a11f7f154a4a9c863ccc262f179444dd7a6dc39ab04babd9ae1c76c9",
+        "published_at": "718e550136f99f3712562728e690a8dea50190415e8dcdc6ab6ac03601adb865"
+      },
+      "source_fingerprint": "4d64c1a87231895f9c587ca6528bb7874aa93599302af8133bf91304f726a660",
+      "entities": [],
+      "countries": [
+        "FR"
+      ],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "86e314f65b1d88936c7013f9c2845256154f4855ee00288cf8a70b1fcf501639"
+    },
+    "verified_source_components": {
+      "article_hash": "bd43be56990f2ce1",
+      "title": "a1ee1903e4b751af1c659d607df7411f3966305b952c03c446753bc967eac86a",
+      "source_excerpt": "90a80786a11f7f154a4a9c863ccc262f179444dd7a6dc39ab04babd9ae1c76c9",
+      "published_at": "718e550136f99f3712562728e690a8dea50190415e8dcdc6ab6ac03601adb865"
+    },
+    "hash": "bd43be56990f2ce1",
+    "published_at": "2026-09-22T12:25:36+00:00"
+  },
+  "3c6b5b4fc81855b7": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "로스앤젤레스 루카스 서사 예술 박물관 내부 공개",
+    "summary": "로스앤젤레스에 신설되는 루카스 서사 예술 박물관의 내부 모습이 공개되었다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Un robot R2-D2, les costumes de Dark Vador, le Landspeeder de Luke Skywalker : dans les coulisses du nouveau « Lucas Museum of Narrative Art » à Los Angeles",
+    "link": "https://news.google.com/rss/articles/CBMisAJBVV95cUxQbVE2TkV0ZF84c3RtLWlSeS01dE4wdDlvejZ5X252MXk0YndSR2JoOUtDNTNSWUEtRXZfZ0hBTmdCXzBvaHpPbEszR3ZsRDI1ejJCaUZiRUM5elZiTGN0cmg5RTNtaTVSYk5lQ19oSWN6X2RHTzR4REZDMjVMUElXRDAyeWpFbnJLSnRjaUtLRmdHRklKYzNzbzdnQUwwdkU3NGNZODhISmlnTUlueFc3X09WME9JZFdKeTFaakkxWTVDX29hd3FKeHNKaDF0V2pSbUp1b0dGcUExMGlyMWVqT3N4T3ROdDI3T042dzNGZzRoaVRxLXhwam1ROV9vOFhRVTQ1YUlxaEhmX25haFVXN2hldnJKNjMtZWt6X3ZQUE1vek5EMG5DMFgtb2RXSFRC?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "3c6b5b4fc81855b7",
+      "source_components": {
+        "article_hash": "3c6b5b4fc81855b7",
+        "title": "b84e4a7a4c66947c02f7bdd0a8f3ad407f4969a3c752a590ae6b0591283e0c67",
+        "source_excerpt": "ce8c4f087c0fd7bd605f9ca4e82093a171233090c2e60d5451a8160a59e44806",
+        "published_at": "024294ebc4d7fc4dd3ee13f615ee0673129e8620eff84c9a32bf9d7ba5cafd89"
+      },
+      "source_fingerprint": "f4943ca313e377849f7d54c388a0a9e757efd061906fff69c282d0aa40659658",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "afcdb95aac2df549928585001464842ff6b4a176be2462a4012c06810569b09b"
+    },
+    "verified_source_components": {
+      "article_hash": "3c6b5b4fc81855b7",
+      "title": "b84e4a7a4c66947c02f7bdd0a8f3ad407f4969a3c752a590ae6b0591283e0c67",
+      "source_excerpt": "ce8c4f087c0fd7bd605f9ca4e82093a171233090c2e60d5451a8160a59e44806",
+      "published_at": "024294ebc4d7fc4dd3ee13f615ee0673129e8620eff84c9a32bf9d7ba5cafd89"
+    },
+    "hash": "3c6b5b4fc81855b7",
+    "published_at": "2026-09-22T13:00:10+00:00"
+  },
+  "1fe806f6c83e0d73": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "교황 방문 앞둔 프랑스 센생드니 지역 동향",
+    "summary": "교황의 방문을 앞두고 프랑스 센생드니 지역의 준비 상황이 보도되었다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Avant l'arrivée du pape, la Seine-Saint-Denis en effervescence",
+    "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxPNjZqRERKLUdjdVZXYnRha3d4Z0N5S0t3SGgwWlc4MG0xX2tHVXhIQUJReHVyNS1fZzI4NVk3UFM0ZzNkclhzUU13QW1sQmtoMVE1QXJLb2FXbHdTeTlTN3JVc0xhR0ZnOHVOdGZVajcyaGdsYUtEU19UM3p1dTRqM1dTLTlfcmV1UDMtdDhPc3RDZ3g1aWxCeUdDaFRyZUVhaEpvUTR3LXFRdWtUZ2l5dFBNSmIyeXliMXc?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "1fe806f6c83e0d73",
+      "source_components": {
+        "article_hash": "1fe806f6c83e0d73",
+        "title": "09433f26bc05ed014efb72dbad4d1aff6bdf5d68f01fb20f053100f3f772a249",
+        "source_excerpt": "2d4e52aa61e7f608de99ad163f60eda8e5125c40347781a15d3c3181cf1e4242",
+        "published_at": "ea0671de94aa268ed2250285f49944a965265a50fb5a6065b86f247fc2e0fb33"
+      },
+      "source_fingerprint": "44293a55bd7cb9758bf962951552524915491ad5dc9bc956937dcfa4490e4942",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "f9d5a40a050ea2c54b569d9eef869bfce97b955bfb2046e4e19da21cd72caff1"
+    },
+    "verified_source_components": {
+      "article_hash": "1fe806f6c83e0d73",
+      "title": "09433f26bc05ed014efb72dbad4d1aff6bdf5d68f01fb20f053100f3f772a249",
+      "source_excerpt": "2d4e52aa61e7f608de99ad163f60eda8e5125c40347781a15d3c3181cf1e4242",
+      "published_at": "ea0671de94aa268ed2250285f49944a965265a50fb5a6065b86f247fc2e0fb33"
+    },
+    "hash": "1fe806f6c83e0d73",
+    "published_at": "2026-09-22T13:00:58+00:00"
+  },
+  "3d674e44dd35d402": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 2,
+      "market_materiality": 0,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "smr"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "경남도, AI 기술 거점 조성 및 원전·SMR 지원 건의",
+    "summary": "박완수 경남도지사가 정부에 AI 기술 플랫폼 구축 및 조선·원전 분야 펀드 지원을 건의함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#SMR",
+      "#경남도"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "경남 제조현장·피지컬AI 국가전략 연결한다",
+    "link": "http://www.gnmaeil.com/news/articleView.html?idxno=595336",
+    "feed": "정책",
+    "domain": "gnmaeil.com",
+    "matched": "SMR 국가전략기술",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "3d674e44dd35d402",
+      "source_components": {
+        "article_hash": "3d674e44dd35d402",
+        "title": "ca91dc7f11aeb3749e689c7713a1f72525121d64336872805abbe694d9396925",
+        "source_excerpt": "9492770daf31fa29cd60e7be46ef206ac603998c2065fd0c13f66891f441d338",
+        "published_at": "2bd99876e0c77c8503863459167e58fbb25894d19b042a9e0ab6b743a29f747c"
+      },
+      "source_fingerprint": "b5dedcdc344b254d5bfcdf9b992cc1823a87e4c48badce5e7e6e8a01eb63e616",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "c4d074a5d0fc531c69038bbde915c72b9365a26a514d4d433e6179eb392bc6d8"
+    },
+    "verified_source_components": {
+      "article_hash": "3d674e44dd35d402",
+      "title": "ca91dc7f11aeb3749e689c7713a1f72525121d64336872805abbe694d9396925",
+      "source_excerpt": "9492770daf31fa29cd60e7be46ef206ac603998c2065fd0c13f66891f441d338",
+      "published_at": "2bd99876e0c77c8503863459167e58fbb25894d19b042a9e0ab6b743a29f747c"
+    },
+    "hash": "3d674e44dd35d402",
+    "published_at": "2026-09-22T14:00:00+00:00"
+  },
+  "8319a0e752809e34": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "FR",
+      "US"
+    ],
+    "article_type": "corporate",
+    "title_kr": "프랑스 중소기업 락팁스, 미국 시장 진출 본격화",
+    "summary": "프랑스 기업 락팁스가 미국 시장 진출을 공식화함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "La PME ligérienne Lactips confirme son virage américain",
+    "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxONmdHb01aaGxSU2NIM3kta3lNQnhib282dXF6N18wZ0JZV2x2QzlKeTJEQWp1X2R4RUdzRWJMTmY5NEgtdml4eU15bGlPNlBWSWlOdTFCMGotWGZISERjUTdPM1BTNnFldURWSUZBMlpELTJrYl9xaURBNTBLckxjU1BQbkxFcnVFd3JHc0dBbkU3R3RQdU1qa1EzaklHQ1Vqd1k3aFJfNVZHUk5kNmJlTEFVcHQ1TkNXYjRCRg?oc=5",
+    "feed": "정책",
+    "domain": "latribune.fr",
+    "matched": "La Tribune 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "8319a0e752809e34",
+      "source_components": {
+        "article_hash": "8319a0e752809e34",
+        "title": "21a1cbd720069b82adccc5cfb7f12f185a7209f556b162e1996300bd7eaaa54d",
+        "source_excerpt": "2c7af8e64fd84e10cb7030fc303a85acb7c685121c282db9c56a952e388d5ff1",
+        "published_at": "3c4bb19d8056b16f01d6af64eaff07d6b2c91c53d8b09fd9ba031fcd965f459e"
+      },
+      "source_fingerprint": "ac01ba97ee1dfe33b31e27870400ce149024fdf985ef07f2debe4a08618ff4b6",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "2e87731d4c2fe142b3789dcaea8cd2fe74c0c433ea7d079e6cf78bb9306d5455"
+    },
+    "verified_source_components": {
+      "article_hash": "8319a0e752809e34",
+      "title": "21a1cbd720069b82adccc5cfb7f12f185a7209f556b162e1996300bd7eaaa54d",
+      "source_excerpt": "2c7af8e64fd84e10cb7030fc303a85acb7c685121c282db9c56a952e388d5ff1",
+      "published_at": "3c4bb19d8056b16f01d6af64eaff07d6b2c91c53d8b09fd9ba031fcd965f459e"
+    },
+    "hash": "8319a0e752809e34",
+    "published_at": "2026-09-22T14:14:07+00:00"
+  },
+  "8d5d990215d33767": {
+    "features": {
+      "event_type": "opinion",
+      "korea_relevance": 3,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "opinion",
+    "title_kr": "대미 투자 관련 국회 보고 및 여야 소통 필요성 제기",
+    "summary": "대미 투자 사업의 상업적 합리성 검증과 여야 소통을 통한 협상력 강화가 필요하다는 사설이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "[사설]대미투자 1~3호 국회에 보고… 여야 소통으로 협상 힘 실어야",
+    "link": "https://www.donga.com/news/Opinion/article/all/20260922/134723630/2",
+    "feed": "정책",
+    "domain": "donga.com",
+    "matched": "원전 수출",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "8d5d990215d33767",
+      "source_components": {
+        "article_hash": "8d5d990215d33767",
+        "title": "3f0300b076f1c5752e025334290d17ce82b3a3ce386bf4a0060f36d79042f267",
+        "source_excerpt": "1eb3b327eaf95ea7656bc90380e94f8d50644d03695ae717bb6c23af182d749e",
+        "published_at": "dfaf59cb35901f1b74869e981b44f2bea500e423f91423b71b203741553b576f"
+      },
+      "source_fingerprint": "899b40fbaab30834b3a57355075804fec211940f14a0670e0e71e0172f907652",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "7c0cffcb3d4f66d8d438453951d00af4ac9ae503c6a65a4520214a3c4f13612d"
+    },
+    "verified_source_components": {
+      "article_hash": "8d5d990215d33767",
+      "title": "3f0300b076f1c5752e025334290d17ce82b3a3ce386bf4a0060f36d79042f267",
+      "source_excerpt": "1eb3b327eaf95ea7656bc90380e94f8d50644d03695ae717bb6c23af182d749e",
+      "published_at": "dfaf59cb35901f1b74869e981b44f2bea500e423f91423b71b203741553b576f"
+    },
+    "hash": "8d5d990215d33767",
+    "published_at": "2026-09-22T14:31:00+00:00"
+  },
+  "cf6fb3077866de1b": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai"
+    ],
+    "countries": [
+      "US",
+      "SA"
+    ],
+    "article_type": "news",
+    "title_kr": "뉴욕 증시, 중동 갈등 완화 기대감 속 혼조세",
+    "summary": "미국-이란 갈등 완화 기대감과 사우디 송유관 재개 소식으로 뉴욕 증시가 혼조세를 보임.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#데이터센터",
+      "#전력수요"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "뉴욕 증시, 중동 갈등 완화 기대감 속 혼조 출발",
+    "link": "https://www.ytn.co.kr/_ln/0104_202609222354348497",
+    "feed": "정책",
+    "domain": "ytn.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "cf6fb3077866de1b",
+      "source_components": {
+        "article_hash": "cf6fb3077866de1b",
+        "title": "4d46ce71bf983d072326dc936e902669093ba04b07c3a35c1a5479adb12e0c87",
+        "source_excerpt": "334c1780b313708768bbcaec4809a5234ed23bf44303c0a0730490ed919720e6",
+        "published_at": "0aaf7877a6670844b96ecb7244269fcab17f9903636d40947ea3d365873542af"
+      },
+      "source_fingerprint": "f6361eadb64dc736e398b5661565a55bf454a2c5eb0df5e90c055e56f5f8fbf9",
+      "entities": [],
+      "countries": [
+        "IN",
+        "US"
+      ],
+      "topics": [
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [
+        "restart",
+        "review"
+      ],
+      "claims": [
+        "3.18%",
+        "4.44%",
+        "30개",
+        "0.1%",
+        "0.11%",
+        "0.44%",
+        "10월",
+        "1.15%",
+        "94.68달러",
+        "2032년",
+        "20기",
+        "11.63%"
+      ],
+      "quantities": {
+        "%": [
+          "0.1",
+          "0.11",
+          "0.44",
+          "1.15",
+          "11.63",
+          "3.18",
+          "4.44"
+        ],
+        "개": [
+          "30"
+        ],
+        "기": [
+          "20"
+        ],
+        "년": [
+          "2032"
+        ],
+        "달러": [
+          "94.68"
+        ],
+        "월": [
+          "10"
+        ]
+      },
+      "manifest_fingerprint": "05c49ae9d3b6ea502862f3044d540f5a00c5350f251e82cb13c031f27e6ac457"
+    },
+    "verified_source_components": {
+      "article_hash": "cf6fb3077866de1b",
+      "title": "4d46ce71bf983d072326dc936e902669093ba04b07c3a35c1a5479adb12e0c87",
+      "source_excerpt": "334c1780b313708768bbcaec4809a5234ed23bf44303c0a0730490ed919720e6",
+      "published_at": "0aaf7877a6670844b96ecb7244269fcab17f9903636d40947ea3d365873542af"
+    },
+    "hash": "cf6fb3077866de1b",
+    "published_at": "2026-09-22T14:54:00+00:00"
+  },
+  "3c83e8ce92527cb7": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "analysis",
+    "title_kr": "프랑스 예산 정책의 미래 영향 분석",
+    "summary": "프랑스의 예산 선택이 미래에 미칠 영향에 대한 분석 기사이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Nos choix budgétaires nous ont-ils conduits à sacrifier notre avenir ?",
+    "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxOdmY3UmxaaXhEYzl5T0JDMExPZWt4NWExdUw3ZnZoOGM4NnpyVnBrZmFMOU14NjlOMTh0QUZZN2lyal80XzlyNXRBa2NTUUxCWHhrQTBRVGRLREJZT21weGZaVGtpdnJOSUJOX2dhUVNaUDZLMkxQTWt0VGdUWGNvM3VrV3FodzJtamdPVk9GalQwY25VZ2ZqSmVHZi1NaDQyUVcyLXl5REZoNVJCMnBZYzhSeVZsUDZOR1ZZQ2JveklKQkVwOW5CWA?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "3c83e8ce92527cb7",
+      "source_components": {
+        "article_hash": "3c83e8ce92527cb7",
+        "title": "7e9559f5ad9f7dd9c3e3baa4e42cc41cca80364b2ca9729a4b1c61687bf8f03b",
+        "source_excerpt": "98f59485ce01edc1340e62e14c9c2e38dba274e35811488f2daa3b2ea99a78da",
+        "published_at": "6344794d4bddb345183ae55cd2de57cc5355efc3058437e801e54edc8324d7ba"
+      },
+      "source_fingerprint": "459708492eb4caa039fa095b16ab42bb048b9ca7effc56c66d8d9e8fe9a07a4a",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "66a599e7f4f1b450b69683b6566839ab03cf031b6912331b320786cb324fb113"
+    },
+    "verified_source_components": {
+      "article_hash": "3c83e8ce92527cb7",
+      "title": "7e9559f5ad9f7dd9c3e3baa4e42cc41cca80364b2ca9729a4b1c61687bf8f03b",
+      "source_excerpt": "98f59485ce01edc1340e62e14c9c2e38dba274e35811488f2daa3b2ea99a78da",
+      "published_at": "6344794d4bddb345183ae55cd2de57cc5355efc3058437e801e54edc8324d7ba"
+    },
+    "hash": "3c83e8ce92527cb7",
+    "published_at": "2026-09-22T14:57:41+00:00"
+  },
+  "795667a2ff313767": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "corporate",
+    "title_kr": "슈나이더 일렉트릭, AI 활용한 공장 운영 전략",
+    "summary": "슈나이더 일렉트릭이 AI를 도입하여 공장 운영 효율화를 추진함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Fermetures d'usines et création d'autres : comment Schneider Electric mise sur l'IA",
+    "link": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxOS2xYQmRBSXczRFcyXzZQZ01PQjFTdEVhSmlmdkFMdmdFa0RLc3lXU09COVYzVWE4SXRWZldCaDkydVFiVS1tdWRGcTNBUGNrTkpQV1FJX0F4MXZNN0hiZkZjTkdRNGx4OU5NU0FaXzM2TlE4WlZVWUFXRk5iTzVSNGxZMEwxdzZIVTlNRHJNbzJjTEtCZC05Q1pEc2VLdEpyeFROVk1fTEd4RGtDNXRxWWQ5TG5lRHhNekpNRlJOTVFtMHplajhpWFQxd2pYM2FuRk4zdmhqODVpdWNobVd1dEZOZDdxUQ?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "795667a2ff313767",
+      "source_components": {
+        "article_hash": "795667a2ff313767",
+        "title": "682c9fdbe494888e31593cfd6e2c28d903719e0cded328c2a18539225f68d241",
+        "source_excerpt": "a32d1e9369e89a6c9d0951fc9155ae086921e39242e2241e790d797659b77af8",
+        "published_at": "576772408cc96ff4af0af220e2cf7824d5d56ffdd9870a8b720848be886e6d53"
+      },
+      "source_fingerprint": "0f0bcb1d64ab46a20379ef24f2e9252127df240ef094a4b450ebc1a57ae17b35",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "cef8e806ef0b5d72a570a047e19c4d07ec52cecd740faa369e69fe4441836804"
+    },
+    "verified_source_components": {
+      "article_hash": "795667a2ff313767",
+      "title": "682c9fdbe494888e31593cfd6e2c28d903719e0cded328c2a18539225f68d241",
+      "source_excerpt": "a32d1e9369e89a6c9d0951fc9155ae086921e39242e2241e790d797659b77af8",
+      "published_at": "576772408cc96ff4af0af220e2cf7824d5d56ffdd9870a8b720848be886e6d53"
+    },
+    "hash": "795667a2ff313767",
+    "published_at": "2026-09-22T15:00:00+00:00"
+  },
+  "882963eb94041e60": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "기술",
+    "topics": [
+      "datacenter_ai"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "analysis",
+    "title_kr": "메타, 자율 에이전트 AI '메타 뮤즈' 상용화",
+    "summary": "메타가 스스로 판단하고 업무를 수행하는 자율 에이전트 AI '메타 뮤즈'를 상용화하며 AI 기술의 새로운 단계인 행동의 시대를 예고함.",
+    "detail": "메타가 상용화한 '메타 뮤즈'는 단순히 대화하는 챗봇을 넘어 스스로 생각하고 판단하여 현실 업무를 대행하는 자율 에이전트 AI이다. AI 기술은 대화형, 생성형, 추론형을 거쳐 자율 에이전트 단계로 진화하고 있다. 고성능 서버의 연산 열기로 인한 전력 소모와 칩 비용 문제가 AI 확산의 주요 과제로 지목된다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#AI",
+      "#데이터센터"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "[김대호 진단] 반도체 열전 (56) 메타 뮤즈(Muse).... 에이전틱AI \"진짜 혁...",
+    "link": "https://www.g-enews.com/view.php?ud=202609220916248515906806b77b_1",
+    "feed": "정책",
+    "domain": "g-enews.com",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "882963eb94041e60",
+      "source_components": {
+        "article_hash": "882963eb94041e60",
+        "title": "348ba05e703d19c872756e31cd35a93cee41e276220ef728978399766ed603dd",
+        "source_excerpt": "4277ac3415244b292345da40d4c05ddab7a281c43bc1469fc3c23ca841093539",
+        "published_at": "576772408cc96ff4af0af220e2cf7824d5d56ffdd9870a8b720848be886e6d53"
+      },
+      "source_fingerprint": "8acdc85725ec9b10d8c9d8da7eacac337cc4c2e89a4acf00dac7906eacf0d1f7",
+      "entities": [],
+      "countries": [
+        "FR",
+        "IN"
+      ],
+      "topics": [],
+      "stages": [
+        "approval"
+      ],
+      "claims": [
+        "2022년"
+      ],
+      "quantities": {
+        "년": [
+          "2022",
+          "2026"
+        ],
+        "월": [
+          "9"
+        ],
+        "일": [
+          "22"
+        ]
+      },
+      "manifest_fingerprint": "eb6d59adf40bb0288380568710f0b8bbf2c9a1ce3ec5d5712522355ee0206748"
+    },
+    "verified_source_components": {
+      "article_hash": "882963eb94041e60",
+      "title": "348ba05e703d19c872756e31cd35a93cee41e276220ef728978399766ed603dd",
+      "source_excerpt": "4277ac3415244b292345da40d4c05ddab7a281c43bc1469fc3c23ca841093539",
+      "published_at": "576772408cc96ff4af0af220e2cf7824d5d56ffdd9870a8b720848be886e6d53"
+    },
+    "hash": "882963eb94041e60",
+    "published_at": "2026-09-22T15:00:00+00:00"
+  },
+  "f789ddbe72d9b3cb": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "해외 영화 'Brothers' 관련 보도",
+    "summary": "해외 영화 'Brothers' 관련 일반 보도임.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "« Brothers » : Matthew McConaughey et Woody Harrelson font le show",
+    "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNcHVlRmplQ3VsVUdxeE9SX0RMSEtqWW5HYUMwR2VmWG9YWkVqZnAyQmxWN2gzQU5FZVBNRVBKVWttZ2hDYThHc2o1SWtWVy1NcmJGYmIyNGU1Qnlic2FYNXFNRFZjZGI0NjFpNE4xTTNzaGFYSlp5T19paWY5WENNTTl1Zlo0N01TY2hWRWdVNTBoTU10UUpMVjk2YTg5Vm90dkNIN19OSGRPY0hmdVA5OFdJcHc?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "f789ddbe72d9b3cb",
+      "source_components": {
+        "article_hash": "f789ddbe72d9b3cb",
+        "title": "cacf04d2feee547e3016c436d457c1eab735f5977fae3b540cba25b004c520ac",
+        "source_excerpt": "1190165209e51b7b032d13f7f67b25bd283b854da653c9f1f7fad72319a4021c",
+        "published_at": "39275c607435dc3d69a6e676a3489c0b71c394ba7f336686a59c23bc9817a685"
+      },
+      "source_fingerprint": "1dfcad697d4db91777d23bb97ba5d7ed805d9ace9591a290369dad6c7df97679",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "fb910a3645acd07846b7afaf9e608d66bc5cbc1b974087445423c871542575b7"
+    },
+    "verified_source_components": {
+      "article_hash": "f789ddbe72d9b3cb",
+      "title": "cacf04d2feee547e3016c436d457c1eab735f5977fae3b540cba25b004c520ac",
+      "source_excerpt": "1190165209e51b7b032d13f7f67b25bd283b854da653c9f1f7fad72319a4021c",
+      "published_at": "39275c607435dc3d69a6e676a3489c0b71c394ba7f336686a59c23bc9817a685"
+    },
+    "hash": "f789ddbe72d9b3cb",
+    "published_at": "2026-09-22T15:00:27+00:00"
+  },
+  "257cd09985bc016c": {
+    "features": {
+      "event_type": "project_milestone",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "smr",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "smr",
+      "newbuild"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "corporate",
+    "title_kr": "HD현대중공업, 울산에 발전엔진 및 SMR 주기기 공장 신설",
+    "summary": "HD현대중공업이 울산에 3GW 규모 발전엔진 공장과 SMR 주기기 제작 전용공장을 신설하기로 울산시와 투자협약을 체결함.",
+    "detail": "HD현대중공업은 울산 울주군 온산읍에 3GW 규모의 '힘센엔진' 생산기지를 건립하고, 동구 본공장 내에 SMR 주기기 제작 전용공장을 신설한다. 이번 투자는 AI 데이터센터 확장에 따른 전력 수요 대응과 글로벌 SMR 시장 선점을 위한 것이다. 울산시는 인허가 단축 및 규제 완화 등 행정 지원을 제공할 예정이다.",
+    "implication": "국내 기업의 SMR 생산 거점 확보가 구체화됨에 따라 향후 글로벌 SMR 공급망 내 국내 제조 경쟁력이 강화될 것으로 보임.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#SMR",
+      "#생산시설"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "울산시-HD현대중공업, 발전엔진·SMR 공장 신설 맞손",
+    "link": "https://www.ksilbo.co.kr/news/articleView.html?idxno=1068122",
+    "feed": "정책",
+    "domain": "ksilbo.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "257cd09985bc016c",
+      "source_components": {
+        "article_hash": "257cd09985bc016c",
+        "title": "b8f4404252f94254d493d800729e60cf23f418499081d7708240ed647a2fed67",
+        "source_excerpt": "bc0d021aece44063257138cf0f48c951215771d93ae59196dbd4db9e80bd5596",
+        "published_at": "5568612efa53d5127457a395da11d49a11e56afd279640e47785d38aa9205dcc"
+      },
+      "source_fingerprint": "d69c9ed2100c36e6eaebe5ca4ad54f6410333f4060e1923c96ef5d442523930e",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [
+        "approval",
+        "contract",
+        "shutdown"
+      ],
+      "claims": [
+        "22일",
+        "3gw"
+      ],
+      "quantities": {
+        "mw": [
+          "3000"
+        ],
+        "일": [
+          "22"
+        ]
+      },
+      "manifest_fingerprint": "30cd727e6a3706e73fbdc76b9c192953bee54e034164fed439f8a35e7d0e6eaf"
+    },
+    "verified_source_components": {
+      "article_hash": "257cd09985bc016c",
+      "title": "b8f4404252f94254d493d800729e60cf23f418499081d7708240ed647a2fed67",
+      "source_excerpt": "bc0d021aece44063257138cf0f48c951215771d93ae59196dbd4db9e80bd5596",
+      "published_at": "5568612efa53d5127457a395da11d49a11e56afd279640e47785d38aa9205dcc"
+    },
+    "hash": "257cd09985bc016c",
+    "published_at": "2026-09-22T15:02:00+00:00"
+  },
+  "599b8df456c3f824": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "프랑스 L'Isle-Adam 지역 시설 관련 보도",
+    "summary": "프랑스 지역 시설 관련 일반 보도임.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "A L'Isle-Adam, la maison des Joséphites s'offre une seconde jeunesse",
+    "link": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxOY3ZmYUxpRWZ6Ukh0dTVhNVdZaG5QbURoNncxeGJscG1QOW1URXQ2UjdKeEJlbXdXUGVZeU5Lajd0MzNLU3lCc093c3lqYW81NDFjWXE2QW9xSjY3SXowcFJFWWpDUUVpTmFrbFZ3bDcybm1FenlndmIxUGdQUnJUMXFxeXhCOTJtQkV0MjduQkt0MEJoSklHQWtoZVFkbkw2czFDMjRqRGsyaklmeTktUkZqMDEzRTZiWlp1QlRxX2I?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "599b8df456c3f824",
+      "source_components": {
+        "article_hash": "599b8df456c3f824",
+        "title": "831918099308e2583227383f96ab48754b4f801ead0cebee509b259896eb31c6",
+        "source_excerpt": "3d3d53939c427a8651bec649a1bc292d1fdd1c21236e9f299039ea24e3746c2c",
+        "published_at": "4e02e8b2814f236cd16f76f9f1ce95482b8407f9f2ca8db5e6d8be5a9e752b19"
+      },
+      "source_fingerprint": "8d8e70cbcbec35525a2194a6ef78927b51fb735c268116d3aa5817b08ebebd16",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "79ef5bdc63466a172a755dba5afeecb3431d0066e4a3723d436f6052c9ef566d"
+    },
+    "verified_source_components": {
+      "article_hash": "599b8df456c3f824",
+      "title": "831918099308e2583227383f96ab48754b4f801ead0cebee509b259896eb31c6",
+      "source_excerpt": "3d3d53939c427a8651bec649a1bc292d1fdd1c21236e9f299039ea24e3746c2c",
+      "published_at": "4e02e8b2814f236cd16f76f9f1ce95482b8407f9f2ca8db5e6d8be5a9e752b19"
+    },
+    "hash": "599b8df456c3f824",
+    "published_at": "2026-09-22T15:02:54+00:00"
+  },
+  "e3358e4e91d5cc45": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 1,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "수요회 회원기관, 추석 맞이 지역 상생 활동 전개",
+    "summary": "수요회 소속 13개 기관이 추석을 맞아 전통시장 장보기와 취약계층 지원 등 지역 상생 활동을 실시했다.",
+    "detail": "13개 기관·단체 모임인 수요회 회원기관들이 추석을 앞두고 전통시장 장보기와 취약계층 지원, 소상공인 금융지원 등 지역 상생 활동을 잇달아 펼쳤다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "기관·단체 모임 '수요회' 추석 맞이 릴레이 상생 실천",
+    "link": "https://www.kado.net/news/articleView.html?idxno=2074577",
+    "feed": "정책",
+    "domain": "kado.net",
+    "matched": "한국수력원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "e3358e4e91d5cc45",
+      "source_components": {
+        "article_hash": "e3358e4e91d5cc45",
+        "title": "6055ee8c686905a8ebd1677aca3caa2740c7cc282446cb21205e34eebbc705a0",
+        "source_excerpt": "f8e592fa10a919cad1a42d21d7479f311be70208b70ba798ac26f7fea5af4124",
+        "published_at": "23ab0c61db51fadde3310205f00daae5e4106a57bc7825212b66804b8d97536a"
+      },
+      "source_fingerprint": "4b5eb8a9eaa3e137b3f867d6d068cb0aa34dddc4d91101c1b55b9e6de6a0170e",
+      "entities": [
+        "khnp"
+      ],
+      "countries": [
+        "KR"
+      ],
+      "topics": [],
+      "stages": [
+        "cancellation"
+      ],
+      "claims": [
+        "15일",
+        "18일",
+        "13개"
+      ],
+      "quantities": {
+        "개": [
+          "13"
+        ],
+        "일": [
+          "15",
+          "18"
+        ]
+      },
+      "manifest_fingerprint": "5538d9ca235d829b9ed3ee99a9342df29eeb7a9fe6cde9a32d9fdf0ac96a1be3"
+    },
+    "verified_source_components": {
+      "article_hash": "e3358e4e91d5cc45",
+      "title": "6055ee8c686905a8ebd1677aca3caa2740c7cc282446cb21205e34eebbc705a0",
+      "source_excerpt": "f8e592fa10a919cad1a42d21d7479f311be70208b70ba798ac26f7fea5af4124",
+      "published_at": "23ab0c61db51fadde3310205f00daae5e4106a57bc7825212b66804b8d97536a"
+    },
+    "hash": "e3358e4e91d5cc45",
+    "published_at": "2026-09-22T15:07:00+00:00"
+  },
+  "ee70a9db485ef368": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "프랑스 오드센 지역 하수 처리 사업자 선정",
+    "summary": "프랑스 오드센 지역의 하수 처리 사업자 선정 관련 일반 보도임.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Eaux usées : huit communes des Hauts-de-Seine cherchent leur prochain concessionnaire",
+    "link": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxNLWFReXMzeFFIczJxWU91RlcxXzB2WkZKUzBlczA0NGhiYzN6UU9hZlNZVkQzTGxoTkpFWjdJNVdMd29sQWd1T3M5NjdGc3FmRDB4WDRXVE4wUi1XQldJNVF3aVRlb0hqdUJId1pSbmx5Q1QwemtlckxvdWt6ZDBfWlBkajB0Qi1BQzByVVB0RXpsVnBCaElOR19mZHB0eG9NS2xMYmg4RHE4eFpoZzJmQkJLTmlMU3hGUFhfckZNZXgyRVpoTFBxRzNHWHowUDZrc0FVWmdhMWM?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "ee70a9db485ef368",
+      "source_components": {
+        "article_hash": "ee70a9db485ef368",
+        "title": "a8d7b60257b112855de6821a7196d5be1f4394a7bf01ab411fa3c219c1d4e7ba",
+        "source_excerpt": "f7b5182cc262d519c7f8a970de167ddd38841b72bcb270de307672477ad28d40",
+        "published_at": "f606306d164705b6ea9de50cdd8685a39d5f1747dc3cf9f71da13a443a154f19"
+      },
+      "source_fingerprint": "4964318b1eb3f3dfe05a68bea96733f0c49bb711ab912a3a30de82854724078b",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "85b7759f650eb59a365b3964745305ea298c435dd11ee116e107016f12270927"
+    },
+    "verified_source_components": {
+      "article_hash": "ee70a9db485ef368",
+      "title": "a8d7b60257b112855de6821a7196d5be1f4394a7bf01ab411fa3c219c1d4e7ba",
+      "source_excerpt": "f7b5182cc262d519c7f8a970de167ddd38841b72bcb270de307672477ad28d40",
+      "published_at": "f606306d164705b6ea9de50cdd8685a39d5f1747dc3cf9f71da13a443a154f19"
+    },
+    "hash": "ee70a9db485ef368",
+    "published_at": "2026-09-22T15:22:07+00:00"
+  },
+  "d2ac8b136347ac26": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "프랑스 독립 게임 'Cairn' 성공 보도",
+    "summary": "프랑스 독립 게임 'Cairn'의 성공 관련 일반 보도임.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "« Cairn », le succès de l'année 2026 dans le jeu vidéo indépendant français",
+    "link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxQUGFESXdsbDFQS2FSVTlycFdUaVF0TnRYcGJXVGhNX0pualB1WGdaRGJPc3JMcDVLcVdkVHJSM2w2UGpadHRwN2NrdTdMVmszOHJYRTFQUVkzdDB3Yk9KWEFoR3ZxWHNGS2g1STE4dTBYNDJLdmItd2R3bk5RQkNUdWZMcFFhU285RnhnWnpOUVMxaW9FQ3dLbW5jVzNQRmpiY2h4X1pMcDRaallxeFVvZG9KUEt2WU1fLTY1dWZPcw?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "d2ac8b136347ac26",
+      "source_components": {
+        "article_hash": "d2ac8b136347ac26",
+        "title": "14e97ace7ffaba2c3138a8b0204b6821cfa37f4bb4c07204b690a2ad0c92ebda",
+        "source_excerpt": "ba99bbfe158fb41820ce2fb620efff44f0df5ce4f2906ab548eef979e3d20b5f",
+        "published_at": "8c6c0ce7d61bdb1a4b666b4e79f4f16baace8c90bb3dcf24cda4df7aa81eb28c"
+      },
+      "source_fingerprint": "828d7338141841a4bfdbfc18a5a6ab2ad51e238d4097c9be82232d753861d5b8",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "43403a641446091d3144427f1fa632d0156462ffcb5ed677835b9c064d0b7cd9"
+    },
+    "verified_source_components": {
+      "article_hash": "d2ac8b136347ac26",
+      "title": "14e97ace7ffaba2c3138a8b0204b6821cfa37f4bb4c07204b690a2ad0c92ebda",
+      "source_excerpt": "ba99bbfe158fb41820ce2fb620efff44f0df5ce4f2906ab548eef979e3d20b5f",
+      "published_at": "8c6c0ce7d61bdb1a4b666b4e79f4f16baace8c90bb3dcf24cda4df7aa81eb28c"
+    },
+    "hash": "d2ac8b136347ac26",
+    "published_at": "2026-09-22T15:34:47+00:00"
+  },
+  "b64696464d14d6e6": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "프랑스, 러시아 올리가르히 제재 명단 제외 이유 보도",
+    "summary": "프랑스가 러시아 올리가르히를 제재 명단에서 제외한 이유에 대한 일반 보도임.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Guerre en Ukraine : pourquoi la France a fait retirer un oligarque russe d'une liste de sanctions européennes",
+    "link": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxQX3lLLUtMeDFwc3JLMjlrYWQ5VFp3eXZOdmdxZzhiM2FiVGNRUHJFc3U0emxibkdtb1BTcVRIZF9aT1JYRVVpaVZLUUdXMF9nSFZYb3N4UW5mek5Tb0J1SEFwVk9SMlZVNFA2Z0RhaE96R1RYcy1SUExYSmFKN3lvRTh4TkZCZFZPbDdzdHpNX2dESjBrMDJGekIzamVYYmFSSWpMT19jai1VbmEyYVp6dHdzb1BaNTBMY0tsRDFic0FENUxKWjZjNVVGajRtbWJrZmo3S2VxXzJzWERLWjhvcEJhMV9yQQ?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "b64696464d14d6e6",
+      "source_components": {
+        "article_hash": "b64696464d14d6e6",
+        "title": "2651b98d0b1348c0726a129f2cabebff33f5b70d8ef7769520391e348532fc46",
+        "source_excerpt": "5569c575e426a8bf5096f07cf2ad703c2ea19a369c183bb7be73de441570085a",
+        "published_at": "ceb993fd58fbd354835172a04e125c29a27168e5e22664248ae72a4a72b12ee5"
+      },
+      "source_fingerprint": "76dc04a8fe0a5580ead075f8a28800f7bec012585acb596bd0b032bb2c13334e",
+      "entities": [],
+      "countries": [
+        "FR",
+        "UA"
+      ],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "ee43e02bc7b30dea62bb93376eb77e8b799a9ff342a11e9bca4d86a380654484"
+    },
+    "verified_source_components": {
+      "article_hash": "b64696464d14d6e6",
+      "title": "2651b98d0b1348c0726a129f2cabebff33f5b70d8ef7769520391e348532fc46",
+      "source_excerpt": "5569c575e426a8bf5096f07cf2ad703c2ea19a369c183bb7be73de441570085a",
+      "published_at": "ceb993fd58fbd354835172a04e125c29a27168e5e22664248ae72a4a72b12ee5"
+    },
+    "hash": "b64696464d14d6e6",
+    "published_at": "2026-09-22T15:41:40+00:00"
+  },
+  "beb2143344044aa5": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 2,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "기술",
+    "topics": [
+      "power_market",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "policy",
+    "title_kr": "정부, 차세대 탠덤 태양전지 상용화 추진…이론 효율 44% 목표",
+    "summary": "정부가 실리콘 태양전지의 한계를 극복하기 위해 페로브스카이트-실리콘 탠덤 태양전지 기술 개발과 상용화를 본격 추진한다.",
+    "detail": "기후에너지환경부는 결정질 실리콘 위에 페로브스카이트를 얹은 탠덤 태양전지의 조기 상용화를 추진한다. 정부는 지난해 셀 효율 30%, 모듈 효율 28%를 목표로 제시했으며, 탠덤 기술의 이론적 한계 효율은 44%에 달한다. 이번 기술 개발은 국토 면적 제약이 있는 국내 환경에서 단위 면적당 발전량을 극대화하여 AI 데이터센터 등 첨단산업의 전력 수요에 대응하기 위한 전략이다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#태양광",
+      "#탠덤전지"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "태양전지 효율 44%까지…정부, 중국산과 '가격' 아닌 '기술'로 승부",
+    "link": "https://www.esgeconomy.com/news/articleView.html?idxno=16824",
+    "feed": "정책",
+    "domain": "esgeconomy.com",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "beb2143344044aa5",
+      "source_components": {
+        "article_hash": "beb2143344044aa5",
+        "title": "f1b9c552dcbf5c7da7132f4628414854a4c46d2436d20ed4ccd574e348a7c229",
+        "source_excerpt": "334601fb2b69af777bccb89d0feb45be81e73b599b423c81fec733f53953c3f5",
+        "published_at": "9a7f06bcdf8f9ded762012416fadd99691062928fc3f060db6987bfbdec34b5f"
+      },
+      "source_fingerprint": "ec1e3be168b9f87fe23a3f6a866b1834cb071b3ae1d2f9a2e7a65bb0d49cf44d",
+      "entities": [],
+      "countries": [
+        "CN",
+        "KR"
+      ],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "44%",
+        "21일",
+        "10일",
+        "30%"
+      ],
+      "quantities": {
+        "%": [
+          "28",
+          "30",
+          "44"
+        ],
+        "일": [
+          "10",
+          "21"
+        ]
+      },
+      "manifest_fingerprint": "9f84bfa5e821b6c64540198766515fc6476e38d7e8e7c51049ba72b305d386ac"
+    },
+    "verified_source_components": {
+      "article_hash": "beb2143344044aa5",
+      "title": "f1b9c552dcbf5c7da7132f4628414854a4c46d2436d20ed4ccd574e348a7c229",
+      "source_excerpt": "334601fb2b69af777bccb89d0feb45be81e73b599b423c81fec733f53953c3f5",
+      "published_at": "9a7f06bcdf8f9ded762012416fadd99691062928fc3f060db6987bfbdec34b5f"
+    },
+    "hash": "beb2143344044aa5",
+    "published_at": "2026-09-22T15:44:00+00:00"
+  },
+  "63804faed566f849": {
+    "features": {
+      "event_type": "regulatory_action",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "규제",
+    "topics": [
+      "datacenter_ai",
+      "regulation"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "policy",
+    "title_kr": "미국 버지니아주, 데이터센터 책임성 프레임워크 행정명령 발표",
+    "summary": "버지니아주가 데이터센터의 전력·물 사용과 환경 영향을 관리하는 '데이터센터 책임성 프레임워크' 행정명령을 발표함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#데이터센터",
+      "#규제"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "VA, 데이터센터 규제 행정명령",
+    "link": "http://www.koreatimes.com/article/1630752",
+    "feed": "정책",
+    "domain": "koreatimes.com",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "63804faed566f849",
+      "source_components": {
+        "article_hash": "63804faed566f849",
+        "title": "9a6cc781d1d14ac6bf8a4c29c4f2f3bdc86aec0777d19076965bb83397dda9c2",
+        "source_excerpt": "113b48227aac8816fdfa08eb2e0907b3d9cd1a30268a7df222d9ddcf96084690",
+        "published_at": "9a7f06bcdf8f9ded762012416fadd99691062928fc3f060db6987bfbdec34b5f"
+      },
+      "source_fingerprint": "df39e0688ed1097e146abd41141668f4ab66d85bcd3d9037fe81bc3b2cc36421",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "18일"
+      ],
+      "quantities": {
+        "일": [
+          "18"
+        ]
+      },
+      "manifest_fingerprint": "e47fafecfd89db6b078ef0808c72cfd3218105dcb8900ac833865180fb93d091"
+    },
+    "verified_source_components": {
+      "article_hash": "63804faed566f849",
+      "title": "9a6cc781d1d14ac6bf8a4c29c4f2f3bdc86aec0777d19076965bb83397dda9c2",
+      "source_excerpt": "113b48227aac8816fdfa08eb2e0907b3d9cd1a30268a7df222d9ddcf96084690",
+      "published_at": "9a7f06bcdf8f9ded762012416fadd99691062928fc3f060db6987bfbdec34b5f"
+    },
+    "hash": "63804faed566f849",
+    "published_at": "2026-09-22T15:44:00+00:00"
+  },
+  "4a0ac9f41b6910fc": {
+    "features": {
+      "event_type": "incident_safety",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "DE",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "독일 내 미군 전투기 추락 사고 발생",
+    "summary": "독일에서 미군 전투기가 추락하는 사고가 발생함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "US fighter jet crashes in Germany",
+    "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxOUFJLekVTQWJIbWRTYk1Bd016SlJHUjIwbVM3U2R3OE1BSU4zQjBXWFdnVWhwLWpGeDljc2YyWVJtWGxGeHRyRzc4QURjNWFLWEVHcEpLV0JsVXNIMGtMdV8tYlhrOU9Pb1IxLTBmT1VKYjBJQy1yR1hJSmppdGQxSjhyNEQ?oc=5",
+    "feed": "정책",
+    "domain": "ft.com",
+    "matched": "FT 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "4a0ac9f41b6910fc",
+      "source_components": {
+        "article_hash": "4a0ac9f41b6910fc",
+        "title": "c58c2fa161c9c2c00db381ab1762d10c486aaebbe8bdc89ca13f2220141729f3",
+        "source_excerpt": "dcabe867f5d6fbdb4358b9ba75e361b56f98147f597c47eb495f0e6cb87cb52b",
+        "published_at": "6cfa265d9b2d7a08cb7404ba9f7060d73e6d2c995a40895d084d68d00d47ce91"
+      },
+      "source_fingerprint": "ade6f9ba54cd2daf6132858c5be035af9b44819883edc49f3a54d51857040d8a",
+      "entities": [],
+      "countries": [
+        "US"
+      ],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "9b7775267cf405ca476788a3b7fce0962c38c78ee4d62065416c4f4ccd54a4a4"
+    },
+    "verified_source_components": {
+      "article_hash": "4a0ac9f41b6910fc",
+      "title": "c58c2fa161c9c2c00db381ab1762d10c486aaebbe8bdc89ca13f2220141729f3",
+      "source_excerpt": "dcabe867f5d6fbdb4358b9ba75e361b56f98147f597c47eb495f0e6cb87cb52b",
+      "published_at": "6cfa265d9b2d7a08cb7404ba9f7060d73e6d2c995a40895d084d68d00d47ce91"
+    },
+    "hash": "4a0ac9f41b6910fc",
+    "published_at": "2026-09-22T15:46:03+00:00"
+  },
+  "b2f7cd2aa3fd4bcd": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 2
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "newbuild",
+      "power_market"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "정부, 원전 역할 공론화 추진으로 제12차 전력수급기본계획 연말까지 연기",
+    "summary": "정부가 원전 역할에 대한 3개월간의 공론화 계획을 발표함에 따라, 10월 예정이었던 제12차 전력수급기본계획 확정이 연말로 지연됨.",
+    "detail": "정부는 반도체 클러스터 전력 공급을 위해 원전 건설 기간 단축을 검토했으나, 22일 원전 역할에 대한 3개월간의 공론화 계획을 발표했다. 이로 인해 당초 10월로 예정되었던 제12차 전력수급기본계획 수립이 연말로 미뤄졌다. 현재 공론화의 구체적인 목표와 정책 반영 기준은 확정되지 않은 상황이다.",
+    "implication": "전력수급기본계획의 지연은 반도체 등 첨단산업 전력 공급 로드맵의 불확실성을 높이며, 향후 공론화 결과가 원전 비중 및 건설 일정에 미칠 영향이 관건임.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#전력수급기본계획",
+      "#원전정책"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "정부 “원전 공론화”… 반도체 전격전 한다면서 전력 수급은 늦춰",
+    "link": "https://www.chosun.com/economy/economy_general/2026/09/23/JUKFVCYYJVDGJAJ4W56ZQK54FA",
+    "feed": "정책",
+    "domain": "chosun.com",
+    "matched": "전력수급기본계획",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "b2f7cd2aa3fd4bcd",
+      "source_components": {
+        "article_hash": "b2f7cd2aa3fd4bcd",
+        "title": "9fd9c1d9f35c5c7022bf1a2ba7a16f008d2efab10a29420b22f64f1708d92d18",
+        "source_excerpt": "55418ff60b9bf57ad04277f156e2ed05050e8a431ad82354206cc404125fccae",
+        "published_at": "64666b8430ab498cced6cd08c2e368f89188b3d4a532615ae518f2798814293d"
+      },
+      "source_fingerprint": "52051d3ae932712d0abccd3f1e391ce0d2629dc98b9d68ca5c32985ff062efd0",
+      "entities": [
+        "basic-plan"
+      ],
+      "countries": [],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [
+        "approval"
+      ],
+      "claims": [
+        "22일",
+        "10월"
+      ],
+      "quantities": {
+        "개": [
+          "3"
+        ],
+        "월": [
+          "10"
+        ],
+        "일": [
+          "22"
+        ]
+      },
+      "manifest_fingerprint": "6ea4b9dd06587750aff88904ef673c08ee093f97ba0686551e5d450364aaabec"
+    },
+    "verified_source_components": {
+      "article_hash": "b2f7cd2aa3fd4bcd",
+      "title": "9fd9c1d9f35c5c7022bf1a2ba7a16f008d2efab10a29420b22f64f1708d92d18",
+      "source_excerpt": "55418ff60b9bf57ad04277f156e2ed05050e8a431ad82354206cc404125fccae",
+      "published_at": "64666b8430ab498cced6cd08c2e368f89188b3d4a532615ae518f2798814293d"
+    },
+    "hash": "b2f7cd2aa3fd4bcd",
+    "published_at": "2026-09-22T15:49:00+00:00"
+  },
+  "5f0a422fa1546ca1": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 2,
+      "market_materiality": 2,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "analysis",
+    "title_kr": "텍사스 가스복합발전소 30조 투자, 데이터센터 전력 수요 불확실성 제기",
+    "summary": "정부가 텍사스 엔시날 가스복합발전소에 30조 원을 투자하나, 데이터센터 전력 수요의 과다 계상 및 규제 변수로 인한 상업적 성과 우려가 제기됨.",
+    "detail": "정부는 텍사스 엔시날 가스복합발전소에 30조 원을 투자하여 20년간 원금 회수를 목표로 하고 있다. 그러나 데이터센터 전력 수요가 중복·과다 집계되는 '유령 수요' 가능성과 현지 규제 변수로 인해 실제 상업적 성과 달성에 대한 우려가 지속되고 있다.",
+    "implication": "해외 전력 인프라 투자 시 데이터센터 수요의 실체 파악과 현지 계통 규제 리스크 관리가 투자 회수의 핵심 변수로 작용함.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#해외투자",
+      "#전력수요"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "텍사스 발전소에 30조 투자, 전기 사줄 기업 확보했나",
+    "link": "https://www.chosun.com/economy/industry-company/2026/09/23/LCMFVMU4PFF23DO62NX2A34BVI",
+    "feed": "정책",
+    "domain": "chosun.com",
+    "matched": "송전망 건설",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "5f0a422fa1546ca1",
+      "source_components": {
+        "article_hash": "5f0a422fa1546ca1",
+        "title": "135ce37ea6237cf61c6c79527eaf9e86afe1cb74f5b5b68400c083583aa262bf",
+        "source_excerpt": "f96640fc24fb10bc756a8fe988cc88f2c0da9d551f1a2c5ced0fb0d20663df8b",
+        "published_at": "64666b8430ab498cced6cd08c2e368f89188b3d4a532615ae518f2798814293d"
+      },
+      "source_fingerprint": "88c6c4677c5325e222322a80c78094e7aec5e16d686333b930754458a9b5df7c",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "grid"
+      ],
+      "stages": [],
+      "claims": [
+        "30조원"
+      ],
+      "quantities": {
+        "년": [
+          "20"
+        ],
+        "조원": [
+          "30"
+        ]
+      },
+      "manifest_fingerprint": "22f334a79c64f33f4ff7f327e48f3652a8da0a6b86ecdb14671328e5a1cbd784"
+    },
+    "verified_source_components": {
+      "article_hash": "5f0a422fa1546ca1",
+      "title": "135ce37ea6237cf61c6c79527eaf9e86afe1cb74f5b5b68400c083583aa262bf",
+      "source_excerpt": "f96640fc24fb10bc756a8fe988cc88f2c0da9d551f1a2c5ced0fb0d20663df8b",
+      "published_at": "64666b8430ab498cced6cd08c2e368f89188b3d4a532615ae518f2798814293d"
+    },
+    "hash": "5f0a422fa1546ca1",
+    "published_at": "2026-09-22T15:49:00+00:00"
+  },
+  "d3b6a330ddb2df3a": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "EUROPE"
+    ],
+    "article_type": "news",
+    "title_kr": "폴리마켓(Polymarket)의 유럽 내 로비 활동 배경 분석",
+    "summary": "예측 시장 플랫폼 폴리마켓이 유럽 시장 진출을 위해 로비 활동을 전개하는 배경을 다룬 영상 보도이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "VIDEO - Pourquoi Polymarket fait du lobbying en Europe",
+    "link": "https://news.google.com/rss/articles/CBMisgFBVV95cUxQMDJJMmpMazN0OXN2S0t4MWpLVHJJQ3RNbC1DQUVMcG0wX1o4RnlGLTRSQnIxZGFVNGRIUF8yU1BxeURDckk3azkzZzViY1V2b2p1a01zOWJKcEF2Y1oxb3ZmZk9Ja0szeXBscnU5NlJMUDhXX2o4VHRtZ0RTSkttS0REdXoxRHBxMVhPS1BUaDgtSk1GTE1XNFBRemlDXzdVWnhrTzZnUWRIaFFIZnFjWVJ3?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "d3b6a330ddb2df3a",
+      "source_components": {
+        "article_hash": "d3b6a330ddb2df3a",
+        "title": "cb866b2075034f1f5f2bd641c632d798cce043318d838b742dee484d3bac833f",
+        "source_excerpt": "e180d9d67c011979e8a6355cef228add6d26dc10560ae1977c0a812f730d9cee",
+        "published_at": "4007069ed9a74c485281cdffd4c0aec40c418bb336c18c3dc0b3dd65c822cfc8"
+      },
+      "source_fingerprint": "7be087f52adddf17a4ab216379b05ad7c98797b0503e872e017cc6286c4360d7",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "1cf4c8f04d1f869355de23f7d6f6cdd41562e9a9fce686914639096a37d5d4b1"
+    },
+    "verified_source_components": {
+      "article_hash": "d3b6a330ddb2df3a",
+      "title": "cb866b2075034f1f5f2bd641c632d798cce043318d838b742dee484d3bac833f",
+      "source_excerpt": "e180d9d67c011979e8a6355cef228add6d26dc10560ae1977c0a812f730d9cee",
+      "published_at": "4007069ed9a74c485281cdffd4c0aec40c418bb336c18c3dc0b3dd65c822cfc8"
+    },
+    "hash": "d3b6a330ddb2df3a",
+    "published_at": "2026-09-22T15:49:24+00:00"
+  },
+  "525e282ed44d3f80": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "양말 제조사 BV 스포츠, 타겟 시장 다변화",
+    "summary": "양말 제조사 BV 스포츠가 타겟 시장을 다변화하고 있음.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Le fabricant de chaussettes BV Sport diversifie ses cibles",
+    "link": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxNdlpEbVpRb3hOREM4UWtXOWdPUmJCWWtpZ1R3cENQZF83ZWV0V3V4UmhyRlV3U0tOUmxGVlk1ODd6ZE1oMXY4anpzRnNYZ3psRURRNEwwUHE3VFExMDlBQk9pLVJuTnVzSVAxSDFELUFVU0xmR0E1WHl0UFJieEU1STBmai1IZlBJNmVFNF9fS1RoVXNOekptQTVKZ2hWSVl3dTQ4eld5bHMtY0lBUlBvMVl0VEM0c25Dd0tzaEJCQ0g?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "525e282ed44d3f80",
+      "source_components": {
+        "article_hash": "525e282ed44d3f80",
+        "title": "18996c1b8d74f30831ddb4f3a1609e04ce5989120c7df2e6e91a289e393f477c",
+        "source_excerpt": "cc614a02b1f4926e8e98cc85de6e4c2533fc819dc822a954a428f41f5b8b0cd4",
+        "published_at": "3c482379a0d8301172a85c6663fa241a867bdc0fd3e92c92dc647f18e8dd153b"
+      },
+      "source_fingerprint": "a1468973e0121c93d16f99c428d7a354863786573346873dd1a8bbf7358d7efd",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "8962da12997c6b551d484b9025c197a32ce54c359956392ad9aca03e6cea7754"
+    },
+    "verified_source_components": {
+      "article_hash": "525e282ed44d3f80",
+      "title": "18996c1b8d74f30831ddb4f3a1609e04ce5989120c7df2e6e91a289e393f477c",
+      "source_excerpt": "cc614a02b1f4926e8e98cc85de6e4c2533fc819dc822a954a428f41f5b8b0cd4",
+      "published_at": "3c482379a0d8301172a85c6663fa241a867bdc0fd3e92c92dc647f18e8dd153b"
+    },
+    "hash": "525e282ed44d3f80",
+    "published_at": "2026-09-22T15:49:35+00:00"
+  },
+  "5a4e4f46ac5af400": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "기술",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "철도 산업, 기후변화 대응을 위한 고온 운행 기술 개발",
+    "summary": "철도 산업이 기후변화에 대응하여 55도 고온에서도 운행 가능한 열차 기술을 개발 중임.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "« On sait faire des trains capables de rouler par 55 degrés » : la course de vitesse de l'industrie ferroviaire pour ralentir les effets du changement climatique",
+    "link": "https://news.google.com/rss/articles/CBMixwJBVV95cUxOTURrNWpVU1k0R3IwQU8yTW5ycGdZTzRNbXZWcGdJaW15TGxwT01wNHdCRDBTVmd2YlZhUTlDcGtJd3o2MlY0bGd5T3p2bUY4TzFZd1BCNUlhVE9ZV242WHczZUpyOGxaNWhoNm1RYUJHcFpxOWVFT2lhV19RUTRzYUc3c3pFdjFUYXkyNDNDNDhvbU5xdng2YUEtejNvRGRSdTVfVUJTc29tX19KcTZ4cXZQQWh1Zkl1T2RPYmJBS182VGtXTFlOdGsySjVVbDUzcC1VdFhaQTl5RXpxMlR3NTdmOTVuWE1uS0x5dUd6RFNIQVVYRU9OcXMtcWxDZU91dXpqRkh2Vy1WdHB0TFpLSThXdFBOM1VNOXZFRkpBMTcwWHFBcU1vZy11TGdSM1ZXVXZmMy0zbHQ5ZlJna1EwM0VlZnVLUVk?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "5a4e4f46ac5af400",
+      "source_components": {
+        "article_hash": "5a4e4f46ac5af400",
+        "title": "f84d4c04003c0d69f696e1a86d972ef772b7080a1251d88cf8c3866989efe5f5",
+        "source_excerpt": "cac15d291ce6e0bf4ef8fb55e4dc5bfb2dcb550fbc3e718af01248cc49cd5fb4",
+        "published_at": "15bc0cf5cbc9341f7920003c76dac03ce25392f0483928bbe12de487a85cb895"
+      },
+      "source_fingerprint": "93709d88f6573ae685c9480658612164a642db94789c83ae2bb9899c88419840",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "par55"
+      ],
+      "quantities": {},
+      "manifest_fingerprint": "fd697906a0acbcc60c7378eff48f5ba39097bf095c97dd7d5ac1bef48ad4abc5"
+    },
+    "verified_source_components": {
+      "article_hash": "5a4e4f46ac5af400",
+      "title": "f84d4c04003c0d69f696e1a86d972ef772b7080a1251d88cf8c3866989efe5f5",
+      "source_excerpt": "cac15d291ce6e0bf4ef8fb55e4dc5bfb2dcb550fbc3e718af01248cc49cd5fb4",
+      "published_at": "15bc0cf5cbc9341f7920003c76dac03ce25392f0483928bbe12de487a85cb895"
+    },
+    "hash": "5a4e4f46ac5af400",
+    "published_at": "2026-09-22T15:50:14+00:00"
+  },
+  "0fbf2c163b18fac8": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "트럼프 행정부와 제약사 간 비밀 합의 내용 공개",
+    "summary": "트럼프 전 대통령 재임 시절 제약사들과 맺은 약가 관련 비밀 합의 내용과 그 파장을 분석한 보도이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Prix des médicaments : ce que révèlent les accords secrets des laboratoires avec Trump",
+    "link": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxQMjdNNXBBaVZCTzN3djNmVGlBemR1d3VfU2w2NGQwSFV2QmNRTkFpR0RDckFrNy1SOTJfZHNuZFJyRWxUWjRya3phR1l4QURRWm16SXJPb0pvNklybTUxYUltTFVZMHN2Qmh1RmZZWVBhaGdqZ3BfVUdTYVlET25ZNkZYWWJqVkxtZVhLSG1MU1pNaWt1eFFuN2wyS1JnZzFNdmZFOGl5TjdHLXdaVDQ2X1NHeF9LVTVTMlNqbE1FdDRCNHdSTFZaUjRBdXhpSGVqOHlmTkJFbDJ1bjN0aGhuOVZ0eWhRdw?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "0fbf2c163b18fac8",
+      "source_components": {
+        "article_hash": "0fbf2c163b18fac8",
+        "title": "08029bc0d86fae96feb744469388c8a6149155737a947839c6f9140f79636991",
+        "source_excerpt": "b833b752d7aff079e8087b7e415189f075b9b3d7c354fc2ae9002d9031533cfd",
+        "published_at": "09b8765466112bcbce305f9d4a8eaa09abd1ab3c73ae50526f31646cb8a89540"
+      },
+      "source_fingerprint": "db6c1759f728e8205d4836cd2536e16485db2d61f49b8f03c355825ff18302a4",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "8b917b9f7a283fd4c284817e7650e05315e0d68603bd21a31c22eb7e86968edb"
+    },
+    "verified_source_components": {
+      "article_hash": "0fbf2c163b18fac8",
+      "title": "08029bc0d86fae96feb744469388c8a6149155737a947839c6f9140f79636991",
+      "source_excerpt": "b833b752d7aff079e8087b7e415189f075b9b3d7c354fc2ae9002d9031533cfd",
+      "published_at": "09b8765466112bcbce305f9d4a8eaa09abd1ab3c73ae50526f31646cb8a89540"
+    },
+    "hash": "0fbf2c163b18fac8",
+    "published_at": "2026-09-22T15:50:52+00:00"
+  },
+  "2e8d2ad382a2da1f": {
+    "features": {
+      "event_type": "opinion",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "opinion",
+    "title_kr": "에두아르 필리프의 2027년 대선 행보 비판",
+    "summary": "에두아르 필리프 전 프랑스 총리의 2027년 대선 출마 관련 정치적 행보를 비판하는 칼럼이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Présidentielle 2027 : Edouard Philippe, arrêtez de jouer la comédie",
+    "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPUjhta3BzMXdTZHpwd0tFc3Bqb0UzZTd2Rm5UeHFyNEdSZ0hJRF93aTNqYjVHaXh1M0ZmYkxSUXZUNWotYnF5dElXSWQ0RHV4MC1uMFdkdmVWbDhUaTNMcXdtdVk3aFE5czB1eDlvOVdiTjJJekNDazh4UEFXZnhNNXAyVmg4bVFZbWNjQ255Ty1Lc0JlYVZ3MDlEcFhEdlZQWG9UVGRFejNBRjNEZm56cXJ0WnMyUQ?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "2e8d2ad382a2da1f",
+      "source_components": {
+        "article_hash": "2e8d2ad382a2da1f",
+        "title": "60eedef6180347b926c2a44b4c70d699b9539931d5136dca70cb1384ce17e08d",
+        "source_excerpt": "568e5b48b6a71d3230e5f9d97c9a01b437c022697d2f002c649ac6c0d50aca0a",
+        "published_at": "3b99ef180e6b7fd22c442f5dc2c8060698216bdab3f70b445b08c5ee9bfb02db"
+      },
+      "source_fingerprint": "e73835f809ddb3d22106cb4b2bd04afee036606ff1e5097c0790e912e4a90f77",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "fb6f806456dd988f9a4c7b041819971ce84e9de0e852ca5561ceec1530468d89"
+    },
+    "verified_source_components": {
+      "article_hash": "2e8d2ad382a2da1f",
+      "title": "60eedef6180347b926c2a44b4c70d699b9539931d5136dca70cb1384ce17e08d",
+      "source_excerpt": "568e5b48b6a71d3230e5f9d97c9a01b437c022697d2f002c649ac6c0d50aca0a",
+      "published_at": "3b99ef180e6b7fd22c442f5dc2c8060698216bdab3f70b445b08c5ee9bfb02db"
+    },
+    "hash": "2e8d2ad382a2da1f",
+    "published_at": "2026-09-22T16:05:36+00:00"
+  },
+  "e041d90bf5a85132": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [
+      "power_market"
+    ],
+    "countries": [
+      "EUROPE"
+    ],
+    "article_type": "analysis",
+    "title_kr": "유럽 탄소배출권거래제(ETS)의 산업 탈탄소화 실효성 논란",
+    "summary": "유럽의 탄소배출권거래제(ETS)가 산업계 탈탄소화를 목표로 하지만, 실제 산업 경쟁력 유지와 병행 가능한지 의문을 제기하는 분석이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#탄소중립",
+      "#유럽정책"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "L'ETS devait décarboner l'industrie européenne, encore faut-il qu'il en reste une !",
+    "link": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQSGVucHZRR1lvUlVKWG1TR2t0dWNhaUtIQ1hFYzljSHktRU4ySzdZUHVzdHhYNzB1MlRKdENTai02QmJHT0w1UXFSczBWQ2Jmc0otT3RiZmtNNXpsQUowek1icGlvQl9GNXZDcUxXS1FZYXJheFdVSDM1eVBadzFKV1pHMnhJMWdCQURaTVVEckdia2NHUnNCdHJMNnpyd1pqbVRrTUJ0M1RRN3A5S281YzlaYnNPT0w3M0RsMmQ4SGR5ellUbXpxUTcybnc0YkRHaWZrdQ?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "e041d90bf5a85132",
+      "source_components": {
+        "article_hash": "e041d90bf5a85132",
+        "title": "60e35b244df604322f42bee077dd774ab19e4a102d53ae3ce5feb81aaaf9f7fc",
+        "source_excerpt": "14c473576b84422e80e581a5563b551e3d5823e15d21cb2c2572d3a2902e22d5",
+        "published_at": "cf6c3bf1ddfd9cfef91a6ea6c68bffc02faf434e39d9d626d521e3b9c61d0ded"
+      },
+      "source_fingerprint": "bbc1236e367e77aa4e3335c742f8d57faa33eac2a480ded2cf3b09101d9ba4be",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "1c4f8ef7efc8b0e8449c26cea6389f52053aef765be9cc8a01a89279148c5355"
+    },
+    "verified_source_components": {
+      "article_hash": "e041d90bf5a85132",
+      "title": "60e35b244df604322f42bee077dd774ab19e4a102d53ae3ce5feb81aaaf9f7fc",
+      "source_excerpt": "14c473576b84422e80e581a5563b551e3d5823e15d21cb2c2572d3a2902e22d5",
+      "published_at": "cf6c3bf1ddfd9cfef91a6ea6c68bffc02faf434e39d9d626d521e3b9c61d0ded"
+    },
+    "hash": "e041d90bf5a85132",
+    "published_at": "2026-09-22T16:15:13+00:00"
+  },
+  "5abff087fdb610e0": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "배우 로버트 패틴슨의 최근 활동 및 평가",
+    "summary": "배우 로버트 패틴슨의 최근 연기 활동과 커리어 전성기에 대한 대중문화적 평가를 다룬 기사이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Robert Pattinson, à son prime",
+    "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxOV2JNcS1kOEN2bjNScHpsQkZQdTJXRG12TjNIU1dpMGMwUWVULXJhb2pVUkZ2a2h5cEE5elBsY2Q5dWZyTjd0eVFGb0R6b1VObGZ1RXNFTWJUUmdIRXBOdVNXRGd0cWIzUXVmejE5cGFYZUNiNjFrZFZkM05OaFNaUXF6THZyaXM?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "5abff087fdb610e0",
+      "source_components": {
+        "article_hash": "5abff087fdb610e0",
+        "title": "cc1bce83b615cc54075acb51f1bc15ff90cecf6bf717ee7a5fe42a6d3e149ec9",
+        "source_excerpt": "74bc45f9889daad7e1086cfd779a82a81be2cff853c98fc026f47f8214efd84a",
+        "published_at": "49b1d06bd41d7ed670eeefe19eceaacc9fdc1a879f1f2083e789a52d50c86c86"
+      },
+      "source_fingerprint": "cd35ec59afa2ab7d344283d8d76b460305740505c4cc6903b2bbed6b0c55f898",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "c7f664fa5e1420208ef1f954f5348d2403fc32af5fb43de3dfa7a8f389c6a50a"
+    },
+    "verified_source_components": {
+      "article_hash": "5abff087fdb610e0",
+      "title": "cc1bce83b615cc54075acb51f1bc15ff90cecf6bf717ee7a5fe42a6d3e149ec9",
+      "source_excerpt": "74bc45f9889daad7e1086cfd779a82a81be2cff853c98fc026f47f8214efd84a",
+      "published_at": "49b1d06bd41d7ed670eeefe19eceaacc9fdc1a879f1f2083e789a52d50c86c86"
+    },
+    "hash": "5abff087fdb610e0",
+    "published_at": "2026-09-22T16:20:26+00:00"
+  },
+  "84bcb05b52c18149": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "smr",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "smr"
+    ],
+    "countries": [
+      "GB"
+    ],
+    "article_type": "news",
+    "title_kr": "영국 기업들, ODIN SMR 상용화 위한 파트너십 체결",
+    "summary": "영국 기업들이 ODIN SMR 기술의 규모 확대를 위해 파트너십을 체결함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#SMR",
+      "#영국원전"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "UK firms partner to scale ODIN",
+    "link": "https://news.google.com/rss/articles/CBMickFVX3lxTE5YMXQxemMtSlhtZXRNNi1oa1RaTktsTGNQZTBzWndrTnhIX2tzQnhqMFlMUFBxX0RVUGhlelhxUFZxZ05fallHcWdUOEdkTEZVSjVMcF9VZ29QdFBYNWltOGR1ZnNhRTZfUWhtYWJheGR5Zw?oc=5",
+    "feed": "정책",
+    "domain": "neimagazine.com",
+    "matched": "Nuclear Engineering International",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "84bcb05b52c18149",
+      "source_components": {
+        "article_hash": "84bcb05b52c18149",
+        "title": "8df8c0372d0596cf663b5ff7cbcd98c54d6fb2a97662f31c509efe8a949afcf6",
+        "source_excerpt": "5591cd2436642002ff4472939d438a67f30efd312a0ac37b87a11d39309d2e38",
+        "published_at": "ece1641265992bc6ecd9cc1bfc97ed4cfacbc14093f0e2242d771f59fbd6609c"
+      },
+      "source_fingerprint": "54720b8a0185831eccab90d634d096e2ceebef3b8279d9cfd7e4fd05f44b7f5c",
+      "entities": [],
+      "countries": [
+        "GB"
+      ],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "8a1ffc40bd0735b093b89e7828369e1045edd7653cae72b2599d7a196dd41bb2"
+    },
+    "verified_source_components": {
+      "article_hash": "84bcb05b52c18149",
+      "title": "8df8c0372d0596cf663b5ff7cbcd98c54d6fb2a97662f31c509efe8a949afcf6",
+      "source_excerpt": "5591cd2436642002ff4472939d438a67f30efd312a0ac37b87a11d39309d2e38",
+      "published_at": "ece1641265992bc6ecd9cc1bfc97ed4cfacbc14093f0e2242d771f59fbd6609c"
+    },
+    "hash": "84bcb05b52c18149",
+    "published_at": "2026-09-22T16:21:40+00:00"
+  },
+  "81f1e69726830f53": {
+    "features": {
+      "event_type": "project_milestone",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "fusion"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "article_type": "news",
+    "title_kr": "Helong-2 핵융합 프로젝트 착공",
+    "summary": "Helong-2 핵융합 프로젝트가 공식적으로 착공됨.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#핵융합"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Helong-2 fusion project breaks ground",
+    "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTFB4QUhuU0UzbGpDU0xlb3FwREc0c2Y5b2FiSHdEOVVrZWhnaTdSS0ZaT2lkR3pCZUxzXzVTZlR2Rk1VTmxsazFkMG1HRmlnRmQ0MXo5WVhLSmVTZGVPa01OeVhIMVpxeENpNEF3OUFoazlMUnBRX3FjaFE4NA?oc=5",
+    "feed": "정책",
+    "domain": "neimagazine.com",
+    "matched": "Nuclear Engineering International",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "81f1e69726830f53",
+      "source_components": {
+        "article_hash": "81f1e69726830f53",
+        "title": "ebb508cc2685edc40d10092a1f03df63c9e16a860c28b534943c51de9d57fd26",
+        "source_excerpt": "74dff2d8b654001cee6c331df32c2a0b2053f8f4a464fa24041caa40f674df2d",
+        "published_at": "ece1641265992bc6ecd9cc1bfc97ed4cfacbc14093f0e2242d771f59fbd6609c"
+      },
+      "source_fingerprint": "5f6c45a8089923d48ca8f41742cdde4293d9d25eb1c36fda50555a0cf8efd8b1",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "fusion"
+      ],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "6e7cd624ab7d105f25650b4f884507a73de03761721f150cd1bfd470e973f40a"
+    },
+    "verified_source_components": {
+      "article_hash": "81f1e69726830f53",
+      "title": "ebb508cc2685edc40d10092a1f03df63c9e16a860c28b534943c51de9d57fd26",
+      "source_excerpt": "74dff2d8b654001cee6c331df32c2a0b2053f8f4a464fa24041caa40f674df2d",
+      "published_at": "ece1641265992bc6ecd9cc1bfc97ed4cfacbc14093f0e2242d771f59fbd6609c"
+    },
+    "hash": "81f1e69726830f53",
+    "published_at": "2026-09-22T16:21:40+00:00"
+  },
+  "104e322bf57d786c": {
+    "features": {
+      "event_type": "regulatory_action",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "smr",
+    "scope": "overseas",
+    "category": "규제",
+    "topics": [
+      "newbuild",
+      "regulation"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "Blue Energy, 텍사스 원전 건설 인허가 신청",
+    "summary": "Blue Energy가 텍사스 내 원전 건설을 위한 인허가를 신청함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#미국원전",
+      "#인허가"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Blue Energy files Texas nuclear permit",
+    "link": "https://news.google.com/rss/articles/CBMifEFVX3lxTFA0ZS1lQ2E4QVdhMnoyZjhqY0V6UTBVRDBpbjNhTVBKV1FKaXY3ak9UNHZGMF9QNHpseU5FSnMydXZPZndod1ZXaG5BS2FfWEV0TklURHhXdjZXSUJxODdLYl9DektERUdNYUs2UVg2enRQMnc1X1ZhMVNTbF8?oc=5",
+    "feed": "정책",
+    "domain": "neimagazine.com",
+    "matched": "Nuclear Engineering International",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "104e322bf57d786c",
+      "source_components": {
+        "article_hash": "104e322bf57d786c",
+        "title": "39f935625778d751216372eb86a5c266be2646fa7dffd8c9f5345b2b63fcbcfa",
+        "source_excerpt": "5ee0cbd9f7abf0e1817bc83be32ff92daad7a8182468767afd7d251b09f459d0",
+        "published_at": "ece1641265992bc6ecd9cc1bfc97ed4cfacbc14093f0e2242d771f59fbd6609c"
+      },
+      "source_fingerprint": "e6a779dba2207c735f0ef2c0947cc43cc5dbf4e1728cd54b049b0d7fb938c23f",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "0c1bcbf970bed9cf9eebc42f5fd2ad7e11397978885436dd8723ea73fb526f5e"
+    },
+    "verified_source_components": {
+      "article_hash": "104e322bf57d786c",
+      "title": "39f935625778d751216372eb86a5c266be2646fa7dffd8c9f5345b2b63fcbcfa",
+      "source_excerpt": "5ee0cbd9f7abf0e1817bc83be32ff92daad7a8182468767afd7d251b09f459d0",
+      "published_at": "ece1641265992bc6ecd9cc1bfc97ed4cfacbc14093f0e2242d771f59fbd6609c"
+    },
+    "hash": "104e322bf57d786c",
+    "published_at": "2026-09-22T16:21:40+00:00"
+  },
+  "b69efb1e8ead6ff8": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "규제",
+    "topics": [],
+    "countries": [],
+    "article_type": "news",
+    "title_kr": "뷰로 베리타스(Bureau Veritas), 새로운 표준 도입",
+    "summary": "뷰로 베리타스가 새로운 인증 표준을 도입함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Bureau Veritas, nouvelles normes",
+    "link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOejlCSUl1RmkwcFhNU0YzdnVaMVFTQzZ5bnRhUWd2NG1ENzZSSE9zam1tVF9tdVRQOHFRTUJramNLQUZYNV9TNW03eVAxZTk4SWwwY3dWbDZWX2lycllENU9JUHJkSkhDU3pOSC02S0Z1SWJxUF92N1BCVkIzRnlKal9objlRS042YXAwZ05sSUludDNVNWl1bGFoWGd4S1hPMFE?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "b69efb1e8ead6ff8",
+      "source_components": {
+        "article_hash": "b69efb1e8ead6ff8",
+        "title": "ef5aab607b7bc6def3b8aaac8ba84ed8fb688c9fb4db4dddfc42f5ff67ffacbf",
+        "source_excerpt": "576d4114538d0e83f0582991cae278f321100fcb1fb5772d5bff0c6f319f6620",
+        "published_at": "1c87ab10ca092ced6b70df91d9a8d8fd6e16eac8d3de715f151658bb900d9869"
+      },
+      "source_fingerprint": "23c38d20407cb1a0551377948b940ace873369bd7362b15af592fe70a7bac7cc",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "665d2da57d355e2d58b697dd0344e89202935ed44f59ed0811f38043ea869950"
+    },
+    "verified_source_components": {
+      "article_hash": "b69efb1e8ead6ff8",
+      "title": "ef5aab607b7bc6def3b8aaac8ba84ed8fb688c9fb4db4dddfc42f5ff67ffacbf",
+      "source_excerpt": "576d4114538d0e83f0582991cae278f321100fcb1fb5772d5bff0c6f319f6620",
+      "published_at": "1c87ab10ca092ced6b70df91d9a8d8fd6e16eac8d3de715f151658bb900d9869"
+    },
+    "hash": "b69efb1e8ead6ff8",
+    "published_at": "2026-09-22T16:23:23+00:00"
+  },
+  "d43e8ee9b0b8f8d2": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "CN"
+    ],
+    "article_type": "news",
+    "title_kr": "중국, 티베트 신임 당 서기 임명",
+    "summary": "중국 정부가 티베트 자치구의 새로운 당 서기를 임명함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "La Chine nomme un nouveau numéro un au Tibet",
+    "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxORGRfSW9GeFVBVlpiT3JjdmhtYWxLaG9hSWxrcXoxWlU2blVJWk16eHVHY0lHX0NZNXB5WHZudFdIenBWSHUtYnNfOGpyeXM0UVVrUmhoOFlsRWp1d3pEZDl2aWpJRTJ1TEJ2TXR5bm5iVmt6bTNqTXBtdmYwclZjbFpsVWVCXzRHOHhiakdHSUhhQQ?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "d43e8ee9b0b8f8d2",
+      "source_components": {
+        "article_hash": "d43e8ee9b0b8f8d2",
+        "title": "e83856cd93a527a3eb47a01b3e21f0e392f1ed078264d6a3bd6033442d62a471",
+        "source_excerpt": "9ca24ffcfc9a68df7b366f97b181869a3264f8b9cf0a4de5229afea8c3eb0575",
+        "published_at": "17d9549fd8d315fff6ce10b84d6e17595ec2c51f91d4e8754d70dc9fe851312b"
+      },
+      "source_fingerprint": "c61d3e0ef8f320cf06ddf9570b43af44bcd2062f2b072382881d152e37ca396f",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "91de13e11e4c74725f2a69fb7b0ee8ff8f81ee90c6c8b0f2ba62c2661b881b0e"
+    },
+    "verified_source_components": {
+      "article_hash": "d43e8ee9b0b8f8d2",
+      "title": "e83856cd93a527a3eb47a01b3e21f0e392f1ed078264d6a3bd6033442d62a471",
+      "source_excerpt": "9ca24ffcfc9a68df7b366f97b181869a3264f8b9cf0a4de5229afea8c3eb0575",
+      "published_at": "17d9549fd8d315fff6ce10b84d6e17595ec2c51f91d4e8754d70dc9fe851312b"
+    },
+    "hash": "d43e8ee9b0b8f8d2",
+    "published_at": "2026-09-22T16:26:38+00:00"
+  },
+  "4f7269b0b497b310": {
+    "features": {
+      "event_type": "opinion",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "US"
+    ],
+    "article_type": "analysis",
+    "title_kr": "트럼프의 반테크 포퓰리즘 대응 관련 분석",
+    "summary": "반테크 포퓰리즘에 맞서는 트럼프의 정치적 입지와 대응 전략을 분석함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Trump, seul rempart face au populisme anti-tech",
+    "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxNQUd2dU1qZEFWVkJIR2Vfby14RUFZUUZsRUp4WlRfMlhBc1pPdWFvdGxwY2FNWVN6SXg0Ylo5NFZDMkpHREhLeWZZV0JWYi1OUmp0MUlodGJiMlBvMWJfRUw0akVLUmFOTENkT3R3SHcwdFA1SWprbGp0REd2SDlPTFpVeGNaX1ZUMkYxMFNXcEZJVnRYNnlSeklxU2VWeHV5MkU1cWdraTV6dVU?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "4f7269b0b497b310",
+      "source_components": {
+        "article_hash": "4f7269b0b497b310",
+        "title": "289e32bb1c3b60f388a15e0004f5237d78ba8831a80f921e9bdd23dfe543edf8",
+        "source_excerpt": "4492eaf5767297a23455b421ff7bff84a8ef0d622ca370effe5ece4cb40c64a0",
+        "published_at": "545ca8bd45371f418bf928e4c0e9c04a7e9cee1af224a2951fb4cf836360fed7"
+      },
+      "source_fingerprint": "630d497fff4c826cf4baead48c8771e2b9b1a8b56d4b7378f7561453f049fc83",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "56407033a8f1c9bdf19b54e0d2c0c7d59193917257e78bf2e9fc24e1c110fba3"
+    },
+    "verified_source_components": {
+      "article_hash": "4f7269b0b497b310",
+      "title": "289e32bb1c3b60f388a15e0004f5237d78ba8831a80f921e9bdd23dfe543edf8",
+      "source_excerpt": "4492eaf5767297a23455b421ff7bff84a8ef0d622ca370effe5ece4cb40c64a0",
+      "published_at": "545ca8bd45371f418bf928e4c0e9c04a7e9cee1af224a2951fb4cf836360fed7"
+    },
+    "hash": "4f7269b0b497b310",
+    "published_at": "2026-09-22T17:00:49+00:00"
+  },
+  "a450dbaaee7d1937": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "policy",
+    "title_kr": "프랑스 정부, 연료비 위기 대응을 위한 추가 지원책 발표",
+    "summary": "프랑스 정부가 연료비 위기 상황을 타개하기 위해 새로운 지원 패키지를 마련함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Carburants : le gouvernement dégaine une nouvelle salve d'aides pour répondre à la crise",
+    "link": "https://news.google.com/rss/articles/CBMi2gFBVV95cUxNUThMRG03Z29ZaDJ3WlAwdkpaeDBrZ09IcXRHQ0NGZ0ZaRGhlV0I2WGRfZDVROEc5LXExendvQ2RYbktodVNsYUgta0NnQVRjbDFQRFFWbUgySEd3R19sMUNmOTgyS1dETHFtUlFyeURON1d2ODhkWEd1N0llWUdyNk5uVmtneDlLV20xZVUyQTdLbVk2eDdnb3NTS05aTmtOVDlCR243X0t0aEM2M2JLTEIzUlE0V2Ixbk8wYUo4dFM4b1pmT1NSQWxZXzgtUjVGeEFpeXh5QmU3Zw?oc=5",
+    "feed": "정책",
+    "domain": "latribune.fr",
+    "matched": "La Tribune 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "a450dbaaee7d1937",
+      "source_components": {
+        "article_hash": "a450dbaaee7d1937",
+        "title": "51a34e43327c134d516ef73bea4e75710f9d41afd463d4fcd193ac5c88a25b02",
+        "source_excerpt": "acaf613fbadb000cf0c46a9150cc0374c10a4a27b041a7f03e23aad36c7abb4d",
+        "published_at": "602be89f8be6717a5a3fdc957f3edcf707520e7cec7ec707a0a31565ef5f3554"
+      },
+      "source_fingerprint": "184c0c8bb22404088718083ca0831543bee14715d1482cc311edd70a33bfb636",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "a43919c16add1c728156ee4ca4bbda8c8e7b23289021f8d9a1649e25145b7847"
+    },
+    "verified_source_components": {
+      "article_hash": "a450dbaaee7d1937",
+      "title": "51a34e43327c134d516ef73bea4e75710f9d41afd463d4fcd193ac5c88a25b02",
+      "source_excerpt": "acaf613fbadb000cf0c46a9150cc0374c10a4a27b041a7f03e23aad36c7abb4d",
+      "published_at": "602be89f8be6717a5a3fdc957f3edcf707520e7cec7ec707a0a31565ef5f3554"
+    },
+    "hash": "a450dbaaee7d1937",
+    "published_at": "2026-09-22T17:04:09+00:00"
+  },
+  "78fb80b98d95470d": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "SA"
+    ],
+    "article_type": "analysis",
+    "title_kr": "사우디아라비아에 대한 군사 지원 제한 배경",
+    "summary": "중동 전쟁 상황에서 사우디아라비아에 대한 군사적 지원이 제한적인 이유를 분석함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Guerre au Moyen-Orient : pourquoi le soutien militaire à l'Arabie saoudite reste limité",
+    "link": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxPVFdSRTYxV0hXa0Q5N1BMMFAxa1MwT3lHa01WVkl4OFU3djM0M2R4Vzc3UjVFOURMR2g2SGxfdmEzT1ZRTVJPZHE2MDQ3Qk9EN1NlZWxjRm1KaWV3R3d2WllzcUJKQmdPTmlxdHRCdFlVMWwzck5ZdEYyZ1Z2M0gzdTVmWm9ZQjkzbGdpSXBMUjlSdC1oMTJLZXVxTkczX1F6Y0RhVzVmV2NLZkktVmcyWFJjWmFtSlNoYzk2X3lxMmdyLVBjN25OLW81OGpBTHpLRjFhaXREM2ZtNzQ?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "78fb80b98d95470d",
+      "source_components": {
+        "article_hash": "78fb80b98d95470d",
+        "title": "a42ac6aa642c7cebf32f6f0f38a368cc7c5c00833886e2af02b472f4de2939d0",
+        "source_excerpt": "673177b97fae7305bb29d6c7f65a6570fbbf5a71ad95f5bd0f492c225fe53ad0",
+        "published_at": "43aa5e9ee22349c411d7f0a1e191451b8f91def33bd5785af70362d598010e3a"
+      },
+      "source_fingerprint": "d17f2f6069d0441a8b6e4015da0c171c10769dc5b377deaedc7f6ce8440c9de7",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "524a5f6bbe96fa99b8dc98ad8fda1c7cb3e6c45fe6e6ea2fe571cd2713b9ed37"
+    },
+    "verified_source_components": {
+      "article_hash": "78fb80b98d95470d",
+      "title": "a42ac6aa642c7cebf32f6f0f38a368cc7c5c00833886e2af02b472f4de2939d0",
+      "source_excerpt": "673177b97fae7305bb29d6c7f65a6570fbbf5a71ad95f5bd0f492c225fe53ad0",
+      "published_at": "43aa5e9ee22349c411d7f0a1e191451b8f91def33bd5785af70362d598010e3a"
+    },
+    "hash": "78fb80b98d95470d",
+    "published_at": "2026-09-22T17:28:30+00:00"
+  },
+  "4aac5dbf32864dbb": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "power_market"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "policy",
+    "title_kr": "기후에너지환경부, 2026년 ESS 중앙계약시장 사업자 선정 입찰 공고",
+    "summary": "기후에너지환경부가 2029년 2월까지 육지 1100MW, 제주 80MW 규모의 ESS를 구축할 발전사업자를 선정하기 위한 입찰을 10월 22일부터 11월 11일까지 진행함.",
+    "detail": "정부는 제11차 전력수급기본계획에 따라 총 1180MW 규모의 ESS 발전사업자를 선정한다. 이번 입찰은 10월 22일부터 11월 11일까지 진행되며 11월 중 낙찰자가 선정될 예정이다. 기존 계통관리변전소 외에도 ESS 연계 필요성이 인정되는 변전소로 사업 대상이 확대되었으며, 제주 지역에는 25년 계약방식이 새로 도입된다. 이는 장수명·다충전이 가능한 ESS 설비를 확보하기 위한 조치다.",
+    "implication": "계통 안정화 기여도 중심의 평가체계 개편과 제주 지역 장기 계약 도입은 ESS의 실질적인 계통 보강 효과를 극대화하려는 의도임.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#ESS",
+      "#전력시장"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "ESS 중앙계약시장 개설…육지 1100MW·제주 80MW",
+    "link": "https://www.energy-news.co.kr/news/articleView.html?idxno=228515",
+    "feed": "정책",
+    "domain": "energy-news.co.kr",
+    "matched": "전력수급기본계획",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "4aac5dbf32864dbb",
+      "source_components": {
+        "article_hash": "4aac5dbf32864dbb",
+        "title": "a1df985b3d4f7e5a18f53d29c9e47994c610a12522dac73ff679045367c46c9f",
+        "source_excerpt": "7e577861cb7009ae1cdfe6caeb213c1596a13991d4bd703b202d60de83c83646",
+        "published_at": "95aa4d2ef136083ef0b4007720a22e8667bc359a9f3c4ecb0fea6ee7c699e7ec"
+      },
+      "source_fingerprint": "798028b7b9bdaea4c3fd6eccf211d8109165b1b84f903b60f9f3768070352a91",
+      "entities": [
+        "basic-plan"
+      ],
+      "countries": [],
+      "topics": [
+        "grid"
+      ],
+      "stages": [
+        "approval",
+        "contract"
+      ],
+      "claims": [
+        "1100mw",
+        "80mw",
+        "2029년",
+        "2월",
+        "1180mw",
+        "25년",
+        "22일",
+        "2026년",
+        "11월",
+        "11일",
+        "2023년",
+        "1196mw",
+        "15년"
+      ],
+      "quantities": {
+        "mw": [
+          "1100",
+          "1180",
+          "1196",
+          "80"
+        ],
+        "년": [
+          "15",
+          "2023",
+          "2026",
+          "2029",
+          "25"
+        ],
+        "월": [
+          "11",
+          "2"
+        ],
+        "일": [
+          "11",
+          "22"
+        ]
+      },
+      "manifest_fingerprint": "9a0eaa10307ef71992fdc488f1a6f8b9b309bc0b83ce0939bf1e4411012cd95f"
+    },
+    "verified_source_components": {
+      "article_hash": "4aac5dbf32864dbb",
+      "title": "a1df985b3d4f7e5a18f53d29c9e47994c610a12522dac73ff679045367c46c9f",
+      "source_excerpt": "7e577861cb7009ae1cdfe6caeb213c1596a13991d4bd703b202d60de83c83646",
+      "published_at": "95aa4d2ef136083ef0b4007720a22e8667bc359a9f3c4ecb0fea6ee7c699e7ec"
+    },
+    "hash": "4aac5dbf32864dbb",
+    "published_at": "2026-09-22T17:32:00+00:00"
+  },
+  "89f77d47d739ffcb": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "아틀리에 고티에(Ateliers Gauthier)의 브랜드 스타일 변화",
+    "summary": "아틀리에 고티에가 새로운 세대의 주도로 브랜드 스타일을 혁신하고 있음.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Ateliers Gauthier : une nouvelle génération impulse son style à la Chemise française",
+    "link": "https://news.google.com/rss/articles/CBMi5AFBVV95cUxNM1MyRjR2V3A2UldmdjlTdnVLbU91cDJhMGF4U3hqc0VESkY5LS1FNXJrZS1mV2F5ZEhlRE9CZmdsU0lyVXZCN2JuZ0JSeHZ2WkxKb04yMmxIM2xRcjlUb0NVYl93YVV1VmMtLTJwSXFNM3JJSmpRckoyZFU4em5ONEx1ZHdIX1d4bEk4YkxMZnlCNU1PLXBUbFZab3hrUHJsUGhKUWQyNE5velpCTk5RTU12WHB2cVNRUkV1Sll1cHppeFBDdjJ2X1VBaGdXcFFXYS1iaXF0aHlRc0lJUV9lUUcwcGc?oc=5",
+    "feed": "정책",
+    "domain": "lesechos.fr",
+    "matched": "Les Échos 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "89f77d47d739ffcb",
+      "source_components": {
+        "article_hash": "89f77d47d739ffcb",
+        "title": "745903f757900127bd0b9935a99b7c2c524bde94089a18d2a7f3d7fdd3af815a",
+        "source_excerpt": "c8d386547fe9cd692b3b49646d85b260d0a19d0088757af4a4bc86b4b9f479cf",
+        "published_at": "eb2bc76dafe0c0fdbe69a7e64b4e4903d32d975b9e32e57eef07d111e8a7fd6e"
+      },
+      "source_fingerprint": "823cd93129d339347a2489db8871c44814cd4e5d459b461ccddc2bd76141d41f",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "776a5480ad7208006e2d108b39eadd862089ef24cee54c19d245daf55585ba2b"
+    },
+    "verified_source_components": {
+      "article_hash": "89f77d47d739ffcb",
+      "title": "745903f757900127bd0b9935a99b7c2c524bde94089a18d2a7f3d7fdd3af815a",
+      "source_excerpt": "c8d386547fe9cd692b3b49646d85b260d0a19d0088757af4a4bc86b4b9f479cf",
+      "published_at": "eb2bc76dafe0c0fdbe69a7e64b4e4903d32d975b9e32e57eef07d111e8a7fd6e"
+    },
+    "hash": "89f77d47d739ffcb",
+    "published_at": "2026-09-22T17:43:15+00:00"
+  },
+  "d5118403bdf1b5e0": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "power_market"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "policy",
+    "title_kr": "기후에너지환경부, 추석 연휴 대비 전력수급 및 비상 대응체계 점검",
+    "summary": "기후에너지환경부가 추석 연휴 안정적인 전력계통 운영을 위해 한수원 등 유관기관과 함께 전력수급 상황과 비상 대응체계를 사전 점검함.",
+    "detail": "이호현 기후에너지환경부 제2차관은 22일 한국전력거래소 중부본부를 방문해 추석 연휴 전력수급 전망과 비상 대응체계를 살폈다. 올해 추석 당일 전력수요는 49.4GW로 전망되며, 정부는 전기차 충전요금 할인과 플러스 DR 운영 등을 통해 수요 증대를 유도할 계획이다. 발전량이 많아질 경우 출력제어를 통해 계통 안정성을 확보할 방침이다.",
+    "implication": "추석 연휴 기간 경부하기 수요 관리와 출력제어 운영은 향후 재생에너지 비중 확대에 따른 계통 안정화 정책의 시험대가 될 것임.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#전력수급",
+      "#계통운영"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "기후에너지환경부, 추석 연휴 전력수급 사전점검",
+    "link": "https://www.energy-news.co.kr/news/articleView.html?idxno=228516",
+    "feed": "정책",
+    "domain": "energy-news.co.kr",
+    "matched": "한국수력원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "d5118403bdf1b5e0",
+      "source_components": {
+        "article_hash": "d5118403bdf1b5e0",
+        "title": "16cbf245c1fbe5f721c487f099ef683a8c72da0f48a5890516611fd8b331968c",
+        "source_excerpt": "ccd4fe5de7bbf4fd0eb91f21a16ac52f2669b3dbb07a4dd549fa4382a0182ffd",
+        "published_at": "c574e6bffeccaa02183d6574a921d5208a962e610a37fa0202c8e5380aa736cb"
+      },
+      "source_fingerprint": "3e157f0523c648d3ac0f2e81d4f7cd2c3b62c23686e59aff353a7a30130d5e7e",
+      "entities": [
+        "kepco",
+        "khnp"
+      ],
+      "countries": [
+        "KR"
+      ],
+      "topics": [
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [
+        "shutdown"
+      ],
+      "claims": [
+        "22일",
+        "49.4gw",
+        "10월",
+        "6일",
+        "1.1gw",
+        "24일",
+        "27일",
+        "100%",
+        "50%"
+      ],
+      "quantities": {
+        "%": [
+          "100",
+          "50"
+        ],
+        "mw": [
+          "1100",
+          "49400",
+          "50500"
+        ],
+        "년": [
+          "2026"
+        ],
+        "월": [
+          "10"
+        ],
+        "일": [
+          "22",
+          "24",
+          "27",
+          "6"
+        ]
+      },
+      "manifest_fingerprint": "416148fe7ebab2796fc5d94a9bd5d517b982209f8a41f722dd1ad0d244c27c2c"
+    },
+    "verified_source_components": {
+      "article_hash": "d5118403bdf1b5e0",
+      "title": "16cbf245c1fbe5f721c487f099ef683a8c72da0f48a5890516611fd8b331968c",
+      "source_excerpt": "ccd4fe5de7bbf4fd0eb91f21a16ac52f2669b3dbb07a4dd549fa4382a0182ffd",
+      "published_at": "c574e6bffeccaa02183d6574a921d5208a962e610a37fa0202c8e5380aa736cb"
+    },
+    "hash": "d5118403bdf1b5e0",
+    "published_at": "2026-09-22T17:56:00+00:00"
+  },
+  "4102d71cc1e0c7b8": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "US",
+      "GB"
+    ],
+    "article_type": "news",
+    "title_kr": "트럼프, 앤디 번햄의 AI 가이드라인 계획 거부",
+    "summary": "도널드 트럼프가 앤디 번햄의 AI 가이드라인 계획을 '글로벌리스트 계획'이라 비판하며 거부함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Donald Trump rejects ‘globalist scheme’ in blow to Andy Burnham’s plan for AI guidelines",
+    "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxPeEI2a3BUUVRNeDZ5NXZlTGFyN0RqdWFoM0ptM0tRLXN3cEZ6R3FYbjA3eXJ5VzlsZ1o1UnY5ZUs5aGRzVVBxaGszendJckozSEVJVmtkaVBCZVlaOVlUTGhhMzJCZ3hqWWpKOXZmbVgzd0RtQ212ZG1xSEpfMmcyLTg5SHY?oc=5",
+    "feed": "정책",
+    "domain": "ft.com",
+    "matched": "FT 원자력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "4102d71cc1e0c7b8",
+      "source_components": {
+        "article_hash": "4102d71cc1e0c7b8",
+        "title": "cb6264da6dba6f6b6a4f635bf2bf67c6303da4a2ef0da79f57961facebeec291",
+        "source_excerpt": "081c64978d73321f7e5eff3192cfb81778fcb92f542f4b92a2eb4be4f6781a09",
+        "published_at": "aff7d8b13eb8e55ddd6b734a380ff6948c1143ed26fe4897f6d3da50bc97e1cb"
+      },
+      "source_fingerprint": "7a94cbf8560594ec4716268f406743bb03bcd04146b4507bee29a6ff0550eefe",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "559512ffa7128eccef411840ab6483b3ba27f9724138f664555ce6128617ea5e"
+    },
+    "verified_source_components": {
+      "article_hash": "4102d71cc1e0c7b8",
+      "title": "cb6264da6dba6f6b6a4f635bf2bf67c6303da4a2ef0da79f57961facebeec291",
+      "source_excerpt": "081c64978d73321f7e5eff3192cfb81778fcb92f542f4b92a2eb4be4f6781a09",
+      "published_at": "aff7d8b13eb8e55ddd6b734a380ff6948c1143ed26fe4897f6d3da50bc97e1cb"
+    },
+    "hash": "4102d71cc1e0c7b8",
+    "published_at": "2026-09-22T18:20:57+00:00"
+  },
+  "8d3ddc344a157971": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 2
+    },
+    "importance": "nice_to_know",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "finance",
+      "power_market"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "policy",
+    "title_kr": "대미 투자 프로젝트 수익배분 5대5 합의 및 안전판 마련",
+    "summary": "한미 대규모 투자 프로젝트의 수익배분을 5대5로 합의하고, 사업 청산 시 투자원리금 우선회수 조항을 확보함.",
+    "detail": "정부는 3,500억 달러 규모의 대미 투자 프로젝트에서 한국 측 투자원리금 전액 회수 시까지 수익을 5대5로 분배하는 구조를 확립했다. 특히 텍사스 엔시날 가스복합화력발전소(6.3~6.4GW) 사업은 20년간 430억~450억 달러 회수를 목표로 하며, 장기 전력구매계약(PPA)을 협의 중이다. 사업 중단 시 원금 100%를 우선 회수하는 안전판 조항을 마련하여 향후 원전 건설 등 후속 프로젝트의 리스크를 최소화했다.",
+    "implication": "수익배분 구조와 우선회수 조항 확보는 향후 추진될 원전 건설 등 후속 프로젝트의 재정적 안정성을 담보하는 핵심 장치가 될 것이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#대미투자",
+      "#수익배분",
+      "#PPA"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "합산 수익배분 5대5 설정… 장기 전력구매 계약도 협의 중",
+    "link": "https://www.mt.co.kr/economy/2026/09/23/2026092219553680902",
+    "feed": "정책",
+    "domain": "mt.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "8d3ddc344a157971",
+      "source_components": {
+        "article_hash": "8d3ddc344a157971",
+        "title": "5f362cbd01e2d543308d035ae3bcc26f95f422a50bb6c252f6b11d84ed2e3ce2",
+        "source_excerpt": "6e23099e6472144988325da1fe76afba3501ffbdc1a21912e1e777e6c78639ab",
+        "published_at": "94c43011f92116b28e0e2b21141f1965109d5ebb35edfbdd59788891218fdc77"
+      },
+      "source_fingerprint": "ebd8e50849dad660cfa49eb899ce11dd9ff3fcaf6ab8aee809bd45227e390c6b",
+      "entities": [],
+      "countries": [
+        "KR",
+        "US"
+      ],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [
+        "cancellation",
+        "review"
+      ],
+      "claims": [
+        "6.4gw",
+        "223억달러",
+        "3500억달러",
+        "22일",
+        "450억달러",
+        "100%"
+      ],
+      "quantities": {
+        "%": [
+          "100"
+        ],
+        "mw": [
+          "6400"
+        ],
+        "년": [
+          "20"
+        ],
+        "달러": [
+          "22300000000",
+          "350000000000",
+          "45000000000"
+        ],
+        "일": [
+          "22"
+        ]
+      },
+      "manifest_fingerprint": "22e042e59a1ef0ed60a8fe18f5700bd2f51078b6b9ae831269372fdadcf710be"
+    },
+    "verified_source_components": {
+      "article_hash": "8d3ddc344a157971",
+      "title": "5f362cbd01e2d543308d035ae3bcc26f95f422a50bb6c252f6b11d84ed2e3ce2",
+      "source_excerpt": "6e23099e6472144988325da1fe76afba3501ffbdc1a21912e1e777e6c78639ab",
+      "published_at": "94c43011f92116b28e0e2b21141f1965109d5ebb35edfbdd59788891218fdc77"
+    },
+    "hash": "8d3ddc344a157971",
+    "published_at": "2026-09-22T19:00:00+00:00"
+  },
+  "eff6b9d414462263": {
+    "features": {
+      "event_type": "contract_award",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "fuel_cycle"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "카메코(Cameco), 글로벌 레이저 엔리치먼트(GLE) 생산 우라늄 독점 판매 대행 계약 체결",
+    "summary": "카메코가 GLE의 파두카 레이저 농축 시설(PLEF)에서 생산될 모든 우라늄 제품의 독점 구매 및 판매 대행 계약을 체결했다.",
+    "detail": "",
+    "implication": "농축 우라늄 공급망 확보를 위한 기업 간 협력이 구체화되었으며, PLEF의 최종 투자 결정 및 가동을 위한 인허가 절차가 진행 중이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#우라늄농축",
+      "#카메코",
+      "#핵연료주기"
+    ],
+    "related_reports": [],
+    "event_date": "2030-01-01",
+    "event_date_type": "scheduled",
+    "event_date_precision": "year",
+    "event_date_source": "article_text",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-22T19:19:10.904784+00:00",
+    "title": "Cameco becomes selling agent for all Global Laser Enrichment output",
+    "link": "https://www.ans.org/news/2026-09-22/article-8420/cameco-becomes-selling-agent-for-all-global-laser-enrichment-output",
+    "feed": "정책",
+    "domain": "ans.org",
+    "matched": "ANS Nuclear Newswire",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "eff6b9d414462263",
+      "source_components": {
+        "article_hash": "eff6b9d414462263",
+        "title": "6188d7983b9b6e5eba62bf885e17a69f01cb30647450a6a4011473372b254ef2",
+        "source_excerpt": "8fc0ff268d1dbf933b43026399803788725c7fc1e4915a98e64893417f2fe054",
+        "published_at": "c1c27d96e6db548a510fdbe041e6a1f70a2c06dd7ec28b05a76d16b05abcdda2"
+      },
+      "source_fingerprint": "b5c14aa6404c7b2cb133089de44838e7481d0313d37a9f04d02ab1ef00d9307d",
+      "entities": [
+        "cameco"
+      ],
+      "countries": [
+        "US"
+      ],
+      "topics": [
+        "fuel_supply"
+      ],
+      "stages": [
+        "approval",
+        "contract"
+      ],
+      "claims": [
+        "is51",
+        "and49",
+        "by2030"
+      ],
+      "quantities": {
+        "달러": [
+          "98900000"
+        ]
+      },
+      "manifest_fingerprint": "3e61847dea5538b3f26f89a4606468e909098d8ddeb05c985513214a5028c502"
+    },
+    "verified_source_components": {
+      "article_hash": "eff6b9d414462263",
+      "title": "6188d7983b9b6e5eba62bf885e17a69f01cb30647450a6a4011473372b254ef2",
+      "source_excerpt": "8fc0ff268d1dbf933b43026399803788725c7fc1e4915a98e64893417f2fe054",
+      "published_at": "c1c27d96e6db548a510fdbe041e6a1f70a2c06dd7ec28b05a76d16b05abcdda2"
+    },
+    "hash": "eff6b9d414462263",
+    "published_at": "2026-09-22T19:16:41+00:00"
   }
 }
