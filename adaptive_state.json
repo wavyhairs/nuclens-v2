@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 6,
-    "date": "2026-09-22"
+    "count": 2,
+    "date": "2026-09-23"
   },
   "retired": {
     "ap1000vsapr1400": {
@@ -470,8 +470,8 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-09-22"
+    "count": 3,
+    "date": "2026-09-23"
   },
   "terms": {
     "ap1000간": {
@@ -649,11 +649,11 @@
       "expires_at": "2026-09-23T03:40:37.312957+00:00",
       "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-09-22T03:40:40.603389+00:00",
+      "last_run": "2026-09-22T15:40:55.791651+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-09-22T03:40:37.312957+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-09-22T15:40:52.063898+00:00",
+      "queries_run": 2,
       "query": "Uprate 원자력",
       "score": 3.6,
       "status": "tracking",
@@ -662,7 +662,7 @@
       "type": "company",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "가스복합화력발전소내": {
       "articles": 1,
@@ -741,6 +741,40 @@
       "yields": 1,
       "zero_streak": 0
     },
+    "보고한한미": {
+      "articles": 1,
+      "created_at": "2026-09-22T15:40:52.063898+00:00",
+      "domains": [
+        "khan.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "khan.co.kr",
+          "hash": "36b62be32bdd9c3d",
+          "importance": "must_read",
+          "title": "정부, 한미 원전 프레임워크 보고···웨스팅하우스 지분 인수 협상 진통"
+        }
+      ],
+      "expires_at": "2026-09-23T15:40:55.791651+00:00",
+      "importance": "must_read",
+      "last_result_count": 19,
+      "last_run": "2026-09-22T15:40:55.791651+00:00",
+      "new_articles": 19,
+      "origin": "auto",
+      "planned_at": "2026-09-22T15:40:52.063898+00:00",
+      "queries_run": 1,
+      "query": "보고한 한미 원전",
+      "score": 3.6,
+      "status": "extended",
+      "term": "보고한 한미",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [
+        "2026-09-23"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    },
     "조지아주": {
       "articles": 1,
       "created_at": "2026-09-22T03:40:37.312957+00:00",
@@ -774,6 +808,52 @@
       ],
       "yields": 1,
       "zero_streak": 0
+    },
+    "한국재료연구원": {
+      "articles": 3,
+      "created_at": "2026-09-22T15:40:52.063898+00:00",
+      "domains": [
+        "mhns.co.kr",
+        "joongang.co.kr",
+        "dongascience.com"
+      ],
+      "evidence": [
+        {
+          "domain": "mhns.co.kr",
+          "hash": "60f379c2a5677323",
+          "importance": "nice_to_know",
+          "title": "한국재료연구원, 사용후핵연료 건식저장용기 알루미늄 합금 열화 평가기술 개발"
+        },
+        {
+          "domain": "joongang.co.kr",
+          "hash": "7df0823d0bce4064",
+          "importance": "nice_to_know",
+          "title": "재료연, 사용후핵연료 건식저장용기 알루미늄 열화 원인 규명"
+        },
+        {
+          "domain": "dongascience.com",
+          "hash": "3f2b0bddefbe6de7",
+          "importance": "nice_to_know",
+          "title": "한국재료연구원, 사용후핵연료 건식저장용기 알루미늄 합금 열화 원인 규명"
+        }
+      ],
+      "expires_at": "2026-09-23T15:40:52.063898+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-09-22T15:40:55.791651+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-22T15:40:52.063898+00:00",
+      "queries_run": 1,
+      "query": "한국재료연구원 원자력",
+      "score": 3.7,
+      "status": "tracking",
+      "term": "한국재료연구원",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     }
   },
   "version": 1

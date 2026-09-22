@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-22T00:43:48+09:00",
+ "generated_at": "2026-09-23T00:47:06+09:00",
  "events": [
   {
    "id": "of-556efe52f0da",
@@ -453,7 +453,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-09-22T00:43:48+09:00",
+   "at": "2026-09-23T00:47:06+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -461,7 +461,7 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-09-22T00:43:48+09:00",
+   "at": "2026-09-23T00:47:06+09:00",
    "ok": true,
    "parsed": 10,
    "kept": 3,
@@ -472,7 +472,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-09-22T00:43:48+09:00",
+   "at": "2026-09-23T00:47:06+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -485,7 +485,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-09-22T00:43:48+09:00",
+   "at": "2026-09-23T00:47:06+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -493,28 +493,27 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-09-22T00:43:48+09:00",
+   "at": "2026-09-23T00:47:06+09:00",
    "ok": true,
-   "parsed": 54,
-   "kept": 4,
-   "new": 2,
+   "parsed": 36,
+   "kept": 3,
+   "new": 0,
    "dropped": {
-    "no_interest_match": 49,
+    "no_interest_match": 32,
     "not_an_event": 1
    }
   },
   "kpx_notice": {
-   "at": "2026-09-22T00:43:48+09:00",
+   "at": "2026-09-23T00:47:06+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 0,
    "new": 0,
    "dropped": {
+    "low_significance": 4,
     "no_interest_match": 7,
     "not_an_event": 6,
-    "low_significance": 2,
-    "no_event_date": 4,
-    "unreadable_event_date": 1
+    "no_event_date": 3
    }
   }
  }
