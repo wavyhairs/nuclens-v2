@@ -424,11 +424,17 @@ def _salvage_json(text: str) -> dict:
     a, b = s.find("{"), s.rfind("}")
     if a != -1 and b > a:
         s = s[a:b + 1]
+    # 첫 객체만 읽고 뒤는 버린다. 첫 '{' 부터 마지막 '}' 까지 자르는 것만으로는
+    # 모델이 온전한 객체 뒤에 객체를 하나 더 붙이거나 '}' 가 든 군말을 덧붙인
+    # 응답을 못 살린다 — json.loads 가 'Extra data' 로 죽고, 2026-09-23 카드
+    # Writer 가 그렇게 두 번 다 죽어 그날 스토리 카드가 안 나왔다. 응답 자체는
+    # 3,391자짜리 멀쩡한 객체였다.
+    decoder = json.JSONDecoder()
     try:
-        return json.loads(s)
+        return decoder.raw_decode(s)[0]
     except json.JSONDecodeError:
         # 문자열 값 안의 raw 줄바꿈을 공백으로 (이스케이프된 \\n 은 건드리지 않음)
-        return json.loads(s.replace("\r", " ").replace("\n", " "))
+        return decoder.raw_decode(s.replace("\r", " ").replace("\n", " "))[0]
 
 
 def _finish_reason(payload: object) -> str:

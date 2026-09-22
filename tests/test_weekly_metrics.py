@@ -157,6 +157,21 @@ class TestGeminiSalvage(unittest.TestCase):
         self.assertEqual(gemini_client._salvage_json('{"a": "줄\n바꿈"}'),
                          {"a": "줄 바꿈"})
 
+    def test_trailing_second_object(self):
+        # 2026-09-23 카드 Writer 실사고 모양 — 온전한 객체 뒤에 객체가 하나 더.
+        # 첫 '{'~마지막 '}' 자르기로는 'Extra data' 로 죽었다.
+        self.assertEqual(gemini_client._salvage_json('{"a": 1}\n{"b": 2}'), {"a": 1})
+
+    def test_trailing_prose_with_brace(self):
+        self.assertEqual(
+            gemini_client._salvage_json('{"a": 1}\n\n참고: 위 형식은 {key: value} 입니다.'),
+            {"a": 1})
+
+    def test_nested_object_is_kept_whole(self):
+        # 첫 객체만 읽되, 그 안의 중첩 객체를 잘라 먹지는 않는다.
+        self.assertEqual(gemini_client._salvage_json('{"a": {"b": [1, {"c": 2}]}} 끝'),
+                         {"a": {"b": [1, {"c": 2}]}})
+
     def test_hopeless_raises(self):
         with self.assertRaises(Exception):
             gemini_client._salvage_json("완전 깨진 응답")
