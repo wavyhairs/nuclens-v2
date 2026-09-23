@@ -1,27 +1,6 @@
 {
- "generated_at": "2026-09-23T00:47:06+09:00",
+ "generated_at": "2026-09-24T00:44:01+09:00",
  "events": [
-  {
-   "id": "of-556efe52f0da",
-   "date": "2026-09-09",
-   "end_date": "2026-09-09",
-   "kind": "point",
-   "time": "14:00",
-   "label": "AI 시대 국가경쟁력을 위한 전원믹스와 시장제도 심포지움 개최",
-   "host": "한국원자력학회",
-   "organizer": "",
-   "place": "대한상공회의소",
-   "url": "https://www.kns.org/boards/chk_view/notice/103327",
-   "source_id": "kns_notice",
-   "publisher": "한국원자력학회",
-   "notice_title": "AI 시대 국가경쟁력을 위한 전원믹스와 시장제도 심포지움 개최(9.9(수) 14:00, 대한상공회의소)",
-   "first_seen": "2026-08-14",
-   "topics": [
-    "power_market"
-   ],
-   "relevance": "전원믹스",
-   "significance": "심포지움"
-  },
   {
    "id": "of-b30b2e7fed2a",
    "date": "2026-09-09",
@@ -251,6 +230,29 @@
    "significance": "포럼"
   },
   {
+   "id": "of-c56dcf7f0eba",
+   "date": "2026-09-30",
+   "end_date": "2026-09-30",
+   "kind": "point",
+   "time": "14:00",
+   "label": "'26년 ESS 중앙계약시장 사업자 설명회 개최",
+   "host": "한국전력거래소",
+   "organizer": "",
+   "place": "스페이스쉐어 서울중부센터 9층 스카이홀",
+   "url": "https://new.kpx.or.kr/board.es?act=view&bid=0042&list_no=78169&mid=a10501010000",
+   "source_id": "kpx_notice",
+   "publisher": "한국전력거래소",
+   "notice_title": "'26년 ESS 중앙계약시장 사업자 설명회 개최",
+   "first_seen": "2026-09-23",
+   "topics": [
+    "renewable_grid"
+   ],
+   "relevance": "ess 중앙계약",
+   "significance": "설명회",
+   "post_id": "78169",
+   "when_clause": "2026년 9월 30일(수) 14:00 ~ 15:30"
+  },
+  {
    "id": "of-5de35584127e",
    "date": "2026-09-30",
    "end_date": "2026-09-30",
@@ -453,7 +455,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-09-23T00:47:06+09:00",
+   "at": "2026-09-24T00:44:01+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -461,7 +463,7 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-09-23T00:47:06+09:00",
+   "at": "2026-09-24T00:44:01+09:00",
    "ok": true,
    "parsed": 10,
    "kept": 3,
@@ -472,7 +474,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-09-23T00:47:06+09:00",
+   "at": "2026-09-24T00:44:01+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -485,7 +487,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-09-23T00:47:06+09:00",
+   "at": "2026-09-24T00:44:01+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -493,27 +495,27 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-09-23T00:47:06+09:00",
+   "at": "2026-09-24T00:44:01+09:00",
    "ok": true,
-   "parsed": 36,
+   "parsed": 43,
    "kept": 3,
    "new": 0,
    "dropped": {
-    "no_interest_match": 32,
+    "no_interest_match": 39,
     "not_an_event": 1
    }
   },
   "kpx_notice": {
-   "at": "2026-09-23T00:47:06+09:00",
+   "at": "2026-09-24T00:44:01+09:00",
    "ok": true,
    "parsed": 20,
-   "kept": 0,
-   "new": 0,
+   "kept": 1,
+   "new": 1,
    "dropped": {
-    "low_significance": 4,
     "no_interest_match": 7,
     "not_an_event": 6,
-    "no_event_date": 3
+    "low_significance": 4,
+    "no_event_date": 2
    }
   }
  }
