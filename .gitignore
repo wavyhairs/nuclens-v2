@@ -22,6 +22,9 @@ crawl_gate_result.json
 # 수집 단계에서 생성하는 임베딩 캐시 (GitHub Actions cache로만 유지)
 embeddings.json
 
+# 웹 빌드가 생성하는 근거 부착 캐시 (GitHub Actions cache로만 유지, evidence_cache.py)
+evidence_attachments.json
+
 # 웹 빌드 산출물 (CI가 매번 재생성해 Cloudflare Pages로 배포 — 커밋 불필요)
 web/public/data/
 web/public/rss.xml
