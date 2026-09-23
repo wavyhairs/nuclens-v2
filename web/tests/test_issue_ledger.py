@@ -110,6 +110,41 @@ class LedgerIdentityTests(unittest.TestCase):
         self.assertEqual(store["issues"]["issue-B"]["moved_to"], "")
         self.assertEqual(issue_ledger.redirects(store, {"issue-A", "issue-B"}), {})
 
+    def test_facts_are_not_overwritten_by_an_empty_fingerprint(self):
+        """2026-09-24 실측: 대표 기사가 바뀌며 assets 'SMR' 이 '' 로 덮였고, 그 칸
+        하나에 기대던 장기 스토리 고리가 끊겨 스토리·카드가 사라졌다.
+
+        새 지문이 축을 비우면 알던 값을 두고, 다른 값을 말하면 그 값으로 바뀐다."""
+        def catalog(fingerprint):
+            issue = _issue("issue-A", ["h1"])
+            issue["story_fingerprint"] = fingerprint
+            return [issue]
+
+        issue_ledger.run(catalog({"actors": "Foreign Ministers", "assets": "SMR",
+                                  "event_family": "policy_decision"}),
+                         today="2026-09-22", path=self.path)
+        store = issue_ledger.run(catalog({"actors": "US Department of State", "assets": "",
+                                          "event_family": "policy_decision"}),
+                                 today="2026-09-24", path=self.path)["store"]
+        facts = store["issues"]["issue-A"]["facts"]
+        self.assertEqual(facts["assets"], "SMR", "빈 값은 알던 값을 덮지 않는다")
+        self.assertEqual(facts["actors"], "US Department of State", "새 값은 이긴다")
+
+        store = issue_ledger.run(catalog({"assets": "AP1000"}),
+                                 today="2026-09-25", path=self.path)["store"]
+        self.assertEqual(store["issues"]["issue-A"]["facts"]["assets"], "AP1000",
+                         "다른 자산을 말하면 그 값으로 바뀐다 — 옛 값이 영영 남지 않는다")
+        self.assertEqual(store["issues"]["issue-A"]["facts"]["actors"],
+                         "US Department of State", "말하지 않은 축은 유지된다")
+
+    def test_retain_facts_helper_is_shared_with_the_backfill_tool(self):
+        """수동 소급 도구가 같은 규칙을 안 쓰면 손으로 돌리는 날 다시 비워진다."""
+        tool = (ROOT.parent / "tools" / "backfill_ledger_retrieval.py").read_text(encoding="utf-8")
+        self.assertIn("issue_ledger.retain_facts(", tool)
+        self.assertEqual(issue_ledger.retain_facts({"assets": "SMR"}, {"assets": " "}),
+                         {"assets": "SMR"})
+        self.assertEqual(issue_ledger.retain_facts(None, {"assets": "x"}), {"assets": "x"})
+
     def test_the_ledger_is_idempotent(self):
         """같은 카탈로그를 두 번 태워도 원장이 자라지 않는다.
 
