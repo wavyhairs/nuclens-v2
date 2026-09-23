@@ -60,6 +60,7 @@ import event_calendar  # noqa: E402
 import event_identity  # noqa: E402
 import event_ledger  # noqa: E402
 import issue_candidate_stats  # noqa: E402
+import evidence_cache  # noqa: E402
 import issue_change_log  # noqa: E402
 import issue_headline  # noqa: E402
 import issue_insight  # noqa: E402
@@ -3122,6 +3123,143 @@ def _evidence_retrieval_canary(
     return rescued, auto_missed, review_missed, excluded_checked
 
 
+def _attach_evidence_one(
+    article: dict,
+    shortlisted: list[dict],
+    *,
+    overrides: dict[str, set[str]],
+    veto_pairs: set[str],
+    embeddings: dict[str, list[float]] | None,
+    local_embeddings: dict[str, list[float]] | None,
+    facility_entities: dict[str, set[str]] | None,
+    candidate_rows: list[dict],
+    seen_candidates: set[str],
+    telemetry: issue_candidate_stats.SearchTelemetry | None,
+    emitted: list[dict] | None = None,
+) -> tuple[dict | None, float, dict | None]:
+    """근거 기사 하나를 shortlisted 이슈들과 대조한다.
+
+    (best_issue, best_score, best_diag) 를 돌려준다. 회색지대 쌍은
+    `candidate_rows` 에 올리고, `emitted` 가 있으면 그 행을 `{"issue_id", "row"}`
+    로 한 번 더 적는다 — 캐시가 적중 시 다시 큐에 올리기 위해서다.
+    `attach_evidence_articles` 의 안쪽 루프를 그대로 옮긴 것이고 판정 순서·
+    동점 처리·계측 호출은 바뀌지 않았다.
+    """
+    article_day = _parse_day(article.get("article_date", ""))
+    best_issue = None
+    best_score = -1.0
+    best_diag = None
+    for issue in shortlisted:
+        if telemetry is not None:
+            telemetry.visit()
+        card_members = issue["members"]
+        _profile_increment("cluster_member_scan_items", len(card_members))
+        card_days = [
+            _parse_day(member.get("article_date") or member.get("briefing_date") or "")
+            for member in card_members
+        ]
+        if article_day and card_days and all(
+            card_day and abs((article_day - card_day).days) > ISSUE_WINDOW_DAYS
+            for card_day in card_days
+        ):
+            if telemetry is not None:
+                telemetry.skip("window")
+            continue
+        if veto_pairs and any(
+            _pair_id(article["hash"], member["hash"]) in veto_pairs
+            for member in card_members
+        ):
+            if telemetry is not None:
+                telemetry.skip("veto")
+            continue
+        # 카드 묶음과 같은 전체 거부권 — 근거 기사도 묶음 멤버로 화면에 실리고
+        # 데이터 게이트의 검사 대상이라, 여기서 빠지면 같은 구멍이 남는다.
+        if _cluster_country_conflict(article, card_members):
+            if telemetry is not None:
+                telemetry.skip("country_conflict")
+            continue
+        if _cluster_facility_conflict(article, card_members):
+            if telemetry is not None:
+                telemetry.skip("facility_conflict")
+            continue
+        if telemetry is not None:
+            telemetry.compare(article["hash"])
+        # 지문 경로만 묶음 전체와 대조한다 — 약한 근거는 연쇄하지 못한다.
+        # (왜 이 경로만인지는 _cluster_fingerprint_conflict 주석에 실측이 있다.)
+        fingerprint_chain_blocked = _cluster_fingerprint_conflict(article, card_members)
+        # 근거끼리 chaining 되지 않도록 카드 멤버만 앵커로 사용한다.
+        for reference in card_members[-3:]:
+            pair_id = _pair_id(article["hash"], reference["hash"])
+            recorded = False
+            matched, score, diag = issue_similarity(
+                article, reference, embeddings, local_embeddings, facility_entities
+            )
+            # 승인 override 보다 위에 있어도 사람 판정을 뒤집지 않는다:
+            # 이 게이트는 blocked_by 를 건드리지 않으므로 아래 승인 분기가
+            # 그대로 matched 를 되살린다. 그리고 판정이 뒤집힌 쌍은
+            # `elif not matched` 로 흘러 검수 큐에 남는다 — 정말 같은
+            # 사건이면 사람이 다시 이을 자리가 있어야 한다.
+            if matched and diag.get("method") == "story_fingerprint" and (
+                    fingerprint_chain_blocked):
+                matched = False
+                diag = {**diag, "method": "fingerprint_chain_blocked"}
+                if telemetry is not None:
+                    telemetry.fingerprint_chain_demoted()
+            if pair_id in veto_pairs:
+                if telemetry is not None:
+                    telemetry.pair(article["hash"], "veto",
+                                   issue["issue_id"], _lexical_score(diag))
+                continue
+            if pair_id in overrides.get("approved", set()) and not diag.get("blocked_by"):
+                matched, score = True, max(score, 1.0)
+                diag = {**diag, "method": "manual_approved"}
+            elif pair_id in overrides.get("llm_approved", set()) and not diag.get("blocked_by"):
+                matched, score = True, max(score, 0.99)
+                diag = {**diag, "method": "llm_approved"}
+            elif not matched:
+                is_candidate, candidate_method, candidate_score = is_review_candidate(diag)
+                if is_candidate and pair_id not in seen_candidates:
+                    seen_candidates.add(pair_id)
+                    recorded = True
+                    row = {
+                        "candidate_id": pair_id,
+                        "left_hash": reference["hash"],
+                        "right_hash": article["hash"],
+                        "left_date": reference.get("briefing_date") or reference.get("article_date"),
+                        "right_date": article.get("article_date"),
+                        "left_title": reference.get("title_kr") or reference.get("title"),
+                        "right_title": article.get("title_kr") or article.get("title"),
+                        "candidate_method": candidate_method,
+                        "candidate_score": round(candidate_score, 4),
+                        "shared_facility_entities": diag.get("shared_facility_entities") or [],
+                        "diagnostics": diag,
+                        "review_state": "pending",
+                        "member_role": "evidence",
+                    }
+                    candidate_rows.append(row)
+                    if emitted is not None:
+                        emitted.append({"issue_id": str(issue.get("issue_id") or ""),
+                                        "row": row})
+            if telemetry is not None:
+                telemetry.pair(article["hash"], _pair_outcome(matched, diag, recorded),
+                               issue["issue_id"], _lexical_score(diag))
+            if matched and score > best_score:
+                best_issue, best_score = issue, score
+                best_diag = {**diag, "reference_hash": reference["hash"]}
+    return best_issue, best_score, best_diag
+
+
+def _record_evidence_attachment(issue: dict, article: dict, score: float,
+                                diag: dict | None) -> None:
+    issue.setdefault("evidence_members", []).append(article)
+    issue["match_diagnostics"].append({
+        "hash": article["hash"],
+        "score": score,
+        "member_role": "evidence",
+        **(diag or {}),
+    })
+
+
 def attach_evidence_articles(
     news_items: list[dict],
     issues: list[dict],
@@ -3131,6 +3269,7 @@ def attach_evidence_articles(
     review_candidates: list[dict] | None = None,
     facility_entities: dict[str, set[str]] | None = None,
     telemetry: issue_candidate_stats.SearchTelemetry | None = None,
+    cache: "evidence_cache.EvidenceCache | None" = None,
 ) -> int:
     """미발송 기사를 이미 고정된 카드 이슈에 근거로만 부착한다.
 
@@ -3141,27 +3280,15 @@ def attach_evidence_articles(
     임베딩 LSH 버킷에서 제한된 후보를 찾고, 수동/LLM 승인·story_id·설비는 필수
     경로로 합친다. 따라서 정밀 비교량은 기사×전체 이슈가 아니라 기사×후보 상한으로
     증가한다.
+
+    `cache` 가 있으면 회차 간 캐시를 쓴다(`evidence_cache` 머리말). 전제가
+    그대로인 기사는 캐시 판정을 쓰되 **직전 저장 이후 바뀌었거나 새로 생긴
+    이슈(델타)** 에만 다시 대본다. 카나리 표본과 전제가 바뀐 기사는 전체를
+    다시 계산한다. `cache=None` 이면 예전과 완전히 같다.
     """
     _profile_increment("evidence_passes")
     if not issues:
         return 0
-    # 근거 풀의 날짜 경계는 **최신 카드 하나가 아니라 카드 전체**가 정한다.
-    #
-    # 예전에는 `최신 카드 - ISSUE_WINDOW_DAYS` 한 줄로 잘랐다. 카탈로그는 60일치인데
-    # 후보는 최근 21일치뿐이라, 21일이 지난 이슈는 **매 빌드마다 제 근거를 잃었다** —
-    # 이슈는 빌드마다 처음부터 다시 조립되고 부착 결과는 어디에도 저장되지 않는다.
-    #
-    # 실측 2026-09-12, 라이브 두 빌드 대조(20260901T125806Z ↔ 20260912T083635Z):
-    # 같은 id 로 살아남은 372건 중 56건에서 근거 215건이 사라졌고 그중 185건(86%)이
-    # 옛 컷오프 이전 날짜였다. **215건 전부 그 빌드의 news.json 에 그대로 있었다** —
-    # 자료가 없어진 게 아니라 후보 목록에서 빠진 것이다. 부착률이 창을 따라 갈린다:
-    #
-    #     last_seen 08-22 이후(옛 창 안)  이슈 273  근거 붙은 이슈 66.7%  이슈당 3.8건
-    #     last_seen 08-01~08-21          이슈 166                22.3%        0.6건
-    #     last_seen 07월 이전             이슈  86                 0.0%        0.0건
-    #
-    # 진짜 게이트는 아래 이슈별 ±ISSUE_WINDOW_DAYS 검사다. 여기서 만드는 것은 그
-    # 검사가 볼 수 있는 범위 — 카드 전체 창의 합집합 — 뿐이고, 판정 자체는 그대로다.
     card_days = [
         day
         for issue in issues
@@ -3196,6 +3323,36 @@ def attach_evidence_articles(
             :EVIDENCE_RETRIEVAL_CANARY
         ]
     }
+    scoring = dict(
+        overrides=overrides, veto_pairs=veto_pairs, embeddings=embeddings,
+        local_embeddings=local_embeddings, facility_entities=facility_entities,
+        candidate_rows=candidate_rows, seen_candidates=seen_candidates,
+    )
+
+    # 캐시 전제 — 이슈 지문 표와 델타 색인은 패스마다 한 번만 만든다.
+    current_fps: dict[str, str] = {}
+    delta_ids: set[str] = set()
+    delta_index: dict | None = None
+    override_reverse: dict = {}
+    if cache is not None:
+        current_fps = {
+            str(issue.get("issue_id") or ""): evidence_cache.issue_fingerprint(
+                issue, embeddings, local_embeddings)
+            for issue in issues
+        }
+        delta_ids = cache.delta_issue_ids(current_fps)
+        if delta_ids:
+            delta_index = _build_evidence_issue_index(
+                [issue for issue in issues if str(issue.get("issue_id") or "") in delta_ids],
+                facility_entities, embeddings, local_embeddings,
+            )
+        override_reverse = evidence_cache.override_reverse_index(overrides)
+        cache.stats["delta_issues"] += len(delta_ids)
+        cache.stats["pool"] += len(evidence)
+        # 같은 issue_id 가 둘이면 색인도 지문 표도 마지막 것만 남는다 — 색인이
+        # 원래 그렇게 동작하므로 캐시도 같은 쪽을 본다. 수만 남겨 눈에 띄게 한다.
+        cache.stats["issue_id_collisions"] += len(issues) - len(current_fps)
+
     attached = 0
 
     for evidence_index, article in enumerate(evidence, 1):
@@ -3206,15 +3363,69 @@ def attach_evidence_articles(
                 f"attached={attached}",
                 flush=True,
             )
-        article_day = _parse_day(article.get("article_date", ""))
-        best_issue = None
-        best_score = -1.0
-        best_diag = None
+        article_hash = str(article.get("hash") or "")
+        is_canary = article_hash in canary_hashes
+
+        # ── 캐시 적중 경로 ─────────────────────────────────
+        if cache is not None and not is_canary:
+            key = evidence_cache.article_key(
+                article, override_reverse, embeddings, local_embeddings, facility_entities)
+            entry = cache.lookup(article_hash, key, current_fps)
+            if entry is not None:
+                cache.stats["hit"] += 1
+                best_issue = None
+                best_score = float(entry.get("score", -1.0))
+                best_diag = entry.get("diag") or None
+                cached_issue_id = entry.get("issue_id")
+                if cached_issue_id is not None:
+                    best_issue = issue_index["issues"].get(str(cached_issue_id))
+                emitted: list[dict] = []
+                if delta_index is not None:
+                    cache.stats["hit_delta_checked"] += 1
+                    shortlisted = _preselect_evidence_issues(
+                        article, delta_index, overrides, facility_entities,
+                        embeddings, local_embeddings, None, approval_reverse_index
+                    )
+                    delta_issue, delta_score, delta_diag = _attach_evidence_one(
+                        article, shortlisted, telemetry=None, emitted=emitted, **scoring)
+                    if delta_issue is not None and delta_score > best_score:
+                        cache.stats["moved"] += 1
+                        best_issue, best_score, best_diag = delta_issue, delta_score, delta_diag
+                # 바뀌지 않은 이슈에 올렸던 회색지대 쌍은 다시 큐에 올린다 — 전체
+                # 재계산이라면 같은 쌍이 또 나왔을 것이고, 안 올리면 판정을 못 받은
+                # 쌍이 사라진다. 델타 이슈의 옛 행은 버린다(방금 새로 대봤다).
+                kept: list[dict] = []
+                for wrapper in entry.get("cands") or []:
+                    issue_id = str((wrapper or {}).get("issue_id") or "")
+                    row = (wrapper or {}).get("row")
+                    if not isinstance(row, dict) or issue_id in delta_ids or issue_id not in current_fps:
+                        continue
+                    kept.append({"issue_id": issue_id, "row": row})
+                    pair_id = str(row.get("candidate_id") or "")
+                    if pair_id and pair_id not in seen_candidates:
+                        seen_candidates.add(pair_id)
+                        candidate_rows.append(dict(row))
+                if best_issue is not None:
+                    _record_evidence_attachment(best_issue, article, best_score, best_diag)
+                    attached += 1
+                cache.store(
+                    article_hash, key=key,
+                    issue_id=(str(best_issue.get("issue_id")) if best_issue is not None else None),
+                    best_fp=(current_fps.get(str(best_issue.get("issue_id")))
+                             if best_issue is not None else None),
+                    score=best_score, diag=best_diag, cands=kept + emitted,
+                )
+                continue
+            cache.stats["canary" if is_canary else ("recomputed" if article_hash in cache.entries else "new")] += 1
+        elif cache is not None:
+            cache.stats["canary"] += 1
+
+        # ── 전체 계산 경로 (캐시 없음 · 미스 · 카나리) ────────
         shortlisted = _preselect_evidence_issues(
             article, issue_index, overrides, facility_entities,
             embeddings, local_embeddings, telemetry, approval_reverse_index
         )
-        if str(article.get("hash") or "") in canary_hashes:
+        if is_canary:
             rescued, auto_missed, review_missed, checked = _evidence_retrieval_canary(
                 article, issues, shortlisted, embeddings, local_embeddings,
                 overrides, facility_entities
@@ -3222,113 +3433,31 @@ def attach_evidence_articles(
             shortlisted.extend(rescued)
             if telemetry is not None:
                 telemetry.retrieval_canary(checked, auto_missed, review_missed)
-        for issue in shortlisted:
-            if telemetry is not None:
-                telemetry.visit()
-            card_members = issue["members"]
-            _profile_increment("cluster_member_scan_items", len(card_members))
-            card_days = [
-                _parse_day(member.get("article_date") or member.get("briefing_date") or "")
-                for member in card_members
-            ]
-            if article_day and card_days and all(
-                card_day and abs((article_day - card_day).days) > ISSUE_WINDOW_DAYS
-                for card_day in card_days
-            ):
-                if telemetry is not None:
-                    telemetry.skip("window")
-                continue
-            if veto_pairs and any(
-                _pair_id(article["hash"], member["hash"]) in veto_pairs
-                for member in card_members
-            ):
-                if telemetry is not None:
-                    telemetry.skip("veto")
-                continue
-            # 카드 묶음과 같은 전체 거부권 — 근거 기사도 묶음 멤버로 화면에 실리고
-            # 데이터 게이트의 검사 대상이라, 여기서 빠지면 같은 구멍이 남는다.
-            if _cluster_country_conflict(article, card_members):
-                if telemetry is not None:
-                    telemetry.skip("country_conflict")
-                continue
-            if _cluster_facility_conflict(article, card_members):
-                if telemetry is not None:
-                    telemetry.skip("facility_conflict")
-                continue
-            if telemetry is not None:
-                telemetry.compare(article["hash"])
-            # 지문 경로만 묶음 전체와 대조한다 — 약한 근거는 연쇄하지 못한다.
-            # (왜 이 경로만인지는 _cluster_fingerprint_conflict 주석에 실측이 있다.)
-            fingerprint_chain_blocked = _cluster_fingerprint_conflict(article, card_members)
-            # 근거끼리 chaining 되지 않도록 카드 멤버만 앵커로 사용한다.
-            for reference in card_members[-3:]:
-                pair_id = _pair_id(article["hash"], reference["hash"])
-                recorded = False
-                matched, score, diag = issue_similarity(
-                    article, reference, embeddings, local_embeddings, facility_entities
-                )
-                # 승인 override 보다 위에 있어도 사람 판정을 뒤집지 않는다:
-                # 이 게이트는 blocked_by 를 건드리지 않으므로 아래 승인 분기가
-                # 그대로 matched 를 되살린다. 그리고 판정이 뒤집힌 쌍은
-                # `elif not matched` 로 흘러 검수 큐에 남는다 — 정말 같은
-                # 사건이면 사람이 다시 이을 자리가 있어야 한다.
-                if matched and diag.get("method") == "story_fingerprint" and (
-                        fingerprint_chain_blocked):
-                    matched = False
-                    diag = {**diag, "method": "fingerprint_chain_blocked"}
-                    if telemetry is not None:
-                        telemetry.fingerprint_chain_demoted()
-                if pair_id in veto_pairs:
-                    if telemetry is not None:
-                        telemetry.pair(article["hash"], "veto",
-                                       issue["issue_id"], _lexical_score(diag))
-                    continue
-                if pair_id in overrides.get("approved", set()) and not diag.get("blocked_by"):
-                    matched, score = True, max(score, 1.0)
-                    diag = {**diag, "method": "manual_approved"}
-                elif pair_id in overrides.get("llm_approved", set()) and not diag.get("blocked_by"):
-                    matched, score = True, max(score, 0.99)
-                    diag = {**diag, "method": "llm_approved"}
-                elif not matched:
-                    is_candidate, candidate_method, candidate_score = is_review_candidate(diag)
-                    if is_candidate and pair_id not in seen_candidates:
-                        seen_candidates.add(pair_id)
-                        recorded = True
-                        candidate_rows.append({
-                            "candidate_id": pair_id,
-                            "left_hash": reference["hash"],
-                            "right_hash": article["hash"],
-                            "left_date": reference.get("briefing_date") or reference.get("article_date"),
-                            "right_date": article.get("article_date"),
-                            "left_title": reference.get("title_kr") or reference.get("title"),
-                            "right_title": article.get("title_kr") or article.get("title"),
-                            "candidate_method": candidate_method,
-                            "candidate_score": round(candidate_score, 4),
-                            "shared_facility_entities": diag.get("shared_facility_entities") or [],
-                            "diagnostics": diag,
-                            "review_state": "pending",
-                            "member_role": "evidence",
-                        })
-                if telemetry is not None:
-                    telemetry.pair(article["hash"], _pair_outcome(matched, diag, recorded),
-                                   issue["issue_id"], _lexical_score(diag))
-                if matched and score > best_score:
-                    best_issue, best_score = issue, score
-                    best_diag = {**diag, "reference_hash": reference["hash"]}
+        emitted = [] if cache is not None else None
+        best_issue, best_score, best_diag = _attach_evidence_one(
+            article, shortlisted, telemetry=telemetry, emitted=emitted, **scoring)
         if telemetry is not None:
             telemetry.settle((best_issue or {}).get("issue_id"))
-        if best_issue is None:
-            continue
-        best_issue.setdefault("evidence_members", []).append(article)
-        best_issue["match_diagnostics"].append({
-            "hash": article["hash"],
-            "score": best_score,
-            "member_role": "evidence",
-            **(best_diag or {}),
-        })
-        attached += 1
-    return attached
+        if best_issue is not None:
+            _record_evidence_attachment(best_issue, article, best_score, best_diag)
+            attached += 1
+        # 카나리 표본은 항목을 남기지 않는다. 카나리는 전수 대조로 구조한 이슈까지
+        # 대본 결과라 후보 행이 더 많다 — 풀이 바뀌어 카나리에서 벗어난 뒤 그
+        # 항목이 적중하면 일반 계산에는 없는 행이 큐에 섞인다(실측 +18건).
+        if cache is not None and not is_canary:
+            key = evidence_cache.article_key(
+                article, override_reverse, embeddings, local_embeddings, facility_entities)
+            cache.store(
+                article_hash, key=key,
+                issue_id=(str(best_issue.get("issue_id")) if best_issue is not None else None),
+                best_fp=(current_fps.get(str(best_issue.get("issue_id")))
+                         if best_issue is not None else None),
+                score=best_score, diag=best_diag, cands=emitted or [],
+            )
 
+    if cache is not None:
+        cache.finish_pass(current_fps, (str(item.get("hash") or "") for item in evidence))
+    return attached
 
 def card_cluster_snapshot(issues: list[dict]) -> list[dict]:
     """Capture the card-only order, membership, and representative before P1 evidence attachment."""
@@ -7002,6 +7131,43 @@ def build() -> None:
     # 관여하지 않는다(issue_candidate_stats 머리말). 2차 패스에서 새로 만든다.
     card_telemetry = issue_candidate_stats.SearchTelemetry("card")
     evidence_telemetry = issue_candidate_stats.SearchTelemetry("evidence")
+    # 근거 부착 캐시 — 임계값·창·설비 사전이 지문이다. 하나라도 바뀌면 파일
+    # 전체를 버리고 처음부터 계산한다(evidence_cache 머리말).
+    attachment_cache = None
+    if evidence_cache.enabled():
+        attachment_cache = evidence_cache.EvidenceCache.load(
+            evidence_cache.policy_fingerprint(
+                {
+                    "ISSUE_WINDOW_DAYS": ISSUE_WINDOW_DAYS,
+                    "ISSUE_EMBEDDING_THRESHOLD": ISSUE_EMBEDDING_THRESHOLD,
+                    "ISSUE_EMBEDDING_CANDIDATE_THRESHOLD": ISSUE_EMBEDDING_CANDIDATE_THRESHOLD,
+                    "LOCAL_EMBEDDING_CANDIDATE_THRESHOLD": LOCAL_EMBEDDING_CANDIDATE_THRESHOLD,
+                    "LOCAL_EMBEDDING_DIMENSION": LOCAL_EMBEDDING_DIMENSION,
+                    "TITLE_MATCH_RATIO": TITLE_MATCH_RATIO,
+                    "TAGS_MATCH_MIN_SHARED": TAGS_MATCH_MIN_SHARED,
+                    "TAGS_MATCH_TITLE_RATIO": TAGS_MATCH_TITLE_RATIO,
+                    "TAGS_MATCH_TOKEN_RATIO": TAGS_MATCH_TOKEN_RATIO,
+                    "TITLE_TAGS_MATCH_RATIO": TITLE_TAGS_MATCH_RATIO,
+                    "FINGERPRINT_MATCH_SIMILARITY": FINGERPRINT_MATCH_SIMILARITY,
+                    "FINGERPRINT_MATCH_MIN_COMPARED": FINGERPRINT_MATCH_MIN_COMPARED,
+                    "FINGERPRINT_MATCH_MIN_SHARED_AXES": FINGERPRINT_MATCH_MIN_SHARED_AXES,
+                    "FINGERPRINT_MATCH_AXES": list(FINGERPRINT_MATCH_AXES),
+                    "EVIDENCE_PRESELECT_TOP_N": EVIDENCE_PRESELECT_TOP_N,
+                    "EVIDENCE_RETRIEVAL_POOL": EVIDENCE_RETRIEVAL_POOL,
+                    "EVIDENCE_VECTOR_TOP_N": EVIDENCE_VECTOR_TOP_N,
+                    "EVIDENCE_RETRIEVAL_TERMS": EVIDENCE_RETRIEVAL_TERMS,
+                    "EVIDENCE_RETRIEVAL_MAX_POSTINGS": EVIDENCE_RETRIEVAL_MAX_POSTINGS,
+                    "EVIDENCE_RETRIEVAL_CANARY": EVIDENCE_RETRIEVAL_CANARY,
+                    "EVIDENCE_LSH_BANDS": EVIDENCE_LSH_BANDS,
+                    "EVIDENCE_LSH_BITS_PER_BAND": EVIDENCE_LSH_BITS_PER_BAND,
+                },
+                evidence_cache.digest(facility_alias_entries(entity_registry)),
+            )
+        )
+        print(f"[build_data] 근거 캐시 로드: 항목 {len(attachment_cache.entries)} · "
+              f"이슈 지문 {len(attachment_cache.issue_fps)}"
+              + (f" · 초기화({attachment_cache.reset_reason})"
+                 if attachment_cache.reset_reason else ""))
     issues = cluster_selected_articles(
         news_items,
         embeddings,
@@ -7022,6 +7188,7 @@ def build() -> None:
         review_candidates,
         facility_entities,
         telemetry=evidence_telemetry,
+        cache=attachment_cache,
     )
     progress(
         "attach_evidence:done",
@@ -7089,6 +7256,7 @@ def build() -> None:
             review_candidates,
             facility_entities,
             telemetry=evidence_telemetry,
+            cache=attachment_cache,
         )
         p1_regression = assert_card_clusters_unchanged(p0_card_snapshot, issues)
     print(f"[build_data] 이슈 병합 LLM 검수: 후보 {llm_stats['candidates']}쌍 "
@@ -7096,6 +7264,9 @@ def build() -> None:
           f"재질의 {llm_stats.get('reasked', 0)} / "
           f"호출 {llm_stats['calls']}회) → 병합 {llm_stats['approved']} "
           f"분리 {llm_stats['rejected']} 실패 {llm_stats['failed']} [{llm_stats['status']}]")
+    if attachment_cache is not None:
+        attachment_cache.save()
+        print("[build_data] 근거 캐시: " + json.dumps(attachment_cache.summary(), ensure_ascii=False))
     print(f"[build_data] 미발송 근거 기사 부착: {evidence_attached}건 "
           f"(카드 클러스터 {len(issues)}개 고정)")
     # 쿼터로 죽으면 '병합 안 함'으로 조용히 흡수돼 후속 보도가 신규 이슈로 갈라진다.

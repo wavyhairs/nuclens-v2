@@ -1075,6 +1075,28 @@ class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
                           "issue_insights.json", "issue_headlines.json"):
                 self.assertIn(cache, yml, f"{name} 에 {cache} 커밋이 빠졌다")
 
+    def test_evidence_attachment_cache_lives_in_actions_cache(self):
+        """근거 부착 캐시(evidence_attachments.json)는 git 이 아니라 Actions 캐시다.
+
+        회차마다 통째로 바뀌는 9MB 파일이라 커밋하면 저장소가 하루 70MB 씩
+        큰다. 잃어도 다음 빌드가 전량 계산으로 다시 만들므로 embeddings.json
+        과 같은 규칙을 따른다. 복원이 빠지면 매 빌드가 근거 풀 전체(7,400건+)를
+        다시 대본다 — 빌드 30분 중 19분(2026-09-23). 저장이 빠지면 복원할 것이
+        없다. 둘 다 있어야 한다.
+        """
+        for name in ("crawl.yml", "daily-brief.yml"):
+            yml = (self.ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
+            restore = yml.split("actions/cache/restore@v4")
+            save = yml.split("actions/cache/save@v4")
+            self.assertTrue(any("path: evidence_attachments.json" in part[:400] for part in restore[1:]),
+                            f"{name} 에 evidence_attachments.json 복원이 없다")
+            self.assertTrue(any("path: evidence_attachments.json" in part[:400] for part in save[1:]),
+                            f"{name} 에 evidence_attachments.json 저장이 없다")
+            self.assertNotIn("git add evidence_attachments.json", yml)
+        ignored = (self.ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+        self.assertIn("evidence_attachments.json", ignored,
+                      "로컬 빌드가 만든 캐시가 손 커밋으로 새어 들어온다")
+
     def test_discovery_state_is_committed(self):
         """discovery 상태도 같은 함정에 걸린다 — 커밋 안 하면 매 시각 같은 쿼리를
         다시 던지고, 헛도는 조합을 영영 못 재운다(zero_yield_streak 이 늘 0)."""

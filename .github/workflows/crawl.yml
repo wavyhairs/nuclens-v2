@@ -419,6 +419,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuclens-audio-
 
+      # 근거 부착 캐시(evidence_cache.py). 없으면 매 빌드가 근거 풀 전체(7,400건+)를
+      # 이슈에 다시 대본다 — 빌드 30분 중 19분이 그것이었다(2026-09-23).
+      # embeddings.json 과 같은 규칙으로 **Actions 캐시에만** 산다. git 에 싣지
+      # 않는 이유: 회차마다 통째로 바뀌는 9MB 파일이라 저장소를 키우고, 잃어도
+      # 다음 빌드가 전량 계산으로 다시 만든다(느릴 뿐 결과는 같다). 캐시는
+      # immutable 이므로 run_id 별로 저장하고 최신 prefix 를 복원한다.
+      - name: Restore evidence attachment cache
+        uses: actions/cache/restore@v4
+        with:
+          path: evidence_attachments.json
+          key: ${{ runner.os }}-nuclens-evidence-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-nuclens-evidence-
+
       # 웹 갱신을 세 스텝으로 가른다: 배포 창 판정 / 데이터 빌드 / 업로드.
       #
       # 예전엔 한 덩어리였다. 그래서 `python web/build_data.py` 가 죽으면 스텝이
@@ -497,6 +511,15 @@ jobs:
           GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
           GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
         run: python web/build_data.py
+
+      # 빌드가 성공한 회차만 저장한다. 죽은 빌드의 캐시는 어느 이슈 상태를
+      # 전제했는지 보장할 수 없다.
+      - name: Save evidence attachment cache
+        if: steps.web-build.outcome == 'success' && hashFiles('evidence_attachments.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: evidence_attachments.json
+          key: ${{ runner.os }}-nuclens-evidence-${{ github.run_id }}
 
       # nuclens.pages.dev 갱신 — 3시간 간격.
       # Pages 무료 티어 월 500회 제한: 크롤이 3시간마다이므로 회차마다 배포해도
