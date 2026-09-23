@@ -425,6 +425,8 @@ def main() -> int:
         "caption": caption,
         "thread_id": payload.get("thread_id", ""),
         "issue_id": payload.get("issue_id", ""),
+        # 게시할 때 이력에 적는다 — 다음 날 '새 사건이 붙었나' 를 이 목록과 비교한다.
+        "event_ids": list(payload.get("event_ids") or []),
         "files": [str(f.relative_to(ROOT)).replace("\\", "/") for f in files],
     }, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"[story] {len(files)}장 준비 완료 → {ALBUM_FILE.name}")
