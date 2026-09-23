@@ -31,7 +31,8 @@ WORKFLOWS = ROOT / ".github" / "workflows"
 
 # Gemini 를 실제로 부르는 워크플로. python-tests 는 여기 없다 — 그쪽은 키를 고르지
 # 않고 빈 값으로 못 박는다(아래 TestWorkflowsPinTheTestRunner).
-GEMINI_WORKFLOWS = ("crawl.yml", "daily-brief.yml", "deploy-web.yml", "weekly.yml", "cards.yml")
+GEMINI_WORKFLOWS = ("crawl.yml", "daily-brief.yml", "deploy-web.yml", "weekly.yml", "cards.yml",
+                    "stories.yml")
 
 SELECT_EXPR = ("${{ vars.GEMINI_PAID_MODE == 'ON' "
                "&& secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}")
@@ -180,7 +181,7 @@ class TestWorkflowsSelectTheKey(unittest.TestCase):
         # (2026-09-20). 그 스텝은 더 이상 LLM 을 부르지 않는다 — 스토리 카피는
         # 앞 "Make cards" 스텝이 같은 편집 판단으로 이미 썼고, 여기서는 렌더와
         # 검증만 한다. 키가 없는 것이 계약이다.
-        self.assertEqual(16, found, "Gemini 스텝 수가 달라졌다 — 새 스텝을 확인할 것")
+        self.assertEqual(17, found, "Gemini 스텝 수가 달라졌다 — 새 스텝을 확인할 것")
 
     def test_no_step_reaches_a_secret_directly(self):
         """시크릿을 직접 집는 곳은 검증 스텝뿐이다. 나머지는 선택 식만 본다.

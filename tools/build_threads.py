@@ -27,7 +27,7 @@ import json
 import sys
 import time
 from collections import Counter, defaultdict
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -115,7 +115,58 @@ def sticky_pairs(index: event_retrieval.Index, seen: set[str],
     return rows
 
 
-def build_edges(pairs: list[dict], verdicts: dict, roots: dict[str, str]) -> tuple:
+def grandfathered_links(store: dict, cache: dict, *,
+                        since=None) -> set[str]:
+    """기억이 없던 첫 회차에 **원장이 이미 잇고 있던 고리**를 통과로 승계한다.
+
+    게이트 기억(`thread_evidence.record_pass`)은 이 코드가 배포된 뒤부터 쌓인다.
+    그 전에 원장에 실린 고리는 그때 게이트를 통과했다는 사실만 있고 기록이 없다 —
+    승계하지 않으면 배포 첫 회차가 지금과 똑같이 오늘 값으로 전량 심사해서,
+    이 수정이 막으려는 해체(2026-09-24 SMR 스토리)를 그날 한 번 더 겪는다.
+
+    승계 조건은 둘 중 하나다:
+      · 스토리가 직전 회차의 live 명단에 있다 — 그 고리는 직전 회차 게이트를 넘었다
+      · 판정이 게이트가 생긴 뒤(`GATE_SINCE`)에 나왔다 — 원장에 실렸다면 게이트를
+        넘은 것이다. 게이트 이전 판정으로 실린 뒤 live 에서 빠진 고리는 승계하지
+        않는다: 게이트가 의도적으로 끊은 오병합일 수 있다.
+
+    양쪽 사건이 살아 있어야 하는 조건은 `sticky_pairs` 가 이미 건다. 여기서
+    승계한 고리도 통과로 기록되므로 둘째 회차부터는 이 함수가 하는 일이 없다.
+    """
+    since = since or thread_evidence.GATE_SINCE
+    live = set(store.get("live_thread_ids") or ())
+    out: set[str] = set()
+    for thread_id, entry in (store.get("threads") or {}).items():
+        if not isinstance(entry, dict) or entry.get("moved_to"):
+            continue
+        for link in entry.get("links") or ():
+            key = thread_judge.pair_id(str(link.get("from") or ""), str(link.get("to") or ""))
+            hit = thread_judge.cached_verdict(cache, key)
+            if hit is None or hit.get("verdict") != "same_thread":
+                continue
+            if thread_id in live:
+                out.add(key)
+                continue
+            reviewed = _parse_ts(hit.get("reviewed_at"))
+            if reviewed is not None and reviewed >= since:
+                out.add(key)
+    return out
+
+
+def _parse_ts(value: object):
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def build_edges(pairs: list[dict], verdicts: dict, roots: dict[str, str],
+                cache: dict | None = None,
+                grandfathered: set[str] | frozenset = frozenset()) -> tuple:
     """판정을 **고리 두 종류**로 나눈다 — 잇는 것과, 잇지 못하게 막는 것.
 
     여기가 이번 수정의 핵심이다. 종전에는 이 자리가 한 줄이었다 —
@@ -141,6 +192,12 @@ def build_edges(pairs: list[dict], verdicts: dict, roots: dict[str, str]) -> tup
             둘이 같은 제3의 사건에 **반대 판정**을 남기는 일이 실제로 있어서,
             고리를 접힌 노드 기준으로 만든다.
 
+        cache: 판정 캐시(`thread_judge.load_cache`). 있으면 통과한 고리를 항목에
+            적고(`thread_evidence.record_pass`), 지금 정책으로 적힌 기록이 있는
+            고리는 오늘 값으로 다시 심사하지 않는다. 호출부가 `gate_recorded` 가
+            0 이 아니면 캐시를 다시 쓴다.
+        grandfathered: 기억이 없어도 통과로 치는 쌍(`grandfathered_links`).
+
     Returns:
         (accepted, negative, relationships, stats). `relationships` 는 **실제 사건
         id 쌍** 기준이다 — 접힌 노드가 아니라. 화면의 흐름은 사건을 시간순으로
@@ -156,11 +213,21 @@ def build_edges(pairs: list[dict], verdicts: dict, roots: dict[str, str]) -> tup
         right_root = roots.get(row["right"].issue_id, row["right"].issue_id)
         kind = verdict.get("verdict")
         if kind == "same_thread":
-            ok, reason = thread_evidence.gate(verdict, row["left"], row["right"],
-                                              row.get("signals"))
+            entry = cache.get(row["key"]) if isinstance(cache, dict) else None
+            if thread_evidence.remembered_pass(entry):
+                ok, reason = True, "remembered"
+                stats["links_remembered"] += 1
+            elif row["key"] in grandfathered:
+                ok, reason = True, "ledger_link"
+                stats["links_grandfathered"] += 1
+            else:
+                ok, reason = thread_evidence.gate(verdict, row["left"], row["right"],
+                                                  row.get("signals"))
             if not ok:
                 stats[f"gated_{reason}"] += 1
                 continue
+            if isinstance(entry, dict) and thread_evidence.record_pass(entry, reason):
+                stats["gate_recorded"] += 1
             stats["links"] += 1
             relation_name = thread_judge.relationship_of(verdict)
             if relation_name:
@@ -284,10 +351,21 @@ def build(args) -> int:
     nodes = {event_id: event for event_id, event in index.by_id.items()
              if roots.get(event_id, event_id) == event_id}
     folded = len(index.by_id) - len(nodes)
-    accepted, negative, relationships, link_stats = build_edges(pairs, verdicts, roots)
+    # 판정이 새 쌍을 물었으면 캐시 파일이 그 뒤에 바뀌었다. 게이트 기록을 적어
+    # 되쓰기 전에 다시 읽는다 — 옛 사본을 쓰면 방금 받은 판정을 지운다.
+    cache = thread_judge.load_cache()
+    store = thread_ledger.load_store()
+    grandfathered = grandfathered_links(store, cache)
+    accepted, negative, relationships, link_stats = build_edges(
+        pairs, verdicts, roots, cache=cache, grandfathered=grandfathered)
     print(f"[threads] 노드 {len(nodes)} (중복 {folded}건 접힘) · "
-          f"고리 {len(accepted)} · 거부권 {link_stats.get('negatives', 0)}쌍 · "
-          f"게이트 거부 {sum(value for key, value in link_stats.items() if key.startswith('gated_'))}")
+          f"고리 {len(accepted)} (기억 {link_stats.get('links_remembered', 0)} · "
+          f"승계 {link_stats.get('links_grandfathered', 0)}) · "
+          f"거부권 {link_stats.get('negatives', 0)}쌍 · "
+          f"게이트 거부 {sum(value for key, value in link_stats.items() if key.startswith('gated_'))} · "
+          f"기록 {link_stats.get('gate_recorded', 0)}")
+    if link_stats.get("gate_recorded") and not args.dry_run:
+        thread_judge.save_cache(cache)
 
     groups, cluster_stats = thread_identity.cluster(nodes, accepted, negative)
     groups = expand_folds(groups, roots)
@@ -298,7 +376,6 @@ def build(args) -> int:
           f"약한고리 {cluster_stats['blocked_weak_link']} / 크기 {cluster_stats['blocked_size']} / "
           f"**거부권 {cluster_stats['blocked_negative_edge']}**)")
 
-    store = thread_ledger.load_store()
     owners = thread_ledger.owner_index(store)
     resolved = thread_identity.resolve(groups, index.by_id, owners)
     threads = resolved["threads"]

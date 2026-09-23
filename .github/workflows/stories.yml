@@ -1,0 +1,117 @@
+name: Long-term stories (수동 재판정)
+
+# 장기 스토리 판정만 다시 돌린다 — Daily Brief 의 `Build long-term stories`
+# 스텝과 같은 명령, 같은 원장 커밋 사다리, 같은 Cards 호출.
+#
+# 왜 따로 있는가: 스토리 판정은 하루 한 번 Daily Brief 안에서만 돌고, 그 워크플로는
+# 오늘 브리핑이 이미 나갔으면 수동 실행도 게이트가 막는다(daily_brief_trigger_gate).
+# 판정 코드를 고친 날 그 효과를 그날 보려면 브리핑을 다시 보내지 않고 판정만
+# 돌릴 길이 필요하다(2026-09-24: 게이트 기억이 스토리를 되살렸는지 확인하고
+# 빠진 스토리 카드를 그날 되살리기). 메모 "스토리만 굽는 경로는 없다"가 이 파일로
+# 닫힌다.
+#
+# 무엇을 안 하는가: 수집·브리핑·오디오·웹 빌드를 돌리지 않는다. 사이트에 판정이
+# 실리는 것은 다음 크롤 빌드다. 카드는 라이브 재료에 체크아웃 원장을 다시 투영하므로
+# (tools/reproject_threads.py) 사이트 갱신 없이도 새 판정을 본다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      cards:
+        description: "판정 뒤 Cards 를 force=true 로 깨운다 (일일 카드 5장도 재생성된다 — 문구가 바뀔 수 있다)"
+        type: boolean
+        default: true
+      send:
+        description: "Cards 가 텔레그램 앨범도 보낸다 (기본 꺼짐)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # thread_ledger.json · thread_llm_reviews.json 커밋
+  actions: write    # cards.yml 호출
+
+# Daily Brief · crawl 과 같은 그룹. 원장 커밋이 겹치지 않게 직렬화한다.
+concurrency:
+  group: nuclens-state
+  cancel-in-progress: false
+
+jobs:
+  stories:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify Gemini key selection
+        env:
+          PAID_MODE: ${{ vars.GEMINI_PAID_MODE }}
+          SELECTED: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
+          PAID_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FREE_KEY: ${{ secrets.GEMINI_FREE_API_KEY }}
+        run: |
+          if [ "$PAID_MODE" = "ON" ]; then
+            mode=paid; want="$PAID_KEY"; name=secrets.GEMINI_API_KEY
+          else
+            mode=free; want="$FREE_KEY"; name=secrets.GEMINI_FREE_API_KEY
+          fi
+          echo "Gemini key mode: $mode"
+          if [ -z "$want" ]; then
+            echo "::error::Gemini key mode: $mode 인데 $name 가 비어 있다 — 반대쪽 키로 넘어가지 않고 여기서 멈춘다"
+            exit 1
+          fi
+          if [ "$SELECTED" != "$want" ]; then
+            echo "::error::Gemini key mode: $mode 인데 선택 식이 다른 키를 골랐다 — 빈 시크릿으로 인한 폴백을 의심할 것"
+            exit 1
+          fi
+
+      # Daily Brief 의 같은 스텝과 명령·예산이 같다. 상한을 바꾸려면 둘 다 바꾼다.
+      - name: Build long-term stories
+        timeout-minutes: 20
+        env:
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::GEMINI_API_KEY 미설정 — 키 없는 판정은 원장을 no_api_key 로 덮는다. 돌리지 않는다"
+            exit 1
+          fi
+          python -u tools/build_threads.py --live-llm --max-new-pairs 400
+
+      - name: Commit story ledger + judge cache
+        run: |
+          for f in thread_ledger.json thread_llm_reviews.json; do
+            if [ -f "$f" ]; then git add "$f"; fi
+          done
+          git diff --cached --quiet && { echo "원장 변경 없음"; exit 0; }
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: long-term stories rejudged"
+          for i in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git fetch origin main || exit 1
+            git rebase origin/main || { git rebase --abort || true; exit 1; }
+          done
+          echo "::error::원장 push 3회 실패 — 판정 결과가 저장소에 없다"
+          exit 1
+
+      - name: Trigger cards workflow
+        if: inputs.cards
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SEND: ${{ inputs.send && 'true' || 'false' }}
+        run: |
+          gh workflow run cards.yml -R "${{ github.repository }}" -f force=true -f send="$SEND" -f deploy_mode=full
+          echo "Cards 워크플로 호출 (force=true · send=$SEND · deploy=full) — 결과는 Actions 의 Cards 에서 본다"

@@ -55,7 +55,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
@@ -119,6 +121,73 @@ def narrow_scope(left, right, *, types: dict[str, str] | None = None) -> frozens
     shared_assets = frozenset(left.assets & right.assets)
     shared_entities = discriminative(left.entities & right.entities, types=types)
     return shared_units | shared_assets | shared_entities
+
+
+# ── 게이트 기억 ──────────────────────────────────────────────────────────────
+#
+# 판정(`thread_judge`)은 캐시에 남아 다시 묻지 않는데, 게이트는 매 회차 **오늘
+# 값**으로 다시 계산했다. 게이트가 보는 두 입력이 모두 매일 움직이는 값이다 —
+# 좁은 대상은 원장 facts(대표 기사가 바뀌면 지문이 바뀐다), 어휘 점수는 말뭉치
+# IDF(기사가 늘면 같은 두 사건의 점수도 움직인다). 2026-09-24 실측: 한·미·일 SMR
+# 스토리의 유일한 고리가 판정은 그대로인데 facts.assets 'SMR' → '' 하나로
+# `generic_scope_only` 가 되어 스토리·카드가 사라졌다. 같은 날 live 스토리 105개 중
+# 39개가 같은 조건(자산 칸 하나 20 · 어휘 문턱 근처 19)이었다.
+#
+# 원칙은 `tools/build_threads.sticky_pairs` 와 같다 — **이미 답을 아는 것은 흔들리는
+# 입력 때문에 다시 계산하지 않는다.** 한 번 통과한 고리는 판정 캐시 항목에
+# `gate` 로 적고, 다음 회차는 그 기록을 믿는다. 다시 심사하는 경우는 셋뿐이다:
+#   · 판정 캐시가 폐기됐다(prompt_version) — `cached_verdict` 가 None 이면 기록도 없다
+#   · 두 사건 중 하나가 원장에서 사라졌다 — `sticky_pairs` 가 그 쌍을 안 되살린다
+#   · 게이트 정책이 바뀌었다 — 아래 지문이 다르면 기록을 무시한다
+#
+# 기억은 **살리는 방향으로만** 작용한다. 그래서 문턱을 올리는 날 옛 고리가 그대로
+# 남는 일이 없도록, 기록에 정책 지문을 함께 적는다. 문턱·판별 유형·판본 중 하나가
+# 바뀌면 지문이 바뀌고 다음 회차가 게이트만 전량 다시 계산한다 — 파이썬 계산
+# 1초 안팎이고 Gemini 를 부르지 않는다. 판정 캐시의 `prompt_version` 과 같은 방식.
+#
+# 구조적 모순(호기 충돌)은 이 기억과 무관하다 — `thread_judge.judge` 가 캐시를
+# 보기 전에 `hard_reject` 를 먼저 적용하므로, 별칭표가 자라 나중에 알아보는
+# 모순도 기억을 이긴다. `different_thread` 거부권과 묶음 단계의 검사도 그대로다.
+
+# 게이트가 생긴 시각(f9aef22, 2026-09-19 20:56 KST). 이 뒤에 나온 판정으로 원장에
+# 실린 고리는 그때 게이트를 통과한 것이다 — 기억이 없던 첫 회차에 원장의 고리를
+# 승계할 때 이 선을 쓴다(`tools/build_threads.grandfathered_links`).
+GATE_SINCE = datetime(2026, 9, 19, 11, 56, tzinfo=timezone.utc)
+
+
+def policy_fingerprint() -> str:
+    """게이트 정책의 지문. 문턱·판별 유형·판본 중 하나라도 바뀌면 달라진다."""
+    payload = json.dumps({
+        "version": EVIDENCE_VERSION,
+        "lexical_without_scope": MIN_LEXICAL_WITHOUT_SCOPE,
+        "lexical_for_cause": MIN_LEXICAL_FOR_CAUSE,
+        "discriminative_types": sorted(DISCRIMINATIVE_TYPES),
+    }, sort_keys=True)
+    return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
+
+
+def remembered_pass(entry: object) -> bool:
+    """이 판정 캐시 항목이 **지금 정책으로** 통과한 기록을 들고 있는가."""
+    if not isinstance(entry, dict):
+        return False
+    memo = entry.get("gate")
+    if not isinstance(memo, dict) or memo.get("passed") is not True:
+        return False
+    return str(memo.get("policy") or "") == policy_fingerprint()
+
+
+def record_pass(entry: dict, basis: str, *, now: datetime | None = None) -> bool:
+    """통과를 항목에 적는다. 이미 같은 정책으로 적혀 있으면 건드리지 않는다.
+
+    Returns:
+        항목이 바뀌었는가 — 호출부가 캐시를 다시 쓸지 정한다.
+    """
+    if remembered_pass(entry):
+        return False
+    stamp = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
+    entry["gate"] = {"passed": True, "policy": policy_fingerprint(),
+                     "basis": str(basis or ""), "at": stamp}
+    return True
 
 
 def gate(verdict: dict, left, right, signals: dict | None = None,
