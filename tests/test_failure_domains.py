@@ -493,6 +493,23 @@ class WorkflowWiringTests(unittest.TestCase):
         self.assertGreaterEqual(step_budget, 6,
                                 "실측 최장 배포(약 3.2분)에 여유가 없다")
 
+    def test_crawl_build_step_is_bounded_before_the_job_is(self):
+        """빌드도 배포와 같다 — 잡 제한이 빌드 한복판에 떨어지면 뒤가 통째로
+        잘린다.  실측 2026-09-22~23 세 회차(run 35728317650 · 35748670832 ·
+        35861671949)가 그랬다.  스텝 제한이 먼저 떨어져야 web_build=failure 로
+        남고 스모크·알림·캐시 커밋이 돈다.
+        """
+        build = self.step(self.crawl(), "web-build")
+        step_budget = self._minutes(build)
+        self.assertIsNotNone(step_budget, "빌드 스텝에 자체 timeout-minutes 가 없다")
+        job_budget = self._minutes(self.crawl_job().split("    steps:", 1)[0])
+        self.assertLess(step_budget, job_budget,
+                        "스텝 제한이 잡 제한보다 늦게 떨어지면 아무 의미가 없다")
+        # 실측 최장 완주는 30.7분(2026-09-23 06:37Z, 느린 러너). 그보다 짧으면
+        # 느린 성공을 죽인다.
+        self.assertGreaterEqual(step_budget, 32,
+                                "실측 최장 빌드(약 31분)에 여유가 없다")
+
     def test_a_timed_out_deploy_is_a_web_failure_only(self):
         """스텝 제한에 걸린 배포는 웹만 실패다 — 수집은 이미 끝나 push 됐다."""
         verdict = fd.classify("crawl", {**CRAWL_HEALTHY, "web_build": "success",
