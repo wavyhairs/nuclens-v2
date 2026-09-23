@@ -129,6 +129,31 @@ def _fingerprint_axis(fingerprint: object, names: tuple[str, ...]) -> str:
     return ""
 
 
+FACT_AXES = ("actors", "assets", "event_family", "action")
+
+
+def retain_facts(existing: object, incoming: object) -> dict:
+    """facts 를 **빈 값으로 덮지 않는다.** 새 값이 있으면 새 값이 이긴다.
+
+    facts 는 원장이 따로 기억하는 값이 아니라 **이번 회차의 대표 기사** 지문에서
+    매번 다시 읽는 값이다. 기사가 더 붙어 대표가 바뀌면 지문도 바뀌고, 그 기사가
+    어떤 축을 비워 두면 원장의 그 칸도 비었다(2026-09-24 실측: 한·미·일 SMR
+    이슈에 기사 3건이 붙으며 assets 'SMR' → '' 가 됐고, 그 칸 하나에 기대던
+    장기 스토리 고리가 `generic_scope_only` 로 끊겨 스토리·카드가 사라졌다).
+
+    `hashes`·`entity_ids`·`units` 가 이미 "덮지 않고 쌓는다"는 같은 원칙을 쓴다.
+    다만 facts 는 목록이 아니라 문장 한 줄이라 합치지 않고, **새로 안 것이 없을 때만
+    알던 것을 둔다.** 새 기사가 다른 자산을 말하면 그 값으로 바뀐다 — 옛 값이
+    틀렸을 때 영영 남는 구조는 아니다.
+    """
+    old = existing if isinstance(existing, dict) else {}
+    new = dict(incoming) if isinstance(incoming, dict) else {}
+    for axis in FACT_AXES:
+        if not _clean(new.get(axis)) and _clean(old.get(axis)):
+            new[axis] = old[axis]
+    return new
+
+
 def _retrieval_fields(issue: dict) -> dict:
     articles = list(issue.get("related_articles") or [])
     representative = issue.get("representative_article") or {}
@@ -221,6 +246,10 @@ def merge(store: dict, rows: list[dict], day: str) -> dict:
             row["evidence_days"] = new_days[:1] + new_days[-1:]
         row["evidence_day_count"] = max(int(existing.get("evidence_day_count") or 0),
                                         int(row.get("evidence_day_count") or 0))
+        # 지문 칸도 빈 값으로 덮지 않는다(`retain_facts`). 검색·판정·근거 게이트가
+        # 전부 이 칸을 읽는데, 대표 기사 하나가 어떤 축을 비우면 어제까지 서 있던
+        # 스토리 고리가 오늘 끊긴다.
+        row["facts"] = retain_facts(existing.get("facts"), row.get("facts"))
         revisions = existing.get("revisions") or []
         last = revisions[-1] if revisions else {}
         if last.get("title") != row["title"] or last.get("summary") != row["summary"]:

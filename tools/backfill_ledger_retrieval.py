@@ -96,7 +96,8 @@ def backfill(store: dict, articles: dict[str, dict], *, overwrite: bool) -> dict
         if days:
             entry["evidence_days"] = days[:1] + days[-1:]
             entry["evidence_day_count"] = len(days)
-        entry["facts"] = {
+        # 원장의 `merge` 와 같은 규칙 — 지문이 어떤 축을 비워도 알던 값은 둔다.
+        entry["facts"] = issue_ledger.retain_facts(entry.get("facts"), {
             "actors": issue_ledger._fingerprint_axis(
                 fingerprint, ("actors", "actor", "operator", "organization")),
             "assets": issue_ledger._fingerprint_axis(
@@ -105,7 +106,7 @@ def backfill(store: dict, articles: dict[str, dict], *, overwrite: bool) -> dict
                 fingerprint, ("event_family", "event_type", "event")),
             "action": issue_ledger._fingerprint_axis(
                 fingerprint, ("action", "decision", "stage")),
-        }
+        })
         stats["filled"] += 1
         stats["with_units"] += bool(units)
         stats["with_entities"] += bool(entry["entity_ids"])
