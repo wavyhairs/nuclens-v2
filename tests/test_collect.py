@@ -1069,8 +1069,10 @@ class TestCrawlWorkflowKeepsDiagnostics(unittest.TestCase):
         """
         for name in ("crawl.yml", "daily-brief.yml"):
             yml = (self.ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
+            # issue_headlines.json: 2026-09-23 실측 — 목록에 없어 매 빌드가
+            # "캐시 0 · 신규 629 (호출 64회)" 로 돌았다. 한도 소진의 주범이었다.
             for cache in ("issue_llm_reviews.json", "keei_llm_matches.json",
-                          "issue_insights.json"):
+                          "issue_insights.json", "issue_headlines.json"):
                 self.assertIn(cache, yml, f"{name} 에 {cache} 커밋이 빠졌다")
 
     def test_discovery_state_is_committed(self):
