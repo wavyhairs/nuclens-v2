@@ -260,12 +260,115 @@ def eligibility(thread: dict) -> tuple[bool, str]:
     return True, f"사건 {len(events)}건 · 진행 관계 {'/'.join(sorted(set(progress)))}"
 
 
+# ── 스토리 카드 이력 ──────────────────────────────────────────────────────────
+#
+# 같은 스토리를 새 전개 없이 또 내지 않는다. 2026-09-18~24 스토리 카드 7장 중
+# 세 쌍이 재방송이었다 — 대미 투자(9/18·9/21), 원전 공론화(9/20·9/23), 한·미·일
+# SMR(9/22·9/24). 세 경우 모두 그 사이 스토리에 새 사건이 붙지 않았다. 큰 이슈는
+# 며칠씩 상위권에 머물고 스토리 후보는 순위 순으로 고르므로, 거르지 않으면 같은
+# 스토리가 계속 1순위가 된다.
+#
+# **무엇이 바뀌었나는 문장이 아니라 사건으로 잰다.** 9/24 의 SMR 이슈는 기사
+# 3건이 더 붙어 제목이 '합의' → '이행 계획 발표' 로 바뀌었고 카드 문구도 달랐지만,
+# 스토리로 보면 같은 사건이었다. 카드 문구는 LLM 이 매번 새로 쓰므로 문장 비교는
+# 늘 '바뀌었다' 가 된다. 스토리 카드가 전하는 것은 "다음 단계로 갔다" 이므로,
+# 지난 카드 이후 **새 사건이 합류했고 그 사건이 진행 관계로 이어졌을 때만** 다시 낸다.
+#
+# 이력은 게시(publish_cards --kind story)가 적는다 — 실제로 사이트에 나간 카드만
+# 세야 하기 때문이다. 파일은 카드 PNG 와 같은 폴더라 같은 커밋에 실린다.
+STORY_HISTORY_FILE = ROOT / "web" / "public" / "cards" / "story_history.json"
+STORY_HISTORY_KEEP_DAYS = 90
+
+
+def event_ids(thread: dict) -> list[str]:
+    """표시 사건의 원장 id 전부. 접힌 사본(`source_event_ids`)까지 센다 —
+    접힌 사본이 나중에 따로 서도 '새 사건' 으로 세지 않게."""
+    out: list[str] = []
+    for row in _display_events(thread):
+        for value in (row.get("source_event_id"), *(row.get("source_event_ids") or ())):
+            text = str(value or "")
+            if text and text not in out:
+                out.append(text)
+    return out
+
+
+def load_story_history(path: Path | None = None) -> list[dict]:
+    target = path or STORY_HISTORY_FILE
+    try:
+        raw = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    rows = raw.get("cards") if isinstance(raw, dict) else None
+    return [row for row in rows or () if isinstance(row, dict) and row.get("thread_id")]
+
+
+def record_story_card(history: list[dict], *, date: str, thread_id: str,
+                      issue_id: str = "", ids: list[str] | None = None,
+                      keep_days: int = STORY_HISTORY_KEEP_DAYS) -> list[dict]:
+    """그날의 스토리 카드를 이력에 적는다. 같은 날 줄은 **바꿔 쓴다** — 그날 다시
+    구우면 마지막 것이 사이트에 남은 카드이기 때문이다."""
+    from datetime import date as _date, timedelta
+    try:
+        cutoff = (_date.fromisoformat(date) - timedelta(days=keep_days)).isoformat()
+    except ValueError:
+        cutoff = ""
+    rows = [row for row in history
+            if str(row.get("date") or "") != date and str(row.get("date") or "") >= cutoff]
+    rows.append({"date": date, "thread_id": thread_id, "issue_id": issue_id,
+                 "event_ids": list(ids or [])})
+    return sorted(rows, key=lambda row: (str(row.get("date") or ""), str(row.get("thread_id"))))
+
+
+def save_story_history(history: list[dict], path: Path | None = None) -> None:
+    target = path or STORY_HISTORY_FILE
+    target.write_text(json.dumps({
+        "_comment": "스토리 카드 발행 이력. publish_cards.py --kind story 가 적고 "
+                    "card_context.repeat_verdict 가 읽는다. 손으로 고치지 말 것.",
+        "cards": history}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+
+
+def repeat_verdict(thread: dict, history: list[dict], date: str) -> tuple[bool, str]:
+    """이 스토리를 오늘 다시 내도 되는가. (가능 여부, 이유).
+
+    오늘 날짜 줄은 보지 않는다 — 같은 날 다시 굽는 것은 재방송이 아니라 교체다.
+    """
+    thread_id = str(thread.get("thread_id") or "")
+    past = [row for row in history
+            if row.get("thread_id") == thread_id and str(row.get("date") or "") < date]
+    if not past:
+        return True, "처음 내는 스토리"
+    last = max(past, key=lambda row: str(row.get("date") or ""))
+    seen = set(last.get("event_ids") or ())
+    events = _display_events(thread)
+    fresh = [i for i, row in enumerate(events)
+             if not ({str(row.get("source_event_id") or ""),
+                      *(str(v) for v in row.get("source_event_ids") or ())} & seen)]
+    if not fresh:
+        return False, f"{last.get('date')} 에 냈고 그 뒤 새 사건 없음"
+    # 새 사건이 앞뒤 어느 쪽으로든 진행 관계로 이어져야 '다음 단계' 다.
+    for i in fresh:
+        before = str(events[i - 1].get("relation_to_next") or "") if i > 0 else ""
+        after = str(events[i].get("relation_to_next") or "") if i < len(events) - 1 else ""
+        if before in PROGRESS_RELATIONS or after in PROGRESS_RELATIONS:
+            return True, f"{last.get('date')} 이후 새 사건 {len(fresh)}건 · 진행 관계"
+    return False, (f"{last.get('date')} 이후 새 사건 {len(fresh)}건이 모두 "
+                   "같은 사안 되풀이 — 단계가 넘어가지 않았다")
+
+
 def pick_story_candidate(data: SiteData, top: list[dict],
-                         reasons: list[str] | None = None) -> StoryCandidate | None:
-    """일일 카드 대상 **그 목록 안에서** 순서대로 첫 스토리를 고른다.
+                         reasons: list[str] | None = None, *,
+                         history: list[dict] | None = None) -> StoryCandidate | None:
+    """후보 목록 **순서대로** 첫 스토리를 고른다.
 
     순위를 다시 매기지 않고 LLM 도 부르지 않는다. 일일 카드와 스토리 카드가
     서로 다른 중요도 판단을 만들면 같은 날 두 산출물이 다른 1위를 말한다.
+
+    `top` 은 사이트 순위 그대로다. 호출부가 일일 카드 3건을 앞에 두고 그 뒤에
+    나머지 오늘 이슈를 사이트 순서로 붙여 넘긴다(2026-09-24). 3건 안에 낼 만한
+    스토리가 없으면 4위부터 내려간다 — 새 중요도 판단을 만드는 것이 아니라
+    **같은 순위표를 더 읽는 것**이다.
+
+    `history` 를 넘기면 새 전개 없는 재방송을 건너뛴다(`repeat_verdict`).
 
     `reasons` 를 넘기면 **후보가 없을 때도** 순위별로 왜 빠졌는지가 남는다.
     2026-09-21 실측: 상위 3건이 전부 스레드에 안 이어져 None 이 돌아왔는데
@@ -297,6 +400,13 @@ def pick_story_candidate(data: SiteData, top: list[dict],
             if reasons is not None:
                 reasons.append(line)
             continue
+        if history is not None:
+            fresh, why = repeat_verdict(thread, history, data.date)
+            if not fresh:
+                # 재방송은 경고가 아니다 — 거르는 것이 정상 동작이다.
+                if reasons is not None:
+                    reasons.append(f"#{rank} {title} → {thread.get('thread_id')}: 재방송 — {why}")
+                continue
         return StoryCandidate(issue=issue, thread=thread, rank=rank,
                               events=_display_events(thread), warnings=warnings)
     return None

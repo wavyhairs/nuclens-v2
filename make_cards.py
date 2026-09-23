@@ -472,11 +472,25 @@ def review(raw: dict, items: list[dict], **kwargs) -> list[str]:
     return problems + [str(f) for f in report.failures]
 
 
-def find_story(data, items: list[dict]):
+def story_pool(items: list[dict], rows: list[dict]) -> list[dict]:
+    """스토리 후보 목록 = 일일 카드 3건 + 나머지 오늘 이슈, **사이트 순서 그대로.**
+
+    2026-09-24 실측: 오늘 순위 18건 중 스토리 자격이 있는 이슈가 5건이었는데
+    3건 안에는 하나(그것도 이틀 전 재방송)뿐이었다. 3건 밖을 읽는 것은 새 중요도
+    판단이 아니다 — 같은 순위표를 더 내려가 읽을 뿐이다.
+    """
+    taken = {str(item.get("issue_id") or "") for item in items}
+    rest = [row for row in rows if str(row.get("issue_id") or "") not in taken]
+    return [*items, *rest]
+
+
+def find_story(data, items: list[dict], rows: list[dict] | None = None):
     """오늘 스토리 후보. 재료가 못 믿을 상태면 없는 것으로 치되 **이유는 남긴다.**"""
     reasons: list[str] = []
     try:
-        found = card_context.pick_story_candidate(data, items, reasons)
+        found = card_context.pick_story_candidate(
+            data, story_pool(items, rows or []), reasons,
+            history=card_context.load_story_history())
     except card_context.ContextError as exc:
         print(f"[cards] 스토리 재료 제외 — {exc}")
         return None
@@ -1114,13 +1128,16 @@ def main() -> int:
         print(f"[cards] 카피 파일 사용 — {args.copy_file}")
         raw = candidate
 
-    # 오늘 스토리가 있는가. **일일 카드 대상 그 3건 안에서만** 찾는다 —
-    # 순위를 다시 매기면 같은 날 두 산출물이 다른 1위를 말한다.
-    story = None if (args.no_llm or raw) else find_story(data, items)
+    # 오늘 스토리가 있는가. 일일 카드 3건을 먼저 보고, 없으면 나머지 오늘 이슈를
+    # **사이트 순서대로** 내려간다. 순위를 다시 매기지 않는다 — 같은 날 두 산출물이
+    # 다른 1위를 말하면 안 된다. 새 전개 없는 재방송은 건너뛴다(card_context 이력).
+    story = None if (args.no_llm or raw) else find_story(data, items, rows)
     story_payload = None
     if story is not None:
         story_payload = story_material(story, date)
-        print(f"[cards] 스토리 후보 #{story.rank} {story.thread_id} "
+        story_payload["event_ids"] = card_context.event_ids(story.thread)
+        where = "" if story.rank <= len(items) else f" (일일 {len(items)}건 밖)"
+        print(f"[cards] 스토리 후보 #{story.rank}{where} {story.thread_id} "
               f"사건 {len(story_payload['events'])}건")
 
     if raw is None and not args.no_llm:
