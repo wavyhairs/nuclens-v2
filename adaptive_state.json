@@ -12,6 +12,14 @@
       "type": "company",
       "until": "2026-09-23T03:43:11.893898+00:00"
     },
+    "ap1000간": {
+      "new_articles": 34,
+      "reason": "질의 횟수 소진",
+      "retired_at": "2026-09-23T18:41:08.691603+00:00",
+      "term": "AP1000 간",
+      "type": "plant",
+      "until": "2026-10-07T18:41:08.691603+00:00"
+    },
     "dlr": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -244,6 +252,14 @@
       "type": "plant",
       "until": "2026-10-04T00:40:36.335664+00:00"
     },
+    "보고한한미": {
+      "new_articles": 19,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-23T18:41:05.315934+00:00",
+      "term": "보고한 한미",
+      "type": "plant",
+      "until": "2026-10-07T18:41:05.315934+00:00"
+    },
     "산진해경제자유구역청": {
       "new_articles": 0,
       "reason": "기간 만료",
@@ -372,6 +388,14 @@
       "type": "plant",
       "until": "2026-09-13T00:39:53.359389+00:00"
     },
+    "조지아주": {
+      "new_articles": 11,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-23T18:41:05.315934+00:00",
+      "term": "조지아주",
+      "type": "plant",
+      "until": "2026-10-07T18:41:05.315934+00:00"
+    },
     "지자흐": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -484,6 +508,14 @@
       "type": "org",
       "until": "2026-09-17T00:40:10.428180+00:00"
     },
+    "한국재료연구원": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-23T18:41:05.315934+00:00",
+      "term": "한국재료연구원",
+      "type": "org",
+      "until": "2026-10-07T18:41:05.315934+00:00"
+    },
     "해사청": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -502,45 +534,10 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 6,
     "date": "2026-09-24"
   },
   "terms": {
-    "ap1000간": {
-      "articles": 1,
-      "created_at": "2026-09-20T12:40:37.812659+00:00",
-      "domains": [
-        "seoul.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "seoul.co.kr",
-          "hash": "527a4637af013564",
-          "importance": "must_read",
-          "title": "정부, 22일 대미투자 협상안 국회 비공개 보고…원전 노형 이견 조율 중"
-        }
-      ],
-      "expires_at": "2026-09-23T06:40:35.071721+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-09-22T18:40:54.104684+00:00",
-      "new_articles": 34,
-      "origin": "auto",
-      "planned_at": "2026-09-22T18:40:50.167206+00:00",
-      "queries_run": 7,
-      "query": "AP1000 간 원전",
-      "score": 3.6,
-      "status": "promote_candidate",
-      "term": "AP1000 간",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-09-21",
-        "2026-09-22"
-      ],
-      "yields": 5,
-      "zero_streak": 1
-    },
     "bechtel": {
       "articles": 1,
       "created_at": "2026-09-22T21:18:22.357974+00:00",
@@ -644,12 +641,12 @@
       ],
       "expires_at": "2026-09-24T12:41:16.098939+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 2,
-      "last_run": "2026-09-22T12:41:17.545064+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-09-23T18:41:08.691529+00:00",
       "new_articles": 2,
       "origin": "auto",
-      "planned_at": "2026-09-22T12:41:16.098939+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-09-23T18:41:05.315934+00:00",
+      "queries_run": 2,
       "query": "KURT 원자력",
       "score": 4.6,
       "status": "extended",
@@ -660,7 +657,7 @@
         "2026-09-22"
       ],
       "yields": 1,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "natrium": {
       "articles": 3,
@@ -790,40 +787,6 @@
       "yields": 1,
       "zero_streak": 0
     },
-    "보고한한미": {
-      "articles": 1,
-      "created_at": "2026-09-22T15:40:52.063898+00:00",
-      "domains": [
-        "khan.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "khan.co.kr",
-          "hash": "36b62be32bdd9c3d",
-          "importance": "must_read",
-          "title": "정부, 한미 원전 프레임워크 보고···웨스팅하우스 지분 인수 협상 진통"
-        }
-      ],
-      "expires_at": "2026-09-23T15:40:55.791651+00:00",
-      "importance": "must_read",
-      "last_result_count": 19,
-      "last_run": "2026-09-22T15:40:55.791651+00:00",
-      "new_articles": 19,
-      "origin": "auto",
-      "planned_at": "2026-09-22T15:40:52.063898+00:00",
-      "queries_run": 1,
-      "query": "보고한 한미 원전",
-      "score": 3.6,
-      "status": "extended",
-      "term": "보고한 한미",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-09-23"
-      ],
-      "yields": 1,
-      "zero_streak": 0
-    },
     "에너지공단": {
       "articles": 7,
       "created_at": "2026-09-23T15:40:28.712795+00:00",
@@ -855,19 +818,24 @@
           "title": "한수원-에너지공단, 감사 업무 전문성 강화 위한 업무협약 체결"
         }
       ],
-      "expires_at": "2026-09-24T15:40:28.712795+00:00",
+      "expires_at": "2026-09-24T18:41:08.691529+00:00",
       "importance": "",
-      "new_articles": 0,
+      "last_result_count": 3,
+      "last_run": "2026-09-23T18:41:08.691529+00:00",
+      "new_articles": 3,
       "origin": "auto",
-      "queries_run": 0,
+      "planned_at": "2026-09-23T18:41:05.315934+00:00",
+      "queries_run": 1,
       "query": "에너지공단 원자력",
       "score": 3.44,
-      "status": "tracking",
+      "status": "extended",
       "term": "에너지공단",
       "ttl_hours": 24,
       "type": "org",
-      "yield_days": [],
-      "yields": 0,
+      "yield_days": [
+        "2026-09-24"
+      ],
+      "yields": 1,
       "zero_streak": 0
     },
     "전력수급내": {
@@ -915,41 +883,6 @@
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
-    },
-    "조지아주": {
-      "articles": 1,
-      "created_at": "2026-09-22T03:40:37.312957+00:00",
-      "domains": [
-        "powermag.com"
-      ],
-      "evidence": [
-        {
-          "domain": "powermag.com",
-          "hash": "686dd56a0788308d",
-          "importance": "must_read",
-          "title": "구글, 조지아주 원전 출력 상향 지원 협약 체결"
-        }
-      ],
-      "expires_at": "2026-09-23T18:40:54.104684+00:00",
-      "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-09-22T18:40:54.104684+00:00",
-      "new_articles": 11,
-      "origin": "auto",
-      "planned_at": "2026-09-22T18:40:50.167206+00:00",
-      "queries_run": 2,
-      "query": "조지아주 원전",
-      "score": 3.6,
-      "status": "extended",
-      "term": "조지아주",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-09-22",
-        "2026-09-23"
-      ],
-      "yields": 2,
-      "zero_streak": 0
     },
     "한국에너지공단": {
       "articles": 8,
@@ -1001,52 +934,6 @@
       ],
       "yields": 1,
       "zero_streak": 0
-    },
-    "한국재료연구원": {
-      "articles": 3,
-      "created_at": "2026-09-22T15:40:52.063898+00:00",
-      "domains": [
-        "mhns.co.kr",
-        "joongang.co.kr",
-        "dongascience.com"
-      ],
-      "evidence": [
-        {
-          "domain": "mhns.co.kr",
-          "hash": "60f379c2a5677323",
-          "importance": "nice_to_know",
-          "title": "한국재료연구원, 사용후핵연료 건식저장용기 알루미늄 합금 열화 평가기술 개발"
-        },
-        {
-          "domain": "joongang.co.kr",
-          "hash": "7df0823d0bce4064",
-          "importance": "nice_to_know",
-          "title": "재료연, 사용후핵연료 건식저장용기 알루미늄 열화 원인 규명"
-        },
-        {
-          "domain": "dongascience.com",
-          "hash": "3f2b0bddefbe6de7",
-          "importance": "nice_to_know",
-          "title": "한국재료연구원, 사용후핵연료 건식저장용기 알루미늄 합금 열화 원인 규명"
-        }
-      ],
-      "expires_at": "2026-09-23T15:40:52.063898+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-09-22T15:40:55.791651+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-09-22T15:40:52.063898+00:00",
-      "queries_run": 1,
-      "query": "한국재료연구원 원자력",
-      "score": 3.7,
-      "status": "tracking",
-      "term": "한국재료연구원",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 1
     }
   },
   "version": 1
