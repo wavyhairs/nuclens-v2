@@ -217,3 +217,40 @@ class TestRpmPacing(unittest.TestCase):
         with patch.object(gemini_client.time, "sleep") as fake_sleep:
             gemini_client._pace("m")
         fake_sleep.assert_called_once()
+
+
+class TestTransientOverloadMarker(unittest.TestCase):
+    """재시도 사다리를 다 쓴 실패에 '분 단위로 기다리면 풀릴 수 있다' 표지를 단다.
+
+    2026-09-25 전문가 브리핑이 503 UNAVAILABLE 로 죽었다. 사다리는 합쳐 15초라
+    과부하 한가운데서 끝났다. 더 기다릴지는 호출자가 정하는데, 그러려면 429 일일
+    한도·400 과 5xx 를 가를 수 있어야 한다.
+    """
+
+    def _fail_with(self, code: int) -> BaseException:
+        import io
+        import urllib.error
+
+        def boom(*_a, **_kw):
+            raise urllib.error.HTTPError(
+                "https://example.invalid", code, "err", {},
+                io.BytesIO(b'{"error":{"status":"UNAVAILABLE"}}'))
+
+        with patch.object(gemini_client, "API_KEY", "test-key"), \
+                patch.object(gemini_client, "_pace", lambda _m: None), \
+                patch.object(gemini_client.time, "sleep", lambda _s: None), \
+                patch.object(gemini_client.urllib.request, "urlopen", boom):
+            with self.assertRaises(gemini_client.GeminiError) as ctx:
+                gemini_client.call_json("sys", "msg", model="m", retries=1, label="probe")
+        return ctx.exception
+
+    def test_5xx_is_transient(self):
+        for code in (500, 502, 503, 504):
+            self.assertTrue(gemini_client.is_transient_overload(self._fail_with(code)), code)
+
+    def test_client_errors_are_not_transient(self):
+        self.assertFalse(gemini_client.is_transient_overload(self._fail_with(400)))
+
+    def test_plain_errors_are_not_transient(self):
+        self.assertFalse(gemini_client.is_transient_overload(gemini_client.GeminiError("x")))
+        self.assertFalse(gemini_client.is_transient_overload(None))

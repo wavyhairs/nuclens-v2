@@ -22,6 +22,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -206,38 +207,79 @@ def _model_ladder(primary: str) -> list[str]:
     return models
 
 
+# 분 단위 과부하 대기 (2026-09-25 전문가 브리핑 누락).
+#
+# 그날 검증 단계가 503 으로 죽었다. call_json 의 사다리는 합쳐 15초라 과부하
+# 한가운데서 다 써 버렸고, 워크플로의 90초 뒤 재실행은 **처음부터** 28회를 다시
+# 불러 이번엔 다른 단계에서 503 을 맞았다. 그래서 두 가지를 바꾼다:
+#   ① 실패한 **그 단계만** 분 단위로 기다렸다 다시 부른다 — 앞 단계 결과는 이
+#      프로세스 메모리에 그대로 있으므로 이어서 간다.
+#   ② 대기 총량을 회차 전체에서 하나로 묶는다. 여러 단계가 연달아 맞아도 알림·채널
+#      공개가 이만큼 이상 밀리지 않는다. 예전 경로(90초 + 전체 재실행)가 그날 이미
+#      약 8분을 썼으므로, 이 예산은 실패일의 지연을 늘리지 않는다.
+# 이 예산으로도 안 풀리면 오늘 안의 재시도는 그만두고 다음 수집 뒤 복구 실행
+# (tools/daily_brief_trigger_gate.py 의 audio recovery)에 넘긴다 — 종료 코드 4.
+#
+# 검증 단계가 다른 모델로 넘어가지 않는 원칙(아래 atomic policy)은 그대로다.
+# 기다렸다가 **같은 모델**로 다시 부를 뿐이다.
+OVERLOAD_WAITS_SEC = (60, 120, 240)
+OVERLOAD_WAIT_BUDGET_SEC = 420
+_overload_waited_sec = 0.0
+OVERLOAD_GAVE_UP = False
+
+
+def _overload_sleep(seconds: float) -> None:
+    """테스트가 갈아 끼우는 자리."""
+    time.sleep(seconds)
+
+
 def _call_structured(system: str, message: str, *, label: str, temperature: float = 0.2,
                      max_output_tokens: int = 8192, primary: str = "curation") -> dict:
-    """단계별 우선 모델(primary) + 반대 버킷 폴백.
+    """단계별 우선 모델(primary) + 반대 버킷 폴백 + 과부하 시 분 단위 대기.
 
     폴백은 primary 모델이 재시도(4회)까지 전부 실패했을 때만 한 번 더 부르는
     최후 수단이다 — 흔치 않은 경로라 반대 버킷을 갑자기 고갈시키지 않는다.
+    모든 모델이 일시 과부하(5xx·연결)로 실패했을 때만 기다린다(OVERLOAD_WAITS_SEC).
     """
+    global _overload_waited_sec, OVERLOAD_GAVE_UP
     policy = llm_policy.profile(label)
     # Verifier model/reasoning is an atomic policy.  A requested level or model
     # failure must fail this audio, not fall through to a different weaker setup.
     models = ([policy.model()] if policy.task == llm_policy.FINAL_SEMANTIC_VERIFY
               else _model_ladder(primary))
     last: Exception | None = None
-    for model in models:
-        try:
-            return call_json(
-                system,
-                message,
-                temperature=temperature,
-                max_output_tokens=max_output_tokens,
-                timeout=150.0,
-                thinking_budget=(0 if policy.thinking_level is None else None),
-                model=model,
-                retries=4,
-                label=label,
-                **policy.reasoning_kwargs(),
-            )
-        except GeminiError as exc:
-            last = exc
-            suffix = ("오디오 중단" if policy.task == llm_policy.FINAL_SEMANTIC_VERIFY
-                      else "폴백")
-            print(f"[expert-audio] {label} {model} 실패 — {suffix}: {str(exc)[:180]}")
+    waits = iter(OVERLOAD_WAITS_SEC)
+    while True:
+        for index, model in enumerate(models):
+            try:
+                return call_json(
+                    system,
+                    message,
+                    temperature=temperature,
+                    max_output_tokens=max_output_tokens,
+                    timeout=150.0,
+                    thinking_budget=(0 if policy.thinking_level is None else None),
+                    model=model,
+                    retries=4,
+                    label=label,
+                    **policy.reasoning_kwargs(),
+                )
+            except GeminiError as exc:
+                last = exc
+                suffix = "폴백" if index + 1 < len(models) else "남은 모델 없음"
+                print(f"[expert-audio] {label} {model} 실패 — {suffix}: {str(exc)[:180]}")
+        if not gemini_client.is_transient_overload(last):
+            break
+        wait = next(waits, None)
+        if wait is None or _overload_waited_sec + wait > OVERLOAD_WAIT_BUDGET_SEC:
+            OVERLOAD_GAVE_UP = True
+            print(f"[expert-audio] {label} 과부하가 대기 예산 "
+                  f"{OVERLOAD_WAIT_BUDGET_SEC}초 안에 안 풀림 — 다음 수집 뒤 복구 실행에 넘김")
+            break
+        _overload_waited_sec += wait
+        print(f"[expert-audio] {label} 일시 과부하 — {wait}초 뒤 이 단계만 다시 "
+              f"(누적 {_overload_waited_sec:.0f}/{OVERLOAD_WAIT_BUDGET_SEC}초)")
+        _overload_sleep(wait)
     raise last or GeminiError(f"{label} 모델 전부 실패")
 
 
@@ -1725,6 +1767,11 @@ if __name__ == "__main__":
     # 2 = TTS 쿼터·실패예산 소진 (audio_brief 와 같은 계약). 전문가 대본은
     # 청크가 6~8개라 재시도 한 번이 그날 예산에서 빠지는 몫이 특히 크다.
     # 3 = 음원은 준비됐는데 전달이 안 끝났다 (audio_brief 와 같은 계약).
+    # 4 = 일시 과부하가 분 단위 대기로도 안 풀렸다. 워크플로는 90초 재실행을
+    #     건너뛴다 — 같은 과부하 속에서 28회를 처음부터 다시 부르는 것이 9/25 에
+    #     두 번째로 실패한 경로다. 다음 수집 뒤 복구 실행이 이어받는다.
+    if not ok and OVERLOAD_GAVE_UP:
+        sys.exit(4)
     if ok and delivery_failed():
         print(f"[expert-audio] 음원은 준비됐으나 전달 미완료 — "
               f"{audio_brief.LAST_DELIVERY.get('state')}")
