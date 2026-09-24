@@ -308,6 +308,18 @@ RELATION_LABELS = {
 }
 
 
+def _stages(events: list) -> list[dict]:
+    """접힌 사본까지 모은 단계를 날짜순으로. 같은 날은 먼저 온 것 하나."""
+    seen: dict[str, dict] = {}
+    for event in events:
+        for stage in getattr(event, "stages", ()) or ():
+            day = str(stage.get("date") or "")
+            if day and day not in seen:
+                seen[day] = {"date": day, "title": str(stage.get("title") or ""),
+                             "hash": str(stage.get("hash") or "")}
+    return [seen[day] for day in sorted(seen)]
+
+
 def _flow(members: list, links: list[dict], by_id: dict | None = None,
           folded: dict | None = None) -> list[dict]:
     """**시간순** 흐름. 목록(`events`)과 방향이 반대인 것이 요점이다.
@@ -368,6 +380,11 @@ def _flow(members: list, links: list[dict], by_id: dict | None = None,
             "title": tail.title,
             "date": head.first_seen.isoformat() if head.first_seen else "",
             "date_kind": DATE_KIND,
+            # 사건 안의 단계. 화면은 이것을 날짜 순서대로 펼친다 — 한 줄의 날짜와
+            # 제목이 **같은 기사**에서 오게 하려는 것이다(event_retrieval.
+            # with_catalog_stages). 비어 있으면(카탈로그 밖 사건) 위 한 줄로 선다.
+            "stages": _stages([event for member in run
+                               for event in _with_folded(member, folded or {})]),
             "relation_to_next": relation,
             "relation_label": RELATION_LABELS.get(relation, ""),
         })

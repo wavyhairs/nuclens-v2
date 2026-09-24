@@ -3303,6 +3303,46 @@ function threadStepSources(step) {
   return ids.length ? ids : [String(step.event_id || "")];
 }
 
+// 흐름을 **단계 행**으로 펼친다. 사건 하나가 여러 브리핑일에 걸쳐 있으면(이슈 판정
+// 규칙상 진행 단계가 바뀐 후속도 같은 사건이다) 그 사건을 한 줄로 그릴 때 날짜는 첫
+// 기사, 제목은 마지막 기사에서 와 어긋났다 — 2026-09-24 라이브에서 9/24 공론화가
+// 7/30 자리에 7/30 날짜로 섰다. 이제 행 하나의 날짜와 제목은 **같은 기사**에서 오고,
+// 행은 날짜 순서로 선다. `stages` 가 없는 사건(카탈로그 밖)은 예전처럼 한 줄이다.
+//
+// 이음매: 판정된 관계 라벨은 **그 사건의 마지막 단계 바로 다음이 다음 사건의 첫
+// 단계일 때만** 붙인다. 날짜 순서로 섞이면 두 사건이 이웃하지 않을 수 있고, 그때
+// 라벨을 달면 판정하지 않은 두 행 사이의 관계를 주장하게 된다.
+function threadFlowRows(steps) {
+  const rows = [];
+  steps.forEach((step, stepIndex) => {
+    const stages = (step.stages || []).filter(stage => stage && stage.date);
+    const list = stages.length ? stages : [{ date: step.date, title: step.title }];
+    list.forEach((stage, stageIndex) => rows.push({
+      step, stepIndex, stageIndex, stageCount: list.length,
+      date: String(stage.date || ""), title: String(stage.title || step.title || ""),
+    }));
+  });
+  // 흡수된 옛 사건은 단계 없이 한 줄로 오는데, 그 기사는 흡수한 사건의 단계에도
+  // 있다 — 같은 날짜·같은 제목이 두 번 선다(실측 6260: 7/31 · 9/6). 단계 쪽을 남긴다.
+  // 기사 자체는 그대로 보이므로 지워지는 기록은 없다.
+  const staged = new Set(rows.filter(row => (row.step.stages || []).length)
+    .map(row => `${row.date} ${row.title}`));
+  const kept = rows.filter(row => (row.step.stages || []).length
+    || !staged.has(`${row.date} ${row.title}`));
+  rows.length = 0;
+  rows.push(...kept);
+  rows.sort((a, b) => a.date.localeCompare(b.date)
+    || a.stepIndex - b.stepIndex || a.stageIndex - b.stageIndex);
+  rows.forEach((row, index) => {
+    const next = rows[index + 1];
+    const endsStep = row.stageIndex === row.stageCount - 1;
+    row.relationLabel = next && endsStep && next.stepIndex === row.stepIndex + 1 && next.stageIndex === 0
+      ? String(row.step.relation_label || "") : "";
+    row.isLast = !next;
+  });
+  return rows;
+}
+
 // 흐름 한 줄. 지금 보고 있는 사건은 링크가 아니라 제자리 표시다 — 자기 자신을
 // 여는 버튼은 누르면 아무 일도 안 일어나는 것으로 읽힌다.
 //
@@ -3314,28 +3354,41 @@ function threadStepSources(step) {
 // 두 종류의 날짜가 선다 — 무슨 날짜인지는 title 로만 알린다.
 // 인자를 구조분해로 받지 않는다 — web/tests 의 함수 추출기가 매개변수의 중괄호를
 // 본문 시작으로 오해해서 블록을 반 토막 낸다(long_term_gate.mjs 와 같은 추출기).
-function threadStepRow(step, currentId, isLast) {
-  const isCurrent = threadStepSources(step).includes(currentId);
-  const isAbsorbed = !isCurrent && step.event_id === currentId;
+function threadStepRow(row, currentId, isCurrentLatest) {
+  const step = row.step;
+  const inCurrent = threadStepSources(step).includes(currentId);
+  const isCurrent = inCurrent && isCurrentLatest;
+  const isAbsorbed = !inCurrent && step.event_id === currentId;
   let title;
-  if (isCurrent || isAbsorbed) {
-    title = `<span class="longterm-event ${isCurrent ? "is-current" : "is-absorbed"}">${esc(step.title)}</span>`;
+  if (inCurrent || isAbsorbed) {
+    title = `<span class="longterm-event ${inCurrent ? "is-current" : "is-absorbed"}">${esc(row.title)}</span>`;
   } else if (!threadEventOpenable(step)) {
-    title = `<span class="longterm-event is-closed" title="이 사건은 현재 이슈 목록에 없습니다">${esc(step.title)}</span>`;
+    title = `<span class="longterm-event is-closed" title="이 사건은 현재 이슈 목록에 없습니다">${esc(row.title)}</span>`;
   } else {
-    title = `<button type="button" class="longterm-event" data-issue-id="${esc(step.event_id)}" data-force-dialog="1">${esc(step.title)}</button>`;
+    title = `<button type="button" class="longterm-event" data-issue-id="${esc(step.event_id)}" data-force-dialog="1">${esc(row.title)}</button>`;
   }
   const dateTitle = step.date_kind === "first_seen" ? ' title="브리핑에 처음 오른 날"' : "";
   return `<li${isCurrent ? ' class="is-current"' : ""}>
-    <div class="timeline-date"><span${dateTitle}>${esc(dateLabel(step.date))}</span></div>
+    <div class="timeline-date"><span${dateTitle}>${esc(dateLabel(row.date))}</span></div>
     <div class="timeline-copy">
       ${title}
       ${isCurrent ? '<small>이번 사건</small>' : ""}
-      ${isAbsorbed ? '<small class="longterm-absorbed">이 이슈에 합쳐진 사건</small>' : ""}
-      ${isLast ? "" : `<p class="longterm-relation"><span aria-hidden="true">↓</span>${
-        step.relation_label ? ` ${esc(step.relation_label)}` : ""}</p>`}
+      ${isAbsorbed && row.stageIndex === 0 ? '<small class="longterm-absorbed">이 이슈에 합쳐진 사건</small>' : ""}
+      ${row.isLast ? "" : `<p class="longterm-relation"><span aria-hidden="true">↓</span>${
+        row.relationLabel ? ` ${esc(row.relationLabel)}` : ""}</p>`}
     </div>
   </li>`;
+}
+
+// '이번 사건' 표시는 현재 사건의 **가장 늦은 단계 행** 하나에만 단다 — 같은 사건의
+// 앞 단계들도 버튼이 아니지만(지금 이 화면이다) '이번'이라 부르지는 않는다.
+function threadDialogRows(steps, currentId) {
+  const rows = threadFlowRows(steps);
+  let latest = -1;
+  rows.forEach((row, index) => {
+    if (threadStepSources(row.step).includes(currentId)) latest = index;
+  });
+  return rows.map((row, index) => threadStepRow(row, currentId, index === latest)).join("");
 }
 
 function threadDialogSection(issue) {
@@ -3357,8 +3410,7 @@ function threadDialogSection(issue) {
   return `<section class="dialog-history dialog-thread" aria-labelledby="issueHistoryTitle">
       <div class="dialog-section-head"><h3 id="issueHistoryTitle">주요 사건 타임라인</h3><span>같은 흐름의 사건 ${steps.length}건 · ${esc(threadPeriodText(thread))}</span></div>
       ${missingNote}
-      <ol class="timeline longterm-timeline longterm-flow">${steps.map((step, index) =>
-        threadStepRow(step, currentId, index + 1 >= steps.length)).join("")}</ol>
+      <ol class="timeline longterm-timeline longterm-flow">${threadDialogRows(steps, currentId)}</ol>
       <p class="dialog-evidence-note">서로 다른 사건이 시간에 따라 이어진 흐름입니다. 각 사건의 근거 기사는 그 사건의 상세에 있습니다.</p>
     </section>`;
 }
@@ -5276,6 +5328,8 @@ function handleHubAction(event) {
 // 늘었다. **더하기만 했다** — 이 화면이 읽는 `event_id`·`title`·`date`·
 // `relation_label` 은 의미까지 그대로라, 여기서 그리는 것은 달라지지 않는다.
 // 늘어난 칸을 쓰는 것은 카드 쪽이다(사건마다 자기 근거만 인용하게 하려고).
+// (2026-09-24) 흐름 행에 `stages`(사건 안의 단계: 날짜·제목·해시)가 더해졌다. 역시
+// 더하기만 했다 — 옛 칸은 뜻 그대로고, 화면은 stages 가 있으면 단계별로 펼친다.
 const THREAD_CONTRACT = "thread-web-v2";
 
 function longTermVisible(payload, nowMs = Date.now()) {
@@ -5375,16 +5429,15 @@ function threadEventOpenable(event) {
 function threadFlow(thread) {
   const steps = thread.flow || [];
   if (!steps.length) return threadTimeline(thread);
-  return `<ol class="timeline longterm-timeline longterm-flow">${steps.map((step, index) => `<li>
-    <div class="timeline-date"><span>${esc(dateLabel(step.date))}</span></div>
+  // 이슈 상세와 같은 펼침을 쓴다(threadFlowRows) — 한 사실을 두 모양으로 그리지 않는다.
+  return `<ol class="timeline longterm-timeline longterm-flow">${threadFlowRows(steps).map(row => `<li>
+    <div class="timeline-date"><span>${esc(dateLabel(row.date))}</span></div>
     <div class="timeline-copy">
-      ${threadEventOpenable(step)
-        ? `<button type="button" class="longterm-event" data-thread-event="${esc(step.event_id)}">${esc(step.title)}</button>`
-        : `<span class="longterm-event is-closed" title="이 사건은 현재 이슈 목록에 없습니다">${esc(step.title)}</span>`}
-      ${index + 1 < steps.length
-        ? `<p class="longterm-relation"><span aria-hidden="true">↓</span>${
-            step.relation_label ? ` ${esc(step.relation_label)}` : ""}</p>`
-        : ""}
+      ${threadEventOpenable(row.step)
+        ? `<button type="button" class="longterm-event" data-thread-event="${esc(row.step.event_id)}">${esc(row.title)}</button>`
+        : `<span class="longterm-event is-closed" title="이 사건은 현재 이슈 목록에 없습니다">${esc(row.title)}</span>`}
+      ${row.isLast ? "" : `<p class="longterm-relation"><span aria-hidden="true">↓</span>${
+        row.relationLabel ? ` ${esc(row.relationLabel)}` : ""}</p>`}
     </div>
   </li>`).join("")}</ol>`;
 }
