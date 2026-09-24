@@ -5189,8 +5189,12 @@ def build_issue_catalog(issues: list[dict], latest_briefing_date: str, checked_a
             (latest_day - last_day).days if latest_day and last_day else None
         )
         implication, why_important = split_interpretation(representative)
+        # 이전 상태는 **카드 멤버(history)에서만** 고른다 — 브리핑 경로와 같은 기준.
+        # evidence_members 는 선정되지 않은 채 뒤에 매칭으로 붙은 보도라, 그 요약을
+        # '직전 상태'로 쓰면 브리핑에 한 번도 안 실린 문장이 "A → B" 의 A 자리에
+        # 앉는다(2026-09-24 라이브: 화살표 256 중 149 가 evidence 가 앞쪽이었다).
         archive_change_line = change_line_for_card(
-            current, history + evidence_timeline,
+            current, history,
             card_visible_text(representative["title_kr"], implication, why_important),
         )
         # 엔티티 매칭은 여기(원 멤버)에서만 가능하다 — _article_view 가
