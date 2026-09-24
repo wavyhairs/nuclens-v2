@@ -134,6 +134,20 @@
         <div id="borderline" class="admin-list"></div>
       </details>
     </section>
+
+    <!-- 빠진 후보는 발송되지 않아 결과물에 흔적이 없다. 알고리즘이 뺀 것과
+         사람이 내린 것을 한 칸에 둬야 알고리즘이 무엇을 놓치는지가 보인다. -->
+    <section class="admin-section" aria-labelledby="repeatTitle">
+      <div class="section-heading compact">
+        <div class="section-title"><span class="sec-no" aria-hidden="true">05</span><h2 id="repeatTitle">그날 화면에서 뺀 것 — 연속일 반복</h2></div>
+        <span class="data-note">전날까지 보낸 사건을 새 전개 없이 다시 보도한 후보(자동)와 사람이 숨긴 항목입니다
+          · <button type="button" class="admin-help-link" data-act="help-open" data-topic="help-repeat">쓰는 법</button></span>
+      </div>
+      <details class="admin-fold" data-fold="repeat">
+        <summary><span data-role="count">건수를 세는 중</span></summary>
+        <div id="repeatRemovals" class="admin-list"></div>
+      </details>
+    </section>
   </section>
 
   <!-- ── 수집 설정 ───────────────────────────────────────────────────────
@@ -245,6 +259,7 @@
         <a href="#help-stage">붙이지 않은 판단</a>
         <a href="#help-issue">날짜를 넘는 병합</a>
         <a href="#help-borderline">붙지 않은 경계선</a>
+        <a href="#help-repeat">그날 화면에서 뺀 것</a>
         <a href="#help-keywords">검색 키워드</a>
         <a href="#help-learned-terms">학습된 검색어</a>
         <a href="#help-anti">공통 제외어</a>
@@ -350,6 +365,23 @@
             됩니다. 단계 판정(<code>event_stage</code>)이면 코드 쪽 문제입니다.</dd></div>
           <div><dt>비어 있으면</dt><dd>정상입니다. 이 기록은 발송 회차에서 오므로 아직 회차가
             없으면 비어 있습니다.</dd></div>
+        </dl>
+      </article>
+
+      <article class="admin-help-card" id="help-repeat">
+        <h3>그날 화면에서 뺀 것 — 연속일 반복</h3>
+        <p class="admin-help-lead">읽기 전용입니다. 그날 브리핑에서 빠진 항목이 여기 모입니다 —
+          알고리즘이 뺀 것(<em>자동 제외</em>), 같은 사건이지만 새 단계라 남긴 것(<em>후속으로
+          유지</em>), 사람이 <code>selection_overrides.json</code> 으로 내린 것(<em>사람이 숨김</em>).</p>
+        <dl class="admin-help-steps">
+          <div><dt>왜 있나</dt><dd>빠진 후보는 발송되지 않아 결과물에 흔적이 없습니다. 이 칸이
+            없으면 "왜 이 기사가 안 나갔나"에 답할 수 없습니다.</dd></div>
+          <div><dt>자동 제외가 이상하면</dt><dd>카드의 <em>이미 보낸 기사</em>와 <em>후보에만 있는
+            사실</em>을 비교합니다. 새로 일어난 일이 있는데 빠졌다면 판정이 과한 것입니다
+            (<code>dedup.cross_day_repeats</code>).</dd></div>
+          <div><dt>사람이 숨김이 쌓이면</dt><dd>알고리즘이 놓친 반복입니다. 같은 모양이 반복되면
+            판정 기준을 고칠 신호입니다.</dd></div>
+          <div><dt>비어 있으면</dt><dd>정상입니다. 그날 반복도, 사람의 숨김도 없었다는 뜻입니다.</dd></div>
         </dl>
       </article>
 
