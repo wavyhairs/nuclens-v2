@@ -32,7 +32,7 @@ import json
 import math
 import re
 from collections import Counter, defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from pathlib import Path
 
@@ -106,6 +106,10 @@ class Event:
     tokens: frozenset
     briefing_count: int
     raw: dict = field(repr=False, default_factory=dict)
+    # 이 사건 안의 단계 — 브리핑일마다 그날 실린 카드 기사 하나(날짜·제목·해시).
+    # 화면의 흐름이 사건을 한 줄이 아니라 단계별로 제 날짜 자리에 세우려고 싣는다.
+    # 이번 빌드의 카탈로그에서만 온다(with_catalog_stages). 판정에는 쓰지 않는다.
+    stages: tuple = ()
 
 
 def load_events(path: Path | None = None) -> list[Event]:
@@ -139,6 +143,40 @@ def load_events(path: Path | None = None) -> list[Event]:
         ))
     out.sort(key=lambda event: (event.first_seen or date.min, event.issue_id))
     return out
+
+
+def with_catalog_stages(events: list[Event], catalog: list[dict]) -> list[Event]:
+    """카탈로그에 있는 사건에 단계(브리핑일별 카드 기사)를 얹는다.
+
+    왜: 이슈 판정 규칙은 "진행 단계가 바뀐 것은 같은 사건"이다(issue_review.SYSTEM_PROMPT).
+    그래서 사건 하나가 7/30 논란부터 9/24 공론화까지 품을 수 있고, 흐름이 그 사건을
+    한 줄로 그리면 날짜는 첫 기사, 제목은 마지막 기사에서 와 서로 어긋난다
+    (2026-09-24 라이브: 9/24 공론화가 7/30 자리에 섰다). 단계마다 **같은 기사의**
+    날짜와 제목을 짝지어 둔다.
+
+    날짜는 브리핑 첫 등장일이다(thread_web.DATE_KIND) — 보도일을 섞지 않는다.
+    같은 날 카드가 여럿이면 그날 브리핑 순위가 가장 높은 기사 하나.
+    """
+    by_issue: dict[str, list[dict]] = {}
+    for row in catalog:
+        picked: dict[str, dict] = {}
+        for article in row.get("related_articles") or ():
+            if (article.get("member_role") or "card") == "evidence":
+                continue
+            day = str(article.get("briefing_date") or "")[:10]
+            if not day:
+                continue
+            rank = article.get("brief_rank")
+            key = (rank if isinstance(rank, int) else 999, str(article.get("hash") or ""))
+            if day not in picked or key < picked[day]["_key"]:
+                picked[day] = {"date": day, "title": str(article.get("title_kr") or article.get("title") or ""),
+                               "hash": str(article.get("hash") or ""), "_key": key}
+        stages = [{k: v for k, v in stage.items() if k != "_key"}
+                  for _, stage in sorted(picked.items())]
+        if stages:
+            by_issue[str(row.get("issue_id") or "")] = stages
+    return [replace(event, stages=tuple(by_issue[event.issue_id]))
+            if event.issue_id in by_issue else event for event in events]
 
 
 class Index:

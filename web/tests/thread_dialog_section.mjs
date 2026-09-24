@@ -150,7 +150,9 @@ function build(state) {
     ${extract("threadPeriodText")}
     ${extract("threadForIssue")}
     ${extract("threadStepSources")}
+    ${extract("threadFlowRows")}
     ${extract("threadStepRow")}
+    ${extract("threadDialogRows")}
     ${extract("threadDialogSection")}
     return { threadDialogSection, threadForIssue };
   `)(state, NOW);
@@ -391,6 +393,90 @@ check("현재 행 강조가 행을 옆으로 밀지 않는다", () => {
   const rule = css.split(/\r?\n/).filter(line => line.includes(".dialog-thread li.is-current"));
   assert.ok(rule.length, "현재 행 규칙이 없다");
   for (const line of rule) assert.ok(!/margin-left|padding-left/.test(line), `행을 미는 규칙: ${line}`);
+});
+
+console.log("사건 안의 단계는 제 날짜 자리에 선다 — 날짜와 제목은 같은 기사에서");
+
+// 2026-09-24 라이브(thread-0b1465ede2a4a282): 사건 6260 이 7/30~9/24 를 품었고, 흐름은
+// 그 사건을 한 줄로 그려 「…3개월간 원전 공론화 추진」(9/24)을 7/30 자리·7/30 날짜로 세웠다.
+const PLAN = "issue-6260c0799db78ac9";
+const PLAN_ISSUE = { issue_id: PLAN, title: "정부, 12차 전기본 수립 위해 3개월간 원전 공론화 추진",
+  thread_id: "thread-plan", related_articles: [] };
+function planThreads() {
+  return threadsPayload({ threads: [{
+    thread_id: "thread-plan", title: "12차 전기본", first_seen: "2026-07-14", last_seen: "2026-09-24",
+    events: [], units: [], entity_ids: [], unit_labels: [], entity_labels: [],
+    flow: [
+      { event_id: "issue-dca7", source_event_id: "issue-dca7", source_event_ids: ["issue-dca7"],
+        title: "기후장관, 원전·SMR 공론화 거쳐 전기본 반영", date: "2026-07-14", date_kind: "first_seen",
+        stages: [{ date: "2026-07-14", title: "기후장관, 원전·SMR 공론화 거쳐 전기본 반영" }],
+        relation_to_next: "stage_progress", relation_label: "다음 단계" },
+      { event_id: PLAN, source_event_id: PLAN, source_event_ids: [PLAN],
+        title: "정부, 12차 전기본 수립 위해 3개월간 원전 공론화 추진", date: "2026-07-30", date_kind: "first_seen",
+        stages: [
+          { date: "2026-07-30", title: "24.7GW 전력 더 필요한데 … 신규 원전 몇 기 짓나" },
+          { date: "2026-08-21", title: "제12차 전력수급기본계획, 원전 비중 확대 시험대" },
+          { date: "2026-09-23", title: "정부, 원전 공론화 추진으로 12차 전기본 확정 내년 2월로 연기" },
+          { date: "2026-09-24", title: "정부, 12차 전기본 수립 위해 3개월간 원전 공론화 추진" },
+        ],
+        relation_to_next: "same_matter", relation_label: "같은 사안" },
+      { event_id: "issue-d1e5", source_event_id: "issue-d1e5", source_event_ids: ["issue-d1e5"],
+        title: "정부, 12차 전기본 수립 토론회 개최", date: "2026-08-24", date_kind: "first_seen",
+        stages: [{ date: "2026-08-24", title: "정부, 12차 전기본 수립 토론회 개최" }],
+        relation_to_next: "", relation_label: "" },
+    ],
+  }] });
+}
+function planHtml() {
+  return build(defaultState({ threads: planThreads(), issues: [PLAN_ISSUE] })).threadDialogSection(PLAN_ISSUE);
+}
+function rowsOf(html) {
+  return [...html.matchAll(/<li[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span><\/div>[\s\S]*?class="longterm-event[^"]*"[^>]*>([^<]+)</g)]
+    .map(match => [match[1], match[2]]);
+}
+
+check("9/24 공론화는 9월 자리에 9월 날짜로 선다 — 7/30 에 서지 않는다", () => {
+  const rows = rowsOf(planHtml());
+  const at = rows.findIndex(([, title]) => title.includes("3개월간 원전 공론화 추진"));
+  assert.ok(at >= 0, "공론화 행이 없다");
+  assert.equal(rows[at][0], "9월 24일", `공론화 행 날짜가 ${rows[at][0]}`);
+  assert.equal(at, rows.length - 1, "공론화 행이 흐름 끝(가장 늦은 자리)에 있지 않다");
+  assert.ok(!rows.some(([day, title]) => day === "7월 30일" && title.includes("공론화 추진")),
+    "7/30 자리에 9월 제목이 남았다");
+});
+
+check("행은 날짜 순서다 — 다른 사건(8/24 토론회)이 제 자리에 끼어든다", () => {
+  const rows = rowsOf(planHtml());
+  const order = rows.map(([, title]) => title);
+  assert.ok(order.indexOf("정부, 12차 전기본 수립 토론회 개최")
+    > order.indexOf("제12차 전력수급기본계획, 원전 비중 확대 시험대"), "8/24 가 8/21 앞에 섰다");
+  assert.ok(order.indexOf("정부, 12차 전기본 수립 토론회 개최")
+    < order.indexOf("정부, 원전 공론화 추진으로 12차 전기본 확정 내년 2월로 연기"), "8/24 가 9/23 뒤에 섰다");
+});
+
+check("판정 라벨은 두 사건이 실제로 이웃할 때만 붙는다", () => {
+  const html = planHtml();
+  // 7/14 → 7/30(6260 첫 단계): 판정된 '다음 단계' 가 이웃이다.
+  assert.ok(html.includes("다음 단계"), "이웃한 판정 라벨이 사라졌다");
+  // 6260 의 마지막 단계(9/24)는 흐름 끝이라 '같은 사안'(→ 8/24 토론회)을 달 자리가 없다.
+  assert.ok(!html.includes("같은 사안"), "이웃하지 않은 두 행 사이에 판정 라벨을 달았다");
+});
+
+check("이번 사건 표시는 현재 사건의 가장 늦은 단계 하나에만", () => {
+  const html = planHtml();
+  assert.equal((html.match(/<li class="is-current"/g) || []).length, 1);
+  const at = html.indexOf('<li class="is-current"');
+  assert.ok(html.indexOf("3개월간 원전 공론화 추진", at) > at, "가장 늦은 단계가 아닌 행에 달렸다");
+  assert.ok(!html.includes(`data-issue-id="${PLAN}"`), "현재 사건의 단계가 자기를 여는 버튼이 됐다");
+});
+
+check("흡수된 옛 사건의 한 줄이 흡수한 사건의 단계와 겹치면 한 번만 선다", () => {
+  const payload = planThreads();
+  payload.threads[0].flow.splice(2, 0, { event_id: PLAN, source_event_id: "issue-d465",
+    source_event_ids: ["issue-d465"], title: "제12차 전력수급기본계획, 원전 비중 확대 시험대",
+    date: "2026-08-21", date_kind: "first_seen", stages: [], relation_to_next: "", relation_label: "" });
+  const html = build(defaultState({ threads: payload, issues: [PLAN_ISSUE] })).threadDialogSection(PLAN_ISSUE);
+  assert.equal((html.match(/원전 비중 확대 시험대/g) || []).length, 1, "같은 기사가 두 줄로 섰다");
 });
 
 console.log("chronicle 계층은 남아 있지 않다");

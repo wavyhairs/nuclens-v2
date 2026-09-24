@@ -59,6 +59,7 @@ import article_quality_gate  # noqa: E402
 import event_calendar  # noqa: E402
 import event_identity  # noqa: E402
 import event_ledger  # noqa: E402
+import event_retrieval  # noqa: E402
 import issue_candidate_stats  # noqa: E402
 import evidence_cache  # noqa: E402
 import briefing_snapshot  # noqa: E402
@@ -7862,7 +7863,9 @@ def build() -> None:
     # 사고 계약) 예외는 여기서 삼키고 '숨김' 페이로드로 떨어진다 —
     # 화면은 그것을 보고 탭 자체를 걸지 않는다.
     try:
-        threads_payload = thread_web.build_payload(now=now)
+        threads_payload = thread_web.build_payload(
+            now=now,
+            events=event_retrieval.with_catalog_stages(event_retrieval.load_events(), issue_catalog))
     except Exception as exc:  # noqa: BLE001
         print(f"[build_data:threads] 투영 실패 — 장기 스토리 화면 숨김 ({type(exc).__name__}: {exc})")
         threads_payload = {
