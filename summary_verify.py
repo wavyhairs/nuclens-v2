@@ -25,7 +25,8 @@
 한도:
     기사 요약(curation)과 같은 모델 버킷(3.1-flash-lite)을 쓴다. 이 검사는 부가
     기능이므로 요약이 한도에 밀리면 안 된다 — 하루 상한과 회차 상한을 두고,
-    429·402 를 한 번이라도 보면 그 회차는 즉시 멈춘다.
+    429·402 를 한 번이라도 보면 그 회차는 즉시 멈춘다. 멈춰서 못 본 기사는 다음
+    회차가 24시간 안에서 본문을 다시 받아 이어서 본다(`backlog_candidates`).
 
 저장:
     append-only JSONL(`.gitattributes` 의 merge=union). crawl 과 daily-brief 가
@@ -63,6 +64,11 @@ DEFAULT_DAILY_CAP = 250
 # 크롤 1회에 새로 들어오는 등급 기사는 보통 수십 건이다. 한 회차가 하루 몫을
 # 다 쓰지 않게 한다 — 분당 15회 제한에서 80회는 6분 안팎이다.
 DEFAULT_RUN_CAP = 80
+
+# 한도·결제 오류로 멈춘 회차의 남은 기사를 다음 회차가 이어서 본다. 본문은 저장하지
+# 않으므로(저작권) 다시 받아 와야 한다 — 그래서 창을 좁게, 회차당 개수를 작게 둔다.
+BACKLOG_HOURS = 24
+BACKLOG_PER_RUN = 30
 
 _MAX_TEXT = 300
 
@@ -257,6 +263,8 @@ def verify(targets: list[dict], *, client=None, now: datetime | None = None,
 
     history = load_log(path)
     done = {(row.get("hash"), row.get("input_sha")) for row in history if row.get("called")}
+    # 호출 없이 규칙만 적은 행. 밀린 기사를 회차마다 다시 볼 때 같은 줄이 쌓이지 않게.
+    noted = {(row.get("hash"), row.get("input_sha")) for row in history}
     used_today = sum(1 for row in history if row.get("called") and row.get("quota_day") == day)
     budget = max(0, min(day_cap - used_today, per_run_cap))
     available = client.is_available()
@@ -284,7 +292,7 @@ def verify(targets: list[dict], *, client=None, now: datetime | None = None,
         }
         if not available or stats["stopped"] or budget <= 0:
             stats["skipped_cap"] += bool(available and not stats["stopped"])
-            if rule:
+            if rule and (target["hash"], sha) not in noted:
                 rows.append(row)  # 규칙은 호출 없이도 결과가 있다
             continue
         try:
@@ -320,6 +328,74 @@ def verify(targets: list[dict], *, client=None, now: datetime | None = None,
         rows.append(row)
     append_log(rows, path)
     return rows, stats
+
+
+def remaining_budget(*, now: datetime | None = None, path: Path = LOG_FILE,
+                     day_cap: int | None = None, per_run_cap: int | None = None) -> int:
+    """이번 회차에 더 물을 수 있는 횟수. 밀린 기사의 본문을 받을지 정할 때 쓴다."""
+    now = now or datetime.now(timezone.utc)
+    day = quota_day(now)
+    day_cap = daily_cap() if day_cap is None else day_cap
+    per_run_cap = run_cap() if per_run_cap is None else per_run_cap
+    used = sum(1 for row in load_log(path) if row.get("called") and row.get("quota_day") == day)
+    return max(0, min(day_cap - used, per_run_cap))
+
+
+def _parse_time(value: object) -> datetime | None:
+    try:
+        moment = datetime.fromisoformat(str(value or ""))
+    except ValueError:
+        return None
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
+def backlog_candidates(curated: dict, exclude: set[str], is_fallback, *,
+                       now: datetime | None = None, path: Path = LOG_FILE,
+                       limit: int = BACKLOG_PER_RUN) -> list[dict]:
+    """최근 요약됐는데 아직 검사하지 못한 기사. 본문 없이 돌려준다(오래된 것부터).
+
+    이번 회차 대상(`exclude`)은 뺀다 — 그쪽은 본문이 이미 손에 있다. 창을 넘긴
+    기사는 포기한다: 이미 여러 번 화면에 나갔고, 경고의 쓸모는 새 요약에 있다.
+    """
+    now = now or datetime.now(timezone.utc)
+    oldest = now - timedelta(hours=BACKLOG_HOURS)
+    checked = {(row.get("hash"), row.get("input_sha"))
+               for row in load_log(path) if row.get("called")}
+    out = []
+    for h, cur in (curated or {}).items():
+        if h in exclude or not isinstance(cur, dict) or not cur.get("link"):
+            continue
+        if cur.get("importance") not in KEPT_IMPORTANCE or is_fallback(cur):
+            continue
+        cached_at = _parse_time(cur.get("cached_at"))
+        if cached_at is None or cached_at < oldest or cached_at > now:
+            continue
+        candidate = {"hash": h, "title": cur.get("title") or "", "link": cur["link"],
+                     "title_kr": cur.get("title_kr") or "", "summary": cur.get("summary") or "",
+                     "detail": cur.get("detail") or "",
+                     "published": str(cur.get("published_at") or "")[:10],
+                     "_cached_at": cached_at}
+        if (h, input_sha(candidate)) in checked:
+            continue
+        out.append(candidate)
+    out.sort(key=lambda row: (row["_cached_at"], row["hash"]))
+    for row in out:
+        row.pop("_cached_at")
+    return out[:max(0, limit)]
+
+
+def attach_bodies(candidates: list[dict], fetch) -> list[dict]:
+    """본문을 다시 받아 붙인다. 못 받은 기사는 뺀다(다음 회차가 창 안에서 다시 본다)."""
+    if not candidates:
+        return []
+    bodies, _stats = fetch([{"hash": row["hash"], "link": row["link"], "title": row["title"]}
+                            for row in candidates])
+    out = []
+    for row in candidates:
+        body = (bodies or {}).get(row["hash"]) or ""
+        if body:
+            out.append({**row, "body": body})
+    return out
 
 
 def targets_from_curation(articles: list[dict], curated: dict, bodies: dict,

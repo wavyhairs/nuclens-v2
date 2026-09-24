@@ -8,7 +8,7 @@
 import json
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import summary_verify
@@ -217,6 +217,84 @@ class TargetSelectionTests(unittest.TestCase):
         self.assertEqual(out[0]["published"], "2026-09-22")
 
 
+class BacklogTests(unittest.TestCase):
+    """한도·결제 오류로 멈춘 회차의 남은 기사를 다음 회차가 이어서 본다."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.path = Path(self.tmp.name) / "checks.jsonl"
+
+    @staticmethod
+    def cur(hours_ago, importance="must_read", **extra):
+        row = {"importance": importance, "link": "https://example.com/a", "title": "t",
+               "title_kr": "제목", "summary": "요약", "detail": "",
+               "cached_at": (NOW - timedelta(hours=hours_ago)).isoformat(),
+               "published_at": "2026-09-23T01:00:00+00:00"}
+        row.update(extra)
+        return row
+
+    def candidates(self, curated, exclude=frozenset(), limit=30):
+        return summary_verify.backlog_candidates(
+            curated, set(exclude), lambda cur: cur.get("curation_status") == "fallback",
+            now=NOW, path=self.path, limit=limit)
+
+    def test_recent_unchecked_kept_articles_oldest_first(self):
+        curated = {"new": self.cur(1), "old": self.cur(20), "stale": self.cur(30),
+                   "noise": self.cur(2, "noise"), "fb": self.cur(2, curation_status="fallback"),
+                   "nolink": self.cur(2, link="")}
+        self.assertEqual([row["hash"] for row in self.candidates(curated)], ["old", "new"])
+
+    def test_this_runs_targets_are_excluded(self):
+        self.assertEqual(self.candidates({"a": self.cur(1)}, exclude={"a"}), [])
+
+    def test_already_checked_summary_is_not_backlog(self):
+        curated = {"a": self.cur(1)}
+        sha = summary_verify.input_sha(self.candidates(curated)[0])
+        self.path.write_text(json.dumps({"hash": "a", "input_sha": sha, "called": True}) + "\n",
+                             encoding="utf-8")
+        self.assertEqual(self.candidates(curated), [])
+
+    def test_rule_only_row_does_not_hide_it_from_backlog(self):
+        """호출 없이 규칙만 적힌 기사는 아직 LLM 검사를 받지 못한 것이다."""
+        curated = {"a": self.cur(1)}
+        sha = summary_verify.input_sha(self.candidates(curated)[0])
+        self.path.write_text(json.dumps({"hash": "a", "input_sha": sha, "called": False}) + "\n",
+                             encoding="utf-8")
+        self.assertEqual(len(self.candidates(curated)), 1)
+
+    def test_limit(self):
+        curated = {f"h{i}": self.cur(i + 1) for i in range(5)}
+        self.assertEqual(len(self.candidates(curated, limit=2)), 2)
+
+    def test_bodies_are_refetched_and_missing_ones_dropped(self):
+        rows = self.candidates({"a": self.cur(1), "b": self.cur(2)})
+        seen = []
+
+        def fetch(articles):
+            seen.extend(articles)
+            return {"a": "본문"}, {}
+
+        out = summary_verify.attach_bodies(rows, fetch)
+        self.assertEqual({row["hash"] for row in seen}, {"a", "b"})
+        self.assertEqual([(row["hash"], row["body"]) for row in out], [("a", "본문")])
+
+    def test_remaining_budget_counts_todays_calls(self):
+        rows = [{"hash": f"h{i}", "called": True, "quota_day": "2026-09-23"} for i in range(3)]
+        self.path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+        self.assertEqual(summary_verify.remaining_budget(
+            now=NOW, path=self.path, day_cap=10, per_run_cap=80), 7)
+        self.assertEqual(summary_verify.remaining_budget(
+            now=NOW, path=self.path, day_cap=10, per_run_cap=5), 5)
+
+    def test_rule_only_row_is_written_once(self):
+        client = FakeClient(available=False)
+        for _ in range(2):
+            summary_verify.verify([target()], client=client, now=NOW, path=self.path,
+                                  day_cap=250, per_run_cap=80)
+        self.assertEqual(len(self.path.read_text(encoding="utf-8").splitlines()), 1)
+
+
 class WiringTests(unittest.TestCase):
     def test_news_bot_runs_it_warning_only_after_curation(self):
         source = (ROOT / "news_bot.py").read_text(encoding="utf-8")
@@ -225,6 +303,9 @@ class WiringTests(unittest.TestCase):
         self.assertIn("not (QUOTA_EXHAUSTED or CONFIG_ERROR)", block)
         self.assertIn("except Exception", block)
         self.assertNotIn("curated[", block, "경고 모드는 요약을 바꾸지 않는다")
+        # 밀린 기사: 여유가 있을 때만 본문을 다시 받는다.
+        self.assertIn("remaining_budget()", block)
+        self.assertIn("attach_bodies(backlog, article_body.fetch_bodies)", block)
 
     def test_log_is_committed_and_union_merged(self):
         for name in ("crawl.yml", "daily-brief.yml"):

@@ -3761,9 +3761,21 @@ def main() -> None:
     # 버킷이라 요약이 한도·설정 오류로 멈춘 회차에는 검사도 하지 않는다.
     if summary_verify.enabled() and not (QUOTA_EXHAUSTED or CONFIG_ERROR):
         try:
+            is_fallback = (lambda cur:
+                           article_quality_gate.infer_curation_status(cur) == "fallback")
             verify_targets = summary_verify.targets_from_curation(
-                final_articles, curated, bodies, curation_attempted_hashes,
-                lambda cur: article_quality_gate.infer_curation_status(cur) == "fallback")
+                final_articles, curated, bodies, curation_attempted_hashes, is_fallback)
+            # 앞 회차가 한도·결제 오류로 멈춰 남긴 기사. 호출 여유가 있을 때만 본문을
+            # 다시 받는다 — 여유가 없는데 받으면 네트워크만 쓰고 검사는 못 한다.
+            spare = summary_verify.remaining_budget() - len(verify_targets)
+            if spare > 0:
+                backlog = summary_verify.backlog_candidates(
+                    curated, curation_attempted_hashes, is_fallback,
+                    limit=min(spare, summary_verify.BACKLOG_PER_RUN))
+                if backlog:
+                    fetched = summary_verify.attach_bodies(backlog, article_body.fetch_bodies)
+                    print(f"[요약검사] 밀린 기사 {len(backlog)}건 → 본문 {len(fetched)}건 확보")
+                    verify_targets += fetched
             if verify_targets:
                 verify_rows, verify_stats = summary_verify.verify(verify_targets)
                 for line in summary_verify.report(verify_rows, verify_stats):
