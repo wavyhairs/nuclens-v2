@@ -1048,6 +1048,36 @@ def already_published(date: str) -> int:
 
 
 
+def published_issue_ids(date: str) -> list[str]:
+    """그날 사이트에 올라간 일일 카드의 이슈 id. `index.json` 의 `lines` 키가 그 기록이다."""
+    try:
+        index = json.loads((CARDS_SITE_DIR / "index.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    return [str(key) for key in ((index.get("lines") or {}).get(date) or {})]
+
+
+def stale_against_ranking(date: str, rows: list[dict] | None) -> tuple[list[str], list[str]] | None:
+    """올라간 카드가 **지금 사이트 상위 k** 와 다르면 (올라간 것, 지금 것). 같거나 모르면 None.
+
+    카드는 발송 직후 한 번 굽는다. 그 뒤 사람이 편집 override 로 순위를 고치면
+    (2026-09-24: 07:27 에 구운 카드 뒤 10:05 에 400GW 숨김·이탈리아 올림) 사이트는
+    바뀌는데 카드는 옛 3건을 그대로 들고 있었다 — '이미 사이트에 있다' 스킵이 막았다.
+    카드의 계약은 "사이트 순위 상위 k 그대로"라(pick_items), 어긋나면 다시 굽는다.
+
+    `lines` 가 없는 옛날 카드는 무엇으로 구웠는지 모르므로 판정하지 않는다(None).
+    """
+    published = published_issue_ids(date)
+    if not published or rows is None:
+        return None
+    current = [item["issue_id"] for item in pick_items(rows, brief_date=date)]
+    # 순서까지 본다 — 카드에 01·02·03 이 박힌다. 발송 뒤 그날 기사는 고정이라
+    # 순서가 흔들리는 것은 사람이 순위를 고쳤을 때뿐이다.
+    if not current or published == current:
+        return None
+    return published, current
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true",
@@ -1061,6 +1091,15 @@ def main() -> int:
 
     if args.date:
         date, outbox = args.date, {}
+        # 그날이 outbox 의 날이면 수집 통계는 거기 있다. 안 읽으면 '오늘 수집 N건'이
+        # 카드에 실린 이슈의 기사 수 합으로 떨어진다(2026-09-24 복구 실행: 683 → 228).
+        if OUTBOX_FILE.exists():
+            try:
+                saved = json.loads(OUTBOX_FILE.read_text(encoding="utf-8"))
+            except ValueError:
+                saved = {}
+            if saved.get("date") == date:
+                outbox = {"selection_stats": saved.get("selection_stats") or {}}
     else:
         if not OUTBOX_FILE.exists():
             print("[cards] outbox.json 없음 — 브리핑이 아직 안 돌았다. 스킵")
@@ -1082,14 +1121,23 @@ def main() -> int:
         # 별도 워크플로로 떼면서 재실행이 쉬워졌으니 여기서 막는다.
         #
         # 손으로 다시 굽고 싶으면 --force (cards.yml 의 수동 실행이 그걸 쓴다).
-        if (outbox.get("cards") or {}).get("date") == date:
-            print(f"[cards] {date} 카드는 이미 발송됨 — 스킵")
-            return 0
+        #
+        # 단, 올라간 카드가 **지금 사이트 순위와 어긋나면** 다시 굽는다
+        # (stale_against_ranking). 텔레그램 앨범은 이미 나간 것이라 되돌릴 수 없지만,
+        # 사이트의 카드는 사이트와 같은 말을 해야 한다. 발송은 워크플로의 send 가 정한다.
+        sent = (outbox.get("cards") or {}).get("date") == date
         made = already_published(date)
-        if made:
-            print(f"[cards] {date} 카드 {made}장이 이미 사이트에 있다 — 스킵 "
-                  "(다시 구우려면 --force)")
-            return 0
+        if sent or made:
+            # 무엇으로 구웠는지 기록(lines)이 있을 때만 재료를 읽는다 — 없으면 판정할 수
+            # 없고, 재료를 읽는 길이 곧 Gemini 를 태우는 길이라 멱등 가드가 흐려진다.
+            probe = load_site_data(date) if published_issue_ids(date) else None
+            stale = stale_against_ranking(date, None if probe is None else probe.issues)
+            if stale is None:
+                print(f"[cards] {date} 카드는 이미 {'발송됨' if sent else f'사이트에 {made}장 있음'}"
+                      " — 사이트 순위와도 같다. 스킵 (다시 구우려면 --force)")
+                return 0
+            print(f"[cards] {date} 카드가 사이트 순위와 어긋났다 — 다시 굽는다: "
+                  f"올라간 {stale[0]} / 지금 {stale[1]}")
 
     data = load_site_data(date)
     rows = None if data is None else data.issues

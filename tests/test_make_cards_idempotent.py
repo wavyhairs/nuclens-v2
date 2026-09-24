@@ -76,6 +76,32 @@ class IdempotentSkipTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertFalse(read_ranking)
 
+    # ── 사이트 순위와 어긋나면 다시 굽는다 (2026-09-24) ────────────────
+    def _publish_with_lines(self, ids):
+        self.publish(self.DAY)
+        index = json.loads((self.site / "index.json").read_text(encoding="utf-8"))
+        index["lines"] = {self.DAY: {key: "줄" for key in ids}}
+        (self.site / "index.json").write_text(json.dumps(index), encoding="utf-8")
+
+    def _rows(self, ids):
+        return [{"issue_id": key, "representative_article": {"url": f"https://e.com/{key}"}}
+                for key in ids]
+
+    def test_rebakes_when_the_site_ranking_moved_after_publishing(self):
+        self._publish_with_lines(["a", "b", "c"])
+        data = mock.Mock(issues=self._rows(["a", "z", "b", "c"]), warnings=())
+        with mock.patch.object(make_cards, "load_site_data", return_value=data),              mock.patch.object(make_cards, "pick_items", wraps=make_cards.pick_items) as picked,              mock.patch.object(make_cards, "attach_bodies", side_effect=SystemExit(9)),              mock.patch.object(sys, "argv", ["make_cards.py"]):
+            with self.assertRaises(SystemExit) as stop:
+                make_cards.main()
+        self.assertEqual(stop.exception.code, 9, "어긋났는데 굽는 길로 안 들어갔다")
+        self.assertTrue(picked.called)
+
+    def test_skips_when_the_site_ranking_still_matches(self):
+        self._publish_with_lines(["a", "b", "c"])
+        data = mock.Mock(issues=self._rows(["a", "b", "c", "d"]), warnings=())
+        with mock.patch.object(make_cards, "load_site_data", return_value=data),              mock.patch.object(make_cards, "attach_bodies", side_effect=AssertionError("구웠다")),              mock.patch.object(sys, "argv", ["make_cards.py"]):
+            self.assertEqual(make_cards.main(), 0)
+
     # ── 반쯤 들어간 상태는 '했다'로 치지 않는다 ─────────────────────────
     def test_an_index_without_the_files_is_not_done(self):
         """index 는 갱신됐는데 PNG 가 없다 — 여기서 넘기면 그날은 영영 안 고쳐진다."""
