@@ -909,6 +909,53 @@ function splitSeparates(cluster, hash) {
         || (entry.right_hash === hash && others.includes(entry.left_hash)));
 }
 
+// 나누기가 **실제로** 어떻게 갈렸는가. `hash_index` 는 이 빌드(=배포본)에서 기사
+// 해시 → [지금 이슈, 역할]이다. clusters 는 카드 멤버만 싣기 때문에 추가 근거가
+// 어디 붙었는지, 판정이 다음 빌드에서 정말 갈랐는지를 여기서만 볼 수 있다.
+function hashHome(hash) {
+  const row = (state.merges?.issue?.hash_index || {})[hash];
+  return row ? { issueId: row[0], role: row[1] } : null;
+}
+
+function splitOutcome(entry) {
+  const side = hashes => (hashes || []).map(hash => hashHome(hash)).filter(Boolean);
+  const left = side(entry.left_hashes);
+  const right = side(entry.right_hashes);
+  const leftIds = new Set(left.map(home => home.issueId));
+  const shared = right.filter(home => leftIds.has(home.issueId)).length;
+  const ids = homes => [...new Set(homes.map(home => home.issueId))];
+  const evidence = [...left, ...right].filter(home => home.role === "evidence").length;
+  return {
+    state: !left.length || !right.length ? "unknown" : shared ? "joined" : "split",
+    leftIds: ids(left), rightIds: ids(right), shared, evidence,
+  };
+}
+
+function splitOutcomeNote(entry) {
+  const outcome = splitOutcome(entry);
+  const link = id => `<a href="/issue/${esc(id)}">${esc(id)}</a>`;
+  if (outcome.state === "unknown") {
+    return '<small class="admin-hint-inline">이 빌드에서 한쪽 기사를 찾지 못했습니다 — 창 밖으로 나갔거나 격리됐습니다.</small>';
+  }
+  if (outcome.state === "joined") {
+    return `<small class="admin-hint-inline"><span class="admin-badge warn">아직 한 이슈</span>
+      양쪽 기사 ${outcome.shared}건이 같은 이슈에 있습니다${
+        pendingBadge(entry).includes("적용됨") ? " — 판정은 적용됐는데 갈리지 않았습니다. 선을 넘는 다른 연결(승인·학습 규칙)을 확인하세요." : " — 다음 빌드를 기다리는 중입니다."}</small>`;
+  }
+  const before = entry.before?.left_issue_ids?.length
+    ? ` (누르기 전: ${[...new Set([...(entry.before.left_issue_ids || []), ...(entry.before.right_issue_ids || [])])].map(esc).join(" · ")})`
+    : "";
+  return `<small class="admin-hint-inline"><span class="admin-badge">갈림 확인</span>${before}
+    왼쪽 → ${outcome.leftIds.map(link).join(" · ")} / 오른쪽 → ${outcome.rightIds.map(link).join(" · ")}${
+      outcome.evidence ? ` · 그중 추가 근거로 붙은 기사 ${outcome.evidence}건` : ""}</small>`;
+}
+
+// 판정 목록의 한 줄에 붙는 결과. 종류 비교를 템플릿 밖에 둔다 — 안에 두면
+// 이스케이프 검사(test_the_console_escapes_everything_it_renders)가 값으로 오해한다.
+function entryOutcome(entry) {
+  return entry.kind === "issue_group_split" ? splitOutcomeNote(entry) : "";
+}
+
 function pendingSplitNote(cluster) {
   const hashes = (cluster.members || []).map(member => member.hash).filter(Boolean);
   const touches = entry => [...(entry.left_hashes || []), ...(entry.right_hashes || [])]
@@ -919,7 +966,8 @@ function pendingSplitNote(cluster) {
   const lines = mine.map(entry =>
     `<li>${esc(entrySubject(entry))}
       <small>${(entry.left_hashes || []).length}건 ↔ ${(entry.right_hashes || []).length}건 · ${
-        esc(entry.note || "사유 없음")}</small></li>`).join("");
+        esc(entry.note || "사유 없음")}</small>
+      ${splitOutcomeNote(entry)}</li>`).join("");
   return `<p class="admin-reason"><strong>나누기 판정 ${mine.length}건</strong>
     다음 빌드에서 갈라집니다. 이 화면의 묶음은 아직 나뉘기 전 상태입니다.</p>
     <ul class="admin-titles">${lines}</ul>`;
@@ -974,8 +1022,10 @@ function groupSplitForm(issueId, anchorHash, preset) {
       <div class="admin-axis-side"><span>같은 사건 쪽</span><div data-role="axis-left"></div></div>
       <div class="admin-axis-side"><span>다른 사건 쪽</span><div data-role="axis-right"></div></div>
       <p class="admin-axis-reach" data-role="reach"></p>
-      <label class="admin-check"><input type="checkbox" name="learn" checked>
+      <label class="admin-check"><input type="checkbox" name="learn">
         이 판별축을 학습합니다 (끄면 이 기사들만 갈라 둡니다)</label>
+      <small class="admin-hint-inline">기본은 끔. 학습된 축은 <strong>새 기사 조합</strong>에도
+        적용됩니다 — 전기본처럼 같은 표현이 반복되는 주제에서는 무관한 사건까지 갈라 놓습니다.</small>
     </fieldset>
     <div class="admin-form-buttons">
       <button type="submit" class="admin-mini primary" data-role="save">이 나누기를 저장</button>
@@ -1008,7 +1058,32 @@ function groupSides(form) {
 
 // 저장 직전에 **무엇과 무엇이 갈라지는지** 그대로 적는다. 이 화면이 없어서
 // 사유와 실제 판정이 어긋난 기록이 남았다(위 주석의 2026-08-16 건).
+// 사람이 '같은 사건'으로 승인한 쌍 중 이 선이 가로지르는 것. 저장하면 같은 쌍이
+// 승인과 기각에 동시에 보관된다 — 어느 쪽이 이기는지는 빌드 순서가 정하게 되고,
+// 나중에 누가 봐도 무엇을 판단했는지 알 수 없다(2026-09-24 합의: 동시 보관 금지).
+function approvedCrossings(left, right) {
+  const approved = new Map((state.merges?.issue?.manual_approved || [])
+    .map(row => [row.pair, row.note || ""]));
+  const out = [];
+  for (const one of left) {
+    for (const other of right) {
+      const pair = [one.hash, other.hash].sort().join("--");
+      if (approved.has(pair)) out.push({ one, other, note: approved.get(pair) });
+    }
+  }
+  return out;
+}
+
 function groupSplitPreview(left, right) {
+  const crossings = approvedCrossings(left, right);
+  if (crossings.length) {
+    return `<p class="admin-reason"><strong>사람 승인 ${crossings.length}쌍과 충돌합니다 — 저장할 수 없습니다</strong>
+      이 선은 이미 '같은 사건'으로 승인된 쌍을 가릅니다. 승인을 유지하려면 그 기사를 같은 쪽에
+      세우고, 승인이 틀렸다면 <code>issue_match_overrides.json</code> 에서 먼저 철회하세요.</p>
+      <ul class="admin-titles">${crossings.map(row =>
+        `<li>${esc(row.one.title || row.one.hash)} <b>↔</b> ${esc(row.other.title || row.other.hash)}
+          <small>${esc(row.note || "사유 없음")}</small></li>`).join("")}</ul>`;
+  }
   if (!right.length) {
     return `<p class="admin-axis-reach">아직 아무것도 갈라지지 않습니다 —
       '다른 사건' 쪽에 기사를 한 건 이상 세우세요.</p>`;
@@ -1052,7 +1127,7 @@ function updateGroupSplit(form) {
     if (box) box.innerHTML = axisChips(side, right.length ? words : [], picked(side));
   }
   const save = form.querySelector('[data-role="save"]');
-  if (save) save.disabled = !right.length;
+  if (save) save.disabled = !right.length || approvedCrossings(left, right).length > 0;
   updateReach(form);
 }
 
@@ -1765,7 +1840,7 @@ function renderJudgments() {
           <td>${esc(entrySubject(entry))}</td>
           <td>${esc(entry.note || "—")}</td>
           <td>${esc(String(entry.created_at || "").slice(0, 10))}</td>
-          <td>${pendingBadge(entry)}</td>
+          <td>${pendingBadge(entry)}${entryOutcome(entry)}</td>
           <td><button class="admin-mini danger" data-act="entry-delete" data-id="${esc(entry.id)}"
             data-label="${esc(entrySubject(entry))}">지우기</button></td>
         </tr>`).join("")}</tbody>
@@ -2093,6 +2168,11 @@ async function onSubmit(event) {
         left_titles: left.map(member => member.title || ""),
         right_titles: right.map(member => member.title || ""),
         note,
+        before: {
+          generated_at: String(state.merges?.generated_at || ""),
+          left_issue_ids: [...new Set(left.map(member => hashHome(member.hash)?.issueId).filter(Boolean))],
+          right_issue_ids: [...new Set(right.map(member => hashHome(member.hash)?.issueId).filter(Boolean))],
+        },
       },
     }, `${left.length}건 ↔ ${right.length}건으로 나눴습니다 — 쌍 ${pairs}개를 못 박습니다.`);
     if (ok && learn) {

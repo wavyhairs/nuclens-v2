@@ -125,6 +125,17 @@ export function normalizeEntry(input) {
     entry.left_titles = textList(input?.left_titles, 60, 180);
     entry.right_titles = textList(input?.right_titles, 60, 180);
     entry.issue_id = text(input?.issue_id, 80);
+    // 누르기 **전** 모양. 비밀번호 하나를 같이 쓰는 콘솔이라 누가 눌렀는지는 모른다 —
+    // 대신 무엇을 보고 눌렀는지(어느 빌드에서, 양쪽 기사가 어느 이슈에 있었나)를 남겨
+    // 다음 빌드의 결과와 맞대 볼 수 있게 한다.
+    const before = input?.before;
+    if (before && typeof before === "object") {
+      entry.before = {
+        generated_at: text(before.generated_at, 40),
+        left_issue_ids: textList(before.left_issue_ids, 10, 80),
+        right_issue_ids: textList(before.right_issue_ids, 10, 80),
+      };
+    }
     return { entry };
   }
 

@@ -274,6 +274,10 @@ jobs:
       # 붙잡아도 화면이 표식을 안 읽으면 조용히 사라진다.
       - name: Past briefing classification note (app.js)
         run: node web/tests/classification_note.mjs
+      # 콘솔 정정의 앞뒤 — 사람 승인과 부딪히는 나누기는 저장을 막고, 저장한 나누기가
+      # 실제로 갈렸는지를 hash_index 로 보인다.
+      - name: Admin correction guards (admin.js)
+        run: node web/tests/admin_corrections.mjs
       - name: Admin gate contract
         run: node web/tests/admin_gate.mjs
 

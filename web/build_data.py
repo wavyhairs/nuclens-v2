@@ -6603,7 +6603,48 @@ def build_admin_merges(
             "method_counts": dict(method_counts.most_common()),
             "clusters": clusters,
             "borderline": borderline,
+            # 콘솔 정정의 앞뒤를 재는 재료(admin.js 의 나누기 확인·충돌 경고).
+            **admin_correction_index(issue_catalog, issue_audit),
         },
+    }
+
+
+def admin_correction_index(issue_catalog: list[dict], issue_audit: dict) -> dict:
+    """사람이 나누기·잇기를 누르기 **전과 후**에 콘솔이 확인할 것들.
+
+    - `hash_index`: 기사 해시 → [지금 이슈, 역할]. `clusters` 는 카드 멤버만 싣기
+      때문에 추가 근거가 어디에 붙었는지, 나누기가 다음 빌드에서 실제로 어디로
+      갈랐는지를 콘솔이 볼 길이 없었다. 역할은 "card" 또는 "evidence".
+    - `manual_approved`: 사람이 '같은 사건'으로 승인한 쌍. 나누기 선이 이 쌍을
+      가로지르면 승인과 기각이 동시에 보관된다 — 콘솔이 저장 전에 막는다.
+    - `override_conflicts`: 이미 그렇게 된 쌍(승인 ∩ 기각).
+    """
+    index: dict[str, list[str]] = {}
+    for row in issue_catalog:
+        for article in row.get("related_articles") or ():
+            article_hash = str(article.get("hash") or "")
+            if article_hash and article_hash not in index:
+                index[article_hash] = [str(row.get("issue_id") or ""),
+                                       str(article.get("member_role") or "card")]
+    overrides = issue_audit.get("overrides") or {}
+    approved = set(overrides.get("approved") or ())
+    rejected = set(overrides.get("rejected") or ())
+    notes: dict[str, str] = {}
+    try:
+        raw = json.loads(MATCH_OVERRIDES_FILE.read_text(encoding="utf-8"))
+        for row in raw.get("approved") or ():
+            if isinstance(row, dict):
+                notes[_pair_id(row.get("left_hash"), row.get("right_hash"))] = str(row.get("note") or "")
+    except (OSError, ValueError):
+        pass
+    conflicts = sorted(approved & rejected)
+    if conflicts:
+        print(f"::warning::사람 판정 충돌 — 같은 쌍이 승인과 기각에 동시에 있다 {len(conflicts)}쌍: "
+              f"{', '.join(conflicts[:5])}")
+    return {
+        "hash_index": index,
+        "manual_approved": [{"pair": pair, "note": notes.get(pair, "")} for pair in sorted(approved)],
+        "override_conflicts": conflicts,
     }
 
 
@@ -6854,6 +6895,36 @@ def build_rss(briefings: list[dict], generated_at: datetime) -> bytes:
                 description.append(f"시사점(AI 해석): {issue['implication']}")
             ET.SubElement(item, "description").text = "\n".join(description)
     return ET.tostring(rss, encoding="utf-8", xml_declaration=True)
+
+
+def stamp_split_lineage(issue_catalog: list[dict], ledger: dict) -> int:
+    """갈라진 사건끼리 서로를 가리키게 한다 — 옛 주소로 온 사람이 갈라진 쪽을 찾게.
+
+    사람의 나누기든 재묶음이든, 옛 id 를 **잃고 새로 발급된** 쪽만 잇는다
+    (`issue_ledger.catalog_rows` 의 split_from 주석).
+
+    옛 주소는 이긴 쪽(공유 기사가 많은 쪽)에 그대로 산다(event_identity 규칙 ④).
+    진 쪽은 새 id 를 받는다. 원장의 리다이렉트는 **사라진** 주소만 넘기므로, 옛
+    주소는 살아 있는 채로 한쪽만 보여 주고 다른 쪽은 어디에도 안내되지 않았다.
+    여기서 부모에는 `split_children`, 자식에는 `split_parent` 를 단다. 살아 있는
+    이슈끼리만 잇는다 — 죽은 주소로 가는 링크는 고장으로 읽힌다.
+    """
+    live = {row.get("issue_id"): row for row in issue_catalog}
+    parents = issue_ledger.split_lineage(ledger, issue_catalog)
+    linked = 0
+    for row in issue_catalog:
+        row["split_children"] = []
+        parent = parents.get(row.get("issue_id"), "")
+        row["split_parent"] = (
+            {"issue_id": parent, "title": str(live[parent].get("title") or "")}
+            if parent in live else {}
+        )
+    for child, parent in sorted(parents.items()):
+        if child in live and parent in live:
+            live[parent]["split_children"].append(
+                {"issue_id": child, "title": str(live[child].get("title") or "")})
+            linked += 1
+    return linked
 
 
 def stamp_thread_ids(issue_catalog: list[dict], threads_payload: dict) -> int:
@@ -7290,9 +7361,8 @@ def build() -> None:
     # `resolve_local_issue_id_conflicts` 앞이므로 중복 id 검사가 상속 결과까지
     # 함께 본다. 묶음 모양은 건드리지 않으므로 p1 서명과 무관하다
     # (그 서명은 대표 해시·대표 제목·카드 해시만 본다).
-    event_identity_diagnostics = event_identity.resolve(
-        issues, issue_ledger.load_store()
-    )
+    identity_ledger = issue_ledger.load_store()
+    event_identity_diagnostics = event_identity.resolve(issues, identity_ledger)
     print(
         f"[build_data] 사건 신원: 상속 {event_identity_diagnostics['inherited']} · "
         f"병합 {event_identity_diagnostics['merged']} "
@@ -7810,6 +7880,8 @@ def build() -> None:
     # 스토리 주소를 이슈에 찍는다. **outputs 를 만들기 전**이어야 `issues.json`·
     # `today.json`·`/data/issue/<id>.json`(정적 상세) 셋이 한 번에 같은 값을 받는다.
     threaded = stamp_thread_ids(issue_catalog, threads_payload)
+    split_linked = stamp_split_lineage(issue_catalog, identity_ledger)
+    print(f"[build_data] 갈라져 새 주소를 받은 사건 계보 {split_linked}건 투영")
     print(f"[build_data:threads] 스토리에 속한 이슈 {threaded}건에 thread_id 투영")
 
     # 지난 브리핑을 발송 당시 모양으로 붙잡는다(briefing_snapshot 의 docstring).

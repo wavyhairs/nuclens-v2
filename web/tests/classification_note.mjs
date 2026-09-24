@@ -25,7 +25,8 @@ const api = new Function("state", `
   ${extract("esc")}
   ${extract("classificationNote")}
   ${extract("briefingIssuesForDisplay")}
-  return { classificationNote, briefingIssuesForDisplay };
+  ${extract("splitLineageNote")}
+  return { classificationNote, briefingIssuesForDisplay, splitLineageNote };
 `);
 
 const corrected = {
@@ -65,6 +66,15 @@ check("최신 회차에서도 정정 카드는 카탈로그 행으로 덮이지 
 check("카드와 상세가 둘 다 안내를 그린다", () => {
   assert.ok(extract("issueCard").includes("classificationNote(issue)"), "카드에 안내가 없다");
   assert.ok(extract("openIssueDialog").includes("classificationNote(issue)"), "상세에 안내가 없다");
+});
+
+check("옛 주소(이긴 쪽)는 갈라져 나간 사건을 링크한다", () => {
+  const html = api({}).splitLineageNote({ issue_id: "issue-6260",
+    split_children: [{ issue_id: "issue-c99b", title: "공론화 추진" }], split_parent: {} });
+  assert.ok(html.includes('data-issue-id="issue-c99b"'));
+  assert.ok(html.includes("갈라져 나간 사건"));
+  assert.equal(api({}).splitLineageNote({ issue_id: "x", split_children: [], split_parent: {} }), "");
+  assert.ok(extract("openIssueDialog").includes("splitLineageNote(issue)"), "상세에 계보 안내가 없다");
 });
 
 if (failures) { console.error(`\n${failures}건 실패`); process.exit(1); }
