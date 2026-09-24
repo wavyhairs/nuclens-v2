@@ -6384,6 +6384,28 @@ class IssueDetailIsCardScopedTests(unittest.TestCase):
         self.assertEqual(row["evidence_article_count"], 1)
         self.assertIn("e1", [a["hash"] for a in row["related_articles"]])
 
+    def test_evidence_is_never_the_previous_state_of_latest_change(self):
+        """근거 기사는 '이전 상태 → 현재' 의 앞쪽이 되지 못한다 — 브리핑 경로와 같은 기준.
+
+        2026-09-24 라이브: 카탈로그 화살표 256 중 149 가 브리핑에 한 번도 안 실린
+        근거 기사를 직전 상태로 쓰고 있었다.
+        """
+        row = self.catalog_row(
+            [self.member("c1", "2026-08-20", "2026-08-21",
+                         "제12차 전력수급기본계획, 원전 비중 확대 시험대")],
+            [self.member("e1", "2026-08-17", None, *self.TARIFF)],
+        )
+        self.assertEqual(row["latest_change"], "")
+        # 카드 멤버가 이전에 있으면 그쪽으로는 여전히 만든다.
+        row = self.catalog_row(
+            [self.member("c1", "2026-08-20", "2026-08-21",
+                         "제12차 전력수급기본계획, 원전 비중 확대 시험대"),
+             self.member("c2", "2026-08-17", "2026-08-18", *self.PLAN)],
+            [self.member("e1", "2026-08-19", None, *self.TARIFF)],
+        )
+        self.assertIn("→", row["latest_change"])
+        self.assertNotIn("차등제", row["latest_change"])
+
     def test_another_card_member_is_the_fallback(self):
         """대표에 요지가 없으면 같은 이슈의 **카드** 요지로 물러난다."""
         row = self.catalog_row(
