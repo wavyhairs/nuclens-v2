@@ -253,6 +253,7 @@ function roundVetoes() { return (state.merges?.story?.stage_vetoes || []).filter
 function roundPromotions() { return (state.merges?.story?.display_promotions || []).filter(inRound); }
 function roundClusters() { return (state.merges?.issue?.clusters || []).filter(inRound); }
 function roundBorderline() { return (state.merges?.issue?.borderline || []).filter(inRound); }
+function roundRepeats() { return (state.merges?.story?.repeat_removals || []).filter(inRound); }
 
 // 주소에 남긴다 — 새로고침해도, 링크를 받아도 같은 날이 열려야 한다. 최신 회차일
 // 때는 지운다(showPanel 이 기본 탭에서 하는 것과 같은 규칙): 기본값이 주소에 박히면
@@ -418,6 +419,8 @@ const MERGE_FOLDS = [
     count: () => roundClusters().length, render: renderIssues },
   { name: "borderline", label: "붙지 않은 경계선", bodies: ["borderline"],
     count: () => roundBorderline().length, render: renderBorderline },
+  { name: "repeat", label: "그날 화면에서 뺀 것", bodies: ["repeatRemovals"],
+    count: () => roundRepeats().length, render: renderRepeatRemovals },
 ];
 
 // 칸을 찾을 때는 **details 로 좁힌다.** '먼저 확인할 것'의 [해당 칸 열기] 버튼도
@@ -795,6 +798,50 @@ function renderStorySplits() {
          <p>제목이 닮았는데 심사↔승인·정지↔재가동처럼 사건 단계가 넘어간 조합만 여기
          올라옵니다. 이 기록은 발송 회차(<code>delivery_log</code>)에서 옵니다 —
          아직 회차가 없으면 비어 있는 것이 정상입니다.</p></div>`;
+}
+
+// 빠진 후보는 발송되지 않아 결과물에 아무 흔적이 없다. 알고리즘이 뺀 것(자동 제외),
+// 같은 사건이지만 후속이라 남긴 것, 사람이 selection_overrides 로 내린 것을 한 칸에
+// 둔다 — 사람이 먼저 내린 반복이 쌓이면 그게 알고리즘이 놓치는 모양이다.
+const REPEAT_BADGES = {
+  auto_drop: ["자동 제외", "warn"],
+  auto_kept: ["후속으로 유지", ""],
+  manual_hide: ["사람이 숨김", ""],
+  manual_demote: ["사람이 뒤로", ""],
+};
+const RELATION_LABELS = {
+  same_restated: "같은 사건 재보도",
+  same_detail: "같은 사건 세부 추가",
+  same_reaction: "같은 사건 해설",
+  next_step: "다음 단계",
+};
+
+function renderRepeatRemovals() {
+  const box = document.getElementById("repeatRemovals");
+  if (!box) return;
+  const rows = roundRepeats();
+  box.innerHTML = rows.length ? rows.map(row => {
+    const [badge, tone] = REPEAT_BADGES[row.kind] || [row.kind, ""];
+    const manual = row.kind.startsWith("manual");
+    const facts = (row.new_facts || []).length
+      ? `<p class="admin-reason"><strong>후보에만 있는 사실</strong>${esc(row.new_facts.join(" · "))}</p>` : "";
+    return `<article class="admin-card">
+    <div class="admin-card-head">
+      <div>
+        <p class="admin-kicker"><span class="admin-badge ${tone}">${esc(badge)}</span>
+          <span>${esc(dateLabel(row.date))}</span>
+          ${row.relation ? `<span>${esc(RELATION_LABELS[row.relation] || row.relation)}</span>` : ""}
+          ${manual ? `<span>${esc(row.hash8 || "")}</span>` : ""}</p>
+        <h3>${esc(row.title || (manual ? "(제목을 찾지 못함 — 아카이브에서 hash 로 확인)" : ""))}</h3>
+      </div>
+    </div>
+    ${manual ? "" : `<ul class="admin-titles"><li>이미 보낸 기사<small>${esc(dateLabel(row.prior_date))} · ${esc(row.prior_title)}</small></li></ul>`}
+    <p class="admin-reason"><strong>사유</strong>${esc(row.reason || "")}</p>
+    ${facts}
+  </article>`;
+  }).join("") : `<div class="empty-state"><strong>이 회차에 뺀 항목이 없습니다</strong>
+     <p>연속일 의미 대조(자동)와 selection_overrides 의 숨김(사람)이 여기 모입니다.
+     자동 판정은 발송 회차 기록(<code>delivery_log</code>)의 cross_day_audit 에서 옵니다.</p></div>`;
 }
 
 // 이슈 병합은 규칙이 판단한다. 어느 규칙이 걸렸는지(method)와 얼마나 빠듯했는지

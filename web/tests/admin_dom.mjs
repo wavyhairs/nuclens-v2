@@ -155,7 +155,7 @@ for (const [, date, label] of options) {
 // 보여 준다.
 const folds = [...html.matchAll(
   /<details class="admin-fold" data-fold="([a-z]+)"([^>]*)>\s*<summary><span data-role="count">([^<]*)</g)];
-assert.equal(folds.length, 4, `접히는 칸이 4개가 아니다: ${folds.length}`);
+assert.equal(folds.length, 5, `접히는 칸이 5개가 아니다: ${folds.length}`);
 assert.ok(!html.includes("건수를 세는 중"),
   "요약 줄이 placeholder 그대로다 — 칸을 못 찾았거나 그리기 전에 예외가 났다");
 

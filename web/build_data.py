@@ -288,6 +288,8 @@ CONSOLE_PROMOTION_PER_ROUND = 24
 CONSOLE_PROMOTION_TOTAL = 240
 CONSOLE_VETO_PER_ROUND = 24
 CONSOLE_VETO_TOTAL = 240
+# 그날 화면에서 뺀 것(연속일 자동 제외 + 사람 숨김). 하루 몇 건이라 회차별 창은 안 둔다.
+CONSOLE_REPEAT_TOTAL = 300
 
 # 전수 덤프가 사는 곳. **web/public 밖이어야 한다** — 그 안이면 admin/data 처럼
 # 엣지에서 가려도 wrangler 가 업로드하고, 그러면 25 MiB 벽이 그대로다
@@ -6098,6 +6100,100 @@ def load_story_audits(limit: int = 14) -> list[dict]:
     return rows[:limit]
 
 
+def load_cross_day_audits(limit: int = 30) -> list[dict]:
+    """delivery_log 의 cross_day_audit 레코드(연속일 의미 대조 판정)를 최신순으로 읽는다.
+
+    빠진 후보는 발송되지 않아 기사 레코드가 없다. 이 줄이 "왜 안 나갔나"의 유일한
+    흔적이다(daily_brief.append_cross_day_audit). 같은 날짜가 여럿이면 최신 회차만.
+    """
+    path = BOT_DIR / "delivery_log.jsonl"
+    if not path.exists():
+        return []
+    latest: dict[str, dict] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if '"cross_day_audit"' not in line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(row, dict) or row.get("record_type") != "cross_day_audit":
+            continue
+        day = str(row.get("date") or "")
+        if day and str(row.get("generated_at") or "") >= str(
+                (latest.get(day) or {}).get("generated_at") or ""):
+            latest[day] = row
+    return [latest[day] for day in sorted(latest, reverse=True)[:limit]]
+
+
+def load_manual_hides(path: Path = SELECTION_OVERRIDES_FILE) -> list[dict]:
+    """selection_overrides 의 demote 항목 — 사람이 그날 화면에서 내린 것."""
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    rows = []
+    for row in raw.get("demote") or []:
+        if not isinstance(row, dict):
+            continue
+        key = _short_hash(row.get("hash8") or row.get("hash"))
+        day = str(row.get("date") or "").strip()
+        if len(key) < 8 or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+            continue
+        action = str(row.get("action") or HIDE_ACTION)
+        rows.append({"hash8": key, "date": day,
+                     "action": action if action in DEMOTE_ACTIONS else HIDE_ACTION,
+                     "reason": str(row.get("reason") or "")})
+    return rows
+
+
+def build_repeat_removals(cross_day_audits: list[dict], manual_hides: list[dict],
+                          news_items: list[dict]) -> list[dict]:
+    """'그날 화면에서 뺀 것'을 한 목록으로 — 알고리즘이 뺀 것과 사람이 내린 것을 가른다.
+
+    둘을 한 칸에 두는 이유: 같은 반복을 사람이 먼저 내렸는지 알고리즘이 잡았는지가
+    곧 알고리즘이 무엇을 놓치나다. 2026-09-25 이탈리아는 사람이 먼저 내렸고, 다음
+    날부터는 알고리즘 칸에 떠야 맞다.
+    """
+    title_of: dict[str, str] = {}
+    for item in news_items:
+        short = _short_hash(item.get("hash"))
+        if short and short not in title_of:
+            title_of[short] = str(item.get("title_kr") or item.get("title") or "")
+    rows: list[dict] = []
+    for audit in cross_day_audits:
+        day = str(audit.get("date") or "")
+        for verdict in audit.get("verdicts") or []:
+            if not isinstance(verdict, dict):
+                continue
+            rows.append({
+                "kind": "auto_drop" if verdict.get("drop") else "auto_kept",
+                "date": day,
+                "title": str(verdict.get("title") or ""),
+                "prior_title": str(verdict.get("prior_title") or ""),
+                "prior_date": str(verdict.get("prior_date") or ""),
+                "relation": str(verdict.get("relation") or ""),
+                "confirm": str(verdict.get("confirm") or ""),
+                "new_facts": list(verdict.get("new_facts") or [])[:3],
+                "reason": str(verdict.get("reason") or ""),
+                "diagnosis_rounds": [day],
+            })
+    for hide in manual_hides:
+        rows.append({
+            "kind": "manual_hide" if hide["action"] == HIDE_ACTION else "manual_demote",
+            "date": hide["date"],
+            "hash8": hide["hash8"],
+            "title": title_of.get(hide["hash8"], ""),
+            "reason": hide["reason"],
+            "diagnosis_rounds": [hide["date"]],
+        })
+    # 날짜는 최신 먼저, 같은 날 안에서는 뺀 것(자동·사람) → 후속으로 살린 것.
+    kind_order = {"auto_drop": 0, "manual_hide": 1, "manual_demote": 2, "auto_kept": 3}
+    rows.sort(key=lambda row: kind_order.get(row["kind"], 9))
+    rows.sort(key=lambda row: row["date"], reverse=True)
+    return rows[:CONSOLE_REPEAT_TOTAL]
+
+
 def _split_units(item: dict, raw_sources: list[dict],
                  known: dict[str, dict] | None = None) -> list[dict]:
     """이 카드에서 사람이 떼어낼 수 있는 기사들 (hash ↔ 제목 짝).
@@ -6282,6 +6378,7 @@ def build_admin_merges(
     issue_audit: dict,
     generated_at: datetime,
     story_audits: list[dict] | None = None,
+    repeat_removals: list[dict] | None = None,
 ) -> dict:
     """병합 판단을 사람이 되짚을 수 있는 형태로 모은다.
 
@@ -6519,9 +6616,11 @@ def build_admin_merges(
             if day:
                 issue_rounds[day] += 1
     stage_totals = veto_totals + promo_totals
+    repeat_totals: Counter = Counter(
+        row["diagnosis_rounds"][0] for row in (repeat_removals or []))
     days = {day for day in (
         set(story_rounds) | set(issue_rounds) | set(stage_totals)
-        | set(borderline_totals) | set(scored_totals)
+        | set(borderline_totals) | set(scored_totals) | set(repeat_totals)
     ) if day}
     # 빌드 회차는 아무 일이 없어도 목록에 남긴다 — 없으면 "오늘"로 들어갈 자리가
     # 사라지고, 화면은 어제를 오늘처럼 연다.
@@ -6537,6 +6636,8 @@ def build_admin_merges(
             # 그 회차에 채점된 쌍 전수(기록 문턱 위 전부). 경계선은 이 가운데
             # 병합 문턱 바로 아래 구간만이다 — 실측 2026-08-21 전체의 2.6%.
             "scored": scored_totals.get(day, 0),
+            # 그날 화면에서 뺀 것(자동 제외·사람 숨김)과 후속으로 살린 것.
+            "repeat": repeat_totals.get(day, 0),
         }
         for day in sorted(days, reverse=True)
     ]
@@ -6583,6 +6684,8 @@ def build_admin_merges(
             "merges": story_rows,
             "stage_vetoes": stage_vetoes,
             "display_promotions": display_promotions,
+            # 연속일 의미 대조 판정 + 사람의 그날 숨김(build_repeat_removals).
+            "repeat_removals": list(repeat_removals or []),
         },
         "issue": {
             "matching_version": issue_audit.get("matching_version", ""),
@@ -7917,8 +8020,10 @@ def build() -> None:
         ("status.json", status),
     )
     admin_outputs = (
-        ("merges.json", build_admin_merges(news_items, issue_catalog, issue_audit, now,
-                                           load_story_audits())),
+        ("merges.json", build_admin_merges(
+            news_items, issue_catalog, issue_audit, now, load_story_audits(),
+            build_repeat_removals(load_cross_day_audits(), load_manual_hides(),
+                                  news_items))),
         ("config.json", build_admin_config(now)),
     )
     for name, payload in outputs:

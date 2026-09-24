@@ -1683,6 +1683,51 @@ def append_story_audit(outbox: dict, path: Path | None = None,
     return True
 
 
+def append_cross_day_audit(outbox: dict, path: Path | None = None,
+                           now: datetime | None = None) -> bool:
+    """연속일 의미 대조(dedup.cross_day_repeats)의 판정을 delivery_log 에 한 줄 남긴다.
+
+    빠진 후보는 발송되지 않으므로 기사 레코드가 없다 — "왜 이 기사가 안 나갔나"는
+    이 줄이 아니면 그날 outbox.json(다음 날 덮어써짐) 속에만 있다. 지운 것과 함께
+    '같은 사건이지만 후속이라 남긴 것'도 싣는다: 무엇을 살렸나가 판정이 과한지를
+    가르는 반쪽이다. 운영 콘솔이 사람의 숨김(selection_overrides)과 나란히 읽는다.
+    """
+    diag = outbox.get("quality_diag")
+    verdicts = [row for row in ((diag or {}).get("cross_day") or [])
+                if isinstance(row, dict)] if isinstance(diag, dict) else []
+    if not verdicts:
+        return False
+    path = path or DELIVERY_LOG_FILE
+    now = now or datetime.now(timezone.utc)
+    date = str(outbox.get("date") or "")
+    # 회차 식별자는 계획 시각이다 — confirm 충돌 재시도가 같은 회차를 두 번 붙이지 않게.
+    generated_at = str(outbox.get("created_at") or now.astimezone(KST).isoformat())
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if '"cross_day_audit"' not in line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if (row.get("record_type") == "cross_day_audit" and row.get("date") == date
+                    and row.get("generated_at") == generated_at):
+                return False
+    dropped = sum(1 for row in verdicts if row.get("drop"))
+    rec = {
+        "record_type": "cross_day_audit",
+        "date": date,
+        "generated_at": generated_at,
+        "dropped": dropped,
+        "kept_same_event": len(verdicts) - dropped,
+        # 상한을 둔다 — 하루 판정은 보통 10건 안쪽이지만 로그는 지우지 않는다.
+        "verdicts": verdicts[:40],
+    }
+    with path.open("a", encoding="utf-8") as fp:
+        fp.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    return True
+
+
 def append_delivery_log(outbox: dict, path: Path | None = None) -> int:
     """발송 성공(sent)한 브리핑의 항목들을 delivery_log.jsonl 에 적재 (멱등).
 
@@ -1832,6 +1877,7 @@ def cmd_confirm() -> int:
     # 구분하려면 오늘 파이프라인이 돌았다는 사실 자체가 필요하다.
     append_selection_stats(outbox)
     append_story_audit(outbox)
+    append_cross_day_audit(outbox)
     append_field_audit(outbox)
     append_quality_audit(outbox)
     save_outbox(outbox)
@@ -1909,6 +1955,7 @@ def main() -> int:
     append_delivery_log(outbox)
     append_selection_stats(outbox)
     append_story_audit(outbox)
+    append_cross_day_audit(outbox)
     append_field_audit(outbox)
     append_quality_audit(outbox)
     if not args.from_curated and not args.keep_queue:

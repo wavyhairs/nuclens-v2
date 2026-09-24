@@ -655,6 +655,29 @@ class TestOutboxFlow(OutboxBase):
         self.assertIn("quality_payload_digest_mismatch", row["alert_key"])
         self.assertEqual(row["items"][0]["blocked_briefs"], ["국내"])
 
+    def test_cross_day_verdicts_are_logged_once_per_round(self):
+        """빠진 후보는 기사 레코드가 없다 — 이 줄이 '왜 안 나갔나'의 유일한 흔적이다."""
+        drop = {"hash": "c2d8", "title": "이탈리아 상원 가결", "prior_title": "원전 부활법 통과",
+                "prior_date": "2026-07-11", "relation": "same_detail", "drop": True}
+        kept = {**drop, "hash": "k1", "relation": "next_step", "drop": False}
+        outbox = {"date": "2026-07-12", "created_at": NOW.isoformat(),
+                  "quality_diag": {"cross_day": [drop, kept]}}
+        log = db.ROOT / "cross_day_audit_test.jsonl"
+        self.addCleanup(log.unlink, True)
+        self.assertTrue(db.append_cross_day_audit(outbox, path=log, now=NOW))
+        # confirm 충돌 재시도 — 같은 회차는 두 번 붙지 않는다.
+        self.assertFalse(db.append_cross_day_audit(outbox, path=log, now=NOW))
+        rows = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["record_type"], "cross_day_audit")
+        self.assertEqual((rows[0]["dropped"], rows[0]["kept_same_event"]), (1, 1))
+        # 판정이 없는 날은 줄을 남기지 않는다.
+        self.assertFalse(db.append_cross_day_audit(
+            {"date": "2026-07-13", "quality_diag": {"cross_day": []}}, path=log, now=NOW))
+        # 기사 레코드가 아니므로 연속일 발송 이력으로 읽히면 안 된다.
+        self.assertEqual(issue_continuity.load_recent_sent(
+            30, path=log, today=datetime(2026, 7, 13).date()), [])
+
     def test_dedup_failure_reaches_the_admin(self):
         """중복 판정 없이 나간 날이 로그 한 줄로 끝나면 안 된다(2026-09-25 editorial_final 503)."""
         outbox = {"date": "2026-07-12", "created_at": NOW.isoformat(),
