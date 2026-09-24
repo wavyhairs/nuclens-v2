@@ -278,6 +278,9 @@ jobs:
       # 실제로 갈렸는지를 hash_index 로 보인다.
       - name: Admin correction guards (admin.js)
         run: node web/tests/admin_corrections.mjs
+      # '달라진 점'은 확인된 전이만 — 요약 비교 문장이 보고서 (변화) 칸으로 새지 않게.
+      - name: Change line speaks only confirmed transitions (app.js)
+        run: node web/tests/confirmed_change.mjs
       - name: Admin gate contract
         run: node web/tests/admin_gate.mjs
 
