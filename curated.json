@@ -541645,16 +541645,33 @@
     "published_at": "2026-09-23T22:00:00+00:00"
   },
   "4c1b147eec2cde2d": {
-    "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "[中 거인의 공급망] ①PCB·SUB 강자 '선난써키트' 없으면 '딥시크'도 없...",
-    "summary": "서버와 데이터센터에 필요한 고속 PCB와 SUB 수요도 함께 늘어날 가능성이 있다.",
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "CN"
+    ],
+    "article_type": "news",
+    "title_kr": "중국 AI 인프라 확대에 따른 선난써키트 PCB 사업 동향",
+    "summary": "중국 AI 반도체 생태계 확장으로 고속 PCB 및 패키징 기판 수요가 증가하며 선난써키트가 주목받고 있다.",
+    "detail": "",
     "implication": "",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
     "tags": [],
     "related_reports": [],
@@ -541662,15 +541679,14 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-09-24T00:38:14.882437+00:00",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
     "title": "[中 거인의 공급망] ①PCB·SUB 강자 '선난써키트' 없으면 '딥시크'도 없...",
     "link": "https://www.newspim.com/news/view/20260923000999",
     "feed": "정책",
     "domain": "newspim.com",
     "matched": "데이터센터 전력",
-    "source_excerpt": "서버와 데이터센터에 필요한 고속 PCB와 SUB 수요도 함께 늘어날 가능성이 있다. 화웨이 공급망에서... 패키징 기판 사업에서는 WB와 FC 계열 패키지 기술을 확보하고 있으며, FC-CSP와 FC-BGA를 비롯해 메모리·전력...",
-    "published_at": "2026-09-23T22:00:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "4c1b147eec2cde2d",
@@ -541738,7 +541754,8 @@
       "source_excerpt": "aa5c0c2758ed897ed32a4a55a14d059d672bc3350ca85e61021d1ef84ab2f928",
       "published_at": "e5d75a4c5b8f9f02b94052a9f7e1e43c90bb9641fdb9fe24f63e69e42220e4fe"
     },
-    "hash": "4c1b147eec2cde2d"
+    "hash": "4c1b147eec2cde2d",
+    "published_at": "2026-09-23T22:00:00+00:00"
   },
   "e407004001c5879a": {
     "features": {
@@ -544117,32 +544134,55 @@
     "published_at": "2026-09-23T23:46:00+00:00"
   },
   "815cab11d7c1c2e9": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "中, AI 연산력 올해 88% 급증 전망…에이전트 확산에 '수요 폭발'",
-    "summary": "AI 데이터센터 '엔비전 갤럭시 캠퍼스'를 가동하기 시작했다.",
-    "implication": "",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "article_type": "report",
+    "title_kr": "중국, AI 연산력 2026년 2576.5EFLOPS 전망…연평균 50% 성장",
+    "summary": "중국의 지능형 연산력이 AI 에이전트 확산에 힘입어 2026년 2576.5EFLOPS로 급증할 전망이다.",
+    "detail": "",
+    "implication": "중국의 AI 연산 인프라 확충은 전력망 및 데이터센터 관련 기술 수요를 동반하며, 2035년까지 GDP에 11조 위안 이상 기여할 것으로 보인다.",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#데이터센터",
+      "#AI",
+      "#전력수요"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-09-24T00:38:14.882437+00:00",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
     "title": "中, AI 연산력 올해 88% 급증 전망…에이전트 확산에 '수요 폭발'",
     "link": "http://www.choicenews.co.kr/news/articleView.html?idxno=171683",
     "feed": "정책",
     "domain": "choicenews.co.kr",
     "matched": "데이터센터 전력",
-    "source_excerpt": "AI 데이터센터 '엔비전 갤럭시 캠퍼스'를 가동하기 시작했다. 회사 측은 이 시설을 세계 최대 규모의 단일 AI 연산 단위이자 중국 최대 AI 연산 단지로 소개했다. 계획된 전체 전력 용량은 2기가와트(GW)다. 천징은...",
-    "published_at": "2026-09-23T23:58:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "815cab11d7c1c2e9",
@@ -544216,7 +544256,8 @@
       "source_excerpt": "a4f39f7ac22c7f9b53e5520fc01e1d027238a857b4ddc0759871fb42b2925885",
       "published_at": "f6744d51eb1b361d5146801c5d049d9a540195b49359d275c3398cd145caa474"
     },
-    "hash": "815cab11d7c1c2e9"
+    "hash": "815cab11d7c1c2e9",
+    "published_at": "2026-09-23T23:58:00+00:00"
   },
   "a5e3fed120cc6064": {
     "features": {
@@ -544404,32 +544445,56 @@
     "published_at": "2026-09-24T00:01:00+00:00"
   },
   "6e4b6f192c37f7e9": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
     "section": "domestic",
+    "scope": "kr",
     "category": "정책",
-    "title_kr": "대미투자 ‘첫 삽’ 윤곽에 野 반발…“상업적 합리성부터 검증”",
-    "summary": "인공지능(AI) 데이터센터 등에 전력을 공급해 수익을 올리는 ‘상업적 합리성’이 확보됐다고 판단했다.",
-    "implication": "",
+    "topics": [
+      "finance",
+      "power_market"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "정부, 3500억 달러 대미투자 프로젝트 추진…야당 상업성 검증 요구",
+    "summary": "정부가 텍사스 가스복합화력발전소 건설 등 대미투자 프로젝트를 추진 중인 가운데, 야당이 수익성 검증을 요구하며 견제에 나섰다.",
+    "detail": "정부는 텍사스 엔시날 가스복합화력발전소 건설을 1호 사업으로 보고했으며, 향후 20년간 450억 달러 회수를 예상한다. 그러나 전력구매계약(PPA) 미체결 등 불확실성이 존재해 국민의힘은 상업적 합리성에 대한 철저한 검증을 요구하고 있다. 특별법에 따라 상업적 합리성이 인정되면 국회 동의 없이 추진 가능하다.",
+    "implication": "대미투자 프로젝트의 상업적 합리성 판단 여부가 향후 국회 동의 절차와 사업 추진 속도를 결정할 핵심 변수다.",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#대미투자",
+      "#전력시장",
+      "#국회"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-09-24T00:38:14.882437+00:00",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
     "title": "대미투자 ‘첫 삽’ 윤곽에 野 반발…“상업적 합리성부터 검증”",
     "link": "https://www.sedaily.com/article/20094634",
     "feed": "정책",
     "domain": "sedaily.com",
     "matched": "데이터센터 전력",
-    "source_excerpt": "인공지능(AI) 데이터센터 등에 전력을 공급해 수익을 올리는 ‘상업적 합리성’이 확보됐다고 판단했다. 김정관 산업통상부 장관은 “우리에게 도움이 되는 사업을 적극 발굴해 미 측과 협의했고 상업적 합리성을 일관된...",
-    "published_at": "2026-09-24T00:01:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "6e4b6f192c37f7e9",
@@ -544484,7 +544549,8 @@
       "source_excerpt": "62352b18fc507e66e85c030f384b534e728b64afce8287abcd5f39bc4ea37074",
       "published_at": "9b04dd50b444722eabbaafb257a7e4bda6a69329bba00af38990c17d37832030"
     },
-    "hash": "6e4b6f192c37f7e9"
+    "hash": "6e4b6f192c37f7e9",
+    "published_at": "2026-09-24T00:01:00+00:00"
   },
   "a205d87edd9ef549": {
     "features": {
@@ -544929,5 +544995,2222 @@
     },
     "hash": "c25f39d873afbf03",
     "published_at": "2026-09-24T00:24:00+00:00"
+  },
+  "2778075e8ce67cba": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "newbuild",
+      "power_market"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "policy",
+    "title_kr": "기후에너지환경부, 제12차 전력수급기본계획 수립 위한 원전 공론화 착수",
+    "summary": "기후에너지환경부가 원전의 역할을 논의할 공론화위원회를 설치하고 3개월간 국민 의견 수렴에 돌입한다.",
+    "detail": "기후에너지환경부는 국무회의에 '원전 공론화 추진계획'을 보고하고, 전력수급기본계획 수립을 앞두고 원전의 역할을 종합적으로 논의하기 위한 공론화 절차를 시작한다. 위원장 포함 11명 이내의 중립적 인사로 구성된 공론화위원회는 시민참여단 숙의토론, 공개토론회, 온라인 의견수렴 등을 거쳐 권고안을 마련할 예정이다. 기후에너지환경부는 이번 공론화 결과를 반영해 제12차 전력수급기본계획(2026~2040)을 확정할 방침이다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#전력수급기본계획",
+      "#원전공론화",
+      "#에너지정책"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "기후부, 원전 공론화 추진계획 국무회의 보고…3개월 간 숙의과정 돌입",
+    "link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9HbDYycU9QMy1UN0pmX21td0FMeGZXUnJ6YzBkVGRXTmFtYXE5dWsySjR5NHhmZ01pVVFnN2syQ3hfcUVjV0NNS2VMU05iSFh3RFVGR2RoeTZEeVVjVnhZMExIckxnMUtLYWlRUtIBcEFVX3lxTFBqWTBDREFZVFgyZjJIV092R1FpNVRwblNINFcyVVhzQV9tMVhMZU1QTThLbC0xQUlvX0RBQS04N0p5dTFmbjZuY0dmdkp1MzlJMVcxRXRsYXhoZVpDQjBKUVBwTm1JenBXSVdKMXB5SDc?oc=5",
+    "feed": "정책",
+    "domain": "e-platform.net",
+    "matched": "국내 원자력 보도",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "2778075e8ce67cba",
+      "source_components": {
+        "article_hash": "2778075e8ce67cba",
+        "title": "61f3c1ac863ed0204fccea5099e68cf0eb23dddba6365fff9879bde63aee6191",
+        "source_excerpt": "e19341de76d7c6f44d71114307c9a674d8be5b818343ed9c1d9ec5158879641c",
+        "published_at": "20112a57aca29f4280f88104f86217d20980136f9d1ee18ff0fd4a57995f7034"
+      },
+      "source_fingerprint": "4d0ab03954530c464c74976154c7a4a59f9f6654b8d418188ac21021d5ce77a8",
+      "entities": [
+        "basic-plan"
+      ],
+      "countries": [],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [
+        "approval"
+      ],
+      "claims": [
+        "3개월",
+        "22일",
+        "1명",
+        "11명",
+        "2040년"
+      ],
+      "quantities": {
+        "개": [
+          "3"
+        ],
+        "년": [
+          "2040"
+        ],
+        "명": [
+          "1",
+          "11"
+        ],
+        "일": [
+          "22"
+        ]
+      },
+      "manifest_fingerprint": "a90a2bb759693223889e3fe6f3394a1ea1ebe796a6f5143a16b99275485fe7a3"
+    },
+    "verified_source_components": {
+      "article_hash": "2778075e8ce67cba",
+      "title": "61f3c1ac863ed0204fccea5099e68cf0eb23dddba6365fff9879bde63aee6191",
+      "source_excerpt": "e19341de76d7c6f44d71114307c9a674d8be5b818343ed9c1d9ec5158879641c",
+      "published_at": "20112a57aca29f4280f88104f86217d20980136f9d1ee18ff0fd4a57995f7034"
+    },
+    "hash": "2778075e8ce67cba",
+    "published_at": "2026-09-23T01:28:45+00:00"
+  },
+  "779b84093f7e89c3": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [
+      "newbuild",
+      "regulation"
+    ],
+    "countries": [
+      "IT"
+    ],
+    "article_type": "policy",
+    "title_kr": "이탈리아 상원, 원전 복귀 기반 법안 가결",
+    "summary": "이탈리아 상원이 40년 만의 원전 복귀를 위한 규제 기반 마련 법안을 의결했다.",
+    "detail": "이탈리아 상원은 찬성 81표로 원전 복귀 법안을 통과시켰다. 정부는 향후 12개월 동안 원자로 허가, 안전 기준, 폐기물 관리 및 부지 선정 기준을 담은 시행령을 마련할 계획이다. 에너지 공급 불안 해소를 위한 결정이나, 실제 건설까지는 지역사회 반대 등 난관이 예상된다.",
+    "implication": "유럽 내 에너지 안보 강화를 위한 원전 회귀 흐름이 가속화되고 있으나, 구체적인 부지 선정과 지역 수용성 확보가 향후 정책 추진의 핵심 변수이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#이탈리아원전",
+      "#에너지안보",
+      "#원전복귀"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "이탈리아 40년 만에 원전 복귀 결정…상원 법안 가결",
+    "link": "https://news.sbs.co.kr/news/endPage.do?cooper=NAVER&news_id=N1008768579&plink=ORI",
+    "feed": "정책",
+    "domain": "sbs.co.kr",
+    "matched": "원전 부지 선정",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "779b84093f7e89c3",
+      "source_components": {
+        "article_hash": "779b84093f7e89c3",
+        "title": "c4d86dfac7e6eade359ef5fddf06378e4374f7e5ccb66dc19edf151432448836",
+        "source_excerpt": "6099d8229d57f95fcfd52d2d60bf474d68a8afa7145b8dd2bc3632a5f016876a",
+        "published_at": "19e2d865d679ce2b11f1c6f8831744833b3e9e84d00404b84f9100263fdb9aa5"
+      },
+      "source_fingerprint": "348b38390537052df02f4e10e7ae99fdb76818377b8eafa2cd94ece093b530fb",
+      "entities": [
+        "chernobyl",
+        "fukushima"
+      ],
+      "countries": [
+        "JP"
+      ],
+      "topics": [
+        "reactor_project",
+        "safety"
+      ],
+      "stages": [
+        "approval",
+        "incident"
+      ],
+      "claims": [
+        "40년",
+        "12개월",
+        "4기",
+        "1986년",
+        "2011년",
+        "90%"
+      ],
+      "quantities": {
+        "%": [
+          "90"
+        ],
+        "개": [
+          "12"
+        ],
+        "기": [
+          "4"
+        ],
+        "년": [
+          "1986",
+          "2011",
+          "2026",
+          "40"
+        ],
+        "월": [
+          "9"
+        ],
+        "일": [
+          "22"
+        ]
+      },
+      "manifest_fingerprint": "f7f34377246b18535f721fd9a6519a3c0e10b70ef4243fb6b68f3180cabde6f9"
+    },
+    "verified_source_components": {
+      "article_hash": "779b84093f7e89c3",
+      "title": "c4d86dfac7e6eade359ef5fddf06378e4374f7e5ccb66dc19edf151432448836",
+      "source_excerpt": "6099d8229d57f95fcfd52d2d60bf474d68a8afa7145b8dd2bc3632a5f016876a",
+      "published_at": "19e2d865d679ce2b11f1c6f8831744833b3e9e84d00404b84f9100263fdb9aa5"
+    },
+    "hash": "779b84093f7e89c3",
+    "published_at": "2026-09-23T19:53:00+00:00"
+  },
+  "8a08107926426bc3": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 1,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "한미 정상회담 후속 협의 및 향후 일정",
+    "summary": "한미 정상회담 이후 원자력 협정 및 조선 협력 등 핵심 현안에 대한 후속 협의를 진행하기로 했다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "李대통령, 유엔총회·트럼프 회담 마치고 멕시코行…내일 정상회담",
+    "link": "https://www.news1.kr/politics/president/6301062",
+    "feed": "정책",
+    "domain": "news1.kr",
+    "matched": "한미 원자력협정",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "8a08107926426bc3",
+      "source_components": {
+        "article_hash": "8a08107926426bc3",
+        "title": "93771faf1c6889d9011196d0dfac40a43458af437fe24b3463f934ff7d3011b3",
+        "source_excerpt": "44720d45b95d21501b647a04758159bc1fd122f06090fb1f1c9ada16ec30e3b0",
+        "published_at": "25b66ed9a587c648c61fbf6e9c9a1272eb19633565b68749ec0b87c49d275b76"
+      },
+      "source_fingerprint": "ca8ca29fb5b92e6186d7e070e12ef8ff36e1156d350e95e0127327135064e9d3",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "12월"
+      ],
+      "quantities": {
+        "개": [
+          "20"
+        ],
+        "년": [
+          "2026"
+        ],
+        "월": [
+          "12",
+          "9"
+        ],
+        "일": [
+          "24"
+        ]
+      },
+      "manifest_fingerprint": "462a8e0e65e75fc58b179f2906a3c994f23b855f3e6490a6bce37ca564bbc2a0"
+    },
+    "verified_source_components": {
+      "article_hash": "8a08107926426bc3",
+      "title": "93771faf1c6889d9011196d0dfac40a43458af437fe24b3463f934ff7d3011b3",
+      "source_excerpt": "44720d45b95d21501b647a04758159bc1fd122f06090fb1f1c9ada16ec30e3b0",
+      "published_at": "25b66ed9a587c648c61fbf6e9c9a1272eb19633565b68749ec0b87c49d275b76"
+    },
+    "hash": "8a08107926426bc3",
+    "published_at": "2026-09-23T20:16:00+00:00"
+  },
+  "6254f3f5664040cf": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 1,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "규제",
+    "topics": [],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "월성 1호기 경제성 평가 조작 의혹 재판 증인신문 마무리 단계",
+    "summary": "월성 1호기 경제성 평가 조작 의혹 사건 재판이 5년째 이어지는 가운데 증인신문이 마무리 수순에 들어갔다.",
+    "detail": "검찰은 2021년 6월 백운규 전 산업부 장관, 채희봉 전 청와대 비서관, 정재훈 전 한수원 사장을 기소했다. 총 120명가량의 증인신문이 거의 완료되었다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "5년째 이어진 월성원전 재판, 증인신문 마무리 수순…남은 증인은 4명",
+    "link": "https://www.nocutnews.co.kr/news/6582711",
+    "feed": "정책",
+    "domain": "nocutnews.co.kr",
+    "matched": "원자력 정책",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "6254f3f5664040cf",
+      "source_components": {
+        "article_hash": "6254f3f5664040cf",
+        "title": "bae5e071e36dba84d49d2ee83ef328a3098d4f4a9535bb1c7c06282abdb64b4a",
+        "source_excerpt": "c2bd6e1b666ec9557eee785af8464f95b0b4435cd7967f49126234be3e49d577",
+        "published_at": "8f32a183497536b943b553990c6f2f8d70eade59e038370b0c969f234e5c9ff9"
+      },
+      "source_fingerprint": "11c3c591f67b4859af81d712ff5ad653b5bcc057561b473623d555f9b7db0411",
+      "entities": [
+        "khnp",
+        "wolsong"
+      ],
+      "countries": [
+        "KR"
+      ],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [
+        "4명",
+        "2021년",
+        "6월",
+        "1호기",
+        "120명"
+      ],
+      "quantities": {
+        "년": [
+          "2021",
+          "5"
+        ],
+        "명": [
+          "120",
+          "4"
+        ],
+        "월": [
+          "6"
+        ],
+        "호기": [
+          "1"
+        ]
+      },
+      "manifest_fingerprint": "94cb0585c33f3a19f5e617cbf2d99def3d18f1ad34d715cd70680a92566b6945"
+    },
+    "verified_source_components": {
+      "article_hash": "6254f3f5664040cf",
+      "title": "bae5e071e36dba84d49d2ee83ef328a3098d4f4a9535bb1c7c06282abdb64b4a",
+      "source_excerpt": "c2bd6e1b666ec9557eee785af8464f95b0b4435cd7967f49126234be3e49d577",
+      "published_at": "8f32a183497536b943b553990c6f2f8d70eade59e038370b0c969f234e5c9ff9"
+    },
+    "hash": "6254f3f5664040cf",
+    "published_at": "2026-09-23T21:01:00+00:00"
+  },
+  "24670c10b103daf8": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 1,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "한미 안보 협의 및 원자력 협정 개정 후속 논의 지지부진",
+    "summary": "지난해 11월 한미 정상의 공동 설명자료 발표 이후 원자력 협정 개정 등 후속 협의가 지지부진한 상황이다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "안보 협의 탄력 받나…파병 등 난제 여전",
+    "link": "https://news.kbs.co.kr/news/pc/view/view.do?ncd=8670843",
+    "feed": "정책",
+    "domain": "kbs.co.kr",
+    "matched": "한미 원자력협정",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "24670c10b103daf8",
+      "source_components": {
+        "article_hash": "24670c10b103daf8",
+        "title": "c8f225b69d3e95b9b060d703f997754a4b17bd67aa50b4b48a36d07e1f110439",
+        "source_excerpt": "35435860a299a38ff75e1c11c4de8309485c7d039718a08ec2deafbd202533e5",
+        "published_at": "9504dcedbb1c16bed22637e65c99e10b46a5b54550fef76a6e95ae5e73cccc1a"
+      },
+      "source_fingerprint": "bef6a281571194d6f32677cc6aa69664528e12b461770923391f0345d9f14dab",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {
+        "월": [
+          "11"
+        ]
+      },
+      "manifest_fingerprint": "4eb93717266394515fc6c102cc60da8aedbceef8061182074a77aede3378b99e"
+    },
+    "verified_source_components": {
+      "article_hash": "24670c10b103daf8",
+      "title": "c8f225b69d3e95b9b060d703f997754a4b17bd67aa50b4b48a36d07e1f110439",
+      "source_excerpt": "35435860a299a38ff75e1c11c4de8309485c7d039718a08ec2deafbd202533e5",
+      "published_at": "9504dcedbb1c16bed22637e65c99e10b46a5b54550fef76a6e95ae5e73cccc1a"
+    },
+    "hash": "24670c10b103daf8",
+    "published_at": "2026-09-23T21:28:00+00:00"
+  },
+  "3f2df935d0158def": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 3,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 3
+    },
+    "importance": "must_read",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "newbuild",
+      "security_trade"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "한미 투자 패키지 중 APR1400 미국 도입 합의 지연",
+    "summary": "한국의 대미 투자 패키지 중 APR1400 원전 도입 합의가 미국 측의 난색으로 지연되고 있다.",
+    "detail": "",
+    "implication": "APR1400의 미국 내 도입 여부가 한국 원전 수출 전략의 핵심 변수로, 향후 미국 정부의 정책적 결정이 사업 추진의 관건이다.",
+    "why_important": "정부 간 투자 패키지 협의 단계에서 원전 배치 방식에 대한 이견으로 서명이 지연되어 사업 추진이 불확실한 상태로 전환되었다.",
+    "why_short": "",
+    "open_question": "에너지 부문 잔여 투자금 1,780억 달러의 구체적인 사용처는 아직 결정되지 않았다.",
+    "open_question_source": "article_text",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#한미원전",
+      "#APR1400",
+      "#수출통제"
+    ],
+    "related_reports": [],
+    "event_date": "2026-09-22",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "3500억 달러 투자에도 가스발전만 챙긴 한국, 정작 원전은 미국 문턱에...",
+    "link": "https://www.g-enews.com/view.php?ud=202609240651002391fbbec65dfb_1",
+    "feed": "정책",
+    "domain": "g-enews.com",
+    "matched": "원자력 정책",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "3f2df935d0158def",
+      "source_components": {
+        "article_hash": "3f2df935d0158def",
+        "title": "9cc7c0aa6bab96972e58f9a06a9f53272c718370faa4ebf9f4ad0a148c8f5bcd",
+        "source_excerpt": "044cecbe812b92f8d06c2db3a8911d8b34dba7a5e5891fe0ebee451364ed0b10",
+        "published_at": "76d182285087c1852feb766a7d812a3bbb048f069e4db6de796895dc08c42bae"
+      },
+      "source_fingerprint": "f1588a5722c0ae8be65b50967a70ed8a55baf2f8e87c80a80cbd51d99b836741",
+      "entities": [
+        "khnp",
+        "nrc",
+        "westinghouse"
+      ],
+      "countries": [
+        "AE",
+        "CN",
+        "JP",
+        "KR",
+        "US"
+      ],
+      "topics": [
+        "grid",
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [
+        "approval",
+        "completion",
+        "contract"
+      ],
+      "claims": [
+        "3500억달러",
+        "2026년",
+        "9월",
+        "22일",
+        "4500억원",
+        "2025년",
+        "7월",
+        "1500억달러",
+        "500억원",
+        "2000억달러",
+        "4000억원",
+        "1780억달러",
+        "3260억원",
+        "2022년",
+        "2500만달러",
+        "1277억원",
+        "apr1400",
+        "ap1000"
+      ],
+      "quantities": {
+        "mw": [
+          "1110",
+          "1400"
+        ],
+        "년": [
+          "2022",
+          "2025",
+          "2026",
+          "50"
+        ],
+        "달러": [
+          "150000000000",
+          "178000000000",
+          "200000000000",
+          "25000000",
+          "350000000000"
+        ],
+        "억원": [
+          "1277",
+          "3260",
+          "4000",
+          "4500",
+          "500"
+        ],
+        "월": [
+          "7",
+          "9"
+        ],
+        "일": [
+          "22"
+        ]
+      },
+      "manifest_fingerprint": "4da8db4e1d7726305eb4ff2ab7a74c4219c2e58db0011de34afb17114a1b544b"
+    },
+    "verified_source_components": {
+      "article_hash": "3f2df935d0158def",
+      "title": "9cc7c0aa6bab96972e58f9a06a9f53272c718370faa4ebf9f4ad0a148c8f5bcd",
+      "source_excerpt": "044cecbe812b92f8d06c2db3a8911d8b34dba7a5e5891fe0ebee451364ed0b10",
+      "published_at": "76d182285087c1852feb766a7d812a3bbb048f069e4db6de796895dc08c42bae"
+    },
+    "hash": "3f2df935d0158def",
+    "published_at": "2026-09-23T22:02:00+00:00"
+  },
+  "cf2a0af097a28a28": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 2,
+      "market_materiality": 2,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "KR",
+      "CA"
+    ],
+    "article_type": "news",
+    "title_kr": "LS일렉트릭, 캐나다 데이터센터 전력 인프라 시장 공략",
+    "summary": "LS일렉트릭이 캐나다 데이터센터 전시회에 참가하며 북미 전력 인프라 시장 확대를 추진한다.",
+    "detail": "",
+    "implication": "북미 지역의 AI 데이터센터 전력 수요 급증에 대응하여 국내 전력기기 기업들의 현지 시장 점유율 확대가 지속될 것으로 보인다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#LS일렉트릭",
+      "#데이터센터",
+      "#북미시장"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "LS일렉트릭, 캐나다 데이터센터 시장 정조준…'GDCC 2026' 출격",
+    "link": "https://www.theguru.co.kr/news/article.html?no=107446",
+    "feed": "정책",
+    "domain": "theguru.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "cf2a0af097a28a28",
+      "source_components": {
+        "article_hash": "cf2a0af097a28a28",
+        "title": "2808ba9f5f433bb113534ab435dd9b3e2e2e094926a5aaeeb840b37030efa080",
+        "source_excerpt": "fa955234dc139578c7c2cec02da7323c7e3f128a43468519b2fcac59daea01fe",
+        "published_at": "a2bc854e5df4acca5940140f437f6671bdbb6787e661dfa52d068db3b3f927a3"
+      },
+      "source_fingerprint": "cb0d24ce95defec210c11ddfc4e88efa19a90cdb9ee8232a04f3fcbeb12b87ce",
+      "entities": [],
+      "countries": [
+        "CA",
+        "US"
+      ],
+      "topics": [
+        "grid"
+      ],
+      "stages": [
+        "approval",
+        "contract"
+      ],
+      "claims": [
+        "24일",
+        "20일",
+        "2309억원",
+        "4월",
+        "3190억원",
+        "gdcc2026",
+        "canada2026"
+      ],
+      "quantities": {
+        "억원": [
+          "2309",
+          "3190"
+        ],
+        "월": [
+          "4"
+        ],
+        "일": [
+          "20",
+          "24"
+        ]
+      },
+      "manifest_fingerprint": "90a134ab1e95653232a402c7d888e62d9644fa9a34004f706da7264487d97762"
+    },
+    "verified_source_components": {
+      "article_hash": "cf2a0af097a28a28",
+      "title": "2808ba9f5f433bb113534ab435dd9b3e2e2e094926a5aaeeb840b37030efa080",
+      "source_excerpt": "fa955234dc139578c7c2cec02da7323c7e3f128a43468519b2fcac59daea01fe",
+      "published_at": "a2bc854e5df4acca5940140f437f6671bdbb6787e661dfa52d068db3b3f927a3"
+    },
+    "hash": "cf2a0af097a28a28",
+    "published_at": "2026-09-23T22:32:00+00:00"
+  },
+  "99fb74ac93c701a6": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "데이터센터 전력망 인프라 시장 성장과 허벨(HUBB) 전망",
+    "summary": "데이터센터 전력망 현대화 시장의 성장으로 북미 과점 기업인 허벨의 수혜가 예상된다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "[GAM]굴뚝 기업 허벨 AI 기대주 변신 ② '소외된 성장주' 31% 상승 예고",
+    "link": "https://www.newspim.com/news/view/20260923000666",
+    "feed": "정책",
+    "domain": "newspim.com",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "99fb74ac93c701a6",
+      "source_components": {
+        "article_hash": "99fb74ac93c701a6",
+        "title": "91d51f686218d69aaec56f8ddb6385d1d34f4f76d9d8374c550bea0a1d864ab2",
+        "source_excerpt": "05ecba4eebcda1fe59341d3475b53189f872dc181dd109a8628b11ac456cc49b",
+        "published_at": "7c963d802cd779580f710552d0fe2de8e04a2bcba308904001e120a8e4ba621d"
+      },
+      "source_fingerprint": "e8a02b9edc028154dc9a342a12e580a78413e29a1e3c1563ae087bf963200db5",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "grid"
+      ],
+      "stages": [],
+      "claims": [
+        "31%"
+      ],
+      "quantities": {
+        "%": [
+          "31"
+        ]
+      },
+      "manifest_fingerprint": "1ed53c834d86524193d42161b2d415cb7b79c9eef9f9b83c8d759efbb4ea9adc"
+    },
+    "verified_source_components": {
+      "article_hash": "99fb74ac93c701a6",
+      "title": "91d51f686218d69aaec56f8ddb6385d1d34f4f76d9d8374c550bea0a1d864ab2",
+      "source_excerpt": "05ecba4eebcda1fe59341d3475b53189f872dc181dd109a8628b11ac456cc49b",
+      "published_at": "7c963d802cd779580f710552d0fe2de8e04a2bcba308904001e120a8e4ba621d"
+    },
+    "hash": "99fb74ac93c701a6",
+    "published_at": "2026-09-23T23:01:00+00:00"
+  },
+  "6d982e17b5b9b337": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "smr",
+      "security_trade"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "이 대통령, 한미 정상회담서 군함 건조 등 조선 협력 논의",
+    "summary": "이 대통령이 트럼프 대통령과의 정상회담에서 군함 건조를 포함한 한미 조선 분야 협력을 논의했다고 밝혔다.",
+    "detail": "이 대통령은 뉴욕에서 열린 '대한민국 투자 서밋 2026'에서 트럼프 대통령과 군함 건설 등 조선 협력 방안을 논의했음을 언급했다. 또한 반도체, AI 데이터센터 등 3대 메가 프로젝트와 SMR, 핵융합 등 7대 시드 프로젝트를 소개하며 글로벌 투자를 독려했다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#한미협력",
+      "#조선",
+      "#SMR"
+    ],
+    "related_reports": [],
+    "event_date": "2026-09-23",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "\"미국 군함, 한국이 만든다\" 이 대통령이 밝힌 한미 조선 협력",
+    "link": "https://www.newsfreezone.co.kr/news/articleView.html?idxno=711039",
+    "feed": "SMR",
+    "domain": "newsfreezone.co.kr",
+    "matched": "SMR",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "6d982e17b5b9b337",
+      "source_components": {
+        "article_hash": "6d982e17b5b9b337",
+        "title": "38ee5c2e89a1e022b29e21516f1ce6e1cff3de3fba0c2e18be53fb247c96629a",
+        "source_excerpt": "8b9f11bcc354c989f374df6f089a393432c7f6b7aabe78b06b9e91bc4ec2a3fe",
+        "published_at": "7c3e45fe61f185d65d7e43c212571ddd304df5653d2da298d57af2aca0130365"
+      },
+      "source_fingerprint": "fa61c79ea346d5914c2a5d2c5f68137fc2837a0b768a7c18ad72a918558bdade",
+      "entities": [],
+      "countries": [
+        "KR",
+        "US"
+      ],
+      "topics": [
+        "fusion",
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [
+        "5년",
+        "23일"
+      ],
+      "quantities": {
+        "년": [
+          "2026",
+          "5"
+        ],
+        "월": [
+          "9"
+        ],
+        "일": [
+          "22",
+          "23"
+        ]
+      },
+      "manifest_fingerprint": "9beb415804febb1931aeb42e61cc30061715ab599a6858121246c4e6eb77fde1"
+    },
+    "verified_source_components": {
+      "article_hash": "6d982e17b5b9b337",
+      "title": "38ee5c2e89a1e022b29e21516f1ce6e1cff3de3fba0c2e18be53fb247c96629a",
+      "source_excerpt": "8b9f11bcc354c989f374df6f089a393432c7f6b7aabe78b06b9e91bc4ec2a3fe",
+      "published_at": "7c3e45fe61f185d65d7e43c212571ddd304df5653d2da298d57af2aca0130365"
+    },
+    "hash": "6d982e17b5b9b337",
+    "published_at": "2026-09-23T23:10:00+00:00"
+  },
+  "b26c3e73685eb8a9": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 2,
+      "market_materiality": 2,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "smr",
+      "finance"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "이 대통령, 글로벌 금융기관 대상 한국 경제 세일즈",
+    "summary": "이 대통령이 뉴욕에서 글로벌 투자자들을 대상으로 한국의 성장 전략과 투자 기회를 소개했다.",
+    "detail": "이 대통령은 블랙록, 핌코 등 글로벌 금융사 인사들에게 한국의 3대 메가 프로젝트(반도체·AI·데이터센터)와 7대 시드 프로젝트(SMR·핵융합 등)를 소개하며 투자를 요청했다. 또한 기업 지배구조 개선 등 자본시장 개혁 성과를 강조하며 코리아 디스카운트 해소 의지를 피력했다.",
+    "implication": "정부의 차세대 산업 육성 정책에 글로벌 자본을 유치하려는 시도로, SMR 등 에너지 분야의 민간 투자 활성화 여부가 향후 정책 추진의 동력이 될 것이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#투자유치",
+      "#SMR",
+      "#한국경제"
+    ],
+    "related_reports": [],
+    "event_date": "2026-09-23",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "李대통령, 블랙록·핌코에 韓증시 세일즈…\"저평가 벗어나고 있다\"",
+    "link": "https://news.einfomax.co.kr/news/articleView.html?idxno=4436374",
+    "feed": "정책",
+    "domain": "einfomax.co.kr",
+    "matched": "원전 수출",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "b26c3e73685eb8a9",
+      "source_components": {
+        "article_hash": "b26c3e73685eb8a9",
+        "title": "630353a8c5f72904c5627c9bf516afb39dad967955dcfefe96f71aeaded74ac3",
+        "source_excerpt": "87eae5d5fcf963c4708145cfa3ed93cb8581232d6367f2e9c00e08f16e9fdac0",
+        "published_at": "6759acb832c69f7e41861345c3df8028a1f284e178fd0c59237e6619ccbb95cb"
+      },
+      "source_fingerprint": "4acb17aefc0287e1fd72db6bbf5d0e6a09a619044738baf4d414533d7be5b738",
+      "entities": [
+        "doosan"
+      ],
+      "countries": [
+        "KR",
+        "US"
+      ],
+      "topics": [
+        "fusion",
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [
+        "shutdown"
+      ],
+      "claims": [
+        "6월",
+        "23일",
+        "12명",
+        "3%"
+      ],
+      "quantities": {
+        "%": [
+          "3"
+        ],
+        "년": [
+          "1",
+          "2026"
+        ],
+        "명": [
+          "12"
+        ],
+        "월": [
+          "6",
+          "9"
+        ],
+        "일": [
+          "22",
+          "23"
+        ]
+      },
+      "manifest_fingerprint": "1670dbcb0fa0c6d1e6fa3982fd2e5b399247aa9f557eb10262ea0d3ae800fb20"
+    },
+    "verified_source_components": {
+      "article_hash": "b26c3e73685eb8a9",
+      "title": "630353a8c5f72904c5627c9bf516afb39dad967955dcfefe96f71aeaded74ac3",
+      "source_excerpt": "87eae5d5fcf963c4708145cfa3ed93cb8581232d6367f2e9c00e08f16e9fdac0",
+      "published_at": "6759acb832c69f7e41861345c3df8028a1f284e178fd0c59237e6619ccbb95cb"
+    },
+    "hash": "b26c3e73685eb8a9",
+    "published_at": "2026-09-23T23:30:00+00:00"
+  },
+  "8c54ce1fa7f062da": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 2,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [
+      "newbuild"
+    ],
+    "countries": [
+      "CZ",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "이재명 대통령, 유엔총회 계기 각국 정상과 경제·안보 협력 논의",
+    "summary": "이재명 대통령이 유엔총회 참석 중 각국 정상들과 방산, 원전, 투자 등 경제·안보 현안을 논의했다.",
+    "detail": "이재명 대통령은 미국 뉴욕에서 열린 리셉션에 참석해 각국 정상들과 격의 없는 대화를 나눴다. 특히 페트르 파벨 체코 대통령과는 우리 기업의 투자와 원전 협력 방안을 논의했다. 이 외에도 베트남, 태국, 몽골 등 여러 국가 정상들과 방산 협력 및 양국 관계 발전 방안에 대해 의견을 교환했다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#원전협력",
+      "#정상외교"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "李대통령 \"외교는 사람 간 신뢰서 시작…국익 지키는 실용외교 할 것\"",
+    "link": "https://news.einfomax.co.kr/news/articleView.html?idxno=4436381",
+    "feed": "정책",
+    "domain": "einfomax.co.kr",
+    "matched": "베트남 원전",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "8c54ce1fa7f062da",
+      "source_components": {
+        "article_hash": "8c54ce1fa7f062da",
+        "title": "fcaaef91ad0e62cff7e23fe96cce1ee2912809fc0290c8b81c2f508841ffee52",
+        "source_excerpt": "a1a95b7db9897aac6508494a2a6eee3dbb05d10fd08837950e5a44863af18175",
+        "published_at": "ea5484aa7b9969bc7569e84e83c8857976788e2fe97dae40f96961769d43ec4f"
+      },
+      "source_fingerprint": "273cf1cc3bbace513fc96c7eb2467c3ea7d988f4a807e7e562640587d5cd3f17",
+      "entities": [],
+      "countries": [
+        "CZ",
+        "KZ",
+        "US"
+      ],
+      "topics": [
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [
+        "shutdown"
+      ],
+      "claims": [
+        "23일"
+      ],
+      "quantities": {
+        "일": [
+          "23"
+        ]
+      },
+      "manifest_fingerprint": "c6ea5ecc6c450bce040a11eb64c33ba14fb6cb09aa56d327d3209a9a68e14052"
+    },
+    "verified_source_components": {
+      "article_hash": "8c54ce1fa7f062da",
+      "title": "fcaaef91ad0e62cff7e23fe96cce1ee2912809fc0290c8b81c2f508841ffee52",
+      "source_excerpt": "a1a95b7db9897aac6508494a2a6eee3dbb05d10fd08837950e5a44863af18175",
+      "published_at": "ea5484aa7b9969bc7569e84e83c8857976788e2fe97dae40f96961769d43ec4f"
+    },
+    "hash": "8c54ce1fa7f062da",
+    "published_at": "2026-09-23T23:48:00+00:00"
+  },
+  "a553fd3b55e5c808": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "smr",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "통신 3사, 피지컬 AI 인프라 시장 공략 본격화",
+    "summary": "통신 3사가 기존 데이터센터와 네트워크 인프라를 활용한 피지컬 AI 시장 진출을 가속화하고 있다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#AI",
+      "#데이터센터"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "로봇의 두뇌·신경망 노린다…통신3사, 피지컬AI 공략",
+    "link": "https://www.mediapen.com/news/view/1125918",
+    "feed": "정책",
+    "domain": "mediapen.com",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "a553fd3b55e5c808",
+      "source_components": {
+        "article_hash": "a553fd3b55e5c808",
+        "title": "8a23e150a0229ab59c49317385a76514bcbdb018f52ae88b7799a4d59885be91",
+        "source_excerpt": "c9ce8682703e0c48519841615c38c063451f70be5aece167466cb2607e7f382a",
+        "published_at": "1ea04b3e940d76fe92480188756a676f1f21ca213577bc3dc5c1612aa42d731f"
+      },
+      "source_fingerprint": "4526f8482df9292fba1b42532621c8b5a47976832bdc1c33e4e54010a3dc7578",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "cfbc8ce46a4393e3d682986bdb328ca305418a3861e8a58de380dc0da7082407"
+    },
+    "verified_source_components": {
+      "article_hash": "a553fd3b55e5c808",
+      "title": "8a23e150a0229ab59c49317385a76514bcbdb018f52ae88b7799a4d59885be91",
+      "source_excerpt": "c9ce8682703e0c48519841615c38c063451f70be5aece167466cb2607e7f382a",
+      "published_at": "1ea04b3e940d76fe92480188756a676f1f21ca213577bc3dc5c1612aa42d731f"
+    },
+    "hash": "a553fd3b55e5c808",
+    "published_at": "2026-09-24T00:06:00+00:00"
+  },
+  "8ddc00bc2b48fe90": {
+    "features": {
+      "event_type": "regulatory_action",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "규제",
+    "topics": [
+      "datacenter_ai",
+      "power_market",
+      "regulation"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "국내 AI 데이터센터 전력 확보난 심화…전력계통영향평가 승인 저조",
+    "summary": "국내 AI 데이터센터 구축이 늘고 있으나 전력 확보가 최대 난관으로 작용하며 전력계통영향평가 승인율이 저조하다.",
+    "detail": "",
+    "implication": "전력 공급 부족이 신규 AIDC 구축의 최대 병목 현상으로 작용하고 있어, 향후 전력망 확충 및 인허가 기준 구체화가 필수적이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#데이터센터",
+      "#전력망",
+      "#규제"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "[AI 고속도로] 서버만 바꾸면 AIDC?…기존 데이터센터와 뭐가 다를까",
+    "link": "https://zdnet.co.kr/view?no=20260924070833",
+    "feed": "정책",
+    "domain": "zdnet.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "8ddc00bc2b48fe90",
+      "source_components": {
+        "article_hash": "8ddc00bc2b48fe90",
+        "title": "06a2e787f5f677e6a207a777b9284f6d230b31bcf34b727168b1f7655d9df32e",
+        "source_excerpt": "887a78d3f8b8a82fc2c607c95520c3264939c9b49df5cb5f396fb65d88d4f042",
+        "published_at": "ce1f91cfea493856707396935b004825b0a6cfb673e291091ba44c21fe1f7393"
+      },
+      "source_fingerprint": "5198df1385b5cc7560a307881b22f7c81893ebf552ec720421f5540de6285a1f",
+      "entities": [],
+      "countries": [
+        "KR"
+      ],
+      "topics": [],
+      "stages": [
+        "approval",
+        "review"
+      ],
+      "claims": [
+        "2024년",
+        "8월",
+        "3월",
+        "522건",
+        "10건",
+        "24일",
+        "182개",
+        "2200억원",
+        "2029년",
+        "12.4%",
+        "70%"
+      ],
+      "quantities": {
+        "%": [
+          "12.4",
+          "70"
+        ],
+        "개": [
+          "182"
+        ],
+        "건": [
+          "10",
+          "522"
+        ],
+        "년": [
+          "2024",
+          "2029"
+        ],
+        "억원": [
+          "2200"
+        ],
+        "월": [
+          "3",
+          "8"
+        ],
+        "일": [
+          "24"
+        ]
+      },
+      "manifest_fingerprint": "b88384189db8291d1530d64e0a46e11b6f3fa44173c155178769794d718d9217"
+    },
+    "verified_source_components": {
+      "article_hash": "8ddc00bc2b48fe90",
+      "title": "06a2e787f5f677e6a207a777b9284f6d230b31bcf34b727168b1f7655d9df32e",
+      "source_excerpt": "887a78d3f8b8a82fc2c607c95520c3264939c9b49df5cb5f396fb65d88d4f042",
+      "published_at": "ce1f91cfea493856707396935b004825b0a6cfb673e291091ba44c21fe1f7393"
+    },
+    "hash": "8ddc00bc2b48fe90",
+    "published_at": "2026-09-24T00:25:00+00:00"
+  },
+  "2fb54c0a9c5d5bce": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 1,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "newbuild",
+      "power_market"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "정부, AI·반도체 전력 수요 대응 위한 원전 역할 재정립 추진",
+    "summary": "정부가 미래 전력 수요 급증에 대응하기 위해 원자력 발전의 활용 방안을 모색하는 공론화를 추진한다.",
+    "detail": "정부는 AI와 반도체 산업 성장에 따른 전력 수요 대응 및 탄소중립 목표 달성을 위해 원전의 역할을 재정립하고자 한다. 에너지 업계와 학계는 이번 공론화가 실질적인 정책 합의로 이어질지 주목하고 있다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#원전정책",
+      "#전력수요"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "AI·반도체發 '전력 대란' 앞두고, '원전' 찬반 넘어 '역할' 찾는다",
+    "link": "https://www.thepublic.kr/news/articleView.html?idxno=319932",
+    "feed": "정책",
+    "domain": "thepublic.kr",
+    "matched": "원자력 정책",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "2fb54c0a9c5d5bce",
+      "source_components": {
+        "article_hash": "2fb54c0a9c5d5bce",
+        "title": "226dca3d014c15d7105370a1110960e41441d76a5109eba0d18fc71099952115",
+        "source_excerpt": "62a99ab9c358ca646d1c130a19f8a6b2d9e2a9488e60c432ed2455dc1027daf3",
+        "published_at": "cc585921e4e167271652b7d5da66789df293294c786f73a4610a553172640f62"
+      },
+      "source_fingerprint": "7ef9d5c9a1b0e2fa203d0be9efd34f0fb4021f819dcdf5613927a462aee22480",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [
+        "2017년"
+      ],
+      "quantities": {
+        "년": [
+          "2017"
+        ]
+      },
+      "manifest_fingerprint": "a6fc159edd1557154a02c79ae52c071e8c2bd50edb26a98bb2d2fad115d6413d"
+    },
+    "verified_source_components": {
+      "article_hash": "2fb54c0a9c5d5bce",
+      "title": "226dca3d014c15d7105370a1110960e41441d76a5109eba0d18fc71099952115",
+      "source_excerpt": "62a99ab9c358ca646d1c130a19f8a6b2d9e2a9488e60c432ed2455dc1027daf3",
+      "published_at": "cc585921e4e167271652b7d5da66789df293294c786f73a4610a553172640f62"
+    },
+    "hash": "2fb54c0a9c5d5bce",
+    "published_at": "2026-09-24T00:48:00+00:00"
+  },
+  "78f454840cd473ce": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 2,
+      "market_materiality": 3,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "market",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "power_market"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "국내 전력기기 기업, AI 데이터센터 증설로 수주잔고 확대",
+    "summary": "미국 AI 데이터센터 증설과 노후 전력망 교체 수요로 국내 전력기기 기업들의 수주잔고가 지속적으로 증가하고 있다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#전력기기",
+      "#수출"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "[추석특집] 추석에 열리는 美·中 '워싱턴 담판'…국내 증시 흔들 핵심...",
+    "link": "https://www.thepublic.kr/news/articleView.html?idxno=319971",
+    "feed": "정책",
+    "domain": "thepublic.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "78f454840cd473ce",
+      "source_components": {
+        "article_hash": "78f454840cd473ce",
+        "title": "8afb663f23a48dc8bfd0291a8d4e7e16ccf04f6723fb041a9efa8b8199bace6b",
+        "source_excerpt": "2177a8b78d758803ef620a56a2bb1257c5eafa5482dcaa564446f4dbe7ea724f",
+        "published_at": "c099ef4c1dab046b01c9c69db8b29da149723c471bf1b0ca75036fff52decd5d"
+      },
+      "source_fingerprint": "8a82c69df8f3759b65e17354a9742b3ba9ea7615f897fbfd5525c19d8b5c9e8d",
+      "entities": [],
+      "countries": [
+        "US"
+      ],
+      "topics": [
+        "grid"
+      ],
+      "stages": [
+        "contract"
+      ],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "3f1b784541de42a043a526bfa873e49be04a2f02c48e3df84a6cbd8f9acfcc2f"
+    },
+    "verified_source_components": {
+      "article_hash": "78f454840cd473ce",
+      "title": "8afb663f23a48dc8bfd0291a8d4e7e16ccf04f6723fb041a9efa8b8199bace6b",
+      "source_excerpt": "2177a8b78d758803ef620a56a2bb1257c5eafa5482dcaa564446f4dbe7ea724f",
+      "published_at": "c099ef4c1dab046b01c9c69db8b29da149723c471bf1b0ca75036fff52decd5d"
+    },
+    "hash": "78f454840cd473ce",
+    "published_at": "2026-09-24T00:50:00+00:00"
+  },
+  "c410c5cbbf6a023e": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 1,
+      "market_materiality": 3,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "market",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "finance",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "미국 기술기업, 데이터센터 투자 위한 대규모 회사채 발행 경쟁",
+    "summary": "기술기업들이 데이터센터 및 전력 인프라 투자를 위해 대규모 회사채를 발행하며 자금 조달 경쟁이 심화되고 있다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#금융",
+      "#데이터센터"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "美국채, 팔 사람은 많고 살 사람은 줄고",
+    "link": "https://biz.sbs.co.kr/article_hub/20000336625?division=NAVER",
+    "feed": "정책",
+    "domain": "sbs.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "c410c5cbbf6a023e",
+      "source_components": {
+        "article_hash": "c410c5cbbf6a023e",
+        "title": "a17a6cbb953232888e7c71f834aaeb79fac8420ab37e6614fd4780c6cc8a9809",
+        "source_excerpt": "01e6692be6d63ff2f50b519a0576d1cc2b160040b20a9d236ef5427528f773df",
+        "published_at": "ad4f02c53d54785e88b5aa82908447821610ce428adf8a38673588bc6ea0c57b"
+      },
+      "source_fingerprint": "493e73a815b0453d70d57e7f4624de33f790db02f73359e4385bf4213050c2f9",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "5%"
+      ],
+      "quantities": {
+        "%": [
+          "5"
+        ]
+      },
+      "manifest_fingerprint": "d5bf5de361ed3c6f045fa1c5f421192a0911518413c58972fad99be7c5640e0c"
+    },
+    "verified_source_components": {
+      "article_hash": "c410c5cbbf6a023e",
+      "title": "a17a6cbb953232888e7c71f834aaeb79fac8420ab37e6614fd4780c6cc8a9809",
+      "source_excerpt": "01e6692be6d63ff2f50b519a0576d1cc2b160040b20a9d236ef5427528f773df",
+      "published_at": "ad4f02c53d54785e88b5aa82908447821610ce428adf8a38673588bc6ea0c57b"
+    },
+    "hash": "c410c5cbbf6a023e",
+    "published_at": "2026-09-24T01:00:00+00:00"
+  },
+  "c34727138b14df75": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 1,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "datacenter_ai",
+      "regulation"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "국회, AI 데이터센터특별법 추진 등 부처 간 칸막이 해소 논의",
+    "summary": "AI 시대 대응을 위해 국회와 정부가 AI데이터센터특별법 추진 등 부처 간 이해관계 조정에 나서고 있다.",
+    "detail": "이해민 대통령실 AI미래기획수석은 의원 시절 AIDC법 추진 과정에서 건축, 전력, 환경 등 부처 간 칸막이로 인한 어려움을 언급하며 통합적 접근의 필요성을 강조했다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#규제",
+      "#데이터센터"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "[AI룰메이커]\"AI는 달리는데 국회는 걷는다\"…여야 9인의 해법",
+    "link": "https://view.asiae.co.kr/article/2026092312544581028",
+    "feed": "정책",
+    "domain": "asiae.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "c34727138b14df75",
+      "source_components": {
+        "article_hash": "c34727138b14df75",
+        "title": "04f8b6c641bf754f62d350a94ee6b289fd4542aa08cbcfc1e4f29021eff4b16f",
+        "source_excerpt": "2cd9db6cbbad2af385591a5ff20ace8de49c819a60accbb78dec404a558a7f76",
+        "published_at": "ad4f02c53d54785e88b5aa82908447821610ce428adf8a38673588bc6ea0c57b"
+      },
+      "source_fingerprint": "b1860ae51c40678061fd8bdbd49e4f40002f40bedc3e182a224c9b9e8639577a",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "2377d9b8dc22df3cc4dc57b504cf7cb4d4ffaad9c038e6410ea1df4dcb072ec2"
+    },
+    "verified_source_components": {
+      "article_hash": "c34727138b14df75",
+      "title": "04f8b6c641bf754f62d350a94ee6b289fd4542aa08cbcfc1e4f29021eff4b16f",
+      "source_excerpt": "2cd9db6cbbad2af385591a5ff20ace8de49c819a60accbb78dec404a558a7f76",
+      "published_at": "ad4f02c53d54785e88b5aa82908447821610ce428adf8a38673588bc6ea0c57b"
+    },
+    "hash": "c34727138b14df75",
+    "published_at": "2026-09-24T01:00:00+00:00"
+  },
+  "07e309876e78910d": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 1,
+      "market_materiality": 3,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "market",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "finance",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "미국 ETF 시장, AI 데이터센터 및 전력 인프라 테마 세분화",
+    "summary": "미국 ETF 시장에 AI 데이터센터 및 800V 전력 인프라 등 세분화된 테마 상품이 신규 상장되고 있다.",
+    "detail": "올해 미국 ETF 누적 순유입액은 1조 5100억 달러로 사상 최대를 기록했다. 최근 신규 상장된 ETF에는 로봇 구동기, AI 데이터센터 800V 전력 인프라 등이 포함되어 투자 테마가 더욱 세분화되는 추세다.",
+    "implication": "글로벌 자본이 AI 데이터센터와 전력 인프라를 핵심 투자처로 인식하고 있음을 보여주는 시장 신호다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#금융",
+      "#데이터센터",
+      "#전력인프라"
+    ],
+    "related_reports": [],
+    "event_date": "2026-09-14",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "美 ETF 올해 유입 1.51조달러 사상 최대…대표지수 쏠림 속 상품 세분화",
+    "link": "https://www.etoday.co.kr/news/view/2629197",
+    "feed": "정책",
+    "domain": "etoday.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "07e309876e78910d",
+      "source_components": {
+        "article_hash": "07e309876e78910d",
+        "title": "93a31b99fd907fe32f5e2c3283c1704ae36f10b0c8bf99ba0df94882fce2c20e",
+        "source_excerpt": "b3e0b9d5c6710d99651482e02b41e3f670c438157ed568d951c242d1aea061cb",
+        "published_at": "ad4f02c53d54785e88b5aa82908447821610ce428adf8a38673588bc6ea0c57b"
+      },
+      "source_fingerprint": "e082c055799a7a5cb49da26560ac981512a487449c13f3e67aba9f347af1af13",
+      "entities": [],
+      "countries": [
+        "CN",
+        "KR",
+        "US"
+      ],
+      "topics": [],
+      "stages": [
+        "review"
+      ],
+      "claims": [
+        "9월",
+        "14일",
+        "13개",
+        "2023년",
+        "5100억달러",
+        "4900억달러",
+        "9903억달러",
+        "4544억달러",
+        "1474억달러",
+        "37개",
+        "15개",
+        "41%",
+        "26%",
+        "242억달러",
+        "95억달러",
+        "21%",
+        "10억달러",
+        "9000만달러",
+        "18일",
+        "328억달러",
+        "407억달러",
+        "8000만달러",
+        "9000억원",
+        "2000억원",
+        "1000억원",
+        "8000억원",
+        "etf13",
+        "etf37"
+      ],
+      "quantities": {
+        "%": [
+          "12",
+          "21",
+          "26",
+          "27",
+          "41"
+        ],
+        "개": [
+          "13",
+          "15",
+          "37"
+        ],
+        "년": [
+          "2023",
+          "2026"
+        ],
+        "달러": [
+          "1000000000",
+          "147400000000",
+          "1510000000000",
+          "24200000000",
+          "32800000000",
+          "40700000000",
+          "454400000000",
+          "490000000000",
+          "510000000000",
+          "80000000",
+          "90000000",
+          "9500000000",
+          "990300000000"
+        ],
+        "억원": [
+          "1000",
+          "2000",
+          "8000",
+          "9000"
+        ],
+        "월": [
+          "9"
+        ],
+        "일": [
+          "14",
+          "18"
+        ]
+      },
+      "manifest_fingerprint": "20ea1f3a6b59a0b36e34cdd0cc86a595b5d3f5652577eae2eeacda554b62ad2d"
+    },
+    "verified_source_components": {
+      "article_hash": "07e309876e78910d",
+      "title": "93a31b99fd907fe32f5e2c3283c1704ae36f10b0c8bf99ba0df94882fce2c20e",
+      "source_excerpt": "b3e0b9d5c6710d99651482e02b41e3f670c438157ed568d951c242d1aea061cb",
+      "published_at": "ad4f02c53d54785e88b5aa82908447821610ce428adf8a38673588bc6ea0c57b"
+    },
+    "hash": "07e309876e78910d",
+    "published_at": "2026-09-24T01:00:00+00:00"
+  },
+  "9b567e088e5eb481": {
+    "features": {
+      "event_type": "regulatory_action",
+      "korea_relevance": 3,
+      "market_materiality": 1,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "power_market"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "충남도의회, 수도권 전력공급용 초고압 송전선로 건설 재검토 촉구",
+    "summary": "충남도의회가 수도권 첨단산단 전력공급을 위한 초고압 송전선로 건설 계획의 재검토를 정부에 촉구했다.",
+    "detail": "충남도의회는 주민 수용성 확보 없는 일방적 송전선로 건설에 반대하며, 서해안 해저 HVDC 연계 등 주민 피해 최소화 대안을 요구했다. 부여군과 천안·아산 시민단체도 대책위를 구성해 반대 의사를 명확히 하고 있다.",
+    "implication": "지역 수용성 문제가 전력망 확충 사업의 주요 지연 요인으로 작용하고 있어, 실질적인 보상 및 대안 검토가 필수적이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#전력망",
+      "#지역수용성"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "“또 희생 강요”…수도권 가는 초고압 송전선로에 반발 잇따라",
+    "link": "https://www.seoul.co.kr/news/society/2026/09/21/20260921500380?wlog_tag3=naver",
+    "feed": "정책",
+    "domain": "seoul.co.kr",
+    "matched": "송전망 건설",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "9b567e088e5eb481",
+      "source_components": {
+        "article_hash": "9b567e088e5eb481",
+        "title": "37515cad2e96c390b5a4d76d73f93d529b4b4c6015a6e217a70a2c33fa2cbe46",
+        "source_excerpt": "617363a8e7b7080054a523cedfc4d5755b7b2f5b35314670504eece487dc75a3",
+        "published_at": "29700d22aba22f17860e4e46085cfb8e8000425144202c144b639eef3565a988"
+      },
+      "source_fingerprint": "eec62b2954f8b0aca7e83f8f949ae4ca3182a98fa7fe05afce071ee36a5c73ac",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "grid"
+      ],
+      "stages": [
+        "cancellation",
+        "shutdown"
+      ],
+      "claims": [
+        "24일"
+      ],
+      "quantities": {
+        "년": [
+          "2026"
+        ],
+        "월": [
+          "9"
+        ],
+        "일": [
+          "21",
+          "24"
+        ]
+      },
+      "manifest_fingerprint": "0644307164ebafd529bcc471958a365e87e772b9cf5f4e09bd27dbd5d984f30b"
+    },
+    "verified_source_components": {
+      "article_hash": "9b567e088e5eb481",
+      "title": "37515cad2e96c390b5a4d76d73f93d529b4b4c6015a6e217a70a2c33fa2cbe46",
+      "source_excerpt": "617363a8e7b7080054a523cedfc4d5755b7b2f5b35314670504eece487dc75a3",
+      "published_at": "29700d22aba22f17860e4e46085cfb8e8000425144202c144b639eef3565a988"
+    },
+    "hash": "9b567e088e5eb481",
+    "published_at": "2026-09-24T01:01:00+00:00"
+  },
+  "d70ba6943d9588df": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "finance",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "글로벌 국부펀드, 한국 AI 데이터센터 및 전력 인프라 투자 확대",
+    "summary": "글로벌 국부펀드와 연기금의 한국 투자가 전통 부동산에서 AI 데이터센터 및 전력 인프라 등 미래 성장산업으로 진화하고 있다.",
+    "detail": "글로벌 국부펀드의 국내 투자 규모는 2021~2026년 9조 2100억 원 이상으로 확대됐다. 싱가포르투자청(GIC)과 캐나다연금투자위원회(CPP) 등은 AI 데이터센터를 핵심 투자 분야로 꼽으며, 전력 및 유틸리티 인프라까지 투자 범위를 넓히고 있다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#금융",
+      "#데이터센터",
+      "#국부펀드"
+    ],
+    "related_reports": [],
+    "event_date": "2026-09-24",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "오피스·물류 넘어 AI·반도체…글로벌 국부펀드 韓 투자 ‘진화’",
+    "link": "https://www.seoul.co.kr/news/economy/2026/09/24/20260924500007?wlog_tag3=naver",
+    "feed": "정책",
+    "domain": "seoul.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "d70ba6943d9588df",
+      "source_components": {
+        "article_hash": "d70ba6943d9588df",
+        "title": "a72b704af1f6f988c5e1e11141fcc40029256947b88eda9ad4018e63ab5ddab9",
+        "source_excerpt": "eaafc00ef1ae2192d10dbe7b8b75ed06b5ca72ccdc7a21e8333f9e6fcfdb0cf2",
+        "published_at": "29700d22aba22f17860e4e46085cfb8e8000425144202c144b639eef3565a988"
+      },
+      "source_fingerprint": "7714a30702f207c65ad3dfd0d77e6b0d964bf15a38a0730aeb54fd1315902577",
+      "entities": [],
+      "countries": [
+        "CA",
+        "KR"
+      ],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "24일",
+        "2015년",
+        "6600억원",
+        "2020년",
+        "7800억원",
+        "2026년",
+        "2100억원",
+        "30%",
+        "10일"
+      ],
+      "quantities": {
+        "%": [
+          "30"
+        ],
+        "년": [
+          "2015",
+          "2020",
+          "2026"
+        ],
+        "억원": [
+          "2100",
+          "6600",
+          "7800"
+        ],
+        "월": [
+          "1",
+          "9"
+        ],
+        "일": [
+          "10",
+          "24",
+          "6"
+        ]
+      },
+      "manifest_fingerprint": "1649bec4ae7f20534992721edeb83c27663b902e1f5ea46198eaa8ff9d307920"
+    },
+    "verified_source_components": {
+      "article_hash": "d70ba6943d9588df",
+      "title": "a72b704af1f6f988c5e1e11141fcc40029256947b88eda9ad4018e63ab5ddab9",
+      "source_excerpt": "eaafc00ef1ae2192d10dbe7b8b75ed06b5ca72ccdc7a21e8333f9e6fcfdb0cf2",
+      "published_at": "29700d22aba22f17860e4e46085cfb8e8000425144202c144b639eef3565a988"
+    },
+    "hash": "d70ba6943d9588df",
+    "published_at": "2026-09-24T01:01:00+00:00"
+  },
+  "76a7bec66bafc806": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 3,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 3
+    },
+    "importance": "must_read",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "newbuild",
+      "security_trade"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "policy",
+    "title_kr": "정부, 대미투자 원전 프레임워크 통해 APR-1400 미국 진출 제약 해소",
+    "summary": "정부가 대미투자 원전 프레임워크를 통해 APR-1400의 미국 진출 제약을 해소하고 수출 경쟁력을 확보했다.",
+    "detail": "정부가 국회에 보고한 대미투자 원전 프레임워크에 따라 대미 투자금으로 건설하는 사업에 한해 APR-1400의 미국 진출 제약이 풀린다. 기존 웨스팅하우스와의 비공개 계약 빗장이 열리면서 미국 수출 이력 확보가 가능해졌으며, 이는 향후 사우디·베트남 수주전에서 큰 경쟁력이 될 전망이다.",
+    "implication": "미국 내 원전 공급망의 대안으로 APR-1400이 공식화됨에 따라, 향후 미국 시장 내 한국 원전의 입지가 강화될 것으로 보인다.",
+    "why_important": "기존 웨스팅하우스와의 계약 제약으로 막혀있던 미국 시장 진출로가 대미투자 프레임워크를 통해 공식적으로 열리며 사업 추진 단계가 진전됨.",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "llm_null",
+    "watch_next": "",
+    "tags": [
+      "#APR1400",
+      "#미국수출",
+      "#원전정책"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "“불평등 계약 족쇄 벗은 APR-1400…美 원전시장서 ‘가격 경쟁력’ 입증...",
+    "link": "https://www.sedaily.com/article/20094787",
+    "feed": "정책",
+    "domain": "sedaily.com",
+    "matched": "원자력진흥위원회",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "76a7bec66bafc806",
+      "source_components": {
+        "article_hash": "76a7bec66bafc806",
+        "title": "0d0e15af04eb1292a43d6c730b248b58f0a3717b48b37c4b0bc142e3960480ae",
+        "source_excerpt": "9b04d33e538d0e3bd42d177b78372174c133b16668bfe93404503c0caf78a1c2",
+        "published_at": "29700d22aba22f17860e4e46085cfb8e8000425144202c144b639eef3565a988"
+      },
+      "source_fingerprint": "599e32cc09af1b9da2f929ce85f30c5ca11bf8f75d288d8809cf1fd3a01f1af5",
+      "entities": [
+        "dukovany",
+        "edf",
+        "kepco",
+        "khnp",
+        "westinghouse"
+      ],
+      "countries": [
+        "AE",
+        "CN",
+        "CZ",
+        "FR",
+        "JP",
+        "KR",
+        "KZ",
+        "US"
+      ],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [
+        "contract"
+      ],
+      "claims": [
+        "6개",
+        "22일",
+        "2027년",
+        "1.4gw",
+        "1.1gw",
+        "40%",
+        "16.6%",
+        "30%",
+        "apr-1400",
+        "ap-1000"
+      ],
+      "quantities": {
+        "%": [
+          "16.6",
+          "30",
+          "40"
+        ],
+        "mw": [
+          "1100",
+          "1400"
+        ],
+        "개": [
+          "6"
+        ],
+        "년": [
+          "2027"
+        ],
+        "일": [
+          "22"
+        ]
+      },
+      "manifest_fingerprint": "6e484ffb1f82d0a7f24b40990e23d3c17c642c3a04cc97d0f6739e06b8e18c47"
+    },
+    "verified_source_components": {
+      "article_hash": "76a7bec66bafc806",
+      "title": "0d0e15af04eb1292a43d6c730b248b58f0a3717b48b37c4b0bc142e3960480ae",
+      "source_excerpt": "9b04d33e538d0e3bd42d177b78372174c133b16668bfe93404503c0caf78a1c2",
+      "published_at": "29700d22aba22f17860e4e46085cfb8e8000425144202c144b639eef3565a988"
+    },
+    "hash": "76a7bec66bafc806",
+    "published_at": "2026-09-24T01:01:00+00:00"
+  },
+  "08bf7c1fdbc89e2f": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 3,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "김영록 전 전남지사, 한전 사장 취업심사 불승인",
+    "summary": "김영록 전 전남지사의 한국전력 사장 취업심사가 불승인되면서 사장 공모 절차가 원점으로 돌아갔다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#한전",
+      "#인사"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-24T01:07:56.719108+00:00",
+    "title": "김영록 前 전남지사, 한전 사장 취업심사 불승인…사장 공모 원점으로",
+    "link": "https://www.ekn.kr/web/view.php?key=20260924027058879",
+    "feed": "정책",
+    "domain": "ekn.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "08bf7c1fdbc89e2f",
+      "source_components": {
+        "article_hash": "08bf7c1fdbc89e2f",
+        "title": "816b341fd5cb93d2be19bdaa71a0c00d913f3b59c2ae2036273896da484b74aa",
+        "source_excerpt": "288750c7b444f5c0e4781d1ad5445d263858ec8adc5770bd92fd853c1a62cb9d",
+        "published_at": "1a7bf6ca149b194ef5ba0e2d888b2c4254f62db3fdff7aeda368a901260b9681"
+      },
+      "source_fingerprint": "695913ce7e91f509179eaa115d8e88cc90cf540d37e74cb75c56c80ce90d0b41",
+      "entities": [
+        "kepco"
+      ],
+      "countries": [],
+      "topics": [],
+      "stages": [
+        "approval",
+        "review"
+      ],
+      "claims": [
+        "30기",
+        "2030년",
+        "100기"
+      ],
+      "quantities": {
+        "기": [
+          "100",
+          "30"
+        ],
+        "년": [
+          "2030"
+        ]
+      },
+      "manifest_fingerprint": "997d79efc869dc1f44e0a8b40fe2173e91a9d9cf3cdd2f69595ee2f06463f63a"
+    },
+    "verified_source_components": {
+      "article_hash": "08bf7c1fdbc89e2f",
+      "title": "816b341fd5cb93d2be19bdaa71a0c00d913f3b59c2ae2036273896da484b74aa",
+      "source_excerpt": "288750c7b444f5c0e4781d1ad5445d263858ec8adc5770bd92fd853c1a62cb9d",
+      "published_at": "1a7bf6ca149b194ef5ba0e2d888b2c4254f62db3fdff7aeda368a901260b9681"
+    },
+    "hash": "08bf7c1fdbc89e2f",
+    "published_at": "2026-09-24T01:06:00+00:00"
   }
 }
