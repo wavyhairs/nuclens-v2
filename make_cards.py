@@ -1091,6 +1091,15 @@ def main() -> int:
 
     if args.date:
         date, outbox = args.date, {}
+        # 그날이 outbox 의 날이면 수집 통계는 거기 있다. 안 읽으면 '오늘 수집 N건'이
+        # 카드에 실린 이슈의 기사 수 합으로 떨어진다(2026-09-24 복구 실행: 683 → 228).
+        if OUTBOX_FILE.exists():
+            try:
+                saved = json.loads(OUTBOX_FILE.read_text(encoding="utf-8"))
+            except ValueError:
+                saved = {}
+            if saved.get("date") == date:
+                outbox = {"selection_stats": saved.get("selection_stats") or {}}
     else:
         if not OUTBOX_FILE.exists():
             print("[cards] outbox.json 없음 — 브리핑이 아직 안 돌았다. 스킵")

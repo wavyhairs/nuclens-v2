@@ -56,6 +56,26 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class DateRunKeepsCollectedCount(unittest.TestCase):
+    def test_date_run_reads_selection_stats_when_the_outbox_is_that_day(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            outbox = Path(tmp) / "outbox.json"
+            outbox.write_text(json.dumps({"date": "2026-09-24", "status": "sent",
+                "selection_stats": {"국내": {"candidate_count": 400}, "해외": {"candidate_count": 283}}}),
+                encoding="utf-8")
+            data = mock.Mock(issues=[_row("a")], warnings=())
+            seen = {}
+
+            def stop(items, date, collected, *args, **kwargs):
+                seen["collected"] = collected
+                raise SystemExit(0)
+
+            with mock.patch.object(make_cards, "OUTBOX_FILE", outbox),                  mock.patch.object(make_cards, "load_site_data", return_value=data),                  mock.patch.object(make_cards, "attach_bodies"),                  mock.patch.object(make_cards, "run_editorial", side_effect=stop),                  mock.patch("sys.argv", ["make_cards.py", "--date", "2026-09-24"]):
+                with self.assertRaises(SystemExit):
+                    make_cards.main()
+            self.assertEqual(seen.get("collected"), 683)
+
+
 class WakeScript(unittest.TestCase):
     def test_crawl_wake_script_reports_through_github_output(self):
         import subprocess
