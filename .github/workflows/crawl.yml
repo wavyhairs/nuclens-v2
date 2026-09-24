@@ -592,7 +592,10 @@ jobs:
           # issue_headlines.json 은 카드 표시 제목 캐시다. 목록에 없어서 매 빌드가
           # 이슈 전량(실측 2026-09-23: 629건 · 호출 64회)을 다시 물었고, 그것이
           # gemini-3.5-flash-lite 일일 500회의 대부분을 먹어 병합 판정이 429 로 죽었다.
-          for f in issue_llm_reviews.json keei_llm_matches.json issue_insights.json issue_headlines.json; do
+          # briefing_snapshots.json 은 지난 브리핑의 발송 당시 카드 구성이다(write-once).
+          # 여기서 싣지 않으면 러너와 함께 사라지고, 그 사이 사건을 나누면 그 날짜는
+          # 나뉜 뒤의 묶음으로 얼려진다 — 보존하려던 기록이 없어진다.
+          for f in issue_llm_reviews.json keei_llm_matches.json issue_insights.json issue_headlines.json briefing_snapshots.json; do
             if [ -f "$f" ]; then git add "$f"; fi
           done
           git diff --cached --quiet && exit 0

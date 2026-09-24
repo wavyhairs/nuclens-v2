@@ -270,6 +270,10 @@ jobs:
       # 통과하는 회귀라(원장·목록은 멀쩡했다) 따로 잠근다 — 2026-09-20 SAR 실측.
       - name: Issue detail reads the thread ledger (app.js)
         run: node web/tests/thread_dialog_section.mjs
+      # 지난 브리핑 카드의 '이후 분류 정정됨'. 원장(briefing_snapshots.json)이 문장을
+      # 붙잡아도 화면이 표식을 안 읽으면 조용히 사라진다.
+      - name: Past briefing classification note (app.js)
+        run: node web/tests/classification_note.mjs
       - name: Admin gate contract
         run: node web/tests/admin_gate.mjs
 

@@ -61,6 +61,7 @@ import event_identity  # noqa: E402
 import event_ledger  # noqa: E402
 import issue_candidate_stats  # noqa: E402
 import evidence_cache  # noqa: E402
+import briefing_snapshot  # noqa: E402
 import issue_change_log  # noqa: E402
 import issue_headline  # noqa: E402
 import issue_insight  # noqa: E402
@@ -98,6 +99,8 @@ OUT_DIR = Path(os.environ.get("OUTPUT_DIR", SITE_DIR / "public" / "data"))
 # 엣지의 접근 통제(functions/admin/_middleware.js)가 닿지 않는다. 화면만 잠그고
 # 데이터를 공개 경로에 두면 URL 하나로 그대로 읽힌다 — 잠근 게 아니다.
 ADMIN_OUT_DIR = Path(os.environ.get("ADMIN_OUTPUT_DIR", OUT_DIR.parent / "admin" / "data"))
+# 지난 브리핑의 발송 당시 카드 구성(briefing_snapshot). CI 가 커밋해야 살아남는다.
+BRIEFING_SNAPSHOT_FILE = Path(os.environ.get("BRIEFING_SNAPSHOT_FILE", BOT_DIR / "briefing_snapshots.json"))
 # 정적 진입점(이슈·회차 페이지·RSS)이 나가는 자리. 진단 실행이 운영 산출물을
 # 덮으면 안 된다 — 창 재생이 실제로 web/public/brief 를 통째로 다시 썼고,
 # 그 결과 페이지와 web/public/data 가 서로 다른 빌드의 것이 되어 검사 세 건이
@@ -7808,6 +7811,17 @@ def build() -> None:
     # `today.json`·`/data/issue/<id>.json`(정적 상세) 셋이 한 번에 같은 값을 받는다.
     threaded = stamp_thread_ids(issue_catalog, threads_payload)
     print(f"[build_data:threads] 스토리에 속한 이슈 {threaded}건에 thread_id 투영")
+
+    # 지난 브리핑을 발송 당시 모양으로 붙잡는다(briefing_snapshot 의 docstring).
+    # **모든 표시 칸이 정해진 뒤**여야 한다 — 표시 제목·변화 문장·카드 해석까지
+    # 얼려야 그날 독자가 본 문장이 남는다. today.json·정적 브리핑 페이지가 이
+    # 아래에서 briefings 를 읽으므로 그 셋이 같은 행을 받는다.
+    snapshot_store = briefing_snapshot.load(BRIEFING_SNAPSHOT_FILE)
+    snapshot_stats = briefing_snapshot.apply(briefings, snapshot_store, now.isoformat())
+    briefing_snapshot.save(BRIEFING_SNAPSHOT_FILE, snapshot_store)
+    print(f"[build_data:snapshot] 새로 얼린 날짜 {snapshot_stats['frozen_new']} · "
+          f"분류 정정 안내 {snapshot_stats['cards_corrected']}장"
+          f"({snapshot_stats['dates_corrected']}일)")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ADMIN_OUT_DIR.mkdir(parents=True, exist_ok=True)
