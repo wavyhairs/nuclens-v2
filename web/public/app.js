@@ -1165,6 +1165,20 @@ function issueHeadline(issue) {
   return String(issue.headline_display || issue.title || "");
 }
 
+// 지난 브리핑 카드가 발송 뒤 다른 사건으로 나뉘거나 합쳐졌을 때의 안내.
+// 카드 문장은 그날 독자가 본 그대로 두고(briefing_snapshot.py), 지금 그 기사들이
+// 어느 사건에 있는지만 링크로 알린다. 조용히 다시 그리면 그날의 기록이 사라진다.
+function classificationNote(issue) {
+  const note = issue?.classification_note;
+  if (!note || note.status !== "corrected") return "";
+  const now = (note.now || []).filter(row => row && row.issue_id);
+  const links = now.map(row => (row.issue_id === issue.issue_id
+    ? `<span>${esc(row.title)}</span>`
+    : `<button type="button" class="classification-link" data-issue-id="${esc(row.issue_id)}" data-force-dialog="1">${esc(row.title)}</button>`)).join(" · ");
+  return `<p class="classification-note"><span class="issue-line-label">이후 분류 정정됨</span><span>발송 뒤 사건 분류가 바뀌었습니다. 카드 문장은 발송 당시 그대로입니다.${
+    links ? ` 지금은 ${now.length > 1 ? `${now.length}개 사건으로 나뉘어 있습니다: ` : "여기에 있습니다: "}${links}` : ""}</span></p>`;
+}
+
 function issueCard(issue, index, archive = false, front = false) {
   const topic = primaryTopicLabel(issue);
   const selectionReason = (issue.selection_reasons || []).find(reason => String(reason || "").trim());
@@ -1239,6 +1253,7 @@ function issueCard(issue, index, archive = false, front = false) {
       ${cardRow("직전까지", priorText)}
       ${cardRow("왜 중요한가", whyText, `<span class="ai-badge">AI</span>`)}
       ${cardRow("다음 확인", nextText)}
+      ${classificationNote(issue)}
       ${selectionReason ? `<div class="issue-reason-row"><span class="issue-reason-chip topic-chip">${esc(selectionReason)}</span></div>` : ""}
       ${matchContext}
       ${archive ? trackingPeriod(issue) : ""}
@@ -3148,8 +3163,9 @@ function briefingIssuesForDisplay(briefing) {
   if (briefing?.date !== latestDate) return issues;
   // 최신 카드의 타임라인 수와 배지는 상세가 쓰는 카탈로그와 같아야 한다.
   // 과거 브리핑은 그날의 스냅샷이므로 그대로 둔다.
-  return issues.map(issue =>
-    state.issues.find(candidate => candidate.issue_id === issue.issue_id) || issue
+  // 분류 정정 안내가 붙은 카드는 발송 당시 문장이 요점이라 카탈로그로 바꾸지 않는다.
+  return issues.map(issue => (issue.classification_note ? issue :
+    state.issues.find(candidate => candidate.issue_id === issue.issue_id) || issue)
   );
 }
 
@@ -3734,6 +3750,7 @@ function openIssueDialog(issueId, updateUrl = true) {
       evidenceArticles.length
         ? `선정 ${cardArticles.length}건 · 추가 근거 ${evidenceArticles.length}건`
         : `누적 ${issue.article_count}건`}</span></div>
+    ${classificationNote(issue)}
     <section class="dialog-update" aria-labelledby="issueUpdateTitle">
       <h3 id="issueUpdateTitle">한 줄 결론</h3>
       ${issue.summary ? `<p>${esc(issue.summary)}</p>` : '<p class="empty">요약이 없습니다.</p>'}

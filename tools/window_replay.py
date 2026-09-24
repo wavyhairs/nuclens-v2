@@ -154,6 +154,9 @@ def run_build(label: str, window: int, as_of: str, *, live_llm: bool,
         # git status 가 아니었으면 못 봤을 것이다. 격리는 전수여야 한다.
         "ISSUE_INSIGHT_CACHE_FILE": str(target / "issue_insights.json"),
         "KEEI_MATCH_CACHE_FILE": str(target / "keei_llm_matches.json"),
+        # 지난 브리핑 원장(write-once). 재생 arm 이 운영 원장에 날짜를 먼저 얼리면
+        # 그 날짜의 발송 당시 기록이 재생본으로 굳는다.
+        "BRIEFING_SNAPSHOT_FILE": str(target / "briefing_snapshots.json"),
         # 정적 페이지와 전수 덤프도 arm 안으로. 이것을 빼먹었더니 web/public 의
         # 페이지가 재생본으로 바뀌고 web/public/data 는 옛 빌드 그대로라 검사가 깨졌다.
         "PAGES_OUTPUT_DIR": str(target / "public"),

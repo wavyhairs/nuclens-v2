@@ -4297,3 +4297,9 @@ button.agenda-head[aria-expanded="true"]::after { content: "▾"; }
 }
 /* 헤더의 날짜 줄은 패널 꼬리가 대신 든다 */
 .today-date { display: none; }
+
+/* 지난 브리핑 카드의 '이후 분류 정정됨'. 경고색이 아니다 — 고장이 아니라 기록의
+   갱신을 알리는 줄이라 본문보다 한 단 물러선 무게로 둔다. */
+.classification-note { margin: var(--sp-2) 0 0; color: var(--c-text-muted); font-size: var(--t-min); line-height: 1.55; }
+.classification-note .issue-line-label { margin-right: var(--sp-2); }
+.classification-link { padding: 0; border: 0; background: transparent; color: var(--c-secondary); font: inherit; text-decoration: underline; cursor: pointer; }
