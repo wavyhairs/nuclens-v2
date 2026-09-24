@@ -655,6 +655,20 @@ class TestOutboxFlow(OutboxBase):
         self.assertIn("quality_payload_digest_mismatch", row["alert_key"])
         self.assertEqual(row["items"][0]["blocked_briefs"], ["국내"])
 
+    def test_dedup_failure_reaches_the_admin(self):
+        """중복 판정 없이 나간 날이 로그 한 줄로 끝나면 안 된다(2026-09-25 editorial_final 503)."""
+        outbox = {"date": "2026-07-12", "created_at": NOW.isoformat(),
+                  "quality_diag": {"dedup_failures": [
+                      {"stage": "editorial_final", "error": "HTTP 503"},
+                      {"stage": "cross_day", "error": "HTTP 503"}]}}
+        log = db.ROOT / "quality_event_dedup.jsonl"
+        self.addCleanup(log.unlink, True)
+        self.assertEqual(db.append_quality_audit(outbox, path=log, now=NOW), 1)
+        row = json.loads(log.read_text(encoding="utf-8").splitlines()[-1])
+        self.assertEqual(row["alert_key"], "dedup-review-failed")
+        self.assertEqual(row["min_occurrences"], 1)
+        self.assertIn("cross_day", row["detail"])
+
     def test_quality_event_is_not_emitted_when_the_outbox_is_intact(self):
         self.seed_queue(self._queue())
         db.cmd_plan()

@@ -109,6 +109,10 @@ _PROFILES: dict[str, TaskProfile] = {
     "summary_verify": _entry(FINAL_SEMANTIC_VERIFY, _main_model),
     "dedup": _entry(IDENTITY_REVIEW, _main_model),
     "dedup_final": _entry(IDENTITY_REVIEW, _main_model),
+    # 오늘 후보 ↔ 최근 발송분 같은-사건 대조 (dedup.cross_day_repeats). 하루 1~2회
+    # 호출이라 품질 버킷을 쓴다 — 2026-09-25 replay(21일·손 라벨 47쌍)에서 3.1 은
+    # 지우면 안 될 쌍 5/19 를, 3.5 는 2/19 를 지웠다.
+    "dedup_cross_day": _entry(IDENTITY_REVIEW, _synthesis_model),
     "issue_insight": _entry(CONTEXT_SYNTHESIS, _insight_model),
     "daily_brief": _entry(CONTEXT_SYNTHESIS, _main_model),
     "daily_brief_implication": _entry(CONTEXT_SYNTHESIS, _synthesis_model),
