@@ -1179,6 +1179,20 @@ function classificationNote(issue) {
     links ? ` 지금은 ${now.length > 1 ? `${now.length}개 사건으로 나뉘어 있습니다: ` : "여기에 있습니다: "}${links}` : ""}</span></p>`;
 }
 
+// 갈라져 새 주소를 받은 사건의 계보(build_data.stamp_split_lineage) — 콘솔 나누기든 재묶음이든. 옛 주소는 이긴 쪽에
+// 그대로 살아 있어서, 그 주소로 들어온 사람은 갈라져 나간 쪽이 있다는 것을 알 길이
+// 없었다 — 원장의 넘김은 **사라진** 주소만 넘긴다.
+function splitLineageNote(issue) {
+  const link = row => `<button type="button" class="classification-link" data-issue-id="${esc(row.issue_id)}" data-force-dialog="1">${esc(row.title || row.issue_id)}</button>`;
+  const children = (issue?.split_children || []).filter(row => row && row.issue_id);
+  const parent = issue?.split_parent?.issue_id ? issue.split_parent : null;
+  const lines = [];
+  if (children.length) lines.push(`이 사건에서 갈라져 나간 사건: ${children.map(link).join(" · ")}`);
+  if (parent) lines.push(`원래 한 사건이던 곳: ${link(parent)}`);
+  if (!lines.length) return "";
+  return `<p class="classification-note"><span class="issue-line-label">사건 분류 변경</span><span>${lines.join("<br>")}</span></p>`;
+}
+
 function issueCard(issue, index, archive = false, front = false) {
   const topic = primaryTopicLabel(issue);
   const selectionReason = (issue.selection_reasons || []).find(reason => String(reason || "").trim());
@@ -3751,6 +3765,7 @@ function openIssueDialog(issueId, updateUrl = true) {
         ? `선정 ${cardArticles.length}건 · 추가 근거 ${evidenceArticles.length}건`
         : `누적 ${issue.article_count}건`}</span></div>
     ${classificationNote(issue)}
+    ${splitLineageNote(issue)}
     <section class="dialog-update" aria-labelledby="issueUpdateTitle">
       <h3 id="issueUpdateTitle">한 줄 결론</h3>
       ${issue.summary ? `<p>${esc(issue.summary)}</p>` : '<p class="empty">요약이 없습니다.</p>'}

@@ -102,6 +102,16 @@ def catalog_rows(issue_catalog: list[dict]) -> list[dict]:
             "briefing_count": int(issue.get("briefing_count") or 0),
             "topics": [t for t in (issue.get("topics") or []) if t][:4],
             "hashes": hashes[:MAX_HASHES],
+            # 사람이 나눠서 새로 발급된 사건이면 어디서 갈라졌는지. event_identity 는
+            # 이 값을 **나뉜 그 빌드에서만** 적는다 — 다음 빌드부터는 제 id 를 물려받은
+            # 평범한 상속이라 칸이 빈다. 원장이 기억하지 않으면 옛 주소에서 갈라진
+            # 쪽으로 가는 길이 하루 만에 사라진다.
+            #
+            # **새로 발급된 쪽(origin=split)만** 적는다. 물려받은 이슈도 기사 일부를 남에게
+            # 잃으면 `identity_split_from` 을 달지만, 그쪽은 제 옛 주소가 살아 있어 안내가
+            # 필요 없고, 적으면 재묶음 잡음이 계보로 쌓인다(로컬 실측: 한 빌드 25건 중 16건).
+            "split_from": (_clean(issue.get("identity_split_from"))
+                           if _clean(issue.get("identity_origin")) == "split" else ""),
             **_retrieval_fields(issue),
         })
     return rows
@@ -250,6 +260,9 @@ def merge(store: dict, rows: list[dict], day: str) -> dict:
         # 전부 이 칸을 읽는데, 대표 기사 하나가 어떤 축을 비우면 어제까지 서 있던
         # 스토리 고리가 오늘 끊긴다.
         row["facts"] = retain_facts(existing.get("facts"), row.get("facts"))
+        # 갈라진 계보는 한 번 적히면 지우지 않는다(catalog_rows 의 split_from 주석).
+        if not row.get("split_from") and existing.get("split_from"):
+            row["split_from"] = existing["split_from"]
         revisions = existing.get("revisions") or []
         last = revisions[-1] if revisions else {}
         if last.get("title") != row["title"] or last.get("summary") != row["summary"]:
@@ -293,6 +306,17 @@ def resolve_moves(store: dict, rows: list[dict]) -> int:
             entry["moved_to"] = target
             moved += 1
     return moved
+
+
+def split_lineage(store: dict, rows: list[dict]) -> dict[str, str]:
+    """child id → 갈라져 나온 옛 id. 이번 빌드의 판정이 원장보다 앞선다."""
+    parents = {issue_id: _clean(entry.get("split_from"))
+               for issue_id, entry in (store.get("issues") or {}).items()
+               if _clean(entry.get("split_from"))}
+    for row in rows:
+        if _clean(row.get("identity_split_from")) and _clean(row.get("identity_origin")) == "split":
+            parents[_clean(row.get("issue_id"))] = _clean(row["identity_split_from"])
+    return {child: parent for child, parent in parents.items() if child != parent}
 
 
 def alias_target(store: dict, issue_id: str) -> str:
