@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 5,
-    "date": "2026-09-24"
+    "count": 2,
+    "date": "2026-09-25"
   },
   "retired": {
     "ap1000vsapr1400": {
@@ -83,6 +83,14 @@
       "term": "Hatch",
       "type": "company",
       "until": "2026-10-07T12:43:20.022444+00:00"
+    },
+    "kurt": {
+      "new_articles": 2,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-24T15:40:46.551388+00:00",
+      "term": "KURT",
+      "type": "company",
+      "until": "2026-10-08T15:40:46.551388+00:00"
     },
     "loi": {
       "new_articles": 34,
@@ -388,6 +396,14 @@
       "type": "plant",
       "until": "2026-09-14T00:39:41.728913+00:00"
     },
+    "전력수급내": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-24T15:40:46.551388+00:00",
+      "term": "전력수급 내",
+      "type": "plant",
+      "until": "2026-10-08T15:40:46.551388+00:00"
+    },
     "전력연구소": {
       "new_articles": 1,
       "reason": "기간 만료",
@@ -508,6 +524,14 @@
       "type": "org",
       "until": "2026-09-10T00:35:20.483573+00:00"
     },
+    "한국에너지공단": {
+      "new_articles": 1,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-24T15:40:46.551388+00:00",
+      "term": "한국에너지공단",
+      "type": "org",
+      "until": "2026-10-08T15:40:46.551388+00:00"
+    },
     "한국에너지정보문화재단": {
       "new_articles": 3,
       "reason": "성과 없음",
@@ -566,58 +590,10 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-09-24"
+    "count": 3,
+    "date": "2026-09-25"
   },
   "terms": {
-    "kurt": {
-      "articles": 3,
-      "created_at": "2026-09-22T12:41:16.098939+00:00",
-      "domains": [
-        "kaeri.re.kr",
-        "epj.co.kr",
-        "e-platform.net"
-      ],
-      "evidence": [
-        {
-          "domain": "kaeri.re.kr",
-          "hash": "091d942ecda0517b",
-          "importance": "nice_to_know",
-          "title": "한국원자력연구원, 지하처분연구시설(KURT) 운영 20주년 심포지엄 개최"
-        },
-        {
-          "domain": "epj.co.kr",
-          "hash": "97715bbaec2bd2cd",
-          "importance": "nice_to_know",
-          "title": "원자력연구원, 지하처분연구시설(KURT) 운영 20주년 심포지엄 개최"
-        },
-        {
-          "domain": "e-platform.net",
-          "hash": "7492209477c0d6d4",
-          "importance": "nice_to_know",
-          "title": "원자력연구원, 지하처분연구시설(KURT) 운영 20주년 심포지엄 개최"
-        }
-      ],
-      "expires_at": "2026-09-24T12:41:16.098939+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-09-23T18:41:08.691529+00:00",
-      "new_articles": 2,
-      "origin": "auto",
-      "planned_at": "2026-09-23T18:41:05.315934+00:00",
-      "queries_run": 2,
-      "query": "KURT 원자력",
-      "score": 4.6,
-      "status": "extended",
-      "term": "KURT",
-      "ttl_hours": 48,
-      "type": "company",
-      "yield_days": [
-        "2026-09-22"
-      ],
-      "yields": 1,
-      "zero_streak": 1
-    },
     "natrium": {
       "articles": 3,
       "created_at": "2026-09-23T15:40:28.712795+00:00",
@@ -664,6 +640,38 @@
       "yields": 0,
       "zero_streak": 2
     },
+    "만의탈": {
+      "articles": 1,
+      "created_at": "2026-09-24T15:40:46.551388+00:00",
+      "domains": [
+        "newspim.com"
+      ],
+      "evidence": [
+        {
+          "domain": "newspim.com",
+          "hash": "f61233e042cc6694",
+          "importance": "must_read",
+          "title": "이탈리아, 원전 부활 법안 최종 통과… 2035년 첫 원자로 가동 목표"
+        }
+      ],
+      "expires_at": "2026-09-25T15:40:46.551388+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-09-24T15:40:50.254433+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-09-24T15:40:46.551388+00:00",
+      "queries_run": 1,
+      "query": "만의 탈 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "만의 탈",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "에너지공단": {
       "articles": 7,
       "created_at": "2026-09-23T15:40:28.712795+00:00",
@@ -697,12 +705,12 @@
       ],
       "expires_at": "2026-09-24T18:41:08.691529+00:00",
       "importance": "",
-      "last_result_count": 3,
-      "last_run": "2026-09-23T18:41:08.691529+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-09-24T15:40:50.254433+00:00",
       "new_articles": 3,
       "origin": "auto",
-      "planned_at": "2026-09-23T18:41:05.315934+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-09-24T15:40:46.551388+00:00",
+      "queries_run": 2,
       "query": "에너지공단 원자력",
       "score": 3.44,
       "status": "extended",
@@ -713,103 +721,52 @@
         "2026-09-24"
       ],
       "yields": 1,
-      "zero_streak": 0
+      "zero_streak": 1
     },
-    "전력수급내": {
+    "이탈리아상원": {
       "articles": 3,
-      "created_at": "2026-09-23T15:40:28.712795+00:00",
+      "created_at": "2026-09-24T15:40:46.551388+00:00",
       "domains": [
-        "ohmynews.com",
-        "ktv.go.kr",
-        "enertopianews.co.kr"
+        "yna.co.kr",
+        "sbs.co.kr",
+        "newspim.com"
       ],
       "evidence": [
         {
-          "domain": "ohmynews.com",
-          "hash": "df97ce47ff7234e2",
+          "domain": "yna.co.kr",
+          "hash": "8ab6be2e98c42c93",
           "importance": "nice_to_know",
-          "title": "정부, 미래 전력수급 내 원전 역할 논의 위한 공론화 절차 개시"
+          "title": "이탈리아 상원, 원전 복귀 기반 법안 의결"
         },
         {
-          "domain": "ktv.go.kr",
-          "hash": "3af96bf636c53a4b",
+          "domain": "sbs.co.kr",
+          "hash": "41a6e6591e3383bc",
           "importance": "nice_to_know",
-          "title": "정부, 3개월간 원전 역할 및 전력수급 공론화 추진"
+          "title": "이탈리아 상원, 40년 만의 원전 복귀 법안 가결"
         },
         {
-          "domain": "enertopianews.co.kr",
-          "hash": "95aa9f59a341ee11",
-          "importance": "noise",
-          "title": "정부, 미래 전력수급 내 원전 역할 국민과 논의 추진"
+          "domain": "newspim.com",
+          "hash": "f61233e042cc6694",
+          "importance": "must_read",
+          "title": "이탈리아, 원전 부활 법안 최종 통과… 2035년 첫 원자로 가동 목표"
         }
       ],
-      "expires_at": "2026-09-24T15:40:28.712795+00:00",
-      "importance": "nice_to_know",
+      "expires_at": "2026-09-27T15:40:46.551388+00:00",
+      "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-09-24T00:40:21.399058+00:00",
+      "last_run": "2026-09-24T15:40:50.254433+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-09-24T00:40:18.058582+00:00",
-      "queries_run": 2,
-      "query": "전력수급 내 원전",
-      "score": 3.64,
+      "planned_at": "2026-09-24T15:40:46.551388+00:00",
+      "queries_run": 1,
+      "query": "이탈리아 상원 원전",
+      "score": 7.0,
       "status": "tracking",
-      "term": "전력수급 내",
-      "ttl_hours": 24,
+      "term": "이탈리아 상원",
+      "ttl_hours": 72,
       "type": "plant",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 2
-    },
-    "한국에너지공단": {
-      "articles": 8,
-      "created_at": "2026-09-23T15:40:28.712795+00:00",
-      "domains": [
-        "khnp.co.kr",
-        "hankooki.com",
-        "pinpointnews.co.kr",
-        "newsquest.co.kr",
-        "srtimes.kr",
-        "the-pr.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "khnp.co.kr",
-          "hash": "011ab330ad7f3bea",
-          "importance": "noise",
-          "title": "한수원-한국에너지공단, AI 기반 감사혁신 업무협약 체결"
-        },
-        {
-          "domain": "hankooki.com",
-          "hash": "ec0dbc00dc62c521",
-          "importance": "noise",
-          "title": "한수원-한국에너지공단, AI 기반 감사혁신 업무협약 체결"
-        },
-        {
-          "domain": "pinpointnews.co.kr",
-          "hash": "b5d8cea09575180a",
-          "importance": "noise",
-          "title": "한수원-에너지공단, AI 감사기법 공유 협력"
-        }
-      ],
-      "expires_at": "2026-09-24T15:40:32.127429+00:00",
-      "importance": "",
-      "last_result_count": 0,
-      "last_run": "2026-09-24T00:40:21.399058+00:00",
-      "new_articles": 1,
-      "origin": "auto",
-      "planned_at": "2026-09-24T00:40:18.058582+00:00",
-      "queries_run": 2,
-      "query": "한국에너지공단 원자력",
-      "score": 4.0,
-      "status": "extended",
-      "term": "한국에너지공단",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [
-        "2026-09-24"
-      ],
-      "yields": 1,
       "zero_streak": 1
     },
     "해치": {
