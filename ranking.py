@@ -993,6 +993,7 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
                         [list[dict], dict[str, float]],
                         tuple[list[dict], list[dict]]] | None = None,
                     continuity_recheck: Callable[[list[dict]], None] | None = None,
+                    cross_day_review: Callable[[list[dict]], list[dict]] | None = None,
                     ) -> tuple[list[dict], dict]:
     """점수화 → 중복 클러스터 → (의미 dedup) → (연속일 재판정) → (하한) → 다양성 top-k.
 
@@ -1020,6 +1021,10 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
 
             None 이면 이 단계를 건너뛴다 — 첫 판정이 그대로 남으므로 예전과
             같이 동작한다.
+        cross_day_review: 최근 발송분과 **의미로** 같은 사건인지 보는 콜러블.
+            하한을 넘는 상위 후보만 넘긴다. 콜러블이 drop 판정을 `continuity` 에
+            실으면 아래 연속일 제거가 그대로 빼고, 빈자리는 다양성 선별이 채운다.
+            판정 목록을 돌려주면 진단(`cross_day`)에 남긴다. None 이면 건너뛴다.
 
     Returns:
         (선정 리스트, 진단 dict: scores/breakdowns/dropped_duplicates/
@@ -1094,9 +1099,19 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
     # Editorial dedup is the last place a fingerprint/story id can be created, and display
     # promotion used to discard the representative's continuity annotation.  Recheck the actual
     # final story objects, then remove exact repeats before filling the slate.
+    cross_day: list[dict] = []
     if continuity_recheck is not None and kept:
         continuity_recheck(kept)
         refresh_scores(kept)
+        if cross_day_review is not None:
+            # 어휘 판정(위)은 매체가 바뀌면 같은 사건을 못 알아본다(2026-09-25
+            # 이탈리아). 화면에 오를 수 있는 상위 후보만 의미로 한 번 더 본다.
+            ordered = sorted(kept, key=lambda a: scores.get(a.get("hash", ""), 0.0),
+                             reverse=True)
+            if floor:
+                ordered = [a for a in ordered if floor_verdict(a, scores, floor)[0]]
+            head = ordered[:max(k * 2, SEMANTIC_HEAD_MIN)]
+            cross_day = cross_day_review(head) or []
         kept = _remove_continuity_repeats(kept, repeats)
 
     below: list[dict] = []
@@ -1137,6 +1152,9 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
         # 어제(또는 같은 날 다른 지역) 발송분과 같은 이슈인데 단계가 안 움직여
         # 빠진 후보. 감점만 받고 살아남은 것들은 breakdown 의 continuity:* 로 남는다.
         "dropped_repeat": repeats,
+        # 의미 대조(cross_day_review)의 판정 전부. drop=false 인 '같은 사건 +
+        # 새 전개'도 남긴다 — 무엇을 지웠나만큼 무엇을 후속으로 살렸나가 중요하다.
+        "cross_day": cross_day,
         "dropped_below_floor": below,
         "dropped_duplicates": [{"hash": d.get("hash", ""),
                                 "dup_of": d.get("dup_of", ""),

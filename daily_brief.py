@@ -920,7 +920,9 @@ def plan_briefs(queue: list[dict],
     # 제목 유사도가 못 넘는 표기 요동을 의미로 잡는다 — 국내·해외 각 1회, 하루 2회.
     # 국내와 해외를 한 번에 보내지 않는 이유: 지역이 다른 기사가 한 사건으로 묶이면
     # 한쪽 브리핑이 통째로 비는 사고가 난다.
+    import dedup
     from dedup import dedup_articles, editorial_dedup_articles
+    dedup.reset_failures()
 
     # 연속일 반복 게이트 — 선정 **전에** 어제 발송분과 대조한다. 그날 큐 안의
     # 중복은 세 단계(제목·의미·편집)가 이미 잡지만, 어제와 대조하는 자리는
@@ -947,12 +949,17 @@ def plan_briefs(queue: list[dict],
         dom_cont["recheck"] = issue_continuity.annotate(
             rows, recent_sent, cfg, today, generic=dom_generic)
 
+    # 어휘로 못 잡는 연속일 반복을 의미로 대조한다(dedup.cross_day_repeats 주석).
+    dom_sent = dedup.recent_for_cross_day(recent_sent, today)
+
     dom, dom_diag = ranking.rank_and_select(
         dom_pool, DOMESTIC_CAP, cfg, now, ranking.resolve_floor(cfg, "domestic"),
         cap_spec=ranking.resolve_caps(cfg, "domestic"),
         semantic_dedup=dedup_articles,
         editorial_dedup=editorial_dedup_articles,
-        continuity_recheck=dom_recheck)
+        continuity_recheck=dom_recheck,
+        cross_day_review=lambda rows: dedup.cross_day_repeats(
+            rows, dom_sent, label="dedup_cross_day_domestic"))
 
     # 해외 풀은 **국내 선정 결과까지** 어제분에 얹어서 본다. 두 지역이 각자
     # 풀에서 따로 랭킹되므로, 같은 이슈가 국내 1번과 해외 3번을 동시에 차지하는
@@ -967,12 +974,16 @@ def plan_briefs(queue: list[dict],
         forn_cont["recheck"] = issue_continuity.annotate(
             rows, forn_recent, cfg, today, generic=forn_generic)
 
+    forn_sent = dedup.recent_for_cross_day(forn_recent, today)
+
     forn, forn_diag = ranking.rank_and_select(
         forn_pool, FOREIGN_CAP, cfg, now, ranking.resolve_floor(cfg, "overseas"),
         cap_spec=ranking.resolve_caps(cfg, "overseas"),
         semantic_dedup=dedup_articles,
         editorial_dedup=editorial_dedup_articles,
-        continuity_recheck=forn_recheck)
+        continuity_recheck=forn_recheck,
+        cross_day_review=lambda rows: dedup.cross_day_repeats(
+            rows, forn_sent, label="dedup_cross_day_overseas"))
     print(f"[daily_brief] 국내 {len(dom)}건 / 해외 {len(forn)}건 선별 "
           f"(중복 제거 {len(dom_diag['dropped_duplicates']) + len(forn_diag['dropped_duplicates'])}건, "
           f"하한 미달 {len(dom_diag['dropped_below_floor']) + len(forn_diag['dropped_below_floor'])}건, "
@@ -1167,6 +1178,10 @@ def plan_briefs(queue: list[dict],
     quality_diag = {
         "held_before_ranking": quality_held,
         "final_cards": card_audits + social_card_audits,
+        # 중복 판정 LLM 이 폴백까지 실패해 '전량 유지'로 넘어간 단계. 판정 없이
+        # 나간 날은 운영 알림으로 올린다(append_quality_audit).
+        "dedup_failures": list(dedup.LLM_FAILURES),
+        "cross_day": (dom_diag.get("cross_day") or []) + (forn_diag.get("cross_day") or []),
         "summary": {
             "held": len(quality_held),
             "fallback_held": sum(1 for row in quality_held if row.get("status") == "fallback"),
@@ -1515,6 +1530,28 @@ def append_quality_audit(outbox: dict, path: Path | None = None,
     other_held = [row for row in held if row not in fallback and row not in integrity]
     final_quarantine = [row for row in cards if row.get("action") == "quarantine"]
     sanitized = [row for row in cards if row.get("action") == "sanitize"]
+    dedup_failures = [row for row in (diag.get("dedup_failures") or [])
+                      if isinstance(row, dict)]
+    if dedup_failures:
+        # 판정을 못 했다고 뉴스를 지울 수는 없어 후보를 유지하고 나갔다. 그 사실이
+        # 로그 한 줄로 끝나면 같은 뉴스가 또 나간 날 원인을 아무도 모른다
+        # (2026-09-25 editorial_final 503). 폴백 모델까지 실패한 경우라 드물다 —
+        # 첫 관측에 알린다.
+        stages = sorted({str(row.get("stage") or "") for row in dedup_failures} - {""})
+        specs.append({
+            "alert_key": "dedup-review-failed",
+            "title": "중복 뉴스 검사를 하지 못하고 브리핑을 보냈습니다",
+            "detail": (f"같은 뉴스인지 확인하는 단계({', '.join(stages)})가 외부 AI 오류로 "
+                       f"실패해 검사 없이 발송했습니다."),
+            "impact": "같은 뉴스가 겹치거나 전날 뉴스가 다시 실렸을 수 있습니다.",
+            "action": "며칠째 반복되면 외부 AI 상태·키를 확인해 주세요.",
+            "technical": "; ".join(f"{row.get('stage')}: {str(row.get('error') or '')[:80]}"
+                                   for row in dedup_failures[:4]),
+            "level": "attention",
+            "severity": "warning", "min_occurrences": 1, "items": dedup_failures,
+            "fingerprint": operational_monitoring.count_fingerprint(
+                "dedup-failed", len(dedup_failures)),
+        })
 
     # 아래 넷은 전부 **안전장치가 제대로 작동한 결과**다. 문제 데이터를 빼고
     # 나머지는 정상 발송했다는 뜻이므로 장애로 표시하지 않는다. severity 는

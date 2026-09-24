@@ -86,7 +86,17 @@ class FrozenProductionRequestTests(unittest.TestCase):
                 recorder = Recorder()
                 kept, dropped = call(list(self.fixture["articles"]), scores,
                                      client=recorder)
-                self._assert_matches(kind, recorder.calls)
+                # 첫 요청이 production 요청이다. 실패하면 반대 버킷 모델로 **같은
+                # 요청**을 한 번 더 보낸다(2026-09-25 editorial_final 503 대응) —
+                # 달라지는 것은 모델 하나뿐이어야 한다.
+                self._assert_matches(kind, recorder.calls[:1])
+                self.assertEqual(len(recorder.calls), 2)
+                first, fallback = recorder.calls
+                self.assertEqual(fallback["system"], first["system"])
+                self.assertEqual(fallback["user"], first["user"])
+                self.assertEqual({k: v for k, v in fallback["options"].items() if k != "model"},
+                                 {k: v for k, v in first["options"].items() if k != "model"})
+                self.assertNotEqual(fallback["options"]["model"], first["options"]["model"])
                 # 실패는 fail-open 이다. 이 성질이 바뀌면 dedup 안전 지표의 의미가
                 # 통째로 달라지므로 여기서 함께 붙잡아 둔다.
                 self.assertEqual(len(kept), len(self.fixture["articles"]))
