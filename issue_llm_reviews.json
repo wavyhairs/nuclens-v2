@@ -654,6 +654,17 @@
       "right_title": "미국 텍사스주, 전력망 감사 완료까지 데이터센터 인허가 중단",
       "same_event": false
     },
+    "00aad362904a51bf--341b2c6cce9e8607": {
+      "embedding_similarity": 0.872,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 오하이오주, 데이터센터 전력·용수 사용 논란 선거 쟁점화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "오하이오주 논란과 지역 제도 폐지",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미국 일부 지역, 데이터센터 자동 승인 제도 폐지",
+      "same_event": false
+    },
     "00aad362904a51bf--37800222f991e8b7": {
       "embedding_similarity": 0.8879,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -950,6 +961,17 @@
       "reviewed_at": "2026-09-19T20:53:16.110056+00:00",
       "right_title": "트럼프, AI 데이터센터 반대 지역에 경제적 낙후 경고",
       "same_event": true
+    },
+    "00aad362904a51bf--ca4db4b73f9f2015": {
+      "embedding_similarity": 0.8539,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 오하이오주, 데이터센터 전력·용수 사용 논란 선거 쟁점화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "선거 쟁점과 FERC 전력계약은 다른 사안임",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미 FERC, 1.8GW 데이터센터 전력계약 취소 통지 거부",
+      "same_event": false
     },
     "00aad362904a51bf--cb59a8015639dd30": {
       "embedding_similarity": 0.8647,
@@ -25672,6 +25694,17 @@
       "right_title": "미 에너지부, 지열 에너지 개발 프로젝트에 9,900만 달러 지원",
       "same_event": false
     },
+    "0bc976d9b4efc42d--c5acbde6bff5c3ae": {
+      "embedding_similarity": 0.8505,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미 에너지부, 지열 에너지 개발 프로젝트에 9,900만 달러 지원",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "지열 에너지와 전력망 투자로 사안이 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "same_event": false
+    },
     "0bc976d9b4efc42d--e009af115f0ba074": {
       "embedding_similarity": 0.8541,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -29581,11 +29614,12 @@
     },
     "0f02b7003aadf9bc--ffed13994a4c38e4": {
       "embedding_similarity": 0.8429,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "기후에너지환경부, 2027년 예산 25.7조 편성…전력망 및 SMR 기술 집중 투자",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "정부 정책과 기금 조성은 별개",
-      "reviewed_at": "2026-09-04T19:21:20.456055+00:00",
+      "reason": "기후부 예산과 반도체 기금은 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
       "right_title": "정부, 반도체 초과세수 활용 '미래대응기금' 조성 추진",
       "same_event": false
     },
@@ -29602,13 +29636,14 @@
     },
     "0f2cfb3ea62ea7a5--35258fc2445fec63": {
       "embedding_similarity": 0.8763,
-      "left_title": "과기정통부, 2027년 예산 29.6조 원 편성…SMR 등 7대 시드 프로젝트 추진",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 820조원 규모 2027년 예산안 편성…SMR 등 10대 전략기술 투자",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "정부 예산안 및 SMR 전략기술 투자의 동일 사안",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "정부, 820조원 규모 2027년 예산안 편성…SMR 등 10대 전략기술 투자",
-      "same_event": true
+      "reason": "총괄 예산안과 과기정통부 세부 예산은 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "과기정통부, 2027년 예산 29.6조 원 편성…SMR 등 7대 시드 프로젝트 추진",
+      "same_event": false
     },
     "0f2cfb3ea62ea7a5--6ca36fe31334fe1a": {
       "embedding_similarity": 0.8578,
@@ -29623,22 +29658,24 @@
     },
     "0f2cfb3ea62ea7a5--706bd2b20f78dfa3": {
       "embedding_similarity": 0.8491,
-      "left_title": "원안위, 2027년 예산 3,030억 편성…SMR 규제체계 및 상시검사 강화",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 820조원 규모 2027년 예산안 편성…SMR 등 10대 전략기술 투자",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "원안위와 정부 전체의 예산안 편성으로 주체와 세부 사안이 다름",
-      "reviewed_at": "2026-09-02T22:06:43.202034+00:00",
-      "right_title": "정부, 820조원 규모 2027년 예산안 편성…SMR 등 10대 전략기술 투자",
+      "reason": "총괄 예산안과 원안위 세부 예산은 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "원안위, 2027년 예산 3,030억 편성…SMR 규제체계 및 상시검사 강화",
       "same_event": false
     },
     "0f2cfb3ea62ea7a5--77f943b6f74f4e27": {
       "embedding_similarity": 0.8439,
-      "left_title": "정부, SMR 제조·공급망 구축 지원에 235억원 배정",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 820조원 규모 2027년 예산안 편성…SMR 등 10대 전략기술 투자",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "SMR 공급망 지원 예산과 정부 전체 예산안 편성은 별개의 사안임",
-      "reviewed_at": "2026-09-02T22:06:43.202034+00:00",
-      "right_title": "정부, 820조원 규모 2027년 예산안 편성…SMR 등 10대 전략기술 투자",
+      "reason": "총괄 예산안과 SMR 공급망 지원은 별개 사안임",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "정부, SMR 제조·공급망 구축 지원에 235억원 배정",
       "same_event": false
     },
     "0f2cfb3ea62ea7a5--80d868494eefad16": {
@@ -29674,12 +29711,13 @@
     },
     "0f3dd936d7842ab6--178ba7a8cca04c97": {
       "embedding_similarity": 0.8489,
-      "left_title": "미국 트럼프 대통령, 사우디와 123 원자력협정안 의회 제출",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한미정상회담 추진 가능성 제기…핵연료주기 권한 확대 논의 주목",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "사우디 123 협정과 한미정상회담 논의는 다른 사안",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
-      "right_title": "한미정상회담 추진 가능성 제기…핵연료주기 권한 확대 논의 주목",
+      "reason": "한미정상회담과 사우디 123협정은 다른 사안임",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미국 트럼프 대통령, 사우디와 123 원자력협정안 의회 제출",
       "same_event": false
     },
     "0f3dd936d7842ab6--bb9449abc3de8062": {
@@ -29695,13 +29733,14 @@
     },
     "0f3dd936d7842ab6--e40a9585f266cf82": {
       "embedding_similarity": 0.8632,
-      "left_title": "한미 원자력협정 개정 및 후속 협의 지연",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한미정상회담 추진 가능성 제기…핵연료주기 권한 확대 논의 주목",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "한미 원자력협정 및 핵연료주기 관련 후속 보도",
-      "reviewed_at": "2026-08-24T09:58:47.385413+00:00",
-      "right_title": "한미정상회담 추진 가능성 제기…핵연료주기 권한 확대 논의 주목",
-      "same_event": true
+      "reason": "정상회담 추진과 원자력협정 지연은 다른 사안임",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "한미 원자력협정 개정 및 후속 협의 지연",
+      "same_event": false
     },
     "0f48c254eb5e752b--bd711166efdeeefc": {
       "embedding_similarity": 0.8587,
@@ -29952,12 +29991,13 @@
     },
     "0fae3fb5765bcb5f--9b707d5bc0e90593": {
       "embedding_similarity": 0.85,
-      "left_title": "전남광주통합특별시의회, SK 100조원 투자 지원 예고",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "광양시, 포스코·SK에 AI 데이터센터 및 신산업 투자 유치 총력",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "지자체별 투자 유치 대상과 주체가 다름",
-      "reviewed_at": "2026-09-04T03:54:55.777389+00:00",
-      "right_title": "광양시, 포스코·SK에 AI 데이터센터 및 신산업 투자 유치 총력",
+      "reason": "지자체와 안건이 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "전남광주통합특별시의회, SK 100조원 투자 지원 예고",
       "same_event": false
     },
     "0fc238eb48abef79--19a3d563cf1ee589": {
@@ -29973,22 +30013,24 @@
     },
     "0fc238eb48abef79--33b53bc5a243a876": {
       "embedding_similarity": 0.8696,
-      "left_title": "AI 생태계 육성 위한 3대 메가 프로젝트, 전력·인허가 불확실성 해소 필요",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "이재명 대통령, AI 3대 메가프로젝트 및 공급망 거점 도약 비전 강조",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "불확실성 지적과 대통령 비전 강조는 다름",
-      "reviewed_at": "2026-08-26T13:04:42.689211+00:00",
-      "right_title": "이재명 대통령, AI 3대 메가프로젝트 및 공급망 거점 도약 비전 강조",
+      "reason": "정부 정책과 과기부 예산은 별개 사안",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "AI 생태계 육성 위한 3대 메가 프로젝트, 전력·인허가 불확실성 해소 필요",
       "same_event": false
     },
     "0fc238eb48abef79--35258fc2445fec63": {
       "embedding_similarity": 0.8449,
-      "left_title": "과기정통부, 2027년 예산 29.6조 원 편성…SMR 등 7대 시드 프로젝트 추진",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "이재명 대통령, AI 3대 메가프로젝트 및 공급망 거점 도약 비전 강조",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "과기정통부 예산안과 대통령 비전 발표는 별개",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "이재명 대통령, AI 3대 메가프로젝트 및 공급망 거점 도약 비전 강조",
+      "reason": "대통령 비전 발표와 과기부 예산 편성은 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "과기정통부, 2027년 예산 29.6조 원 편성…SMR 등 7대 시드 프로젝트 추진",
       "same_event": false
     },
     "0fc238eb48abef79--3a1c685e8e8036ef": {
@@ -30015,12 +30057,13 @@
     },
     "0fc238eb48abef79--959a0bd83cc42eea": {
       "embedding_similarity": 0.873,
-      "left_title": "정부, 18.4GW AI 데이터센터 메가프로젝트 추진 및 특별법 제정",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "이재명 대통령, AI 3대 메가프로젝트 및 공급망 거점 도약 비전 강조",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "메가프로젝트 추진과 비전 강조",
-      "reviewed_at": "2026-08-26T07:01:13.621309+00:00",
-      "right_title": "이재명 대통령, AI 3대 메가프로젝트 및 공급망 거점 도약 비전 강조",
+      "reason": "대통령 발언과 정부 메가프로젝트 추진은 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "정부, 18.4GW AI 데이터센터 메가프로젝트 추진 및 특별법 제정",
       "same_event": false
     },
     "0fc238eb48abef79--d1e54858467d9da4": {
@@ -30035,13 +30078,14 @@
     },
     "0fc238eb48abef79--d1e966b5772613fd": {
       "embedding_similarity": 0.8725,
-      "left_title": "이재명 대통령, SMR·양자컴 등 7대 성장동력으로 AI 시대 대비 강조",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "이재명 대통령, AI 3대 메가프로젝트 및 공급망 거점 도약 비전 강조",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "성장동력 강조와 메가프로젝트 비전",
-      "reviewed_at": "2026-08-26T07:01:13.621309+00:00",
-      "right_title": "이재명 대통령, AI 3대 메가프로젝트 및 공급망 거점 도약 비전 강조",
-      "same_event": false
+      "reason": "대통령의 동일한 AI 및 SMR 관련 강조 보도",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "이재명 대통령, SMR·양자컴 등 7대 성장동력으로 AI 시대 대비 강조",
+      "same_event": true
     },
     "0fcebff15941fdb4--41960dd1740dddb9": {
       "embedding_similarity": 0.8526,
@@ -30067,12 +30111,13 @@
     },
     "0fcebff15941fdb4--66738c9585266a88": {
       "embedding_similarity": 0.8431,
-      "left_title": "포항시, 현대중공업터보기계 투자 유치로 SMR 기자재 생산 거점화",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "경주시, 미래전략산업 투자유치 강화…SMR 등 기업 공략",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "포항시 투자유치와 경주시 투자는 주체가 다름",
-      "reviewed_at": "2026-09-01T09:53:31.976312+00:00",
-      "right_title": "경주시, 미래전략산업 투자유치 강화…SMR 등 기업 공략",
+      "reason": "경주 투자유치와 포항 현대중공업터보기계 유치는 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "포항시, 현대중공업터보기계 투자 유치로 SMR 기자재 생산 거점화",
       "same_event": false
     },
     "0fcebff15941fdb4--72888f93b36f1d3a": {
@@ -30131,12 +30176,13 @@
     },
     "0fcebff15941fdb4--c15a88cbebc4b653": {
       "embedding_similarity": 0.8571,
-      "left_title": "경주시, 2027년 국·도비 확보 위해 SMR 제작지원센터 등 건의",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "경주시, 미래전략산업 투자유치 강화…SMR 등 기업 공략",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "경주시 국도비 건의와 투자유치는 다른 사안임",
-      "reviewed_at": "2026-09-01T09:53:31.976312+00:00",
-      "right_title": "경주시, 미래전략산업 투자유치 강화…SMR 등 기업 공략",
+      "reason": "투자유치와 국도비 건의 사업은 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "경주시, 2027년 국·도비 확보 위해 SMR 제작지원센터 등 건의",
       "same_event": false
     },
     "0fcebff15941fdb4--e95bbb3445c5f10a": {
@@ -30152,12 +30198,13 @@
     },
     "0fd40747f57a11c6--2c8c37e2574cf314": {
       "embedding_similarity": 0.844,
-      "left_title": "두산퓨얼셀, 미국 AI 데이터센터 전력 시장 진출",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국내 전력기기 3사, 북미 AI 데이터센터 수요로 수주잔고 급증",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "개별 기업 진출과 전력기기 3사 업계 동향",
-      "reviewed_at": "2026-09-04T19:21:20.456055+00:00",
-      "right_title": "국내 전력기기 3사, 북미 AI 데이터센터 수요로 수주잔고 급증",
+      "reason": "전력기기 3사 일반 동향과 두산퓨얼셀 수주는 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "두산퓨얼셀, 미국 AI 데이터센터 전력 시장 진출",
       "same_event": false
     },
     "0fd40747f57a11c6--55c18ff863c4429c": {
@@ -30172,12 +30219,13 @@
     },
     "0fd40747f57a11c6--78926903156f16fa": {
       "embedding_similarity": 0.8632,
-      "left_title": "HD현대중공업, 미국 데이터센터용 9560억 원 규모 발전설비 수주",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국내 전력기기 3사, 북미 AI 데이터센터 수요로 수주잔고 급증",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "개별 기업 수주와 업계 전반의 동향",
-      "reviewed_at": "2026-08-19T09:43:49.513709+00:00",
-      "right_title": "국내 전력기기 3사, 북미 AI 데이터센터 수요로 수주잔고 급증",
+      "reason": "업계 동향과 HD현대중공업 개별 수주는 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "HD현대중공업, 미국 데이터센터용 9560억 원 규모 발전설비 수주",
       "same_event": false
     },
     "0fd40747f57a11c6--7bc06b0dde0d292a": {
@@ -30192,12 +30240,13 @@
     },
     "0fd40747f57a11c6--83244884e53b5562": {
       "embedding_similarity": 0.8701,
-      "left_title": "트럼프 행정부, 핵심 전력망 외국산 기기 제한 행정명령 서명",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국내 전력기기 3사, 북미 AI 데이터센터 수요로 수주잔고 급증",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "미국 행정명령과 국내 전력기기사 수주 증가 동향임",
-      "reviewed_at": "2026-08-30T21:18:34.460078+00:00",
-      "right_title": "국내 전력기기 3사, 북미 AI 데이터센터 수요로 수주잔고 급증",
+      "reason": "수주잔고 급증과 미국 행정명령은 별개 사건",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "트럼프 행정부, 핵심 전력망 외국산 기기 제한 행정명령 서명",
       "same_event": false
     },
     "0fd40747f57a11c6--a906966348221102": {
@@ -30212,22 +30261,24 @@
     },
     "0fd40747f57a11c6--c9f1242ff12ab32a": {
       "embedding_similarity": 0.8865,
-      "left_title": "LS일렉트릭, 북미 데이터센터 배전 시장서 1.2조 원 수주",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국내 전력기기 3사, 북미 AI 데이터센터 수요로 수주잔고 급증",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "북미 배전 시장 수주 실적 동일",
-      "reviewed_at": "2026-08-19T06:56:25.436270+00:00",
-      "right_title": "국내 전력기기 3사, 북미 AI 데이터센터 수요로 수주잔고 급증",
-      "same_event": true
+      "reason": "업계 동향과 LS일렉트릭 개별 수주는 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "LS일렉트릭, 북미 데이터센터 배전 시장서 1.2조 원 수주",
+      "same_event": false
     },
     "0fd40747f57a11c6--e000f116b94e6aa9": {
       "embedding_similarity": 0.8687,
-      "left_title": "HD현대일렉트릭, 美 크레인 원전 재가동 프로젝트에 변압기 공급",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국내 전력기기 3사, 북미 AI 데이터센터 수요로 수주잔고 급증",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "개별 기업(HD현대)의 수주와 전체 기기 3사의 동향은 다름",
-      "reviewed_at": "2026-08-21T06:59:08.475878+00:00",
-      "right_title": "국내 전력기기 3사, 북미 AI 데이터센터 수요로 수주잔고 급증",
+      "reason": "수주잔고 급증 보도와 HD현대일렉트릭 변압기 공급은 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "HD현대일렉트릭, 美 크레인 원전 재가동 프로젝트에 변압기 공급",
       "same_event": false
     },
     "0fe1e5be66a5cb09--198277cd2a64d1ea": {
@@ -30781,21 +30832,23 @@
     },
     "0fe72c91dc24354b--6a34f042735ece18": {
       "embedding_similarity": 0.8637,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "웨스팅하우스-아멘텀, APX SMR 플릿 배치 역량 확대를 위한 파트너십 체결",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "SMR 파트너십과 원자력 추진 상선",
-      "reviewed_at": "2026-08-25T07:01:01.656726+00:00",
+      "reason": "웨스팅하우스 파트너십과 미국-영국 해운 협력은 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
       "right_title": "미국 해사청-영국 코어파워, 원자력 추진 상선 개발 협력 각서 체결",
       "same_event": false
     },
     "0fe72c91dc24354b--6b44ee4146ad6b25": {
       "embedding_similarity": 0.8481,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "웨스팅하우스-아멘텀, APX SMR 플릿 배치 역량 확대를 위한 파트너십 체결",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "웨스팅하우스 파트너십과 두산 공급 계약은 별개",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "웨스팅하우스 파트너십과 두산에너빌리티 계약은 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
       "right_title": "두산에너빌리티, 미국 3대 SMR 기업과 공급 계약 체결",
       "same_event": false
     },
@@ -39272,6 +39325,17 @@
       "right_title": "미국 라우든 카운티, 신규 데이터센터 건설 1년 유예 결의",
       "same_event": false
     },
+    "17494159e9693304--341b2c6cce9e8607": {
+      "embedding_similarity": 0.8783,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 10여 개 주, 데이터센터 세금 감면 혜택 중단 및 축소",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "세금 감면 중단과 지역 제도 폐지",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미국 일부 지역, 데이터센터 자동 승인 제도 폐지",
+      "same_event": false
+    },
     "17494159e9693304--37800222f991e8b7": {
       "embedding_similarity": 0.8937,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -39952,6 +40016,17 @@
       "reason": "서로 다른 데이터센터 규제",
       "reviewed_at": "2026-09-09T21:10:07.654666+00:00",
       "right_title": "미 SEC, AI 데이터센터 자산유동화증권(ABS) 위험보유 규제 면제",
+      "same_event": false
+    },
+    "17494159e9693304--ca4db4b73f9f2015": {
+      "embedding_similarity": 0.8645,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 10여 개 주, 데이터센터 세금 감면 혜택 중단 및 축소",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "세금 감면과 FERC 전력계약은 다른 사안임",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미 FERC, 1.8GW 데이터센터 전력계약 취소 통지 거부",
       "same_event": false
     },
     "17494159e9693304--cb59a8015639dd30": {
@@ -48851,6 +48926,17 @@
       "reviewed_at": "2026-09-22T18:58:39.051114+00:00",
       "right_title": "테라파워(TerraPower), 나트륨(Natrium) 원전 EPC 계약 재입찰 추진",
       "same_event": false
+    },
+    "1a5d92dbd0371e7c--e7ca8aec0646c414": {
+      "embedding_similarity": 0.9063,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "테라파워(TerraPower), 나트륨(Natrium) 원전 EPC 계약 재입찰 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "나트륨 원전 EPC 재입찰과 벡텔 제외",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "벡텔(Bechtel), 나트륨(Natrium) 프로젝트 EPC 사업자에서 제외",
+      "same_event": true
     },
     "1a5d92dbd0371e7c--ef379b05444c5a2f": {
       "embedding_similarity": 0.8485,
@@ -58712,6 +58798,39 @@
       "right_title": "원자력학회 등, AI 시대 전원믹스 및 시장제도 심포지움 개최",
       "same_event": false
     },
+    "22db5095717038d6--4d2f3fff4e759e9f": {
+      "embedding_similarity": 0.865,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "NERC, 데이터센터 전력망 연결 관련 신규 규제 도입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "규제 도입과 일반적 동향은 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "빅테크 AI 인프라 투자 확대와 전력망 병목 현상 심화",
+      "same_event": false
+    },
+    "22db5095717038d6--afac0f147faf133c": {
+      "embedding_similarity": 0.8618,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미 하원, 데이터센터 전력망 확충 비용 부담 법안 가결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "법안 가결과 인프라 투자 동향은 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "빅테크 AI 인프라 투자 확대와 전력망 병목 현상 심화",
+      "same_event": false
+    },
+    "22db5095717038d6--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8576,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스 허가 중단과 일반적 인프라 동향",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "빅테크 AI 인프라 투자 확대와 전력망 병목 현상 심화",
+      "same_event": false
+    },
     "22eb499b8d4883d2--2eba66f067fdc974": {
       "embedding_similarity": 0.8433,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -63146,6 +63265,17 @@
       "reason": "서로 다른 주체와 사안의 뉴스임",
       "reviewed_at": "2026-09-11T18:48:51.490301+00:00",
       "right_title": "인도 요타, 16조원 규모 데이터센터에 엔비디아 GPU 8만개 배치",
+      "same_event": false
+    },
+    "262a0452c1ac89dc--bdb0ea1d9afd545f": {
+      "embedding_similarity": 0.8426,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "브룩필드, 네이버 AI 팩토리 구축 사업 전략 파트너십 공식화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 대상이 완전히 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "비트코인 채굴기업 룩소르, AI 데이터센터 에너지 공급 사업 진출",
       "same_event": false
     },
     "262a0452c1ac89dc--c08e54a445fa76f0": {
@@ -77794,6 +77924,17 @@
       "right_title": "미국 웨스팅하우스, 사업 확대 위한 상장 추진",
       "same_event": false
     },
+    "2eba66f067fdc974--cd0dbf646d4f6fb3": {
+      "embedding_similarity": 0.8495,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한수원-웨스팅하우스, 미국 내 원전 8기 건설 협력 잠정 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "미국 내 건설과 폴란드 EPC는 별개",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "폴란드 원전 EPC 계약 협상 다음 단계 진입",
+      "same_event": false
+    },
     "2eba66f067fdc974--d0acb6732cea6ae5": {
       "embedding_similarity": 0.8578,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -84656,6 +84797,83 @@
       "reviewed_at": "2026-08-14T01:04:51.606120+00:00",
       "right_title": "원전 수출에 '안전 및 규제체계 협력' 강화 업무협약 체결",
       "same_event": true
+    },
+    "341b2c6cce9e8607--4d2f3fff4e759e9f": {
+      "embedding_similarity": 0.8579,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "NERC, 데이터센터 전력망 연결 관련 신규 규제 도입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "NERC 규제와 지역별 자동 승인 폐지",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미국 일부 지역, 데이터센터 자동 승인 제도 폐지",
+      "same_event": false
+    },
+    "341b2c6cce9e8607--67c693714bcd14b1": {
+      "embedding_similarity": 0.8534,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "美 인디애나 주지사, 데이터센터 전력 100% 자체 조달 요구",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "인디애나 주지사 요구와 지역 제도 폐지",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미국 일부 지역, 데이터센터 자동 승인 제도 폐지",
+      "same_event": false
+    },
+    "341b2c6cce9e8607--9cfd425260ba57a7": {
+      "embedding_similarity": 0.8607,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "글로벌 데이터센터 전력망 및 환경 규제 강화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "글로벌 규제와 미국 지역 제도는 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미국 일부 지역, 데이터센터 자동 승인 제도 폐지",
+      "same_event": false
+    },
+    "341b2c6cce9e8607--9da3b3a22e47eb16": {
+      "embedding_similarity": 0.8469,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "글로벌 기업, 데이터센터 입지 선정 시 기후 리스크 필수 평가",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "기후 리스크 평가와 지역 제도 폐지",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미국 일부 지역, 데이터센터 자동 승인 제도 폐지",
+      "same_event": false
+    },
+    "341b2c6cce9e8607--afac0f147faf133c": {
+      "embedding_similarity": 0.8541,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미 하원, 데이터센터 전력망 확충 비용 부담 법안 가결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "하원 법안과 지역 제도 폐지",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미국 일부 지역, 데이터센터 자동 승인 제도 폐지",
+      "same_event": false
+    },
+    "341b2c6cce9e8607--d4e027c4a33d5af6": {
+      "embedding_similarity": 0.8741,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 버지니아주, 공청회 공고 절차 위반으로 AI 데이터센터 건립 무효화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "버지니아주 건립 무효화와 지역 제도 폐지",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미국 일부 지역, 데이터센터 자동 승인 제도 폐지",
+      "same_event": false
+    },
+    "341b2c6cce9e8607--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8525,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스 허가 중단과 지역 제도 폐지",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미국 일부 지역, 데이터센터 자동 승인 제도 폐지",
+      "same_event": false
     },
     "341fae7beffafdcb--34b54b6a74dfabbb": {
       "embedding_similarity": 0.8666,
@@ -129038,6 +129256,17 @@
       "right_title": "미국 전력설비 업계, AI 데이터센터 수요 급증으로 일감 폭주",
       "same_event": false
     },
+    "4d2f3fff4e759e9f--bdb0ea1d9afd545f": {
+      "embedding_similarity": 0.854,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "NERC, 데이터센터 전력망 연결 관련 신규 규제 도입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 대상이 완전히 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "비트코인 채굴기업 룩소르, AI 데이터센터 에너지 공급 사업 진출",
+      "same_event": false
+    },
     "4d2f3fff4e759e9f--c49f3fc911644c23": {
       "embedding_similarity": 0.856,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -160198,6 +160427,17 @@
       "right_title": "HD현대, AI 데이터센터 전력 인프라 시장 공략 가속",
       "same_event": false
     },
+    "618699d25c6e6a21--bdb0ea1d9afd545f": {
+      "embedding_similarity": 0.8478,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "두산퓨얼셀, 미국 AI 데이터센터용 연료전지 3222억원 추가 수주",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 대상이 완전히 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "비트코인 채굴기업 룩소르, AI 데이터센터 에너지 공급 사업 진출",
+      "same_event": false
+    },
     "618699d25c6e6a21--be582b7454d752a7": {
       "embedding_similarity": 0.8401,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -168220,6 +168460,17 @@
       "reason": "인디애나 주지사와 트럼프의 별개 발언",
       "reviewed_at": "2026-09-07T09:49:37.126611+00:00",
       "right_title": "트럼프, AI 데이터센터 반대 지역에 경제적 낙후 경고",
+      "same_event": false
+    },
+    "67c693714bcd14b1--ca4db4b73f9f2015": {
+      "embedding_similarity": 0.8633,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "美 인디애나 주지사, 데이터센터 전력 100% 자체 조달 요구",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주지사 요구와 FERC 결정은 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미 FERC, 1.8GW 데이터센터 전력계약 취소 통지 거부",
       "same_event": false
     },
     "67c693714bcd14b1--cb59a8015639dd30": {
@@ -195604,6 +195855,17 @@
       "right_title": "이탈리아, 에너지 안보 강화 위해 36년 만에 원전 복귀 결정",
       "same_event": true
     },
+    "7c2474bbb614138c--a8e58001db5c998b": {
+      "embedding_similarity": 0.8684,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "이탈리아, 에너지 안보 강화 위해 36년 만에 원전 복귀 결정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "이탈리아의 원전 복귀 추진 관련",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "이탈리아, 원자력 발전 재개 검토",
+      "same_event": true
+    },
     "7c2474bbb614138c--b0a45ddf95efb4e3": {
       "embedding_similarity": 0.8908,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -215126,6 +215388,17 @@
       "right_title": "울진군 등 원전 소재 지자체, 사용후핵연료 건식저장시설 지원방안 선제적 요구",
       "same_event": false
     },
+    "9280bb770c9a48c7--a8e58001db5c998b": {
+      "embedding_similarity": 0.8648,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "이탈리아, 45년 만에 탈원전 폐기 및 2035년 원전 재개 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "이탈리아의 원전 재개 관련 동일 사안",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "이탈리아, 원자력 발전 재개 검토",
+      "same_event": true
+    },
     "9280bb770c9a48c7--b0a45ddf95efb4e3": {
       "embedding_similarity": 0.8721,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -229540,6 +229813,17 @@
       "right_title": "정부, 2040년 최대전력 수요 165GW 전망…전력 확보 과제",
       "same_event": false
     },
+    "a3e4a75a5aa84bef--bcee3cc819a64b2a": {
+      "embedding_similarity": 0.8431,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "인도 요타, 16조원 규모 데이터센터에 엔비디아 GPU 8만개 배치",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 다루는 내용이 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "엔비디아 루빈 플랫폼 도입에 따른 전력반도체 및 냉각 부품 수요 급증",
+      "same_event": false
+    },
     "a3e57010d24635a7--a5a1ef68231b4e51": {
       "embedding_similarity": 0.8477,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -233015,6 +233299,17 @@
       "right_title": "정부, 산업용 전기요금 지역별 차등화 추진…한전 연간 3조원 수입 감소 전망",
       "same_event": false
     },
+    "a8e58001db5c998b--b0a45ddf95efb4e3": {
+      "embedding_similarity": 0.8611,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "이탈리아, 에너지 위기 대응 위해 40년 만에 원전 부활법 통과",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "이탈리아 원전 부활 관련 보도",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "이탈리아, 원자력 발전 재개 검토",
+      "same_event": true
+    },
     "a8f70eee44a629c0--f0fd1d874206e5fe": {
       "embedding_similarity": 0.867,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -236293,6 +236588,17 @@
       "right_title": "미 SEC, AI 데이터센터 자산유동화증권(ABS) 위험보유 규제 면제",
       "same_event": false
     },
+    "ae1881fd98d4b999--ca4db4b73f9f2015": {
+      "embedding_similarity": 0.8528,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 하원, AI 데이터센터 전력 비용 부담 의무화 법안 본회의 상정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "입법부 법안과 규제기관 결정은 다른 사안임",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미 FERC, 1.8GW 데이터센터 전력계약 취소 통지 거부",
+      "same_event": false
+    },
     "ae1881fd98d4b999--cb59a8015639dd30": {
       "embedding_similarity": 0.8611,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -237777,6 +238083,17 @@
       "reason": "하원 법안과 에너지부 송전 회랑 중단은 다름",
       "reviewed_at": "2026-09-17T19:28:50.498738+00:00",
       "right_title": "미 에너지부, 국가중요 송전 회랑 3곳 지정 절차 중단",
+      "same_event": false
+    },
+    "afac0f147faf133c--bdb0ea1d9afd545f": {
+      "embedding_similarity": 0.8485,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미 하원, 데이터센터 전력망 확충 비용 부담 법안 가결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 대상이 완전히 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "비트코인 채굴기업 룩소르, AI 데이터센터 에너지 공급 사업 진출",
       "same_event": false
     },
     "afac0f147faf133c--c041a2e0e6c1b779": {
@@ -247068,6 +247385,17 @@
       "right_title": "미국 농무부(USDA), 농촌 지역 원자력 도입 지원",
       "same_event": true
     },
+    "bda5f625aa462afc--c5acbde6bff5c3ae": {
+      "embedding_similarity": 0.843,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미 농무부(USDA), 농촌 전력협동조합 대상 1.75억 달러 원전 지원 프로그램 신설",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "지원 주체 및 대상 사업이 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "same_event": false
+    },
     "bda5f625aa462afc--f6cca926ebb3cd2c": {
       "embedding_similarity": 0.8517,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -247088,6 +247416,39 @@
       "reason": "주제는 유사하나 구체적 사안이 다름",
       "reviewed_at": "2026-09-20T19:25:36.710897+00:00",
       "right_title": "정부, 호르무즈 파병 및 대미 투자 등 한미 현안 논의 지속",
+      "same_event": false
+    },
+    "bdb0ea1d9afd545f--ef8497efb48823ba": {
+      "embedding_similarity": 0.8453,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "ONE Nuclear, 루이지애나 데이터센터 연계 2.88GW 원전 프로젝트 의향서 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 대상이 완전히 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "비트코인 채굴기업 룩소르, AI 데이터센터 에너지 공급 사업 진출",
+      "same_event": false
+    },
+    "bdb0ea1d9afd545f--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8408,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 대상이 완전히 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "비트코인 채굴기업 룩소르, AI 데이터센터 에너지 공급 사업 진출",
+      "same_event": false
+    },
+    "bdb0ea1d9afd545f--f6cca926ebb3cd2c": {
+      "embedding_similarity": 0.8454,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미 에너지부, 구글 전력 공급용 듀안 아널드 원전 재가동에 19억 달러 대출",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 대상이 완전히 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "비트코인 채굴기업 룩소르, AI 데이터센터 에너지 공급 사업 진출",
       "same_event": false
     },
     "bdb54a326e1c83c0--d2b22e8f275e5662": {
@@ -253336,6 +253697,39 @@
       "reason": "빅테크 투자 일반 동향과 개별 기업 협력",
       "reviewed_at": "2026-09-07T21:38:14.372631+00:00",
       "right_title": "에퀴닉스(Equinix), 엔비디아와 협력해 AI 추론 플랫폼 구축",
+      "same_event": false
+    },
+    "ca4db4b73f9f2015--d4e027c4a33d5af6": {
+      "embedding_similarity": 0.8724,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 버지니아주, 공청회 공고 절차 위반으로 AI 데이터센터 건립 무효화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "버지니아주 건립 무효화와 FERC 결정은 다름",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미 FERC, 1.8GW 데이터센터 전력계약 취소 통지 거부",
+      "same_event": false
+    },
+    "ca4db4b73f9f2015--ef8497efb48823ba": {
+      "embedding_similarity": 0.8515,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "ONE Nuclear, 루이지애나 데이터센터 연계 2.88GW 원전 프로젝트 의향서 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원전 프로젝트와 FERC 결정은 다른 사안임",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미 FERC, 1.8GW 데이터센터 전력계약 취소 통지 거부",
+      "same_event": false
+    },
+    "ca4db4b73f9f2015--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8511,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 데이터센터 관련 사안임",
+      "reviewed_at": "2026-09-24T18:57:46.556460+00:00",
+      "right_title": "미 FERC, 1.8GW 데이터센터 전력계약 취소 통지 거부",
       "same_event": false
     },
     "ca519e2ea2771cd1--e9608686ef8d2812": {
