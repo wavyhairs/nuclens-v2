@@ -3242,21 +3242,46 @@ function threadForIssue(issue) {
   return longTermThreads().find(thread => thread.thread_id === threadId) || null;
 }
 
+// 흐름 한 줄이 원래 어느 사건(들)이었나. `event_id` 는 **지금 열리는 주소**라
+// 흡수된 사건은 흡수한 쪽의 id 를 달고 온다 — 그 값으로 "이번 사건"을 고르면
+// 흡수된 옛 사건 행까지 현재로 칠해지거나(같은 라우트), 반대로 접힌 사본 쪽으로
+// 들어온 이슈에서 현재 행이 사라진다. 신원은 `source_event_id(s)` 다
+// (thread-web-v2). 칸이 없는 옛 계약에서만 라우트로 물러난다.
+function threadStepSources(step) {
+  const ids = [step.source_event_id, ...(step.source_event_ids || [])]
+    .map(value => String(value || "")).filter(Boolean);
+  return ids.length ? ids : [String(step.event_id || "")];
+}
+
 // 흐름 한 줄. 지금 보고 있는 사건은 링크가 아니라 제자리 표시다 — 자기 자신을
 // 여는 버튼은 누르면 아무 일도 안 일어나는 것으로 읽힌다.
+//
+// **흡수 행**(라우트는 지금 이슈인데 원래는 다른 사건)도 같은 이유로 버튼이 아니다.
+// 누르면 지금 이 화면이 다시 열릴 뿐이다. 행을 현재 행에 합치지는 않는다 —
+// 흐름에서 그 사건이 언제 있었는지가 사라진다(2026-09-24 합의).
+//
+// 날짜 축은 `date`(= date_kind, 브리핑 첫 등장일) 하나다. 보도일을 섞으면 한 축에
+// 두 종류의 날짜가 선다 — 무슨 날짜인지는 title 로만 알린다.
 // 인자를 구조분해로 받지 않는다 — web/tests 의 함수 추출기가 매개변수의 중괄호를
 // 본문 시작으로 오해해서 블록을 반 토막 낸다(long_term_gate.mjs 와 같은 추출기).
 function threadStepRow(step, currentId, isLast) {
-  const isCurrent = step.event_id === currentId;
-  const title = isCurrent || !threadEventOpenable(step)
-    ? `<span class="longterm-event${isCurrent ? " is-current" : " is-closed"}"${
-        isCurrent ? "" : ' title="이 사건은 현재 이슈 목록에 없습니다"'}>${esc(step.title)}</span>`
-    : `<button type="button" class="longterm-event" data-issue-id="${esc(step.event_id)}" data-force-dialog="1">${esc(step.title)}</button>`;
+  const isCurrent = threadStepSources(step).includes(currentId);
+  const isAbsorbed = !isCurrent && step.event_id === currentId;
+  let title;
+  if (isCurrent || isAbsorbed) {
+    title = `<span class="longterm-event ${isCurrent ? "is-current" : "is-absorbed"}">${esc(step.title)}</span>`;
+  } else if (!threadEventOpenable(step)) {
+    title = `<span class="longterm-event is-closed" title="이 사건은 현재 이슈 목록에 없습니다">${esc(step.title)}</span>`;
+  } else {
+    title = `<button type="button" class="longterm-event" data-issue-id="${esc(step.event_id)}" data-force-dialog="1">${esc(step.title)}</button>`;
+  }
+  const dateTitle = step.date_kind === "first_seen" ? ' title="브리핑에 처음 오른 날"' : "";
   return `<li${isCurrent ? ' class="is-current"' : ""}>
-    <div class="timeline-date"><span>${esc(dateLabel(step.date))}</span></div>
+    <div class="timeline-date"><span${dateTitle}>${esc(dateLabel(step.date))}</span></div>
     <div class="timeline-copy">
       ${title}
       ${isCurrent ? '<small>이번 사건</small>' : ""}
+      ${isAbsorbed ? '<small class="longterm-absorbed">이 이슈에 합쳐진 사건</small>' : ""}
       ${isLast ? "" : `<p class="longterm-relation"><span aria-hidden="true">↓</span>${
         step.relation_label ? ` ${esc(step.relation_label)}` : ""}</p>`}
     </div>
@@ -3269,13 +3294,21 @@ function threadDialogSection(issue) {
   // `flow` 는 시간순이고 `events` 는 최신순이다. 흐름은 처음부터 읽어야 흐름이라
   // 앞쪽을 쓰고, 계약이 바뀌어 비어 있으면 구역을 세우지 않는다.
   const steps = thread.flow || [];
-  const others = steps.filter(step => step.event_id !== issue.issue_id).length;
+  const currentId = String(issue.issue_id || "");
+  const hasCurrent = steps.some(step => threadStepSources(step).includes(currentId));
+  const others = steps.filter(step => !threadStepSources(step).includes(currentId)).length;
   // 이 이슈 하나뿐인 스토리는 보여 줄 흐름이 없다. 같은 목록을 두 번 두지 않는다.
-  if (steps.length < 2 || !others) return "";
+  if (!others || (hasCurrent && steps.length < 2)) return "";
+  // 이슈는 이 스토리를 가리키는데 흐름에 그 사건이 없다 — 사건을 나눈 직후처럼
+  // 새 id 가 다음 흐름 판정(thread_judge) 전인 때다. 아무 행에나 '이번 사건'을
+  // 붙이지 않고, 없다는 사실을 그대로 말한다.
+  const missingNote = hasCurrent ? "" :
+    '<p class="dialog-evidence-note longterm-missing">지금 보고 있는 사건은 아직 이 흐름에 자리 잡지 않았습니다 — 다음 흐름 판정 뒤에 들어갑니다.</p>';
   return `<section class="dialog-history dialog-thread" aria-labelledby="issueHistoryTitle">
       <div class="dialog-section-head"><h3 id="issueHistoryTitle">주요 사건 타임라인</h3><span>같은 흐름의 사건 ${steps.length}건 · ${esc(threadPeriodText(thread))}</span></div>
+      ${missingNote}
       <ol class="timeline longterm-timeline longterm-flow">${steps.map((step, index) =>
-        threadStepRow(step, issue.issue_id, index + 1 >= steps.length)).join("")}</ol>
+        threadStepRow(step, currentId, index + 1 >= steps.length)).join("")}</ol>
       <p class="dialog-evidence-note">서로 다른 사건이 시간에 따라 이어진 흐름입니다. 각 사건의 근거 기사는 그 사건의 상세에 있습니다.</p>
     </section>`;
 }

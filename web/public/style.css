@@ -3203,7 +3203,11 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
   font-weight: 600;
   cursor: default;
 }
-.dialog-thread li.is-current { border-left: 2px solid var(--c-secondary); margin-left: -10px; padding-left: 8px; }
+/* 강조는 **자리를 옮기지 않고** 색으로만 한다. 예전에는 margin-left 로 행을 왼쪽으로
+   끌어 선을 그었는데, 그 행만 날짜 칸이 어긋나 타임라인 축이 꺾여 보였다. */
+.dialog-thread li.is-current .timeline-date span { color: var(--c-secondary); font-weight: 600; }
+.dialog-thread .longterm-event.is-absorbed { display: block; color: var(--c-text-secondary); cursor: default; }
+.dialog-thread .longterm-absorbed { color: var(--c-text-muted); font-size: var(--t-min); }
 .dialog-thread li.is-current small { color: var(--c-secondary); font-size: var(--t-min); }
 /* ── 변화 이력 ─────────────────────────────────────────────────────────────
    회차와 회차의 **짝**을 세운다. 아래 타임라인은 같은 기사들을 날짜순 한 줄씩
