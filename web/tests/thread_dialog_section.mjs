@@ -149,6 +149,7 @@ function build(state) {
     ${extract("threadEventOpenable")}
     ${extract("threadPeriodText")}
     ${extract("threadForIssue")}
+    ${extract("threadStepSources")}
     ${extract("threadStepRow")}
     ${extract("threadDialogSection")}
     return { threadDialogSection, threadForIssue };
@@ -326,6 +327,70 @@ check("제목에 든 따옴표가 마크업을 깨지 않는다", () => {
   // 8/23 제목에 작은따옴표가 실제로 들어 있다 — '계절별 송전용량'.
   const html = build(defaultState()).threadDialogSection(sepIssue());
   assert.ok(html.includes("&#39;계절별 송전용량&#39;"), "제목이 이스케이프되지 않았다");
+});
+
+console.log("현재 행은 신원(source_event_id)으로 고른다 — 라우트가 아니다");
+
+// 흡수된 사건: 라우트(event_id)는 흡수한 이슈의 id 를 달고 오지만 원래는 다른
+// 사건이다. 라우트로 고르면 이 행이 '이번 사건'이 되고, 누르면 지금 화면이 다시 열린다.
+const SAR_OLD = "issue-0ld0000000000000";
+function absorbedPayload() {
+  const payload = threadsPayload();
+  payload.threads[0].flow = [
+    { event_id: SAR_AUG, source_event_id: SAR_AUG, source_event_ids: [SAR_AUG],
+      title: SAR_AUG_TITLE, date: "2026-08-24", date_kind: "first_seen",
+      relation_to_next: "stage_progress", relation_label: "다음 단계" },
+    { event_id: SAR_SEP, source_event_id: SAR_OLD, source_event_ids: [SAR_OLD],
+      title: "흡수된 옛 사건", date: "2026-09-01", date_kind: "first_seen",
+      relation_to_next: "", relation_label: "" },
+    { event_id: SAR_SEP, source_event_id: SAR_SEP, source_event_ids: [SAR_SEP],
+      title: SAR_SEP_TITLE, date: "2026-09-19", date_kind: "first_seen",
+      relation_to_next: "", relation_label: "" },
+  ];
+  return payload;
+}
+
+check("흡수 행은 '이번 사건'이 아니고, 자기 자신을 여는 버튼도 아니다", () => {
+  const html = build(defaultState({ threads: absorbedPayload() })).threadDialogSection(sepIssue());
+  assert.equal((html.match(/<li class="is-current"/g) || []).length, 1, "현재 행이 하나가 아니다");
+  assert.ok(html.includes("is-absorbed"), "흡수 행 표시가 없다");
+  assert.ok(html.includes("이 이슈에 합쳐진 사건"), "흡수 행 라벨이 없다");
+  assert.ok(!html.includes(`data-issue-id="${SAR_SEP}"`), "흡수 행이 자기 자신을 여는 버튼이 됐다");
+  // 행은 합치지 않는다 — 세 사건이 다 선다.
+  assert.equal((html.match(/<li/g) || []).length, 3, "행이 합쳐졌다");
+  // 현재 행은 흡수 행이 아니라 9/19 행이다.
+  const currentAt = html.indexOf('<li class="is-current"');
+  assert.ok(html.indexOf(SEP_SHOWN, currentAt) > currentAt, "현재 표시가 엉뚱한 행에 붙었다");
+  assert.ok(html.indexOf("흡수된 옛 사건") < currentAt, "흡수 행이 현재 행으로 칠해졌다");
+});
+
+check("접힌 사본(source_event_ids)으로 들어온 이슈도 현재 행을 찾는다", () => {
+  const payload = threadsPayload();
+  payload.threads[0].flow[1] = { ...payload.threads[0].flow[1],
+    event_id: "story-other", source_event_id: "story-other",
+    source_event_ids: [SAR_SEP, "story-other"] };
+  const html = build(defaultState({ threads: payload })).threadDialogSection(sepIssue());
+  assert.ok(html.includes('<li class="is-current"'), "접힌 사본 쪽 이슈에서 현재 행이 사라졌다");
+  assert.ok(!html.includes("아직 이 흐름에 자리 잡지"), "현재가 있는데 없다고 말한다");
+});
+
+check("흐름에 현재 사건이 없으면 없다고 말한다 — 아무 행에나 붙이지 않는다", () => {
+  const issue = sepIssue({ issue_id: "issue-split-new" });
+  const html = build(defaultState()).threadDialogSection(issue);
+  assert.ok(html.includes("아직 이 흐름에 자리 잡지"), "현재 사건 부재 안내가 없다");
+  assert.ok(!html.includes('<li class="is-current"'), "없는 현재 행이 생겼다");
+});
+
+check("날짜 축은 브리핑 첫 등장일 하나다 — 무슨 날짜인지는 title 로만", () => {
+  const html = build(defaultState({ threads: absorbedPayload() })).threadDialogSection(sepIssue());
+  assert.ok(html.includes('title="브리핑에 처음 오른 날"'), "날짜 종류 안내가 없다");
+});
+
+check("현재 행 강조가 행을 옆으로 밀지 않는다", () => {
+  const css = readFileSync(fileURLToPath(new URL("../public/style.css", import.meta.url)), "utf8");
+  const rule = css.split(/\r?\n/).filter(line => line.includes(".dialog-thread li.is-current"));
+  assert.ok(rule.length, "현재 행 규칙이 없다");
+  for (const line of rule) assert.ok(!/margin-left|padding-left/.test(line), `행을 미는 규칙: ${line}`);
 });
 
 console.log("chronicle 계층은 남아 있지 않다");
