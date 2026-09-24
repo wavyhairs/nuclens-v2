@@ -104,6 +104,9 @@ _PROFILES: dict[str, TaskProfile] = {
     # 모델 버킷은 같이 쓴다(둘 다 짧은 판정 한 줄).
     "thread_judge": _entry(IDENTITY_REVIEW, _review_model),
     "keei_match": _entry(IDENTITY_REVIEW, _main_model),
+    # 요약 사실검증(경고 모드). 기사 요약과 같은 3.1 버킷이다 — 측정에서 추론
+    # 레벨은 결과를 바꾸지 않았고 high 는 한 건에 생각 6.3만 토큰까지 폭주했다.
+    "summary_verify": _entry(FINAL_SEMANTIC_VERIFY, _main_model),
     "dedup": _entry(IDENTITY_REVIEW, _main_model),
     "dedup_final": _entry(IDENTITY_REVIEW, _main_model),
     "issue_insight": _entry(CONTEXT_SYNTHESIS, _insight_model),

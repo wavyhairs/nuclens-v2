@@ -27,6 +27,7 @@ import article_body
 import article_quality_gate
 import entity_match
 import news_archive
+import summary_verify
 # 반복 알림 억제 규칙을 여기서 다시 쓰지 않는다 — 규칙이 두 곳에 있으면 어긋난다.
 import operational_monitoring
 from curation_normalization import (
@@ -3754,6 +3755,21 @@ def main() -> None:
                 "collect", len(integrity_held)),
             items=integrity_held,
         )
+
+    # ---- 요약 사실검증 (경고 모드 — 요약·등급·발송은 바꾸지 않는다) ----------
+    # 본문이 손에 있는 곳은 여기뿐이다(본문은 저장하지 않는다). 요약과 같은 모델
+    # 버킷이라 요약이 한도·설정 오류로 멈춘 회차에는 검사도 하지 않는다.
+    if summary_verify.enabled() and not (QUOTA_EXHAUSTED or CONFIG_ERROR):
+        try:
+            verify_targets = summary_verify.targets_from_curation(
+                final_articles, curated, bodies, curation_attempted_hashes,
+                lambda cur: article_quality_gate.infer_curation_status(cur) == "fallback")
+            if verify_targets:
+                verify_rows, verify_stats = summary_verify.verify(verify_targets)
+                for line in summary_verify.report(verify_rows, verify_stats):
+                    print(line)
+        except Exception as exc:  # noqa: BLE001 — 검사 실패가 수집을 멈추면 안 된다
+            print(f"[요약검사] 건너뜀 — {type(exc).__name__}: {exc}")
 
     # ---- 영구 아카이브 적재 (웹 확장용 — 실패해도 크롤·발송은 계속) ----------
     # curated.json 은 14일 만료라 트렌드 재료가 안 쌓임 → noise 포함 전부 별도 적재.
