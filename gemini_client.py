@@ -167,6 +167,19 @@ class GeminiConfigError(GeminiError):
     """호출 전에 발견한 Gemini generation 설정 오류."""
 
 
+# 서버가 "잠시 뒤 다시"라고 말하는 실패. call_json 의 재시도 사다리(1+2+4+8초)는
+# 수 초짜리 요동을 넘기는 용도라, 몇 분씩 가는 과부하(2026-09-25 전문가 브리핑:
+# 503 UNAVAILABLE 이 첫 시도부터 90초 뒤 재실행까지 이어짐)는 못 넘긴다. 그 더 긴
+# 대기를 할지는 호출자가 정한다 — 여기서 사다리를 늘리면 브리핑·빌드의 모든 호출이
+# 같이 느려진다. 호출자는 이 표지로만 가른다(429 일일 한도·400 은 기다려도 안 풀린다).
+TRANSIENT_HTTP_STATUSES = frozenset({500, 502, 503, 504})
+
+
+def is_transient_overload(exc: BaseException | None) -> bool:
+    """사다리를 다 쓴 실패가 분 단위로 기다리면 풀릴 수 있는 종류인가."""
+    return bool(getattr(exc, "transient", False))
+
+
 class GeminiTruncated(GeminiError):
     """출력 토큰 예산 소진으로 응답이 잘렸다 (finishReason=MAX_TOKENS).
 
@@ -632,6 +645,7 @@ def call_json(
         except urllib.error.HTTPError as e:
             body_text = e.read().decode("utf-8", errors="replace")
             last_err = GeminiError(f"HTTP {e.code}: {body_text[:600]}")
+            last_err.transient = e.code in TRANSIENT_HTTP_STATUSES
             _record_detail(
                 task=label, label=attempt_label, model=resolved_model,
                 requested_thinking=requested_thinking,
@@ -690,6 +704,8 @@ def call_json(
             continue
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
             last_err = GeminiError(f"{type(e).__name__}: {e}")
+            # 연결·타임아웃은 과부하와 같은 쪽이다. 응답 JSON 이 깨진 것은 아니다.
+            last_err.transient = not isinstance(e, json.JSONDecodeError)
             if attempt == retries:
                 raise last_err
             time.sleep(2 ** attempt)

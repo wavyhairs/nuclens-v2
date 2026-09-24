@@ -73,6 +73,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.gate.outputs.should_run }}
+      # 오늘 브리핑은 나갔는데 라이브에 오늘 오디오가 없을 때 crawl 완료가 켠다
+      # (tools/daily_brief_trigger_gate.py). 수동 audio_recovery 와 같은 --recover 길.
+      audio_recovery: ${{ steps.gate.outputs.audio_recovery }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -558,7 +561,7 @@ jobs:
           # force_audio 는 조용한 시험(--no-send), audio_recovery 는 발송까지 가는
           # 복구(--force 만). 둘 다 켜면 복구를 이긴다 — 복구를 누른 사람의 의도가
           # 더 구체적이고, 조용한 재생성은 언제든 다시 돌릴 수 있다.
-          if [ "${{ inputs.audio_recovery }}" = "true" ]; then
+          if [ "${{ inputs.audio_recovery }}" = "true" ] || [ "${{ needs.preflight.outputs.audio_recovery }}" = "true" ]; then
             # --recover 는 --force 가 아니다. 그날 mp3 가 이미 있고 아직 안
             # 나갔으면 **그 파일 그대로 발송만** 재시도한다(TTS 재호출 0회).
             # 음원 자체가 없는 날은 평소처럼 만든다. 예전에는 여기가 --force 라
@@ -594,6 +597,13 @@ jobs:
             fi
             if [ "$rc" = "2" ]; then
               echo "[${label}] TTS 예산 소진 — 재시도 생략 (남은 요청은 복구 실행 몫)"
+              echo "${key}=failure" >> "$GITHUB_OUTPUT"; return 0
+            fi
+            # 종료 코드 4 = Gemini 일시 과부하가 스크립트 안의 분 단위 대기(최대 7분)
+            # 로도 안 풀렸다. 90초 재실행은 같은 과부하 속에서 처음부터 다시 부를
+            # 뿐이다(2026-09-25). 다음 crawl 완료의 오디오 복구가 이어받는다.
+            if [ "$rc" = "4" ]; then
+              echo "[${label}] Gemini 과부하 지속 — 재시도 생략 (다음 수집 뒤 자동 오디오 복구)"
               echo "${key}=failure" >> "$GITHUB_OUTPUT"; return 0
             fi
             if [ "$rc" = "3" ]; then

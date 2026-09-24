@@ -911,5 +911,87 @@ class ModelBucketRoutingTests(unittest.TestCase):
             self.assertEqual(seen["expert_verify_after_repair"], "curation-model")
 
 
+class OverloadWaitTests(unittest.TestCase):
+    """일시 과부하는 실패한 단계만 분 단위로 기다렸다 같은 모델로 다시 부른다.
+
+    2026-09-25: 검증 단계가 503 으로 죽었고, 워크플로의 90초 뒤 재실행은 28회를
+    처음부터 다시 불러 다른 단계에서 또 503 을 맞았다.
+    """
+
+    def setUp(self):
+        self.sleeps: list[float] = []
+        self._orig = (expert.call_json, expert._overload_sleep,
+                      expert._overload_waited_sec, expert.OVERLOAD_GAVE_UP)
+        expert._overload_sleep = self.sleeps.append
+        expert._overload_waited_sec = 0.0
+        expert.OVERLOAD_GAVE_UP = False
+
+    def tearDown(self):
+        (expert.call_json, expert._overload_sleep,
+         expert._overload_waited_sec, expert.OVERLOAD_GAVE_UP) = self._orig
+
+    @staticmethod
+    def overload() -> GeminiError:
+        exc = GeminiError("HTTP 503: UNAVAILABLE")
+        exc.transient = True
+        return exc
+
+    def test_verify_waits_and_retries_same_model(self):
+        models: list[str] = []
+
+        def fake(system, message, **kw):
+            models.append(kw["model"])
+            if len(models) < 3:
+                raise self.overload()
+            return {"ok": True}
+
+        expert.call_json = fake
+        out = expert._call_structured("s", "m", label="expert_verify_해외")
+        self.assertEqual(out, {"ok": True})
+        # 검증은 대체 모델 없이 같은 모델만 다시 부른다(atomic policy).
+        self.assertEqual(len(set(models)), 1)
+        self.assertEqual(self.sleeps, [60, 120])
+        self.assertFalse(expert.OVERLOAD_GAVE_UP)
+
+    def test_budget_is_shared_across_stages_and_then_gives_up(self):
+        def fake(system, message, **kw):
+            raise self.overload()
+
+        expert.call_json = fake
+        with self.assertRaises(GeminiError):
+            expert._call_structured("s", "m", label="expert_verify_국내")
+        self.assertEqual(sum(self.sleeps), expert.OVERLOAD_WAIT_BUDGET_SEC)
+        self.assertTrue(expert.OVERLOAD_GAVE_UP)
+        # 다음 단계는 남은 예산이 없으므로 기다리지 않고 바로 넘긴다.
+        before = list(self.sleeps)
+        with self.assertRaises(GeminiError):
+            expert._call_structured("s", "m", label="expert_dossiers_1")
+        self.assertEqual(self.sleeps, before)
+
+    def test_non_transient_failure_does_not_wait(self):
+        def fake(system, message, **kw):
+            raise GeminiError("HTTP 400: bad request")
+
+        expert.call_json = fake
+        with self.assertRaises(GeminiError):
+            expert._call_structured("s", "m", label="expert_verify_국내")
+        self.assertEqual(self.sleeps, [])
+        self.assertFalse(expert.OVERLOAD_GAVE_UP)
+
+    def test_ladder_stage_tries_fallback_before_waiting(self):
+        models: list[str] = []
+
+        def fake(system, message, **kw):
+            models.append(kw["model"])
+            if len(models) == 1:
+                raise self.overload()
+            return {"ok": True}
+
+        expert.call_json = fake
+        expert._call_structured("s", "m", label="expert_dossiers_1")
+        self.assertEqual(len(models), 2)
+        self.assertEqual(self.sleeps, [])
+
+
 if __name__ == "__main__":
     unittest.main()
