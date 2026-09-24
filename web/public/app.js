@@ -439,23 +439,38 @@ function issueEvidenceText(issue) {
   return parts.join(" · ");
 }
 
-// 요약을 그대로 되풀이하는 변화 문장은 빌드가 비운다. 빈 값이면 블록을 그리지
-// 않는다 — 요약이 이미 같은 사실을 말하고 있으므로 '없다'는 안내도 붙이지 않는다.
-// change_display 는 화살표 문장의 뒤쪽(=현재 요약 재진술)을 걷어낸 표시 전용
-// 필드다. 필드 자체가 없으면(구세대 데이터) latest_change 로 물러난다 —
-// undefined 와 "" 를 구분해야 "의도적으로 비움"이 폴백으로 되살아나지 않는다.
-function issueChangeText(issue) {
-  if (issue.change_display !== undefined) return issue.change_display || "";
-  return issue.latest_change || "";
+// '달라진 점'은 **확인된 전이(change_log)만** 말한다 (2026-09-24 결정).
+//
+// 예전에는 latest_change/change_display 였다 — 최신 기사 요약과 과거 기사 요약을
+// 빌드가 즉석에서 이어 붙인 "A → B" 라, 그 사이에 정말 무엇이 달라졌는지는 아무도
+// 확인하지 않았다. 이 줄은 실무자가 보고서의 (변화) 칸으로 그대로 옮긴다(복사 기능).
+// 틀린 변화가 보고서에 들어가는 것은 칸이 비는 것보다 나쁘다.
+//
+// 라이브 실측(20260924T030934Z): 이 기준으로 상세의 변화 블록 102 → 18, 오늘 카드
+// 8 → 2, 첫 화면 '진행 중 이슈 변화' 13 → 2. 빈 날은 칸이 숨는다(renderContinuing).
+//
+// 문장은 새로 짓지 않는다 — 두 기사의 **실제 제목**을 잇는다. 판정 문구(reason)를
+// 쓰지 않는 이유는 CHANGE_LOG_LABELS 주석과 같다.
+function confirmedChange(issue) {
+  const log = changeLog(issue);
+  if (!log.length) return null;
+  const entry = log.reduce((best, row) =>
+    String(row.date || "") > String(best.date || "") ? row : best);
+  const before = String(entry.prior_title || "").trim();
+  const after = String(entry.title || "").trim();
+  if (!after) return null;
+  return { entry, text: before ? `${before} → ${after}` : after };
 }
 
-// 그 문장이 '지금 달라진 것'인지 '직전 상태'인지에 따라 라벨이 달라진다.
-// 빌드가 화살표 문장의 뒤쪽(현재 상태)을 걷어내면 남는 것은 **바뀌기 전** 상태뿐인데,
-// 예전에는 그 줄에도 '달라진 것' 이 붙어 있었다(라이브 실측 10/160) — 라벨은 변화를
-// 묻는데 문장은 옛 상태를 답하는 꼴이라, 훑어보는 사람이 옛 상태를 오늘 일로 읽는다.
-// 지금 상태는 바로 위 제목이 말한다. change_kind 가 없는 구세대 데이터는 종전대로.
+function issueChangeText(issue) {
+  return confirmedChange(issue)?.text || "";
+}
+
+// 확인된 전이는 앞뒤 두 기사를 다 싣는다 — 예전의 '직전까지'(앞쪽만 남은 문장) 라벨은
+// 더 이상 필요 없다. 라벨은 그 전이가 단계 이동인지 후속 보도인지를 말한다.
 function issueChangeLabel(issue, fallback) {
-  return issue.change_kind === "previous" ? "직전까지" : fallback;
+  const kind = confirmedChange(issue)?.entry?.kind;
+  return kind === "material" ? `${fallback} · 단계 이동` : fallback;
 }
 
 // 근거 패널과 이슈 다이얼로그가 같은 내용을 보이게 하는 단일 조립 지점.
@@ -1559,7 +1574,11 @@ function weekRangeLabel(report) {
 function weeklyChangedIssues(briefing) {
   const { start, end } = weekRange(briefing.date);
   return state.issues
-    .filter(issue => issue.latest_change && issue.last_seen >= start && issue.last_seen <= end)
+    // 이번 주에 **확인된 전이**가 있는 이슈만. 없는 주는 칸이 숨는다.
+    .filter(issue => {
+      const day = String(confirmedChange(issue)?.entry?.date || "");
+      return day && day >= start && day <= end;
+    })
     .sort((a, b) => String(b.last_seen).localeCompare(String(a.last_seen))
       || (b.card_article_count || 0) - (a.card_article_count || 0))
     .slice(0, 5);
@@ -2216,7 +2235,8 @@ function applyCardLines(pickList, picks, date) {
 
 function continuingRow(issue) {
   // 변화 문장은 'A → B' 꼴이다. 목차에 이미 제목이 있으니 바뀐 쪽만 보인다.
-  const change = String(issue.latest_change || "").split("→").pop().trim();
+  // 목차에 이미 제목이 있으니 바뀐 쪽(새 기사 제목)만 보인다.
+  const change = String(confirmedChange(issue)?.entry?.title || "").trim();
   return `<a class="cont-row" href="/issue/${encodeURIComponent(issue.issue_id)}/">
   <span class="cont-title">${esc(issue.title)}</span>
   ${change ? `<span class="cont-change">${esc(change)}</span>` : ""}

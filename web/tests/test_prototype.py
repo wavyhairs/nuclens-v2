@@ -2447,14 +2447,21 @@ class GeneratedDataTests(unittest.TestCase):
         self.assertIn(".hero-audio button { min-height: 44px; }", style)
         self.assertNotIn(".hero-audio { display: none", style)
 
-    def test_card_change_display_is_wired_over_latest_change(self):
-        """카드·상세·복사의 단일 접점(issueChangeText)이 표시 전용 필드를 우선한다.
+    def test_change_text_speaks_only_confirmed_transitions(self):
+        """카드·상세·복사의 단일 접점(issueChangeText)은 확인된 전이(change_log)만 읽는다.
 
-        undefined/"" 구분 필수 — 빌드가 의도적으로 비운 변화 문장이
-        latest_change 폴백으로 되살아나면 재진술 게이트가 무효가 된다.
+        2026-09-24 결정: 즉석 요약 비교(latest_change·change_display)는 무엇이 달라졌는지
+        확인한 적이 없는 문장이라, 보고서의 (변화) 칸으로 옮겨지면 사고다.
         """
         script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        self.assertIn("issue.change_display !== undefined", script)
+        body = script[script.index("function issueChangeText("):]
+        body = body[:body.index("\n}\n")]
+        self.assertIn("confirmedChange(issue)", body)
+        self.assertNotIn("latest_change", body)
+        self.assertNotIn("change_display", body)
+        weekly = script[script.index("function weeklyChangedIssues("):]
+        weekly = weekly[:weekly.index("\n}\n")]
+        self.assertNotIn("latest_change", weekly)
 
     def test_p3_issue_pages_have_unique_open_graph_metadata(self):
         script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")

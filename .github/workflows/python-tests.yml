@@ -187,6 +187,7 @@ jobs:
           node web/tests/thread_dialog_section.mjs
           node web/tests/classification_note.mjs
           node web/tests/admin_corrections.mjs
+          node web/tests/confirmed_change.mjs
           # 카드 렌더러는 **의미를 만들지 않는다**. 예전에는 art selector 가
           # 제목까지 고정 문구로 덮어써서, 검증한 문장과 인쇄된 문장이 달랐다 —
           # 파이썬 쪽 검증·QA 가 전부 그 앞 단계에 있어 아무도 못 잡는 자리다.
