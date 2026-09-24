@@ -1043,6 +1043,17 @@
       "right_title": "KINS, 제4회 원전 중대사고 리스크 심포지엄 개최",
       "verdict": "different_thread"
     },
+    "issue-03e750bdec0ed533--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "원안위, 혁신형 SMR 표준설계인가 신청 건 보고",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "i-SMR 표준설계인가와 월성 1호기 재판은 다른 사안이다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
+      "verdict": "different_thread"
+    },
     "issue-03e750bdec0ed533--story-e953ef2351651b19": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "원안위, 혁신형 SMR 표준설계인가 신청 건 보고",
@@ -1940,6 +1951,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "원안위, 월성·한울원전 복수부지 동시 사고 가정 국가방사능방재 훈련 실시",
+      "verdict": "different_thread"
+    },
+    "issue-04b60a0ede3e9484--story-f875e4ea339f158c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "원안위, 중저준위 방폐장 표층처분시설 건설·운영변경허가 의결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "방폐장 허가와 울진군 유치는 별개 사안임",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "울진군, 고준위방폐물 유치 공론화 및 10조 원 SOC 지원 제안",
       "verdict": "different_thread"
     },
     "issue-04f6da330d86e460--issue-61fefa0bf9e0db2c": {
@@ -3547,6 +3569,17 @@
       "right_title": "롱비치 항만, 미 해양청(MARAD)과 해상 원자로 개발 협력 첫 파트너십 체결",
       "verdict": "different_thread"
     },
+    "issue-0a3a69c9a73e8bbe--issue-507b8b82e83bb7fd": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 기업(두산, DL이앤씨)의 별개 SMR 사업",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "DL이앤씨, 미국 X-에너지 전략적 투자 등 원전 사업 확대",
+      "verdict": "different_thread"
+    },
     "issue-0a3a69c9a73e8bbe--issue-591caac62d5f3545": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "빌 게이츠 방한, 국내 기업 테라파워 SMR 공급망 참여 본격화",
@@ -3575,7 +3608,24 @@
       "right_title": "빌 게이츠 방한, SMR 공급망 논의…테라파워, 美 NRC 건설허가 획득",
       "verdict": "same_thread"
     },
+    "issue-0a3a69c9a73e8bbe--issue-65bc735c35edf37c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 SMR 기자재 계약과 필리핀 원전 협력 MOU",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한국수력원자력, 필리핀 아보이티즈 파워와 원전 사업 협력 MOU 체결",
+      "verdict": "different_thread"
+    },
     "issue-0a3a69c9a73e8bbe--issue-66d8933507f8bf75": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "테라파워 나트륨 SMR, 美 와이오밍주서 건설 현황 조명",
       "model": "gemini-3.5-flash-lite",
@@ -3587,6 +3637,12 @@
       "verdict": "same_thread"
     },
     "issue-0a3a69c9a73e8bbe--issue-719103e4dd4fefb1": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "빌 게이츠 방한, 국내 기업 테라파워 SMR 공급망 참여 본격화",
       "model": "gemini-3.5-flash-lite",
@@ -3648,6 +3704,12 @@
       "verdict": "same_thread"
     },
     "issue-0a3a69c9a73e8bbe--issue-9177c575aca6c154": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "테라파워 나트륨 SMR, 美 와이오밍주서 건설 현황 조명",
       "model": "gemini-3.5-flash-lite",
@@ -3691,6 +3753,17 @@
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "테라파워-한국 기업 SMR 협력, 한국 원전기업 수출 공급망 확대",
       "verdict": "same_thread"
+    },
+    "issue-0a3a69c9a73e8bbe--issue-a5e21a02762fb9b6": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대상 국가와 기업이 완전히 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한국수력원자력, 필리핀 아보이티즈 파워와 원전 사업 협력 MOU 체결",
+      "verdict": "different_thread"
     },
     "issue-0a3a69c9a73e8bbe--issue-aafd59741b95cafa": {
       "gate": {
@@ -3760,6 +3833,12 @@
       "verdict": "different_thread"
     },
     "issue-0a3a69c9a73e8bbe--issue-d5147918f97d542d": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "빌 게이츠 방한, 국내 기업 테라파워 SMR 공급망 참여 본격화",
       "model": "gemini-3.5-flash-lite",
@@ -3780,6 +3859,17 @@
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "빌 게이츠 테라파워, AI 데이터센터용 2호 SMR 프로젝트 추진",
       "verdict": "same_thread"
+    },
+    "issue-0a3a69c9a73e8bbe--issue-ddf89f92aa789c8a": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 SMR 기자재 계약과 필리핀 원전 협력",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한수원, 필리핀과 원자력 협력 MOU 체결로 아시아 시장 확대",
+      "verdict": "different_thread"
     },
     "issue-0a3a69c9a73e8bbe--issue-e000f116b94e6aa9": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -3804,6 +3894,12 @@
       "verdict": "different_thread"
     },
     "issue-0a3a69c9a73e8bbe--issue-f179a670a63aab2a": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "테라파워 나트륨 SMR, 美 와이오밍주서 건설 현황 조명",
       "model": "gemini-3.5-flash-lite",
@@ -3826,6 +3922,12 @@
       "verdict": "different_thread"
     },
     "issue-0a3a69c9a73e8bbe--issue-f796c0b6619106a8": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "테라파워 나트륨 SMR, 美 와이오밍주서 건설 현황 조명",
       "model": "gemini-3.5-flash-lite",
@@ -3845,6 +3947,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "테라파워, 영국 내 SMR 건설 부지 선정 및 협력 추진",
+      "verdict": "different_thread"
+    },
+    "issue-0a3a69c9a73e8bbe--story-14abbebf6bb0a431": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 테라파워 사업과 스웨덴 SMR 사업은 별개의 프로젝트다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "삼성물산, 스웨덴 SMR 사업 공동개발협약 체결",
       "verdict": "different_thread"
     },
     "issue-0a3a69c9a73e8bbe--story-16bab8dc452d7e6e": {
@@ -3876,6 +3989,12 @@
       "verdict": "same_thread"
     },
     "issue-0a3a69c9a73e8bbe--story-2969954994be36e3": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "빌 게이츠 방한, 국내 기업 테라파워 SMR 공급망 참여 본격화",
       "model": "gemini-3.5-flash-lite",
@@ -3897,7 +4016,24 @@
       "right_title": "두산퓨얼셀, 미국 AI 데이터센터 전력 시장 진출",
       "verdict": "different_thread"
     },
+    "issue-0a3a69c9a73e8bbe--story-362f6541c79b3cf7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "기자재 공급 계약과 세액공제 확대 건의는 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한경협, SMR 등 포함한 국내생산세액공제 확대 건의",
+      "verdict": "different_thread"
+    },
     "issue-0a3a69c9a73e8bbe--story-371b3e95bd53df77": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "테라파워 나트륨 SMR, 美 와이오밍주서 건설 현황 조명",
       "model": "gemini-3.5-flash-lite",
@@ -3908,6 +4044,28 @@
       "right_title": "테라파워, 나트륨 원전 기자재 공급 계약 12건 체결",
       "verdict": "same_thread"
     },
+    "issue-0a3a69c9a73e8bbe--story-46920b014bcfae94": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "두산 계약 건과 NECX 컨퍼런스 동향은 별개의 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미국 NECX 2026, SMR 스타트업들의 원자로 임계 달성 사례 공유",
+      "verdict": "different_thread"
+    },
+    "issue-0a3a69c9a73e8bbe--story-5279bd491a828ad6": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "테라파워 기자재 공급과 일본의 대미 투자 패키지는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "일본, 대미 투자 패키지 3차 후보로 차세대 SMR 및 전력망 낙점",
+      "verdict": "different_thread"
+    },
     "issue-0a3a69c9a73e8bbe--story-5658c290d3369b54": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
@@ -3917,6 +4075,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-18T20:05:06.026312+00:00",
       "right_title": "한·프랑스, 군사·AI·원자력 등 16건 협력 MOU 채택",
+      "verdict": "different_thread"
+    },
+    "issue-0a3a69c9a73e8bbe--story-603a7c13853cd80b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 SMR 프로젝트 및 기업 협력 건",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "GE Vernova·삼성물산 등, 유럽 내 BWRX-300 SMR 배치 협력 MOU 체결",
       "verdict": "different_thread"
     },
     "issue-0a3a69c9a73e8bbe--story-660161cd9e0d6bb3": {
@@ -4005,6 +4174,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-17T19:50:44.952073+00:00",
       "right_title": "우리기술, 두산에너빌리티와 신한울 3·4호기 가상화 DCS 개발 계약 체결",
+      "verdict": "different_thread"
+    },
+    "issue-0a3a69c9a73e8bbe--story-e0dd333f959cbd3d": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "두산의 테라파워 기자재 공급과 부산시 해양 SMR 전략은 별개",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "부산시, 조선·해양과 SMR 결합한 해양산업 육성 전략 발표",
       "verdict": "different_thread"
     },
     "issue-0a3a69c9a73e8bbe--story-e953ef2351651b19": {
@@ -4562,6 +4742,17 @@
       "relationship": "",
       "reviewed_at": "2026-09-21T19:56:41.668162+00:00",
       "right_title": "최원호 원안위원장, 월성원전 현장 방문해 중수 누설 후속조치 점검",
+      "verdict": "different_thread"
+    },
+    "issue-0bf298578a3b22bc--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "중수로 리튜빙 선점전 불붙었다…월성원전 슬롯 확보 비상",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "월성원전 리튜빙과 월성 1호기 재판은 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
       "verdict": "different_thread"
     },
     "issue-0d29e5a153e4d297--issue-417bacb5581d9fcd": {
@@ -5783,6 +5974,17 @@
       "right_title": "미 NRC, 테네시주 BWRX-300 SMR 건설 허가 이달 말 완료 목표",
       "verdict": "different_thread"
     },
+    "issue-1333abd082ef5397--story-9280bb770c9a48c7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 원자력규제위원회(NRC), 원전 인허가 및 감독 규정 전면 개편 제안",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 NRC 규제 개편과 이탈리아 원전 복귀 법안은 무관하다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "이탈리아 상원, 원자력 발전 복귀 법안 가결",
+      "verdict": "different_thread"
+    },
     "issue-1333abd082ef5397--story-9fd4c4e2ded65b09": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 원자력규제위원회(NRC), 원전 인허가 및 감독 규정 전면 개편 제안",
@@ -6198,6 +6400,23 @@
       "reviewed_at": "2026-09-13T19:37:56.120401+00:00",
       "right_title": "미 국방부, AI 인프라 스타트업 플루이드스택에 6.7조원 대출 협의",
       "verdict": "different_thread"
+    },
+    "issue-147ece88607645c4--story-3f2df935d0158def": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 2000억 달러 규모 대미 전략투자 첫 사업 막판 조율",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대미 투자 협상 과정과 원전 도입 지연",
+      "relationship": "cause_effect",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 투자 패키지 중 APR1400 미국 도입 합의 지연",
+      "verdict": "same_thread"
     },
     "issue-147ece88607645c4--story-4e1bbcf5fe2a6b99": {
       "gate": {
@@ -6896,6 +7115,17 @@
       "right_title": "한미일, 제3국 SMR 배치 가속화 및 경제안보 협력 강화 합의",
       "verdict": "same_thread"
     },
+    "issue-177995631b062915--story-c3de2b9a5fc71ff5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SMR 시장, 한미일 '분업' 모델과 중러 '올인원' 모델 대결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "SMR 국가별 전략 일반론과 영국 개별 GDA 착수는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "영국, Xe-100 SMR에 대한 일반설계평가(GDA) 착수",
+      "verdict": "different_thread"
+    },
     "issue-177995631b062915--story-dbfa69dbe602a61e": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "SMR 시장, 한미일 '분업' 모델과 중러 '올인원' 모델 대결",
@@ -7444,6 +7674,17 @@
       "right_title": "미국 10여 개 주, 데이터센터 세금 감면 혜택 중단 및 축소",
       "verdict": "different_thread"
     },
+    "issue-1a48967b5795e76b--story-3ff816ae38eb1d7b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "텍사스주, 데이터센터 환경 인허가 전면 중단…한국 엔시널 발전소 사업 차질",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "텍사스주 인허가 중단과 MS의 중동 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
+      "verdict": "different_thread"
+    },
     "issue-1a48967b5795e76b--story-4762adf8f144ad93": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
@@ -7486,6 +7727,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-21T19:56:41.668162+00:00",
       "right_title": "EU, 데이터센터 에너지·물 소비량 등급제 도입 추진",
+      "verdict": "different_thread"
+    },
+    "issue-1a48967b5795e76b--story-7a160be563f14be1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "텍사스주, 데이터센터 환경 인허가 전면 중단…한국 엔시널 발전소 사업 차질",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대상 국가와 프로젝트가 서로 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "카자흐스탄 외교장관, 한국과 AI·데이터센터 및 핵심광물 협력 강화 희망",
       "verdict": "different_thread"
     },
     "issue-1a48967b5795e76b--story-7a2f767931f11036": {
@@ -8174,6 +8426,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-16T20:00:06.431448+00:00",
       "right_title": "KINS, 제4회 원전 중대사고 리스크 심포지엄 개최",
+      "verdict": "different_thread"
+    },
+    "issue-226ae9896d181bd9--story-f875e4ea339f158c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한국원자력환경공단, 2026년 방사능분석능력평가 9년 연속 A등급 획득",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "방사능 분석 평가와 방폐물 유치 공론화는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "울진군, 고준위방폐물 유치 공론화 및 10조 원 SOC 지원 제안",
       "verdict": "different_thread"
     },
     "issue-2373d90047ca2464--issue-5190f5f0f0d050de": {
@@ -9964,6 +10227,17 @@
       "right_title": "국민의힘-경북도, 산업용 전기요금 차등제 확대 등 지역 현안 대응",
       "verdict": "different_thread"
     },
+    "issue-2bd6fbe43be1036a--story-4d5bf6f05d2db61b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "당정, 2027년 예산안에 반도체 특별회계 신설 및 전력·용수 인프라 지원",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "반도체 인프라 예산과 전기차 충전 할인으로 사안이 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 추석 연휴 낮 시간대 전기차 충전요금 50% 할인 시행",
+      "verdict": "different_thread"
+    },
     "issue-2bdc5f2fb94508de--issue-2ee56fe1780454f0": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 텍사스주, 데이터센터 규제 강화…빅테크 기업 대응 분주",
@@ -10089,6 +10363,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-17T19:50:44.952073+00:00",
       "right_title": "정부 3대 메가프로젝트 투자 계획과 공공 인프라 지원의 과제",
+      "verdict": "different_thread"
+    },
+    "issue-2bdc5f2fb94508de--story-3ff816ae38eb1d7b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 텍사스주, 데이터센터 규제 강화…빅테크 기업 대응 분주",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "텍사스주 데이터센터 규제와 MS의 중동 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
       "verdict": "different_thread"
     },
     "issue-2bdc5f2fb94508de--story-4762adf8f144ad93": {
@@ -10227,6 +10512,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-20T19:50:20.531512+00:00",
       "right_title": "튀르키예, 2035년까지 1080억 달러 투입해 재생에너지 120GW 구축",
+      "verdict": "different_thread"
+    },
+    "issue-2c6be969d54d5386--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "인도, 재생에너지 사업자 계통 연결 지연 시 비용 부담 허용",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "인도 계통 연결 정책과 미 DOE 전력망 투자",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
       "verdict": "different_thread"
     },
     "issue-2c6be969d54d5386--story-d3effaaae45ac23b": {
@@ -10460,6 +10756,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-19T21:20:37.113659+00:00",
       "right_title": "미국 오하이오주, 데이터센터 전력·용수 사용 논란 선거 쟁점화",
+      "verdict": "different_thread"
+    },
+    "issue-2ee56fe1780454f0--story-3ff816ae38eb1d7b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "삼성전자, 미국 내 로비 의제에 데이터센터 전력망 추가",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "삼성전자 로비 의제와 MS의 중동 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
       "verdict": "different_thread"
     },
     "issue-2ee56fe1780454f0--story-52cb1c00ba67bc51": {
@@ -10787,6 +11094,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "센트러스 에너지, X-에너지에 LEU 및 HALEU 농축 서비스 제공 확정 계약 체결",
+      "verdict": "different_thread"
+    },
+    "issue-31715b9c7ef12b5a--issue-66d8933507f8bf75": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "그리드위즈, 알엑스와 SMR 기반 AI 데이터센터 솔루션 개발 협력",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 기업들의 SMR 협력 건임",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
       "verdict": "different_thread"
     },
     "issue-31715b9c7ef12b5a--issue-6b4bcffb54f95abb": {
@@ -11622,6 +11940,12 @@
       "verdict": "same_thread"
     },
     "issue-3733dacb6eb9bc94--issue-66d8933507f8bf75": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "산업통상부 장관, 한수원·SK-테라파워 상업화 계약 체결식 참석 예정",
       "model": "gemini-3.5-flash-lite",
@@ -12330,6 +12654,39 @@
       "right_title": "로이드선급·머스크, 대서양 원자력 상선 운항 위한 '핑크 회랑' 연구 착수",
       "verdict": "different_thread"
     },
+    "issue-39d2da80812a25d1--story-a0ddc0f1138d2ea5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 해사청(MARAD), 코퍼스 크리스티 항만과 SMR 개발 협력 MOU 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "각각 다른 주체의 SMR 관련 개별 협약",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
+      "verdict": "different_thread"
+    },
+    "issue-39d2da80812a25d1--story-aa6ac60c2ca8f6b0": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 해사청(MARAD), 코퍼스 크리스티 항만과 SMR 개발 협력 MOU 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 기관과 기업의 별개 SMR 프로젝트",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "삼성물산, 카이로스 파워와 Hermes 2 실증로 EPC 협력 체결",
+      "verdict": "different_thread"
+    },
+    "issue-39d2da80812a25d1--story-cf2a564da87ca921": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 해사청(MARAD), 코퍼스 크리스티 항만과 SMR 개발 협력 MOU 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "해양 SMR 협력과 한미 정상회담은 별개의 사안",
+      "relationship": " same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+      "verdict": "different_thread"
+    },
     "issue-39d2da80812a25d1--story-e0dd333f959cbd3d": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미 해사청(MARAD), 코퍼스 크리스티 항만과 SMR 개발 협력 MOU 체결",
@@ -12832,6 +13189,17 @@
       "right_title": "중국, AI 연산 수요 대응 위해 데이터센터 서부 분산 전략 추진",
       "verdict": "different_thread"
     },
+    "issue-3b2beac3f62235b6--story-3ff816ae38eb1d7b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "中 '동수서산' 전략 확대…AI 데이터센터 인프라 집중 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "중국 데이터센터 전략과 MS의 중동 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
+      "verdict": "different_thread"
+    },
     "issue-3b2beac3f62235b6--story-661b1150fb0281ea": {
       "gate": {
         "at": "2026-09-23T21:48:05+00:00",
@@ -13327,6 +13695,17 @@
       "right_title": "원안위, 부산 기장군 혁신형 SMR 안전성 심사 착수",
       "verdict": "same_thread"
     },
+    "issue-3d40dcc6ed6f3fac--issue-66d8933507f8bf75": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "글로벌 SMR 상용화 경쟁 가속화 및 한국의 대응 현황",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "글로벌 동향 일반론과 개별 기업 제휴는 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "verdict": "different_thread"
+    },
     "issue-3d40dcc6ed6f3fac--issue-803df161cccdc211": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "글로벌 SMR 상용화 경쟁 가속화 및 한국의 대응 현황",
@@ -13625,6 +14004,23 @@
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "유럽 폭염으로 인한 원전 가동 중단 및 경제적 손실 발생",
       "verdict": "different_thread"
+    },
+    "issue-3e7a0e79ed144761--issue-66d8933507f8bf75": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "동일한 SMR 파트너십 체결 건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "verdict": "same_thread"
     },
     "issue-3e7a0e79ed144761--issue-796f3139d1f97809": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -14716,6 +15112,17 @@
       "right_title": "미 에너지부, 폭염 대비 미드애틀랜틱 지역 전력망 안정화 긴급 명령 발령",
       "verdict": "different_thread"
     },
+    "issue-410bd72bfb8cf04f--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "美 원전 투자 재시동 및 국내 전력수요 급증, 건설사 수주 기대감 상승",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "원전 대출 프로그램과 전력망 투자는 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "verdict": "different_thread"
+    },
     "issue-410bd72bfb8cf04f--story-cc58741ea2a05477": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "美 원전 투자 재시동 및 국내 전력수요 급증, 건설사 수주 기대감 상승",
@@ -14770,6 +15177,17 @@
       "reviewed_at": "2026-09-15T19:41:17.611810+00:00",
       "right_title": "정부, 호남 반도체 클러스터 부지 무안군 선정…군공항 이전 본격화",
       "verdict": "same_thread"
+    },
+    "issue-4113d294aea75ee0--issue-66d8933507f8bf75": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "산업부, 호남권 AI·반도체 산업 거점 육성 계획 발표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "호남권 거점 육성과 테라파워 협력은 무관",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "verdict": "different_thread"
     },
     "issue-4113d294aea75ee0--issue-67b1530f243d1683": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -15125,6 +15543,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-21T19:56:41.668162+00:00",
       "right_title": "국민의힘-경북도, 산업용 전기요금 차등제 확대 등 지역 현안 대응",
+      "verdict": "different_thread"
+    },
+    "issue-4113d294aea75ee0--story-4d5bf6f05d2db61b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "산업부, 호남권 AI·반도체 산업 거점 육성 계획 발표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "호남권 육성 계획과 추석 전기차 충전 할인은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 추석 연휴 낮 시간대 전기차 충전요금 50% 할인 시행",
       "verdict": "different_thread"
     },
     "issue-4113d294aea75ee0--story-6002bbd9aac821c7": {
@@ -16574,6 +17003,17 @@
       "right_title": "빌 게이츠 방한, SMR 공급망 논의…테라파워, 美 NRC 건설허가 획득",
       "verdict": "different_thread"
     },
+    "issue-4b899066712be0cd--issue-66d8933507f8bf75": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "테라파워, 선진원자로 기업 최초로 INPO 가입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "INPO 가입과 SK이노베이션 사업 공조 체결은 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "verdict": "different_thread"
+    },
     "issue-4b899066712be0cd--issue-895b471e7f2e1d4c": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "테라파워, 선진원자로 기업 최초로 INPO 가입",
@@ -17282,6 +17722,17 @@
       "right_title": "영국 규제당국, X-energy Xe-100 SMR 설계 평가 착수",
       "verdict": "same_thread"
     },
+    "issue-4d55708b92e20a28--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "X-에너지, 텍사스 SMR 프로젝트에 최대 10억 달러 추가 공적 자금 확보",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "텍사스 SMR 자금 확보와 전력망 현대화 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "verdict": "different_thread"
+    },
     "issue-4d55708b92e20a28--story-dbfa69dbe602a61e": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "X-에너지, 텍사스 SMR 프로젝트에 최대 10억 달러 추가 공적 자금 확보",
@@ -17867,6 +18318,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-13T02:57:19.147638+00:00",
       "right_title": "미 에너지부, 폭염 대비 미드애틀랜틱 지역 전력망 안정화 긴급 명령 발령",
+      "verdict": "different_thread"
+    },
+    "issue-4e5fa6152c305934--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 DOE, 국가이익 전력송전회랑(NIETC) 3곳 지정 절차 중단",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "송전회랑 중단과 투자 집행은 다른 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
       "verdict": "different_thread"
     },
     "issue-4e5fa6152c305934--story-cc58741ea2a05477": {
@@ -18718,6 +19180,17 @@
       "right_title": "두산에너빌리티, 한수원과 체코 원전 주기기 공급 계약 체결",
       "verdict": "different_thread"
     },
+    "issue-5190f5f0f0d050de--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "루마니아, 다뉴브강 수위 저하로 원전 가동 중단 후 전력 절약 요청",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "루마니아 원전 가동 중단과 월성 1호기 재판은 전혀 다른 사안이다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
+      "verdict": "different_thread"
+    },
     "issue-51dcb7c7707f1ab4--issue-726ce5e20cdd473d": {
       "gate": {
         "at": "2026-09-23T21:48:05+00:00",
@@ -19133,6 +19606,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-19T21:20:37.113659+00:00",
       "right_title": "미스트랄·휴메인, 사우디와 수억 유로 규모 소버린 AI 협력",
+      "verdict": "different_thread"
+    },
+    "issue-53cff084bc298889--story-3ff816ae38eb1d7b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 AI 데이터센터 프로젝트, 주민 반발로 1300억 달러 지연·취소",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 데이터센터 주민 반발과 MS의 중동 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
       "verdict": "different_thread"
     },
     "issue-53cff084bc298889--story-5912265ba9aa8cfe": {
@@ -20053,6 +20537,17 @@
       "right_title": "최태원·정기선이 주목한 SMR, 미국에서 본게임 시작",
       "verdict": "same_thread"
     },
+    "issue-591caac62d5f3545--issue-d31013e6bf533618": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "빌 게이츠 참여 SMR, 미국 NRC 건설허가 획득 및 착공",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "테라파워 SMR 규제 승인과 SK와의 사업 협력",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "SK-테라파워, SMR 동맹 강화…AI 데이터센터 에너지 솔루션 추진",
+      "verdict": "same_thread"
+    },
     "issue-591caac62d5f3545--issue-d4776c81220de821": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "빌 게이츠 참여 SMR, 미국 NRC 건설허가 획득 및 착공",
@@ -20469,6 +20964,17 @@
       "right_title": "미 에너지부, 인디애나주 석탄발전소 가동 연장 긴급명령 발령",
       "verdict": "different_thread"
     },
+    "issue-5dd57acfbbc87613--story-9280bb770c9a48c7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "석탄화력발전소 폐지지역 지원 특별법 국회 본회의 통과",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "석탄폐지지역 특별법과 이탈리아 원전 복귀 법안은 대상이 다르다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "이탈리아 상원, 원자력 발전 복귀 법안 가결",
+      "verdict": "different_thread"
+    },
     "issue-5dd57acfbbc87613--story-b06948bba6b5555b": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "석탄화력발전소 폐지지역 지원 특별법 국회 본회의 통과",
@@ -20711,6 +21217,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-20T19:50:20.531512+00:00",
       "right_title": "미 DOE, 국내 광물 채굴 기술 혁신에 7,300만 달러 지원",
+      "verdict": "different_thread"
+    },
+    "issue-5f50f27e3d506043--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 에너지부, 제네시스 미션 프로젝트에 원자력 분야 대거 선정 발표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "DOE의 서로 다른 프로그램 및 투자 건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
       "verdict": "different_thread"
     },
     "issue-5f50f27e3d506043--story-cc58741ea2a05477": {
@@ -21659,6 +22176,17 @@
       "right_title": "튀르키예, 2035년까지 1080억 달러 투입해 재생에너지 120GW 구축",
       "verdict": "different_thread"
     },
+    "issue-6260c0799db78ac9--story-9280bb770c9a48c7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 12차 전기본 수립 위해 3개월간 원전 공론화 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 에너지 정책과 이탈리아 원전 법안으로 대상이 다르다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "이탈리아 상원, 원자력 발전 복귀 법안 가결",
+      "verdict": "different_thread"
+    },
     "issue-6260c0799db78ac9--story-980c9a9e381ecd8d": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, 신규 원전 건설 공론화 착수…12월 권고안 도출",
@@ -21757,6 +22285,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-23T19:34:57.272811+00:00",
       "right_title": "정부, 2000억 달러 규모 대미투자 협상 결과 22일 국회 보고",
+      "verdict": "different_thread"
+    },
+    "issue-627ba69c29d4adc5--issue-66d8933507f8bf75": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "민간 대기업들, SMR 사업 활성화를 위한 제도 개편 및 요금제도 확정 건의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 대기업 건의와 SK-테라파워 제휴는 별개의 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
       "verdict": "different_thread"
     },
     "issue-627ba69c29d4adc5--issue-9f78f3de3e01224a": {
@@ -22414,6 +22953,12 @@
       "verdict": "different_thread"
     },
     "issue-63d944c5faf26b32--issue-dcf7c30e7fd1692d": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "빌 게이츠 방한, SMR 공급망 논의…테라파워, 美 NRC 건설허가 획득",
       "model": "gemini-3.5-flash-lite",
@@ -23044,6 +23589,17 @@
       "right_title": "한-프랑스, 원자력 전 주기 협력 강화 및 고위급 대화채널 개설",
       "verdict": "different_thread"
     },
+    "issue-66d8933507f8bf75--issue-67b1530f243d1683": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "SMR 사업 합의와 ESS 동향은 다른 사안",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "AI 시대 핵심 인프라로 부상하는 ESS",
+      "verdict": "different_thread"
+    },
     "issue-66d8933507f8bf75--issue-895b471e7f2e1d4c": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한덕수 국무총리, 빌 게이츠와 14일 SMR 협력 방안 논의 예정",
@@ -23066,7 +23622,24 @@
       "right_title": "빌 게이츠 방한, 국내 기업 테라파워 SMR 공급망 참여 본격화",
       "verdict": "same_thread"
     },
+    "issue-66d8933507f8bf75--issue-9b707d5bc0e90593": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "SMR 사업 합의와 지자체 투자 지원은 별개",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "전남광주통합특별시의회, SK 100조원 투자 지원 예고",
+      "verdict": "different_thread"
+    },
     "issue-66d8933507f8bf75--issue-aafd59741b95cafa": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한덕수 국무총리, 빌 게이츠와 14일 SMR 협력 방안 논의 예정",
       "model": "gemini-3.5-flash-lite",
@@ -23094,6 +23667,17 @@
       "right_title": "SK-테라파워, SMR 동맹 강화…AI 데이터센터 에너지 솔루션 추진",
       "verdict": "same_thread"
     },
+    "issue-66d8933507f8bf75--issue-d32ad97e6decc8fb": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "기업 및 SMR 관련 주제만 같고 개별 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "현대건설, 글로벌 원전 슈퍼사이클 대응 및 SMR 시장 공략",
+      "verdict": "different_thread"
+    },
     "issue-66d8933507f8bf75--issue-dcf7c30e7fd1692d": {
       "gate": {
         "at": "2026-09-23T21:48:05+00:00",
@@ -23111,6 +23695,23 @@
       "right_title": "빌 게이츠 테라파워, AI 데이터센터용 2호 SMR 프로젝트 추진",
       "verdict": "same_thread"
     },
+    "issue-66d8933507f8bf75--issue-f179a670a63aab2a": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "테라파워 SMR 관련 국내 기업들의 파트너십 체결",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "현대건설, 테라파워와 나트륨 원전 EPC 파트너십 체결",
+      "verdict": "same_thread"
+    },
     "issue-66d8933507f8bf75--issue-f796c0b6619106a8": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한덕수 국무총리, 빌 게이츠와 14일 SMR 협력 방안 논의 예정",
@@ -23121,6 +23722,84 @@
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "두산에너빌리티, 테라파워 SMR 1호기 핵심기기 제작 참여",
       "verdict": "same_thread"
+    },
+    "issue-66d8933507f8bf75--story-064c34cfad2c8142": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "테라파워 SMR 사업 제휴에서 영국 부지 선정으로 확장",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "테라파워, 영국 내 SMR 건설 부지 선정 및 협력 추진",
+      "verdict": "same_thread"
+    },
+    "issue-66d8933507f8bf75--story-1a5d92dbd0371e7c": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "테라파워 SMR 사업 합의 이후 EPC 재입찰 진행",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "테라파워(TerraPower), 나트륨(Natrium) 원전 EPC 계약 재입찰 추진",
+      "verdict": "same_thread"
+    },
+    "issue-66d8933507f8bf75--story-2969954994be36e3": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "기업간 사업 합의와 규제기관 간 MOC는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "원안위, 미국 NRC와 SMR 심사 협력 위한 MOC 체결 추진",
+      "verdict": "different_thread"
+    },
+    "issue-66d8933507f8bf75--story-371b3e95bd53df77": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "사업 협의와 개별 기자재 계약은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "테라파워, 나트륨 원전 기자재 공급 계약 12건 체결",
+      "verdict": "different_thread"
+    },
+    "issue-66d8933507f8bf75--story-3df864966dac189f": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "SMR 사업 합의와 국방부 대출 협의는 별개",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 국방부, AI 인프라 스타트업 플루이드스택에 6.7조원 대출 협의",
+      "verdict": "different_thread"
+    },
+    "issue-66d8933507f8bf75--story-8a4787f6f9b21f3b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "테라파워의 SK 협력과 영국 원전 추진은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "빌 게이츠의 테라파워, 2034년 영국 원전 가동 목표",
+      "verdict": "different_thread"
     },
     "issue-66d8933507f8bf75--story-8d3a05e742ae9e55": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -23134,6 +23813,12 @@
       "verdict": "different_thread"
     },
     "issue-66d8933507f8bf75--story-8efc86ce47ad1b25": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한덕수 국무총리, 빌 게이츠와 14일 SMR 협력 방안 논의 예정",
       "model": "gemini-3.5-flash-lite",
@@ -23143,6 +23828,28 @@
       "reviewed_at": "2026-09-18T22:16:48.193931+00:00",
       "right_title": "테라파워, 메타와 나트륨 원전 8기 개발 협력 및 SK 참여 확대",
       "verdict": "same_thread"
+    },
+    "issue-66d8933507f8bf75--story-aa6ac60c2ca8f6b0": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "테라파워 제휴와 카이로스 파워 실증로 계약은 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "삼성물산, 카이로스 파워와 Hermes 2 실증로 EPC 협력 체결",
+      "verdict": "different_thread"
+    },
+    "issue-66d8933507f8bf75--story-c36dd376bcc98430": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "SK-테라파워 제휴와 미일 G20 SMR 프로젝트는 다른 사안",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미·일, G20 계기 산업·기술 공조 강화 및 대규모 투자 약정",
+      "verdict": "different_thread"
     },
     "issue-67b1530f243d1683--issue-78926903156f16fa": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -23164,6 +23871,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-19T21:20:37.113659+00:00",
       "right_title": "전남광주통합특별시의회, SK 100조원 투자 지원 예고",
+      "verdict": "different_thread"
+    },
+    "issue-67b1530f243d1683--issue-c15a88cbebc4b653": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "AI 시대 핵심 인프라로 부상하는 ESS",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "ESS 정책 동향과 지자체 SMR 지원 건의는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "경주시, 2027년 국·도비 확보 위해 SMR 제작지원센터 등 건의",
       "verdict": "different_thread"
     },
     "issue-67b1530f243d1683--issue-f7fb3d73512b4f68": {
@@ -23603,6 +24321,17 @@
       "right_title": "포스코, 철강 탈탄소 위한 원전 PPA 허용 건의",
       "verdict": "different_thread"
     },
+    "issue-6a278c9de55d7527--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "송영길 의원, 월성 압력관 예타 면제 건의 정부 전달",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "정치인의 건의와 사법부 재판은 다른 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
+      "verdict": "different_thread"
+    },
     "issue-6b4bcffb54f95abb--issue-726ce5e20cdd473d": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "AI 데이터센터 급증에 따른 전력안보 체계 강화 필요",
@@ -23881,6 +24610,28 @@
       "reviewed_at": "2026-09-13T02:57:19.147638+00:00",
       "right_title": "정부, 12차 전기본 통해 데이터센터 전력 수요 옥석 가리기",
       "verdict": "same_thread"
+    },
+    "issue-6b4bcffb54f95abb--story-3ff816ae38eb1d7b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "AI 데이터센터 급증에 따른 전력안보 체계 강화 필요",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 전력안보 제언과 MS의 중동 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
+      "verdict": "different_thread"
+    },
+    "issue-6b4bcffb54f95abb--story-4d5bf6f05d2db61b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "AI 데이터센터 급증에 따른 전력안보 체계 강화 필요",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "AI 전력안보 제언과 추석 전기차 충전 할인 시행은 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 추석 연휴 낮 시간대 전기차 충전요금 50% 할인 시행",
+      "verdict": "different_thread"
     },
     "issue-6b4bcffb54f95abb--story-4e912543bb1eed40": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -25482,6 +26233,17 @@
       "right_title": "경북도, 산업용 지역 전기요금제 환영…30% 이상 차등 필요성 강조",
       "verdict": "same_thread"
     },
+    "issue-726ce5e20cdd473d--story-4d5bf6f05d2db61b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "경북도, 산업용 지역 전기요금제 환영…30% 이상 차등 필요성 강조",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "전기요금 차등제와 전기차 충전 할인으로 사안이 다름",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 추석 연휴 낮 시간대 전기차 충전요금 50% 할인 시행",
+      "verdict": "different_thread"
+    },
     "issue-726ce5e20cdd473d--story-4e912543bb1eed40": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "경북도, 산업용 지역 전기요금제 환영…30% 이상 차등 필요성 강조",
@@ -26621,6 +27383,17 @@
       "right_title": "국회 토론회, 서남권 반도체 클러스터 전력공급 및 제12차 전기본 과제 논의",
       "verdict": "same_thread"
     },
+    "issue-76e475ad2520cd4f--story-9280bb770c9a48c7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 2040년 전력수요 최대 885TWh 전망…발전설비 확충 시급",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "전력수요 전망과 이탈리아 원전 복귀 법안은 무관하다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "이탈리아 상원, 원자력 발전 복귀 법안 가결",
+      "verdict": "different_thread"
+    },
     "issue-76e475ad2520cd4f--story-9b1fae628f12cba4": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, 2040년 전력수요 최대 885TWh 전망…발전설비 확충 시급",
@@ -27445,6 +28218,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-23T19:34:57.272811+00:00",
       "right_title": "미국, 2050년까지 원전 설비용량 400GW 확대 행정명령 서명",
+      "verdict": "different_thread"
+    },
+    "issue-7a867b2ff27fd40f--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국, 전력망 인프라 안보 강화 위한 행정명령 발동",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "행정명령 발동과 개별 프로젝트 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
       "verdict": "different_thread"
     },
     "issue-7b2b8cc8cc78400b--story-88bd5673cf01350f": {
@@ -30060,6 +30844,17 @@
       "right_title": "태국, SMR 도입 추진 가속화",
       "verdict": "different_thread"
     },
+    "issue-89c42f8dd386dc31--story-c3de2b9a5fc71ff5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "대미 투자 협상 난항, 전략자산 활용한 상업성 확보 과제",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국가와 SMR 대상 프로젝트가 서로 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "영국, Xe-100 SMR에 대한 일반설계평가(GDA) 착수",
+      "verdict": "different_thread"
+    },
     "issue-89c42f8dd386dc31--story-cf3a48a0423086ac": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "대미 투자 협상 난항, 전략자산 활용한 상업성 확보 과제",
@@ -30341,6 +31136,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-20T19:50:20.531512+00:00",
       "right_title": "산업부, 2027년 예산 13.2조 편성…제조 AI·첨단산업 집중",
+      "verdict": "different_thread"
+    },
+    "issue-8d4e6351d6c710b2--story-4d5bf6f05d2db61b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 14조원 규모 국가기간 전력망 예타 면제 확정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "전력망 예타 면제 확정과 추석 전기차 충전 할인은 무관",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 추석 연휴 낮 시간대 전기차 충전요금 50% 할인 시행",
       "verdict": "different_thread"
     },
     "issue-8d4e6351d6c710b2--story-9b1fae628f12cba4": {
@@ -31216,6 +32022,17 @@
       "reviewed_at": "2026-09-13T02:57:19.147638+00:00",
       "right_title": "미국 10여 개 주, 데이터센터 세금 감면 혜택 중단 및 축소",
       "verdict": "same_thread"
+    },
+    "issue-9957f9f4b43552f8--story-3ff816ae38eb1d7b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "트럼프 미국 대통령, 데이터센터 건설 반대 여론에 정면 대응",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 대통령 발언과 MS의 중동 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
+      "verdict": "different_thread"
     },
     "issue-9957f9f4b43552f8--story-661b1150fb0281ea": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -32214,6 +33031,17 @@
       "right_title": "미 DOE NRIC, 차세대 원자로 및 핵연료 주기 프로젝트 13개 선정",
       "verdict": "different_thread"
     },
+    "issue-9ff80dab9059f991--story-074d64c28e3a3d13": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "INL 내 서로 다른 주체와 목적의 프로젝트임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "INL, 사용후핵연료 피복관 제거용 이동식 스키드 가동 준비 완료",
+      "verdict": "different_thread"
+    },
     "issue-9ff80dab9059f991--story-796f3139d1f97809": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "ARC, 아이다호 국립연구소(INL)와 SMR 배치 협력",
@@ -32879,6 +33707,17 @@
       "right_title": "미 DOE, 국내 광물 채굴 기술 혁신에 7,300만 달러 지원",
       "verdict": "different_thread"
     },
+    "issue-a587d096a9a94b15--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 디아블로 캐년 원전에 2.71억 달러 지원",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "DOE 관련 다른 사업 지원 및 투자 건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "verdict": "different_thread"
+    },
     "issue-a587d096a9a94b15--story-e009af115f0ba074": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미 에너지부, 디아블로 캐년 원전에 2.71억 달러 지원",
@@ -33452,6 +34291,28 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-23T19:34:57.272811+00:00",
       "right_title": "정부, 신규 원전 건설 공론화 착수…12월 권고안 도출",
+      "verdict": "different_thread"
+    },
+    "issue-aa221d1a4aeed024--story-1409cf729f7879fd": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "고준위 방사성폐기물 관리 전문위원회 35명 위촉 및 본격 가동",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 위원회 출범과 미 상원 청문회는 다른 국가의 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 상원 환경공공사업위, 핵폐기물 관리 정책 개정 청문회 개최",
+      "verdict": "different_thread"
+    },
+    "issue-aa221d1a4aeed024--story-f875e4ea339f158c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "고준위 방사성폐기물 관리 전문위원회 35명 위촉 및 본격 가동",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "전문위원회 위촉과 울진군 유치 신청은 별개",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "울진군, 고준위방폐물 유치 공론화 및 10조 원 SOC 지원 제안",
       "verdict": "different_thread"
     },
     "issue-aafd59741b95cafa--issue-aee00725a324e9a4": {
@@ -36190,6 +37051,17 @@
       "right_title": "한울 6호기 사용후핵연료 이송 중 붕산수 누출 사고 발생",
       "verdict": "different_thread"
     },
+    "issue-bcb929a6f7db234b--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "원안위, 월성·한울원전 복수부지 동시 사고 가정 국가방사능방재 훈련 실시",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "방사능방재 훈련과 월성 1호기 재판은 별개의 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
+      "verdict": "different_thread"
+    },
     "issue-bccf5f15f321ec1b--issue-c635ceb310705bc0": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "SMR 입지·거래 규제, 향후 2년간의 중요성 강조",
@@ -36456,6 +37328,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-22T20:05:59.325536+00:00",
       "right_title": "미국 오하이오주, 데이터센터 전력·용수 사용 논란 선거 쟁점화",
+      "verdict": "different_thread"
+    },
+    "issue-bdd7d6c200b05cfb--story-3ff816ae38eb1d7b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미스트랄·휴메인, 사우디와 수억 유로 규모 소버린 AI 협력",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 기업들의 중동 AI 인프라 투자",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
       "verdict": "different_thread"
     },
     "issue-bdd7d6c200b05cfb--story-52cb1c00ba67bc51": {
@@ -36855,6 +37738,17 @@
       "right_title": "미국 뉴멕시코주, 주유지 내 신규 우라늄 채굴 금지 행정명령 발령",
       "verdict": "different_thread"
     },
+    "issue-be44c7daf4c104cd--story-cf2a564da87ca921": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "학회 발표와 정상회담 협의는 다른 사안",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+      "verdict": "different_thread"
+    },
     "issue-be44c7daf4c104cd--story-ef96aafc7f363583": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "Global 2026, 원자력 연료 주기 개발 동향 발표",
@@ -36985,6 +37879,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-13T19:37:56.120401+00:00",
       "right_title": "미 에너지부, 폭염 대비 미드애틀랜틱 지역 전력망 안정화 긴급 명령 발령",
+      "verdict": "different_thread"
+    },
+    "issue-be4ddc7381fc3514--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "(OFFICIAL) 미국 에너지부, 철강 산업 현대화에 5억 달러 지원",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "철강 산업 현대화와 전력망 투자는 별개",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
       "verdict": "different_thread"
     },
     "issue-be4ddc7381fc3514--story-cc58741ea2a05477": {
@@ -37416,6 +38321,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-23T19:34:57.272811+00:00",
       "right_title": "홀텍, 아이다호 국립연구소(INL)에 SMR-300 테스트 시설 구축",
+      "verdict": "different_thread"
+    },
+    "issue-c15a88cbebc4b653--story-cf2a564da87ca921": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "경주시, 2027년 국·도비 확보 위해 SMR 제작지원센터 등 건의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "경주시 제작지원센터 건의와 한미 정상회담은 주제가 다름",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
       "verdict": "different_thread"
     },
     "issue-c15a88cbebc4b653--story-e0dd333f959cbd3d": {
@@ -39906,6 +40822,17 @@
       "right_title": "원안위, 새울 3호기 재가동 승인…운전원 설정값 입력 오류 확인",
       "verdict": "different_thread"
     },
+    "issue-d4010b67b8de8881--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "원안위, 새울원전 1호기 정기검사 후 재가동 승인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대상 호기와 사안이 완전히 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
+      "verdict": "different_thread"
+    },
     "issue-d4010b67b8de8881--story-f03f72eb83f63915": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "원안위, 새울원전 1호기 정기검사 후 재가동 승인",
@@ -40385,6 +41312,17 @@
       "right_title": "삼성, 네덜란드 AI 반도체 스타트업 '유클리드'에 투자",
       "verdict": "different_thread"
     },
+    "issue-d621a4293eb89200--story-4d5bf6f05d2db61b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "당정, 2027년 예산안에 반도체 특별회계 신설 및 전력·용수 인프라 지원",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "예산안 편성과 추석 전기차 충전 할인 대책은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 추석 연휴 낮 시간대 전기차 충전요금 50% 할인 시행",
+      "verdict": "different_thread"
+    },
     "issue-d621a4293eb89200--story-7d604ab595035fb4": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "당정, 2027년 예산안에 반도체 특별회계 신설 및 전력·용수 인프라 지원",
@@ -40526,6 +41464,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "미국 에너지부, 오클로(Oklo) 시험용 원자로 가동 승인",
+      "verdict": "different_thread"
+    },
+    "issue-d8ddeb54d18d01d7--story-074d64c28e3a3d13": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 DOE NRIC, 차세대 원자로 및 핵연료 주기 프로젝트 13개 선정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "프로젝트 선정과 연구소의 장비 가동은 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "INL, 사용후핵연료 피복관 제거용 이동식 스키드 가동 준비 완료",
       "verdict": "different_thread"
     },
     "issue-d8ddeb54d18d01d7--story-0bc976d9b4efc42d": {
@@ -41411,6 +42360,17 @@
       "right_title": "테라파워, 메타와 나트륨 원전 8기 개발 협력 및 SK 참여 확대",
       "verdict": "same_thread"
     },
+    "issue-ddd7d2806859e642--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "태국, 건물 에너지 효율 및 전력망 현대화 로드맵 발표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "태국과 미국의 서로 다른 정책 발표임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "verdict": "different_thread"
+    },
     "issue-ddd7d2806859e642--story-ff6b831bee753ecc": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "태국, 건물 에너지 효율 및 전력망 현대화 로드맵 발표",
@@ -42144,6 +43104,17 @@
       "right_title": "웨스트버지니아주, 미 에너지부(DOE) 원전 수명주기 혁신 캠퍼스 최종 후보 선정",
       "verdict": "different_thread"
     },
+    "issue-e40a9585f266cf82--story-3f2df935d0158def": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원자력협정 개정 및 후속 협의 지연",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "원자력협정 개정과 APR1400 도입 지연은 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 투자 패키지 중 APR1400 미국 도입 합의 지연",
+      "verdict": "different_thread"
+    },
     "issue-e40a9585f266cf82--story-71596a4c2e20ad56": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한미 원자력협정 개정 및 후속 협의 지연",
@@ -42154,6 +43125,23 @@
       "reviewed_at": "2026-09-19T21:20:37.113659+00:00",
       "right_title": "한수원, 프랑스 오라노와 우라늄 농축 분야 장기 협력의향서 체결",
       "verdict": "different_thread"
+    },
+    "issue-e40a9585f266cf82--story-cf2a564da87ca921": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원자력협정 개정 및 후속 협의 지연",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "원자력협정 지연에서 정상회담 합의로 진전",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+      "verdict": "same_thread"
     },
     "issue-e415df575e4ff4c8--issue-ebf7dd57b9741653": {
       "gate": {
@@ -42483,6 +43471,17 @@
       "right_title": "한수원-공군 미사일방어사령부, 원전 방호 협력 업무협약 체결",
       "verdict": "different_thread"
     },
+    "issue-ec91ed3e3ac96397--story-fc64f50e257b3a0a": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "일본, 호르무즈 우회 송유관 건설 지원 및 원전 활용 방침 재확인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "일본 원전 정책과 한국의 대미 투자 합의는 무관",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 대미 전략투자 연간 200억 달러 제한 재확인",
+      "verdict": "different_thread"
+    },
     "issue-ef135f23dd0e3a24--story-5074c0196cff452b": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "IAEA, 자포리자 원전 수석 엔지니어 사망 사건 규탄",
@@ -42624,6 +43623,28 @@
       "relationship": "",
       "reviewed_at": "2026-09-21T19:56:41.668162+00:00",
       "right_title": "미 NRC, 위험 기반 규제 도입 및 인허가 체계 개편 추진",
+      "verdict": "different_thread"
+    },
+    "issue-f0e25c21cc586ce0--story-a0ddc0f1138d2ea5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "뉴스케일파워, 6GW SMR 전력계약 논의 및 AI 설계 도구 도입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "뉴스케일파워 동향과 미국-튀르키예 SMR 협약은 대상이 다름",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
+      "verdict": "different_thread"
+    },
+    "issue-f0e25c21cc586ce0--story-aa6ac60c2ca8f6b0": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "뉴스케일파워, 6GW SMR 전력계약 논의 및 AI 설계 도구 도입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "뉴스케일파워와 삼성물산 카이로스파워 협력은 별개의 SMR 사업",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "삼성물산, 카이로스 파워와 Hermes 2 실증로 EPC 협력 체결",
       "verdict": "different_thread"
     },
     "issue-f0e25c21cc586ce0--story-aeea870445785e55": {
@@ -42798,6 +43819,17 @@
       "right_title": "테라파워, 메타와 나트륨 원전 8기 개발 협력 및 SK 참여 확대",
       "verdict": "same_thread"
     },
+    "issue-f179a670a63aab2a--story-a0ddc0f1138d2ea5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "현대건설, 테라파워와 나트륨 원전 EPC 파트너십 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 SMR 해외 협력 사업이다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
+      "verdict": "different_thread"
+    },
     "issue-f179a670a63aab2a--story-a3e57010d24635a7": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "현대건설, 테라파워와 나트륨 원전 EPC 파트너십 체결",
@@ -42808,6 +43840,17 @@
       "reviewed_at": "2026-09-13T02:57:19.147638+00:00",
       "right_title": "한수원-웨스팅하우스, 미국 내 원전 8기 건설 협력 잠정 합의",
       "verdict": "same_thread"
+    },
+    "issue-f179a670a63aab2a--story-aa6ac60c2ca8f6b0": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "현대건설, 테라파워와 나트륨 원전 EPC 파트너십 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "테라파워와 카이로스 파워는 서로 다른 SMR 기업",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "삼성물산, 카이로스 파워와 Hermes 2 실증로 EPC 협력 체결",
+      "verdict": "different_thread"
     },
     "issue-f179a670a63aab2a--story-c1ddbcc160b82974": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -42984,6 +44027,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-13T19:37:56.120401+00:00",
       "right_title": "한수원, 프랑스 오라노와 우라늄 농축 분야 장기 협력의향서 체결",
+      "verdict": "different_thread"
+    },
+    "issue-f377614915cf667c--story-cf2a564da87ca921": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "스탠다드 뉴클리어, 래디언트와 TRISO 핵연료 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "민간 기업 계약과 정부 정상회담은 별개의 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
       "verdict": "different_thread"
     },
     "issue-f377614915cf667c--story-dc617ac727429a81": {
@@ -43837,6 +44891,17 @@
       "right_title": "시진핑·푸틴, 시베리아의 힘-2 가스관 사업 논의 예정",
       "verdict": "different_thread"
     },
+    "issue-f9ffebf1f741230a--story-3f2df935d0158def": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미얀마 대통령, 취임 후 첫 러시아 방문…푸틴과 에너지 협력 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미얀마-러시아 협력과 한미 APR1400은 무관",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 투자 패키지 중 APR1400 미국 도입 합의 지연",
+      "verdict": "different_thread"
+    },
     "issue-f9ffebf1f741230a--story-5658c290d3369b54": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미얀마 대통령, 취임 후 첫 러시아 방문…푸틴과 에너지 협력 논의",
@@ -43890,6 +44955,17 @@
       "relationship": "",
       "reviewed_at": "2026-09-21T19:56:41.668162+00:00",
       "right_title": "정부, 2000억 달러 규모 대미투자 협상 결과 22일 국회 보고",
+      "verdict": "different_thread"
+    },
+    "issue-f9ffebf1f741230a--story-fc64f50e257b3a0a": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미얀마 대통령, 취임 후 첫 러시아 방문…푸틴과 에너지 협력 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국가 간 정상회담과 국내 투자 제한 재확인은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 대미 전략투자 연간 200억 달러 제한 재확인",
       "verdict": "different_thread"
     },
     "issue-f9ffebf1f741230a--story-fd4140d2668bcbc0": {
@@ -44465,6 +45541,17 @@
       "right_title": "박해철 의원, 5개 발전공기업 통합 ‘한국발전공사법’ 대표 발의",
       "verdict": "different_thread"
     },
+    "story-03eec1ad43415c80--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "포스코, 철강 탈탄소 위한 원전 PPA 허용 건의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "원전 PPA 건의와 형사 재판은 다른 사안",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
+      "verdict": "different_thread"
+    },
     "story-064c34cfad2c8142--story-1a5d92dbd0371e7c": {
       "gate": {
         "at": "2026-09-23T21:48:05+00:00",
@@ -44526,6 +45613,28 @@
       "reviewed_at": "2026-09-18T22:16:48.193931+00:00",
       "right_title": "테라파워, 메타와 나트륨 원전 8기 개발 협력 및 SK 참여 확대",
       "verdict": "same_thread"
+    },
+    "story-074d64c28e3a3d13--story-a74fe0a192c3a524": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "INL, 사용후핵연료 피복관 제거용 이동식 스키드 가동 준비 완료",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "INL 장비 가동과 홀텍 테스트 시설 구축은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "홀텍, 아이다호 국립연구소(INL)에 SMR-300 테스트 시설 구축",
+      "verdict": "different_thread"
+    },
+    "story-074d64c28e3a3d13--story-c1ddbcc160b82974": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "INL, 사용후핵연료 피복관 제거용 이동식 스키드 가동 준비 완료",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "INL 내 서로 다른 장비 및 시설 구축 사업임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "홀텍, 아이다호 국립연구소(INL)에 SMR-300 테스트 시설 구축",
+      "verdict": "different_thread"
     },
     "story-0809388b2c901a85--story-83244884e53b5562": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -44773,6 +45882,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-22T20:05:59.325536+00:00",
       "right_title": "미 에너지부, 폭염 대비 미드애틀랜틱 지역 전력망 안정화 긴급 명령 발령",
+      "verdict": "different_thread"
+    },
+    "story-0bc976d9b4efc42d--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 지열 에너지 개발 프로젝트에 9,900만 달러 지원",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "지열 지원과 전력망 투자는 다른 프로젝트",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
       "verdict": "different_thread"
     },
     "story-0bc976d9b4efc42d--story-cc58741ea2a05477": {
@@ -45327,6 +46447,17 @@
       "right_title": "미·일, 5500억 달러 규모 대미 전략 투자 및 관세 합의 재확인",
       "verdict": "different_thread"
     },
+    "story-14abbebf6bb0a431--story-a0ddc0f1138d2ea5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "삼성물산, 스웨덴 SMR 사업 공동개발협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "삼성물산 스웨덴 사업과 미국-튀르키예 협약",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
+      "verdict": "different_thread"
+    },
     "story-14abbebf6bb0a431--story-aa6ac60c2ca8f6b0": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "삼성물산, 스웨덴 SMR 사업 공동개발협약 체결",
@@ -45550,6 +46681,17 @@
       "right_title": "미 에너지부, 인디애나주 석탄발전소 가동 연장 긴급명령 발령",
       "verdict": "different_thread"
     },
+    "story-15e2626e3102dcd5--story-9280bb770c9a48c7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 2040년까지 석탄발전 60기 단계적 폐지 및 LNG·양수발전 전환",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 석탄발전 폐지 계획과 이탈리아 원전 법안은 다른 사안이다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "이탈리아 상원, 원자력 발전 복귀 법안 가결",
+      "verdict": "different_thread"
+    },
     "story-15e2626e3102dcd5--story-9b1fae628f12cba4": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "제12차 전기본 토론회 개최…석탄발전 조기 폐지 논의",
@@ -45716,6 +46858,17 @@
       "right_title": "미국 기업 4곳, 한국에 20억 달러 규모 투자 신고",
       "verdict": "different_thread"
     },
+    "story-166d03d61f2780a1--story-f875e4ea339f158c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "울진군, 원자력 청정수소 산단 조성 위한 범정부 지원 촉구",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "청정수소 산단과 방폐물 유치는 다른 사안",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "울진군, 고준위방폐물 유치 공론화 및 10조 원 SOC 지원 제안",
+      "verdict": "different_thread"
+    },
     "story-16bab8dc452d7e6e--story-67e9d8e68965f581": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "울진군, 죽변 비상활주로 이전 사업비 분담 구조 재검토 요구",
@@ -45769,6 +46922,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-17T19:50:44.952073+00:00",
       "right_title": "우리기술, 두산에너빌리티와 신한울 3·4호기 가상화 DCS 개발 계약 체결",
+      "verdict": "different_thread"
+    },
+    "story-17494159e9693304--story-3ff816ae38eb1d7b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 오하이오주, 데이터센터 전력·용수 사용 논란 선거 쟁점화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "오하이오주 선거 쟁점화와 MS의 중동 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
       "verdict": "different_thread"
     },
     "story-17494159e9693304--story-661b1150fb0281ea": {
@@ -45918,6 +47082,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-13T19:37:56.120401+00:00",
       "right_title": "원안위, 월성·한울원전 복수부지 동시 사고 가정 국가방사능방재 훈련 실시",
+      "verdict": "different_thread"
+    },
+    "story-187c6f42d94d20f7--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한수원 월성본부, 신월성 2호기 방사능방재 연합훈련 실시",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "방사능방재 훈련과 월성 1호기 재판은 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
       "verdict": "different_thread"
     },
     "story-198277cd2a64d1ea--story-8670d0ff62f2c4a6": {
@@ -46302,6 +47477,17 @@
       "right_title": "헥사곤 에너지-웨이어하우저, 미국 태평양 북서부 지열 발전 개발 협약",
       "verdict": "different_thread"
     },
+    "story-1bc040b763e53fbe--story-fc64f50e257b3a0a": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "OECD NEA, 기존 원전 계속운전이 저탄소 전력 중 가장 저렴",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "OECD NEA 보고서와 대미 투자 제한은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 대미 전략투자 연간 200억 달러 제한 재확인",
+      "verdict": "different_thread"
+    },
     "story-1e85c02f82d433ab--story-c358b979285ac464": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미-사우디 원자력 협력 협정의 전략적 시사점",
@@ -46355,6 +47541,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-20T19:50:20.531512+00:00",
       "right_title": "미 에너지부, 인디애나주 석탄발전소 가동 연장 긴급명령 발령",
+      "verdict": "different_thread"
+    },
+    "story-1f8e829fa562808f--story-9280bb770c9a48c7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 하원, 신규 원전 건설 및 인허가 개혁 법안 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 하원 법안과 이탈리아 상원 법안은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "이탈리아 상원, 원자력 발전 복귀 법안 가결",
       "verdict": "different_thread"
     },
     "story-1f8e829fa562808f--story-a3e57010d24635a7": {
@@ -46655,6 +47852,12 @@
       "verdict": "same_thread"
     },
     "story-224aef821c084125--story-d5217cd852b861bd": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "웨스팅하우스 지분 확보 시나리오와 국내 원전 수출 영향 분석",
       "model": "gemini-3.5-flash-lite",
@@ -46707,6 +47910,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-21T19:56:41.668162+00:00",
       "right_title": "최원호 원안위원장, 월성원전 현장 방문해 중수 누설 후속조치 점검",
+      "verdict": "different_thread"
+    },
+    "story-22eddac9c3adda60--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "월성원자력본부, 해병대와 협력해 대드론 방어체계 강화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대드론 방어체계와 월성 1호기 재판은 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
       "verdict": "different_thread"
     },
     "story-22eddac9c3adda60--story-e953ef2351651b19": {
@@ -46914,6 +48128,17 @@
       "reviewed_at": "2026-09-14T19:37:48.371439+00:00",
       "right_title": "미 국방부, 인디애나주 NWS Crane 기지에 해군 최초 마이크로원자로 배치 확정",
       "verdict": "same_thread"
+    },
+    "story-26620a5b42ec18ee--story-c3de2b9a5fc71ff5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 해군, 인디애나주 크레인 기지에 2028년 9월까지 SMR 설치 확정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미 해군 기지와 영국 GDA는 별개의 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "영국, Xe-100 SMR에 대한 일반설계평가(GDA) 착수",
+      "verdict": "different_thread"
     },
     "story-26620a5b42ec18ee--story-f5dc9a76e5e40425": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -47899,6 +49124,17 @@
       "right_title": "경북도, 산업용 지역 전기요금제 환영…30% 이상 차등 필요성 강조",
       "verdict": "same_thread"
     },
+    "story-3af9682ffc246654--story-4bf343a0fd9c3d08": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "산업부, EU 산업가속화법(IAA) 관련 유럽의회에 한국 입장 전달",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "통상 협상과 민간 기업 간 철강 계약은 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "스웨덴 Stegra, 구글과 9.1만 톤 규모 저탄소 철강 인증 계약 체결",
+      "verdict": "different_thread"
+    },
     "story-3af9682ffc246654--story-f6aff60f007ec6f1": {
       "gate": {
         "at": "2026-09-23T21:48:05+00:00",
@@ -47936,6 +49172,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-21T19:56:41.668162+00:00",
       "right_title": "이탈리아, 에너지 안보 강화 위해 36년 만에 원전 복귀 결정",
+      "verdict": "different_thread"
+    },
+    "story-3c89063cc60c39e7--story-a0ddc0f1138d2ea5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "일본 다카이치 내각, 원전 재가동 및 SMR 도입 등 에너지 정책 강화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "일본 에너지 정책과 미국-튀르키예 협약",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
       "verdict": "different_thread"
     },
     "story-3c89063cc60c39e7--story-aeea870445785e55": {
@@ -48247,6 +49494,56 @@
       "right_title": "한-프랑스, 국빈방문 계기 원자력 연료주기 등 9개 협력 성과 도출",
       "verdict": "same_thread"
     },
+    "story-3f2df935d0158def--story-7d38399da40c2738": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 투자 패키지 중 APR1400 미국 도입 합의 지연",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "원전 도입 지연과 가스터빈 시장 재진입은 무관",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "안살도 에너지, 미국 가스터빈 시장 재진입",
+      "verdict": "different_thread"
+    },
+    "story-3f2df935d0158def--story-a71ed0190b30aa57": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 투자 패키지 중 APR1400 미국 도입 합의 지연",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "원전 도입 합의와 일반 투자 신고는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미국 기업 4곳, 한국에 20억 달러 규모 투자 신고",
+      "verdict": "different_thread"
+    },
+    "story-3f2df935d0158def--story-fc64f50e257b3a0a": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 투자 패키지 중 APR1400 미국 도입 합의 지연",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대미 투자 제한과 APR1400 도입 지연 연관",
+      "relationship": "cause_effect",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 대미 전략투자 연간 200억 달러 제한 재확인",
+      "verdict": "same_thread"
+    },
+    "story-3f2df935d0158def--story-fd4140d2668bcbc0": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 투자 패키지 중 APR1400 미국 도입 합의 지연",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "APR1400 미국 도입 지연과 글로벌 사이버 보안은 다른 주제다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "글로벌 에너지 인프라 대상 사이버 공격 급증…OT 보안 중요성 부상",
+      "verdict": "different_thread"
+    },
     "story-3fb25c8cd30fd600--story-661b1150fb0281ea": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, 호남 반도체 클러스터 부지 무안군 선정…군공항 이전 본격화",
@@ -48313,6 +49610,50 @@
       "right_title": "미 연준, AI 인프라 투자가 경제 및 물가에 미치는 영향 논의 본격화",
       "verdict": "different_thread"
     },
+    "story-3ff816ae38eb1d7b--story-52cb1c00ba67bc51": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "마이크로소프트 투자와 EU의 AI 인프라 추진은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "EU, AI 데이터센터 확충 및 전력 인프라 강화 추진",
+      "verdict": "different_thread"
+    },
+    "story-3ff816ae38eb1d7b--story-661b1150fb0281ea": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국가 및 대상 프로젝트가 완전히 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "중국, 제15차 5개년 계획 통해 AI 가속기 10만장급 클러스터 구축",
+      "verdict": "different_thread"
+    },
+    "story-3ff816ae38eb1d7b--story-695f6dbbf28db5df": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "투자 주체와 규제 대상 사안이 상이함",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "EU, 데이터센터 에너지·물 소비량 등급제 도입 추진",
+      "verdict": "different_thread"
+    },
+    "story-3ff816ae38eb1d7b--story-9b3cdf6ffb8ccd84": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "중동 인프라 투자와 메모리반도체 시연은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "마이크론, 512GB DDR5 RDIMM 시연…AI 서버 전력 효율 개선",
+      "verdict": "different_thread"
+    },
     "story-411d35e73e729522--story-84184ba869024d4d": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "영국 원자력 규제기관, 신규 원전 인허가 절차 개혁 계획 발표",
@@ -48322,6 +49663,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-17T19:50:44.952073+00:00",
       "right_title": "미국 팰리세이즈 원전, 연료 장전 개시…폐쇄 후 재가동 위한 주요 이정표 달성",
+      "verdict": "different_thread"
+    },
+    "story-411d35e73e729522--story-9280bb770c9a48c7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "영국 원자력 규제기관, 신규 원전 인허가 절차 개혁 계획 발표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "영국 원전 인허가 개혁과 이탈리아 원전 복귀 법안은 별개의 사안이다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "이탈리아 상원, 원자력 발전 복귀 법안 가결",
       "verdict": "different_thread"
     },
     "story-411d35e73e729522--story-edc41bace7398257": {
@@ -48379,6 +49731,17 @@
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "경북도, 산업용 지역 전기요금제 환영…30% 이상 차등 필요성 강조",
       "verdict": "same_thread"
+    },
+    "story-414635dfc63ab9c4--story-4d5bf6f05d2db61b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "국민의힘-경북도, 산업용 전기요금 차등제 확대 등 지역 현안 대응",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "요금 차등제 정치 협력과 전기차 충전 할인은 무관함",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 추석 연휴 낮 시간대 전기차 충전요금 50% 할인 시행",
+      "verdict": "different_thread"
     },
     "story-414635dfc63ab9c4--story-9b1fae628f12cba4": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -48612,6 +49975,17 @@
       "right_title": "美 NRC, 팰리세이즈 SMR 부지 기초 토목공사 예외 승인",
       "verdict": "different_thread"
     },
+    "story-46920b014bcfae94--story-aa6ac60c2ca8f6b0": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 NECX 2026, SMR 스타트업들의 원자로 임계 달성 사례 공유",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 컨퍼런스와 삼성물산-카이로스 EPC 협력은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "삼성물산, 카이로스 파워와 Hermes 2 실증로 EPC 협력 체결",
+      "verdict": "different_thread"
+    },
     "story-4762adf8f144ad93--story-d3effaaae45ac23b": {
       "gate": {
         "at": "2026-09-23T21:48:05+00:00",
@@ -48729,6 +50103,17 @@
       "right_title": "유용원 의원, '핵추진잠수함 특별법' 발의…컨트롤타워 설치 추진",
       "verdict": "different_thread"
     },
+    "story-4796900841f0262b--story-a0ddc0f1138d2ea5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, IAEA 총회서 SMR 특별법 기반 i-SMR 개발 및 활용 확대 천명",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한국의 IAEA 활동과 미-튀르키예 협약으로 주체·대상 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
+      "verdict": "different_thread"
+    },
     "story-4796900841f0262b--story-aeea870445785e55": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, IAEA 총회서 SMR 특별법 기반 i-SMR 개발 및 활용 확대 천명",
@@ -48738,6 +50123,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-20T19:50:20.531512+00:00",
       "right_title": "태국, SMR 도입 추진 가속화",
+      "verdict": "different_thread"
+    },
+    "story-4796900841f0262b--story-c3de2b9a5fc71ff5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, IAEA 총회서 SMR 특별법 기반 i-SMR 개발 및 활용 확대 천명",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 정책 발표와 영국 GDA 착수는 무관",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "영국, Xe-100 SMR에 대한 일반설계평가(GDA) 착수",
       "verdict": "different_thread"
     },
     "story-4796900841f0262b--story-c924b8fc99b091ba": {
@@ -48782,6 +50178,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "미 DOE, 국내 광물 채굴 기술 혁신에 7,300만 달러 지원",
+      "verdict": "different_thread"
+    },
+    "story-49559d9a502f73b1--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 DOE-SBA, 에너지 분야 중소기업 투자 지원 이니셔티브 출범",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "중소기업 투자 이니셔티브와 전력망 투자는 별개 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
       "verdict": "different_thread"
     },
     "story-49559d9a502f73b1--story-cc58741ea2a05477": {
@@ -48999,6 +50406,17 @@
       "right_title": "고리 1호기 부지, SMR 및 데이터센터 활용 방안 논의",
       "verdict": "different_thread"
     },
+    "story-4d181084fd09b33f--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한빛 2호기 운영허가 만료로 가동 정지…내년 계속운전 심의 예정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대상 호기와 사안이 전혀 다른 사건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
+      "verdict": "different_thread"
+    },
     "story-4d181084fd09b33f--story-eb158dfa6ce0660f": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한빛 2호기 운영허가 만료로 가동 정지…내년 계속운전 심의 예정",
@@ -49047,6 +50465,17 @@
       "relationship": "",
       "reviewed_at": "2026-09-21T19:56:41.668162+00:00",
       "right_title": "테네시주, 타입 원 에너지에 상업용 핵융합 기기 운영 면허 발급",
+      "verdict": "different_thread"
+    },
+    "story-4d5bf6f05d2db61b--story-9b1fae628f12cba4": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 추석 연휴 낮 시간대 전기차 충전요금 50% 할인 시행",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "단기 수급 대책과 전력망 투자 재원 토론회는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "국회, 전력망 투자 재원 마련 위한 전기요금 선납제 토론회 개최",
       "verdict": "different_thread"
     },
     "story-4e1bbcf5fe2a6b99--story-53bce9fe9fcb6487": {
@@ -50185,6 +51614,17 @@
       "right_title": "Blue Energy, 미국 NRC에 가스-원전 복합플랜트 건설 인허가 신청",
       "verdict": "different_thread"
     },
+    "story-57d2219c4e7d3660--story-a0ddc0f1138d2ea5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 NRC, 위험 기반 규제 도입 및 인허가 체계 개편 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 규제 개편과 미-튀르키예 협약은 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
+      "verdict": "different_thread"
+    },
     "story-57d2219c4e7d3660--story-a4aa06fac0666fcc": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미 NRC, 위험 기반 규제 도입 및 인허가 체계 개편 추진",
@@ -50527,6 +51967,23 @@
       "reviewed_at": "2026-09-13T02:57:19.147638+00:00",
       "right_title": "IAEA, 북한 영변 새 우라늄 농축시설 원심분리 설비 수용 가능성 분석",
       "verdict": "different_thread"
+    },
+    "story-5e301c2826a5be47--story-cf2a564da87ca921": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 핵추진잠수함 도입 관련 IAEA 협의 개시 통보",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "핵잠수함 관련 IAEA 협의와 정상회담 합의",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+      "verdict": "same_thread"
     },
     "story-5e301c2826a5be47--story-f49db048bb3de335": {
       "gate": {
@@ -51228,6 +52685,17 @@
       "right_title": "정부, 내년 에너지 R&D 예산 48% 증액…원자력 R&D 역대 최대",
       "verdict": "different_thread"
     },
+    "story-6ca36fe31334fe1a--story-9280bb770c9a48c7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 내년 에너지 R&D 예산 48% 증액…원자력 R&D 역대 최대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 R&D 예산 편성과 이탈리아 원자력 법안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "이탈리아 상원, 원자력 발전 복귀 법안 가결",
+      "verdict": "different_thread"
+    },
     "story-6ca36fe31334fe1a--story-b674a830b574b651": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, 내년 에너지 R&D 예산 48% 증액…원자력 R&D 역대 최대",
@@ -51405,6 +52873,17 @@
       "right_title": "한수원, 한빛원전 부지 내 사용후핵연료 저장시설 설명회 개최",
       "verdict": "different_thread"
     },
+    "story-7025587664fd73f5--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획 심의 보류",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "원전 심의와 법적 재판은 별개의 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
+      "verdict": "different_thread"
+    },
     "story-706bd2b20f78dfa3--story-87c6c33c04c22365": {
       "gate": {
         "at": "2026-09-23T21:48:05+00:00",
@@ -51453,6 +52932,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-23T19:34:57.272811+00:00",
       "right_title": "정부, 제1차 자원안보 기본계획 확정…원유 특정지역 의존도 50% 이하로 완화",
+      "verdict": "different_thread"
+    },
+    "story-71596a4c2e20ad56--story-cf2a564da87ca921": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한수원, 프랑스 오라노와 우라늄 농축 분야 장기 협력의향서 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "프랑스 오라노 협력과 한미 정상회담은 별개 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
       "verdict": "different_thread"
     },
     "story-71596a4c2e20ad56--story-cf3a48a0423086ac": {
@@ -51521,6 +53011,17 @@
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "정부, 미국 내 원전 8기 건설 추진…한미 양국 노형 도입 줄다리기",
       "verdict": "same_thread"
+    },
+    "story-735e685c5860a682--story-cf2a564da87ca921": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "트럼프-시진핑, 24일 정상회담 예정…무역·AI·안보 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대상과 사안이 다른 정상회담임",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+      "verdict": "different_thread"
     },
     "story-743ea92d59b8e9fe--story-a3e57010d24635a7": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -51673,6 +53174,12 @@
       "verdict": "same_thread"
     },
     "story-7524648ff8032947--story-d5217cd852b861bd": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, 대미 투자 1호 사업 22억 달러 이달 말 송금 및 웨스팅하우스 지분 인수 추진",
       "model": "gemini-3.5-flash-lite",
@@ -52181,6 +53688,17 @@
       "right_title": "미·일, 5500억 달러 규모 대미 전략 투자 및 관세 합의 재확인",
       "verdict": "different_thread"
     },
+    "story-7d604ab595035fb4--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 미국과 전력망·SMR 협력 강화 위한 정례 에너지 협력 채널 신설",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국가 간 협력 채널 신설과 미 DOE 투자는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "verdict": "different_thread"
+    },
     "story-7d604ab595035fb4--story-e953ef2351651b19": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, 미국과 전력망·SMR 협력 강화 위한 정례 에너지 협력 채널 신설",
@@ -52212,6 +53730,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-15T19:41:17.611810+00:00",
       "right_title": "유용원 의원, '핵추진잠수함 특별법' 발의…컨트롤타워 설치 추진",
+      "verdict": "different_thread"
+    },
+    "story-7dcaf5a11918ec5e--story-cf2a564da87ca921": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "로이드선급·머스크, 대서양 원자력 상선 운항 위한 '핑크 회랑' 연구 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "민간 상선 연구와 한미 정상회담은 별개의 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
       "verdict": "different_thread"
     },
     "story-7eb1aa603fa1727d--story-88bd5673cf01350f": {
@@ -52655,6 +54184,17 @@
       "right_title": "정부, 2040년 재생에너지 220GW 확대 목표 제시",
       "verdict": "different_thread"
     },
+    "story-89fad957c99c4b5a--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "튀르키예, 2035년까지 1080억 달러 투입해 재생에너지 120GW 구축",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "튀르키예 재생에너지 계획과 미국의 전력망 투자",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "verdict": "different_thread"
+    },
     "story-89fad957c99c4b5a--story-dad000f44333a347": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "튀르키예, 2035년까지 1080억 달러 투입해 재생에너지 120GW 구축",
@@ -52830,6 +54370,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-19T21:20:37.113659+00:00",
       "right_title": "미 에너지부, 폭염 대비 미드애틀랜틱 지역 전력망 안정화 긴급 명령 발령",
+      "verdict": "different_thread"
+    },
+    "story-8d771c691b805a6a--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 인디애나주 석탄발전소 가동 연장 긴급명령 발령",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "석탄발전소 가동 연장과 전력망 투자는 별개",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
       "verdict": "different_thread"
     },
     "story-8d771c691b805a6a--story-cc58741ea2a05477": {
@@ -53081,6 +54632,17 @@
       "right_title": "태국, SMR 도입 추진 가속화",
       "verdict": "different_thread"
     },
+    "story-9280bb770c9a48c7--story-fc306daa74c101ed": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "이탈리아 상원, 원자력 발전 복귀 법안 가결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "이탈리아 원자력 복귀 법안과 국내 공론화",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 신규 원전 건설 공론화 착수…12월 권고안 도출",
+      "verdict": "different_thread"
+    },
     "story-94ba2f9538e11e5b--story-9c15ebed21a70c50": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "美 우주군, 안타레스와 2170억 원 규모 우주용 원자로 개발 계약",
@@ -53164,6 +54726,17 @@
       "right_title": "미·일, G20 계기 산업·기술 공조 강화 및 대규모 투자 약정",
       "verdict": "same_thread"
     },
+    "story-960f72ba9fd3624f--story-cf2a564da87ca921": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미·일, 5500억 달러 규모 대미 전략 투자 및 관세 합의 재확인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미일 합의와 한미 정상회담은 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+      "verdict": "different_thread"
+    },
     "story-960f72ba9fd3624f--story-cf3a48a0423086ac": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미·일, 5500억 달러 규모 대미 전략 투자 및 관세 합의 재확인",
@@ -53173,6 +54746,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-20T19:50:20.531512+00:00",
       "right_title": "한-프랑스, SMR 공동연구 등 16건 협력 합의",
+      "verdict": "different_thread"
+    },
+    "story-960f72ba9fd3624f--story-fc64f50e257b3a0a": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미·일, 5500억 달러 규모 대미 전략 투자 및 관세 합의 재확인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미일 합의와 한국 정부의 대미 투자 제한은 다름",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "정부, 대미 전략투자 연간 200억 달러 제한 재확인",
       "verdict": "different_thread"
     },
     "story-980c9a9e381ecd8d--story-a1912ae6be142db4": {
@@ -53295,6 +54879,23 @@
       "reviewed_at": "2026-09-21T19:56:41.668162+00:00",
       "right_title": "미국, 한국에 대미 투자 신속 이행 압박 및 전략 분야 협력 강조",
       "verdict": "different_thread"
+    },
+    "story-9b8254df89532e88--story-cf2a564da87ca921": {
+      "gate": {
+        "at": "2026-09-24T19:41:49+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "유용원 의원, '핵추진잠수함 특별법' 발의…컨트롤타워 설치 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 핵추진잠수함 특별법 발의와 한미 정상 간 핵잠수함 협력 합의",
+      "relationship": "cause_effect",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+      "verdict": "same_thread"
     },
     "story-9b8254df89532e88--story-f49db048bb3de335": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -53438,6 +55039,50 @@
       "relationship": "",
       "reviewed_at": "2026-09-23T19:34:57.272811+00:00",
       "right_title": "미국 원자력학회(ANS), NRC 방사선 보호 프레임워크 개정안에 의견 제출",
+      "verdict": "different_thread"
+    },
+    "story-a0ddc0f1138d2ea5--story-aa6ac60c2ca8f6b0": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국가별 SMR 도입과 실증로 EPC는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "삼성물산, 카이로스 파워와 Hermes 2 실증로 EPC 협력 체결",
+      "verdict": "different_thread"
+    },
+    "story-a0ddc0f1138d2ea5--story-aeea870445785e55": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "튀르키예와 태국의 SMR 도입은 서로 다른 국가 사업",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "태국, SMR 도입 추진 가속화",
+      "verdict": "different_thread"
+    },
+    "story-a0ddc0f1138d2ea5--story-c3de2b9a5fc71ff5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "튀르키예 SMR 협약과 영국의 GDA 착수는 서로 다른 사업",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "영국, Xe-100 SMR에 대한 일반설계평가(GDA) 착수",
+      "verdict": "different_thread"
+    },
+    "story-a0ddc0f1138d2ea5--story-f6607cce45ffc36b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국-튀르키예, SMR 도입 가속화 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 국가 간 외교 및 협력 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "제1차 한-중앙아 비즈니스 서밋 개최 및 19건 MOU 체결",
       "verdict": "different_thread"
     },
     "story-a1912ae6be142db4--story-fa50e2b3f06c0eed": {
@@ -53617,6 +55262,17 @@
       "right_title": "미국, AI 인프라와 달러 결제망 결합한 '컴퓨트달러' 구상",
       "verdict": "different_thread"
     },
+    "story-a4da657876628c7b--story-f2bbce3c3c47e0b9": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "오바마 전 대통령, 앤트로픽 CEO의 'AI 속도조절론' 공개 지지",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "개인의 지지와 UN에서의 기업 발표는 다름",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "오픈AI·앤트로픽, UN서 AI 통제 상실 위험 경고 및 규제 촉구",
+      "verdict": "different_thread"
+    },
     "story-a71ed0190b30aa57--story-aec44fbc6dc629ce": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 기업 4곳, 한국에 20억 달러 규모 투자 신고",
@@ -53700,6 +55356,17 @@
       "right_title": "홀텍 뉴클리어, 최대 9억 달러 규모 IPO 추진…팔리세이즈 원전 재가동 및 SMR 개발",
       "verdict": "same_thread"
     },
+    "story-aa6ac60c2ca8f6b0--story-f6607cce45ffc36b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "삼성물산, 카이로스 파워와 Hermes 2 실증로 EPC 협력 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "삼성물산의 실증로 협력과 한-중앙아 서밋 MOU는 다른 사안이다.",
+      "relationship": "",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "제1차 한-중앙아 비즈니스 서밋 개최 및 19건 MOU 체결",
+      "verdict": "different_thread"
+    },
     "story-ac8d71d7047b20ba--story-b06948bba6b5555b": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미 환경단체, 플로리다 석탄화력발전소 가동 연장 명령에 소송 제기",
@@ -53731,6 +55398,17 @@
       "relationship": "",
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "미 에너지부, 폭염 대비 미드애틀랜틱 지역 전력망 안정화 긴급 명령 발령",
+      "verdict": "different_thread"
+    },
+    "story-ac8d71d7047b20ba--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 환경단체, 플로리다 석탄화력발전소 가동 연장 명령에 소송 제기",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "기관만 같고 대상과 사안이 전혀 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
       "verdict": "different_thread"
     },
     "story-ac8d71d7047b20ba--story-cc58741ea2a05477": {
@@ -54056,6 +55734,17 @@
       "right_title": "미 에너지부, 폭염 대비 미드애틀랜틱 지역 전력망 안정화 긴급 명령 발령",
       "verdict": "different_thread"
     },
+    "story-c358b979285ac464--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 DOE, 국내 광물 채굴 기술 혁신에 7,300만 달러 지원",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "광물 채굴 기술 지원과 전력망 투자는 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "verdict": "different_thread"
+    },
     "story-c358b979285ac464--story-cc58741ea2a05477": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미 DOE, 국내 광물 채굴 기술 혁신에 7,300만 달러 지원",
@@ -54144,6 +55833,28 @@
       "right_title": "DL이앤씨, 미국 엑스에너지와 4세대 SMR 표준화 설계 계약 체결",
       "verdict": "same_thread"
     },
+    "story-c3de2b9a5fc71ff5--story-fb0964b39bee6f61": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "영국, Xe-100 SMR에 대한 일반설계평가(GDA) 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "영국 GDA 착수와 중국 주도 글로벌 네트워크 발족은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "중국, 'SMR 혁신 글로벌 네트워크' 발족…표준화 및 보급 주도",
+      "verdict": "different_thread"
+    },
+    "story-c5339e0603d11b2c--story-c5acbde6bff5c3ae": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 폭염 대비 미드애틀랜틱 지역 전력망 안정화 긴급 명령 발령",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "전력망 긴급명령과 일반 투자 프로젝트는 별개",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "verdict": "different_thread"
+    },
     "story-c5339e0603d11b2c--story-cc58741ea2a05477": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미 에너지부, 폭염 대비 미드애틀랜틱 지역 전력망 안정화 긴급 명령 발령",
@@ -54174,6 +55885,72 @@
       "reason": "폭염 대응 전력망 명령과 원전 재가동 대출은 별개",
       "relationship": "same_matter",
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
+      "right_title": "미 에너지부, 구글 전력 공급용 듀안 아널드 원전 재가동에 19억 달러 대출",
+      "verdict": "different_thread"
+    },
+    "story-c5a7f5394e4063a7--story-e4db53e82ffb05e7": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "포스코, 철강 탈탄소 위한 원전 PPA 허용 건의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "PPA 제도 건의와 월성 1호기 재판은 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "월성 1호기 경제성 조작 의혹 재판, 증인 축소로 마무리 수순",
+      "verdict": "different_thread"
+    },
+    "story-c5acbde6bff5c3ae--story-dad000f44333a347": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국과 독일의 서로 다른 송전망 정책임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "독일, 송전망 건설 갈등 해결 위해 지중화 및 주민 참여 제도 개선",
+      "verdict": "different_thread"
+    },
+    "story-c5acbde6bff5c3ae--story-e009af115f0ba074": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "DOE 내 서로 다른 프로젝트 지원 건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부, 구글 전력 공급용 듀안 아널드 원전 재가동에 19억 달러 대출",
+      "verdict": "different_thread"
+    },
+    "story-c5acbde6bff5c3ae--story-e697c619ec9f9fdd": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "전력망 투자와 양자 컴퓨팅 경진대회는 무관",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 에너지부(DOE), 2.15억 달러 규모 양자 컴퓨팅 경진대회 개최",
+      "verdict": "different_thread"
+    },
+    "story-c5acbde6bff5c3ae--story-f1ecac74ad93af10": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "전력망 투자와 데이터센터 비용 부담 법안은 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "미 하원, 데이터센터 전력망 확충 비용 부담 법안 가결",
+      "verdict": "different_thread"
+    },
+    "story-c5acbde6bff5c3ae--story-f6cca926ebb3cd2c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "DOE의 서로 다른 지원 사업임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
       "right_title": "미 에너지부, 구글 전력 공급용 듀안 아널드 원전 재가동에 19억 달러 대출",
       "verdict": "different_thread"
     },
@@ -54297,6 +56074,28 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-20T19:50:20.531512+00:00",
       "right_title": "미 에너지부, 구글 전력 공급용 듀안 아널드 원전 재가동에 19억 달러 대출",
+      "verdict": "different_thread"
+    },
+    "story-cf2a564da87ca921--story-cf3a48a0423086ac": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 정상회담과 한-프랑스 협력은 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "한-프랑스, SMR 공동연구 등 16건 협력 합의",
+      "verdict": "different_thread"
+    },
+    "story-cf2a564da87ca921--story-e0dd333f959cbd3d": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "정상회담의 핵잠수함 협력과 부산시 SMR 해양 전략은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
+      "right_title": "부산시, 조선·해양과 SMR 결합한 해양산업 육성 전략 발표",
       "verdict": "different_thread"
     },
     "story-cf3a48a0423086ac--story-d5217cd852b861bd": {

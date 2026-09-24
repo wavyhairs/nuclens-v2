@@ -6508,7 +6508,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-09-24T19:13:12+00:00",
+    "updated_at": "2026-09-24T19:40:32+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -6588,7 +6588,7 @@
         "title": "원문과 다른 기사를 자동으로 제외했습니다",
         "detail": "요약이 원문과 다르게 만들어진 기사 5건을 브리핑 후보와 아카이브에서 뺐습니다. 다시 만들어 봐도 같아서 내보내지 않았습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-09-24T19:13:12+00:00",
+        "last_seen_at": "2026-09-24T19:40:32+00:00",
         "last_observation_id": "2026-09-25T04:05:03.341424+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-24T18:55:00+00:00",
@@ -6611,7 +6611,7 @@
         "title": "검증이 끝나지 않은 기사를 자동 보류했습니다",
         "detail": "요약 근거가 확인되지 않은 기사 3건을 발송 대기열에 넣지 않았습니다. 그중 3건은 재시도 상한에 닿아 제외했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-09-24T19:13:12+00:00",
+        "last_seen_at": "2026-09-24T19:40:32+00:00",
         "last_observation_id": "2026-09-25T03:47:51.207850+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-19T21:41:48+00:00",
@@ -6669,26 +6669,26 @@
         "resolved_at": "2026-09-19T15:43:07+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 56,
+        "consecutive": 57,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
-        "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 2건 · 기존 제외 유지 33건. 사건일이 잘못된 기사 1331건은 날짜만 자동 정정했습니다.",
+        "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 1건 · 기존 제외 유지 35건. 사건일이 잘못된 기사 1365건은 날짜만 자동 정정했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-09-24T12:50:40+00:00",
-        "last_observation_id": "github-run:35907430639",
+        "last_seen_at": "2026-09-24T19:40:32+00:00",
+        "last_observation_id": "github-run:36045107486",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
-        "last_notified_at": "2026-09-23T19:34:50+00:00",
+        "last_notified_at": "2026-09-24T19:40:32+00:00",
         "last_notified_severity": "critical",
-        "notifications": 21,
+        "notifications": 22,
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=17648 quarantined=35 sanitized=1331 samples=017ab310db05, 02bd77b262dd, 05f52bcacc9d, 0b31010f0bdb, 205e053d314f",
-        "fingerprint": "q=35:37a796ac13006af0",
-        "last_notified_fingerprint": "q=35:37a796ac13006af0"
+        "technical": "checked=17975 quarantined=36 sanitized=1365 samples=017ab310db05, 02bd77b262dd, 05f52bcacc9d, 0b31010f0bdb, 205e053d314f",
+        "fingerprint": "q=36:37a796ac13006af0",
+        "last_notified_fingerprint": "q=36:37a796ac13006af0"
       },
       "source:산업부 보도자료:failure": {
         "consecutive": 0,
@@ -6792,7 +6792,7 @@
         "title": "일부 기사를 정리하지 못하고 넘겼습니다",
         "detail": "오늘 42건이 요약·분류 단계에서 처리되지 못했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-09-24T19:13:12+00:00",
+        "last_seen_at": "2026-09-24T19:40:32+00:00",
         "last_observation_id": "2026-09-25:2026-09-25T00:42:40.095952+09:00:42",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-22T15:46:42+00:00",
@@ -6857,14 +6857,14 @@
         "resolution_notified_at": "2026-08-26T09:52:50+00:00"
       },
       "issue-candidate:topn-retention": {
-        "consecutive": 7,
+        "consecutive": 8,
         "scope": "data_gate",
         "active": true,
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
         "detail": "기사당 Top-12 이 실제 병합을 놓친다",
         "severity": "warning",
-        "last_seen_at": "2026-09-24T12:50:40+00:00",
-        "last_observation_id": "github-run:35907430639",
+        "last_seen_at": "2026-09-24T19:40:32+00:00",
+        "last_observation_id": "github-run:36045107486",
         "min_occurrences": 2,
         "first_seen_at": "2026-09-18T20:05:02+00:00",
         "level": "attention",
@@ -6927,7 +6927,7 @@
         "resolved_at": "2026-09-01T22:39:19+00:00"
       },
       "issue-candidate:preselect-headroom": {
-        "consecutive": 47,
+        "consecutive": 48,
         "scope": "data_gate",
         "active": true,
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
@@ -6936,10 +6936,10 @@
         "level": "attention",
         "impact": "없음 — 뉴스 수집과 서비스는 정상입니다. 이슈를 묶는 정확도만 영향을 받습니다.",
         "action": "개발자 확인이 필요합니다 — 서비스 중단은 아닙니다.",
-        "technical": "[issue-candidate:preselect-headroom] 정답 묶음이 컷 밖으로 밀린 병합 5건 / 111건 (4.5%). 컷을 92 이상으로 올리거나 예선 점수 구성을 다시 봐야 한다. p99 32위 · 중앙 0위 · 최대 82위 · 표본 111건",
+        "technical": "[issue-candidate:preselect-headroom] 정답 묶음이 컷 밖으로 밀린 병합 12건 / 191건 (6.3%). 컷을 106 이상으로 올리거나 예선 점수 구성을 다시 봐야 한다. p99 81위 · 중앙 1위 · 최대 96위 · 표본 191건",
         "fingerprint": "guard:critical",
-        "last_seen_at": "2026-09-24T12:50:40+00:00",
-        "last_observation_id": "github-run:35907430639",
+        "last_seen_at": "2026-09-24T19:40:32+00:00",
+        "last_observation_id": "github-run:36045107486",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-27T22:49:37+00:00",
         "pending_notification": false,
@@ -7429,9 +7429,9 @@
         "resolution_notified_at": "2026-09-07T03:43:02+00:00"
       },
       "quality:audio-brief-missing": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "audio_pipeline",
-        "active": false,
+        "active": true,
         "title": "전문가 오디오 브리핑이 생성되지 않았습니다",
         "detail": "오늘 전문가 브리핑 음성이 만들어지지 않아 구독 채널에 나가지 않았습니다.",
         "severity": "warning",
@@ -7440,17 +7440,16 @@
         "action": "복구하려면 아침 브리핑 워크플로를 '빠진 오디오 재발송' 옵션으로 다시 실행해 주세요. 음성 생성 서버가 일시적으로 붐빈 경우라면 시간을 두고 실행하면 대개 풀립니다.",
         "technical": "audio_brief=success / expert_audio_brief=failure. 복구는 daily-brief workflow_dispatch 의 audio_recovery=true (force_audio 는 --no-send 라 발송되지 않는다). 실패 사유는 워크플로 로그의 '[audio]'·'[expert-audio]' 줄.",
         "fingerprint": "",
-        "last_seen_at": "2026-09-09T22:08:27+00:00",
-        "last_observation_id": "daily-brief:34408806063",
+        "last_seen_at": "2026-09-24T19:40:32+00:00",
+        "last_observation_id": "daily-brief:36045107486",
         "min_occurrences": 1,
-        "first_seen_at": "2026-09-09T22:08:27+00:00",
+        "first_seen_at": "2026-09-24T19:40:32+00:00",
         "pending_notification": false,
-        "last_notified_at": "2026-09-09T22:08:27+00:00",
+        "last_notified_at": "2026-09-24T19:40:32+00:00",
         "last_notified_severity": "warning",
-        "notifications": 2,
+        "notifications": 3,
         "resolution_notified_at": "2026-09-09T22:24:13+00:00",
-        "last_notified_fingerprint": "",
-        "resolved_at": "2026-09-09T22:24:13+00:00"
+        "last_notified_fingerprint": ""
       },
       "source:FT 원자력:empty": {
         "consecutive": 0,
@@ -7477,7 +7476,7 @@
         "resolution_notified_at": "2026-09-21T09:46:34+00:00"
       },
       "issue-candidate:evidence-attach-rate-drift": {
-        "consecutive": 1,
+        "consecutive": 2,
         "scope": "data_gate",
         "active": true,
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
@@ -7486,12 +7485,17 @@
         "level": "attention",
         "impact": "없음 — 뉴스 수집과 서비스는 정상입니다. 이슈를 묶는 정확도만 영향을 받습니다.",
         "action": "운영 조치는 필요 없습니다 — 개발자 확인 항목입니다.",
-        "technical": "[issue-candidate:evidence-attach-rate-drift] 이번 12.8168 vs 최근 중앙값 0.3259 (+3833%, 허용 ±30%). 수집량·임베딩 커버리지·병합 규칙 중 무엇이 움직였는지 봐야 한다.",
+        "technical": "[issue-candidate:evidence-attach-rate-drift] 이번 7.8896 vs 최근 중앙값 0.3271 (+2312%, 허용 ±30%). 수집량·임베딩 커버리지·병합 규칙 중 무엇이 움직였는지 봐야 한다.",
         "fingerprint": "guard:warning",
-        "last_seen_at": "2026-09-24T12:50:40+00:00",
-        "last_observation_id": "github-run:35907430639",
+        "last_seen_at": "2026-09-24T19:40:32+00:00",
+        "last_observation_id": "github-run:36045107486",
         "min_occurrences": 2,
-        "first_seen_at": "2026-09-23T19:34:50+00:00"
+        "first_seen_at": "2026-09-23T19:34:50+00:00",
+        "pending_notification": false,
+        "last_notified_at": "2026-09-24T19:40:32+00:00",
+        "last_notified_severity": "warning",
+        "last_notified_fingerprint": "guard:warning",
+        "notifications": 1
       }
     }
   }
