@@ -580,6 +580,22 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python tools/prune_actions_caches.py --prefix "${RUNNER_OS}-nuclens-web-production-" --keep 2
 
+      # 오늘 카드가 사이트 순위와 어긋났으면 카드 워크플로를 깨운다. 카드는 발송 직후
+      # 한 번 굽는데, 그 뒤 편집 override 로 순위가 바뀌면(2026-09-24 400GW 숨김·
+      # 이탈리아 올림) 사이트와 카드가 다른 3건을 말했다. 판정은 make_cards 와 같은
+      # 함수라 깨운 쪽과 굽는 쪽이 어긋나지 않는다. 텔레그램 앨범은 다시 보내지 않는다.
+      # **snapshot 저장 뒤**여야 카드의 FAST 배포가 방금 올린 세대를 재사용한다.
+      - name: Wake cards if today's cards drifted from the site ranking
+        if: steps.web-deploy.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python tools/cards_stale.py
+          if grep -q '^stale=true' "$GITHUB_OUTPUT" 2>/dev/null; then
+            gh workflow run cards.yml -R "${{ github.repository }}" -f force=false -f send=false -f deploy_mode=fast
+          fi
+
       # 이슈 병합 회색지대 LLM 판정 캐시. 커밋하지 않으면 빌드마다(하루 8회+)
       # 같은 쌍을 다시 물어보게 되고, 판정이 흔들리면 이슈 묶음도 같이 흔들린다.
       # 배포 스텝 뒤라 앞의 "Commit state" 에 실을 수 없어 별도 스텝으로 둔다.
