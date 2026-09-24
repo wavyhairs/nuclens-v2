@@ -371,6 +371,9 @@ jobs:
           # 있었다. 실측(2026-08-04): 커밋된 173건이 전부 발송 기록이고
           # record_type 이 붙은 줄은 0건 — 두 기능 다 도입 이후 한 줄도 안 남았다.
           if [ -f delivery_log.jsonl ]; then git add delivery_log.jsonl; fi
+          # 요약 사실검증 기록(경고 모드). 커밋 안 하면 같은 요약을 빌드마다 다시
+          # 묻고, 하루 상한도 러너마다 0 부터 다시 센다.
+          if [ -f summary_checks.jsonl ]; then git add summary_checks.jsonl; fi
           # discovery 쿼리 상태(성과·냉각). 커밋 안 하면 매 시각 같은 쿼리를
           # 다시 던지고 헛도는 조합을 영영 못 재운다 — 캐시와 같은 함정이다.
           if [ -f discovery_state.json ]; then git add discovery_state.json; fi
