@@ -1244,6 +1244,48 @@ class SpokenScriptAuditTests(unittest.TestCase):
             self.contracts, reference_date="2026-08-14", min_lines=3)
         self.assertEqual(audit.action, "reject")
 
+    def test_wrong_country_pair_is_caught_without_an_assertion_verb(self):
+        """2026-09-25 빠른 브리핑: '한미 정상회담'을 '한일 정상회담'으로 말했다.
+
+        문장은 '…관련 내용인데요'라 사실 주장 동사가 없어 나라 검사가 안 돌았다.
+        """
+        summit = {"hash": "h-summit", "title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+                  "title_kr": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+                  "summary": "이재명 대통령과 트럼프 대통령이 뉴욕에서 정상회담을 가졌다.",
+                  "article_date": "2026-09-25"}
+        contracts = contracts_of(summit)
+        wrong = gate.audit_spoken_script(
+            "HOST: 첫 번째 소식은 한일 정상회담 관련 내용인데요.", contracts,
+            reference_date="2026-09-25")
+        self.assertEqual(wrong.action, "sanitize")
+        self.assertEqual(wrong.findings[0].details["country_pairs"], ["JP"])
+        right = gate.audit_spoken_script(
+            "HOST: 첫 번째 소식은 한미 정상회담 관련 내용인데요.", contracts,
+            reference_date="2026-09-25")
+        self.assertEqual(right.action, "allow")
+
+    def test_country_pair_is_checked_against_the_paragraph_owner(self):
+        """그날 다른 기사에 일본이 나와도, 한미 기사 문단의 '한일'은 잡는다."""
+        summit = {"hash": "h-summit", "title": "한미 정상, 원자력 협정 협력 심화 합의",
+                  "title_kr": "한미 정상, 원자력 협정 협력 심화 합의",
+                  "summary": "이재명 대통령과 트럼프 대통령이 원자력 협정 협력에 합의했다.",
+                  "article_date": "2026-09-25"}
+        japan = {"hash": "h-japan", "title": "일본 가시와자키가리와 6호기 재가동",
+                 "title_kr": "일본 가시와자키가리와 6호기 재가동",
+                 "summary": "일본 도쿄전력이 가시와자키가리와 6호기를 재가동했다.",
+                 "article_date": "2026-09-25"}
+        audit = gate.audit_spoken_script(
+            "HOST: 이재명 대통령과 트럼프 대통령의 한일 원자력 협정 협력 심화 합의 소식입니다.",
+            contracts_of(summit, japan), reference_date="2026-09-25")
+        self.assertEqual(audit.action, "sanitize")
+        self.assertEqual(audit.findings[0].code, "script_claim_cross_attributed")
+
+    def test_pair_check_is_script_only(self):
+        """주간·리드·카드 호출자는 기본 검사 목록을 쓰고, 거기엔 약칭 검사가 없다."""
+        self.assertNotIn("country_pairs", gate.ALL_FACT_CHECKS)
+        self.assertEqual(gate._pair_countries("한미약품 주가 상승"), set())
+        self.assertEqual(gate._pair_countries("한미일 외교장관 회의"), {"KR", "US", "JP"})
+
     def test_no_contracts_leaves_the_script_untouched(self):
         """근거가 없다는 것은 거짓이라는 증거가 아니다 — 브리핑을 비우지 않는다."""
         audit = gate.audit_spoken_script("HOST: 아무 말.", [])

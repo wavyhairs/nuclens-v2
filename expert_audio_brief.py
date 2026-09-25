@@ -679,8 +679,30 @@ def _identity_rule(dossiers: list[dict]) -> str:
         "  문장에 넣으십시오.\n")
 
 
+def _position_rule(block: str, index: int, total: int, offset: int, n: int,
+                   block_total: int) -> str:
+    """묶음이 구간의 어디인지 — 첫·마지막 같은 순서 표현을 거기에 맞춘다.
+
+    2026-09-25 해외 9건이 5·4건 두 묶음으로 쓰였는데, 첫 묶음은 5번째 기사를
+    '마지막 소식은'으로, 둘째 묶음은 6번째 기사를 '해외 첫 번째 소식은'으로 열었다.
+    각 묶음이 자기 안의 처음과 끝을 구간의 처음과 끝으로 읽은 것이다.
+    """
+    if total <= 1 or not block_total:
+        return ""
+    rule = (f"- 이 묶음의 story 는 {block} 전체 {block_total}건 중 "
+            f"{offset + 1}~{offset + n}번째입니다.\n")
+    if index > 1:
+        rule += (f"- 앞 묶음이 이미 {block} 소식을 시작했습니다. '첫 소식', '첫 번째 소식',\n"
+                 f"  '{block} 첫' 같은 표현을 쓰지 말고 '다음 소식은', '이어서'로 시작합니다.\n")
+    if index < total:
+        rule += ("- 뒤에 다음 묶음이 이어집니다. '마지막 소식', '마지막으로', '끝으로'를\n"
+                 "  쓰지 않습니다.\n")
+    return rule
+
+
 def script_prompt(briefing: dict, dossiers: list[dict], plan: dict,
-                  block: str = "", part: tuple[int, int] = (1, 1)) -> str:
+                  block: str = "", part: tuple[int, int] = (1, 1),
+                  offset: int = 0, block_total: int = 0) -> str:
     n = max(1, len(dossiers))
     # 배치 프롬프트는 그 배치 재료만 보고 분량을 정한다. 전체 하한을 씌우면
     # 배치마다 프로그램 전체 분량을 요구하게 된다.
@@ -699,11 +721,16 @@ def script_prompt(briefing: dict, dossiers: list[dict], plan: dict,
                  f"  다른 원고가 담당합니다.\n"
                  f"- 이 묶음은 프로그램의 일부이므로 '오늘 브리핑을 시작하겠습니다' 같은\n"
                  f"  도입도, 전체를 마무리하는 문장도 쓰지 않습니다. 본문만 씁니다.\n")
+        scope += _position_rule(block, index, total, offset, n, block_total)
     # 듣는 사람은 텔레그램 목록을 보면서 듣는다. Dossiers 순서가 곧 그 목록
     # 순서이므로 프롬프트에 명시한다 — 다만 이건 협조 요청이고, 지켜졌는지는
     # script_order_report 가 결과물에서 확인한다.
+    #
+    # 번호는 **구간 전체 기준**이다. 묶음마다 1번부터 다시 매기면 모델이 두 번째
+    # 묶음의 1번을 '해외 첫 번째 소식'으로 읽는다(2026-09-25 대본 36행).
     running = "\n".join(
-        f"  {i}. {str(d.get('title') or '')[:60]}" for i, d in enumerate(dossiers, 1))
+        f"  {offset + i}. {str(d.get('title') or '')[:60]}"
+        for i, d in enumerate(dossiers, 1))
     order_rule = (
         "\n[설명 순서 — 반드시 지킬 것]\n"
         "- 듣는 사람은 같은 순서로 번호가 매겨진 목록을 화면으로 보고 있습니다.\n"
@@ -862,21 +889,89 @@ def _owned_paragraphs(script: str, issues: list[dict]
     for line in str(script or "").splitlines():
         match = SPEAKER_RE.match(line.strip())
         body = (match.group(2) if match else line).strip()
-        if not body:
-            continue
-        lowered = body.lower()
-        scores = {issue_id: sum(1 for a in anchors[issue_id] if a in lowered)
-                  for issue_id in judged}
-        best = max(scores.values(), default=0)
-        if best <= 0:
-            continue
-        mentioned = sum(1 for s in scores.values() if s > 0)
-        if mentioned >= 2 and _BACKREFERENCE_RE.search(lowered):
-            continue
-        winners = [i for i, s in scores.items() if s == best]
-        if len(winners) == 1:
-            pairs.append((winners[0], body))
+        owner = _body_owner(body, anchors, judged)
+        if owner:
+            pairs.append((owner, body))
     return pairs, anchors, judged
+
+
+def _body_owner(body: str, anchors: dict[str, set[str]], judged: list[str]) -> str:
+    """문단 하나의 주인 이슈. 분명하지 않으면 빈 문자열 (`_owned_paragraphs` 기준)."""
+    if not body:
+        return ""
+    lowered = body.lower()
+    scores = {issue_id: sum(1 for a in anchors[issue_id] if a in lowered)
+              for issue_id in judged}
+    best = max(scores.values(), default=0)
+    if best <= 0:
+        return ""
+    mentioned = sum(1 for s in scores.values() if s > 0)
+    if mentioned >= 2 and _BACKREFERENCE_RE.search(lowered):
+        return ""
+    winners = [i for i, s in scores.items() if s == best]
+    return winners[0] if len(winners) == 1 else ""
+
+
+# 문단 첫머리의 순서 표현. 뒤의 조사까지 한 덩어리로 잡아 통째로 바꾼다.
+_FIRST_LEAD_RE = re.compile(
+    r"^(?:(?:국내|해외)\s*)?첫\s*(?:번째\s*)?(?:소식|이슈|뉴스)(?:은|는|으로는)?\s*")
+_NTH_LEAD_RE = re.compile(
+    r"^(?:(?:국내|해외)\s*)?(두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s*번째\s*"
+    r"(?:소식|이슈|뉴스)(?:은|는|으로는)?\s*")
+_LAST_NOUN_LEAD_RE = re.compile(r"^마지막\s*(?:소식|이슈|뉴스)(?:은|는|으로는)?\s*")
+_LAST_ADVERB_LEAD_RE = re.compile(r"^(?:마지막으로|끝으로)[,，]?\s*")
+_KOREAN_ORDINALS = {"두": 2, "세": 3, "네": 4, "다섯": 5, "여섯": 6, "일곱": 7,
+                    "여덟": 8, "아홉": 9, "열": 10}
+
+
+def neutralize_position_words(script: str, issues: list[dict]) -> tuple[str, list[dict]]:
+    """각 story 를 처음 소개하는 문단의 순서 표현을 실제 자리에 맞춘다.
+
+    프롬프트(`_position_rule`)는 협조 요청이다. 검증·수정·재배치·식별 보정이
+    대본을 다시 쓰므로, 그 모든 단계가 끝난 블록에서 한 번 더 기계적으로 본다.
+    자리와 안 맞는 표현만 중립 표현('다음 소식은', '이어서')으로 바꾼다 —
+    맞는 자리의 '첫 소식'·'마지막으로'는 그대로 둔다. 사실은 건드리지 않는다.
+
+    2026-09-25 해외 구간: 5번째 기사가 '마지막 소식은', 6번째가 '해외 첫 번째
+    소식은'으로 시작했다.
+    """
+    expected = [str(i.get("issue_id") or "") for i in issues]
+    position = {issue_id: index for index, issue_id in enumerate(expected, 1)}
+    total = len(expected)
+    anchors = issue_anchors(issues)
+    judged = [i for i in expected if anchors.get(i)]
+    seen: set[str] = set()
+    fixes: list[dict] = []
+    lines = str(script or "").splitlines()
+    for number, line in enumerate(lines):
+        match = SPEAKER_RE.match(line.strip())
+        if not match:
+            continue
+        body = match.group(2).strip()
+        owner = _body_owner(body, anchors, judged)
+        if not owner or owner in seen:
+            continue
+        seen.add(owner)
+        place = position[owner]
+        new_body = body
+        lead = _FIRST_LEAD_RE.match(body)
+        if lead and place != 1:
+            new_body = "다음 소식은 " + body[lead.end():]
+        lead = _NTH_LEAD_RE.match(body)
+        if lead and _KOREAN_ORDINALS[lead.group(1)] != place:
+            new_body = "다음 소식은 " + body[lead.end():]
+        if place != total:
+            lead = _LAST_NOUN_LEAD_RE.match(body)
+            if lead:
+                new_body = "다음 소식은 " + body[lead.end():]
+            lead = _LAST_ADVERB_LEAD_RE.match(body)
+            if lead:
+                new_body = "이어서 " + body[lead.end():]
+        if new_body != body:
+            lines[number] = f"{match.group(1)}: {new_body}"
+            fixes.append({"issue_id": owner, "position": place, "total": total,
+                          "before": body[:40], "after": new_body[:40]})
+    return "\n".join(lines), fixes
 
 
 def script_order_report(script: str, issues: list[dict]) -> dict:
@@ -1010,10 +1105,37 @@ def identity_names_for(issue: dict, anchors: dict[str, set[str]] | None = None,
     if names or anchors is None:
         return names
     issue_id = str(issue.get("issue_id") or "")
+    # 앵커는 **판정용**이라 소문자다 — 지문의 영문 필드(`Samsung C&T`,
+    # `radioactive waste`)까지 잘라 넣는다. 그대로 '이 이름으로 소개하라'고
+    # 넘기면 모델이 글자째 베낀다(2026-09-25 대본: "samsung 물산",
+    # "radioactive 폐기물", "nuclear-powered 관련"). 소개용 이름은 한글 낱말을
+    # 먼저 쓰고, 영문은 제목에 **원래 표기로** 나온 것만 그 표기대로 쓴다.
+    shown = [name for name in (_display_anchor(a, issue) for a in anchors.get(issue_id) or ())
+             if name]
     # 정렬 키에 문자열 자체를 더한다 — set 순회 순서는 해시 시드에 따라 실행마다
     # 바뀌므로, 길이가 같은 앵커가 여럿이면 len 만으로는 어떤 두 개가 뽑힐지
     # 실행마다 달라진다. 같은 이슈는 항상 같은 폴백 이름을 써야 한다.
-    return sorted(anchors.get(issue_id) or (), key=lambda a: (-len(a), a))[:2]
+    return sorted(set(shown), key=lambda a: (-len(a), a))[:2]
+
+
+_HANGUL_RE = re.compile(r"[가-힣]")
+
+
+def _display_anchor(anchor: str, issue: dict) -> str:
+    """판정용 앵커 → 소개용 표기. 소개에 쓸 수 없으면 빈 문자열.
+
+    한글 낱말은 그대로. 영문은 이슈 제목에서 원래 표기를 되찾되, 전부 소문자인
+    일반어(radioactive, nuclear-powered)는 이름이 아니므로 버린다 —
+    대문자나 숫자가 있는 표기(Stegra, SMR, Xe-100)만 고유명사로 본다.
+    """
+    if _HANGUL_RE.search(anchor):
+        return anchor
+    for field in ("title_kr", "title"):
+        match = re.search(re.escape(anchor), str(issue.get(field) or ""), re.IGNORECASE)
+        if match:
+            original = match.group(0)
+            return original if re.search(r"[A-Z0-9]", original) else ""
+    return ""
 
 
 def intro_identification_report(script: str, issues: list[dict],
@@ -1176,11 +1298,13 @@ def _plan_for(plan: dict, issue_ids: set[str]) -> dict:
 
 
 def _batch_script(briefing: dict, dossiers: list[dict], plan: dict,
-                  block: str, part: tuple[int, int]) -> tuple[str, int]:
+                  block: str, part: tuple[int, int],
+                  offset: int = 0, block_total: int = 0) -> tuple[str, int]:
     """배치 하나의 대본. 형식·분량 미달이면 수치를 실어 한 번 다시 부른다."""
     n = len(dossiers)
     _, low, high = spoken_bounds(dossiers, clamp=False)
-    prompt = script_prompt(briefing, dossiers, plan, block, part)
+    prompt = script_prompt(briefing, dossiers, plan, block, part,
+                           offset=offset, block_total=block_total)
     draft = _call_structured(
         SCRIPT_SYSTEM, prompt,
         label=f"expert_script_{block}_{part[0]}", temperature=0.35, max_output_tokens=12000,
@@ -1314,13 +1438,16 @@ def generate_expert_script(briefing: dict, issues: list[dict],
                 issue_by_id.get(issue_id) or {"issue_id": issue_id}, block_anchors)
         chunks = even_batches(rows, SCRIPT_BATCH_ISSUES)
         block_parts: list[str] = []
+        offset = 0
         for index, chunk in enumerate(chunks, 1):
             # 순서는 chunk 를 따라간다 — set 으로 뽑으면 배치 안 순서가 흔들려
             # 랭킹대로 말하지 않는 날이 생긴다.
             ids = [str(r.get("issue_id") or "") for r in chunk]
             text, _count = _batch_script(
                 briefing, [by_issue[i] for i in ids if i in by_issue],
-                _plan_for(plan, set(ids)), block, (index, len(chunks)))
+                _plan_for(plan, set(ids)), block, (index, len(chunks)),
+                offset=offset, block_total=len(rows))
+            offset += len(chunk)
             block_parts.append(text)
         block_script = "\n".join(block_parts)
         print(f"[expert-audio] {block} 구간 — 이슈 {len(rows)}개 / 호출 {len(chunks)}회 "
@@ -1345,6 +1472,7 @@ def generate_expert_script(briefing: dict, issues: list[dict],
     reports: list[dict] = []
     order_reports: list[dict] = []
     intro_reports: list[dict] = []
+    position_reports: list[dict] = []
     for block, rows, block_dossiers, block_script in drafted:
         block_evidence = semantic_source_evidence([
             contracts_by_issue[issue_id]
@@ -1430,6 +1558,15 @@ def generate_expert_script(briefing: dict, issues: list[dict],
                 print(f"[expert-audio] {block} 식별 보정 실패 — 원본 유지: {str(exc)[:140]}")
         intro_reports.append({"block": block, **intro})
 
+        # 순서 표현은 대본을 다시 쓰는 단계(검증 수정·재배치·식별 보정)가 **모두
+        # 끝난 뒤**에 맞춘다 — 그 앞에서 고치면 뒤 단계가 되살린다.
+        block_script, position_fixes = neutralize_position_words(block_script, rows)
+        if position_fixes:
+            print(f"[expert-audio] {block} 구간 순서 표현 {len(position_fixes)}곳 교정 — "
+                  + " / ".join(f"{f['position']}번째: '{f['before'][:16]}…'"
+                               for f in position_fixes))
+        position_reports.extend({"block": block, **fix} for fix in position_fixes)
+
         bridge = _block_bridge(block)
         if bridge and parts:
             parts.append(bridge)
@@ -1466,6 +1603,8 @@ def generate_expert_script(briefing: dict, issues: list[dict],
         "blocks": intro_reports,
         **intro_identification_report(script, issues),
     }
+    # 기계적으로 고친 순서 표현. 매일 쌓이면 프롬프트(_position_rule)가 안 먹는다는 뜻이다.
+    report["position_fixes"] = position_reports
     if not report["intro_check"]["ok"]:
         bad = report["intro_check"]["missing"]
         titles = {str(i.get("issue_id") or ""): str(i.get("title") or "")[:60] for i in issues}

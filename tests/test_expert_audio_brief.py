@@ -993,5 +993,99 @@ class OverloadWaitTests(unittest.TestCase):
         self.assertEqual(self.sleeps, [])
 
 
+OVERSEAS_TITLES = [
+    "텍사스주, 데이터센터 환경 인허가 전면 중단", "미 에너지부, 전력망 현대화 31개 프로젝트",
+    "미 상원 환경공공사업위, 핵폐기물 청문회", "미국-튀르키예, SMR 도입 가속화 협약",
+    "오픈AI·앤트로픽, UN서 AI 통제 상실 경고", "스웨덴 Stegra, 구글과 저탄소 철강 인증 계약",
+    "INL, 사용후핵연료 피복관 제거 스키드", "영국, Xe-100 SMR 일반설계평가 착수",
+    "마이크로소프트, 중동 4개국 AI 인프라 투자",
+]
+
+
+class PositionWordingTests(unittest.TestCase):
+    """2026-09-25 해외 9건이 5·4건 두 묶음으로 쓰이며 5번째가 '마지막 소식은',
+    6번째가 '해외 첫 번째 소식은'으로 시작했다."""
+
+    def setUp(self):
+        self.issues = [{"issue_id": f"i{k}", "title": t}
+                       for k, t in enumerate(OVERSEAS_TITLES, 1)]
+
+    def test_misplaced_first_and_last_are_neutralized(self):
+        script = "\n".join([
+            "HOST: 해외 첫 소식은 텍사스주에서 발생한 데이터센터 인허가 중단 조치입니다.",
+            "HOST: 마지막 소식은 오픈아이와 앤트로픽의 UN 회의 발언입니다.",
+            "HOST: 해외 첫 번째 소식은 스웨덴의 Stegra입니다.",
+            "HOST: 마지막으로 영국은 Xe-100 SMR 일반설계평가에 착수했습니다.",
+            "HOST: 마지막으로 마이크로소프트의 중동 AI 인프라 투자 소식입니다.",
+        ])
+        out, fixes = expert.neutralize_position_words(script, self.issues)
+        lines = out.splitlines()
+        self.assertEqual(lines[0], "HOST: 해외 첫 소식은 텍사스주에서 발생한 데이터센터 인허가 중단 조치입니다.")
+        self.assertEqual(lines[1], "HOST: 다음 소식은 오픈아이와 앤트로픽의 UN 회의 발언입니다.")
+        self.assertEqual(lines[2], "HOST: 다음 소식은 스웨덴의 Stegra입니다.")
+        self.assertEqual(lines[3], "HOST: 이어서 영국은 Xe-100 SMR 일반설계평가에 착수했습니다.")
+        # 진짜 마지막 자리의 '마지막으로'는 그대로 둔다.
+        self.assertEqual(lines[4], "HOST: 마지막으로 마이크로소프트의 중동 AI 인프라 투자 소식입니다.")
+        self.assertEqual([f["position"] for f in fixes], [5, 6, 8])
+
+    def test_only_the_first_paragraph_of_a_story_is_touched(self):
+        """같은 story 의 뒤 문단에 나오는 '마지막으로 남은 과제는'은 순서 표현이 아니다."""
+        script = "\n".join([
+            "HOST: 다음은 오픈AI와 앤트로픽의 UN 회의 발언입니다.",
+            "HOST: 마지막으로 오픈AI와 앤트로픽이 남긴 과제는 규제 설계입니다.",
+        ])
+        out, fixes = expert.neutralize_position_words(script, self.issues)
+        self.assertEqual(out, script)
+        self.assertEqual(fixes, [])
+
+    def test_wrong_ordinal_number_is_neutralized(self):
+        script = "HOST: 두 번째 소식은 스웨덴의 Stegra입니다."
+        out, fixes = expert.neutralize_position_words(script, self.issues)
+        self.assertEqual(out, "HOST: 다음 소식은 스웨덴의 Stegra입니다.")
+        self.assertEqual(fixes[0]["position"], 6)
+
+    def test_prompt_numbers_items_by_block_and_forbids_misplaced_words(self):
+        dossiers = [{"issue_id": f"i{k}", "title": t, "body": "가" * 400}
+                    for k, t in enumerate(OVERSEAS_TITLES[5:], 6)]
+        second = expert.script_prompt({"date": "2026-09-25"}, dossiers, {}, "해외", (2, 2),
+                                      offset=5, block_total=9)
+        self.assertIn("  6. 스웨덴 Stegra", second)
+        self.assertIn("전체 9건 중 6~9번째", second)
+        self.assertIn("'첫 소식', '첫 번째 소식'", second)
+        self.assertNotIn("'마지막 소식', '마지막으로'", second)
+        first = expert.script_prompt({"date": "2026-09-25"}, dossiers, {}, "해외", (1, 2),
+                                     offset=0, block_total=9)
+        self.assertIn("'마지막 소식', '마지막으로'", first)
+        self.assertNotIn("'첫 소식', '첫 번째 소식'", first)
+        single = expert.script_prompt({"date": "2026-09-25"}, dossiers, {}, "해외", (1, 1),
+                                      offset=0, block_total=4)
+        self.assertNotIn("번째입니다", single)
+
+
+class IdentityNameDisplayTests(unittest.TestCase):
+    """2026-09-25 대본: 'samsung 물산', 'radioactive 폐기물', 'nuclear-powered 관련'."""
+
+    def test_lowercase_english_fragments_are_never_offered_as_names(self):
+        issues = [
+            {"issue_id": "a", "title": "삼성물산, 카이로스 파워와 Hermes 2 실증로 EPC 협력 체결",
+             "story_fingerprint": {"actors": ["Samsung C&T", "Kairos Power"]}},
+            {"issue_id": "b", "title": "울진군, 고준위방폐물 유치 공론화 및 10조 원 SOC 지원 제안",
+             "story_fingerprint": {"assets": ["radioactive waste facility"]}},
+            {"issue_id": "c", "title": "스웨덴 Stegra, 구글과 9.1만 톤 규모 저탄소 철강 인증 계약 체결",
+             "story_fingerprint": {"actors": ["Stegra", "Google"]}},
+            {"issue_id": "d", "title": "한미 정상, 원자력 협정 및 핵잠수함 협력 심화 합의",
+             "story_fingerprint": {"actors": ["nuclear-powered submarine"]}},
+        ]
+        anchors = expert.issue_anchors(issues)
+        names = {i["issue_id"]: expert.identity_names_for(i, anchors, registry={})
+                 for i in issues}
+        for issue_id, shown in names.items():
+            for name in shown:
+                self.assertFalse(name.isascii() and name == name.lower(),
+                                 f"{issue_id}: 소문자 영문 '{name}'")
+        self.assertIn("Stegra", names["c"])          # 제목 표기 그대로
+        self.assertIn("핵잠수함", names["d"])
+
+
 if __name__ == "__main__":
     unittest.main()
