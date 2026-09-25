@@ -416,6 +416,27 @@ def _countries(text: object) -> frozenset[str]:
     return frozenset(found)
 
 
+# 한국식 나라 쌍 약칭. 뒤에 외교·협력 문맥어가 붙을 때만 센다 — '한미약품'
+# 같은 회사명이나 낱말 속 우연한 글자열을 나라로 읽지 않기 위해서다.
+_PAIR_SYLLABLES: Mapping[str, str] = {
+    "한": "KR", "미": "US", "일": "JP", "중": "CN", "러": "RU", "영": "GB", "불": "FR",
+}
+_PAIR_RE = re.compile(
+    r"(?<![가-힣])([한미일중러영불](?:[·ㆍ\-]?[한미일중러영불]){1,2})"
+    r"(?=\s*(?:정상|외교|관계|협력|동맹|원자력|회담|합의|협정|공동|양국|3국|삼국|"
+    r"통상|무역|안보|장관|간|FTA))")
+
+
+def _pair_countries(text: object) -> set[str]:
+    """'한미 정상회담' → {KR, US}. 같은 글자가 겹치는 조합은 약칭이 아니다."""
+    found: set[str] = set()
+    for match in _PAIR_RE.finditer(clean_text(text)):
+        letters = [ch for ch in match.group(1) if ch in _PAIR_SYLLABLES]
+        if len(set(letters)) == len(letters) >= 2:
+            found.update(_PAIR_SYLLABLES[ch] for ch in letters)
+    return found
+
+
 def _topics(text: object) -> frozenset[str]:
     cleaned = clean_text(text)
     found = {
@@ -2292,6 +2313,14 @@ def _merged_contract_view(contracts: Sequence[EvidenceContract]) -> dict[str, ob
 
 
 ALL_FACT_CHECKS = ("entities", "countries", "stages", "claims", "dates")
+# 오디오 대본 전용 — 한국식 나라 쌍 약칭(한미·한일·한미일 …)을 따로 본다.
+#
+# 2026-09-25 빠른 브리핑이 '한미 정상회담'을 '한일 정상회담'으로 말했는데 통과했다.
+# 나라 사전(`_COUNTRY_TERMS`)은 약칭을 모르고, 나라 검사는 '체결·승인·발표' 같은
+# 사실 주장 동사가 있는 문장에서만 도는데 그 문장은 '…관련 내용인데요'였다.
+# 약칭은 나라를 **명시적으로 짝지어** 말하는 표현이라 문장 성격과 무관하게
+# 근거와 대조해도 오탐이 적다. 다른 호출자(주간·리드·카드)는 이 검사를 안 탄다.
+SCRIPT_FACT_CHECKS = ALL_FACT_CHECKS + ("country_pairs",)
 # Quantities and calendar dates are the only facts precise enough to attribute
 # to a single story.  Backtesting the 2026-08-14 expert programme showed why:
 # judging entities/countries/stages per paragraph removed 4 of 30 paragraphs,
@@ -2300,6 +2329,10 @@ ALL_FACT_CHECKS = ("entities", "countries", "stages", "claims", "dates")
 # check, which guarantees the fact appeared in some verified article that day
 # and had no false positive on the same data.
 ATTRIBUTION_FACT_CHECKS = ("claims", "dates")
+# 문단 주인 대조에서도 나라 쌍은 본다 — 그날 다른 기사에 일본이 나오면 전역
+# 대조만으로는 '한일'을 못 잡는다. 약칭은 문단 주인의 나라를 틀리게 말한 것이라
+# 위 주석의 오탐(운영사·미확정 날짜)과 성격이 다르다.
+SCRIPT_ATTRIBUTION_CHECKS = ATTRIBUTION_FACT_CHECKS + ("country_pairs",)
 # An analysis sentence ("심사 가속화 우려를 불식", "인허가 지연으로 난항") names a
 # project stage as the subject it reasons about, not as an event it claims
 # happened.  Replaying the stored weekly reports showed every stage finding on
@@ -2362,6 +2395,14 @@ def unsupported_facts(
         )
         if claims:
             problems["claims"] = sorted(claims)
+
+    if "country_pairs" in wanted:
+        stated = _pair_countries(cleaned)
+        if stated:
+            known = set(view["countries"]) | _pair_countries(str(view["text"]))
+            missing = stated - known
+            if missing:
+                problems["country_pairs"] = sorted(missing)
 
     if "dates" in wanted:
         reference = _parse_reference_date(reference_date)
@@ -2441,14 +2482,15 @@ def audit_spoken_script(
             kept.append(line)
             continue
 
-        problems = unsupported_facts(body, contracts, reference_date=reference_date)
+        problems = unsupported_facts(body, contracts, reference_date=reference_date,
+                                     checks=SCRIPT_FACT_CHECKS)
         code = "script_claim_unsupported"
         if not problems:
             owner = _paragraph_owner(body, contracts)
             if owner is not None:
                 problems = unsupported_facts(
                     body, [owner], reference_date=reference_date,
-                    checks=ATTRIBUTION_FACT_CHECKS)
+                    checks=SCRIPT_ATTRIBUTION_CHECKS)
                 code = "script_claim_cross_attributed"
                 if problems:
                     problems = {**problems, "attributed_to": owner.key}
