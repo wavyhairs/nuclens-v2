@@ -61,8 +61,14 @@ def _load(path: Path) -> dict:
     return value if isinstance(value, dict) else {}
 
 
-def delivery_state(*, now: datetime, reports_path: Path, channel_path: Path,
-                   channel_required: bool) -> tuple[bool, str]:
+def delivery_snapshot(*, now: datetime, reports_path: Path, channel_path: Path,
+                      channel_required: bool) -> dict:
+    """현재 ISO 주차가 어디까지 나갔는가.
+
+    '나갔는가'의 판정은 이 함수 하나만 갖는다. 게이트(실행할까)와 운영 알림
+    (안 나갔다고 알릴까)이 서로 다른 규칙을 들면, 둘 중 하나는 반드시 틀린
+    말을 하게 된다.
+    """
     key = _week_id(now)
     report = (_load(reports_path).get("reports") or {}).get(key) or {}
     automation = report.get("_automation") or {}
@@ -75,8 +81,20 @@ def delivery_state(*, now: datetime, reports_path: Path, channel_path: Path,
             if batch.get("id") == f"weekly-{key}":
                 channel = str(batch.get("status") or "missing")
                 break
-    complete = dm == "sent" and (not channel_required or channel == "sent")
-    return complete, f"week={key} dm={dm} channel={channel}"
+    return {
+        "week_id": key, "dm": dm, "channel": channel,
+        "complete": dm == "sent" and (not channel_required or channel == "sent"),
+    }
+
+
+def delivery_state(*, now: datetime, reports_path: Path, channel_path: Path,
+                   channel_required: bool) -> tuple[bool, str]:
+    snapshot = delivery_snapshot(
+        now=now, reports_path=reports_path, channel_path=channel_path,
+        channel_required=channel_required)
+    return snapshot["complete"], (
+        f"week={snapshot['week_id']} dm={snapshot['dm']} "
+        f"channel={snapshot['channel']}")
 
 
 def _in_recovery_window(now: datetime) -> bool:

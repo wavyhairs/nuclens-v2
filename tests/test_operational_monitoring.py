@@ -763,5 +763,78 @@ class AlertLifecycleTests(unittest.TestCase):
         self.assertFalse(state["items"]["source:x"]["pending_notification"])
 
 
+class WeeklyDeliveryAlertTests(unittest.TestCase):
+    """금요일 주간 판세가 안 나갔다는 사실을, Weekly 워크플로 밖에서 본다.
+
+    2026-09-18 Weekly 는 열한 번 연속 startup_failure 로 죽었다. 그 죽음은 잡이
+    뜨기 전이라 워크플로 안의 어떤 스텝도 안 돌았고, 그래서 아무 데도 안 남았다.
+    자기가 죽은 것을 스스로 알릴 수 있는 워크플로는 없다.
+    """
+
+    FRI_2100 = datetime.fromisoformat("2026-09-18T12:10:00+00:00")  # 21:10 KST 금
+    FRI_1910 = datetime.fromisoformat("2026-09-18T10:10:00+00:00")  # 19:10 KST 금
+    SAT_0400 = datetime.fromisoformat("2026-09-18T19:00:00+00:00")  # 04:00 KST 토
+    MON_0900 = datetime.fromisoformat("2026-09-21T00:00:00+00:00")  # 09:00 KST 월
+
+    UNSENT = {"week_id": "2026-W38", "dm": "missing", "channel": "missing",
+              "complete": False}
+    SENT = {"week_id": "2026-W38", "dm": "sent", "channel": "sent",
+            "complete": True}
+
+    def test_window_opens_friday_night_and_closes_sunday_noon(self):
+        self.assertFalse(monitor.weekly_delivery_window(self.FRI_1910),
+                         "19시대는 아직 정상 복구 시간이다 — 실측 배달은 18:58·19:06 이었다")
+        self.assertTrue(monitor.weekly_delivery_window(self.FRI_2100))
+        self.assertTrue(monitor.weekly_delivery_window(self.SAT_0400))
+        self.assertFalse(monitor.weekly_delivery_window(self.MON_0900))
+
+    def test_an_undelivered_week_raises_one_actionable_alert(self):
+        signals, scopes = monitor.weekly_delivery_signals(self.UNSENT, now=self.FRI_2100)
+        self.assertEqual(scopes, {monitor.WEEKLY_SCOPE})
+        self.assertEqual(len(signals), 1)
+        signal = signals[0].normalized()
+        self.assertEqual(signal.level, monitor.LEVEL_ACTION)
+        self.assertEqual(signal.min_occurrences, 1, "금요일 밤에 두 번 볼 때까지 기다릴 수 없다")
+        self.assertIn("2026-W38", signal.detail)
+        # 운영자가 읽는 세 문장에 상태 코드가 새면 안 된다.
+        operator_text = " ".join([signal.title, signal.detail, signal.impact, signal.action])
+        for token in ("=", "::", "missing", "None", "status"):
+            self.assertNotIn(token, operator_text)
+        self.assertTrue(signal.impact and signal.action)
+        self.assertIn("개인알림=missing", signal.technical, "값은 마지막 줄로 내려갔을 뿐이다")
+
+    def test_a_delivered_week_evaluates_the_scope_without_a_signal(self):
+        """신호가 없어야 앞선 사건이 해소된다 — 그러려면 scope 는 남아야 한다."""
+        signals, scopes = monitor.weekly_delivery_signals(self.SENT, now=self.FRI_2100)
+        self.assertEqual(signals, [])
+        self.assertEqual(scopes, {monitor.WEEKLY_SCOPE})
+
+    def test_outside_the_window_nothing_is_judged(self):
+        """판정하지 않은 것과 '이상 없음'은 다르다. 창 밖에서는 scope 를 비운다."""
+        self.assertEqual(monitor.weekly_delivery_signals(self.UNSENT, now=self.MON_0900),
+                         ([], set()))
+        self.assertEqual(monitor.weekly_delivery_signals(self.UNSENT, now=self.FRI_1910),
+                         ([], set()))
+
+    def test_a_missing_snapshot_is_not_an_alert(self):
+        """파일을 못 읽은 것은 미발송의 증거가 아니다."""
+        self.assertEqual(monitor.weekly_delivery_signals(None, now=self.FRI_2100),
+                         ([], set()))
+
+    def test_the_alert_resolves_once_the_week_goes_out(self):
+        signals, scopes = monitor.weekly_delivery_signals(self.UNSENT, now=self.FRI_2100)
+        state, due = monitor.evaluate_alerts(
+            signals, None, evaluated_scopes=scopes, now=self.FRI_2100)
+        self.assertEqual(len(due), 1)
+        key = due[0].key
+        self.assertTrue(state["items"][key]["active"])
+
+        signals, scopes = monitor.weekly_delivery_signals(self.SENT, now=self.SAT_0400)
+        state, due = monitor.evaluate_alerts(
+            signals, state, evaluated_scopes=scopes, now=self.SAT_0400)
+        self.assertFalse(state["items"][key]["active"])
+        self.assertTrue(state["items"][key].get("resolved_at"))
+
+
 if __name__ == "__main__":
     unittest.main()

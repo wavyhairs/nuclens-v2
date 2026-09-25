@@ -38,7 +38,31 @@ except (AttributeError, ValueError):
 ROOT = Path(__file__).parent
 SENT_FILE = ROOT / "sent.json"
 DELIVERY_LOG = ROOT / "delivery_log.jsonl"
+WEEKLY_REPORTS_FILE = ROOT / "weekly_reports.json"
+CHANNEL_OUTBOX_FILE = ROOT / "channel_outbox.json"
 KST = timezone(timedelta(hours=9))
+
+
+def weekly_delivery_snapshot(now: datetime, *, channel_required: bool,
+                             reports_path: Path | None = None,
+                             channel_path: Path | None = None) -> dict | None:
+    """주간 판세가 어디까지 나갔는가. 판정 규칙은 게이트 하나만 갖는다.
+
+    Weekly 워크플로 자체는 자기가 죽은 것을 못 알린다(startup_failure 는 잡이
+    뜨기 전이다). 그래서 3시간마다 도는 crawl 이 같은 파일을 읽어 대신 본다 —
+    읽는 규칙이 갈라지면 한쪽은 반드시 틀린 말을 하므로 게이트 함수를 그대로 쓴다.
+    """
+    try:
+        sys.path.insert(0, str(ROOT / "tools"))
+        import weekly_trigger_gate
+        return weekly_trigger_gate.delivery_snapshot(
+            now=now,
+            reports_path=reports_path or WEEKLY_REPORTS_FILE,
+            channel_path=channel_path or CHANNEL_OUTBOX_FILE,
+            channel_required=channel_required)
+    except Exception as exc:  # noqa: BLE001 — 알림 경로는 절대 수집을 죽이지 않는다
+        print(f"[ops-monitor] 주간 발송 상태를 읽지 못했습니다: {type(exc).__name__}: {exc}")
+        return None
 
 
 def _read_object(path: Path) -> dict | None:
@@ -247,6 +271,9 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
         identity_quarantined: int = 0,
         audio_fast_outcome: str | None = None,
         audio_expert_outcome: str | None = None,
+        weekly_channel_required: bool | None = None,
+        weekly_reports_path: Path | None = None,
+        weekly_channel_path: Path | None = None,
         now: datetime | None = None) -> dict:
     """Process source health and today's quality events; never raises."""
     now = now or datetime.now(timezone.utc)
@@ -293,8 +320,20 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
     audio_signals = monitor.audio_pipeline_signals(
         audio_fast_outcome, audio_expert_outcome,
         observation_id=pipeline_observation_id)
+    # 주간 판세는 **채널 필요 여부를 넘긴 호출자만** 판정한다. 넘기지 않은
+    # 호출자까지 판정하면, 채널을 못 보는 쪽이 '이상 없음'으로 읽어 다른 쪽이
+    # 올린 사건을 해소해 버린다 — 같은 scope 를 두 기준이 나눠 쓰면 안 된다.
+    weekly_signals: list[monitor.AlertSignal] = []
+    weekly_scopes: set[str] = set()
+    if weekly_channel_required is not None:
+        weekly_signals, weekly_scopes = monitor.weekly_delivery_signals(
+            weekly_delivery_snapshot(
+                now, channel_required=weekly_channel_required,
+                reports_path=weekly_reports_path, channel_path=weekly_channel_path),
+            now=now, observation_id=collection_observation_id or pipeline_observation_id)
     signals = (source_signals + quality_signals + pipeline_signals +
-               collection_signals + identity_signals + audio_signals)
+               collection_signals + identity_signals + audio_signals +
+               weekly_signals)
     scopes = set(quality_scopes)
     if source_processed:
         scopes.add("source")
@@ -313,6 +352,7 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
     # 끝났다는 뜻이다 — 둘 다 성공한 회차는 신호가 없으므로 앞선 누락이 해소된다.
     if audio_fast_outcome is not None or audio_expert_outcome is not None:
         scopes.add("audio_pipeline")
+    scopes |= weekly_scopes
 
     alert_state, due = monitor.evaluate_alerts(
         signals, state.get("operational_alerts"), evaluated_scopes=scopes, now=now)
@@ -450,6 +490,13 @@ def main() -> int:
     args = parser.parse_args()
     if args.check_admin_chat:
         return check_admin_chat()
+    # 주간 판세 판정은 **이 값을 넘긴 호출자만** 한다. CHANNEL_REQUIRED 를 세운
+    # 워크플로 스텝은 "나는 채널까지 볼 수 있다"고 말한 것이고, 안 세운 스텝은
+    # 판정에서 빠진다 — 기준이 다른 둘이 같은 scope 를 나눠 쓰면 한쪽이 올린
+    # 사건을 다른 쪽이 '이상 없음'으로 해소한다.
+    weekly_channel_required = None
+    if "CHANNEL_REQUIRED" in os.environ:
+        weekly_channel_required = os.environ["CHANNEL_REQUIRED"].strip().lower() == "true"
     pipeline_outcomes = None
     raw_outcomes = {
         "web_build": args.web_build_outcome,
@@ -470,6 +517,7 @@ def main() -> int:
             identity_quarantined=_int_or_zero(args.identity_quarantined),
             audio_fast_outcome=(args.audio_fast_outcome.strip() or None),
             audio_expert_outcome=(args.audio_expert_outcome.strip() or None),
+            weekly_channel_required=weekly_channel_required,
         )
     except Exception as exc:  # monitoring must never make collection/deploy red
         print(f"[ops-monitor] 예상하지 못한 실패(비치명): {type(exc).__name__}: {exc}")

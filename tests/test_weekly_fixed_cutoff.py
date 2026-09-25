@@ -88,6 +88,19 @@ class GateAgreesWithWeeklyBotTests(unittest.TestCase):
         workflow = (ROOT / ".github" / "workflows" / "weekly.yml").read_text(encoding="utf-8")
         self.assertIn('cron: "7 8 * * 5"', workflow)   # UTC 08:07 = KST 17:07 > 17:05
 
+class WorkerAgreesWithGateTests(unittest.TestCase):
+    """독립 Worker 도 같은 경계에서 금요일 호출을 연다 — 17:10 으로 따로 놀던 적이 있다."""
+
+    def test_worker_cutoff_constants_match_the_gate(self):
+        import re
+        source = (ROOT / "workers" / "crawl-watchdog" / "src" / "index.mjs").read_text(encoding="utf-8")
+        hour = re.search(r"const WEEKLY_CUTOFF_HOUR = (\d+);", source)
+        minute = re.search(r"const WEEKLY_CUTOFF_MINUTE = (\d+);", source)
+        self.assertIsNotNone(hour)
+        self.assertIsNotNone(minute)
+        self.assertEqual((int(hour.group(1)), int(minute.group(1))),
+                         (gate.CUTOFF_HOUR, gate.CUTOFF_MINUTE))
+
 
 if __name__ == "__main__":
     unittest.main()

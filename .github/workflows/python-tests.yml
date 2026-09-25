@@ -60,6 +60,10 @@ on:
       #
       # 그래서 파일을 하나씩 세지 않는다. 디렉터리를 통째로 본다.
       - ".github/workflows/**"
+      # 독립 Worker 는 배포될 때만 검사를 돌렸다(deploy-crawl-watchdog.yml). 이제
+      # 이 Worker 가 크롤뿐 아니라 금요일 주간 판세도 부르므로, main 에 들어간
+      # 뒤가 아니라 PR 에서 먼저 본다.
+      - "workers/**"
   push:
     branches: [main]
     # 앵커(&python_paths)로 묶고 싶지만 Actions 파서가 YAML 앵커를 받지
@@ -107,6 +111,10 @@ on:
       #
       # 그래서 파일을 하나씩 세지 않는다. 디렉터리를 통째로 본다.
       - ".github/workflows/**"
+      # 독립 Worker 는 배포될 때만 검사를 돌렸다(deploy-crawl-watchdog.yml). 이제
+      # 이 Worker 가 크롤뿐 아니라 금요일 주간 판세도 부르므로, main 에 들어간
+      # 뒤가 아니라 PR 에서 먼저 본다.
+      - "workers/**"
   workflow_dispatch:
 
 # 자동 수집물(curated.json·sent.json·delivery_log.jsonl·discovery_state.json·
@@ -202,3 +210,8 @@ jobs:
       # 암호화까지 돌려 본다(루트 검사에 포함).
       - name: Web push contracts
         run: node web/tests/push_contract.mjs
+
+      # 이 Worker 는 크롤 슬롯 복구와 금요일 주간 판세 호출을 모두 판단한다.
+      # 판단이 틀리면 조용하다 — 아무것도 안 부르고, 로그는 Cloudflare 에만 남는다.
+      - name: Crawl/weekly watchdog decisions
+        run: node --test workers/crawl-watchdog/test.mjs
