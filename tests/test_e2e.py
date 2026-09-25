@@ -227,7 +227,9 @@ class TestE2E(unittest.TestCase):
         self.assertEqual(len(fake_tg.sent_messages), n)
 
         # ── ⑥ weekly 집계 (curated 모의) ──
-        curated = {a["hash"]: {**a, "cached_at": NOW.isoformat()}
+        # 주간 창은 금요일 17:05 고정 경계로 끝난다 — '지금'이 아니라 창 안의 시각.
+        in_week = (weekly_bot.week_cutoff() - timedelta(hours=1)).isoformat()
+        curated = {a["hash"]: {**a, "cached_at": in_week, "published_at": in_week}
                    for a in FIXTURE_QUEUE if a["importance"] != "noise"}
         items = weekly_bot.get_week_articles(curated)
         self.assertGreater(len(items), 0)

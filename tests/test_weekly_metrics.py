@@ -21,6 +21,15 @@ import weekly_sections
 NOW_ISO = "2026-07-12T22:00:00+00:00"
 
 
+def _in_week() -> datetime:
+    """지금 창 안의 한 시각 — 창 끝(금 17:05 경계) 한 시간 전.
+
+    창은 실행 시각이 아니라 고정 경계로 정해진다. 테스트가 '지금'을 기사 시각으로
+    쓰면 금요일 경계 뒤~다음 경계 사이에는 그 기사가 창 밖이다.
+    """
+    return (weekly_bot.week_cutoff() - timedelta(hours=1)).astimezone(timezone.utc)
+
+
 def _update(uid, data="fb:abcd1234:important", from_id=7):
     return {"update_id": uid,
             "callback_query": {"id": f"cq{uid}", "from": {"id": from_id},
@@ -29,7 +38,7 @@ def _update(uid, data="fb:abcd1234:important", from_id=7):
 
 class TestWeekly(unittest.TestCase):
     def _curated(self, grade_field):
-        now = datetime.now(timezone.utc).isoformat()
+        now = _in_week().isoformat()
         return {
             "h1" * 8: {grade_field: "must_read", "title": "T1", "title_kr": "티1",
                        "link": "https://a.com/1", "domain": "world-nuclear-news.org",
@@ -56,14 +65,14 @@ class TestWeekly(unittest.TestCase):
     def test_old_articles_excluded(self):
         c = self._curated("importance")
         for v in c.values():
-            v["cached_at"] = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+            v["cached_at"] = (_in_week() - timedelta(days=10)).isoformat()
         self.assertEqual(weekly_bot.get_week_articles(c), [])
 
     def test_actual_publication_time_wins_over_recent_cache_time(self):
         c = self._curated("importance")
         first = next(iter(c.values()))
         first["published_at"] = (
-            datetime.now(timezone.utc) - timedelta(days=10)
+            _in_week() - timedelta(days=10)
         ).isoformat()
         items = weekly_bot.get_week_articles(c)
         self.assertNotIn(first["link"], {row["link"] for row in items})
@@ -72,9 +81,9 @@ class TestWeekly(unittest.TestCase):
         c = self._curated("importance")
         first = next(iter(c.values()))
         first["cached_at"] = (
-            datetime.now(timezone.utc) - timedelta(days=10)
+            _in_week() - timedelta(days=10)
         ).isoformat()
-        first["published_at"] = datetime.now(timezone.utc).isoformat()
+        first["published_at"] = _in_week().isoformat()
         items = weekly_bot.get_week_articles(c)
         self.assertIn(first["link"], {row["link"] for row in items})
 
@@ -294,7 +303,7 @@ class TestWeeklyReportStore(unittest.TestCase):
     def test_same_week_overwrite_is_detected(self):
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "weekly_reports.json"
-            now = datetime(2026, 8, 3, 17, 0, tzinfo=weekly_bot.KST)
+            now = datetime(2026, 8, 7, 17, 30, tzinfo=weekly_bot.KST)   # 금, 경계 뒤
             weekly_bot.save_weekly_report(self._synthesis(), {"total": 3},
                                           self.ITEMS, now, path)
             self.assertTrue(weekly_bot.save_weekly_report(
@@ -309,10 +318,10 @@ class TestWeeklyReportStore(unittest.TestCase):
             path = Path(tmp) / "weekly_reports.json"
             weekly_bot.save_weekly_report(
                 self._synthesis(), {"total": 3}, self.ITEMS,
-                datetime(2026, 8, 3, 17, 0, tzinfo=weekly_bot.KST), path)
+                datetime(2026, 8, 7, 17, 30, tzinfo=weekly_bot.KST), path)
             weekly_bot.save_weekly_report(
                 self._synthesis(), {"total": 3}, self.ITEMS,
-                datetime(2026, 8, 10, 17, 0, tzinfo=weekly_bot.KST), path)
+                datetime(2026, 8, 14, 17, 30, tzinfo=weekly_bot.KST), path)
             self.assertEqual(sorted(weekly_bot.load_weekly_reports(path)["reports"]),
                              ["2026-W32", "2026-W33"])
 
@@ -1095,10 +1104,13 @@ class TestWeeklySections(unittest.TestCase):
 
     def test_report_period_matches_the_articles_it_was_built_from(self):
         """리포트가 말하는 구간과 기사 수집 구간이 어긋나면 안 된다."""
+        # 금요일 17:05 경계 고정 — 일요일 저녁에 돌아도 지난 금요일로 끝나는 주다.
         now = datetime(2026, 7, 12, 20, 0, tzinfo=weekly_bot.KST)
         since, until = weekly_bot.week_window(now)
-        self.assertEqual(since.date().isoformat(), "2026-07-06")
-        self.assertEqual(until, now)
+        self.assertEqual(since, datetime(2026, 7, 3, 17, 5, tzinfo=weekly_bot.KST))
+        self.assertEqual(until, datetime(2026, 7, 10, 17, 5, tzinfo=weekly_bot.KST))
+        self.assertEqual([d.isoformat() for d in weekly_bot.week_label(now)],
+                         ["2026-07-04", "2026-07-10"])
         def record(link, published, cached):
             return {"importance": "must_read", "curation_status": "reviewed",
                     "title": f"주간 창 검사 {link}", "title_kr": f"주간 창 검사 {link}",
@@ -1106,14 +1118,21 @@ class TestWeeklySections(unittest.TestCase):
                     "published_at": published, "cached_at": cached}
 
         curated = {
-            "in" + "0" * 14: record("https://a.com/in", "2026-07-06T09:00:00+09:00",
-                                    "2026-07-06T00:00:00+00:00"),
-            "out" + "0" * 13: record("https://a.com/out", "2026-07-05T20:00:00+09:00",
-                                     "2026-07-05T11:00:00+00:00"),
+            # 경계 직후(금 17:06)는 이번 주, 경계 직전(금 17:04)은 지난주.
+            "in" + "0" * 14: record("https://a.com/in", "2026-07-03T17:06:00+09:00",
+                                    "2026-07-03T08:06:00+00:00"),
+            "out" + "0" * 13: record("https://a.com/out", "2026-07-03T17:04:00+09:00",
+                                     "2026-07-03T08:04:00+00:00"),
+            "end" + "0" * 13: record("https://a.com/end", "2026-07-10T17:05:00+09:00",
+                                     "2026-07-10T08:05:00+00:00"),
+            "next" + "0" * 12: record("https://a.com/next", "2026-07-10T17:06:00+09:00",
+                                      "2026-07-10T08:06:00+00:00"),
         }
         links = {row["link"] for row in weekly_bot.get_week_articles(curated, now=now)}
         self.assertIn("https://a.com/in", links)
+        self.assertIn("https://a.com/end", links)
         self.assertNotIn("https://a.com/out", links)
+        self.assertNotIn("https://a.com/next", links)
 
     def test_saved_report_carries_the_corners(self):
         items = [self._article(
@@ -1130,10 +1149,10 @@ class TestWeeklySections(unittest.TestCase):
                  "key_events": []},
                 {"total": 1}, items, now=now, path=path, sections=sections)
             entry = json.loads(path.read_text(encoding="utf-8"))["reports"]
-            entry = entry[weekly_bot.week_id(now)]
-        self.assertEqual(entry["week_start"],
-                         weekly_bot.week_window(now)[0].date().isoformat())
-        self.assertEqual(entry["week_end"], now.date().isoformat())
+            entry = entry[weekly_bot.report_week_id(now)]
+        start, end = weekly_bot.week_label(now)
+        self.assertEqual(entry["week_start"], start.isoformat())
+        self.assertEqual(entry["week_end"], end.isoformat())
         self.assertEqual(len(entry["top_stories"]), 1)
         for key in ("country_briefs", "publications", "upcoming"):
             self.assertIsInstance(entry[key], list)
@@ -1236,7 +1255,7 @@ class TestWeeklyUpcomingDisabled(unittest.TestCase):
                                           items, now=self.NOW, path=path,
                                           sections=sections)
             entry = json.loads(path.read_text(encoding="utf-8"))["reports"]
-        entry = entry[weekly_bot.week_id(self.NOW)]
+        entry = entry[weekly_bot.report_week_id(self.NOW)]
         self.assertEqual([row["date"] for row in entry["upcoming"]], ["2026-07-25"])
 
     def test_telegram_does_not_print_the_upcoming_corner(self):

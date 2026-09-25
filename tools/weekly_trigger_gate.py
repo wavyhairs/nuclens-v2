@@ -33,8 +33,23 @@ KST = timezone(timedelta(hours=9))
 BACKUP_TRIGGER_SOURCE = "backup_watchdog"
 
 
+# 주간 경계 — weekly_bot.WEEK_CUTOFF_WEEKDAY / WEEK_CUTOFF_TIME 과 같은 값이어야 한다
+# (테스트가 대조한다). 이 게이트는 의존성 설치 전에 돌아서 weekly_bot 을 import 하지 않는다.
+CUTOFF_WEEKDAY = 4          # Friday
+CUTOFF_HOUR, CUTOFF_MINUTE = 17, 5
+
+
+def _cutoff(now: datetime) -> datetime:
+    local = now.astimezone(KST)
+    back = (local.weekday() - CUTOFF_WEEKDAY) % 7
+    cutoff = (local - timedelta(days=back)).replace(
+        hour=CUTOFF_HOUR, minute=CUTOFF_MINUTE, second=0, microsecond=0)
+    return cutoff if cutoff <= local else cutoff - timedelta(days=7)
+
+
 def _week_id(now: datetime) -> str:
-    year, week, _ = now.astimezone(KST).isocalendar()
+    """리포트 저장 키와 같은 규칙 — 실행 시각이 아니라 경계가 속한 ISO 주차."""
+    year, week, _ = _cutoff(now).isocalendar()
     return f"{year}-W{week:02d}"
 
 
@@ -67,7 +82,9 @@ def delivery_state(*, now: datetime, reports_path: Path, channel_path: Path,
 def _in_recovery_window(now: datetime) -> bool:
     local = now.astimezone(KST)
     weekday = local.weekday()  # Monday=0
-    return ((weekday == 4 and local.hour >= 17)
+    # 경계(금 17:05) 전의 금요일 복구는 **지난주** 창을 만든다 — 열지 않는다.
+    return ((weekday == CUTOFF_WEEKDAY
+             and (local.hour, local.minute) >= (CUTOFF_HOUR, CUTOFF_MINUTE))
             or weekday == 5
             or (weekday == 6 and local.hour < 12))
 
@@ -94,7 +111,7 @@ def decide(*, event_name: str, workflow_conclusion: str, now: datetime,
             f"crawl conclusion is {workflow_conclusion or 'missing'}")
     if not _in_recovery_window(now):
         return False, "outside_recovery_window", (
-            f"outside Friday 17:00-Sunday 12:00 KST; {detail}")
+            f"outside Friday 17:05-Sunday 12:00 KST; {detail}")
     if "dm=failed" in detail:
         state = "delivery_failed_recovery"
     elif "dm=pending" in detail:
