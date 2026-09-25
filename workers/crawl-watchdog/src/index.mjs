@@ -138,6 +138,9 @@ export async function checkAndRecover(env, now = new Date()) {
 const WEEKLY_MIN_GAP_MS = 30 * 60_000;
 const WEEKLY_MAX_DISPATCHES = 6;
 const KST_OFFSET_MS = 9 * 3_600_000;
+// 주간 경계 — tools/weekly_trigger_gate.py 의 CUTOFF_HOUR/CUTOFF_MINUTE 와 같아야 한다.
+const WEEKLY_CUTOFF_HOUR = 17;
+const WEEKLY_CUTOFF_MINUTE = 5;
 
 function kst(now) {
   return new Date(now.getTime() + KST_OFFSET_MS);
@@ -156,13 +159,18 @@ export function isoWeekId(now) {
   return `${year}-W${String(week).padStart(2, "0")}`;
 }
 
-/** 금요일 17:10 ~ 일요일 12:00 KST. 게이트의 복구 창과 같은 자리에 선다. */
+/**
+ * 금요일 17:05 ~ 일요일 12:00 KST. 게이트의 복구 창과 같은 자리에 선다.
+ * 17:05 는 weekly_bot 의 주간 경계(tools/weekly_trigger_gate.py CUTOFF_*)다 —
+ * 이 Worker 의 cron(:07)이 경계 직후 첫 호출이 된다.
+ */
 export function weeklyWindow(now) {
   const local = kst(now);
   const day = local.getUTCDay();          // 일=0 … 금=5, 토=6
   const hour = local.getUTCHours();
   const minute = local.getUTCMinutes();
-  if (day === 5) return hour > 17 || (hour === 17 && minute >= 10);
+  if (day === 5) return hour > WEEKLY_CUTOFF_HOUR
+    || (hour === WEEKLY_CUTOFF_HOUR && minute >= WEEKLY_CUTOFF_MINUTE);
   if (day === 6) return true;
   return day === 0 && hour < 12;
 }
@@ -205,12 +213,13 @@ export function evaluateWeekly(runs, reports, now = new Date()) {
 }
 
 export function weeklyWindowStart(now) {
-  // 이번 창이 열린 금요일 17:10 KST. 지난 주 실행이 예산에 섞이지 않게 한다.
+  // 이번 창이 열린 금요일 17:05 KST. 지난 주 실행이 예산에 섞이지 않게 한다.
   const local = kst(now);
   const day = local.getUTCDay();
   const back = day === 5 ? 0 : (day === 6 ? 1 : 2);   // 금 0 · 토 1 · 일 2
   const start = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(),
-                                  local.getUTCDate() - back, 17, 10));
+                                  local.getUTCDate() - back,
+                                  WEEKLY_CUTOFF_HOUR, WEEKLY_CUTOFF_MINUTE));
   return new Date(start.getTime() - KST_OFFSET_MS);
 }
 

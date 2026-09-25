@@ -143,9 +143,10 @@ test("ISO week matches weekly_bot, including the year boundaries", () => {
   assert.equal(isoWeekId(at("2025-12-29T00:00:00Z")), "2026-W01");
 });
 
-test("the weekly window opens at 17:10 KST Friday and closes at noon Sunday", () => {
-  assert.equal(weeklyWindow(at("2026-09-18T08:09:00Z")), false);  // 17:09 금
-  assert.equal(weeklyWindow(at("2026-09-18T08:10:00Z")), true);   // 17:10 금
+test("the weekly window opens at 17:05 KST Friday and closes at noon Sunday", () => {
+  assert.equal(weeklyWindow(at("2026-09-18T08:04:00Z")), false);  // 17:04 금
+  assert.equal(weeklyWindow(at("2026-09-18T08:05:00Z")), true);   // 17:05 금
+  assert.equal(weeklyWindow(at("2026-09-18T08:07:00Z")), true);   // 17:07 금 — Worker 첫 호출
   assert.equal(weeklyWindow(at("2026-09-19T06:00:00Z")), true);   // 15:00 토
   assert.equal(weeklyWindow(at("2026-09-20T02:59:00Z")), true);   // 11:59 일
   assert.equal(weeklyWindow(at("2026-09-20T03:00:00Z")), false);  // 12:00 일
@@ -153,7 +154,7 @@ test("the weekly window opens at 17:10 KST Friday and closes at noon Sunday", ()
 });
 
 test("the retry budget is counted from this Friday, not the last one", () => {
-  const start = "2026-09-18T08:10:00.000Z";
+  const start = "2026-09-18T08:05:00.000Z";
   assert.equal(weeklyWindowStart(at("2026-09-18T09:00:00Z")).toISOString(), start);
   assert.equal(weeklyWindowStart(at("2026-09-19T15:00:00Z")).toISOString(), start);
   assert.equal(weeklyWindowStart(at("2026-09-20T02:00:00Z")).toISOString(), start);
