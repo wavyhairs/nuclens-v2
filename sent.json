@@ -6509,7 +6509,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-09-25T00:11:54+00:00",
+    "updated_at": "2026-09-25T00:25:09+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -6589,7 +6589,7 @@
         "title": "원문과 다른 기사를 자동으로 제외했습니다",
         "detail": "요약이 원문과 다르게 만들어진 기사 6건을 브리핑 후보와 아카이브에서 뺐습니다. 다시 만들어 봐도 같아서 내보내지 않았습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-09-25T00:11:54+00:00",
+        "last_seen_at": "2026-09-25T00:25:09+00:00",
         "last_observation_id": "2026-09-25T09:10:37.995643+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-24T18:55:00+00:00",
@@ -6612,7 +6612,7 @@
         "title": "검증이 끝나지 않은 기사를 자동 보류했습니다",
         "detail": "요약 근거가 확인되지 않은 기사 3건을 발송 대기열에 넣지 않았습니다. 그중 3건은 재시도 상한에 닿아 제외했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-09-25T00:11:54+00:00",
+        "last_seen_at": "2026-09-25T00:25:09+00:00",
         "last_observation_id": "2026-09-25T03:47:51.207850+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-19T21:41:48+00:00",
@@ -6670,14 +6670,14 @@
         "resolved_at": "2026-09-19T15:43:07+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 57,
+        "consecutive": 58,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
-        "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 1건 · 기존 제외 유지 35건. 사건일이 잘못된 기사 1365건은 날짜만 자동 정정했습니다.",
+        "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 36건. 사건일이 잘못된 기사 1373건은 날짜만 자동 정정했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-09-25T00:11:54+00:00",
-        "last_observation_id": "github-run:36045107486",
+        "last_seen_at": "2026-09-25T00:25:09+00:00",
+        "last_observation_id": "github-run:36075852054",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
@@ -6687,7 +6687,7 @@
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=17975 quarantined=36 sanitized=1365 samples=017ab310db05, 02bd77b262dd, 05f52bcacc9d, 0b31010f0bdb, 205e053d314f",
+        "technical": "checked=18030 quarantined=36 sanitized=1373 samples=017ab310db05, 02bd77b262dd, 05f52bcacc9d, 0b31010f0bdb, 205e053d314f",
         "fingerprint": "q=36:37a796ac13006af0",
         "last_notified_fingerprint": "q=36:37a796ac13006af0"
       },
@@ -6793,7 +6793,7 @@
         "title": "일부 기사를 정리하지 못하고 넘겼습니다",
         "detail": "오늘 42건이 요약·분류 단계에서 처리되지 못했습니다.",
         "severity": "critical",
-        "last_seen_at": "2026-09-25T00:11:54+00:00",
+        "last_seen_at": "2026-09-25T00:25:09+00:00",
         "last_observation_id": "2026-09-25:2026-09-25T00:42:40.095952+09:00:42",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-22T15:46:42+00:00",
@@ -6858,20 +6858,20 @@
         "resolution_notified_at": "2026-08-26T09:52:50+00:00"
       },
       "issue-candidate:topn-retention": {
-        "consecutive": 8,
+        "consecutive": 9,
         "scope": "data_gate",
         "active": true,
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
         "detail": "기사당 Top-12 이 실제 병합을 놓친다",
         "severity": "warning",
-        "last_seen_at": "2026-09-25T00:11:54+00:00",
-        "last_observation_id": "github-run:36045107486",
+        "last_seen_at": "2026-09-25T00:25:09+00:00",
+        "last_observation_id": "github-run:36075852054",
         "min_occurrences": 2,
         "first_seen_at": "2026-09-18T20:05:02+00:00",
         "level": "attention",
         "impact": "없음 — 뉴스 수집과 서비스는 정상입니다. 이슈를 묶는 정확도만 영향을 받습니다.",
         "action": "운영 조치는 필요 없습니다 — 개발자 확인 항목입니다.",
-        "technical": "[issue-candidate:topn-retention] LLM 승인 병합 1093건 중 13건이 상위 12 밖이다 (보존율 0.988, 기준 1.000). 컷을 올려야 한다.",
+        "technical": "[issue-candidate:topn-retention] LLM 승인 병합 1076건 중 13건이 상위 12 밖이다 (보존율 0.988, 기준 1.000). 컷을 올려야 한다.",
         "fingerprint": "guard:warning",
         "pending_notification": false,
         "last_notified_at": "2026-09-18T22:16:43+00:00",
@@ -6928,9 +6928,9 @@
         "resolved_at": "2026-09-01T22:39:19+00:00"
       },
       "issue-candidate:preselect-headroom": {
-        "consecutive": 48,
+        "consecutive": 0,
         "scope": "data_gate",
-        "active": true,
+        "active": false,
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
         "detail": "어휘 예선 컷 20 이 실제 병합을 놓친다 (evidence)",
         "severity": "critical",
@@ -6947,7 +6947,9 @@
         "last_notified_at": "2026-09-22T20:05:53+00:00",
         "last_notified_severity": "critical",
         "last_notified_fingerprint": "guard:critical",
-        "notifications": 2
+        "notifications": 2,
+        "resolved_at": "2026-09-25T00:25:09+00:00",
+        "resolution_notified_at": "2026-09-25T00:25:09+00:00"
       },
       "source:DOE 원자력국:stale": {
         "consecutive": 0,
@@ -7430,9 +7432,9 @@
         "resolution_notified_at": "2026-09-07T03:43:02+00:00"
       },
       "quality:audio-brief-missing": {
-        "consecutive": 1,
+        "consecutive": 0,
         "scope": "audio_pipeline",
-        "active": true,
+        "active": false,
         "title": "전문가 오디오 브리핑이 생성되지 않았습니다",
         "detail": "오늘 전문가 브리핑 음성이 만들어지지 않아 구독 채널에 나가지 않았습니다.",
         "severity": "warning",
@@ -7449,8 +7451,9 @@
         "last_notified_at": "2026-09-24T19:40:32+00:00",
         "last_notified_severity": "warning",
         "notifications": 3,
-        "resolution_notified_at": "2026-09-09T22:24:13+00:00",
-        "last_notified_fingerprint": ""
+        "resolution_notified_at": "2026-09-25T00:25:09+00:00",
+        "last_notified_fingerprint": "",
+        "resolved_at": "2026-09-25T00:25:09+00:00"
       },
       "source:FT 원자력:empty": {
         "consecutive": 0,
@@ -7477,7 +7480,7 @@
         "resolution_notified_at": "2026-09-21T09:46:34+00:00"
       },
       "issue-candidate:evidence-attach-rate-drift": {
-        "consecutive": 2,
+        "consecutive": 3,
         "scope": "data_gate",
         "active": true,
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
@@ -7486,10 +7489,10 @@
         "level": "attention",
         "impact": "없음 — 뉴스 수집과 서비스는 정상입니다. 이슈를 묶는 정확도만 영향을 받습니다.",
         "action": "운영 조치는 필요 없습니다 — 개발자 확인 항목입니다.",
-        "technical": "[issue-candidate:evidence-attach-rate-drift] 이번 7.8896 vs 최근 중앙값 0.3271 (+2312%, 허용 ±30%). 수집량·임베딩 커버리지·병합 규칙 중 무엇이 움직였는지 봐야 한다.",
+        "technical": "[issue-candidate:evidence-attach-rate-drift] 이번 71.6000 vs 최근 중앙값 0.3286 (+21689%, 허용 ±30%). 수집량·임베딩 커버리지·병합 규칙 중 무엇이 움직였는지 봐야 한다.",
         "fingerprint": "guard:warning",
-        "last_seen_at": "2026-09-25T00:11:54+00:00",
-        "last_observation_id": "github-run:36045107486",
+        "last_seen_at": "2026-09-25T00:25:09+00:00",
+        "last_observation_id": "github-run:36075852054",
         "min_occurrences": 2,
         "first_seen_at": "2026-09-23T19:34:50+00:00",
         "pending_notification": false,
