@@ -19,8 +19,10 @@
     python tools/backfill_weekly_report.py --start 2026-08-15 --end 2026-08-21
     python tools/backfill_weekly_report.py --start ... --end ... --dry-run
 
-    기간은 **KST 달력 날짜**(양끝 포함)다. 주차 키·week_start·week_end 는
-    `--end` 가 속한 ISO 주차로 정해지므로, 그 주의 마지막 날을 준다.
+    기간은 **KST 달력 날짜**(양끝 포함)로 먼저 자른다. 주차 키·week_start·week_end 는
+    `--end` 가 속한 ISO 주차로 정해지므로, 그 주의 마지막 날(금요일)을 준다.
+    저장 전 `weekly_bot.week_window` 가 한 번 더 자르므로 끝은 금요일 17:05 경계다
+    (그 뒤 기사는 다음 주 몫 — weekly_bot.WEEK_CUTOFF_TIME).
 """
 
 from __future__ import annotations

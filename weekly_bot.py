@@ -33,7 +33,7 @@ import re
 import sys
 import llm_policy
 from collections import Counter
-from datetime import datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 from ranking import cluster_duplicates
@@ -170,17 +170,57 @@ def parse_moment(value: object) -> datetime | None:
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=KST)
 
 
-def week_window(now: datetime | None = None) -> tuple[datetime, datetime]:
-    """리포트가 말하는 구간 — KST 달력으로 `WEEK_DAYS` 일(양끝 포함).
+# 주간 경계 — **금요일 17:05 KST** 고정.
+#
+# 예전 창은 '실행 시각 기준 최근 7일'이었다. 금요일 schedule 은 자주 밀리고
+# 밀리면 금 17시~일 12시 복구 실행이 대신 도는데, 그러면 실행 시각이 곧 기간이
+# 됐다 — W35 는 토요일 00:00 에 돌아 8/23(일)~8/29(토)가 되어 다음 주 시작일과
+# 겹쳤다. 제때 돌아도 금요일 17시 이후 기사는 이번 주에서 빠지고 다음 주는
+# 토요일 0시부터라 어느 주에도 안 들어갔다.
+#
+# 경계를 고정하면 몇 시에 돌든 같은 기간이 나오고 빈틈·겹침이 없다. 정각(17:00)
+# 을 피해 몇 분 뒤로 둔다 — schedule cron(17:07)이 언제나 경계 **뒤**에 돌아야
+# 방금 끝난 주를 만든다. 복구 게이트(tools/weekly_trigger_gate.py)도 같은 경계에서
+# 열린다.
+WEEK_CUTOFF_WEEKDAY = 4          # Monday=0 → Friday
+WEEK_CUTOFF_TIME = time(17, 5)
 
-    라벨과 수집 구간이 어긋나 있었다: 저장본은 KST 로 `now-6일 ~ now` 라고
-    적으면서 기사는 UTC 문자열로 `now-7일` 이후를 담아, 화면의 '8/15~8/21'
-    안에 8/14 저녁 기사가 섞였다. 판세도 코너도 이 창 하나만 쓴다 — 한 화면에
-    두 기간이 섞이면 독자가 읽은 '이번 주'가 어느 주인지 알 수 없다.
-    """
+
+def week_cutoff(now: datetime | None = None) -> datetime:
+    """`now` 이전(같은 시각 포함)의 가장 최근 경계 — 리포트가 말하는 주의 끝."""
     now = (now or datetime.now(KST)).astimezone(KST)
-    first = (now - timedelta(days=WEEK_DAYS - 1)).date()
-    return datetime.combine(first, time.min, tzinfo=KST), now
+    back = (now.weekday() - WEEK_CUTOFF_WEEKDAY) % 7
+    cutoff = datetime.combine((now - timedelta(days=back)).date(), WEEK_CUTOFF_TIME,
+                              tzinfo=KST)
+    return cutoff if cutoff <= now else cutoff - timedelta(days=7)
+
+
+def week_window(now: datetime | None = None) -> tuple[datetime, datetime]:
+    """리포트가 모으는 기사 구간 — (직전 경계, 이번 경계]. 판세도 코너도 이 창 하나만 쓴다.
+
+    한 화면에 두 기간이 섞이면 독자가 읽은 '이번 주'가 어느 주인지 알 수 없다.
+    """
+    end = week_cutoff(now)
+    return end - timedelta(days=WEEK_DAYS), end
+
+
+def week_label(now: datetime | None = None) -> tuple[date, date]:
+    """화면·텔레그램에 적는 기간 — 경계 금요일로 끝나는 토~금 7일.
+
+    수집 구간은 금요일 17:05 에서 끊기지만 사람에게는 달력 주로 말한다
+    ("9월 19일–25일"). `WEEK_DAYS` 를 넓혀 쓰는 백필도 라벨은 그 주 그대로다.
+    """
+    end = week_cutoff(now).date()
+    return end - timedelta(days=6), end
+
+
+def report_week_id(now: datetime | None = None) -> str:
+    """저장 키 — 실행 시각이 아니라 **경계가 속한 ISO 주차**.
+
+    금요일 경계 전에 손으로 돌리면 창은 지난주인데 실행 시각은 이번 주라, 예전처럼
+    `week_id(now)` 를 쓰면 이번 주 키에 지난주 내용을 덮어쓴다.
+    """
+    return week_id(week_cutoff(now))
 
 
 def get_week_articles(curated: dict, now: datetime | None = None) -> list[dict]:
@@ -192,7 +232,7 @@ def get_week_articles(curated: dict, now: datetime | None = None) -> list[dict]:
         # 재수집·재큐레이션 시각이 아니라 실제 발행 시각으로 주간 창을 자른다.
         # 옛 캐시에는 published_at이 없으므로 그 경우에만 cached_at으로 호환한다.
         moment = parse_moment(data.get("published_at") or data.get("cached_at"))
-        if moment is None or not (since <= moment <= until):
+        if moment is None or not (since < moment <= until):
             continue
         if _grade(data) not in ("must_read", "nice_to_know"):
             continue
@@ -988,7 +1028,7 @@ def filter_previous_week_repeats(
     """
     now = (now or datetime.now(KST)).astimezone(KST)
     if previous_report is None:
-        previous_key = week_id(now - timedelta(days=7))
+        previous_key = week_id(week_cutoff(now) - timedelta(days=7))
         previous_report = load_weekly_reports(reports_path)["reports"].get(previous_key)
     if not isinstance(previous_report, dict):
         return items, {"previous_week": "", "excluded": [], "material_progress": []}
@@ -1069,11 +1109,11 @@ def build_week_sections(items: list[dict], now: datetime | None = None) -> dict:
     LLM 을 타지 않으므로 '주 1회 1호출' 계약이 그대로다. 기간도 판세와 같은
     `week_window` 하나를 쓴다 — '예정'만 그 창의 끝 이후를 본다.
     """
-    start, end = week_window(now)
+    start, end = week_label(now)
     return weekly_sections.build_sections(
         weekly_stories(items), weekly_contracts(items),
         is_development=is_development,
-        week_start=start.date().isoformat(), week_end=end.date().isoformat())
+        week_start=start.isoformat(), week_end=end.isoformat())
 
 
 def save_weekly_report(synthesis: dict, agg: dict, items: list[dict],
@@ -1090,15 +1130,15 @@ def save_weekly_report(synthesis: dict, agg: dict, items: list[dict],
     now = (now or datetime.now(KST)).astimezone(KST)
     path = path or WEEKLY_REPORTS_FILE
     store = load_weekly_reports(path)
-    key = week_id(now)
-    # 라벨과 수집 구간을 한 함수에서 낸다 — 둘이 갈리면 화면의 '이번 주'가
+    key = report_week_id(now)
+    # 라벨과 수집 구간을 한 경계에서 낸다 — 둘이 갈리면 화면의 '이번 주'가
     # 실제로 담긴 기사의 주와 하루 어긋난다.
-    start, end = week_window(now)
+    start, end = week_label(now)
     sections = sections if sections is not None else build_week_sections(items, now)
     entry = {
         "week_id": key,
-        "week_start": start.date().isoformat(),
-        "week_end": end.date().isoformat(),
+        "week_start": start.isoformat(),
+        "week_end": end.isoformat(),
         "generated_at": now.isoformat(),
         "timezone": "Asia/Seoul",
         "schema_version": 1,
@@ -1157,7 +1197,7 @@ def count_unique_issues(items: list[dict]) -> int:
 def format_weekly(items: list[dict], synthesis: dict | None = None,
                   sections: dict | None = None,
                   now: datetime | None = None) -> str:
-    start, today = week_window(now)
+    start, today = week_label(now)
     agg = build_aggregates(items)
     synthesis = synthesis if synthesis is not None else batch_synthesize(items, agg)
     sections = sections if sections is not None else build_week_sections(items, now)
@@ -1313,7 +1353,7 @@ def _current_report(now: datetime | None = None,
                     path: Path | None = None) -> tuple[str, dict | None, dict]:
     now = (now or datetime.now(KST)).astimezone(KST)
     store = load_weekly_reports(path)
-    key = week_id(now)
+    key = report_week_id(now)
     row = store["reports"].get(key)
     return key, row if isinstance(row, dict) else None, store
 
