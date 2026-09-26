@@ -38,9 +38,12 @@ from __future__ import annotations
 
 import copy
 import json
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = 1
+# v2 (2026-09-26): 소급으로 얼린 날짜의 표시 제목을 그날 제목으로 되돌린다(_migrate_v2).
+VERSION = 2
+_KST = timezone(timedelta(hours=9))
 
 # 화면이 카드·상세에서 읽는 **문장** 칸. 여기에 없는 칸은 지금 이슈에서 빌린다.
 FROZEN_FIELDS = (
@@ -167,11 +170,51 @@ def reconcile(rows: list[dict], briefing_date: str, snapshot: dict) -> tuple[lis
     return [row for _, _, row in placed], sum(1 for _, index, _ in placed if index < 0)
 
 
+def _frozen_late(day: str, frozen_at: object) -> bool:
+    """그 날짜보다 하루 넘게 늦게 얼렸나 — 원장이 생기기 전 날짜를 소급으로 얼린 경우."""
+    try:
+        frozen = datetime.fromisoformat(str(frozen_at))
+        briefing_day = date.fromisoformat(day)
+    except (TypeError, ValueError):
+        return False
+    if frozen.tzinfo is not None:
+        frozen = frozen.astimezone(_KST)
+    return (frozen.date() - briefing_day).days > 1
+
+
+def _migrate_v2(payload: dict) -> int:
+    """v1 원장의 소급 날짜에서 표시 제목만 그날 제목으로 되돌린다. 고친 카드 수.
+
+    write-once 의 유일한 예외다. 2026-09-24 에 원장이 처음 돌면서 그 전 날짜를
+    전부 그 빌드의 묶음으로 얼렸는데, 그때 브리핑 행의 `headline_display` 는
+    이슈의 **그 시점** 표시 제목이었다(`apply_headline_display` 가 카탈로그
+    제목을 모든 날짜에 덮었다). 그날 화면에 실제로 선 표시 제목은 남아 있지
+    않으므로, 그날 카드 자신의 제목이 가장 가까운 값이다. 다른 칸은 건드리지 않는다.
+    """
+    if int(payload.get("version") or 1) >= 2:
+        return 0
+    fixed = 0
+    for day, snapshot in (payload.get("dates") or {}).items():
+        if not isinstance(snapshot, dict) or not _frozen_late(day, snapshot.get("frozen_at")):
+            continue
+        for card in snapshot.get("cards") or ():
+            fields = card.get("fields") if isinstance(card, dict) else None
+            if not isinstance(fields, dict):
+                continue
+            title = fields.get("title")
+            if title and fields.get("headline_display") != title:
+                fields["headline_display"] = title
+                fixed += 1
+    return fixed
+
+
 def apply(briefings: list[dict], payload: dict, frozen_at: str) -> dict:
     """모든 날짜에 대해 얼리거나(처음 본 날) 맞댄다(이미 얼린 날). 통계를 돌려준다."""
     dates = payload.setdefault("dates", {})
+    migrated = _migrate_v2(payload)
     payload["version"] = VERSION
-    stats = {"frozen_new": 0, "dates_corrected": 0, "cards_corrected": 0}
+    stats = {"frozen_new": 0, "dates_corrected": 0, "cards_corrected": 0,
+             "migrated_headlines": migrated}
     for briefing in briefings:
         day = str(briefing.get("date") or "")
         rows = briefing.get("issues") or []
