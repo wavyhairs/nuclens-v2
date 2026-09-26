@@ -5,6 +5,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
@@ -1133,6 +1134,28 @@ class ArticleKindGateTests(OutboxBase):
         self.assertIn("[해설] 원전 산업 구조 변화 심층 분석", domestic, "카드 제목에 [해설]이 없다")
         stats = outbox["selection_stats"]["domestic"]["article_kind"]
         self.assertEqual((stats["opinion_dropped"], stats["explainer_selected"]), (1, 1))
+
+
+class QualitySignalTests(OutboxBase):
+    """LLM 없는 일일 품질 신호가 selection_stats 에 실린다 — 재는 일이 발송을 막지 않는다."""
+
+    def test_signals_ride_the_selection_stats(self):
+        self.seed_queue([qitem(h="dn", section="khnp", domain="khnp.co.kr",
+                               title="한수원 신규 발표 오늘")])
+        self.assertEqual(db.cmd_plan(), 0)
+        outbox = db.load_outbox()
+        signals = outbox["selection_stats"]["quality_signals"]
+        self.assertEqual(signals["sent"], len(outbox["items"]))
+        self.assertIn("story_older_2d", signals)
+
+    def test_a_failing_signal_does_not_stop_the_brief(self):
+        self.seed_queue([qitem(h="dn", section="khnp", domain="khnp.co.kr",
+                               title="한수원 신규 발표 오늘")])
+        with mock.patch.object(db.brief_signals, "compute", side_effect=ValueError("boom")):
+            self.assertEqual(db.cmd_plan(), 0)
+        outbox = db.load_outbox()
+        self.assertIn("dn", {i["hash"] for i in outbox["items"]})
+        self.assertIn("ValueError", outbox["selection_stats"]["quality_signals"]["error"])
 
 
 if __name__ == "__main__":

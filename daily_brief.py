@@ -47,6 +47,7 @@ import llm_policy
 from sources import credibility
 import article_quality_gate
 import brief_kind
+import brief_signals
 import freshness
 import issue_continuity
 # 반복 알림 억제 규칙을 여기서 다시 쓰지 않는다 — 규칙이 두 곳에 있으면 어긋난다.
@@ -1323,6 +1324,25 @@ def plan_briefs(queue: list[dict],
         },
     }
 
+    # LLM 없는 일일 품질 신호 — 게이트가 아니라 추세다(brief_signals docstring).
+    # 재는 일이 발송을 막아서는 안 된다.
+    try:
+        signal_dates = event_dates
+        if not signal_dates:
+            signal_dates = freshness.archive_dates()
+            for art in queue:
+                if art.get("hash"):
+                    signal_dates.setdefault(art["hash"], {
+                        "published_at": art.get("published_at") or art.get("queued_at"),
+                        "title": art.get("title_kr") or art.get("title") or ""})
+        quality_signals = brief_signals.compute(dom + forn, today, signal_dates, recent_sent)
+        print(f"[daily_brief] 품질 신호: {quality_signals['sent']}건 중 게재 2일+ "
+              f"{quality_signals['article_older_2d']} · 스토리 2일+ "
+              f"{quality_signals['story_older_2d']} · 7일 내 닮은 제목 "
+              f"{quality_signals['similar_7d']}")
+    except Exception as exc:  # noqa: BLE001 — 지표 실패는 기록만
+        quality_signals = {"error": f"{type(exc).__name__}: {exc}"[:200]}
+
     return _seal_quality_payload({
         **base, "status": "pending", "briefs": briefs, "items": out_items,
         "report_diag": report_diag,
@@ -1345,6 +1365,7 @@ def plan_briefs(queue: list[dict],
                 "must_read_unselected": unselected_must_read(
                     forn_pool, forn, forn_diag, final_quarantine_hashes),
             },
+            "quality_signals": quality_signals,
         },
         "dropped_duplicates": dom_diag["dropped_duplicates"] + forn_diag["dropped_duplicates"],
         # 병합만 기록하면 진단 화면은 반쪽이다. "왜 붙었나"의 짝은 "왜 안 붙었나"인데,
