@@ -46,6 +46,7 @@ from gemini_client import GeminiError, call_json, is_available, synthesis_model
 import llm_policy
 from sources import credibility
 import article_quality_gate
+import freshness
 import issue_continuity
 # 반복 알림 억제 규칙을 여기서 다시 쓰지 않는다 — 규칙이 두 곳에 있으면 어긋난다.
 import operational_monitoring
@@ -868,6 +869,53 @@ def region_stats(diag: dict, selected: list[dict], pool: list[dict] | None = Non
     return stats
 
 
+def freshness_stats(cutoff: datetime | None, stale_dropped: list[dict],
+                    pool: list[dict], region_of: dict[str, str], reg: str) -> dict:
+    """그 지역의 신선도 판정 — 기준 시각, 뺀 묵은 기사, 날짜 달고 남긴 must_read."""
+    dropped = [row for row in stale_dropped if region_of.get(row.get("hash", "")) == reg]
+    return {
+        "cutoff": cutoff.isoformat() if cutoff else "",
+        "stale_dropped": len(dropped),
+        "dated_must_read": sum(1 for a in pool if a.get("stale_since")),
+        "samples": dropped[:8],
+    }
+
+
+def unselected_must_read(pool: list[dict], selected: list[dict], diag: dict,
+                         quarantined: set[str]) -> list[dict]:
+    """must_read 인데 안 나간 후보와 그 사유.
+
+    2026-09-22 must_read 였던 '대미투자 1호 확정' 기사가 9/23 발송에서 왜 빠졌는지
+    로그 어디에도 없었다 — selection_stats 는 건수만 남겼다. 늦은 발송을 고치려면
+    '제날 왜 못 나갔나'부터 보여야 한다.
+    """
+    chosen = {a.get("hash", "") for a in selected}
+    dups = {row.get("hash", ""): row for row in diag.get("dropped_duplicates") or []}
+    repeats = {str(row.get("hash") or "") for row in diag.get("dropped_repeat") or []}
+    below = {row.get("hash", "") for row in diag.get("dropped_below_floor") or []}
+    scores = diag.get("scores") or {}
+    rows: list[dict] = []
+    for art in pool:
+        h = art.get("hash", "")
+        if not h or h in chosen or str(art.get("importance") or "") != "must_read":
+            continue
+        row = {"hash": h, "title": (art.get("title_kr") or art.get("title") or "")[:80],
+               "score": round(float(scores.get(h, 0.0) or 0.0), 2)}
+        if h in dups:
+            row.update(reason="duplicate", dup_of=dups[h].get("dup_of", ""),
+                       dup_reason=dups[h].get("reason", ""))
+        elif h in repeats:
+            row["reason"] = "repeat"
+        elif h in below:
+            row["reason"] = "below_floor"
+        elif h in quarantined:
+            row["reason"] = "final_card_quarantine"
+        else:
+            row["reason"] = "ranked_out"
+        rows.append(row)
+    return rows[:40]
+
+
 def plan_briefs(queue: list[dict],
                 social_pairs: list[tuple[str, dict]] | None = None,
                 now: datetime | None = None) -> dict:
@@ -906,6 +954,17 @@ def plan_briefs(queue: list[dict],
                    if get_importance(a) in ("noise", "market")]
     candidates = [a for a in queue if get_importance(a) not in ("noise", "market")]
     items, quality_held = screen_auto_delivery(candidates)
+    # 신선도 — 직전 브리핑 이후에 나온 기사만 오늘 소식이다(freshness docstring).
+    # 묵은 nice_to_know 는 빼고, 묵은 must_read 는 날짜를 달아 남긴다(결정 D1).
+    fresh_cfg = freshness.resolve_config(cfg)
+    fresh_cutoff = freshness.last_brief_at(today, DELIVERY_LOG_FILE)
+    region_of = {a.get("hash", ""): region(a) for a in items}
+    items, stale_dropped = freshness.split(items, fresh_cutoff, fresh_cfg)
+    stale_hashes = {row["hash"] for row in stale_dropped if row.get("hash")}
+    if stale_dropped or fresh_cutoff is not None:
+        dated = sum(1 for a in items if a.get("stale_since"))
+        print(f"[daily_brief] 신선도: 기준 {fresh_cutoff.isoformat() if fresh_cutoff else '없음'} "
+              f"— 묵은 기사 {len(stale_dropped)}건 제외, 날짜 달고 남긴 must_read {dated}건")
     quality_held_hashes = {row.get("hash", "") for row in quality_held if row.get("hash")}
     if quality_held:
         fallbacks = sum(1 for row in quality_held if row.get("status") == "fallback")
@@ -990,6 +1049,9 @@ def plan_briefs(queue: list[dict],
           f"연속일 반복 {len(dom_diag.get('dropped_repeat') or []) + len(forn_diag.get('dropped_repeat') or [])}건 제외 "
           f"/ 감점 {dom_cont['matched'] + forn_cont['matched']}건 판정)")
 
+    # 1번 자리는 그날 소식에만 준다 — 날짜를 단 묵은 must_read 가 1위면 새 기사를 앞으로.
+    dom = freshness.fresh_first(dom)
+    forn = freshness.fresh_first(forn)
     allsel = dom + forn
 
     # 조건부 필수 항목 보완 — '한수원 시사점이 있어야 하는데 빈' 카드만.
@@ -1000,6 +1062,13 @@ def plan_briefs(queue: list[dict],
     # 핵심 headline/what 충돌은 카드 전체를 빼고, 선택 해석 필드의 새 주장은 그 줄만 뺀다.
     dom, dom_cards, dom_card_audits = verify_final_cards(dom)
     forn, forn_cards, forn_card_audits = verify_final_cards(forn)
+    # 날짜 표시는 사실 검사를 **통과한 뒤에** 붙인다. 먼저 붙이면 '(9/22)' 의 숫자가
+    # 원문에 없는 수치로 걸린다. 발송 로그의 title_kr 은 원래 제목 그대로 둔다.
+    for arts, cards in ((dom, dom_cards), (forn, forn_cards)):
+        for art, card in zip(arts, cards):
+            label = freshness.date_label(art)
+            if label and card.get("headline"):
+                card["headline"] = f"{label} {card['headline']}"
     card_audits = dom_card_audits + forn_card_audits
     final_quarantine_hashes = {
         row.get("hash", "") for row in card_audits
@@ -1134,6 +1203,8 @@ def plan_briefs(queue: list[dict],
         # 조건부 필수 항목 판정과 그 결과. 빈 값도 남긴다 — "왜 이 카드에는
         # 시사점이 없나"는 판정 등급을 봐야만 답할 수 있다.
         meta["implication_requirement"] = a.get("implication_requirement", "")
+        if a.get("stale_since"):
+            meta["stale_since"] = a["stale_since"]
         if a.get("implication_source"):
             meta["implication_source"] = a["implication_source"]
         # 연속일 반복 판정이 붙은 기사는 그 근거를 남긴다. 감점을 받고도 살아남은
@@ -1172,8 +1243,10 @@ def plan_briefs(queue: list[dict],
         for row in (dom_diag.get("dropped_repeat") or [])
                    + (forn_diag.get("dropped_repeat") or [])
     }
+    # 묵은 기사는 내일 더 묵을 뿐이다 — 큐에 남겨 3일 청소를 기다릴 이유가 없다.
     prune = sorted((selected_hashes | set(dup_hashes) | set(junk_hashes)
-                    | repeat_hashes | quality_held_hashes | final_quarantine_hashes) - {""})
+                    | repeat_hashes | quality_held_hashes | final_quarantine_hashes
+                    | stale_hashes) - {""})
 
     quality_diag = {
         "held_before_ranking": quality_held,
@@ -1200,8 +1273,20 @@ def plan_briefs(queue: list[dict],
         "field_diag": field_diag,
         "quality_diag": quality_diag,
         "selection_stats": {
-            "domestic": region_stats(dom_diag, dom, dom_pool, dom_cont),
-            "overseas": region_stats(forn_diag, forn, forn_pool, forn_cont),
+            "domestic": {
+                **region_stats(dom_diag, dom, dom_pool, dom_cont),
+                "freshness": freshness_stats(fresh_cutoff, stale_dropped, dom_pool,
+                                             region_of, "국내"),
+                "must_read_unselected": unselected_must_read(
+                    dom_pool, dom, dom_diag, final_quarantine_hashes),
+            },
+            "overseas": {
+                **region_stats(forn_diag, forn, forn_pool, forn_cont),
+                "freshness": freshness_stats(fresh_cutoff, stale_dropped, forn_pool,
+                                             region_of, "해외"),
+                "must_read_unselected": unselected_must_read(
+                    forn_pool, forn, forn_diag, final_quarantine_hashes),
+            },
         },
         "dropped_duplicates": dom_diag["dropped_duplicates"] + forn_diag["dropped_duplicates"],
         # 병합만 기록하면 진단 화면은 반쪽이다. "왜 붙었나"의 짝은 "왜 안 붙었나"인데,
