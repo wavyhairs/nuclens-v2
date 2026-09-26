@@ -109,5 +109,41 @@ class OrderAndLabelTests(unittest.TestCase):
         self.assertEqual(fr.date_label({}), "")
 
 
+class StaleOutletTests(unittest.TestCase):
+    """커버리지 가점은 오늘 여러 곳이 다룬 소식에만 — 어제까지의 보도는 빼고 센다."""
+
+    def _raw(self, ident, pub):
+        return {"identity": ident, "publisher": ident, "pub": pub}
+
+    def test_an_outlet_whose_reports_all_predate_the_last_brief_is_stale(self):
+        item = {"raw_sources": [self._raw("a", "2026-09-22T10:00:00+09:00"),
+                                self._raw("b", "2026-09-25T08:00:00+09:00"),
+                                self._raw("c", "")]}
+        self.assertEqual(fr.stale_outlets(item, CUTOFF, 6.0), {"a"})
+
+    def test_one_fresh_report_keeps_the_outlet(self):
+        item = {"raw_sources": [self._raw("a", "2026-09-22T10:00:00+09:00"),
+                                self._raw("a", "2026-09-25T07:00:00+09:00")]}
+        self.assertEqual(fr.stale_outlets(item, CUTOFF, 6.0), set())
+
+    def test_no_cutoff_counts_nothing(self):
+        item = {"raw_sources": [self._raw("a", "2026-09-01T10:00:00+09:00")]}
+        self.assertEqual(fr.stale_outlets(item, None, 6.0), set())
+
+    def test_the_coverage_bonus_leaves_out_yesterdays_outlets(self):
+        import ranking
+        item = {"hash": "x", "publisher": "연합뉴스", "story_outlet_count": 4,
+                "story_sources": [{"identity": i} for i in ("연합뉴스", "a", "b", "c")],
+                "raw_sources": [self._raw("a", "2026-09-22T10:00:00+09:00"),
+                                self._raw("b", "2026-09-23T10:00:00+09:00"),
+                                self._raw("c", "2026-09-25T09:00:00+09:00")]}
+        cfg = ranking.load_config()
+        before, _ = ranking._coverage_bonus(item, cfg)
+        cfg.update({"_fresh_cutoff": CUTOFF, "_fresh_grace_hours": 6.0})
+        after, _ = ranking._coverage_bonus(item, cfg)
+        self.assertAlmostEqual(before, 1.2)
+        self.assertAlmostEqual(after, 0.4)  # 연합뉴스·c 두 곳 → 추가 매체 1곳
+
+
 if __name__ == "__main__":
     unittest.main()

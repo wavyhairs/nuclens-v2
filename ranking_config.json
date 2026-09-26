@@ -127,5 +127,12 @@
     "grace_hours": 6,
     "keep_must_read_dated": true,
     "event_review": true
+  },
+  "article_kind": {
+    "_comment": "사설·칼럼·기고·시론·창간사 등(원제목 말머리 또는 article_type=opinion, 인터뷰 제외)은 후보에서 뺀다. 기획·분석(article_type=analysis 또는 말머리)은 카드 제목에 [해설]을 달고 국내·해외 합쳐 하루 explainer_per_day 건, 1번 자리는 주지 않는다(2026-09-26 결정 D2). brief_kind.py docstring 참조.",
+    "_tuning": "2026-09-13~26 발송 243건 재현: 사설·칼럼 4건 제외(비사건 2·창간사·인물 칼럼), 해설 8건 중 하루 2건이던 이틀에서 1건씩 빠지고, 해설이 1번이던 1건은 뒤로.",
+    "enabled": true,
+    "exclude_opinion": true,
+    "explainer_per_day": 1
   }
 }
