@@ -878,6 +878,8 @@ def freshness_stats(cutoff: datetime | None, stale_dropped: list[dict],
     return {
         "cutoff": cutoff.isoformat() if cutoff else "",
         "stale_dropped": len(dropped),
+        # 날짜를 달기에도 너무 묵은 must_read(freshness max_dated_days). stale_dropped 에 포함.
+        "over_limit": sum(1 for row in dropped if row.get("reason") == "stale_over_limit"),
         "dated_must_read": sum(1 for a in pool if a.get("stale_since")),
         "samples": dropped[:8],
     }
@@ -973,7 +975,7 @@ def plan_briefs(queue: list[dict],
     fresh_cfg = freshness.resolve_config(cfg)
     fresh_cutoff = freshness.last_brief_at(today, DELIVERY_LOG_FILE)
     region_of = {a.get("hash", ""): region(a) for a in items}
-    items, stale_dropped = freshness.split(items, fresh_cutoff, fresh_cfg)
+    items, stale_dropped = freshness.split(items, fresh_cutoff, fresh_cfg, today=today)
     stale_hashes = {row["hash"] for row in stale_dropped if row.get("hash")}
     if fresh_cutoff is not None and fresh_cfg.get("enabled", True):
         # 커버리지 가점에서 직전 브리핑 전에만 보도한 매체를 뺀다(freshness.stale_outlets).
@@ -982,8 +984,10 @@ def plan_briefs(queue: list[dict],
                                                         freshness.DEFAULTS["grace_hours"]))
     if stale_dropped or fresh_cutoff is not None:
         dated = sum(1 for a in items if a.get("stale_since"))
+        over = sum(1 for row in stale_dropped if row.get("reason") == "stale_over_limit")
         print(f"[daily_brief] 신선도: 기준 {fresh_cutoff.isoformat() if fresh_cutoff else '없음'} "
-              f"— 묵은 기사 {len(stale_dropped)}건 제외, 날짜 달고 남긴 must_read {dated}건")
+              f"— 묵은 기사 {len(stale_dropped)}건 제외(7일 초과 must_read {over}건 포함), "
+              f"날짜 달고 남긴 must_read {dated}건")
     # 글 종류 — 사설·칼럼은 빼고, 기획·분석은 '해설'로 하루 한 건(결정 D2, brief_kind).
     kind_cfg = brief_kind.resolve_config(cfg)
     items, opinion_dropped = brief_kind.split(items, kind_cfg)

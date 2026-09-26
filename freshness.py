@@ -20,6 +20,10 @@
   한 번은 보낸다(`stale_since`). 이미 보낸 사건이면 연속일 게이트(#186)가 뺀다.
   2026-09-26 결정 D1: 중요한 결정을 영영 빠뜨리는 것이 늦는 것보다 나쁘다. 다만
   1번 자리는 그날 소식에만 준다(`fresh_first`).
+- 그 must_read 도 게재가 `max_dated_days`(7일)보다 오래면 뺀다(`stale_over_limit`).
+  연속일 게이트(dedup.CROSS_DAY_SENT_DAYS)가 7일 발송분만 대조하므로, 더 묵은 기사는
+  이미 보낸 사건이어도 알아보지 못하고 날짜만 달고 다시 나갈 수 있다. 두 창을 맞춘다.
+  7/14~9/26 발송분에서 이 상한에 걸렸을 must_read 는 0건이다 — 드문 구멍을 막는 것.
 
 243건 재현(grace 6h): 문제 기사 29건(늦음 15·재발송 10·각도만 바꾼 재발송 3·옛
 사실 1)이 걸리고 정상 기사는 1건(정상회담 전날의 예고 기사)만 걸린다.
@@ -32,7 +36,7 @@ from pathlib import Path
 
 KST = timezone(timedelta(hours=9))
 DEFAULTS = {"enabled": True, "grace_hours": 6.0, "keep_must_read_dated": True,
-            "event_review": True}
+            "max_dated_days": 7, "event_review": True}
 
 
 def resolve_config(cfg: dict | None) -> dict:
@@ -138,15 +142,22 @@ def stale_outlets(item: dict, cutoff: datetime | None, grace_hours: float) -> se
     return {ident for ident, is_fresh in fresh.items() if not is_fresh}
 
 
-def split(items: list[dict], cutoff: datetime | None, cfg: dict) -> tuple[list[dict], list[dict]]:
+def split(items: list[dict], cutoff: datetime | None, cfg: dict,
+          today: str | date | None = None) -> tuple[list[dict], list[dict]]:
     """(남길 것, 뺀 것). 남긴 묵은 must_read 에는 `stale_since` 를 단다(제자리).
 
-    뺀 것은 진단용 요약이다 — 무엇을 왜 뺐는지 발송 로그에 남는다.
+    뺀 것은 진단용 요약이다 — 무엇을 왜 뺐는지 발송 로그에 남는다. 사유는 `stale`
+    (묵은 nice_to_know) 또는 `stale_over_limit`(날짜를 달기에도 너무 묵은 must_read).
+    ``today`` 는 브리핑 날짜. 없으면 기준 시각의 다음 날로 본다.
     """
     if not cfg.get("enabled", True) or cutoff is None:
         return list(items), []
     grace = float(cfg.get("grace_hours", DEFAULTS["grace_hours"]))
     keep_must = bool(cfg.get("keep_must_read_dated", True))
+    if isinstance(today, str):
+        today = date.fromisoformat(today)
+    today = today or (cutoff.astimezone(KST).date() + timedelta(days=1))
+    oldest = today - timedelta(days=int(cfg.get("max_dated_days", DEFAULTS["max_dated_days"])))
     kept: list[dict] = []
     dropped: list[dict] = []
     for item in items:
@@ -155,7 +166,8 @@ def split(items: list[dict], cutoff: datetime | None, cfg: dict) -> tuple[list[d
         if since is None:
             kept.append(item)
             continue
-        if keep_must and str(item.get("importance") or "") == "must_read":
+        must_read = str(item.get("importance") or "") == "must_read"
+        if keep_must and must_read and since >= oldest:
             item["stale_since"] = since.isoformat()
             kept.append(item)
             continue
@@ -164,7 +176,7 @@ def split(items: list[dict], cutoff: datetime | None, cfg: dict) -> tuple[list[d
             "title": (item.get("title_kr") or item.get("title") or "")[:80],
             "importance": item.get("importance", ""),
             "published_at": str(item.get("published_at") or item.get("queued_at") or ""),
-            "reason": "stale",
+            "reason": "stale_over_limit" if keep_must and must_read else "stale",
         })
     return kept, dropped
 
