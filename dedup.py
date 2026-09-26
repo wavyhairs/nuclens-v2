@@ -626,7 +626,11 @@ relation 은 다섯 중 하나:
 # 남긴다: replay 에서 이 칸이 '같은 주제의 다른 뉴스'를 가장 많이 빨아들였다.
 CROSS_DAY_DROP_RELATIONS = frozenset({"same_restated", "same_detail"})
 CROSS_DAY_RELATIONS = CROSS_DAY_DROP_RELATIONS | {"same_reaction", "next_step", "different"}
-CROSS_DAY_SENT_DAYS = 3
+# 3 → 7 (2026-09-26): 9/13~26 발송분의 재발송 40건 중 12건이 직전 발송에서 4~6일
+# 뒤에 나갔다(삼성물산 스웨덴 SMR·로사톰 카자흐·Xe-100 설계평가). 발송 이력은
+# continuity lookback_days(14) 로 이미 불러오므로 창만 넓히면 된다. 후보당 대조
+# 대상은 여전히 어휘로 추린 CROSS_DAY_SUSPECTS 건이라 호출 크기는 거의 같다.
+CROSS_DAY_SENT_DAYS = 7
 CROSS_DAY_SUSPECTS = 3
 _SUSPECT_LABELS = "ABCDEFGH"
 
@@ -672,9 +676,25 @@ def _suspects(candidate: dict, sent: list[dict], generic: frozenset[str],
     return [sent[index] for _score, index in scored[:limit]]
 
 
+def _published_day(article: dict) -> str:
+    """후보 기사의 게재일(KST). '지난 22일'을 풀 기준이자 SENT 날짜와 견줄 값이다."""
+    from datetime import datetime, timedelta, timezone
+    raw = article.get("published_at") or article.get("queued_at") or article.get("pub")
+    if isinstance(raw, datetime):
+        stamp = raw
+    else:
+        try:
+            stamp = datetime.fromisoformat(str(raw or "").replace("Z", "+00:00"))
+        except ValueError:
+            return ""
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=timezone.utc)
+    return stamp.astimezone(timezone(timedelta(hours=9))).date().isoformat()
+
+
 def _candidate_block(idx: int, article: dict, suspects: list[dict]) -> str:
     lines = [
-        f"[CANDIDATE {idx}]",
+        f"[CANDIDATE {idx}] published={_published_day(article)}",
         f"TITLE: {_trim(article.get('title_kr') or article.get('title'), 200)}",
         f"TITLE_ORIGINAL: {_trim(article.get('title'), 200)}",
         f"SUMMARY: {_trim(article.get('summary'), 500)}",
@@ -727,6 +747,12 @@ CROSS_DAY_CONFIRM_PROMPT = """당신은 원자력 브리핑의 사실 확인 담
 후보를 빼려고 합니다. 빼도 되는지 한 가지만 확인하세요:
 
 **CANDIDATE 가 SENT 이후에 새로 일어난 행동·결정·일정 변화를 보도하는가?**
+- **날짜로 먼저 본다.** SENT date 는 독자에게 보낸 날이다. CANDIDATE 의 `지난 22일`·`지난달`
+  같은 날짜는 CANDIDATE published 기준으로 풀어서 SENT date 와 견준다. SENT date 보다 **앞서거나
+  같은 날** 일어난 행동은 새로 일어난 일이 아니다 — SENT 가 보도한 사건의 원인·배경이거나 같은
+  자리(면담·회의·행사)에서 나온 다른 말이다.
+  (예: SENT 9/25 '울진군, 한수원에 현안 13건 해결 요구' / CANDIDATE 9/26 '지난 22일 한수원 사장과
+   면담해 상생발전 논의' — 면담은 9/22, SENT 보다 앞선 같은 자리다 → new_action=false)
 - 새로 일어난 일의 예: 회담·행사가 실제로 열림, 합의·서명·체결, 승인·허가, 표결 통과,
   연기·취소·중단, 착공·가동·정지, 조사 착수, 새 당사자의 결정.
 - SENT 가 '예정'·'추진'·'논의'라고 한 일이 CANDIDATE 에서 실제로 일어났거나 미뤄졌으면
@@ -758,7 +784,7 @@ def _confirm_no_new_action(proposals: list[tuple[dict, dict, dict]], *,
             f"SENT date={_trim(prior.get('date'), 10)}",
             f"  TITLE: {_trim(prior.get('title_kr') or prior.get('title'), 200)}",
             f"  SUMMARY: {_trim(prior.get('summary'), 400)}",
-            "CANDIDATE",
+            f"CANDIDATE published={_published_day(cand)}",
             f"  TITLE: {_trim(cand.get('title_kr') or cand.get('title'), 200)}",
             f"  SUMMARY: {_trim(cand.get('summary'), 500)}",
             f"  DETAIL: {_trim(cand.get('detail'), 500)}",
