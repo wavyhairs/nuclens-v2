@@ -375,7 +375,24 @@ def build_slides(raw: dict, payload: dict) -> list[dict]:
     # 표지 사진은 분류로 고른다 — 본문 문구를 훑으면 그날 기사에만 맞는 규칙이 된다.
     slides[0]["topic"] = slides[0]["topic"] or payload["topic"]
     slides[0]["photoTopic"] = payload["topic"]
+    # 전에 카드로 나간 스토리면 표지에 '후속' 을 단다(card_context.since_last).
+    since = payload.get("since_last") or {}
+    m = re.match(r"\d{4}-(\d{2})-(\d{2})", str(since.get("date") or ""))
+    if m:
+        slides[0]["followUp"] = f"{int(m.group(1))}월 {int(m.group(2))}일 카드 이후 후속"
+    # 마지막 장의 버튼은 **갈 곳이 있어야** 한다. 예전 "지금 이슈를 계속
+    # 업데이트합니다 →" 는 주소가 없었다. 사이트의 이슈 상세로 보낸다.
+    url = issue_url(payload)
+    if url:
+        slides[4]["cta"] = "이 이슈 계속 보기"
+        slides[4]["ctaUrl"] = url.split("//", 1)[-1].rstrip("/")
     return slides
+
+
+def issue_url(payload: dict) -> str:
+    """오늘 스토리 이슈의 사이트 상세 주소. 정적 `/issue/<id>/` 는 사이트 빌드가 만든다."""
+    issue_id = str(payload.get("issue_id") or "").strip()
+    return f"https://{mc.SITE}/issue/{issue_id}/" if issue_id else ""
 
 
 def load_story_copy(date: str) -> tuple[dict, dict] | None:
@@ -445,7 +462,8 @@ def main() -> int:
     mc.render(slides)
     files = mc.gate(len(slides))
     plain = raw["cover"]["headline"].replace("[[", "").replace("]]", "")
-    caption = "\n".join([f"[스토리] {plain}", raw["cover"]["deck"], "", mc.SITE])
+    caption = "\n".join([f"[스토리] {plain}", raw["cover"]["deck"], "",
+                         issue_url(payload) or mc.SITE])
     ALBUM_FILE.write_text(json.dumps({
         "date": date, "issue": payload["issue_title"],
         "caption": caption,
@@ -554,6 +572,11 @@ def _self_check() -> None:
                                            "story-why", "story-check"]
     assert slides[1]["timeline"] == ok["facts"]["timeline"]
     assert slides[4]["checks"] == ok["check"]["checks"]
+    assert "followUp" not in slides[0] and "ctaUrl" not in slides[4]
+    linked = build_slides(ok, {**payload, "issue_id": "story-abc",
+                               "since_last": {"date": "2026-09-21", "new_titles": ["x"]}})
+    assert linked[0]["followUp"] == "9월 21일 카드 이후 후속", linked[0]
+    assert linked[4]["ctaUrl"] == f"{mc.SITE}/issue/story-abc", linked[4]
 
 
 if __name__ == "__main__":

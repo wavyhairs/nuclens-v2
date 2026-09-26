@@ -45,6 +45,32 @@ ALBUM_FILE = CARDS_DIR / "album.json"
 # 날은 편집 데스크를 한 번만 부르고, 그 결과로 두 산출물을 다 쓴다. 그래서
 # story_cards 는 정상 경로에서 **LLM 을 부르지 않는다** — 렌더와 검증만 한다.
 STORY_COPY_FILE = CARDS_DIR / "story_copy.json"
+# 모델이 쓴 카피를 **자르기 전 그대로** 남긴다. 2026-09-26 카드가 "…" 로 잘려
+# 나갔을 때 모델이 원래 몇 자를 썼는지 확인할 길이 없어 원인을 추정으로만
+# 짚었다. 워크플로가 Actions 산출물로 올린다(커밋하지 않는다).
+#
+# 카피만 싣는다 — 편집 브리프와 입력 재료는 빼고, 회차별 daily·story 칸만.
+RAW_COPY_FILE = CARDS_DIR / "copy_raw.json"
+_RAW_ROUNDS: list[dict] = []
+
+
+def keep_raw_copy(task: str, response: object) -> None:
+    """Writer 응답을 normalize 가 손대기 전에 복사해 둔다."""
+    if not isinstance(response, dict):
+        return
+    daily = response.get("daily") if isinstance(response.get("daily"), dict) else (
+        response if "steps" in response else None)
+    _RAW_ROUNDS.append({"task": task,
+                        "daily": json.loads(json.dumps(daily, ensure_ascii=False)),
+                        "story": json.loads(json.dumps(response.get("story"), ensure_ascii=False))})
+
+
+def save_raw_copy(date: str) -> None:
+    if not _RAW_ROUNDS:
+        return
+    RAW_COPY_FILE.write_text(json.dumps({"date": date, "rounds": _RAW_ROUNDS},
+                                        ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"[cards] 원문 카피 {len(_RAW_ROUNDS)}회차 → {RAW_COPY_FILE.name}")
 OUTBOX_FILE = ROOT / "outbox.json"
 # 사이트가 매일 굽는 순위. web/build_data.py 가 배포 스텝에서 만든다(gitignore).
 BRIEFINGS_FILE = ROOT / "web" / "public" / "data" / "briefings.json"
@@ -364,6 +390,7 @@ def ask_narrator(items: list[dict], date: str, story: dict | None,
 
 def ask_writer(brief: dict, items: list[dict], date: str, *, with_story: bool,
                problems: list[str] | None = None, story_events: list[dict] | None = None,
+               story_since_last: dict | None = None,
                log: list[dict] | None = None, task: str = "card_writer") -> dict:
     """카피라이터. 브리프를 규격에 맞게 적는다 — 기사를 다시 해석하지 않는다."""
     payload = {"date": date, "brief": brief,
@@ -372,6 +399,9 @@ def ask_writer(brief: dict, items: list[dict], date: str, *, with_story: bool,
                "sensitive": [it.get("issue_id", "") for it in items if it["sensitive"]]}
     if with_story and story_events:
         payload["story_events"] = story_events
+        # 전에 카드로 나간 스토리면 그날과 그 뒤 새로 붙은 사건(card_context.since_last).
+        if story_since_last:
+            payload["story_since_last"] = story_since_last
     # 스토리가 붙는 날은 한 응답에 일일 3장 + 스토리 5장이 들어간다. 예산을
     # 8192 로 두되 **부족해서 생긴 문제는 아니다** — 실측 2026-09-20 에 12288 을
     # 줘도 실제 사용은 1,354 토큰이었다(로그의 tokens=… 가 그것을 보여 준다).
@@ -623,6 +653,7 @@ def run_editorial(items: list[dict], date: str, collected: int,
     except Exception as exc:  # noqa: BLE001
         print(f"[cards] card_daily_writer 실패 — {type(exc).__name__}: {exc}")
         return None, None
+    keep_raw_copy("card_daily_writer", candidate)
     daily_copy = _daily_of(candidate)
     problems = _apply_and_review(daily_copy, items, strict_length=True)
     if not problems:
@@ -638,6 +669,7 @@ def run_editorial(items: list[dict], date: str, collected: int,
     except Exception as exc:  # noqa: BLE001
         print(f"[cards] repair 실패 — {type(exc).__name__}: {exc}")
         return None, None
+    keep_raw_copy("card_writer_repair", repaired)
     repaired_daily = _daily_of(repaired)
     problems = _apply_and_review(repaired_daily, items)
     if problems:
@@ -689,10 +721,13 @@ def _writer_round(brief: dict, items: list[dict], date: str,
         try:
             raw = ask_writer(brief, items, date, with_story=with_story,
                              problems=(daily_bad + story_bad) or None,
-                             story_events=events, log=call_log, task=task)
+                             story_events=events,
+                             story_since_last=(story_payload or {}).get("since_last"),
+                             log=call_log, task=task)
         except Exception as exc:  # noqa: BLE001
             print(f"[cards] Writer({task}) 실패 — {type(exc).__name__}: {exc}")
             return None
+        keep_raw_copy(task, raw)
         # 첫 회차만 원문 길이로 잰다. repair 뒤에도 넘치면 clip() 이 받는다 —
         # 길이 한 자에 앨범을 떨어뜨리지 않는다는 원칙(09-20)은 그대로다.
         strict = task == "card_writer"
@@ -1275,12 +1310,18 @@ def main() -> int:
     if story is not None:
         story_payload = story_material(story, date)
         story_payload["event_ids"] = card_context.event_ids(story.thread)
+        since = card_context.since_last(story.thread, card_context.load_story_history(), date)
+        if since:
+            story_payload["since_last"] = since
+            print(f"[cards] 후속 스토리 — {since['date']} 카드 이후 새 사건 "
+                  f"{len(since['new_titles'])}건")
         where = "" if story.rank <= len(items) else f" (일일 {len(items)}건 밖)"
         print(f"[cards] 스토리 후보 #{story.rank}{where} {story.thread_id} "
               f"사건 {len(story_payload['events'])}건")
 
     if raw is None and not args.no_llm:
         raw, story_copy = run_editorial(items, date, collected, story_payload, call_log)
+        save_raw_copy(date)
         if story_copy is not None:
             STORY_COPY_FILE.write_text(json.dumps(
                 {"date": date, "thread_id": story.thread_id,

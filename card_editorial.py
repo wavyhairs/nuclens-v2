@@ -158,6 +158,9 @@ JSON 만 출력한다. 스키마:
  }}
 }}
 
+story.since_last 가 있으면 이 스토리는 그 날짜에 이미 카드로 나갔다. key_change 는
+그 날짜 이후 새로 붙은 사건(new_titles)으로 달라진 것이어야 한다.
+
 story 는 **일일 카드의 확대판이 아니다**. 일일은 "오늘 무엇이 달라졌는가",
 story 는 "이 사안이 어떻게 여기까지 왔는가" 를 보여 준다.
 story.confirmed_facts 와 unknowns 를 섞지 마라 — 모르는 것을 확인된 것처럼 쓰지 않는다."""
@@ -203,6 +206,9 @@ story 규칙:
 - **timeline[].when 은 입력 events 의 날짜만 쓴다.** 없던 날짜를 붙이지 않는다.
 - events 가 {TIMELINE_ROWS}개 미만이면 **그 개수만큼만** 쓴다. '현재' 같은 행을 지어내지 않는다.
 - 각 timeline 행은 **자기 event 의 내용만** 쓴다. 다른 날 사건을 끌어오지 않는다.
+- story_since_last 가 있으면 이 스토리는 그 날짜에 이미 카드로 나갔다(후속이다).
+  cover.deck 과 facts.lede 는 그 뒤 **새로 붙은 사건(new_titles)** 부터 쓴다.
+  지난 카드에서 한 얘기를 처음부터 되풀이하지 않는다.
 - badge.value 의 숫자는 입력에 나온 숫자여야 한다. 없으면 badge 를 null 로.
 - checks 는 반드시 섞는다: 앞의 2~3개는 이미 일어난 사실(done=true),
   나머지는 앞으로 볼 것(done=false). 전부 같은 값이면 버려진다.

@@ -732,24 +732,27 @@ ${fontLinks(theme)}
   .st-msg { margin-top: 24px; font-family: ${theme.fonts.heading.css}; font-size: 56px;
     font-weight: 850; line-height: 1.3; letter-spacing: -1.8px; word-break: keep-all; }
   .st-msg .em { color: #1F5FA8; }
-  .st-three { flex: 1; margin: 34px 0; display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 20px; align-content: center; }
+  /* 세 칸이 남는 높이를 **채운다.** 예전에는 align-content:center 라 칸이 가운데
+     떠서 제목 아래와 인용 위에 큰 빈 면이 남았다(09-26 4장). 칸 안에서 가운데 맞춘다. */
+  .st-three { flex: 1; margin: 30px 0 24px; display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px; align-content: stretch; }
   .st-three .cell { background: #FFFDF7; border: 1px solid #E6E0D2; padding: 34px 22px;
-    text-align: center; }
+    text-align: center; display: flex; flex-direction: column; justify-content: center; }
   .st-three .ic { width: 96px; height: 96px; margin: 0 auto 20px; border-radius: 50%;
     background: #E7EEF8; color: #1F5FA8; display: flex; align-items: center;
     justify-content: center; }
   .st-three .ic svg { width: 52px; height: 52px; fill: none; stroke: currentColor;
     stroke-width: 3.5; }
-  .st-three h4 { font-size: 32px; font-weight: 850; word-break: keep-all; }
-  .st-three p { margin-top: 14px; font-size: 26px; line-height: 1.44; font-weight: 620;
+  .st-three h4 { font-size: 36px; font-weight: 850; word-break: keep-all; }
+  .st-three p { margin-top: 16px; font-size: 30px; line-height: 1.44; font-weight: 620;
     color: #41506B; word-break: keep-all; }
   .st-quotes { margin-top: auto; display: flex; flex-direction: column; gap: 14px; }
-  .st-quote { background: #FFFDF7; border: 1px solid #E6E0D2; padding: 20px 24px;
-    display: grid; grid-template-columns: 40px 1fr; gap: 18px; font-size: 29px;
+  /* 인용 표지는 글자가 아니라 왼쪽 띠다. 예전에는 ::before 에 깨진 따옴표(U+0081
+     제어문자 + "C")를 46px 로 찍었는데, 40px 칸보다 넓어 본문 첫 글자를 덮었다
+     (09-26 4장, 폰트에 따라 "C" 나 빈 네모로 보였다). */
+  .st-quote { background: #FFFDF7; border: 1px solid #E6E0D2; border-left: 8px solid #A9C4E6;
+    padding: 20px 28px; font-size: 29px;
     line-height: 1.42; font-weight: 650; color: #35455F; word-break: keep-all; }
-  .st-quote::before { content: "C"; font-family: ${theme.fonts.heading.css};
-    font-size: 46px; font-weight: 900; color: #A9C4E6; line-height: .9; }
 
   /* 앞으로 볼 것 */
   /* 인용을 옆 칸에 세우면 세로로 긴 빈 면에 작은 글씨가 갇힌다(지니 09-19).
@@ -774,6 +777,16 @@ ${fontLinks(theme)}
     stroke-width: 3; stroke-linejoin: round; }
   .st-cta { margin-top: 26px; align-self: flex-start; background: #12294C; color: #F6F2E9;
     padding: 22px 40px; border-radius: 999px; font-size: 30px; font-weight: 800; }
+  .st-foot { margin-top: 26px; display: flex; align-items: center; gap: 24px; }
+  .st-foot .st-cta { margin-top: 0; flex: 0 0 auto; }
+  .st-url { min-width: 0; font-size: 22px; font-weight: 700; color: #5B6B84;
+    overflow-wrap: anywhere; }
+  /* 같은 스토리를 전에 카드로 낸 적이 있으면 표지에 '후속' 을 단다(card_context.since_last).
+     칩·주제·후속 셋이 한 줄에 서므로 주제가 긴 날은 줄을 바꾼다 — 가로로 넘치면
+     렌더 가드가 스토리를 통째로 죽인다. */
+  .st-cover .st-row { flex-wrap: wrap; row-gap: 12px; }
+  .st-follow { padding: 8px 18px; border-radius: 999px; border: 2px solid #1F5FA8;
+    color: #1F5FA8; font-size: 22px; font-weight: 800; white-space: nowrap; }
 </style></head><body>${inner}</body></html>`;
 }
 
@@ -845,7 +858,7 @@ function renderStory(s, theme, type) {
           ${storyHead(s, s.tagline || "NEWS FOR A BRIGHTER TOMORROW")}
         </div>
         <div class="st-body">
-          <div class="st-row">${chip}${s.topic ? `<span class="st-desc" style="margin:0;font-size:24px;font-weight:700;color:#12294C">${esc(s.topic)}</span>` : ""}</div>
+          <div class="st-row">${chip}${s.topic ? `<span class="st-desc" style="margin:0;font-size:24px;font-weight:700;color:#12294C">${esc(s.topic)}</span>` : ""}${s.followUp ? `<span class="st-follow">${esc(s.followUp)}</span>` : ""}</div>
           <h1 class="st-title">${accentize(s.headline, "em")}</h1>
           <p class="st-desc">${esc(s.deck || "")}</p>
           ${s.badge ? `<div class="st-badge"><span class="v">${esc(s.badge.value)}</span>
@@ -914,7 +927,8 @@ function renderStory(s, theme, type) {
         <div class="st-row">${chip}<h2 class="st-q">${accentize(s.headline, "em")}</h2></div>
         <div class="st-check">${items}</div>
         ${s.aside ? `<div class="st-aside"><span class="ic">${storyIcon("scope")}</span><span>${esc(s.aside)}</span></div>` : ""}
-        <div class="st-cta">${esc(s.cta || "지금 이슈를 계속 업데이트합니다")} →</div>
+        <div class="st-foot"><div class="st-cta">${esc(s.cta || "지금 이슈를 계속 업데이트합니다")} →</div>
+          ${s.ctaUrl ? `<span class="st-url">${esc(s.ctaUrl)}</span>` : ""}</div>
       </div>
     </div>`, theme, false);
 }
@@ -1465,6 +1479,28 @@ function selfCheck() {
       throw new Error(
         `render guard failed (slide ${i + 1}): font=${fontOk} overflow=${overflow}`
       );
+    }
+
+    // 말줄임은 **죽이지 않고 알린다.** 카피가 잘려 "…" 로 끝났거나 칸이 글자를
+    // 가로로 삼켰으면 Actions 에 경고로 남긴다 — 09-26 에는 거의 모든 장이 "…" 로
+    // 나갔는데 로그 어디에도 흔적이 없어 사이트를 열어 보고서야 알았다.
+    const clipped = await page.evaluate(() => {
+      const card = document.querySelector(".card");
+      if (!card) return [];
+      const found = [];
+      for (const el of card.querySelectorAll("*")) {
+        const own = [...el.childNodes].filter((n) => n.nodeType === 3)
+          .map((n) => n.textContent).join("").trim();
+        if (!own) continue;
+        if (/…$/.test(own)) found.push(`말줄임 "${own.slice(-24)}"`);
+        else if (getComputedStyle(el).overflow === "hidden" && el.scrollWidth > el.clientWidth + 2) {
+          found.push(`가로 잘림 "${own.slice(0, 24)}"`);
+        }
+      }
+      return found;
+    });
+    for (const line of clipped) {
+      console.log(`::warning title=카드 말줄임::slide ${i + 1} (${slides[i].type || "step"}) ${line}`);
     }
 
     const n = String(i + 1).padStart(2, "0");

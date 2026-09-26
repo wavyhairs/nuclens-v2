@@ -289,6 +289,18 @@ class CallCountTests(unittest.TestCase):
         asked = call.call_args_list[1].kwargs["fix_these"]
         self.assertTrue(any("서술형 종결" in p for p in asked), asked)
 
+    def test_the_raw_copy_is_kept_before_normalize_cuts_it(self):
+        """자르기 전 원문을 남긴다 — 09-26 에는 모델이 몇 자를 썼는지 확인할 길이 없었다."""
+        long = copy()["daily"]
+        long["steps"][0]["facts"][0] = "가나다 " * 14
+        written = long["steps"][0]["facts"][0]
+        make_cards._RAW_ROUNDS.clear()
+        self._run(None, [long, json.loads(json.dumps(long))])
+        kept = [r["daily"]["steps"][0]["facts"][0] for r in make_cards._RAW_ROUNDS]
+        make_cards._RAW_ROUNDS.clear()
+        self.assertEqual(kept, [written] * 2)
+        self.assertNotEqual(long["steps"][0]["facts"][0], written)  # 카드 쪽은 잘렸다
+
     def test_an_overlong_line_that_survives_the_repair_is_cut_not_dropped(self):
         """repair 뒤에도 넘치면 그때 clip() 이 받는다 — 길이 한 자에 앨범을
         떨어뜨리지 않는다는 09-20 원칙은 그대로다."""
