@@ -859,10 +859,18 @@ def apply_archive_integrity_gate(records: list[dict]) -> tuple[list[dict], dict]
         if status in SITE_HIDDEN_STATUSES:
             status_blocked.append({**sample, "codes": [f"status:{status}"]})
             continue
+        # 발행시각은 **기준일로만** 넘긴다. source 에 넣으면 manifest 결속 검사가
+        # 그 값을 봉인된 발행시각과 맞대는데, 아카이브의 `pub` 은 원래 시간대
+        # (+09:00)이고 봉인은 UTC 로 정규화한 값(PR #31)이다. pub 이 비면 여기서
+        # archived_at 까지 끌어와 더 어긋났다. 실측 2026-09-27: manifest
+        # 18,481개 중 7,235개만 유효로 읽혀, 발송 게이트(#48)가 통과시킨 기사
+        # 25건이 사이트에서만 격리돼 있었다. 아카이브는 결속용 발행시각을
+        # `verified_source_components` 로 보존하므로, 레코드에 없는 값을 지어
+        # 넣지 않으면 검사가 그 봉인값으로 맞춘다(news_archive.load_evidence_manifests
+        # 와 같은 방식).
         result = article_quality_gate.audit_article_integrity(
             record,
-            source={"title": record.get("title", ""),
-                    "published_at": record.get("pub") or record.get("archived_at")},
+            source={"title": record.get("title", "")},
             reference_date=record.get("pub") or record.get("archived_at"),
         )
         sample["codes"] = [finding.code for finding in result.findings]
