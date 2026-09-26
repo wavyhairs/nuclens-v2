@@ -390,7 +390,6 @@ def ask_narrator(items: list[dict], date: str, story: dict | None,
 
 def ask_writer(brief: dict, items: list[dict], date: str, *, with_story: bool,
                problems: list[str] | None = None, story_events: list[dict] | None = None,
-               story_since_last: dict | None = None,
                log: list[dict] | None = None, task: str = "card_writer") -> dict:
     """카피라이터. 브리프를 규격에 맞게 적는다 — 기사를 다시 해석하지 않는다."""
     payload = {"date": date, "brief": brief,
@@ -399,9 +398,6 @@ def ask_writer(brief: dict, items: list[dict], date: str, *, with_story: bool,
                "sensitive": [it.get("issue_id", "") for it in items if it["sensitive"]]}
     if with_story and story_events:
         payload["story_events"] = story_events
-        # 전에 카드로 나간 스토리면 그날과 그 뒤 새로 붙은 사건(card_context.since_last).
-        if story_since_last:
-            payload["story_since_last"] = story_since_last
     # 스토리가 붙는 날은 한 응답에 일일 3장 + 스토리 5장이 들어간다. 예산을
     # 8192 로 두되 **부족해서 생긴 문제는 아니다** — 실측 2026-09-20 에 12288 을
     # 줘도 실제 사용은 1,354 토큰이었다(로그의 tokens=… 가 그것을 보여 준다).
@@ -557,7 +553,15 @@ def find_story(data, items: list[dict], rows: list[dict] | None = None):
 
 
 def story_material(story, date: str) -> dict:
-    return card_context.evidence_packet(story, date, topic=topic_label(story.issue))
+    packet = card_context.evidence_packet(story, date, topic=topic_label(story.issue))
+    # 전에 카드로 나간 스토리면 그날과 그 뒤 새로 붙은 사건(card_context.since_last).
+    # Narrator 는 이 packet 을 통째로 받고, Writer 에게는 브리프로 넘긴다(run_editorial).
+    since = card_context.since_last(story.thread, card_context.load_story_history(), date)
+    if since:
+        packet["since_last"] = since
+        print(f"[cards] 후속 스토리 — {since['date']} 카드 이후 새 사건 "
+              f"{len(since['new_titles'])}건")
+    return packet
 
 
 def log_calls(call_log: list[dict]) -> None:
@@ -641,6 +645,11 @@ def run_editorial(items: list[dict], date: str, collected: int,
         story_payload = None
 
     if brief is not None:
+        # Writer 는 packet 이 아니라 브리프를 본다. 후속 여부는 편집 판단의 재료라
+        # 브리프의 story 칸에 실어 준다 — Writer 가 덱·lede 를 새 사건부터 쓰게.
+        since = (story_payload or {}).get("since_last")
+        if since and isinstance(brief.get("story"), dict):
+            brief["story"]["since_last"] = since
         raw = _writer_round(brief, items, date, story_payload, call_log)
         if raw is not None:
             return _daily_of(raw), raw.get("story") or None
@@ -721,9 +730,7 @@ def _writer_round(brief: dict, items: list[dict], date: str,
         try:
             raw = ask_writer(brief, items, date, with_story=with_story,
                              problems=(daily_bad + story_bad) or None,
-                             story_events=events,
-                             story_since_last=(story_payload or {}).get("since_last"),
-                             log=call_log, task=task)
+                             story_events=events, log=call_log, task=task)
         except Exception as exc:  # noqa: BLE001
             print(f"[cards] Writer({task}) 실패 — {type(exc).__name__}: {exc}")
             return None
@@ -1310,11 +1317,6 @@ def main() -> int:
     if story is not None:
         story_payload = story_material(story, date)
         story_payload["event_ids"] = card_context.event_ids(story.thread)
-        since = card_context.since_last(story.thread, card_context.load_story_history(), date)
-        if since:
-            story_payload["since_last"] = since
-            print(f"[cards] 후속 스토리 — {since['date']} 카드 이후 새 사건 "
-                  f"{len(since['new_titles'])}건")
         where = "" if story.rank <= len(items) else f" (일일 {len(items)}건 밖)"
         print(f"[cards] 스토리 후보 #{story.rank}{where} {story.thread_id} "
               f"사건 {len(story_payload['events'])}건")

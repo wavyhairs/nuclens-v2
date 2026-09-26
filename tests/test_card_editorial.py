@@ -237,6 +237,16 @@ class CallCountTests(unittest.TestCase):
         self.assertEqual([c.args[0] for c in call.call_args_list],
                          ["card_editorial_narrator", "card_writer"])
 
+    def test_a_follow_up_story_tells_the_writer_since_when(self):
+        """후속 스토리면 Writer 가 브리프에서 지난 카드 날짜와 새 사건을 본다."""
+        since = {"date": "2026-09-18", "new_event_ids": ["e"], "new_titles": ["새 사건"]}
+        payload = {"thread_id": "thread-x", "events": [{"date": "2026-09-19"}],
+                   "since_last": since}
+        _daily, _story, call = self._run(payload, [brief(story_thread="thread-x"),
+                                                   copy(with_story=True)])
+        sent = call.call_args_list[1].args[2]
+        self.assertEqual(sent["brief"]["story"]["since_last"], since)
+
     def test_a_narrator_failure_drops_the_story_and_keeps_the_daily_card(self):
         """**일일 카드는 핵심 산출물이다.** 스토리 때문에 같이 빠지지 않는다."""
         payload = {"thread_id": "thread-x", "events": []}

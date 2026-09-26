@@ -206,12 +206,12 @@ story 규칙:
 - **timeline[].when 은 입력 events 의 날짜만 쓴다.** 없던 날짜를 붙이지 않는다.
 - events 가 {TIMELINE_ROWS}개 미만이면 **그 개수만큼만** 쓴다. '현재' 같은 행을 지어내지 않는다.
 - 각 timeline 행은 **자기 event 의 내용만** 쓴다. 다른 날 사건을 끌어오지 않는다.
-- story_since_last 가 있으면 이 스토리는 그 날짜에 이미 카드로 나갔다(후속이다).
-  cover.deck 과 facts.lede 는 그 뒤 **새로 붙은 사건(new_titles)** 부터 쓴다.
-  지난 카드에서 한 얘기를 처음부터 되풀이하지 않는다.
 - badge.value 의 숫자는 입력에 나온 숫자여야 한다. 없으면 badge 를 null 로.
 - checks 는 반드시 섞는다: 앞의 2~3개는 이미 일어난 사실(done=true),
   나머지는 앞으로 볼 것(done=false). 전부 같은 값이면 버려진다.
+- 브리프 story.since_last 가 있으면 이 스토리는 그 날짜에 이미 카드로 나갔다(후속이다).
+  cover.deck 과 facts.lede 는 그 뒤 **새로 붙은 사건(new_titles)** 부터 쓴다.
+  지난 카드에서 한 얘기를 처음부터 되풀이하지 않는다.
 - 말투: cover.deck·facts.lede 만 "~습니다" 서술형으로 짧게. 나머지(제목·타임라인·
   쟁점·의미·인용·체크리스트·aside)는 위 [말투] 대로 개조식 체언 종결."""
 
