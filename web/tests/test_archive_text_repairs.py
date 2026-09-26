@@ -1,8 +1,9 @@
 """아카이브 제목·요약 수선이 빌드에 얹힌다 — 원본 JSONL 은 다시 쓰지 않는다.
 
-2026-09-26 발송분 1,044건 점검에서 제목이 틀린 28건(배경 사실을 새 사건처럼 17 등)을
-archive_repairs.json 에 적었다. 국가 수선(country_repairs)은 빌드가 읽기 시점에
-얹었지만 제목·요약 수선은 `--migrate-quality` 에서만 반영돼 사이트에 닿지 않았다.
+2026-09-26 발송분 1,044건 점검에서 제목이 틀린 28건(배경 사실을 새 사건처럼 17 등)과
+사이트 21일 창의 미발송분 점검에서 27건을 archive_repairs.json 에 적었다.
+국가 수선(country_repairs)은 빌드가 읽기 시점에 얹었지만 제목·요약 수선은
+`--migrate-quality` 에서만 반영돼 사이트에 닿지 않았다.
 """
 from __future__ import annotations
 
@@ -81,10 +82,10 @@ class RepairFileContractTests(unittest.TestCase):
                 self.assertEqual([e for e in curation_errors(record, summary_limit=120)
                                   if e.split(":")[0] in bd.TEXT_REPAIR_FIELDS], [])
 
-    def test_the_audit_batch_is_all_there(self):
-        batch = [key for key, entry in self._text_entries().items()
-                 if str(entry.get("reason", "")).startswith("2026-09-26")]
-        self.assertEqual(len(batch), 28)
+    def test_the_audit_batches_are_all_there(self):
+        reasons = [str(entry.get("reason", "")) for entry in self._text_entries().values()]
+        self.assertEqual(sum(r.startswith("2026-09-26 발송분 점검") for r in reasons), 28)
+        self.assertEqual(sum(r.startswith("2026-09-26 사이트 창 점검") for r in reasons), 27)
 
 
 if __name__ == "__main__":
