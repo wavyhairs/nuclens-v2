@@ -526168,32 +526168,55 @@
     "published_at": "2026-09-26T20:10:00+00:00"
   },
   "05bcbdd640c69c2c": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 2,
+      "market_materiality": 2,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
     "section": "domestic",
-    "category": "정책",
-    "title_kr": "원료도 웨이퍼도 칩도 다 오른다…반도체 공급망 '가격 인상 도미노'",
-    "summary": "온세미는 원재료와 제조·에너지·인프라 비용 상승에 전력·산업·데이터센터용 반도체 수요 증가가 겹친 점을 가격 인상 이유로 들었다.",
-    "implication": "",
-    "why_important": "",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "analysis",
+    "title_kr": "반도체 공급망 전반 가격 인상 도미노…데이터센터 수요 급증 영향",
+    "summary": "온세미 등 전력반도체 기업과 소재 업체들이 에너지 및 인프라 비용 상승과 AI 데이터센터 수요 증가를 이유로 제품 가격 인상을 단행하고 있다.",
+    "detail": "미국 온세미는 다음달 10일부터 제품 가격 인상을 예고했으며, 일본 르네사스 등도 구조적 비용 압박을 이유로 가격 인상을 계획 중이다. 실리콘 웨이퍼 가격 또한 3년 만에 10% 이상 상승할 것으로 전망된다. 이러한 공급망 전반의 가격 상승은 AI 데이터센터 투자 확대에 따른 전력반도체 및 관련 소재 수요 급증이 주원인이다. 업계는 이러한 현상이 반도체 수급 상황이 매우 빠듯함을 보여주는 지표라고 분석하고 있다.",
+    "implication": "AI 데이터센터 확산에 따른 전력반도체 및 소재 가격 상승은 전력 인프라 구축 비용 증가로 이어질 가능성이 크다.",
+    "why_important": "반도체 공급망 전반의 가격 상승은 AI 데이터센터 등 전력 다소비 시설의 구축 비용 상승을 유발하며, 이는 전력 인프라 투자 및 원전 등 안정적 전력원 확보의 경제적 유인을 강화하는 요인이 된다.",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#데이터센터",
+      "#전력시장"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-09-26T21:06:24.338636+00:00",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-26T21:13:06.125135+00:00",
     "title": "원료도 웨이퍼도 칩도 다 오른다…반도체 공급망 '가격 인상 도미노'",
     "link": "https://www.mt.co.kr/industry/2026/09/27/2026092313501624453",
     "feed": "정책",
     "domain": "mt.co.kr",
     "matched": "데이터센터 전력",
-    "source_excerpt": "온세미는 원재료와 제조·에너지·인프라 비용 상승에 전력·산업·데이터센터용 반도체 수요 증가가 겹친 점을 가격 인상 이유로 들었다. 내년 가격 인상을 예고한 일본 차량용 반도체 기업 르네사스도 \"글로벌 반도체...",
-    "published_at": "2026-09-26T20:34:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "05bcbdd640c69c2c",
@@ -526251,7 +526274,8 @@
       "source_excerpt": "6db4987c3e0c6e0a7c59ca518e1b1fa16f2e4f56078194a0bb073fff88b0dea4",
       "published_at": "8763f20d789b622f08295a931250da6f8bbf30265bc88a27394ca449eccfaa31"
     },
-    "hash": "05bcbdd640c69c2c"
+    "hash": "05bcbdd640c69c2c",
+    "published_at": "2026-09-26T20:34:00+00:00"
   },
   "3a784448a07601ce": {
     "features": {
@@ -526900,5 +526924,79 @@
     },
     "hash": "dc9b9ec0e70db5ba",
     "published_at": "2026-09-26T21:01:00+00:00"
+  },
+  "903f82216826afad": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 1,
+      "market_materiality": 0,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "US",
+      "MX"
+    ],
+    "article_type": "news",
+    "title_kr": "李 대통령, 뉴욕서 트럼프와 정상회담 및 멕시코 CEPA 제안",
+    "summary": "李 대통령이 순방을 마치고 뉴욕에서 트럼프와 정상회담을 가졌으며, 멕시코에서 CEPA 체결을 제안했다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-09-26T21:13:06.125135+00:00",
+    "title": "순방 마친 李, 뉴욕서 트럼프와 극적 정상회담…멕시코선 CEPA 제안",
+    "link": "https://view.asiae.co.kr/article/2026092609473305489",
+    "feed": "정책",
+    "domain": "asiae.co.kr",
+    "matched": "사용후핵연료",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "903f82216826afad",
+      "source_components": {
+        "article_hash": "903f82216826afad",
+        "title": "55da8603997b1f131e2726f1b1460b6ed288e1c276d8a3b88ba73d50f5ec6502",
+        "source_excerpt": "9481db4b4ba4a4674f42448ab77bcc2c6ff44c4932d00eb57186ac4b48256ea6",
+        "published_at": "c2d33276de65fcd4a9be1165d11c519ff56da92d4bb383824c0134f6c6ff7f8f"
+      },
+      "source_fingerprint": "157c04c5d94a78804688ca9eefe4c351a77a9b4c425850390594935bf7d6d672",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "fuel_supply",
+        "waste"
+      ],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "manifest_fingerprint": "9293b3e1d691a39a47c21ee5509593927803daac960c0e64ae49a8e42fe324f1"
+    },
+    "verified_source_components": {
+      "article_hash": "903f82216826afad",
+      "title": "55da8603997b1f131e2726f1b1460b6ed288e1c276d8a3b88ba73d50f5ec6502",
+      "source_excerpt": "9481db4b4ba4a4674f42448ab77bcc2c6ff44c4932d00eb57186ac4b48256ea6",
+      "published_at": "c2d33276de65fcd4a9be1165d11c519ff56da92d4bb383824c0134f6c6ff7f8f"
+    },
+    "hash": "903f82216826afad",
+    "published_at": "2026-09-26T19:00:00+00:00"
   }
 }
