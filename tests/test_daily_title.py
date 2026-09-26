@@ -177,15 +177,20 @@ class TitleNameTests(unittest.TestCase):
         self.assertNotIn("윤석열", out["summary"])
         self.assertIn("해남", out["title_kr"], "이름만 떼고 나머지 사실은 살아야 한다")
 
-    def test_a_matching_surname_is_left_alone(self):
-        """원문과 성이 맞으면 깎지 않는다 — 제목 정보밀도를 깎는 쪽이 더 나쁘다."""
+    def test_a_matching_surname_keeps_the_source_short_form(self):
+        """성이 맞아도 원문에 없는 이름은 원문의 줄인 표기로 되돌린다.
+
+        예전에는 '성이 맞으면 깎지 않는다'였다. 2026-09-26 원문 '한 총리'를 큐레이션이
+        '한덕수 국무총리'로 풀었는데 그날 총리는 한성숙이었다 — 성이 같다고 맞는 사람은
+        아니다. 줄인 표기는 원문이 쓴 그대로라 정보를 지어내지 않는다.
+        """
         item = {
             "importance": "nice_to_know",
             "title_kr": "이재명 대통령, 해남 청정에너지 단지 조성 강조",
             "summary": "이재명 대통령이 해남 청정에너지 단지 조성을 강조했다.",
         }
         out = news_bot.normalize_curation_item(dict(item), dict(self.ARTICLE))
-        self.assertIn("이재명", out["title_kr"])
+        self.assertEqual(out["title_kr"], "이 대통령, 해남 청정에너지 단지 조성 강조")
 
 
 class TitleWithoutBodyTests(unittest.TestCase):
