@@ -154,6 +154,45 @@ class MigrationV2Tests(unittest.TestCase):
                          "9/24 의 이슈 표시 제목")
 
 
+class RepairTests(unittest.TestCase):
+    """나중에 찾은 제목 오류(archive_repairs.json)는 얼린 카드를 세울 때 얹는다 — 원장은 그대로.
+
+    2026-09-26: 정정 55건 중 23장이 원장에 옛 제목("한덕수 국무총리, 빌 게이츠와…")으로
+    얼려 있었다. 기사 묶음이 그대로면 지금 행(정정된 제목)이 서지만, 묶음이 바뀌는
+    순간 얼린 문장으로 돌아가 옛 오류가 다시 보인다.
+    """
+
+    REPAIRS = {"a": {"title_kr": "한성숙 국무총리, 빌 게이츠 면담",
+                     "summary": "고친 요약", "detail": "고친 상세"}}
+
+    def setUp(self):
+        self.store = {"dates": {}}
+        sent = [_row("issue-gates", ["a", "b"], "한덕수 국무총리, 빌 게이츠 면담")]
+        bs.apply([_briefing(sent)], self.store, "2026-09-24T00:00:00+09:00")
+        self.split_now = [_row("issue-gates", ["a"], "한성숙 국무총리, 빌 게이츠 면담"),
+                          _row("issue-smr", ["b"], "테라파워 공급망")]
+
+    def test_a_frozen_card_shows_the_repaired_text(self):
+        briefing = _briefing(self.split_now)
+        bs.apply([briefing], self.store, "t", repairs=self.REPAIRS)
+        card = briefing["issues"][0]
+        self.assertIn("classification_note", card, "얼린 카드 경로를 타지 않았다")
+        self.assertEqual((card["title"], card["headline_display"], card["summary"], card["detail"]),
+                         ("한성숙 국무총리, 빌 게이츠 면담", "한성숙 국무총리, 빌 게이츠 면담",
+                          "고친 요약", "고친 상세"))
+
+    def test_the_ledger_keeps_what_was_frozen(self):
+        bs.apply([_briefing(self.split_now)], self.store, "t", repairs=self.REPAIRS)
+        fields = self.store["dates"][DAY]["cards"][0]["fields"]
+        self.assertEqual(fields["title"], "한덕수 국무총리, 빌 게이츠 면담",
+                         "정정이 원장(write-once)에 스며들었다")
+
+    def test_without_a_repair_the_frozen_text_stands(self):
+        briefing = _briefing(self.split_now)
+        bs.apply([briefing], self.store, "t", repairs={"zz": {"title_kr": "다른 기사"}})
+        self.assertEqual(briefing["issues"][0]["title"], "한덕수 국무총리, 빌 게이츠 면담")
+
+
 class FileTests(unittest.TestCase):
     def test_round_trip_and_one_line_per_date(self):
         store = {"dates": {}}

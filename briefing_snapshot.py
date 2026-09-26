@@ -33,6 +33,9 @@
 - 편집 숨김·원문 불일치 격리로 그날 기사가 전부 빠진 카드는 되살리지 않는다.
   빠진 것은 정정이 아니라 철회다.
 - 얼린 뒤에 그 날짜에 새로 붙은 기사(늦은 복원 등)는 지금 행 그대로 둔다.
+- 원장의 문장을 고치지 않는다. 나중에 찾은 제목·요약 오류(archive_repairs.json)는
+  얼린 카드를 **화면에 세울 때만** 얹는다(`apply(..., repairs=)`). 그날 나간 것이
+  틀렸다는 사실까지 원장에서 지우지 않고, 새 정정이 생겨도 원장을 다시 쓰지 않는다.
 """
 from __future__ import annotations
 
@@ -103,12 +106,31 @@ def freeze_rows(rows: list[dict], briefing_date: str, frozen_at: str) -> dict:
     return {"frozen_at": frozen_at, "cards": cards}
 
 
+# 얼린 카드의 대표 기사에 정정이 있으면 화면에 세울 때 얹는다 — 칸 → 정정 칸.
+# 카드 제목은 대표 기사의 제목이다(2026-09-26 원장 885장 중 884장 일치, 나머지
+# 1장은 빌드의 복합 제목 다듬기). 표시 제목도 같은 기사에서 나왔으므로 같이 고친다.
+REPAIRED_FIELDS = (("title", "title_kr"), ("headline_display", "title_kr"),
+                   ("summary", "summary"), ("detail", "detail"))
+
+
+def repair_text(row: dict, repair: dict | None) -> bool:
+    """정정 문장을 행에 얹는다. 바뀐 칸이 있으면 True."""
+    changed = False
+    for field, source in REPAIRED_FIELDS:
+        text = (repair or {}).get(source)
+        if text and row.get(field) != text:
+            row[field] = text
+            changed = True
+    return changed
+
+
 def _now_label(row: dict) -> dict:
     return {"issue_id": str(row.get("issue_id") or ""),
             "title": str(row.get("headline_display") or row.get("title") or "")}
 
 
-def reconcile(rows: list[dict], briefing_date: str, snapshot: dict) -> tuple[list[dict], int]:
+def reconcile(rows: list[dict], briefing_date: str, snapshot: dict,
+              repairs: dict[str, dict] | None = None) -> tuple[list[dict], int]:
     """지금 행과 얼린 카드를 맞대 그날 화면에 설 행을 돌려준다. (행, 정정 카드 수).
 
     - 해시 묶음이 똑같은 지금 행이 있으면 그 행을 쓴다(분류 그대로).
@@ -143,6 +165,7 @@ def reconcile(rows: list[dict], briefing_date: str, snapshot: dict) -> tuple[lis
         base = next((row for row, held in current if rep in held), holders[0])
         row = copy.deepcopy(base)
         row.update(copy.deepcopy(card.get("fields") or {}))
+        repair_text(row, (repairs or {}).get(rep))
         row["issue_id"] = card.get("issue_id") or row.get("issue_id")
         row["current_article_count"] = len(hashes)
         row["classification_note"] = {
@@ -208,8 +231,13 @@ def _migrate_v2(payload: dict) -> int:
     return fixed
 
 
-def apply(briefings: list[dict], payload: dict, frozen_at: str) -> dict:
-    """모든 날짜에 대해 얼리거나(처음 본 날) 맞댄다(이미 얼린 날). 통계를 돌려준다."""
+def apply(briefings: list[dict], payload: dict, frozen_at: str,
+          repairs: dict[str, dict] | None = None) -> dict:
+    """모든 날짜에 대해 얼리거나(처음 본 날) 맞댄다(이미 얼린 날). 통계를 돌려준다.
+
+    ``repairs`` 는 기사 해시 → {title_kr, summary, detail} 정정(build_data.text_repairs).
+    얼린 문장으로 세우는 카드에만 얹고, 원장(payload)은 바꾸지 않는다.
+    """
     dates = payload.setdefault("dates", {})
     migrated = _migrate_v2(payload)
     payload["version"] = VERSION
@@ -224,7 +252,7 @@ def apply(briefings: list[dict], payload: dict, frozen_at: str) -> dict:
             dates[day] = freeze_rows(rows, day, frozen_at)
             stats["frozen_new"] += 1
             continue
-        new_rows, corrected = reconcile(rows, day, dates[day])
+        new_rows, corrected = reconcile(rows, day, dates[day], repairs)
         if corrected:
             stats["dates_corrected"] += 1
             stats["cards_corrected"] += corrected
