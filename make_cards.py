@@ -52,6 +52,8 @@ STORY_COPY_FILE = CARDS_DIR / "story_copy.json"
 # 카피만 싣는다 — 편집 브리프와 입력 재료는 빼고, 회차별 daily·story 칸만.
 RAW_COPY_FILE = CARDS_DIR / "copy_raw.json"
 _RAW_ROUNDS: list[dict] = []
+# 타임라인 선택의 모델·코드 비교(card_context.choose_timeline). 같은 산출물에 싣는다.
+_TIMELINE_PICK: dict = {}
 
 
 def keep_raw_copy(task: str, response: object) -> None:
@@ -68,7 +70,8 @@ def keep_raw_copy(task: str, response: object) -> None:
 def save_raw_copy(date: str) -> None:
     if not _RAW_ROUNDS:
         return
-    RAW_COPY_FILE.write_text(json.dumps({"date": date, "rounds": _RAW_ROUNDS},
+    RAW_COPY_FILE.write_text(json.dumps({"date": date, "rounds": _RAW_ROUNDS,
+                                         "timeline_pick": _TIMELINE_PICK or None},
                                         ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"[cards] 원문 카피 {len(_RAW_ROUNDS)}회차 → {RAW_COPY_FILE.name}")
 OUTBOX_FILE = ROOT / "outbox.json"
@@ -382,7 +385,11 @@ def ask_narrator(items: list[dict], date: str, story: dict | None,
     """
     payload = {"date": date, "issues": _article_payload(items)}
     if story:
-        payload["story"] = story
+        # 편집 데스크는 사건 **전부**(candidates)를 보고 타임라인을 고른다. 코드가
+        # 미리 골라 둔 events·background 는 싣지 않는다 — 같은 사건이 두 번 들어가고,
+        # 코드 선택이 눈앞에 있으면 모델이 그것을 따라 적어 비교가 무의미해진다.
+        payload["story"] = {k: v for k, v in story.items()
+                            if k not in ("events", "background", "code_pick", "timeline_pick")}
     return card_editorial.call(
         "card_editorial_narrator", card_editorial.NARRATOR_SYSTEM, payload,
         max_output_tokens=6144, log=log)
@@ -642,6 +649,12 @@ def run_editorial(items: list[dict], date: str, collected: int,
                 # 호출이 계약(2회)보다 한 번 더 나간다(2026-09-20 실측).
                 print(f"[cards] 스토리만 제외: {'; '.join(story_bad[:2])}")
                 story_payload = None
+    if brief is not None and story_payload is not None:
+        # 타임라인 칸: 오늘 사건은 코드가 못 박고 나머지는 편집 데스크가 고른다.
+        # 형식이 틀리면 코드 선택으로 간다(스토리를 빼거나 repair 를 부르지 않는다).
+        pick = (brief.get("story") or {}).get("timeline_pick")
+        print(card_context.choose_timeline(story_payload, pick))
+        _TIMELINE_PICK.update(story_payload.get("timeline_pick") or {})
     if brief is None and story_payload is not None:
         # Narrator 가 없으면 스토리도 없다 — 판단 없이 5장을 쓰면 규격만 맞는
         # 이야기가 나온다. 일일 카드는 아래 폴백 한 번으로 살린다.
