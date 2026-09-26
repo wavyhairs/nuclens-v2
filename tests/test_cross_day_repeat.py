@@ -211,11 +211,25 @@ class CrossDayRepeatsTests(unittest.TestCase):
         self.assertEqual(dedup.cross_day_repeats([dict(ITALY_CAND)], [], client=client), [])
         self.assertEqual(client.calls, [])
 
-    def test_recent_window_is_three_days_and_includes_today(self):
+    def test_recent_window_is_seven_days_and_includes_today(self):
+        """3일 창 밖에서 재발송이 12건 나갔다(9/13~26, 직전 발송 4~6일 뒤)."""
         rows = [{"date": d, "hash": d} for d in
-                ("2026-09-20", "2026-09-21", "2026-09-22", "2026-09-24", TODAY)]
+                ("2026-09-17", "2026-09-18", "2026-09-20", "2026-09-24", TODAY)]
         got = [r["date"] for r in dedup.recent_for_cross_day(rows, TODAY)]
-        self.assertEqual(got, [TODAY, "2026-09-24", "2026-09-22"])
+        self.assertEqual(got, [TODAY, "2026-09-24", "2026-09-20", "2026-09-18"])
+
+    def test_both_questions_carry_the_candidate_publish_day(self):
+        """확인 단계가 날짜를 못 봐서 SENT 보다 앞선 면담을 '새 행동'으로 살렸다(9/26 울진)."""
+        client = FakeClient({"verdicts": [{"candidate": 0, "matched_sent_title": ITALY_SENT_TITLE,
+                                           "reason": "same", "match": "A",
+                                           "relation": "same_detail"}]},
+                            {"pairs": [{"pair": 0, "new_facts": [], "new_action": False}]})
+        cand = dict(ITALY_CAND, published_at="2026-09-24T22:10:00+00:00")
+        dedup.cross_day_repeats([cand], [ITALY_SENT], client=client)
+        self.assertIn("[CANDIDATE 0] published=2026-09-25", client.calls[0]["payload"])
+        self.assertIn("CANDIDATE published=2026-09-25", client.calls[1]["payload"])
+        self.assertIn("SENT date=2026-09-24", client.calls[1]["payload"])
+        self.assertIn("날짜로 먼저 본다", dedup.CROSS_DAY_CONFIRM_PROMPT)
 
 
 class IdentityReviewFallbackTests(unittest.TestCase):
