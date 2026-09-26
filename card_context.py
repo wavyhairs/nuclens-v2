@@ -358,6 +358,29 @@ def repeat_verdict(thread: dict, history: list[dict], date: str) -> tuple[bool, 
                    "같은 사안 되풀이 — 단계가 넘어가지 않았다")
 
 
+def since_last(thread: dict, history: list[dict], date: str) -> dict | None:
+    """이 스토리를 전에 카드로 낸 적이 있으면 그날과 그 뒤 새로 붙은 사건.
+
+    재방송 판정(`repeat_verdict`)을 통과해 다시 나가는 스토리는 **후속**이다.
+    그런데 카드는 매번 처음 보는 사람에게 하듯 처음부터 다시 풀었다 — 지난번
+    카드를 본 사람에게는 같은 이야기의 반복이다. 무엇이 새로 붙었는지를 카피와
+    표지에 알려 준다. 처음 나가는 스토리는 None.
+    """
+    thread_id = str(thread.get("thread_id") or "")
+    past = [row for row in history
+            if row.get("thread_id") == thread_id and str(row.get("date") or "") < date]
+    if not past:
+        return None
+    last = max(past, key=lambda row: str(row.get("date") or ""))
+    seen = set(last.get("event_ids") or ())
+    fresh = [row for row in _display_events(thread)
+             if not ({str(row.get("source_event_id") or ""),
+                      *(str(v) for v in row.get("source_event_ids") or ())} & seen)]
+    return {"date": str(last.get("date") or ""),
+            "new_event_ids": [str(row.get("source_event_id") or "") for row in fresh],
+            "new_titles": [str(row.get("title") or "") for row in fresh]}
+
+
 def pick_story_candidate(data: SiteData, top: list[dict],
                          reasons: list[str] | None = None, *,
                          history: list[dict] | None = None) -> StoryCandidate | None:

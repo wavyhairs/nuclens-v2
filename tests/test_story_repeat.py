@@ -97,6 +97,42 @@ class RepeatVerdictTests(unittest.TestCase):
         self.assertFalse(cc.repeat_verdict(thread, history, "2026-09-24")[0])
 
 
+class SinceLastTests(unittest.TestCase):
+    """재방송 판정을 통과해 다시 나가는 스토리는 **후속**이다. 카드가 그걸 알아야
+    지난번 카드를 본 사람에게 같은 얘기를 처음부터 되풀이하지 않는다."""
+
+    def test_a_first_story_has_no_previous_card(self):
+        self.assertIsNone(cc.since_last(SMR, [], "2026-09-24"))
+
+    def test_a_follow_up_names_the_last_card_and_what_joined_since(self):
+        thread = _thread("thread-inv",
+                         _row("story-d521", "2026-08-26", "same_matter"),
+                         _row("story-a3e5", "2026-09-08", "stage_progress"),
+                         _row("story-7524", "2026-09-09"))
+        history = [{"date": "2026-09-05", "thread_id": "thread-inv", "event_ids": ["story-d521"]},
+                   {"date": "2026-09-21", "thread_id": "thread-inv",
+                    "event_ids": ["story-d521", "story-7524"]}]
+        since = cc.since_last(thread, history, "2026-09-24")
+        self.assertEqual(since["date"], "2026-09-21")
+        self.assertEqual(since["new_event_ids"], ["story-a3e5"])
+
+    def test_a_same_day_rebake_is_not_a_follow_up(self):
+        history = [{"date": "2026-09-24", "thread_id": "thread-smr", "event_ids": ["issue-1779"]}]
+        self.assertIsNone(cc.since_last(SMR, history, "2026-09-24"))
+
+    def test_the_cover_says_follow_up_and_the_last_page_links_the_issue(self):
+        import story_cards
+        payload = {"topic": "정책", "issue_id": "story-g",
+                   "since_last": {"date": "2026-09-21", "new_titles": ["x"]}}
+        raw = {"cover": {"headline": "h", "deck": "d"},
+               "facts": {"timeline": []}, "issues": [],
+               "why": {"headline": "w", "pillars": []}, "check": {"headline": "c", "checks": []}}
+        slides = story_cards.build_slides(raw, payload)
+        self.assertEqual(slides[0]["followUp"], "9월 21일 카드 이후 후속")
+        self.assertEqual(slides[4]["ctaUrl"], f"{mc.SITE}/issue/story-g")
+        self.assertTrue(story_cards.issue_url(payload).endswith("/issue/story-g/"))
+
+
 class PoolTests(unittest.TestCase):
     NEW = _thread("thread-eu", _row("e1", "2026-09-10", "stage_progress"),
                   _row("e2", "2026-09-23"))

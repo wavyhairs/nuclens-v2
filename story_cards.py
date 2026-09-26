@@ -158,10 +158,14 @@ def _align(rows: list, payload: dict) -> list[tuple[dict, dict | None]]:
 
 
 def _fit(text, limit: int) -> str:
-    """상한 안으로. 절 경계에서 끊고, 못 끊으면 그대로 둔다(검증이 잡는다)."""
+    """상한 안으로. **검증이 봐주는 여유(LEN_SLACK) 안쪽은 건드리지 않는다.**
+
+    예전에는 상한을 한 자만 넘어도 잘랐다 — 검증은 27/26 을 통과시키는데
+    normalize 가 그 한 자 때문에 "…" 를 붙였다. 여유를 넘은 것만 자른다.
+    """
     if not isinstance(text, str):
         return text
-    return text if mc.visible_len(text) <= limit else mc.clip(text, limit)
+    return text if mc.visible_len(text) <= limit + LEN_SLACK else mc.clip(text, limit)
 
 
 def normalize(raw: dict, payload: dict) -> dict:
@@ -219,6 +223,28 @@ def normalize(raw: dict, payload: dict) -> dict:
     for it in (check.get("checks") or []):
         if isinstance(it, dict):
             it["text"] = _fit(it.get("text"), CHECK_TEXT_MAX)
+    return out
+
+
+def style_problems(raw: dict) -> list[str]:
+    """개조식이어야 할 자리의 서술형 종결. 첫 회차에서만 되묻는다(make_cards.story_problems).
+
+    cover.deck·facts.lede 는 서술형이 맞다 — 표지와 2장 머리의 문장이다.
+    """
+    if not isinstance(raw, dict):
+        return []
+    cover, facts = raw.get("cover") or {}, raw.get("facts") or {}
+    why, check = raw.get("why") or {}, raw.get("check") or {}
+    ne = mc.narrative_endings
+    out = ne("cover.headline", [cover.get("headline")])
+    out += ne("facts.timeline.what", [r.get("what") for r in facts.get("timeline") or [] if isinstance(r, dict)])
+    for i, it in enumerate(raw.get("issues") or [], start=1):
+        if isinstance(it, dict):
+            out += ne(f"issues[{i}].points", it.get("points") or [])
+    out += ne("why.headline", [why.get("headline")])
+    out += ne("why.pillars.text", [p.get("text") for p in why.get("pillars") or [] if isinstance(p, dict)])
+    out += ne("why.quotes", why.get("quotes") or [])
+    out += ne("check.checks", [c.get("text") for c in check.get("checks") or [] if isinstance(c, dict)])
     return out
 
 
@@ -364,7 +390,24 @@ def build_slides(raw: dict, payload: dict) -> list[dict]:
     # 표지 사진은 분류로 고른다 — 본문 문구를 훑으면 그날 기사에만 맞는 규칙이 된다.
     slides[0]["topic"] = slides[0]["topic"] or payload["topic"]
     slides[0]["photoTopic"] = payload["topic"]
+    # 전에 카드로 나간 스토리면 표지에 '후속' 을 단다(card_context.since_last).
+    since = payload.get("since_last") or {}
+    m = re.match(r"\d{4}-(\d{2})-(\d{2})", str(since.get("date") or ""))
+    if m:
+        slides[0]["followUp"] = f"{int(m.group(1))}월 {int(m.group(2))}일 카드 이후 후속"
+    # 마지막 장의 버튼은 **갈 곳이 있어야** 한다. 예전 "지금 이슈를 계속
+    # 업데이트합니다 →" 는 주소가 없었다. 사이트의 이슈 상세로 보낸다.
+    url = issue_url(payload)
+    if url:
+        slides[4]["cta"] = "이 이슈 계속 보기"
+        slides[4]["ctaUrl"] = url.split("//", 1)[-1].rstrip("/")
     return slides
+
+
+def issue_url(payload: dict) -> str:
+    """오늘 스토리 이슈의 사이트 상세 주소. 정적 `/issue/<id>/` 는 사이트 빌드가 만든다."""
+    issue_id = str(payload.get("issue_id") or "").strip()
+    return f"https://{mc.SITE}/issue/{issue_id}/" if issue_id else ""
 
 
 def load_story_copy(date: str) -> tuple[dict, dict] | None:
@@ -435,7 +478,8 @@ def main() -> int:
     mc.render(slides)
     files = mc.gate(len(slides))
     plain = raw["cover"]["headline"].replace("[[", "").replace("]]", "")
-    caption = "\n".join([f"[스토리] {plain}", raw["cover"]["deck"], "", mc.SITE])
+    caption = "\n".join([f"[스토리] {plain}", raw["cover"]["deck"], "",
+                         issue_url(payload) or mc.SITE])
     ALBUM_FILE.write_text(json.dumps({
         "date": date, "issue": payload["issue_title"],
         "caption": caption,
@@ -506,8 +550,11 @@ def _self_check() -> None:
     # 길이는 2자까지 봐준다(LEN_SLACK) — 그 안쪽은 통과하고 normalize 가 잘라 넣는다.
     edge = mut("cover", headline="가" * (COVER_HEADLINE_MAX + LEN_SLACK))
     assert not any("cover.headline" in p for p in validate(edge, payload)), "여유 안쪽은 통과"
+    # 여유 안쪽은 normalize 도 건드리지 않는다 — 한 자 넘었다고 "…" 를 붙이지 않는다.
     fixed = normalize(edge, payload)
-    assert mc.visible_len(fixed["cover"]["headline"]) <= COVER_HEADLINE_MAX, fixed["cover"]["headline"]
+    assert fixed["cover"]["headline"] == edge["cover"]["headline"], fixed["cover"]["headline"]
+    over = mut("cover", headline="가나다 " * 12)
+    assert mc.visible_len(normalize(over, payload)["cover"]["headline"]) <= COVER_HEADLINE_MAX
     # 지어낸 날짜 행은 자르는 게 아니라 **버린다**.
     invented = json.loads(json.dumps(ok))
     invented["facts"]["timeline"].append({"when": "현재 (9월 9일)", "what": "협상 계속"})
@@ -563,6 +610,11 @@ def _self_check() -> None:
                                            "story-why", "story-check"]
     assert slides[1]["timeline"] == ok["facts"]["timeline"]
     assert slides[4]["checks"] == ok["check"]["checks"]
+    assert "followUp" not in slides[0] and "ctaUrl" not in slides[4]
+    linked = build_slides(ok, {**payload, "issue_id": "story-abc",
+                               "since_last": {"date": "2026-09-21", "new_titles": ["x"]}})
+    assert linked[0]["followUp"] == "9월 21일 카드 이후 후속", linked[0]
+    assert linked[4]["ctaUrl"] == f"{mc.SITE}/issue/story-abc", linked[4]
 
 
 if __name__ == "__main__":
