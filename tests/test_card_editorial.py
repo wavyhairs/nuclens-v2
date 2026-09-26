@@ -247,6 +247,23 @@ class CallCountTests(unittest.TestCase):
         sent = call.call_args_list[1].args[2]
         self.assertEqual(sent["brief"]["story"]["since_last"], since)
 
+    def test_the_desk_sees_every_candidate_and_its_pick_reaches_the_writer(self):
+        """편집 데스크는 코드 선택을 보지 않고 후보 전부에서 고른다. 그 선택이 Writer 로 간다."""
+        cands = [{"n": i + 1, "date": f"2026-09-{10 + i:02d}", "title": f"사건{i + 1}",
+                  "source_event_id": f"e{i + 1}", "relation_to_next": ""} for i in range(6)]
+        payload = {"thread_id": "thread-x", "candidates": cands, "code_pick": [0, 1, 2, 5],
+                   "events": [dict(cands[i]) for i in (0, 1, 2, 5)], "background": []}
+        desk = brief(story_thread="thread-x")
+        desk["story"]["timeline_pick"] = [1, 4, 5]
+        _daily, _story, call = self._run(payload, [desk, copy(with_story=True)])
+        narrator_story = call.call_args_list[0].args[2]["story"]
+        self.assertNotIn("events", narrator_story)
+        self.assertNotIn("code_pick", narrator_story)
+        self.assertEqual(len(narrator_story["candidates"]), 6)
+        sent = call.call_args_list[1].args[2]["story_events"]
+        self.assertEqual([e["source_event_id"] for e in sent], ["e1", "e4", "e5", "e6"])
+        self.assertEqual(payload["timeline_pick"]["used"], "모델")
+
     def test_a_narrator_failure_drops_the_story_and_keeps_the_daily_card(self):
         """**일일 카드는 핵심 산출물이다.** 스토리 때문에 같이 빠지지 않는다."""
         payload = {"thread_id": "thread-x", "events": []}

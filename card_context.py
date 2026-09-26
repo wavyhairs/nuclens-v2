@@ -487,7 +487,17 @@ def _clip(text: object, limit: int) -> str:
 # 관계가 판정된 전환점이고, 한수원과 가장 직접 닿는 사건이다. 대신 관계 판정도
 # 없는 09-11 이 들어갔다.
 #
-# 그래서 고르는 것은 코드가 한다. 모델은 고른 사건마다 한 줄씩 쓴다.
+# 그래서 **오늘 사건(마지막)은 코드가 못 박고**, 나머지 칸은 편집 데스크(Narrator)가
+# 기준을 받아 고른다(`choose_timeline`). 모델은 고른 사건마다 한 줄씩 쓴다.
+#
+# 왜 반반인가 — 지난 스토리 카드를 되짚으면(09-23·09-25·09-26) 기준 없이 모델에게
+# 맡겼을 때 난 가장 큰 사고는 **오늘 사건 누락**이었다(3건 중 2건). 그건 코드가
+# 막는다. 반면 가운데 칸은 뜻을 봐야 한다 — 코드는 떨어져 있는 같은 얘기(09-23:
+# 08-11 과 08-20 이 같은 제목)를 못 알아보고, 관계 라벨이 빈칸이면(09-26: 6 중 3)
+# 점수가 서지 않는다. 모델 선택이 형식에 안 맞으면 아래 코드 선택으로 떨어진다.
+# 두 선택은 비교할 수 있게 로그에 나란히 남긴다.
+#
+# 아래는 **코드 선택**(폴백·비교 기준)의 규칙이다.
 #
 #   필수   오늘 사건(마지막) — 스토리 카드가 나온 이유다.
 #          출발점(첫 사건)   — 어디서 시작했는지.
@@ -540,7 +550,15 @@ def timeline_score(events: list[dict], i: int, details: list[dict] | None = None
     if rel_out == "same_matter":
         score -= RESTATED_PENALTY
         why.append("같은사안")
+    elif _title_key(row) in {_title_key(earlier) for earlier in events[:i]}:
+        # 떨어져 있는 같은 제목(09-23: 08-11 과 08-20). 인접 관계로는 안 잡힌다.
+        score -= RESTATED_PENALTY
+        why.append("되풀이")
     return score, why
+
+
+def _title_key(row: dict) -> str:
+    return "".join(str(row.get("title") or "").split())
 
 
 def select_timeline(events: list[dict], limit: int = TIMELINE_ROWS,
@@ -565,37 +583,36 @@ def evidence_packet(candidate: StoryCandidate, date: str, *, topic: str = "") ->
     선다(`card_context` 모듈 주석 ③). 스토리 전체의 '왜 중요한가'만 여러 사건을
     함께 인용할 수 있고, 그 자리는 아래 `narrative`·`watchpoints` 다.
 
-    `events` 는 **타임라인에 세울 사건만** 싣는다(`select_timeline`). 모델은
-    이 사건마다 한 줄씩, 같은 순서로 쓴다 — 고르지 않는다. 고르지 않은 사건은
-    `background` 에 제목·요지만 실어 쟁점·의미의 재료로 쓰게 한다.
+    `candidates` 는 사건 전부(번호 `n` 이 붙는다) — Narrator 가 여기서 타임라인을
+    고른다. `events` 는 **타임라인에 세울 사건만**, `background` 는 나머지다.
+    처음에는 코드 선택으로 채우고, Narrator 가 고르면 `choose_timeline` 이
+    바꿔 끼운다. Writer 는 `events` 마다 한 줄씩 쓴다 — 고르지 않는다.
     """
     thread = candidate.thread
     index = load_issue_index()
     rows = candidate.events[-MAX_EVENTS:]
     details = [index.get(str(row.get("source_event_id") or "")) or {} for row in rows]
-    picked = select_timeline(rows, TIMELINE_ROWS, details)
-    events, background, narrative, watchpoints, seen_w = [], [], [], [], set()
+    candidates, narrative, watchpoints, seen_w = [], [], [], set()
+    seen_titles: dict[str, int] = {}
     for position, (row, detail) in enumerate(zip(rows, details)):
-        source_id = str(row.get("source_event_id") or "")
-        if position not in picked:
-            background.append({"date": row.get("date"), "title": row.get("title"),
-                               "summary": _clip(detail.get("summary"), 200)})
-        else:
-            hashes = [str(value) for value in (row.get("evidence_hashes") or ())][:MAX_EVIDENCE]
-            # 관계는 **타임라인에서도 이웃일 때만** 싣는다. 사이 사건을 건너뛰었는데
-            # 원래 이웃의 관계를 그대로 두면 '원인→결과' 가 엉뚱한 두 칸을 잇는다.
-            nxt = picked[picked.index(position) + 1] if position != picked[-1] else None
-            events.append({
-                "date": row.get("date"),
-                # 이 파일의 날짜가 무슨 날짜인지 카피가 추측하지 않게 한다.
-                "date_kind": row.get("date_kind") or "first_seen",
-                "title": row.get("title"),
-                "source_event_id": source_id,
-                "relation_to_next": (row.get("relation_to_next") or "") if nxt == position + 1 else "",
-                "evidence_hashes": hashes,
-                "summary": _clip(detail.get("summary"), 200),
-                "detail": _clip(detail.get("detail"), DETAIL_MAX),
-            })
+        item = {
+            "n": position + 1,
+            "date": row.get("date"),
+            # 이 파일의 날짜가 무슨 날짜인지 카피가 추측하지 않게 한다.
+            "date_kind": row.get("date_kind") or "first_seen",
+            "title": row.get("title"),
+            "source_event_id": str(row.get("source_event_id") or ""),
+            "relation_to_next": row.get("relation_to_next") or "",
+            "evidence_hashes": [str(v) for v in (row.get("evidence_hashes") or ())][:MAX_EVIDENCE],
+            "summary": _clip(detail.get("summary"), 200),
+            "detail": _clip(detail.get("detail"), DETAIL_MAX),
+        }
+        # 떨어져 있는 같은 제목은 모델에게도 알려 준다 — 되풀이를 고르지 않게.
+        key = _title_key(row)
+        if key in seen_titles:
+            item["repeats"] = seen_titles[key]
+        seen_titles.setdefault(key, position + 1)
+        candidates.append(item)
         line = _clip(detail.get("implication") or detail.get("summary"), 160)
         if line and line not in narrative:
             narrative.append(line)
@@ -604,6 +621,7 @@ def evidence_packet(candidate: StoryCandidate, date: str, *, topic: str = "") ->
             if question and question not in seen_w:
                 seen_w.add(question)
                 watchpoints.append(question)
+    code_pick = select_timeline(rows, TIMELINE_ROWS, details)
 
     issue = candidate.issue
     tail = _clip(issue.get("open_question"), 160)
@@ -616,9 +634,12 @@ def evidence_packet(candidate: StoryCandidate, date: str, *, topic: str = "") ->
         "issue_id": str(issue.get("issue_id") or ""),
         "issue_title": issue.get("title") or thread.get("title"),
         "topic": topic,
-        "events": events,
+        "candidates": candidates,
+        # 코드가 고른 타임라인(0 부터 센 위치). Narrator 선택이 틀리면 이것으로 간다.
+        "code_pick": code_pick,
+        "events": _timeline_events(candidates, code_pick),
         # 타임라인에 안 세운 사건. 쟁점·의미의 재료이고, 타임라인 행이 되면 안 된다.
-        "background": background,
+        "background": _background(candidates, code_pick),
         "narrative": narrative[-5:],
         "phase_now": narrative[-1] if narrative else (issue.get("summary") or ""),
         "watchpoints": watchpoints[:6],
@@ -628,3 +649,72 @@ def evidence_packet(candidate: StoryCandidate, date: str, *, topic: str = "") ->
         "briefing_count": thread.get("briefing_count") or 0,
         "lifespan_days": thread.get("lifespan_days") or 0,
     }
+
+
+def _timeline_events(candidates: list[dict], picked: list[int]) -> list[dict]:
+    """고른 위치의 사건. 관계는 **타임라인에서도 이웃일 때만** 싣는다 — 사이 사건을
+    건너뛰었는데 원래 이웃의 관계를 두면 '원인→결과' 가 엉뚱한 두 칸을 잇는다."""
+    out = []
+    for k, position in enumerate(picked):
+        row = {key: value for key, value in candidates[position].items()
+               if key not in ("n", "repeats")}
+        nxt = picked[k + 1] if k + 1 < len(picked) else None
+        if nxt != position + 1:
+            row["relation_to_next"] = ""
+        out.append(row)
+    return out
+
+
+def _background(candidates: list[dict], picked: list[int]) -> list[dict]:
+    return [{"date": row.get("date"), "title": row.get("title"), "summary": row.get("summary")}
+            for position, row in enumerate(candidates) if position not in picked]
+
+
+def check_model_pick(pick: object, total: int, limit: int = TIMELINE_ROWS) -> tuple[list[int] | None, str]:
+    """Narrator 의 `timeline_pick`(1 부터 센 n, 오늘 사건 제외)을 위치 목록으로.
+
+    형식이 틀리면 (None, 이유). 오늘 사건은 여기서 붙인다 — 모델이 뺐든 넣었든
+    마지막 칸은 늘 오늘이다.
+    """
+    if total <= limit:
+        return list(range(total)), "후보가 칸보다 적다 — 전부"
+    if not isinstance(pick, list) or not all(isinstance(v, int) and not isinstance(v, bool) for v in pick):
+        return None, f"번호 목록이 아니다: {str(pick)[:40]}"
+    chosen = [v for v in pick if v != total]            # 오늘을 넣었으면 걷어 낸다
+    if len(set(chosen)) != len(chosen):
+        return None, f"번호 중복: {pick}"
+    if any(not 1 <= v < total for v in chosen):
+        return None, f"없는 번호: {pick} (후보 1~{total})"
+    if len(chosen) != limit - 1:
+        return None, f"{len(chosen)}개 — 오늘을 빼고 {limit - 1}개여야 한다"
+    return sorted(v - 1 for v in chosen) + [total - 1], "모델"
+
+
+def choose_timeline(packet: dict, model_pick: object, limit: int = TIMELINE_ROWS) -> str:
+    """Narrator 선택을 packet 에 반영한다. 틀리면 코드 선택을 둔다. 로그 한 줄을 돌려준다.
+
+    비교를 위해 두 선택을 packet["timeline_pick"] 에 나란히 남긴다.
+    """
+    candidates = packet.get("candidates") or []
+    if not candidates:
+        return "[cards] 타임라인 후보 없음 — 선택 건너뜀"
+    code = list(packet.get("code_pick") or [])
+    picked, why = check_model_pick(model_pick, len(candidates), limit)
+    used = "모델" if picked is not None and why == "모델" else ("전부" if picked is not None else "코드")
+    final = picked if picked is not None else code
+    packet["events"] = _timeline_events(candidates, final)
+    packet["background"] = _background(candidates, final)
+    packet["timeline_pick"] = {"used": used, "model": model_pick, "code": [p + 1 for p in code],
+                               "final": [p + 1 for p in final], "why": why}
+
+    def names(positions):
+        return " / ".join(f"{str(candidates[p].get('date'))[5:]} {str(candidates[p].get('title') or '')[:14]}"
+                          for p in positions)
+    if used == "전부":
+        return f"[cards] 타임라인 {len(candidates)}건 전부 — {why}"
+    line = f"[cards] 타임라인 선택 — 사용: {used}"
+    if used == "코드":
+        line += f" (모델 선택 무효: {why})"
+    model_view = names(picked) if picked is not None else str(model_pick)
+    return f"{line}\n[cards]   모델: {model_view}\n[cards]   코드: {names(code)}"
+

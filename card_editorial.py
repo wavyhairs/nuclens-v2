@@ -152,11 +152,22 @@ JSON 만 출력한다. 스키마:
    "key_change": 이 스토리의 핵심 변화,
    "core_issues": [현재 해결·결정되지 않은 것 2~3개],
    "so_what": [정책·시장·사업에서 달라지는 것 2~3개],
-   "confirmed_facts": [입력 events 로 확인된 사실 2~4개],
+   "confirmed_facts": [입력 candidates 로 확인된 사실 2~4개],
    "unknowns": [아직 모르는 것 1~3개],
-   "watchpoints": [다음에 확인해야 할 결정·실증·승인 2~5개]
+   "watchpoints": [다음에 확인해야 할 결정·실증·승인 2~5개],
+   "timeline_pick": [타임라인에 세울 candidates 의 n 번호] — 아래 규칙
  }}
 }}
+
+timeline_pick — 스토리 2장 타임라인에 세울 사건을 고른다. 칸은 {TIMELINE_ROWS}개다.
+- 마지막 후보(가장 큰 n)는 오늘 사건이라 **항상 들어간다.** 그것을 **빼고**
+  {TIMELINE_ROWS - 1}개를 고른다. 후보가 {TIMELINE_ROWS}개 이하면 [] 로 둔다.
+- 이 사안이 **어떻게 여기까지 왔는지** 한눈에 보이게 고른다. 앞세울 것:
+  출발점, 흐름이 바뀐 지점(relation_to_next 가 stage_progress·cause_effect),
+  한수원 사업·원전과 직접 닿는 사건.
+- 같은 얘기를 되풀이한 사건은 고르지 않는다 — relation_to_next 가 same_matter 이거나
+  repeats 가 붙은 후보(앞의 같은 제목 후보 번호다).
+- 입력에 있는 n 만 쓴다. 번호가 틀리면 코드가 대신 고른다.
 
 story.since_last 가 있으면 이 스토리는 그 날짜에 이미 카드로 나갔다. key_change 는
 그 날짜 이후 새로 붙은 사건(new_titles)으로 달라진 것이어야 한다.

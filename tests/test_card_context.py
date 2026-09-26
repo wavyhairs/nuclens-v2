@@ -391,5 +391,66 @@ class TimelineSelectionTests(unittest.TestCase):
         self.assertEqual(relations, ["stage_progress", "", "", ""])
 
 
+class NarratorPickTests(unittest.TestCase):
+    """오늘 사건은 코드가 못 박고, 나머지 칸은 편집 데스크가 고른다. 틀리면 코드 선택."""
+
+    def packet(self):
+        rows = us_invest_rows()
+        thread = sar_thread(flow=rows)
+        candidate = card_context.StoryCandidate(issue=issue("story-g", "텍사스"), thread=thread,
+                                                rank=1, events=rows)
+        return card_context.evidence_packet(candidate, "2026-09-26", topic="정책")
+
+    def test_every_event_is_a_numbered_candidate(self):
+        packet = self.packet()
+        self.assertEqual([c["n"] for c in packet["candidates"]], list(range(1, 8)))
+        self.assertEqual(packet["code_pick"], [0, 1, 4, 6])
+
+    def test_a_valid_model_pick_is_used_and_today_is_always_last(self):
+        packet = self.packet()
+        line = card_context.choose_timeline(packet, [1, 2, 5])
+        self.assertIn("사용: 모델", line)
+        self.assertEqual([e["source_event_id"] for e in packet["events"]],
+                         ["story-a", "story-b", "story-e", "story-g"])
+        self.assertEqual(packet["timeline_pick"]["code"], [1, 2, 5, 7])
+
+    def test_the_model_may_or_may_not_list_today(self):
+        for pick in ([1, 3, 5], [1, 3, 5, 7]):
+            with self.subTest(pick=pick):
+                self.assertEqual(card_context.check_model_pick(pick, 7)[0], [0, 2, 4, 6])
+
+    def test_a_broken_pick_falls_back_to_the_code_pick(self):
+        for pick in (None, "1,2,3", [1, 2], [1, 1, 3], [0, 2, 3], [1, 2, 9], [True, 2, 3]):
+            with self.subTest(pick=pick):
+                packet = self.packet()
+                line = card_context.choose_timeline(packet, pick)
+                self.assertIn("사용: 코드", line)
+                self.assertEqual(packet["timeline_pick"]["final"], [1, 2, 5, 7])
+                self.assertEqual(packet["events"][-1]["source_event_id"], "story-g")
+
+    def test_a_short_story_takes_every_event(self):
+        rows = us_invest_rows()[:3]
+        packet = card_context.evidence_packet(
+            card_context.StoryCandidate(issue=issue("x", "x"), thread=sar_thread(flow=rows),
+                                        rank=1, events=rows), "2026-09-26")
+        card_context.choose_timeline(packet, [])
+        self.assertEqual(len(packet["events"]), 3)
+
+    def test_a_distant_repeat_is_marked_and_scored_down(self):
+        """09-23: 08-11 과 08-20 이 같은 제목인데 인접 관계로는 안 잡혔다."""
+        rows = [_flow_row(f"s{i}", title, f"2026-08-{10 + i:02d}", "", [f"h{i}"])
+                for i, title in enumerate(["공론화 방침", "신규 원전 공론화 결정", "전기본 토론회",
+                                           "신규 원전 공론화 결정", "전기본 반영 논의"])]
+        packet = card_context.evidence_packet(
+            card_context.StoryCandidate(issue=issue("x", "x"), thread=sar_thread(flow=rows),
+                                        rank=1, events=rows), "2026-09-26")
+        self.assertEqual(packet["candidates"][3].get("repeats"), 2)
+        first, _ = card_context.timeline_score(rows, 1)
+        again, why = card_context.timeline_score(rows, 3)
+        self.assertIn("되풀이", why)
+        # 같은 제목의 뒤 사건은 앞 사건보다 되풀이 감점만큼 낮다(직전 가점은 따로 더한다).
+        self.assertEqual(again, first + card_context.LEAD_IN_POINTS - card_context.RESTATED_PENALTY)
+
+
 if __name__ == "__main__":
     unittest.main()
