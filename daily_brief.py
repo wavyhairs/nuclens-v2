@@ -1011,14 +1011,36 @@ def plan_briefs(queue: list[dict],
     # 어휘로 못 잡는 연속일 반복을 의미로 대조한다(dedup.cross_day_repeats 주석).
     dom_sent = dedup.recent_for_cross_day(recent_sent, today)
 
+    # 사건 신선도 — 기사는 새것인데 사건이 묵은 후보(freshness B5 주석). 같은 스토리의
+    # 가장 이른 기사가 직전 브리핑 전이면 "그 뒤 새 일이 있나"를 묻는다.
+    grace = float(fresh_cfg.get("grace_hours", freshness.DEFAULTS["grace_hours"]))
+    event_dates: dict[str, dict] = {}
+    if (fresh_cutoff is not None and fresh_cfg.get("enabled", True)
+            and fresh_cfg.get("event_review", True)):
+        event_dates = freshness.archive_dates()
+        for art in queue:
+            if art.get("hash"):
+                event_dates.setdefault(art["hash"], {
+                    "published_at": art.get("published_at") or art.get("queued_at"),
+                    "title": art.get("title_kr") or art.get("title") or ""})
+
+    def review_repeats(rows: list[dict], sent: list[dict], label: str) -> list[dict]:
+        verdicts = dedup.cross_day_repeats(rows, sent, label=f"dedup_cross_day_{label}")
+        if event_dates:
+            firsts = freshness.stale_firsts(rows, event_dates, fresh_cutoff, grace)
+            if firsts:
+                verdicts = verdicts + dedup.stale_event_review(
+                    rows, firsts, fresh_cutoff.date().isoformat(),
+                    label=f"dedup_stale_event_{label}")
+        return verdicts
+
     dom, dom_diag = ranking.rank_and_select(
         dom_pool, DOMESTIC_CAP, cfg, now, ranking.resolve_floor(cfg, "domestic"),
         cap_spec=ranking.resolve_caps(cfg, "domestic"),
         semantic_dedup=dedup_articles,
         editorial_dedup=editorial_dedup_articles,
         continuity_recheck=dom_recheck,
-        cross_day_review=lambda rows: dedup.cross_day_repeats(
-            rows, dom_sent, label="dedup_cross_day_domestic"))
+        cross_day_review=lambda rows: review_repeats(rows, dom_sent, "domestic"))
 
     # 해외 풀은 **국내 선정 결과까지** 어제분에 얹어서 본다. 두 지역이 각자
     # 풀에서 따로 랭킹되므로, 같은 이슈가 국내 1번과 해외 3번을 동시에 차지하는
@@ -1041,8 +1063,7 @@ def plan_briefs(queue: list[dict],
         semantic_dedup=dedup_articles,
         editorial_dedup=editorial_dedup_articles,
         continuity_recheck=forn_recheck,
-        cross_day_review=lambda rows: dedup.cross_day_repeats(
-            rows, forn_sent, label="dedup_cross_day_overseas"))
+        cross_day_review=lambda rows: review_repeats(rows, forn_sent, "overseas"))
     print(f"[daily_brief] 국내 {len(dom)}건 / 해외 {len(forn)}건 선별 "
           f"(중복 제거 {len(dom_diag['dropped_duplicates']) + len(forn_diag['dropped_duplicates'])}건, "
           f"하한 미달 {len(dom_diag['dropped_below_floor']) + len(forn_diag['dropped_below_floor'])}건, "

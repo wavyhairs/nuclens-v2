@@ -902,6 +902,103 @@ def cross_day_repeats(candidates: list[dict], sent: list[dict], *,
     return verdicts
 
 
+STALE_EVENT_PROMPT = """당신은 원자력 아침 브리핑의 편집 데스크입니다.
+
+각 CANDIDATE 는 오늘 보낼 후보인데, 같은 사건을 다룬 첫 기사(FIRST)가 이미 며칠 전에
+나와 있었습니다. 오늘 브리핑은 직전 브리핑(CUTOFF) **이후에 일어난 일**만 전합니다.
+
+후보마다 질문 하나: **CANDIDATE 가 CUTOFF 이후에 새로 일어난 행동·결정·일정 변화를 보도하는가?**
+- 날짜로 먼저 본다. CANDIDATE 의 `지난 22일`·`지난달` 같은 날짜는 CANDIDATE published 기준으로
+  풀어서 CUTOFF 와 견준다. CUTOFF 보다 앞선 일은 새 일이 아니다.
+- FIRST 가 보도한 일을 다시 정리·요약·분석·전망하거나 배경·반응·수치만 더한 것은 새 일이 아니다.
+  (예: FIRST 9/22 '정부, 대미투자 1호로 텍사스 가스발전소 확정' / CANDIDATE 9/25 '국회 보고된
+   대미투자…텍사스 확정, 원전·LNG 협상 진행형' — 9/22 국회 보고의 정리 → new_action=false)
+- 새 일의 예: 회담·행사가 실제로 열림, 합의·서명·체결, 승인·허가, 표결 통과, 연기·취소·중단,
+  착공·가동·정지, 조사 착수, 새 당사자의 결정 — 단 그 일이 CUTOFF 이후여야 한다.
+
+⚠️ 출력은 JSON 하나만:
+{"items": [{"candidate": 0, "new_facts": ["CUTOFF 이후의 새 사실을 짧게, 없으면 빈 배열"], "new_action": false}]}
+new_facts 를 먼저 적고, 그 가운데 CUTOFF 이후의 행동·결정·일정 변화가 하나라도 있으면
+new_action=true 입니다. 확신이 없으면 true(빼지 않는다).
+"""
+
+
+def stale_event_review(candidates: list[dict], first: dict[str, dict], cutoff_day: str, *,
+                       label: str = "dedup_stale_event", client=None) -> list[dict]:
+    """같은 사건의 첫 기사가 직전 브리핑 전에 나온 후보만, 그 뒤 새 일이 있는지 묻는다.
+
+    `first` 는 hash → 그 후보 스토리의 가장 이른 기사 {hash, published_at, title}. 호출부
+    (daily_brief)가 freshness.first_seen 으로 **직전 브리핑보다 앞선 것만** 넣는다.
+
+    새 일이 없다고 **명시적으로** 답한 후보만 건드린다(판정 불가·실패는 그대로 = fail-open).
+      - nice_to_know: continuity.drop — ranking 이 기존 연속일 경로로 빼고 빈자리를 채운다.
+      - must_read: 빼지 않고 `stale_since` 에 첫 보도일을 단다 — 제목에 날짜가 붙고 1번
+        자리는 피한다(2026-09-26 결정 D1: 중요한 결정을 영영 빠뜨리는 것이 늦는 것보다 나쁘다).
+    """
+    rows = [(i, cand) for i, cand in enumerate(candidates)
+            if cand.get("hash") in first and not (cand.get("continuity") or {}).get("drop")]
+    if not rows or not is_available():
+        return []
+    blocks = []
+    for pos, (_i, cand) in enumerate(rows):
+        head = first[cand["hash"]]
+        blocks.append("\n".join([
+            f"[CANDIDATE {pos}] published={_published_day(cand)}",
+            f"TITLE: {_trim(cand.get('title_kr') or cand.get('title'), 200)}",
+            f"SUMMARY: {_trim(cand.get('summary'), 500)}",
+            f"DETAIL: {_trim(cand.get('detail'), 500)}",
+            f"  (FIRST) published={_published_day(head)}",
+            f"  TITLE: {_trim(head.get('title'), 200)}",
+        ]))
+    payload = f"CUTOFF={cutoff_day}\n\n" + "\n\n".join(blocks)
+    try:
+        result = _call_identity_review(STALE_EVENT_PROMPT, payload, policy_name="dedup_cross_day",
+                                       label=label, client=client, max_output_tokens=2048)
+    except GeminiError as exc:
+        print(f"[dedup] stale_event 실패 → 건드리지 않음: {exc}")
+        _record_failure("stale_event", exc)
+        return []
+    answers: dict[int, dict] = {}
+    raw = result.get("items") if isinstance(result, dict) else None
+    for entry in raw if isinstance(raw, list) else []:
+        if isinstance(entry, dict) and isinstance(entry.get("candidate"), int):
+            answers.setdefault(entry["candidate"], entry)
+    verdicts: list[dict] = []
+    for pos, (_i, cand) in enumerate(rows):
+        answer = answers.get(pos)
+        head = first[cand["hash"]]
+        stale = isinstance(answer, dict) and answer.get("new_action") is False
+        facts = answer.get("new_facts") if isinstance(answer, dict) else None
+        verdict = {
+            "hash": cand.get("hash", ""),
+            "title": _trim(cand.get("title_kr") or cand.get("title"), 80),
+            "relation": "stale_event",
+            "prior_hash": head.get("hash", ""),
+            "prior_title": _trim(head.get("title"), 80),
+            "prior_date": _published_day(head),
+            "new_facts": [_trim(f, 80) for f in facts[:3]] if isinstance(facts, list) else [],
+            "confirm": "no_new_action" if stale else "new_action_or_unknown",
+            "drop": False, "dated": False,
+        }
+        if stale and str(cand.get("importance") or "") == "must_read":
+            cand["stale_since"] = verdict["prior_date"]
+            verdict["dated"] = True
+        elif stale:
+            cont = dict(cand.get("continuity") or {})
+            cont.update({
+                "matched": True, "drop": True,
+                "prior_hash": verdict["prior_hash"], "prior_title": verdict["prior_title"],
+                "prior_date": verdict["prior_date"],
+                "identity_confirmed": True, "identity_method": "stale_event",
+                "progression": "none",
+                "match_reasons": list(cont.get("match_reasons") or []) + ["stale_event:no_new_action"],
+            })
+            cand["continuity"] = cont
+            verdict["drop"] = True
+        verdicts.append(verdict)
+    return verdicts
+
+
 # ---- CLI 자가진단 ----------------------------------------------------------
 
 if __name__ == "__main__":
