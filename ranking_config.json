@@ -118,5 +118,12 @@
     "max_per_topic": 2,
     "penalty": 2.5
   },
-  "duplicate_similarity": 0.82
+  "duplicate_similarity": 0.82,
+  "freshness": {
+    "_comment": "브리핑 후보는 직전 브리핑(delivery_log selection_stats 의 가장 이른 줄) 이후 게재 기사만. 게재 시각이 기준보다 grace_hours 이상 앞서면 묵은 기사 — nice_to_know 는 빼고, must_read 는 제목에 게재일을 달아 남기되 1번 자리는 주지 않는다(2026-09-26 결정 D1). 자정(KST) 게재 시각은 날짜만 준 게시판 기사로 보고 날짜로 비교한다. freshness.py docstring 참조.",
+    "_tuning": "2026-09-13~26 발송 243건 재현: grace 0h → 문제 36·정상 4 걸림, 6h → 문제 29·정상 1, 12h → 문제 28·정상 1. 새벽 게재·브리핑 뒤 수집을 살리려 6h.",
+    "enabled": true,
+    "grace_hours": 6,
+    "keep_must_read_dated": true
+  }
 }

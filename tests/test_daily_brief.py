@@ -1044,5 +1044,67 @@ class TestContinuityStats(unittest.TestCase):
         self.assertNotIn("recheck", stats)
 
 
+
+class FreshnessGateTests(OutboxBase):
+    """직전 브리핑 이후의 기사만 오늘 소식이다 — 묵은 must_read 는 날짜를 달고 한 번 나간다.
+
+    2026-09-13~26 발송 243건 판정: 이틀 이상 늦은 발송 45건, 재발송 33건.
+    """
+
+    def _seed_last_brief(self, hours_ago):
+        kst = timezone(timedelta(hours=9))
+        now = datetime.now(kst)
+        prev = now - timedelta(hours=hours_ago)
+        yesterday = (now.date() - timedelta(days=1)).isoformat()
+        row = {"record_type": "selection_stats", "date": yesterday,
+               "generated_at": prev.isoformat()}
+        db.DELIVERY_LOG_FILE.write_text(json.dumps(row) + "\n", encoding="utf-8")
+        return now
+
+    def test_stale_nice_is_pruned_and_stale_must_read_is_dated_but_not_first(self):
+        now = self._seed_last_brief(hours_ago=24)
+        fresh = (now - timedelta(hours=2)).isoformat()
+        stale = (now - timedelta(days=3)).isoformat()
+        self.seed_queue([
+            qitem(h="dn", section="khnp", domain="khnp.co.kr", title="한수원 신규 발표 오늘",
+                  published_at=fresh),
+            qitem(h="dm", section="khnp", domain="khnp.co.kr", importance="must_read",
+                  title="정부 대미투자 1호 사업 확정", published_at=stale),
+            qitem(h="fo", section="international", title="Old overseas story entirely",
+                  published_at=stale),
+            qitem(h="fn", section="international", title="Fresh overseas story today",
+                  published_at=fresh),
+        ])
+        self.assertEqual(db.cmd_plan(), 0)
+        outbox = db.load_outbox()
+        items = {i["hash"]: i for i in outbox["items"]}
+        self.assertNotIn("fo", items, "묵은 nice_to_know 가 나갔다")
+        self.assertIn("fo", outbox["prune_hashes"], "묵은 기사가 큐에 남아 내일 또 경쟁한다")
+        self.assertIn("dm", items, "묵은 must_read 를 버렸다 — 결정 D1 은 날짜 달고 한 번")
+        self.assertEqual(items["dm"]["stale_since"], (now - timedelta(days=3)).date().isoformat())
+        self.assertEqual(items["dn"]["brief_rank"], 1, "1번 자리를 묵은 기사가 차지했다")
+        domestic = next(b["text"] for b in outbox["briefs"] if b["name"] == "국내")
+        label = f"({(now - timedelta(days=3)).month}/{(now - timedelta(days=3)).day})"
+        self.assertIn(f"{label} 정부 대미투자 1호 사업 확정", domestic, "카드 제목에 날짜가 없다")
+        stats = outbox["selection_stats"]["overseas"]["freshness"]
+        self.assertEqual(stats["stale_dropped"], 1)
+
+    def test_no_previous_brief_means_no_cut(self):
+        self.seed_queue([qitem(h="fo", section="international", title="Old overseas story",
+                               published_at="2026-08-01T00:00:00+00:00")])
+        self.assertEqual(db.cmd_plan(), 0)
+        self.assertIn("fo", {i["hash"] for i in db.load_outbox()["items"]})
+
+    def test_unselected_must_read_carries_a_reason(self):
+        """제날 왜 못 나갔나 — 9/22 must_read '대미투자 1호 확정'은 로그에 흔적이 없었다."""
+        self._seed_last_brief(hours_ago=24)
+        pool = [qitem(h="a1", importance="must_read", title="첫 번째 기사"),
+                qitem(h="a2", importance="must_read", title="두 번째 기사")]
+        diag = {"dropped_duplicates": [{"hash": "a2", "dup_of": "a1", "reason": "title"}],
+                "scores": {"a1": 20.0, "a2": 19.0}}
+        rows = db.unselected_must_read(pool, [pool[0]], diag, set())
+        self.assertEqual(rows, [{"hash": "a2", "title": "두 번째 기사", "score": 19.0,
+                                 "reason": "duplicate", "dup_of": "a1", "dup_reason": "title"}])
+
 if __name__ == "__main__":
     unittest.main()
