@@ -121,6 +121,39 @@ class ReconcileTests(unittest.TestCase):
                          "발송 당시 순서가 지켜지지 않았다")
 
 
+class MigrationV2Tests(unittest.TestCase):
+    """v1 원장의 소급 날짜만 표시 제목을 그날 제목으로 되돌린다 — 한 번만, 그 칸만."""
+
+    def _v1_store(self, frozen_at):
+        return {"version": 1, "dates": {DAY: {"frozen_at": frozen_at, "cards": [{
+            "issue_id": "issue-x", "hashes": ["a"], "representative_hash": "a",
+            "fields": {"title": "그날 제목", "headline_display": "9/24 의 이슈 표시 제목",
+                       "summary": "그날 요약"}}]}}}
+
+    def test_backfilled_date_gets_its_own_title(self):
+        store = self._v1_store("2026-09-24T18:50:55.342384+09:00")
+        stats = bs.apply([], store, "2026-09-26T06:00:00+09:00")
+        fields = store["dates"][DAY]["cards"][0]["fields"]
+        self.assertEqual(fields["headline_display"], "그날 제목")
+        self.assertEqual(fields["summary"], "그날 요약", "표시 제목 말고 다른 칸까지 건드렸다")
+        self.assertEqual(stats["migrated_headlines"], 1)
+        self.assertEqual(store["version"], bs.VERSION)
+
+    def test_date_frozen_on_its_own_day_is_left_alone(self):
+        store = self._v1_store(f"{DAY}T06:10:00+09:00")
+        bs.apply([], store, "2026-09-26T06:00:00+09:00")
+        self.assertEqual(store["dates"][DAY]["cards"][0]["fields"]["headline_display"],
+                         "9/24 의 이슈 표시 제목")
+
+    def test_migration_runs_once(self):
+        store = self._v1_store("2026-09-24T18:50:55+09:00")
+        store["version"] = 2
+        stats = bs.apply([], store, "2026-09-26T06:00:00+09:00")
+        self.assertEqual(stats["migrated_headlines"], 0)
+        self.assertEqual(store["dates"][DAY]["cards"][0]["fields"]["headline_display"],
+                         "9/24 의 이슈 표시 제목")
+
+
 class FileTests(unittest.TestCase):
     def test_round_trip_and_one_line_per_date(self):
         store = {"dates": {}}

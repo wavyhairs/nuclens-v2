@@ -80,6 +80,28 @@ class HeadlineWiringTests(unittest.TestCase):
         self.assertEqual(calls, [["i1", "i2"]], "브리핑 행에서 또 물었다")
         self.assertEqual(briefings[0]["issues"][0]["headline_display"], "표시 제목 하나")
 
+    def test_a_past_briefing_row_keeps_its_own_title(self):
+        """지난 날짜 행은 그날 대표 기사의 제목을 단다 — 이슈의 지금 표시 제목이 아니다.
+
+        2026-09-26 라이브: 9/14~9/23 대미투자 카드들이 빌드마다 이슈의 최신 표시
+        제목(9/26 조선 협력)을 달고 나왔다. 879장 중 132장.
+        """
+        catalog, briefings = self._rows()
+        past = dict(catalog[0], title="원안위, 8월 회의에서 방폐장 변경허가 의결")
+        briefings.append({"issues": [past]})
+        with mock.patch.object(bd.issue_headline, "build",
+                               return_value=({"i1": "오르비텍 핵연료물질 사용 허가",
+                                              "i2": "고리 3·4호기 연내 결론"},
+                                             {"from_cache": 2, "asked": 0, "calls": 0,
+                                              "fell_back": 0, "status": "ok",
+                                              "reject_reasons": {}})):
+            bd.apply_headline_display(catalog, briefings)
+        self.assertEqual(past["headline_display"], past["title"],
+                         "지난 날짜 카드가 이슈의 지금 표시 제목을 달았다")
+        self.assertEqual(briefings[0]["issues"][0]["headline_display"],
+                         "오르비텍 핵연료물질 사용 허가",
+                         "제목이 같은 오늘 행까지 표시 제목을 잃었다")
+
     def test_a_missing_headline_falls_back_to_the_title(self):
         catalog, briefings = self._rows()
         with mock.patch.object(bd.issue_headline, "build",

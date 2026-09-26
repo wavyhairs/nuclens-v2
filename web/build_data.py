@@ -3826,6 +3826,11 @@ def apply_headline_display(catalog: list[dict], briefings: list[dict]) -> dict:
     생성은 **카탈로그 행에서만** 한다. 브리핑 행은 같은 이슈의 날짜별 부분집합이라
     거기서 또 물으면 같은 이슈를 날짜 수만큼 중복 질의한다 — `issue_insight` 가
     같은 이유로 같은 순서를 쓴다.
+
+    그래서 카탈로그 표시 제목은 **이슈의 지금 제목**으로 만든 말이다. 브리핑 행의
+    제목이 그와 다르면(지난 날짜의 대표 기사) 그 표시 제목을 얹지 않고 행 자신의
+    제목을 쓴다. 2026-09-26 라이브 실측: 과거 카드 879장 중 132장이 그날 내용과
+    다른 제목을 달고 있었다 — 9/14~9/23 대미투자 카드에 9/26 조선 협력 제목.
     """
     requests = [{
         "issue_id": str(row.get("issue_id") or ""),
@@ -3834,17 +3839,22 @@ def apply_headline_display(catalog: list[dict], briefings: list[dict]) -> dict:
         "detail": str(row.get("detail") or row.get("summary") or ""),
     } for row in catalog]
     headlines, stats = issue_headline.build(requests)
+    catalog_titles = {str(row.get("issue_id") or ""): str(row.get("title") or "")
+                      for row in catalog}
 
-    def _apply(rows: list[dict]) -> None:
+    def _apply(rows: list[dict], *, same_title_only: bool) -> None:
         for row in rows:
             title = str(row.get("title") or "")
+            issue_id = str(row.get("issue_id") or "")
+            headline = headlines.get(issue_id)
+            if same_title_only and title != catalog_titles.get(issue_id):
+                headline = None
             # 폴백이 두 겹이다. 캐시·판정이 무엇을 하든 이 칸이 비지 않는다.
-            row["headline_display"] = headlines.get(
-                str(row.get("issue_id") or "")) or title
+            row["headline_display"] = headline or title
 
-    _apply(catalog)
+    _apply(catalog, same_title_only=False)
     for briefing in briefings:
-        _apply(briefing.get("issues") or [])
+        _apply(briefing.get("issues") or [], same_title_only=True)
     return stats
 
 
