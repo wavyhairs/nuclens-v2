@@ -318,7 +318,7 @@ def _upgrade_record(record: dict) -> dict:
         if repair.get("drop"):
             upgraded["quality_drop"] = True
             upgraded["quality_drop_reason"] = repair.get("reason", "manual_quality_gate")
-        for field in ("title_kr", "summary", "implication", "why_important",
+        for field in ("title_kr", "summary", "detail", "implication", "why_important",
                       "why_short", "open_question"):
             if field in repair:
                 upgraded[field] = clean_text(repair[field])
