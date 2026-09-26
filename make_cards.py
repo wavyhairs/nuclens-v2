@@ -390,6 +390,7 @@ def ask_narrator(items: list[dict], date: str, story: dict | None,
 
 def ask_writer(brief: dict, items: list[dict], date: str, *, with_story: bool,
                problems: list[str] | None = None, story_events: list[dict] | None = None,
+               story_background: list[dict] | None = None,
                log: list[dict] | None = None, task: str = "card_writer") -> dict:
     """카피라이터. 브리프를 규격에 맞게 적는다 — 기사를 다시 해석하지 않는다."""
     payload = {"date": date, "brief": brief,
@@ -398,6 +399,9 @@ def ask_writer(brief: dict, items: list[dict], date: str, *, with_story: bool,
                "sensitive": [it.get("issue_id", "") for it in items if it["sensitive"]]}
     if with_story and story_events:
         payload["story_events"] = story_events
+        # 타임라인에 안 세운 사건. 쟁점·의미의 재료로만 쓴다(card_context.select_timeline).
+        if story_background:
+            payload["story_background"] = story_background
     # 스토리가 붙는 날은 한 응답에 일일 3장 + 스토리 5장이 들어간다. 예산을
     # 8192 로 두되 **부족해서 생긴 문제는 아니다** — 실측 2026-09-20 에 12288 을
     # 줘도 실제 사용은 1,354 토큰이었다(로그의 tokens=… 가 그것을 보여 준다).
@@ -730,7 +734,9 @@ def _writer_round(brief: dict, items: list[dict], date: str,
         try:
             raw = ask_writer(brief, items, date, with_story=with_story,
                              problems=(daily_bad + story_bad) or None,
-                             story_events=events, log=call_log, task=task)
+                             story_events=events,
+                             story_background=(story_payload or {}).get("background"),
+                             log=call_log, task=task)
         except Exception as exc:  # noqa: BLE001
             print(f"[cards] Writer({task}) 실패 — {type(exc).__name__}: {exc}")
             return None
@@ -1318,8 +1324,9 @@ def main() -> int:
         story_payload = story_material(story, date)
         story_payload["event_ids"] = card_context.event_ids(story.thread)
         where = "" if story.rank <= len(items) else f" (일일 {len(items)}건 밖)"
+        shown = [f"{e.get('date')} {str(e.get('title') or '')[:16]}" for e in story_payload["events"]]
         print(f"[cards] 스토리 후보 #{story.rank}{where} {story.thread_id} "
-              f"사건 {len(story_payload['events'])}건")
+              f"사건 {len(story.events)}건 · 타임라인 {len(shown)}건: {' / '.join(shown)}")
 
     if raw is None and not args.no_llm:
         raw, story_copy = run_editorial(items, date, collected, story_payload, call_log)

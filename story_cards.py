@@ -110,38 +110,51 @@ def _line(problems: list[str], where: str, text, limit: int, accent_ok: bool = F
         problems.append(f'{where}: {mc.visible_len(text)}자 > {limit} — "{text[:22]}…"')
 
 
+def _date_forms(stamp: str) -> set[str]:
+    """한 날짜를 '9월 17일'·'2026-09-17'·'2026년 9월 17일'·'2026.09.17' 어느 표기로 써도 맞도록."""
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})", str(stamp or ""))
+    if not m:
+        return set()
+    y, mo, da = m.group(1), int(m.group(2)), int(m.group(3))
+    return {stamp[:10], f"{y}년 {mo}월 {da}일", f"{mo}월 {da}일", f"{y}.{mo:02d}.{da:02d}"}
+
+
 def _dates_in(payload: dict) -> set[str]:
-    """events 날짜를 '9월 17일'·'2026-09-17'·'2026년 9월 17일' 어느 표기로 써도 맞도록."""
     out: set[str] = set()
     for ev in payload.get("events") or []:
-        d = str(ev.get("date") or "")
-        m = re.match(r"(\d{4})-(\d{2})-(\d{2})", d)
-        if not m:
-            continue
-        y, mo, da = m.group(1), int(m.group(2)), int(m.group(3))
-        out |= {d, f"{y}년 {mo}월 {da}일", f"{mo}월 {da}일", f"{y}.{mo:02d}.{da:02d}"}
+        out |= _date_forms(str(ev.get("date") or ""))
     return out
 
 
+def _same_day(when: str, event: dict) -> bool:
+    return any(form in when or when in form for form in _date_forms(str(event.get("date") or "")))
 
-def _event_for_row(row: dict, payload: dict) -> dict | None:
-    """타임라인 한 행이 가리키는 **그 사건**. 날짜로 찾는다.
+
+def _align(rows: list, payload: dict) -> list[tuple[dict, dict | None]]:
+    """타임라인 행 ↔ 사건. **순서대로** 짝짓는다.
 
     카피는 `source_event_id` 를 적지 않는다(화면에 안 나가는 값을 쓰게 하면
-    그것부터 지어낸다). 대신 행의 `when` 이 어느 사건의 날짜인지로 되짚는다 —
-    날짜는 이미 "입력 events 의 것만" 으로 검증되는 값이다.
+    그것부터 지어낸다). 대신 행의 `when` 이 어느 사건의 날짜인지로 되짚는데,
+    예전에는 날짜가 맞는 **첫 사건**을 골랐다. 같은 날 사건이 둘이면(2026-09-25:
+    APR1400 합의 지연 · 200억 달러 제한 재확인) 두 행이 모두 첫 사건에 붙어
+    숫자 대조가 엉뚱한 사건과 이뤄졌다.
+
+    이제 `events` 는 코드가 고른 타임라인 사건이고 모델은 그 순서대로 쓴다.
+    그래서 앞에서부터 한 사건씩 소비한다 — 같은 날 두 행은 두 사건에 차례로
+    붙는다. 짝이 없는 행(입력에 없는 날짜, 순서를 거스른 행)은 `None` 이다.
     """
-    when = str(row.get("when") or "")
-    for event in payload.get("events") or ():
-        stamp = str(event.get("date") or "")
-        if not stamp:
+    events = list(payload.get("events") or ())
+    out: list[tuple[dict, dict | None]] = []
+    cursor = 0
+    for row in rows:
+        when = str(row.get("when") or "") if isinstance(row, dict) else ""
+        hit = next((j for j in range(cursor, len(events)) if when and _same_day(when, events[j])), None)
+        if hit is None:
+            out.append((row, None))
             continue
-        year, month, day = stamp[:4], int(stamp[5:7]), int(stamp[8:10])
-        for form in (stamp, f"{year}년 {month}월 {day}일", f"{month}월 {day}일",
-                     f"{year}.{month:02d}.{day:02d}"):
-            if form in when or when in form:
-                return event
-    return None
+        out.append((row, events[hit]))
+        cursor = hit + 1
+    return out
 
 
 def _fit(text, limit: int) -> str:
@@ -177,19 +190,19 @@ def normalize(raw: dict, payload: dict) -> dict:
     facts["lede"] = _fit(facts.get("lede"), LEDE_MAX)
     if facts.get("note"):
         facts["note"] = _fit(facts["note"], NOTE_MAX)
-    known = _dates_in(payload)
     rows = [r for r in (facts.get("timeline") or []) if isinstance(r, dict)]
-    if known:
-        # 입력에 없는 날짜의 행은 **버린다**(자르지 않는다). 모델이 events 가
+    if payload.get("events"):
+        # 입력 사건과 짝이 안 맞는 행은 **버린다**(자르지 않는다). 모델이 events 가
         # 모자랄 때 "현재 (9월 9일)" 같은 행을 만들어 채우는 것을 봤다.
-        rows = [r for r in rows
-                if any(k in str(r.get("when") or "") or str(r.get("when") or "") in k
-                       for k in known)]
-    want = min(TIMELINE_ROWS, len(payload.get("events") or [])) or TIMELINE_ROWS
+        #
+        # 예전에는 여기서 `rows[:4]` 로 앞 네 줄만 남겼다. 시간순으로 다섯 줄이
+        # 오면 **맨 끝의 오늘 사건이 잘렸다.** 이제 사건 하나에 행 하나만 짝지으므로
+        # 행이 사건 수를 넘을 수 없다 — 자를 일이 없다.
+        rows = [row for row, event in _align(rows, payload) if event is not None]
     for r in rows:
         r["what"] = _fit(r.get("what"), WHAT_MAX)
         r["when"] = _fit(r.get("when"), WHEN_MAX)
-    facts["timeline"] = rows[:want]
+    facts["timeline"] = rows
 
     for it in (out.get("issues") or []):
         if isinstance(it, dict):
@@ -261,36 +274,38 @@ def validate(raw: dict, payload: dict) -> list[str]:
     if facts.get("note"):
         _line(problems, "facts.note", facts.get("note"), NOTE_MAX)
     timeline = facts.get("timeline")
-    # events 가 4건 미만인 스토리도 있다 — 그럴 땐 있는 만큼이 정답이다.
-    # v1 은 정확히 4행을 요구했다. v2 에서는 normalize 가 **입력에 없는 날짜의 행을
-    # 버리기** 때문에 3행으로 내려올 수 있다(모델이 "현재 (9월 9일)" 같은 행을 즐겨
-    # 만든다). 지어낸 행을 지우고 남은 3행이 4행을 채운 거짓말보다 낫다 — 범위로 본다.
-    want = min(TIMELINE_ROWS, len(payload.get("events") or [])) or TIMELINE_ROWS
-    lo = 2 if want > 2 else want
+    # 타임라인 사건은 코드가 골랐다(`card_context.select_timeline`) — 모델은 그
+    # 사건마다 한 줄씩 쓴다. 한 줄까지는 봐준다: 지어낸 행을 normalize 가 버린
+    # 결과일 수 있고, 한 칸 빈 타임라인이 스토리를 통째로 빼는 것보다 낫다.
+    # **오늘 사건(마지막) 줄은 봐주지 않는다** — 그게 이 카드가 나온 이유다.
+    events = list(payload.get("events") or [])
+    want = min(TIMELINE_ROWS, len(events)) or TIMELINE_ROWS
+    lo = max(2, want - 1) if want > 2 else want
     if not isinstance(timeline, list) or not lo <= len(timeline) <= want:
         problems.append(f"facts.timeline: {len(timeline) if isinstance(timeline, list) else '?'}개 "
                         f"— {lo}~{want}개여야 한다")
     else:
-        known = _dates_in(payload)
-        for i, rowx in enumerate(timeline, start=1):
+        pairs = _align(timeline, payload) if events else [(row, None) for row in timeline]
+        for i, (rowx, own) in enumerate(pairs, start=1):
             if not isinstance(rowx, dict):
                 problems.append(f"facts.timeline[{i}]: 객체가 아님")
                 continue
             _line(problems, f"facts.timeline[{i}].when", rowx.get("when"), WHEN_MAX)
             _line(problems, f"facts.timeline[{i}].what", rowx.get("what"), WHAT_MAX)
-            # **한 행은 자기 사건만 인용한다.** 행의 날짜로 어느 event 인지
-            # 정하고, 그 event 의 재료에 없는 숫자를 쓰면 다른 날 사건의 근거를
-            # 끌어온 것이다(cross-event leakage). 스토리 전체의 '왜 중요한가'만
-            # 여러 사건을 함께 인용할 수 있다.
-            own = _event_for_row(rowx, payload)
+            # **한 행은 자기 사건만 인용한다.** 행이 짝지어진 event 의 재료에 없는
+            # 숫자를 쓰면 다른 날 사건의 근거를 끌어온 것이다(cross-event leakage).
+            # 스토리 전체의 '왜 중요한가'만 여러 사건을 함께 인용할 수 있다.
             if own is not None:
                 material = json.dumps(own, ensure_ascii=False)
                 for problem in card_qa.ungrounded(rowx.get("what"), material):
                     problems.append(f"facts.timeline[{i}].what: {problem} "
                                     f"(이 행은 {own.get('date')} 사건이다)")
-            when = str(rowx.get("when") or "")
-            if known and not any(k in when or when in k for k in known):
-                problems.append(f'facts.timeline[{i}].when: "{when}" 은 events 에 없는 날짜')
+            elif events:
+                problems.append(f'facts.timeline[{i}].when: "{rowx.get("when")}" 은 '
+                                "events 에 없는 날짜이거나 순서가 어긋났다")
+        if events and not any(own is events[-1] for _row, own in pairs):
+            problems.append(f"facts.timeline: 오늘 사건({events[-1].get('date')} "
+                            f"{str(events[-1].get('title') or '')[:20]}) 줄이 없다")
 
     issues = raw.get("issues")
     if not isinstance(issues, list) or len(issues) != ISSUE_COUNT:
@@ -443,7 +458,8 @@ def main() -> int:
     if args.copy_file:
         raw = json.loads(args.copy_file.read_text(encoding="utf-8"))
     print(f"[story] {payload['issue_title'][:36]} | thread={payload.get('thread_id')} "
-          f"| 사건 {len(payload['events'])}건 | 관전 {len(payload['watchpoints'])}건")
+          f"| 타임라인 {len(payload['events'])}건 · 배경 {len(payload.get('background') or [])}건 "
+          f"| 관전 {len(payload['watchpoints'])}건")
 
     raw = normalize(raw, payload)
     problems = validate(raw, payload)
@@ -494,9 +510,9 @@ def _self_check() -> None:
                   "badge": None},
         "facts": {"lede": "서명은 미뤄졌습니다", "note": "",
                   "timeline": [{"when": "2026년 9월 8일", "what": "미국, 원전 8기 건설 제안"},
+                               {"when": "9월 12일", "what": "산업부, 협상 진행 확인"},
                                {"when": "9월 16일", "what": "국회 보고 취소"},
-                               {"when": "9월 17일", "what": "MOU 서명 연기"},
-                               {"when": "현재 (9월 17일)", "what": "새 일정 미정"}]},
+                               {"when": "9월 17일", "what": "MOU 서명 연기"}]},
         "issues": [{"title": "투자 규모", "points": ["규모가 조율 중입니다"], "icon": "coins"},
                    {"title": "지분 구조", "points": ["의결권 확보가 쟁점입니다"], "icon": "plant"},
                    {"title": "국회 절차", "points": ["보고 일정이 미정입니다"], "icon": "doc"}],
@@ -547,12 +563,34 @@ def _self_check() -> None:
     assert any("cover.headline" in p for p in validate(bad, payload))
     bad = json.loads(json.dumps(ok)); bad["issues"] = bad["issues"][:2]
     assert any("issues" in p for p in validate(bad, payload))
-    # 3행까지는 봐준다(지어낸 행을 버린 결과일 수 있다). 2행 미만이면 타임라인이 아니다.
-    assert not any("timeline" in p for p in
-                   validate({**ok, "facts": {**ok["facts"],
-                                             "timeline": ok["facts"]["timeline"][:3]}}, payload))
+    # 가운데 한 줄 빠진 것은 봐준다(지어낸 행을 버린 결과일 수 있다).
+    short = json.loads(json.dumps(ok)); del short["facts"]["timeline"][1]
+    assert not any("timeline" in p for p in validate(short, payload)), validate(short, payload)
+    # **오늘 사건(마지막) 줄이 빠지면 안 된다** — 그게 이 카드가 나온 이유다.
+    bad = json.loads(json.dumps(ok)); bad["facts"]["timeline"] = bad["facts"]["timeline"][:3]
+    assert any("오늘 사건" in p for p in validate(bad, payload)), validate(bad, payload)
     bad = json.loads(json.dumps(ok)); bad["facts"]["timeline"] = bad["facts"]["timeline"][:1]
     assert any("timeline" in p for p in validate(bad, payload))
+    # 시간순으로 한 줄 더 오면 예전에는 앞 네 줄만 남겨 **오늘 줄이 잘렸다.**
+    extra = json.loads(json.dumps(ok))
+    extra["facts"]["timeline"].insert(0, {"when": "9월 1일", "what": "지어낸 출발점"})
+    kept = normalize(extra, payload)["facts"]["timeline"]
+    assert [r["what"] for r in kept] == [r["what"] for r in ok["facts"]["timeline"]], kept
+
+    # 같은 날 사건이 둘이면 두 줄이 **차례로** 두 사건에 붙는다. 예전에는 둘 다
+    # 첫 사건에 붙어 둘째 줄의 숫자가 엉뚱한 사건과 대조됐다(2026-09-25 실측).
+    twin = {**payload, "events": [
+        {"date": "2026-09-08", "title": "막판 조율"},
+        {"date": "2026-09-25", "title": "APR1400 도입 합의 지연"},
+        {"date": "2026-09-25", "title": "연간 200억 달러 제한 재확인"},
+        {"date": "2026-09-26", "title": "텍사스 발전소 확정"}]}
+    rows = [{"when": "9월 8일", "what": "막판 조율"},
+            {"when": "9월 25일", "what": "APR1400 도입 합의 지연"},
+            {"when": "9월 25일", "what": "연간 200억 달러 제한"},
+            {"when": "9월 26일", "what": "텍사스 발전소 확정"}]
+    assert [e["title"] for _r, e in _align(rows, twin)] == [e["title"] for e in twin["events"]]
+    twin_ok = json.loads(json.dumps(ok)); twin_ok["facts"]["timeline"] = rows
+    assert not [p for p in validate(twin_ok, twin) if "timeline" in p], validate(twin_ok, twin)
     bad = json.loads(json.dumps(ok)); bad["issues"][0]["icon"] = "rocket"
     assert any("목록 밖" in p for p in validate(bad, payload))
 

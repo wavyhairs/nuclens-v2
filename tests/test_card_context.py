@@ -321,5 +321,75 @@ class LoadTests(unittest.TestCase):
                 card_context.load_site_data("2026-01-01", tmp)
 
 
+# 2026-09-26 대미 전략투자 스레드(thread-69334fcff32b6984). 원장의 제목·날짜·인접
+# 관계를 그대로 옮겼다(08-17·08-18 같은 제목 두 건은 flow 가 한 칸으로 접는다).
+US_INVEST_FLOW = [
+    ("story-a", "2026-08-17", "정부, 2000억 달러 규모 대미 전략투자 첫 사업 막판 조율", "stage_progress"),
+    ("story-b", "2026-08-30", "한미 원전 노형 배분 등 이견으로 대미 투자 MOU 서명 연기", ""),
+    ("story-c", "2026-09-11", "미국, 한국의 대미 투자 지연에 불만…일본과 비교하며 속도 압박", ""),
+    ("story-d", "2026-09-12", "한-미, 대미 에너지 투자 협상 막판 조율", ""),
+    ("story-e", "2026-09-25", "한미 투자 패키지 중 APR1400 미국 도입 합의 지연", "cause_effect"),
+    ("story-f", "2026-09-25", "정부, 대미 전략투자 연간 200억 달러 제한 재확인", "same_matter"),
+    ("story-g", "2026-09-26", "정부, 대미 전략투자 첫 사업으로 텍사스 가스복합발전소 건설 확정", ""),
+]
+
+
+def us_invest_rows():
+    return [_flow_row(sid, title, date, rel, [sid]) for sid, date, title, rel in US_INVEST_FLOW]
+
+
+class TimelineSelectionTests(unittest.TestCase):
+    """7~8건 중 타임라인 4칸을 **코드가** 고른다 — 모델에게 맡기면 기준이 날마다 다르다."""
+
+    def test_the_real_thread_keeps_the_turning_points(self):
+        rows = us_invest_rows()
+        picked = [rows[i]["source_event_id"] for i in card_context.select_timeline(rows, 4)]
+        # 모델은 09-25 APR1400 지연(원인→결과 전환점)을 빼고 관계 판정도 없는
+        # 09-11 속도 압박을 넣었다. 기준으로 고르면 흐름이 선다.
+        self.assertEqual(picked, ["story-a", "story-b", "story-e", "story-g"])
+
+    def test_the_first_and_today_are_always_kept(self):
+        rows = us_invest_rows()
+        for limit in (2, 3, 4):
+            picked = card_context.select_timeline(rows, limit)
+            self.assertEqual(len(picked), limit)
+            self.assertEqual(picked[0], 0)
+            self.assertEqual(picked[-1], len(rows) - 1)
+
+    def test_fewer_events_than_slots_keeps_all(self):
+        rows = us_invest_rows()[:3]
+        self.assertEqual(card_context.select_timeline(rows, 4), [0, 1, 2])
+
+    def test_a_restatement_loses_to_the_step_it_repeats(self):
+        rows = us_invest_rows()
+        score_f, why_f = card_context.timeline_score(rows, 5)
+        score_e, _ = card_context.timeline_score(rows, 4)
+        self.assertIn("같은사안", why_f)
+        self.assertLess(score_f, score_e)
+
+    def test_khnp_relevance_breaks_a_tie_between_unjudged_rows(self):
+        rows = [_flow_row(f"s{i}", title, f"2026-09-{10 + i:02d}", "", [f"h{i}"])
+                for i, title in enumerate(["출발", "미국 투자 압박 발언",
+                                           "원전 노형 배분 협의 착수", "재정 당국 입장 발표",
+                                           "오늘 사건"])]
+        picked = card_context.select_timeline(rows, 3)
+        self.assertEqual([rows[i]["source_event_id"] for i in picked], ["s0", "s2", "s4"])
+
+    def test_the_packet_carries_only_the_picked_events_and_the_rest_as_background(self):
+        rows = us_invest_rows()
+        thread = sar_thread(flow=rows)
+        candidate = card_context.StoryCandidate(issue=issue("story-g", "텍사스"), thread=thread,
+                                                rank=1, events=rows)
+        packet = card_context.evidence_packet(candidate, "2026-09-26", topic="정책")
+        self.assertEqual([e["source_event_id"] for e in packet["events"]],
+                         ["story-a", "story-b", "story-e", "story-g"])
+        self.assertEqual([b["date"] for b in packet["background"]],
+                         ["2026-09-11", "2026-09-12", "2026-09-25"])
+        # 관계는 타임라인에서도 이웃일 때만 — 08-17 → 08-30 은 원래 이웃이라 남고,
+        # 09-25 APR1400 → 09-26 은 사이(200억 제한)를 건너뛰었으므로 비운다.
+        relations = [e["relation_to_next"] for e in packet["events"]]
+        self.assertEqual(relations, ["stage_progress", "", "", ""])
+
+
 if __name__ == "__main__":
     unittest.main()

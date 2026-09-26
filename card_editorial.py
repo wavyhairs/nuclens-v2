@@ -189,7 +189,7 @@ STORY_SCHEMA = f"""
              "badge": {{"value": 핵심 숫자({BADGE_VALUE_MAX}자 이내),
                        "label": 그 숫자가 무엇인지({BADGE_LABEL_MAX}자 이내)}} 또는 null}},
   "facts":  {{"lede": {LEDE_MAX}자 이내 한 줄,
-             "timeline": [{{"when": 날짜, "what": {WHAT_MAX}자 이내}}] 입력 events 수만큼(최대 {TIMELINE_ROWS}),
+             "timeline": [{{"when": 날짜, "what": {WHAT_MAX}자 이내}}] 입력 story_events **하나에 한 줄, 같은 순서로**,
              "note": {NOTE_MAX}자 이내 (없으면 "")}},
   "issues": [{{"title": {ISSUE_TITLE_MAX}자 이내, "points": [{ISSUE_POINT_MAX}자 이내] 1~2개,
              "icon": {" | ".join(ISSUE_ICONS)} 중 하나}}] {ISSUE_COUNT}개,
@@ -203,9 +203,13 @@ STORY_SCHEMA = f"""
  }}
 
 story 규칙:
-- **timeline[].when 은 입력 events 의 날짜만 쓴다.** 없던 날짜를 붙이지 않는다.
-- events 가 {TIMELINE_ROWS}개 미만이면 **그 개수만큼만** 쓴다. '현재' 같은 행을 지어내지 않는다.
+- **story_events 는 타임라인에 세울 사건으로 이미 골라 둔 것이다.** event 하나마다 한 줄을,
+  입력과 같은 순서로 쓴다. 고르거나 빼거나 합치지 않는다. 마지막 event 가 오늘 사건이다.
+- **timeline[].when 은 그 event 의 날짜만 쓴다.** 없던 날짜를 붙이지 않는다.
+  '현재' 같은 행을 지어내지 않는다.
 - 각 timeline 행은 **자기 event 의 내용만** 쓴다. 다른 날 사건을 끌어오지 않는다.
+- story_background 는 타임라인에 **넣지 않은** 사건이다. 쟁점·의미를 쓸 때 재료로만 쓰고
+  timeline 행으로 만들지 않는다.
 - badge.value 의 숫자는 입력에 나온 숫자여야 한다. 없으면 badge 를 null 로.
 - checks 는 반드시 섞는다: 앞의 2~3개는 이미 일어난 사실(done=true),
   나머지는 앞으로 볼 것(done=false). 전부 같은 값이면 버려진다.
