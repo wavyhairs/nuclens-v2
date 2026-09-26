@@ -729,6 +729,37 @@ jobs:
           VAPID_SUBJECT: ${{ vars.VAPID_SUBJECT || 'mailto:nuclens@users.noreply.github.com' }}
         run: python tools/push_notify.py
 
+      # 카카오톡 '나에게 보내기' (선택 기능, 무료)
+      # ------------------------------------------------------------------
+      # 텔레그램과 같은 카드의 제목 목록을 카카오톡 '나와의 채팅'으로 보낸다.
+      # 본인에게만 가는 대신 사업자 등록·검수·건당 요금이 없다. 텍스트 말풍선은
+      # 200자까지만 보여서 본문 대신 제목을 싣고, 버튼이 그날 웹 브리핑을 연다.
+      #
+      # 왜 여기인가: 버튼이 여는 /brief/<날짜> 는 배포가 끝나야 오늘 것이다. 다만
+      # 웹 푸시와 달리 배포 성공에 걸지 않는다 — 배포가 실패한 날에도 카톡은
+      # 나가고 버튼만 첫 화면을 연다(WEB_DEPLOY_OUTCOME). 텔레그램 발송 성패와도
+      # 무관하다. claim 성공(=오늘 브리핑이 확정됐다)만 본다.
+      #
+      # 발송 기록은 outbox.json 의 `kakao` 칸에 남고 아래 "Commit issue review
+      # cache" 스텝이 커밋한다 — 같은 날 재실행이 두 번 보내지 않는다.
+      #
+      # 비밀값이 하나도 없으면 조용히 건너뛴다. 반쪽만 있거나 토큰이 만료되면
+      # ::error:: 로 남긴다. 비치명이다 — 텔레그램·웹은 이미 나갔다.
+      - name: KakaoTalk morning brief (나에게 보내기)
+        id: kakao
+        if: always() && steps.claim.conclusion == 'success'
+        continue-on-error: true
+        env:
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+          KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          # 리프레시 토큰은 한 달 미만 남으면 갱신 요청 때 새 것이 온다. 이 PAT
+          # (이 저장소 Secrets 쓰기 권한)가 있으면 스크립트가 gh secret set 으로
+          # KAKAO_REFRESH_TOKEN 을 갈아 끼운다. 없으면 경고 + 카톡으로 재인증 안내.
+          KAKAO_SECRET_WRITER: ${{ secrets.KAKAO_SECRET_WRITER }}
+          WEB_DEPLOY_OUTCOME: ${{ steps.web-deploy.outcome }}
+        run: python tools/kakao_notify.py
+
 
       # 관리자 secret은 이 짧은 전용 프로세스에만 노출한다. Deploy/audio/wrangler는
       # TELEGRAM_ADMIN_CHAT_ID를 상속하지 않는다. 미발송 경고는 익일에도 재시도된다.
@@ -838,7 +869,7 @@ jobs:
           # 같은 날 재실행이 이미 나간 자료를 다시 채널에 올린다.
           # outbox.json 의 `push` 칸도 같은 성질이다 — 아침 알림이 나간 날짜를
           # push_notify.py 가 적는다. 여기서 싣지 않으면 같은 날 재실행이
-          # 구독자에게 알림을 한 번 더 보낸다.
+          # 구독자에게 알림을 한 번 더 보낸다. `kakao` 칸(kakao_notify.py)도 같다.
           # issue_ledger.json 은 이슈 주소의 영속성 기록이다. build_data 가
           # 카탈로그를 만들 때마다 갱신하므로 여기서 실어야 살아남는다 —
           # deploy-web.yml 에는 커밋 스텝이 아예 없어서 그쪽 갱신분은 러너와

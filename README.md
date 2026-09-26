@@ -37,6 +37,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `metrics.py` | 오프라인 품질 지표 (`python metrics.py`) — 표본 부족 시 insufficient_data |
 | `gemini_client.py` | Gemini REST wrapper (429 백오프) |
 | `telegram_send.py` | 텔레그램 발송 (inline keyboard 지원) |
+| `tools/kakao_notify.py` | 카카오톡 '나에게 보내기' 아침 브리핑 (선택·무료) — 국내·해외 카드 제목을 200자 말풍선으로, 버튼은 그날 웹 브리핑. 리프레시 토큰 자동 교체 |
 | `sources.py` + `sources.json` | 출처 공신력 tier — JSON 만 편집 |
 | `email_ingest.py` | ANS Nuclear News Daily 뉴스레터 외부 링크 추출 (IMAP) |
 | `reports_kb.json.example` | 과거 보고서 KB 템플릿 — 채우면 보고서 추천 정밀화 |
@@ -645,6 +646,68 @@ python channel_queue.py --find-channel
 글을 하나 올린 뒤 다시 돌린다. 나온 `-100…` 을 `TELEGRAM_CHANNEL_ID` 에 넣고
 `--check-channel` 로 확인한다.
 
+## 카카오톡 아침 브리핑 (`tools/kakao_notify.py`, 선택)
+
+텔레그램과 **같은 브리핑**을 카카오톡 '나와의 채팅'으로도 받는다. 카카오 메시지
+API 의 **나에게 보내기**는 로그인한 본인에게만 가는 대신 **무료**이고 사업자
+등록·검수·비즈 채널이 필요 없다(알림톡·친구톡·채널 메시지는 건당 과금).
+
+- 무엇이 오나: 국내·해외 카드 **제목 목록**(텔레그램 번호 순서 그대로). 텍스트
+  말풍선은 200자까지만 보여서 본문은 싣지 않는다 — 평소 말풍선 4~5개.
+- 버튼: 말풍선마다 **브리핑 전체 보기** → `SITE_URL/brief/<날짜>`. 기사 원문
+  링크는 못 단다(카카오는 앱에 등록한 도메인만 연다).
+- 언제: Daily Brief 의 웹 배포 직후(텔레그램보다 15분가량 뒤). 배포가 실패한
+  날에도 보내고 버튼만 사이트 첫 화면을 연다. 텔레그램 발송 성패와는 무관하다.
+- 재실행해도 두 번 가지 않는다(`outbox.json` 의 `kakao` 칸).
+- Secrets 가 하나도 없으면 조용히 건너뛴다 — 켜기 전까지 아무 영향이 없다.
+
+### 1회 설정 (약 10분)
+
+1. [Kakao Developers](https://developers.kakao.com) → 내 애플리케이션 → **애플리케이션
+   추가** (개인 이름으로 가능).
+2. **앱 키 → REST API 키**를 복사한다 → `KAKAO_REST_API_KEY`.
+3. **카카오 로그인**을 켜고 Redirect URI 에 `http://localhost:8765/callback` 을
+   **글자 그대로** 등록한다.
+4. **동의항목 → 카카오톡 메시지 전송(`talk_message`)** 을 '선택 동의'로 켠다.
+5. **플랫폼 → Web → 사이트 도메인**에 `https://nuclens-v2.pages.dev` 를 등록한다.
+   빠뜨리면 메시지는 오는데 버튼이 안 열린다.
+6. (보안 메뉴에서 Client Secret 을 켰다면 그 값 → `KAKAO_CLIENT_SECRET`)
+7. PC 에서 `.env` 에 `KAKAO_REST_API_KEY=` 를 채우고:
+
+   ```bash
+   python tools/kakao_notify.py --auth
+   ```
+
+   브라우저에서 로그인·동의하면 카톡으로 테스트 메시지가 오고, 터미널에
+   리프레시 토큰이 찍힌다 → GitHub Secret `KAKAO_REFRESH_TOKEN` 에 넣는다.
+   브라우저를 못 여는 환경이면 `--manual` (주소창 URL 을 붙여넣는다).
+8. **(권장) 토큰 자동 교체** — GitHub → Settings → Developer settings →
+   Fine-grained tokens → 이 저장소만, *Repository permissions → Secrets: Read and
+   write* 로 발급 → `KAKAO_SECRET_WRITER`.
+
+### 토큰이 끊기지 않게
+
+리프레시 토큰은 **두 달짜리**다. 남은 기간이 한 달 미만일 때 갱신 요청을 하면
+새 것이 함께 오는데, 그걸 저장하지 않으면 두 달 뒤 조용히 끊긴다.
+
+| 상황 | 동작 |
+|---|---|
+| `KAKAO_SECRET_WRITER` 있음 | 새 토큰이 오는 날 `gh secret set` 으로 `KAKAO_REFRESH_TOKEN` 을 스스로 교체 — 손댈 일 없음 |
+| 없음 (또는 PAT 만료) | Actions 에 `::warning::` + **카톡으로 재인증 안내** 한 줄. 한 달 안에 `--auth` 를 다시 돌려 Secret 을 바꾼다 |
+| 토큰 만료·폐기 (`invalid_grant`) | `::error::` — `--auth` 로 다시 발급 |
+
+토큰 값은 어떤 로그에도 찍지 않는다. 확인용 명령:
+
+```bash
+python tools/kakao_notify.py --dry-run   # 오늘 보낼 말풍선만 찍는다 (토큰 불필요)
+python tools/kakao_notify.py --test      # 연결 확인용 한 줄 발송
+python tools/kakao_notify.py --force     # 오늘 보냈다는 기록을 무시하고 다시 보낸다
+```
+
+한계: '나와의 채팅' **본인 1명**에게만 간다. 여러 명에게 무료로 보내는 경로는
+카카오에 없다(친구에게 보내기는 권한 심사, 채널·알림톡은 유료) — 구독자 배포는
+텔레그램 채널이 맡는다. 오디오 파일도 카톡으로는 보내지 않는다(웹에서 재생).
+
 ## 랭킹 조정 (비개발자용)
 
 1. `ranking_config.json` 열기 — 모든 가중치에 한국어 설명 주석이 있다.
@@ -663,6 +726,9 @@ python channel_queue.py --find-channel
 | `GEMINI_API_KEY` | ⭕ | **유료** 프로젝트 키. 없으면 신규 기사 큐레이션·투자관점 생략. 미검증 fallback은 자동 발송하지 않고 재검토 대기 |
 | `GEMINI_FREE_API_KEY` | ⭕ | **무료** 프로젝트 키(Billing 미연결). 둘 중 어느 쪽을 쓸지는 아래 `GEMINI_PAID_MODE` 가 고른다 |
 | `IMAP_USER` / `IMAP_PASSWORD` | ⭕ | ANS 뉴스레터 수집 (Gmail 앱 비밀번호, 공백 제거) |
+| `KAKAO_REST_API_KEY` / `KAKAO_REFRESH_TOKEN` | ⭕ | 카카오톡 '나에게 보내기' 아침 브리핑. 둘 다 없으면 건너뛰고, 하나만 있으면 오류. 발급: `python tools/kakao_notify.py --auth` ([설정](#카카오톡-아침-브리핑-toolskakao_notifypy-선택)) |
+| `KAKAO_CLIENT_SECRET` | ⭕ | 카카오 앱에서 Client Secret 을 켰을 때만 |
+| `KAKAO_SECRET_WRITER` | ⭕ | 이 저장소 *Secrets: Read and write* 권한 PAT. 있으면 두 달짜리 `KAKAO_REFRESH_TOKEN` 을 스스로 교체한다 |
 
 ## Variables (GitHub Actions)
 
