@@ -122,8 +122,10 @@
   "freshness": {
     "_comment": "브리핑 후보는 직전 브리핑(delivery_log selection_stats 의 가장 이른 줄) 이후 게재 기사만. 게재 시각이 기준보다 grace_hours 이상 앞서면 묵은 기사 — nice_to_know 는 빼고, must_read 는 제목에 게재일을 달아 남기되 1번 자리는 주지 않는다(2026-09-26 결정 D1). 자정(KST) 게재 시각은 날짜만 준 게시판 기사로 보고 날짜로 비교한다. freshness.py docstring 참조.",
     "_tuning": "2026-09-13~26 발송 243건 재현: grace 0h → 문제 36·정상 4 걸림, 6h → 문제 29·정상 1, 12h → 문제 28·정상 1. 새벽 게재·브리핑 뒤 수집을 살리려 6h.",
+    "_event_review": "기사는 새것인데 사건이 묵은 후보(9/26 1번 카드 '대미투자 1호 확정' = 9/22 국회 보고의 9/25 정리 기사). 같은 스토리의 가장 이른 기사가 직전 브리핑보다 grace 이상 앞서면 dedup.stale_event_review 가 '그 뒤 새 일이 있나'를 묻는다. 243건 판정: 이 신호가 늦음 32/45 를 잡지만 정상 11/137 도 걸려 자르지 않고 묻는다.",
     "enabled": true,
     "grace_hours": 6,
-    "keep_must_read_dated": true
+    "keep_must_read_dated": true,
+    "event_review": true
   }
 }

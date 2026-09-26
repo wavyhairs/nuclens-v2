@@ -31,7 +31,8 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 KST = timezone(timedelta(hours=9))
-DEFAULTS = {"enabled": True, "grace_hours": 6.0, "keep_must_read_dated": True}
+DEFAULTS = {"enabled": True, "grace_hours": 6.0, "keep_must_read_dated": True,
+            "event_review": True}
 
 
 def resolve_config(cfg: dict | None) -> dict:
@@ -154,3 +155,81 @@ def date_label(item: dict) -> str:
     except ValueError:
         return ""
     return f"({since.month}/{since.day})"
+
+
+# ── 사건 신선도(B5) — 기사는 새것인데 사건이 묵은 경우 ─────────────────────
+#
+# 늦은 발송 45건 가운데 27건은 기사 자체는 하루 안에 나온 새 기사였다 — 옛 사건을
+# 다시 다룬 정리·후속 기사다(9/26 1번 카드 '대미투자 1호 확정'은 9/22 국회 보고를
+# 9/25 정리 기사가 다시 쓴 것). 게재 시각만 보는 위 규칙은 이것을 못 본다.
+# 같은 스토리로 묶인 기사 중 가장 이른 것이 직전 브리핑 전에 나왔으면 '옛 사건일
+# 수 있다'는 신호로 삼고, 그 후보만 모델에게 "그 뒤 새로 일어난 일이 있나"를 묻는다
+# (dedup.stale_event_review). 신호만으로 자르면 243건 판정에서 정상 기사 11/137 이
+# 같이 잘렸다 — 하원 가결처럼 진짜 후속이 옛 스토리에 붙어 있기 때문이다.
+
+
+def archive_dates(days: int = 14, *, root: Path | None = None,
+                  now: datetime | None = None) -> dict[str, dict]:
+    """최근 아카이브의 hash → {published_at, title}. 스토리 첫 보도일을 찾는 재료."""
+    root = root or Path(__file__).resolve().parent / "archive"
+    now = (now or datetime.now(KST)).astimezone(KST)
+    since = now - timedelta(days=days)
+    months = {now.strftime("%Y-%m"), since.strftime("%Y-%m")}
+    found: dict[str, dict] = {}
+    for month in sorted(months):
+        path = root / f"{month}.jsonl"
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue
+            stamp = _parse(row.get("pub"))
+            if not row.get("hash") or stamp is None or stamp < since:
+                continue
+            found[row["hash"]] = {"published_at": row.get("pub"),
+                                  "title": row.get("title_kr") or row.get("title") or ""}
+    return found
+
+
+def first_seen(item: dict, dates: dict[str, dict]) -> dict | None:
+    """자기와 스토리 멤버 가운데 가장 이른 기사 {hash, published_at, title}."""
+    hashes = [item.get("hash")]
+    hashes += list(item.get("story_article_hashes") or [])
+    hashes += [m.get("hash") for m in item.get("story_members") or () if isinstance(m, dict)]
+    best: tuple[datetime, dict] | None = None
+    for h in dict.fromkeys(h for h in hashes if h):
+        row = dates.get(h)
+        if h == item.get("hash") and row is None:
+            row = {"published_at": item.get("published_at") or item.get("queued_at"),
+                   "title": item.get("title_kr") or item.get("title") or ""}
+        stamp = _parse((row or {}).get("published_at"))
+        if stamp is None:
+            continue
+        if best is None or stamp < best[0]:
+            best = (stamp, {"hash": h, "published_at": row["published_at"],
+                            "title": row.get("title") or ""})
+    return best[1] if best else None
+
+
+def stale_firsts(rows: list[dict], dates: dict[str, dict], cutoff: datetime | None,
+                 grace_hours: float) -> dict[str, dict]:
+    """hash → 그 후보 스토리의 가장 이른 기사 — 그 기사가 직전 브리핑보다 묵은 후보만.
+
+    기사 자체가 묵은 must_read(`stale_since`)는 이미 날짜를 달았으므로 건너뛴다.
+    가장 이른 기사가 자기 자신이면(스토리에 더 이른 기사가 없음) 묻지 않는다.
+    """
+    if cutoff is None:
+        return {}
+    firsts: dict[str, dict] = {}
+    for row in rows:
+        if row.get("stale_since") or not row.get("hash"):
+            continue
+        head = first_seen(row, dates)
+        if head and head["hash"] != row["hash"] and stale_since(
+                {"published_at": head["published_at"]}, cutoff, grace_hours):
+            firsts[row["hash"]] = head
+    return firsts
