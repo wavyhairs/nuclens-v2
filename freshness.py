@@ -94,6 +94,13 @@ def _date_only(stamp: datetime) -> bool:
     return stamp.hour == 0 and stamp.minute == 0 and stamp.second == 0 and stamp.microsecond == 0
 
 
+def _older(stamp: datetime, cutoff: datetime, grace_hours: float) -> bool:
+    cutoff = cutoff.astimezone(KST)
+    if _date_only(stamp):
+        return stamp.date() < cutoff.date()
+    return stamp < cutoff - timedelta(hours=grace_hours)
+
+
 def stale_since(item: dict, cutoff: datetime | None, grace_hours: float) -> date | None:
     """묵은 기사면 그 게재일(KST)을, 아니면 None. 기준이나 시각을 모르면 None(통과)."""
     if cutoff is None:
@@ -101,10 +108,34 @@ def stale_since(item: dict, cutoff: datetime | None, grace_hours: float) -> date
     stamp = published_at(item)
     if stamp is None:
         return None
-    cutoff = cutoff.astimezone(KST)
-    if _date_only(stamp):
-        return stamp.date() if stamp.date() < cutoff.date() else None
-    return stamp.date() if stamp < cutoff - timedelta(hours=grace_hours) else None
+    return stamp.date() if _older(stamp, cutoff, grace_hours) else None
+
+
+def stale_outlets(item: dict, cutoff: datetime | None, grace_hours: float) -> set[str]:
+    """이 기사 묶음에서 **직전 브리핑 전에만** 보도한 매체(identity).
+
+    커버리지 가점(`ranking._coverage_bonus`)이 여기서 센 매체를 뺀다. 9/26 국내
+    1번은 9/22 국회 보고를 열 곳이 이미 쓴 사건의 9/25 정리 기사였는데, 그 열
+    곳이 '여러 매체가 다룬 오늘 소식'으로 1.2점을 보탰다. 게재 시각은 수집
+    단계에서 접힌 기사(raw_sources)만 들고 있으므로 거기서만 센다 — 한 매체의
+    기사가 하나라도 새것이거나 시각을 모르면 그 매체는 남긴다.
+
+    9/13~26 발송 243건 재현: 가점이 줄어드는 건 늦은 발송 8/45, 정상 1/135.
+    """
+    if cutoff is None:
+        return set()
+    fresh: dict[str, bool] = {}
+    for raw in item.get("raw_sources") or []:
+        if not isinstance(raw, dict):
+            continue
+        ident = str(raw.get("identity") or raw.get("publisher") or raw.get("domain") or "")
+        ident = ident.strip().lower()
+        if not ident:
+            continue
+        stamp = _parse(raw.get("pub"))
+        old = stamp is not None and _older(stamp, cutoff, grace_hours)
+        fresh[ident] = fresh.get(ident, False) or not old
+    return {ident for ident, is_fresh in fresh.items() if not is_fresh}
 
 
 def split(items: list[dict], cutoff: datetime | None, cfg: dict) -> tuple[list[dict], list[dict]]:
@@ -138,12 +169,17 @@ def split(items: list[dict], cutoff: datetime | None, cfg: dict) -> tuple[list[d
     return kept, dropped
 
 
+def _can_lead(row: dict) -> bool:
+    # 해설(brief_kind)도 1번은 받지 않는다 — 결정 D2.
+    return not row.get("stale_since") and row.get("brief_kind") != "explainer"
+
+
 def fresh_first(rows: list[dict]) -> list[dict]:
-    """1번 자리는 그날 소식에만 준다. 묵은 must_read 가 1위면 첫 새 기사를 앞으로."""
-    if not rows or not rows[0].get("stale_since"):
+    """1번 자리는 그날 소식에만 준다. 묵은 must_read·해설이 1위면 첫 새 보도를 앞으로."""
+    if not rows or _can_lead(rows[0]):
         return rows
     for index, row in enumerate(rows):
-        if not row.get("stale_since"):
+        if _can_lead(row):
             return [row] + rows[:index] + rows[index + 1:]
     return rows
 

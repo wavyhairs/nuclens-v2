@@ -30,6 +30,7 @@ from pathlib import Path
 
 import event_stage
 import admin_overrides
+import freshness
 from sources import credibility
 from story_cluster import (
     choose_display_representative,
@@ -39,6 +40,7 @@ from story_cluster import (
     member_hashes,
     promote_representative,
     raw_sources_of,
+    source_identity,
 )
 
 ROOT = Path(__file__).parent
@@ -339,6 +341,16 @@ def _coverage_bonus(item: dict, cfg: dict) -> tuple[float, dict]:
         outlets = max(1, int(item.get("story_outlet_count") or 1))
     except (TypeError, ValueError):
         outlets = 1
+    # 직전 브리핑 전에만 보도한 매체는 '오늘 여러 곳이 다룬 소식'의 근거가 아니다.
+    # 기준 시각은 daily_brief 가 실행 중에만 cfg 에 싣는다(freshness.stale_outlets).
+    cutoff = cfg.get("_fresh_cutoff")
+    if cutoff is not None and outlets > 1:
+        stale = freshness.stale_outlets(item, cutoff, float(cfg.get("_fresh_grace_hours") or 0.0))
+        own = source_identity(item)
+        known = {str(src.get("identity") or "").lower()
+                 for src in item.get("story_sources") or [] if isinstance(src, dict)}
+        stale = {ident for ident in stale if ident != own and (not known or ident in known)}
+        outlets = max(1, outlets - len(stale))
     try:
         tier1 = max(0, int(item.get("story_tier1_count") or 0))
     except (TypeError, ValueError):
@@ -923,6 +935,8 @@ def _select_with_identity_invariants(
     seen_hashes: dict[str, dict] = {}
     seen_stories: dict[str, dict] = {}
     violations: list[dict] = []
+    # 기획·분석('해설')은 하루 한 건(brief_kind). 몫은 daily_brief 가 실행 중에만 싣는다.
+    explainer_room = cfg.get("_explainer_cap")
     for item in ordered:
         article_hash = str(item.get("hash") or "")
         story_id = ensure_story_id(item)
@@ -942,6 +956,10 @@ def _select_with_identity_invariants(
                 "resolution": "backfill_next_distinct_story",
             })
             continue
+        if explainer_room is not None and item.get("brief_kind") == "explainer":
+            if explainer_room <= 0:
+                continue
+            explainer_room -= 1
         selected.append(item)
         if article_hash:
             seen_hashes[article_hash] = item

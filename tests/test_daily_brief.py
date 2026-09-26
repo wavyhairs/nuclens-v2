@@ -1106,5 +1106,34 @@ class FreshnessGateTests(OutboxBase):
         self.assertEqual(rows, [{"hash": "a2", "title": "두 번째 기사", "score": 19.0,
                                  "reason": "duplicate", "dup_of": "a1", "dup_reason": "title"}])
 
+class ArticleKindGateTests(OutboxBase):
+    """사설·칼럼은 빼고, 기획·분석은 [해설]로 하루 한 건, 1번 자리는 주지 않는다(결정 D2)."""
+
+    def test_opinion_is_pruned_and_one_explainer_runs_labelled_and_not_first(self):
+        self.seed_queue([
+            qitem(h="op", section="khnp", domain="khnp.co.kr", importance="must_read",
+                  title="[사설] 원전 정책 더 서둘러야 한다"),
+            qitem(h="ex", section="khnp", domain="khnp.co.kr", importance="must_read",
+                  title="원전 산업 구조 변화 심층 분석", article_type="analysis"),
+            qitem(h="dn", section="khnp", domain="khnp.co.kr", title="한수원 신규 발표 오늘"),
+            qitem(h="fx", section="international", importance="must_read",
+                  title="Deep dive into reactor supply chains", article_type="analysis"),
+            qitem(h="fn", section="international", title="Fresh overseas story today"),
+        ])
+        self.assertEqual(db.cmd_plan(), 0)
+        outbox = db.load_outbox()
+        items = {i["hash"]: i for i in outbox["items"]}
+        self.assertNotIn("op", items, "사설이 나갔다")
+        self.assertIn("op", outbox["prune_hashes"], "사설이 큐에 남아 내일 또 경쟁한다")
+        explainers = sorted(h for h, i in items.items() if i.get("brief_kind") == "explainer")
+        self.assertEqual(explainers, ["ex"], "해설이 하루 한 건을 넘었다")
+        self.assertNotEqual(items["ex"]["brief_rank"], 1, "해설이 1번 자리를 차지했다")
+        self.assertIn("fn", items, "해설 몫이 찬 자리를 다른 기사로 채우지 않았다")
+        domestic = next(b["text"] for b in outbox["briefs"] if b["name"] == "국내")
+        self.assertIn("[해설] 원전 산업 구조 변화 심층 분석", domestic, "카드 제목에 [해설]이 없다")
+        stats = outbox["selection_stats"]["domestic"]["article_kind"]
+        self.assertEqual((stats["opinion_dropped"], stats["explainer_selected"]), (1, 1))
+
+
 if __name__ == "__main__":
     unittest.main()

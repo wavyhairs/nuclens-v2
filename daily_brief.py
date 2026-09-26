@@ -46,6 +46,7 @@ from gemini_client import GeminiError, call_json, is_available, synthesis_model
 import llm_policy
 from sources import credibility
 import article_quality_gate
+import brief_kind
 import freshness
 import issue_continuity
 # 반복 알림 억제 규칙을 여기서 다시 쓰지 않는다 — 규칙이 두 곳에 있으면 어긋난다.
@@ -881,6 +882,18 @@ def freshness_stats(cutoff: datetime | None, stale_dropped: list[dict],
     }
 
 
+def kind_stats(opinion_dropped: list[dict], pool: list[dict], selected: list[dict],
+               region_of: dict[str, str], reg: str) -> dict:
+    """그 지역의 글 종류 판정 — 뺀 사설·칼럼, 해설 후보와 실제로 나간 해설."""
+    dropped = [row for row in opinion_dropped if region_of.get(row.get("hash", "")) == reg]
+    return {
+        "opinion_dropped": len(dropped),
+        "explainer_candidates": sum(1 for a in pool if brief_kind.is_explainer(a)),
+        "explainer_selected": sum(1 for a in selected if brief_kind.is_explainer(a)),
+        "samples": dropped[:8],
+    }
+
+
 def unselected_must_read(pool: list[dict], selected: list[dict], diag: dict,
                          quarantined: set[str]) -> list[dict]:
     """must_read 인데 안 나간 후보와 그 사유.
@@ -961,10 +974,25 @@ def plan_briefs(queue: list[dict],
     region_of = {a.get("hash", ""): region(a) for a in items}
     items, stale_dropped = freshness.split(items, fresh_cutoff, fresh_cfg)
     stale_hashes = {row["hash"] for row in stale_dropped if row.get("hash")}
+    if fresh_cutoff is not None and fresh_cfg.get("enabled", True):
+        # 커버리지 가점에서 직전 브리핑 전에만 보도한 매체를 뺀다(freshness.stale_outlets).
+        cfg["_fresh_cutoff"] = fresh_cutoff
+        cfg["_fresh_grace_hours"] = float(fresh_cfg.get("grace_hours",
+                                                        freshness.DEFAULTS["grace_hours"]))
     if stale_dropped or fresh_cutoff is not None:
         dated = sum(1 for a in items if a.get("stale_since"))
         print(f"[daily_brief] 신선도: 기준 {fresh_cutoff.isoformat() if fresh_cutoff else '없음'} "
               f"— 묵은 기사 {len(stale_dropped)}건 제외, 날짜 달고 남긴 must_read {dated}건")
+    # 글 종류 — 사설·칼럼은 빼고, 기획·분석은 '해설'로 하루 한 건(결정 D2, brief_kind).
+    kind_cfg = brief_kind.resolve_config(cfg)
+    items, opinion_dropped = brief_kind.split(items, kind_cfg)
+    opinion_hashes = {row["hash"] for row in opinion_dropped if row.get("hash")}
+    explainer_room = (int(kind_cfg.get("explainer_per_day", 1))
+                      if kind_cfg.get("enabled", True) else None)
+    if opinion_dropped or any(brief_kind.is_explainer(a) for a in items):
+        print(f"[daily_brief] 글 종류: 사설·칼럼 {len(opinion_dropped)}건 제외, "
+              f"해설 후보 {sum(1 for a in items if brief_kind.is_explainer(a))}건"
+              f"(하루 {explainer_room if explainer_room is not None else '무제한'}건)")
     quality_held_hashes = {row.get("hash", "") for row in quality_held if row.get("hash")}
     if quality_held:
         fallbacks = sum(1 for row in quality_held if row.get("status") == "fallback")
@@ -1034,6 +1062,7 @@ def plan_briefs(queue: list[dict],
                     label=f"dedup_stale_event_{label}")
         return verdicts
 
+    cfg["_explainer_cap"] = explainer_room
     dom, dom_diag = ranking.rank_and_select(
         dom_pool, DOMESTIC_CAP, cfg, now, ranking.resolve_floor(cfg, "domestic"),
         cap_spec=ranking.resolve_caps(cfg, "domestic"),
@@ -1057,6 +1086,10 @@ def plan_briefs(queue: list[dict],
 
     forn_sent = dedup.recent_for_cross_day(forn_recent, today)
 
+    # 해설 몫은 하루 치다 — 국내가 쓴 만큼 해외 몫에서 뺀다.
+    if explainer_room is not None:
+        cfg["_explainer_cap"] = max(0, explainer_room - sum(
+            1 for a in dom if brief_kind.is_explainer(a)))
     forn, forn_diag = ranking.rank_and_select(
         forn_pool, FOREIGN_CAP, cfg, now, ranking.resolve_floor(cfg, "overseas"),
         cap_spec=ranking.resolve_caps(cfg, "overseas"),
@@ -1087,7 +1120,7 @@ def plan_briefs(queue: list[dict],
     # 원문에 없는 수치로 걸린다. 발송 로그의 title_kr 은 원래 제목 그대로 둔다.
     for arts, cards in ((dom, dom_cards), (forn, forn_cards)):
         for art, card in zip(arts, cards):
-            label = freshness.date_label(art)
+            label = " ".join(x for x in (brief_kind.label(art), freshness.date_label(art)) if x)
             if label and card.get("headline"):
                 card["headline"] = f"{label} {card['headline']}"
     card_audits = dom_card_audits + forn_card_audits
@@ -1226,6 +1259,8 @@ def plan_briefs(queue: list[dict],
         meta["implication_requirement"] = a.get("implication_requirement", "")
         if a.get("stale_since"):
             meta["stale_since"] = a["stale_since"]
+        if a.get("brief_kind"):
+            meta["brief_kind"] = a["brief_kind"]
         if a.get("implication_source"):
             meta["implication_source"] = a["implication_source"]
         # 연속일 반복 판정이 붙은 기사는 그 근거를 남긴다. 감점을 받고도 살아남은
@@ -1267,7 +1302,7 @@ def plan_briefs(queue: list[dict],
     # 묵은 기사는 내일 더 묵을 뿐이다 — 큐에 남겨 3일 청소를 기다릴 이유가 없다.
     prune = sorted((selected_hashes | set(dup_hashes) | set(junk_hashes)
                     | repeat_hashes | quality_held_hashes | final_quarantine_hashes
-                    | stale_hashes) - {""})
+                    | stale_hashes | opinion_hashes) - {""})
 
     quality_diag = {
         "held_before_ranking": quality_held,
@@ -1298,6 +1333,7 @@ def plan_briefs(queue: list[dict],
                 **region_stats(dom_diag, dom, dom_pool, dom_cont),
                 "freshness": freshness_stats(fresh_cutoff, stale_dropped, dom_pool,
                                              region_of, "국내"),
+                "article_kind": kind_stats(opinion_dropped, dom_pool, dom, region_of, "국내"),
                 "must_read_unselected": unselected_must_read(
                     dom_pool, dom, dom_diag, final_quarantine_hashes),
             },
@@ -1305,6 +1341,7 @@ def plan_briefs(queue: list[dict],
                 **region_stats(forn_diag, forn, forn_pool, forn_cont),
                 "freshness": freshness_stats(fresh_cutoff, stale_dropped, forn_pool,
                                              region_of, "해외"),
+                "article_kind": kind_stats(opinion_dropped, forn_pool, forn, region_of, "해외"),
                 "must_read_unselected": unselected_must_read(
                     forn_pool, forn, forn_diag, final_quarantine_hashes),
             },
