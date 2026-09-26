@@ -82,6 +82,23 @@ class SplitTests(unittest.TestCase):
                          "묵은 must_read 에 날짜가 안 붙었다 — 제목에 날짜를 달 수 없다")
         self.assertNotIn("stale_since", kept[0])
 
+    def test_a_must_read_past_the_seven_day_cap_is_dropped(self):
+        """연속일 대조가 7일만 보므로 더 묵은 must_read 는 재발송을 알아보지 못한다."""
+        rows = [_item("edge", "2026-09-19T10:00:00+09:00", importance="must_read"),
+                _item("over", "2026-09-18T23:00:00+09:00", importance="must_read")]
+        kept, dropped = fr.split(rows, CUTOFF, fr.resolve_config({}))   # 오늘 = 9/26
+        self.assertEqual([a["hash"] for a in kept], ["edge"], "7일째(9/19)는 날짜 달고 남아야 한다")
+        self.assertEqual(kept[0]["stale_since"], "2026-09-19")
+        self.assertEqual([(d["hash"], d["reason"]) for d in dropped], [("over", "stale_over_limit")])
+
+    def test_the_cap_counts_from_the_briefing_day(self):
+        rows = [_item("key", "2026-09-20T10:00:00+09:00", importance="must_read")]
+        kept, dropped = fr.split(rows, CUTOFF, fr.resolve_config({}), today="2026-09-28")
+        self.assertEqual((kept, [d["reason"] for d in dropped]), ([], ["stale_over_limit"]))
+        kept, _ = fr.split(rows, CUTOFF, fr.resolve_config({"freshness": {"max_dated_days": 14}}),
+                           today="2026-09-28")
+        self.assertEqual([a["hash"] for a in kept], ["key"])
+
     def test_disabled_config_keeps_everything(self):
         rows = [_item("old", "2026-09-01T10:00:00+09:00")]
         kept, dropped = fr.split(rows, CUTOFF, fr.resolve_config({"freshness": {"enabled": False}}))

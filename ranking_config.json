@@ -126,6 +126,8 @@
     "enabled": true,
     "grace_hours": 6,
     "keep_must_read_dated": true,
+    "_max_dated_days": "날짜를 달고 남기는 must_read 의 게재 상한(일). 연속일 대조 창(dedup.CROSS_DAY_SENT_DAYS=7)과 맞춘다 — 더 묵으면 이미 보낸 사건인지 알아보지 못한다. 넘으면 빼고 selection_stats freshness.over_limit 로 센다.",
+    "max_dated_days": 7,
     "event_review": true
   },
   "article_kind": {

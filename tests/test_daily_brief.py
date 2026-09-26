@@ -1090,6 +1090,21 @@ class FreshnessGateTests(OutboxBase):
         stats = outbox["selection_stats"]["overseas"]["freshness"]
         self.assertEqual(stats["stale_dropped"], 1)
 
+    def test_a_must_read_older_than_seven_days_is_pruned_and_counted(self):
+        now = self._seed_last_brief(hours_ago=24)
+        self.seed_queue([
+            qitem(h="dn", section="khnp", domain="khnp.co.kr", title="한수원 신규 발표 오늘",
+                  published_at=(now - timedelta(hours=2)).isoformat()),
+            qitem(h="dm", section="khnp", domain="khnp.co.kr", importance="must_read",
+                  title="열흘 전 정부 발표", published_at=(now - timedelta(days=10)).isoformat()),
+        ])
+        self.assertEqual(db.cmd_plan(), 0)
+        outbox = db.load_outbox()
+        self.assertNotIn("dm", {i["hash"] for i in outbox["items"]}, "열흘 묵은 must_read 가 나갔다")
+        self.assertIn("dm", outbox["prune_hashes"])
+        stats = outbox["selection_stats"]["domestic"]["freshness"]
+        self.assertEqual((stats["stale_dropped"], stats["over_limit"]), (1, 1))
+
     def test_no_previous_brief_means_no_cut(self):
         self.seed_queue([qitem(h="fo", section="international", title="Old overseas story",
                                published_at="2026-08-01T00:00:00+00:00")])
