@@ -773,8 +773,44 @@ def load_archive() -> list[dict]:
             article_hash = record.get("hash")
             if not article_hash:
                 continue
-            records.append(_normalize_archive_record(record))
+            records.append(apply_text_repairs(_normalize_archive_record(record)))
     return records
+
+
+_TEXT_REPAIRS: dict[str, dict[str, str]] | None = None
+TEXT_REPAIR_FIELDS = ("title_kr", "summary", "detail")
+
+
+def text_repairs() -> dict[str, dict[str, str]]:
+    """`archive_repairs.json` 의 제목·요약·상세 수선 — `country_repairs` 와 같은 자리.
+
+    2026-09-26 발송분 1,044건 점검에서 제목이 틀린 28건을 찾았다(배경 사실을 새
+    사건처럼 17·칼럼을 기관 조치처럼 6·날짜/인명 오류 3 등). 아카이브를 다시 쓰지
+    않고 여기서 얹는다 — 빌드가 매번 아카이브 전체를 지나가므로 과거분까지 즉시
+    반영되고, 원본 JSONL 은 감사 이력으로 남는다. `--migrate-quality` 는 같은
+    파일을 읽어 원본에도 반영할 수 있다(news_archive._upgrade_record).
+    """
+    global _TEXT_REPAIRS
+    if _TEXT_REPAIRS is None:
+        try:
+            raw = json.loads((BOT_DIR / "archive_repairs.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            raw = {}
+        _TEXT_REPAIRS = {
+            key: {field: str(entry[field]) for field in TEXT_REPAIR_FIELDS
+                  if isinstance(entry.get(field), str) and entry[field].strip()}
+            for key, entry in (raw.items() if isinstance(raw, dict) else [])
+            if isinstance(entry, dict)
+        }
+        _TEXT_REPAIRS = {key: fields for key, fields in _TEXT_REPAIRS.items() if fields}
+    return _TEXT_REPAIRS
+
+
+def apply_text_repairs(record: dict) -> dict:
+    repair = text_repairs().get(str(record.get("hash") or ""))
+    if repair:
+        record.update(repair)
+    return record
 
 
 # 수집·발송 단계가 이미 판정해 기록한 상태. 사이트·RSS 는 그 판정을 다시
