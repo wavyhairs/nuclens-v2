@@ -145,10 +145,14 @@ def _event_for_row(row: dict, payload: dict) -> dict | None:
 
 
 def _fit(text, limit: int) -> str:
-    """상한 안으로. 절 경계에서 끊고, 못 끊으면 그대로 둔다(검증이 잡는다)."""
+    """상한 안으로. **검증이 봐주는 여유(LEN_SLACK) 안쪽은 건드리지 않는다.**
+
+    예전에는 상한을 한 자만 넘어도 잘랐다 — 검증은 27/26 을 통과시키는데
+    normalize 가 그 한 자 때문에 "…" 를 붙였다. 여유를 넘은 것만 자른다.
+    """
     if not isinstance(text, str):
         return text
-    return text if mc.visible_len(text) <= limit else mc.clip(text, limit)
+    return text if mc.visible_len(text) <= limit + LEN_SLACK else mc.clip(text, limit)
 
 
 def normalize(raw: dict, payload: dict) -> dict:
@@ -206,6 +210,28 @@ def normalize(raw: dict, payload: dict) -> dict:
     for it in (check.get("checks") or []):
         if isinstance(it, dict):
             it["text"] = _fit(it.get("text"), CHECK_TEXT_MAX)
+    return out
+
+
+def style_problems(raw: dict) -> list[str]:
+    """개조식이어야 할 자리의 서술형 종결. 첫 회차에서만 되묻는다(make_cards.story_problems).
+
+    cover.deck·facts.lede 는 서술형이 맞다 — 표지와 2장 머리의 문장이다.
+    """
+    if not isinstance(raw, dict):
+        return []
+    cover, facts = raw.get("cover") or {}, raw.get("facts") or {}
+    why, check = raw.get("why") or {}, raw.get("check") or {}
+    ne = mc.narrative_endings
+    out = ne("cover.headline", [cover.get("headline")])
+    out += ne("facts.timeline.what", [r.get("what") for r in facts.get("timeline") or [] if isinstance(r, dict)])
+    for i, it in enumerate(raw.get("issues") or [], start=1):
+        if isinstance(it, dict):
+            out += ne(f"issues[{i}].points", it.get("points") or [])
+    out += ne("why.headline", [why.get("headline")])
+    out += ne("why.pillars.text", [p.get("text") for p in why.get("pillars") or [] if isinstance(p, dict)])
+    out += ne("why.quotes", why.get("quotes") or [])
+    out += ne("check.checks", [c.get("text") for c in check.get("checks") or [] if isinstance(c, dict)])
     return out
 
 
@@ -490,8 +516,11 @@ def _self_check() -> None:
     # 길이는 2자까지 봐준다(LEN_SLACK) — 그 안쪽은 통과하고 normalize 가 잘라 넣는다.
     edge = mut("cover", headline="가" * (COVER_HEADLINE_MAX + LEN_SLACK))
     assert not any("cover.headline" in p for p in validate(edge, payload)), "여유 안쪽은 통과"
+    # 여유 안쪽은 normalize 도 건드리지 않는다 — 한 자 넘었다고 "…" 를 붙이지 않는다.
     fixed = normalize(edge, payload)
-    assert mc.visible_len(fixed["cover"]["headline"]) <= COVER_HEADLINE_MAX, fixed["cover"]["headline"]
+    assert fixed["cover"]["headline"] == edge["cover"]["headline"], fixed["cover"]["headline"]
+    over = mut("cover", headline="가나다 " * 12)
+    assert mc.visible_len(normalize(over, payload)["cover"]["headline"]) <= COVER_HEADLINE_MAX
     # 지어낸 날짜 행은 자르는 게 아니라 **버린다**.
     invented = json.loads(json.dumps(ok))
     invented["facts"]["timeline"].append({"when": "현재 (9월 9일)", "what": "협상 계속"})

@@ -14,6 +14,7 @@
 죽으면 스토리만 빠지고 일일은 단독 호출로 살아난다.
 """
 import sys
+import json
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -210,7 +211,7 @@ class CallCountTests(unittest.TestCase):
     def _run(self, story_payload, responses, story_bad=()):
         calls: list[dict] = []
         with mock.patch.object(make_cards, "story_problems",
-                               side_effect=lambda *_: list(story_bad)),                 mock.patch.object(make_cards, "card_editorial") as fake:
+                               side_effect=lambda *_, **__: list(story_bad)),                 mock.patch.object(make_cards, "card_editorial") as fake:
             fake.validate_brief = card_editorial.validate_brief
             fake.daily_writer_system = lambda **_: "sys"
             fake.writer_system = lambda **_: "sys"
@@ -263,6 +264,42 @@ class CallCountTests(unittest.TestCase):
         self.assertEqual([c.args[0] for c in call.call_args_list],
                          ["card_daily_writer", "card_writer_repair"])
 
+    def test_an_overlong_line_goes_to_repair_instead_of_being_cut(self):
+        """**자르기 전에 먼저 줄여 쓰게 한다.** 2026-09-26 카드는 repair 없이
+        normalize 가 잘라 "집행합…"·"요구됩…" 토막으로 나갔다 — 길이 초과가
+        검증에 한 번도 안 걸렸기 때문이다."""
+        long = copy()["daily"]
+        long["steps"][0]["facts"][0] = "가" * (make_cards.FACT_MAX + 6)
+        daily, _story, call = self._run(None, [long, copy()["daily"]])
+        self.assertIsNotNone(daily)
+        self.assertEqual([c.args[0] for c in call.call_args_list],
+                         ["card_daily_writer", "card_writer_repair"])
+        asked = call.call_args_list[1].kwargs["fix_these"]
+        self.assertTrue(any("자 > " in p and "다시 요약" in p for p in asked), asked)
+
+    def test_a_narrative_ending_is_asked_back_once_but_never_drops_the_album(self):
+        """카드 문구는 개조식이다. 09-26 은 "~습니다" 로 나와 줄마다 잘렸다.
+        첫 회차에만 되묻고, repair 뒤에도 서술형이면 그대로 보낸다."""
+        wordy = copy()["daily"]
+        wordy["steps"][0]["facts"][0] = "진안·금산에서 착수했습니다"
+        daily, _story, call = self._run(None, [wordy, json.loads(json.dumps(wordy))])
+        self.assertIsNotNone(daily)
+        self.assertEqual([c.args[0] for c in call.call_args_list],
+                         ["card_daily_writer", "card_writer_repair"])
+        asked = call.call_args_list[1].kwargs["fix_these"]
+        self.assertTrue(any("서술형 종결" in p for p in asked), asked)
+
+    def test_an_overlong_line_that_survives_the_repair_is_cut_not_dropped(self):
+        """repair 뒤에도 넘치면 그때 clip() 이 받는다 — 길이 한 자에 앨범을
+        떨어뜨리지 않는다는 09-20 원칙은 그대로다."""
+        long = copy()["daily"]
+        long["steps"][0]["facts"][0] = "가나다 " * 14
+        daily, _story, call = self._run(None, [long, json.loads(json.dumps(long))])
+        self.assertIsNotNone(daily)
+        self.assertEqual(call.call_count, 2)
+        self.assertLessEqual(make_cards.visible_len(daily["steps"][0]["facts"][0]),
+                             make_cards.FACT_MAX)
+
     def test_a_failure_that_survives_the_repair_gives_up_instead_of_shipping_it(self):
         bad = copy()["daily"]
         bad["steps"][0]["why"] = ["진안·금산에서 착수", "실증기간 1년"]
@@ -285,7 +322,7 @@ class StoryDomainTests(unittest.TestCase):
         calls: list[dict] = []
         seq = iter(story_bad_sequence)
         with mock.patch.object(make_cards, "story_problems",
-                               side_effect=lambda *_: list(next(seq, []))),                 mock.patch.object(make_cards, "card_editorial") as fake:
+                               side_effect=lambda *_, **__: list(next(seq, []))),                 mock.patch.object(make_cards, "card_editorial") as fake:
             fake.validate_brief = card_editorial.validate_brief
             fake.normalize_brief = card_editorial.normalize_brief
             fake.daily_writer_system = lambda **_: "sys"

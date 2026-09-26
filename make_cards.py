@@ -72,7 +72,6 @@ TELEGRAM_ALBUM_MAX = 10
 # 폭이라 72px 에서 한 줄에 9자, 강조줄(1.13em)은 7자다 — 16자를 넘기면 3줄이 되고
 # 렌더가 글자를 줄여 제목이 작아진다(지니 09-20: "3줄일 필요가 있나, 자리만 차지").
 # 목표 14자, 상한 18자(72px 2줄의 실측 한계). 22자까지는 렌더 축소(하한 52px)가 2줄로 앉힌다.
-HEADLINE_TARGET = 14
 HEADLINE_MAX = 18
 # 18자는 **취향**(72px 2줄)이고, 28자는 **렌더 한계**(축소 하한 52px 2줄)다. 이 둘을
 # 같은 숫자로 쓰다 09-20 아침에 앨범을 통째로 날렸다 — 24자 제목 하나에 카피가
@@ -148,34 +147,6 @@ APP_JS = ROOT / "web" / "public" / "app.js"
 # (web/build_data.py infer_topics). 그 판정을 그대로 쓴다.
 SENSITIVE_TOPICS = {"safety"}
 SENSITIVE_WORDS = ("피폭", "방사능 누출", "INES", "중대재해")
-
-SYSTEM_PROMPT = f"""너는 한국수력원자력 원자력정책실의 일일 카드뉴스 카피라이터다.
-기사 1건당 카드 **한 장**을 만든다. 한 장 안에 ①무슨 일이 있었나(사실 불릿)
-②왜 중요한가(의미 불릿)를 둘 다 담는다.
-
-출력 형식(JSON 객체 하나):
-{{"hook": {{"headline": "..."}},
-  "steps": [{{"headline": "...", "facts": ["...", "..."], "why": ["...", "..."]}}]}}
-
-- steps 는 입력 기사와 **같은 개수·같은 순서**로 만든다. 하나도 빠뜨리지 않는다.
-- 분류(태그)는 코드가 붙이니 쓰지 않는다.
-- hook.headline: 오늘 전체를 관통하는 한 줄 판단. 한글 {HEADLINE_TARGET}자 이내
-  (최대 {HEADLINE_MAX}자, 넘기면 버려진다). 표지 부제는 코드가 만드니 쓰지 않는다.
-- steps[].headline: 그 기사에서 **무슨 일이 있었나**. 같은 길이 규칙.
-- steps[].facts: **{BULLETS_MAX}개**(재료가 정말 없을 때만 {BULLETS_MIN}개), 각 {FACT_MAX}자 이내. **날짜·기관·대상·결정·수치**처럼
-  원문에 적힌 구체값만. 해석·전망·형용사 금지. 개조식 체언 종결.
-  예) "9월 11일 제2026-14회 회의" / "2건 의결, 1건 재상정"
-- steps[].why: **{BULLETS_MAX}개**(재료가 정말 없을 때만 {BULLETS_MIN}개), 각 {WHY_MAX}자 이내. 정책 영향 / 한수원 시사점 /
-  다음 확인사항 순서를 권장한다. 입력의 why_important·implication·open_question 을
-  재료로 쓰되 그대로 베끼지 말고 한 줄로 줄인다.
-- 강조는 headline 에만 최대 한 곳 `[[대괄호]]`. 불릿에는 쓰지 않는다.
-- 숫자·호기명·국가명·기관명은 원문 그대로 옮긴다. 반올림·추정·의역 금지.
-  **입력에 없는 수치·날짜를 지어내지 않는다.** 재료가 부족하면 불릿 수를 줄인다.
-- 입력 기사에 sensitive=true 가 붙었으면 `[[ ]]` 강조와 수사적 표현을 쓰지 않는다.
-  사실 서술만.
-- 사람인 척하는 페르소나·감탄사·이모지 금지. 개조식 체언 종결을 기본으로 한다.
-- 글자 수는 코드로 다시 잰다. 넘기면 통째로 버려지니 짧게 쓴다."""
-
 
 # ---- A. 카드 소재 선정 + 재료 확보 ---------------------------------------------
 
@@ -459,15 +430,70 @@ def normalize(raw: dict, headline_max: int = HEADLINE_HARD,
     return raw
 
 
-def review(raw: dict, items: list[dict], **kwargs) -> list[str]:
+# 검증 메시지 중 **길이 초과**만 골라내는 자. `_check_line` 과
+# `story_cards._line` 이 같은 꼴(`where: 29자 > 26`)로 쓴다.
+_OVERRUN_RE = re.compile(r": \d+자 > \d+")
+LENGTH_ASK = " — 자르지 말고 핵심만 남겨 이 길이 안으로 다시 요약해 쓸 것"
+
+
+def length_overruns(problems: list[str]) -> list[str]:
+    """검증 결과에서 길이 초과만, repair 에 넘길 지시로 바꿔서."""
+    return [p + LENGTH_ASK for p in problems if _OVERRUN_RE.search(p)]
+
+
+# 서술형 종결. 카드 문구는 개조식이다(card_editorial.RUBRIC [말투]).
+#
+# 09-20 에 프롬프트를 card_editorial 로 옮기면서 옛 SYSTEM_PROMPT 의 "개조식
+# 체언 종결" 지시가 빠졌다. 그 뒤로 말투는 모델 재량이었다 — 09-25 는 "~함"
+# 으로, 09-26 은 "~습니다" 로 나왔고 서술형인 날은 글자가 늘어 줄마다 잘렸다.
+# 프롬프트만으로는 흔들리므로 첫 회차에서 한 번 되묻는다. 반려 사유로는 안
+# 쓴다 — repair 뒤에도 서술형이면 그대로 나간다(말투 때문에 앨범을 버리지 않는다).
+_NARRATIVE_END_RE = re.compile(r"(니다|했다|한다|된다|있다|이다|었다|였다)[.。]?$")
+
+
+def narrative_endings(where: str, lines) -> list[str]:
+    out = []
+    for i, line in enumerate(lines or [], start=1):
+        text = str(line or "").replace("[[", "").replace("]]", "").strip()
+        m = _NARRATIVE_END_RE.search(text)
+        if m:
+            out.append(f'{where}[{i}]: 서술형 종결("…{text[-8:]}") — 개조식 체언 종결'
+                       "(~함·~됨·~임·명사)로 다시 쓸 것")
+    return out
+
+
+def daily_style_problems(raw: dict) -> list[str]:
+    if not isinstance(raw, dict):
+        return []
+    out = narrative_endings("hook.headline", [(raw.get("hook") or {}).get("headline")])
+    for n, slide in enumerate(raw.get("steps") or [], start=1):
+        if not isinstance(slide, dict):
+            continue
+        out += narrative_endings(f"steps[{n}].headline", [slide.get("headline")])
+        for key in ("facts", "why"):
+            rows = slide.get(key)
+            out += narrative_endings(f"steps[{n}].{key}", rows if isinstance(rows, list) else [])
+    return out
+
+
+def review(raw: dict, items: list[dict], *, strict_length: bool = False, **kwargs) -> list[str]:
     """규격 검증 + 편집 QA 를 한 번에. **둘 다 통과해야 카드가 나간다.**
 
     규격(`validate`)은 "깨지지 않는가" 를, QA(`card_qa`)는 "같은 말을 두 번
     하지 않는가" 를 본다. 경고는 실패로 세지 않되 목록에는 실어 보낸다 —
     repair 는 경고까지 같이 고칠 기회가 있어야 한다.
+
+    `strict_length` — **자르기 전의 원문**으로 길이를 잰다. 첫 회차에 쓴다.
+    예전에는 `normalize()` 가 먼저 잘라 넣은 뒤 검증했으므로 길이 초과가 검증에
+    한 번도 안 걸렸고, repair 는 "줄여 다시 써라" 를 받을 일이 없었다 — 모델이
+    길게 쓴 날은 카드 전체가 "집행합…"·"요구됩…" 토막으로 나갔다(2026-09-26).
+    repair 회차는 strict 를 끈다: 그래도 넘치면 그때 `clip()` 이 안전망이다.
     """
     kwargs.setdefault("why_min", WHY_MIN)
-    problems = validate(normalize(raw), items, **kwargs)
+    before = (length_overruns(validate(json.loads(json.dumps(raw)), items, **kwargs))
+              + daily_style_problems(raw)
+              if strict_length and isinstance(raw, dict) else [])
+    problems = before + validate(normalize(raw), items, **kwargs)
     report = card_qa.review_daily(raw, items)
     return problems + [str(f) for f in report.failures]
 
@@ -538,11 +564,11 @@ def _daily_of(candidate: dict) -> dict:
     return candidate
 
 
-def _apply_and_review(candidate: dict, items: list[dict]) -> list[str]:
+def _apply_and_review(candidate: dict, items: list[dict], *, strict_length: bool = False) -> list[str]:
     stripped = strip_accent_on_sensitive(candidate, items)
     if stripped:
         print(f"[cards] sensitive 기사 강조 {stripped}곳 제거")
-    return review(candidate, items)
+    return review(candidate, items, strict_length=strict_length)
 
 
 def run_editorial(items: list[dict], date: str, collected: int,
@@ -598,7 +624,7 @@ def run_editorial(items: list[dict], date: str, collected: int,
         print(f"[cards] card_daily_writer 실패 — {type(exc).__name__}: {exc}")
         return None, None
     daily_copy = _daily_of(candidate)
-    problems = _apply_and_review(daily_copy, items)
+    problems = _apply_and_review(daily_copy, items, strict_length=True)
     if not problems:
         return daily_copy, None
     print(f"[cards] 편집 QA 실패: {'; '.join(problems[:6])}")
@@ -620,7 +646,7 @@ def run_editorial(items: list[dict], date: str, collected: int,
     return repaired_daily, None
 
 
-def story_problems(copy: object, payload: dict) -> list[str]:
+def story_problems(copy: object, payload: dict, *, strict_length: bool = False) -> list[str]:
     """스토리 카피가 규격과 근거를 지키는가. 렌더 쪽 검증기를 그대로 쓴다.
 
     **지연 import 다.** `story_cards` 가 이 모듈을 읽으므로 맨 위에서 부르면
@@ -630,7 +656,15 @@ def story_problems(copy: object, payload: dict) -> list[str]:
     if not isinstance(copy, dict):
         return ["story: 객체가 아님"]
     import story_cards
-    return story_cards.validate(story_cards.normalize(copy, payload), payload)
+    problems = story_cards.validate(story_cards.normalize(copy, payload), payload)
+    if strict_length:
+        # `review(strict_length=...)` 와 같은 이유 — normalize 가 먼저 자르면
+        # 길이 초과가 검증에 안 걸린다. 2026-09-26 표지 제목(31자 > 26)과 덱이
+        # 그렇게 "텍사스…"·"확정되었으며…" 로 나갔다. 원문은 normalize 가
+        # 복사해서 다루므로 여기서 다시 재도 된다.
+        problems = (length_overruns(story_cards.validate(copy, payload))
+                    + story_cards.style_problems(copy) + problems)
+    return problems
 
 
 def _writer_round(brief: dict, items: list[dict], date: str,
@@ -659,8 +693,11 @@ def _writer_round(brief: dict, items: list[dict], date: str,
         except Exception as exc:  # noqa: BLE001
             print(f"[cards] Writer({task}) 실패 — {type(exc).__name__}: {exc}")
             return None
-        daily_bad = _apply_and_review(_daily_of(raw), items)
-        story_bad = (story_problems(raw.get("story"), story_payload)
+        # 첫 회차만 원문 길이로 잰다. repair 뒤에도 넘치면 clip() 이 받는다 —
+        # 길이 한 자에 앨범을 떨어뜨리지 않는다는 원칙(09-20)은 그대로다.
+        strict = task == "card_writer"
+        daily_bad = _apply_and_review(_daily_of(raw), items, strict_length=strict)
+        story_bad = (story_problems(raw.get("story"), story_payload, strict_length=strict)
                      if with_story else [])
         if not daily_bad and not story_bad:
             return raw
@@ -703,11 +740,54 @@ def terse(text: str) -> str:
 FALLBACK_HEADLINE_MAX = 44   # 제목은 축약 없이 세 줄까지 — "…지분…" 같은 잘린 제목보다 낫다
 
 
+def _cut_visible(text: str, n: int) -> str:
+    """보이는 글자 n 개까지. `[[ ]]` 는 마크업이라 세지 않고, 짝이 깨지면 걷는다.
+
+    예전 강제 절단은 `text[:limit - 1]` 이었다 — 마크업 네 글자까지 세서 화면에는
+    상한보다 **네 글자 적게** 남았다(2026-09-26 스토리 표지: 26자 상한에 21자
+    "정부, 대미 전략투자 첫 사업 텍사스…").
+    """
+    out, seen, i = [], 0, 0
+    while i < len(text) and seen < n:
+        if text.startswith(("[[", "]]"), i):
+            out.append(text[i:i + 2])
+            i += 2
+            continue
+        out.append(text[i])
+        seen += 1
+        i += 1
+    cut = "".join(out)
+    if cut.count("[[") != cut.count("]]"):
+        cut = cut.replace("[[", "").replace("]]", "")
+    return cut
+
+
 def clip(text: str, limit: int) -> str:
-    """limit 안으로 줄이되 절 경계에서 끊는다. 말줄임 없는 문장이 잘린 문장보다 낫다."""
+    """limit 안으로 줄이되 **문장 → 절 → 낱말** 경계 순서로 끊는다.
+
+    이건 마지막 안전망이다. 길이 초과는 먼저 repair 로 돌아가 모델이 줄여 쓴다
+    (`review(strict_length=True)`). 그래도 넘친 것만 여기 온다.
+
+    ① 문장 — 두 문장 중 앞 문장만 들어가면 그것만 쓴다. 온전한 문장이 잘린 두
+       문장보다 낫다(09-26 스토리 덱: "…확정되었으며…" 로 끝났다).
+    ② 절 — 절이 이어졌음을 "…" 로 남긴다. "확인되어" 로 끝나면 미완성으로 읽힌다.
+    ③ 낱말 — 낱말 한가운데서 끊지 않는다(09-26 일일: "집행합…"·"요구됩…").
+    """
     text = " ".join(str(text or "").split()).rstrip(".。")
     if visible_len(text) <= limit:
         return text
+    floor = max(8, limit // 3)
+    sentences = [part for part in _SENT_SPLIT_RE.split(text) if part.strip()]
+    if len(sentences) > 1:
+        acc = ""
+        for sent in sentences:
+            nxt = f"{acc} {sent}".strip()
+            if visible_len(nxt.rstrip(".。")) > limit:
+                break
+            acc = nxt
+        acc = acc.rstrip(".。")
+        if acc and visible_len(acc) >= floor and acc.count("[[") == acc.count("]]"):
+            return acc
     for sep in _CLAUSE_SEPS:
         if sep not in text:
             continue
@@ -715,14 +795,25 @@ def clip(text: str, limit: int) -> str:
         acc = parts[0]
         for part in parts[1:]:
             nxt = acc + sep + part
-            if visible_len(nxt) > limit:
+            if visible_len(nxt) > limit - 1:
                 break
             acc = nxt
         acc = acc.strip(" ,·-–")
         # 첫 절부터 상한을 넘으면 이 구분자로는 못 자른다 — 다음 구분자로
-        if visible_len(acc) <= limit - 1 and visible_len(acc) >= max(8, limit // 3):
-            return acc + "…"   # 절이 이어졌음을 남긴다 — "확인되어" 로 끝나면 미완성으로 읽힌다
-    return text[:limit - 1].rstrip(" ,·") + "…"
+        if (visible_len(acc) <= limit - 1 and visible_len(acc) >= floor
+                and acc.count("[[") == acc.count("]]")):
+            return acc + "…"
+    cut = _cut_visible(text, limit - 1)
+    words = cut.split(" ")
+    # 뒤 낱말이 잘렸으면 통째로 덜어낸다. 너무 많이 줄면 그냥 글자로 자른다.
+    if len(words) > 1 and not text.startswith(cut + " "):
+        shorter = " ".join(words[:-1])
+        if visible_len(shorter) >= max(8, limit // 2):
+            cut = shorter
+    cut = cut.rstrip(" ,·-–")
+    if cut.count("[[") != cut.count("]]"):
+        cut = cut.replace("[[", "").replace("]]", "")
+    return cut + "…"
 
 
 def _sentences(*fields: str) -> list[str]:
@@ -1384,6 +1475,14 @@ def _self_check() -> None:
     long_sent = "일본 주부전력은 하마오카 원전 3·4호기의 재가동 심사에 제출한 지진 데이터 일부를 조작했다고 인정하고 경영진 사임을 발표했다"
     assert visible_len(clip(long_sent, FACT_MAX)) <= FACT_MAX, clip(long_sent, FACT_MAX)
     assert "3·4호기" in clip("하마오카 원전 3·4호기 재가동 심사 지연", 20)   # '·'에서 안 자른다
+    # 두 문장 중 앞 문장이 들어가면 그것만 — 말줄임 없이 끝난다(09-26 스토리 덱).
+    deck = ("총 2000억 달러 규모의 대미 전략투자가 본격적인 실행 단계에 진입했습니다. "
+            "텍사스 가스복합발전소 건설이 첫 사업으로 확정되었으며, 한미 에너지 협력의 새 국면이 열릴 전망입니다.")
+    assert clip(deck, 90) == "총 2000억 달러 규모의 대미 전략투자가 본격적인 실행 단계에 진입했습니다", clip(deck, 90)
+    # 강제 절단은 보이는 글자로 세고 낱말 경계에서 끊는다. 마크업이 깨지면 걷는다.
+    head = clip("정부, 대미 전략투자 [[첫 사업]] 텍사스 가스복합발전소 확정", 26)
+    assert visible_len(head) <= 26 and head.endswith("텍사스…") and "[[첫 사업]]" in head, head
+    assert not clip("연간 200억 달러 한도로 총 2000억 달러 규모의 전략투자를 집행합니다", 30).endswith("집행합…")
     print("self-check OK")
 
 
