@@ -88,5 +88,47 @@ class RepairFileContractTests(unittest.TestCase):
         self.assertEqual(sum(r.startswith("2026-09-26 사이트 창 점검") for r in reasons), 27)
 
 
+class SnapshotRepairTests(unittest.TestCase):
+    """지난 브리핑 원장(briefing_snapshots.json)에 얼린 옛 제목도 화면에서는 정정된다."""
+
+    def setUp(self):
+        self._saved = bd._TEXT_REPAIRS
+        self.addCleanup(setattr, bd, "_TEXT_REPAIRS", self._saved)
+
+    def test_the_build_hands_repairs_to_the_snapshot(self):
+        bd._TEXT_REPAIRS = {"a": {"title_kr": "고친 제목"}}
+        store = {"dates": {"2026-08-06": {"frozen_at": "t0", "cards": [{
+            "issue_id": "issue-x", "hashes": ["a", "b"], "representative_hash": "a",
+            "fields": {"title": "옛 제목", "headline_display": "옛 제목"}}]}}}
+        row = {"issue_id": "issue-x", "title": "지금 제목", "representative_article": {"hash": "a"},
+               "related_articles": [{"hash": "a", "briefing_date": "2026-08-06"}]}
+        briefing = {"date": "2026-08-06", "issues": [row]}
+        bd.apply_briefing_snapshot([briefing], store, "t1")
+        self.assertEqual(briefing["issues"][0]["title"], "고친 제목")
+        self.assertEqual(store["dates"]["2026-08-06"]["cards"][0]["fields"]["title"], "옛 제목")
+
+    def test_every_frozen_card_of_a_repaired_article_would_show_the_fix(self):
+        """실제 원장에서 — 묶음이 바뀌어 얼린 문장으로 돌아가도 옛 제목이 서지 않는다."""
+        import briefing_snapshot
+        path = ROOT.parent / "briefing_snapshots.json"
+        if not path.exists():
+            self.skipTest("원장 없음")
+        store = json.loads(path.read_text(encoding="utf-8"))
+        bd._TEXT_REPAIRS = None
+        repairs = bd.text_repairs()
+        checked = 0
+        for day in (store.get("dates") or {}).values():
+            for card in day.get("cards") or ():
+                repair = repairs.get(card.get("representative_hash") or "")
+                if not repair or "title_kr" not in repair:
+                    continue
+                row = dict(card.get("fields") or {})
+                briefing_snapshot.repair_text(row, repair)
+                self.assertEqual(row.get("title"), repair["title_kr"])
+                self.assertEqual(row.get("headline_display"), repair["title_kr"])
+                checked += 1
+        self.assertGreater(checked, 0, "정정된 기사를 대표로 둔 얼린 카드가 하나도 없다")
+
+
 if __name__ == "__main__":
     unittest.main()

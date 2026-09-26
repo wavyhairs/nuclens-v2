@@ -806,6 +806,12 @@ def text_repairs() -> dict[str, dict[str, str]]:
     return _TEXT_REPAIRS
 
 
+def apply_briefing_snapshot(briefings: list[dict], store: dict, frozen_at: str) -> dict:
+    """지난 브리핑을 원장과 맞댄다. 얼린 문장으로 세우는 카드에도 제목·요약 정정을
+    얹는다 — 원장 파일은 그대로 두고 화면에서만(briefing_snapshot docstring)."""
+    return briefing_snapshot.apply(briefings, store, frozen_at, repairs=text_repairs())
+
+
 def apply_text_repairs(record: dict) -> dict:
     repair = text_repairs().get(str(record.get("hash") or ""))
     if repair:
@@ -8041,7 +8047,7 @@ def build() -> None:
     # 얼려야 그날 독자가 본 문장이 남는다. today.json·정적 브리핑 페이지가 이
     # 아래에서 briefings 를 읽으므로 그 셋이 같은 행을 받는다.
     snapshot_store = briefing_snapshot.load(BRIEFING_SNAPSHOT_FILE)
-    snapshot_stats = briefing_snapshot.apply(briefings, snapshot_store, now.isoformat())
+    snapshot_stats = apply_briefing_snapshot(briefings, snapshot_store, now.isoformat())
     briefing_snapshot.save(BRIEFING_SNAPSHOT_FILE, snapshot_store)
     print(f"[build_data:snapshot] 새로 얼린 날짜 {snapshot_stats['frozen_new']} · "
           f"분류 정정 안내 {snapshot_stats['cards_corrected']}장"
