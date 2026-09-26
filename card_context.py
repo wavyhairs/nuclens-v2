@@ -33,6 +33,9 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import khnp_relevance
+from card_editorial import TIMELINE_ROWS
+
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "web" / "public" / "data"
 
@@ -449,6 +452,88 @@ def _clip(text: object, limit: int) -> str:
     return value[:limit]
 
 
+# ── 타임라인에 세울 사건 고르기 ─────────────────────────────────────────────
+#
+# 스토리의 사건은 7~8건인데 타임라인 칸은 4개다. 예전에는 8건을 통째로 넘기고
+# "최대 4행"만 적어 **고르는 일을 모델에게 맡겼다.** 기준이 없으니 그날그날
+# 달랐고, 2026-09-26 실측(대미 전략투자, 7건)에서 모델은
+#
+#     08-17 막판 조율 · 08-30 MOU 서명 연기 · 09-11 미국 속도 압박 · 09-26 텍사스 확정
+#
+# 을 골랐다. 빠진 것은 **09-25 APR1400 도입 합의 지연** — 이 스레드에서 원인→결과
+# 관계가 판정된 전환점이고, 한수원과 가장 직접 닿는 사건이다. 대신 관계 판정도
+# 없는 09-11 이 들어갔다.
+#
+# 그래서 고르는 것은 코드가 한다. 모델은 고른 사건마다 한 줄씩 쓴다.
+#
+#   필수   오늘 사건(마지막) — 스토리 카드가 나온 이유다.
+#          출발점(첫 사건)   — 어디서 시작했는지.
+#   점수   진행 관계(stage_progress·cause_effect)에 닿은 사건   +3  흐름이 넘어간 자리
+#          한수원 관련 required / expected                   +2 / +1
+#          오늘 바로 앞 사건                                  +1  오늘 일의 직접 배경
+#          근거 기사 수가 많은 사건                           +1  크게 보도된 것
+#          다음 사건과 same_matter                            −2  뒤 사건이 같은 얘기를 한다
+#   동점   더 최근 사건
+#
+# 진행 관계는 스토리 자격(`eligibility`)과 재방송 판정(`repeat_verdict`)이 이미
+# 쓰는 기준이다. 타임라인도 같은 자로 잰다 — 셋이 다른 자를 쓰면 "이 스토리는
+# 단계가 넘어갔다" 고 판정한 근거가 정작 타임라인에서 빠질 수 있다.
+PROGRESS_POINTS = 3
+KHNP_POINTS = {"required": 2, "expected": 1}
+LEAD_IN_POINTS = 1
+COVERAGE_POINTS = 1
+COVERAGE_MIN = 3                # 근거 해시가 이만큼 이상이면 '크게 보도됐다'
+RESTATED_PENALTY = 2
+
+
+def _khnp_level(row: dict, detail: dict) -> str:
+    return khnp_relevance.relevance({
+        "title": row.get("title") or detail.get("title"),
+        "summary": detail.get("summary"),
+        "topics": detail.get("topics") or [],
+    })["level"]
+
+
+def timeline_score(events: list[dict], i: int, details: list[dict] | None = None) -> tuple[int, list[str]]:
+    """가운데 사건 하나의 점수와 그 이유(검사·디버깅용)."""
+    row = events[i]
+    detail = (details or [{}] * len(events))[i] or {}
+    score, why = 0, []
+    rel_in = str(events[i - 1].get("relation_to_next") or "") if i > 0 else ""
+    rel_out = str(row.get("relation_to_next") or "") if i < len(events) - 1 else ""
+    if rel_in in PROGRESS_RELATIONS or rel_out in PROGRESS_RELATIONS:
+        score += PROGRESS_POINTS
+        why.append("진행")
+    level = _khnp_level(row, detail)
+    if level in KHNP_POINTS:
+        score += KHNP_POINTS[level]
+        why.append(f"한수원:{level}")
+    if i == len(events) - 2:
+        score += LEAD_IN_POINTS
+        why.append("직전")
+    if len(row.get("evidence_hashes") or ()) >= COVERAGE_MIN:
+        score += COVERAGE_POINTS
+        why.append("보도")
+    if rel_out == "same_matter":
+        score -= RESTATED_PENALTY
+        why.append("같은사안")
+    return score, why
+
+
+def select_timeline(events: list[dict], limit: int = TIMELINE_ROWS,
+                    details: list[dict] | None = None) -> list[int]:
+    """타임라인에 세울 사건의 위치(시간순). 사건이 칸보다 적으면 전부."""
+    n = len(events)
+    if n <= limit:
+        return list(range(n))
+    if limit < 2:
+        return [n - 1]
+    middle = sorted(range(1, n - 1),
+                    key=lambda i: (timeline_score(events, i, details)[0], i),
+                    reverse=True)
+    return sorted({0, n - 1, *middle[:limit - 2]})
+
+
 def evidence_packet(candidate: StoryCandidate, date: str, *, topic: str = "") -> dict:
     """Evidence Packet — 사건마다 **자기 근거만** 들고 선다.
 
@@ -456,25 +541,38 @@ def evidence_packet(candidate: StoryCandidate, date: str, *, topic: str = "") ->
     기사·문장을 끌어와 채우지 않는다 — 그러면 타임라인 한 줄이 다른 날의 근거로
     선다(`card_context` 모듈 주석 ③). 스토리 전체의 '왜 중요한가'만 여러 사건을
     함께 인용할 수 있고, 그 자리는 아래 `narrative`·`watchpoints` 다.
+
+    `events` 는 **타임라인에 세울 사건만** 싣는다(`select_timeline`). 모델은
+    이 사건마다 한 줄씩, 같은 순서로 쓴다 — 고르지 않는다. 고르지 않은 사건은
+    `background` 에 제목·요지만 실어 쟁점·의미의 재료로 쓰게 한다.
     """
     thread = candidate.thread
     index = load_issue_index()
-    events, narrative, watchpoints, seen_w = [], [], [], set()
-    for row in candidate.events[-MAX_EVENTS:]:
+    rows = candidate.events[-MAX_EVENTS:]
+    details = [index.get(str(row.get("source_event_id") or "")) or {} for row in rows]
+    picked = select_timeline(rows, TIMELINE_ROWS, details)
+    events, background, narrative, watchpoints, seen_w = [], [], [], [], set()
+    for position, (row, detail) in enumerate(zip(rows, details)):
         source_id = str(row.get("source_event_id") or "")
-        detail = index.get(source_id) or {}
-        hashes = [str(value) for value in (row.get("evidence_hashes") or ())][:MAX_EVIDENCE]
-        events.append({
-            "date": row.get("date"),
-            # 이 파일의 날짜가 무슨 날짜인지 카피가 추측하지 않게 한다.
-            "date_kind": row.get("date_kind") or "first_seen",
-            "title": row.get("title"),
-            "source_event_id": source_id,
-            "relation_to_next": row.get("relation_to_next") or "",
-            "evidence_hashes": hashes,
-            "summary": _clip(detail.get("summary"), 200),
-            "detail": _clip(detail.get("detail"), DETAIL_MAX),
-        })
+        if position not in picked:
+            background.append({"date": row.get("date"), "title": row.get("title"),
+                               "summary": _clip(detail.get("summary"), 200)})
+        else:
+            hashes = [str(value) for value in (row.get("evidence_hashes") or ())][:MAX_EVIDENCE]
+            # 관계는 **타임라인에서도 이웃일 때만** 싣는다. 사이 사건을 건너뛰었는데
+            # 원래 이웃의 관계를 그대로 두면 '원인→결과' 가 엉뚱한 두 칸을 잇는다.
+            nxt = picked[picked.index(position) + 1] if position != picked[-1] else None
+            events.append({
+                "date": row.get("date"),
+                # 이 파일의 날짜가 무슨 날짜인지 카피가 추측하지 않게 한다.
+                "date_kind": row.get("date_kind") or "first_seen",
+                "title": row.get("title"),
+                "source_event_id": source_id,
+                "relation_to_next": (row.get("relation_to_next") or "") if nxt == position + 1 else "",
+                "evidence_hashes": hashes,
+                "summary": _clip(detail.get("summary"), 200),
+                "detail": _clip(detail.get("detail"), DETAIL_MAX),
+            })
         line = _clip(detail.get("implication") or detail.get("summary"), 160)
         if line and line not in narrative:
             narrative.append(line)
@@ -496,6 +594,8 @@ def evidence_packet(candidate: StoryCandidate, date: str, *, topic: str = "") ->
         "issue_title": issue.get("title") or thread.get("title"),
         "topic": topic,
         "events": events,
+        # 타임라인에 안 세운 사건. 쟁점·의미의 재료이고, 타임라인 행이 되면 안 된다.
+        "background": background,
         "narrative": narrative[-5:],
         "phase_now": narrative[-1] if narrative else (issue.get("summary") or ""),
         "watchpoints": watchpoints[:6],
