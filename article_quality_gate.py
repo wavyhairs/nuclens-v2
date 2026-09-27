@@ -819,6 +819,32 @@ def _date_problem(event_date: object, event_type: object, reference: date) -> st
     return ""
 
 
+# 해를 말로 적은 날짜 — "내년 10월"·"지난해 3월 5일". 가장 가까운 해로 풀면 반년
+# 넘게 떨어진 날에서 틀린다(실측 2026-09: "발전 5사 통합, 내년 10월 출범"이
+# 2026년 10월로 읽혀 사건일 봉인과 달력 '10월 중'에 그대로 섰다). "전년"은 넣지
+# 않는다 — "전년 동기 대비"처럼 해를 가리키지 않는 쓰임이 더 많다.
+_RELATIVE_YEAR_RE = re.compile(r"(내후년|내년|재작년|지난해|작년|올해|금년)\s*$")
+_RELATIVE_YEAR_OFFSET = {"내후년": 2, "내년": 1, "재작년": -2, "지난해": -1, "작년": -1,
+                         "올해": 0, "금년": 0}
+
+
+def _stated_year(text: str, start: int, reference: date) -> int | None:
+    """``text[start:]`` 의 월·일 바로 앞에 해가 말로 적혀 있으면 그 해."""
+    match = _RELATIVE_YEAR_RE.search(text[max(0, start - 8):start])
+    return reference.year + _RELATIVE_YEAR_OFFSET[match.group(1)] if match else None
+
+
+def _month_date(month: int, day: int, reference: date, text: str, start: int) -> date | None:
+    """월·일(연도 없음)을 날짜로. 적힌 해가 있으면 그 해, 없으면 가장 가까운 해."""
+    year = _stated_year(text, start, reference)
+    if year is None:
+        return _nearest_year_date(month, day, reference)
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
+
+
 def _nearest_year_date(month: int, day: int, reference: date) -> date | None:
     candidates = []
     for year in (reference.year - 1, reference.year, reference.year + 1):
@@ -860,7 +886,8 @@ def _explicit_evidence_dates(text: str, reference: date) -> set[date]:
     # not interpreted a second time with the publication year.
     without_full = _FULL_NUMERIC_DATE_RE.sub(" ", _COMPACT_DATE_RE.sub(" ", text))
     for match in _MONTH_DAY_RE.finditer(without_full):
-        parsed = _nearest_year_date(int(match.group("month")), int(match.group("day")), reference)
+        parsed = _month_date(int(match.group("month")), int(match.group("day")),
+                             reference, without_full, match.start())
         if parsed:
             found.add(parsed)
 
@@ -898,7 +925,8 @@ def _date_evidence_problem(expected: date, precision: object,
     for match in _YEAR_MONTH_RE.finditer(evidence):
         months.add((int(match.group("year")), int(match.group("month"))))
     for match in _MONTH_ONLY_RE.finditer(evidence):
-        candidate = _nearest_year_date(int(match.group("month")), 1, reference)
+        candidate = _month_date(int(match.group("month")), 1, reference,
+                                evidence, match.start())
         if candidate:
             months.add((candidate.year, candidate.month))
     years.update(year for year, _month in months)
