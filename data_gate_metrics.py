@@ -255,8 +255,10 @@ def report(record: dict) -> None:
         print(f"::warning::원문과 다른 아카이브 기사 {archive_quality['quarantined']}건을 "
               "웹 출력에서 격리했다 (배포는 계속한다)")
     if archive_quality.get("sanitized"):
-        print(f"::warning::아카이브 기사 {archive_quality['sanitized']}건의 잘못된 사건일 등 "
-              "무결성 필드를 정제했다 (배포는 계속한다)")
+        codes = archive_quality.get("sanitize_codes") or {}
+        breakdown = ", ".join(f"{code}={count}" for code, count in sorted(codes.items()))
+        print(f"::warning::아카이브 사건일 {archive_quality['sanitized']}건을 사이트에 "
+              f"표시하지 않았다({breakdown or '사유 미기록'}) (배포는 계속한다)")
 
     candidates = record.get("issue_candidates") or {}
     if not candidates.get("applicable"):

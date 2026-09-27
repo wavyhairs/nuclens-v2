@@ -216,6 +216,30 @@ class ArchiveIntegrityRepeatTests(unittest.TestCase):
         self.assertIn("새로 제외 0건", signal.detail)
         self.assertIn("기존 제외 유지 21건", signal.detail)
 
+    def test_a_shrinking_exclusion_list_is_not_notified_again(self):
+        """제외가 풀리기만 한 날은 새 소식이 아니다(실측 2026-09-27: 36→35, 새로 제외 0건).
+
+        지문에는 표본 해시가 들어가므로 목록이 줄어도 지문은 바뀐다. 그것만으로
+        "자동 제외했습니다"를 다시 보내면 나아진 날마다 알림이 울린다.
+        """
+        hashes = [{"hash": f"kept{index:02d}"} for index in range(20)]
+        first = gate_record(quarantined=36, observation="run-1", quarantine_samples=hashes)
+        state, due = self.evaluate(first, None, None, T0)
+        self.assertEqual(["quality:archive-integrity"], [row.key for row in due])
+        state = monitor.mark_notified(state, due, T0)
+
+        shrunk = gate_record(quarantined=35, observation="run-2",
+                             quarantine_samples=hashes[1:])
+        state, due = self.evaluate(shrunk, first, state, T0 + timedelta(days=1))
+        self.assertEqual([], [row.key for row in due])
+
+        # 그 뒤 **새** 기사가 제외되면 다시 알린다 — 억제가 새 문제까지 삼키면 안 된다.
+        grown = gate_record(quarantined=36, observation="run-3",
+                            quarantine_samples=hashes[1:] + [{"hash": "fresh01"}])
+        _state, due = self.evaluate(grown, shrunk, state, T0 + timedelta(days=2))
+        signal = next(row for row in due if row.key == "quality:archive-integrity")
+        self.assertIn("새로 제외 1건", signal.detail)
+
     def test_escalation_from_date_fixes_to_exclusion_still_pages(self):
         """정제만 있던 상태에서 격리가 생기면 쿨다운을 기다리지 않는다."""
         first = gate_record(quarantined=0, sanitized=6, observation="run-1")
@@ -224,6 +248,50 @@ class ArchiveIntegrityRepeatTests(unittest.TestCase):
         worse = gate_record(quarantined=2, sanitized=6, observation="run-2")
         _state, due = self.evaluate(worse, first, state, T0 + timedelta(hours=2))
         self.assertEqual(["quality:archive-integrity"], [row.key for row in due])
+
+
+class ArchiveEventDateWordingTests(unittest.TestCase):
+    """사건일을 뺀 이유를 이유대로 말한다.
+
+    예전 문장 "사건일이 잘못된 기사 1,412건은 날짜만 자동 정정했습니다"는 두 군데가
+    틀렸다. 고친 것이 아니라 표시하지 않은 것이고, 1,412건 전부 날짜가 틀려서가
+    아니라 원문 근거(본문)를 다시 확인할 수 없어서였다(실측 2026-09-27).
+    """
+
+    def signal(self, **archive_quality):
+        record = gate_record(quarantined=0, sanitized=1412)
+        record["archive_quality"].update(archive_quality)
+        return next(row for row in monitor.data_gate_signals(record)
+                    if row.key == "quality:archive-integrity")
+
+    def test_unverifiable_dates_are_not_called_wrong(self):
+        signal = self.signal(sanitize_codes={"event_date_source_unavailable": 1412})
+        self.assertIn("원문 근거를 다시 확인할 수 없음 1412건", signal.detail)
+        self.assertIn("날짜 이상 0건", signal.detail)
+        for word in ("잘못", "정정"):
+            self.assertNotIn(word, signal.title + signal.detail)
+        self.assertIn("source_unavailable:1412", signal.technical)
+
+    def test_abnormal_dates_are_counted_apart(self):
+        signal = self.signal(sanitized=10, sanitize_codes={
+            "event_date_source_unavailable": 7, "event_date_implausible_year": 2,
+            "event_date_source_conflict": 1})
+        self.assertIn("원문 근거를 다시 확인할 수 없음 7건", signal.detail)
+        self.assertIn("날짜 이상 3건", signal.detail)
+
+    def test_a_record_without_reason_codes_names_both_possibilities(self):
+        """사유별 건수가 생기기 전의 기록은 둘을 가를 수 없다 — 한쪽으로 단정하지 않는다."""
+        signal = self.signal()
+        self.assertIn("원문 근거를 다시 확인할 수 없거나 날짜가 비정상인 사건일 1412건",
+                      signal.detail)
+
+    def test_quarantine_alert_carries_the_same_date_sentence(self):
+        record = gate_record(quarantined=11, sanitized=1416)
+        record["archive_quality"]["sanitize_codes"] = {"event_date_source_unavailable": 1416}
+        signal = next(row for row in monitor.data_gate_signals(record)
+                      if row.key == "quality:archive-integrity")
+        self.assertIn("원문 근거를 다시 확인할 수 없음 1416건", signal.detail)
+        self.assertNotIn("정정", signal.detail)
 
 
 class RepeatAndRecoveryTests(unittest.TestCase):

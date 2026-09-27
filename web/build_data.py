@@ -899,6 +899,12 @@ def apply_archive_integrity_gate(records: list[dict]) -> tuple[list[dict], dict]
         "checked": len(records),
         "quarantined": len(quarantined),
         "sanitized": len(sanitized),
+        # 사유별 건수. "원문 근거를 다시 확인할 수 없다"와 "날짜가 틀렸다"는 운영자에게
+        # 전혀 다른 소식인데 합계 하나로는 가를 수 없었다 — 실측 2026-09-27 에
+        # 1,412건 전부가 전자였는데 알림은 "사건일이 잘못된 기사"라고 불렀다.
+        "sanitize_codes": dict(sorted(Counter(
+            code for row in sanitized for code in row["codes"]
+            if code.startswith("event_date_")).items())),
         "headline_repaired": len(headline_repaired),
         "status_blocked": len(status_blocked),
         "fallback_trimmed": len(fallback_trimmed),
