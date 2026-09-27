@@ -25,6 +25,16 @@ Two distinctions are deliberate:
 같은 상태를 회차마다 다시 알리지 않도록 ``fingerprint`` 를 둔다.  값이 있으면
 쿨다운이 지나도 **지문이 달라졌을 때만** 다시 부른다.  지문은 반복을 줄이기만
 하며, 지문이 달라졌다고 쿨다운을 건너뛰지는 않는다.
+
+알림은 세 갈래로 나간다(``delivery``). 2026-09-13~27 운영 알림 58통 중 사람이
+실제로 손댈 일은 한 건이었고, 나머지는 새벽에도 울리는 '자동으로 처리됐습니다'와
+그 '해결됨'이었다 — 그러면 진짜 🚨 도 안 읽힌다.
+
+* ``immediate`` — 사람이 손대야 풀리고 기다리면 손해인 것만 바로 보낸다(브리핑 발송
+  실패, Gemini 결제·한도·설정, 수집·사이트 연속 실패, 주간 판세 미발송).
+* ``digest`` — 자동으로 처리됐거나 급하지 않은 것. 하루 한 번 요약
+  (:mod:`operational_digest`)에 모인다. 따로 울리지 않고 '해결됨'도 없다.
+* ``dev`` — 운영자가 할 수 있는 일이 없는 개발 점검 항목. 월요일 요약에만 싣는다.
 """
 
 from __future__ import annotations
@@ -32,6 +42,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 import hashlib
+import inspect
 import json
 from typing import Callable, Iterable, Mapping, Sequence
 
@@ -63,12 +74,27 @@ _LEVEL_LABELS = {
     LEVEL_INFO: ("ℹ️", "정보"),
     LEVEL_RESOLVED: ("✅", "해결됨"),
 }
-# 읽는 순서 = 급한 순서. 조치할 것이 첫 화면에 있어야 스크롤이 필요 없다.
-_LEVEL_ORDER = (LEVEL_ACTION, LEVEL_ATTENTION, LEVEL_INFO, LEVEL_RESOLVED)
-
 # 같은 뜻을 열 군데에서 다르게 쓰면 운영자는 매번 다시 읽는다. 자주 쓰는 문장만
 # 여기 모은다 — 상황별 문장은 그 상황을 아는 곳에서 쓰는 편이 정확하다.
 IMPACT_NONE = "없음 — 뉴스 수집과 서비스는 정상입니다."
+
+DELIVERY_IMMEDIATE = "immediate"
+DELIVERY_DIGEST = "digest"
+DELIVERY_DEV = "dev"
+_DELIVERIES = frozenset({DELIVERY_IMMEDIATE, DELIVERY_DIGEST, DELIVERY_DEV})
+# 운영자가 할 수 있는 일이 없는 항목. 판정 모듈의 문장이 "컷을 올려야 한다" 같은
+# 개발자 문장이라 운영 채널에 섞이면 전체가 안 읽힌다.
+_DEV_KEY_PREFIXES = ("issue-candidate:",)
+_DEV_KEYS = frozenset({"quality:tracking-rate"})
+
+
+def default_delivery(key: str, level: str) -> str:
+    """갈래를 적지 않은 알림의 기본값: 개발 점검 → dev, 조치 필요 → 즉시, 나머지 → 요약."""
+    if str(key).startswith(_DEV_KEY_PREFIXES) or key in _DEV_KEYS:
+        return DELIVERY_DEV
+    if level == LEVEL_ACTION:
+        return DELIVERY_IMMEDIATE
+    return DELIVERY_DIGEST
 ACTION_NONE = "필요 없음 — 자동으로 처리됐습니다."
 ACTION_WATCH = "필요 없음 — 같은 알림이 계속 늘어나면 확인해 주세요."
 
@@ -400,10 +426,15 @@ class AlertSignal:
     # 나아진 것뿐이라 새로 알릴 것이 없다고 신호 쪽이 아는 경우다. 첫 통지·심각도
     # 상승·해결 뒤 재발은 이 값과 상관없이 알린다.
     renotify: bool = True
+    # 어느 갈래로 나가나(모듈 설명). 비우면 default_delivery 가 정한다.
+    delivery: str = ""
 
     def normalized(self) -> "AlertSignal":
         severity = self.severity if self.severity in _SEVERITY_RANK else "warning"
         level = self.level if self.level in _LEVEL_LABELS else default_level(severity)
+        key = str(self.key).strip()
+        delivery = (self.delivery if self.delivery in _DELIVERIES
+                    else default_delivery(key, level))
         return AlertSignal(
             key=str(self.key).strip(),
             scope=str(self.scope or "quality").strip(),
@@ -418,6 +449,7 @@ class AlertSignal:
             level=level,
             fingerprint=str(self.fingerprint or "").strip()[:200],
             renotify=bool(self.renotify),
+            delivery=delivery,
         )
 
 
@@ -538,6 +570,9 @@ def source_health_signals(health: Mapping | None, *,
                            f"failure_hours={hours} "
                            f"last_error={raw.get('last_error') or 'n/a'}"),
                 fingerprint=f"started={failure_started.isoformat() if failure_started else ''}",
+                # 한 출처가 며칠 막힌 것은 할 일이지만 새벽에 깨울 일은 아니다 —
+                # 다른 출처와 브리핑은 그대로 나간다. 아침 요약의 '할 일'로 간다.
+                delivery=DELIVERY_DIGEST,
                 observation_id=observation_id, min_occurrences=1,
             ))
         elif not low_frequency and empties >= empty_threshold:
@@ -915,7 +950,9 @@ def web_pipeline_signals(outcomes: Mapping | None, *,
                    + ("data_quality_gate 기록이 없을 수 있으므로 "
                       if "data_gate" in failed else "")
                    + "워크플로 로그와 배포 상태를 확인해 주세요."),
-        observation_id=str(observation_id).strip(), min_occurrences=1,
+        # 한 번의 실패는 3시간 뒤 다음 실행이 다시 만든다. 두 번 연속이면 저절로
+        # 풀리지 않는 것이라 그때 바로 부른다. 한 번만 난 것은 아침 요약에 남는다.
+        observation_id=str(observation_id).strip(), min_occurrences=2 if serving else 1,
     )]
 
 
@@ -1044,7 +1081,8 @@ def collection_pipeline_signals(outcome: str | None, *,
         action="워크플로 로그를 확인해 주세요. 다음 예약 회차에 자동으로 다시 수집합니다.",
         technical=(f"news_bot step outcome={normalized}. source_yield가 갱신되지 않았을 수 있어 "
                    "이전 수집 상태를 정상 관측으로 사용하지 않습니다."),
-        observation_id=str(observation_id).strip(), min_occurrences=1,
+        # 한 번 멈춘 수집은 3시간 뒤 다음 회차가 다시 모은다. 두 번 연속이면 부른다.
+        observation_id=str(observation_id).strip(), min_occurrences=2,
     )]
 
 
@@ -1454,6 +1492,9 @@ def daily_quality_signals(records: Iterable[Mapping], date: str, *,
             fingerprint=str(row.get("fingerprint") or ""),
             observation_id=str(row.get("generated_at") or date),
             min_occurrences=max(1, _nonnegative_int(row.get("min_occurrences")) or 2),
+            # 품질 이벤트는 '자동으로 이렇게 처리했다'는 기록이다. 기록 쪽이 즉시를
+            # 명시하지 않으면 아침 요약으로 모은다(대본 문단·보류·격리 전부).
+            delivery=str(row.get("delivery") or DELIVERY_DIGEST),
         ))
 
     return signals, scopes
@@ -1478,24 +1519,53 @@ def _signal_from_row(key: str, row: Mapping) -> AlertSignal:
         technical=str(row.get("technical") or ""),
         level=str(row.get("level") or ""),
         fingerprint=str(row.get("fingerprint") or ""),
+        delivery=row_delivery(key, row),
     ).normalized()
+
+
+def row_delivery(key: str, row: Mapping) -> str:
+    """저장된 행의 갈래. 이 필드가 생기기 전 행은 키 모양으로 되짚는다."""
+    stored = str(row.get("delivery") or "")
+    if stored in _DELIVERIES:
+        return stored
+    if key.startswith("quality-event:") or (
+            key.startswith("source:") and key != "source:collection-pipeline-failure"):
+        return DELIVERY_DIGEST
+    level = str(row.get("level") or "")
+    if level not in _LEVEL_LABELS:
+        level = default_level(str(row.get("severity") or "warning"))
+    return default_delivery(key, level)
+
+
+# 기록 창(최근 24시간)으로 판정하는 갈래. 여기서 '풀렸다'는 '24시간 동안 다시 안
+# 생겼다'는 뜻이고, 나머지는 '그다음 실행에서 정상으로 확인됐다'는 뜻이다.
+_WINDOW_SCOPES = frozenset({"curation", "selection", "quality_event", "data_gate"})
 
 
 def _resolution_signal(key: str, row: Mapping) -> AlertSignal:
     """이미 알린 문제가 스스로 사라졌다는 통지.
 
     없으면 운영자는 어제 받은 🚨 가 아직 살아 있는지 알 수 없다. 상태가 닫혔다는
-    말을 듣지 못하면 알림 하나가 끝없이 열린 채로 남는다.
+    말을 듣지 못하면 알림 하나가 끝없이 열린 채로 남는다. 예전 문장("이전에 알린
+    문제가 사라졌습니다")은 **무엇이** 확인됐는지 말하지 않았다 — 자정에 날짜가 바뀐
+    것도 같은 문장으로 나갔다.
     """
     base = _signal_from_row(key, row)
+    resolved = _parse_time(row.get("resolved_at"))
+    when = resolved.astimezone(KST).strftime("%H:%M") if resolved else ""
+    if base.scope in _WINDOW_SCOPES:
+        detail = "지난 24시간 동안 다시 생기지 않았습니다."
+    else:
+        detail = (f"{when} 실행에서 정상으로 확인됐습니다." if when
+                  else "다음 실행에서 정상으로 확인됐습니다.")
     return AlertSignal(
         key=key, scope=base.scope, title=base.title,
-        detail="이전에 알린 문제가 사라졌습니다. 자동으로 정상으로 돌아왔습니다.",
+        detail=detail,
         severity="info", level=LEVEL_RESOLVED,
         impact=IMPACT_NONE, action="필요 없음.",
         technical=f"resolved_at={row.get('resolved_at') or ''} was={base.severity}",
         observation_id=str(row.get("resolved_at") or base.observation_id),
-        min_occurrences=1,
+        min_occurrences=1, delivery=DELIVERY_IMMEDIATE,
     ).normalized()
 
 
@@ -1510,7 +1580,8 @@ def _notified_this_episode(row: Mapping) -> bool:
 def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
                     *, evaluated_scopes: set[str] | None = None,
                     now: datetime | None = None,
-                    cooldown: timedelta = DEFAULT_ALERT_COOLDOWN) -> tuple[dict, list[AlertSignal]]:
+                    cooldown: timedelta = DEFAULT_ALERT_COOLDOWN,
+                    immediate_only: bool = False) -> tuple[dict, list[AlertSignal]]:
     """Update alert streaks and return alerts due for notification.
 
     The same ``observation_id`` never advances a streak twice, which matters
@@ -1522,6 +1593,10 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
     빌드마다 아카이브 전체를 다시 검사하는 무결성 게이트처럼, 같은 상태가 계속
     관측되는 것이 정상인 알림이 있기 때문이다(실측: 같은 격리 21건이 회차마다
     새 critical 로 5회 통지됐다).
+
+    ``immediate_only`` 면 즉시 갈래(``delivery=immediate``)만 보낼 목록에 오른다.
+    나머지도 상태는 똑같이 갱신된다 — 아침 요약이 그 상태를 읽는다. 요약 갈래는
+    따로 울리지 않으므로 '해결됨'도 만들지 않는다.
     """
     now_dt = _utc_now(now)
     now_iso = _iso(now_dt)
@@ -1547,7 +1622,9 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
             # '알린 적'은 **이번 사건에서**다. 예전에는 몇 주 전 한 번 알린 기록만
             # 있어도 해결 통지를 만들었다 — 실측 audio-script-claim-removed 는
             # 9/09 이후 경보가 한 번도 안 나갔는데 '✅ 해결됨'만 9번 나갔다.
-            if _notified_this_episode(row) and not row.get("pending_notification"):
+            if (_notified_this_episode(row) and not row.get("pending_notification")
+                    and (not immediate_only
+                         or row_delivery(key, row) == DELIVERY_IMMEDIATE)):
                 row["pending_resolution"] = True
 
     due: list[AlertSignal] = []
@@ -1573,6 +1650,7 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
             "last_seen_at": now_iso,
             "last_observation_id": signal.observation_id,
             "min_occurrences": signal.min_occurrences,
+            "delivery": signal.delivery,
         })
         # 다시 살아난 문제는 새 사고다 — 아직 못 보낸 해결 통지는 의미를 잃는다.
         row.pop("pending_resolution", None)
@@ -1596,6 +1674,12 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
             repeatable = signal.renotify and cooldown_elapsed and (
                 not signal.fingerprint or
                 signal.fingerprint != str(row.get("last_notified_fingerprint") or ""))
+        if immediate_only and signal.delivery != DELIVERY_IMMEDIATE:
+            # 요약·개발 갈래는 여기서 울리지 않는다. 옛 규칙에서 미발송으로 남은
+            # 표시도 지운다 — 남겨 두면 아래 재시도 루프가 그대로 다시 보낸다.
+            row["pending_notification"] = False
+            items[key] = row
+            continue
         if _nonnegative_int(row.get("consecutive")) >= signal.min_occurrences and repeatable:
             due.append(signal)
             # Keep the payload retryable even if the underlying condition
@@ -1606,6 +1690,9 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
     due_keys = {signal.key for signal in due}
     for key, row in items.items():
         if key in due_keys or not row.get("pending_notification"):
+            continue
+        if immediate_only and row_delivery(key, row) != DELIVERY_IMMEDIATE:
+            row["pending_notification"] = False
             continue
         due.append(_signal_from_row(key, row))
         due_keys.add(key)
@@ -1649,41 +1736,52 @@ def _level_of(signal: AlertSignal) -> str:
     return signal.level if signal.level in _LEVEL_LABELS else default_level(signal.severity)
 
 
-def format_admin_alerts(alerts: Sequence[AlertSignal], *, max_chars: int = 3500) -> str:
-    """운영자 한 명이 5초 안에 읽는 한 통의 메시지.
+def format_admin_alerts(alerts: Sequence[AlertSignal], *, max_chars: int = 3500,
+                        run_url: str = "") -> str:
+    """즉시 알림 한 통. 첫 줄이 결론이다 — 할 일이 있나, 몇 건인가.
 
-    순서는 의미 순서다 — ① 무슨 일이 있었나 ② 서비스 영향 ③ 내가 할 일
-    ④ 기술 상세.  조치가 필요한 것이 항상 맨 위에 오고, 자동 처리된 것과
-    해결된 것이 그 아래에 붙는다.  해시·비율·예외 이름은 마지막 줄에만 나온다.
+    블록마다 **무슨 일 → 영향 → 할 일** 순서다. 기술 값(해시·예외·비율)은 여기
+    싣지 않는다 — 실행 로그(:func:`format_technical_log`)에 그대로 남고, 끝에 그
+    실행 기록 링크를 붙인다. 예전에는 `상세: consecutive_bozo=3 usable=10/10 ...`
+    같은 줄이 텔레그램 본문에 그대로 나갔다.
     """
-    grouped: dict[str, list[AlertSignal]] = {level: [] for level in _LEVEL_ORDER}
-    for signal in alerts:
-        grouped[_level_of(signal)].append(signal)
+    open_alerts = [signal for signal in alerts if _level_of(signal) != LEVEL_RESOLVED]
+    resolved = [signal for signal in alerts if _level_of(signal) == LEVEL_RESOLVED]
+    order = {LEVEL_ACTION: 0, LEVEL_ATTENTION: 1, LEVEL_INFO: 2}
+    open_alerts.sort(key=lambda row: (order.get(_level_of(row), 3),
+                                      -_SEVERITY_RANK.get(row.severity, 1)))
+    todo = sum(1 for signal in open_alerts if _level_of(signal) == LEVEL_ACTION)
+    if todo:
+        head = f"🚨 할 일 {todo}건"
+    elif open_alerts:
+        head = f"⚠️ 확인 {len(open_alerts)}건"
+    else:
+        head = "✅ 풀렸습니다"
+    if open_alerts and resolved:
+        head += f" · 풀림 {len(resolved)}건"
+    lines = [f"{head} · 뉴클렌스 운영"]
 
-    counts = [f"{_LEVEL_LABELS[level][1]} {len(grouped[level])}건"
-              for level in _LEVEL_ORDER if grouped[level]]
-    lead = next((level for level in _LEVEL_ORDER if grouped[level]), LEVEL_INFO)
-    lines = [f"{_LEVEL_LABELS[lead][0]} Nuclens+ 운영 알림 · " + " · ".join(counts)]
+    blocks: list[str] = []
+    for signal in open_alerts:
+        icon = _LEVEL_LABELS[_level_of(signal)][0]
+        block = [f"\n{icon} {signal.title}"]
+        if signal.detail:
+            block.append(f"무슨 일: {signal.detail}")
+        if signal.impact:
+            block.append(f"영향: {signal.impact}")
+        if signal.action:
+            block.append(f"할 일: {signal.action}")
+        blocks.append("\n".join(block))
+    for signal in resolved:
+        blocks.append(f"\n✅ 풀림 · {signal.title}\n{signal.detail} 할 일 없음.")
 
-    for level in _LEVEL_ORDER:
-        icon, label = _LEVEL_LABELS[level]
-        for signal in sorted(grouped[level],
-                             key=lambda row: -_SEVERITY_RANK.get(row.severity, 1)):
-            block = [f"\n{icon} {label} · {signal.title}"]
-            if signal.detail:
-                block.append(f"  {signal.detail}")
-            if signal.impact:
-                block.append(f"  서비스 영향: {signal.impact}")
-            if signal.action:
-                block.append(f"  조치: {signal.action}")
-            if signal.technical:
-                block.append(f"  상세: {signal.technical}")
-            text = "\n".join(block)
-            if len("\n".join(lines)) + len(text) > max_chars:
-                lines.append("\n• 나머지 알림은 실행 로그에서 확인해 주세요.")
-                return "\n".join(lines)[:max_chars]
-            lines.append(text)
-    return "\n".join(lines)[:max_chars]
+    footer = f"\n실행 기록: {run_url}" if run_url else ""
+    for text in blocks:
+        if len("\n".join(lines)) + len(text) + len(footer) > max_chars:
+            lines.append("\n• 나머지는 실행 기록에서 확인해 주세요.")
+            break
+        lines.append(text)
+    return ("\n".join(lines) + footer)[:max_chars]
 
 
 def format_technical_log(alerts: Sequence[AlertSignal]) -> str:
@@ -1696,20 +1794,36 @@ def format_technical_log(alerts: Sequence[AlertSignal]) -> str:
         for signal in alerts)
 
 
+def call_sender(sender: Callable[..., object], message: str, *, silent: bool) -> object:
+    """``silent`` 을 받는 발송기에만 넘긴다(테스트의 한 인자 발송기는 그대로 산다)."""
+    try:
+        parameters = inspect.signature(sender).parameters
+    except (TypeError, ValueError):
+        parameters = {}
+    if "silent" in parameters or any(
+            parameter.kind is inspect.Parameter.VAR_KEYWORD
+            for parameter in parameters.values()):
+        return sender(message, silent=silent)
+    return sender(message)
+
+
 def notify_alerts(state: Mapping, alerts: Sequence[AlertSignal],
                   sender: Callable[[str], object], *,
-                  now: datetime | None = None) -> tuple[dict, dict]:
+                  now: datetime | None = None, run_url: str = "") -> tuple[dict, dict]:
     """Send one aggregate message without allowing notification failure to raise.
 
     This function deliberately accepts an injected callable.  Production can
     pass a thin Telegram adapter; tests and local analysis never need secrets or
     network access.
+
+    '풀렸습니다'만 있는 통은 소리 없이 보낸다 — 좋은 소식으로 새벽에 깨울 이유가 없다.
     """
     if not alerts:
         return dict(state), {"sent": False, "count": 0, "error": ""}
-    message = format_admin_alerts(alerts)
+    message = format_admin_alerts(alerts, run_url=run_url)
+    silent = all(_level_of(signal) == LEVEL_RESOLVED for signal in alerts)
     try:
-        response = sender(message)
+        response = call_sender(sender, message, silent=silent)
         if isinstance(response, Mapping) and response.get("ok") is False:
             raise RuntimeError(str(response.get("description") or "sender returned ok=false"))
     except Exception as exc:  # monitoring must never break the main job

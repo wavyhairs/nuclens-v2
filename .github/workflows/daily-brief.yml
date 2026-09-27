@@ -754,7 +754,10 @@ jobs:
               --identity-quarantined "${{ steps.web-build.outputs.identity_quarantined }}"
             )
           fi
-          python operational_alerts.py --notify \
+          # --digest: 오늘 하루 운영 요약을 이 단계에서 보낸다(오디오·빌드까지 끝난 뒤라
+          # 그날 할 일이 다 모여 있다). 이미 보냈으면 건너뛰고, 이 단계가 빠진 날은
+          # 10시 이후 첫 수집이 대신 보낸다(operational_digest.FALLBACK_HOUR_KST).
+          python operational_alerts.py --notify --digest \
             --collect-outcome "${{ steps.collect.outcome }}" \
             --collection-observation-id "daily-brief:${{ github.run_id }}" \
             --audio-fast-outcome "${{ steps.audio.outputs.fast }}" \

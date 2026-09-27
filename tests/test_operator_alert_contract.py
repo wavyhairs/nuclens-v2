@@ -344,7 +344,7 @@ class RepeatAndRecoveryTests(unittest.TestCase):
                                              now=recovered)
         self.assertEqual([monitor.LEVEL_RESOLVED], [row.level for row in due])
         message = monitor.format_admin_alerts(due)
-        self.assertIn("해결됨", message)
+        self.assertIn("풀림", message)
         self.assertIn("SFEN", message)
 
     def test_a_problem_that_comes_back_is_reported_again(self):
@@ -416,15 +416,20 @@ class ChannelRenderingTests(unittest.TestCase):
                 action="배포 로그를 확인해 주세요.",
                 technical="Cloudflare 배포·스모크=failure"),
         ]
-        message = monitor.format_admin_alerts(alerts)
+        message = monitor.format_admin_alerts(
+            alerts, run_url="https://github.com/o/r/actions/runs/1")
+        # 첫 줄이 결론이다 — 할 일이 몇 건인가.
+        self.assertTrue(message.startswith("🚨 할 일 1건"))
         # 조치가 필요한 것이 먼저 온다.
-        self.assertLess(message.index("조치 필요"), message.index("확인 필요"))
         self.assertLess(message.index("사이트 배포가 실패했습니다"),
                         message.index("자동 제외했습니다"))
         block = message[message.index("사이트 배포가 실패했습니다"):]
-        self.assertLess(block.index("서비스 영향:"), block.index("조치:"))
-        self.assertLess(block.index("조치:"), block.index("상세:"))
-        self.assertTrue(message.startswith("🚨"))
+        self.assertLess(block.index("무슨 일:"), block.index("영향:"))
+        self.assertLess(block.index("영향:"), block.index("할 일:"))
+        # 기술 값은 텔레그램에 싣지 않는다 — 실행 기록 링크가 대신한다.
+        self.assertNotIn("quarantined=21", message)
+        self.assertNotIn("=failure", message)
+        self.assertTrue(message.rstrip().endswith("actions/runs/1"))
 
     def test_a_quiet_run_sends_nothing_and_says_so(self):
         out = cli.run(sent_path=self.sent, log_path=self.log, notify=True,
@@ -572,9 +577,10 @@ class QualityEventContractTests(unittest.TestCase):
         signal = signals[0].normalized()
         self.assertEqual(monitor.LEVEL_ATTENTION, signal.level)
         self.assertEqual("integrity=33", signal.fingerprint)
+        self.assertEqual(monitor.DELIVERY_DIGEST, signal.delivery,
+                         "자동으로 걸러진 품질 관리는 아침 요약으로 간다")
         message = monitor.format_admin_alerts([signal])
-        self.assertIn("확인 필요", message)
-        self.assertNotIn("조치 필요", message)
+        self.assertNotIn("할 일", message.splitlines()[0])
 
     def test_a_record_without_operator_fields_still_renders(self):
         rows = [{
