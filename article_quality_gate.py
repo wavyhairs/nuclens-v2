@@ -39,6 +39,11 @@ import event_stage
 
 CURATION_STATUSES = frozenset({"reviewed", "fallback", "unreviewed", "quarantined"})
 EVIDENCE_MANIFEST_VERSION = 2
+# manifest 수치를 어떤 규칙으로 읽었나. 선택 키라 버전을 올리지 않는다(아래
+# build_evidence_manifest 의 event date 와 같은 방식). 키가 없는 옛 manifest 는
+# 복합 금액(`13억 1600만 달러`)의 마지막 조각만 적어 두었으므로, 그 옛 값과
+# 맞는 복합 금액은 같은 금액으로 봐 준다 — 새 manifest 에는 그 관용을 주지 않는다.
+QUANTITY_RULES_VERSION = 2
 # Bump whenever the narrative rules below change what they accept.  Cached audio
 # stores this number, so an older cache stops being trusted automatically.
 NARRATIVE_GATE_VERSION = 2
@@ -319,17 +324,91 @@ _CANONICAL_UNITS: Mapping[str, tuple[str, Decimal]] = {
     "억 유로": ("유로", Decimal(10) ** 8),
     "억유로": ("유로", Decimal(10) ** 8),
 }
+# 영문 기수·호기 표기. 번역 제목의 `N기`·`N호기` 는 여기서 읽힌 값으로만 근거를
+# 얻는다 — 못 읽으면 멀쩡한 번역이 '원문에 없는 수치'로 격리된다. 실측
+# 2026-09-13~27: 원문과 다르다고 격리된 174건 중 외국어 기사가 90건(비율 6.8%,
+# 한국어 1.9%)이었고, 충실한 번역 제목으로 재현하면 WNN 기사 10건 중 7건이
+# 이 구멍에서 걸렸다 — "Third unit at Changjiang"·"Mochovce 4"·"units 3 and 4"·
+# "a fleet of 14 BWRX-300 small modular reactors".
+#
+# 근거를 넓히는 것이 늘 안전하지는 않다. 원문에서 **틀린** 번호를 읽으면 '근거 없음'
+# 이던 자리가 '근거와 모순'이 돼 오히려 격리된다(처음 시도에서 "Leningrad 2-4"를
+# 2 로만 읽어 4호기 번역이 격리됐다). 그래서 범위·단위어·달 이름을 가려 읽고, 바꿀
+# 때마다 아카이브 전량을 build_data 와 같은 호출로 다시 돌려 본다 — 2026-09-27
+# 18,516건: 새로 격리 0 · 풀림 3(전부 `25억6000만달러`=`25.6억 달러` 같은 오탐).
 _EN_COUNT_RE = re.compile(
-    r"\b(?P<number>\d+|one|two|three|four|five|six|seven|eight|nine|ten|"
-    r"eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|"
-    r"nineteen|twenty)\s+(?:new\s+)?(?:nuclear\s+(?:power\s+)?)?"
-    r"(?:reactors?|units?)\b",
+    r"(?<![\d,.\-])\b(?P<number>\d+|one|two|three|four|five|six|seven|eight|nine|"
+    r"ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|"
+    r"nineteen|twenty)\s+(?:[a-z][\w-]*\s+){0,4}?"
+    r"(?:reactors?|units?|smrs?|mmrs?|microreactors?|plants?)\b",
     re.IGNORECASE,
 )
 _EN_UNIT_ID_RE = re.compile(
-    r"\b(?:unit|reactor)\s*(?:no\.?\s*)?(?P<number>\d{1,2})\b",
+    r"\b(?:unit|reactor|block)\s*(?:no\.?\s*)?(?P<number>\d{1,2})\b",
     re.IGNORECASE,
 )
+# "units 3 and 4" · "units 1, 2 and 3" · "reactors 5-6". 복수형 뒤의 목록은 위
+# 단수 패턴이 못 읽는다(`units` 의 s 에서 끊긴다).
+_EN_UNIT_LIST_RE = re.compile(
+    r"\b(?:units|reactors|blocks)\s+(?:nos?\.?\s*)?"
+    r"(?P<numbers>\d{1,2}(?:\s*(?:,|&|and|to|-|–)\s*\d{1,2})+)\b",
+    re.IGNORECASE,
+)
+# "the third unit" · "the second RITM-200C small modular reactor unit".
+_EN_ORDINAL_UNIT_RE = re.compile(
+    r"\b(?P<ordinal>first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|"
+    r"tenth|1st|2nd|3rd|[4-9]th|10th)\s+(?:[\w-]+\s+){0,4}?"
+    r"(?:units?|reactors?|blocks?)\b",
+    re.IGNORECASE,
+)
+_EN_ORDINALS = {
+    "first": "1", "second": "2", "third": "3", "fourth": "4", "fifth": "5",
+    "sixth": "6", "seventh": "7", "eighth": "8", "ninth": "9", "tenth": "10",
+    "1st": "1", "2nd": "2", "3rd": "3", "10th": "10",
+    **{f"{number}th": str(number) for number in range(4, 10)},
+}
+# "Mochovce 4" · "Flamanville 3" · "Krško II" — 원전 이름 뒤 번호가 곧 호기다.
+# 대문자로 시작하는 이름에만 붙이고(대소문자를 보려고 casefold 전 원문에 건다),
+# 달·요일·흔한 앞말과 뒤따르는 단위어는 걸러 낸다. 번역 제목("Vogtle 3 상업운전")
+# 쪽에서는 읽지 않는다 — 출력에 새 수치 주장을 만들려는 것이 아니다.
+_EN_NAMED_UNIT_RE = re.compile(
+    r"(?<![\w-])(?P<name>[^\W\d_][\w'’-]{2,})\s+(?P<number>\d{1,2}|II|III|IV|V|VI)"
+    r"(?:\s*[-–]\s*(?P<last>\d{1,2}))?"
+    r"(?![\w%]|[.,]\d)(?P<tail>\s*[^\s]*)"
+)
+_EN_NAMED_UNIT_SKIP_NAMES = frozenset({
+    *(name for name in (
+        "january", "february", "march", "april", "may", "june", "july", "august",
+        "september", "october", "november", "december", "jan", "feb", "mar", "apr",
+        "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec",
+        "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+        "the", "and", "for", "with", "from", "over", "under", "about", "around",
+        "than", "nearly", "almost", "some", "all", "only", "just", "top", "article",
+        "section", "chapter", "covid", "cop", "phase", "group", "page", "figure",
+        "table", "level", "category", "class", "tier", "round", "stage", "step",
+        "number", "no", "version", "gen", "generation",
+    )),
+})
+_EN_NAMED_UNIT_SKIP_TAIL = re.compile(
+    r"\s*(?:%|percent|per\b|billion|million|thousand|trillion|bn\b|mn\b|years?\b|"
+    r"months?\b|weeks?\b|days?\b|hours?\b|minutes?\b|mw|gw|kw|twh|gwh|mwh|tonnes?\b|"
+    r"tons?\b|people\b|countries\b|companies\b|firms\b|sites\b|projects\b|"
+    r"reactors?\b|units?\b|smrs?\b|plants?\b|nations\b|states\b|jobs\b|times\b|"
+    r"percentage\b|points?\b|km\b|miles?\b|m\b|kg\b)",
+    re.IGNORECASE,
+)
+_ROMAN_UNITS = {"II": "2", "III": "3", "IV": "4", "V": "5", "VI": "6"}
+# `1억 7500만 달러` — 배수가 둘 이상 붙은 금액. 공용 정규식은 마지막 조각
+# (`7500만 달러`)만 잡아 전혀 다른 금액으로 읽는다. 실측 2026-09-20 전문가
+# 대본 "1억 7500만 달러 규모 ARC 프로그램" 이 영문 원문 `$175 million` 과 맞지
+# 않아 멀쩡한 문단이 방송에서 빠졌다. 원화는 기존 `조원`·`억원` 축을 그대로 둔다.
+_KO_COMPOSITE_MONEY_RE = re.compile(
+    r"(?<![\d.,])(?P<parts>(?:\d+(?:\.\d+)?\s*(?:조|억|만)\s*){2,3})"
+    r"(?P<unit>달러|弗|유로)"
+)
+_KO_UNIT_RANGE_RE = re.compile(
+    r"(?<![\d.])(?P<first>\d{1,2})\s*[-~–]\s*(?P<last>\d{1,2})\s*호기")
+_KO_MULTIPLIERS = {"조": Decimal(10) ** 12, "억": Decimal(10) ** 8, "만": Decimal(10) ** 4}
 _EN_NUMBERS = {
     word: str(number) for number, word in enumerate((
         "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
@@ -337,6 +416,78 @@ _EN_NUMBERS = {
         "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
     ))
 }
+
+
+def _composite_money(text: str) -> list[tuple[int, int, str, str, str]]:
+    """(start, end, 정규화 단위, 값, 옛 읽기 값). 조·억·만이 내림차순으로 두 번 이상 붙은 금액만.
+
+    '옛 읽기 값'은 이 규칙이 생기기 전 파서가 읽던 마지막 조각(`1600만 달러`)이다.
+    수집 때 봉인된 manifest 수치는 그 옛 규칙으로 만들어져 있으므로, 근거를 대볼
+    때는 둘 중 하나만 맞아도 같은 금액으로 본다(`_quantity_alternates`).
+    """
+    found: list[tuple[int, int, str, str, str]] = []
+    for match in _KO_COMPOSITE_MONEY_RE.finditer(text):
+        pieces = re.findall(r"(\d+(?:\.\d+)?)\s*(조|억|만)", match.group("parts"))
+        scales = [_KO_MULTIPLIERS[scale] for _number, scale in pieces]
+        if scales != sorted(scales, reverse=True) or len(set(scales)) != len(scales):
+            continue
+        try:
+            value = sum(Decimal(number) * _KO_MULTIPLIERS[scale] for number, scale in pieces)
+        except InvalidOperation:
+            continue
+        unit = "유로" if match.group("unit") == "유로" else "달러"
+        tail_number, tail_scale = pieces[-1]
+        tail = _render_quantity(Decimal(tail_number) * _KO_MULTIPLIERS[tail_scale])
+        found.append((match.start(), match.end(), unit, _render_quantity(value), tail))
+    return found
+
+
+def _quantity_alternates(text: object) -> dict[str, dict[str, set[str]]]:
+    """unit → {복합 금액 값: {옛 읽기 값}}. 근거 대조에서 둘 중 하나면 된다."""
+    alternates: dict[str, dict[str, set[str]]] = {}
+    for _start, _end, unit, value, tail in _composite_money(clean_text(text).casefold()):
+        alternates.setdefault(unit, {}).setdefault(value, set()).add(tail)
+    return alternates
+
+
+def _mask_spans(text: str, spans: Iterable[tuple[int, int]]) -> str:
+    """같은 길이의 공백으로 덮는다 — 뒤 패턴의 위치 계산이 흔들리지 않게."""
+    chars = list(text)
+    for start, end in spans:
+        chars[start:end] = " " * (end - start)
+    return "".join(chars)
+
+
+def _english_unit_ids(text: str) -> set[str]:
+    """영문 원문의 호기 번호. 목록·서수·'이름 번호' 표기를 모두 읽는다."""
+    compact = text.casefold()
+    numbers: set[str] = set()
+    for match in _EN_UNIT_ID_RE.finditer(compact):
+        numbers.add(match.group("number"))
+    for match in _EN_UNIT_LIST_RE.finditer(compact):
+        raw = match.group("numbers")
+        values = [int(value) for value in re.findall(r"\d{1,2}", raw)]
+        numbers.update(str(value) for value in values)
+        # "units 1-4" 는 1·2·3·4 다. 범위 표기일 때만, 짧은 범위만 채운다.
+        if len(values) == 2 and re.search(r"-|–|\bto\b", raw) and 0 < values[1] - values[0] <= 8:
+            numbers.update(str(value) for value in range(values[0], values[1] + 1))
+    for match in _EN_ORDINAL_UNIT_RE.finditer(compact):
+        numbers.add(_EN_ORDINALS[match.group("ordinal")])
+    for match in _EN_NAMED_UNIT_RE.finditer(text):
+        name = match.group("name")
+        if not name[0].isupper() or name.casefold() in _EN_NAMED_UNIT_SKIP_NAMES:
+            continue
+        tail = match.group("tail") or ""
+        # 번역 제목 쪽("Vogtle 3 상업운전")에서는 읽지 않는다 — 근거만 넓히려는 것이지
+        # 출력에 새 수치 주장을 만들려는 것이 아니다.
+        if _EN_NAMED_UNIT_SKIP_TAIL.match(tail) or re.search(r"[가-힣]", tail):
+            continue
+        first = int(_ROMAN_UNITS.get(match.group("number"), match.group("number")))
+        last = int(match.group("last") or first)
+        # "Leningrad 2-4" 는 2·3·4호기다. 짧은 범위만 채운다.
+        span = range(first, last + 1) if 0 <= last - first <= 8 else (first, last)
+        numbers.update(str(value) for value in span)
+    return numbers
 _DATE_MARKER_RE = re.compile(
     r"(?:(?<!\d)(?:19|20|21)\d{6}(?!\d)"
     r"|(?<!\d)(?:19|20|21)\d{2}(?!\d)"
@@ -458,6 +609,16 @@ def _entity_aliases() -> tuple[tuple[str, str, str, str], ...]:
     for entity in entity_match.load_entity_registry():
         aliases = list(entity.get("aliases") or [])
         aliases.extend((entity.get("name_kr") or "", entity.get("name_en") or ""))
+        if entity.get("type") == "plant":
+            # 등록부의 영문명은 `Changjiang NPP` 꼴이라 원문이 쓰는 맨 이름
+            # ("Changjiang site", "Mochovce 4")을 못 읽었다. 한국어 쪽 `창장`·
+            # `모호체` 는 별칭으로 있어 번역 제목에서만 엔티티가 보이고, 그래서
+            # 멀쩡한 번역이 '원문에 없는 엔티티'로 격리됐다(sizewell·vogtle 은
+            # 이미 손으로 넣어 둔 같은 처방이다). 등록부는 이슈 묶음에도 쓰이므로
+            # 고치지 않고 이 게이트 안에서만 파생한다.
+            bare = re.sub(r"\s+(?:npp|nuclear power (?:plant|station))$", "",
+                          clean_text(entity.get("name_en")), flags=re.IGNORECASE)
+            aliases.append(bare)
         seen: set[str] = set()
         for alias in aliases:
             alias = clean_text(alias)
@@ -471,24 +632,38 @@ def _entity_aliases() -> tuple[tuple[str, str, str, str], ...]:
     return tuple(rows)
 
 
-def _alias_present(text: str, alias: str, policy: str) -> bool:
+def _alias_spans(lowered: str, alias: str, policy: str) -> list[tuple[int, int]]:
+    """Where ``alias`` occurs in already-casefolded text, as (start, end) spans."""
     if policy == "tag_only":
-        return False
-    lowered = text.casefold()
+        return []
     alias_lower = alias.casefold()
     if re.search(r"[가-힣]", alias_lower):
         # Short plant names that overlap ordinary Korean are accepted only next
         # to a unit or an explicit plant marker.
         if policy == "tag_or_unit_adjacent":
-            return bool(re.search(
-                re.escape(alias_lower) + r"\s*(?:원전|\d+\s*호기)", lowered
-            ))
-        return alias_lower in lowered
-    pieces = [re.escape(piece) for piece in re.findall(r"[0-9a-z]+", alias_lower)]
-    if not pieces:
-        return False
-    pattern = r"(?<![0-9a-z])" + r"[\s.&/\-]*".join(pieces) + r"(?![0-9a-z])"
-    return bool(re.search(pattern, lowered))
+            # 짧은 원전 이름은 앞에 한글이 붙어 있으면 다른 이름의 일부다 —
+            # `신한울 원전` 은 한울이 아니고 `신고리 원전` 은 고리가 아니다. 이게
+            # 없어서 대본의 "신한울 원전"이 원문 "신한울 3·4호기"에 없는 `hanul` 을
+            # 새로 만든 것으로 몰려 멀쩡한 문단이 방송에서 빠졌다(실측 2026-09-26).
+            #
+            # 전면적인 '긴 이름 먼저 가리기'는 쓰지 않는다. 수집 때 봉인된 manifest
+            # 엔티티가 옛 규칙(`한전기술` 안의 `한전`)으로 만들어져 있어, 규칙을
+            # 통째로 바꾸면 봉인과 어긋나 멀쩡한 기사가 새로 격리된다(아카이브
+            # 재생으로 확인). 앞에 한글이 붙는 이 경우만 좁혀 막는다.
+            pattern = (r"(?<![가-힣])" + re.escape(alias_lower)
+                       + r"(?=\s*(?:원전|\d+\s*호기))")
+        else:
+            pattern = re.escape(alias_lower)
+    else:
+        pieces = [re.escape(piece) for piece in re.findall(r"[0-9a-z]+", alias_lower)]
+        if not pieces:
+            return []
+        pattern = r"(?<![0-9a-z])" + r"[\s.&/\-]*".join(pieces) + r"(?![0-9a-z])"
+    return [match.span() for match in re.finditer(pattern, lowered)]
+
+
+def _alias_present(text: str, alias: str, policy: str) -> bool:
+    return bool(_alias_spans(text.casefold(), alias, policy))
 
 
 def _entities(text: object) -> frozenset[str]:
@@ -524,6 +699,13 @@ def concrete_claims(text: object) -> tuple[str, ...]:
     """Return deterministic quantities/model identifiers in appearance order."""
     cleaned = clean_text(text)
     claims: list[str] = []
+    composite = _composite_money(cleaned)
+    for start, end, *_rest in composite:
+        claim = _normalize_claim(cleaned[start:end])
+        if claim and claim not in claims:
+            claims.append(claim)
+    # 복합 금액의 꼬리(`7500만 달러`)가 따로 읽히면 전혀 다른 금액이 된다.
+    cleaned = _mask_spans(cleaned, [(start, end) for start, end, *_ in composite])
     for match in _QUANTITY_RE.finditer(cleaned):
         claim = _normalize_claim(match.group(0))
         if claim and claim not in claims:
@@ -564,10 +746,18 @@ def _canonical_quantity(unit: str, number: str) -> tuple[str, str]:
 
 def _quantity_map(text: object) -> dict[str, set[str]]:
     result: dict[str, set[str]] = {}
-    compact = clean_text(text).casefold()
+    original = clean_text(text)
+    compact = original.casefold()
+    composite = _composite_money(compact)
+    for _start, _end, unit, value, _tail in composite:
+        result.setdefault(unit, set()).add(value)
+    compact = _mask_spans(compact, [(start, end) for start, end, *_ in composite])
     for match in _UNIT_LIST_RE.finditer(compact):
         result.setdefault(match.group("unit"), set()).update(
             re.findall(r"\d{1,2}", match.group("numbers")))
+    # `2-4호기`·`2~4호기` 는 끝값만 읽히고 있었다(`4호기`). 첫값도 같은 주장이다.
+    for match in _KO_UNIT_RANGE_RE.finditer(compact):
+        result.setdefault("호기", set()).update((match.group("first"), match.group("last")))
     for match in _NUMBER_UNIT_RE.finditer(compact):
         unit = re.sub(r"\s+", " ", match.group("unit").lower()).strip()
         if unit == "퍼센트":
@@ -590,8 +780,9 @@ def _quantity_map(text: object) -> dict[str, set[str]]:
     for match in _EN_COUNT_RE.finditer(compact):
         number = match.group("number").lower()
         result.setdefault("기", set()).add(_EN_NUMBERS.get(number, number))
-    for match in _EN_UNIT_ID_RE.finditer(compact):
-        result.setdefault("호기", set()).add(match.group("number"))
+    unit_ids = _english_unit_ids(original)
+    if unit_ids:
+        result.setdefault("호기", set()).update(unit_ids)
     return result
 
 
@@ -634,9 +825,11 @@ def _detect_stages(text: object) -> frozenset[str]:
 
 def _critical_quantity_conflicts(left: object, right: object) -> dict[str, dict[str, list[str]]]:
     left_map, right_map = _quantity_map(left), _quantity_map(right)
+    right_alternates = _quantity_alternates(right)
     conflicts: dict[str, dict[str, list[str]]] = {}
     for unit in sorted(set(right_map) & _CRITICAL_UNITS):
         source_values = left_map.get(unit, set())
+        alternates = right_alternates.get(unit, {})
         unsupported = {
             output_value for output_value in right_map[unit]
             if not source_values
@@ -650,6 +843,9 @@ def _critical_quantity_conflicts(left: object, right: object) -> dict[str, dict[
                 "unsupported_output": sorted(unsupported),
                 "supported_output": sorted(supported),
             }
+            if alternates:
+                conflicts[unit]["output_alternates"] = {
+                    value: sorted(tails) for value, tails in sorted(alternates.items())}
     return conflicts
 
 
@@ -1714,6 +1910,7 @@ def build_evidence_manifest(
         "stages": sorted(_detect_stages(evidence))[:30],
         "claims": list(concrete_claims(evidence))[:100],
         "quantities": quantities,
+        "quantity_rules": QUANTITY_RULES_VERSION,
     }
     # A new optional key, not a new version: bumping EVIDENCE_MANIFEST_VERSION
     # would invalidate every manifest already archived and take the title/summary
@@ -1823,6 +2020,7 @@ def _evidence_manifest(
         "stages": strings("stages"),
         "claims": strings("claims"),
         "quantities": quantities,
+        "legacy_quantities": raw.get("quantity_rules") != QUANTITY_RULES_VERSION,
         "event_date": _sealed_event_date(raw.get("verified_event_date")),
     }
 
@@ -1860,14 +2058,20 @@ def _signals_with_manifest_support(
     for unit, details in (adjusted.get("quantity_conflicts") or {}).items():
         if not isinstance(details, Mapping):
             continue
-        source_values = set(details.get("source") or ()) | set(
-            manifest_quantities.get(unit) or ())
+        manifest_values = set(manifest_quantities.get(unit) or ())
+        source_values = set(details.get("source") or ()) | manifest_values
         output_values = set(details.get("output") or ())
-        unsupported = {
-            value for value in output_values
-            if not source_values
-            or not _numbers_overlap({value}, source_values, unit=unit)
-        }
+        alternates = details.get("output_alternates") or {}
+
+        def supported(value: str) -> bool:
+            if source_values and _numbers_overlap({value}, source_values, unit=unit):
+                return True
+            # 옛 규칙 manifest 만 복합 금액의 마지막 조각을 적어 두었다.
+            legacy = set(alternates.get(value) or ()) if manifest.get("legacy_quantities") else set()
+            return bool(legacy and manifest_values
+                        and _numbers_overlap(legacy, manifest_values, unit=unit))
+
+        unsupported = {value for value in output_values if not supported(value)}
         if unsupported:
             conflicts[unit] = {
                 "source": sorted(source_values),
@@ -1875,6 +2079,8 @@ def _signals_with_manifest_support(
                 "unsupported_output": sorted(unsupported),
                 "supported_output": sorted(output_values - unsupported),
             }
+            if alternates:
+                conflicts[unit]["output_alternates"] = dict(alternates)
     adjusted["quantity_conflicts"] = conflicts
     return adjusted
 
@@ -1884,8 +2090,10 @@ def _unsupported_claims(field_text: str, evidence_text: str,
     evidence = _normalize_claim(evidence_text)
     evidence_quantities = _quantity_map(evidence_text)
     manifest = manifest or {}
-    for unit, values in (manifest.get("quantities") or {}).items():
-        evidence_quantities.setdefault(str(unit), set()).update(values)
+    manifest_quantities = {str(unit): set(values)
+                           for unit, values in (manifest.get("quantities") or {}).items()}
+    for unit, values in manifest_quantities.items():
+        evidence_quantities.setdefault(unit, set()).update(values)
     manifest_claims = set(manifest.get("claims") or ())
     unsupported: list[str] = []
     for claim in concrete_claims(field_text):
@@ -1897,6 +2105,14 @@ def _unsupported_claims(field_text: str, evidence_text: str,
             and _numbers_overlap(numbers, evidence_quantities[unit], unit=unit)
             for unit, numbers in claim_quantities.items()
         )
+        if not supported_by_rounding and manifest.get("legacy_quantities"):
+            # 옛 규칙 manifest 는 복합 금액의 마지막 조각만 적어 두었다.
+            supported_by_rounding = any(
+                unit in manifest_quantities
+                and _numbers_overlap(tails, manifest_quantities[unit], unit=unit)
+                for unit, by_value in _quantity_alternates(claim).items()
+                for tails in by_value.values()
+            )
         if not supported_by_rounding:
             unsupported.append(claim)
     return unsupported

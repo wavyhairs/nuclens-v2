@@ -650,8 +650,9 @@ class DeliveryManifestEvidenceTests(unittest.TestCase):
     def test_real_quantity_conflict_still_blocks(self):
         """원문이 **다른 값**을 말하면 계속 차단이다 ($50M → 3억 5천만 달러).
 
-        한국어 복합 수사(`3억 5,000만`)는 뒤 자리만 읽히는 별개의 파서 한계가
-        있어서, 이 테스트는 그 한계에 기대지 않는 표기를 쓴다.
+        제목의 `3억 5000만 달러` 는 이제 통째로 3.5억 달러로 읽힌다. 마지막 조각
+        (`5000만 달러`)이 우연히 원문 $50M 과 같아도, 새 manifest 에서는 그 조각을
+        근거로 쳐 주지 않는다(옛 manifest 만 받는 관용이다).
         """
         article = {
             "hash": "money-1",
@@ -1382,6 +1383,162 @@ class SummaryTests(unittest.TestCase):
         self.assertEqual(summary["sanitized"], 1)
         self.assertEqual(summary["quarantined"], 1)
         self.assertEqual(summary["removed_fields"]["why"], 1)
+
+
+class TranslatedTitleEvidenceTests(unittest.TestCase):
+    """외국어 원문이 쓰는 호기·기수·원전 이름을 읽어야 충실한 번역이 통과한다.
+
+    실측 2026-09-13~27: 원문과 다르다고 격리된 174건 중 90건이 외국어 기사였다
+    (외국어 6.8% · 한국어 1.9%). WNN 원문에 충실한 제목을 붙여 재현하면 10건 중
+    7건이 이 구멍에서 걸렸다 — 아래 원문은 그 WNN 기사들이다.
+    """
+
+    def audit(self, title, description, title_kr):
+        return gate.audit_article_integrity(
+            {"title": title, "title_kr": title_kr, "summary": ""},
+            source={"title": title, "description": description},
+            reference_date="2026-09-25")
+
+    CASES = (
+        # (원문 제목, 원문 발췌, 충실한 번역, 틀린 번역)
+        ("Power start-up for Mochovce 4",
+         "Slovakia's Mochovce 4 began power generation at 15:33 on Monday.",
+         "슬로바키아 모호체 원전 4호기 전력 생산 개시", "모호체 원전 3호기 전력 생산 개시"),
+        ("Third unit at Changjiang site commissioned",
+         "Unit 3 of the Changjiang nuclear power plant in Hainan has entered commercial operation.",
+         "중국 창장 원전 3호기 상업운전 돌입", "중국 창장 원전 5호기 상업운전 돌입"),
+        ("Chubu withdraws restart applications for Hamaoka units",
+         "Chubu Electric will withdraw applications for regulatory reviews of Hamaoka units 3 and 4.",
+         "주부전력, 하마오카 3·4호기 재가동 심사 신청 철회", "주부전력, 하마오카 5호기 재가동 신청 철회"),
+        ("Akkuyu 1 set for next stage of pre-commissioning activities",
+         "The first unit at Turkey's Akkuyu Nuclear Power Plant is being prepared.",
+         "튀르키예 아쿠유 원전 1호기, 시운전 다음 단계 돌입", "튀르키예 아쿠유 원전 2호기 시운전"),
+        ("Second reactor manufactured for floating nuclear plant",
+         "The second RITM-200S small modular reactor unit has been manufactured.",
+         "러시아, 부유식 원전용 원자로 2호기 제작 완료", "러시아, 부유식 원전용 원자로 4호기 제작 완료"),
+        ("SGE confident of UK SMR fleet prospects",
+         "Plans for a fleet of 14 BWRX-300 small modular reactors in the UK are on track.",
+         "SGE, 영국 BWRX-300 SMR 14기 선단 사업 자신", "SGE, 영국 SMR 24기 선단 추진"),
+        ("Russia Announces Construction Progress At Leningrad 2-4 Nuclear Plant",
+         "Construction continues at Leningrad 2-4.",
+         "러시아 레닌그라드 2-4호기 원전 건설 공정 진전", "러시아 레닌그라드 6호기 건설 진전"),
+    )
+
+    def test_faithful_translations_pass(self):
+        for title, description, faithful, _wrong in self.CASES:
+            with self.subTest(title=title):
+                self.assertTrue(self.audit(title, description, faithful).eligible)
+
+    def test_wrong_unit_or_count_still_quarantines(self):
+        for title, description, _faithful, wrong in self.CASES:
+            with self.subTest(title=title):
+                self.assertFalse(self.audit(title, description, wrong).eligible)
+
+    def test_bare_english_plant_name_is_the_same_entity(self):
+        """등록부 영문명은 `Changjiang NPP` 라 원문 "Changjiang site"를 못 읽었다."""
+        self.assertIn("changjiang", gate._entities("Third unit at Changjiang site commissioned"))
+        self.assertIn("mochovce", gate._entities("Power start-up for Mochovce 4"))
+
+    def test_other_plant_is_still_a_conflict(self):
+        result = self.audit(
+            "Third unit at Changjiang site commissioned",
+            "Unit 3 of the Changjiang nuclear power plant has entered commercial operation.",
+            "중국 타이산 원전 3호기 상업운전 돌입")
+        self.assertFalse(result.eligible)
+
+    def test_prefixed_plant_name_is_not_the_short_one(self):
+        """`신한울 원전` 은 한울이 아니다 — 실측 2026-09-26 대본 문단이 이걸로 빠졌다."""
+        self.assertEqual(gate._entities("신한울 원전인 신한울 3·4호기"), {"shin-hanul"})
+        self.assertIn("hanul", gate._entities("한울 원전 1호기"))
+        self.assertIn("kori", gate._entities("고리 원전 2호기"))
+        self.assertNotIn("kori", gate._entities("신고리 원전 5호기"))
+
+    def test_numbers_that_are_not_units_are_not_read_as_units(self):
+        for text in ("Covid 19 measures", "September 22 meeting", "Top 10 utilities",
+                     "Phase 2 approval", "Italy 5 billion plan"):
+            with self.subTest(text=text):
+                self.assertNotIn("호기", gate._quantity_map(text))
+
+
+class CompositeKoreanMoneyTests(unittest.TestCase):
+    """`1억 7500만 달러` 는 1억 7500만 달러다 — 마지막 조각(7500만 달러)이 아니다.
+
+    실측 2026-09-20: 전문가 대본 "1억 7500만 달러 규모 ARC 프로그램"이 영문 원문
+    `$175 million` 과 맞지 않아 멀쩡한 문단이 방송에서 빠졌다.
+    """
+
+    def test_composite_amount_is_read_whole(self):
+        self.assertEqual(gate._quantity_map("1억 7500만 달러"), {"달러": {"175000000"}})
+        self.assertEqual(gate._quantity_map("1조 5552억 달러"), {"달러": {"1555200000000"}})
+        self.assertEqual(gate.concrete_claims("1억 7500만 달러 규모"), ("1억7500만달러",))
+
+    def test_english_source_supports_the_composite_claim(self):
+        line = "미 농무부는 1억 7500만 달러 규모의 ARC 프로그램을 신설했습니다."
+        self.assertEqual(gate._unsupported_claims(line, "USDA announced $175 million."), [])
+        self.assertEqual(gate._unsupported_claims("7500만 달러 규모", "USDA announced $175 million."),
+                         ["7500만달러"])
+
+    def test_same_amount_written_two_ways(self):
+        """원문 `25억6000만달러` 와 번역 `25.6억 달러` 는 같은 금액이다(아카이브 실측)."""
+        result = gate.audit_article_integrity(
+            {"title": "2분기 매출 25억6000만달러 전망, 코어위브 두 배 성장",
+             "title_kr": "코어위브, 2분기 매출 25.6억 달러 전망", "summary": ""},
+            source={"title": "2분기 매출 25억6000만달러 전망, 코어위브 두 배 성장"},
+            reference_date="2026-08-10")
+        self.assertTrue(result.eligible)
+
+    def manifest_article(self, *, legacy):
+        """본문에만 금액이 있던 기사. 발췌에는 숫자가 없어 manifest 가 유일한 근거다."""
+        article = {
+            "hash": "legacy-1", "title": "패브리넷 4분기 실적 발표",
+            "source_excerpt": "패브리넷이 회계연도 4분기 실적을 발표했다.",
+            "published_at": "2026-08-22T09:00:00+09:00", "features": {},
+            "title_kr": "패브리넷, 4분기 매출 13억 1600만 달러 기록", "summary": "",
+        }
+        manifest = gate.build_evidence_manifest(
+            {"title": article["title"], "description": article["source_excerpt"],
+             "published_at": article["published_at"]}, article=article)
+        manifest = {key: value for key, value in manifest.items()
+                    if key != "manifest_fingerprint"}
+        # 본문 "13억 1600만 달러"를 옛 규칙은 마지막 조각 1600만 달러로 적었다.
+        manifest["quantities"] = {"달러": ["16000000"]}
+        if legacy:
+            manifest.pop("quantity_rules", None)
+        manifest["manifest_fingerprint"] = gate._digest_payload(manifest)
+        article["verified_evidence"] = manifest
+        return article
+
+    def audit_manifest_article(self, article):
+        return gate.audit_article_integrity(
+            article, source={"title": article["title"],
+                             "description": article["source_excerpt"]},
+            reference_date=article["published_at"])
+
+    def test_legacy_manifest_tail_supports_the_whole_amount(self):
+        """봉인된 옛 manifest 는 `1600만 달러`만 적어 두었다 — 같은 금액으로 봐 준다."""
+        self.assertTrue(self.audit_manifest_article(self.manifest_article(legacy=True)).eligible)
+
+    def test_same_tail_in_a_new_manifest_is_a_different_amount(self):
+        self.assertFalse(self.audit_manifest_article(self.manifest_article(legacy=False)).eligible)
+
+    def test_new_manifest_gets_no_tail_leniency(self):
+        """새 manifest 에서는 꼬리가 우연히 맞아도 다른 금액이다(3억 5000만 ≠ 5000만)."""
+        article = {
+            "hash": "new-1", "title": "Groq raises $50 million",
+            "source_excerpt": "Groq raises $50 million",
+            "published_at": "2026-08-22T09:00:00+09:00", "features": {},
+            "title_kr": "그록, 3억 5000만 달러 투자 유치", "summary": "",
+        }
+        article["verified_evidence"] = gate.build_evidence_manifest(
+            {"title": article["title"], "description": article["source_excerpt"],
+             "published_at": article["published_at"]}, article=article)
+        self.assertEqual(article["verified_evidence"]["quantity_rules"],
+                         gate.QUANTITY_RULES_VERSION)
+        result = gate.audit_article_integrity(
+            article, source={"title": article["title"],
+                             "description": article["source_excerpt"]},
+            reference_date=article["published_at"])
+        self.assertFalse(result.eligible)
 
 
 if __name__ == "__main__":
