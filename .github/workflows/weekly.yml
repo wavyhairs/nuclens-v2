@@ -217,7 +217,7 @@ jobs:
     needs: weekly
     if: always() && needs.weekly.outputs.report_ref != ''
     permissions:
-      contents: read
+      contents: write     # deploy-web 이 LLM 판정 캐시를 main 에 채워 넣는다
       actions: write
     uses: ./.github/workflows/deploy-web.yml
     with:
