@@ -1148,7 +1148,13 @@ def refresh_evidence_manifest(article: dict, curation: dict, *, body: str = "",
     if (not force and article_quality_gate.evidence_manifest_is_valid(
             existing, article=bound_article, source=source)):
         return dict(existing)
-    return article_quality_gate.build_evidence_manifest(source, article=bound_article)
+    # 사건일도 여기서 봉인한다 — 본문이 있는 마지막 자리다. 이 뒤로는 발송·주간·
+    # 사이트 어디서도 본문을 못 보므로, 봉인이 없으면 `article_text` 근거의
+    # 사건일은 단계마다 '확인 불가'로 지워졌다(실측 2026-08-17~09-27, 하루 약
+    # 34건씩 1,412건). 기준일은 audit_curation_integrity 와 같은 값을 넘긴다.
+    return article_quality_gate.build_evidence_manifest(
+        source, article=bound_article, curation=curation,
+        reference_date=article.get("pub"))
 
 
 def load_queue() -> list:

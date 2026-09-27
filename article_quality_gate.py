@@ -32,7 +32,7 @@ import json
 import re
 from typing import Iterable, Mapping, Sequence
 
-from data_quality import clean_text, is_complete_sentence
+from data_quality import clean_text, is_complete_sentence, normalize_event_date_fields
 import entity_match
 import event_stage
 
@@ -1265,6 +1265,50 @@ def _declared_date_evidence(
     return False, ""
 
 
+def _event_date_problem(
+    article: Mapping[str, object], source: Mapping[str, object] | None,
+    reference: date,
+) -> str:
+    """Why the declared event date cannot be trusted here, or "" when it can.
+
+    One judge for two callers: the integrity gate, and the manifest builder that
+    seals the verdict while the body is still available.  If they drifted apart,
+    a date sealed at collection could be one this gate would have rejected.
+    """
+    problem = _date_problem(article.get("event_date"), article.get("event_date_type"), reference)
+    if problem or not clean_text(article.get("event_date")):
+        return problem
+    declared_source = clean_text(article.get("event_date_source")).lower()
+    if declared_source not in {"title", "description", "article_text"}:
+        return "source_unknown"
+    evidence_provided, date_evidence = _declared_date_evidence(
+        article, source, declared_source
+    )
+    if not evidence_provided:
+        return "source_unavailable"
+    if not _DATE_MARKER_RE.search(date_evidence):
+        return "source_unsubstantiated"
+    expected = date.fromisoformat(clean_text(article.get("event_date")))
+    return _date_evidence_problem(
+        expected, article.get("event_date_precision"), date_evidence, reference
+    )
+
+
+def _event_date_claim(article: Mapping[str, object]) -> dict[str, str]:
+    """The four fields that together say which date was verified, and against what.
+
+    Normalized the way the archive normalizes them, so a curation dict (raw model
+    output) and the archived record compare equal when they say the same thing.
+    """
+    fields = normalize_event_date_fields(dict(article))
+    return {
+        "value": fields["event_date"] or "",
+        "type": fields["event_date_type"],
+        "precision": fields["event_date_precision"],
+        "source": fields["event_date_source"],
+    }
+
+
 def audit_article_integrity(
     article: Mapping[str, object],
     *,
@@ -1338,24 +1382,15 @@ def audit_article_integrity(
             ))
 
     ref = _reference_date(article, source, reference_date)
-    date_problem = _date_problem(article.get("event_date"), article.get("event_date_type"), ref)
-    if not date_problem and clean_text(article.get("event_date")):
-        declared_source = clean_text(article.get("event_date_source")).lower()
-        evidence_provided, date_evidence = _declared_date_evidence(
-            article, source, declared_source
-        )
-        if declared_source not in {"title", "description", "article_text"}:
-            date_problem = "source_unknown"
-        elif not evidence_provided:
-            date_problem = "source_unavailable"
-        else:
-            if not _DATE_MARKER_RE.search(date_evidence):
-                date_problem = "source_unsubstantiated"
-            else:
-                expected = date.fromisoformat(clean_text(article.get("event_date")))
-                date_problem = _date_evidence_problem(
-                    expected, article.get("event_date_precision"), date_evidence, ref
-                )
+    date_problem = _event_date_problem(article, source, ref)
+    # The declared field is gone (the body is never stored), but the collection
+    # stage verified this exact date against it and sealed the verdict.  Only the
+    # same four fields are accepted — a sealed 2026-09-26 does not vouch for a
+    # later 2026-10-03, nor for the same day relabelled as a scheduled event.
+    if (date_problem == "source_unavailable"
+            and manifest.get("event_date")
+            and manifest["event_date"] == _event_date_claim(article)):
+        date_problem = ""
     if date_problem:
         for key, default in (
             ("event_date", None), ("event_date_type", "unknown"),
@@ -1605,6 +1640,8 @@ def build_evidence_manifest(
     source: Mapping[str, object],
     *,
     article: Mapping[str, object] | None = None,
+    curation: Mapping[str, object] | None = None,
+    reference_date: object = None,
 ) -> dict:
     """Persist source fingerprints without retaining copyrighted article text.
 
@@ -1612,6 +1649,12 @@ def build_evidence_manifest(
     intentionally cannot.  This compact manifest lets final-card validation
     remember which concrete entities, dates and quantities really appeared in
     that body without storing or re-publishing the body itself.
+
+    With ``curation`` the manifest also seals that curation's event date — but
+    only after judging it here, against ``source``, with the same judge the
+    integrity gate uses.  The caller's word that it verified the date is not
+    taken.  ``reference_date`` should be the value the curation-time integrity
+    check used, so relative dates ("어제") resolve to the same day.
     """
     parts = _source_parts(article or {}, source)
     evidence = " ".join(filter(None, parts.values()))
@@ -1644,8 +1687,50 @@ def build_evidence_manifest(
         "claims": list(concrete_claims(evidence))[:100],
         "quantities": quantities,
     }
+    # A new optional key, not a new version: bumping EVIDENCE_MANIFEST_VERSION
+    # would invalidate every manifest already archived and take the title/summary
+    # support (#48) down with it.  Old manifests simply carry no event date and
+    # the gate stays fail-closed for them.
+    verified_date = _verified_event_date(
+        curation, source,
+        _reference_date(article or {}, source, reference_date or source.get("published_at")),
+    ) if curation is not None else {}
+    if verified_date:
+        manifest["verified_event_date"] = verified_date
     manifest["manifest_fingerprint"] = _digest_payload(manifest)
     return manifest
+
+
+def _verified_event_date(
+    curation: Mapping[str, object], source: Mapping[str, object], reference: date,
+) -> dict[str, str]:
+    """The curation's event date, if the declared field in ``source`` bears it out.
+
+    Judged on the claim fields alone so the evidence can only come from
+    ``source`` — never from text the curation itself wrote.
+    """
+    claim = _event_date_claim(curation)
+    if not claim["value"]:
+        return {}
+    candidate = {
+        "event_date": claim["value"], "event_date_type": claim["type"],
+        "event_date_precision": claim["precision"], "event_date_source": claim["source"],
+    }
+    if _event_date_problem(candidate, source, reference):
+        return {}
+    return claim
+
+
+def _sealed_event_date(value: object) -> dict[str, str]:
+    if not isinstance(value, Mapping):
+        return {}
+    claim = {key: clean_text(value.get(key)).lower()
+             for key in ("value", "type", "precision", "source")}
+    try:
+        date.fromisoformat(claim["value"])
+    except ValueError:
+        return {}
+    return claim
 
 
 def _evidence_manifest(
@@ -1679,6 +1764,7 @@ def _evidence_manifest(
         "stages": strings("stages"),
         "claims": strings("claims"),
         "quantities": quantities,
+        "event_date": _sealed_event_date(raw.get("verified_event_date")),
     }
 
 
