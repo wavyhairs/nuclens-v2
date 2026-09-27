@@ -116,6 +116,8 @@ class ArchiveIntegrityIntegrationTests(unittest.TestCase):
         self.assertEqual(diagnostics["checked"], 2)
         self.assertEqual(diagnostics["quarantined"], 1)
         self.assertEqual(diagnostics["sanitized"], 1)
+        # 운영 알림이 "근거 재확인 불가"와 "날짜 이상"을 가를 수 있게 사유별로 센다.
+        self.assertEqual(diagnostics["sanitize_codes"], {"event_date_implausible_year": 1})
 
 
 if __name__ == "__main__":

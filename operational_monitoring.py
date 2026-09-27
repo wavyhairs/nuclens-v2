@@ -380,6 +380,10 @@ class AlertSignal:
     # 상태 동일성 지문. 이 값이 있으면 **내용이 달라졌을 때만** 다시 알린다.
     # 비어 있으면 예전처럼 쿨다운마다 다시 알린다(진행 중인 장애의 기본값).
     fingerprint: str = ""
+    # False 면 쿨다운이 지나고 지문이 달라져도 되풀이하지 않는다 — 달라진 것이
+    # 나아진 것뿐이라 새로 알릴 것이 없다고 신호 쪽이 아는 경우다. 첫 통지·심각도
+    # 상승·해결 뒤 재발은 이 값과 상관없이 알린다.
+    renotify: bool = True
 
     def normalized(self) -> "AlertSignal":
         severity = self.severity if self.severity in _SEVERITY_RANK else "warning"
@@ -397,6 +401,7 @@ class AlertSignal:
             technical=str(self.technical or "").strip()[:700],
             level=level,
             fingerprint=str(self.fingerprint or "").strip()[:200],
+            renotify=bool(self.renotify),
         )
 
 
@@ -593,6 +598,33 @@ def archive_quarantine_split(current: Mapping | None,
     return new_count, total - new_count
 
 
+SOURCE_UNAVAILABLE_CODE = "event_date_source_unavailable"
+
+
+def _archive_event_date_sentence(archive_quality: Mapping, sanitized: int) -> str:
+    """사이트에서 뺀 사건일을 **이유대로** 말한다.
+
+    예전 문장은 "사건일이 잘못된 기사 N건은 날짜만 자동 정정했습니다"였다. 둘 다
+    사실이 아니었다 — 고친 것이 아니라 표시하지 않은 것이고, 실측 2026-09-27
+    1,412건은 전부 날짜가 틀려서가 아니라 원문 근거(본문)를 다시 확인할 수 없어서였다.
+    사유별 건수(`sanitize_codes`)가 없는 옛 기록은 두 경우를 함께 부른다.
+    """
+    codes = archive_quality.get("sanitize_codes")
+    if not isinstance(codes, Mapping) or not codes:
+        return (f"원문 근거를 다시 확인할 수 없거나 날짜가 비정상인 사건일 "
+                f"{sanitized}건은 사이트에 표시하지 않았습니다.")
+    unavailable = min(sanitized, _nonnegative_int(codes.get(SOURCE_UNAVAILABLE_CODE)))
+    return (f"사건일 {sanitized}건은 사이트에 표시하지 않았습니다 — 원문 근거를 "
+            f"다시 확인할 수 없음 {unavailable}건 · 날짜 이상 {sanitized - unavailable}건.")
+
+
+def _codes_summary(codes: object) -> str:
+    if not isinstance(codes, Mapping) or not codes:
+        return "-"
+    return ",".join(f"{str(code).removeprefix('event_date_')}:{_nonnegative_int(count)}"
+                    for code, count in sorted(codes.items()))
+
+
 def data_gate_signals(record: Mapping | None,
                       previous: Mapping | None = None) -> list[AlertSignal]:
     """Translate one ``data_quality_gate`` record into actionable signals.
@@ -620,17 +652,17 @@ def data_gate_signals(record: Mapping | None,
         samples = (list(archive_quality.get("quarantine_samples") or []) +
                    list(archive_quality.get("sanitize_samples") or []))
         hashes = ", ".join(sorted(_sample_hashes(samples))[:5])
+        date_sentence = _archive_event_date_sentence(archive_quality, sanitized)
         if quarantined:
             title = "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다"
             counted = (f"제외 {quarantined}건" if previous_archive is None else
                        f"새로 제외 {new_quarantine}건 · 기존 제외 유지 {kept_quarantine}건")
             detail = f"원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — {counted}."
             if sanitized:
-                detail += f" 사건일이 잘못된 기사 {sanitized}건은 날짜만 자동 정정했습니다."
+                detail += " " + date_sentence
         else:
-            title = "아카이브 기사 날짜를 자동으로 정정했습니다"
-            detail = (f"사건일이 잘못 적힌 기사 {sanitized}건의 날짜만 비우고 "
-                      "나머지 내용은 그대로 내보냈습니다.")
+            title = "확인할 수 없는 아카이브 사건일을 표시하지 않았습니다"
+            detail = date_sentence + " 기사 내용은 그대로 내보냈습니다."
         out.append(AlertSignal(
             # 격리와 정제는 같은 무결성 사고의 강도 차이다. 키를 하나로
             # 유지하면 정제 경고 뒤 격리가 생겼을 때 severity escalation은
@@ -645,6 +677,7 @@ def data_gate_signals(record: Mapping | None,
             action=ACTION_NONE + " 매 빌드에서 다시 검사합니다.",
             technical=(f"checked={_nonnegative_int(archive_quality.get('checked'))} "
                        f"quarantined={quarantined} sanitized={sanitized} "
+                       f"sanitize_codes={_codes_summary(archive_quality.get('sanitize_codes'))} "
                        f"samples={hashes or 'see build log'}"),
             # **정제 건수는 지문에 넣지 않는다.** 아카이브가 커지면 날짜 정정은
             # 매일 늘어난다(실측 6→40→72→100→142). 그것까지 지문에 넣으면 새로
@@ -652,6 +685,11 @@ def data_gate_signals(record: Mapping | None,
             fingerprint=(f"q={quarantined}:"
                          + _digest(_sample_hashes(
                              archive_quality.get("quarantine_samples")))),
+            # 지문은 목록이 **줄어도** 바뀐다. 제외가 풀린 날(실측 2026-09-27: 36→35,
+            # 새로 제외 0건)에 "자동 제외했습니다"를 다시 보낼 이유가 없다. 새로
+            # 제외된 기사가 있을 때만 되풀이한다 — 격리가 처음 생기는 것은
+            # 심각도 상승으로, 해결 뒤 재발은 재발로 여전히 즉시 알린다.
+            renotify=previous_archive is None or new_quarantine > 0,
             observation_id=observation_id, min_occurrences=1,
         ))
     tracking = record.get("tracking")
@@ -1403,7 +1441,7 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
             # 지문은 **줄이기만 한다.** 쿨다운이 지났어도 상태가 그대로면 같은 말을
             # 다시 하지 않는다. 반대로 지문이 달라졌다고 쿨다운을 건너뛰지도 않는다
             # — 그러면 회차마다 건수만 흔들리는 알림이 3시간마다 울린다.
-            repeatable = cooldown_elapsed and (
+            repeatable = signal.renotify and cooldown_elapsed and (
                 not signal.fingerprint or
                 signal.fingerprint != str(row.get("last_notified_fingerprint") or ""))
         if _nonnegative_int(row.get("consecutive")) >= signal.min_occurrences and repeatable:
