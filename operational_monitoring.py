@@ -124,6 +124,22 @@ def _nonnegative_int(value: object) -> int:
         return 0
 
 
+# 파일 종류 표시만 틀린 경고. 서버가 RSS 를 `text/html` 로 보내거나 인코딩 선언이
+# 실제와 다르면 feedparser 는 bozo 를 세우지만 항목은 그대로 다 읽는다. 실측
+# 2026-09-13~27 DOE: 경고 6번·해결 6번이 나갔는데 매번 기사 10건 중 10건을 읽었다
+# (`usable=10/10`). energy.gov 가 두 표시를 번갈아 보내서 켜졌다 꺼졌다 했을 뿐이다.
+# 항목을 다 읽은 경우에만 무시한다 — 하나라도 빠지면 그대로 부분 장애다.
+BENIGN_BOZO_MARKERS = ("is not an XML media type", "document declared as")
+
+
+def benign_bozo(observation: Mapping) -> bool:
+    exception = str(observation.get("bozo_exception") or "")
+    entries = _nonnegative_int(observation.get("entries"))
+    usable = _nonnegative_int(observation.get("usable"))
+    return (entries > 0 and usable >= entries
+            and any(marker in exception for marker in BENIGN_BOZO_MARKERS))
+
+
 def _days_since(value: object, now: datetime) -> int | None:
     """Whole days between an ISO timestamp and ``now``; ``None`` if unusable."""
     text = str(value or "").strip()
@@ -284,7 +300,7 @@ def update_source_health(previous: Mapping | None,
                 # 뒤로 가지 않는다 — 어떤 실행이 일부만 읽어 와도 그 피드가
                 # 갑자기 오래된 것으로 보이면 안 된다.
                 row["last_newest_pub"] = max(newest, str(row.get("last_newest_pub") or ""))
-            if observation.get("bozo"):
+            if observation.get("bozo") and not benign_bozo(observation):
                 row["consecutive_bozo"] = _nonnegative_int(row.get("consecutive_bozo")) + 1
                 row["last_bozo_exception"] = str(
                     observation.get("bozo_exception") or "")[:200]
@@ -457,9 +473,10 @@ def source_health_signals(health: Mapping | None, *,
                 out.append(AlertSignal(
                     key=f"source:{name}:partial-parse", scope="source",
                     severity="warning", level=LEVEL_ATTENTION,
-                    title=f"{name} 기사 목록을 일부만 읽었습니다",
-                    detail=(f"{kind_label} 목록을 읽는 중 오류가 나서 항목 일부만 "
-                            f"받았습니다. 연속 {bozo}회째입니다."),
+                    title=f"{name} 기사 목록 파일에 형식 오류가 있습니다",
+                    detail=(f"{kind_label} 목록 파일이 연속 {bozo}회 깨진 채로 왔습니다. "
+                            f"이번에 읽은 기사는 {_nonnegative_int(raw.get('last_usable'))}건"
+                            "이고, 깨진 곳 뒤의 기사는 빠졌을 수 있습니다."),
                     impact="이 출처의 일부 기사가 빠질 수 있습니다. 다른 출처와 서비스는 정상입니다.",
                     action="반복되면 해당 사이트 형식이 바뀐 것입니다 — 수집 설정을 확인해 주세요.",
                     technical=(f"consecutive_bozo={bozo} "
@@ -1188,17 +1205,136 @@ def previous_data_gate_record(records: Iterable[Mapping],
     return best
 
 
-def daily_quality_signals(records: Iterable[Mapping], date: str) -> tuple[list[AlertSignal], set[str]]:
-    """Aggregate the day's persisted quality events into alert signals.
+QUALITY_WINDOW = timedelta(hours=24)
+
+# 큐레이션(기사 요약) 호출 실패의 원인별 문장. 원인에 따라 할 일이 정반대라
+# 문장을 한 벌로 두면 반드시 한쪽이 틀린다 — 결제·한도는 사람이 풀어야 하고,
+# 서버 혼잡은 기다리면 풀린다.
+_CURATION_HELD = ("요약 못 한 기사는 버리지 않고 보류했다가 풀린 뒤 다시 요약합니다. "
+                  "오래 걸리면 그 사이 기사 일부는 놓칠 수 있습니다. 이미 나간 브리핑과 "
+                  "사이트는 그대로입니다.")
+_CURATION_RETRY = ("해당 기사는 다음 수집(약 3시간 뒤)에서 다시 요약해 늦게 들어갑니다. "
+                   "두 번 연속 실패한 기사만 빠질 수 있습니다.")
+_CURATION_FAILURE_TEXT: dict[str, dict[str, str]] = {
+    "billing": {
+        "title": "Gemini 선불 크레딧이 떨어져 기사 요약이 멈췄습니다",
+        "detail": "기사 {lost}건을 AI로 요약하지 못했습니다. 구글이 '결제가 필요하다'고 답했습니다.",
+        "impact": "충전 전까지 새 기사가 브리핑에 들어가지 않습니다. " + _CURATION_HELD,
+        "action": ("Google AI Studio 결제 화면에서 크레딧을 충전해 주세요. "
+                   "충전하면 다음 수집부터 자동으로 풀립니다."),
+    },
+    "spending_cap": {
+        "title": "Gemini 월 지출 한도에 걸려 기사 요약이 멈췄습니다",
+        "detail": ("기사 {lost}건을 AI로 요약하지 못했습니다. 구글이 '이번 달 지출 한도를 "
+                   "넘었다'고 답했습니다."),
+        "impact": "한도를 올리기 전까지 새 기사가 브리핑에 들어가지 않습니다. " + _CURATION_HELD,
+        "action": ("Google AI Studio 결제(Billing) 화면에서 월 지출 한도를 올려 주세요. "
+                   "올리면 다음 수집부터 자동으로 풀립니다."),
+    },
+    "quota": {
+        "title": "Gemini 사용 한도에 걸려 기사 요약이 멈췄습니다",
+        "detail": "기사 {lost}건을 AI로 요약하지 못했습니다. 구글이 '호출 한도를 넘었다'고 답했습니다.",
+        "impact": "한도가 풀릴 때까지 새 기사가 브리핑에 들어가지 않습니다. " + _CURATION_HELD,
+        "action": ("하루 한도라면 구글 기준 자정(한국 시각 오후 4~5시)에 풀립니다. 매일 "
+                   "반복되면 유료 키 전환이나 호출량 점검이 필요합니다."),
+    },
+    "config": {
+        "title": "Gemini 설정 오류로 기사 요약이 멈췄습니다",
+        "detail": ("기사 {lost}건을 AI로 요약하지 못했습니다. 구글이 '이 키로는 모델을 쓸 수 "
+                   "없다'고 답했습니다."),
+        "impact": ("고치기 전까지 매 수집이 같은 자리에서 실패합니다. 이미 나간 브리핑과 "
+                   "사이트는 그대로입니다."),
+        "action": "GitHub 저장소 설정의 Gemini 키와 모델 이름을 확인해 주세요.",
+    },
+    "overloaded": {
+        "title": "구글 AI 서버가 붐벼 기사 요약이 늦어졌습니다",
+        "detail": ("기사 {lost}건을 이번 수집에서 AI로 요약하지 못했습니다. 구글이 '지금 "
+                   "요청이 몰려 있다'고 답했습니다."),
+        "impact": _CURATION_RETRY,
+        "action": "필요 없음 — 구글 쪽 일시 혼잡이라 기다리면 풀립니다.",
+    },
+    "timeout": {
+        "title": "AI 요약 응답이 늦어 기사 일부를 다시 요약합니다",
+        "detail": "기사 {lost}건의 AI 요약 응답이 제때 오지 않았습니다.",
+        "impact": _CURATION_RETRY,
+        "action": "필요 없음 — 다음 수집에서 다시 요약합니다.",
+    },
+    "other": {
+        "title": "기사 일부를 AI로 요약하지 못했습니다",
+        "detail": "기사 {lost}건을 이번 수집에서 AI로 요약하지 못했습니다. 원인은 확인되지 않았습니다.",
+        "impact": _CURATION_RETRY,
+        "action": ("필요 없음 — 다음 수집에서 다시 요약합니다. 하루 넘게 이어지면 "
+                   "워크플로 로그의 '큐레이션 실패' 줄을 확인해 주세요."),
+    },
+}
+_CURATION_FAILURE_NEEDS_HUMAN = frozenset({"billing", "spending_cap", "quota", "config"})
+
+
+def curation_failure_kind(failures: Iterable[Mapping]) -> str:
+    """유실 기록의 원인. 사람 손이 필요한 것이 섞여 있으면 그쪽이 이긴다.
+
+    라벨(``reasons``)과 함께 기사별 원문 응답(``items[].reason``)도 본다 — 라벨이
+    생기기 전 기록은 503 도 402 도 전부 ``other`` 였다.
+    """
+    labels: set[str] = set()
+    texts: list[str] = []
+    for row in failures:
+        if not isinstance(row, Mapping):
+            continue
+        if isinstance(row.get("reasons"), Mapping):
+            labels.update(str(key) for key in row["reasons"])
+        for item in row.get("items") or []:
+            if isinstance(item, Mapping):
+                texts.append(str(item.get("reason") or ""))
+    blob = " ".join(texts).lower()
+    if "billing" in labels or "http 402" in blob or "prepaid" in blob:
+        return "billing"
+    if "spending cap" in blob:
+        return "spending_cap"
+    if "quota" in labels:
+        return "quota"
+    if "config" in labels:
+        return "config"
+    if ("overloaded" in labels or "http 503" in blob or "unavailable" in blob
+            or "high demand" in blob):
+        return "overloaded"
+    if "timeout" in labels or "truncated" in labels:
+        return "timeout"
+    return "other"
+
+
+def _in_quality_window(row: Mapping, date: str, now: datetime | None,
+                       window: timedelta) -> bool:
+    if now is None:
+        return str(row.get("date") or "") == date
+    at = _parse_time(row.get("generated_at"))
+    if at is None:
+        return str(row.get("date") or "") == date
+    now_utc = _utc_now(now)
+    # 몇 분 앞선 기록은 같은 회차의 시계 차이다.
+    return now_utc - window <= at <= now_utc + timedelta(minutes=10)
+
+
+def daily_quality_signals(records: Iterable[Mapping], date: str, *,
+                          now: datetime | None = None,
+                          window: timedelta = QUALITY_WINDOW,
+                          ) -> tuple[list[AlertSignal], set[str]]:
+    """Aggregate recent persisted quality events into alert signals.
 
     The returned scopes tell :func:`evaluate_alerts` which older alerts may be
-    resolved.  A daily data-gate record also closes the curation-failure window:
-    if no failures were logged before that point, yesterday's failure alert can
-    safely resolve.
+    resolved.  A data-gate record also closes the curation-failure window: if no
+    failures were logged in the window, the earlier failure alert can resolve.
+
+    ``now`` 를 주면 **달력 날짜가 아니라 최근 24시간**을 본다. 날짜로 자르면 자정이
+    지나는 순간 어제의 기록이 통째로 사라져 '해결됐다'가 된다 — 실측 2026-09-13~27
+    품질 이벤트의 '✅ 해결됨' 19건이 전부 자정 직후 첫 수집(00:42~00:51)에 나갔다.
+    고쳐진 것이 아니라 날짜가 바뀐 것이었고, 같은 날 다시 생기면 '재발'이라 쿨다운을
+    건너뛰고 또 알렸다. 24시간 창에서 '해결'은 '24시간 동안 다시 안 생겼다'는 뜻이다.
+    ``now`` 가 없으면 예전처럼 ``date`` 하루만 본다.
     """
     records = list(records)
     rows = [row for row in records
-            if isinstance(row, Mapping) and str(row.get("date") or "") == date]
+            if isinstance(row, Mapping) and _in_quality_window(row, date, now, window)]
     signals: list[AlertSignal] = []
     scopes: set[str] = set()
 
@@ -1222,22 +1358,26 @@ def daily_quality_signals(records: Iterable[Mapping], date: str) -> tuple[list[A
                 reasons[str(reason)] = reasons.get(str(reason), 0) + _nonnegative_int(count)
         reason_text = ", ".join(f"{key} {value}건" for key, value in sorted(reasons.items())) or "원인 미분류"
         latest_id = max(str(row.get("generated_at") or "") for row in failures)
-        heavy = lost >= 10
+        kind = curation_failure_kind(failures)
+        spec = _CURATION_FAILURE_TEXT[kind]
+        # 사람이 손대야 풀리는 것(결제·한도·설정)만 조치 필요다. 구글 서버 혼잡(503)은
+        # 건수가 커도 다음 수집이 다시 요약한다 — 예전에는 10건 이상이면 무조건
+        # '외부 API 한도·키 상태를 확인해 주세요'(🚨)였고, 실측 7회 중 6회가 503 이었다.
+        needs_human = kind in _CURATION_FAILURE_NEEDS_HUMAN
         signals.append(AlertSignal(
             key="quality:curation-failure", scope="curation",
-            severity="critical" if heavy else "warning",
-            level=LEVEL_ACTION if heavy else LEVEL_ATTENTION,
-            title="일부 기사를 정리하지 못하고 넘겼습니다",
-            detail=(f"오늘 {lost}건이 요약·분류 단계에서 처리되지 못했습니다."),
-            impact=("해당 기사는 오늘 브리핑과 사이트에 나오지 않습니다. 나머지 "
-                    "기사와 서비스는 정상입니다."),
-            action=("외부 API 한도·키 상태를 확인해 주세요."
-                    if heavy else ACTION_WATCH),
-            technical=f"records={len(failures)} lost={lost} reasons={reason_text}",
+            severity="critical" if needs_human else "warning",
+            level=LEVEL_ACTION if needs_human else LEVEL_ATTENTION,
+            title=spec["title"],
+            detail=spec["detail"].format(lost=lost),
+            impact=spec["impact"],
+            action=spec["action"],
+            technical=f"records={len(failures)} lost={lost} kind={kind} reasons={reason_text}",
             observation_id=f"{date}:{latest_id}:{lost}",
-            # A large loss is actionable immediately; a small transient loss
-            # must recur on another day before paging an administrator.
-            min_occurrences=1 if heavy else 2,
+            # 원인이 같으면 건수가 흔들려도 같은 소식이다. 원인이 바뀌면 다시 말한다.
+            fingerprint=f"kind={kind}",
+            # 사람이 할 일이 있으면 바로, 기다리면 풀리는 것은 한 번 더 났을 때만.
+            min_occurrences=1 if needs_human else 2,
         ))
 
     selection_rows = [row for row in rows if row.get("record_type") == "selection_stats"]
@@ -1359,6 +1499,14 @@ def _resolution_signal(key: str, row: Mapping) -> AlertSignal:
     ).normalized()
 
 
+def _notified_this_episode(row: Mapping) -> bool:
+    notified = _parse_time(row.get("last_notified_at"))
+    if notified is None:
+        return False
+    started = _parse_time(row.get("first_seen_at"))
+    return started is None or notified >= started
+
+
 def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
                     *, evaluated_scopes: set[str] | None = None,
                     now: datetime | None = None,
@@ -1395,7 +1543,11 @@ def evaluate_alerts(signals: Sequence[AlertSignal], previous: Mapping | None,
             row["resolved_at"] = now_iso
             # 알린 적 없는 문제의 '해결'은 소식이 아니다. 미발송분이 남아 있으면
             # 그 원본이 먼저 나가야 하므로 해결 통지를 만들지 않는다.
-            if row.get("last_notified_at") and not row.get("pending_notification"):
+            #
+            # '알린 적'은 **이번 사건에서**다. 예전에는 몇 주 전 한 번 알린 기록만
+            # 있어도 해결 통지를 만들었다 — 실측 audio-script-claim-removed 는
+            # 9/09 이후 경보가 한 번도 안 나갔는데 '✅ 해결됨'만 9번 나갔다.
+            if _notified_this_episode(row) and not row.get("pending_notification"):
                 row["pending_resolution"] = True
 
     due: list[AlertSignal] = []

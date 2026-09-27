@@ -239,6 +239,21 @@ class PreselectRankTests(unittest.TestCase):
 class GuardrailTests(unittest.TestCase):
     """평소엔 빈 리스트가 정상이다. 여기서 잠그는 것은 '언제 우는가'다."""
 
+    # 어휘 예선 컷을 **다시 계획했을 때**의 설정. 기본값은 비어 있다(아래
+    # test_no_path_is_guarded_while_no_cut_is_planned) — 기계는 남겨 두고 이 설정으로 잠근다.
+    PLANNED = {"preselect_guarded_paths": ("evidence",)}
+
+    def test_no_path_is_guarded_while_no_cut_is_planned(self):
+        """컷 20 은 적용되지 않았다 — 실제 후보는 어휘 50 ∪ 의미 80 ∪ 필수다.
+
+        그 상태에서 "컷 20 이 실제 병합을 놓친다"가 매일 나갔다(9/23 부터 critical).
+        이미 붙은 병합의 어휘 순위는 놓침의 증거가 아니다.
+        """
+        breach = stats.preselect_rank_summary(Counter({0: 60, 25: 40}), Counter())
+        diag = {"search_space": [{"path": "evidence", "preselect_rank": breach}],
+                "top_n_retention": {"llm_approved_total": 0, "levels": []}}
+        self.assertEqual(stats.guardrails(diag), [])
+
     def test_only_the_paths_we_plan_to_cut_are_guarded(self):
         """적용하지도 않을 컷을 두고 우는 알림은 배경 소음이 된다.
 
@@ -252,7 +267,7 @@ class GuardrailTests(unittest.TestCase):
                              {"path": "evidence", "preselect_rank": breach}],
             "top_n_retention": {"llm_approved_total": 0, "levels": []},
         }
-        found = stats.guardrails(diag)
+        found = stats.guardrails(diag, limits=self.PLANNED)
         self.assertEqual([row["id"] for row in found],
                          ["issue-candidate:preselect-headroom"])
         self.assertIn("(evidence)", found[0]["title"])
@@ -283,17 +298,17 @@ class GuardrailTests(unittest.TestCase):
 
     def test_a_healthy_run_says_nothing(self):
         healthy = self.diagnostics(Counter({0: 300, 1: 80, 4: 20}))
-        self.assertEqual(stats.guardrails(healthy), [])
+        self.assertEqual(stats.guardrails(healthy, limits=self.PLANNED), [])
 
     def test_one_outlier_does_not_page(self):
         """`max` 하나로 걸면 매 회차 운다. 컷 밖 1건 / 400건(0.25%)은 침묵해야 한다 —
         이 테스트가 깨지면 알림이 배경 소음이 되고, 그러면 진짜일 때도 안 읽힌다."""
         noisy = self.diagnostics(Counter({0: 350, 2: 49, 28: 1}))
-        self.assertEqual(stats.guardrails(noisy), [])
+        self.assertEqual(stats.guardrails(noisy, limits=self.PLANNED), [])
 
     def test_real_loss_pages(self):
         broken = self.diagnostics(Counter({0: 300, 2: 60, 25: 40}))
-        found = stats.guardrails(broken)
+        found = stats.guardrails(broken, limits=self.PLANNED)
         self.assertEqual([row["id"] for row in found],
                          ["issue-candidate:preselect-headroom"])
         self.assertEqual(found[0]["severity"], "critical")
@@ -303,12 +318,12 @@ class GuardrailTests(unittest.TestCase):
         """뉴스가 한산한 날 분모가 10건이면 1건만 밀려도 10% 다. 추적률 게이트가
         하루치 분모로 겪은 것과 같은 함정이라 표본 하한을 둔다."""
         tiny = self.diagnostics(Counter({0: 8, 30: 2}))
-        self.assertEqual(stats.guardrails(tiny), [])
+        self.assertEqual(stats.guardrails(tiny, limits=self.PLANNED), [])
 
     def test_p99_warns_before_the_cut_is_crossed(self):
         """컷을 넘긴 뒤 알리면 이미 병합을 놓친 회차다. 그 앞에서 한 번 말한다."""
         tight = self.diagnostics(Counter({0: 200, 15: 90, 18: 10}))
-        found = stats.guardrails(tight)
+        found = stats.guardrails(tight, limits=self.PLANNED)
         self.assertEqual([row["severity"] for row in found], ["warning"])
         self.assertIn("여유가 줄었다", found[0]["title"])
 
@@ -347,8 +362,31 @@ class GuardrailTests(unittest.TestCase):
         """`id` 는 운영 알림의 중복 억제 키다. 바꾸면 쿨다운이 끊겨 같은 사고가
         매 회차 새 알림으로 온다. 이름을 바꿀 때는 그 사실을 알고 바꿀 것."""
         broken = self.diagnostics(Counter({0: 100, 25: 40}))
-        self.assertTrue(all(row["id"].startswith("issue-candidate:")
-                            for row in stats.guardrails(broken)))
+        found = stats.guardrails(broken, limits=self.PLANNED)
+        self.assertTrue(found)
+        self.assertTrue(all(row["id"].startswith("issue-candidate:") for row in found))
+
+
+class EvidenceAttachRateTests(unittest.TestCase):
+    """부착률의 분자·분모는 같은 기사 집합이다 — 근거 캐시 뒤 값이 1 을 넘던 문제."""
+
+    def test_only_articles_compared_this_run_are_counted(self):
+        telemetry = stats.SearchTelemetry("evidence")
+        telemetry.compare("a-new")          # 이번 회차에 다시 대본 기사 하나
+        merges = [
+            {"hash": "a-new", "member_role": "evidence"},
+            # 캐시로 이어 붙은 부착 — 이번 회차에 대보지 않았다.
+            *({"hash": f"a-cached-{index}", "member_role": "evidence"} for index in range(20)),
+        ]
+        summary = stats.summarize([], merges, [telemetry])
+        self.assertEqual(summary["evidence_attach_rate"], 1.0)
+        self.assertEqual(summary["evidence_attach_rate_version"],
+                         stats.EVIDENCE_ATTACH_RATE_VERSION)
+
+    def test_drift_is_not_measured_across_definitions(self):
+        diag = {"search_space": [], "top_n_retention": {"llm_approved_total": 0, "levels": []},
+                "evidence_attach_rate": 0.31}
+        self.assertEqual(stats.guardrails(diag, baseline={"evidence_attach_rate": 7.9}), [])
 
 
 class TelemetryTests(unittest.TestCase):

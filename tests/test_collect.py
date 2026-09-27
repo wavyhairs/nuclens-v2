@@ -356,6 +356,15 @@ class TestRequestFailureClassification(unittest.TestCase):
         self.assertEqual(nb.classify_request_failure(
             GeminiError("URLError: <urlopen error timed out>")), "timeout")
 
+    def test_billing_and_overload_have_their_own_labels(self):
+        """402 는 충전이, 503 은 기다림이 푼다 — 'other' 한 칸이면 알림이 틀린 일을 시킨다."""
+        self.assertEqual(nb.classify_request_failure(
+            GeminiError("HTTP 402: prepaid credits exhausted")), "billing")
+        self.assertEqual(nb.classify_request_failure(GeminiError(
+            'HTTP 503: {"error": {"code": 503, "message": "This model is currently '
+            'experiencing high demand.", "status": "UNAVAILABLE"}}')), "overloaded")
+        self.assertNotIn("overloaded", nb.SPLITTABLE_FAILURES)
+
     def test_unknown_defaults_to_other(self):
         self.assertEqual(nb.classify_request_failure(
             GeminiError("응답 구조 비정상")), "other")

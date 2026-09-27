@@ -1891,6 +1891,13 @@ def classify_request_failure(exc: Exception) -> str:
                     ``quota`` 보다 나쁘다 — 기다리면 낫는 게 아니라 매 회차 같은
                     자리에서 100% 실패한다. 사람이 설정을 고쳐야 한다.
       - ``timeout`` 응답이 느렸을 뿐. 입력을 줄이면 짧아지므로 분할 재시도 대상.
+      - ``billing`` 선불 크레딧 소진(HTTP 402). 처리는 ``quota`` 와 같다 — 충전 전까지
+                    매 호출이 실패하므로 fallback 으로 강등하지 않고 보류한다. 라벨을
+                    따로 두는 것은 사람이 할 일이 다르기 때문이다(기다림이 아니라 충전).
+      - ``overloaded`` 구글 쪽 서버 혼잡(HTTP 503 · UNAVAILABLE). 처리는 ``other`` 와
+                    같다(쪼개도 안 풀린다). 라벨만 갈라 운영 알림이 '키·한도를 확인하라'고
+                    잘못 말하지 않게 한다 — 실측 2026-09-13~25 큐레이션 유실 7회 중 6회가
+                    이 503 이었는데 알림은 전부 '외부 API 한도·키 상태 확인'이었다.
       - ``other``   원인 불명. 함부로 다시 부르지 않는다 (기존 기본값 유지).
 
     ``truncated`` 는 예외 타입(``GeminiTruncated``)으로 이미 갈라지므로 여기 없다.
@@ -1905,12 +1912,17 @@ def classify_request_failure(exc: Exception) -> str:
     msg = str(exc)
     if "RESOURCE_EXHAUSTED" in msg or "HTTP 429" in msg:
         return "quota"
+    if "HTTP 402" in msg or "PAYMENT_REQUIRED" in msg or "prepaid" in msg.lower():
+        return "billing"
     if ("HTTP 404" in msg or "NOT_FOUND" in msg
             or "HTTP 403" in msg or "PERMISSION_DENIED" in msg
             or "HTTP 401" in msg or "UNAUTHENTICATED" in msg):
         return "config"
     if "TimeoutError" in msg or "timed out" in msg.lower():
         return "timeout"
+    if ("HTTP 503" in msg or "UNAVAILABLE" in msg or "overloaded" in msg.lower()
+            or "high demand" in msg.lower()):
+        return "overloaded"
     return "other"
 
 
@@ -2018,6 +2030,21 @@ def append_curation_failure(lost: dict[str, str], articles: list[dict],
         print(f"  ! 큐레이션 유실 기록 실패: {exc}")
         return False
     return True
+
+
+def example_titles(rows: list[dict], limit: int = 3) -> str:
+    """운영 알림에 붙일 기사 제목 예시. '몇 건'만으로는 무슨 기사인지 알 수 없다."""
+    titles = []
+    for row in rows:
+        title = clean_text(row.get("title"))
+        if title and title not in titles:
+            titles.append(title if len(title) <= 40 else title[:39] + "…")
+        if len(titles) >= limit:
+            break
+    if not titles:
+        return ""
+    more = f" 외 {len(rows) - len(titles)}건" if len(rows) > len(titles) else ""
+    return " 예: " + ", ".join(f"「{title}」" for title in titles) + more + "."
 
 
 def append_quality_event(alert_key: str, title: str, detail: str, *,
@@ -2390,7 +2417,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 process(chunk[mid:], f"{label}b", split=True)
                 return
             global QUOTA_EXHAUSTED, CONFIG_ERROR
-            if reason == "quota":
+            if reason in ("quota", "billing"):
                 QUOTA_EXHAUSTED = True
             if reason == "config" and not CONFIG_ERROR:
                 CONFIG_ERROR = detail
@@ -2444,15 +2471,20 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
 
     if final_integrity_quarantines:
         count = len(final_integrity_quarantines)
+        # '제외했다'고 말하면 안 된다 — 이 기사들은 sent 로 마킹되지 않아 다음
+        # 수집에서 다시 요약된다(실측 2026-09-26~27: 같은 WNN 기사가 9회 연속 이
+        # 목록에 올랐다). 사실대로 '이번 수집에서 뺐다'고 말한다.
         append_quality_event(
             "article-integrity-quarantine",
-            "원문과 다른 기사를 자동으로 제외했습니다",
-            (f"요약이 원문과 다르게 만들어진 기사 {count}건을 브리핑 후보와 "
-             "아카이브에서 뺐습니다. 다시 만들어 봐도 같아서 내보내지 않았습니다."),
+            "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
+            (f"AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 {count}건을 "
+             "두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 "
+             "만들어 봅니다."
+             + example_titles(list(final_integrity_quarantines.values()))),
             severity="critical", min_occurrences=1,
             level="attention",
-            impact="없음 — 제외된 기사만 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
-            action="필요 없음 — 자동으로 걸러졌습니다. 건수가 계속 늘면 확인해 주세요.",
+            impact="없음 — 해당 기사만 늦어지거나 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
+            action="필요 없음 — 같은 기사가 며칠째 반복되면 알려 주세요.",
             technical=(f"stage=curation-regen quarantined={count} "
                        + "; ".join(str(row.get("reason") or "")[:80]
                                    for row in list(final_integrity_quarantines.values())[:3])),
@@ -3767,15 +3799,24 @@ def main() -> None:
 
     if fallback_held:
         final_count = sum(1 for row in fallback_held if row.get("final"))
+        # 두 번 실패한 기사(final)는 더 시도하지 않는다 — 그 기사에 '다음 회차에
+        # 다시 시도한다'고 말하던 것이 틀린 문장이었다.
+        retrying = len(fallback_held) - final_count
+        detail = (f"AI 요약을 받지 못해 원문 첫 문장만 있는 기사 {len(fallback_held)}건을 "
+                  "브리핑 후보에 넣지 않았습니다.")
+        if retrying:
+            detail += f" {retrying}건은 다음 수집(약 3시간 뒤)에서 다시 요약합니다."
+        if final_count:
+            detail += f" {final_count}건은 두 번 모두 실패해 더 시도하지 않고 뺐습니다."
         append_quality_event(
             "unverified-fallback-held",
-            "검증이 끝나지 않은 기사를 자동 보류했습니다",
-            (f"요약 근거가 확인되지 않은 기사 {len(fallback_held)}건을 발송 대기열에 "
-             f"넣지 않았습니다. 그중 {final_count}건은 재시도 상한에 닿아 제외했습니다."),
+            "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
+            detail + example_titles(fallback_held),
             severity="warning", min_occurrences=1 if final_count else 2,
             level="attention",
-            impact="없음 — 보류된 기사만 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
-            action="필요 없음 — 다음 회차에 자동으로 다시 시도합니다.",
+            impact="없음 — 해당 기사만 늦어지거나 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
+            action=("필요 없음 — 같은 소식은 대개 다른 매체 기사로 들어옵니다."
+                    if final_count else "필요 없음 — 다음 수집에서 자동으로 다시 요약합니다."),
             technical=f"held={len(fallback_held)} final_quarantine={final_count}",
             fingerprint=operational_monitoring.count_fingerprint(
                 f"held-final-{bool(final_count)}", len(fallback_held)),
@@ -3784,13 +3825,14 @@ def main() -> None:
     if integrity_held:
         append_quality_event(
             "article-integrity-quarantine",
-            "원문과 다른 기사를 자동으로 제외했습니다",
-            (f"요약이 원문과 다르게 만들어진 기사 {len(integrity_held)}건을 수집 "
-             "단계에서 뺐습니다."),
+            "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
+            (f"AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 "
+             f"{len(integrity_held)}건을 이번 수집에서 뺐습니다. 다음 수집에서 다시 "
+             "확인합니다." + example_titles(integrity_held)),
             severity="critical", min_occurrences=1,
             level="attention",
-            impact="없음 — 제외된 기사만 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
-            action="필요 없음 — 자동으로 걸러졌습니다. 건수가 계속 늘면 확인해 주세요.",
+            impact="없음 — 해당 기사만 늦어지거나 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
+            action="필요 없음 — 같은 기사가 며칠째 반복되면 알려 주세요.",
             technical=f"stage=collect quarantined={len(integrity_held)}",
             fingerprint=operational_monitoring.count_fingerprint(
                 "collect", len(integrity_held)),

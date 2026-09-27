@@ -836,5 +836,106 @@ class WeeklyDeliveryAlertTests(unittest.TestCase):
         self.assertTrue(state["items"][key].get("resolved_at"))
 
 
+class AlertNoiseRegressionTests(unittest.TestCase):
+    """2026-09-13~27 운영 알림 58통을 되짚어 찾은 소음. 다시 생기면 여기서 깨진다."""
+
+    def test_content_type_only_bozo_is_not_a_partial_parse(self):
+        """DOE: `text/html ... is not an XML media type` 인데 10건 중 10건을 읽었다."""
+        diagnostics = {"entries": 10, "usable": 10, "bozo": True,
+                       "bozo_exception": "text/html; charset=utf-8 is not an XML media type",
+                       "newest_pub": (T0 - timedelta(days=1)).isoformat()}
+        health = None
+        for index in range(3):
+            health = monitor.update_source_health(
+                health, monitor.source_observations(
+                    {"counts": {"DOE": 10}, "diagnostics": {"DOE": diagnostics}},
+                    {"DOE": "official"}), T0 + timedelta(hours=index))
+        self.assertEqual(health["sources"]["DOE"]["consecutive_bozo"], 0)
+        self.assertEqual(monitor.source_health_signals(health, now=T0), [])
+
+    def test_content_type_warning_with_missing_items_still_counts(self):
+        self.assertFalse(monitor.benign_bozo(
+            {"entries": 10, "usable": 6, "bozo": True,
+             "bozo_exception": "text/html; charset=utf-8 is not an XML media type"}))
+
+    def test_resolution_is_only_for_alerts_sent_in_this_episode(self):
+        """9/09 에 한 번 알린 기록만으로 매일 '✅ 해결됨'이 나가던 것."""
+        signal = monitor.AlertSignal(
+            key="quality-event:x", scope="quality_event", title="x", detail="d",
+            observation_id="o1", min_occurrences=2)
+        state = {"version": 1, "items": {"quality-event:x": {
+            "scope": "quality_event", "active": False, "consecutive": 0,
+            "resolved_at": (T0 - timedelta(days=2)).isoformat(),
+            "last_notified_at": (T0 - timedelta(days=18)).isoformat(),
+            "last_notified_severity": "warning"}}}
+        # 새 사건이 시작되지만 min_occurrences=2 라 이번엔 알리지 않는다.
+        state, due = monitor.evaluate_alerts([signal], state,
+                                             evaluated_scopes={"quality_event"}, now=T0)
+        self.assertEqual(due, [])
+        state, due = monitor.evaluate_alerts([], state, evaluated_scopes={"quality_event"},
+                                             now=T0 + timedelta(hours=3))
+        self.assertEqual(due, [], "알리지 않은 사건의 해결 통지")
+
+    def test_midnight_does_not_resolve_yesterdays_event(self):
+        """품질 이벤트 해결 19건이 전부 자정 직후 첫 수집에 나갔다 — 날짜가 바뀐 것뿐이다."""
+        kst = timezone(timedelta(hours=9))
+        row = {"record_type": "quality_event", "date": "2026-09-26",
+               "generated_at": "2026-09-26T21:44:00+09:00", "alert_key": "held",
+               "title": "보류", "detail": "d", "min_occurrences": 1}
+        after_midnight = datetime(2026, 9, 27, 0, 45, tzinfo=kst)
+        signals, scopes = monitor.daily_quality_signals([row], "2026-09-27", now=after_midnight)
+        self.assertEqual([s.key for s in signals], ["quality-event:held"])
+        next_evening = datetime(2026, 9, 27, 21, 50, tzinfo=kst)
+        signals, _ = monitor.daily_quality_signals([row], "2026-09-27", now=next_evening)
+        self.assertEqual(signals, [], "24시간 동안 다시 안 생겼으면 그때 해결이다")
+
+    def test_without_now_the_old_calendar_day_is_kept(self):
+        row = {"record_type": "quality_event", "date": "2026-09-26",
+               "generated_at": "2026-09-26T21:44:00+09:00", "alert_key": "held",
+               "title": "보류", "detail": "d"}
+        signals, _ = monitor.daily_quality_signals([row], "2026-09-27")
+        self.assertEqual(signals, [])
+
+
+class CurationFailureCauseTests(unittest.TestCase):
+    """원인에 따라 할 일이 정반대다 — 결제·한도는 사람이, 서버 혼잡은 시간이 푼다."""
+
+    def failure(self, reason_label, detail, lost=60):
+        return {"record_type": "curation_failure", "date": "2026-09-23",
+                "generated_at": "2026-09-23T00:46:00+09:00", "lost": lost,
+                "reasons": {reason_label: lost},
+                "items": [{"hash": "h", "title": "t", "reason": f"request:{reason_label}:{detail}"}]}
+
+    def signal(self, row):
+        signals, _ = monitor.daily_quality_signals([row], "2026-09-23")
+        return next(s for s in signals if s.key == "quality:curation-failure").normalized()
+
+    def test_server_overload_is_not_an_action(self):
+        """실측 7회 중 6회: 503 인데 '외부 API 한도·키 상태를 확인해 주세요'(🚨)였다."""
+        signal = self.signal(self.failure(
+            "other", 'HTTP 503: {"error": {"code": 503, "message": "This model is '
+                     'currently experiencing high demand."}}'))
+        self.assertEqual(signal.level, monitor.LEVEL_ATTENTION)
+        self.assertEqual(signal.min_occurrences, 2)
+        self.assertIn("붐벼", signal.title)
+        self.assertNotIn("키", signal.action)
+
+    def test_spending_cap_says_what_to_raise(self):
+        signal = self.signal(self.failure(
+            "quota", "HTTP 429: Your project has exceeded its monthly spending cap."))
+        self.assertEqual(signal.level, monitor.LEVEL_ACTION)
+        self.assertIn("월 지출 한도", signal.title)
+        self.assertIn("월 지출 한도를 올려", signal.action)
+
+    def test_prepaid_credits_say_top_up(self):
+        signal = self.signal(self.failure("billing", "HTTP 402: prepaid credits exhausted"))
+        self.assertEqual(signal.level, monitor.LEVEL_ACTION)
+        self.assertIn("충전", signal.action)
+
+    def test_mixed_causes_surface_the_one_needing_a_person(self):
+        rows = [self.failure("overloaded", "HTTP 503"), self.failure("config", "HTTP 404")]
+        self.assertEqual(monitor.curation_failure_kind(rows), "config")
+
+
 if __name__ == "__main__":
     unittest.main()

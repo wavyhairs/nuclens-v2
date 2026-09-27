@@ -68,6 +68,10 @@ TOP_N_CHOICES: tuple[int, ...] = (3, 5, 10, 12, 15, 20)
 #     N=12 170/170 (100%)     N=15 170/170            N=20 170/170
 ISSUE_CANDIDATE_TOP_N = 12
 
+# 2: 분자를 '이번 회차에 대본 기사의 부착'으로 한정했다(근거 캐시 이후 분모만
+# 줄어 값이 1 을 넘던 문제). 1 로 적힌 옛 기록과는 기준선을 섞지 않는다.
+EVIDENCE_ATTACH_RATE_VERSION = 2
+
 
 class SearchTelemetry:
     """후보 생성 루프의 계수기. 세는 것 말고는 아무것도 하지 않는다.
@@ -571,7 +575,17 @@ GUARD_LIMITS: dict[str, object] = {
     #     card      정답 순위 p99 24위 · 표본 123건 → 같은 컷이면 1.6% 를 잃는다
     # 카드 경로의 예선이 훨씬 약하다는 것 자체가 "카드는 건드리지 말자"의 근거다.
     # 값은 계속 `search_space[].preselect_rank` 에 남으므로 언제든 다시 볼 수 있다.
-    "preselect_guarded_paths": ("evidence",),
+    #
+    # **지금은 비어 있다(2026-09-27).** 컷 20 은 끝내 적용되지 않았다 — 8/27 #58 부터
+    # 근거 경로의 실제 후보는 '어휘 상위 50 ∪ 의미 상위 80 ∪ 필수 후보'다
+    # (`web/build_data.EVIDENCE_PRESELECT_TOP_N`·`EVIDENCE_VECTOR_TOP_N`). 여기서 재는
+    # 어휘 순위는 **이미 붙은** 병합의 순위라, 컷 밖이라도 의미 검색이 건져 붙였다는
+    # 뜻이지 놓쳤다는 뜻이 아니다. 그런데도 "컷 20 이 실제 병합을 놓친다"가 🚨 로
+    # 매일 나갔고, 9/23 근거 캐시(#171) 뒤 표본이 2,362 → 71건으로 줄자 비율이 튀어
+    # critical 이 됐다. 실제로 놓친 것을 재는 곳은 고정 전수 표본의 retrieval canary
+    # (`index-auto-recall`·`index-review-recall`)다. 새로 컷을 계획하면 그 경로를
+    # 다시 넣는다 — 값은 계속 `search_space[].preselect_rank` 에 남는다.
+    "preselect_guarded_paths": (),
     # 컷의 70%(=14위)를 **p99 가** 건드리면 여유가 사실상 없다. 그때 알린다 —
     # 컷을 넘긴 뒤에 알리면 이미 병합을 놓친 회차다.
     "preselect_headroom_ratio": 0.70,
@@ -688,6 +702,10 @@ def guardrails(diagnostics: dict, *, baseline: dict | None = None,
         before = baseline.get(key)
         if current is None or not before:
             continue
+        if (key == "evidence_attach_rate"
+                and diagnostics.get("evidence_attach_rate_version")
+                != EVIDENCE_ATTACH_RATE_VERSION):
+            continue
         # 부호를 살린다 — "줄었다"와 "늘었다"는 원인이 다르고, 절대값만 적으면
         # 알림을 읽는 사람이 어느 쪽인지 다시 열어 봐야 한다.
         drift = (float(current) - float(before)) / float(before)
@@ -718,6 +736,18 @@ def summarize(rows: list[dict], merges: list[dict],
     evidence_merges = [m for m in merges if m.get("member_role") == "evidence"]
     evidence_articles = sum(space.get("articles_that_compared") or 0
                             for space in search_space if space.get("path") == "evidence")
+    # 부착률의 분자와 분모는 **같은 기사 집합**이어야 한다. 근거 캐시(#171) 뒤로 이번
+    # 회차에 다시 대본 기사만 분모에 들어오는데, 분자는 캐시로 이어 붙은 부착까지
+    # 전부 셌다 — 그래서 0.31 이던 값이 7.9~71.6 으로 뛰었고(1 을 넘는 부착률)
+    # '부착률 +139%' 경고가 떴다. 이번에 대본 기사의 부착만 센다. 캐시가 없던
+    # 시절에는 모든 기사를 대봤으므로 값의 뜻은 그대로다.
+    compared_hashes = {
+        str(article_hash)
+        for telemetry in (telemetries or []) if telemetry.path == "evidence"
+        for article_hash in telemetry.per_article_clusters
+    }
+    compared_evidence_merges = [m for m in evidence_merges
+                                if str(m.get("hash") or "") in compared_hashes]
     out = {
         "definition_version": "candidate-telemetry-v1",
         "search_space": search_space,
@@ -728,8 +758,11 @@ def summarize(rows: list[dict], merges: list[dict],
         # 감시가 다음 회차와 대조하는 값들. 표 안에 묻어 두면 비교할 수 없다.
         "evidence_share": bands["evidence_share"],
         "merge_rate": round(len(card_merges) / selected_count, 4) if selected_count else None,
-        "evidence_attach_rate": (round(len(evidence_merges) / evidence_articles, 4)
+        "evidence_attach_rate": (round(len(compared_evidence_merges) / evidence_articles, 4)
                                  if evidence_articles else None),
+        # 부착률 정의가 바뀐 판. 기준선은 같은 판끼리만 비교한다
+        # (data_gate_metrics.candidate_baseline).
+        "evidence_attach_rate_version": EVIDENCE_ATTACH_RATE_VERSION,
         "merge_total": len(merges),
         "card_merge_total": len(card_merges),
         "evidence_merge_total": len(evidence_merges),

@@ -63,7 +63,7 @@ class OperationalAlertsCliTests(unittest.TestCase):
                       expected_sources={"IAEA": "feed"}, now=NOW)
         self.assertTrue(out["sent"])
         self.assertEqual(1, len(messages))
-        self.assertIn("정리하지 못하고", messages[0])
+        self.assertIn("요약이 멈췄습니다", messages[0])
         self.assertIn("조치:", messages[0])
         # Topic-weeks needs a second distinct daily observation, so it is not
         # part of this first notification batch.

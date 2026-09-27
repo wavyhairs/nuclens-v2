@@ -306,7 +306,8 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
 
     records = _read_jsonl(log_path)
     today = now.astimezone(KST).date().isoformat()
-    quality_signals, quality_scopes = monitor.daily_quality_signals(records, today)
+    quality_signals, quality_scopes = monitor.daily_quality_signals(
+        records, today, now=now)
     source_signals = monitor.source_health_signals(health)
     pipeline_signals = monitor.web_pipeline_signals(
         pipeline_outcomes, observation_id=pipeline_observation_id)
