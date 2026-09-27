@@ -157,7 +157,13 @@ def candidate_baseline(history: list[dict]) -> dict:
     """기준선은 **중앙값**이다. 평균을 쓰면 한 회차의 사고가 기준선을 끌고 간다."""
     baseline: dict = {}
     for key in CANDIDATE_DRIFT_KEYS:
-        values = [float(row[key]) for row in history
+        rows = history
+        if key == "evidence_attach_rate":
+            # 정의가 바뀐 값은 옛 값과 섞으면 표류가 아니라 단위 차이를 잰다.
+            rows = [row for row in history
+                    if row.get("evidence_attach_rate_version")
+                    == issue_candidate_stats.EVIDENCE_ATTACH_RATE_VERSION]
+        values = [float(row[key]) for row in rows
                   if isinstance(row.get(key), (int, float))]
         if len(values) >= CANDIDATE_BASELINE_MIN:
             baseline[key] = round(statistics.median(values), 4)
@@ -185,6 +191,7 @@ def measure_issue_candidates(audit: dict | None, history: list[dict]) -> dict:
         "evidence_share": diagnostics.get("evidence_share"),
         "merge_rate": diagnostics.get("merge_rate"),
         "evidence_attach_rate": diagnostics.get("evidence_attach_rate"),
+        "evidence_attach_rate_version": diagnostics.get("evidence_attach_rate_version"),
         "baseline": baseline,
         "baseline_records": len(history),
         "preselect": [

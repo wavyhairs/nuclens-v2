@@ -178,6 +178,18 @@ class IssueCandidateMeasurement(unittest.TestCase):
         history = [_candidates(merge_rate=value) for value in (0.17, 0.16, 0.18, 0.02)]
         self.assertEqual(gate.candidate_baseline(history)["merge_rate"], 0.165)
 
+    def test_attach_rate_baseline_ignores_the_old_definition(self):
+        """근거 캐시 뒤 옛 정의의 값(7.9·12.8·71.6)을 기준선에 섞으면 새 값 0.3 이
+        '-96%' 로 다시 경고가 된다. 같은 정의끼리만 중앙값을 낸다."""
+        version = gate.issue_candidate_stats.EVIDENCE_ATTACH_RATE_VERSION
+        history = ([_candidates(evidence_attach_rate=value) for value in (7.9, 12.8, 71.6)]
+                   + [_candidates(evidence_attach_rate=value,
+                                  evidence_attach_rate_version=version)
+                      for value in (0.30, 0.31, 0.33)])
+        baseline = gate.candidate_baseline(history)
+        self.assertEqual(baseline["evidence_attach_rate"], 0.31)
+        self.assertEqual(baseline["merge_rate"], 0.17)
+
     def test_too_few_records_means_no_baseline(self):
         """이틀치로 표류를 말하면 매일 운다. 표류는 '평소'가 있어야 말할 수 있다."""
         self.assertEqual(gate.candidate_baseline([_candidates(), _candidates()]), {})
