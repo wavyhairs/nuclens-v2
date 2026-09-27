@@ -148,7 +148,7 @@ class LedgerIdentityTests(unittest.TestCase):
     def test_the_ledger_is_idempotent(self):
         """같은 카탈로그를 두 번 태워도 원장이 자라지 않는다.
 
-        빌드는 하루에 여러 번 돌고 `deploy-web.yml` 은 커밋하지 않으므로
+        빌드는 하루에 여러 번 돌고 `deploy-web.yml` 은 원장을 커밋하지 않으므로
         같은 입력이 반복해서 들어온다.
         """
         catalog = [_issue("issue-A", ["h1"])]

@@ -68,7 +68,12 @@ on:
         options: [full, fast, auto]
 
 permissions:
-  contents: read          # 상태를 커밋하지 않는다 — 배포만 한다
+  # 상태는 커밋하지 않는다. 쓰는 것은 LLM 판정 캐시 하나다 — 빌드가 물어서 얻은
+  # 답을 main 에 채워 넣을 뿐, main 의 답을 덮지 않는다("Return LLM judgment caches").
+  # 이 권한을 올리면 uses: 로 부르는 잡(weekly.yml deploy)도 같이 올려야 한다 —
+  # 안 그러면 호출한 런이 startup_failure 로 시작조차 안 한다
+  # (tests/test_reusable_workflow_permissions.py).
+  contents: write
   actions: write          # 검증된 production snapshot 저장
 
 concurrency:
@@ -242,6 +247,44 @@ jobs:
           GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
         run: python web/build_data.py
+
+      # 빌드가 물어서 얻은 LLM 판정을 main 의 캐시에 채워 넣는다.
+      #
+      # 2026-09-27 실측: 이 워크플로가 답을 러너와 함께 버려서 09:02·09:15 배포가
+      # 13분 간격으로 같은 225쌍을 12회씩 물었고, 10:41 배포와 15:37 크롤이 또
+      # 물었다 — 같은 질문이 네 번 나갔다. 그날 유료 3.5-flash-lite 82회 중 72회가
+      # 배포였다.
+      #
+      # 배포는 머지 커밋(과거 SHA)을 짓고, 그 사이 크롤·브리핑이 같은 파일에 답을
+      # 더 올렸을 수 있다. 그래서 파일을 통째로 커밋하지 않고 origin/main 을 따로
+      # 펼쳐 항목 단위로 합친다 — main 에 없는 답만 넣고 main 의 답은 덮지 않는다
+      # (tools/merge_llm_caches.py). 원장(issue_ledger·thread_ledger)은 싣지 않는다.
+      #
+      # 빌드가 실패해도 그 전에 받은 답은 유효하므로 always() 다. 못 올려도 배포는
+      # 산다 — 다음 빌드가 다시 물을 뿐이다. GITHUB_TOKEN push 는 push 워크플로를
+      # 다시 부르지 않으므로 이 배포가 자기를 되부르지 않는다.
+      - name: Return LLM judgment caches to main
+        if: always() && steps.effective-mode.outputs.mode == 'full'
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          target="$RUNNER_TEMP/llm-cache-main"
+          for i in 1 2 3; do
+            git worktree remove --force "$target" 2>/dev/null || true
+            git fetch --quiet origin main || exit 0
+            git worktree add --quiet --detach "$target" FETCH_HEAD || exit 0
+            python tools/merge_llm_caches.py --base-ref HEAD --target "$target" || exit 0
+            if git -C "$target" diff --quiet; then
+              echo "새로 얻은 판정 없음 — 커밋 생략"
+              exit 0
+            fi
+            git -C "$target" add issue_llm_reviews.json keei_llm_matches.json issue_insights.json issue_headlines.json
+            git -C "$target" commit --quiet -m "chore: issue review cache (deploy-web)"
+            git -C "$target" push --quiet origin HEAD:main && exit 0
+            echo "push 실패 ($i/3) — main 이 앞서갔다. 다시 펼쳐 합친다"
+          done
+          echo "캐시 push 실패 — 비치명, 다음 빌드가 다시 묻는다"
 
       - name: Render static entry pages with current shell
         run: python tools/render_static_pages.py
