@@ -294,6 +294,19 @@ def reset_call_log() -> None:
     _CALL_DETAIL.clear()
 
 
+def attempt_count(label: str) -> int:
+    """이 프로세스에서 ``label`` 로 나간 HTTP 요청 수 — 재시도(``label:retry``) 포함.
+
+    call_json 한 번이 재시도로 요청 네 번이 될 수 있고, 무료 일일 한도는 요청마다
+    깎인다. 자기 예산을 쥔 호출자(summary_verify)가 호출 전후의 차이로 실제로 쓴
+    요청 수를 센다. `_CALL_LOG` 가 CALL_LOG_LIMIT 에 닿으면 더 늘지 않으므로
+    호출자는 차이가 0 이어도 최소 1회로 본다.
+    """
+    prefix = f"{label}:"
+    return sum(1 for _stamp, _model, name in _CALL_LOG
+               if name == label or name.startswith(prefix))
+
+
 def call_stats() -> dict:
     """모델별 호출 수, 라벨별 내역, **최대 분당 호출 수**.
 

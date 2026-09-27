@@ -63,6 +63,15 @@ class TestCallInstrumentation(unittest.TestCase):
         self.assertEqual(stats["per_model"]["gemini-2.5-flash-lite"], 1)
         self.assertEqual(stats["per_label"]["curation:retry"], 1)
 
+    def test_attempt_count_includes_retries_of_that_label_only(self):
+        """자기 예산을 쥔 호출자가 재시도까지 센다(summary_verify)."""
+        for label in ("summary_verify", "summary_verify:retry", "summary_verify:retry",
+                      "summary_verify_x", "curation"):
+            gemini_client._record_call("m", label)
+        self.assertEqual(gemini_client.attempt_count("summary_verify"), 3)
+        self.assertEqual(gemini_client.attempt_count("curation"), 1)
+        self.assertEqual(gemini_client.attempt_count("absent"), 0)
+
     def test_peak_uses_a_sliding_window_not_clock_minutes(self):
         """'시:분' 경계로 세면 59초와 61초에 걸친 폭주를 못 잡는다.
 

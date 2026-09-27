@@ -25,8 +25,10 @@
 한도:
     기사 요약(curation)과 같은 모델 버킷(3.1-flash-lite)을 쓴다. 이 검사는 부가
     기능이므로 요약이 한도에 밀리면 안 된다 — 하루 상한과 회차 상한을 두고,
-    429·402 를 한 번이라도 보면 그 회차는 즉시 멈춘다. 멈춰서 못 본 기사는 다음
-    회차가 24시간 안에서 본문을 다시 받아 이어서 본다(`backlog_candidates`).
+    429·402 를 한 번이라도 보거나 연달아 실패하면 그 회차는 즉시 멈춘다. 멈춰서
+    못 본 기사는 다음 회차가 24시간 안에서 본문을 다시 받아 이어서 본다
+    (`backlog_candidates`). 두 상한은 **검사 건수가 아니라 HTTP 요청 수**로 센다
+    — 재시도와 실패한 요청도 한도를 깎기 때문이다(아래 CONSECUTIVE_FAILURE_STOP).
 
 저장:
     append-only JSONL(`.gitattributes` 의 merge=union). crawl 과 daily-brief 가
@@ -60,10 +62,26 @@ KST = timezone(timedelta(hours=9))
 
 # 2026-09-17~23 실측: 3.1 사용량 최대 123회/일(크롤 104 + 브리핑 19).
 # 250 을 더하면 373 — 500 의 75%. 기사가 많은 날(등급 기사 284건)은 상한이 막는다.
+# 이 계산은 250 이 **요청 수**일 때만 성립한다 — 재시도·실패까지 센다.
 DEFAULT_DAILY_CAP = 250
 # 크롤 1회에 새로 들어오는 등급 기사는 보통 수십 건이다. 한 회차가 하루 몫을
-# 다 쓰지 않게 한다 — 분당 15회 제한에서 80회는 6분 안팎이다.
+# 다 쓰지 않게 한다 — 분당 15회 제한에서 80회는 6분 안팎이다. 이것도 요청 수다.
 DEFAULT_RUN_CAP = 80
+
+# 연달아 이만큼 실패하면 그 회차는 멈춘다. 상한은 요청 수로 센다(`requests_of`).
+#
+# 2026-09-24 00:50 KST 실측: Gemini 가 503 을 내던 회차에 대상 24건 중 22건이
+# 실패했다. call_json 이 건마다 세 번씩 다시 보내 요청은 94회(첫 요청 24 + 재시도
+# 70) 나갔는데, 실패한 건은 기록에 줄이 남지 않아 하루 상한도 회차 상한도 한 번도
+# 깎이지 않았다. 같은 회차의 요약(curation)은 이미 503 으로 전부 실패한 뒤였다 —
+# 본 기능이 서 있는 과부하 한가운데서 부가 기능이 한도만 태운 것이다. 그날 무료
+# 3.1-flash-lite 는 453/500 까지 갔고 그 가운데 351 이 이 검사였다.
+#
+# 한 번의 실패는 흔한 일이라(타임아웃 하나) 멈추지 않는다. 둘이 잇따르면 과부하로
+# 본다 — 그 회차에서 더 부르면 건마다 요청 네 번씩 나간다.
+CONSECUTIVE_FAILURE_STOP = 2
+
+LABEL = "summary_verify"
 
 # 한도·결제 오류로 멈춘 회차의 남은 기사를 다음 회차가 이어서 본다. 본문은 저장하지
 # 않으므로(저작권) 다시 받아 와야 한다 — 그래서 창을 좁게, 회차당 개수를 작게 둔다.
@@ -232,6 +250,37 @@ def _clip(value: object) -> str:
     return text if len(text) <= _MAX_TEXT else text[:_MAX_TEXT - 1] + "…"
 
 
+def requests_of(row: dict) -> int:
+    """이 줄이 쓴 HTTP 요청 수. `requests` 가 생기기 전의 줄은 호출 1회로 본다."""
+    value = row.get("requests")
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+        return value
+    return 1 if row.get("called") else 0
+
+
+def _requests_on(history: list[dict], day: str) -> int:
+    return sum(requests_of(row) for row in history if row.get("quota_day") == day)
+
+
+def _attempts(client) -> int | None:
+    """클라이언트가 지금까지 이 라벨로 보낸 요청 수. 셀 수 없는 대역이면 None."""
+    counter = getattr(client, "attempt_count", None)
+    if not callable(counter):
+        return None
+    try:
+        return int(counter(LABEL))
+    except Exception:  # noqa: BLE001 — 계측 실패가 검사를 멈추면 안 된다
+        return None
+
+
+def _spent(client, before: int | None) -> int:
+    """호출 한 번이 실제로 쓴 요청 수. 셀 수 없으면 1회로 본다(최소 1)."""
+    after = _attempts(client)
+    if before is None or after is None:
+        return 1
+    return max(1, after - before)
+
+
 def _is_stop_error(exc: Exception) -> bool:
     """한도(429)·결제(402)·설정 오류는 그 회차 전체를 멈춘다 — 요약 몫을 지킨다."""
     if type(exc).__name__ == "GeminiConfigError":
@@ -255,7 +304,7 @@ def verify(targets: list[dict], *, client=None, now: datetime | None = None,
     day_cap = daily_cap() if day_cap is None else day_cap
     per_run_cap = run_cap() if per_run_cap is None else per_run_cap
     stats = {"targets": len(targets), "checked": 0, "cached": 0, "failed": 0,
-             "skipped_cap": 0, "stopped": "", "status": "ok",
+             "skipped_cap": 0, "stopped": "", "status": "ok", "requests": 0,
              "contradiction": 0, "stale": 0, "unsupported": 0,
              "quote_unverified": 0, "rule": 0}
     if client is None:
@@ -265,8 +314,8 @@ def verify(targets: list[dict], *, client=None, now: datetime | None = None,
     done = {(row.get("hash"), row.get("input_sha")) for row in history if row.get("called")}
     # 호출 없이 규칙만 적은 행. 밀린 기사를 회차마다 다시 볼 때 같은 줄이 쌓이지 않게.
     noted = {(row.get("hash"), row.get("input_sha")) for row in history}
-    used_today = sum(1 for row in history if row.get("called") and row.get("quota_day") == day)
-    budget = max(0, min(day_cap - used_today, per_run_cap))
+    budget = max(0, min(day_cap - _requests_on(history, day), per_run_cap))
+    failures_in_row = 0
     available = client.is_available()
     if not available:
         stats["status"] = "no_api_key"
@@ -295,24 +344,41 @@ def verify(targets: list[dict], *, client=None, now: datetime | None = None,
             if rule and (target["hash"], sha) not in noted:
                 rows.append(row)  # 규칙은 호출 없이도 결과가 있다
             continue
+        before = _attempts(client)
         try:
             payload = client.call_json(
                 system, build_user_message(target),
                 temperature=0.0, max_output_tokens=2048,
-                model=policy.model(), label="summary_verify",
+                model=policy.model(), label=LABEL,
                 **policy.reasoning_kwargs(),
             )
         except Exception as exc:  # noqa: BLE001 — 검사 실패가 수집을 멈추면 안 된다
+            spent = _spent(client, before)
+            budget -= spent
+            stats["requests"] += spent
             stats["failed"] += 1
+            failures_in_row += 1
+            # 실패도 줄을 남긴다 — 그래야 다음 회차가 오늘 쓴 요청으로 센다.
+            # called 는 거짓이라 이 기사는 검사된 것으로 치지 않고 밀린 기사로 남는다.
+            rows.append({**row, "requests": spent, "verdict": "failed",
+                         "error": _clip(f"{type(exc).__name__}: {exc}")[:120]})
             if _is_stop_error(exc):
                 stats["stopped"] = type(exc).__name__
                 stats["status"] = f"stopped: {str(exc)[:80]}"
+            elif failures_in_row >= CONSECUTIVE_FAILURE_STOP:
+                stats["stopped"] = "consecutive_failures"
+                stats["status"] = f"stopped: 연속 실패 {failures_in_row}건 — {str(exc)[:60]}"
             continue
-        budget -= 1
+        spent = _spent(client, before)
+        budget -= spent
+        stats["requests"] += spent
+        failures_in_row = 0
+        row["requests"] = spent
         items = payload.get("items") if isinstance(payload, dict) else None
         answer = items[0] if isinstance(items, list) and items and isinstance(items[0], dict) else None
         if answer is None:
             stats["failed"] += 1
+            rows.append({**row, "verdict": "failed", "error": "응답에 items 가 없다"})
             continue
         verdict, quoted = classify(answer, source)
         stats["checked"] += 1
@@ -337,8 +403,7 @@ def remaining_budget(*, now: datetime | None = None, path: Path = LOG_FILE,
     day = quota_day(now)
     day_cap = daily_cap() if day_cap is None else day_cap
     per_run_cap = run_cap() if per_run_cap is None else per_run_cap
-    used = sum(1 for row in load_log(path) if row.get("called") and row.get("quota_day") == day)
-    return max(0, min(day_cap - used, per_run_cap))
+    return max(0, min(day_cap - _requests_on(load_log(path), day), per_run_cap))
 
 
 def _parse_time(value: object) -> datetime | None:
@@ -420,7 +485,8 @@ def targets_from_curation(articles: list[dict], curated: dict, bodies: dict,
 
 def report(rows: list[dict], stats: dict) -> list[str]:
     lines = [f"[요약검사] 대상 {stats['targets']} · 검사 {stats['checked']} · 이미 검사 {stats['cached']}"
-             f" · 상한 보류 {stats['skipped_cap']} · 실패 {stats['failed']} · 상태 {stats['status']}"
+             f" · 상한 보류 {stats['skipped_cap']} · 실패 {stats['failed']}"
+             f" · 요청 {stats.get('requests', 0)} · 상태 {stats['status']}"
              f" → 모순 {stats['contradiction']} · 과거사건 {stats['stale']}"
              f" · 인용불일치 {stats['quote_unverified']} · 단계어 규칙 {stats['rule']} (경고 모드)"]
     for row in rows:

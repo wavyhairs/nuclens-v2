@@ -48,6 +48,30 @@ class FakeClient:
         return {"items": [answer]}
 
 
+class ScriptedClient(FakeClient):
+    """call_json 한 번이 HTTP 요청 여러 번이 되는 실제 클라이언트를 흉내 낸다.
+
+    outcomes 의 예외는 던지고 사전은 답으로 돌려준다. 다 쓰면 ok 다.
+    """
+
+    def __init__(self, outcomes, attempts_per_call=1):
+        super().__init__()
+        self.outcomes = list(outcomes)
+        self.attempts_per_call = attempts_per_call
+        self.attempts = 0
+
+    def attempt_count(self, label):
+        return self.attempts if label == "summary_verify" else 0
+
+    def call_json(self, system, user, **kwargs):
+        self.calls.append({"system": system, "user": user, **kwargs})
+        self.attempts += self.attempts_per_call
+        outcome = self.outcomes.pop(0) if self.outcomes else {"verdict": "ok"}
+        if isinstance(outcome, Exception):
+            raise outcome
+        return {"items": [outcome]}
+
+
 class StageWordRuleTests(unittest.TestCase):
     """LLM 이 어떤 추론 레벨에서도 못 잡은 유형 — 규칙이 맡는다."""
 
@@ -174,10 +198,72 @@ class VerifyTests(unittest.TestCase):
                 self.assertEqual(len(client.calls), 1)
                 self.assertTrue(stats["stopped"])
 
-    def test_other_errors_do_not_stop_the_run(self):
-        client = FakeClient(error=RuntimeError("timeout"))
-        self.run_verify([target("a" * 16), target("b" * 16)], client)
+    def test_a_single_failure_does_not_stop_the_run(self):
+        client = ScriptedClient([RuntimeError("timeout"), {"verdict": "ok"}, {"verdict": "ok"}])
+        _, stats = self.run_verify([target("a" * 16), target("b" * 16), target("c" * 16)], client)
+        self.assertEqual(len(client.calls), 3)
+        self.assertFalse(stats["stopped"])
+
+    def test_two_failures_in_a_row_stop_the_run(self):
+        """2026-09-24: 503 과부하 회차에 22건이 건마다 요청 네 번씩 실패했다."""
+        client = ScriptedClient([RuntimeError("HTTP 503: overloaded")] * 5, attempts_per_call=4)
+        _, stats = self.run_verify([target(c * 16) for c in "abcde"], client)
         self.assertEqual(len(client.calls), 2)
+        self.assertEqual(stats["stopped"], "consecutive_failures")
+        self.assertEqual(stats["requests"], 8)
+
+    def test_retries_count_against_the_run_cap(self):
+        """상한은 검사 건수가 아니라 요청 수다 — 재시도도 한도를 깎는다."""
+        client = ScriptedClient([], attempts_per_call=4)
+        _, stats = self.run_verify([target(c * 16) for c in "abcde"], client, per_run_cap=8)
+        self.assertEqual(len(client.calls), 2)
+        self.assertEqual(stats["requests"], 8)
+        self.assertEqual(stats["skipped_cap"], 3)
+
+    def test_failed_call_leaves_a_row_the_next_run_counts(self):
+        """실패한 건이 줄을 안 남기면 다음 회차가 오늘 쓴 요청을 모른다."""
+        client = ScriptedClient([RuntimeError("HTTP 503: overloaded")], attempts_per_call=4)
+        rows, _ = self.run_verify([target()], client)
+        self.assertEqual((rows[0]["verdict"], rows[0]["called"], rows[0]["requests"]),
+                         ("failed", False, 4))
+        self.assertEqual(summary_verify.remaining_budget(
+            now=NOW, path=self.path, day_cap=10, per_run_cap=80), 6)
+
+    def test_successful_row_records_its_requests(self):
+        rows, _ = self.run_verify([target()], ScriptedClient([], attempts_per_call=2))
+        self.assertEqual((rows[0]["called"], rows[0]["requests"]), (True, 2))
+
+    def test_client_that_cannot_count_attempts_is_one_request_per_call(self):
+        rows, stats = self.run_verify([target()], FakeClient(error=RuntimeError("timeout")))
+        self.assertEqual((rows[0]["requests"], stats["requests"]), (1, 1))
+
+    def test_real_client_retries_on_503_are_counted(self):
+        """대역이 아니라 gemini_client 의 재시도 경로 그대로 — 503 한 건이 요청 넷이다."""
+        from io import BytesIO
+        from unittest.mock import patch
+        import urllib.error
+        import gemini_client as gc
+
+        def overloaded(*_a, **_kw):
+            raise urllib.error.HTTPError("u", 503, "Unavailable", {}, BytesIO(b'{"error": {}}'))
+
+        gc.reset_call_log()
+        self.addCleanup(gc.reset_call_log)
+        with patch.object(gc, "API_KEY", "test-key"), \
+             patch.object(gc.urllib.request, "urlopen", overloaded), \
+             patch.object(gc.time, "sleep", lambda _s: None):
+            rows, stats = self.run_verify([target(c * 16) for c in "abc"], gc)
+        self.assertEqual(stats["stopped"], "consecutive_failures")
+        failed = [row for row in rows if row["verdict"] == "failed"]
+        self.assertEqual([row["requests"] for row in failed], [4, 4])
+        # 멈춘 뒤의 세 번째 기사는 호출 없이 단계어 규칙 줄만 남는다.
+        self.assertEqual([summary_verify.requests_of(row) for row in rows], [4, 4, 0])
+        self.assertEqual(stats["requests"], gc.attempt_count("summary_verify"))
+
+    def test_requests_of_old_and_rule_only_rows(self):
+        self.assertEqual(summary_verify.requests_of({"called": True}), 1)
+        self.assertEqual(summary_verify.requests_of({"called": False, "rule": ["x"]}), 0)
+        self.assertEqual(summary_verify.requests_of({"called": False, "requests": 4}), 4)
 
     def test_no_key_means_no_calls_but_rule_still_recorded(self):
         client = FakeClient(available=False)
