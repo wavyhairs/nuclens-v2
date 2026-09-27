@@ -737,7 +737,7 @@ class AlertLifecycleTests(unittest.TestCase):
                                              now=T0)
         self.assertTrue(result["sent"])
         self.assertIn("last_notified_at", sent["items"]["x"])
-        self.assertIn("Nuclens+ 운영 알림", messages[0])
+        self.assertIn("뉴클렌스 운영", messages[0])
 
     def test_unsent_alert_survives_recovery_and_next_day(self):
         signal = monitor.AlertSignal(

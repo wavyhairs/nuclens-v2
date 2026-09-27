@@ -25,6 +25,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Mapping
 
+import operational_digest as digest
 import operational_monitoring as monitor
 
 
@@ -40,6 +41,7 @@ SENT_FILE = ROOT / "sent.json"
 DELIVERY_LOG = ROOT / "delivery_log.jsonl"
 WEEKLY_REPORTS_FILE = ROOT / "weekly_reports.json"
 CHANNEL_OUTBOX_FILE = ROOT / "channel_outbox.json"
+CRAWL_RUNS_FILE = ROOT / "crawl_runs.json"
 KST = timezone(timedelta(hours=9))
 
 
@@ -214,6 +216,14 @@ def describe_admin_chat_id(raw: object, public_chat_id: object = "") -> str:
             "봇이 말을 걸 수 있습니다. 아직 누른 적이 없다면 이 오류가 납니다.")
 
 
+def run_url_from_env() -> str:
+    """이 실행의 GitHub Actions 기록 주소. 즉시 알림 끝에 붙인다(기술 상세는 거기 있다)."""
+    server = os.environ.get("GITHUB_SERVER_URL", "").rstrip("/")
+    repo = os.environ.get("GITHUB_REPOSITORY", "")
+    run_id = os.environ.get("GITHUB_RUN_ID", "")
+    return f"{server}/{repo}/actions/runs/{run_id}" if server and repo and run_id else ""
+
+
 def telegram_sender_from_env() -> Callable[[str], object] | None:
     """Return an admin-only sender when both dedicated values are present.
 
@@ -225,17 +235,21 @@ def telegram_sender_from_env() -> Callable[[str], object] | None:
     if not token or not admin_chat_id:
         return None
 
-    def send(message: str) -> object:
+    def send(message: str, *, silent: bool = False) -> object:
         # Deliberately not telegram_send: its default target is the public
         # briefing chat.  This adapter takes no chat argument at all, so it
         # cannot silently route an operational warning to subscribers.
+        payload = {
+            "chat_id": admin_chat_id,
+            "text": message,
+            "disable_web_page_preview": "true",
+        }
+        if silent:
+            # 하루 요약·'풀렸습니다'는 소리 없이 쌓인다 — 새벽에 울릴 이유가 없다.
+            payload["disable_notification"] = "true"
         request = urllib.request.Request(
             f"https://api.telegram.org/bot{token}/sendMessage",
-            data=urllib.parse.urlencode({
-                "chat_id": admin_chat_id,
-                "text": message,
-                "disable_web_page_preview": "true",
-            }).encode("utf-8"),
+            data=urllib.parse.urlencode(payload).encode("utf-8"),
         )
         try:
             with urllib.request.urlopen(request, timeout=30) as response:
@@ -274,6 +288,10 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
         weekly_channel_required: bool | None = None,
         weekly_reports_path: Path | None = None,
         weekly_channel_path: Path | None = None,
+        digest_requested: bool = False,
+        digest_fallback: bool = False,
+        crawl_runs_path: Path = CRAWL_RUNS_FILE,
+        run_url: str = "",
         now: datetime | None = None) -> dict:
     """Process source health and today's quality events; never raises."""
     now = now or datetime.now(timezone.utc)
@@ -355,8 +373,11 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
         scopes.add("audio_pipeline")
     scopes |= weekly_scopes
 
+    # 즉시 갈래만 여기서 보낸다. 나머지도 상태는 갱신되고, 하루 요약이 그 상태와
+    # delivery_log 를 읽어 한 통으로 말한다(operational_digest).
     alert_state, due = monitor.evaluate_alerts(
-        signals, state.get("operational_alerts"), evaluated_scopes=scopes, now=now)
+        signals, state.get("operational_alerts"), evaluated_scopes=scopes, now=now,
+        immediate_only=True)
     state["operational_alerts"] = alert_state
 
     notification = {"sent": False, "count": len(due), "error": ""}
@@ -373,7 +394,7 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
                 notification["error"] = "admin_sender_unavailable"
         else:
             alert_state, notification = monitor.notify_alerts(
-                alert_state, due, active_sender, now=now)
+                alert_state, due, active_sender, now=now, run_url=run_url)
             state["operational_alerts"] = alert_state
             if notification["sent"]:
                 print(f"[ops-monitor] 관리자 알림 {notification['count']}건 발송")
@@ -390,14 +411,72 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
                 else:
                     print(f"::warning::관리자 Telegram 알림 실패: {notification['error']}")
     else:
-        print("[ops-monitor] 새로 알릴 운영 품질 이상 없음")
+        print("[ops-monitor] 새로 알릴 즉시 알림 없음")
+
+    digest_result = send_digest_if_due(
+        state, records, now=now, requested=digest_requested, fallback=digest_fallback,
+        notify=notify, sender=sender, crawl_runs_path=crawl_runs_path)
 
     saved = _write_object(sent_path, state)
     return {
         "ok": True, "saved": saved, "source_processed": source_processed,
         "signals": len(signals), "due": len(due), "sent": bool(notification["sent"]),
         "notification_error": notification.get("error", ""),
+        "digest_sent": digest_result["sent"], "digest_error": digest_result["error"],
+        "digest_due": digest_result["due"],
     }
+
+
+def build_digest_text(state: Mapping, records: list[dict], *, now: datetime,
+                      crawl_runs_path: Path = CRAWL_RUNS_FILE,
+                      include_dev: bool | None = None) -> str:
+    runs = _read_object(crawl_runs_path) or {}
+    digest_state = state.get("operational_digest")
+    return digest.build_digest(
+        records=records, alert_state=state.get("operational_alerts"),
+        crawl_slots=runs.get("slots") if isinstance(runs.get("slots"), Mapping) else {},
+        since=digest.window_start(digest_state, now), now=now, include_dev=include_dev)
+
+
+def send_digest_if_due(state: dict, records: list[dict], *, now: datetime,
+                       requested: bool, notify: bool, fallback: bool = False,
+                       sender: Callable[..., object] | None,
+                       crawl_runs_path: Path = CRAWL_RUNS_FILE) -> dict:
+    """오늘 요약을 아직 안 보냈으면 보낸다. 실패하면 표시하지 않아 다음 실행이 다시 보낸다."""
+    result = {"due": False, "sent": False, "error": ""}
+    digest_state = state.get("operational_digest")
+    if not digest.digest_due(digest_state, now, requested=requested, fallback=fallback):
+        return result
+    result["due"] = True
+    try:
+        text = build_digest_text(state, records, now=now, crawl_runs_path=crawl_runs_path)
+    except Exception as exc:  # noqa: BLE001 — 요약이 알림 경로를 죽이면 안 된다
+        result["error"] = f"{type(exc).__name__}: {exc}"[:300]
+        print(f"::warning::하루 요약을 만들지 못했습니다: {result['error']}")
+        return result
+    print(text)
+    active_sender = sender or (telegram_sender_from_env() if notify else None)
+    if active_sender is None:
+        print("[ops-monitor] 하루 요약: 발송 경로 없음 — 로그만 남깁니다")
+        if notify:
+            result["error"] = "admin_sender_unavailable"
+        return result
+    try:
+        response = monitor.call_sender(active_sender, text, silent=True)
+        if isinstance(response, Mapping) and response.get("ok") is False:
+            raise RuntimeError(str(response.get("description") or "sender returned ok=false"))
+    except Exception as exc:  # noqa: BLE001
+        result["error"] = f"{type(exc).__name__}: {exc}"[:300]
+        print(f"::warning::하루 요약 발송 실패(다음 실행이 다시 보냅니다): {result['error']}")
+        return result
+    local = now.astimezone(KST)
+    state["operational_digest"] = {
+        "last_sent_date": local.date().isoformat(),
+        "last_sent_at": now.astimezone(timezone.utc).isoformat(timespec="seconds"),
+    }
+    result["sent"] = True
+    print("[ops-monitor] 하루 요약 발송")
+    return result
 
 
 def check_admin_chat() -> int:
@@ -454,6 +533,11 @@ def main() -> int:
                         help="Telegram 환경변수가 있으면 관리자에게 묶어서 발송")
     parser.add_argument("--check-admin-chat", action="store_true",
                         help="관리자 채팅이 닿는지만 확인한다(메시지를 보내지 않음)")
+    parser.add_argument("--digest", action="store_true",
+                        help="오늘 하루 요약을 아직 안 보냈으면 이 실행에서 보낸다"
+                             "(아침 브리핑 워크플로의 마지막 알림 단계가 넘긴다)")
+    parser.add_argument("--digest-preview", action="store_true",
+                        help="지금 파일로 하루 요약을 만들어 출력만 한다(발송·저장 없음)")
     parser.add_argument("--sent", type=Path, default=SENT_FILE)
     parser.add_argument("--delivery-log", type=Path, default=DELIVERY_LOG)
     parser.add_argument("--web-build-outcome",
@@ -491,6 +575,11 @@ def main() -> int:
     args = parser.parse_args()
     if args.check_admin_chat:
         return check_admin_chat()
+    if args.digest_preview:
+        state = _read_object(args.sent) or {}
+        now = datetime.now(timezone.utc)
+        print(build_digest_text(state, _read_jsonl(args.delivery_log), now=now))
+        return 0
     # 주간 판세 판정은 **이 값을 넘긴 호출자만** 한다. CHANNEL_REQUIRED 를 세운
     # 워크플로 스텝은 "나는 채널까지 볼 수 있다"고 말한 것이고, 안 세운 스텝은
     # 판정에서 빠진다 — 기준이 다른 둘이 같은 scope 를 나눠 쓰면 한쪽이 올린
@@ -519,6 +608,10 @@ def main() -> int:
             audio_fast_outcome=(args.audio_fast_outcome.strip() or None),
             audio_expert_outcome=(args.audio_expert_outcome.strip() or None),
             weekly_channel_required=weekly_channel_required,
+            digest_requested=args.digest,
+            # 아침 브리핑 실행이 빠진 날은 대체 시각 뒤 첫 실행이 대신 보낸다.
+            digest_fallback=True,
+            run_url=run_url_from_env(),
         )
     except Exception as exc:  # monitoring must never make collection/deploy red
         print(f"[ops-monitor] 예상하지 못한 실패(비치명): {type(exc).__name__}: {exc}")
@@ -529,6 +622,9 @@ def main() -> int:
         return 1
     if args.notify and result.get("due") and not result.get("sent"):
         print(f"::warning::관리자 경고 {result['due']}건이 미발송 상태로 남았습니다.")
+        return 2
+    if args.notify and result.get("digest_due") and not result.get("digest_sent"):
+        print("::warning::하루 요약이 미발송 상태로 남았습니다 — 다음 실행이 다시 보냅니다.")
         return 2
     return 0
 

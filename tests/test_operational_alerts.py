@@ -25,6 +25,14 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.sent = Path(self.tmp.name) / "sent.json"
         self.log = Path(self.tmp.name) / "delivery_log.jsonl"
 
+    def write_brief_ok(self):
+        """아침 브리핑이 정상 발송된 기록. 없으면 요약이 '발송 기록 없음'을 할 일로 올린다."""
+        row = {"record_type": "selection_stats", "date": "2026-08-17",
+               "generated_at": "2026-08-17T12:10:00+09:00", "pipeline_status": "ok",
+               "domestic": {"selected_count": 6}, "overseas": {"selected_count": 8}}
+        with self.log.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+
     def write_sent(self, source_yield=None):
         self.sent.write_text(json.dumps({"sent": {}, "source_yield": source_yield or {}},
                                         ensure_ascii=False), encoding="utf-8")
@@ -64,7 +72,7 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertTrue(out["sent"])
         self.assertEqual(1, len(messages))
         self.assertIn("요약이 멈췄습니다", messages[0])
-        self.assertIn("조치:", messages[0])
+        self.assertIn("할 일:", messages[0])
         # Topic-weeks needs a second distinct daily observation, so it is not
         # part of this first notification batch.
         self.assertNotIn("추세 지표", messages[0])
@@ -82,7 +90,8 @@ class OperationalAlertsCliTests(unittest.TestCase):
                "generated_at": "2026-08-17T22:00:00+09:00",
                "alert_key": "card-quarantine", "title": "카드 격리",
                "detail": "핵심 사실 충돌", "severity": "critical",
-               "min_occurrences": 1}
+               # 품질 이벤트의 기본은 아침 요약이다. 즉시 갈래를 명시한 기록만 바로 간다.
+               "delivery": "immediate", "min_occurrences": 1}
         self.log.write_text(json.dumps(row, ensure_ascii=False), encoding="utf-8")
         first = cli.run(sent_path=self.sent, log_path=self.log, notify=True,
                         sender=lambda _text: (_ for _ in ()).throw(OSError("down")),
@@ -101,61 +110,77 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertIn("핵심 사실 충돌", messages[0])
 
     def test_pipeline_failure_is_idempotent_and_resolves_on_success(self):
+        """사이트 배포 실패는 두 번 연속일 때 부른다 — 한 번은 3시간 뒤 다음 실행이 푼다."""
         self.write_sent()
         failed = {
-            "web_build": "success", "data_gate": "failure", "web_deploy": "success",
+            "web_build": "success", "data_gate": "success", "web_deploy": "failure",
         }
         messages = []
-        first = cli.run(
-            sent_path=self.sent, log_path=self.log, notify=True,
-            sender=lambda text: messages.append(text) or {"ok": True},
-            expected_sources={}, pipeline_outcomes=failed,
-            pipeline_observation_id="daily-brief:100", now=NOW)
-        self.assertTrue(first["sent"])
-        self.assertEqual(1, len(messages))
-        self.assertIn("데이터 품질 기록=failure", messages[0])
-        # 지표 기록만 실패한 회차다. 배포·수집은 정상이므로 '조치 필요'가 아니다.
-        self.assertIn("확인 필요", messages[0])
-        self.assertNotIn("조치 필요", messages[0])
 
-        retry = cli.run(
-            sent_path=self.sent, log_path=self.log, notify=True,
-            sender=lambda text: messages.append(text) or {"ok": True},
-            expected_sources={}, pipeline_outcomes=failed,
-            pipeline_observation_id="daily-brief:100", now=NOW + timedelta(minutes=5))
-        self.assertFalse(retry["sent"])
+        def run(observation, outcomes, minutes):
+            return cli.run(
+                sent_path=self.sent, log_path=self.log, notify=True,
+                sender=lambda text: messages.append(text) or {"ok": True},
+                expected_sources={}, pipeline_outcomes=outcomes,
+                pipeline_observation_id=observation, now=NOW + timedelta(minutes=minutes))
+
+        self.assertFalse(run("crawl:100", failed, 0)["sent"], "한 번은 아침 요약으로")
+        self.assertFalse(run("crawl:100", failed, 5)["sent"], "같은 실행의 재시도는 세지 않는다")
+        second = run("crawl:101", failed, 180)
+        self.assertTrue(second["sent"])
         self.assertEqual(1, len(messages))
+        self.assertIn("사이트 배포가 실패했습니다", messages[0])
+        self.assertTrue(messages[0].startswith("🚨 할 일 1건"))
+        # 기술 값은 실행 로그에만 있다.
+        self.assertNotIn("=failure", messages[0])
 
         # 복구는 **소식이다.** 알렸던 문제가 닫혔다는 말을 한 번 해 준다.
-        recovered = cli.run(
-            sent_path=self.sent, log_path=self.log, notify=True,
-            sender=lambda text: messages.append(text) or {"ok": True},
-            expected_sources={}, pipeline_outcomes={
-                "web_build": "success", "data_gate": "success", "web_deploy": "success",
-            }, pipeline_observation_id="daily-brief:101", now=NOW + timedelta(hours=1))
+        recovered = run("crawl:102", {"web_build": "success", "data_gate": "success",
+                                      "web_deploy": "success"}, 360)
         self.assertTrue(recovered["sent"])
-        self.assertIn("해결됨", messages[-1])
+        self.assertIn("풀림", messages[-1])
         state = json.loads(self.sent.read_text(encoding="utf-8"))
         self.assertFalse(state["operational_alerts"]["items"]
                          ["quality:web-pipeline-failure"]["active"])
 
-    def test_audio_failure_notifies_and_resolves_on_a_later_success(self):
-        """2026-09-08 회귀: 오디오가 통째로 빠졌는데 알림이 한 건도 안 나갔다."""
+    def test_a_metrics_only_failure_waits_for_the_digest(self):
+        """지표 기록만 실패한 회차는 배포·수집이 정상이다 — 바로 울리지 않는다."""
         self.write_sent()
+        messages = []
+        out = cli.run(
+            sent_path=self.sent, log_path=self.log, notify=True,
+            sender=lambda text: messages.append(text) or {"ok": True},
+            expected_sources={}, pipeline_outcomes={
+                "web_build": "success", "data_gate": "failure", "web_deploy": "success"},
+            pipeline_observation_id="daily-brief:100", now=NOW)
+        self.assertFalse(out["sent"])
+        self.assertEqual([], messages)
+        state = json.loads(self.sent.read_text(encoding="utf-8"))
+        row = state["operational_alerts"]["items"]["quality:web-pipeline-failure"]
+        self.assertTrue(row["active"])
+        self.assertEqual("digest", row["delivery"])
+
+    def test_audio_failure_is_a_todo_in_the_morning_digest(self):
+        """2026-09-08 회귀(오디오가 빠졌는데 아무 말이 없었다)는 막되, 새벽에 따로 울리지 않는다.
+
+        오디오는 아침 브리핑 실행 안에서 만들어지고 그 실행의 마지막 단계가 요약을
+        보낸다 — 할 일은 같은 아침에 도착한다.
+        """
+        self.write_sent()
+        self.write_brief_ok()
         messages = []
         failed = cli.run(
             sent_path=self.sent, log_path=self.log, notify=True,
             sender=lambda text: messages.append(text) or {"ok": True},
             expected_sources={}, audio_fast_outcome="failure",
-            audio_expert_outcome="failure",
+            audio_expert_outcome="failure", digest_requested=True,
             pipeline_observation_id="daily-brief:200", now=NOW)
-        self.assertTrue(failed["sent"])
+        self.assertFalse(failed["sent"], "즉시 알림으로는 나가지 않는다")
+        self.assertTrue(failed["digest_sent"])
         self.assertEqual(1, len(messages))
-        self.assertIn("오디오 브리핑", messages[0])
-        # 오디오는 부가 기능이다 — 텍스트·사이트가 정상인 날을 '조치 필요'로
-        # 부르면 진짜 장애와 구별이 사라진다.
-        self.assertIn("확인 필요", messages[0])
-        self.assertNotIn("조치 필요", messages[0])
+        self.assertIn("🔧 할 일 1건", messages[0])
+        self.assertIn("오디오 브리핑이 생성되지 않았습니다", messages[0])
+        self.assertIn("빠진 오디오 재발송", messages[0])
 
         recovered = cli.run(
             sent_path=self.sent, log_path=self.log, notify=True,
@@ -163,8 +188,11 @@ class OperationalAlertsCliTests(unittest.TestCase):
             expected_sources={}, audio_fast_outcome="success",
             audio_expert_outcome="success",
             pipeline_observation_id="daily-brief:201", now=NOW + timedelta(hours=1))
-        self.assertTrue(recovered["sent"])
-        self.assertIn("해결됨", messages[-1])
+        self.assertFalse(recovered["sent"], "알리지 않은 것의 '풀림'도 없다")
+        self.assertEqual(1, len(messages))
+        state = json.loads(self.sent.read_text(encoding="utf-8"))
+        self.assertFalse(state["operational_alerts"]["items"]
+                         ["quality:audio-brief-missing"]["active"])
 
     # ── 주간 판세: Weekly 워크플로 밖에서 보는 유일한 눈 ──────────────────
     #
@@ -197,9 +225,8 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertTrue(result["sent"])
         self.assertIn("2026-W38", seen[0])
         self.assertIn("Weekly report", seen[0], "운영자가 어디를 볼지 말해야 한다")
-        # 값은 마지막 '상세' 줄에만 있고, 앞의 네 줄은 사람 말이다.
-        head = seen[0].split("  상세:")[0]
-        self.assertNotIn("=", head, "운영자 문장에 상태 코드가 새면 안 된다")
+        # 상태 코드(`개인알림=missing`)는 실행 로그에만 있다.
+        self.assertNotIn("=", seen[0], "운영자 문장에 상태 코드가 새면 안 된다")
 
     def test_a_delivered_friday_report_raises_nothing(self):
         self.write_sent()
@@ -236,12 +263,13 @@ class OperationalAlertsCliTests(unittest.TestCase):
         failed = {
             "web_build": "failure", "data_gate": "skipped", "web_deploy": "skipped",
         }
-        first = cli.run(
-            sent_path=self.sent, log_path=self.log, notify=True,
-            sender=lambda _text: (_ for _ in ()).throw(OSError("down")),
-            expected_sources={}, pipeline_outcomes=failed,
-            pipeline_observation_id="daily-brief:200", now=NOW)
-        self.assertFalse(first["sent"])
+        for index, observation in enumerate(("crawl:200", "crawl:201")):
+            first = cli.run(
+                sent_path=self.sent, log_path=self.log, notify=True,
+                sender=lambda _text: (_ for _ in ()).throw(OSError("down")),
+                expected_sources={}, pipeline_outcomes=failed,
+                pipeline_observation_id=observation, now=NOW + timedelta(hours=3 * index))
+            self.assertFalse(first["sent"])
 
         messages = []
         recovered = cli.run(
@@ -249,7 +277,7 @@ class OperationalAlertsCliTests(unittest.TestCase):
             sender=lambda text: messages.append(text) or {"ok": True},
             expected_sources={}, pipeline_outcomes={
                 "web_build": "success", "data_gate": "success", "web_deploy": "success",
-            }, pipeline_observation_id="daily-brief:201", now=NOW + timedelta(days=1))
+            }, pipeline_observation_id="crawl:202", now=NOW + timedelta(days=1))
         self.assertTrue(recovered["sent"])
         self.assertEqual(1, len(messages))
         state = json.loads(self.sent.read_text(encoding="utf-8"))
@@ -263,6 +291,12 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.write_sent({"at": "stale-run", "counts": {"IAEA": 5},
                          "kept": {"IAEA": 1}, "errors": {}})
         messages = []
+        once = cli.run(
+            sent_path=self.sent, log_path=self.log, notify=True,
+            sender=lambda text: messages.append(text) or {"ok": True},
+            expected_sources={}, collection_outcome="failure",
+            collection_observation_id="crawl:299", now=NOW - timedelta(hours=3))
+        self.assertFalse(once["sent"], "한 번 멈춘 수집은 다음 회차가 다시 모은다")
         failed = cli.run(
             sent_path=self.sent, log_path=self.log, notify=True,
             sender=lambda text: messages.append(text) or {"ok": True},
@@ -271,8 +305,8 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertTrue(failed["sent"])
         self.assertFalse(failed["source_processed"])
         self.assertIn("뉴스 수집", messages[0])
-        self.assertIn("조치 필요", messages[0])
-        self.assertIn("news_bot step outcome=failure", messages[0])
+        self.assertIn("🚨 할 일", messages[0])
+        self.assertNotIn("news_bot step outcome=failure", messages[0], "기술 값은 로그로")
         state = json.loads(self.sent.read_text(encoding="utf-8"))
         self.assertEqual({}, state["source_health"]["sources"])
 
@@ -427,23 +461,23 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertFalse(out["ok"])
         self.assertEqual(before, self.sent.read_bytes())
 
-    def test_a_degraded_build_reaches_the_administrator(self):
-        """빌드가 성공한 회차라 web_pipeline 경로로는 한 마디도 안 나간다."""
+    def test_a_degraded_build_reaches_the_administrator_in_the_digest(self):
+        """빌드가 성공한 회차라 web_pipeline 경로로는 한 마디도 안 나간다 — 요약이 말한다."""
         self.write_sent({"at": "run-degraded", "counts": {"IAEA": 5},
                          "kept": {}, "errors": {}})
+        self.write_brief_ok()
         messages = []
         out = cli.run(sent_path=self.sent, log_path=self.log, notify=True,
                       sender=lambda text: messages.append(text) or {"ok": True},
                       expected_sources={"IAEA": "feed"},
                       pipeline_outcomes={"web_build": "success", "data_gate": "success",
                                          "web_deploy": "success"},
-                      pipeline_observation_id="crawl:501",
+                      pipeline_observation_id="crawl:501", digest_requested=True,
                       build_mode="degraded", identity_quarantined=2, now=NOW)
-        self.assertTrue(out["sent"])
-        self.assertEqual(1, len(messages))
+        self.assertFalse(out["sent"], "장애가 아니다 — 즉시 알림이 아니다")
+        self.assertTrue(out["digest_sent"])
         self.assertIn("갈라 놓았습니다", messages[0])
-        # 장애가 아니다 — 사이트도 브리핑도 정상이라고 말해야 한다.
-        self.assertIn("정상", messages[0])
+        self.assertIn("✅ 할 일 없음", messages[0])
 
     def test_a_clean_build_resolves_the_previous_degraded_incident(self):
         """오염이 사라졌는데 사건이 열려 있으면 다음 degraded 를 못 알아본다."""
@@ -457,12 +491,10 @@ class OperationalAlertsCliTests(unittest.TestCase):
         cli.run(**common, sender=lambda text: messages.append(text) or {"ok": True},
                 pipeline_observation_id="crawl:601", build_mode="degraded",
                 identity_quarantined=2, now=NOW)
-        self.assertEqual(1, len(messages))
         cli.run(**common, sender=lambda text: messages.append(text) or {"ok": True},
                 pipeline_observation_id="crawl:602", build_mode="ok",
                 identity_quarantined=0, now=NOW + timedelta(hours=3))
-        self.assertEqual(2, len(messages))
-        self.assertIn("정상", messages[1])
+        self.assertEqual([], messages, "요약 갈래는 따로 울리지도, '풀림'을 보내지도 않는다")
         state = json.loads(self.sent.read_text(encoding="utf-8"))
         row = state["operational_alerts"]["items"]["quality:web-identity-degraded"]
         self.assertFalse(row["active"])
