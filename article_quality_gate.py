@@ -1749,6 +1749,37 @@ def _verified_event_date(
     return claim
 
 
+def verify_event_date_claim(
+    curation: Mapping[str, object], source: Mapping[str, object],
+    reference_date: object,
+) -> dict[str, str]:
+    """Public judge: the claim to seal if ``source`` bears out the curation's date.
+
+    For stages that re-acquire the evidence later — the archive restore tool
+    re-fetches bodies of articles collected before sealing existed.  Same judge,
+    same claim shape as ``build_evidence_manifest(curation=...)``.
+    """
+    return _verified_event_date(
+        curation, source, _reference_date({}, source, reference_date))
+
+
+def with_sealed_event_date(manifest: Mapping[str, object],
+                           claim: Mapping[str, object]) -> dict:
+    """``manifest`` plus a sealed event-date claim, fingerprint recomputed.
+
+    Every other key — the source binding above all — is kept as it was, so the
+    result binds to exactly the article the original manifest did.  This does not
+    judge the claim: pass only what ``verify_event_date_claim`` returned.
+    """
+    sealed = _sealed_event_date(claim)
+    updated = {str(key): deepcopy(value) for key, value in manifest.items()
+               if key != "manifest_fingerprint"}
+    if sealed:
+        updated["verified_event_date"] = sealed
+    updated["manifest_fingerprint"] = _digest_payload(updated)
+    return updated
+
+
 def _sealed_event_date(value: object) -> dict[str, str]:
     if not isinstance(value, Mapping):
         return {}
