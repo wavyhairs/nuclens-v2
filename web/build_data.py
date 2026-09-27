@@ -773,8 +773,49 @@ def load_archive() -> list[dict]:
             article_hash = record.get("hash")
             if not article_hash:
                 continue
-            records.append(apply_text_repairs(_normalize_archive_record(record)))
+            records.append(apply_event_date_seal(
+                apply_text_repairs(_normalize_archive_record(record))))
     return records
+
+
+_EVENT_DATE_SEALS: dict[str, dict] | None = None
+
+
+def event_date_seals() -> dict[str, dict]:
+    """봉인 도입(PR #205) 전에 수집된 기사의 사건일 봉인 — `tools/restore_event_date_seals.py` 산출.
+
+    그 기사들은 수집 때 본문으로 사건일을 확인했지만 봉인이 없어 사이트에서
+    지워졌다(2026-09-27 기준 1,416건). 도구가 본문을 다시 받아 **새 기사와 같은
+    판정기**로 확인한 것만 여기 적는다. 아카이브는 건드리지 않는다 —
+    `archive_source_backfill.json` 과 같은 자리다.
+    """
+    global _EVENT_DATE_SEALS
+    if _EVENT_DATE_SEALS is None:
+        try:
+            raw = json.loads((BOT_DIR / "archive_event_date_seals.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            raw = {}
+        _EVENT_DATE_SEALS = {key: value for key, value in raw.items()
+                             if isinstance(value, dict)} if isinstance(raw, dict) else {}
+    return _EVENT_DATE_SEALS
+
+
+def apply_event_date_seal(record: dict) -> dict:
+    """봉인을 그 기사의 manifest 에 얹는다. 판정은 무결성 게이트가 그대로 한다.
+
+    봉인은 **확인할 때 본 manifest** 에만 얹힌다(`base_fingerprint`). 레코드의
+    manifest 가 그 뒤 바뀌었으면 얹지 않는다 — 다른 근거 위에 옛 판정을 붙이지
+    않는다. 얹은 뒤에도 게이트가 결속·봉인·네 필드 일치를 다시 본다.
+    """
+    seal = event_date_seals().get(str(record.get("hash") or ""))
+    manifest = record.get("verified_evidence")
+    if not seal or not isinstance(manifest, dict):
+        return record
+    if manifest.get("manifest_fingerprint") != seal.get("base_fingerprint"):
+        return record
+    record["verified_evidence"] = article_quality_gate.with_sealed_event_date(
+        manifest, seal.get("verified_event_date") or {})
+    return record
 
 
 _TEXT_REPAIRS: dict[str, dict[str, str]] | None = None
