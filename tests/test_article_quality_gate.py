@@ -426,6 +426,43 @@ class ArticleIntegrityTests(unittest.TestCase):
                       [row.code for row in result.findings])
 
 
+class StatedYearDateTests(unittest.TestCase):
+    """'내년 10월'은 가장 가까운 10월이 아니다.
+
+    연도 없는 월·일은 발행일에 가장 가까운 해로 푼다. 해가 말로 적혀 있으면
+    그것이 이겨야 한다 — 실측 2026-09: "발전 5개사, 내년 10월 '한국발전'으로 통합
+    출범"(9/22 기사)이 2026년 10월로 확인돼 사건일 봉인과 달력 '10월 중'에 섰다.
+    """
+
+    def test_next_year_month_is_next_year(self):
+        text = "발전 5개사, 내년 10월 '한국발전'으로 통합 출범"
+        self.assertEqual(
+            gate.date_evidence_problem("2026-10-01", "month", text, "2026-09-22"),
+            "source_conflict")
+        self.assertEqual(
+            gate.date_evidence_problem("2027-10-01", "month", text, "2026-09-22"), "")
+
+    def test_stated_year_beats_the_nearest_year_for_a_day(self):
+        self.assertEqual(gate.explicit_dates("제도는 내년 3월 5일 시행된다", "2026-01-10"),
+                         (gate.date(2027, 3, 5),))
+        self.assertEqual(gate.explicit_dates("지난해 11월 3일 발표했다", "2026-06-01"),
+                         (gate.date(2025, 11, 3),))
+
+    def test_this_year_is_the_publication_year(self):
+        self.assertEqual(
+            gate.date_evidence_problem("2026-10-01", "month", "올해 10월 착공한다", "2026-01-05"),
+            "")
+
+    def test_unmarked_dates_still_use_the_nearest_year(self):
+        self.assertEqual(gate.explicit_dates("10월 5일 개최한다", "2026-09-27"),
+                         (gate.date(2026, 10, 5),))
+
+    def test_year_on_year_comparison_is_not_a_year_marker(self):
+        """'전년 동기'는 해를 가리키지 않는다."""
+        self.assertEqual(gate.explicit_dates("전년 10월 5일 대비 증가", "2026-09-27"),
+                         (gate.date(2026, 10, 5),))
+
+
 class CurrencyQuantityTests(unittest.TestCase):
     """달러 금액도 수치다 — 예전에는 이 축이 통째로 안 보였다.
 
