@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-09-28"
   },
   "retired": {
@@ -630,7 +630,7 @@
     }
   },
   "spent": {
-    "count": 2,
+    "count": 3,
     "date": "2026-09-28"
   },
   "terms": {
@@ -681,6 +681,56 @@
       "yield_days": [],
       "yields": 0,
       "zero_streak": 2
+    },
+    "한국전기연구원": {
+      "articles": 5,
+      "created_at": "2026-09-28T12:41:10.802463+00:00",
+      "domains": [
+        "yna.co.kr",
+        "segye.com",
+        "hankookilbo.com",
+        "chosun.com",
+        "nocutnews.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "yna.co.kr",
+          "hash": "fdf983fa3639e543",
+          "importance": "nice_to_know",
+          "title": "한국전기연구원, 상온 '다층 그래핀' 코팅 기술 개발…초고성능 도체 대량생산 길 열려"
+        },
+        {
+          "domain": "segye.com",
+          "hash": "d6cdda72e221db43",
+          "importance": "nice_to_know",
+          "title": "한국전기연구원, 상온에서 다층 그래핀 직접 성장시키는 ‘K-sputtering’ 기술 개발"
+        },
+        {
+          "domain": "hankookilbo.com",
+          "hash": "1b3eb0e8784bd825",
+          "importance": "nice_to_know",
+          "title": "한국전기연구원, 상온 그래핀 직접 증착 공정 개발"
+        }
+      ],
+      "expires_at": "2026-09-29T12:41:12.166268+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 23,
+      "last_run": "2026-09-28T12:41:12.166268+00:00",
+      "new_articles": 23,
+      "origin": "auto",
+      "planned_at": "2026-09-28T12:41:10.802463+00:00",
+      "queries_run": 1,
+      "query": "한국전기연구원 원자력",
+      "score": 3.91,
+      "status": "extended",
+      "term": "한국전기연구원",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [
+        "2026-09-28"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     }
   },
   "version": 1
