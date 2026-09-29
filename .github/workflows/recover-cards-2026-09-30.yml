@@ -1,0 +1,53 @@
+name: Recover cards 2026-09-30
+
+on:
+  push:
+    branches:
+      - ops/recover-cards-2026-09-30
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Wait for active crawl to settle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CRAWL_RUN_ID: "36634562432"
+        run: |
+          for i in $(seq 1 80); do
+            status=$(gh run view "$CRAWL_RUN_ID" -R "${{ github.repository }}" --json status --jq '.status' 2>/dev/null || echo unknown)
+            echo "crawl status=$status"
+            case "$status" in
+              completed|cancelled|failure) break ;;
+            esac
+            sleep 15
+          done
+
+      - name: Recover only if crawl did not already wake cards
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CUTOFF: "2026-09-29T21:37:00Z"
+        run: |
+          latest=$(gh run list -R "${{ github.repository }}" --workflow cards.yml --limit 1 \
+            --json databaseId,createdAt,status,conclusion --jq '.[0] | [.databaseId,.createdAt,.status,(.conclusion // "")] | @tsv' 2>/dev/null || true)
+          echo "latest cards run: ${latest:-none}"
+
+          if [ -n "$latest" ]; then
+            IFS=$'\t' read -r run_id created status conclusion <<< "$latest"
+            if [[ "$created" > "$CUTOFF" ]] && { [ "$status" = "queued" ] || [ "$status" = "in_progress" ] || { [ "$status" = "completed" ] && [ "$conclusion" = "success" ]; }; }; then
+              echo "crawl already recovered/woke today's cards — no duplicate dispatch"
+              exit 0
+            fi
+          fi
+
+          echo "dispatch manual recovery for 2026-09-30"
+          gh workflow run cards.yml -R "${{ github.repository }}" --ref main \
+            -f date=2026-09-30 \
+            -f force=true \
+            -f send=false \
+            -f deploy_mode=full
