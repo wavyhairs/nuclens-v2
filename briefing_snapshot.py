@@ -53,7 +53,7 @@ FROZEN_FIELDS = (
     "title", "headline_display", "summary", "detail", "implication",
     "why_important", "why_short", "card_why", "card_prior", "open_question",
     "latest_change", "change_display", "change_kind",
-    "region", "importance", "status", "selection_reasons",
+    "region", "importance", "selection_reasons",
 )
 
 
@@ -164,7 +164,12 @@ def reconcile(rows: list[dict], briefing_date: str, snapshot: dict,
         rep = card.get("representative_hash") or ""
         base = next((row for row, held in current if rep in held), holders[0])
         row = copy.deepcopy(base)
-        row.update(copy.deepcopy(card.get("fields") or {}))
+        frozen_fields = copy.deepcopy(card.get("fields") or {})
+        # `status` is tracking metadata, not historical prose.  Legacy snapshots
+        # may contain it, but applying that old value beside today's
+        # tracked_briefings/previous_article_count creates an impossible mixed state.
+        frozen_fields.pop("status", None)
+        row.update(frozen_fields)
         repair_text(row, (repairs or {}).get(rep))
         row["issue_id"] = card.get("issue_id") or row.get("issue_id")
         row["current_article_count"] = len(hashes)
