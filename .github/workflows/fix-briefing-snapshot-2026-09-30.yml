@@ -1,0 +1,126 @@
+name: Fix briefing snapshot tracking + redeploy 2026-09-30
+
+on:
+  push:
+    branches:
+      - ops/fix-briefing-snapshot-2026-09-30
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  fix-and-redeploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch snapshot tracking contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('briefing_snapshot.py')
+          text = p.read_text(encoding='utf-8')
+
+          old_fields = '    "region", "importance", "status", "selection_reasons",\n'
+          new_fields = '    "region", "importance", "selection_reasons",\n'
+          assert text.count(old_fields) == 1, 'FROZEN_FIELDS status pattern changed'
+          text = text.replace(old_fields, new_fields, 1)
+
+          old_apply = '        row.update(copy.deepcopy(card.get("fields") or {}))\n'
+          new_apply = '''        frozen_fields = copy.deepcopy(card.get("fields") or {})\n        # `status` is tracking metadata, not historical prose.  Legacy snapshots\n        # may contain it, but applying that old value beside today's\n        # tracked_briefings/previous_article_count creates an impossible mixed state.\n        frozen_fields.pop("status", None)\n        row.update(frozen_fields)\n'''
+          assert text.count(old_apply) == 1, 'reconcile frozen-field apply pattern changed'
+          text = text.replace(old_apply, new_apply, 1)
+          p.write_text(text, encoding='utf-8')
+          PY
+          python -m py_compile briefing_snapshot.py
+
+      - name: Regression check for legacy frozen status
+        run: |
+          python - <<'PY'
+          import briefing_snapshot as bs
+
+          day = '2026-09-30'
+          current = [{
+              'issue_id': 'issue-current',
+              'title': '현재 분류',
+              'headline_display': '현재 분류',
+              'status': 'new',
+              'tracked_briefings': 1,
+              'previous_article_count': 0,
+              'representative_article': {'hash': 'h1'},
+              'related_articles': [
+                  {'hash': 'h1', 'briefing_date': day, 'member_role': 'card'},
+              ],
+          }]
+          legacy = {
+              'frozen_at': '2026-09-24T00:00:00+09:00',
+              'cards': [{
+                  'issue_id': 'issue-old',
+                  'hashes': ['h1', 'h2'],
+                  'representative_hash': 'h1',
+                  'fields': {'title': '과거 표시문장', 'status': 'ongoing'},
+              }],
+          }
+          rows, corrected = bs.reconcile(current, day, legacy)
+          assert corrected == 1
+          assert len(rows) == 1
+          assert rows[0]['status'] == 'new', rows[0]
+          assert rows[0]['tracked_briefings'] == 1, rows[0]
+          assert rows[0]['previous_article_count'] == 0, rows[0]
+          print('legacy frozen status regression: PASS')
+          PY
+
+      - name: Commit fix to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add briefing_snapshot.py
+          git diff --cached --quiet && { echo 'already fixed'; exit 0; }
+          git commit -m "fix: keep briefing tracking status consistent"
+          git push origin HEAD:main
+
+      - name: Dispatch full web deploy
+        id: dispatch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          marker=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          echo "marker=$marker" >> "$GITHUB_OUTPUT"
+          gh workflow run deploy-web.yml -R "${{ github.repository }}" --ref main -f mode_hint=full
+
+      - name: Wait for dispatched deploy and verify live cards
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MARKER: ${{ steps.dispatch.outputs.marker }}
+          SITE_URL: https://nuclens-v2.pages.dev
+        run: |
+          run_id=""
+          for i in $(seq 1 40); do
+            run_id=$(gh run list -R "${{ github.repository }}" --workflow deploy-web.yml --event workflow_dispatch --limit 10 \
+              --json databaseId,createdAt --jq '.[] | select(.createdAt >= env.MARKER) | .databaseId' | head -1)
+            [ -n "$run_id" ] && break
+            sleep 5
+          done
+          [ -n "$run_id" ] || { echo '::error::dispatched deploy run not found'; exit 1; }
+          echo "deploy run=$run_id"
+          gh run watch "$run_id" -R "${{ github.repository }}" --exit-status
+
+          cb=$(date +%s)
+          for n in 01 02 03 04 05; do
+            url="$SITE_URL/cards/2026-09-30/$n.png?cb=$cb"
+            curl -fsS "$url" -o "/tmp/$n.png"
+            python - "$n" <<'PY'
+          import pathlib, sys
+          n = sys.argv[1]
+          data = pathlib.Path(f'/tmp/{n}.png').read_bytes()
+          assert data.startswith(b'\x89PNG\r\n\x1a\n') and len(data) > 1000, (n, len(data))
+          print(f'live card {n}: OK ({len(data)} bytes)')
+          PY
+          done
