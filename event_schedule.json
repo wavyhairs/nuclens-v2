@@ -1,27 +1,6 @@
 {
- "generated_at": "2026-09-29T00:45:08+09:00",
+ "generated_at": "2026-09-30T00:49:12+09:00",
  "events": [
-  {
-   "id": "of-767bb383b6cb",
-   "date": "2026-09-15",
-   "end_date": "2026-09-15",
-   "kind": "point",
-   "time": "13:30",
-   "label": "탄소중립 혁신포럼 2026 글로벌 기후테크 실증 밸리 구축",
-   "host": "서범수 의원실",
-   "organizer": "서범수 의원실",
-   "place": "기타 : 울주군청 회의실(1층 문수홀)",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "탄소중립 혁신포럼 2026 글로벌 기후테크 실증 밸리 구축",
-   "first_seen": "2026-09-13",
-   "topics": [
-    "carbon_free"
-   ],
-   "relevance": "탄소중립",
-   "significance": "포럼"
-  },
   {
    "id": "of-33e370642eef",
    "date": "2026-09-16",
@@ -234,6 +213,27 @@
    "significance": "세미나"
   },
   {
+   "id": "of-0cd365ab1808",
+   "date": "2026-10-02",
+   "end_date": "2026-10-02",
+   "kind": "point",
+   "time": "16:00",
+   "label": "산업용 지역 전기요금제 설계안 진단 및 개선방향 토론회",
+   "host": "차규근·김종민·서왕진 의원실, 기후시민프로젝트",
+   "organizer": "차규근·김종민·서왕진 의원실, 기후시민프로젝트",
+   "place": "의원회관 제10간담회의실(217호)",
+   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
+   "source_id": "assembly_events",
+   "publisher": "국회",
+   "notice_title": "산업용 지역 전기요금제 설계안 진단 및 개선방향 토론회",
+   "first_seen": "2026-09-30",
+   "topics": [
+    "power_market"
+   ],
+   "relevance": "전기요금",
+   "significance": "토론회"
+  },
+  {
    "id": "of-e84de075fb02",
    "date": "2026-10-04",
    "end_date": "2026-10-09",
@@ -415,7 +415,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-09-29T00:45:08+09:00",
+   "at": "2026-09-30T00:49:12+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -423,18 +423,19 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-09-29T00:45:08+09:00",
+   "at": "2026-09-30T00:49:12+09:00",
    "ok": true,
-   "parsed": 9,
-   "kept": 3,
-   "new": 1,
+   "parsed": 10,
+   "kept": 2,
+   "new": 0,
    "dropped": {
-    "not_an_event": 3,
-    "low_significance": 3
+    "no_interest_match": 1,
+    "low_significance": 3,
+    "not_an_event": 4
    }
   },
   "kaif_calendar": {
-   "at": "2026-09-29T00:45:08+09:00",
+   "at": "2026-09-30T00:49:12+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -447,7 +448,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-09-29T00:45:08+09:00",
+   "at": "2026-09-30T00:49:12+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -455,27 +456,26 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-09-29T00:45:08+09:00",
+   "at": "2026-09-30T00:49:12+09:00",
    "ok": true,
-   "parsed": 50,
-   "kept": 3,
-   "new": 0,
+   "parsed": 39,
+   "kept": 2,
+   "new": 1,
    "dropped": {
-    "no_interest_match": 46,
-    "not_an_event": 1
+    "no_interest_match": 37
    }
   },
   "kpx_notice": {
-   "at": "2026-09-29T00:45:08+09:00",
+   "at": "2026-09-30T00:49:12+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 1,
    "new": 0,
    "dropped": {
+    "no_event_date": 3,
     "no_interest_match": 7,
-    "not_an_event": 6,
-    "low_significance": 4,
-    "no_event_date": 2
+    "not_an_event": 5,
+    "low_significance": 4
    }
   }
  }
