@@ -348,6 +348,14 @@
       "type": "plant",
       "until": "2026-10-07T18:41:05.315934+00:00"
     },
+    "보르셀레": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-30T21:41:07.793427+00:00",
+      "term": "보르셀레",
+      "type": "plant",
+      "until": "2026-10-14T21:41:07.793427+00:00"
+    },
     "산진해경제자유구역청": {
       "new_articles": 0,
       "reason": "기간 만료",
@@ -355,6 +363,14 @@
       "term": "산진해경제자유구역청",
       "type": "org",
       "until": "2026-09-26T03:42:59.646817+00:00"
+    },
+    "상원이보르셀레": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-30T21:41:07.793427+00:00",
+      "term": "상원이 보르셀레",
+      "type": "plant",
+      "until": "2026-10-14T21:41:07.793427+00:00"
     },
     "안전건설위원회": {
       "new_articles": 1,
@@ -548,6 +564,14 @@
       "type": "org",
       "until": "2026-10-02T15:40:41.667920+00:00"
     },
+    "펜실베이니아주크레인": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-09-30T21:41:07.793427+00:00",
+      "term": "펜실베이니아주 크레인",
+      "type": "plant",
+      "until": "2026-10-14T21:41:07.793427+00:00"
+    },
     "포툼": {
       "new_articles": 2,
       "reason": "기간 만료",
@@ -690,70 +714,6 @@
       "yields": 0,
       "zero_streak": 1
     },
-    "보르셀레": {
-      "articles": 1,
-      "created_at": "2026-09-29T18:41:25.706491+00:00",
-      "domains": [
-        "world-nuclear-news.org"
-      ],
-      "evidence": [
-        {
-          "domain": "world-nuclear-news.org",
-          "hash": "f6d1a4ef14044317",
-          "importance": "must_read",
-          "title": "네덜란드 상원, 보르셀레 원전 계속운전 위한 원자력에너지법 개정안 승인"
-        }
-      ],
-      "expires_at": "2026-09-30T18:41:25.706491+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-09-30T03:41:20.345007+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-09-30T03:41:18.123317+00:00",
-      "queries_run": 2,
-      "query": "보르셀레 원전",
-      "score": 3.6,
-      "status": "tracking",
-      "term": "보르셀레",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
-    "상원이보르셀레": {
-      "articles": 1,
-      "created_at": "2026-09-29T18:41:25.706491+00:00",
-      "domains": [
-        "world-nuclear-news.org"
-      ],
-      "evidence": [
-        {
-          "domain": "world-nuclear-news.org",
-          "hash": "f6d1a4ef14044317",
-          "importance": "must_read",
-          "title": "네덜란드 상원, 보르셀레 원전 계속운전 위한 원자력에너지법 개정안 승인"
-        }
-      ],
-      "expires_at": "2026-09-30T18:41:25.706491+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-09-30T03:41:20.345007+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-09-30T03:41:18.123317+00:00",
-      "queries_run": 2,
-      "query": "상원이 보르셀레 원전",
-      "score": 3.6,
-      "status": "tracking",
-      "term": "상원이 보르셀레",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
     "심사중인": {
       "articles": 3,
       "created_at": "2026-09-30T00:26:55.045359+00:00",
@@ -890,38 +850,6 @@
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
-    },
-    "펜실베이니아주크레인": {
-      "articles": 1,
-      "created_at": "2026-09-29T18:41:25.706491+00:00",
-      "domains": [
-        "ans.org"
-      ],
-      "evidence": [
-        {
-          "domain": "ans.org",
-          "hash": "1d952b5bc4dd535a",
-          "importance": "must_read",
-          "title": "미 NRC, 펜실베이니아주 크레인 원전 환경영향평가 결과 '영향 없음' 확정"
-        }
-      ],
-      "expires_at": "2026-09-30T18:41:25.706491+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-09-30T15:41:11.356746+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-09-30T15:41:08.024201+00:00",
-      "queries_run": 2,
-      "query": "펜실베이니아주 크레인 원전",
-      "score": 3.6,
-      "status": "tracking",
-      "term": "펜실베이니아주 크레인",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
     },
     "한국전기연구원": {
       "articles": 5,
