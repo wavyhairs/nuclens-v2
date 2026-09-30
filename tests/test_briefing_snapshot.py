@@ -120,6 +120,25 @@ class ReconcileTests(unittest.TestCase):
                          ["issue-6260", "issue-italy", "issue-late"],
                          "발송 당시 순서가 지켜지지 않았다")
 
+    def test_a_legacy_frozen_status_does_not_mix_with_current_tracking(self):
+        """`status` 는 문장이 아니라 추적 메타데이터다 (2026-09-30 복구 중 발견).
+
+        옛 스냅샷은 `status="ongoing"` 을 얼려 두었는데, 정정 카드는 그 위에
+        지금 재계산한 `tracked_briefings` 를 싣는다. 둘이 한 행에 서면 불가능한
+        조합이 되어 전체 웹 배포의 데이터 계약 검사가 그 복구를 한 번 더 막았다.
+        """
+        self.store["dates"][DAY]["cards"][0]["fields"]["status"] = "ongoing"
+        split_a = _row("issue-6260", ["a"], "전기본 확정")
+        split_a.update({"status": "new", "tracked_briefings": 1})
+        now = [split_a, _row("issue-tariff", ["b"], "지역별 요금제"),
+               _row("issue-italy", ["c"], "이탈리아 원전법")]
+        briefing = _briefing(now)
+        bs.apply([briefing], self.store, "t")
+        sent = briefing["issues"][0]
+        self.assertEqual(sent["title"], "전기본 비대 이슈", "얼린 문장은 그대로 선다")
+        self.assertEqual(sent["status"], "new", "얼린 옛 status 가 지금 추적값과 섞였다")
+        self.assertEqual(sent["tracked_briefings"], 1)
+
 
 class MigrationV2Tests(unittest.TestCase):
     """v1 원장의 소급 날짜만 표시 제목을 그날 제목으로 되돌린다 — 한 번만, 그 칸만."""

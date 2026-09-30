@@ -41,12 +41,43 @@ from __future__ import annotations
 
 import json
 import os
+import time
 
 import gemini_client
 import llm_policy
 
 # 전송 계층 재시도 상한. 논리 호출 1회 = 최대 `1 + CARD_LLM_RETRIES` HTTP 요청.
 CARD_LLM_RETRIES = max(0, int(os.environ.get("CARD_LLM_RETRIES") or 1))
+
+
+def _int_list(raw: str | None, default: tuple[int, ...]) -> tuple[int, ...]:
+    try:
+        values = tuple(int(x) for x in str(raw or "").split(",") if x.strip())
+    except ValueError:
+        return default
+    return values or default
+
+
+# 일시 과부하(5xx·연결) 대기 사다리 (2026-09-30).
+#
+# 전송 재시도(CARD_LLM_RETRIES)는 초 단위 요동을 넘기는 용도라, 분 단위로 가는
+# 503 은 못 넘긴다. 그날 실측: 통합 `card_writer` 가 HTTP 503 으로 두 번 다
+# 떨어지자 일일 카드는 `card_daily_writer` 단독 호출로 살아났지만 **스토리는
+# 그 경로가 없어 그대로 빠졌다.** 같은 503 을 맞고 한쪽만 살아남는 비대칭이다.
+#
+# 그래서 대기를 호출 계층(여기)에 둔다 — Narrator·Writer·일일 Writer·repair 가
+# 모두 같은 기회를 얻는다. `gemini_client.is_transient_overload` 가 참인 실패만
+# 기다린다(429 일일 한도·400·잘림은 기다려도 안 풀린다). 대기 총량은 **프로세스
+# 하나에 공유되는 예산**이라, 과부하가 안 풀리는 날 호출마다 사다리를 새로 타서
+# 잡 시간(30분)을 태우지 않는다. 예산이 바닥나면 즉시 올리고, 호출자의 기존
+# 폴백(일일 → 단독 Writer → 사이트 문장)이 그대로 이어받는다.
+CARD_OVERLOAD_WAITS_SEC = _int_list(os.environ.get("CARD_OVERLOAD_WAITS"), (45, 120))
+CARD_OVERLOAD_BUDGET_SEC = max(0, int(os.environ.get("CARD_OVERLOAD_BUDGET_SEC") or 240))
+_overload_waited_sec = 0.0
+
+
+def _overload_sleep(seconds: float) -> None:
+    time.sleep(seconds)
 
 BRIEF_SCHEMA_VERSION = "editorial-brief-v1"
 
@@ -306,20 +337,41 @@ def call(task: str, system_prompt: str, payload: dict, *,
                       ("prompt_tokens", "candidate_tokens", "thought_tokens",
                        "total_tokens", "finish_reason")})
 
-    result = gemini_client.call_json(
-        system_prompt,
-        json.dumps(body, ensure_ascii=False, indent=1),
-        temperature=0.3,
-        max_output_tokens=max_output_tokens,
-        retries=CARD_LLM_RETRIES,
-        model=profile.model(),
-        label=f"cards:{task}",
-        trace_sink=_usage,
-        **profile.reasoning_kwargs(),
-    )
+    global _overload_waited_sec
+    waits = iter(CARD_OVERLOAD_WAITS_SEC)
+    overload_retries = 0
+    while True:
+        try:
+            result = gemini_client.call_json(
+                system_prompt,
+                json.dumps(body, ensure_ascii=False, indent=1),
+                temperature=0.3,
+                max_output_tokens=max_output_tokens,
+                retries=CARD_LLM_RETRIES,
+                model=profile.model(),
+                label=f"cards:{task}",
+                trace_sink=_usage,
+                **profile.reasoning_kwargs(),
+            )
+            break
+        except gemini_client.GeminiError as exc:
+            if not gemini_client.is_transient_overload(exc):
+                raise
+            wait = next(waits, None)
+            if wait is None or _overload_waited_sec + wait > CARD_OVERLOAD_BUDGET_SEC:
+                print(f"[cards] {task} 일시 과부하가 대기 예산 안에 안 풀림 "
+                      f"(누적 {_overload_waited_sec:.0f}/{CARD_OVERLOAD_BUDGET_SEC}초) — 포기")
+                raise
+            _overload_waited_sec += wait
+            overload_retries += 1
+            print(f"[cards] {task} 일시 과부하 — {wait}초 뒤 이 호출만 다시 "
+                  f"(누적 {_overload_waited_sec:.0f}/{CARD_OVERLOAD_BUDGET_SEC}초): "
+                  f"{str(exc)[:120]}")
+            _overload_sleep(wait)
     if log is not None:
         log.append({"task": task, "model": profile.model(),
-                    "max_http_attempts": CARD_LLM_RETRIES + 1,
+                    "max_http_attempts": (CARD_LLM_RETRIES + 1) * (overload_retries + 1),
+                    "overload_retries": overload_retries,
                     "budget": max_output_tokens,
                     "repair": bool(fix_these), **usage})
     return result

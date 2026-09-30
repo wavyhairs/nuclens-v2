@@ -434,6 +434,66 @@ def load_story_copy(date: str) -> tuple[dict, dict] | None:
     return payload, copy
 
 
+def load_story_status(date: str) -> dict | None:
+    """make_cards 가 남긴 스토리 판정(STORY_STATUS_FILE). 오늘 것이 아니면 None."""
+    try:
+        saved = json.loads(mc.STORY_STATUS_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(saved, dict) or str(saved.get("date") or "") != date:
+        return None
+    return saved
+
+
+def step_summary(line: str) -> None:
+    """Actions 실행 요약에 한 줄. 초록/빨강 아이콘만 보고 지나가지 않게."""
+    path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not path:
+        return
+    try:
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+    except OSError:
+        pass
+
+
+RECOVERY_HINT = ("복구: Actions → Cards (카드뉴스) 를 force 로 다시 돌린다. "
+                 "스토리 판정 자체부터 다시 해야 하면 Long-term stories (수동 재판정) — "
+                 "판정 뒤 Cards 를 이어 부른다.")
+
+
+def report_missing_copy(date: str) -> int:
+    """스토리 카피가 없을 때 **왜 없는지**에 따라 종료 코드를 가른다 (2026-09-30).
+
+    예전에는 전부 "오늘 스토리 카피가 없다" 로 exit 0 이었다. 그날 후보가
+    있었는데 통합 Writer 가 503 으로 떨어져 스토리만 빠졌고, `Make story cards`
+    는 초록불이었다 — 운영자가 수동 복구가 끝났다고 오인했다.
+
+      none/판정 없음  콘텐츠 부재 — exit 0
+      quality         편집 QA 가 뺐다 — 경고, exit 0 (판단의 결과다)
+      failed          호출이 실패했다 — **exit 1** (장애다. 일일 카드는 이미 커밋됐다)
+    """
+    status = load_story_status(date) or {}
+    kind = status.get("status")
+    thread = status.get("thread_id") or "-"
+    reason = status.get("reason") or ""
+    if kind == mc.STORY_FAILED:
+        print(f"::error::[story] {date}: 스토리 후보({thread})가 있었는데 카피 생성이 "
+              f"실패했다 — {reason}. {RECOVERY_HINT}")
+        step_summary(f"### ❌ 스토리 카드 실패 ({date})\n- 후보: `{thread}`\n"
+                     f"- 원인: {reason}\n- {RECOVERY_HINT}")
+        return 1
+    if kind == mc.STORY_QUALITY:
+        print(f"::warning::[story] {date}: 스토리 후보({thread})를 편집 QA 가 뺐다 — {reason}")
+        step_summary(f"### ⚠️ 스토리 제외 — 편집 QA ({date})\n- 후보: `{thread}`\n"
+                     f"- 사유: {reason}")
+        return 0
+    print(f"[story] {date}: 오늘 스토리 카피가 없다 — 카드 안 만든다"
+          + (f" ({reason})" if reason else ""))
+    step_summary(f"스토리 카드 없음 ({date}) — {reason or '후보 없음'}")
+    return 0
+
+
 # ---- D. main ------------------------------------------------------------------
 
 
@@ -452,8 +512,7 @@ def main() -> int:
     date = args.date or mc.datetime.now(mc.KST).strftime("%Y-%m-%d")
     saved = load_story_copy(date)
     if saved is None:
-        print(f"[story] {date}: 오늘 스토리 카피가 없다 — 카드 안 만든다")
-        return 0
+        return report_missing_copy(date)
     payload, raw = saved
     if args.copy_file:
         raw = json.loads(args.copy_file.read_text(encoding="utf-8"))
@@ -466,8 +525,13 @@ def main() -> int:
     if problems:
         # 폴백 카피를 만들지 않는다. 재료를 기계적으로 이어 붙이면 타임라인이
         # 그럴듯한 거짓말이 된다. 스토리만 빠지고 일일 카드는 이미 나갔다.
-        print("[story] 카피 검증 실패: " + "; ".join(problems[:8]))
-        return 0
+        #
+        # 그래도 **초록불은 아니다** (2026-09-30). make_cards 가 저장 전에 같은
+        # 검증기(make_cards.story_problems)로 이미 걸렀으므로, 여기서 떨어지면
+        # 두 쪽이 어긋난 것이다 — 콘텐츠 부재가 아니라 결함이다.
+        print("::error::[story] 카피 검증 실패: " + "; ".join(problems[:8]))
+        step_summary(f"### ❌ 스토리 카피 검증 실패 ({date})\n- " + "; ".join(problems[:4]))
+        return 1
 
 
     slides = build_slides(raw, payload)

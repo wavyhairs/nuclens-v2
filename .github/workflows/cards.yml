@@ -134,6 +134,7 @@ jobs:
             echo "generation 일치 (재시도 1회)"
           else
             echo "::warning::배포 세대가 받는 중에 바뀌었다 — 스토리는 건너뛴다"
+            echo "### ⚠️ 스토리 건너뜀 — 라이브 배포 세대가 받는 중에 바뀌었다. Cards 를 다시 돌리면 복구된다" >> "$GITHUB_STEP_SUMMARY"
             echo "STORY_SKIP=true" >> "$GITHUB_ENV"
           fi
 
@@ -273,6 +274,14 @@ jobs:
       # threads(장기 스토리 원장) — 이벤트 3건 이상인 스레드가 그날 순위에 걸릴
       # 때만 만들고, 없으면 story_cards.py 가 조용히 exit 0 한다.
       #
+      # **'없음'과 '실패'를 가른다 (2026-09-30).** make_cards 가 cards/story_status.json
+      # 에 판정을 남긴다 — 후보가 없던 날은 exit 0, 후보가 있었는데 Gemini 호출이
+      # 실패한 날은 exit 1(빨간불), 편집 QA 가 뺀 날은 경고. 그날 실사고: 후보가
+      # 있었는데 503 으로 카피가 안 나왔고 이 스텝은 초록불이라 복구가 끝난 줄 알았다.
+      #
+      # 이 스텝은 오늘 스토리 **판정**을 다시 하지 않는다. 체크아웃 원장을 투영할
+      # 뿐이다(위 Re-project 스텝). 판정부터 다시 하려면 stories.yml 을 돌린다.
+      #
       # **일일 카드 커밋 뒤**에 세운 이유: 이 워크플로는 continue-on-error 를 쓰지
       # 않는다(실패를 숨기지 않는 계약). 앞에 두면 스토리가 죽는 날 일일 카드
       # 커밋까지 못 가고 그날 카드가 사이트에서 사라진다. 뒤에 두면 일일 카드는
@@ -353,8 +362,12 @@ jobs:
 
       # 커밋이 없었으면 배포도 깨우지 않는다. 같은 파일을 다시 올리려고 Pages
       # 배포 횟수(무료 500회/월)를 쓰지 않는다.
+      #
+      # `!cancelled()` 가 있어야 한다 — 스토리 스텝이 빨간불인 날(위)에도 이미
+      # main 에 커밋된 **일일 카드**는 사이트에 올라가야 한다. 암묵 success() 면
+      # 스토리 실패가 일일 카드 게시까지 끌고 내려간다(도메인 분리 위반).
       - name: Trigger site deploy
-        if: steps.commit.outputs.committed == 'true' || steps.commit-story.outputs.committed == 'true'
+        if: ${{ !cancelled() && (steps.commit.outputs.committed == 'true' || steps.commit-story.outputs.committed == 'true') }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run deploy-web.yml -R ${{ github.repository }} -f mode_hint=${{ inputs.deploy_mode || 'fast' }}
