@@ -23413,6 +23413,23 @@
       "right_title": "정부, 2040년 전력수요 최대 885TWh 전망…발전설비 확충 시급",
       "verdict": "same_thread"
     },
+    "issue-5976e83faefed3d5--issue-d4658d844ee27556": {
+      "gate": {
+        "at": "2026-09-30T23:21:55+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "24.7GW 전력 더 필요한데 … 신규 원전 몇 기 짓나 또 '국민 선택'",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "전력수급기본계획 수립 과정의 연속된 논의",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-09-30T23:21:53.554358+00:00",
+      "right_title": "12차 전력수급기본계획, 원전 반영 여부 두고 정부 부처 간 혼선",
+      "verdict": "same_thread"
+    },
     "issue-5976e83faefed3d5--issue-e35ba84675a81735": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "24.7GW 전력 더 필요한데 … 신규 원전 몇 기 짓나 또 '국민 선택'",
@@ -25173,6 +25190,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-23T19:34:57.272811+00:00",
       "right_title": "정부, 2000억 달러 규모 대미투자 협상 결과 22일 국회 보고",
+      "verdict": "different_thread"
+    },
+    "issue-6260c0799db78ac9--story-fd4140d2668bcbc0": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "제12차 전기본, 석탄발전 27기 LNG 전환 방안 제시",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "전기본 정책과 사이버 보안은 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-30T23:21:53.554358+00:00",
+      "right_title": "글로벌 에너지 인프라 대상 사이버 공격 급증…OT 보안 중요성 부상",
       "verdict": "different_thread"
     },
     "issue-627ba69c29d4adc5--issue-66d8933507f8bf75": {
@@ -37715,6 +37743,17 @@
       "reason": "새울 1호기 재가동과 사고관리계획서 심의는 별개임",
       "relationship": "",
       "reviewed_at": "2026-09-30T22:30:55.430871+00:00",
+      "right_title": "원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 승인 보류",
+      "verdict": "different_thread"
+    },
+    "issue-a3880024de8c77cf--story-7025587664fd73f5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "원안위, 새울원전 1호기 정기검사 후 재가동 승인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대상이 다르고 별개의 사건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-30T23:21:53.554358+00:00",
       "right_title": "원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 승인 보류",
       "verdict": "different_thread"
     },
@@ -51223,6 +51262,17 @@
       "right_title": "한수원 등, 포항 공영주차장 RE100 신재생에너지 설치 협약",
       "verdict": "different_thread"
     },
+    "issue-fd62cf7e5b213d06--story-4d181084fd09b33f": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "고리원전 계속운전 지원금 관련 주민 반발 발생",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "주민 반발과 한빛 2호기 정지는 별개 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-30T23:21:53.554358+00:00",
+      "right_title": "한빛 2호기 운영허가 만료로 가동 정지…내년 계속운전 심의 예정",
+      "verdict": "different_thread"
+    },
     "issue-fd62cf7e5b213d06--story-7025587664fd73f5": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "고리원전 계속운전 지원금 관련 주민 반발 발생",
@@ -54876,6 +54926,17 @@
       "right_title": "한울원전 6호기 붕산수 누출 사고 발생 및 경위 설명 논란",
       "verdict": "same_thread"
     },
+    "story-1b9b02046e156110--story-7025587664fd73f5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한울원전 6호기, 제15차 계획예방정비 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대상이 다르고 별개의 사건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-30T23:21:53.554358+00:00",
+      "right_title": "원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 승인 보류",
+      "verdict": "different_thread"
+    },
     "story-1b9b02046e156110--story-82eac093341d2c01": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한울원전 6호기, 제15차 계획예방정비 착수",
@@ -56596,6 +56657,12 @@
       "verdict": "different_thread"
     },
     "story-2eba66f067fdc974--story-7524648ff8032947": {
+      "gate": {
+        "at": "2026-09-30T23:21:55+00:00",
+        "basis": "ledger_link",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한수원-웨스팅하우스, 미국 내 원전 8기 건설 협력 잠정 합의",
       "model": "gemini-3.5-flash-lite",
@@ -60605,6 +60672,17 @@
       "right_title": "미국, 태양광 공급망을 국가안보 자산으로 격상…12월 4일 관세 시행",
       "verdict": "different_thread"
     },
+    "story-54a52b596a1678e2--story-7025587664fd73f5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한수원-공군 미사일방어사령부, 원전 방호 협력 업무협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대상이 다르고 별개의 사건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-30T23:21:53.554358+00:00",
+      "right_title": "원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 승인 보류",
+      "verdict": "different_thread"
+    },
     "story-54a52b596a1678e2--story-71596a4c2e20ad56": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한수원-공군 미사일방어사령부, 원전 방호 협력 업무협약 체결",
@@ -62709,6 +62787,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-13T19:37:56.120401+00:00",
       "right_title": "국회 토론회, 서남권 반도체 클러스터 전력공급 및 제12차 전기본 과제 논의",
+      "verdict": "different_thread"
+    },
+    "story-7025587664fd73f5--story-79affc73cad65844": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 승인 보류",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대상이 다르고 별개의 사건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-09-30T23:21:53.554358+00:00",
+      "right_title": "한수원, 3D프린팅 원전 부품 18개월 운전 성공",
       "verdict": "different_thread"
     },
     "story-7025587664fd73f5--story-89c1ce7ebf89478f": {
