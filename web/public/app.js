@@ -185,16 +185,31 @@ async function loadRootJSON(name, optional = false) {
   }
 }
 
+async function loadNewsShards() {
+  const manifest = await loadJSON("news-manifest.json");
+  const parts = await Promise.all(
+    (manifest?.shards || []).map(row => loadJSON(row.file))
+  );
+  return parts.flat();
+}
+
+// shard 이름은 내용 지문이다(build_data.write_news_payload). 배포 전환 창에는
+// 새 manifest 가 아직 안 퍼진 shard 를 가리켜 404 가 날 수 있다 — 틀린 데이터가
+// 아니라 '아직 없음'이므로, 잠깐 뒤 manifest 부터 다시 받으면 한 세대로 맞는다.
+const NEWS_RETRY_DELAY_MS = 1500;
+
 async function loadNewsPayload() {
   try {
-    const manifest = await loadJSON("news-manifest.json");
-    const parts = await Promise.all(
-      (manifest?.shards || []).map(row => loadJSON(row.file))
-    );
-    return parts.flat();
-  } catch (error) {
-    // One rolling-deploy generation may still expose the legacy payload.
-    return loadJSON("news.json");
+    return await loadNewsShards();
+  } catch (first) {
+    try {
+      await new Promise(resolve => setTimeout(resolve, NEWS_RETRY_DELAY_MS));
+      return await loadNewsShards();
+    } catch (error) {
+      // One rolling-deploy generation may still expose the legacy payload.
+      // 그것도 없으면 legacy 404 가 아니라 **원래 실패**를 올린다 — 진단이 그쪽에 있다.
+      return loadJSON("news.json").catch(() => { throw error; });
+    }
   }
 }
 
