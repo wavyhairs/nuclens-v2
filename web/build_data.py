@@ -4,7 +4,7 @@
 결과를 쓴다. ``BOT_DIR`` 환경 변수로 원본 봇 저장소 위치를 지정할 수 있다.
 
 출력:
-  - news-manifest.json + news/*.json: 기사 발행일 기준 전체 피드 shard
+  - news-manifest.json + news/NNN-<내용해시>.json: 기사 발행일 기준 전체 피드 shard
   - briefings.json: 발송일 기준 브리핑 + 이슈 묶음
   - issues.json: 전체 기간에서 중복 제거한 고유 이슈 카탈로그
   - trend.json: 집계 데이터
@@ -5945,8 +5945,15 @@ def write_news_payload(news_items: list[dict], out_dir: Path = OUT_DIR,
         nonlocal current, current_bytes
         if not current:
             return
-        name = f"{len(shards):03d}.json"
         payload = b"[" + b",".join(current) + b"]"
+        # **이름에 내용 지문을 싣는다 (2026-09-30).** 예전 이름은 `000.json` 이라
+        # 세대가 바뀌어도 같았고, 배포 전환 창에 새 manifest 가 옛 shard 를
+        # 받아 `news/000.json declared=2142 actual=2161` 로 조용히 섞였다.
+        # 내용이 바뀌면 이름도 바뀌므로 manifest 는 제 세대의 shard 만 가리킨다 —
+        # 결과는 '맞는 shard' 아니면 '아직 없음(404)' 뿐이고, 틀린 데이터는 없다.
+        # 앞의 순번은 사람이 읽기 좋게 남긴다(순서는 manifest 가 정한다).
+        digest = hashlib.sha256(payload).hexdigest()[:12]
+        name = f"{len(shards):03d}-{digest}.json"
         (shard_dir / name).write_bytes(payload)
         shards.append({"file": f"news/{name}", "count": len(current), "bytes": len(payload)})
         current = []

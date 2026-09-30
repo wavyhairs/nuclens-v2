@@ -45,6 +45,17 @@ ALBUM_FILE = CARDS_DIR / "album.json"
 # 날은 편집 데스크를 한 번만 부르고, 그 결과로 두 산출물을 다 쓴다. 그래서
 # story_cards 는 정상 경로에서 **LLM 을 부르지 않는다** — 렌더와 검증만 한다.
 STORY_COPY_FILE = CARDS_DIR / "story_copy.json"
+# 스토리가 **왜** 없는가. `story_copy.json` 이 없다는 사실만으로는 두 날을 못
+# 가른다 (2026-09-30): 후보가 없던 날(정상)과, 후보가 있었는데 Gemini 503 으로
+# 카피가 안 나온 날(장애). 둘 다 story_cards 가 "오늘 스토리 카피가 없다" 로
+# exit 0 했고 Actions 는 초록불이었다. 그래서 make_cards 가 판정을 남긴다.
+#
+#   none     후보 없음 — 콘텐츠 부재. 정상.
+#   ready    카피 저장됨.
+#   quality  후보는 있었지만 편집 QA(브리프·규격)가 스토리를 뺐다. 경고.
+#   failed   후보는 있었지만 **호출이 실패**했다(과부하·연결·파싱). 장애.
+STORY_STATUS_FILE = CARDS_DIR / "story_status.json"
+STORY_NONE, STORY_READY, STORY_QUALITY, STORY_FAILED = "none", "ready", "quality", "failed"
 # 모델이 쓴 카피를 **자르기 전 그대로** 남긴다. 2026-09-26 카드가 "…" 로 잘려
 # 나갔을 때 모델이 원래 몇 자를 썼는지 확인할 길이 없어 원인을 추정으로만
 # 짚었다. 워크플로가 Actions 산출물로 올린다(커밋하지 않는다).
@@ -592,6 +603,8 @@ def log_calls(call_log: list[dict]) -> None:
               f"tokens={row.get('candidate_tokens')}/{row.get('budget')} "
               f"thoughts={row.get('thought_tokens')} "
               f"finish={row.get('finish_reason')}"
+              + (f" overload_retries={row['overload_retries']}"
+                 if row.get("overload_retries") else "")
               + (" (repair)" if row["repair"] else ""))
     print(f"[cards] 논리 호출 {len(call_log)}회 · HTTP 최악 상한 {worst}회")
 
@@ -609,6 +622,19 @@ def _daily_of(candidate: dict) -> dict:
     return candidate
 
 
+def _story_drop(outcome: dict | None, status: str, reason: str) -> None:
+    """스토리가 빠진 **첫** 원인만 적는다 — 뒤따르는 폴백이 원인을 덮지 않게."""
+    if outcome is not None and not outcome.get("status"):
+        outcome.update({"status": status, "reason": reason[:300]})
+
+
+def write_story_status(date: str, status: str, reason: str = "",
+                       thread_id: str = "") -> None:
+    STORY_STATUS_FILE.write_text(json.dumps(
+        {"date": date, "status": status, "reason": reason, "thread_id": thread_id},
+        ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def _apply_and_review(candidate: dict, items: list[dict], *, strict_length: bool = False) -> list[str]:
     stripped = strip_accent_on_sensitive(candidate, items)
     if stripped:
@@ -618,12 +644,16 @@ def _apply_and_review(candidate: dict, items: list[dict], *, strict_length: bool
 
 def run_editorial(items: list[dict], date: str, collected: int,
                   story_payload: dict | None,
-                  call_log: list[dict]) -> tuple[dict | None, dict | None]:
+                  call_log: list[dict],
+                  story_outcome: dict | None = None) -> tuple[dict | None, dict | None]:
     """오늘의 카피를 만든다. 돌려주는 것은 (일일 카피, 스토리 카피).
 
     호출 계약은 `card_editorial` 모듈 주석에 있다. 여기서 지키는 것은
     **실패 도메인 분리**다 — 스토리가 깨져도 일일 카드는 그대로 나가고,
     Narrator 가 죽으면 스토리만 빠진 채 일일 폴백 한 번으로 떨어진다.
+
+    `story_outcome` 을 주면 스토리가 빠진 이유를 적는다(STORY_STATUS_FILE) —
+    호출 실패(failed)와 편집 판단(quality)을 가른다.
     """
     daily, story_copy, brief = None, None, None
 
@@ -632,6 +662,8 @@ def run_editorial(items: list[dict], date: str, collected: int,
             brief = ask_narrator(items, date, story_payload, log=call_log)
         except Exception as exc:  # noqa: BLE001 — 부가 계층, 원인만 남기고 내려간다
             print(f"[cards] Narrator 실패 — {type(exc).__name__}: {exc}")
+            _story_drop(story_outcome, STORY_FAILED,
+                        f"Narrator 호출 실패 — {type(exc).__name__}: {exc}")
             brief = None
         if brief is not None:
             card_editorial.normalize_brief(brief)
@@ -642,12 +674,16 @@ def run_editorial(items: list[dict], date: str, collected: int,
             if fatal:
                 # 이 브리프로는 일일 카드를 쓸 수 없다. 스토리도 같이 빠진다.
                 print(f"[cards] 편집 브리프 거부: {'; '.join(fatal[:4])}")
+                _story_drop(story_outcome, STORY_QUALITY,
+                            f"편집 브리프 거부 — {'; '.join(fatal[:2])}")
                 brief = None
             elif story_bad:
                 # **스토리만 못 쓴다.** 일일 판단은 멀쩡하므로 그대로 쓴다 —
                 # 여기서 브리프를 통째로 버리면 Narrator 를 부른 값이 사라지고
                 # 호출이 계약(2회)보다 한 번 더 나간다(2026-09-20 실측).
                 print(f"[cards] 스토리만 제외: {'; '.join(story_bad[:2])}")
+                _story_drop(story_outcome, STORY_QUALITY,
+                            f"브리프의 스토리 칸 거부 — {'; '.join(story_bad[:2])}")
                 story_payload = None
     if brief is not None and story_payload is not None:
         # 타임라인 칸: 오늘 사건은 코드가 못 박고 나머지는 편집 데스크가 고른다.
@@ -667,7 +703,7 @@ def run_editorial(items: list[dict], date: str, collected: int,
         since = (story_payload or {}).get("since_last")
         if since and isinstance(brief.get("story"), dict):
             brief["story"]["since_last"] = since
-        raw = _writer_round(brief, items, date, story_payload, call_log)
+        raw = _writer_round(brief, items, date, story_payload, call_log, story_outcome)
         if raw is not None:
             return _daily_of(raw), raw.get("story") or None
         print("[cards] Writer 실패 — 일일 카드를 단독 호출로 다시 만든다")
@@ -726,7 +762,8 @@ def story_problems(copy: object, payload: dict, *, strict_length: bool = False) 
 
 
 def _writer_round(brief: dict, items: list[dict], date: str,
-                  story_payload: dict | None, call_log: list[dict]) -> dict | None:
+                  story_payload: dict | None, call_log: list[dict],
+                  story_outcome: dict | None = None) -> dict | None:
     """Writer 1회 + 필요하면 repair 1회. **Narrator 는 다시 부르지 않는다.**
 
     **두 도메인을 같이 본다.** 예전에는 일일만 검증하고 스토리 카피는 검증 없이
@@ -752,6 +789,9 @@ def _writer_round(brief: dict, items: list[dict], date: str,
                              log=call_log, task=task)
         except Exception as exc:  # noqa: BLE001
             print(f"[cards] Writer({task}) 실패 — {type(exc).__name__}: {exc}")
+            if with_story:
+                _story_drop(story_outcome, STORY_FAILED,
+                            f"Writer({task}) 호출 실패 — {type(exc).__name__}: {exc}")
             return None
         keep_raw_copy(task, raw)
         # 첫 회차만 원문 길이로 잰다. repair 뒤에도 넘치면 clip() 이 받는다 —
@@ -767,8 +807,13 @@ def _writer_round(brief: dict, items: list[dict], date: str,
                 print(f"[cards] 편집 QA 실패({task}·{label}): "
                       f"{'; '.join(problems[:5])}")
     if daily_bad:
+        if with_story:
+            _story_drop(story_outcome, STORY_QUALITY,
+                        f"일일 카피 QA 실패로 통합 Writer 결과를 버림 — {'; '.join(daily_bad[:2])}")
         return None
     # 일일은 통과했고 스토리만 끝내 안 됐다. **일일을 살린다.**
+    _story_drop(story_outcome, STORY_QUALITY,
+                f"스토리 카피 QA 실패 — {'; '.join(story_bad[:2])}")
     print("[cards] 스토리 카피만 제외 — 일일 카드는 이 회차 결과로 간다")
     raw = dict(raw or {})
     raw["story"] = None
@@ -1332,6 +1377,7 @@ def main() -> int:
     # **사이트 순서대로** 내려간다. 순위를 다시 매기지 않는다 — 같은 날 두 산출물이
     # 다른 1위를 말하면 안 된다. 새 전개 없는 재방송은 건너뛴다(card_context 이력).
     story = None if (args.no_llm or raw) else find_story(data, items, rows)
+    story_outcome: dict = {}
     story_payload = None
     if story is not None:
         story_payload = story_material(story, date)
@@ -1342,7 +1388,8 @@ def main() -> int:
               f"사건 {len(story.events)}건 · 타임라인 {len(shown)}건: {' / '.join(shown)}")
 
     if raw is None and not args.no_llm:
-        raw, story_copy = run_editorial(items, date, collected, story_payload, call_log)
+        raw, story_copy = run_editorial(items, date, collected, story_payload, call_log,
+                                        story_outcome)
         save_raw_copy(date)
         if story_copy is not None:
             STORY_COPY_FILE.write_text(json.dumps(
@@ -1355,6 +1402,15 @@ def main() -> int:
         elif story is not None:
             STORY_COPY_FILE.unlink(missing_ok=True)
             print("[cards] 스토리 카피 실패 — 스토리만 건너뛴다. 일일 카드는 그대로 간다")
+        if story is None:
+            write_story_status(date, STORY_NONE, "오늘 순위에 스토리 후보 없음")
+        elif story_copy is not None:
+            write_story_status(date, STORY_READY, thread_id=story.thread_id)
+        else:
+            write_story_status(
+                date, story_outcome.get("status") or STORY_FAILED,
+                story_outcome.get("reason") or "원인 미상 — 스토리 카피가 안 나왔다",
+                thread_id=story.thread_id)
 
     if raw is None:
         # LLM 이 없거나(쿼터 0) 카피가 끝내 안 나왔다 — 사이트 문장으로 대체한다.

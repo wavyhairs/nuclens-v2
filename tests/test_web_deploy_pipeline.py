@@ -174,6 +174,44 @@ class NewsShardTests(unittest.TestCase):
             for descriptor in manifest["shards"]:
                 self.assertLessEqual((data_dir / descriptor["file"]).stat().st_size, 1024)
 
+    def _write(self, rows, data_dir):
+        return build_data.write_news_payload(rows, data_dir, max_bytes=1024)
+
+    def test_shard_names_carry_a_content_fingerprint(self):
+        """세대가 바뀌면 이름도 바뀐다 — 새 manifest 가 옛 shard 를 받아 섞일 수 없다.
+
+        2026-09-30: 이름이 늘 `000.json` 이라 배포 전환 창에 새 manifest 가 옛
+        shard 를 받아 `declared=2142 actual=2161` 이 났다.
+        """
+        rows = [{"hash": str(i), "title": "x" * 600} for i in range(5)]
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            first = [d["file"] for d in self._write(rows, Path(a))["shards"]]
+            again = [d["file"] for d in self._write(rows, Path(b))["shards"]]
+            self.assertEqual(first, again, "같은 내용인데 이름이 달라졌다 — 불필요한 재다운로드")
+            for name in first:
+                self.assertRegex(name, r"^news/\d{3}-[0-9a-f]{12}\.json$")
+            changed = rows[:-1] + [{"hash": "4", "title": "y" * 600}]
+            later = [d["file"] for d in self._write(changed, Path(b))["shards"]]
+            self.assertNotEqual(first[-1], later[-1], "내용이 바뀌었는데 이름이 그대로다")
+            self.assertEqual(first[:-1], later[:-1], "바뀌지 않은 shard 까지 이름이 바뀌었다")
+
+    def test_a_rebuild_leaves_only_the_current_generation(self):
+        """옛 세대 파일이 남으면 배포 크기만 늘고 스냅샷이 섞인다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            self._write([{"hash": "1", "title": "old"}], data_dir)
+            manifest = self._write([{"hash": "1", "title": "new"}], data_dir)
+            on_disk = sorted(f"news/{p.name}" for p in (data_dir / "news").iterdir())
+            self.assertEqual(on_disk, [d["file"] for d in manifest["shards"]])
+
+    def test_the_live_smoke_accepts_fingerprinted_names(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            rows = [{"hash": str(i), "title": "x" * 600} for i in range(5)]
+            manifest = json.loads(json.dumps(self._write(rows, data_dir)))
+            load = lambda name: json.loads((data_dir / name).read_text(encoding="utf-8"))
+            self.assertEqual(check_live_news.validate_manifest(manifest, load), 5)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -62,6 +62,16 @@ def index_of(blocks, needle):
     return next(i for i, b in enumerate(blocks) if needle in b)
 
 
+class StoryFailureDoesNotHideDailyCardsTest(unittest.TestCase):
+    """스토리 스텝의 빨간불이 일일 카드 게시를 끌고 내려가지 않는다 (2026-09-30)."""
+
+    def test_site_deploy_runs_even_when_the_story_step_failed(self):
+        blocks = step_blocks("cards.yml", "cards")
+        deploy = step(blocks, "Trigger site deploy")
+        self.assertIn("!cancelled()", deploy)
+        self.assertIn("steps.commit.outputs.committed == 'true'", deploy)
+
+
 class DailyBriefHandsCardsOffTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -78,16 +88,46 @@ class DailyBriefHandsCardsOffTest(unittest.TestCase):
         커밋하면 어느 쪽이 최신인지 알 수 없다."""
         self.assertNotIn("git add web/public/cards", self.text)
 
-    def test_cards_are_woken_only_after_the_site_deploy_succeeded(self):
+    def test_cards_are_woken_only_after_the_site_upload_succeeded(self):
         """카드는 **라이브의** briefings.json 을 재료로 쓴다.
 
         배포 전에 깨우면 어제 순위로 카드를 굽거나, 파일이 없어 그냥 죽는다.
         """
         trigger = step(self.blocks, "Trigger cards workflow")
-        self.assertIn("if: steps.web-deploy.outcome == 'success'", trigger)
-        self.assertLess(index_of(self.blocks, "id: web-deploy"),
+        self.assertIn("steps.web-upload.outcome == 'success'", trigger)
+        self.assertLess(index_of(self.blocks, "id: web-upload"),
                         self.blocks.index(trigger),
-                        "배포 스텝보다 앞에서 깨운다")
+                        "업로드 스텝보다 앞에서 깨운다")
+
+    def test_a_live_smoke_failure_does_not_block_cards(self):
+        """라이브 스모크 실패가 카드뉴스를 끌고 내려가지 않는다 (2026-09-30).
+
+        업로드는 정상이었는데 배포 직후 manifest·shard 세대가 잠시 섞여 스모크가
+        떨어졌고, Cards 호출이 `web-deploy` 에 걸려 있어 그날 카드가 통째로
+        안 나갔다. 카드는 업로드에만 건다 — 검증 실패는 snapshot 부재 → full
+        배포로 이어져 섞인 세대를 새로 덮는다.
+        """
+        trigger = step(self.blocks, "Trigger cards workflow")
+        self.assertNotIn("steps.web-deploy.outcome", trigger)
+        self.assertIn("!cancelled()", trigger)
+
+    def test_upload_and_live_verification_are_separate_steps(self):
+        """wrangler 업로드와 스모크가 한 스텝이면 둘의 실패를 가를 수 없다."""
+        upload = step(self.blocks, "Deploy web to Cloudflare Pages")
+        verify = step(self.blocks, "Verify live site (배포 스모크)")
+        self.assertIn("id: web-upload", upload)
+        self.assertIn("wrangler@4 pages deploy", upload)
+        self.assertNotIn("check_live_news", upload)
+        self.assertIn("id: web-deploy", verify)
+        self.assertIn("check_live_news", verify)
+        self.assertLess(self.blocks.index(upload), self.blocks.index(verify))
+        # 업로드 실패는 verify 의 failure 로 남아야 한다(skipped 면 '배포 안 한 날'과
+        # 구별이 안 된다) — snapshot·알림·failure domain 이 web-deploy 를 본다.
+        self.assertIn("steps.web-upload.outcome != 'skipped'", verify)
+        self.assertIn('if [ "${{ steps.web-upload.outcome }}" != "success" ]', verify)
+        # 검증된 배포에만 snapshot 을 만든다 — 계약은 그대로다.
+        self.assertIn("if: steps.web-deploy.outcome == 'success'",
+                      step(self.blocks, "Create verified production snapshot"))
 
     def test_cards_are_woken_after_todays_snapshot_is_saved(self):
         """FAST 배포가 어제 snapshot 과 경주하지 않게 (2026-09-19).
@@ -269,8 +309,10 @@ class CardsWorkflowShowsItsFailuresTest(unittest.TestCase):
     def test_an_unchanged_day_neither_commits_nor_deploys(self):
         """같은 파일을 다시 올리려고 Pages 배포 횟수(무료 500회/월)를 쓰지 않는다."""
         self.assertIn("committed=false", step(self.blocks, "Commit cards"))
-        self.assertIn("if: steps.commit.outputs.committed == 'true'",
-                      step(self.blocks, "Trigger site deploy"))
+        deploy = step(self.blocks, "Trigger site deploy")
+        self.assertIn("steps.commit.outputs.committed == 'true'", deploy)
+        # 게이트는 커밋 여부 **뿐**이다 — always() 로 넓히면 커밋 없는 날도 배포한다.
+        self.assertNotIn("always()", deploy)
 
     def test_the_card_deploy_reuses_the_verified_snapshot(self):
         """카드만 바뀐 날은 FAST 로 올린다 (2026-09-19).
