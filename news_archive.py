@@ -92,10 +92,20 @@ def load_recent_hashes() -> set[str]:
     return hashes
 
 
+def _month_files_all() -> list[Path]:
+    """아카이브 전체 월 파일. 웹 빌드의 중복 검사(validate_archive_records)와 같은 범위."""
+    return sorted(ARCHIVE_DIR.glob("*.jsonl"))
+
+
 def load_recent_identities() -> dict[str, set[str]]:
-    """최근 아카이브의 해시·정규화 URL·정확 제목 키를 함께 읽는다."""
+    """아카이브 **전체**의 해시·정규화 URL·정확 제목 키를 함께 읽는다.
+
+    적재 검사는 웹 빌드의 중복 게이트와 범위가 같아야 한다. 최근 2개월만 보던
+    때는 월이 바뀌면 그 앞달 기록이 창 밖으로 빠져, 같은 제목이 다시 적재되고
+    빌드가 duplicate_title 로 멈췄다(2026-10-01, 08월 기록과 겹친 10월 적재).
+    """
     identities = {"hashes": set(), "urls": set(), "titles": set()}
-    for path in _month_files_recent():
+    for path in _month_files_all():
         if not path.exists():
             continue
         for line in path.read_text(encoding="utf-8").splitlines():
