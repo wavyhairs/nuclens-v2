@@ -514,6 +514,64 @@ def topn_retention(rows: list[dict], merges: list[dict],
         "review_band_total": len(band_rows),
         "llm_approved_total": len(llm_merges),
         "levels": out,
+        "cut": topn_cut(rows),
+    }
+
+
+# 잘린 쌍을 몇 건까지 이름으로 싣나. 진단은 배포본에도 그대로 가므로(O(1)) 상한을
+# 둔다 — 평소 0~4건이라 10 이면 다 보이고, 넘는 날은 건수가 먼저 말한다.
+TOPN_CUT_SAMPLE_LIMIT = 10
+TOPN_CUT_TITLE_LIMIT = 80
+
+
+def topn_cut(rows: list[dict], top_n: int = ISSUE_CANDIDATE_TOP_N) -> dict:
+    """기사당 Top-N 상한 때문에 **LLM 에 묻지 않고 버린** 회색지대 쌍.
+
+    이 상한의 대가를 재는 자리는 여기다. 위 `llm_approved` 보존율은 대가를 못 본다
+    — 상한 밖 쌍은 LLM 에 넘어가지 않으니 승인될 수가 없고, 그래서 상한을 건
+    2026-08-22 ~ 09-18 에 회차당 최대 36건을 버리는 동안에도 100% 였다. 반대로
+    09-19 부터 매일 울린 1% 손실은 **이미 캐시로 승인돼 순위와 무관하게 붙어 있는**
+    병합이 뒤에 쌓인 후보에 밀려 순위가 내려간 것이었다(놓친 게 아니다).
+
+    판정은 `within_article_top_n` 을 그대로 부른다 — 집행하는 규칙과 다른 규칙으로
+    세면 다시 엉뚱한 것을 센다. 사람이 그 쌍을 눈으로 확인할 수 있게 제목을 싣는다.
+    """
+    band_rows = [row for row in rows or [] if isinstance(row, dict)
+                 and in_review_band(remote_cosine(row.get("diagnostics") or {}))]
+    kept = {id(row) for row in within_article_top_n(rows or [], top_n)}
+    cut_rows = [row for row in band_rows if id(row) not in kept]
+    scores: dict[str, list[float]] = defaultdict(list)
+    for row in rows or []:
+        if isinstance(row, dict):
+            scores[str(row.get("right_hash") or "")].append(
+                float(row.get("candidate_score") or 0))
+
+    def clip(text: object) -> str:
+        text = " ".join(str(text or "").split())
+        return text if len(text) <= TOPN_CUT_TITLE_LIMIT else text[:TOPN_CUT_TITLE_LIMIT - 1] + "…"
+
+    cut_rows.sort(key=lambda row: (-float(row.get("candidate_score") or 0),
+                                   str(row.get("candidate_id") or "")))
+    samples = []
+    for row in cut_rows[:TOPN_CUT_SAMPLE_LIMIT]:
+        score = float(row.get("candidate_score") or 0)
+        peers = scores[str(row.get("right_hash") or "")]
+        samples.append({
+            "candidate_id": row.get("candidate_id"),
+            # right 가 이번에 자리를 찾던 기사, left 가 이미 이슈에 있던 기사다.
+            "article_title": clip(row.get("right_title")),
+            "article_date": row.get("right_date"),
+            "issue_title": clip(row.get("left_title")),
+            "issue_date": row.get("left_date"),
+            "similarity": round(float(remote_cosine(row.get("diagnostics") or {}) or 0), 4),
+            "rank": 1 + sum(1 for other in peers if other > score),
+            "article_candidates": len(peers),
+        })
+    return {
+        "n": top_n,
+        "review_band_total": len(band_rows),
+        "review_band_cut": len(cut_rows),
+        "samples": samples,
     }
 
 
@@ -597,12 +655,16 @@ GUARD_LIMITS: dict[str, object] = {
     # 분모 문제 — TRACKING_WINDOW_BRIEFINGS 주석과 같은 함정이다).
     "preselect_min_sample": 50,
     # 기사당 남길 후보 수 — **계획값이 아니라 실제로 걸린 상한**이다
-    # (`issue_review.select_pairs`). 그래서 가드도 이 값에서 운다: Top-12 가
-    # 승인 병합을 하나라도 놓치면 그 회차에 바로 알아야 한다.
+    # (`issue_review.select_pairs`). 그래서 가드도 이 값에서 운다.
     "top_n": ISSUE_CANDIDATE_TOP_N,
-    # `llm_approved` 는 후보 목록을 반드시 거치는 유일한 병합 경로다.
-    # 하나라도 못 지키면 그 컷은 쓸 수 없다.
-    "top_n_min_retention": 1.0,
+    # 상한 밖으로 밀려 LLM 에 묻지 않은 회색지대 쌍의 비율. 한 건이라도 있으면
+    # 알리고(제목을 같이 싣는다), 이 비율을 넘으면 critical 이다. 3% 는 상한을 건
+    # 직후(08-22~25) 실측 1.5~2.2% 위에 여유를 둔 값이다.
+    "top_n_cut_critical": 0.03,
+    # 알림 상세에 제목을 몇 쌍까지 적나. 운영 알림의 기술 상세는 700자에서
+    # 잘리므로(operational_monitoring) 그 안에 들어가는 만큼만. 나머지는
+    # data_quality_gate 기록과 빌드 로그에 전부 있다.
+    "top_n_cut_detail_samples": 3,
     # 최근 회차 중앙값 대비 이만큼 벗어나면 병합기의 성질이 변한 것이다.
     "merge_rate_drift": 0.30,
     "evidence_share_drift": 0.15,
@@ -676,22 +738,39 @@ def guardrails(diagnostics: dict, *, baseline: dict | None = None,
                 f"아직 {lost}건 / {landed}건). {tail}",
             ))
 
+    # 기사당 Top-N 상한의 대가는 **LLM 에 묻지 않고 버린 회색지대 쌍**으로 잰다.
+    # 예전에는 `llm_approved` 보존율로 울었는데, 그건 상한 밖 쌍이 승인될 수 없어
+    # 진짜 손실을 못 보고(08-22~09-18 회차당 최대 36건을 버리는 동안 100%), 이미
+    # 캐시로 붙어 있는 병합의 순위가 밀린 것을 손실로 읽었다(09-19~ 매일 1%).
+    # 보존율은 `top_n_retention.levels` 에 그대로 남는다 — 참고값이다.
     top_n = int(limits["top_n"])
-    floor = float(limits["top_n_min_retention"])
-    for level in (diagnostics.get("top_n_retention") or {}).get("levels") or []:
-        if int(level.get("n") or 0) != top_n:
-            continue
-        share = float(level.get("llm_approved_share") or 0)
-        total = (diagnostics.get("top_n_retention") or {}).get("llm_approved_total") or 0
-        if total and share < floor:
-            lost = total - int(level.get("llm_approved_kept") or 0)
-            out.append(_finding(
-                "issue-candidate:topn-retention",
-                "critical" if share < floor - 0.02 else "warning",
-                f"기사당 Top-{top_n} 이 실제 병합을 놓친다",
-                f"LLM 승인 병합 {total}건 중 {lost}건이 상위 {top_n} 밖이다 "
-                f"(보존율 {share:.3f}, 기준 {floor:.3f}). 컷을 올려야 한다.",
-            ))
+    cut = (diagnostics.get("top_n_retention") or {}).get("cut") or {}
+    dropped = int(cut.get("review_band_cut") or 0)
+    if dropped and int(cut.get("n") or top_n) == top_n:
+        band_total = int(cut.get("review_band_total") or 0)
+        share = dropped / band_total if band_total else 1.0
+        samples = list(cut.get("samples") or [])
+        shown = samples[:max(0, int(limits["top_n_cut_detail_samples"]))]
+        # 알림 한 줄에 세 쌍이 들어가야 해서 여기서만 더 줄인다. 전체 제목은 기록에 있다.
+        def short(text: object, limit: int = 40) -> str:
+            text = str(text or "?")
+            return text if len(text) <= limit else text[:limit - 1] + "…"
+        examples = " / ".join(
+            f"『{short(row.get('article_title'))}』↔『{short(row.get('issue_title'))}』"
+            f"({float(row.get('similarity') or 0):.3f}·{row.get('rank')}위)"
+            for row in shown
+        )
+        more = len(samples) - len(shown) + max(0, dropped - len(samples))
+        out.append(_finding(
+            "issue-candidate:topn-cut",
+            "critical" if share > float(limits["top_n_cut_critical"]) else "warning",
+            f"기사당 Top-{top_n} 상한 때문에 LLM 에 묻지 않은 쌍이 있다",
+            f"회색지대 후보 {band_total}건 중 {dropped}건({share:.1%})이 기사당 상위 "
+            f"{top_n} 밖이라 판정 없이 버려졌다. 같은 사건인지 확인해 주세요 — "
+            f"기사↔이슈 쪽 기사(유사도·순위): {examples}"
+            + (f" 외 {more}건" if more else "")
+            + ". 같은 사건이 섞여 있으면 상한을 올려야 한다.",
+        ))
 
     for key, label, limit_key in (
         ("merge_rate", "카드 병합률", "merge_rate_drift"),
