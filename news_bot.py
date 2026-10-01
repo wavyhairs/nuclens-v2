@@ -59,12 +59,14 @@ from data_quality import (
     title_key,
     url_hash as canonical_url_hash,
 )
+import embedding_pipeline
 from embedding_pipeline import (
     DEFAULT_CACHE_FILE as EMBEDDINGS_CACHE_FILE,
     get_or_compute_embedding as pipeline_get_or_compute_embedding,
     load_cache as load_embedding_store,
     save_cache as save_embedding_store,
 )
+from embedding_quota import EmbeddingCallsSuspended, EmbeddingQuotaError
 import event_stage
 import admin_overrides
 from story_cluster import attach_raw_source, consolidate_story_metadata, raw_sources_of
@@ -931,17 +933,22 @@ def cosine_sim(a: list[float], b: list[float]) -> float:
 
 
 def get_or_compute_embedding(article: dict, cache_key: str, cache: dict) -> list[float] | None:
+    """벡터가 없으면 None — 호출자는 그 기사를 접지 않고 그대로 남긴다(삭제 아님).
+
+    429 는 여기서 판단하지 않는다. 종류 판별·대기·재시도·회차 중단은
+    embedding_quota 가 맡고 상세도 거기서 남긴다. 예전에는 이 자리가 모든 429 를
+    'embedding quota exceeded' 한 줄로 뭉개고 다음 기사에 또 불러, 2026-10-01
+    수집 #526 에서 같은 실패를 188번 반복했다.
+    """
     client = get_gemini()
     try:
         vector, _ = pipeline_get_or_compute_embedding(client, article, cache_key, cache)
         return vector
+    except (EmbeddingCallsSuspended, EmbeddingQuotaError):
+        return None  # 회차 중단·재시도 소진. 상세는 embedding_quota 가 이미 남겼다.
     except Exception as e:
-        msg = str(e)
-        if "RESOURCE_EXHAUSTED" in msg or "429" in msg:
-            print(f"  ! embedding quota exceeded")
-        else:
-            title = article.get("title_kr") or article.get("title") or ""
-            print(f"  ! embedding failed for '{title[:40]}': {type(e).__name__}")
+        title = article.get("title_kr") or article.get("title") or ""
+        print(f"  ! embedding failed for '{title[:40]}': {type(e).__name__}")
         return None
 
 
@@ -961,11 +968,13 @@ def semantic_dedup(articles: list[dict], emb_cache: dict,
     if len(articles) < 2:
         return articles
 
+    # 속도는 embedding_quota 가 최근 60초 실제 요청 수로 맞춘다. 예전의 기사당
+    # 고정 0.3초는 호출 수를 보지 않아 분당 100회를 넘겼고(2026-10-01 RPM 106),
+    # 캐시를 재사용한 기사까지 쓸데없이 기다리게 했다.
     enriched: list[tuple[dict, list[float] | None]] = []
     for art in articles:
         emb = get_or_compute_embedding(art, art["hash"], emb_cache)
         enriched.append((art, emb))
-        time.sleep(0.3)
 
     enriched.sort(key=lambda x: x[0]["score"], reverse=True)
 
@@ -3909,6 +3918,12 @@ def main() -> None:
         print(gemini_client.format_call_stats())
     except Exception as exc:  # 계측이 본 작업을 죽이면 안 된다
         print(f"[gemini] 호출 통계 실패: {exc}")
+    # 임베딩은 call_json 을 타지 않으므로 위 줄에 안 잡힌다. 모델·버킷이 다르니
+    # 합치지 않고 따로 찍는다(RPM 106/100 은 이 줄에서만 보인다).
+    try:
+        print(embedding_pipeline.limiter().format_stats())
+    except Exception as exc:  # 계측이 본 작업을 죽이면 안 된다
+        print(f"[embedding] 호출 통계 실패: {exc}")
 
     # 수집·상태 저장은 여기까지 정상으로 끝냈다. 그러나 설정 오류는 다음 회차에도
     # 똑같이 100% 실패하므로 **종료 코드로 알려야** 워크플로가 빨간불이 된다.
