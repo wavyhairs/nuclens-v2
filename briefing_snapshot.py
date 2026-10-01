@@ -143,6 +143,11 @@ def reconcile(rows: list[dict], briefing_date: str, snapshot: dict,
     if not cards:
         return rows, 0
     current = [(row, set(card_hashes(row, briefing_date))) for row in rows]
+    # 지금 빌드에 그날 기사로 남아 있는 것. 얼린 해시는 이것과 겹친 만큼만 센다 —
+    # 뉴스 창(60일) 밖으로 밀려났거나 편집으로 내려간 기사는 철회지 정정이 아니다.
+    # 안 그러면 창 경계의 날짜에서 묶음이 그대로인 카드가 '정정됨'이 되고, 기사 수를
+    # 화면에 없는 기사까지 세어 부풀린다(2026-10-02, 08-03 카드 2 ≠ 1).
+    present: set[str] = set().union(*(held for _, held in current))
     frozen_all: set[str] = set()
     for card in cards:
         frozen_all.update(card.get("hashes") or ())
@@ -151,7 +156,9 @@ def reconcile(rows: list[dict], briefing_date: str, snapshot: dict,
     used: set[int] = set()
     corrected = 0
     for order, card in enumerate(cards):
-        hashes = set(card.get("hashes") or ())
+        hashes = set(card.get("hashes") or ()) & present
+        if not hashes:
+            continue   # 그날 기사가 전부 빠졌다 — 철회지 정정이 아니다
         exact = next((index for index, (_, held) in enumerate(current)
                       if held == hashes and index not in used), None)
         if exact is not None:
@@ -159,8 +166,6 @@ def reconcile(rows: list[dict], briefing_date: str, snapshot: dict,
             placed.append((order, exact, current[exact][0]))
             continue
         holders = [row for row, held in current if held & hashes]
-        if not holders:
-            continue   # 그날 기사가 전부 빠졌다 — 철회지 정정이 아니다
         rep = card.get("representative_hash") or ""
         base = next((row for row, held in current if rep in held), holders[0])
         row = copy.deepcopy(base)

@@ -2709,7 +2709,16 @@ class GeneratedDataTests(unittest.TestCase):
             for cluster in self.issue_audit["clusters"]
             for match in cluster["matches"]
         }
-        self.assertIn("manual_approved", methods)
+        # 승인 쌍이 뉴스 창(60일) 안에 있을 때만 병합 흔적을 요구한다. 승인은
+        # 07-20~08-04 기사뿐이라 2026-10-02 에 마지막 쌍이 창 밖으로 나가면서
+        # 이 검사가 배포를 막았다 — 날짜가 지났을 뿐 계약이 깨진 게 아니다.
+        news_hashes = {article["hash"] for article in self.news}
+        live_pairs = [pair for pair in approved
+                      if all(part in news_hashes for part in pair.split("--"))]
+        if live_pairs:
+            self.assertIn("manual_approved", methods, f"창 안의 승인 쌍 {live_pairs[:3]}")
+        else:
+            self.assertNotIn("manual_approved", methods)
 
     def test_generated_issue_clusters_have_no_country_or_facility_conflicts(self):
         by_hash = {article["hash"]: article for article in self.news}

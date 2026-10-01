@@ -100,9 +100,14 @@ class SnapshotRepairTests(unittest.TestCase):
         store = {"dates": {"2026-08-06": {"frozen_at": "t0", "cards": [{
             "issue_id": "issue-x", "hashes": ["a", "b"], "representative_hash": "a",
             "fields": {"title": "옛 제목", "headline_display": "옛 제목"}}]}}}
-        row = {"issue_id": "issue-x", "title": "지금 제목", "representative_article": {"hash": "a"},
-               "related_articles": [{"hash": "a", "briefing_date": "2026-08-06"}]}
-        briefing = {"date": "2026-08-06", "issues": [row]}
+        # 묶음이 실제로 바뀌었다 — b 는 다른 카드로 갔고 a 는 c 와 합쳐졌다. 얼린 해시가
+        # 빌드에서 빠지기만 한 것은 철회라 정정 경로를 타지 않는다(briefing_snapshot).
+        row = {"issue_id": "issue-z", "title": "지금 제목", "representative_article": {"hash": "a"},
+               "related_articles": [{"hash": "a", "briefing_date": "2026-08-06"},
+                                    {"hash": "c", "briefing_date": "2026-08-06"}]}
+        other = {"issue_id": "issue-y", "title": "다른 제목", "representative_article": {"hash": "b"},
+                 "related_articles": [{"hash": "b", "briefing_date": "2026-08-06"}]}
+        briefing = {"date": "2026-08-06", "issues": [row, other]}
         bd.apply_briefing_snapshot([briefing], store, "t1")
         self.assertEqual(briefing["issues"][0]["title"], "고친 제목")
         self.assertEqual(store["dates"]["2026-08-06"]["cards"][0]["fields"]["title"], "옛 제목")
