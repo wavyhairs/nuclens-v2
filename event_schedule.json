@@ -1,27 +1,6 @@
 {
- "generated_at": "2026-10-01T00:50:55+09:00",
+ "generated_at": "2026-10-02T01:03:52+09:00",
  "events": [
-  {
-   "id": "of-7f62c3839e97",
-   "date": "2026-09-17",
-   "end_date": "2026-09-17",
-   "kind": "point",
-   "time": "10:30",
-   "label": "조선·해운산업 탄소중립 전환과 중소선사의 미래를 위한 정책토론회",
-   "host": "이재관·서삼석·윤준병·송옥주·임미애·김용태 의원실",
-   "organizer": "이재관·서삼석·윤준병·송옥주·임미애·김용태 의원실",
-   "place": "의원회관 제3간담회의실(203호)",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "조선·해운산업 탄소중립 전환과 중소선사의 미래를 위한 정책토론회",
-   "first_seen": "2026-09-13",
-   "topics": [
-    "carbon_free"
-   ],
-   "relevance": "탄소중립",
-   "significance": "토론회"
-  },
   {
    "id": "of-57eba4a2abf8",
    "date": "2026-09-18",
@@ -415,7 +394,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-10-01T00:50:55+09:00",
+   "at": "2026-10-02T01:03:52+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -423,11 +402,11 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-10-01T00:50:55+09:00",
+   "at": "2026-10-02T01:03:52+09:00",
    "ok": true,
    "parsed": 10,
    "kept": 2,
-   "new": 1,
+   "new": 0,
    "dropped": {
     "no_interest_match": 1,
     "low_significance": 3,
@@ -435,7 +414,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-10-01T00:50:55+09:00",
+   "at": "2026-10-02T01:03:52+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -448,7 +427,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-10-01T00:50:55+09:00",
+   "at": "2026-10-02T01:03:52+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -456,25 +435,25 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-10-01T00:50:55+09:00",
+   "at": "2026-10-02T01:03:52+09:00",
    "ok": true,
-   "parsed": 26,
+   "parsed": 18,
    "kept": 1,
    "new": 0,
    "dropped": {
-    "no_interest_match": 25
+    "no_interest_match": 17
    }
   },
   "kpx_notice": {
-   "at": "2026-10-01T00:50:55+09:00",
+   "at": "2026-10-02T01:03:52+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 1,
    "new": 0,
    "dropped": {
-    "no_event_date": 3,
+    "not_an_event": 6,
+    "no_event_date": 2,
     "no_interest_match": 7,
-    "not_an_event": 5,
     "low_significance": 4
    }
   }
