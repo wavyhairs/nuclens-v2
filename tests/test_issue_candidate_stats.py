@@ -115,7 +115,7 @@ class WithinArticleTopNTests(unittest.TestCase):
         """12 는 감이 아니라 실측 최소값이다 — 가드도 같은 값에서 운다."""
         self.assertEqual(stats.ISSUE_CANDIDATE_TOP_N, 12)
         self.assertEqual(stats.GUARD_LIMITS["top_n"], 12)
-        self.assertEqual(stats.GUARD_LIMITS["top_n_min_retention"], 1.0)
+        self.assertNotIn("top_n_min_retention", stats.GUARD_LIMITS)
 
     def test_twelve_or_fewer_candidates_pass_through_untouched(self):
         rows = [candidate(0.9 - i / 100, article="a1") for i in range(12)]
@@ -176,33 +176,100 @@ class WithinArticleTopNTests(unittest.TestCase):
                          if n > stats.ISSUE_CANDIDATE_TOP_N])
 
 
+class TopNCutTests(unittest.TestCase):
+    """상한 때문에 LLM 에 묻지 않고 버린 쌍 — 집행 규칙 그대로 세고 제목을 싣는다."""
+
+    def crowded(self, extra=()):
+        # a1 에 0.919 부터 0.001 씩 내려가는 회색지대 후보 14건: 13·14위가 잘린다.
+        rows = [candidate(round(0.919 - i / 1000, 4), article="a1") for i in range(14)]
+        for index, row in enumerate(rows):
+            row["right_title"] = "새 기사"
+            row["left_title"] = f"이슈 기사 {index + 1}"
+        return rows + list(extra)
+
+    def test_counts_exactly_what_the_cap_drops(self):
+        rows = self.crowded([candidate(0.86, article="a2")])
+        cut = stats.topn_cut(rows)
+        kept = stats.within_article_top_n(rows)
+        band = [row for row in rows
+                if stats.in_review_band(row["diagnostics"]["embedding_similarity"])]
+        self.assertEqual(cut["review_band_total"], len(band))
+        self.assertEqual(cut["review_band_cut"], len(band) - len(kept))
+        self.assertEqual(cut["review_band_cut"], 2)
+
+    def test_samples_carry_titles_and_rank_for_a_human(self):
+        cut = stats.topn_cut(self.crowded())
+        first = cut["samples"][0]
+        self.assertEqual(first["article_title"], "새 기사")
+        self.assertEqual(first["issue_title"], "이슈 기사 13")
+        self.assertEqual(first["rank"], 13)
+        self.assertEqual(first["article_candidates"], 14)
+
+    def test_higher_candidates_outside_the_band_still_push_a_pair_out(self):
+        """순위는 밴드로 좁히기 전 후보 전체에서 매긴다(select_pairs 와 같다)."""
+        rows = [candidate(0.83 - i / 1000, article="a1") for i in range(12)]
+        rows = [{**row, "candidate_score": 0.95 - i / 1000} for i, row in enumerate(rows)]
+        rows.append(candidate(0.86, article="a1"))
+        self.assertEqual(stats.topn_cut(rows)["review_band_cut"], 1)
+
+    def test_sample_list_is_bounded(self):
+        rows = [candidate(round(0.919 - i / 10000, 5), article="a1") for i in range(40)]
+        cut = stats.topn_cut(rows)
+        self.assertEqual(cut["review_band_cut"], 28)
+        self.assertEqual(len(cut["samples"]), stats.TOPN_CUT_SAMPLE_LIMIT)
+
+    def test_nothing_cut_is_empty(self):
+        cut = stats.topn_cut([candidate(0.86)])
+        self.assertEqual((cut["review_band_cut"], cut["samples"]), (0, []))
+
+    def test_retention_carries_the_cut(self):
+        self.assertEqual(stats.topn_retention(self.crowded(), [])["cut"]["review_band_cut"], 2)
+
+
 class TopNGuardTests(unittest.TestCase):
-    """상한이 승인 병합을 놓치면 그 회차에 바로 울어야 한다."""
+    """상한이 회색지대 쌍을 묻지 않고 버리면 그 회차에 제목과 함께 알린다."""
 
-    def retention(self, kept, total=170, n=12):
+    def diag(self, dropped, total=100, samples=None, n=None, kept=170, approved=170):
         return {"top_n_retention": {
-            "llm_approved_total": total,
-            "levels": [{"n": n, "llm_approved_kept": kept,
-                        "llm_approved_share": kept / total}],
+            "llm_approved_total": approved,
+            "levels": [{"n": stats.ISSUE_CANDIDATE_TOP_N, "llm_approved_kept": kept,
+                        "llm_approved_share": kept / approved}],
+            "cut": {"n": n or stats.ISSUE_CANDIDATE_TOP_N, "review_band_total": total,
+                    "review_band_cut": dropped, "samples": samples or []},
         }}
 
-    def test_full_retention_is_silent(self):
-        self.assertEqual(stats.guardrails(self.retention(170)), [])
+    def sample(self, index):
+        return {"candidate_id": f"x{index}", "article_title": f"기사{index}",
+                "issue_title": f"이슈{index}", "similarity": 0.861, "rank": 13}
 
-    def test_losing_one_approved_merge_warns(self):
-        found = stats.guardrails(self.retention(169))
-        self.assertEqual([row["id"] for row in found],
-                         ["issue-candidate:topn-retention"])
-        self.assertIn("Top-12", found[0]["title"])
+    def test_nothing_cut_is_silent(self):
+        self.assertEqual(stats.guardrails(self.diag(0)), [])
 
-    def test_the_guard_now_watches_twelve_not_ten(self):
-        """운영 상한이 12 이므로 10 에서 울면 적용하지 않는 컷을 두고 우는 것이다."""
-        at_ten = {"top_n_retention": {
-            "llm_approved_total": 170,
-            "levels": [{"n": 10, "llm_approved_kept": 169, "llm_approved_share": 0.9941},
-                       {"n": 12, "llm_approved_kept": 170, "llm_approved_share": 1.0}],
-        }}
-        self.assertEqual(stats.guardrails(at_ten), [])
+    def test_approved_merges_ranked_low_no_longer_page(self):
+        """이미 캐시로 붙은 병합의 순위가 밀린 것은 손실이 아니다(09-19~ 매일 울던 것)."""
+        self.assertEqual(stats.guardrails(self.diag(0, kept=1186, approved=1198)), [])
+
+    def test_a_cut_pair_warns_with_its_titles(self):
+        found = stats.guardrails(self.diag(1, samples=[self.sample(1)]))
+        self.assertEqual([row["id"] for row in found], ["issue-candidate:topn-cut"])
+        self.assertEqual(found[0]["severity"], "warning")
+        self.assertIn(f"Top-{stats.ISSUE_CANDIDATE_TOP_N}", found[0]["title"])
+        self.assertIn("『기사1』↔『이슈1』", found[0]["detail"])
+        self.assertIn("13위", found[0]["detail"])
+
+    def test_only_a_few_titles_go_in_the_alert(self):
+        samples = [self.sample(i) for i in range(10)]
+        detail = stats.guardrails(self.diag(12, samples=samples))[0]["detail"]
+        self.assertIn("『기사2』", detail)
+        self.assertNotIn("『기사3』", detail)
+        self.assertIn("외 9건", detail)
+
+    def test_a_large_share_is_critical(self):
+        found = stats.guardrails(self.diag(4, total=69, samples=[self.sample(1)]))
+        self.assertEqual(found[0]["severity"], "critical")
+
+    def test_a_cut_measured_at_another_n_is_ignored(self):
+        self.assertEqual(stats.guardrails(self.diag(3, n=10)), [])
 
 
 class PrefilterShadowTests(unittest.TestCase):
@@ -327,7 +394,7 @@ class GuardrailTests(unittest.TestCase):
         self.assertEqual([row["severity"] for row in found], ["warning"])
         self.assertIn("여유가 줄었다", found[0]["title"])
 
-    def test_topn_retention_below_one_pages(self):
+    def test_topn_cut_pages(self):
         # 감시하는 N 은 **실제로 거는 상한**이다(2026-08-22 부터 12). 여기 숫자를
         # 손으로 적으면 상한을 옮길 때 이 테스트만 조용히 어긋난다.
         diag = {
@@ -336,10 +403,12 @@ class GuardrailTests(unittest.TestCase):
                 "llm_approved_total": 132,
                 "levels": [{"n": stats.ISSUE_CANDIDATE_TOP_N,
                             "llm_approved_kept": 129, "llm_approved_share": 0.977}],
+                "cut": {"n": stats.ISSUE_CANDIDATE_TOP_N, "review_band_total": 200,
+                        "review_band_cut": 3, "samples": []},
             },
         }
         found = stats.guardrails(diag)
-        self.assertEqual([row["id"] for row in found], ["issue-candidate:topn-retention"])
+        self.assertEqual([row["id"] for row in found], ["issue-candidate:topn-cut"])
         self.assertIn("3건", found[0]["detail"])
 
     def test_drift_needs_a_baseline_and_keeps_its_sign(self):

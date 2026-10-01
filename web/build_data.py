@@ -1818,6 +1818,14 @@ def report_candidate_diagnostics(diagnostics: dict) -> None:
               f"최대 {rank.get('max')} (표본 {rank.get('landed')}) | "
               f"canary 누락 자동 {canary.get('auto_missed') or 0} · "
               f"LLM {canary.get('review_missed') or 0}")
+    cut = (diagnostics.get("top_n_retention") or {}).get("cut") or {}
+    if cut.get("review_band_cut"):
+        print(f"    [top-{cut.get('n')}] LLM 에 묻지 않은 회색지대 쌍 "
+              f"{cut['review_band_cut']}건 / {cut.get('review_band_total')}건")
+        for row in cut.get("samples") or []:
+            print(f"        {row.get('similarity')} · {row.get('rank')}위/"
+                  f"{row.get('article_candidates')} 『{row.get('article_title')}』 ↔ "
+                  f"『{row.get('issue_title')}』 [{row.get('candidate_id')}]")
     for guard in diagnostics.get("guards") or []:
         level = "error" if guard.get("severity") == "critical" else "warning"
         print(f"::{level}::[{guard.get('id')}] {guard.get('title')} — {guard.get('detail')}")

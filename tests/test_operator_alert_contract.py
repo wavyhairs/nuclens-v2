@@ -139,16 +139,17 @@ class OperatorSentenceTests(unittest.TestCase):
         """`컷을 올려야 한다` 는 운영자가 할 수 있는 일이 아니다."""
         record = gate_record()
         record["issue_candidates"] = {"applicable": True, "guards": [{
-            "id": "issue-candidate:topn-retention", "severity": "warning",
-            "title": "기사당 Top-10 이 실제 병합을 놓친다",
-            "detail": "LLM 승인 병합 170건 중 1건이 상위 10 밖이다 (보존율 0.994). 컷을 올려야 한다.",
+            "id": "issue-candidate:topn-cut", "severity": "warning",
+            "title": "기사당 Top-12 상한 때문에 LLM 에 묻지 않은 쌍이 있다",
+            "detail": "회색지대 후보 69건 중 1건(1.4%)이 기사당 상위 12 밖이라 판정 없이 "
+                      "버려졌다. 같은 사건이 섞여 있으면 상한을 올려야 한다.",
         }]}
         signal = next(row for row in self.signals(record)
-                      if row.key == "issue-candidate:topn-retention").normalized()
+                      if row.key == "issue-candidate:topn-cut").normalized()
         self.assertEqual(monitor.LEVEL_ATTENTION, signal.level)
         self.assertTrue(signal.impact.startswith("없음"))
         self.assertIn("개발자", signal.action)
-        self.assertIn("컷을 올려야 한다", signal.technical)
+        self.assertIn("상한을 올려야 한다", signal.technical)
 
 
 class ArchiveIntegrityRepeatTests(unittest.TestCase):

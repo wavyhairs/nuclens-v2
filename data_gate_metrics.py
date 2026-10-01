@@ -199,6 +199,9 @@ def measure_issue_candidates(audit: dict | None, history: list[dict]) -> dict:
             for space in diagnostics.get("search_space") or []
         ],
         "top_n_retention": (diagnostics.get("top_n_retention") or {}).get("levels") or [],
+        # 상한 때문에 LLM 에 묻지 않은 회색지대 쌍 — 건수와 제목. 알림 문장은 700자에서
+        # 잘리므로 사람이 확인할 전체 목록은 이 기록에서 본다.
+        "top_n_cut": (diagnostics.get("top_n_retention") or {}).get("cut") or {},
         # build_data 가 회차 안에서 찾은 것 + 여기서 표류로 찾은 것. 운영 알림은
         # 이 목록 하나만 읽는다(operational_monitoring.data_gate_signals).
         "guards": guards,
@@ -283,6 +286,15 @@ def report(record: dict) -> None:
           f"· 기준선 {candidates['baseline'] or '없음'}({candidates['baseline_records']}회차)")
     if ranks:
         print(f"[data-gate] 어휘 예선 정답 순위 — {ranks}")
+    cut = candidates.get("top_n_cut") or {}
+    if cut.get("review_band_cut"):
+        print(f"[data-gate] 기사당 Top-{cut.get('n')} 밖이라 LLM 에 묻지 않은 회색지대 쌍 "
+              f"{cut['review_band_cut']}건 / {cut.get('review_band_total')}건")
+        for row in cut.get("samples") or []:
+            print(f"    {row.get('similarity')} · {row.get('rank')}위/{row.get('article_candidates')} "
+                  f"『{row.get('article_title')}』({row.get('article_date')}) ↔ "
+                  f"『{row.get('issue_title')}』({row.get('issue_date')}) "
+                  f"[{row.get('candidate_id')}]")
     # 여기서도 종료 코드는 바꾸지 않는다. 알림은 operational_alerts 가 보낸다.
     for guard in candidates.get("guards") or []:
         level = "error" if guard.get("severity") == "critical" else "warning"
