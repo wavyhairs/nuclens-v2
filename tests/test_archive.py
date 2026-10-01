@@ -135,6 +135,22 @@ class TestAppendDedup(ArchiveDirMixin):
         line = json.loads(expected.read_text(encoding="utf-8").strip())
         self.assertEqual(line["hash"], "hx")
 
+    def test_title_seen_outside_recent_months_is_not_reappended(self):
+        # 월이 바뀌어 최근 2개월 창 밖이 된 기록도 적재 중복 검사가 본다 —
+        # 웹 빌드의 duplicate_title 게이트는 아카이브 전체를 본다.
+        old = news_archive.make_record({
+            "hash": "aug1", "link": "https://example.com/aug", "title": "한국원자력학회"
+        }, {}, "2020-08-31T09:37:41+00:00")
+        old_path = Path(self._tmp.name) / "2020-08.jsonl"
+        old_path.write_text(json.dumps(old, ensure_ascii=False) + "\n", encoding="utf-8")
+
+        identities = news_archive.load_recent_identities()
+        self.assertIn("aug1", identities["hashes"])
+        new = news_archive.make_record({
+            "hash": "oct1", "link": "https://example.com/oct", "title": "한국원자력학회"
+        }, {}, _now_iso())
+        self.assertEqual(news_archive.append_records([new]), 0)
+
     def test_broken_line_skipped(self):
         now = datetime.now(timezone.utc)
         path = Path(self._tmp.name) / f"{now.strftime('%Y-%m')}.jsonl"
