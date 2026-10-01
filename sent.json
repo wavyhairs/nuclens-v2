@@ -6216,7 +6216,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-10-01T20:29:18+00:00",
+    "updated_at": "2026-10-01T20:32:01+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -6296,7 +6296,7 @@
         "title": "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
         "detail": "AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 5건을 두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 만들어 봅니다. 예: 「원자력연료 가공시설 가동중 방사선환경조사보고서(2026년도 상반기)」, 「방사능 시료 채취용 소모품 구매」, 「BWXT Awarded $189 Million Naval Nuclear…」 외 2건.",
         "severity": "critical",
-        "last_seen_at": "2026-10-01T20:29:18+00:00",
+        "last_seen_at": "2026-10-01T20:32:01+00:00",
         "last_observation_id": "2026-10-02T05:26:01.519118+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-24T18:55:00+00:00",
@@ -6320,7 +6320,7 @@
         "title": "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
         "detail": "AI 요약을 받지 못해 원문 첫 문장만 있는 기사 1건을 브리핑 후보에 넣지 않았습니다. 1건은 두 번 모두 실패해 더 시도하지 않고 뺐습니다. 예: 「[주요공시] 디아이, 두산에너빌리티, 우진엔텍, 아이쓰리시스템, 대한해…」.",
         "severity": "warning",
-        "last_seen_at": "2026-10-01T20:29:18+00:00",
+        "last_seen_at": "2026-10-01T20:32:01+00:00",
         "last_observation_id": "2026-10-02T03:45:23.635757+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-26T21:11:41+00:00",
@@ -6385,7 +6385,7 @@
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
         "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 8건. 사건일 73건은 사이트에 표시하지 않았습니다 — 원문 근거를 다시 확인할 수 없음 73건 · 날짜 이상 0건.",
         "severity": "critical",
-        "last_seen_at": "2026-10-01T20:29:18+00:00",
+        "last_seen_at": "2026-10-01T20:32:01+00:00",
         "last_observation_id": "github-run:36794967922",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
@@ -6456,7 +6456,7 @@
         "title": "전문가 브리핑 대본에서 근거 없는 문단을 뺐습니다",
         "detail": "2026-10-01 전문가 브리핑 대본에서 기사 근거로 확인되지 않는 문단 2건을 빼고 내보냈습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-10-01T20:29:18+00:00",
+        "last_seen_at": "2026-10-01T20:32:01+00:00",
         "last_observation_id": "2026-10-01T09:25:44.954671+09:00",
         "min_occurrences": 2,
         "first_seen_at": "2026-09-30T22:30:48+00:00",
@@ -6503,7 +6503,7 @@
         "title": "구글 AI 서버가 붐벼 기사 요약이 늦어졌습니다",
         "detail": "기사 58건을 이번 수집에서 AI로 요약하지 못했습니다. 구글이 '지금 요청이 몰려 있다'고 답했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-10-01T20:29:18+00:00",
+        "last_seen_at": "2026-10-01T20:32:01+00:00",
         "last_observation_id": "2026-10-02:2026-10-02T00:57:39.110996+09:00:58",
         "min_occurrences": 2,
         "first_seen_at": "2026-09-30T22:01:36+00:00",
@@ -6574,7 +6574,7 @@
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
         "detail": "기사당 Top-12 이 실제 병합을 놓친다",
         "severity": "warning",
-        "last_seen_at": "2026-10-01T20:29:18+00:00",
+        "last_seen_at": "2026-10-01T20:32:01+00:00",
         "last_observation_id": "github-run:36794967922",
         "min_occurrences": 2,
         "first_seen_at": "2026-09-18T20:05:02+00:00",
@@ -6615,28 +6615,27 @@
         "resolution_notified_at": "2026-08-24T07:05:56+00:00"
       },
       "quality:web-pipeline-failure": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "web_pipeline",
-        "active": false,
-        "title": "사이트 배포가 실패했습니다",
+        "active": true,
+        "title": "사이트에 올릴 데이터를 만들지 못했습니다",
         "detail": "자동 실행이 도중에 멈췄습니다.",
         "severity": "critical",
         "level": "action",
-        "impact": "새 데이터가 사이트에 반영되지 않았습니다. 텔레그램 브리핑은 정상 발송됩니다.",
-        "action": "배포 로그와 사이트 접속을 확인해 주세요.",
-        "technical": "Cloudflare 배포·스모크=failure. 워크플로 로그와 배포 상태를 확인해 주세요.",
+        "impact": "사이트가 이전 데이터 그대로 남습니다. 텔레그램 브리핑 발송은 영향받지 않습니다.",
+        "action": "워크플로 로그를 확인해 주세요. 다음 예약 실행에서 자동 재시도합니다.",
+        "technical": "웹 데이터 빌드=failure. 워크플로 로그와 배포 상태를 확인해 주세요.",
         "fingerprint": "",
-        "last_seen_at": "2026-09-29T20:25:44+00:00",
-        "last_observation_id": "daily-brief:36622990775",
+        "last_seen_at": "2026-10-01T20:32:01+00:00",
+        "last_observation_id": "daily-brief:36920878569",
         "min_occurrences": 2,
-        "first_seen_at": "2026-09-29T20:25:44+00:00",
+        "first_seen_at": "2026-10-01T20:32:01+00:00",
         "pending_notification": false,
         "last_notified_at": "2026-08-31T21:12:58+00:00",
         "last_notified_severity": "critical",
         "notifications": 4,
         "resolution_notified_at": "2026-09-01T22:39:19+00:00",
-        "delivery": "immediate",
-        "resolved_at": "2026-09-30T22:30:48+00:00"
+        "delivery": "immediate"
       },
       "issue-candidate:preselect-headroom": {
         "consecutive": 0,
@@ -7226,7 +7225,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=5 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-10-01T20:29:18+00:00",
+        "last_seen_at": "2026-10-01T20:32:01+00:00",
         "last_observation_id": "2026-10-01T20:27:45+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -7236,7 +7235,7 @@
     }
   },
   "operational_digest": {
-    "last_sent_date": "2026-10-01",
-    "last_sent_at": "2026-09-30T22:30:48+00:00"
+    "last_sent_date": "2026-10-02",
+    "last_sent_at": "2026-10-01T20:32:01+00:00"
   }
 }
