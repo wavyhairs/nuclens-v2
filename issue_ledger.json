@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-01T08:16:57+09:00",
+ "generated_at": "2026-10-01T09:24:03+09:00",
  "issues": {
   "issue-01083ffbfa10992b": {
    "article_count": 1,
@@ -622,7 +622,7 @@
    "units": []
   },
   "issue-05da702fed62250a": {
-   "article_count": 43,
+   "article_count": 44,
    "briefing_count": 5,
    "countries": [
     "KR",
@@ -632,7 +632,7 @@
    "entity_ids": [
     "basic-plan"
    ],
-   "evidence_day_count": 29,
+   "evidence_day_count": 30,
    "evidence_days": [
     "2026-08-06",
     "2026-10-01"
@@ -776,7 +776,7 @@
    "units": []
   },
   "issue-065dc3057ee2df9d": {
-   "article_count": 84,
+   "article_count": 87,
    "briefing_count": 14,
    "countries": [
     "KR",
@@ -11719,7 +11719,7 @@
    "units": []
   },
   "issue-6260c0799db78ac9": {
-   "article_count": 48,
+   "article_count": 52,
    "briefing_count": 6,
    "countries": [
     "KR"
@@ -13309,7 +13309,7 @@
    "units": []
   },
   "issue-7025587664fd73f5": {
-   "article_count": 2,
+   "article_count": 3,
    "briefing_count": 1,
    "countries": [
     "KR"
@@ -13332,7 +13332,8 @@
    "first_seen": "2026-09-12",
    "hashes": [
     "7025587664fd73f5",
-    "a2ac90fe69e32a85"
+    "a2ac90fe69e32a85",
+    "bb94a62ae676ddd5"
    ],
    "identity_status": "ok",
    "issue_id": "issue-7025587664fd73f5",
@@ -14204,7 +14205,8 @@
     "2ad78d39aaa94e3b",
     "ca04aa1a2108d2dc",
     "8c36e5a9adfdcab9",
-    "4827d3adbe952767"
+    "4827d3adbe952767",
+    "25be95adde6602bd"
    ],
    "identity_status": "ok",
    "issue_id": "issue-76e475ad2520cd4f",
@@ -31235,8 +31237,8 @@
    "units": []
   },
   "story-15e2626e3102dcd5": {
-   "article_count": 47,
-   "briefing_count": 4,
+   "article_count": 23,
+   "briefing_count": 2,
    "countries": [
     "KR",
     "DE"
@@ -31247,15 +31249,15 @@
    "evidence_day_count": 16,
    "evidence_days": [
     "2026-08-15",
-    "2026-09-18"
+    "2026-09-23"
    ],
    "facts": {
     "action": "",
-    "actors": "MOTIE",
-    "assets": "coal_power_plants",
-    "event_family": "policy_decision"
+    "actors": "Ministry of Climate, Environment and Energy",
+    "assets": "coal_power_plant",
+    "event_family": "policy_discussion"
    },
-   "first_seen": "2026-08-24",
+   "first_seen": "2026-08-30",
    "hashes": [
     "d090e00015633ab5",
     "5acc5e77897a84d4",
@@ -31329,13 +31331,20 @@
     "2e54b8e74c6fc037",
     "f53fd6eb759ee137",
     "391ae521e2cbd174",
-    "93406ef00ae86d41"
+    "93406ef00ae86d41",
+    "2b3ad8a7a7afe2b2",
+    "33e76a921d8b5860",
+    "f6832c64396faf0f",
+    "91c28f4c623f0bf0",
+    "8d50051b1a9ebfcf",
+    "d84837185968e586",
+    "87af551a8bf6a027"
    ],
    "identity_status": "ok",
    "issue_id": "story-15e2626e3102dcd5",
-   "last_seen": "2026-09-19",
-   "last_written": "2026-09-19",
-   "moved_to": "issue-76e475ad2520cd4f",
+   "last_seen": "2026-09-10",
+   "last_written": "2026-10-01",
+   "moved_to": "",
    "plants": [
     "hanbit"
    ],
@@ -31370,14 +31379,19 @@
      "date": "2026-09-19",
      "summary": "정부가 제12차 전력수급기본계획을 통해 2040년까지 석탄발전 60기를 폐지하고 LNG 및 양수발전으로 전환하는 로드맵을 발표했다.",
      "title": "정부, 2040년까지 석탄발전 60기 단계적 폐지 및 LNG·양수발전 전환"
+    },
+    {
+     "date": "2026-10-01",
+     "summary": "기후에너지환경부가 제12차 전력수급기본계획 수립을 위한 토론회를 열고 석탄화력발전소 조기 폐지 방안을 논의한다.",
+     "title": "제12차 전기본 토론회 개최…석탄발전 조기 폐지 논의"
     }
    ],
-   "summary": "정부가 제12차 전력수급기본계획을 통해 2040년까지 석탄발전 60기를 폐지하고 LNG 및 양수발전으로 전환하는 로드맵을 발표했다.",
-   "title": "정부, 2040년까지 석탄발전 60기 단계적 폐지 및 LNG·양수발전 전환",
+   "split_from": "story-249bbc59c86e42a7",
+   "summary": "기후에너지환경부가 제12차 전력수급기본계획 수립을 위한 토론회를 열고 석탄화력발전소 조기 폐지 방안을 논의한다.",
+   "title": "제12차 전기본 토론회 개최…석탄발전 조기 폐지 논의",
    "topics": [
     "power_market",
-    "newbuild",
-    "datacenter_ai"
+    "restart_lto"
    ],
    "units": [
     "hanbit-1",
@@ -32434,7 +32448,7 @@
    "units": []
   },
   "story-20bfb60e1ffef23c": {
-   "article_count": 6,
+   "article_count": 7,
    "briefing_count": 1,
    "countries": [
     "US",
@@ -32459,7 +32473,8 @@
     "0bf0f4227ecdad53",
     "41cc00249c139686",
     "9550528c0898fd55",
-    "79c7acc98b556c4e"
+    "79c7acc98b556c4e",
+    "2c16e06c20741b48"
    ],
    "identity_status": "ok",
    "issue_id": "story-20bfb60e1ffef23c",
@@ -32825,7 +32840,7 @@
    "issue_id": "story-249bbc59c86e42a7",
    "last_seen": "2026-09-10",
    "last_written": "2026-10-01",
-   "moved_to": "",
+   "moved_to": "story-15e2626e3102dcd5",
    "plants": [],
    "region": "국내",
    "revisions": [
@@ -32903,7 +32918,7 @@
    "units": []
   },
   "story-26118e1b5ab3595d": {
-   "article_count": 10,
+   "article_count": 8,
    "briefing_count": 2,
    "countries": [
     "KR"
@@ -32913,7 +32928,7 @@
    ],
    "evidence_day_count": 5,
    "evidence_days": [
-    "2026-09-18",
+    "2026-09-09",
     "2026-09-30"
    ],
    "facts": {
@@ -32934,7 +32949,8 @@
     "59797dd2fcd74abd",
     "1f01f3a4d8b58b84",
     "f919b31de7d68d8b",
-    "cba63ece12a06934"
+    "cba63ece12a06934",
+    "99f2916afcd7ec62"
    ],
    "identity_status": "ok",
    "issue_id": "story-26118e1b5ab3595d",
@@ -36398,7 +36414,7 @@
    "units": []
   },
   "story-4d181084fd09b33f": {
-   "article_count": 24,
+   "article_count": 25,
    "briefing_count": 3,
    "countries": [
     "KR"
@@ -36456,7 +36472,8 @@
     "ad84d93680c2cdac",
     "4dc23e6b18b88000",
     "3442696228c4a373",
-    "d297edd7e3cb2aea"
+    "d297edd7e3cb2aea",
+    "74d2f3863250f487"
    ],
    "identity_status": "ok",
    "issue_id": "story-4d181084fd09b33f",
@@ -36606,11 +36623,12 @@
    "units": []
   },
   "story-4e1bbcf5fe2a6b99": {
-   "article_count": 20,
+   "article_count": 21,
    "briefing_count": 1,
    "countries": [
     "KR",
-    "US"
+    "US",
+    "CA"
    ],
    "entity_ids": [
     "khnp",
@@ -36679,7 +36697,8 @@
     "50243404e5a7d20f",
     "d8ee0d20829f5713",
     "8df8ff446b69d318",
-    "2ea68139776e08db"
+    "2ea68139776e08db",
+    "d9029b014ad9d1ac"
    ],
    "identity_status": "ok",
    "issue_id": "story-4e1bbcf5fe2a6b99",
@@ -40126,7 +40145,7 @@
    "units": []
   },
   "story-7025587664fd73f5": {
-   "article_count": 28,
+   "article_count": 25,
    "briefing_count": 2,
    "countries": [
     "KR"
@@ -40800,7 +40819,7 @@
    "units": []
   },
   "story-74e5378ee7284fb8": {
-   "article_count": 8,
+   "article_count": 9,
    "briefing_count": 1,
    "countries": [
     "KR"
@@ -40835,7 +40854,8 @@
     "92fff3a73439a3e1",
     "641a61d458893aea",
     "3e5b7cc9515b6649",
-    "2b849451365073d1"
+    "2b849451365073d1",
+    "7a1d3d0f68e4cfb4"
    ],
    "identity_status": "ok",
    "issue_id": "story-74e5378ee7284fb8",
@@ -43673,7 +43693,7 @@
    "units": []
   },
   "story-9067996958167ead": {
-   "article_count": 1,
+   "article_count": 2,
    "briefing_count": 1,
    "countries": [
     "US"
@@ -43692,7 +43712,8 @@
    },
    "first_seen": "2026-10-01",
    "hashes": [
-    "9067996958167ead"
+    "9067996958167ead",
+    "3ec5ab9e81bd0f8e"
    ],
    "identity_status": "ok",
    "issue_id": "story-9067996958167ead",
@@ -45810,7 +45831,7 @@
    "units": []
   },
   "story-a3e57010d24635a7": {
-   "article_count": 50,
+   "article_count": 51,
    "briefing_count": 5,
    "countries": [
     "KR",
@@ -45910,7 +45931,8 @@
     "27827fdce629bad7",
     "042e8899dcf1bcba",
     "b06b9bcc7ab7505c",
-    "88129dd9f5f18e9a"
+    "88129dd9f5f18e9a",
+    "a48b1cf5aade8f18"
    ],
    "identity_status": "ok",
    "issue_id": "story-a3e57010d24635a7",
@@ -51203,16 +51225,16 @@
    "units": []
   },
   "story-e317f8765b0d98e2": {
-   "article_count": 5,
+   "article_count": 6,
    "briefing_count": 1,
    "countries": [
     "KR"
    ],
    "entity_ids": [],
-   "evidence_day_count": 4,
+   "evidence_day_count": 5,
    "evidence_days": [
     "2026-09-17",
-    "2026-09-30"
+    "2026-10-01"
    ],
    "facts": {
     "action": "",
@@ -51226,7 +51248,8 @@
     "902fc6e330acfd27",
     "8288b81368493c84",
     "62eee1fdf5ee63ef",
-    "3599d7ba4ce108d9"
+    "3599d7ba4ce108d9",
+    "4cd8e4ff2e18e07c"
    ],
    "identity_status": "ok",
    "issue_id": "story-e317f8765b0d98e2",
@@ -53738,7 +53761,7 @@
    "units": []
   },
   "story-faaaf64161402907": {
-   "article_count": 7,
+   "article_count": 8,
    "briefing_count": 1,
    "countries": [
     "KR",
@@ -53747,10 +53770,10 @@
    "entity_ids": [
     "x-energy"
    ],
-   "evidence_day_count": 3,
+   "evidence_day_count": 4,
    "evidence_days": [
     "2026-09-14",
-    "2026-09-29"
+    "2026-10-01"
    ],
    "facts": {
     "action": "",
@@ -53767,7 +53790,8 @@
     "85c82b000e7c87e3",
     "e28a2a11e17e8ce2",
     "75814ba0ac630add",
-    "72c3e847731f6f73"
+    "72c3e847731f6f73",
+    "448fbef0a3a03038"
    ],
    "identity_status": "ok",
    "issue_id": "story-faaaf64161402907",
