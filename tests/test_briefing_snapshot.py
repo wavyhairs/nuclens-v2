@@ -110,6 +110,27 @@ class ReconcileTests(unittest.TestCase):
         bs.apply([briefing], self.store, "t")
         self.assertEqual([r["issue_id"] for r in briefing["issues"]], ["issue-6260"])
 
+    def test_article_gone_from_the_window_is_not_a_correction(self):
+        """뉴스 창(60일) 밖으로 밀려난 기사는 철회다 (2026-10-02, 08-03 카드 2 ≠ 1).
+
+        묶음은 그대로인데 얼린 해시 하나가 빌드에 없다고 '정정됨'을 달고,
+        화면에 없는 기사까지 세면 안 된다."""
+        now = [_row("issue-6260", ["a"], "전기본 비대 이슈"),
+               _row("issue-italy", ["c"], "이탈리아 원전법")]
+        briefing = _briefing(now)
+        stats = bs.apply([briefing], self.store, "t")
+        self.assertEqual(stats["cards_corrected"], 0)
+        self.assertIs(briefing["issues"][0], now[0])
+        self.assertNotIn("classification_note", briefing["issues"][0])
+
+    def test_corrected_card_counts_only_articles_still_present(self):
+        now = [_row("issue-merged", ["a", "c"], "합쳐진 이슈")]
+        briefing = _briefing(now)
+        bs.apply([briefing], self.store, "t")
+        sent = briefing["issues"][0]
+        self.assertEqual(sent["classification_note"]["status"], "corrected")
+        self.assertEqual(sent["current_article_count"], 1, "창 밖 기사 b 까지 셌다")
+
     def test_late_article_row_is_kept_after_the_frozen_cards(self):
         now = [_row("issue-late", ["z"], "늦게 복원된 기사"),
                _row("issue-6260", ["a", "b"], "전기본 비대 이슈"),
