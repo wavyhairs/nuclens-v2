@@ -24,6 +24,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `article_quality_gate.py` | 원문-큐레이션 제목·요약·사건일 무결성, fallback 발송 제한, 최종 카드 근거 검증 |
 | `operational_monitoring.py` + `operational_alerts.py` + `operational_digest.py` | 수집원 연속 장애·품질 이상 누적, 중복 억제·관리자 알림. 알림은 세 갈래다 — **🚨 즉시**(사람이 손대야 풀리는 것: 브리핑 발송 실패·Gemini 결제/한도/설정·수집·사이트 두 번 연속 실패·주간 판세 미발송), **📋 하루 요약**(아침 브리핑 끝에 무음으로 한 통: 자동 처리된 일·할 일·출처 상태, 뺀 기사 제목과 대본에서 뺀 문장까지), **개발 점검**(월요일 요약에만). 즉시 알림은 **무슨 일 → 영향 → 할 일** 순서이고 기술 값은 실행 기록 링크로 대신한다. 미리보기: `python operational_alerts.py --digest-preview` |
 | `embedding_pipeline.py` | Gemini 임베딩 모델·35일 캐시·최근 21일 브리핑 백필 계약 |
+| `embedding_quota.py` | 임베딩 API 공통 속도 제어(최근 60초 80회)·429 RPM/TPM/RPD 분류·`[embedding]` 호출 통계 |
 | `news_archive.py` | v3 아카이브 적재·중복 차단·검증 근거 지문 보존 |
 | `archive_repairs.json` | 과거 깨진 레코드의 고정 회귀 수선·제외 근거 |
 | `daily_brief.py` | 일일 브리핑: story dedup→랭킹→투자 관점→보고서 추천→발송/웹 story 계약 기록 |
@@ -740,6 +741,14 @@ PR 에서 자동으로 도는 것은 `.github/workflows/python-tests.yml` — **
 - 요약은 80자 이내 완결문이어야 하며 실패 항목만 한 번 재생성한다. 재실패 항목은 격리한다.
 - `source_type`과 `evidence_role`을 분리해 전문언론을 공식 원문으로 표시하지 않는다.
 - 이슈 임베딩은 `gemini-embedding-2`로 생성하고 모델·차원·입력 지문이 다른 구형 캐시는 폐기한다.
+- 임베딩 요청은 수집 중복 판별·백필 모두 `embedding_quota` 를 지난다. 최근 60초 요청이
+  `GEMINI_EMBEDDING_RPM_CAP`(기본 80, 무료 한도 100)에 닿으면 기다리고, 캐시 재사용은 세지도
+  기다리지도 않는다. 429 는 본문의 quotaId·RetryInfo 로 가른다 — 분당(RPM·TPM)은 서버가 요구한
+  만큼 기다려 같은 요청을 최대 2회 재시도, 일일(RPD)은 그 회차 신규 호출 중단, 종류 불명은 1회만
+  재시도한다. 재시도까지 실패하면 회차 신규 호출을 멈추고 캐시로 진행한다(기사는 지우지 않는다).
+  회차 상한은 재시도 6회·대기 360초. 같은 잡의 수집→백필 스텝은 임시 디렉터리 원장으로 60초 창을
+  나눠 합계가 상한을 넘지 않는다. 실행 끝에 `[embedding] … API 요청 N회 · 캐시 재사용 · 최대 분당`
+  한 줄이 텍스트 모델의 `[gemini] 호출` 줄과 따로 찍힌다.
 - 신규 큐레이션은 `event_date`와 날짜 의미·정밀도·근거 필드를 함께 기록한다.
 
 과거 아카이브 이관 미리보기와 적용:

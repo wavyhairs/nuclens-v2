@@ -16,6 +16,9 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable
 
+import embedding_quota
+from embedding_quota import EmbeddingCallsSuspended, EmbeddingQuotaError
+
 
 EMBEDDING_MODEL = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-2")
 EMBEDDING_DIMENSION = int(os.environ.get("GEMINI_EMBEDDING_DIMENSION", "768"))
@@ -119,13 +122,37 @@ def save_cache(cache: dict, path: Path = DEFAULT_CACHE_FILE) -> None:
     )
 
 
-def embed_one(client, text: str) -> list[float]:
+def limiter() -> embedding_quota.EmbeddingLimiter:
+    """이 프로세스의 임베딩 제한기. 수집 중복 판별과 백필이 같은 것을 쓴다."""
+    return embedding_quota.get_limiter(EMBEDDING_MODEL)
+
+
+def _embed_config(types):
+    config = {"output_dimensionality": EMBEDDING_DIMENSION}
+    # 재시도는 embedding_quota 한 곳에서만 한다. google-genai 는 클라이언트에
+    # retry_options 가 없으면 재시도하지 않지만(2.26 기준 stop_after_attempt(1)),
+    # 기본값이 바뀌면 SDK 재시도(최대 5회, 429 포함)가 바깥 재시도와 곱해지고
+    # 그 요청들은 우리 60초 창에 잡히지도 않는다. 요청 단위로 1회를 못 박는다.
+    # HttpRetryOptions 가 없는 구버전 SDK 는 애초에 재시도 기능이 없다.
+    if hasattr(types, "HttpRetryOptions"):
+        config["http_options"] = types.HttpOptions(
+            retry_options=types.HttpRetryOptions(attempts=1))
+    return types.EmbedContentConfig(**config)
+
+
+def embed_one(client, text: str, *, gate: embedding_quota.EmbeddingLimiter | None = None,
+              label: str = "") -> list[float]:
+    """임베딩 API 요청 하나. 반드시 제한기를 지난다(재시도 포함)."""
     from google.genai import types
 
-    result = client.models.embed_content(
-        model=EMBEDDING_MODEL,
-        contents=text,
-        config=types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIMENSION),
+    config = _embed_config(types)
+    result = (gate or limiter()).call(
+        lambda: client.models.embed_content(
+            model=EMBEDDING_MODEL,
+            contents=text,
+            config=config,
+        ),
+        label=label,
     )
     if not result.embeddings:
         raise RuntimeError("embedding response is empty")
@@ -142,16 +169,24 @@ def get_or_compute_embedding(
     article: dict,
     cache_key: str,
     cache: dict,
+    *,
+    gate: embedding_quota.EmbeddingLimiter | None = None,
 ) -> tuple[list[float] | None, bool]:
-    """벡터와 신규 생성 여부를 반환한다."""
+    """벡터와 신규 생성 여부를 반환한다.
+
+    캐시가 현행이면 API 를 부르지 않는다 — 요청으로 세지도, 페이싱으로 기다리지도
+    않는다. 회차 신규 호출이 멈췄으면 ``EmbeddingCallsSuspended`` 가 올라온다.
+    """
+    gate = gate or limiter()
     text = embedding_text(article)
     entry = cache.get(cache_key)
     if cache_entry_is_current(entry, text):
+        gate.record_cache_hit()
         return cached_vector(entry), False
     if client is None:
         return None, False
 
-    vector = embed_one(client, text)
+    vector = embed_one(client, text, gate=gate, label=str(cache_key)[:8])
     cache[cache_key] = {
         "vec": vector,
         "model": EMBEDDING_MODEL,
@@ -210,29 +245,40 @@ def refresh_embeddings(
     client,
     *,
     max_new: int = 150,
-    sleep_seconds: float = 0.15,
+    sleep_seconds: float = 0.0,
     cache_path: Path = DEFAULT_CACHE_FILE,
+    gate: embedding_quota.EmbeddingLimiter | None = None,
 ) -> dict:
+    """최근 브리핑 기사의 벡터를 채운다.
+
+    속도는 ``embedding_quota`` 가 최근 60초 요청 수로 맞춘다. 예전의 고정
+    ``sleep_seconds``(0.15초)는 실제 호출 수를 보지 않아 한도를 못 지켰다 — 인자는
+    호환을 위해 남기되 기본 0 이다.
+    """
+    gate = gate or limiter()
     generated = 0
     failed = 0
-    quota_exhausted = False
     for article in articles:
         article_hash = str(article.get("hash") or "")
         if not article_hash:
             continue
         text = embedding_text(article)
         if cache_entry_is_current(cache.get(article_hash), text):
+            gate.record_cache_hit()
             continue
-        if generated >= max_new or quota_exhausted:
+        if generated >= max_new or gate.suspended:
             break
         try:
-            _, created = get_or_compute_embedding(client, article, article_hash, cache)
+            _, created = get_or_compute_embedding(
+                client, article, article_hash, cache, gate=gate)
             generated += int(created)
+        except EmbeddingCallsSuspended:
+            break  # 일일 한도·예산 소진. 남은 기사는 다음 실행이 캐시 위에서 잇는다.
+        except EmbeddingQuotaError as exc:
+            failed += 1  # 상세는 제한기가 이미 남겼다. 회차도 거기서 멈췄다.
+            print(f"[embeddings] {article_hash[:8]} 생성 실패: 429 {exc.info.kind}")
         except Exception as exc:  # API 장애는 다음 실행에서 재시도한다.
             failed += 1
-            message = str(exc)
-            if "429" in message or "RESOURCE_EXHAUSTED" in message:
-                quota_exhausted = True
             print(f"[embeddings] {article_hash[:8]} 생성 실패: {type(exc).__name__}")
         if generated and generated % 10 == 0:
             save_cache(cache, cache_path)
@@ -253,6 +299,7 @@ def refresh_embeddings(
         "coverage": round(current / len(articles), 4) if articles else 1.0,
         "model": EMBEDDING_MODEL,
         "dimension": EMBEDDING_DIMENSION,
+        "stopped": gate.suspended,
     }
 
 
@@ -283,6 +330,7 @@ def main() -> int:
         cache_path=cache_path,
     )
     print("[embeddings] " + json.dumps(stats, ensure_ascii=False))
+    print(limiter().format_stats())
     if args.require_nonzero and articles and stats["current"] == 0:
         print("::error::최근 브리핑 임베딩이 0건입니다.")
         return 1
