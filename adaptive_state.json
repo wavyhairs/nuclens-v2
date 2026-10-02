@@ -364,6 +364,14 @@
       "type": "plant",
       "until": "2026-10-14T21:41:07.793427+00:00"
     },
+    "본토에한국형": {
+      "new_articles": 7,
+      "reason": "기간 만료",
+      "retired_at": "2026-10-02T00:41:22.412305+00:00",
+      "term": "본토에 한국형",
+      "type": "plant",
+      "until": "2026-10-16T00:41:22.412305+00:00"
+    },
     "산진해경제자유구역청": {
       "new_articles": 0,
       "reason": "기간 만료",
@@ -380,6 +388,14 @@
       "type": "plant",
       "until": "2026-10-14T21:41:07.793427+00:00"
     },
+    "심사중인": {
+      "new_articles": 1,
+      "reason": "기간 만료",
+      "retired_at": "2026-10-02T00:41:22.412305+00:00",
+      "term": "심사 중인",
+      "type": "plant",
+      "until": "2026-10-16T00:41:22.412305+00:00"
+    },
     "안전건설위원회": {
       "new_articles": 1,
       "reason": "기간 만료",
@@ -395,6 +411,14 @@
       "term": "에너지공단",
       "type": "org",
       "until": "2026-10-08T21:31:29.107838+00:00"
+    },
+    "에너지와20년간": {
+      "new_articles": 10,
+      "reason": "기간 만료",
+      "retired_at": "2026-10-02T00:41:22.412305+00:00",
+      "term": "에너지와 20년간",
+      "type": "plant",
+      "until": "2026-10-16T00:41:22.412305+00:00"
     },
     "연결신청": {
       "new_articles": 1,
@@ -580,6 +604,14 @@
       "type": "org",
       "until": "2026-10-02T15:40:41.667920+00:00"
     },
+    "톈완": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-10-02T00:41:25.914538+00:00",
+      "term": "톈완",
+      "type": "plant",
+      "until": "2026-10-16T00:41:25.914538+00:00"
+    },
     "펜실베이니아주크레인": {
       "new_articles": 0,
       "reason": "기간 만료",
@@ -694,7 +726,7 @@
     }
   },
   "spent": {
-    "count": 9,
+    "count": 12,
     "date": "2026-10-02"
   },
   "terms": {
@@ -747,40 +779,6 @@
       "yields": 1,
       "zero_streak": 0
     },
-    "본토에한국형": {
-      "articles": 1,
-      "created_at": "2026-10-01T00:40:53.396982+00:00",
-      "domains": [
-        "chosun.com"
-      ],
-      "evidence": [
-        {
-          "domain": "chosun.com",
-          "hash": "8e205925596e9fd2",
-          "importance": "must_read",
-          "title": "한미, 1200억 달러 규모 원전 프레임워크 합의…미국 본토에 한국형 원전 2기 건설"
-        }
-      ],
-      "expires_at": "2026-10-02T00:40:56.634070+00:00",
-      "importance": "must_read",
-      "last_result_count": 7,
-      "last_run": "2026-10-01T00:40:56.634070+00:00",
-      "new_articles": 7,
-      "origin": "auto",
-      "planned_at": "2026-10-01T00:40:53.396982+00:00",
-      "queries_run": 1,
-      "query": "본토에 한국형 원전",
-      "score": 3.6,
-      "status": "extended",
-      "term": "본토에 한국형",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-10-01"
-      ],
-      "yields": 1,
-      "zero_streak": 0
-    },
     "세계원자력사업자협회": {
       "articles": 4,
       "created_at": "2026-10-01T15:41:09.510662+00:00",
@@ -826,88 +824,6 @@
       "type": "org",
       "yield_days": [
         "2026-10-02"
-      ],
-      "yields": 1,
-      "zero_streak": 0
-    },
-    "심사중인": {
-      "articles": 3,
-      "created_at": "2026-09-30T00:26:55.045359+00:00",
-      "domains": [
-        "yna.co.kr",
-        "chosun.com",
-        "straightnews.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "yna.co.kr",
-          "hash": "3ae9589a0be8406b",
-          "importance": "nice_to_know",
-          "title": "계속운전 심사 중인 원전 9기 중 4기 정지 상태"
-        },
-        {
-          "domain": "chosun.com",
-          "hash": "01e51e4c5b697384",
-          "importance": "nice_to_know",
-          "title": "계속운전 심사 중인 원전 4기 가동 중단으로 2,395만MWh 전력 생산 차질"
-        },
-        {
-          "domain": "straightnews.co.kr",
-          "hash": "1aa6d941a1cb95fd",
-          "importance": "nice_to_know",
-          "title": "계속운전 심사 중인 원전 4기 정지로 1조 9천억 원 기회비용 발생"
-        }
-      ],
-      "expires_at": "2026-10-02T00:26:55.045359+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-10-01T18:41:21.615020+00:00",
-      "new_articles": 1,
-      "origin": "auto",
-      "planned_at": "2026-10-01T18:41:18.096820+00:00",
-      "queries_run": 3,
-      "query": "심사 중인 원전",
-      "score": 4.6,
-      "status": "extended",
-      "term": "심사 중인",
-      "ttl_hours": 48,
-      "type": "plant",
-      "yield_days": [
-        "2026-09-30"
-      ],
-      "yields": 1,
-      "zero_streak": 2
-    },
-    "에너지와20년간": {
-      "articles": 1,
-      "created_at": "2026-10-01T00:40:53.396982+00:00",
-      "domains": [
-        "pinpointnews.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "pinpointnews.co.kr",
-          "hash": "3ec5ab9e81bd0f8e",
-          "importance": "must_read",
-          "title": "아마존, 콘스텔레이션 에너지와 20년간 원전 전력 공급 계약 체결"
-        }
-      ],
-      "expires_at": "2026-10-02T00:40:56.634070+00:00",
-      "importance": "must_read",
-      "last_result_count": 10,
-      "last_run": "2026-10-01T00:40:56.634070+00:00",
-      "new_articles": 10,
-      "origin": "auto",
-      "planned_at": "2026-10-01T00:40:53.396982+00:00",
-      "queries_run": 1,
-      "query": "에너지와 20년간 원전",
-      "score": 3.6,
-      "status": "extended",
-      "term": "에너지와 20년간",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-10-01"
       ],
       "yields": 1,
       "zero_streak": 0
@@ -985,12 +901,12 @@
       ],
       "expires_at": "2026-10-03T15:41:09.510662+00:00",
       "importance": "must_read",
-      "last_result_count": 3,
-      "last_run": "2026-10-01T15:41:12.996408+00:00",
-      "new_articles": 3,
+      "last_result_count": 1,
+      "last_run": "2026-10-02T00:41:25.914427+00:00",
+      "new_articles": 4,
       "origin": "auto",
-      "planned_at": "2026-10-01T15:41:09.510662+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-02T00:41:22.412305+00:00",
+      "queries_run": 2,
       "query": "원전수출기획위원회",
       "score": 5.9,
       "status": "extended",
@@ -1000,7 +916,7 @@
       "yield_days": [
         "2026-10-02"
       ],
-      "yields": 1,
+      "yields": 2,
       "zero_streak": 0
     },
     "캘버트클리프": {
@@ -1049,14 +965,14 @@
           "title": "아마존, 콘스텔레이션 에너지와 20년간 원전 전력 공급 계약 체결"
         }
       ],
-      "expires_at": "2026-10-02T03:41:01.094240+00:00",
+      "expires_at": "2026-10-03T00:41:25.914427+00:00",
       "importance": "must_read",
       "last_result_count": 2,
-      "last_run": "2026-10-01T03:41:01.094240+00:00",
-      "new_articles": 2,
+      "last_run": "2026-10-02T00:41:25.914427+00:00",
+      "new_articles": 4,
       "origin": "auto",
-      "planned_at": "2026-10-01T03:40:58.106623+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-02T00:41:22.412305+00:00",
+      "queries_run": 2,
       "query": "캘버트 클리프스 원전",
       "score": 3.6,
       "status": "extended",
@@ -1064,9 +980,10 @@
       "ttl_hours": 24,
       "type": "plant",
       "yield_days": [
-        "2026-10-01"
+        "2026-10-01",
+        "2026-10-02"
       ],
-      "yields": 1,
+      "yields": 2,
       "zero_streak": 0
     },
     "테네시강유역개발공사": {
@@ -1107,45 +1024,6 @@
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
-    },
-    "톈완": {
-      "articles": 2,
-      "created_at": "2026-09-30T15:41:08.024201+00:00",
-      "domains": [
-        "world-nuclear-news.org",
-        "g-enews.com"
-      ],
-      "evidence": [
-        {
-          "domain": "world-nuclear-news.org",
-          "hash": "3b3c285c75ab3bcd",
-          "importance": "nice_to_know",
-          "title": "중국 톈완 원전 7호기, 최초 임계 도달 및 최소 제어 출력 확보"
-        },
-        {
-          "domain": "g-enews.com",
-          "hash": "d391e6017581b98a",
-          "importance": "must_read",
-          "title": "중국 톈완 원전 7호기 최초 임계 도달…러시아 VVER-1200 노형 상업운전 임박"
-        }
-      ],
-      "expires_at": "2026-10-02T15:41:08.024201+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-10-01T03:41:01.094240+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-10-01T03:40:58.106623+00:00",
-      "queries_run": 2,
-      "query": "톈완 원전",
-      "score": 5.3,
-      "status": "tracking",
-      "term": "톈완",
-      "ttl_hours": 48,
-      "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
     },
     "한국전기연구원": {
       "articles": 5,
