@@ -2445,6 +2445,482 @@
         },
         "confirmed_at": "2026-09-25T18:09:35.350009+09:00"
       }
+    },
+    "2026-W40": {
+      "week_id": "2026-W40",
+      "week_start": "2026-09-26",
+      "week_end": "2026-10-02",
+      "generated_at": "2026-10-02T17:08:56.507556+09:00",
+      "timezone": "Asia/Seoul",
+      "schema_version": 1,
+      "source_issue_count": 1036,
+      "article_count": 1422,
+      "weekly_intro": "이번 주는 한미 양국 간 1,200억 달러 규모의 원전 프레임워크가 체결되며 미국 본토 내 대형 원전 건설 추진이 본격화된 한 주였다. AI 데이터센터 확산에 따른 전력 수요 급증으로 글로벌 원전 및 SMR 도입 논의가 한층 강화되었다. 국내에서는 SMR 등 7대 미래 기술에 대한 대규모 투자와 계속운전 심사 보류 등이 교차하며 정책적 대응이 요구되고 있다.",
+      "policy_shifts": [
+        {
+          "what": "한미 양국이 1,200억 달러 규모의 원전 프레임워크에 합의하여 미국 내 대형 원전 8기 건설 추진을 공식화했다.",
+          "so_what": "한국형 원전 APR1400의 미국 본토 진출과 공급망 참여를 위한 제도적 기반이 마련되었다.",
+          "evidence_hashes": [
+            "ce0e9262",
+            "bda13f0d"
+          ]
+        },
+        {
+          "what": "정부가 SMR과 핵융합 등 7대 미래 성장동력인 SEED 프로젝트에 내년 4조 원을 투입하는 예산 편성을 확정했다.",
+          "so_what": "차세대 원자력 기술 확보와 상용화 가속화를 위한 범정부 차원의 지원 체계가 본격 가동된다.",
+          "evidence_hashes": [
+            "b44a2005",
+            "2f1716ac"
+          ]
+        },
+        {
+          "what": "원자력안전위원회가 고리 3·4호기와 한빛 1·2호기의 사고관리계획서 승인 심사를 보류했다.",
+          "so_what": "계속운전 심사 지연으로 인한 전력 생산 공백과 기회비용 발생 우려가 지속되고 있다.",
+          "evidence_hashes": [
+            "1f8dc72c",
+            "faadcd08"
+          ]
+        }
+      ],
+      "theme_moves": [
+        {
+          "theme": "SMR",
+          "direction": "강화",
+          "why": "미국 NRC의 클린치 리버 SMR 건설 승인과 국내 SMR 특별법 후속 조치 및 민관협의체 출범이 이어졌다.",
+          "evidence_hashes": [
+            "d91d0de7",
+            "b8c77807",
+            "b44a2005"
+          ]
+        },
+        {
+          "theme": "신규건설",
+          "direction": "강화",
+          "why": "한미 원전 프레임워크 합의에 따른 미국 내 대형 원전 건설과 해외 SMR EPC 파트너십 체결이 진전되었다.",
+          "evidence_hashes": [
+            "d91d0de7",
+            "b8c77807",
+            "ce0e9262"
+          ]
+        },
+        {
+          "theme": "공급망",
+          "direction": "강화",
+          "why": "미국 내 원전 수출 추진과 함께 아마존의 대규모 원전 전력 공급 계약 등 글로벌 공급망 협력이 확대되었다.",
+          "evidence_hashes": [
+            "bda13f0d",
+            "3ec5ab9e"
+          ]
+        },
+        {
+          "theme": "수출",
+          "direction": "강화",
+          "why": "미국 본토 내 APR1400 건설 추진과 원전수출기획위원회 개최로 해외 원전 수주 가시성이 높아졌다.",
+          "evidence_hashes": [
+            "ce0e9262",
+            "bda13f0d"
+          ]
+        },
+        {
+          "theme": "계속운전",
+          "direction": "유지",
+          "why": "국내 원전 4기의 계속운전 심사가 보류된 반면, 해외에서는 네덜란드와 미국의 계속운전 승인이 병행되었다.",
+          "evidence_hashes": [
+            "f6d1a4ef",
+            "1f8dc72c",
+            "5c74aa13"
+          ]
+        },
+        {
+          "theme": "원전운영",
+          "direction": "유지",
+          "why": "원전 설비 출력 상향 및 전력 구매 계약이 추진되는 동시에 안전성 규제 점검이 병행되고 있다.",
+          "evidence_hashes": [
+            "1d952b5b",
+            "b44a2005",
+            "5c74aa13"
+          ]
+        },
+        {
+          "theme": "핵융합",
+          "direction": "강화",
+          "why": "정부의 7대 SEED 프로젝트에 핵융합 연구가 포함되어 예산 투입과 기술 개발이 본격화되었다.",
+          "evidence_hashes": [
+            "b44a2005",
+            "2f1716ac"
+          ]
+        },
+        {
+          "theme": "전력망",
+          "direction": "유지",
+          "why": "미국의 송전망 비용 전액 부담 입법 추진과 국내 송전선로 건설 및 계통 병목 해소 대책이 지속적으로 논의되고 있다.",
+          "evidence_hashes": [
+            "a52d37bb",
+            "11a8edc2",
+            "7834aac8"
+          ]
+        },
+        {
+          "theme": "핵연료",
+          "direction": "유지",
+          "why": "미국 에너지부의 농축우라늄 공급사 생산 일정 단축 요구와 차세대 핵연료 제조시설 건설이 진행 중이다.",
+          "evidence_hashes": [
+            "01f4d1d1",
+            "37d62548",
+            "92672c96"
+          ]
+        },
+        {
+          "theme": "우라늄",
+          "direction": "유지",
+          "why": "니제르 우라늄 프로젝트 재개 협약 체결 및 신규 시추 프로젝트가 진행되며 공급 다변화가 모색되고 있다.",
+          "evidence_hashes": [
+            "01f4d1d1",
+            "34ca0513",
+            "115c466d"
+          ]
+        }
+      ],
+      "khnp_direct": "한수원은 새울 및 고리 원전 인근에 원자력안전정보공유센터를 개소하여 주민 접근성을 높였으며, 신한울 3·4호기 건설과 관련해 지역 상생 방안을 논의했다. 또한 신재생에너지 출력 제한으로 인한 발전 손실 대응과 원전 주변 불법드론 대응체계 고도화를 추진하고 있다.",
+      "watchpoints": [
+        "한미 원전 프레임워크 후속 조치에 따른 구체적인 미국 내 APR1400 부지 선정 및 계약 일정.",
+        "원안위의 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 심의 결과 및 계속운전 진행 상황.",
+        "정부의 SMR 민관합동 협의체 출범 및 7대 SEED 프로젝트 예산 집행 세부 계획.",
+        "10월 국정감사에서 다뤄질 한수원 및 주요 에너지 공공기관의 안전관리 체계 및 전력망 투자 이슈."
+      ],
+      "report_candidates": [
+        {
+          "topic": "미국 원전 프레임워크 체결에 따른 한수원 대미 사업 진출 전략",
+          "basis": "한미 1,200억 달러 원전 프레임워크 합의 및 미국 내 대형 원전 8기 건설 추진 본격화"
+        },
+        {
+          "topic": "계속운전 심사 지연에 따른 전력 생산 손실 분석과 제도 개선 과제",
+          "basis": "원안위의 사고관리계획서 승인 보류 및 원전 4기 가동 공백에 따른 기회비용 발생"
+        }
+      ],
+      "key_events": [
+        {
+          "hash": "ce0e9262",
+          "headline": "한미, 1,200억 달러 규모 원전 프레임워크 합의…미국 내 APR1400 2기 건설 확정",
+          "implication": "한미 양국의 원전 협력이 구체화되면서 한국형 원전의 미국 본토 진출 교두보가 마련되었다."
+        },
+        {
+          "hash": "b8c77807",
+          "headline": "미국 NRC, 미국 최초 소형모듈원자로(SMR) 건설 승인",
+          "implication": "글로벌 SMR 상용화 경쟁이 제도적 승인 단계를 거치며 본격적인 가속 구간에 진입했다."
+        },
+        {
+          "hash": "1f8dc72c",
+          "headline": "원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 승인 보류",
+          "implication": "계속운전 심사 지연으로 인한 전력 공급 공백과 경제적 손실 우려가 해소되지 않고 있다."
+        },
+        {
+          "hash": "b44a2005",
+          "headline": "정부, 7대 SEED 프로젝트에 내년 4조원 투입 및 범정부 추진체계 가동",
+          "implication": "SMR과 핵융합 등 미래 원자력 기술 확보를 위한 국가적 R&D 투자가 대폭 강화된다."
+        },
+        {
+          "hash": "923f5da5",
+          "headline": "울진군-한수원, 신한울 3·4호기 건설 및 지역 상생 방안 논의",
+          "implication": "대형원전 건설 과정에서 지자체와의 긴밀한 소통과 실효성 있는 지역 상생 협력이 요구된다."
+        }
+      ],
+      "top_stories": [
+        {
+          "key": "5af90dc9",
+          "hash": "5af90dc99671f3dd",
+          "title": "트럼프 미 대통령, 한국 대미 투자 프로젝트 일방 발표…원전 8기 포함",
+          "summary": "트럼프 미 대통령이 한국 정부와 검토 중인 원전 8기 건설과 알래스카 LNG 사업을 확정된 투자 프로젝트로 일방 발표했다.",
+          "link": "https://www.joongang.co.kr/article/25466378",
+          "articles": 8,
+          "outlets": 8,
+          "published_at": "2026-10-01T06:25:00+00:00",
+          "score": 13.4
+        },
+        {
+          "key": "ce0e9262",
+          "hash": "ce0e9262f34b144d",
+          "title": "한미, 1,200억 달러 규모 원전 프레임워크 합의…미국 내 APR1400 2기 건설 확정",
+          "summary": "한미 양국이 1,200억 달러 규모의 원전 프레임워크에 합의하여 미국 내 대형 원전 8기 건설을 추진하며, 한국형 APR1400 2기 건설이 확정됨.",
+          "link": "https://www.kaif.or.kr/ko?c=250&gbn=view&ix=30087",
+          "articles": 15,
+          "outlets": 13,
+          "published_at": "2026-09-30T15:00:00+00:00",
+          "score": 13.4
+        },
+        {
+          "key": "de6f629a",
+          "hash": "de6f629a0bbb12a5",
+          "title": "포스코, 수소환원제철 전력 확보 위해 민간 원전 투자 정부 건의",
+          "summary": "포스코가 수소환원제철 전환에 따른 전력 부족 해결을 위해 한수원과 합작법인 설립 및 민간 원전 투자를 정부에 건의한다.",
+          "link": "https://www.chosun.com/economy/industry-company/2026/09/29/IFIFLEQKYVA35D2NAY7VBXMELM",
+          "articles": 4,
+          "outlets": 4,
+          "published_at": "2026-09-28T20:01:00+00:00",
+          "score": 12.7
+        }
+      ],
+      "country_briefs": [
+        {
+          "key": "11051406",
+          "hash": "110514064e83212b",
+          "title": "트럼프, 한국 기업의 미국 내 2,000억 달러 투자 계획 발표 예정",
+          "summary": "백악관은 트럼프 대통령이 한국 기업들의 미국 내 프로젝트에 대한 2,000억 달러 규모의 투자 계획을 발표할 예정이라고 밝혔다.",
+          "link": "https://news.google.com/rss/articles/CBMizgFBVV95cUxPd19OMlhEUlRpYXJTY0hWUjF3MDRneXkxa0w0dzhuZ19VUGl3UlEyM0tiWnJqLWprdXByMm9lUG9paGU0Nl9VQ2I5djVaLW5rSGhLMDlCN3Y1enBXcHB3dUNoeEhybms5dmVCS3FJMFl3T20yM2ZJOEx1TGItMnNrT1FrM0RtT0xDc0VieWxkLWJidUh2a2l4V0sxS0plYVJuQi1qOW1ETzRDREdCUEE4U3lZaVpjVHlKTEhRTC1jTmNWWjZ3Zk5fZWFCQnJudw?oc=5",
+          "articles": 5,
+          "outlets": 2,
+          "published_at": "2026-09-30T17:03:08+00:00",
+          "country": "KR",
+          "country_kr": "한국",
+          "score": 12.1
+        },
+        {
+          "key": "b8c77807",
+          "hash": "b8c7780770dee3c7",
+          "title": "미국 NRC, 미국 최초 소형모듈원자로(SMR) 건설 승인",
+          "summary": "미국 원자력규제위원회(NRC)가 미국 내 최초의 소형모듈원자로(SMR) 건설을 공식 승인했다.",
+          "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxObUNDek1mWS1CaWZkc2FkdC1LUnRBMGoyclZzanBQbFJ2STYzWEZtV3pkY1NFeGE1VDQ3VzhsRkhqRlVhZW9tYTBRSTF0WjRFc0JnZDZ4S3VhX2VkUWNDN05Udm9hWWtPS1huWnV1RW42M01YWEVhTW5hVl9RSEV5TmZiQ1BIUFJadjVwNWV3NURuYkxLYUJMTUREME8wSWFXVEFiV01XUllYSDlVRnQ3SEdwNUxkZ1EtT2xEeGNGZXNPUQ?oc=5",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-09-29T17:54:07+00:00",
+          "country": "US",
+          "country_kr": "미국",
+          "score": 11.5
+        },
+        {
+          "key": "e8fce33d",
+          "hash": "e8fce33dd7e31c53",
+          "title": "중동부 유럽, 가뭄 위기 속 원전 확대 기조 유지",
+          "summary": "중동부 유럽이 가뭄으로 인한 냉각수 부족에도 불구하고 원전 확대 기조를 유지하며 SMR 도입을 검토 중이다.",
+          "link": "https://www.dailian.co.kr/news/view/1694303?sc=Naver",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-09-26T03:01:00+00:00",
+          "country": "RO",
+          "country_kr": "루마니아",
+          "score": 7.9
+        },
+        {
+          "key": "717d24c5",
+          "hash": "717d24c5b43605be",
+          "title": "중국, 2030년까지 ESS·전고체 배터리 육성하는 15차 5개년 계획 발표",
+          "summary": "중국 정부가 AI 데이터센터와 초장수명 ESS를 차세대 성장 동력으로 삼는 2026~2030년 신형 배터리 산업 발전 계획을 발표했다.",
+          "link": "https://www.edaily.co.kr/News/Read?mediaCodeNo=257&newsId=05572726645585368",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-09-30T10:35:00+00:00",
+          "country": "CN",
+          "country_kr": "중국",
+          "score": 7.4
+        },
+        {
+          "key": "34134371",
+          "hash": "34134371208f9a49",
+          "title": "북미·유럽 원전 시장 확대…캐나다·영국·네덜란드 신규 사업 가동",
+          "summary": "캐나다 서스캐처원주 원전 로드맵 발표, 영국 셀라필드 인프라 계약, 네덜란드 보르셀레 원전 계속운전 법안 가결 등 북미·유럽 원전 시장이 확대되고 있다.",
+          "link": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxONkFIQk5fMXZrQlRPaTFyNU9RaU9odWdsTzFmOEJZcF85Q2tPVUxSRkVDSUw4OHc4RHFEMlVCdG9GR3h2WVBUWVc5dG5RRmpSc3ZxWlZSejEwbVBIaXlsNHRyNWNHS1ZReHNnQTdNTTA4aVltaUtaNzFUalc0aGZ1ZFJST2NMd0Rn?oc=5",
+          "articles": 2,
+          "outlets": 1,
+          "published_at": "2026-10-01T01:46:32+00:00",
+          "country": "CA",
+          "country_kr": "캐나다",
+          "score": 6.6
+        },
+        {
+          "key": "4c72df21",
+          "hash": "4c72df21fde87f87",
+          "title": "폴리멕스 모스토스탈, 폴란드 AP1000 원전 조립동 건설 수주",
+          "summary": "폴란드 건설사 폴리멕스 모스토스탈이 벡텔로부터 폴란드 AP1000 원전 건설을 위한 대형 조립동 2개동 건설 계약을 수주했다.",
+          "link": "https://www.world-nuclear-news.org/articles/polimex-mostostal-to-build-polish-ap1000-assembly-halls",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-09-29T14:54:32+00:00",
+          "country": "PL",
+          "country_kr": "폴란드",
+          "score": 6.5
+        }
+      ],
+      "publications": [
+        {
+          "org": "국제원자력기구(IAEA)",
+          "title": "규제 경험 환류 관리",
+          "url": "http://www.iaea.org/publications/16055/regulatory-experience-feedback-management",
+          "date": "2026-05-26",
+          "gist": "원자력 안전 규제 기관의 경험 사례를 수집·분석하여 규제 체계에 반영하는 방법론",
+          "relevance": "policy"
+        }
+      ],
+      "upcoming": [
+        {
+          "key": "8645a3b8",
+          "hash": "8645a3b81440b5b6",
+          "title": "국회 기후부 국감, 제12차 전기본 원전 역할 및 석탄 폐지 쟁점",
+          "summary": "10월 6일 예정된 기후에너지환경부 국정감사에서 제12차 전력수급기본계획 수립 방향과 원전 공론화 결과 반영, 석탄발전 폐지 대체전원 확보 방안이 핵심 쟁점으로 다뤄질 전망이다.",
+          "link": "https://www.ajunews.com/view/20260928162922426",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-09-28T09:02:00+00:00",
+          "date": "2026-10-06",
+          "precision": "day"
+        },
+        {
+          "key": "9f389ec3",
+          "hash": "9f389ec330700c63",
+          "title": "국회 기후에너지환경노동위, 10월 6일부터 국정감사 실시",
+          "summary": "국회 기후에너지환경노동위원회가 10월 6일부터 27일까지 기후에너지환경부 및 산하기관을 대상으로 국정감사를 실시한다.",
+          "link": "http://www.e2news.com/news/articleView.html?idxno=334629",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-09-28T12:04:00+00:00",
+          "date": "2026-10-06",
+          "precision": "day"
+        },
+        {
+          "key": "b4309b2f",
+          "hash": "b4309b2f1f728061",
+          "title": "대한전기산업연합회, SMR 금속 3D프린팅 전문인력 양성 교육 실시",
+          "summary": "SMR 특별법 시행에 발맞춰 대한전기산업연합회가 SMR 금속 3D프린팅 전문인력 양성을 위한 무료 교육을 10월 13일부터 진행한다.",
+          "link": "https://www.electimes.com/news/articleView.html?idxno=372829",
+          "articles": 4,
+          "outlets": 4,
+          "published_at": "2026-09-28T02:08:00+00:00",
+          "date": "2026-10-13",
+          "precision": "day"
+        },
+        {
+          "key": "5b238298",
+          "hash": "5b23829883d3d2a7",
+          "title": "경남도, 10월 20일 서울서 원전·SMR 등 전략산업 투자유치 설명회 개최",
+          "summary": "경남도가 10월 20일 서울에서 수도권 기업을 대상으로 원전·SMR 등 전략산업 투자유치 설명회를 개최하여 신규 투자 및 사업 확장을 지원한다.",
+          "link": "https://www.yna.co.kr/view/AKR20260927015500052?input=1195m",
+          "articles": 8,
+          "outlets": 8,
+          "published_at": "2026-09-27T00:37:00+00:00",
+          "date": "2026-10-20",
+          "precision": "day"
+        },
+        {
+          "key": "052d95a1",
+          "hash": "052d95a126a98fff",
+          "title": "정부, 전작권 환수 및 자주국방 실현 의지 재확인",
+          "summary": "대통령이 사흘 연속 자주국방을 강조하며 전작권 환수와 첨단 무기체계 확보를 통한 한미연합방위체제 재설계 의지를 밝혔다.",
+          "link": "https://www.goodmorningcc.com/news/articleView.html?idxno=453367",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-10-02T06:02:00+00:00",
+          "date": "2026-11-01",
+          "precision": "month"
+        },
+        {
+          "key": "22a2c584",
+          "hash": "22a2c58415888d54",
+          "title": "한미글로벌, 미국 SMR 현지 법인 11월 출범",
+          "summary": "한미글로벌이 미국 델라웨어주에 SMR 및 원전 사업 전담 법인을 설립하고 현지 시장 진출을 본격화한다.",
+          "link": "https://www.newsway.co.kr/news/view?ud=2026092915281218049",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-09-29T06:42:00+00:00",
+          "date": "2026-11-01",
+          "precision": "month"
+        }
+      ],
+      "repeat_filter": {
+        "previous_week": "2026-W39",
+        "excluded": [
+          {
+            "hash": "6989a6e69464fbfb",
+            "title": "정부, 신규 원전 건설 위한 공론화위원회 구성 추진",
+            "prior_hash": "fc306daa74c101ed",
+            "progression": "none"
+          },
+          {
+            "hash": "9df0d4a759d1731a",
+            "title": "삼성물산, 미국 카이로스 파워 SMR 사업에 1천억 원 투자",
+            "prior_hash": "820d0092a36c2198",
+            "progression": "none"
+          },
+          {
+            "hash": "6a4f14cfcc74a126",
+            "title": "정부, 제12차 전기본 수립 앞두고 원전 공론화 추진",
+            "prior_hash": "c99b7cc176f524d8",
+            "progression": "none"
+          },
+          {
+            "hash": "0d0e8ce2a7876636",
+            "title": "이재명 대통령, 한미 정상회담서 원자력 및 안보 협력 심화 합의",
+            "prior_hash": "cf2a564da87ca921",
+            "progression": "minor"
+          },
+          {
+            "hash": "fb962ecd3e9ebe50",
+            "title": "삼성물산, 미국 카이로스파워와 SMR 실증·상용화 협약 체결",
+            "prior_hash": "820d0092a36c2198",
+            "progression": "minor"
+          },
+          {
+            "hash": "14960bc031595436",
+            "title": "정부, 223억 달러 규모 미국 텍사스 가스복합발전 프로젝트 확정",
+            "prior_hash": "64564be0c7d459e5",
+            "progression": "minor"
+          },
+          {
+            "hash": "0128ba39e1aa2927",
+            "title": "대미 전략투자 1호 사업 추진 및 원전 협력 검토",
+            "prior_hash": "094b0a7f215ca445",
+            "progression": "none"
+          },
+          {
+            "hash": "ecf97adf1d45312a",
+            "title": "한미 정상, 핵연료주기 및 핵잠수함 협력 심화 합의",
+            "prior_hash": "cf2a564da87ca921",
+            "progression": "none"
+          },
+          {
+            "hash": "0f7e58dfb7ee35fa",
+            "title": "정부, 대미 전략투자 프로젝트 추진계획 확정",
+            "prior_hash": "c401331c6f39aae5",
+            "progression": "minor"
+          },
+          {
+            "hash": "154e26c40578a908",
+            "title": "정부, 텍사스 가스발전 투자로 20년간 60조 원 회수 전망",
+            "prior_hash": "64564be0c7d459e5",
+            "progression": "minor"
+          },
+          {
+            "hash": "960a64e598a1060a",
+            "title": "한미 전략투자 1호 '텍사스 가스발전' 추진 및 원전 8기 협력 합의",
+            "prior_hash": "094b0a7f215ca445",
+            "progression": "minor"
+          },
+          {
+            "hash": "e85f360f72a9b48d",
+            "title": "한미 대미투자 사업 범위 이견 발생",
+            "prior_hash": "b68ab153369e7d3e",
+            "progression": "none"
+          },
+          {
+            "hash": "f4d068dc04ae0fe4",
+            "title": "한미, 대미투자 1호 텍사스 발전소 추진 및 원전 8기 협력 합의",
+            "prior_hash": "094b0a7f215ca445",
+            "progression": "minor"
+          },
+          {
+            "hash": "06f22dda9e9710ac",
+            "title": "정부, 대미 전략투자 1호 텍사스 가스복합발전소에 24억 달러 송금",
+            "prior_hash": "64564be0c7d459e5",
+            "progression": "minor"
+          }
+        ],
+        "material_progress": []
+      },
+      "_automation": {
+        "created_at": "2026-10-02T17:08:56.507556+09:00",
+        "message_html": "📅 <b>9/26-10/2 원자력 주간 판세</b>\n<i>총 1422건 검토 · must_read 62건</i>\n\n<b>이번 주 핵심</b>\n이번 주는 한미 양국 간 1,200억 달러 규모의 원전 프레임워크가 체결되며 미국 본토 내 대형 원전 건설 추진이 본격화된 한 주였다. AI 데이터센터 확산에 따른 전력 수요 급증으로 글로벌 원전 및 SMR 도입 논의가 한층 강화되었다. 국내에서는 SMR 등 7대 미래 기술에 대한 대규모 투자와 계속운전 심사 보류 등이 교차하며 정책적 대응이 요구되고 있다.\n\n━━ <b>📌 이번 주</b> (9월 26일–10월 2일 · 주요 사건) ━━\n• <b>트럼프 미 대통령, 한국 대미 투자 프로젝트 일방 발표…원전 8기 포함</b>\n  트럼프 미 대통령이 한국 정부와 검토 중인 원전 8기 건설과 알래스카 LNG 사업을 확정된 투자 프로젝트로 일방 발표했다.\n  이어지는 이슈 · 8건 · 매체 8곳\n  🔗 https://www.joongang.co.kr/article/25466378\n• <b>한미, 1,200억 달러 규모 원전 프레임워크 합의…미국 내 APR1400 2기 건설 확정</b>\n  한미 양국이 1,200억 달러 규모의 원전 프레임워크에 합의하여 미국 내 대형 원전 8기 건설을 추진하며, 한국형 APR1400 2기 건설이 확정됨.\n  이어지는 이슈 · 15건 · 매체 13곳\n  🔗 https://www.kaif.or.kr/ko?c=250&gbn=view&ix=30087\n• <b>포스코, 수소환원제철 전력 확보 위해 민간 원전 투자 정부 건의</b>\n  포스코가 수소환원제철 전환에 따른 전력 부족 해결을 위해 한수원과 합작법인 설립 및 민간 원전 투자를 정부에 건의한다.\n  이어지는 이슈 · 4건 · 매체 4곳\n  🔗 https://www.chosun.com/economy/industry-company/2026/09/29/IFIFLEQKYVA35D2NAY7VBXMELM\n\n━━ <b>🌍 국가별 단신</b> ━━\n• <b>한국</b> — 트럼프, 한국 기업의 미국 내 2,000억 달러 투자 계획 발표 예정\n• <b>미국</b> — 미국 NRC, 미국 최초 소형모듈원자로(SMR) 건설 승인\n• <b>루마니아</b> — 중동부 유럽, 가뭄 위기 속 원전 확대 기조 유지\n• <b>중국</b> — 중국, 2030년까지 ESS·전고체 배터리 육성하는 15차 5개년 계획 발표\n• <b>캐나다</b> — 북미·유럽 원전 시장 확대…캐나다·영국·네덜란드 신규 사업 가동\n• <b>폴란드</b> — 폴리멕스 모스토스탈, 폴란드 AP1000 원전 조립동 건설 수주\n\n━━ <b>📚 이번 주 발간물</b> ━━\n• 국제원자력기구(IAEA) · <b>규제 경험 환류 관리</b>\n  🔗 http://www.iaea.org/publications/16055/regulatory-experience-feedback-management\n\n━━ <b>🏛 정책 변화</b> ━━\n• <b>한미 양국이 1,200억 달러 규모의 원전 프레임워크에 합의하여 미국 내 대형 원전 8기 건설 추진을 공식화했다.</b>\n  → 한국형 원전 APR1400의 미국 본토 진출과 공급망 참여를 위한 제도적 기반이 마련되었다.\n• <b>정부가 SMR과 핵융합 등 7대 미래 성장동력인 SEED 프로젝트에 내년 4조 원을 투입하는 예산 편성을 확정했다.</b>\n  → 차세대 원자력 기술 확보와 상용화 가속화를 위한 범정부 차원의 지원 체계가 본격 가동된다.\n• <b>원자력안전위원회가 고리 3·4호기와 한빛 1·2호기의 사고관리계획서 승인 심사를 보류했다.</b>\n  → 계속운전 심사 지연으로 인한 전력 생산 공백과 기회비용 발생 우려가 지속되고 있다.\n\n━━ <b>주제별 강약</b> ━━\n▲ <b>SMR</b> — 미국 NRC의 클린치 리버 SMR 건설 승인과 국내 SMR 특별법 후속 조치 및 민관협의체 출범이 이어졌다.\n▲ <b>신규건설</b> — 한미 원전 프레임워크 합의에 따른 미국 내 대형 원전 건설과 해외 SMR EPC 파트너십 체결이 진전되었다.\n▲ <b>공급망</b> — 미국 내 원전 수출 추진과 함께 아마존의 대규모 원전 전력 공급 계약 등 글로벌 공급망 협력이 확대되었다.\n▲ <b>수출</b> — 미국 본토 내 APR1400 건설 추진과 원전수출기획위원회 개최로 해외 원전 수주 가시성이 높아졌다.\n\n━━ <b>🇰🇷 한국·한수원 직접 영향</b> ━━\n한수원은 새울 및 고리 원전 인근에 원자력안전정보공유센터를 개소하여 주민 접근성을 높였으며, 신한울 3·4호기 건설과 관련해 지역 상생 방안을 논의했다. 또한 신재생에너지 출력 제한으로 인한 발전 손실 대응과 원전 주변 불법드론 대응체계 고도화를 추진하고 있다.\n\n━━ <b>📌 그 밖에 짚어 둘 사건</b> ━━\n• <b>원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 승인 보류</b>\n  → 계속운전 심사 지연으로 인한 전력 공급 공백과 경제적 손실 우려가 해소되지 않고 있다.\n  🔗 https://news.google.com/rss/articles/CBMibkFVX3lxTE5fckd3OXJkLWVMWlYtVk11YzR6Wk5RR2NYc0xRUTE5cGdRN2VnUTVuckk1WHVPQU5VWkJVbnRRNkFCZzlhbXVaRFRPdDEwZ3dmcld0YnVZSjUxWW8xTGpqZHM2WV9uaGVNSkVYTWpR0gFzQVVfeXFMUDlwcWs2ZnRzOS1HbmEyQk1vZjhTSkd3UHdpcDhtSGpTclZYeTRwZ21pTUczSXpTNWQ2NUwxTWxTUnJnOXo0dkk4djdlSW9YODNmNmxRdG9MN05CYmdGUlc5VFdnVnFOUkFpclUtSkVZUS1SRQ?oc=5\n• <b>정부, 7대 SEED 프로젝트에 내년 4조원 투입 및 범정부 추진체계 가동</b>\n  → SMR과 핵융합 등 미래 원자력 기술 확보를 위한 국가적 R&amp;D 투자가 대폭 강화된다.\n  🔗 https://biz.chosun.com/science-chosun/science/2026/09/30/WRJKFOYWWVGMLNFZZIZM3B2VS4\n• <b>울진군-한수원, 신한울 3·4호기 건설 및 지역 상생 방안 논의</b>\n  → 대형원전 건설 과정에서 지자체와의 긴밀한 소통과 실효성 있는 지역 상생 협력이 요구된다.\n  🔗 https://news.google.com/rss/articles/CBMiYEFVX3lxTE1WbkNoczI3dmc3UnRBLU1TbmJsVzZ4djBuc2w4X1NkSTU2VnJ0Wl81V29XaF9qc2VwQzFWTmdyVDRXZjRuV2F5VUFLT0tLUHMwdjVuNDM4b1czWU9ZYjk4ZA?oc=5\n\n━━ <b>📝 보고서 검토 후보</b> ━━\n• <b>미국 원전 프레임워크 체결에 따른 한수원 대미 사업 진출 전략</b> — 한미 1,200억 달러 원전 프레임워크 합의 및 미국 내 대형 원전 8기 건설 추진 본격화\n• <b>계속운전 심사 지연에 따른 전력 생산 손실 분석과 제도 개선 과제</b> — 원안위의 사고관리계획서 승인 보류 및 원전 4기 가동 공백에 따른 기회비용 발생\n\n📋 <b>다음 주 모니터링 포인트</b>\n• 한미 원전 프레임워크 후속 조치에 따른 구체적인 미국 내 APR1400 부지 선정 및 계약 일정.\n• 원안위의 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 심의 결과 및 계속운전 진행 상황.\n• 정부의 SMR 민관합동 협의체 출범 및 7대 SEED 프로젝트 예산 집행 세부 계획.\n• 10월 국정감사에서 다뤄질 한수원 및 주요 에너지 공공기관의 안전관리 체계 및 전력망 투자 이슈.\n\n🔁 <b>반복 등장</b>: #데이터센터 (332회), #SMR (189회), #전력망 (112회), #AI (98회), #에너지안보 (67회)\n🕳 <b>이번 주 소스 공백</b>: IAEA, OECD NEA, US NRC, 산업통상자원부, 한국원자력안전기술원, 한국원자력환경공단",
+        "telegram": {
+          "status": "pending"
+        }
+      }
     }
   }
 }
