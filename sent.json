@@ -6198,7 +6198,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-10-02T10:34:43+00:00",
+    "updated_at": "2026-10-02T10:48:07+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -6278,7 +6278,7 @@
         "title": "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
         "detail": "AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 8건을 두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 만들어 봅니다. 예: 「BWXT Awarded $189 Million Naval Nuclear…」, 「USA, South Korea targeting six AP1000 a…」, 「Hinkley Point B Nuclear Station Transfe…」 외 5건.",
         "severity": "critical",
-        "last_seen_at": "2026-10-02T10:34:43+00:00",
+        "last_seen_at": "2026-10-02T10:48:07+00:00",
         "last_observation_id": "2026-10-02T19:32:56.721700+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-24T18:55:00+00:00",
@@ -6302,7 +6302,7 @@
         "title": "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
         "detail": "AI 요약을 받지 못해 원문 첫 문장만 있는 기사 1건을 브리핑 후보에 넣지 않았습니다. 1건은 두 번 모두 실패해 더 시도하지 않고 뺐습니다. 예: 「[2027 예산안] 821조 '슈퍼 예산', 잠재성장률 반등 이끈다」.",
         "severity": "warning",
-        "last_seen_at": "2026-10-02T10:34:43+00:00",
+        "last_seen_at": "2026-10-02T10:48:07+00:00",
         "last_observation_id": "2026-10-02T19:33:03.524575+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-26T21:11:41+00:00",
@@ -6361,14 +6361,14 @@
         "resolved_at": "2026-09-19T15:43:07+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 66,
+        "consecutive": 67,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
         "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 8건. 사건일 73건은 사이트에 표시하지 않았습니다 — 원문 근거를 다시 확인할 수 없음 73건 · 날짜 이상 0건.",
         "severity": "critical",
-        "last_seen_at": "2026-10-01T21:45:23+00:00",
-        "last_observation_id": "github-run:36794967922",
+        "last_seen_at": "2026-10-02T10:48:07+00:00",
+        "last_observation_id": "github-run:36995610006",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
@@ -6378,7 +6378,7 @@
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=20104 quarantined=8 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 54abc319758c",
+        "technical": "checked=20818 quarantined=8 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 54abc319758c",
         "fingerprint": "q=8:650c9bfbffcf6cf5",
         "last_notified_fingerprint": "q=35:37a796ac13006af0",
         "delivery": "digest"
@@ -6432,16 +6432,16 @@
         "resolved_at": "2026-09-13T06:43:34+00:00"
       },
       "quality-event:audio-script-claim-removed": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "quality_event",
-        "active": false,
+        "active": true,
         "title": "전문가 브리핑 대본에서 근거 없는 문단을 뺐습니다",
-        "detail": "2026-10-01 전문가 브리핑 대본에서 기사 근거로 확인되지 않는 문단 2건을 빼고 내보냈습니다.",
+        "detail": "2026-10-02 전문가 브리핑 대본에서 기사 근거로 확인되지 않는 문단 1건을 빼고 내보냈습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-10-01T21:45:23+00:00",
-        "last_observation_id": "2026-10-01T09:25:44.954671+09:00",
+        "last_seen_at": "2026-10-02T10:48:07+00:00",
+        "last_observation_id": "2026-10-02T19:41:42.491045+09:00",
         "min_occurrences": 2,
-        "first_seen_at": "2026-09-30T22:30:48+00:00",
+        "first_seen_at": "2026-10-02T10:48:07+00:00",
         "pending_notification": false,
         "last_notified_at": "2026-09-09T22:08:27+00:00",
         "last_notified_severity": "warning",
@@ -6449,11 +6449,10 @@
         "level": "attention",
         "impact": "없음 — 음원은 정상 발송됐고, 뺀 문단 외의 내용은 그대로입니다.",
         "action": "필요 없음 — 자동으로 정리됐습니다.",
-        "technical": "variant=expert date=2026-10-01 removed=2 action=sanitize",
-        "fingerprint": "removed:2026-10-01:expert:2:sanitize",
+        "technical": "variant=expert date=2026-10-02 removed=1 action=sanitize",
+        "fingerprint": "removed:2026-10-02:expert:1:sanitize",
         "resolution_notified_at": "2026-09-26T15:42:21+00:00",
-        "delivery": "digest",
-        "resolved_at": "2026-10-02T00:48:30+00:00"
+        "delivery": "digest"
       },
       "source:DOE:partial-parse": {
         "consecutive": 0,
@@ -6486,7 +6485,7 @@
         "title": "구글 AI 서버가 붐벼 기사 요약이 늦어졌습니다",
         "detail": "기사 47건을 이번 수집에서 AI로 요약하지 못했습니다. 구글이 '지금 요청이 몰려 있다'고 답했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-10-02T10:34:43+00:00",
+        "last_seen_at": "2026-10-02T10:48:07+00:00",
         "last_observation_id": "2026-10-02:2026-10-02T00:57:39.110996+09:00:47",
         "min_occurrences": 2,
         "first_seen_at": "2026-09-30T22:01:36+00:00",
@@ -6551,9 +6550,9 @@
         "resolution_notified_at": "2026-08-26T09:52:50+00:00"
       },
       "issue-candidate:topn-retention": {
-        "consecutive": 17,
+        "consecutive": 0,
         "scope": "data_gate",
-        "active": true,
+        "active": false,
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
         "detail": "기사당 Top-12 이 실제 병합을 놓친다",
         "severity": "warning",
@@ -6571,7 +6570,8 @@
         "last_notified_severity": "warning",
         "last_notified_fingerprint": "guard:warning",
         "notifications": 1,
-        "delivery": "dev"
+        "delivery": "dev",
+        "resolved_at": "2026-10-02T10:48:07+00:00"
       },
       "source:한수원 보도자료:stale": {
         "consecutive": 0,
@@ -6598,9 +6598,9 @@
         "resolution_notified_at": "2026-08-24T07:05:56+00:00"
       },
       "quality:web-pipeline-failure": {
-        "consecutive": 1,
+        "consecutive": 0,
         "scope": "web_pipeline",
-        "active": true,
+        "active": false,
         "title": "사이트에 올릴 데이터를 만들지 못했습니다",
         "detail": "자동 실행이 도중에 멈췄습니다.",
         "severity": "critical",
@@ -6618,7 +6618,8 @@
         "last_notified_severity": "critical",
         "notifications": 4,
         "resolution_notified_at": "2026-09-01T22:39:19+00:00",
-        "delivery": "immediate"
+        "delivery": "immediate",
+        "resolved_at": "2026-10-02T10:48:07+00:00"
       },
       "issue-candidate:preselect-headroom": {
         "consecutive": 0,
@@ -7174,27 +7175,26 @@
         "resolution_notified_at": "2026-09-21T09:46:34+00:00"
       },
       "issue-candidate:evidence-attach-rate-drift": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "data_gate",
-        "active": false,
+        "active": true,
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
         "detail": "근거 기사 부착률이 최근 회차와 크게 다르다",
         "severity": "warning",
         "level": "attention",
         "impact": "없음 — 뉴스 수집과 서비스는 정상입니다. 이슈를 묶는 정확도만 영향을 받습니다.",
         "action": "운영 조치는 필요 없습니다 — 개발자 확인 항목입니다.",
-        "technical": "[issue-candidate:evidence-attach-rate-drift] 이번 0.8629 vs 최근 중앙값 0.6103 (+41%, 허용 ±30%). 수집량·임베딩 커버리지·병합 규칙 중 무엇이 움직였는지 봐야 한다.",
+        "technical": "[issue-candidate:evidence-attach-rate-drift] 이번 0.2821 vs 최근 중앙값 0.6533 (-57%, 허용 ±30%). 수집량·임베딩 커버리지·병합 규칙 중 무엇이 움직였는지 봐야 한다.",
         "fingerprint": "guard:warning",
-        "last_seen_at": "2026-10-01T00:21:01+00:00",
-        "last_observation_id": "github-run:36788953849",
+        "last_seen_at": "2026-10-02T10:48:07+00:00",
+        "last_observation_id": "github-run:36995610006",
         "min_occurrences": 2,
-        "first_seen_at": "2026-09-30T23:21:46+00:00",
+        "first_seen_at": "2026-10-02T10:48:07+00:00",
         "pending_notification": false,
         "last_notified_at": "2026-09-24T19:40:32+00:00",
         "last_notified_severity": "warning",
         "notifications": 1,
-        "delivery": "dev",
-        "resolved_at": "2026-10-01T00:32:13+00:00"
+        "delivery": "dev"
       },
       "source:Euractiv 원자력:empty": {
         "consecutive": 9,
@@ -7208,7 +7208,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=11 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-10-02T10:34:43+00:00",
+        "last_seen_at": "2026-10-02T10:48:07+00:00",
         "last_observation_id": "2026-10-02T10:34:13+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
