@@ -154,5 +154,48 @@ class AudioRecoveryGateTests(unittest.TestCase):
             audio_brief.DELIVERY_QUEUE_FAILED}))
 
 
+class LiveManifestRequestTests(unittest.TestCase):
+    """라이브 조회는 사이트가 받아 주는 User-Agent 로 나간다.
+
+    Cloudflare Pages 는 Python-urllib 기본 UA 를 403 으로 거절한다. 그래서
+    2026-09-25 ~ 10-02 의 모든 오디오 복구 판정이 '판정 불가' 로 끝났고 복구는
+    한 번도 켜지지 않았다. 모의 로더만 쓰는 위 테스트들은 이 구멍을 못 본다.
+    """
+
+    def test_request_carries_the_smoke_user_agent(self):
+        request = gate.live_audio_manifest_request("https://example.pages.dev/")
+        self.assertEqual(request.get_header("User-agent"), gate.LIVE_USER_AGENT)
+        self.assertTrue(request.full_url.startswith(
+            "https://example.pages.dev/data/audio/audio.json?cb="))
+
+    def test_user_agent_matches_the_live_smoke_check(self):
+        import check_live_news
+        import inspect
+        self.assertIn(f'"User-Agent": "{gate.LIVE_USER_AGENT}"',
+                      inspect.getsource(check_live_news.check))
+
+    def test_fetch_sends_the_request_object_not_a_bare_url(self):
+        import io
+        from unittest import mock
+        seen = {}
+
+        class Response(io.BytesIO):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_exc):
+                return False
+
+        def fake_urlopen(request, timeout=None):
+            seen["request"] = request
+            return Response(b'{"variants": {}}')
+
+        with mock.patch.object(gate.urllib.request, "urlopen", fake_urlopen):
+            self.assertEqual(gate.fetch_live_audio_manifest("https://example.pages.dev"),
+                             {"variants": {}})
+        self.assertIsInstance(seen["request"], gate.urllib.request.Request)
+        self.assertEqual(seen["request"].get_header("User-agent"), gate.LIVE_USER_AGENT)
+
+
 if __name__ == "__main__":
     unittest.main()

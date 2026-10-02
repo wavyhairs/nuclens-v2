@@ -62,12 +62,24 @@ def missing_audio(manifest: object, today: str) -> list[str]:
     return missing
 
 
+# Cloudflare Pages 가 Python-urllib 기본 User-Agent 를 403 으로 거절한다.
+# 2026-09-25 도입부터 10-02 까지 이 조회는 한 번도 성공한 적이 없었고, 그래서
+# 오디오 복구가 켜진 적도 없었다. 스모크 검사(tools/check_live_news.py)와 같은
+# UA 를 보낸다.
+LIVE_USER_AGENT = "nuclens-smoke/1.0"
+
+
+def live_audio_manifest_request(site_url: str) -> urllib.request.Request:
+    url = f"{site_url.rstrip('/')}/data/audio/audio.json?cb={int(time.time())}"
+    return urllib.request.Request(url, headers={"User-Agent": LIVE_USER_AGENT})
+
+
 def fetch_live_audio_manifest(site_url: str, timeout: float = 15.0) -> dict | None:
     if not site_url:
         return None
-    url = f"{site_url.rstrip('/')}/data/audio/audio.json?cb={int(time.time())}"
+    request = live_audio_manifest_request(site_url)
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as response:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
             data = json.loads(response.read().decode("utf-8"))
     except (OSError, ValueError) as exc:
         print(f"[daily-brief-gate] live audio manifest unavailable: {type(exc).__name__}: {exc}")
