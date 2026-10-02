@@ -582,10 +582,18 @@ def editorial_dedup_articles(articles: list[dict], scores: dict[str, float],
 #   것을 입력에 넣는 일**뿐이었다. 사이트 원장(issue_ledger)은 같은 사건임을
 #   알았지만 브리핑 뒤에만 쓰이므로 선정 시점에는 새 기사가 없다.
 #
-# 삭제 조건은 두 열쇠다: 모델이 '같은 사건 + 새 전개 없음'이라 하고, 어휘 기반
-# 진전 판정(issue_continuity.progression)도 material 이 아니어야 한다. 새울 3호기
-# (승인 → 배관 누설 정지 → 사건조사 착수)처럼 같은 시설의 진짜 후속을 한쪽
-# 판정만으로 지우지 않기 위해서다.
+# 삭제 조건은 두 열쇠다: 모델이 '같은 사건'이라 하고, 좁은 확인 질문
+# (_confirm_no_new_action)이 '새로 일어난 일 없음'이라 답해야 한다.
+#
+# 어휘 기반 진전 판정(issue_continuity.progression)이 material 이면 예전에는 그것만으로
+# 살렸다 — 새울 3호기(승인 → 배관 누설 정지 → 사건조사 착수)처럼 같은 시설의 진짜
+# 후속을 모델 한 마디로 지우지 않으려는 안전장치였다. 그런데 2026-09-27·10-01 에
+# 그 거부권이 재탕 둘을 통과시켰다: "논의 **재개**" 를 재가동으로(stage_flip),
+# "협약 체결" → "MOU 체결" 을 단계 상승으로(scale_advance) 읽었고, 확인 질문은
+# 묻지도 않았다. 낱말 몇 개로 보는 판정에 묻지 않고 뒤집는 권한을 준 것이 문제다.
+# 그래서 material 은 이제 '살림'이 아니라 '확인 필요'다 — 같은 확인 질문을 묻고,
+# 새 행동이 있다고 하면 살고 없다고 하면 빠진다. 새울 같은 진짜 후속은 그 질문에서
+# 새 행동(정지·조사 착수)으로 잡혀 살아남는다. 판정 기록에는 lexical_material 로 남긴다.
 CROSS_DAY_PROMPT = """당신은 원자력 아침 브리핑의 편집 데스크입니다.
 
 입력은 오늘 보낼 후보(CANDIDATE)들이고, 후보마다 최근 며칠 안에 이미 독자에게 보낸 항목 중
@@ -866,8 +874,9 @@ def cross_day_repeats(candidates: list[dict], sent: list[dict], *,
             continue
         decided.add(ci)
         prog = issue_continuity.progression(prior, cand)
-        drop = (relation in CROSS_DAY_DROP_RELATIONS
-                and prog.get("verdict") != "material")
+        # material 은 거부권이 아니라 확인 대상이다(머리말 주석). 지우자는 쌍은
+        # 전부 아래 확인 질문을 거친다.
+        drop = relation in CROSS_DAY_DROP_RELATIONS
         verdict = {
             "hash": cand.get("hash", ""),
             "title": _trim(cand.get("title_kr") or cand.get("title"), 80),
@@ -876,6 +885,7 @@ def cross_day_repeats(candidates: list[dict], sent: list[dict], *,
             "prior_date": prior.get("date", ""),
             "relation": relation,
             "progression": prog.get("verdict"),
+            "lexical_material": prog.get("verdict") == "material",
             "reason": _trim(entry.get("reason"), 200),
             "drop": drop,
         }

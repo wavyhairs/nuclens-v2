@@ -159,20 +159,76 @@ class CrossDayRepeatsTests(unittest.TestCase):
                             confirm=NO_NEW_ACTION)
         self.assertFalse(dedup.cross_day_repeats([cand], [ITALY_SENT], client=client)[0]["drop"])
 
-    def test_lexical_material_progression_vetoes_the_model(self):
-        """어휘 판정이 단계 전환을 보면 모델 말만으로 지우지 않는다."""
-        prior = {"date": "2026-09-24", "hash": "p1",
-                 "title_kr": "원안위, 새울 3호기 운영허가 심사 착수",
-                 "summary": "원안위가 새울 3호기 운영허가 심사에 착수했다."}
+    # ── 어휘 진전 판정(material)은 거부권이 아니라 확인 대상이다 ──────────────
+    #
+    # 예전에는 material 이면 확인 질문도 없이 살렸다. 2026-09-27·10-01 실측에서 그
+    # 거부권이 재탕 둘을 통과시켰다(아래 두 픽스처, delivery_log 원문 그대로).
+
+    SAEUL_PRIOR = {"date": "2026-09-24", "hash": "p1",
+                   "title_kr": "원안위, 새울 3호기 운영허가 심사 착수",
+                   "summary": "원안위가 새울 3호기 운영허가 심사에 착수했다."}
+
+    def test_lexical_material_progression_still_asks_the_narrow_question(self):
+        """진짜 후속(심사 → 승인)은 확인 질문이 '새 행동 있음'으로 살린다 — 거부권 없이도."""
         cand = candidate("c1", "원안위, 새울 3호기 운영허가 최종 승인",
                          "원안위가 새울 3호기 운영허가를 최종 승인했다.")
-        client = FakeClient({"verdicts": [verdict(title=prior["title_kr"],
+        client = FakeClient({"verdicts": [verdict(title=self.SAEUL_PRIOR["title_kr"],
+                                                  relation="same_restated")]},
+                            confirm=NEW_ACTION)
+        verdicts = dedup.cross_day_repeats([cand], [self.SAEUL_PRIOR], client=client)
+        self.assertEqual(verdicts[0]["progression"], "material")
+        self.assertTrue(verdicts[0]["lexical_material"])
+        self.assertFalse(verdicts[0]["drop"])
+        self.assertEqual(verdicts[0]["confirm"], "new_action_or_unknown")
+        self.assertNotIn("continuity", cand)
+        # 확인 질문을 실제로 물었다 — 예전엔 material 이면 여기서 끝났다.
+        self.assertEqual([c["confirm"] for c in client.calls], [False, True])
+
+    def test_material_with_confirmed_no_new_action_is_dropped(self):
+        """확인 질문까지 '새 행동 없음'이면 어휘 판정이 뭐라 했든 뺀다."""
+        cand = candidate("c1", "원안위, 새울 3호기 운영허가 최종 승인",
+                         "원안위가 새울 3호기 운영허가를 최종 승인했다.")
+        client = FakeClient({"verdicts": [verdict(title=self.SAEUL_PRIOR["title_kr"],
                                                   relation="same_restated")]},
                             confirm=NO_NEW_ACTION)
-        verdicts = dedup.cross_day_repeats([cand], [prior], client=client)
+        verdicts = dedup.cross_day_repeats([cand], [self.SAEUL_PRIOR], client=client)
         self.assertEqual(verdicts[0]["progression"], "material")
-        self.assertFalse(verdicts[0]["drop"])
-        self.assertNotIn("continuity", cand)
+        self.assertTrue(verdicts[0]["drop"])
+        self.assertEqual(cand["continuity"]["drop"], True)
+
+    def test_italy_restated_with_restart_word_is_dropped(self):
+        """실측 2026-09-27: '논의 재개'의 재개를 재가동(stage_flip)으로 읽어 재탕이 통과했다."""
+        prior = {"date": "2026-09-25", "hash": "c2d8c771daf24eb2",
+                 "title_kr": "이탈리아 상원, 원자력 발전 복귀 법안 가결",
+                 "summary": "이탈리아 상원이 원자력 발전 복귀를 위한 정부 법안을 찬성 81표, "
+                            "반대 51표로 통과시켰다."}
+        cand = candidate("82b362426fa100d6", "이탈리아, 원자력 발전 재도입 논의 재개",
+                         "이탈리아 정부가 원자력 발전 재도입을 위한 정책적 논의를 다시 시작했다.")
+        self.assertEqual(issue_continuity.progression(prior, cand)["kind"], "stage_flip")
+        client = FakeClient({"verdicts": [verdict(title=prior["title_kr"], relation="same_restated",
+                                                  reason="동일 내용의 보도")]},
+                            confirm={"pairs": [{"pair": 0, "new_facts": [], "new_action": False}]})
+        verdicts = dedup.cross_day_repeats([cand], [prior], client=client)
+        self.assertTrue(verdicts[0]["lexical_material"])
+        self.assertTrue(verdicts[0]["drop"])
+        self.assertEqual(cand["continuity"]["prior_hash"], "c2d8c771daf24eb2")
+
+    def test_iaea_agreement_reworded_as_mou_is_dropped(self):
+        """실측 2026-10-01: '협약 체결' → 'MOU 체결' 을 단계 상승(scale_advance)으로 읽었다."""
+        prior = {"date": "2026-09-30", "hash": "8cf98e9053488434",
+                 "title_kr": "IAEA-미주개발은행, 중남미 원전 도입 협력 협약 체결",
+                 "summary": "IAEA와 미주개발은행(IDB)이 중남미 지역의 원자력 에너지 도입을 위한 "
+                            "제도 구축 및 기술 지원 협약을 체결했다."}
+        cand = candidate("9590b262de317065",
+                         "IAEA-미주개발은행, 라틴아메리카 원자력 협력 확대 MOU 체결",
+                         "IAEA와 미주개발은행(IDB)이 라틴아메리카 및 카리브해 지역의 원자력 에너지 "
+                         "프로젝트 협력을 위한 MOU를 체결했다.")
+        self.assertEqual(issue_continuity.progression(prior, cand)["kind"], "scale_advance")
+        client = FakeClient({"verdicts": [verdict(title=prior["title_kr"], relation="same_restated",
+                                                  reason="동일한 사건이다")]},
+                            confirm={"pairs": [{"pair": 0, "new_facts": [], "new_action": False}]})
+        verdicts = dedup.cross_day_repeats([cand], [prior], client=client)
+        self.assertTrue(verdicts[0]["drop"])
 
     def test_unrelated_and_malformed_verdicts_touch_nothing(self):
         cand = dict(ITALY_CAND)
