@@ -60,6 +60,13 @@ SAMPLE_FALLBACK = (
 )
 
 
+# Cloudflare Pages 는 Python-urllib 기본 User-Agent 를 403 으로 거절한다
+# (tools/daily_brief_trigger_gate.py 의 같은 함정). 첫 실행(10-04)이 이걸 몰라
+# 모든 대본을 못 받고 223자 내장 표본으로 돌았다 — 운영 청크(~900자)와 달라
+# 400 비교에 쓸 수 없었다.
+LIVE_USER_AGENT = "nuclens-smoke/1.0"   # 스모크 검사·오디오 복구 게이트와 같은 값 — 통과가 확인된 UA
+
+
 def fetch_script(site_url: str, today: datetime, days: int = 4) -> tuple[str, str]:
     """라이브 사이트의 최근 대본(전문가 우선)을 가져온다. 없으면 내장 표본."""
     base = site_url.rstrip("/")
@@ -67,13 +74,18 @@ def fetch_script(site_url: str, today: datetime, days: int = 4) -> tuple[str, st
         date = (today - timedelta(days=back)).strftime("%Y-%m-%d")
         for kind in ("expert", "fast"):
             url = f"{base}/data/audio/script-{kind}-{date}.txt?cb={int(time.time())}"
+            request = urllib.request.Request(url, headers={"User-Agent": LIVE_USER_AGENT})
             try:
-                with urllib.request.urlopen(url, timeout=30) as response:
+                with urllib.request.urlopen(request, timeout=30) as response:
                     text = response.read().decode("utf-8")
-            except (urllib.error.URLError, TimeoutError, OSError):
+            except (urllib.error.URLError, TimeoutError, OSError) as exc:
+                print(f"[probe] {url.split('?')[0]} 못 받음 — {exc}")
                 continue
             if audio_brief.SPEAKER_RE.search(text.splitlines()[0] if text else ""):
                 return text, f"script-{kind}-{date}.txt"
+            print(f"[probe] {url.split('?')[0]} 는 대본 모양이 아니다 — 건너뜀")
+    print("::warning::라이브 대본을 하나도 못 받았다 — 내장 표본(짧다)으로 돈다. "
+          "운영 청크와 길이가 달라 400 비교 근거로는 약하다")
     return SAMPLE_FALLBACK, "builtin-sample"
 
 
