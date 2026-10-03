@@ -41,6 +41,7 @@ from pathlib import Path
 
 from gemini_client import GeminiError, call_json, is_available
 import article_quality_gate
+import audio_verify
 import gemini_client
 import llm_policy
 import news_archive
@@ -91,6 +92,18 @@ TRIM_FRAME_MS = 10
 # 잡고, 기대치의 이만큼도 안 되면 잘린 것으로 본다.
 SPOKEN_CHARS_PER_SEC = 8.5
 TRUNCATION_RATIO = 0.6
+
+# ── 출력 검증 (2026-10-03) ─────────────────────────────────────────────────
+# 잘림 검사는 '너무 짧음'만 본다. 그날 TTS 가 청크 하나를 **두 번** 읽어 217초로
+# 돌려줬는데(평소 115초) 아무 검사에도 안 걸려 해외 구간 1분 48초가 되풀이된
+# 채 나갔다. 생성형 TTS 의 되풀이는 프롬프트로 못 막는다 — 출력을 보고 걸러
+# 다시 만든다(audio_verify 머리말). 실패 순서: 같은 모델 재생성 → 청크 분할 →
+# 두 번째 읽기 잘라내기. 오디오가 안 나가는 경우를 새로 만들지 않는다.
+OUTPUT_VERIFY_RETRIES = 1        # 검증 실패 시 같은 청크를 같은 모델로 다시 만드는 횟수
+# 2.5 TTS 폴백은 10-03 되풀이가 난 바로 그 경로다(3.1 은 그 전 15일 무사고).
+# 기본 모델의 일시 과부하에는 사다리 한 단을 더 쓴다(5+15+45초). 폴백 모델은
+# 그대로 2회 — 전체 대기 총량은 TTS_BACKOFF_BUDGET_SEC 가 계속 묶는다.
+TTS_PRIMARY_RETRIES = 3
 
 # TTS 는 gemini_client.call_json 을 안 거친다(엔드포인트가 다르다). 그래서 그쪽이
 # 갖춘 429/5xx 정책을 **여기서 다시 갖춰야 한다.** 2026-09-08 실사고: 빠른·전문가
@@ -791,8 +804,7 @@ def _tts_backoff(wait: float, model: str, attempt: int, reason: str) -> bool:
               f"{model} 재시도 중단")
         return False
     _tts_backoff_spent += wait
-    print(f"[audio] {model} {reason} — {wait:.0f}초 대기 후 재시도 "
-          f"{attempt + 1}/{TTS_TRANSIENT_RETRIES}")
+    print(f"[audio] {model} {reason} — {wait:.0f}초 대기 후 재시도 {attempt + 1}")
     time.sleep(wait)
     return True
 
@@ -808,9 +820,11 @@ def call_tts(script: str, models: list[str] | None = None) -> tuple[bytes, int]:
     """
     global _tts_failures, _tts_quota_exhausted
     last_err: Exception | None = None
+    primary = (_tts_models() or [""])[0]
     for model in (models or _tts_models()):
         url = _TTS_ENDPOINT.format(model=model)
-        for attempt in range(1, TTS_TRANSIENT_RETRIES + 1):
+        max_attempts = TTS_PRIMARY_RETRIES if model == primary else TTS_TRANSIENT_RETRIES
+        for attempt in range(1, max_attempts + 1):
             request = urllib.request.Request(
                 url,
                 data=json.dumps(tts_payload(script)).encode("utf-8"),
@@ -856,7 +870,7 @@ def call_tts(script: str, models: list[str] | None = None) -> tuple[bytes, int]:
                       f"{model} 재시도 중단, 남은 모델은 1회씩만 시도")
                 _tts_quota_exhausted = True
                 wait = None
-            if (wait is None or attempt == TTS_TRANSIENT_RETRIES
+            if (wait is None or attempt == max_attempts
                     or not _tts_backoff(wait, model, attempt, reason)):
                 print(f"[audio] {last_err} — 다음 모델 폴백")
                 break
@@ -911,6 +925,129 @@ def trim_silence(pcm: bytes, rate: int) -> bytes:
     return samples[start:end].tobytes()
 
 
+# 마지막 합성의 출력 검증 기록. generate() 가 매니페스트에 싣는다 — 날마다 쌓인
+# 유사도 점수가 문턱(audio_verify.REPEAT_SCORE)을 조정할 근거다.
+LAST_OUTPUT_VERIFICATION: dict = {}
+
+
+def output_verify_enabled() -> bool:
+    return (gemini_client._resolve("AUDIO_OUTPUT_VERIFY", "on") or "on").lower() not in (
+        "0", "off", "false", "no")
+
+
+def verify_tts_chunk(index: int, chunk: str, pcm: bytes, rate: int) -> dict:
+    """청크 음성 하나의 출력 판정 (audio_verify.verify_chunk 의 자리 — 테스트가 바꿔 낀다)."""
+    if not output_verify_enabled():
+        return {"index": index, "ok": True, "reason": "", "disabled": True,
+                "duration_sec": round(audio_verify.duration_sec(pcm, rate), 1),
+                "spoken_chars": len(audio_verify.normalize(chunk)),
+                "similarity": {"checked": False}, "transcript": {"checked": False}}
+    return audio_verify.verify_chunk(index, chunk, pcm, rate)
+
+
+def _spoken_of(chunk: str) -> int:
+    return sum(len(m.group(2)) for m in
+               (SPEAKER_RE.match(line) for line in chunk.splitlines()) if m)
+
+
+def synthesize_verified_chunk(index: int, chunk: str, synth, *,
+                              reports: list[dict] | None = None,
+                              retries: int = OUTPUT_VERIFY_RETRIES) -> tuple[bytes, int]:
+    """청크 하나를 만들고 **출력을 검증**한다. 실패면 재생성 → 분할 → 잘라내기.
+
+    synth(chunk) -> (pcm, rate) 는 원시 합성(잘림 검사 포함)이다. 전문가·빠른
+    브리핑이 각자의 모델 고정·재시도 정책을 synth 로 넘기므로, 이 함수는
+    '만들어진 음성이 대본과 같은가'만 책임진다.
+
+    반환 PCM 은 trim_silence 를 거치지 않은 원본이다(호출자가 다듬는다). 분할
+    경로만 예외다 — 반쪽 사이 간격을 여기서 붙이므로 다듬어서 돌려준다.
+    """
+    log = reports if reports is not None else []
+    last_pcm: bytes = b""
+    last_rate = 0
+    last_report: dict = {}
+    for attempt in range(retries + 1):
+        pcm, rate = synth(chunk)
+        report = verify_tts_chunk(index, chunk, pcm, rate)
+        report["attempt"] = attempt + 1
+        log.append(report)
+        if report.get("ok"):
+            return pcm, rate
+        last_pcm, last_rate, last_report = pcm, rate, report
+        print(f"[audio] 청크 {index} 출력 검증 실패 ({attempt + 1}/{retries + 1}) — "
+              f"{report.get('reason')}"
+              + (" → 같은 모델로 다시 생성" if attempt < retries else ""))
+    # 분할: 입력이 짧을수록 되풀이 확률이 낮고, 같은 모델이라 음색이 안 바뀐다.
+    halves = split_script(chunk, limit=max(1, _spoken_of(chunk) // 2))
+    if len(halves) >= 2:
+        print(f"[audio] 청크 {index} 를 {len(halves)}조각으로 나눠 다시 생성")
+        pieces: list[bytes] = []
+        rate = 0
+        for sub_index, half in enumerate(halves, 1):
+            pcm, half_rate = synth(half)
+            report = verify_tts_chunk(index, half, pcm, half_rate)
+            report["attempt"] = f"split{sub_index}"
+            log.append(report)
+            if not report.get("ok"):
+                print(f"[audio] 청크 {index} 분할 {sub_index} 도 검증 실패 — "
+                      f"{report.get('reason')}")
+                pieces = []
+                break
+            if rate and half_rate != rate:
+                raise GeminiError(f"청크 {index} 분할 샘플레이트 불일치: {half_rate} != {rate}")
+            rate = half_rate
+            if pieces:
+                pieces.append(b"\x00" * (int(rate * CHUNK_GAP_SEC) * 2))
+            pieces.append(trim_silence(pcm, rate))
+        if pieces:
+            return b"".join(pieces), rate
+    # 마지막 수단: 유사도가 짚은 두 번째 읽기를 잘라낸다.
+    trimmed = audio_verify.trim_repeat(last_pcm, last_rate,
+                                       (last_report.get("similarity") or {}))
+    if trimmed:
+        print(f"[audio] 청크 {index} 되풀이 구간을 잘라내고 사용 — "
+              f"{audio_verify.duration_sec(last_pcm, last_rate):.0f}초 → "
+              f"{audio_verify.duration_sec(trimmed, last_rate):.0f}초")
+        log.append({"index": index, "ok": True, "attempt": "trimmed",
+                    "reason": "두 번째 읽기 잘라냄",
+                    "duration_sec": round(audio_verify.duration_sec(trimmed, last_rate), 1),
+                    "spoken_chars": len(audio_verify.normalize(chunk)),
+                    "similarity": {"checked": True}, "transcript": {"checked": False}})
+        return trimmed, last_rate
+    raise GeminiError(f"청크 {index} 출력 검증 실패 — 재생성·분할로도 해소 안 됨: "
+                      f"{last_report.get('reason')}")
+
+
+def verify_whole(pcm: bytes, rate: int) -> tuple[bytes, dict]:
+    """이어붙인 전체에서 청크 경계를 넘는 되풀이를 본다. 찾으면 잘라낸다."""
+    if not output_verify_enabled():
+        return pcm, {"checked": False, "repeat": False}
+    report = audio_verify.self_similarity(pcm, rate)
+    if not report.get("repeat"):
+        return pcm, report
+    trimmed = audio_verify.trim_repeat(pcm, rate, report)
+    if trimmed:
+        print(f"[audio] 전체 음원에서 되풀이 발견 — 잘라냄 "
+              f"({audio_verify.duration_sec(pcm, rate):.0f}초 → "
+              f"{audio_verify.duration_sec(trimmed, rate):.0f}초)")
+        return trimmed, {**report, "trimmed": True}
+    return pcm, report
+
+
+def output_verification_summary(reports: list[dict], whole: dict,
+                                *, models: list[str] | None = None) -> dict:
+    summary = audio_verify.summarize(reports)
+    summary["whole"] = {k: whole.get(k) for k in
+                        ("checked", "max_score", "repeat", "run_sec", "trimmed")}
+    summary["regenerated"] = sum(1 for r in reports if not r.get("ok"))
+    summary["trimmed"] = bool(whole.get("trimmed")) or any(
+        r.get("attempt") == "trimmed" for r in reports)
+    if models is not None:
+        summary["fallback_model_used"] = any(
+            m and m != (_tts_models() or [""])[0] for m in models)
+    return summary
+
+
 def synthesize(script: str) -> tuple[bytes, int]:
     """대본을 청크로 나눠 합성하고 PCM 을 이어붙인다.
 
@@ -922,24 +1059,34 @@ def synthesize(script: str) -> tuple[bytes, int]:
     voiceName 이라도 음색이 다르다. 그래서 실패하면 다음 모델로 **처음부터**
     다시 만든다. 이미 만든 청크를 버리는 값보다 화자가 중간에 바뀌는 값이 크다.
     """
+    global LAST_OUTPUT_VERIFICATION
     chunks = split_script(script)
     print(f"[audio] 대본 {len(script)}자 → TTS 청크 {len(chunks)}개")
     last_err: Exception | None = None
+    reports: list[dict] = []
+    LAST_OUTPUT_VERIFICATION = {}
     for model in _tts_models():
         pieces: list[bytes] = []
         rate = 0
         try:
             for index, chunk in enumerate(chunks, 1):
-                pcm, chunk_rate = call_tts(chunk, models=[model])
+                def synth(text: str, _index=index, _model=model) -> tuple[bytes, int]:
+                    pcm, chunk_rate = call_tts(text, models=[_model])
+                    _check_not_truncated(_index, text, pcm, chunk_rate)
+                    return pcm, chunk_rate
+                pcm, chunk_rate = synthesize_verified_chunk(
+                    index, chunk, synth, reports=reports)
                 if rate and chunk_rate != rate:
                     raise GeminiError(
                         f"청크 {index} 샘플레이트 불일치: {chunk_rate} != {rate}")
                 rate = chunk_rate
-                _check_not_truncated(index, chunk, pcm, rate)
                 if pieces:
                     pieces.append(b"\x00" * (int(rate * CHUNK_GAP_SEC) * 2))
                 pieces.append(trim_silence(pcm, rate))
-            return b"".join(pieces), rate
+            joined, whole = verify_whole(b"".join(pieces), rate)
+            LAST_OUTPUT_VERIFICATION = output_verification_summary(
+                reports, whole, models=[model])
+            return joined, rate
         except GeminiError as exc:
             last_err = exc
             print(f"[audio] {model} 실패 — 다음 모델로 대본 처음부터: {exc}")
@@ -1509,6 +1656,8 @@ def generate(force: bool = False, send: bool = True,
         "semantic_verdict_digest": (
             semantic_verifier.verdict_digest(semantic_result)
             if semantic_result else ""),
+        # 만들어진 음성이 대본을 한 번씩 읽었는지 본 결과 (audio_verify).
+        "output_verification": dict(LAST_OUTPUT_VERIFICATION),
     }
     _write_audio_variant(date, FAST_VARIANT, meta)
     # 대본을 함께 남긴다 — 프롬프트 적중 여부를 라이브 산출물로 검증하는
