@@ -1402,12 +1402,24 @@ class TestKoreanNuclearOrgFeeds(unittest.TestCase):
                 self.assertEqual(row["kind"], kind)
                 self.assertEqual(row["monitoring_profile"], "low_frequency")
 
+    # 규제·공기업은 공식 1차 자료, 협회·학회·사업단은 이해당사자(stakeholder) 다 —
+    # 수집 우선순위는 같지만 '공식 원문' 배지는 전자만 받는다(2026-10-03 재점검).
+    ROLES = {
+        "kinac.re.kr": ("official", "primary"),
+        "knfc.co.kr": ("official", "primary"),
+        "kaif.or.kr": ("industry_body", "stakeholder"),
+        "ismr.or.kr": ("industry_body", "stakeholder"),
+        "kns.org": ("academic", "stakeholder"),
+        "niftep.snu.ac.kr": ("academic", "stakeholder"),
+    }
+
     def test_each_carries_an_official_primary_grade(self):
         for domain in self.ORGS:
             with self.subTest(domain=domain):
                 profile = data_quality.source_profile(domain)
-                self.assertEqual(profile["source_type"], "official")
-                self.assertEqual(profile["evidence_role"], "primary")
+                source_type, role = self.ROLES.get(domain, ("official", "primary"))
+                self.assertEqual(profile["source_type"], source_type)
+                self.assertEqual(profile["evidence_role"], role)
                 self.assertIn(profile["source_tier"], (1, 2))
                 self.assertEqual(profile["publisher"], self.ORGS[domain])
                 # 등급이 실제로 수집 우선순위에 닿는지. 8 은 tier2 하한이다.

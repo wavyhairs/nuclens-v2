@@ -563,6 +563,52 @@ def _tier_rank(article: dict) -> int:
     return {1: 3, 2: 2, 3: 1}.get(tier, 0)
 
 
+def outlet_rank(article: dict) -> int:
+    """매체 급. tier1 4 · tier2 3 · tier3 2 · 미등록 1 · 본업이 다른 매체(peripheral)·
+    포털 사본(distributed_claim) 0.
+
+    대표 기사 선정의 둘째 키다(첫째는 '내용이 있는가'). 2026-10-03 라이브 이슈 709건
+    중 260건(37%)이 더 높은 급 매체가 멤버에 있는데 낮은 매체를 대표로 세우고
+    있었고, 142건은 미등록 매체(글로벌E·핀포인트뉴스)가 조선·전기신문을 제치고
+    있었다 — 옛 키가 must_read 와 요약 길이만 보고 매체 급을 안 봤기 때문이다.
+    """
+    role = _clean(article.get("evidence_role")).lower()
+    domain = _clean(article.get("domain") or article.get("publisher_domain"))
+    if domain or article.get("publisher"):
+        # 레코드의 source_tier 는 기본값 3 이 '등록된 tier3' 와 같아 보인다 — 등급표를
+        # 직접 물어 미등록을 가른다. 등급표가 바뀌면 재빌드 때 순위도 따라온다.
+        from data_quality import source_profile  # noqa: PLC0415 (순환 import 회피)
+        profile = source_profile(domain, article.get("publisher") or "")
+        role = role or _clean(profile.get("evidence_role")).lower()
+        if role in ("peripheral", "distributed_claim"):
+            return 0
+        if not profile.get("registered"):
+            return 1
+        return {1: 4, 2: 3, 3: 2}.get(profile.get("source_tier"), 1)
+    if role in ("peripheral", "distributed_claim"):
+        return 0
+    return {1: 4, 2: 3, 3: 2}.get(source_tier(article), 1)
+
+
+def representative_key(article: dict) -> tuple:
+    """이슈·story 의 대표 기사 순위 — 웹(build_data)과 발송 측이 같이 쓴다.
+
+    순서: 내용이 있는가(요약 또는 본문 요지) → 매체 급 → 본문 요지가 있는가 →
+    must_read → 선별 점수 → 기사 날짜. '별 내용 없는 기사'가 대표가 되지 않게
+    내용 유무가 맨 앞이고, 그 다음이 사용자가 지적한 매체 급이다. 선별 점수는
+    같은 급 안에서만 가른다.
+    """
+    content = _content_rank(article)
+    return (
+        1 if content > 0 else 0,
+        outlet_rank(article),
+        content,
+        1 if article.get("importance") == "must_read" else 0,
+        float(article.get("selection_score") or 0),
+        str(article.get("article_date") or ""),
+    )
+
+
 def _role_rank(article: dict) -> int:
     role = _clean(article.get("evidence_role")).lower()
     return {"primary": 2, "independent": 1}.get(role, 0)
@@ -575,14 +621,14 @@ def display_rank_key(article: dict, score: float = 0.0) -> tuple:
     대표가 바뀐다. 교체는 **더 나은 이유가 있을 때만** 일어나야 하고, 동점은 유지가
     정답이다. 결정성은 호출부가 hash 를 보조 키로 써서 따로 확보한다.
     """
-    return (_content_rank(article), _tier_rank(article), _role_rank(article),
+    return (_content_rank(article), outlet_rank(article), _role_rank(article),
             round(float(score), 4))
 
 
 def _display_reason(winner: dict, loser: dict) -> str:
     if _content_rank(winner) > _content_rank(loser):
         return "본문 요지가 있는 기사로 교체"
-    if _tier_rank(winner) > _tier_rank(loser):
+    if outlet_rank(winner) > outlet_rank(loser):
         return "출처 등급이 더 높은 기사로 교체"
     if _role_rank(winner) > _role_rank(loser):
         return "근거 역할(공식·독립)이 더 강한 기사로 교체"
