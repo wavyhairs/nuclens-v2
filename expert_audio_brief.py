@@ -833,8 +833,30 @@ def normalize_script(text: str, issue_count: int = 7) -> tuple[str, int]:
 
 _ANCHOR_TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9\-]{2,}|[가-힣]{2,}")
 # 되짚기 표식. 프롬프트가 이 표현으로 잇도록 지시하므로 여기서도 같은 말을 본다.
+#
+# '언급한/언급했던' 은 뺐다(2026-10-03). "트럼프 대통령이 언급한 84억 달러 사업"
+# 처럼 **사건 자체가 '언급'인** 문단이 되짚기로 읽혀 주인을 잃었고, 그 story 가
+# '누락'으로 찍혀 불필요한 재배치 호출이 나갔다. 되짚기는 '앞서'·'먼저' 류로만 본다.
 _BACKREFERENCE_RE = re.compile(
-    r"앞서|앞에서|앞의|먼저 본|먼저 말씀|말씀드린|언급한|언급했던|짚었던|살펴본")
+    r"앞서|앞에서|앞의|먼저 본|먼저 말씀|말씀드린|짚었던|살펴본")
+# 문단 **끝**의 다음 주제 예고. "…주시 대상입니다. 다음으로 미국 내 인허가 진척
+# 상황입니다." 의 둘째 문장은 이 문단의 설명이 아니라 다음 문단으로 넘기는
+# 다리다 — 여기 든 말로 이 문단의 주인을 정하면 다음 story 가 두 자리에서
+# 설명된 것처럼 보인다(10-03: 홀텍 '중복' 오판의 원인).
+_TRAILING_TRANSITION_RE = re.compile(
+    r"(?<=[.!?])\s+(?:다음(?:으로|은|에는|\s*소식|\s*이슈)|이어서|이어지는|계속해서|"
+    r"끝으로|마지막으로)[^.!?]*[.!?]\s*$")
+# 제목에서 뽑히지만 그날 어느 문단에나 나올 수 있는 말. 이것 **하나**만으로는
+# 문단 주인을 정하지 않는다 — '일방'(일방적 발표), '인허가', '언급' 같은 말이
+# 단독으로 다른 story 의 문단을 가져갔다(10-03).
+_WEAK_ANCHORS = frozenset({
+    "언급", "일방", "인허가", "신청", "제출", "허가", "승인", "확정", "검토", "확인",
+    "진위", "파악", "합의", "조사", "착수", "통과", "방출", "압박", "전망", "투표",
+    "진입", "집행", "체결", "발굴", "수립", "마련", "대응", "소송", "처분", "제한",
+    "면제", "조치", "가속화", "강조", "절충", "포함", "규모", "단계", "건설", "협정",
+    "비준", "발표", "추진", "확대", "지원", "투자", "협력", "공급", "사고", "안전",
+    "전략", "법안", "정책", "대통령", "장관", "정부", "회수", "석유", "원유", "가스",
+})
 # 원자력 뉴스면 어디에나 나오는 말. 앵커로 쓰면 아무 문단이나 걸린다.
 _ORDER_STOPWORDS = frozenset({
     "원자력", "원전", "에너지", "전력", "정부", "발표", "추진", "확대", "계획",
@@ -856,6 +878,40 @@ def _issue_anchor_pool(issue: dict) -> set[str]:
     parts.extend(str(t).lstrip("#") for t in (issue.get("tags") or []))
     tokens = {t.lower() for part in parts for t in _ANCHOR_TOKEN_RE.findall(str(part))}
     return {t for t in tokens if t not in _ORDER_STOPWORDS}
+
+
+def _issue_entity_tokens(issue: dict) -> set[str]:
+    """지문(actors·assets·countries)·엔티티에서 온 토큰 — 제목 낱말보다 믿을 만하다."""
+    fingerprint = issue.get("story_fingerprint")
+    fingerprint = fingerprint if isinstance(fingerprint, dict) else {}
+    parts: list[str] = []
+    for key in ("actors", "assets", "countries"):
+        value = fingerprint.get(key)
+        if isinstance(value, list):
+            parts.extend(str(v) for v in value)
+    return {t.lower() for part in parts for t in _ANCHOR_TOKEN_RE.findall(str(part))}
+
+
+def issue_strong_anchors(issues: list[dict]) -> dict[str, set[str]]:
+    """고유 앵커 중 **단독으로** 문단 주인을 정할 수 있는 것.
+
+    지문에서 온 말(원전명·회사명·나라)과 영문 토큰, 그리고 세 글자 이상이면서
+    흔한 행위 명사가 아닌 한글 낱말이다. 두 글자 행위 명사('일방'·'언급')는
+    다른 story 의 문단에도 흔히 나오므로 둘 이상 겹칠 때만 근거가 된다.
+    """
+    anchors = issue_anchors(issues)
+    strong: dict[str, set[str]] = {}
+    for issue in issues:
+        issue_id = str(issue.get("issue_id") or "")
+        entity = _issue_entity_tokens(issue)
+        keep = set()
+        for token in anchors.get(issue_id, ()):
+            if token in _WEAK_ANCHORS:
+                continue
+            if token in entity or not _HANGUL_RE.search(token) or len(token) >= 3:
+                keep.add(token)
+        strong[issue_id] = keep
+    return strong
 
 
 def issue_anchors(issues: list[dict]) -> dict[str, set[str]]:
@@ -883,25 +939,34 @@ def _owned_paragraphs(script: str, issues: list[dict]
     """
     expected = [str(i.get("issue_id") or "") for i in issues]
     anchors = issue_anchors(issues)
+    strong = issue_strong_anchors(issues)
     judged = [i for i in expected if anchors.get(i)]
 
     pairs: list[tuple[str, str]] = []
     for line in str(script or "").splitlines():
         match = SPEAKER_RE.match(line.strip())
         body = (match.group(2) if match else line).strip()
-        owner = _body_owner(body, anchors, judged)
+        owner = _body_owner(body, anchors, judged, strong)
         if owner:
             pairs.append((owner, body))
     return pairs, anchors, judged
 
 
-def _body_owner(body: str, anchors: dict[str, set[str]], judged: list[str]) -> str:
-    """문단 하나의 주인 이슈. 분명하지 않으면 빈 문자열 (`_owned_paragraphs` 기준)."""
+def _body_owner(body: str, anchors: dict[str, set[str]], judged: list[str],
+                strong: dict[str, set[str]] | None = None) -> str:
+    """문단 하나의 주인 이슈. 분명하지 않으면 빈 문자열 (`_owned_paragraphs` 기준).
+
+    2026-10-03 오판 셋을 막는 규칙이 더 있다 — 문단 끝의 다음 주제 예고는 빼고
+    세고, 약한 앵커 한 개만으로는(비교 대상이 둘 이상일 때) 주인을 정하지 않는다.
+    """
     if not body:
         return ""
     lowered = body.lower()
-    scores = {issue_id: sum(1 for a in anchors[issue_id] if a in lowered)
-              for issue_id in judged}
+    if lowered.count(".") + lowered.count("?") + lowered.count("!") >= 2:
+        lowered = _TRAILING_TRANSITION_RE.sub("", lowered)
+    hits = {issue_id: [a for a in anchors[issue_id] if a in lowered]
+            for issue_id in judged}
+    scores = {issue_id: len(found) for issue_id, found in hits.items()}
     best = max(scores.values(), default=0)
     if best <= 0:
         return ""
@@ -909,7 +974,14 @@ def _body_owner(body: str, anchors: dict[str, set[str]], judged: list[str]) -> s
     if mentioned >= 2 and _BACKREFERENCE_RE.search(lowered):
         return ""
     winners = [i for i, s in scores.items() if s == best]
-    return winners[0] if len(winners) == 1 else ""
+    if len(winners) != 1:
+        return ""
+    winner = winners[0]
+    if best == 1 and len(judged) > 1 and strong is not None:
+        # 한 표짜리 승리는 그 한 표가 강한 앵커일 때만 인정한다.
+        if not any(a in strong.get(winner, ()) for a in hits[winner]):
+            return ""
+    return winner
 
 
 # 문단 첫머리의 순서 표현. 뒤의 조사까지 한 덩어리로 잡아 통째로 바꾼다.
@@ -972,6 +1044,98 @@ def neutralize_position_words(script: str, issues: list[dict]) -> tuple[str, lis
             fixes.append({"issue_id": owner, "position": place, "total": total,
                           "before": body[:40], "after": new_body[:40]})
     return "\n".join(lines), fixes
+
+
+# ---- 문체 교정 -----------------------------------------------------------------
+#
+# 재배치·식별 보정·사실 수정은 모두 대본을 **다시 쓴다**. 2026-10-03 재배치 결과물은
+# 문장 7개가 '들어섰다'·'존재한다'·'풀이된다' 로 끝났다 — 원본은 전부 합니다체였다.
+# 재작성 결과는 순서만 다시 봤고 문체는 아무도 보지 않아 그대로 방송됐다.
+# 모델에게 다시 부탁하지 않고 기계적으로 고친다 — 한 번 더 부르면 또 다른 것이 흔들린다.
+_PLAIN_ENDING_RE = re.compile(r"([가-힣]+)다([.!?])(?=\s|$)")
+_JONG_NONE, _JONG_N, _JONG_L, _JONG_B = 0, 4, 8, 17
+
+
+def _is_polite(word: str) -> bool:
+    """'…습니다' 또는 '…ㅂ니다'(입니다·합니다·됩니다). '아니다' 는 아니다."""
+    if word.endswith("습니다"):
+        return True
+    if not word.endswith("니다") or len(word) < 3:
+        return False
+    code = ord(word[-3]) - 0xAC00
+    return 0 <= code < 11172 and code % 28 == _JONG_B
+
+
+def _polite_form(word: str) -> str | None:
+    """'…다' 로 끝나는 한 낱말을 '…습니다/…ㅂ니다' 로. 못 바꾸면 None."""
+    stem = word[:-1]
+    if not stem or _is_polite(word):
+        return None
+    last = stem[-1]
+    code = ord(last) - 0xAC00
+    if not 0 <= code < 11172:
+        return None
+    cho, jung, jong = code // 588, (code % 588) // 28, code % 28
+    if last == "는" and len(stem) >= 2:           # 먹는다 → 먹습니다
+        return stem[:-1] + "습니다"
+    if jong == _JONG_NONE:                        # 이다 → 입니다, 크다 → 큽니다
+        return stem[:-1] + chr(0xAC00 + cho * 588 + jung * 28 + _JONG_B) + "니다"
+    if jong in (_JONG_N, _JONG_L):                # 한다 → 합니다, 만들다 → 만듭니다
+        return stem[:-1] + chr(0xAC00 + cho * 588 + jung * 28 + _JONG_B) + "니다"
+    return stem + "습니다"                         # 했다 → 했습니다, 있다 → 있습니다
+
+
+def plain_endings(script: str) -> list[str]:
+    """합니다체가 아닌 '…다.' 종결 문장의 끝 낱말 목록 — 측정·테스트용."""
+    found: list[str] = []
+    for line in str(script or "").splitlines():
+        match = SPEAKER_RE.match(line.strip())
+        body = match.group(2) if match else line
+        for m in _PLAIN_ENDING_RE.finditer(body):
+            if not _is_polite(m.group(1) + "다"):
+                found.append(m.group(1) + "다" + m.group(2))
+    return found
+
+
+def restore_polite_endings(script: str) -> tuple[str, list[dict]]:
+    """해라체 종결을 합니다체로 바꾼다. 바꾼 자리를 함께 돌려준다."""
+    fixes: list[dict] = []
+    lines = str(script or "").splitlines()
+    for number, line in enumerate(lines):
+        match = SPEAKER_RE.match(line.strip())
+        if not match:
+            continue
+        body = match.group(2)
+
+        def swap(m: re.Match) -> str:
+            word = m.group(1) + "다"
+            if _is_polite(word):
+                return m.group(0)
+            polite = _polite_form(word)
+            if not polite:
+                return m.group(0)
+            fixes.append({"before": word + m.group(2), "after": polite + m.group(2)})
+            return polite + m.group(2)
+        new_body = _PLAIN_ENDING_RE.sub(swap, body)
+        if new_body != body:
+            lines[number] = f"{match.group(1)}: {new_body}"
+    return "\n".join(lines), fixes
+
+
+def rewrite_is_sane(original: str, candidate: str) -> tuple[bool, str]:
+    """재작성 결과를 받아도 되는 모양인가 — 순서 말고 **글 자체**를 본다.
+
+    문단 수가 크게 달라졌거나 해라체 문장이 늘었으면 모델이 지시 밖까지 손댔다는
+    뜻이다. 그런 결과는 원본보다 낫다고 볼 수 없다.
+    """
+    before = [l for l in str(original or "").splitlines() if l.strip()]
+    after = [l for l in str(candidate or "").splitlines() if l.strip()]
+    if abs(len(after) - len(before)) > max(2, len(before) // 4):
+        return False, f"문단 수 {len(before)}→{len(after)}"
+    plain_before, plain_after = len(plain_endings(original)), len(plain_endings(candidate))
+    if plain_after > plain_before:
+        return False, f"해라체 문장 {plain_before}→{plain_after}"
+    return True, ""
 
 
 def script_order_report(script: str, issues: list[dict]) -> dict:
@@ -1473,6 +1637,7 @@ def generate_expert_script(briefing: dict, issues: list[dict],
     order_reports: list[dict] = []
     intro_reports: list[dict] = []
     position_reports: list[dict] = []
+    speech_reports: list[dict] = []
     for block, rows, block_dossiers, block_script in drafted:
         block_evidence = semantic_source_evidence([
             contracts_by_issue[issue_id]
@@ -1519,11 +1684,15 @@ def generate_expert_script(briefing: dict, issues: list[dict],
                     max_output_tokens=12000, primary="synthesis")
                 candidate, _ = normalize_script(fixed.get("script"), len(rows))
                 recheck = script_order_report(candidate, rows)
+                sane, why = rewrite_is_sane(block_script, candidate)
                 # 재배치가 더 나쁘면 원본을 쓴다. 순서 때문에 사실이 검증된
                 # 대본을 버리는 것은 남는 장사가 아니다 — 이 단계는 검증을
                 # 다시 돌지 않으므로 새 대본의 사실 정확성은 보장되지 않는다.
-                if recheck["ok"] or (len(recheck["missing"]) <= len(order["missing"])
-                                     and not recheck["out_of_order"]):
+                # 글 모양이 흔들렸으면(10-03: 문장 7개가 해라체로) 순서가 맞아도 버린다.
+                if not sane:
+                    print(f"[expert-audio] {block} 재배치 결과가 원본과 다른 모양 — 원본 유지 ({why})")
+                elif recheck["ok"] or (len(recheck["missing"]) <= len(order["missing"])
+                                       and not recheck["out_of_order"]):
                     block_script, order = candidate, recheck
                 else:
                     print(f"[expert-audio] {block} 재배치가 개선 없음 — 원본 유지")
@@ -1546,9 +1715,12 @@ def generate_expert_script(briefing: dict, issues: list[dict],
                 candidate, _ = normalize_script(fixed.get("script"), len(rows))
                 recheck_intro = intro_identification_report(candidate, rows)
                 recheck_order = script_order_report(candidate, rows)
+                sane, why = rewrite_is_sane(block_script, candidate)
                 # 식별 보정이 순서를 흔들면 남는 장사가 아니다 — 개선 폭과
-                # 순서 유지 둘 다 볼 때만 채택한다.
-                if len(recheck_intro["missing"]) < len(intro["missing"]) \
+                # 순서 유지 둘 다 볼 때만 채택한다. 글 모양이 흔들린 것도 같다.
+                if not sane:
+                    print(f"[expert-audio] {block} 식별 보정 결과가 원본과 다른 모양 — 원본 유지 ({why})")
+                elif len(recheck_intro["missing"]) < len(intro["missing"]) \
                         and not recheck_order["out_of_order"] \
                         and len(recheck_order["duplicated"]) <= len(order["duplicated"]):
                     block_script, intro, order = candidate, recheck_intro, recheck_order
@@ -1566,6 +1738,13 @@ def generate_expert_script(briefing: dict, issues: list[dict],
                   + " / ".join(f"{f['position']}번째: '{f['before'][:16]}…'"
                                for f in position_fixes))
         position_reports.extend({"block": block, **fix} for fix in position_fixes)
+        # 문체도 같은 자리에서 — 사실 수정(repair_prompt)은 채택 조건이 없어
+        # 해라체가 섞여 들어올 수 있다. 쌓이면 REPAIR_SYSTEM 프롬프트를 볼 신호다.
+        block_script, speech_fixes = restore_polite_endings(block_script)
+        if speech_fixes:
+            print(f"[expert-audio] {block} 구간 해라체 {len(speech_fixes)}문장 교정 — "
+                  + " / ".join(f"'{f['before']}'" for f in speech_fixes[:4]))
+        speech_reports.extend({"block": block, **fix} for fix in speech_fixes)
 
         bridge = _block_bridge(block)
         if bridge and parts:
@@ -1605,6 +1784,8 @@ def generate_expert_script(briefing: dict, issues: list[dict],
     }
     # 기계적으로 고친 순서 표현. 매일 쌓이면 프롬프트(_position_rule)가 안 먹는다는 뜻이다.
     report["position_fixes"] = position_reports
+    # 기계적으로 고친 문체. 재작성 호출이 합니다체를 깨는 날이 얼마나 되는지의 기록.
+    report["speech_level_fixes"] = speech_reports
     if not report["intro_check"]["ok"]:
         bad = report["intro_check"]["missing"]
         titles = {str(i.get("issue_id") or ""): str(i.get("title") or "")[:60] for i in issues}

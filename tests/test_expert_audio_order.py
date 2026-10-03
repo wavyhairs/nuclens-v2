@@ -397,5 +397,155 @@ class IntroRepairPromptTests(unittest.TestCase):
         self.assertIn("z1", prompt)
 
 
+class OwnershipFalseAlarmTests(unittest.TestCase):
+    """2026-10-03 순서 검사기 오판 셋 — 멀쩡한 대본을 '누락 1·중복 1' 로 찍어
+    불필요한 재배치 호출을 냈고, 그 호출이 대본을 망쳤다.
+
+    같은 인물(트럼프)이 나오는 두 story 와, 제목에서 뽑힌 흔한 말('일방'·'인허가')
+    이 겹친 날이다. 세 규칙으로 막는다: '언급한' 은 되짚기가 아니다, 문단 끝의
+    다음 주제 예고는 세지 않는다, 약한 앵커 한 표로는 주인을 정하지 않는다.
+    """
+
+    def setUp(self):
+        self.issues = [
+            issue("oil", "트럼프 대통령, 84억 달러 규모 석유 회수 사업 언급…정부 진위 파악 중",
+                  "국내", 3, fingerprint={"actors": ["트럼프", "산업통상자원부"]}),
+            issue("lng", "트럼프 대통령, 한국의 알래스카 LNG 투자 및 원전 건설 일방 발표",
+                  "해외", 2, fingerprint={"actors": ["트럼프"], "assets": ["알래스카"]}),
+            issue("holtec", "홀텍, 팰리세이즈 SMR 건설 허가 신청 위한 안전분석보고서 제출",
+                  "해외", 4, fingerprint={"actors": ["홀텍"], "assets": ["팰리세이즈"]}),
+        ]
+
+    def script(self, *paragraphs):
+        return "\n".join(f"HOST: {p}" for p in paragraphs)
+
+    def test_a_story_about_someone_mentioning_something_is_not_a_backreference(self):
+        body = ("세 번째 소식은 한미에너지협력과 관련해 트럼프 대통령이 언급한 84억 달러 규모의 "
+                "석유 회수 증진 사업입니다. 산업통상자원부는 사실관계를 확인하는 단계입니다.")
+        pairs, _anchors, _judged = expert._owned_paragraphs(self.script(body), self.issues)
+        self.assertEqual([("oil", body)], pairs)
+
+    def test_trailing_preview_of_the_next_topic_does_not_claim_the_paragraph(self):
+        body = ("향후 한미 간 후속 실무 협의 결과와 알래스카 프로젝트의 경제성 검토 결과가 "
+                "주요 주시 대상입니다. 다음으로 미국 내 원자력 관련 인허가 진척 상황입니다.")
+        pairs, _a, _j = expert._owned_paragraphs(self.script(body), self.issues)
+        self.assertEqual(["lng"], [owner for owner, _ in pairs])
+
+    def test_a_single_weak_anchor_cannot_steal_a_paragraph(self):
+        body = ("이 사안은 미국 측의 일방적 발표에 가까워 실제 사업 추진 가능성과 "
+                "정치적 의도 사이에 괴리가 존재합니다.")
+        pairs, _a, _j = expert._owned_paragraphs(self.script(body), self.issues)
+        self.assertEqual([], pairs)           # '일방' 한 표로는 lng 의 문단이 아니다
+
+    def test_a_single_strong_anchor_still_claims_the_paragraph(self):
+        body = "팰리세이즈 부지에서는 굴착 사전 작업이 승인됐습니다."
+        pairs, _a, _j = expert._owned_paragraphs(self.script(body), self.issues)
+        self.assertEqual(["holtec"], [owner for owner, _ in pairs])
+
+    def test_two_weak_anchors_together_are_enough(self):
+        body = "석유 회수 증진 사업의 진위를 정부가 파악하고 있습니다."
+        pairs, _a, _j = expert._owned_paragraphs(self.script(body), self.issues)
+        self.assertEqual(["oil"], [owner for owner, _ in pairs])
+
+    def test_the_whole_day_now_passes_in_the_right_order(self):
+        script = self.script(
+            "세 번째 소식은 한미에너지협력과 관련해 트럼프 대통령이 언급한 84억 달러 규모의 석유 회수 증진 사업입니다. 산업통상자원부는 사실관계를 확인하는 단계입니다.",
+            "이 사안은 미국 측의 일방적 발표에 가까워 실제 사업 추진 가능성과 정치적 의도 사이에 괴리가 존재합니다.",
+            "국내 소식은 여기까지입니다. 이어서 해외 동향을 보겠습니다.",
+            "트럼프 미국 대통령이 한국의 알래스카 LNG 개발 투자를 일방 발표했습니다.",
+            "향후 한미 간 후속 실무 협의 결과와 알래스카 프로젝트의 경제성 검토 결과가 주요 주시 대상입니다. 다음으로 미국 내 원자력 관련 인허가 진척 상황입니다.",
+            "이어지는 소식은 홀텍의 SMR 건설 허가 절차 진전 상황입니다. 홀텍이 팰리세이즈 부지 예비안전분석보고서를 제출했습니다.",
+        )
+        report = expert.script_order_report(script, self.issues)
+        self.assertTrue(report["ok"], report)
+        self.assertEqual(["oil", "lng", "holtec"], report["observed"])
+
+    def test_strong_anchor_sets_drop_weak_title_words(self):
+        strong = expert.issue_strong_anchors(self.issues)
+        self.assertIn("알래스카", strong["lng"])
+        self.assertNotIn("일방", strong["lng"])
+        self.assertIn("팰리세이즈", strong["holtec"])
+        self.assertNotIn("인허가", strong["holtec"])
+        self.assertNotIn("언급", strong["oil"])
+
+
+class SpeechLevelTests(unittest.TestCase):
+    """재작성(재배치·식별 보정·사실 수정)이 합니다체를 깨면 기계적으로 되돌린다.
+
+    2026-10-03 재배치 결과물은 문장 7개가 '들어섰다'·'존재한다' 로 끝났는데,
+    원본은 전부 합니다체였다. 순서만 다시 보고 채택해 그대로 방송됐다.
+    """
+
+    def test_the_seven_sentences_from_that_day_are_restored(self):
+        cases = {"들어섰다.": "들어섰습니다.", "존재한다.": "존재합니다.",
+                 "풀이된다.": "풀이됩니다.", "상태이다.": "상태입니다.",
+                 "전망이다.": "전망입니다.", "명확히 했다.": "명확히 했습니다.",
+                 "완화되었다.": "완화되었습니다."}
+        for before, after in cases.items():
+            fixed, fixes = expert.restore_polite_endings(f"HOST: 투자가 {before}")
+            self.assertEqual(f"HOST: 투자가 {after}", fixed, before)
+            self.assertEqual(1, len(fixes))
+
+    def test_more_conjugations(self):
+        cases = {"있다.": "있습니다.", "없다.": "없습니다.", "크다.": "큽니다.",
+                 "만든다.": "만듭니다.", "먹는다.": "먹습니다.", "않는다.": "않습니다.",
+                 "모른다.": "모릅니다.", "아니다.": "아닙니다.", "같다!": "같습니다!"}
+        for before, after in cases.items():
+            fixed, _ = expert.restore_polite_endings(f"HOST: 그것은 {before}")
+            self.assertEqual(f"HOST: 그것은 {after}", fixed, before)
+
+    def test_polite_sentences_are_left_alone(self):
+        script = ("HOST: 확정됐습니다. 검토 중인데요, 결정은 다음 주입니다. 이어서 보겠습니다.\n"
+                  "HOST: 다음 소식은 한수원입니다. 심사가 진행됩니까? 아직입니다.")
+        fixed, fixes = expert.restore_polite_endings(script)
+        self.assertEqual(script, fixed)
+        self.assertEqual([], fixes)
+
+    def test_mid_sentence_da_is_not_an_ending(self):
+        script = "HOST: 바다 건너 소식입니다. 다음 주에 결정됩니다."
+        fixed, fixes = expert.restore_polite_endings(script)
+        self.assertEqual(script, fixed)
+        self.assertEqual([], fixes)
+
+    def test_plain_endings_counts_only_non_polite_closers(self):
+        self.assertEqual(["들어섰다."],
+                         expert.plain_endings("HOST: 국면에 들어섰다. 관찰이 필요합니다."))
+
+
+class RewriteSanityTests(unittest.TestCase):
+    """재작성 결과는 순서가 맞아도 글 모양이 흔들렸으면 받지 않는다."""
+
+    ORIGINAL = "\n".join([f"HOST: 문단 {i} 입니다. 다음 단계가 남아 있습니다." for i in range(8)])
+
+    def test_same_shape_is_sane(self):
+        ok, why = expert.rewrite_is_sane(self.ORIGINAL, self.ORIGINAL.replace("문단", "단락"))
+        self.assertTrue(ok, why)
+
+    def test_plain_endings_creeping_in_is_rejected(self):
+        broken = self.ORIGINAL.replace("남아 있습니다.", "남아 있다.", 3)
+        ok, why = expert.rewrite_is_sane(self.ORIGINAL, broken)
+        self.assertFalse(ok)
+        self.assertIn("해라체", why)
+
+    def test_paragraph_count_collapse_is_rejected(self):
+        collapsed = "\n".join(self.ORIGINAL.splitlines()[:3])
+        ok, why = expert.rewrite_is_sane(self.ORIGINAL, collapsed)
+        self.assertFalse(ok)
+        self.assertIn("문단 수", why)
+
+    def test_rewrite_acceptance_and_speech_fix_are_wired_in(self):
+        """재배치·식별 보정 채택 조건에 글 모양 검사가 있고, 문체 교정은 모든 재작성 뒤에 돈다."""
+        source = (ROOT / "expert_audio_brief.py").read_text(encoding="utf-8")
+        head, _, tail = source.partition("재배치 결과가 원본과 다른 모양")
+        self.assertTrue(tail, "재배치 채택 조건에 글 모양 검사가 없다")
+        self.assertIn("rewrite_is_sane", head[-1500:])
+        _, _, intro_tail = source.partition("식별 보정 결과가 원본과 다른 모양")
+        self.assertTrue(intro_tail, "식별 보정 채택 조건에 글 모양 검사가 없다")
+        self.assertIn("restore_polite_endings(block_script)", source,
+                      "모든 재작성 뒤에 문체 교정이 돌아야 한다")
+        self.assertLess(source.index("neutralize_position_words(block_script, rows)"),
+                        source.index("restore_polite_endings(block_script)"))
+
+
 if __name__ == "__main__":
     unittest.main()
