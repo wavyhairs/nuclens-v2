@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 6,
-    "date": "2026-10-03"
+    "count": 1,
+    "date": "2026-10-04"
   },
   "retired": {
     "ap1000vsapr1400": {
@@ -572,14 +572,6 @@
       "type": "org",
       "until": "2026-10-03T18:40:53.720696+00:00"
     },
-    "전력연구원": {
-      "new_articles": 12,
-      "reason": "기간 만료",
-      "retired_at": "2026-08-28T14:55:58.745146+00:00",
-      "term": "전력연구원",
-      "type": "org",
-      "until": "2026-09-11T14:55:58.745146+00:00"
-    },
     "전문위원회": {
       "new_articles": 27,
       "reason": "성과 없음",
@@ -822,8 +814,8 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-10-03"
+    "count": 3,
+    "date": "2026-10-04"
   },
   "terms": {
     "원전수출기획위원회": {
@@ -849,12 +841,12 @@
       ],
       "expires_at": "2026-10-04T00:41:21.296526+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-10-03T00:41:21.296526+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-10-03T15:40:58.910731+00:00",
       "new_articles": 5,
       "origin": "auto",
-      "planned_at": "2026-10-03T00:41:17.878975+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-10-03T15:40:55.762391+00:00",
+      "queries_run": 4,
       "query": "원전수출기획위원회",
       "score": 5.9,
       "status": "promote_candidate",
@@ -866,7 +858,56 @@
         "2026-10-03"
       ],
       "yields": 3,
-      "zero_streak": 0
+      "zero_streak": 1
+    },
+    "전력연구원": {
+      "articles": 7,
+      "created_at": "2026-10-03T15:40:55.762391+00:00",
+      "domains": [
+        "dailysecu.com",
+        "epj.co.kr",
+        "khnp.co.kr",
+        "todayenergy.kr",
+        "e-platform.net",
+        "newscj.com"
+      ],
+      "evidence": [
+        {
+          "domain": "dailysecu.com",
+          "hash": "ff94480c3cb00964",
+          "importance": "nice_to_know",
+          "title": "전력연구원, 재생에너지 확대에 따른 전력망 보안 중요성 강조"
+        },
+        {
+          "domain": "epj.co.kr",
+          "hash": "bce646fc8a118f3f",
+          "importance": "nice_to_know",
+          "title": "한수원-미국 전력연구원(EPRI), 기계분야 통합 워크숍 개최"
+        },
+        {
+          "domain": "khnp.co.kr",
+          "hash": "494b8edf7e038a1e",
+          "importance": "noise",
+          "title": "한수원, 미국 전력연구원(EPRI)과 기계분야 통합 워크숍 개최"
+        }
+      ],
+      "expires_at": "2026-10-06T15:40:55.762391+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-10-03T15:40:58.910731+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-10-03T15:40:55.762391+00:00",
+      "queries_run": 1,
+      "query": "전력연구원 원자력",
+      "score": 6.71,
+      "status": "tracking",
+      "term": "전력연구원",
+      "ttl_hours": 72,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     },
     "한미양국": {
       "articles": 1,
@@ -882,14 +923,14 @@
           "title": "한·미 원전 프레임워크 체결, 미국 내 APR1400 2기 건설 확정"
         }
       ],
-      "expires_at": "2026-10-03T18:41:22.514092+00:00",
+      "expires_at": "2026-10-04T15:40:58.910731+00:00",
       "importance": "must_read",
       "last_result_count": 3,
-      "last_run": "2026-10-02T18:41:22.514092+00:00",
-      "new_articles": 3,
+      "last_run": "2026-10-03T15:40:58.910731+00:00",
+      "new_articles": 6,
       "origin": "auto",
-      "planned_at": "2026-10-02T18:41:18.897240+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-03T15:40:55.762391+00:00",
+      "queries_run": 2,
       "query": "한·미 양국 원전",
       "score": 3.6,
       "status": "extended",
@@ -897,9 +938,10 @@
       "ttl_hours": 24,
       "type": "plant",
       "yield_days": [
-        "2026-10-03"
+        "2026-10-03",
+        "2026-10-04"
       ],
-      "yields": 1,
+      "yields": 2,
       "zero_streak": 0
     },
     "황재철의원": {
