@@ -296,11 +296,15 @@ def _is_stop_error(exc: Exception) -> bool:
 
 def verify(targets: list[dict], *, client=None, now: datetime | None = None,
            path: Path = LOG_FILE, day_cap: int | None = None,
-           per_run_cap: int | None = None) -> tuple[list[dict], dict]:
+           per_run_cap: int | None = None,
+           row_extra: dict | None = None) -> tuple[list[dict], dict]:
     """대상 기사를 1건씩 검사하고 결과를 기록한다. 요약은 바꾸지 않는다.
 
     Args:
         targets: [{"hash", "title", "body", "title_kr", "summary", "detail"}, ...]
+        row_extra: 기록 행마다 덧붙일 표식. 재생성 뒤 다시 검사한 행은
+            ``{"stage": "after_repair"}`` 로 구분한다 — 같은 기사의 두 행이
+            전후 비교에서 섞이지 않게.
     Returns:
         (이번에 기록한 행, 통계)
     """
@@ -343,6 +347,7 @@ def verify(targets: list[dict], *, client=None, now: datetime | None = None,
             "checked_at": now.isoformat(timespec="seconds"), "quota_day": day,
             "title_kr": _clip(target.get("title_kr")), "rule": rule,
             "called": False, "verdict": "",
+            **(row_extra or {}),
         }
         if not available or stats["stopped"] or budget <= 0:
             stats["skipped_cap"] += bool(available and not stats["stopped"])
@@ -486,6 +491,38 @@ def targets_from_curation(articles: list[dict], curated: dict, bodies: dict,
                     "title_kr": cur.get("title_kr") or "", "summary": cur.get("summary") or "",
                     "detail": cur.get("detail") or ""})
     return out
+
+
+# ── 재생성 메모 ──────────────────────────────────────────────────────────
+
+# 재생성으로 넘기는 판정. unsupported 는 넘기지 않는다 — 본문이 1,500자에서
+# 잘려 "확인 불가"인 것과 검사기의 문자 그대로 읽기(임계 도달≠연쇄 반응)가
+# 섞여 있어(2026-10-03 손판정 24건 중 4건 오판) 자동 재작성의 근거로 약하다.
+REPAIR_VERDICTS = frozenset({"contradiction"})
+
+
+def repair_notes(rows: list[dict]) -> dict[str, list[str]]:
+    """검사 행에서 재생성에 넘길 "이전 출력 오류" 메모를 만든다. {hash: [메모]}.
+
+    모순 판정은 검사기가 인용한 원문 구절을 그대로 싣는다 — 재생성 모델이 고칠
+    근거는 그 구절뿐이다. 단계어 규칙은 호출 없이도 결과가 있으니 같이 싣는다.
+    """
+    notes: dict[str, list[str]] = {}
+    for row in rows:
+        h = row.get("hash")
+        if not h:
+            continue
+        found: list[str] = []
+        if row.get("called") and row.get("verdict") in REPAIR_VERDICTS:
+            field = row.get("field") or "요약"
+            found.append(
+                f"사실검사 모순[{field}]: 요약이 '{row.get('claim') or ''}' 라고 썼으나 "
+                f"원문은 '{row.get('source_quote') or ''}' — {row.get('reason') or ''}")
+        for rule in row.get("rule") or []:
+            found.append(f"단계어 오류: 원문의 초안 단계어를 최종 단계어로 바꿔 썼다 ({rule})")
+        if found:
+            notes.setdefault(h, []).extend(found)
+    return notes
 
 
 def report(rows: list[dict], stats: dict) -> list[str]:

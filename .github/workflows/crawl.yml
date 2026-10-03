@@ -230,6 +230,9 @@ jobs:
           # 요약 사실검사 버킷 (기본 gemini-3.5-flash-lite — llm_policy._summary_verify_model).
           # 되돌리려면 이 변수에 gemini-3.1-flash-lite 를 넣는다.
           GEMINI_SUMMARY_VERIFY_MODEL: ${{ vars.GEMINI_SUMMARY_VERIFY_MODEL }}
+          # 모순 판정 요약의 재생성 버킷 (기본 gemini-3.5-flash-lite). SUMMARY_REPAIR=off 로 끈다.
+          GEMINI_CURATION_REPAIR_MODEL: ${{ vars.GEMINI_CURATION_REPAIR_MODEL }}
+          SUMMARY_REPAIR: ${{ vars.SUMMARY_REPAIR }}
           # 이메일 뉴스레터 수집 (선택 — 미설정 시 자동 스킵)
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}

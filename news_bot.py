@@ -2253,11 +2253,115 @@ def append_open_question_stats(verdicts: dict[str, dict],
     return True
 
 
+# 재생성이 바꾸는 칸. 등급·구간·지표·사건일은 **원래 값**을 지킨다 — 재생성은
+# 틀린 문장을 고치는 자리지 선정을 다시 하는 자리가 아니다.
+SUMMARY_REPAIR_FIELDS = ("title_kr", "summary", "detail", "implication",
+                         "why_important", "why_short")
+
+
+def summary_repair_enabled() -> bool:
+    return os.environ.get("SUMMARY_REPAIR", "on").strip().lower() not in {"0", "off", "false", "no"}
+
+
+def repair_contradicted_summaries(verify_rows: list[dict], verify_targets: list[dict],
+                                  final_articles: list[dict], curated: dict,
+                                  queue: list[dict], reports_kb: list[dict], *,
+                                  now_iso: str, client=None,
+                                  curate=None, verify=None) -> dict:
+    """사실검사가 **모순**으로 판정한 요약을 1건씩 다시 쓰고, 다시 검사한다.
+
+    배경 (2026-10-03): 9/24 부터 열흘간 검사기가 1,610건을 봤고 모순이 6%,
+    원문에 없는 내용 추가가 13% 였다. 모순의 절반은 단계 부풀리기("하기로
+    했다"→"합의했다")였고, 원문 인용까지 같이 기록돼 있는데 그 판정은 어디로도
+    가지 않았다 — 경고 모드의 기록만 쌓이고 틀린 요약은 그대로 화면에 나갔다.
+
+    어떻게:
+    - 대상은 이번 회차에 요약한 기사 가운데 모순 판정을 받은 것. 밀린 기사
+      (backlog)는 기사 원본(설명문·게재일)이 손에 없어 뺀다.
+    - 기존 재생성 경로(품질 게이트 재시도)를 탄다. 검사기의 원문 인용을
+      "이전 출력 오류" 메모로 넘기고, **1건씩** 부른다(묶음 혼입 차단), 모델은
+      한 단 위 버킷(llm_policy ``curation_verify_repair``).
+    - 등급이 바뀐 결과는 버린다. 재생성은 문장을 고치는 자리지 선정을 다시
+      하는 자리가 아니다. 받아들인 결과는 curated 와 **이번 회차 큐 항목**
+      양쪽에 적는다 — 큐 항목은 검사 전에 복사된 것이라 따로 고쳐야 한다.
+    - 고친 요약은 다시 검사한다(``stage: after_repair``). 두 번째도 모순이면
+      고친 쪽을 둔다 — 원문 근거를 본 쪽이다 — 그리고 기록에 남긴다. 비울지는
+      사람이 일주일 기록을 본 뒤 정한다.
+
+    ``curate``/``verify`` 는 테스트 이음매다. 기본은 이 모듈의 ``curate_batch`` 와
+    ``summary_verify.verify``.
+    """
+    curate = curate or curate_batch
+    verify = verify or summary_verify.verify
+    notes = summary_verify.repair_notes(verify_rows)
+    stats = {"flagged": len(notes), "targets": 0, "repaired": 0, "grade_changed": 0,
+             "failed": 0, "recheck": {}}
+    if not notes:
+        return stats
+    by_hash = {a["hash"]: a for a in final_articles}
+    bodies = {t["hash"]: t["body"] for t in verify_targets if t.get("body")}
+    articles = [by_hash[h] for h in notes if h in by_hash and h in bodies and h in curated]
+    stats["targets"] = len(articles)
+    if not articles:
+        return stats
+    fresh = curate(articles, reports_kb, bodies, client=client,
+                   error_notes=notes, chunk_size=1,
+                   label="curation:검사재생성", profile="curation_verify_repair")
+    repaired: set[str] = set()
+    for art in articles:
+        h = art["hash"]
+        item = fresh.get(h)
+        cur = curated[h]
+        if not item:
+            stats["failed"] += 1
+            print(f"  ! 검사 재생성 실패 — 원래 요약 유지: {(cur.get('title_kr') or art['title'])[:40]}")
+            continue
+        if item.get("importance") != cur.get("importance"):
+            stats["grade_changed"] += 1
+            print(f"  ! 검사 재생성이 등급을 바꿔({cur.get('importance')}→{item.get('importance')}) "
+                  f"버림: {(cur.get('title_kr') or art['title'])[:40]}")
+            continue
+        before = {k: cur.get(k) for k in SUMMARY_REPAIR_FIELDS}
+        for k in SUMMARY_REPAIR_FIELDS:
+            cur[k] = item.get(k) or ""
+        cur["summary_repair"] = {
+            "at": now_iso, "note": notes[h][0][:300],
+            "before": {k: (v or "")[:200] for k, v in before.items() if k in ("title_kr", "summary")},
+        }
+        for entry in queue:
+            if entry.get("hash") == h:
+                for k in SUMMARY_REPAIR_FIELDS:
+                    entry[k] = cur[k]
+        repaired.add(h)
+        stats["repaired"] += 1
+        print(f"  ✓ 검사 재생성: {before['summary'][:50]!r} → {cur['summary'][:50]!r}")
+    if repaired:
+        retargets = [{**t, **{k: curated[t["hash"]].get(k) or "" for k in ("title_kr", "summary", "detail")}}
+                     for t in verify_targets if t["hash"] in repaired]
+        rows, recheck = verify(retargets, row_extra={"stage": "after_repair"})
+        stats["recheck"] = {k: recheck.get(k, 0) for k in ("checked", "contradiction", "unsupported", "failed")}
+        for row in rows:
+            if row.get("verdict") == "contradiction":
+                print(f"  ! 재생성 뒤에도 모순: {row.get('title_kr', '')[:40]} | "
+                      f"요약: {row.get('claim', '')[:50]} | 원문: {row.get('source_quote', '')[:50]}")
+    return stats
+
+
 def curate_batch(articles: list[dict], reports_kb: list[dict],
                  bodies: dict[str, str] | None = None,
                  client=None, log_path: Path | None = None,
-                 evidence_sink=None) -> dict[str, dict]:
+                 evidence_sink=None, *,
+                 error_notes: dict[str, list[str]] | None = None,
+                 chunk_size: int | None = None,
+                 label: str = "curation",
+                 profile: str = "curation") -> dict[str, dict]:
     """새 기사 목록을 chunk 단위 배치 호출로 큐레이션. {hash: cur_dict} 반환.
+
+    ``error_notes``/``chunk_size``/``label``/``profile`` 은 **요약 사실검사의 모순
+    재생성** 이음매다(``repair_contradicted_summaries``). 기본값이면 예전과 글자까지
+    같다. 재생성은 첫 호출부터 "이전 출력 오류" 메모를 붙이고(검사기가 찾은 원문
+    인용), 1건씩 부르며(묶음에서 옆 기사 근거가 섞이는 것을 막는다), 호출 라벨과
+    모델 프로필을 따로 센다.
 
     ``client``/``log_path`` 는 오프라인 replay 전용 이음매다. 기본값은 예전과
     글자까지 같은 동작이고, 프롬프트·파라미터·판정은 어느 쪽으로도 달라지지 않는다.
@@ -2293,6 +2397,9 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
     # 오류는 여기 들어와도 재생성에서 정상화되면 관리자 경고 대상이 아니다.
     final_integrity_quarantines: dict[str, dict] = {}
 
+    initial_notes = {h: list(v) for h, v in (error_notes or {}).items() if v}
+    chunk_size = max(1, int(chunk_size or BATCH_CHUNK))
+
     def run_chunk(chunk: list[dict], error_notes: dict[str, list[str]] | None = None,
                   *, split: bool = False):
         blocks = []
@@ -2326,7 +2433,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
             blocks.append("\n".join(lines))
 
         try:
-            policy = llm_policy.profile("curation")
+            policy = llm_policy.profile(profile)
             result = call(
                 system_prompt + (
                     "\n\n[재생성] 이전 출력의 오류가 표시된 항목입니다. 사실·시제를 유지하면서 "
@@ -2338,7 +2445,8 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 model=policy.model(),
                 # 재생성인지 최초 호출인지를 갈라서 센다. 429 가 분당 한도였는데
                 # 그 1분에 누가 몇 번 불렀는지 몰라 원인을 두 번 잘못 짚었다.
-                label="curation:재생성" if error_notes else "curation",
+                label=(label if label != "curation"
+                       else ("curation:재생성" if error_notes else "curation")),
                 **policy.reasoning_kwargs(),
             )
         except GeminiTruncated as e:
@@ -2461,7 +2569,9 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
     def process(chunk: list[dict], label: str, *, split: bool = False) -> None:
         """chunk 하나를 큐레이션해 out/lost 를 채운다."""
         nonlocal split_budget
-        valid, failures = run_chunk(chunk, split=split)
+        notes = {art["hash"]: initial_notes[art["hash"]]
+                 for art in chunk if art["hash"] in initial_notes} or None
+        valid, failures = run_chunk(chunk, notes, split=split)
         out.update(valid)
 
         reason = request_failure_reason(failures, chunk)
@@ -2501,7 +2611,11 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
         ]
         if retryable:
             print(f"  ! 품질 게이트 재생성: {len(retryable)}건")
-            repaired, remaining = run_chunk(retryable, failures, split=split)
+            # 검사기 메모가 있던 기사는 그 메모를 게이트 사유 앞에 그대로 둔다 —
+            # 게이트 재시도에서 모순 근거가 사라지면 처음 요약으로 돌아간다.
+            merged = {art["hash"]: initial_notes.get(art["hash"], []) + failures[art["hash"]]
+                      for art in retryable}
+            repaired, remaining = run_chunk(retryable, merged, split=split)
             out.update(repaired)
             for art in retryable:
                 if art["hash"] in remaining:
@@ -2518,12 +2632,12 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                         + ", ".join(reasons)
                     )
 
-    for start in range(0, len(articles), BATCH_CHUNK):
-        process(articles[start:start + BATCH_CHUNK],
-                f"chunk {start // BATCH_CHUNK + 1}")
+    for start in range(0, len(articles), chunk_size):
+        process(articles[start:start + chunk_size],
+                f"chunk {start // chunk_size + 1}")
 
         # 무료 티어 분당 한도 배려 — chunk 사이 짧은 대기
-        if start + BATCH_CHUNK < len(articles):
+        if start + chunk_size < len(articles):
             time.sleep(3)
 
     if lost:
@@ -3944,6 +4058,16 @@ def main() -> None:
                 verify_rows, verify_stats = summary_verify.verify(verify_targets)
                 for line in summary_verify.report(verify_rows, verify_stats):
                     print(line)
+                # 모순 판정은 여기서 재생성으로 간다. 검사는 경고 모드지만 재생성은
+                # 요약을 바꾼다 — 등급·선정은 안 바꾸고 문장만 고친다.
+                if summary_repair_enabled():
+                    repair = repair_contradicted_summaries(
+                        verify_rows, verify_targets, final_articles, curated, queue,
+                        reports_kb, now_iso=now_iso)
+                    if repair["flagged"]:
+                        print(f"[요약검사] 재생성: 모순 {repair['flagged']} · 대상 {repair['targets']}"
+                              f" · 고침 {repair['repaired']} · 등급변경 버림 {repair['grade_changed']}"
+                              f" · 실패 {repair['failed']} · 재검사 {repair['recheck']}")
         except Exception as exc:  # noqa: BLE001 — 검사 실패가 수집을 멈추면 안 된다
             print(f"[요약검사] 건너뜀 — {type(exc).__name__}: {exc}")
 

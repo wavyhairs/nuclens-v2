@@ -106,12 +106,25 @@ def _summary_verify_model() -> str:
         "GEMINI_SUMMARY_VERIFY_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
 
 
+def _curation_repair_model() -> str:
+    """사실검사 모순을 받은 요약의 재생성. 요약(3.1)이 아니라 한 단 위 버킷을 쓴다.
+
+    카드 편집 데스크와 같은 이유다 — 같은 모델에 같은 입력을 다시 주면 같은
+    추측이 돌아오기 쉽다. 재생성은 하루 10~20건이라 3.5 버킷(64~76회/일)에
+    더해도 한도와 멀다.
+    """
+    return gemini_client._resolve(
+        "GEMINI_CURATION_REPAIR_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
+
+
 def _entry(task: str, resolver: Callable[[], str], *, strict: bool = False) -> TaskProfile:
     return TaskProfile(task=task, model_resolver=resolver, strict_reasoning=strict)
 
 
 _PROFILES: dict[str, TaskProfile] = {
     "curation": _entry(BULK_CURATION, _main_model),
+    # 사실검사가 모순으로 판정한 요약만 1건씩 다시 쓴다(news_bot.repair_contradicted_summaries).
+    "curation_verify_repair": _entry(BULK_CURATION, _curation_repair_model),
     "issue_review": _entry(IDENTITY_REVIEW, _review_model),
     # 장기 스토리 판정. `issue_review` 와 **같은 과제가 아니다** — 저쪽은
     # "같은 사건인가", 이쪽은 "같은 이야기의 다른 단계인가"를 묻는다.
