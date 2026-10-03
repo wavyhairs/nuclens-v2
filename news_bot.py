@@ -308,15 +308,64 @@ RSS_SOURCES += [
      "domain_label": "energy.gov", "source_kind": "official"},
 ]
 # Reuters는 공개 RSS 폐지, La Tribune은 섹션 피드 없음 → Google News 우회 (실측 12~18건/일)
+# ---- 일반 매체 피드의 주제 게이트 -------------------------------------------
+# Google News 의 `site:도메인 (키워드 OR …)` 검색은 **매체에 따라 괄호 키워드를
+# 통째로 무시한다.** 원자력 전문지(NEI)는 도메인 자체가 주제라 상관없지만, 종합지는
+# 그 매체의 최신 기사 전부가 들어온다. 실측 2026-10-03 (라이브 피드 1회분):
+#
+#   Reuters    36건 중 원자력 3   (루마니아 풍력·미얀마 선박·주가 페이지·연예)
+#   Les Échos  56건 중 원자력 2   (드라마 리뷰·여론조사·부동산 금리)
+#   La Tribune 20건 중 원자력 1   (미사일·우주·국방 예산)
+#   FT         12건 중 원자력 1   (맨시티·Garmin·분기 실적 공시)
+#   NEI        16건 중 원자력 16  ← 도메인이 곧 주제. 게이트 불필요
+#
+# 같은 기간 아카이브(9/19~10/2)로 보면 이 네 피드와 Le Monde 에너지 섹션에서
+# 들어온 974건 중 원자력 단어가 있는 건 70건이다. 904건은 큐레이션 LLM 까지 가서
+# 862건이 noise 로 찍혔지만 42건(5%)은 nice_to_know·market 으로 새어 브리핑 이슈가
+# 됐다 — G7 원유 방출, 오픈AI 조사 같은 것들이 그 경로다. 그 862건은 또 Gemini
+# 토큰과 아카이브 무결성 게이트(제목 불일치 격리)의 잡음이기도 하다.
+#
+# 그래서 종합지 피드는 **수집 단계에서** 제목·요약에 원자력 단어가 있어야 통과한다
+# (passes_source_keyword_gate). Google News 항목의 description 은 제목+매체명이라
+# 사실상 제목 게이트다. 쿼리의 괄호 키워드는 그대로 둔다 — 무시하지 않는 매체에서는
+# 여전히 좁혀 주고, 해롭지 않다.
+#
+# 부분 문자열 일치라 짧은 토큰은 위험하다: "edf" 는 Redford, "epr" 은 représente
+# 에 걸린다. 그래서 EDF·EPR 은 넣지 않는다 — 그 기사들은 거의 늘 "nucléaire" 를
+# 함께 쓴다(실측 Les Échos "Nucléaire : pourquoi la facture des EPR2 d'EDF…").
+NUCLEAR_TITLE_KEYWORDS = (
+    "nuclear", "reactor", "smr", "uranium", "atomic", "enrich",
+    "radioactive", "fusion", "fission", "nucléaire", "원전", "원자력",
+    # 핵연료 고유어. 제목에 nuclear 없이 나오는 공시가 있다(2026-09-24 FT
+    # "TRISO-X Completes Vertical Construction of TX-1 Fuel Fabrication Facility").
+    "triso", "haleu",
+)
+# 프랑스어 피드용. 영어 목록에서 "fusion" 을 뺀다 — 프랑스어에서는 합병(fusions-
+# acquisitions)·수혈(perfusion)·방송(diffusion)에 걸린다(아카이브 실측 4건, 전부
+# noise). 핵융합은 "fusion nucléaire" 로 받는다. "haleu" 도 뺀다 — chaleur(열·
+# 히트펌프)에 걸린다(아카이브 실측). 프랑스어 고유 표현을 더하되 "réacteur" 는
+# 넣지 않는다 — 제트엔진이기도 해서 등유 세금 기사가 통과했다(2026-10-03 Le Monde
+# 실측). 원전 기사는 어차피 "nucléaire" 를 함께 쓴다.
+_FR_EXCLUDED = {"fusion", "haleu"}
+NUCLEAR_TITLE_KEYWORDS_FR = tuple(k for k in NUCLEAR_TITLE_KEYWORDS if k not in _FR_EXCLUDED) + (
+    "fusion nucléaire", "radioactif", "framatome", "orano", "flamanville",
+)
+# Google News `site:` 피드 중 게이트가 **없어도 되는** 도메인 — 사이트 자체가
+# 원자력 기관·전문지라 주제가 이미 좁다. 여기 없는 종합지 site: 피드는 반드시
+# require_keywords 를 달아야 한다 (tests/test_collect.py 가 잠근다).
+TOPIC_BOUND_DOMAINS = frozenset({"neimagazine.com", "kns.org", "knfc.co.kr"})
+
 _REUTERS_Q = quote_plus('site:reuters.com ("nuclear power" OR reactor OR SMR OR uranium) when:1d')
 RSS_SOURCES.append({
     "url": f"https://news.google.com/rss/search?q={_REUTERS_Q}&hl=en-US&gl=US&ceid=US:en",
     "name": "Reuters 원자력", "domain_label": "reuters.com",
+    "require_keywords": NUCLEAR_TITLE_KEYWORDS,
 })
 _LATRIBUNE_Q = quote_plus("site:latribune.fr (nucléaire OR EDF OR EPR) when:2d")
 RSS_SOURCES.append({
     "url": f"https://news.google.com/rss/search?q={_LATRIBUNE_Q}&hl=fr&gl=FR&ceid=FR:fr",
     "name": "La Tribune 원자력", "domain_label": "latribune.fr",
+    "require_keywords": NUCLEAR_TITLE_KEYWORDS_FR,
 })
 
 # ---- 사내 큐레이션 코퍼스 격차 보완 (2026-08-01) ------------------------------
@@ -337,8 +386,11 @@ RSS_SOURCES += [
      "domain_label": "powermag.com"},
     # 에너지 섹션 피드 — 비원자력이 섞이지만 DOE 피드와 같이 큐레이션 noise 필터가
     # 거른다. 코퍼스 27건.
+    # 에너지 섹션 전체 피드다 — 유가·연료비·히트펌프가 대부분이고 원자력은 일부.
+    # 실측 2026-10-03: 20건 중 원자력 0, 아카이브 2주 52건 중 0. Google 경유가 아니라
+    # 쿼리로 좁힐 수 없으니 같은 게이트를 건다.
     {"url": "https://www.lemonde.fr/energies/rss_full.xml", "name": "Le Monde 에너지",
-     "domain_label": "lemonde.fr"},
+     "domain_label": "lemonde.fr", "require_keywords": NUCLEAR_TITLE_KEYWORDS_FR},
 ]
 # FT·Les Échos는 공개 RSS가 없거나 403 → 검증된 Google News site: 패턴.
 # FT는 페이월이라 본문이 없다. 제목·헤드라인 수준의 추적용으로만 쓴다.
@@ -346,11 +398,13 @@ _FT_Q = quote_plus('site:ft.com ("nuclear power" OR reactor OR SMR OR uranium) w
 RSS_SOURCES.append({
     "url": f"https://news.google.com/rss/search?q={_FT_Q}&hl=en-US&gl=US&ceid=US:en",
     "name": "FT 원자력", "domain_label": "ft.com",
+    "require_keywords": NUCLEAR_TITLE_KEYWORDS,
 })
 _LESECHOS_Q = quote_plus("site:lesechos.fr (nucléaire OR EDF OR EPR) when:2d")
 RSS_SOURCES.append({
     "url": f"https://news.google.com/rss/search?q={_LESECHOS_Q}&hl=fr&gl=FR&ceid=FR:fr",
     "name": "Les Échos 원자력", "domain_label": "lesechos.fr",
+    "require_keywords": NUCLEAR_TITLE_KEYWORDS_FR,
 })
 # E&E News 기존 도메인은 영구적인 0건을 반환하므로 퇴역시킨다. 검증된
 # POLITICO Pro 공개 경로가 생기면 별도 출처로 다시 등록한다.
@@ -369,10 +423,6 @@ RETIRED_SOURCE_NAMES = {"E&E News 원자력"}
 #   World Nuclear Association  구글 18건 중 절반이 'Contact Us' 류 상시 페이지고
 #                    나머지는 뉴스가 아닌 보고서·행사다. 발간물 경로가 맞아
 #                    뉴스 수집원으로는 넣지 않는다.
-NUCLEAR_TITLE_KEYWORDS = (
-    "nuclear", "reactor", "smr", "uranium", "atomic", "enrich",
-    "radioactive", "fusion", "nucléaire", "원전", "원자력",
-)
 # 원자력 전문지 — 실측 8건 전부 원자력(2026-08-05). 직접 RSS(neimagazine.com/feed)는
 # 403 이거나 5개월 전 항목을 돌려주는 캐시라 Google News 경로를 쓴다.
 _NEI_Q = quote_plus("site:neimagazine.com when:3d")
@@ -382,7 +432,9 @@ RSS_SOURCES.append({
 })
 # EU 정책 전문지 — EU 차원 규제·지침·역내 전력망 논의가 다른 출처에 잘 안 잡힌다.
 # 직접 RSS 는 Cloudflare 403(브라우저 UA 로도 동일). Google News 는 이 도메인에서
-# 괄호 키워드를 무시하므로 require_keywords 로 수집 단계에서 거른다.
+# 괄호 키워드를 무시하므로 require_keywords 로 수집 단계에서 거른다 — 2026-08-05 에
+# 여기서 처음 확인한 현상인데, 2026-10-03 실측으로 Reuters·FT·Les Échos·La Tribune
+# 도 같다는 것이 드러나 종합지 전부로 넓혔다(NUCLEAR_TITLE_KEYWORDS 주석).
 _EURACTIV_Q = quote_plus("site:euractiv.com (nuclear OR reactor OR SMR OR uranium) when:3d")
 RSS_SOURCES.append({
     "url": f"https://news.google.com/rss/search?q={_EURACTIV_Q}&hl=en-US&gl=US&ceid=US:en",

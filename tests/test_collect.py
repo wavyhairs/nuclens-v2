@@ -15,7 +15,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, unquote_plus
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -1219,6 +1219,92 @@ class TestReferenceSiteCoverage(unittest.TestCase):
         euractiv = [s for s in nb.RSS_SOURCES if "euractiv.com" in s["url"]]
         self.assertEqual(len(euractiv), 1)
         self.assertTrue(euractiv[0].get("require_keywords"))
+
+    def test_every_generalist_google_site_feed_carries_a_keyword_gate(self):
+        """Google News 는 `site:` 쿼리의 괄호 키워드를 매체에 따라 무시한다 — Euractiv 에서
+        처음 봤고(2026-08-05) Reuters·FT·Les Échos·La Tribune 도 같다(2026-10-03 실측:
+        네 피드 124건 중 원자력 7건). 종합지 site: 피드는 전부 게이트가 있어야 하고,
+        예외는 사이트 자체가 원자력인 TOPIC_BOUND_DOMAINS 뿐이다. 새 종합지를 넣으며
+        게이트를 빠뜨리면 여기서 걸린다."""
+        for src in nb.RSS_SOURCES:
+            query = unquote_plus(src["url"])
+            if "news.google.com/rss/search" not in src["url"] or "site:" not in query:
+                continue
+            with self.subTest(source=src["name"]):
+                if src["domain_label"] in nb.TOPIC_BOUND_DOMAINS:
+                    self.assertFalse(src.get("require_keywords"),
+                                     "원자력 전문 도메인에는 게이트가 필요 없다")
+                else:
+                    self.assertTrue(src.get("require_keywords"),
+                                    f"{src['name']} 은 종합지 site: 피드인데 require_keywords 가 없다")
+
+    def test_generalist_feeds_use_the_language_matching_keyword_list(self):
+        gates = {s["domain_label"]: s.get("require_keywords") for s in nb.RSS_SOURCES}
+        for domain in ("reuters.com", "ft.com"):
+            self.assertEqual(gates[domain], nb.NUCLEAR_TITLE_KEYWORDS, domain)
+        for domain in ("lesechos.fr", "latribune.fr", "lemonde.fr"):
+            self.assertEqual(gates[domain], nb.NUCLEAR_TITLE_KEYWORDS_FR, domain)
+
+    def test_le_monde_energy_section_feed_is_gated(self):
+        """직접 RSS 지만 에너지 섹션 전체라 유가·연료비 기사가 대부분이다
+        (2026-10-03: 20건 중 원자력 0, 아카이브 2주 52건 중 0)."""
+        rows = [s for s in nb.RSS_SOURCES if s["domain_label"] == "lemonde.fr"]
+        self.assertEqual(len(rows), 1)
+        self.assertTrue(rows[0].get("require_keywords"))
+
+    def test_english_gate_on_live_reuters_shapes(self):
+        """2026-10-03 Reuters 피드 실제 제목. Google News 항목의 description 은
+        '제목 + 매체명'이라 사실상 제목만으로 판정된다."""
+        src = {"require_keywords": nb.NUCLEAR_TITLE_KEYWORDS}
+        keep = ("US senators expect vote after midterms on Trump's nuclear power pact with Saudi Arabia",
+                "Nuclear technology group Steady Energy falls in market debut",
+                "Reactor crisis day-by-day")
+        drop = ("Romania's newest wind farm may add solar, storage, as country faces energy crunch",
+                "Trump says US deal with South Korea has $8.4 billion for oil recovery",
+                "MGAV.SG - | Stock Price & Latest News",
+                "Meghan named People's best dressed")
+        for title in keep:
+            self.assertTrue(nb.passes_source_keyword_gate(src, {"title": title, "description": f"{title}  Reuters"}), title)
+        for title in drop:
+            self.assertFalse(nb.passes_source_keyword_gate(src, {"title": title, "description": f"{title}  Reuters"}), title)
+
+    def test_french_gate_keeps_nuclear_and_drops_oil_and_mergers(self):
+        """프랑스어 목록은 'fusion' 을 빼고 'fusion nucléaire'·Framatome 등을 더한다 —
+        합병(fusions-acquisitions)·수혈(perfusion)·방송(diffusion)이 영어 목록에 걸렸다.
+        'réacteur' 도 넣지 않는다 — 제트엔진이라 등유 세금 기사가 통과했다."""
+        src = {"require_keywords": nb.NUCLEAR_TITLE_KEYWORDS_FR}
+        keep = ("Nucléaire : pourquoi la facture des EPR2 d'EDF pourrait grimper à 153 milliards d'euros",
+                "Uranium : la Mauritanie se rapproche du statut de fournisseur",
+                "Flamanville : le réacteur redémarre après un arrêt de dix jours",
+                "ITER : la fusion nucléaire franchit une étape")
+        drop = ("Sous pression de Donald Trump, le G7 annonce un déblocage de 100 millions de barils de pétrole",
+                "Fusions-acquisitions en Afrique : derrière la hausse des montants, un marché qui se concentre",
+                "Bientôt sous perfusion du FMI, le Sénégal veut relancer l'investissement",
+                "UFC Paris 2026 : horaires, diffusion… le MMA français change d'ère",
+                "La justice américaine enquête sur les agents IA d'OpenAI et d'Anthropic",
+                "Le gouvernement ouvre une brèche dans la taxation du kérosène des réacteurs d'avion")
+        for title in keep:
+            self.assertTrue(nb.passes_source_keyword_gate(src, {"title": title, "description": ""}), title)
+        for title in drop:
+            self.assertFalse(nb.passes_source_keyword_gate(src, {"title": title, "description": ""}), title)
+
+    def test_french_list_still_covers_everything_english_except_fusion_and_haleu(self):
+        """fusion 은 합병, haleu 는 chaleur(열) 에 걸린다 — 프랑스어 목록에서만 뺀다."""
+        self.assertNotIn("fusion", nb.NUCLEAR_TITLE_KEYWORDS_FR)
+        self.assertNotIn("haleu", nb.NUCLEAR_TITLE_KEYWORDS_FR)
+        for keyword in nb.NUCLEAR_TITLE_KEYWORDS:
+            if keyword not in ("fusion", "haleu"):
+                self.assertIn(keyword, nb.NUCLEAR_TITLE_KEYWORDS_FR)
+
+    def test_fuel_terms_keep_announcements_without_the_word_nuclear(self):
+        en = {"require_keywords": nb.NUCLEAR_TITLE_KEYWORDS}
+        fr = {"require_keywords": nb.NUCLEAR_TITLE_KEYWORDS_FR}
+        self.assertTrue(nb.passes_source_keyword_gate(en, {
+            "title": "TRISO-X Completes Vertical Construction of TX-1 Fuel Fabrication Facility – Company Announcement",
+            "description": ""}))
+        self.assertTrue(nb.passes_source_keyword_gate(en, {"title": "NANO, QNI target future HALEU", "description": ""}))
+        self.assertFalse(nb.passes_source_keyword_gate(fr, {
+            "title": "Le marché de la pompe à chaleur se relance (enfin)", "description": ""}))
 
     def test_new_sources_are_registered_in_sources_json(self):
         raw = json.loads((Path(nb.__file__).parent / "sources.json").read_text(encoding="utf-8"))
