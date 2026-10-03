@@ -862,6 +862,21 @@ def _enforce_article_ownership(
     return owners, conflicts
 
 
+def carry_story_scores(promotions: list[dict], scores: dict[str, float]) -> None:
+    """대표가 바뀌어도 이슈의 자리는 그대로다 — 물러난 대표의 점수를 새 대표에 넘긴다.
+
+    점수는 사건의 중요도(사건 유형·한국 관련성·매체 수)이지 그 기사를 쓴 매체의
+    급이 아니다. 매체 급 때문에 대표를 바꿨는데 새 기사의 자기 점수가 낮아 이슈가
+    아래로 내려가면, 교체가 곧 강등이 된다. refresh_scores 가 새 대표의 자기 점수를
+    다시 매긴 **뒤에** 부른다 — 둘 중 높은 쪽을 쓴다.
+    """
+    for row in promotions:
+        old = float(scores.get(str(row.get("from_hash") or ""), 0.0))
+        new_hash = str(row.get("to_hash") or "")
+        if new_hash and old > float(scores.get(new_hash, 0.0)):
+            scores[new_hash] = old
+
+
 def _pick_display_representatives(
     kept: list[dict],
     pool: list[dict],
@@ -1113,6 +1128,7 @@ def rank_and_select(items: list[dict], k: int, cfg: dict | None = None,
         kept, items, scores, dropped, ownership_conflicts)
     if promotions:
         refresh_scores(kept)
+        carry_story_scores(promotions, scores)
 
     # Editorial dedup is the last place a fingerprint/story id can be created, and display
     # promotion used to discard the representative's continuity annotation.  Recheck the actual

@@ -667,7 +667,16 @@ def choose_display_representative(
         return current, "keep"
     if display_rank_key(best, score_of(best)) <= display_rank_key(current, score_of(current)):
         return current, "keep"
-    # 점수를 크게 거스르면서까지 바꾸지 않는다.
+    # 매체 급이 올라가는 교체는 점수 차를 보지 않는다. 2026-10-03 국내 1위: 글로벌E
+    # (미등록, must_read 26.8점) 가 서울신문·한겨레·ANS 를 두고 "점수 차가 커서
+    # 유지"로 남았다. 점수는 **사건의 중요도**지 그 기사를 쓴 매체의 급이 아니고,
+    # 교체해도 이슈의 자리는 그대로다(ranking 이 물러난 대표의 점수를 넘겨준다).
+    # 내용이 더 빈약한 기사로는 올라가지 않는다 — 급이 높아도 요약뿐이면 본문 요지가
+    # 있는 현재 대표를 못 밀어낸다.
+    if (outlet_rank(best) > outlet_rank(current)
+            and _content_rank(best) >= _content_rank(current)):
+        return best, _display_reason(best, current)
+    # 같은 급 안에서는 점수를 크게 거스르면서까지 바꾸지 않는다.
     if score_of(current) - score_of(best) > max_score_gap:
         return current, "keep_score_gap"
     return best, _display_reason(best, current)
