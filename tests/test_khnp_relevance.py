@@ -82,6 +82,24 @@ class RelevanceTests(unittest.TestCase):
         })
         self.assertEqual(verdict["level"], "required")
 
+    def test_curation_topics_are_counted_as_subject_signals(self):
+        """topics 는 큐레이션이 붙인 통제 어휘다. power_market·datacenter_ai 가 대응표에
+        없어서 "산업용 전기료 차등요금제" 가 0점(not_required) 으로 떨어졌다(2026-10-03)."""
+        tariff = {
+            "title_kr": "순천·구례·보성 제조업계, 산업용 전기료 차등요금제 조기 시행 촉구",
+            "summary": "지역 제조업계가 지역별 차등 전기요금제의 조기 시행을 요구했다.",
+            "topics": ["power_market"], "tags": ["#전기요금"],
+        }
+        with_topic = khnp_relevance.relevance(tariff)
+        without = khnp_relevance.relevance({**tariff, "topics": []})
+        self.assertIn("market×", " ".join(with_topic["reasons"]))
+        self.assertGreater(with_topic["score"], without["score"] - 0.01)
+        self.assertNotEqual(with_topic["level"], "not_required")
+        # security_trade·finance 는 일부러 대응하지 않는다 — 원유 방출이 그 태그를 단다.
+        oil = {"title_kr": "G7, 원유 1억 배럴 방출 발표", "summary": "유가 안정 조치.",
+               "topics": ["security_trade", "finance"]}
+        self.assertEqual(khnp_relevance.relevance(oil)["level"], "not_required")
+
     def test_reasons_name_the_axes(self):
         verdict = khnp_relevance.relevance(ESS_ARTICLE)
         self.assertTrue(any(r.startswith("policy") for r in verdict["reasons"]))
