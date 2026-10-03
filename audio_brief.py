@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import array
 import base64
+import http.client
 import json
 import re
 import shutil
@@ -142,11 +143,15 @@ _tts_backoff_spent = 0.0
 # 이 상한은 재시도 도입 **이전의 최악값(12건)** 을 그대로 유지시킨다. 즉 이
 # 백오프가 폭풍일의 쿼터 소모를 늘리지 않는다.
 #
-# ⚠ 15 는 아직 추정이다. 429 본문의 실제 한도 수치를 표시 절단이 잘라먹어
-# 못 봤다(그래서 아래 _http_detail 을 넓혔다). 다음에 429 를 맞으면 로그에
-# 수치가 남으므로 그때 이 값을 재조정한다.
+# 실측 한도는 **모델당 10** 이다(09-08·10-01 429 본문:
+# generate_content_free_tier_requests, limit: 10). 15 가정보다 빠듯하다.
+#
+# **예산은 모델별로 센다** (2026-10-04). 쿼터가 모델별 버킷인데 예산을 회차
+# 전체 하나로 세면, 기본 모델(3.1)이 503 폭풍에 예산을 다 태운 뒤 폴백 모델은
+# 시도마다 1회뿐이다. 10-04 가 그 모양이다 — 3.1 의 503 세 번에 예산이 닳고,
+# 2.5 는 첫 청크의 표집 400 한 번에 끝났다. 폴백은 자기 버킷으로 자기 몫을 쓴다.
 TTS_FAILURE_BUDGET = 3
-_tts_failures = 0
+_tts_failures: dict[str, int] = {}
 
 # 워크플로의 90초 재시도를 건너뛰게 하는 신호. 쿼터·실패예산으로 접은 회차는
 # 90초 뒤 다시 불러도 같은 벽에 부딪히면서 그날 남은 요청만 태운다 — 그리고
@@ -762,14 +767,25 @@ def _http_detail(code: int, body_text: str) -> str:
     return body_text[:_TTS_DETAIL_CHARS.get(code, _TTS_DETAIL_DEFAULT)]
 
 
-def _tts_budget_left() -> bool:
-    """실패 예산이 남았는가. 다 썼으면 재시도를 접고 모델당 1회로 degrade 한다.
+def _tts_failure_count(model: str) -> int:
+    return _tts_failures.get(model, 0)
+
+
+def _tts_budget_left(model: str) -> bool:
+    """이 모델의 실패 예산이 남았는가. 다 썼으면 이 모델은 시도당 1회로 degrade 한다.
 
     degrade 지점이 중요하다 — 예산을 넘겨도 **다음 모델 1회 시도는 계속한다.**
     무료 티어 쿼터가 모델별 버킷이라 한쪽이 막혀도 다른 쪽은 살아 있을 수 있고,
     여기서 통째로 포기하면 재시도 도입 이전보다 오히려 나빠진다.
     """
-    return _tts_failures < TTS_FAILURE_BUDGET
+    return _tts_failure_count(model) < TTS_FAILURE_BUDGET
+
+
+# 2.5 TTS 가 오디오 대신 글을 내려다 거절당한 400. 같은 요청이 다음 번엔 통과한다
+# — 요청 모양 문제가 아니라 표집 문제다(09-09: 같은 회차 같은 모델로 3건 성공·
+# 3건 이 400). 그래서 다른 400 과 달리 되짚는다. 응답 모양 붕괴(KeyError, 아래)와
+# 같은 종류의 실패라 같은 사다리를 쓴다.
+_TTS_TEXT_SAMPLING_MARKER = "should only be used for TTS"
 
 
 def _tts_retry_wait(code: int, body_text: str, model: str, attempt: int) -> float | None:
@@ -791,7 +807,9 @@ def _tts_retry_wait(code: int, body_text: str, model: str, attempt: int) -> floa
         return gemini_client._retry_delay_seconds(body_text) or _tts_ladder_wait(attempt)
     if code in (500, 502, 503, 504):
         return _tts_ladder_wait(attempt)
-    # 400 등은 같은 요청을 다시 보내도 같은 답이 온다.
+    if code == 400 and _TTS_TEXT_SAMPLING_MARKER in body_text:
+        return _tts_ladder_wait(attempt)
+    # 그 밖의 400 등은 같은 요청을 다시 보내도 같은 답이 온다.
     return None
 
 
@@ -848,25 +866,28 @@ def call_tts(script: str, models: list[str] | None = None) -> tuple[bytes, int]:
                 # 본문 뒤쪽 details 에 실려 오는데 예전엔 [:200] 로 자른 뒤라
                 # 일일/분당을 사후에 가를 수 없었다(gemini_client 의 같은 함정).
                 body_text = exc.read().decode("utf-8", errors="replace")
-                _tts_failures += 1
+                _tts_failures[model] = _tts_failure_count(model) + 1
                 last_err = GeminiError(
                     f"{model}: HTTP {exc.code} {_http_detail(exc.code, body_text)}")
                 wait = _tts_retry_wait(exc.code, body_text, model, attempt)
                 reason = f"HTTP {exc.code}"
-            except (urllib.error.URLError, TimeoutError, KeyError, IndexError,
+            except (urllib.error.URLError, TimeoutError, ConnectionError,
+                    http.client.HTTPException, KeyError, IndexError,
                     json.JSONDecodeError) as exc:
                 # 연결 실패와 응답 모양 붕괴(모델이 오디오 대신 텍스트를 냄)는
                 # 서버가 이유를 안 알려준다. 둘 다 표집이 흔들린 결과라 같은
                 # 사다리로 한 번 더 본다 — 예산이 위에서 묶여 있다.
-                _tts_failures += 1
+                # 응답을 읽다 끊긴 연결(RemoteDisconnected)은 URLError 로 안
+                # 싸여 올라온다 — 09-30 에 그게 폴백 모델 시도를 통째로 죽였다.
+                _tts_failures[model] = _tts_failure_count(model) + 1
                 last_err = GeminiError(f"{model}: {type(exc).__name__}: {exc}")
                 wait = _tts_ladder_wait(attempt)
                 reason = type(exc).__name__
             # 실패 예산을 다 썼으면 되짚지 않는다. 실패한 요청도 RPD 를 깎으므로,
             # 폭풍일에 재시도를 계속 태우면 그날 복구 실행분까지 먹어 치운다.
-            if wait is not None and not _tts_budget_left():
+            if wait is not None and not _tts_budget_left(model):
                 print(f"[audio] TTS 실패 예산 소진 "
-                      f"({_tts_failures}/{TTS_FAILURE_BUDGET}) — "
+                      f"({_tts_failure_count(model)}/{TTS_FAILURE_BUDGET}) — "
                       f"{model} 재시도 중단, 남은 모델은 1회씩만 시도")
                 _tts_quota_exhausted = True
                 wait = None
@@ -875,6 +896,10 @@ def call_tts(script: str, models: list[str] | None = None) -> tuple[bytes, int]:
                 print(f"[audio] {last_err} — 다음 모델 폴백")
                 break
     raise last_err or GeminiError("TTS 모델 전부 실패")
+
+
+class TTSTruncatedError(GeminiError):
+    """HTTP 는 성공했는데 음원이 대사보다 한참 짧다 — 같은 요청을 다시 낼 값어치가 있다."""
 
 
 def _check_not_truncated(index: int, chunk: str, pcm: bytes, rate: int) -> None:
@@ -891,7 +916,7 @@ def _check_not_truncated(index: int, chunk: str, pcm: bytes, rate: int) -> None:
     expected = spoken / SPOKEN_CHARS_PER_SEC
     actual = len(pcm) / 2 / rate
     if actual < expected * TRUNCATION_RATIO:
-        raise GeminiError(
+        raise TTSTruncatedError(
             f"청크 {index} 잘림 의심 — 대사 {spoken}자에 음원 {actual:.0f}초"
             f"(기대 {expected:.0f}초 이상)")
 

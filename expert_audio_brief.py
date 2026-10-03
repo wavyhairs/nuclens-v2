@@ -39,6 +39,7 @@ from audio_brief import (
     CHUNK_SPOKEN,
     KST,
     SPEAKER_RE,
+    TTSTruncatedError,
     VOICES,
     WEB_DATA,
     _audio_manifest,
@@ -1924,14 +1925,21 @@ def _score_summary(report: dict) -> str:
 
 
 def _tts_chunk_retry(index: int, chunk: str, model: str) -> tuple[bytes, int]:
-    """HTTP 성공인데 짧게 잘린 TTS는 절대 채택하지 않고 동일 model로 한 번 재생성."""
+    """HTTP 성공인데 짧게 잘린 TTS는 절대 채택하지 않고 동일 model로 한 번 재생성.
+
+    **잘림만 여기서 되짚는다.** HTTP 오류(503·429·400)는 call_tts 가 이미 자기
+    사다리와 실패 예산으로 되짚고 난 뒤의 결론이다. 그걸 여기서 '품질 실패' 로
+    받아 한 번 더 부르면 503 폭풍 속에 요청만 늘고 일일 한도(모델당 10)를 태운다
+    (10-04: 청크 3 의 503 을 '동일 청크 재생성 2/2' 로 다시 불렀다). HTTP 오류는
+    그대로 올려 synthesize_expert 가 다음 모델로 넘기게 한다.
+    """
     last: Exception | None = None
     for attempt in range(1, EXPERT_TTS_RETRIES + 1):
+        pcm, rate = call_tts(chunk, models=[model])
         try:
-            pcm, rate = call_tts(chunk, models=[model])
             _check_not_truncated(index, chunk, pcm, rate)
             return pcm, rate
-        except GeminiError as exc:
+        except TTSTruncatedError as exc:
             last = exc
             if attempt < EXPERT_TTS_RETRIES:
                 print(f"[expert-audio] 청크 {index} 품질 실패 — {model} 동일 청크 재생성 {attempt+1}/{EXPERT_TTS_RETRIES}: {exc}")

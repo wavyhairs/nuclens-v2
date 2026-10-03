@@ -934,7 +934,7 @@ class TTSRetryPolicyTest(unittest.TestCase):
         self.slept = []
         audio_brief.time.sleep = self.slept.append
         audio_brief._tts_backoff_spent = 0.0
-        audio_brief._tts_failures = 0
+        audio_brief._tts_failures = {}
         audio_brief._tts_quota_exhausted = False
         self.addCleanup(self._restore)
 
@@ -1019,7 +1019,8 @@ class TTSRetryPolicyTest(unittest.TestCase):
         한쪽이 막혀도 다른 쪽은 살아 있을 수 있고, 통째로 포기하면 재시도 도입
         이전보다 오히려 나빠진다.
         """
-        audio_brief._tts_failures = audio_brief.TTS_FAILURE_BUDGET - 1
+        audio_brief._tts_failures = {m: audio_brief.TTS_FAILURE_BUDGET - 1
+                                     for m in ("m1", "m2", "m3")}
         self._install([self._http_error(503, "high demand"),
                        self._http_error(503, "high demand"), "ok"])
         audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2", "m3"])
@@ -1031,7 +1032,44 @@ class TTSRetryPolicyTest(unittest.TestCase):
     def test_failed_requests_count_toward_the_budget(self):
         self._install([self._http_error(503, "x"), "ok"])
         audio_brief.call_tts("HOST: 안녕하세요", models=["m1"])
-        self.assertEqual(1, audio_brief._tts_failures)
+        self.assertEqual({"m1": 1}, audio_brief._tts_failures)
+
+    def test_failure_budget_is_counted_per_model(self):
+        """쿼터가 모델별 버킷이다 — 기본 모델의 503 폭풍이 폴백의 재시도를 굶기면 안 된다.
+
+        10-04: 3.1 이 503 으로 예산을 다 태운 뒤 2.5 는 표집 400 한 번에 끝났다.
+        """
+        audio_brief._tts_failures = {"m1": audio_brief.TTS_FAILURE_BUDGET}
+        self._install([self._http_error(503, "x"),        # m1: 예산 소진 — 1회만
+                       self._http_error(503, "x"), "ok"])  # m2: 자기 예산으로 되짚음
+        pcm, _rate = audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2"])
+        self.assertTrue(pcm)
+        self.assertEqual(3, len(self.seen))
+        self.assertIn("m2", self.seen[2])
+        self.assertEqual([audio_brief.TTS_BACKOFF_LADDER[0]], self.slept)
+
+    def test_tts_text_sampling_400_is_retried(self):
+        """'Model tried to generate text' 400 은 표집 실패라 같은 요청이 다음엔 통과한다.
+
+        09-09·09-30·10-04 에 폴백 2.5 가 매번 이 400 으로 죽었다 — 폴백이 한 번도
+        브리핑을 살리지 못한 이유다.
+        """
+        body = ('{"error":{"code":400,"message":"Model tried to generate text, but it '
+                'should only be used for TTS. Make sure your instructions are clear"}}')
+        self._install([self._http_error(400, body), "ok"])
+        pcm, _rate = audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2"])
+        self.assertTrue(pcm)
+        self.assertEqual(2, len(self.seen))
+        self.assertIn("m1", self.seen[1])                   # 같은 모델로 되짚음
+        self.assertEqual([audio_brief.TTS_BACKOFF_LADDER[0]], self.slept)
+
+    def test_dropped_connection_is_a_transient_failure(self):
+        """응답을 읽다 끊긴 연결은 URLError 로 안 싸여 온다 — 09-30 폴백을 통째로 죽였다."""
+        self._install([audio_brief.http.client.RemoteDisconnected(
+            "Remote end closed connection without response"), "ok"])
+        pcm, _rate = audio_brief.call_tts("HOST: 안녕하세요", models=["m1"])
+        self.assertTrue(pcm)
+        self.assertEqual(2, len(self.seen))
 
     def test_quota_body_is_logged_wide_enough_to_show_the_limit(self):
         """한도 수치는 본문 뒤쪽 details 에 있다 — 200 자로 자르면 안내문만 남는다."""
@@ -1062,7 +1100,8 @@ class TTSRetryPolicyTest(unittest.TestCase):
         self.assertTrue(audio_brief.tts_quota_exhausted())
 
     def test_budget_exhaustion_marks_the_run_for_retry_skip(self):
-        audio_brief._tts_failures = audio_brief.TTS_FAILURE_BUDGET - 1
+        audio_brief._tts_failures = {m: audio_brief.TTS_FAILURE_BUDGET - 1
+                                     for m in ("m1", "m2")}
         self._install([self._http_error(503, "x")] * 4)
         with self.assertRaises(GeminiError):
             audio_brief.call_tts("HOST: 안녕하세요", models=["m1", "m2"])

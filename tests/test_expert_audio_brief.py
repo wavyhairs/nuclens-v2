@@ -514,23 +514,47 @@ class ExpertAudioAlgorithmTests(unittest.TestCase):
             expert.trim_silence = original_trim
 
     def test_tts_retry_does_not_sleep_because_the_limit_is_daily(self):
-        """RPD 는 기다린다고 회복되지 않는다 — 재시도에 백오프를 두지 않는다."""
+        """잘림은 같은 모델로 한 번 더 — 백오프 없이(RPD 는 기다린다고 회복되지 않는다)."""
         original_call = expert.call_tts
         original_check = expert._check_not_truncated
         attempts: list[str] = []
         try:
             def fake_call(chunk, models=None):
                 attempts.append(models[0])
-                if len(attempts) < 2:
-                    raise GeminiError("HTTP 429")
                 return b"\x00\x40" * 100, 24000
+
+            def fake_check(index, chunk, pcm, rate):
+                if len(attempts) < 2:
+                    raise expert.TTSTruncatedError("잘림 의심")
             expert.call_tts = fake_call
-            expert._check_not_truncated = lambda *a, **k: None
+            expert._check_not_truncated = fake_check
             _pcm, rate = expert._tts_chunk_retry(1, "가" * 100, "m1")
             self.assertEqual(24000, rate)
             self.assertEqual(["m1", "m1"], attempts)  # 같은 모델로 한 번 더
             self.assertEqual(2, expert.EXPERT_TTS_RETRIES)
             self.assertFalse(hasattr(expert, "EXPERT_TTS_BACKOFF_SEC"))
+        finally:
+            expert.call_tts = original_call
+            expert._check_not_truncated = original_check
+
+    def test_http_errors_are_not_retried_again_at_chunk_level(self):
+        """call_tts 가 이미 되짚은 HTTP 오류를 '품질 실패' 로 다시 부르지 않는다.
+
+        10-04: 청크 3 의 503 을 '동일 청크 재생성 2/2' 로 한 번 더 불러 503 폭풍
+        속에 요청만 늘었다. HTTP 오류는 그대로 올려 다음 모델로 넘긴다.
+        """
+        original_call = expert.call_tts
+        original_check = expert._check_not_truncated
+        attempts: list[str] = []
+        try:
+            def fake_call(chunk, models=None):
+                attempts.append(models[0])
+                raise GeminiError("m1: HTTP 503 high demand")
+            expert.call_tts = fake_call
+            expert._check_not_truncated = lambda *a, **k: None
+            with self.assertRaises(GeminiError):
+                expert._tts_chunk_retry(1, "가" * 100, "m1")
+            self.assertEqual(["m1"], attempts)
         finally:
             expert.call_tts = original_call
             expert._check_not_truncated = original_check
