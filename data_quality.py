@@ -31,9 +31,15 @@ VALID_SOURCE_TYPES = {
     "specialist_media",
     "general_media",
     "press_release",
+    # 업계 단체·학회 — 공식 기관이 아니다(sources.json _comment_stakeholder).
+    "industry_body",
+    "academic",
     "unknown",
 }
-VALID_EVIDENCE_ROLES = {"primary", "independent", "distributed_claim", "unknown"}
+# stakeholder: 업계·학계의 자기 입장. 1차 자료도 독립 보도도 아니다.
+# peripheral:  본업이 다른 매체. 근거로만 남고 독립 출처·대표가 되지 못한다.
+VALID_EVIDENCE_ROLES = {"primary", "independent", "distributed_claim", "stakeholder",
+                        "peripheral", "unknown"}
 VALID_EVENT_DATE_TYPES = {
     "announcement", "occurrence", "effective", "deadline", "scheduled", "unknown",
 }
@@ -298,6 +304,7 @@ def source_profile(domain: object = "", publisher: object = "") -> dict:
             result["publisher"] = clean_text(publisher)
         if normalized_domain:
             result["domain"] = normalized_domain
+        result["registered"] = True
         return result
 
     if normalized_domain.endswith((".go.kr", ".gov", ".gov.uk")):
@@ -315,6 +322,10 @@ def source_profile(domain: object = "", publisher: object = "") -> dict:
         "source_type": source_type,
         "evidence_role": role,
         "source_tier": tier,
+        # 등급표(sources.json)에 없는 도메인. 기본값 tier3 를 받지만 등록된 tier3
+        # 와는 다르다 — 점수(news_bot.source_score)와 대표 순위(story_cluster.
+        # outlet_rank)가 이 플래그로 가른다. 정부 도메인(.go.kr/.gov)은 등록으로 친다.
+        "registered": source_type == "official",
     }
 
 

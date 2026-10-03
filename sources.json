@@ -1,6 +1,10 @@
 {
   "_comment": "출처의 랭킹 등급과 성격을 분리한다. rank_tier는 정렬 호환용이고, 화면의 공식 출처 표시는 evidence_role=primary만 사용한다.",
   "_how_it_works": "도메인을 우선하고 발행처 이름·alias를 보조로 사용한다. source_type은 발행 주체의 성격, evidence_role은 해당 출처를 근거로 사용할 때의 기본 역할이다.",
+  "_comment_tiers": "2026-10-03 재점검. tier1=규제·정부·국제기구·원자력 전문지(1차 자료), tier2=전국 종합지·통신(연합)·경제지·방송·에너지 전문지·국제 유력지, tier3=그 외 등록 매체. 등록되지 않은 도메인은 tier3 보다 아래(점수 4)다. news_bot.source_score 가 여기서 점수를 파생하므로 매체 점수표는 이 파일 하나다.",
+  "_comment_stakeholder": "업계 단체·학회·사업단(NEI·WNA·SFEN·KAIF·i-SMR 사업단·원자력학회·NIFTEP)은 evidence_role=stakeholder 다. 수집 우선순위(tier1)는 그대로지만 '공식 원문' 배지와 must_read 자동 격상에서는 빠진다 — 업계 입장문이 규제 의결과 같은 무게로 오르던 것을 막는다(2026-10-03 재점검). 독립 출처로도 세지 않는다.",
+  "_comment_peripheral": "본업이 다른 매체(암호화폐·채용·해외기업 동향)는 evidence_role=peripheral 이다. 수집은 되고 근거로 남지만, 독립 출처로 세지 않고 대표 기사가 되지 못한다. 토큰포스트는 90일 321건이 들어와 발송 29건을 차지했고, '주제 밖 기사' 상위 도메인 1위였다.",
+  "_comment_portals": "포털 중계(네이트·다음·MSN·네이버)는 evidence_role=distributed_claim 이다. 원 매체의 기사를 그대로 실어 나르므로 **독립 출처가 아니다** — 원문과 포털 사본이 같은 이슈 클러스터에 들어가면 _is_independent_source 가 둘 다 세어 '복수 출처 확인' 배지를 위조한다. 실측 2026-08-06 아카이브 970건 중 23건이 이 꼴이었고 전부 independent 로 잡혀 있었다(네이트 12·v.daum.net 6·MSN 5). 대부분 Google News 피드에서 <source> 가 포털로 찍혀 들어온다 — 원 언론사 복원은 리다이렉트를 따라가야 해서 별건이고, 그 전까지는 재인용으로 다룬다. 랭킹 점수는 바뀌지 않는다(둘 다 tier3 기본값).",
   "tier1_bonus": 40,
   "tier2_bonus": 20,
   "tier1": [
@@ -190,8 +194,8 @@
         "WNA",
         "@World_Nuclear"
       ],
-      "source_type": "official",
-      "evidence_role": "primary",
+      "source_type": "industry_body",
+      "evidence_role": "stakeholder",
       "rank_tier": 1
     },
     {
@@ -213,8 +217,8 @@
         "Nuclear Energy Institute",
         "@NEI"
       ],
-      "source_type": "official",
-      "evidence_role": "primary",
+      "source_type": "industry_body",
+      "evidence_role": "stakeholder",
       "rank_tier": 1
     },
     {
@@ -225,8 +229,8 @@
         "Société Française d'Énergie Nucléaire",
         "Revue Générale Nucléaire"
       ],
-      "source_type": "specialist_media",
-      "evidence_role": "independent",
+      "source_type": "industry_body",
+      "evidence_role": "stakeholder",
       "rank_tier": 2
     },
     {
@@ -248,8 +252,8 @@
         "한국원자력학회",
         "원자력학회"
       ],
-      "source_type": "official",
-      "evidence_role": "primary",
+      "source_type": "academic",
+      "evidence_role": "stakeholder",
       "rank_tier": 2
     },
     {
@@ -260,8 +264,8 @@
         "원자력산업협회",
         "KAIF"
       ],
-      "source_type": "official",
-      "evidence_role": "primary",
+      "source_type": "industry_body",
+      "evidence_role": "stakeholder",
       "rank_tier": 2
     },
     {
@@ -284,8 +288,8 @@
         "혁신형SMR기술개발사업단",
         "i-SMR 사업단"
       ],
-      "source_type": "official",
-      "evidence_role": "primary",
+      "source_type": "industry_body",
+      "evidence_role": "stakeholder",
       "rank_tier": 2
     },
     {
@@ -296,8 +300,8 @@
         "원자력미래기술정책연구소",
         "NIFTEP"
       ],
-      "source_type": "official",
-      "evidence_role": "primary",
+      "source_type": "academic",
+      "evidence_role": "stakeholder",
       "rank_tier": 2
     }
   ],
@@ -478,28 +482,6 @@
       "rank_tier": 2
     },
     {
-      "domain": "koreaherald.com",
-      "name": "Korea Herald",
-      "aliases": [
-        "Korea Herald",
-        "코리아헤럴드"
-      ],
-      "source_type": "general_media",
-      "evidence_role": "independent",
-      "rank_tier": 2
-    },
-    {
-      "domain": "koreatimes.co.kr",
-      "name": "Korea Times",
-      "aliases": [
-        "Korea Times",
-        "코리아타임스"
-      ],
-      "source_type": "general_media",
-      "evidence_role": "independent",
-      "rank_tier": 2
-    },
-    {
       "domain": "yna.co.kr",
       "name": "연합뉴스",
       "aliases": [
@@ -526,6 +508,349 @@
       "name": "Bulletin of the Atomic Scientists",
       "aliases": [
         "Bulletin of the Atomic Scientists"
+      ],
+      "source_type": "specialist_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "chosun.com",
+      "name": "조선일보",
+      "aliases": [
+        "조선일보",
+        "조선비즈",
+        "chosun.com",
+        "biz.chosun.com"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "joongang.co.kr",
+      "name": "중앙일보",
+      "aliases": [
+        "중앙일보",
+        "중앙SUNDAY"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "donga.com",
+      "name": "동아일보",
+      "aliases": [
+        "동아일보",
+        "동아닷컴"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "hani.co.kr",
+      "name": "한겨레",
+      "aliases": [
+        "한겨레",
+        "한겨레신문"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "khan.co.kr",
+      "name": "경향신문",
+      "aliases": [
+        "경향신문",
+        "경향"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "hankookilbo.com",
+      "name": "한국일보",
+      "aliases": [
+        "한국일보"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "kmib.co.kr",
+      "name": "국민일보",
+      "aliases": [
+        "국민일보"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "munhwa.com",
+      "name": "문화일보",
+      "aliases": [
+        "문화일보"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "seoul.co.kr",
+      "name": "서울신문",
+      "aliases": [
+        "서울신문"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "segye.com",
+      "name": "세계일보",
+      "aliases": [
+        "세계일보"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "kbs.co.kr",
+      "name": "KBS 뉴스",
+      "aliases": [
+        "KBS 뉴스",
+        "KBS뉴스",
+        "KBS"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "imbc.com",
+      "name": "MBC 뉴스",
+      "aliases": [
+        "MBC 뉴스",
+        "MBC뉴스",
+        "MBC",
+        "mbc.co.kr"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "sbs.co.kr",
+      "name": "SBS 뉴스",
+      "aliases": [
+        "SBS 뉴스",
+        "SBS뉴스",
+        "SBS Biz",
+        "SBS"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "ytn.co.kr",
+      "name": "YTN",
+      "aliases": [
+        "YTN",
+        "와이티엔"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "jtbc.co.kr",
+      "name": "JTBC 뉴스",
+      "aliases": [
+        "JTBC 뉴스",
+        "JTBC"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "mk.co.kr",
+      "name": "매일경제",
+      "aliases": [
+        "매일경제",
+        "매경"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "hankyung.com",
+      "name": "한국경제",
+      "aliases": [
+        "한국경제",
+        "한경"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "fnnews.com",
+      "name": "파이낸셜뉴스",
+      "aliases": [
+        "파이낸셜뉴스"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "edaily.co.kr",
+      "name": "이데일리",
+      "aliases": [
+        "이데일리"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "asiae.co.kr",
+      "name": "아시아경제",
+      "aliases": [
+        "아시아경제"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "heraldcorp.com",
+      "name": "헤럴드경제",
+      "aliases": [
+        "헤럴드경제"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "sedaily.com",
+      "name": "서울경제",
+      "aliases": [
+        "서울경제",
+        "서울경제신문"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "mt.co.kr",
+      "name": "머니투데이",
+      "aliases": [
+        "머니투데이"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "etnews.com",
+      "name": "전자신문",
+      "aliases": [
+        "전자신문"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "ekn.kr",
+      "name": "에너지경제",
+      "aliases": [
+        "에너지경제",
+        "에너지경제신문"
+      ],
+      "source_type": "specialist_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "energy-news.co.kr",
+      "name": "에너지신문",
+      "aliases": [
+        "에너지신문"
+      ],
+      "source_type": "specialist_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "energydaily.co.kr",
+      "name": "에너지데일리",
+      "aliases": [
+        "에너지데일리"
+      ],
+      "source_type": "specialist_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "epj.co.kr",
+      "name": "일렉트릭파워",
+      "aliases": [
+        "일렉트릭파워",
+        "Electric Power Journal"
+      ],
+      "source_type": "specialist_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "energytimes.kr",
+      "name": "에너지타임즈",
+      "aliases": [
+        "에너지타임즈"
+      ],
+      "source_type": "specialist_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "todayenergy.kr",
+      "name": "투데이에너지",
+      "aliases": [
+        "투데이에너지"
+      ],
+      "source_type": "specialist_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "knpnews.com",
+      "name": "한국원자력신문",
+      "aliases": [
+        "한국원자력신문",
+        "원자력신문"
+      ],
+      "source_type": "specialist_media",
+      "evidence_role": "independent",
+      "rank_tier": 2
+    },
+    {
+      "domain": "e-platform.net",
+      "name": "에너지플랫폼뉴스",
+      "aliases": [
+        "에너지플랫폼뉴스"
       ],
       "source_type": "specialist_media",
       "evidence_role": "independent",
@@ -564,17 +889,6 @@
       "rank_tier": 3
     },
     {
-      "domain": "kbs.co.kr",
-      "name": "KBS 뉴스",
-      "aliases": [
-        "KBS 뉴스",
-        "KBS뉴스"
-      ],
-      "source_type": "general_media",
-      "evidence_role": "independent",
-      "rank_tier": 3
-    },
-    {
       "domain": "news1.kr",
       "name": "뉴스1",
       "aliases": [
@@ -591,58 +905,6 @@
         "뉴시스"
       ],
       "source_type": "general_media",
-      "evidence_role": "independent",
-      "rank_tier": 3
-    },
-    {
-      "domain": "mt.co.kr",
-      "name": "머니투데이",
-      "aliases": [
-        "머니투데이"
-      ],
-      "source_type": "general_media",
-      "evidence_role": "independent",
-      "rank_tier": 3
-    },
-    {
-      "domain": "sedaily.com",
-      "name": "서울경제",
-      "aliases": [
-        "서울경제",
-        "서울경제신문"
-      ],
-      "source_type": "general_media",
-      "evidence_role": "independent",
-      "rank_tier": 3
-    },
-    {
-      "domain": "etnews.com",
-      "name": "전자신문",
-      "aliases": [
-        "전자신문"
-      ],
-      "source_type": "general_media",
-      "evidence_role": "independent",
-      "rank_tier": 3
-    },
-    {
-      "domain": "energy-news.co.kr",
-      "name": "에너지신문",
-      "aliases": [
-        "에너지신문"
-      ],
-      "source_type": "specialist_media",
-      "evidence_role": "independent",
-      "rank_tier": 3
-    },
-    {
-      "domain": "ekn.kr",
-      "name": "에너지경제",
-      "aliases": [
-        "에너지경제",
-        "에너지경제신문"
-      ],
-      "source_type": "specialist_media",
       "evidence_role": "independent",
       "rank_tier": 3
     },
@@ -694,7 +956,291 @@
       "source_type": "general_media",
       "evidence_role": "distributed_claim",
       "rank_tier": 3
+    },
+    {
+      "domain": "koreaherald.com",
+      "name": "Korea Herald",
+      "aliases": [
+        "Korea Herald",
+        "코리아헤럴드"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "koreatimes.co.kr",
+      "name": "Korea Times",
+      "aliases": [
+        "Korea Times",
+        "코리아타임스"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "yonhapnewstv.co.kr",
+      "name": "연합뉴스TV",
+      "aliases": [
+        "연합뉴스TV"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "g-enews.com",
+      "name": "글로벌이코노믹",
+      "aliases": [
+        "글로벌이코노믹"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "etoday.co.kr",
+      "name": "이투데이",
+      "aliases": [
+        "이투데이"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "newspim.com",
+      "name": "뉴스핌",
+      "aliases": [
+        "뉴스핌"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "ajunews.com",
+      "name": "아주경제",
+      "aliases": [
+        "아주경제"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "newdaily.co.kr",
+      "name": "뉴데일리",
+      "aliases": [
+        "뉴데일리",
+        "뉴데일리경제"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "dnews.co.kr",
+      "name": "대한경제",
+      "aliases": [
+        "대한경제"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "businesspost.co.kr",
+      "name": "비즈니스포스트",
+      "aliases": [
+        "비즈니스포스트"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "ohmynews.com",
+      "name": "오마이뉴스",
+      "aliases": [
+        "오마이뉴스"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "nocutnews.co.kr",
+      "name": "노컷뉴스",
+      "aliases": [
+        "노컷뉴스",
+        "CBS노컷뉴스"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "asiatoday.co.kr",
+      "name": "아시아투데이",
+      "aliases": [
+        "아시아투데이"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "zdnet.co.kr",
+      "name": "지디넷코리아",
+      "aliases": [
+        "지디넷코리아",
+        "ZDNet Korea"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "ebn.co.kr",
+      "name": "EBN",
+      "aliases": [
+        "EBN",
+        "EBN산업경제"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "dailian.co.kr",
+      "name": "데일리안",
+      "aliases": [
+        "데일리안"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "metroseoul.co.kr",
+      "name": "메트로신문",
+      "aliases": [
+        "메트로신문",
+        "메트로경제"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "pinpointnews.co.kr",
+      "name": "핀포인트뉴스",
+      "aliases": [
+        "핀포인트뉴스"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "tvchosun.com",
+      "name": "TV조선",
+      "aliases": [
+        "TV조선",
+        "TV CHOSUN"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "ichannela.com",
+      "name": "채널A",
+      "aliases": [
+        "채널A"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "mbn.co.kr",
+      "name": "MBN",
+      "aliases": [
+        "MBN",
+        "매일경제TV"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "esgeconomy.com",
+      "name": "ESG경제",
+      "aliases": [
+        "ESG경제"
+      ],
+      "source_type": "specialist_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "impacton.net",
+      "name": "임팩트온",
+      "aliases": [
+        "IMPACT ON(임팩트온)",
+        "임팩트온",
+        "IMPACT ON"
+      ],
+      "source_type": "specialist_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "cbci.co.kr",
+      "name": "CBC뉴스",
+      "aliases": [
+        "CBC뉴스 | CBCNEWS",
+        "CBC뉴스",
+        "CBCNEWS"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "independent",
+      "rank_tier": 3
+    },
+    {
+      "domain": "tokenpost.kr",
+      "name": "토큰포스트",
+      "aliases": [
+        "토큰포스트"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "peripheral",
+      "rank_tier": 3
+    },
+    {
+      "domain": "job-post.co.kr",
+      "name": "잡포스트",
+      "aliases": [
+        "잡포스트(JOBPOST)",
+        "잡포스트"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "peripheral",
+      "rank_tier": 3
+    },
+    {
+      "domain": "theguru.co.kr",
+      "name": "더구루",
+      "aliases": [
+        "더구루",
+        "theguru.co.kr"
+      ],
+      "source_type": "general_media",
+      "evidence_role": "peripheral",
+      "rank_tier": 3
     }
-  ],
-  "_comment_portals": "포털 중계(네이트·다음·MSN·네이버)는 evidence_role=distributed_claim 이다. 원 매체의 기사를 그대로 실어 나르므로 **독립 출처가 아니다** — 원문과 포털 사본이 같은 이슈 클러스터에 들어가면 _is_independent_source 가 둘 다 세어 '복수 출처 확인' 배지를 위조한다. 실측 2026-08-06 아카이브 970건 중 23건이 이 꼴이었고 전부 independent 로 잡혀 있었다(네이트 12·v.daum.net 6·MSN 5). 대부분 Google News 피드에서 <source> 가 포털로 찍혀 들어온다 — 원 언론사 복원은 리다이렉트를 따라가야 해서 별건이고, 그 전까지는 재인용으로 다룬다. 랭킹 점수는 바뀌지 않는다(둘 다 tier3 기본값)."
+  ]
 }

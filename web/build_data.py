@@ -2494,13 +2494,14 @@ def _parse_day(value: str) -> date | None:
 
 
 def _representative_key(article: dict) -> tuple:
-    return (
-        1 if article.get("importance") == "must_read" else 0,
-        float(article.get("selection_score") or 0),
-        1 if article.get("source_tier") == 1 else 0,
-        len(article.get("summary") or ""),
-        article.get("article_date") or "",
-    )
+    """이슈 대표 기사 순위. story_cluster.representative_key 와 같은 키다.
+
+    예전 키는 (must_read, 선별 점수, tier1 여부, 요약 길이, 날짜)였다. 매체 급을
+    tier1 하나로만 봐서 Reuters·연합·전기신문이 미등록 매체와 같았고, 동점은 요약
+    길이가 갈랐다 — 그래서 글로벌E 가 전기신문을, 핀포인트뉴스가 조선을 제치고
+    대표가 됐다(2026-10-03, 709건 중 260건). 키를 한 곳(story_cluster)으로 모았다.
+    """
+    return story_cluster.representative_key(article)
 
 
 def flow_takeaway(direction: object, limit: int = 86) -> str:

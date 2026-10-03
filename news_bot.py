@@ -148,20 +148,10 @@ def write_github_output(name: str, value: object) -> None:
 # originallink·pubDate·title) 파싱은 손대지 않는다.
 NAVER_URL = "https://naverapihub.apigw.ntruss.com/search/v1/news"
 
-DOMAIN_SCORE = {
-    "hani.co.kr": 9, "chosun.com": 9, "joongang.co.kr": 9,
-    "donga.com": 9, "khan.co.kr": 9, "hankookilbo.com": 9,
-    "kmib.co.kr": 9, "munhwa.com": 9, "seoul.co.kr": 9,
-    "mk.co.kr": 8, "hankyung.com": 8, "etnews.com": 8,
-    "sedaily.com": 8, "fnnews.com": 8, "edaily.co.kr": 7,
-    "mt.co.kr": 7, "asiae.co.kr": 7, "businesspost.co.kr": 7,
-    "electimes.com": 9, "ekn.kr": 9, "energy-news.co.kr": 8,
-    "epj.co.kr": 8, "energytimes.kr": 8, "energydaily.co.kr": 7,
-    "yna.co.kr": 8, "newsis.com": 7, "news1.kr": 7, "yonhapnewstv.co.kr": 7,
-    "kbs.co.kr": 7, "imbc.com": 7, "sbs.co.kr": 7, "ytn.co.kr": 7,
-    "jtbc.co.kr": 7, "tvchosun.com": 6, "ichannela.com": 6, "mbn.co.kr": 6,
-    "newspim.com": 5, "ajunews.com": 5,
-}
+# 매체 점수는 sources.json 의 등급에서 파생한다(source_score). 예전에는 여기
+# 37개 도메인짜리 점수표가 따로 있었고, 랭킹이 보는 sources.json 과 서로 다른
+# 얘기를 했다 — 조선·중앙·동아가 점수표에선 9점인데 등급표엔 없어서 랭킹에선
+# '모르는 매체'였다(2026-10-03 재점검). 표는 하나여야 한다.
 DEFAULT_SCORE = 4
 MIN_SCORE = 4
 
@@ -850,14 +840,21 @@ def article_seen(state: dict, url: str) -> bool:
     return url_hash(url) in sent or legacy_url_hash(url) in sent
 
 
+TIER_SCORE = {1: 10, 2: 8, 3: 6}
+
+
 def source_score(domain: str, publisher: str = "") -> int:
-    """출처 모델을 반영한 수집 우선순위 점수."""
-    tier = source_profile(domain, publisher)["source_tier"]
-    if tier == 1:
-        return 10
-    if tier == 2:
-        return max(8, DOMAIN_SCORE.get(domain, DEFAULT_SCORE))
-    return DOMAIN_SCORE.get(domain, DEFAULT_SCORE)
+    """수집 우선순위 점수 — sources.json 등급 하나에서 파생한다.
+
+    tier1 10 · tier2 8 · tier3 6 · 미등록 4(DEFAULT_SCORE). 수집 단계 중복 접기
+    (_fold_pair)와 발송 링크가 이 점수로 대표를 고르므로, 등급표에 없는 매체는
+    등록된 어떤 매체보다 뒤에 선다. 본업이 다른 매체(peripheral)는 등록돼 있어도
+    미등록과 같은 점수다 — 수집은 하되 대표는 되지 못한다.
+    """
+    profile = source_profile(domain, publisher)
+    if profile.get("evidence_role") == "peripheral" or not profile.get("registered"):
+        return DEFAULT_SCORE
+    return TIER_SCORE.get(profile["source_tier"], DEFAULT_SCORE)
 
 
 def load_json(path: Path, default):
