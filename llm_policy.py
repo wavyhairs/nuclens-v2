@@ -168,6 +168,8 @@ _PROFILES: dict[str, TaskProfile] = {
     "card_writer_repair": _entry(NARRATIVE_GENERATION, _card_writer_model),
     "pubs_translate": _entry(SIMPLE_EXTRACT, _main_model),
     "expert_dossiers": _entry(SIMPLE_EXTRACT, _main_model),
+    # 국내·해외 선정분이 **같은 발표**인지 — 하루 한 번, 제목·요약만 보는 판정.
+    "expert_cross_region": _entry(SIMPLE_EXTRACT, _main_model),
     "expert_plan": _entry(CONTEXT_SYNTHESIS, _synthesis_model),
     "expert_script": _entry(NARRATIVE_GENERATION, _synthesis_model),
     "expert_repair": _entry(NARRATIVE_GENERATION, _synthesis_model),
@@ -183,7 +185,7 @@ def _canonical_name(name: str) -> str:
     for prefix in (
         "expert_verify_after_repair", "expert_verify", "expert_dossiers",
         "expert_script_retry", "expert_script", "expert_intro_repair",
-        "expert_repair", "expert_reorder",
+        "expert_repair", "expert_reorder", "expert_cross_region",
     ):
         if name.startswith(prefix):
             return "expert_script" if prefix == "expert_script_retry" else prefix.replace(

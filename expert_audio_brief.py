@@ -451,6 +451,97 @@ def even_batches(rows: list[dict], size: int) -> list[list[dict]]:
     return out
 
 
+# ---- 국내·해외 같은 사건 ---------------------------------------------------------
+#
+# 중복 제거는 국내와 해외를 따로 돌린다(daily_brief: 두 지역을 한 번에 돌리면 한
+# 지역이 한 사건으로 접혀 브리핑이 통째로 비는 사고). 그래서 같은 발표가 양쪽에
+# 한 번씩 뽑힐 수 있다 — 2026-10-03: 국내 1위 '한미 텍사스 가스발전소·원전 8기
+# 합의' 와 해외 2위 '트럼프, 알래스카 LNG·원전 건설 일방 발표' 는 같은 발표였고,
+# 전문가 대본은 둘을 처음부터 따로 설명했다. 기사를 빼지 않는다(선정은 지역별
+# 계약이다). 대본 작성기에 "이건 앞서 다룬 사건" 이라고 알려 짧게 잇게 한다.
+CROSS_REGION_SYSTEM = """당신은 원자력 아침 브리핑의 편집 데스크입니다.
+국내 구간과 해외 구간에 각각 선정된 story 목록을 보고, **같은 발표·같은 결정·같은
+사건**을 양쪽에서 한 번씩 다루고 있는 쌍만 찾습니다.
+
+- '관련 있다'·'같은 주제다'·'같은 나라다' 는 같은 사건이 아닙니다. 같은 날 같은
+  주체가 낸 같은 발표(또는 그 발표를 전하는 양국 보도)만 같은 사건입니다.
+- 확신이 없으면 넣지 않습니다. 빈 목록이 정상입니다.
+- 한 해외 story 는 국내 story 하나와만 짝이 됩니다.
+
+[출력 JSON]
+{"links":[{"overseas":"<해외 issue_id>","domestic":"<국내 issue_id>","why":"한 문장"}]}"""
+
+
+def cross_region_prompt(domestic: list[dict], overseas: list[dict]) -> str:
+    def block(rows: list[dict]) -> str:
+        return "\n".join(
+            f"- [{str(r.get('issue_id') or '')}] {str(r.get('title') or '')[:80]}"
+            f" — {str(r.get('summary') or '')[:160]}"
+            for r in rows)
+    return (f"[국내 구간]\n{block(domestic)}\n\n[해외 구간]\n{block(overseas)}\n\n"
+            "같은 발표·같은 사건인 쌍만 links 에 적으십시오.")
+
+
+def cross_region_links(issues: list[dict]) -> dict[str, dict]:
+    """해외 issue_id → {"issue_id", "title", "brief_rank", "why"} (짝이 된 국내 story).
+
+    판정 실패는 빈 dict 다 — 이 힌트가 없어도 대본은 만들어진다. 양쪽이 다 있을
+    때만 부른다(하루 1회).
+    """
+    blocks = dict(script_blocks(issues))
+    domestic = blocks.get("국내") or []
+    overseas = blocks.get("해외") or []
+    if not domestic or not overseas:
+        return {}
+    by_id = {str(r.get("issue_id") or ""): r for r in issues}
+    try:
+        payload = _call_structured(
+            CROSS_REGION_SYSTEM, cross_region_prompt(domestic, overseas),
+            label="expert_cross_region", temperature=0.0, max_output_tokens=2048,
+            primary="curation")
+    except (GeminiError, ValueError) as exc:
+        print(f"[expert-audio] 국내·해외 같은 사건 판정 실패 — 힌트 없이 진행: {str(exc)[:140]}")
+        return {}
+    domestic_ids = {str(r.get("issue_id") or "") for r in domestic}
+    overseas_ids = {str(r.get("issue_id") or "") for r in overseas}
+    links: dict[str, dict] = {}
+    for row in (payload.get("links") if isinstance(payload, dict) else None) or []:
+        if not isinstance(row, dict):
+            continue
+        o, d = str(row.get("overseas") or ""), str(row.get("domestic") or "")
+        if o in overseas_ids and d in domestic_ids and o not in links:
+            target = by_id[d]
+            links[o] = {"issue_id": d, "title": str(target.get("title") or "")[:60],
+                        "brief_rank": target.get("brief_rank"),
+                        "why": str(row.get("why") or "")[:120]}
+    if links:
+        print("[expert-audio] 국내·해외 같은 사건 " + " / ".join(
+            f"'{str(by_id[o].get('title') or '')[:24]}' ↔ 국내 {v['brief_rank']}번"
+            for o, v in links.items()))
+    return links
+
+
+def _same_event_rule(dossiers: list[dict]) -> str:
+    """국내에서 이미 다룬 사건을 해외 묶음이 다시 처음부터 설명하지 않게 하는 규칙."""
+    linked = [(d, d.get("same_event_as")) for d in dossiers
+              if isinstance(d.get("same_event_as"), dict)]
+    if not linked:
+        return ""
+    lines = "\n".join(
+        f"  - '{str(d.get('title') or '')[:40]}' ↔ 국내 {link.get('brief_rank') or '?'}번"
+        f" '{str(link.get('title') or '')[:40]}'"
+        for d, link in linked)
+    return (
+        "\n[국내에서 이미 다룬 사건 — 반드시 지킬 것]\n"
+        "- 아래 story 는 국내 구간에서 이미 설명한 **같은 발표** 입니다. 사실을 처음부터\n"
+        "  다시 설명하지 마십시오.\n"
+        f"{lines}\n"
+        "- 첫 문장은 '앞서 국내 소식에서 본 … 의 미국 측 발표입니다' 처럼 한 문장으로\n"
+        "  잇고, 이 story 에만 있는 새 사실(상대국 측 표현·일정·반응·미확정 사항)에만\n"
+        "  집중합니다. 분량은 다른 story 의 절반 안팎이면 됩니다.\n"
+        "- 이 되짚기는 '다른 구간의 사건을 언급하지 말라' 는 규칙의 예외입니다.\n")
+
+
 def dossier_prompt(briefing: dict, issues: list[dict]) -> str:
     material = [issue_material(issue, str(briefing.get("date") or "")) for issue in issues]
     return f"""다음 {len(material)}개 briefing story를 각각 dossier로 구조화하십시오.
@@ -740,8 +831,9 @@ def script_prompt(briefing: dict, dossiers: list[dict], plan: dict,
         "  순서는 그대로 두고 '앞서 본 …와 이어집니다' 로 연결합니다.\n"
         "- 한 story 를 서로 떨어진 두 자리에서 다시 설명하지 마십시오.\n")
     identity_rule = _identity_rule(dossiers)
+    same_event_rule = _same_event_rule(dossiers)
     return f"""EpisodePlan과 dossiers만 근거로 1인 전문가 Script를 작성하십시오.
-{scope}{order_rule}{identity_rule}
+{scope}{order_rule}{identity_rule}{same_event_rule}
 [전달 방식]
 - 화자는 수석 원자력 분석가 한 명뿐이며 모든 줄은 HOST: 로 시작합니다.
 - 가상의 질문자, 자문자답, '네/그렇군요/맞습니다' 같은 대화형 추임새를 금지합니다.
@@ -1587,6 +1679,13 @@ def generate_expert_script(briefing: dict, issues: list[dict],
         primary="synthesis",
     )
 
+    # 국내·해외에 같은 발표가 한 번씩 뽑힌 날, 해외 dossier 에 '앞서 다룬 사건'
+    # 힌트를 심는다. 기사는 빼지 않는다 — 대본이 짧게 잇는다.
+    links = cross_region_links(issues)
+    for overseas_id, link in links.items():
+        if overseas_id in by_issue:
+            by_issue[overseas_id]["same_event_as"] = link
+
     drafted: list[tuple[str, list[dict], list[dict], str]] = []
     for block, rows in script_blocks(issues):
         block_dossiers = [by_issue[str(r.get("issue_id") or "")] for r in rows
@@ -1786,6 +1885,9 @@ def generate_expert_script(briefing: dict, issues: list[dict],
     report["position_fixes"] = position_reports
     # 기계적으로 고친 문체. 재작성 호출이 합니다체를 깨는 날이 얼마나 되는지의 기록.
     report["speech_level_fixes"] = speech_reports
+    # 국내·해외에 같은 발표가 한 번씩 뽑혀 해외 쪽을 짧게 이은 날의 기록.
+    report["cross_region_links"] = [
+        {"overseas": o, **link} for o, link in links.items()]
     if not report["intro_check"]["ok"]:
         bad = report["intro_check"]["missing"]
         titles = {str(i.get("issue_id") or ""): str(i.get("title") or "")[:60] for i in issues}
