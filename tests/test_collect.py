@@ -1288,11 +1288,23 @@ class TestReferenceSiteCoverage(unittest.TestCase):
         for title in drop:
             self.assertFalse(nb.passes_source_keyword_gate(src, {"title": title, "description": ""}), title)
 
-    def test_french_list_still_covers_everything_english_except_fusion(self):
+    def test_french_list_still_covers_everything_english_except_fusion_and_haleu(self):
+        """fusion 은 합병, haleu 는 chaleur(열) 에 걸린다 — 프랑스어 목록에서만 뺀다."""
         self.assertNotIn("fusion", nb.NUCLEAR_TITLE_KEYWORDS_FR)
+        self.assertNotIn("haleu", nb.NUCLEAR_TITLE_KEYWORDS_FR)
         for keyword in nb.NUCLEAR_TITLE_KEYWORDS:
-            if keyword != "fusion":
+            if keyword not in ("fusion", "haleu"):
                 self.assertIn(keyword, nb.NUCLEAR_TITLE_KEYWORDS_FR)
+
+    def test_fuel_terms_keep_announcements_without_the_word_nuclear(self):
+        en = {"require_keywords": nb.NUCLEAR_TITLE_KEYWORDS}
+        fr = {"require_keywords": nb.NUCLEAR_TITLE_KEYWORDS_FR}
+        self.assertTrue(nb.passes_source_keyword_gate(en, {
+            "title": "TRISO-X Completes Vertical Construction of TX-1 Fuel Fabrication Facility – Company Announcement",
+            "description": ""}))
+        self.assertTrue(nb.passes_source_keyword_gate(en, {"title": "NANO, QNI target future HALEU", "description": ""}))
+        self.assertFalse(nb.passes_source_keyword_gate(fr, {
+            "title": "Le marché de la pompe à chaleur se relance (enfin)", "description": ""}))
 
     def test_new_sources_are_registered_in_sources_json(self):
         raw = json.loads((Path(nb.__file__).parent / "sources.json").read_text(encoding="utf-8"))

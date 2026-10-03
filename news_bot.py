@@ -336,13 +336,18 @@ RSS_SOURCES += [
 NUCLEAR_TITLE_KEYWORDS = (
     "nuclear", "reactor", "smr", "uranium", "atomic", "enrich",
     "radioactive", "fusion", "fission", "nucléaire", "원전", "원자력",
+    # 핵연료 고유어. 제목에 nuclear 없이 나오는 공시가 있다(2026-09-24 FT
+    # "TRISO-X Completes Vertical Construction of TX-1 Fuel Fabrication Facility").
+    "triso", "haleu",
 )
 # 프랑스어 피드용. 영어 목록에서 "fusion" 을 뺀다 — 프랑스어에서는 합병(fusions-
 # acquisitions)·수혈(perfusion)·방송(diffusion)에 걸린다(아카이브 실측 4건, 전부
-# noise). 핵융합은 "fusion nucléaire" 로 받는다. 프랑스어 고유 표현을 더하되
-# "réacteur" 는 넣지 않는다 — 제트엔진이기도 해서 등유 세금 기사가 통과했다
-# (2026-10-03 Le Monde 실측). 원전 기사는 어차피 "nucléaire" 를 함께 쓴다.
-NUCLEAR_TITLE_KEYWORDS_FR = tuple(k for k in NUCLEAR_TITLE_KEYWORDS if k != "fusion") + (
+# noise). 핵융합은 "fusion nucléaire" 로 받는다. "haleu" 도 뺀다 — chaleur(열·
+# 히트펌프)에 걸린다(아카이브 실측). 프랑스어 고유 표현을 더하되 "réacteur" 는
+# 넣지 않는다 — 제트엔진이기도 해서 등유 세금 기사가 통과했다(2026-10-03 Le Monde
+# 실측). 원전 기사는 어차피 "nucléaire" 를 함께 쓴다.
+_FR_EXCLUDED = {"fusion", "haleu"}
+NUCLEAR_TITLE_KEYWORDS_FR = tuple(k for k in NUCLEAR_TITLE_KEYWORDS if k not in _FR_EXCLUDED) + (
     "fusion nucléaire", "radioactif", "framatome", "orano", "flamanville",
 )
 # Google News `site:` 피드 중 게이트가 **없어도 되는** 도메인 — 사이트 자체가
