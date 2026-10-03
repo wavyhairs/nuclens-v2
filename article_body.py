@@ -212,19 +212,30 @@ def _meta_description(page: str) -> str:
     return ""
 
 
-def extract_text(page_html: str, *, limit: int = MAX_BODY_CHARS) -> str:
+def extract_text(page_html: str, *, limit: int | None = None, title: str = "") -> str:
     """HTML → 본문 텍스트. 못 뽑으면 빈 문자열.
 
     ``<p>`` → 블록 태그 분해 → meta description 순으로 물러난다. 국내 매체 상당수가
     ``<p>`` 없이 ``<br>`` 로만 줄을 나눠서(실측) 두 번째 경로가 실제로 필요하다.
+
+    ``title`` 을 주면 ``<article>`` 이 여러 개일 때 **제목과 가장 겹치는** 것을
+    고른다. 2026-10-03 실측(140건): 헤럴드경제·EBN·이코노미사이언스는 한 페이지에
+    ``<article>`` 이 9~13개(관련기사·인기기사 블록)이고 가장 긴 것이 남의 기사였다.
+    강릉 데이터센터 기사의 본문이 개그우먼 홈쇼핑 기사로 뽑혀 제목 불일치로
+    버려졌다. 제목이 없으면 예전처럼 가장 긴 것.
     """
+    if limit is None:
+        limit = MAX_BODY_CHARS
     if not page_html:
         return ""
     cleaned = _DROP_TAGS.sub(" ", _COMMENT.sub(" ", page_html))
 
     # <article> 이 있으면 그 안이 본문일 확률이 높다. 없으면 문서 전체.
     scopes = [m.group(1) for m in _ARTICLE.finditer(cleaned)] or [cleaned]
-    scope = max(scopes, key=len)
+    if title and len(scopes) > 1:
+        scope = max(scopes, key=lambda frag: (_title_hits(_clean_line(frag), title)[0], len(frag)))
+    else:
+        scope = max(scopes, key=len)
 
     lines = _collect(scope, lambda frag: _P_BLOCK.findall(frag))
     if len(" ".join(lines)) < MIN_BODY_CHARS:
@@ -280,7 +291,48 @@ _RELEVANCE_RATIO = 0.50
 _RELEVANCE_MIN_HITS = 3
 
 
-def matches_title(body: str, title: str) -> bool:
+def _title_hits(text: str, title: str) -> tuple[int, int]:
+    """(제목 토큰 중 text 에 있는 수, 제목 토큰 수). 조사 한 글자를 떼고도 본다."""
+    tokens = set(_TOKEN_RE.findall(title or ""))
+    if not tokens:
+        return 0, 0
+    haystack = (text or "").lower()
+    hits = 0
+    for token in tokens:
+        needle = token.lower()
+        # 조사 한 글자를 떼고도 본다('원전이' → '원전').
+        if needle in haystack or (len(needle) > 2 and needle[:-1] in haystack):
+            hits += 1
+    return hits, len(tokens)
+
+
+_PAGE_TITLE_RES = (
+    re.compile(r"""(?is)<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']{1,300})["']"""),
+    re.compile(r"""(?is)<meta[^>]+content=["']([^"']{1,300})["'][^>]+property=["']og:title["']"""),
+    re.compile(r"(?is)<title[^>]*>(.*?)</title>"),
+)
+
+
+def extract_page_title(page_html: str) -> str:
+    """페이지가 스스로 말하는 제목(og:title → <title>). 없으면 빈 문자열."""
+    for pattern in _PAGE_TITLE_RES:
+        match = pattern.search(page_html or "")
+        if match:
+            line = _clean_line(html_module.unescape(match.group(1)))
+            if line:
+                return line
+    return ""
+
+
+# 페이지 제목이 기사 제목과 이만큼 겹치면 "이 페이지가 그 기사"라고 본다.
+_PAGE_TITLE_RATIO = 0.50
+_PAGE_TITLE_MIN_HITS = 2
+# 그때 본문 쪽 하한. 0이면 안 된다 — 페이지는 맞는데 본문 범위를 잘못 잡은
+# 경우(관련기사 블록)를 걸러야 하므로 제목 낱말이 조금은 본문에 있어야 한다.
+_BODY_RATIO_WITH_PAGE_TITLE = 0.25
+
+
+def matches_title(body: str, title: str, page_title: str = "") -> bool:
     """본문이 그 제목의 기사인가.
 
     필요한 이유: 프롬프트가 "제목과 본문이 어긋나면 본문이 우선"이라고 지시하므로,
@@ -288,21 +340,29 @@ def matches_title(body: str, title: str) -> bool:
     오류가 그대로 요약이 된다. 실측에서 서로 다른 두 URL 이 같은 본문을 돌려주고
     요약까지 같아진 사례가 있었다. 판정할 수 없으면 **본문을 버린다** — 본문
     없이 돌아가는 경로는 이미 있고 그쪽이 안전하다.
+
+    ``page_title`` (og:title) 이 기사 제목과 맞으면 본문 쪽 하한을 낮춘다.
+    2026-10-03 실측(140건): 제목 불일치로 버린 12건 중 9건이 **맞는 기사**였다.
+    "30조 넣고 수익률 15%?…그래서 얼마 버나", "누가 말이 맞아?" 처럼 제목이
+    구어·동사 낱말로 돼 있어 본문 첫 1,500자에 그 낱말이 없었던 것이다. 페이지
+    제목은 그 구어 낱말까지 그대로 들고 있으므로 "이 페이지가 그 기사"의 증거가
+    된다. 다만 본문 겹침 0은 통과시키지 않는다 — 페이지는 맞는데 본문 범위가
+    남의 기사인 경우(관련기사 블록)는 여전히 버려야 한다. 폴리뉴스 사고(해외건설
+    본문)는 페이지 제목부터 다르므로 이 완화로 되살아나지 않는다.
     """
     if not title:
         return True
-    tokens = [t for t in _TOKEN_RE.findall(title)]
-    if not tokens:
+    hits, unique = _title_hits(body, title)
+    if unique == 0:
         return True
-    haystack = body.lower()
-    hits = 0
-    for token in set(tokens):
-        needle = token.lower()
-        # 조사 한 글자를 떼고도 본다('원전이' → '원전').
-        if needle in haystack or (len(needle) > 2 and needle[:-1] in haystack):
-            hits += 1
-    unique = len(set(tokens))
-    return hits >= max(_RELEVANCE_MIN_HITS, round(unique * _RELEVANCE_RATIO))
+    if hits >= max(_RELEVANCE_MIN_HITS, round(unique * _RELEVANCE_RATIO)):
+        return True
+    if page_title:
+        page_hits, _ = _title_hits(page_title, title)
+        page_matches = page_hits >= max(_PAGE_TITLE_MIN_HITS, round(unique * _PAGE_TITLE_RATIO))
+        if page_matches and hits >= max(2, round(unique * _BODY_RATIO_WITH_PAGE_TITLE)):
+            return True
+    return False
 
 
 _SITE_NAME_RE = re.compile(
@@ -374,10 +434,10 @@ def fetch_one(url: str, session, title: str = "",
         # 본문 판정보다 **먼저** 담는다. 제목과 안 맞아 본문을 버리는 기사도
         # 매체명은 멀쩡하고, 그 기사도 카드에는 실린다.
         meta["site_name"] = extract_site_name(resp.text)
-    body = extract_text(resp.text)
+    body = extract_text(resp.text, title=title)
     if not body:
         return "", "thin"
-    if not matches_title(body, title):
+    if not matches_title(body, title, extract_page_title(resp.text)):
         return "", "title_mismatch"
     return body, "ok"
 
@@ -408,10 +468,10 @@ def fetch_bodies(articles: list[dict], *, max_fetch: int = MAX_FETCH_PER_RUN,
             local.session = got
         return got
 
-    def work(article: dict) -> tuple[str, str, str]:
+    def work(article: dict) -> tuple[str, str, str, str]:
         meta: dict = {}
-        body, status = fetch_one(article.get("link") or "", session_for_thread(),
-                                 str(article.get("title") or ""), meta)
+        title = str(article.get("title") or "")
+        body, status = fetch_one(article.get("link") or "", session_for_thread(), title, meta)
         if meta.get("site_name"):
             article["site_name"] = meta["site_name"]
         # Google News 리다이렉트를 푼 실주소. 원래 link 는 그대로 둔다 —
@@ -419,7 +479,24 @@ def fetch_bodies(articles: list[dict], *, max_fetch: int = MAX_FETCH_PER_RUN,
         resolved = meta.get("url") or ""
         if resolved and resolved != (article.get("link") or ""):
             article["resolved_url"] = resolved
-        return article.get("hash", ""), body, status
+        failed_at = _domain(resolved or article.get("link") or "")
+        # 원 매체가 막으면 네이버 미러로 한 번 더 간다. 운영(GitHub Actions 의
+        # 해외 데이터센터 IP)에서는 403 이 한 회차에 17~45건인데, 같은 기사 140건을
+        # 국내 주거용 IP 에서 받으면 403 은 2건이다 — 헤더가 아니라 IP 차단이다
+        # (브라우저 전체 헤더로도 변화 없음, 2026-10-03 실측). 그래서 헤더를
+        # 바꾸는 대신 **다른 주소**로 간다. 네이버 API 가 준 미러 주소는 수집 때
+        # `naver_link` 로 들고 있다(news_bot). 미러 페이지는 본문이 <article>
+        # 하나에 og:title 과 함께 있어 그대로 뽑힌다(실측 2/2). 제목 불일치는
+        # 원 페이지가 맞는 기사가 아니라는 뜻이 아니라 판정 실패라 미러로 안 간다.
+        mirror = str(article.get("naver_link") or "")
+        if not body and mirror and status != "title_mismatch":
+            mirror_meta: dict = {}
+            mirror_body, mirror_status = fetch_one(mirror, session_for_thread(), title, mirror_meta)
+            if mirror_body:
+                body, status = mirror_body, "ok_naver"
+            else:
+                status = f"{status}>naver_{mirror_status}"
+        return article.get("hash", ""), body, status, failed_at
 
     bodies: dict[str, str] = {}
     try:
@@ -429,12 +506,22 @@ def fetch_bodies(articles: list[dict], *, max_fetch: int = MAX_FETCH_PER_RUN,
         stats["reasons"]["pool_error"] = f"{type(exc).__name__}"
         return {}, stats
 
-    for article_hash, body, status in results:
+    failed_domains: dict[str, dict[str, int]] = {}
+    for article_hash, body, status, failed_at in results:
         stats["reasons"][status] = stats["reasons"].get(status, 0) + 1
         if body and article_hash:
             bodies[article_hash] = body
             stats["ok"] += 1
             stats["chars"] += len(body)
+        elif failed_at:
+            # 어느 매체가 막는지 로그에 남긴다. 2026-10-03 까지는 http_403=45 라는
+            # 숫자만 있어 어느 도메인인지 알 수 없었고, 그래서 차단 목록도
+            # 미러 전략도 실측 없이는 못 정했다.
+            key = status.split(">")[0]
+            failed_domains.setdefault(key, {})
+            failed_domains[key][failed_at] = failed_domains[key].get(failed_at, 0) + 1
+    if failed_domains:
+        stats["failed_domains"] = failed_domains
     if stats["ok"]:
         stats["avg_chars"] = stats["chars"] // stats["ok"]
     return bodies, stats
@@ -444,5 +531,12 @@ def format_stats(stats: dict) -> str:
     reasons = stats.get("reasons") or {}
     detail = " ".join(f"{k}={v}" for k, v in sorted(reasons.items()))
     rate = (stats["ok"] * 100 // stats["attempted"]) if stats.get("attempted") else 0
-    return (f"[body] 본문 {stats.get('ok', 0)}/{stats.get('attempted', 0)}건 ({rate}%) "
+    line = (f"[body] 본문 {stats.get('ok', 0)}/{stats.get('attempted', 0)}건 ({rate}%) "
             f"평균 {stats.get('avg_chars', 0)}자 | {detail}")
+    failed = stats.get("failed_domains") or {}
+    for status in ("http_403", "title_mismatch", "thin"):
+        domains = failed.get(status) or {}
+        if domains:
+            top = sorted(domains.items(), key=lambda kv: (-kv[1], kv[0]))[:5]
+            line += "\n[body] " + status + ": " + ", ".join(f"{d}({n})" for d, n in top)
+    return line
