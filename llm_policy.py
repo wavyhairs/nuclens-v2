@@ -92,6 +92,20 @@ def _verify_model() -> str:
     return gemini_client._resolve("GEMINI_VERIFY_MODEL", _main_model()) or _main_model()
 
 
+def _summary_verify_model() -> str:
+    """요약 사실검사. 요약을 쓴 모델(3.1 버킷)과 **다른** 버킷을 쓴다.
+
+    2026-09-24~10-02 실측: 검사가 요약과 같은 3.1 버킷을 나눠 써서 하루 240~360회
+    가운데 검사가 200회 안팎을 차지했다. 그 사이 3.5-flash-lite 버킷은 64~76회만
+    썼다. 검사 설계의 전제가 "요약이 한도에 밀리면 안 된다"였으니 버킷을 가른다.
+
+    덤으로 요약과 검사를 다른 모델이 맡는다. 같은 모델은 같은 빈칸을 같은 추측으로
+    메운다 — 원문에 없는 '제12차'를 요약이 적고 검사도 그럴듯하게 넘기는 식이다.
+    """
+    return gemini_client._resolve(
+        "GEMINI_SUMMARY_VERIFY_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
+
+
 def _entry(task: str, resolver: Callable[[], str], *, strict: bool = False) -> TaskProfile:
     return TaskProfile(task=task, model_resolver=resolver, strict_reasoning=strict)
 
@@ -104,9 +118,10 @@ _PROFILES: dict[str, TaskProfile] = {
     # 모델 버킷은 같이 쓴다(둘 다 짧은 판정 한 줄).
     "thread_judge": _entry(IDENTITY_REVIEW, _review_model),
     "keei_match": _entry(IDENTITY_REVIEW, _main_model),
-    # 요약 사실검증(경고 모드). 기사 요약과 같은 3.1 버킷이다 — 측정에서 추론
-    # 레벨은 결과를 바꾸지 않았고 high 는 한 건에 생각 6.3만 토큰까지 폭주했다.
-    "summary_verify": _entry(FINAL_SEMANTIC_VERIFY, _main_model),
+    # 요약 사실검증(경고 모드). 요약과 다른 버킷(기본 3.5-flash-lite)을 쓴다 —
+    # `_summary_verify_model` 의 근거. 추론은 켜지 않는다: 측정에서 레벨은 결과를
+    # 바꾸지 않았고 high 는 한 건에 생각 6.3만 토큰까지 폭주했다.
+    "summary_verify": _entry(FINAL_SEMANTIC_VERIFY, _summary_verify_model),
     "dedup": _entry(IDENTITY_REVIEW, _main_model),
     "dedup_final": _entry(IDENTITY_REVIEW, _main_model),
     # 오늘 후보 ↔ 최근 발송분 같은-사건 대조 (dedup.cross_day_repeats). 하루 1~2회
