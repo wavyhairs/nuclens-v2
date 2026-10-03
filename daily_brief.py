@@ -49,6 +49,7 @@ import article_quality_gate
 import brief_kind
 import brief_signals
 import freshness
+import story_echo
 import issue_continuity
 # 반복 알림 억제 규칙을 여기서 다시 쓰지 않는다 — 규칙이 두 곳에 있으면 어긋난다.
 import operational_monitoring
@@ -988,6 +989,22 @@ def plan_briefs(queue: list[dict],
         print(f"[daily_brief] 신선도: 기준 {fresh_cutoff.isoformat() if fresh_cutoff else '없음'} "
               f"— 묵은 기사 {len(stale_dropped)}건 제외(7일 초과 must_read {over}건 포함), "
               f"날짜 달고 남긴 must_read {dated}건")
+    # 뒷북 되풀이 — 같은 story 의 선행 기사(직전 브리핑 전, 큐레이션 받음)가 이미 쓴
+    # 사실을 다시 쓴 기사(story_echo docstring). 기사 자체는 새것이라 위 신선도 창을
+    # 통과한다. story 가 이미 브리핑에 나갔으면 빼고, 아니면 must_read 를 내리고
+    # 선행 기사 날짜를 단다 — 2026-10-03 국내 1위(글로벌E) 가 이 꼴이었다.
+    echo_dropped: list[dict] = []
+    if fresh_cutoff is not None and fresh_cfg.get("enabled", True) and fresh_cfg.get("echo_gate", True):
+        echo_rows = story_echo.archive_rows()
+        items, echo_dropped = story_echo.apply(
+            items, echo_rows, fresh_cutoff,
+            float(fresh_cfg.get("grace_hours", freshness.DEFAULTS["grace_hours"])),
+            story_echo.briefed_stories(DELIVERY_LOG_FILE, today=today))
+        demoted = [a for a in items if a.get("story_echo")]
+        if echo_dropped or demoted:
+            print(f"[daily_brief] 되풀이: 이미 브리핑된 story 의 되풀이 {len(echo_dropped)}건 제외, "
+                  f"첫 보도 못 탄 되풀이 {len(demoted)}건은 등급 내리고 날짜 달아 유지")
+    echo_hashes = {row["hash"] for row in echo_dropped if row.get("hash")}
     # 글 종류 — 사설·칼럼은 빼고, 기획·분석은 '해설'로 하루 한 건(결정 D2, brief_kind).
     kind_cfg = brief_kind.resolve_config(cfg)
     items, opinion_dropped = brief_kind.split(items, kind_cfg)
@@ -1307,7 +1324,7 @@ def plan_briefs(queue: list[dict],
     # 묵은 기사는 내일 더 묵을 뿐이다 — 큐에 남겨 3일 청소를 기다릴 이유가 없다.
     prune = sorted((selected_hashes | set(dup_hashes) | set(junk_hashes)
                     | repeat_hashes | quality_held_hashes | final_quarantine_hashes
-                    | stale_hashes | opinion_hashes) - {""})
+                    | stale_hashes | opinion_hashes | echo_hashes) - {""})
 
     quality_diag = {
         "held_before_ranking": quality_held,
@@ -1316,6 +1333,14 @@ def plan_briefs(queue: list[dict],
         # 나간 날은 운영 알림으로 올린다(append_quality_audit).
         "dedup_failures": list(dedup.LLM_FAILURES),
         "cross_day": (dom_diag.get("cross_day") or []) + (forn_diag.get("cross_day") or []),
+        # 뒷북 되풀이(story_echo). 뺀 것과 등급을 내린 것을 따로 적는다 — 운영 요약이
+        # "이미 본 소식이라 뺐다"와 "늦게 들어와 날짜 달았다"를 구분해 말해야 한다.
+        "story_echo_dropped": echo_dropped,
+        "story_echo_demoted": [
+            {"hash": a.get("hash", ""), "title": (a.get("title_kr") or a.get("title") or "")[:80],
+             "importance_llm": a.get("importance_llm", ""), "domain": a.get("domain", ""),
+             **(a.get("story_echo") or {})}
+            for a in items if a.get("story_echo")],
         "summary": {
             "held": len(quality_held),
             "fallback_held": sum(1 for row in quality_held if row.get("status") == "fallback"),
@@ -1759,6 +1784,30 @@ def append_quality_audit(outbox: dict, path: Path | None = None,
             "level": "attention",
             "severity": "warning", "min_occurrences": 2, "items": other_held,
             "fingerprint": operational_monitoring.count_fingerprint("unreviewed", len(other_held)),
+        })
+    echo_dropped = [row for row in (diag.get("story_echo_dropped") or []) if isinstance(row, dict)]
+    echo_demoted = [row for row in (diag.get("story_echo_demoted") or []) if isinstance(row, dict)]
+    if echo_dropped or echo_demoted:
+        parts = []
+        if echo_dropped:
+            parts.append(f"이미 브리핑에 나간 소식을 다시 쓴 기사 {len(echo_dropped)}건을 뺐습니다")
+        if echo_demoted:
+            parts.append(f"먼저 보도된 소식을 늦게 쓴 기사 {len(echo_demoted)}건은 '중요' 표시를 "
+                         "내리고 첫 보도 날짜를 달아 실었습니다")
+        specs.append({
+            "alert_key": "story-echo-held",
+            "title": "며칠 전 보도의 되풀이 기사를 걸렀습니다",
+            "detail": ". ".join(parts) + ".",
+            "impact": "없음 — 새 소식은 그대로 나갔습니다.",
+            "action": "필요 없음 — 새 소식이 여기 섞여 있으면 알려 주세요.",
+            "technical": "; ".join(
+                f"{row.get('domain')}←{row.get('prior_domain')}@{row.get('prior_date')} sim={row.get('similarity')}"
+                for row in (echo_dropped + echo_demoted)[:6]),
+            "level": "attention",
+            "severity": "info", "min_occurrences": 1,
+            "items": echo_dropped + echo_demoted,
+            "fingerprint": operational_monitoring.count_fingerprint(
+                "story-echo", len(echo_dropped) + len(echo_demoted)),
         })
     if final_quarantine:
         specs.append({

@@ -1090,6 +1090,53 @@ class FreshnessGateTests(OutboxBase):
         stats = outbox["selection_stats"]["overseas"]["freshness"]
         self.assertEqual(stats["stale_dropped"], 1)
 
+    def test_echo_of_an_already_briefed_story_is_pruned_and_unbriefed_echo_is_demoted(self):
+        """2026-10-03 국내 1위: 10/1 서울신문이 쓴 사실을 10/3 글로벌E 가 다시 썼고, 그 story 는
+        10/2 카드로 이미 나갔다 → 뺀다. 아직 안 나간 story 의 되풀이는 must_read 를 내리고
+        선행 기사 날짜를 단다(결정 D1 의 선)."""
+        now = self._seed_last_brief(hours_ago=24)
+        fresh = (now - timedelta(hours=2)).isoformat()
+        old = (now - timedelta(days=2)).replace(microsecond=0)
+        rows = {
+            "p1": {"hash": "p1", "published_at": old.isoformat(), "summary": "한미가 223억 달러 규모 텍사스 발전소를 확정하고 원전 8기에 합의했다.",
+                   "title_kr": "한미, 223억 달러 텍사스 가스발전소 확정 및 원전 8기 건설 합의", "title": "", "detail": "",
+                   "domain": "seoul.co.kr", "importance": "must_read"},
+            "p2": {"hash": "p2", "published_at": old.isoformat(), "summary": "정부가 2040년까지 석탄발전 60기를 폐지하는 방안을 제시했다.",
+                   "title_kr": "정부, 2040년까지 석탄발전 60기 전면 폐지 방안 제시", "title": "", "detail": "",
+                   "domain": "mt.co.kr", "importance": "must_read"},
+        }
+        self.seed_queue([
+            qitem(h="echo1", section="khnp", domain="globale.co.kr", importance="must_read",
+                  title="한미, 223억 달러 규모 텍사스 가스복합발전소 및 원전 8기 건설 합의",
+                  summary="한미가 223억 달러 규모의 텍사스 가스복합화력발전소 건설을 확정하고 원전 8기 건설에 합의했다.",
+                  published_at=fresh, story_id="story-texas", story_members=[{"hash": "p1"}]),
+            qitem(h="echo2", section="domestic", domain="todayenergy.kr", importance="must_read",
+                  title="정부, 2040년까지 석탄발전 60기 전면 폐지 방안 제시",
+                  summary="정부가 2040년까지 석탄발전 60기를 전면 폐지하는 방안을 제시했다.",
+                  published_at=fresh, story_id="story-coal", story_members=[{"hash": "p2"}]),
+            qitem(h="fresh1", section="khnp", domain="khnp.co.kr", title="한수원 신규 발표 오늘",
+                  published_at=fresh),
+            qitem(h="fo", section="international", title="Fresh overseas story today", published_at=fresh),
+        ])
+        with mock.patch.object(db.story_echo, "archive_rows", return_value=rows), \
+             mock.patch.object(db.story_echo, "briefed_stories",
+                               return_value={"story_ids": {"story-texas"}, "hashes": set()}):
+            self.assertEqual(db.cmd_plan(), 0)
+        outbox = db.load_outbox()
+        items = {i["hash"]: i for i in outbox["items"]}
+        self.assertNotIn("echo1", items, "이미 브리핑된 story 의 되풀이가 나갔다")
+        self.assertIn("echo1", outbox["prune_hashes"])
+        self.assertIn("echo2", items, "첫 보도를 못 탄 되풀이는 날짜 달고 실어야 한다(D1)")
+        self.assertEqual(items["echo2"]["stale_since"], old.date().isoformat())
+        self.assertNotEqual(items["echo2"]["brief_rank"], 1, "되풀이가 1번 자리를 차지했다")
+        domestic = next(b["text"] for b in outbox["briefs"] if b["name"] == "국내")
+        self.assertIn(f"({old.month}/{old.day}) 정부, 2040년까지 석탄발전 60기", domestic, "카드 제목에 첫 보도 날짜가 없다")
+        diag = outbox["quality_diag"]
+        self.assertEqual([row["hash"] for row in diag["story_echo_dropped"]], ["echo1"])
+        self.assertEqual(diag["story_echo_dropped"][0]["prior_hash"], "p1")
+        self.assertEqual([(row["hash"], row["importance_llm"]) for row in diag["story_echo_demoted"]],
+                         [("echo2", "must_read")])
+
     def test_a_must_read_older_than_seven_days_is_pruned_and_counted(self):
         now = self._seed_last_brief(hours_ago=24)
         self.seed_queue([
