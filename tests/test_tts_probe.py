@@ -78,6 +78,31 @@ class CallOnceTests(unittest.TestCase):
         self.assertTrue(res["pcm"])
 
 
+class FetchScriptTests(unittest.TestCase):
+    def test_live_fetch_sends_a_user_agent_cloudflare_accepts(self):
+        """Python-urllib 기본 UA 는 Cloudflare 가 403 으로 막는다 — 첫 실행이 그래서 표본으로 돌았다."""
+        seen = []
+
+        def fake(request, timeout=None):
+            seen.append(request)
+            stream = io.BytesIO("HOST: 안녕하세요.\nHOST: 다음 소식입니다.".encode("utf-8"))
+            stream.__enter__ = lambda self=stream: self
+            stream.__exit__ = lambda *a: False
+            return stream
+        with patch.object(tts_probe.urllib.request, "urlopen", fake):
+            text, source = tts_probe.fetch_script("https://site", tts_probe.datetime(2026, 10, 4))
+        self.assertTrue(source.startswith("script-expert-2026-10-04"))
+        self.assertIn("HOST:", text)
+        self.assertEqual(tts_probe.LIVE_USER_AGENT, seen[0].get_header("User-agent"))
+
+    def test_falls_back_to_the_sample_when_nothing_is_reachable(self):
+        def fake(request, timeout=None):
+            raise _http_error(403, "forbidden")
+        with patch.object(tts_probe.urllib.request, "urlopen", fake):
+            _text, source = tts_probe.fetch_script("https://site", tts_probe.datetime(2026, 10, 4))
+        self.assertEqual("builtin-sample", source)
+
+
 class SummaryTests(unittest.TestCase):
     def test_counts_per_variant(self):
         results = [
