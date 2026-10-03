@@ -33,6 +33,24 @@ class TaskPolicyTests(unittest.TestCase):
             self.assertEqual(llm_policy.profile("audio_brief").model(), "script-x")
             self.assertEqual(llm_policy.profile("expert_verify_1").model(), "verify-x")
 
+    def test_summary_verify_uses_its_own_bucket(self):
+        """요약 사실검사는 요약(GEMINI_MODEL)과 다른 버킷을 쓴다.
+
+        2026-09-24~10-02 실측에서 검사가 요약과 같은 3.1 버킷의 200회 안팎을
+        차지했다. 기본은 3.5-flash-lite 이고, 되돌릴 때는 전용 변수에 3.1 을
+        넣는다 — GEMINI_MODEL 을 바꿔도 검사 버킷은 따라가지 않는다.
+        """
+        with patch.dict(os.environ, {"GEMINI_SUMMARY_VERIFY_MODEL": "",
+                                     "GEMINI_MODEL": "main-x"}, clear=False):
+            self.assertEqual(llm_policy.profile("summary_verify").model(),
+                             "gemini-3.5-flash-lite")
+            self.assertNotEqual(llm_policy.profile("summary_verify").model(),
+                                llm_policy.profile("curation").model())
+        with patch.dict(os.environ, {"GEMINI_SUMMARY_VERIFY_MODEL": "gemini-3.1-flash-lite"},
+                        clear=False):
+            self.assertEqual(llm_policy.profile("summary_verify").model(),
+                             "gemini-3.1-flash-lite")
+
     def test_card_profiles_resolve_in_the_documented_order(self):
         """카드는 자리마다 해석 순서가 다르다 — 편집 데스크와 카피라이터는
         같은 과제가 아니다.

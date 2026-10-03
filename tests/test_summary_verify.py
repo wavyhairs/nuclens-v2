@@ -6,8 +6,10 @@
 """
 
 import json
+import os
 import tempfile
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -400,11 +402,23 @@ class WiringTests(unittest.TestCase):
         attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
         self.assertIn("summary_checks.jsonl merge=union", attributes)
 
-    def test_policy_uses_the_curation_bucket_without_reasoning(self):
+    def test_policy_uses_a_separate_bucket_without_reasoning(self):
+        """검사는 요약과 **다른** 버킷을 쓰고 추론은 켜지 않는다.
+
+        처음(9/24)에는 요약과 같은 3.1 버킷을 썼다. 10/2 까지 실측에서 그 버킷의
+        하루 240~360회 중 검사가 200회 안팎이었고 3.5 버킷은 64~76회만 쓰여서
+        갈랐다. 워크플로 변수로만 되돌린다 — GEMINI_MODEL 을 바꿔도 안 따라간다.
+        """
         import llm_policy
-        profile = llm_policy.profile("summary_verify")
-        self.assertEqual(profile.model(), llm_policy.profile("curation").model())
-        self.assertEqual(profile.reasoning_kwargs(), {})
+        with patch.dict(os.environ, {"GEMINI_SUMMARY_VERIFY_MODEL": ""}, clear=False):
+            profile = llm_policy.profile("summary_verify")
+            self.assertNotEqual(profile.model(), llm_policy.profile("curation").model())
+            self.assertEqual(profile.model(), "gemini-3.5-flash-lite")
+            self.assertEqual(profile.reasoning_kwargs(), {})
+        for name in ("crawl.yml", "daily-brief.yml"):
+            yml = (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
+            self.assertIn("GEMINI_SUMMARY_VERIFY_MODEL: ${{ vars.GEMINI_SUMMARY_VERIFY_MODEL }}",
+                          yml, f"{name} 이 검사 버킷 변수를 안 넘긴다")
 
 
 if __name__ == "__main__":
