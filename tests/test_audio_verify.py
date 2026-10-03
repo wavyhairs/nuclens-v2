@@ -176,6 +176,26 @@ class CompareTranscriptTests(unittest.TestCase):
         self.assertEqual([], diff["missing"], diff)
         self.assertEqual([], diff["repeated"], diff)
 
+    def test_latin_and_digits_read_in_hangul_are_not_missing(self):
+        """TTS 는 'Nuclens' 를 '뉴클렌스' 로 읽고 받아쓰기는 들은 대로 적는다.
+
+        10-04: 이 첫 문장이 빠른·전문가 모두 매 시도 '누락' 으로 찍혀 멀쩡한 첫 청크를
+        재생성·분할·모델 전환까지 몰았고, TTS 요청이 필요분의 세 배가 됐다.
+        """
+        script = "HOST: 10월 4일 일요일 Nuclens 전문가 브리핑입니다.\n" + SCRIPT
+        for heard in ("10월 4일 일요일 뉴클렌스 전문가 브리핑입니다.",
+                      "시월 사일 일요일 누클렌즈 전문가 브리핑입니다."):
+            diff = audio_verify.compare_transcript(script, heard + " " + self._flat(SCRIPT))
+            self.assertEqual([], diff["missing"], heard)
+            self.assertEqual([], diff["repeated"], heard)
+
+    def test_a_latin_heavy_sentence_is_still_missing_when_never_heard(self):
+        """영문을 빼고 보더라도 한글 부분이 안 들리면 여전히 누락이다."""
+        script = "HOST: 10월 4일 일요일 Nuclens 전문가 브리핑입니다.\n" + SCRIPT
+        diff = audio_verify.compare_transcript(script, self._flat(SCRIPT))
+        self.assertEqual(1, len(diff["missing"]))
+        self.assertIn("Nuclens", diff["missing"][0])
+
     def test_short_transition_sentences_are_not_judged(self):
         script = "HOST: 다음 소식입니다.\nHOST: 이어서 보겠습니다.\n" + SCRIPT
         diff = audio_verify.compare_transcript(script, self._flat(SCRIPT))
@@ -210,6 +230,17 @@ class TranscriptCheckTests(unittest.TestCase):
             result = audio_verify.transcript_check(SCRIPT, speech_like(60, seed=22), RATE)
         self.assertFalse(result["ok"])
         self.assertEqual("untrusted", result["error"])
+
+    def test_a_normal_speaking_rate_is_trusted(self):
+        """10-04 정상 청크는 받아쓴 글 4.7~5.0자/초였다(141초 678자 등). 5.0 문턱은
+        그 청크들을 '불신' 으로 찍어 매일 재생성으로 몰았다."""
+        flat = " ".join(l.split(":", 1)[1] for l in SCRIPT.splitlines())
+        seconds = len(audio_verify.normalize(flat)) / 4.7
+        with patch.object(gemini_client, "API_KEY", "k"), \
+                patch.object(gemini_client, "call_json", lambda *a, **k: {"transcript": flat}):
+            result = audio_verify.transcript_check(SCRIPT, speech_like(seconds, seed=24), RATE)
+        self.assertNotEqual("untrusted", result["error"], result)
+        self.assertTrue(result["ok"], result)
 
     def test_transcribe_sends_audio_inline_without_thinking(self):
         seen = {}
@@ -425,7 +456,7 @@ class PrimaryModelRetryTests(unittest.TestCase):
         self.slept = []
         audio_brief.time.sleep = self.slept.append
         audio_brief._tts_backoff_spent = 0.0
-        audio_brief._tts_failures = 0
+        audio_brief._tts_failures = {}
         audio_brief._tts_quota_exhausted = False
         audio_brief.TTS_FAILURE_BUDGET = 10
         self.addCleanup(self._restore)

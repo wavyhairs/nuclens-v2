@@ -64,9 +64,17 @@ _COEFFS = 20
 # ── 받아쓰기 ────────────────────────────────────────────────────────────────
 TRANSCRIBE_LABEL = "audio_transcribe"
 TRANSCRIBE_MAX_TOKENS = 4096
-# 받아쓴 글자 수 / 음성 초. 평소 대사 7.0~7.7자/초(09-18~10-03 실측). 이보다
+# 받아쓴 글자 수(normalize 뒤 — 띄어쓰기·문장부호 없음) / 음성 초. 이보다
 # 한참 낮으면 받아쓰기가 무언가를 빠뜨렸다는 뜻이라 그 결과를 믿지 않는다.
-TRANSCRIPT_MIN_CHARS_PER_SEC = 5.0
+#
+# 4.0 인 이유(2026-10-04 하향): 5.0 은 **정상 청크가 걸리는 값**이었다. 대사
+# 7.0~7.7자/초는 띄어쓰기를 센 값이고, 받아쓴 글을 normalize 하면 4.7~5.0 이
+# 나온다(10-04 정상 청크 4개: 141초 678자·130초 642자·125초 620자·145초 679자).
+# 그날 이 문턱 하나가 멀쩡한 청크를 재생성·분할로 몰아 TTS 요청을 몇 배로 늘렸고,
+# 무료 일일 한도(모델당 10건)와 503 과부하 앞에서 전문가 오디오가 죽었다.
+# 지켜야 할 모양은 10-03 되풀이다 — 대사 860자를 217초에 두 번 읽고 받아쓰기가
+# 한 번만 적으면 3.2 안팎이다. 4.0 은 그 사이다.
+TRANSCRIPT_MIN_CHARS_PER_SEC = 4.0
 SENTENCE_MIN_CHARS = 10  # 이보다 짧은 문장은 대조에 안 쓴다 — "다음 소식입니다" 류
 SHINGLE = 6              # 글자 n-gram 길이
 REPEAT_SHINGLE_RATIO = 0.6   # 문장 n-gram 의 이 비율 이상이 2회 이상 나오면 되풀이
@@ -271,6 +279,25 @@ def _shingles(text: str) -> list[str]:
     return [text[i:i + SHINGLE] for i in range(0, max(0, len(text) - SHINGLE + 1))]
 
 
+_HANGUL_RUN_RE = re.compile(r"[가-힣]+")
+
+
+def _script_shingles(norm_sentence: str) -> list[str]:
+    """대본 문장 쪽 n-gram — **한글 덩어리 안에서만** 뽑는다.
+
+    대본의 영문·숫자는 받아쓰기에서 모양이 바뀐다. TTS 는 'Nuclens' 를 '뉴클렌스'
+    로, '4일' 을 '사일' 로 읽을 수 있고 받아쓰기는 들은 대로 적는다. 그 자리를
+    걸친 n-gram 은 음성이 멀쩡해도 안 보이므로 누락 판정을 오염시킨다(10-04:
+    "10월 4일 일요일 Nuclens 전문가 브리핑입니다." 가 매일 첫 청크에서 '누락' 으로
+    찍혀 같은 청크를 재생성·분할·모델 전환까지 몰았다). 한글끼리 이어진 자리는
+    받아쓰기와 같은 글자로 돌아오므로 그것만 대조에 쓴다.
+    """
+    out: list[str] = []
+    for run in _HANGUL_RUN_RE.findall(norm_sentence):
+        out.extend(_shingles(run))
+    return out
+
+
 def compare_transcript(script_text: str, transcript: str) -> dict:
     """받아쓴 글이 대본을 한 번씩 담았는가.
 
@@ -291,7 +318,7 @@ def compare_transcript(script_text: str, transcript: str) -> dict:
         norm_script_len += len(norm_s)
         if len(norm_s) < SENTENCE_MIN_CHARS:
             continue
-        shingles = _shingles(norm_s)
+        shingles = _script_shingles(norm_s)
         if not shingles:
             continue
         judged += 1
