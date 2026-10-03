@@ -30,6 +30,7 @@ import news_archive
 import summary_verify
 # 반복 알림 억제 규칙을 여기서 다시 쓰지 않는다 — 규칙이 두 곳에 있으면 어긋난다.
 import operational_monitoring
+import topic_gate
 from curation_normalization import (
     COUNTRY_ALIASES,
     COUNTRY_SCOPE_CODES,
@@ -1837,6 +1838,9 @@ def normalize_curation_item(item: dict, article: dict, body: str = "") -> dict:
     # 두게 하므로 여기서는 그 규칙을 나머지 해석 필드로 넓히기만 한다.
     if not (body or "").strip():
         drop_interpretation_without_body(normalized, article.get("title", ""))
+    # 마지막 결정적 점검 — 원자력 어휘도, 한수원 사업환경 축도 없는 nice_to_know 는
+    # noise 로 내린다(topic_gate docstring). must_read·market 은 그대로다.
+    topic_gate.apply(normalized, article)
     return normalized
 
 
@@ -3453,6 +3457,7 @@ def main() -> None:
     skipped_config = 0
     fallback_held: list[dict] = []
     integrity_held: list[dict] = []
+    topic_gate.reset()
     # 모듈 전역이라 한 프로세스에서 두 번 돌면 이전 실행의 판정이 남는다.
     global QUOTA_EXHAUSTED, CONFIG_ERROR
     QUOTA_EXHAUSTED = False
@@ -3858,6 +3863,23 @@ def main() -> None:
         state["sent"][h] = now_iso
         queued += 1
 
+    if topic_gate.DEMOTED:
+        demoted = list(topic_gate.DEMOTED)
+        append_quality_event(
+            "off-topic-demoted",
+            "원자력·전력과 관련 없는 기사를 브리핑 후보에서 뺐습니다",
+            (f"AI 가 '알아둘 만함'으로 분류했지만 제목·요약에 원자력 어휘가 없고 전력시장·"
+             f"수요·정책 축에도 걸리지 않는 기사 {len(demoted)}건을 뺐습니다."
+             + example_titles(demoted)),
+            severity="info", min_occurrences=1,
+            level="attention",
+            impact="없음 — 해당 기사만 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
+            action="필요 없음 — 원자력 기사가 여기 들어 있으면 topic_gate 의 어휘를 봐 주세요.",
+            technical=f"demoted={len(demoted)} " + "; ".join(
+                f"{row.get('domain')}:{row.get('level')}:{row.get('score')}" for row in demoted[:6]),
+            fingerprint=operational_monitoring.count_fingerprint("off-topic", len(demoted)),
+            items=demoted,
+        )
     if fallback_held:
         final_count = sum(1 for row in fallback_held if row.get("final"))
         # 두 번 실패한 기사(final)는 더 시도하지 않는다 — 그 기사에 '다음 회차에

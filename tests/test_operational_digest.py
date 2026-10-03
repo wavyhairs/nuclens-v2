@@ -60,6 +60,20 @@ def records():
                     "line": "트럼프 행정부는 2026년 9월 29일 정부 서비스 효율화를 위한 웹사이트 "
                             "America.gov를 공식 출범했습니다.",
                     "dates": ["2026-09-29"]}]},
+        {"record_type": "quality_event", "date": "2026-09-27",
+         "generated_at": "2026-09-27T03:45:00+09:00",
+         "alert_key": "off-topic-demoted",
+         "title": "원자력·전력과 관련 없는 기사를 브리핑 후보에서 뺐습니다", "detail": "…",
+         "items": [{"hash": "o1", "title": "G7, 트럼프 압박에 원유 1억 배럴 방출 발표",
+                    "domain": "lemonde.fr", "level": "not_required", "score": 0.0},
+                   {"hash": "o2", "title": "미국 사법당국, 오픈AI 및 앤스로픽의 AI 에이전트 사고 조사 착수",
+                    "domain": "lesechos.fr", "level": "not_required", "score": 0.0}]},
+        {"record_type": "quality_event", "date": "2026-09-27",
+         "generated_at": "2026-09-27T05:12:00+09:00",
+         "alert_key": "off-topic-demoted",
+         "title": "원자력·전력과 관련 없는 기사를 브리핑 후보에서 뺐습니다", "detail": "…",
+         "items": [{"hash": "o1", "title": "G7, 트럼프 압박에 원유 1억 배럴 방출 발표",
+                    "domain": "lemonde.fr", "level": "not_required", "score": 0.0}]},
         # 창 밖 — 요약에 나오면 안 된다.
         {"record_type": "quality_event", "date": "2026-09-25",
          "generated_at": "2026-09-25T06:00:00+09:00", "alert_key": "old-thing",
@@ -139,6 +153,13 @@ class DigestContentTests(unittest.TestCase):
         # 같은 기사(w1)가 보류 쪽에도 있었다 — 한 번만 센다.
         self.assertIn("잠시 뺀 기사 1건", text)
         self.assertIn("최종 제외 1건: 「울산시-HD현중, 1조 원대 발전엔진·SMR 건립 협약」", text)
+
+    def test_off_topic_demotions_are_named_once(self):
+        """같은 기사(o1)가 두 회차에 기록돼도 한 번만 센다."""
+        text = self.build()
+        self.assertIn("원자력·전력과 관련이 없어 브리핑 후보에서 뺀 기사 2건", text)
+        self.assertIn("「G7, 트럼프 압박에 원유 1억 배럴 방출 발표」", text)
+        self.assertNotIn("off-topic-demoted", text)
 
     def test_ai_failure_says_the_cause_in_words(self):
         self.assertIn("늦춰진 기사 23건 (구글 AI 서버 혼잡 1회)", self.build())

@@ -58,7 +58,7 @@ _TODO_KEYS = frozenset({
 # 품질 이벤트 중 아래에서 따로 풀어 쓰는 것. 나머지는 제목 한 줄로 싣는다.
 _DETAILED_EVENTS = frozenset({
     "article-integrity-quarantine", "unverified-fallback-held",
-    "audio-script-claim-removed", "audio-script-unverified",
+    "audio-script-claim-removed", "audio-script-unverified", "off-topic-demoted",
 })
 
 
@@ -229,6 +229,16 @@ def _article_lines(by_key: Mapping[str, list[Mapping]]) -> list[str]:
             line += (f" 두 번 모두 실패해 최종 제외 {len(final)}건: "
                      f"{_quote_titles(list(final.values()))}.")
         lines.append(line)
+
+    off_topic = _event_items(by_key.get("off-topic-demoted", ()))
+    if off_topic:
+        titles: dict[str, str] = {}
+        for item in off_topic:
+            titles.setdefault(str(item.get("hash") or item.get("title")),
+                              str(item.get("title") or ""))
+        lines.append(
+            f"원자력·전력과 관련이 없어 브리핑 후보에서 뺀 기사 {len(titles)}건 — "
+            f"{_quote_titles(list(titles.values()))}. 원자력 기사가 섞여 있으면 알려 주세요.")
     return lines
 
 

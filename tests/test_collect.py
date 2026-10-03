@@ -531,6 +531,35 @@ class TestOpenQuestionGate(unittest.TestCase):
         self.assertEqual(out["open_question"], "")
         self.assertEqual(out["open_question_source"], "unknown")
 
+    def test_normalize_demotes_off_topic_nice_to_know_to_noise(self):
+        """2026-10-03 G7 원유 방출 — LLM 은 nice_to_know, 원자력 어휘·사업환경 축 모두 없음."""
+        import topic_gate
+        topic_gate.reset()
+        item = {"importance": "nice_to_know", "section": "international", "scope": "overseas",
+                "title_kr": "G7, 트럼프 압박에 원유 1억 배럴 방출 발표",
+                "summary": "G7 국가들이 유가 안정을 위해 전략 비축유 1억 배럴을 방출하기로 했다.",
+                "topics": ["security_trade"], "tags": ["#에너지안보"], **self.GOOD}
+        out = nb.normalize_curation_item(item, {
+            "hash": "g7", "domain": "lemonde.fr",
+            "title": "Le G7 annonce un déblocage de 100 millions de barils de pétrole"})
+        self.assertEqual(out["importance"], "noise")
+        self.assertEqual(out["importance_llm"], "nice_to_know")
+        self.assertEqual(out["topic_verdict"], "off_topic")
+        self.assertEqual([row["hash"] for row in topic_gate.DEMOTED], ["g7"])
+
+    def test_normalize_keeps_power_market_context_without_nuclear_word(self):
+        import topic_gate
+        topic_gate.reset()
+        item = {"importance": "nice_to_know", "section": "domestic", "scope": "kr",
+                "title_kr": "제12차 전력수급기본계획, AI 데이터센터 수요 반영해 목표 상향",
+                "summary": "정부가 2040년 최대전력수요 전망을 165GW 로 올렸다.",
+                "topics": ["power_market", "datacenter_ai"], **self.GOOD}
+        out = nb.normalize_curation_item(item, {"hash": "pp", "domain": "ebn.co.kr",
+                                               "title": "12차 전기본 수요 상향"})
+        self.assertEqual(out["importance"], "nice_to_know")
+        self.assertEqual(out["topic_verdict"], "on_topic")
+        self.assertEqual(topic_gate.DEMOTED, [])
+
     def test_archive_record_carries_the_field(self):
         """화이트리스트에 없으면 아카이브에 안 남고 웹에서 영영 못 본다."""
         import news_archive

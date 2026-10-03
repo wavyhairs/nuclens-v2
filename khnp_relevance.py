@@ -124,6 +124,13 @@ TOPIC_DOMAINS: dict[str, str] = {
     "smr": "core", "nuclear": "core", "reactor": "core", "fuel_cycle": "core",
     "waste": "core", "decommissioning": "core", "safety": "core",
     "regulation": "core", "life_extension": "core",
+    # 큐레이션의 실제 통제 어휘(curation_normalization.VALID_TOPICS). 아래 여섯이
+    # 빠져 있어서 topics=['power_market'] 인 전기요금·발전사 통합 기사가 본문
+    # 낱말 하나에 기대다 0점으로 떨어졌다(2026-10-03 실측: "산업용 전기료 차등
+    # 요금제" not_required). security_trade·finance 는 일부러 안 맺는다 — 원유
+    # 방출·LNG 제재가 그 태그를 달고 들어온다.
+    "newbuild": "core", "restart_lto": "core", "fukushima": "core", "fusion": "core",
+    "power_market": "market", "datacenter_ai": "demand",
     "export": "export", "supply_chain": "export", "construction": "export",
     "policy": "policy", "climate": "policy",
     "grid": "market", "market": "market", "grid_demand": "demand",
