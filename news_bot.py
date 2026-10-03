@@ -3451,6 +3451,11 @@ def collect_articles(feed_name: str, keywords: list[str], anchors: list[str], st
             if existing and existing["score"] >= score:
                 continue
 
+            # 네이버가 함께 주는 미러 주소(n.news.naver.com). 신원·dedup 키는 원
+            # 매체 주소 그대로이고, 이것은 본문 수집이 원 매체에서 403 을 받을 때
+            # 한 번 더 가 보는 대체 주소다(article_body.fetch_bodies). 큐·아카이브
+            # 레코드는 필드를 골라 복사하므로 여기 두어도 밖으로 새지 않는다.
+            mirror = normalize_url(item.get("link") or "")
             by_title[norm] = {
                 "hash": h,
                 "title": title,
@@ -3462,6 +3467,8 @@ def collect_articles(feed_name: str, keywords: list[str], anchors: list[str], st
                 "domain": domain,
                 "publisher": profile.get("publisher", ""),
                 "feed": feed_name,
+                **({"naver_link": mirror}
+                   if mirror and mirror != link and "news.naver.com" in mirror else {}),
             }
         time.sleep(0.1)
 
