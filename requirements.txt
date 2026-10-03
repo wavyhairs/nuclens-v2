@@ -6,3 +6,6 @@ feedparser>=6.0.0
 # 이유는 엣지에서 손으로 서명하던 판이 본문을 실을 수 없었기 때문이다
 # (functions/push/_shared.js 머리말).
 pywebpush>=2.0
+# TTS 출력 검증(audio_verify.py)의 음성 자기유사도 — 되풀이 읽기를 API 없이 찾는다.
+# 없으면 그 검사만 '못 봤음'으로 남고 받아쓰기 대조는 그대로 돈다.
+numpy>=1.26

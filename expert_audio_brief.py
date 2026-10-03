@@ -1683,6 +1683,10 @@ def synthesize_expert(script: str) -> tuple[bytes, int, list[str], list[str]]:
     rate = 0
     warnings: list[str] = []
     last: Exception | None = None
+    # 출력 검증 기록 (2026-10-03 되풀이 사고). 청크마다 '대본을 한 번씩 읽었나'를
+    # 보고, 아니면 재생성→분할→잘라내기. 기록은 매니페스트에 싣는다.
+    reports: list[dict] = []
+    audio_brief.LAST_OUTPUT_VERIFICATION = {}
 
     for model_index, model in enumerate(_tts_models()):
         if len(pieces) >= len(chunks):
@@ -1699,7 +1703,10 @@ def synthesize_expert(script: str) -> tuple[bytes, int, list[str], list[str]]:
 
         try:
             for index in range(len(pieces), len(chunks)):
-                pcm, chunk_rate = _tts_chunk_retry(index + 1, chunks[index], model)
+                pcm, chunk_rate = audio_brief.synthesize_verified_chunk(
+                    index + 1, chunks[index],
+                    lambda text, _i=index + 1, _m=model: _tts_chunk_retry(_i, text, _m),
+                    reports=reports)
                 if rate and chunk_rate != rate:
                     raise GeminiError(f"청크 {index+1} sample rate {chunk_rate} != {rate}")
                 rate = chunk_rate
@@ -1724,7 +1731,15 @@ def synthesize_expert(script: str) -> tuple[bytes, int, list[str], list[str]]:
         if i:
             merged.append(gap)
         merged.append(pcm)
-    return b"".join(merged), rate, segment_models, warnings
+    joined, whole = audio_brief.verify_whole(b"".join(merged), rate)
+    audio_brief.LAST_OUTPUT_VERIFICATION = audio_brief.output_verification_summary(
+        reports, whole, models=segment_models)
+    rejected = sum(1 for r in reports if not r.get("ok"))
+    if rejected or whole.get("trimmed"):
+        warnings.append(
+            f"TTS 출력 검증에서 되풀이·누락 의심 {rejected}건을 걸러 다시 만들었습니다"
+            + (" (전체 음원에서 되풀이 구간을 잘라냈습니다)." if whole.get("trimmed") else "."))
+    return joined, rate, segment_models, warnings
 
 
 def generate(force: bool = False, send: bool = True,
@@ -1858,6 +1873,8 @@ def generate(force: bool = False, send: bool = True,
         "evidence_issue_count": len(contracts),
         "tts_models": list(dict.fromkeys(tts_models)),
         "warnings": warnings,
+        # 만들어진 음성이 대본을 한 번씩 읽었는지 본 결과 (audio_verify).
+        "output_verification": dict(audio_brief.LAST_OUTPUT_VERIFICATION),
     }
     _write_audio_variant(date, EXPERT_VARIANT, meta)
     script_path.write_text(script, encoding="utf-8")

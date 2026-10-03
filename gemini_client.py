@@ -56,6 +56,7 @@ connect-ai의 `_quickLLMCall` 패턴을 차용 — 단일 system+user 메시지,
 
 from __future__ import annotations
 
+import base64
 import copy
 import json
 import itertools
@@ -266,6 +267,25 @@ _CAPTURE_DIR = os.environ.get("NUCLENS_LLM_CAPTURE_DIR") or None
 _CAPTURE_SEQ = itertools.count()
 
 
+def _without_inline_bytes(body: dict) -> dict:
+    """capture 에는 음성 바이트 대신 크기만 남긴다 — 청크 하나가 base64 로 14MB 다."""
+    try:
+        contents = []
+        for content in body.get("contents") or []:
+            parts = []
+            for part in content.get("parts") or []:
+                if isinstance(part, dict) and "inlineData" in part:
+                    inline = dict(part["inlineData"])
+                    inline["data"] = f"<{len(inline.get('data') or '')} base64 chars omitted>"
+                    parts.append({"inlineData": inline})
+                else:
+                    parts.append(part)
+            contents.append({**content, "parts": parts})
+        return {**body, "contents": contents}
+    except Exception:  # noqa: BLE001 — capture 정리가 본 호출을 죽이면 안 된다
+        return body
+
+
 def _capture(url: str, body: dict, *, response: object, detail: dict) -> None:
     if not _CAPTURE_DIR:
         return
@@ -274,7 +294,7 @@ def _capture(url: str, body: dict, *, response: object, detail: dict) -> None:
             "seq": next(_CAPTURE_SEQ),
             "captured_at": time.time(),
             "url": url,
-            "request_body": body,
+            "request_body": _without_inline_bytes(body),
             "response": response,
             "detail": dict(detail),
         }
@@ -501,8 +521,12 @@ def call_json(
     model: str | None = None,
     label: str = "unlabeled",
     trace_sink=None,
+    inline_data: tuple[str, bytes] | None = None,
 ) -> dict:
     """system+user 한 쌍을 Gemini에 보내고 JSON 객체로 파싱해 반환.
+
+    - inline_data=(mime, bytes) 를 주면 그 바이트를 user 메시지의 첫 part 로
+      실어 보낸다(음성 받아쓰기 — audio_verify). capture 에는 크기만 남긴다.
 
     - response_mime_type=application/json 으로 펜스·머리말 없는 순수 JSON 강제.
     - 429/일시 오류는 지수 백오프로 retries 만큼 재시도.
@@ -558,9 +582,16 @@ def call_json(
     # 돌리면 Actions 로그도 함께 공개된다. Google 이 공식 지원하는 헤더 방식으로
     # 옮겨 애초에 실릴 자리를 없앤다.
     url = _ENDPOINT.format(model=resolved_model)
+    user_parts: list[dict] = []
+    if inline_data is not None:
+        mime, blob = inline_data
+        user_parts.append({"inlineData": {
+            "mimeType": mime,
+            "data": base64.b64encode(blob).decode("ascii")}})
+    user_parts.append({"text": user_message})
     body = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
-        "contents": [{"role": "user", "parts": [{"text": user_message}]}],
+        "contents": [{"role": "user", "parts": user_parts}],
         "generationConfig": generation_config,
     }
 
