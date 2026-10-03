@@ -25,14 +25,19 @@ class ChunkAndBodyContractTests(unittest.TestCase):
             importlib.reload(article_body)
             importlib.reload(news_bot)
             self.assertEqual(news_bot.BATCH_CHUNK, 8)
-            self.assertEqual(article_body.MAX_BODY_CHARS, 3000)
+            self.assertEqual(article_body.MAX_BODY_CHARS, 6000)
 
-    def test_input_per_call_stays_where_it_was(self):
-        """15 × 1,500 = 22,500 자였다. 묶음을 줄인 만큼 본문을 늘려 그 근처에 둔다."""
+    # 상한 없이 받은 140건 실측(2026-10-03): 중앙값 1,507자, 상위 10% 3,304자.
+    MEASURED_P50 = 1507
+    MEASURED_P90 = 3304
+
+    def test_cap_covers_nearly_every_article_and_typical_input_stays_small(self):
+        """상한은 상위 10% 기사도 통째로 받을 만큼 크고(97% 가 안 잘린다), 보통
+        호출의 입력(묶음 × 중앙값)은 예전 15 × 1,500 = 22,500 자보다 작다."""
         importlib.reload(article_body)
         importlib.reload(news_bot)
-        self.assertLessEqual(news_bot.BATCH_CHUNK * article_body.MAX_BODY_CHARS, 24_000)
-        self.assertGreaterEqual(news_bot.BATCH_CHUNK * article_body.MAX_BODY_CHARS, 20_000)
+        self.assertGreaterEqual(article_body.MAX_BODY_CHARS, self.MEASURED_P90)
+        self.assertLessEqual(news_bot.BATCH_CHUNK * self.MEASURED_P50, 22_500)
 
     def test_repo_variables_roll_back_without_code(self):
         with patch.dict(os.environ, {"CURATION_BATCH_CHUNK": "15", "MAX_BODY_CHARS": "1500"}, clear=False):

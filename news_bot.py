@@ -1871,8 +1871,10 @@ def normalize_curation_item(item: dict, article: dict, body: str = "") -> dict:
 #
 # 호출 수는 하루 약 120회 → 약 225회. 사실검사를 3.5 버킷으로 옮겨(#226) 3.1
 # 버킷에 그만한 여유가 생긴 뒤에만 가능한 변경이다. 입력 크기는 같이 바뀐
-# article_body.MAX_BODY_CHARS(1,500 → 3,000)와 맞물려 호출당 2만 4천 자 안팎으로
-# 예전(15 × 1,500 = 2만 2,500 자)과 같다. 출력은 호출당 절반이라 잘림 위험은 준다.
+# article_body.MAX_BODY_CHARS(1,500 → 6,000)와 맞물린다. 본문 중앙값이 1,507자
+# (140건 실측)라 호출당 입력은 평균 1만 2천 자 안팎, 최악(8건 전부 상한) 4만
+# 8천 자다. 예전(15 × 1,500 = 2만 2,500 자)과 같은 자릿수이고 모델 문맥(100만
+# 토큰)과는 거리가 멀다. 출력은 호출당 절반이라 잘림 위험은 준다.
 #
 # 이 값은 P4 production contract 의 batch_size 다(llm_policy.CONTRACT_FIELDS).
 # 바꾸면 지문이 바뀌는 것이 의도다 — 검증한 적 없는 계약 위에서 "검증됐다"가
@@ -2301,9 +2303,14 @@ def repair_contradicted_summaries(verify_rows: list[dict], verify_targets: list[
     - 기존 재생성 경로(품질 게이트 재시도)를 탄다. 검사기의 원문 인용을
       "이전 출력 오류" 메모로 넘기고, **1건씩** 부른다(묶음 혼입 차단), 모델은
       한 단 위 버킷(llm_policy ``curation_verify_repair``).
-    - 등급이 바뀐 결과는 버린다. 재생성은 문장을 고치는 자리지 선정을 다시
-      하는 자리가 아니다. 받아들인 결과는 curated 와 **이번 회차 큐 항목**
-      양쪽에 적는다 — 큐 항목은 검사 전에 복사된 것이라 따로 고쳐야 한다.
+    - 등급·분류·지표·사건일은 **원래 값**을 지킨다. 재생성은 문장을 고치는
+      자리지 선정을 다시 하는 자리가 아니다. 재생성 답의 등급이 달라져도
+      문장은 받는다 — 처음(#227)에는 그 답을 통째로 버렸는데, 그러면 모순이
+      확인된 요약이 그대로 남는다(2026-10-03 지적). 대신 **빈 칸으로 덮지
+      않는다**: 등급이 '잡음'으로 나온 답은 '왜 중요' 칸이 비기 쉬운데, 그걸
+      '중요' 기사에 복사하면 카드가 깨진다. 비어 온 칸은 원래 값을 둔다.
+      받아들인 결과는 curated 와 **이번 회차 큐 항목** 양쪽에 적는다 — 큐
+      항목은 검사 전에 복사된 것이라 따로 고쳐야 한다.
     - 고친 요약은 다시 검사한다(``stage: after_repair``). 두 번째도 모순이면
       고친 쪽을 둔다 — 원문 근거를 본 쪽이다 — 그리고 기록에 남긴다. 비울지는
       사람이 일주일 기록을 본 뒤 정한다.
@@ -2337,13 +2344,14 @@ def repair_contradicted_summaries(verify_rows: list[dict], verify_targets: list[
             print(f"  ! 검사 재생성 실패 — 원래 요약 유지: {(cur.get('title_kr') or art['title'])[:40]}")
             continue
         if item.get("importance") != cur.get("importance"):
+            # 등급은 원래 값을 지키고 문장만 받는다. 얼마나 자주 갈리는지는 센다.
             stats["grade_changed"] += 1
-            print(f"  ! 검사 재생성이 등급을 바꿔({cur.get('importance')}→{item.get('importance')}) "
-                  f"버림: {(cur.get('title_kr') or art['title'])[:40]}")
-            continue
+            print(f"  ! 검사 재생성 답의 등급이 다름({cur.get('importance')}→{item.get('importance')}) "
+                  f"— 등급은 두고 문장만 반영: {(cur.get('title_kr') or art['title'])[:40]}")
         before = {k: cur.get(k) for k in SUMMARY_REPAIR_FIELDS}
         for k in SUMMARY_REPAIR_FIELDS:
-            cur[k] = item.get(k) or ""
+            # 비어 온 칸은 원래 값을 둔다 — 빈 칸으로 덮지 않는다.
+            cur[k] = item.get(k) or cur.get(k) or ""
         cur["summary_repair"] = {
             "at": now_iso, "note": notes[h][0][:300],
             "before": {k: (v or "")[:200] for k, v in before.items() if k in ("title_kr", "summary")},
@@ -4093,7 +4101,7 @@ def main() -> None:
                         reports_kb, now_iso=now_iso)
                     if repair["flagged"]:
                         print(f"[요약검사] 재생성: 모순 {repair['flagged']} · 대상 {repair['targets']}"
-                              f" · 고침 {repair['repaired']} · 등급변경 버림 {repair['grade_changed']}"
+                              f" · 고침 {repair['repaired']} · 등급 달랐음 {repair['grade_changed']}"
                               f" · 실패 {repair['failed']} · 재검사 {repair['recheck']}")
         except Exception as exc:  # noqa: BLE001 — 검사 실패가 수집을 멈추면 안 된다
             print(f"[요약검사] 건너뜀 — {type(exc).__name__}: {exc}")

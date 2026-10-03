@@ -151,13 +151,28 @@ class RepairContradictedSummariesTests(unittest.TestCase):
         self.assertEqual(calls["verify"]["targets"][0]["body"], "군은 유치를 추진하며")
         self.assertEqual(stats["recheck"]["checked"], 1)
 
-    def test_grade_change_is_discarded(self):
-        fresh = {"h1": _item("합천군이 유치를 추진한다.", importance="noise")}
+    def test_grade_change_keeps_the_grade_but_takes_the_text(self):
+        """처음엔 등급이 달라진 답을 통째로 버렸다. 그러면 모순이 확인된 요약이
+        그대로 남는다(2026-10-03 지적). 등급은 두고 문장만 받는다."""
+        fresh = {"h1": _item("합천군이 유치를 추진한다.", importance="noise", implication="")}
         stats, calls = self._run(fresh)
         self.assertEqual(stats["grade_changed"], 1)
-        self.assertEqual(stats["repaired"], 0)
-        self.assertEqual(self.curated["h1"]["summary"], "합천군이 오도산 양수발전소 유치를 확정했다.")
-        self.assertNotIn("verify", calls)
+        self.assertEqual(stats["repaired"], 1)
+        cur = self.curated["h1"]
+        self.assertEqual(cur["summary"], "합천군이 유치를 추진한다.")
+        self.assertEqual(cur["importance"], "nice_to_know")           # 등급은 원래 값
+        self.assertEqual(cur["implication"], "확정이라 중요")           # 비어 온 칸은 안 덮는다
+        self.assertEqual(self.queue[0]["summary"], "합천군이 유치를 추진한다.")
+        self.assertIn("verify", calls)
+
+    def test_empty_regenerated_field_never_blanks_an_existing_one(self):
+        fresh = {"h1": _item("합천군이 유치를 추진한다.", implication="", why_important="")}
+        self.curated["h1"]["why_important"] = "지역 전력망에 영향"
+        self._run(fresh)
+        cur = self.curated["h1"]
+        self.assertEqual(cur["summary"], "합천군이 유치를 추진한다.")
+        self.assertEqual(cur["implication"], "확정이라 중요")
+        self.assertEqual(cur["why_important"], "지역 전력망에 영향")
 
     def test_failed_regeneration_keeps_original(self):
         stats, calls = self._run({})
