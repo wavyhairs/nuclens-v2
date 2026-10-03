@@ -726,14 +726,18 @@ def split_script(script: str, limit: int = CHUNK_SPOKEN) -> list[str]:
     return chunks
 
 
-def tts_payload(script: str) -> dict:
+def tts_payload(script: str, instruction: str | None = None) -> dict:
     """TTS 요청 본문 — 단일 화자. 'HOST: ' 라벨은 형식용이라 떼고 보낸다
-    (멀티스피커 모드가 아니면 라벨을 그대로 읽는다)."""
+    (멀티스피커 모드가 아니면 라벨을 그대로 읽는다).
+
+    instruction 은 대본 앞에 붙는 안내문이다. 기본은 STYLE_INSTRUCTION 이고,
+    tools/tts_probe.py 가 후보 안내문을 같은 요청 모양으로 시험할 때 바꾼다."""
     text = "\n".join(match.group(2) for match in
                      (SPEAKER_RE.match(line) for line in script.splitlines())
                      if match)
     return {
-        "contents": [{"parts": [{"text": STYLE_INSTRUCTION + text}]}],
+        "contents": [{"parts": [{"text": (STYLE_INSTRUCTION if instruction is None
+                                          else instruction) + text}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {"voiceConfig": {

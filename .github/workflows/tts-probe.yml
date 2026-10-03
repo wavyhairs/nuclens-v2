@@ -1,0 +1,77 @@
+name: TTS probe (안내문 시험)
+
+# TTS 안내문 후보를 같은 대본으로 번갈아 불러 400 비율과 음성 품질을 잰다
+# (tools/tts_probe.py 머리말). 모델 하나만, 재시도 없이 부른다.
+#
+# 무엇을 안 하는가: 수집·브리핑·배포·발송·커밋을 하지 않는다. 결과는 이 실행의
+# Summary 와 artifact(results.json + 후보별 wav 1개)로만 남는다.
+#
+# 키는 **유료(secrets.GEMINI_API_KEY) 고정**이다. 무료 TTS 한도는 모델당 하루
+# 10건이고, 그 몫은 다음 아침 브리핑의 폴백 모델이 써야 한다. 기본값(후보 4 ×
+# 6회 = 24건, 청크 ~90초)은 1달러 미만으로 추정한다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "시험할 TTS 모델"
+        type: string
+        default: gemini-2.5-flash-preview-tts
+      rounds:
+        description: "후보당 호출 수"
+        type: string
+        default: "6"
+      variants:
+        description: "쉼표로 구분한 후보 (current,short_ko,short_en,none)"
+        type: string
+        default: current,short_ko,short_en,none
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tts-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run probe
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://nuclens-v2.pages.dev' }}
+          MODEL: ${{ inputs.model }}
+          ROUNDS: ${{ inputs.rounds }}
+          VARIANTS: ${{ inputs.variants }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::secrets.GEMINI_API_KEY(유료) 가 비어 있다 — 무료 키로 넘어가지 않는다"
+            exit 1
+          fi
+          python tools/tts_probe.py --model "$MODEL" --rounds "$ROUNDS" \
+            --variants "$VARIANTS" --site-url "$SITE_URL" --out probe
+
+      - name: Upload probe results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tts-probe-${{ github.run_id }}
+          path: probe/
+          if-no-files-found: ignore
+          retention-days: 14
