@@ -792,6 +792,9 @@ def _confirm_no_new_action(proposals: list[tuple[dict, dict, dict]], *,
             f"SENT date={_trim(prior.get('date'), 10)}",
             f"  TITLE: {_trim(prior.get('title_kr') or prior.get('title'), 200)}",
             f"  SUMMARY: {_trim(prior.get('summary'), 400)}",
+            # 발송 카드의 본문 요지도 보여 준다 — 10/2 카드는 제목·요약이 '24억 송금'
+            # 이었고 '원전 8기 합의'는 요지에만 있어서, 10/3 되풀이가 새 사실로 통과했다.
+            f"  DETAIL: {_trim(prior.get('detail'), 400)}",
             f"CANDIDATE published={_published_day(cand)}",
             f"  TITLE: {_trim(cand.get('title_kr') or cand.get('title'), 200)}",
             f"  SUMMARY: {_trim(cand.get('summary'), 500)}",
