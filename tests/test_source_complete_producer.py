@@ -237,7 +237,12 @@ class ProducerActivationTests(unittest.TestCase):
         self.assertEqual(report["live_api_calls_this_command"], {"gemini": 0, "openai": 0})
         self.assertEqual(report["incremental_api_calls"], {"gemini": 0, "openai": 0})
         self.assertEqual(report["remaining"], 30)
-        self.assertEqual(report["minimum_future_successful_batches"], 2)
+        # 묶음 크기는 production 값(news_bot.BATCH_CHUNK)을 따른다 — 2026-10-03 에
+        # 15 → 8 로 바뀌면서 30건 목표는 2회가 아니라 4회가 됐다.
+        import math
+        import news_bot
+        self.assertEqual(report["minimum_future_successful_batches"],
+                         math.ceil(30 / news_bot.BATCH_CHUNK))
         self.assertEqual(
             report["activation"][producer.MAX_CALLS_ENV], "6")
         self.assertIn("Gold judgment", report["forbidden_in_this_stage"])
