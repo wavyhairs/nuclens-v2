@@ -57,6 +57,13 @@ def _risk_tags(article: dict, body: str) -> set[str]:
     return tags
 
 
+# P4 captures 가 기록된 production 묶음 크기. 2026-10-03 에 news_bot.BATCH_CHUNK 가
+# 15 → 8 로 바뀌었지만 이미 기록된 captures 는 15건 묶음이고, 보정(calibration)은
+# 그 captures 를 기준으로 한다. production 의 현재 값은 보고서의 batch_chunk 가
+# 따로 적는다 — 둘이 다르면 contract 지문이 달라져 PASS 가 이월되지 않는다(의도).
+CAPTURE_BATCH_CHUNK = 15
+
+
 def candidate_captures(records: list[tuple[Path, dict]], index: dict[str, dict]) -> list[dict]:
     choices = []
     for path, record in records:
@@ -67,7 +74,7 @@ def candidate_captures(records: list[tuple[Path, dict]], index: dict[str, dict])
             rebuilt = replay_inputs.reconstruct_curation(record, index)
         except (KeyError, TypeError, ValueError):
             continue
-        if (len(rebuilt["articles"]) != news_bot.BATCH_CHUNK
+        if (len(rebuilt["articles"]) != CAPTURE_BATCH_CHUNK
                 or rebuilt["is_regeneration"] or rebuilt["prompt_needs_reports_kb"]):
             continue
         coverage = {dimension: 0 for dimension in judge.DIMENSIONS}
@@ -146,7 +153,7 @@ def hard_gate(articles: list[dict], output: dict[str, dict], details: list[dict]
     truncation = sum(bool(row.get("truncated")) for row in details)
     http_failures = sum(bool(row.get("http_status")) for row in details)
     checks = {
-        "input_count_is_15": len(articles) == news_bot.BATCH_CHUNK == 15,
+        "input_count_is_15": len(articles) == CAPTURE_BATCH_CHUNK == 15,
         "no_missing_items": not (expected - actual),
         "no_extra_items": not (actual - expected),
         "schema_valid": not schema_errors,
