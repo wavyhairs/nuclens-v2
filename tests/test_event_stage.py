@@ -317,6 +317,38 @@ class TestDisplayRepresentative(unittest.TestCase):
         self.assertIs(winner, thick)
         self.assertIn("본문", reason)
 
+    def test_higher_outlet_grade_swaps_despite_the_score_gap(self):
+        """2026-10-03 국내 1위: 글로벌E(미등록, 26.8점)가 서울신문(본문 요지 있음)을
+        두고 '점수 차가 커서 유지'였다. 매체 급이 올라가는 교체는 점수 차를 안 본다."""
+        minor = item("a", "한미, 텍사스 발전소·원전 8기 합의", summary="한 줄",
+                     domain="globale.co.kr", publisher="글로벌E", importance="must_read")
+        major = item("b", "한미, 텍사스 가스발전 1호 사업 확정 및 원전 8기 건설 합의",
+                     summary="한 줄", detail="본문 요지가 충분히 길게 들어 있는 기사 " * 3,
+                     domain="seoul.co.kr", publisher="서울신문")
+        winner, reason = story_cluster.choose_display_representative(
+            [minor, major], {"a": 26.8, "b": 5.0}, current=minor)
+        self.assertIs(winner, major)
+        self.assertIn("본문", reason)
+
+    def test_higher_grade_but_thinner_content_does_not_swap(self):
+        """급이 높아도 요약뿐이면 본문 요지가 있는 현재 대표를 못 밀어낸다."""
+        rich_minor = item("a", "같은 사건", summary="한 줄", detail="본문 " * 40,
+                          domain="globale.co.kr")
+        thin_major = item("b", "같은 사건", summary="한 줄", domain="chosun.com")
+        winner, _ = story_cluster.choose_display_representative(
+            [rich_minor, thin_major], {"a": 10.0, "b": 9.0}, current=rich_minor)
+        self.assertIs(winner, rich_minor)
+
+    def test_promoted_representative_keeps_the_story_score(self):
+        import ranking
+        scores = {"old": 26.8, "new": 5.0}
+        ranking.carry_story_scores([{"from_hash": "old", "to_hash": "new"}], scores)
+        self.assertEqual(scores["new"], 26.8)
+        # 새 대표의 자기 점수가 더 높으면 그대로 둔다.
+        scores = {"old": 3.0, "new": 9.0}
+        ranking.carry_story_scores([{"from_hash": "old", "to_hash": "new"}], scores)
+        self.assertEqual(scores["new"], 9.0)
+
     def test_score_gap_blocks_the_swap(self):
         thin = item("a", "같은 사건", summary="한 줄")
         thick = item("b", "같은 사건 상세", detail="본문 " * 40)
