@@ -342,5 +342,26 @@ class TestVerificationScript(unittest.TestCase):
                         self.assertNotIn(secret, log, "로그에 키 값이 찍혔다")
 
 
+class TestTtsProbeIsTheOnePinnedException(unittest.TestCase):
+    """tts-probe.yml 만은 모드를 안 따르고 유료 키를 직접 집는다 — 의도된 예외다.
+
+    무료 TTS 한도는 모델당 하루 10건이고 그 몫은 다음 아침 브리핑의 폴백이 쓴다.
+    시험 호출 24건이 그걸 태우면 시험이 운영을 죽인다(2026-10-04 결정). 예외가
+    조용히 퍼지지 않게, 사람이 손으로만 돌리고 다른 키로 넘어가지 않음을 고정한다.
+    """
+
+    def test_probe_pins_the_paid_secret_and_runs_only_by_hand(self):
+        text = read("tts-probe.yml")
+        self.assertIn("GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}", text)
+        self.assertNotIn("GEMINI_FREE_API_KEY", text)
+        triggers = text.split("\non:", 1)[1].split("\npermissions:", 1)[0]
+        self.assertIn("workflow_dispatch:", triggers)
+        for other in ("schedule:", "push:", "pull_request", "workflow_run:"):
+            self.assertNotIn(other, triggers)
+
+    def test_probe_is_not_one_of_the_mode_following_workflows(self):
+        self.assertNotIn("tts-probe.yml", GEMINI_WORKFLOWS)
+
+
 if __name__ == "__main__":
     unittest.main()
