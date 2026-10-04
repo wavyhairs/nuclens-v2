@@ -780,6 +780,14 @@
       "type": "org",
       "until": "2026-10-16T21:41:26.260047+00:00"
     },
+    "한미양국": {
+      "new_articles": 6,
+      "reason": "기간 만료",
+      "retired_at": "2026-10-04T18:43:26.442906+00:00",
+      "term": "한·미 양국",
+      "type": "plant",
+      "until": "2026-10-18T18:43:26.442906+00:00"
+    },
     "해사청": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -822,7 +830,7 @@
     }
   },
   "spent": {
-    "count": 0,
+    "count": 3,
     "date": "2026-10-05"
   },
   "terms": {
@@ -881,12 +889,12 @@
       ],
       "expires_at": "2026-10-05T09:41:07.553962+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-10-04T09:41:07.553962+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-10-04T18:43:33.733441+00:00",
       "new_articles": 6,
       "origin": "auto",
-      "planned_at": "2026-10-04T09:41:03.956463+00:00",
-      "queries_run": 6,
+      "planned_at": "2026-10-04T18:43:26.442906+00:00",
+      "queries_run": 7,
       "query": "원전수출기획위원회",
       "score": 5.9,
       "status": "promote_candidate",
@@ -899,7 +907,7 @@
         "2026-10-04"
       ],
       "yields": 4,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "전력연구원": {
       "articles": 7,
@@ -934,12 +942,12 @@
       ],
       "expires_at": "2026-10-06T15:40:55.762391+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 2,
-      "last_run": "2026-10-04T09:41:07.553962+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-10-04T18:43:33.733441+00:00",
       "new_articles": 2,
       "origin": "auto",
-      "planned_at": "2026-10-04T09:41:03.956463+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-10-04T18:43:26.442906+00:00",
+      "queries_run": 4,
       "query": "전력연구원 원자력",
       "score": 6.71,
       "status": "extended",
@@ -950,7 +958,7 @@
         "2026-10-04"
       ],
       "yields": 1,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "추진한국형": {
       "articles": 1,
@@ -968,12 +976,12 @@
       ],
       "expires_at": "2026-10-05T12:22:27.397963+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-10-04T12:22:27.397963+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-10-04T18:43:33.733441+00:00",
       "new_articles": 1,
       "origin": "auto",
-      "planned_at": "2026-10-04T12:22:22.283714+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-04T18:43:26.442906+00:00",
+      "queries_run": 2,
       "query": "추진 한국형 원전",
       "score": 3.6,
       "status": "extended",
@@ -984,42 +992,7 @@
         "2026-10-04"
       ],
       "yields": 1,
-      "zero_streak": 0
-    },
-    "한미양국": {
-      "articles": 1,
-      "created_at": "2026-10-02T15:43:54.067175+00:00",
-      "domains": [
-        "joongang.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "joongang.co.kr",
-          "hash": "54e4538ade932dd2",
-          "importance": "must_read",
-          "title": "한·미 원전 프레임워크 체결, 미국 내 APR1400 2기 건설 확정"
-        }
-      ],
-      "expires_at": "2026-10-04T15:40:58.910731+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-10-04T09:41:07.553962+00:00",
-      "new_articles": 6,
-      "origin": "auto",
-      "planned_at": "2026-10-04T09:41:03.956463+00:00",
-      "queries_run": 4,
-      "query": "한·미 양국 원전",
-      "score": 3.6,
-      "status": "extended",
-      "term": "한·미 양국",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-10-03",
-        "2026-10-04"
-      ],
-      "yields": 2,
-      "zero_streak": 2
+      "zero_streak": 1
     }
   },
   "version": 1
