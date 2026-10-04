@@ -17328,6 +17328,17 @@
       "right_title": "우리기술, 한수원과 원전 VMI 협약 체결…제어계측 부품 장기 공급",
       "verdict": "different_thread"
     },
+    "issue-40c55eaaa3e1c6e4--issue-4d55708b92e20a28": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "텍사스 지역이나 SMR로 다른 사업임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "X-에너지, 텍사스 SMR 프로젝트에 최대 10억 달러 추가 공적 자금 확보",
+      "verdict": "different_thread"
+    },
     "issue-40c55eaaa3e1c6e4--issue-4dd6bcfae86b28c4": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, 대미 투자 1호 사업 22억 달러 이달 말 송금 및 웨스팅하우스 지분 인수 추진",
@@ -17427,6 +17438,17 @@
       "right_title": "산업부·원안위, 원전 수출 위한 규제체계 협력 업무협약 체결",
       "verdict": "different_thread"
     },
+    "issue-40c55eaaa3e1c6e4--issue-b8940c87a75f8a42": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한전 재무 상황으로 프로젝트와 무관",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "한전·가스공사 상반기 이자비용 2.7조원…하반기 재무 부담 가중",
+      "verdict": "different_thread"
+    },
     "issue-40c55eaaa3e1c6e4--issue-c45a602bd034d8ae": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "산업부, 한·미 웨스팅하우스 지분 공동 인수설 부인",
@@ -17504,6 +17526,17 @@
       "right_title": "정부, 발전 5사 통합 '한국발전' 및 석유·가스공사 통합 '에너지자원공사' 설립 추진",
       "verdict": "different_thread"
     },
+    "issue-40c55eaaa3e1c6e4--issue-ddf89f92aa789c8a": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "필리핀 협력으로 텍사스 프로젝트와 무관",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "한수원, 필리핀과 원자력 협력 MOU 체결로 아시아 시장 확대",
+      "verdict": "different_thread"
+    },
     "issue-40c55eaaa3e1c6e4--issue-dee49c6cc6ac05cd": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한미, 웨스팅하우스 지분 5~10% 투자 및 의결권 확보 협상",
@@ -17547,6 +17580,23 @@
       "reviewed_at": "2026-10-02T10:48:13.382447+00:00",
       "right_title": "미얀마 대통령, 취임 후 첫 러시아 방문…푸틴과 에너지 협력 논의",
       "verdict": "different_thread"
+    },
+    "issue-40c55eaaa3e1c6e4--issue-fb600cacc188187d": {
+      "gate": {
+        "at": "2026-10-04T00:06:56+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "동일한 한미 에너지 프로젝트 보도",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "verdict": "same_thread"
     },
     "issue-40c55eaaa3e1c6e4--story-01092a570f92afc5": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -17660,6 +17710,12 @@
       "verdict": "different_thread"
     },
     "issue-40c55eaaa3e1c6e4--story-2eba66f067fdc974": {
+      "gate": {
+        "at": "2026-10-04T00:06:56+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "산업부, 한·미 웨스팅하우스 지분 공동 인수설 부인",
       "model": "gemini-3.5-flash-lite",
@@ -17668,6 +17724,40 @@
       "relationship": "stage_progress",
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "한수원-웨스팅하우스, 미국 내 원전 8기 건설 협력 잠정 합의",
+      "verdict": "same_thread"
+    },
+    "issue-40c55eaaa3e1c6e4--story-3e5730a5ce752577": {
+      "gate": {
+        "at": "2026-10-04T00:06:56+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "텍사스 발전소 사업 추진 및 지연 상황",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "정부 대미 전략투자 첫 사업 발표 지연…미국 내부 절차 진행 중",
+      "verdict": "same_thread"
+    },
+    "issue-40c55eaaa3e1c6e4--story-3f2df935d0158def": {
+      "gate": {
+        "at": "2026-10-04T00:06:56+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 원전 패키지 도입 관련 진행 상황",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "한미 투자 패키지 중 APR1400 미국 도입 합의 지연",
       "verdict": "same_thread"
     },
     "issue-40c55eaaa3e1c6e4--story-4af2a74e5a3eb0e3": {
@@ -17679,6 +17769,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-13T19:37:56.120401+00:00",
       "right_title": "한수원, 이집트 엘다바 원전 건설 현장 점검 및 협력 강화",
+      "verdict": "different_thread"
+    },
+    "issue-40c55eaaa3e1c6e4--story-4c72df21fde87f87": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대상 프로젝트와 당사자가 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "폴리멕스 모스토스탈, 폴란드 AP1000 원전 조립동 건설 수주",
       "verdict": "different_thread"
     },
     "issue-40c55eaaa3e1c6e4--story-4e1bbcf5fe2a6b99": {
@@ -17720,6 +17821,23 @@
       "right_title": "한·프랑스, 군사·AI·원자력 등 16건 협력 MOU 채택",
       "verdict": "different_thread"
     },
+    "issue-40c55eaaa3e1c6e4--story-724a3270a5cb5092": {
+      "gate": {
+        "at": "2026-10-04T00:06:56+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대미 에너지 투자 합의의 이전 보도",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "한·미, 1000억달러 규모 에너지 투자 합의 임박",
+      "verdict": "same_thread"
+    },
     "issue-40c55eaaa3e1c6e4--story-7524648ff8032947": {
       "gate": {
         "at": "2026-09-23T21:48:05+00:00",
@@ -17757,6 +17875,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-15T19:41:17.611810+00:00",
       "right_title": "한-미, 대미 에너지 투자 협상 막판 조율",
+      "verdict": "different_thread"
+    },
+    "issue-40c55eaaa3e1c6e4--story-7d38399da40c2738": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 프로젝트와 안살도 에너지의 미국 시장 진입은 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "안살도 에너지, 미국 가스터빈 시장 재진입",
       "verdict": "different_thread"
     },
     "issue-40c55eaaa3e1c6e4--story-8de39c6959e696a8": {
@@ -17921,6 +18050,17 @@
       "right_title": "한-미, 대미 에너지 투자 협상 막판 조율",
       "verdict": "same_thread"
     },
+    "issue-40c55eaaa3e1c6e4--story-e7194df18af9a0fe": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "배전선로 정전비용 산출로 무관한 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "한전, 배전선로별 정전비용 산출 착수…투자 우선순위 활용",
+      "verdict": "different_thread"
+    },
     "issue-40c55eaaa3e1c6e4--story-e7c56234fc4b4464": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한미, 웨스팅하우스 지분 5~10% 투자 및 의결권 확보 협상",
@@ -17954,6 +18094,23 @@
       "right_title": "미국 트럼프 행정부, 화력발전소 탄소배출 규제 폐지 발표",
       "verdict": "different_thread"
     },
+    "issue-40c55eaaa3e1c6e4--story-f298fadfdbc98ba8": {
+      "gate": {
+        "at": "2026-10-04T00:06:56+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 원전 협력 및 APR1400 관련 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "한-미 원자력협정 개정, APR1400 미국 수출 제한 예외 조항 마련",
+      "verdict": "same_thread"
+    },
     "issue-40c55eaaa3e1c6e4--story-fc64f50e257b3a0a": {
       "gate": {
         "at": "2026-10-02T10:48:41+00:00",
@@ -17980,6 +18137,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-02T10:48:13.382447+00:00",
       "right_title": "글로벌 에너지 인프라 대상 사이버 공격 급증…OT 보안 중요성 부상",
+      "verdict": "different_thread"
+    },
+    "issue-40c55eaaa3e1c6e4--story-ff6b831bee753ecc": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 원전 합의와 한전 부채 문제로 대상과 사안이 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
       "verdict": "different_thread"
     },
     "issue-410bd72bfb8cf04f--issue-4d55708b92e20a28": {
@@ -20904,6 +21072,17 @@
       "relationship": "",
       "reviewed_at": "2026-09-21T19:56:41.668162+00:00",
       "right_title": "뉴스케일파워, 6GW SMR 전력계약 논의 및 AI 설계 도구 도입",
+      "verdict": "different_thread"
+    },
+    "issue-4d55708b92e20a28--issue-fb600cacc188187d": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "X-에너지, 텍사스 SMR 프로젝트에 최대 10억 달러 추가 공적 자금 확보",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "X-에너지 SMR과 대형 원전 사업은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "한미, 223억 달러 규모 텍사스 가스복합발전소 및 대형 원전 8기 건설 합의",
       "verdict": "different_thread"
     },
     "issue-4d55708b92e20a28--story-0128ba39e1aa2927": {
@@ -44602,6 +44781,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-13T19:37:56.120401+00:00",
       "right_title": "한빛 2호기 운영허가 만료로 가동 정지…내년 계속운전 심의 예정",
+      "verdict": "different_thread"
+    },
+    "issue-bdf0fa9bc581aaa0--story-4e1bbcf5fe2a6b99": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "새울원전 3호기, 재가동 이틀 만에 증기 배관 누설로 수동 정지",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 원전 정지와 미국 원전 수출 협정임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-04T00:06:53.106930+00:00",
+      "right_title": "한미, 원전 협정 개정 합의…미국 내 APR1400 2기 건설 길 열려",
       "verdict": "different_thread"
     },
     "issue-bdf0fa9bc581aaa0--story-67e9d8e68965f581": {
