@@ -2268,12 +2268,13 @@
       "attempt_id": "37201540742",
       "attempts": 1,
       "claimed_at": "2026-10-04T12:16:50.194918Z",
-      "finished_at": null,
+      "finished_at": "2026-10-04T12:25:44.977558Z",
       "event_name": "schedule",
       "trigger_source": "schedule",
       "trigger_state": "schedule_trigger_created",
-      "status": "running",
-      "new_article_count": null
+      "status": "success_with_articles",
+      "new_article_count": 15,
+      "collect_outcome": "success"
     }
   }
 }
