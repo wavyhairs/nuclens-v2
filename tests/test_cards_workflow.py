@@ -335,6 +335,46 @@ class CardsWorkflowShowsItsFailuresTest(unittest.TestCase):
         self.assertIn("inputs.deploy_mode || 'fast'", deploy)
 
 
+class MorningPushRidesTheCardDeployTest(unittest.TestCase):
+    """아침 알림은 **카드가 올라간 뒤에** 간다 (2026-10-05).
+
+    2026-09-19 ~ 10-04 에는 Daily Brief 의 스모크 통과 직후에 보냈다. 그 자리에서
+    라이브인 것은 기사 브리핑뿐이다 — 카드는 이 워크플로가 그 뒤에 굽고, 오늘
+    스토리 판정은 Daily Brief 가 배포 **뒤에** 돌린다. 라이브 실측 2026-10-05:
+    알림 07:10:18, 카드·스토리 반영 07:16:05. 알림을 누른 첫 화면에 둘이 없었다.
+
+    세부 배선(기다리는 런·재료·표식 커밋)은 tests/test_push_notify.py 의
+    WorkflowWiringTests 가 본다. 여기서는 이 파일의 계약 — 실패가 어디에 남는가 —
+    와 어긋나지 않는지만 잠근다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.text = body("cards.yml")
+
+    def test_the_notification_is_its_own_job(self):
+        """알림 실패가 cards 잡을 빨갛게 만들면 '카드 실패'로 읽힌다. 잡을 갈라야
+        Actions 화면에서 어느 쪽이 죽었는지 보인다 — continue-on-error 없이."""
+        self.assertIn("\n  notify:\n", self.text)
+        notify = self.text.split("\n  notify:\n", 1)[1]
+        self.assertIn("needs: cards", notify)
+        # cards 잡의 스텝 목록에 알림이 섞여 있지 않다.
+        cards_steps = step_blocks("cards.yml", "cards")
+        self.assertFalse(any("push_notify" in b for b in cards_steps))
+
+    def test_the_notification_runs_only_when_asked(self):
+        """손으로 지난 날짜를 다시 굽는 실행이 구독자를 깨우지 않는다."""
+        notify = self.text.split("\n  notify:\n", 1)[1].split("    steps:", 1)[0]
+        self.assertIn("inputs.notify", notify)
+        inputs = self.text.split("workflow_dispatch:", 1)[1].split("concurrency:", 1)[0]
+        self.assertIn("      notify:", inputs)
+        self.assertIn("default: false", inputs.split("      notify:", 1)[1])
+
+    def test_the_brief_passes_notify_when_it_wakes_cards(self):
+        trigger = step(step_blocks("daily-brief.yml", "brief"), "Trigger cards workflow")
+        self.assertIn("-f notify=true", trigger)
+
+
 class WorkflowShapeTest(unittest.TestCase):
     """위 검사들이 딛고 선 전제 — 깨지면 조용히 0건을 검사하게 된다."""
 
