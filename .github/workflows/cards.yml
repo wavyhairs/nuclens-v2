@@ -22,6 +22,11 @@
 #
 # 받은 재료에는 체크아웃 원장의 오늘 판정을 다시 투영한다(아래 스텝 주석).
 #
+# 아침 알림(웹 푸시)은 이 워크플로의 **마지막 잡**이다 (2026-10-05, notify 잡 주석).
+# 카드와 오늘 스토리가 사이트에 올라간 뒤에 보내야 알림을 누른 첫 화면이 다
+# 갖춰져 있다. Daily Brief 는 `notify=true` 로 깨우고, 손으로 돌리는 실행은
+# 기본 꺼짐이다.
+#
 # 자동 실행은 멱등하다. 같은 날 카드가 이미 사이트에 있으면 make_cards.py 가
 # Gemini 를 부르지 않고 빠지고, 커밋할 변경이 없으면 배포도 깨우지 않는다.
 # 손으로 부른 실행은 기본이 force 라 늘 다시 굽는다(복구가 그 목적이다).
@@ -45,6 +50,13 @@ on:
         description: "이미 만들어 둔 날도 다시 굽는다 (Gemini 재호출). 자동 호출은 false 로 넘긴다"
         type: boolean
         default: true
+      notify:
+        # 아침 알림은 하루 한 번이고 outbox 의 push 칸이 중복을 막지만, 지난
+        # 날짜를 손으로 다시 굽는 실행이 구독자에게 알림을 보낼 이유는 없다.
+        # Daily Brief 의 자동 호출만 true 로 넘긴다.
+        description: "카드가 올라간 뒤 웹 푸시(아침 알림)를 보낸다. 자동 호출은 true 로 넘긴다"
+        type: boolean
+        default: false
       deploy_mode:
         # fast 가 기본이다 (2026-09-19). full 은 카드만 바뀐 날에 **해로웠다**:
         #
@@ -70,6 +82,11 @@ on:
         default: fast
         options: [fast, full]
 
+env:
+  # daily-brief.yml 과 같은 변수다. 알림이 가리키는 주소와 알림 본문의 재료
+  # (라이브 briefings.json)가 같은 사이트여야 한다.
+  SITE_URL: ${{ vars.SITE_URL || 'https://nuclens-v2.pages.dev' }}
+
 concurrency:
   group: cards
   cancel-in-progress: false
@@ -82,6 +99,11 @@ jobs:
   cards:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      # notify 잡이 기다릴 배포가 있는지와 그 배포가 언제 깨워졌는지.
+      # 커밋이 없어 배포를 안 깨운 날은 둘 다 비고, notify 는 바로 보낸다.
+      deploy_triggered: ${{ steps.trigger-deploy.outputs.triggered }}
+      deploy_since: ${{ steps.trigger-deploy.outputs.since }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -367,7 +389,136 @@ jobs:
       # main 에 커밋된 **일일 카드**는 사이트에 올라가야 한다. 암묵 success() 면
       # 스토리 실패가 일일 카드 게시까지 끌고 내려간다(도메인 분리 위반).
       - name: Trigger site deploy
+        id: trigger-deploy
         if: ${{ !cancelled() && (steps.commit.outputs.committed == 'true' || steps.commit-story.outputs.committed == 'true') }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run deploy-web.yml -R ${{ github.repository }} -f mode_hint=${{ inputs.deploy_mode || 'fast' }}
+        run: |
+          # 깨우기 **전** 시각을 남긴다 — notify 잡이 이 시각 이후에 생긴 deploy-web
+          # 런을 찾아 기다린다(dispatch API 는 런 id 를 돌려주지 않는다). 러너와
+          # GitHub 의 시계가 몇 초 어긋나도 놓치지 않게 5초 앞당긴다.
+          since=$(date -u -d '-5 seconds' +%Y-%m-%dT%H:%M:%SZ)
+          gh workflow run deploy-web.yml -R ${{ github.repository }} -f mode_hint=${{ inputs.deploy_mode || 'fast' }}
+          echo "triggered=true" >> "$GITHUB_OUTPUT"
+          echo "since=$since" >> "$GITHUB_OUTPUT"
+
+  # ── 아침 알림(웹 푸시) ───────────────────────────────────────────────
+  #
+  # 왜 여기인가 (2026-10-05)
+  # ------------------------------------------------------------------
+  # 알림은 2026-09-19 부터 Daily Brief 의 "Verify live site" 직후에 있었다.
+  # 그 자리는 기사 브리핑만 올라간 시점이다 — 카드는 이 워크플로가 그 뒤에
+  # 굽고, 오늘 스토리 판정은 Daily Brief 가 배포 **뒤에** 돌린다. 라이브 실측
+  # 2026-10-05: 알림 07:10:18, 카드·스토리 반영 07:16:05. 알림을 누른 사람은
+  # 카드도 오늘 스토리도 없는 화면을 봤다. 평시 5~6분이고, 스토리 판정이 긴
+  # 날(timeout 20분)은 그만큼 더 벌어진다.
+  #
+  # 알림이 약속하는 것은 "눌렀을 때 오늘 것이 다 있다" 다. 그 약속이 참이
+  # 되는 가장 이른 자리가 카드 배포가 끝난 뒤이고, 그게 이 잡이다.
+  #
+  # 왜 별도 잡인가
+  # ------------------------------------------------------------------
+  # 이 워크플로의 계약은 "실패를 숨기지 않는다"(continue-on-error 금지,
+  # tests/test_cards_workflow.py). 알림 실패를 cards 잡의 스텝으로 두면 카드가
+  # 멀쩡히 올라간 날도 Cards 가 '카드 실패'로 읽히는 빨간불이 된다. 잡을
+  # 가르면 Actions 화면에서 어느 쪽이 죽었는지 바로 보인다.
+  #
+  # cards 잡이 **실패한 날에도 돈다**(`!cancelled()`). 기사 브리핑은 Daily Brief
+  # 의 첫 배포로 이미 라이브에 있으므로, 카드가 빠진 날이라도 알림은 가야
+  # 한다 — 예전 자리와 같은 약속이다. 카드가 없는 화면을 보게 되지만, 알림이
+  # 아예 안 오는 것보다 낫고 그 실패는 cards 잡의 빨간불로 남아 있다.
+  #
+  # 재료는 **라이브** briefings.json 이다. 알림 본문은 화면이 고른 상위 3건
+  # 제목이라, 체크아웃이 아니라 지금 올라가 있는 파일을 읽어야 화면과 같은
+  # 말을 한다. 받기에 실패하면 이 잡은 그대로 죽는다 — 라이브가 안 열리는
+  # 사이트로 사람을 부르지 않는다.
+  #
+  # 중복은 outbox 의 push 칸이 막는다(push_notify.already_notified). 그 표식을
+  # 여기서 커밋해야 같은 날 재실행이 알림을 또 보내지 않는다.
+  #
+  # Daily Brief 가 이 워크플로를 깨우는 데 실패한 날은 그쪽의 예비 스텝이
+  # 예전 자리에서 직접 보낸다(daily-brief.yml "Web push (예비 — Cards 를 못
+  # 깨운 날)"). 둘이 같은 날 겹치지 않는다 — 깨우기가 실패하면 이 잡은 없다.
+  notify:
+    needs: cards
+    if: ${{ !cancelled() && inputs.notify }}
+    runs-on: ubuntu-latest
+    # 기다리는 배포는 fast 가 4~5분, full(오늘 snapshot 이 없는 날)은 20분까지다.
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # outbox.json 의 push 칸(이미 보냈는가)은 main 의 최신을 봐야 한다.
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+
+      # cards 잡이 깨운 deploy-web 런을 찾아 끝나기를 기다린다. 결과가 실패여도
+      # 알림은 보낸다 — 기사 브리핑은 첫 배포로 이미 라이브에 있고, 배포
+      # 실패는 그 런의 빨간불로 남는다. 2분 안에 런이 안 보이면(API 지연·
+      # dispatch 유실) 경고만 남기고 넘어간다 — 알림을 영영 안 보내는 것보다
+      # 카드 없는 화면이 낫다. 어느 경우도 이 스텝은 실패하지 않는다.
+      - name: Wait for the card deploy
+        if: needs.cards.outputs.deploy_triggered == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SINCE: ${{ needs.cards.outputs.deploy_since }}
+        run: |
+          run_id=""
+          for i in $(seq 1 24); do
+            # 최신이 먼저 온다. SINCE 이후 것 중 가장 오래된(= 우리가 깨운) 런.
+            run_id=$(gh run list -R "${{ github.repository }}" --workflow deploy-web.yml \
+              --event workflow_dispatch --limit 10 --json databaseId,createdAt \
+              --jq ".[] | select(.createdAt >= \"$SINCE\") | .databaseId" | tail -n 1)
+            if [ -n "$run_id" ]; then break; fi
+            sleep 5
+          done
+          if [ -z "$run_id" ]; then
+            echo "::warning::$SINCE 이후의 deploy-web 런을 2분 안에 못 찾았다 — 기다리지 않고 알림을 보낸다"
+            exit 0
+          fi
+          echo "deploy-web 런 $run_id 를 기다린다 (since=$SINCE)"
+          # --exit-status 를 쓰지 않는다 — 배포 실패가 알림을 막을 이유가 아니다.
+          gh run watch "$run_id" -R "${{ github.repository }}" --interval 10
+          conclusion=$(gh run view "$run_id" -R "${{ github.repository }}" --json conclusion --jq .conclusion)
+          if [ "$conclusion" = "success" ]; then
+            echo "카드 배포 완료 — 알림을 보낼 자리다"
+          else
+            echo "::warning::deploy-web 런 $run_id 결과 '$conclusion' — 카드가 아직 없을 수 있지만 브리핑은 라이브다. 알림은 보낸다"
+          fi
+
+      - name: Fetch the live ranking (알림 본문 재료)
+        run: |
+          mkdir -p web/public/data
+          curl -fsS "$SITE_URL/data/briefings.json?cb=$(date +%s)" -o web/public/data/briefings.json
+
+      - name: Web push (아침 알림)
+        env:
+          # Cloudflare Pages 시크릿과 **같은 값**이어야 한다 — /push/list 가 이걸로 막힌다.
+          PUSH_ADMIN_TOKEN: ${{ secrets.PUSH_ADMIN_TOKEN }}
+          # 이미 Cloudflare 에 넣어 둔 것과 **같은 키**. 갈면 기존 구독이 전부 죽는다.
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ vars.VAPID_SUBJECT || 'mailto:nuclens@users.noreply.github.com' }}
+        run: python tools/push_notify.py
+
+      # 표식을 싣지 못하면 같은 날 재실행이 구독자에게 한 번 더 보낸다. 그래서
+      # 이 커밋의 실패는 조용히 넘기지 않는다.
+      - name: Commit the push record
+        run: |
+          git add outbox.json
+          if git diff --cached --quiet; then
+            echo "기록할 변경 없음 — 보낸 구독이 없거나 오늘 표식이 이미 있다"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: morning push record"
+          for i in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo "::error::push 기록 커밋 3회 실패 — 같은 날 재실행이 알림을 다시 보낼 수 있다"
+          exit 1

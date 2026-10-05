@@ -459,7 +459,13 @@ class EndToEndTests(unittest.TestCase):
 
 
 class WorkflowWiringTests(unittest.TestCase):
-    """알림은 **브리핑에 딸린 일**이다 — 따로 예약하지 않는다.
+    """알림은 **브리핑에 딸린 일**이다 — 따로 예약하지 않는다. 그리고 **카드가
+    올라간 뒤에** 간다 (2026-10-05).
+
+    2026-09-19 ~ 10-04 에는 Daily Brief 의 스모크 통과 직후에 보냈다. 그 자리에서
+    라이브인 것은 기사 브리핑뿐이었다 — 카드는 Cards 워크플로가 그 뒤에 굽고,
+    오늘 스토리 판정도 그 뒤에 돈다. 라이브 실측 2026-10-05: 알림 07:10, 카드·
+    스토리 반영 07:16. 알림을 누른 사람은 둘이 없는 화면을 봤다.
 
     YAML 파서를 안 쓴다. requirements.txt 는 런타임에 필요한 것만 담고,
     검사 하나를 위해 PyYAML 을 거기 얹지 않는다(test_cards_workflow.py 와 같은 이유).
@@ -468,45 +474,126 @@ class WorkflowWiringTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.workflows = ROOT / ".github" / "workflows"
-        cls.brief = (cls.workflows / "daily-brief.yml").read_text(encoding="utf-8")
+        cls.brief = cls._body("daily-brief.yml")
+        cls.cards = cls._body("cards.yml")
+
+    @classmethod
+    def _body(cls, name):
+        """주석 줄을 걷은 워크플로 원문 — 하지 않는 이유를 적은 주석이 오탐이 된다."""
+        lines = (cls.workflows / name).read_text(encoding="utf-8").splitlines()
+        return "\n".join(line for line in lines if not line.lstrip().startswith("#"))
+
+    @staticmethod
+    def _step(text, title):
+        """`- name: <title>` 스텝 본문(다음 스텝 머리 직전까지)."""
+        marker = f"- name: {title}\n"
+        assert text.count(marker) == 1, f"'{title}' 스텝이 {text.count(marker)}건"
+        return text.split(marker, 1)[1].split("- name:", 1)[0]
 
     def test_the_dedicated_push_cron_is_gone(self):
         """07:00 전용 예약은 "지금이 아침인가"를 발송기가 되묻게 만들었다.
-        그 질문의 답은 브리핑이 나갔는지 뿐이고, 그건 브리핑만이 안다."""
+        그 질문의 답은 브리핑이 나갔는지 뿐이고, 그건 브리핑 쪽 워크플로만 안다."""
         self.assertFalse((self.workflows / "push-notify.yml").exists())
         for path in self.workflows.glob("*.yml"):
             # 실행하는 곳만 본다 — 주석의 언급까지 세면 검사가 문장에 걸린다.
             if "python tools/push_notify.py" in path.read_text(encoding="utf-8"):
-                self.assertEqual(path.name, "daily-brief.yml",
-                                 f"{path.name} 이 알림을 따로 보낸다")
+                self.assertIn(path.name, ("cards.yml", "daily-brief.yml"),
+                              f"{path.name} 이 알림을 따로 보낸다")
 
-    def test_the_push_step_hangs_off_a_verified_deploy(self):
-        step = self.brief.split("- name: Web push", 1)[1].split("- name:", 1)[0]
-        self.assertIn("python tools/push_notify.py", step)
-        # 배포 성공은 claim 성공을 이미 포함한다(web-deploy 자신의 if). 브리핑이
-        # 안 나간 날에는 알림도 안 가고, /?src=push 가 오늘 것을 보여 준다.
-        self.assertIn("steps.web-deploy.outcome == 'success'", step)
+    def test_the_push_runs_after_the_card_deploy(self):
+        """정상일의 알림은 cards.yml 의 notify 잡이, 카드 배포를 기다린 뒤 보낸다."""
+        notify = self.cards.split("\n  notify:\n", 1)[1]
+        self.assertIn("needs: cards", notify)
+        self.assertIn("inputs.notify", notify)
+        wait = self._step(notify, "Wait for the card deploy")
+        send = self._step(notify, "Web push (아침 알림)")
+        self.assertIn("gh run watch", wait)
+        self.assertIn("needs.cards.outputs.deploy_triggered == 'true'", wait)
+        # 배포 실패가 알림을 막지 않는다 — 브리핑은 첫 배포로 이미 라이브다.
+        self.assertNotIn("--exit-status", wait)
+        self.assertLess(notify.index("- name: Wait for the card deploy"),
+                        notify.index("- name: Web push (아침 알림)"))
+        self.assertIn("python tools/push_notify.py", send)
+
+    def test_the_push_waits_for_the_deploy_this_run_woke(self):
+        """기다리는 런은 **이 실행이 깨운** deploy-web 이다 — 깨우기 직전 시각
+        이후에 생긴 dispatch 런. 아무 최근 런을 기다리면 다른 배포에 걸린다."""
+        trigger = self._step(self.cards, "Trigger site deploy")
+        self.assertIn("id: trigger-deploy", trigger)
+        self.assertIn('echo "since=$since" >> "$GITHUB_OUTPUT"', trigger)
+        self.assertIn('echo "triggered=true" >> "$GITHUB_OUTPUT"', trigger)
+        outputs = self.cards.split("\n  cards:\n", 1)[1].split("    steps:", 1)[0]
+        self.assertIn("deploy_triggered: ${{ steps.trigger-deploy.outputs.triggered }}", outputs)
+        self.assertIn("deploy_since: ${{ steps.trigger-deploy.outputs.since }}", outputs)
+        wait = self._step(self.cards, "Wait for the card deploy")
+        self.assertIn("--event workflow_dispatch", wait)
+        self.assertIn('select(.createdAt >= \\"$SINCE\\")', wait)
+
+    def test_a_failed_card_run_still_notifies(self):
+        """카드가 죽은 날에도 기사 브리핑은 라이브다 — 알림은 간다 (예전 자리와
+        같은 약속). 암묵 success() 면 카드 실패가 알림까지 끌고 내려간다."""
+        notify = self.cards.split("\n  notify:\n", 1)[1].split("    steps:", 1)[0]
+        self.assertIn("!cancelled()", notify)
+
+    def test_the_notification_reads_the_live_ranking(self):
+        """본문은 화면이 고른 상위 3건 제목이다 — 체크아웃이 아니라 라이브를 읽어야
+        화면과 같은 말을 한다."""
+        notify = self.cards.split("\n  notify:\n", 1)[1]
+        fetch = self._step(notify, "Fetch the live ranking (알림 본문 재료)")
+        self.assertIn("$SITE_URL/data/briefings.json", fetch)
+        self.assertIn("-o web/public/data/briefings.json", fetch)
+        self.assertLess(notify.index("- name: Fetch the live ranking"),
+                        notify.index("- name: Web push (아침 알림)"))
+
+    def test_the_brief_wakes_cards_with_notify_on(self):
+        """Daily Brief 의 자동 호출만 알림을 켠다. 손으로 지난 날짜를 다시 굽는
+        실행이 구독자에게 알림을 보낼 이유는 없다 — 입력 기본값은 꺼짐이다."""
+        trigger = self._step(self.brief, "Trigger cards workflow")
+        self.assertIn("-f notify=true", trigger)
+        inputs = self.cards.split("workflow_dispatch:", 1)[1].split("concurrency:", 1)[0]
+        notify_input = inputs.split("      notify:", 1)[1].split("      deploy_mode:", 1)[0]
+        self.assertIn("type: boolean", notify_input)
+        self.assertIn("default: false", notify_input)
+
+    def test_the_brief_only_sends_itself_when_it_could_not_wake_cards(self):
+        """Daily Brief 에 남은 발송은 예비 하나다 — Cards 깨우기가 실패한 날.
+        정상일에 여기서도 보내면 알림이 두 번 간다."""
+        self.assertEqual(self.brief.count("python tools/push_notify.py"), 1)
+        fallback = self._step(self.brief, "Web push (예비 — Cards 를 못 깨운 날)")
+        self.assertIn("steps.trigger-cards.outcome == 'failure'", fallback)
+        self.assertIn("id: trigger-cards", self._step(self.brief, "Trigger cards workflow"))
+        # 옛 자리의 조건은 사라졌다 — 스모크 통과 직후에 보내는 스텝이 없다.
+        self.assertNotIn("if: steps.web-deploy.outcome == 'success'\n        continue-on-error: true\n        env:\n          # Cloudflare Pages",
+                         self.brief)
 
     def test_a_failed_notification_never_takes_the_briefing_down(self):
-        step = self.brief.split("- name: Web push", 1)[1].split("- name:", 1)[0]
-        self.assertIn("continue-on-error: true", step)
+        fallback = self._step(self.brief, "Web push (예비 — Cards 를 못 깨운 날)")
+        self.assertIn("continue-on-error: true", fallback)
+        # cards.yml 은 continue-on-error 를 금한다(test_cards_workflow). 그래서 알림은
+        # 별도 잡이다 — 알림 실패가 cards 잡을 빨갛게 만들지 않고 자기 잡에 남는다.
+        self.assertNotIn("continue-on-error", self.cards)
 
-    def test_the_step_carries_exactly_what_the_sender_reads(self):
-        step = self.brief.split("- name: Web push", 1)[1].split("- name:", 1)[0]
-        self.assertIn("PUSH_ADMIN_TOKEN: ${{ secrets.PUSH_ADMIN_TOKEN }}", step)
-        self.assertIn("VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}", step)
-        self.assertIn("VAPID_SUBJECT:", step)
-        # SITE_URL 은 워크플로 전역 env 다 — 스텝이 따로 들고 있으면 둘이 갈린다.
-        self.assertIn("SITE_URL:", self.brief.split("on:", 1)[0])
+    def test_the_steps_carry_exactly_what_the_sender_reads(self):
+        for text, title in ((self.cards, "Web push (아침 알림)"),
+                            (self.brief, "Web push (예비 — Cards 를 못 깨운 날)")):
+            step = self._step(text, title)
+            self.assertIn("PUSH_ADMIN_TOKEN: ${{ secrets.PUSH_ADMIN_TOKEN }}", step)
+            self.assertIn("VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}", step)
+            self.assertIn("VAPID_SUBJECT:", step)
+            # SITE_URL 은 워크플로 전역 env 다 — 스텝이 따로 들고 있으면 둘이 갈린다.
+            self.assertIn("SITE_URL:", text.split("on:", 1)[0] if text is self.brief
+                          else text.split("concurrency:", 1)[0])
 
     def test_the_mark_is_committed_after_the_notification(self):
         """outbox 의 push 칸을 커밋하는 스텝이 발송 **뒤**에 있어야 한다.
         앞에 있으면 표식이 러너와 함께 사라지고, 재실행이 알림을 또 보낸다."""
-        send_at = self.brief.index("- name: Web push")
-        commit_at = self.brief.index("- name: Commit issue review cache")
-        self.assertLess(send_at, commit_at)
-        commit = self.brief[commit_at:].split("- name:", 2)[1]
-        self.assertIn("git add outbox.json", commit)
+        notify = self.cards.split("\n  notify:\n", 1)[1]
+        self.assertLess(notify.index("- name: Web push (아침 알림)"),
+                        notify.index("- name: Commit the push record"))
+        self.assertIn("git add outbox.json", self._step(notify, "Commit the push record"))
+        # 예비 스텝은 커밋 스텝 뒤에 있으므로 표식을 스스로 싣는다.
+        fallback = self._step(self.brief, "Web push (예비 — Cards 를 못 깨운 날)")
+        self.assertIn("git add outbox.json", fallback)
 
     def test_the_sender_has_its_dependency(self):
         requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8")
@@ -514,6 +601,9 @@ class WorkflowWiringTests(unittest.TestCase):
         # 파이썬 검사 워크플로가 requirements 를 깔기 때문에 CI 에서 실제로 돈다.
         tests_workflow = (self.workflows / "python-tests.yml").read_text(encoding="utf-8")
         self.assertIn("pip install -r requirements.txt", tests_workflow)
+        # notify 잡도 같은 requirements 를 깐다 — pywebpush 가 거기서 필요하다.
+        notify = self.cards.split("\n  notify:\n", 1)[1]
+        self.assertIn("pip install -r requirements.txt", notify)
 
 
 class EdgeSurfaceTests(unittest.TestCase):
@@ -542,7 +632,8 @@ class EdgeSurfaceTests(unittest.TestCase):
         둘 중 어느 것을 넣어야 하는지 알 수 없다."""
         for path in (*self.FUNCTIONS.glob("*.js"),
                      ROOT / "tools" / "push_notify.py",
-                     ROOT / ".github" / "workflows" / "daily-brief.yml"):
+                     ROOT / ".github" / "workflows" / "daily-brief.yml",
+                     ROOT / ".github" / "workflows" / "cards.yml"):
             self.assertNotIn("PUSH_SEND_TOKEN", path.read_text(encoding="utf-8"), str(path))
 
 
