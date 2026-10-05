@@ -5922,7 +5922,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-10-05T22:06:25+00:00",
+    "updated_at": "2026-10-05T22:33:39+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -6002,7 +6002,7 @@
         "title": "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
         "detail": "AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 4건을 두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 만들어 봅니다. 예: 「자료] 뉴스핌 기사에 대하여 다음과 같이 설명드립니다.」, 「Poland Formally Adopts Updated Nuclear …」, 「Europe Delivers Final Vacuum Vessel Sec…」 외 1건.",
         "severity": "critical",
-        "last_seen_at": "2026-10-05T22:06:25+00:00",
+        "last_seen_at": "2026-10-05T22:33:39+00:00",
         "last_observation_id": "2026-10-06T07:03:51.165672+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-24T18:55:00+00:00",
@@ -6026,7 +6026,7 @@
         "title": "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
         "detail": "AI 요약을 받지 못해 원문 첫 문장만 있는 기사 1건을 브리핑 후보에 넣지 않았습니다. 1건은 두 번 모두 실패해 더 시도하지 않고 뺐습니다. 예: 「전기세 25조 선납 요구에 성과급 잔치? 한전이 조금은 억울한 이유」.",
         "severity": "warning",
-        "last_seen_at": "2026-10-05T22:06:25+00:00",
+        "last_seen_at": "2026-10-05T22:33:39+00:00",
         "last_observation_id": "2026-10-06T06:46:33.391684+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-26T21:11:41+00:00",
@@ -6085,14 +6085,14 @@
         "resolved_at": "2026-09-19T15:43:07+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 72,
+        "consecutive": 73,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
         "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 8건. 사건일 73건은 사이트에 표시하지 않았습니다 — 원문 근거를 다시 확인할 수 없음 73건 · 날짜 이상 0건.",
         "severity": "critical",
-        "last_seen_at": "2026-10-05T21:48:51+00:00",
-        "last_observation_id": "github-run:37237707293",
+        "last_seen_at": "2026-10-05T22:33:39+00:00",
+        "last_observation_id": "github-run:37379003883",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
@@ -6102,7 +6102,7 @@
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=21268 quarantined=8 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 54abc319758c",
+        "technical": "checked=21534 quarantined=8 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 54abc319758c",
         "fingerprint": "q=8:650c9bfbffcf6cf5",
         "last_notified_fingerprint": "q=35:37a796ac13006af0",
         "delivery": "digest"
@@ -6210,7 +6210,7 @@
         "title": "구글 AI 서버가 붐벼 기사 요약이 늦어졌습니다",
         "detail": "기사 8건을 이번 수집에서 AI로 요약하지 못했습니다. 구글이 '지금 요청이 몰려 있다'고 답했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-10-05T22:06:25+00:00",
+        "last_seen_at": "2026-10-05T22:33:39+00:00",
         "last_observation_id": "2026-10-06:2026-10-06T00:45:44.566439+09:00:8",
         "min_occurrences": 2,
         "first_seen_at": "2026-10-05T15:47:12+00:00",
@@ -6934,7 +6934,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=13 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-10-05T22:06:25+00:00",
+        "last_seen_at": "2026-10-05T22:33:39+00:00",
         "last_observation_id": "2026-10-05T22:04:18+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6972,7 +6972,7 @@
         "action": "필요 없음 — 원자력 기사가 여기 들어 있으면 topic_gate 의 어휘를 봐 주세요.",
         "technical": "demoted=2 news1.kr:not_required:0.0; hankyung.com:not_required:0.5",
         "fingerprint": "off-topic~1",
-        "last_seen_at": "2026-10-05T22:06:25+00:00",
+        "last_seen_at": "2026-10-05T22:33:39+00:00",
         "last_observation_id": "2026-10-06T07:03:55.390752+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -7002,7 +7002,7 @@
     }
   },
   "operational_digest": {
-    "last_sent_date": "2026-10-05",
-    "last_sent_at": "2026-10-04T22:10:20+00:00"
+    "last_sent_date": "2026-10-06",
+    "last_sent_at": "2026-10-05T22:33:39+00:00"
   }
 }
