@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-10-06"
   },
   "retired": {
@@ -588,6 +588,14 @@
       "type": "org",
       "until": "2026-10-03T18:40:53.720696+00:00"
     },
+    "전력연구원": {
+      "new_articles": 8,
+      "reason": "질의 횟수 소진",
+      "retired_at": "2026-10-06T00:41:26.320429+00:00",
+      "term": "전력연구원",
+      "type": "org",
+      "until": "2026-10-20T00:41:26.320429+00:00"
+    },
     "전문위원회": {
       "new_articles": 27,
       "reason": "성과 없음",
@@ -846,7 +854,7 @@
     }
   },
   "spent": {
-    "count": 4,
+    "count": 7,
     "date": "2026-10-06"
   },
   "terms": {
@@ -896,14 +904,14 @@
           "title": "한·미, 미국 내 한국형 원전 APR1400 2기 건설 합의…웨스팅하우스 예외 적용"
         }
       ],
-      "expires_at": "2026-10-06T09:41:21.212180+00:00",
+      "expires_at": "2026-10-07T00:41:26.320332+00:00",
       "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-10-05T15:41:34.697754+00:00",
-      "new_articles": 1,
+      "last_result_count": 2,
+      "last_run": "2026-10-06T00:41:26.320332+00:00",
+      "new_articles": 3,
       "origin": "auto",
-      "planned_at": "2026-10-05T15:41:30.910680+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-10-06T00:41:22.738671+00:00",
+      "queries_run": 4,
       "query": "반세기 만에 원전",
       "score": 3.6,
       "status": "extended",
@@ -911,63 +919,43 @@
       "ttl_hours": 24,
       "type": "plant",
       "yield_days": [
-        "2026-10-05"
-      ],
-      "yields": 1,
-      "zero_streak": 1
-    },
-    "전력연구원": {
-      "articles": 7,
-      "created_at": "2026-10-03T15:40:55.762391+00:00",
-      "domains": [
-        "dailysecu.com",
-        "epj.co.kr",
-        "khnp.co.kr",
-        "todayenergy.kr",
-        "e-platform.net",
-        "newscj.com"
-      ],
-      "evidence": [
-        {
-          "domain": "dailysecu.com",
-          "hash": "ff94480c3cb00964",
-          "importance": "nice_to_know",
-          "title": "전력연구원, 재생에너지 확대에 따른 전력망 보안 중요성 강조"
-        },
-        {
-          "domain": "epj.co.kr",
-          "hash": "bce646fc8a118f3f",
-          "importance": "nice_to_know",
-          "title": "한수원-미국 전력연구원(EPRI), 기계분야 통합 워크숍 개최"
-        },
-        {
-          "domain": "khnp.co.kr",
-          "hash": "494b8edf7e038a1e",
-          "importance": "noise",
-          "title": "한수원, 미국 전력연구원(EPRI)과 기계분야 통합 워크숍 개최"
-        }
-      ],
-      "expires_at": "2026-10-06T15:41:34.697754+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 1,
-      "last_run": "2026-10-05T15:41:34.697754+00:00",
-      "new_articles": 6,
-      "origin": "auto",
-      "planned_at": "2026-10-05T15:41:30.910680+00:00",
-      "queries_run": 7,
-      "query": "전력연구원 원자력",
-      "score": 6.71,
-      "status": "promote_candidate",
-      "term": "전력연구원",
-      "ttl_hours": 72,
-      "type": "org",
-      "yield_days": [
-        "2026-10-04",
         "2026-10-05",
         "2026-10-06"
       ],
-      "yields": 3,
+      "yields": 2,
       "zero_streak": 0
+    },
+    "오하이오주비스트라": {
+      "articles": 1,
+      "created_at": "2026-10-06T00:41:22.738671+00:00",
+      "domains": [
+        "energy.gov"
+      ],
+      "evidence": [
+        {
+          "domain": "energy.gov",
+          "hash": "42140c47d3602872",
+          "importance": "must_read",
+          "title": "미 에너지부, 비스트라 원전 현대화에 42억 달러 조건부 대출 약정 발표"
+        }
+      ],
+      "expires_at": "2026-10-07T00:41:22.738671+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-10-06T00:41:26.320332+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-10-06T00:41:22.738671+00:00",
+      "queries_run": 1,
+      "query": "오하이오주 비스트라 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "오하이오주 비스트라",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     },
     "추진한국형": {
       "articles": 1,
