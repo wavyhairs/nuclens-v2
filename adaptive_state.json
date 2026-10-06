@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 2,
-    "date": "2026-10-06"
+    "count": 1,
+    "date": "2026-10-07"
   },
   "retired": {
     "ap1000vsapr1400": {
@@ -854,10 +854,56 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-10-06"
+    "count": 3,
+    "date": "2026-10-07"
   },
   "terms": {
+    "pctc": {
+      "articles": 3,
+      "created_at": "2026-10-06T15:42:21.522794+00:00",
+      "domains": [
+        "khan.co.kr",
+        "fnnews.com",
+        "seoul.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "khan.co.kr",
+          "hash": "4d3ef3bb0f941dab",
+          "importance": "nice_to_know",
+          "title": "현대글로비스, 미국 LGL과 SMR 추진 자동차운반선 운항 공동 검토"
+        },
+        {
+          "domain": "fnnews.com",
+          "hash": "3aefb2e5a73ffe50",
+          "importance": "nice_to_know",
+          "title": "현대글로비스, SMR 추진 자동차운반선 상업운항 검토"
+        },
+        {
+          "domain": "seoul.co.kr",
+          "hash": "7c904f53ed74f76d",
+          "importance": "nice_to_know",
+          "title": "현대글로비스, SMR 추진 자동차운반선 상업운항 검토"
+        }
+      ],
+      "expires_at": "2026-10-08T15:42:21.522794+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-10-06T15:42:25.401276+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-10-06T15:42:21.522794+00:00",
+      "queries_run": 1,
+      "query": "PCTC 원자력",
+      "score": 4.6,
+      "status": "tracking",
+      "term": "PCTC",
+      "ttl_hours": 48,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "국민권익위원회": {
       "articles": 3,
       "created_at": "2026-10-06T09:41:00.094559+00:00",
@@ -920,14 +966,14 @@
           "title": "한미, 미국 내 대형 원전 8기 건설 합의…APR1400 2기 적용"
         }
       ],
-      "expires_at": "2026-10-07T03:41:14.146126+00:00",
+      "expires_at": "2026-10-07T15:42:25.401276+00:00",
       "importance": "must_read",
-      "last_result_count": 3,
-      "last_run": "2026-10-06T03:41:14.146126+00:00",
-      "new_articles": 3,
+      "last_result_count": 1,
+      "last_run": "2026-10-06T15:42:25.401276+00:00",
+      "new_articles": 4,
       "origin": "auto",
-      "planned_at": "2026-10-06T03:41:11.927758+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-10-06T15:42:21.522794+00:00",
+      "queries_run": 4,
       "query": "기에 한국형 원전",
       "score": 3.6,
       "status": "extended",
@@ -935,9 +981,10 @@
       "ttl_hours": 24,
       "type": "plant",
       "yield_days": [
-        "2026-10-06"
+        "2026-10-06",
+        "2026-10-07"
       ],
-      "yields": 1,
+      "yields": 2,
       "zero_streak": 0
     },
     "반세기만에": {
@@ -1021,14 +1068,14 @@
           "title": "정부, APR1400 미국 진출 2기 한정 확인…연내 원자력협력협정(SA) 개정 협의 추진"
         }
       ],
-      "expires_at": "2026-10-07T03:41:14.146126+00:00",
+      "expires_at": "2026-10-07T15:42:25.401276+00:00",
       "importance": "must_read",
-      "last_result_count": 20,
-      "last_run": "2026-10-06T03:41:14.146126+00:00",
-      "new_articles": 26,
+      "last_result_count": 3,
+      "last_run": "2026-10-06T15:42:25.401276+00:00",
+      "new_articles": 29,
       "origin": "auto",
-      "planned_at": "2026-10-06T03:41:11.927758+00:00",
-      "queries_run": 5,
+      "planned_at": "2026-10-06T15:42:21.522794+00:00",
+      "queries_run": 6,
       "query": "추진 한국형 원전",
       "score": 3.6,
       "status": "promote_candidate",
@@ -1038,9 +1085,10 @@
       "yield_days": [
         "2026-10-04",
         "2026-10-05",
-        "2026-10-06"
+        "2026-10-06",
+        "2026-10-07"
       ],
-      "yields": 4,
+      "yields": 5,
       "zero_streak": 0
     }
   },

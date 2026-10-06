@@ -1,27 +1,6 @@
 {
- "generated_at": "2026-10-06T00:47:48+09:00",
+ "generated_at": "2026-10-07T00:51:43+09:00",
  "events": [
-  {
-   "id": "of-aa740eaac3d9",
-   "date": "2026-09-22",
-   "end_date": "2026-09-22",
-   "kind": "point",
-   "time": "14:00",
-   "label": "전력산업, 누가 어떤 원칙으로 감독할 것인가: Part 2. 전력산업 공공성 강화를 위한 정책 연속세미나",
-   "host": "김주영·김정호 의원실, 내일의 공공과 에너지·노동을 생각하는 의원모임, 혁신더하기연구소, 전기신문",
-   "organizer": "김주영·김정호 의원실, 내일의 공공과 에너지·노동을 생각하는 의원모임, 혁신더하기연구소, 전기신문",
-   "place": "국회도서관 소강당",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "전력산업, 누가 어떤 원칙으로 감독할 것인가: Part 2. 전력산업 공공성 강화를 위한 정책 연속세미나",
-   "first_seen": "2026-09-18",
-   "topics": [
-    "power_market"
-   ],
-   "relevance": "전력산업",
-   "significance": "세미나"
-  },
   {
    "id": "of-d461711de05a",
    "date": "2026-09-28",
@@ -274,6 +253,29 @@
    "significance": "세미나"
   },
   {
+   "id": "of-b404d7cf4768",
+   "date": "2026-10-15",
+   "end_date": "2026-10-15",
+   "kind": "point",
+   "time": "13:00",
+   "label": "가상환경 기반 VPP용 분산자원연계장치 의견수렴 안내",
+   "host": "한국전력거래소",
+   "organizer": "",
+   "place": "스파크플러스 삼성2호점",
+   "url": "https://new.kpx.or.kr/board.es?act=view&bid=0042&list_no=78252&mid=a10501010000",
+   "source_id": "kpx_notice",
+   "publisher": "한국전력거래소",
+   "notice_title": "가상환경 기반 VPP용 분산자원연계장치 의견수렴 안내(10.15)",
+   "first_seen": "2026-10-06",
+   "topics": [
+    "renewable_grid"
+   ],
+   "relevance": "분산자원",
+   "significance": "의견수렴",
+   "post_id": "78252",
+   "when_clause": "2026년 10월 15일(목) 13:00 ~ 16:30"
+  },
+  {
    "id": "of-4806b4ba1a2c",
    "date": "2026-10-18",
    "end_date": "2026-10-21",
@@ -415,7 +417,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-10-06T00:47:48+09:00",
+   "at": "2026-10-07T00:51:43+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -423,7 +425,7 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-10-06T00:47:48+09:00",
+   "at": "2026-10-07T00:51:43+09:00",
    "ok": true,
    "parsed": 10,
    "kept": 2,
@@ -435,7 +437,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-10-06T00:47:48+09:00",
+   "at": "2026-10-07T00:51:43+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -448,7 +450,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-10-06T00:47:48+09:00",
+   "at": "2026-10-07T00:51:43+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -456,25 +458,25 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-10-06T00:47:48+09:00",
+   "at": "2026-10-07T00:51:43+09:00",
    "ok": true,
-   "parsed": 15,
-   "kept": 2,
-   "new": 0,
-   "dropped": {
-    "no_interest_match": 13
-   }
-  },
-  "kpx_notice": {
-   "at": "2026-10-06T00:47:48+09:00",
-   "ok": true,
-   "parsed": 20,
+   "parsed": 7,
    "kept": 1,
    "new": 0,
    "dropped": {
-    "not_an_event": 6,
+    "no_interest_match": 6
+   }
+  },
+  "kpx_notice": {
+   "at": "2026-10-07T00:51:43+09:00",
+   "ok": true,
+   "parsed": 20,
+   "kept": 2,
+   "new": 1,
+   "dropped": {
+    "not_an_event": 7,
     "no_event_date": 2,
-    "no_interest_match": 7,
+    "no_interest_match": 5,
     "low_significance": 4
    }
   }
