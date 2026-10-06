@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-10-06"
   },
   "retired": {
@@ -854,10 +854,58 @@
     }
   },
   "spent": {
-    "count": 9,
+    "count": 12,
     "date": "2026-10-06"
   },
   "terms": {
+    "국민권익위원회": {
+      "articles": 3,
+      "created_at": "2026-10-06T09:41:00.094559+00:00",
+      "domains": [
+        "yna.co.kr",
+        "newsis.com",
+        "news1.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "yna.co.kr",
+          "hash": "e20d5e86439f277d",
+          "importance": "nice_to_know",
+          "title": "권익위, 월성원전 인근 마을 안전시설 보강 조정안 마련"
+        },
+        {
+          "domain": "newsis.com",
+          "hash": "cbf370973f7fe2d0",
+          "importance": "nice_to_know",
+          "title": "국민권익위, 월성원전 비상계획구역 주민 고충민원 조정안 마련"
+        },
+        {
+          "domain": "news1.kr",
+          "hash": "eebd56fdb1abec3d",
+          "importance": "nice_to_know",
+          "title": "월성원전 인근 포항 19개 마을 방재시설 보강"
+        }
+      ],
+      "expires_at": "2026-10-07T09:41:03.399747+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 1,
+      "last_run": "2026-10-06T09:41:03.399747+00:00",
+      "new_articles": 1,
+      "origin": "auto",
+      "planned_at": "2026-10-06T09:41:00.094559+00:00",
+      "queries_run": 1,
+      "query": "국민권익위원회 원자력",
+      "score": 3.7,
+      "status": "extended",
+      "term": "국민권익위원회",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [
+        "2026-10-06"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    },
     "기에한국형": {
       "articles": 1,
       "created_at": "2026-10-05T12:40:59.955086+00:00",
@@ -906,17 +954,17 @@
           "title": "한·미, 미국 내 한국형 원전 APR1400 2기 건설 합의…웨스팅하우스 예외 적용"
         }
       ],
-      "expires_at": "2026-10-07T00:41:26.320332+00:00",
+      "expires_at": "2026-10-07T09:41:03.399747+00:00",
       "importance": "must_read",
-      "last_result_count": 2,
-      "last_run": "2026-10-06T00:41:26.320332+00:00",
-      "new_articles": 3,
+      "last_result_count": 1,
+      "last_run": "2026-10-06T09:41:03.399747+00:00",
+      "new_articles": 4,
       "origin": "auto",
-      "planned_at": "2026-10-06T00:41:22.738671+00:00",
-      "queries_run": 4,
+      "planned_at": "2026-10-06T09:41:00.094559+00:00",
+      "queries_run": 5,
       "query": "반세기 만에 원전",
       "score": 3.6,
-      "status": "extended",
+      "status": "promote_candidate",
       "term": "반세기 만에",
       "ttl_hours": 24,
       "type": "plant",
@@ -924,7 +972,7 @@
         "2026-10-05",
         "2026-10-06"
       ],
-      "yields": 2,
+      "yields": 3,
       "zero_streak": 0
     },
     "오하이오주비스트라": {
@@ -944,11 +992,11 @@
       "expires_at": "2026-10-07T00:41:22.738671+00:00",
       "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-10-06T00:41:26.320332+00:00",
+      "last_run": "2026-10-06T09:41:03.399747+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-10-06T00:41:22.738671+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-06T09:41:00.094559+00:00",
+      "queries_run": 2,
       "query": "오하이오주 비스트라 원전",
       "score": 3.6,
       "status": "tracking",
@@ -957,7 +1005,7 @@
       "type": "plant",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "추진한국형": {
       "articles": 1,
