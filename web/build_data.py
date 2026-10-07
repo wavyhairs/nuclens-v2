@@ -758,6 +758,18 @@ def validate_archive_records(records: list[dict]) -> None:
         raise ValueError(f"data quality gate failed ({len(errors)}): {preview}")
 
 
+def in_news_window(item: dict, cutoff: str) -> bool:
+    """60일 뉴스 창 안인가. 브리핑에 실린 기사는 **브리핑 날짜로도** 센다.
+
+    브리핑에는 며칠 전에 나온 기사가 실린다(08-09 회차에 08-04~08-08 기사 7건).
+    기사 날짜로만 자르면 경계 날짜의 회차가 반쪽이 된다 — 얼린 1위 카드가 빠지고
+    남은 카드가 얼린 순서대로 서서 국내 첫 이슈가 4번째로 밀렸고(2026-10-08
+    deploy-web #181), 묶음이 그대로인 카드가 '정정됨'이 됐다(10-02 #169).
+    회차는 창에 통째로 들어오고 통째로 나간다.
+    """
+    return max(item.get("article_date") or "", item.get("briefing_date") or "") >= cutoff
+
+
 def load_archive() -> list[dict]:
     records = []
     archive_dir = BOT_DIR / "archive"
@@ -7411,7 +7423,7 @@ def build() -> None:
         print(f"[overrides] 편집 승격 {promoted}건")
 
     visible.sort(key=lambda item: (item["article_date"], item.get("briefing_date") or ""), reverse=True)
-    news_items = [item for item in visible if item["article_date"] >= cutoff_news]
+    news_items = [item for item in visible if in_news_window(item, cutoff_news)]
     progress("prepare_news:done", records=len(records), news_items=len(news_items))
 
     embeddings = load_embeddings_cache()

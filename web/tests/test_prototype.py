@@ -3745,6 +3745,26 @@ class SelectionStatsTests(unittest.TestCase):
         self.assertEqual(build_data.pick_selection_stats(rows), {})
 
 
+class NewsWindowTests(unittest.TestCase):
+    """경계 날짜의 회차가 반쪽이 되면 얼린 순서·기사 수가 어긋난다(deploy-web #169, #181)."""
+
+    CUTOFF = "2026-08-09"
+
+    def test_older_article_in_a_window_briefing_stays(self):
+        # 08-09 회차에 실린 08-04 원안위 기사 — 회차와 함께 남는다
+        item = {"article_date": "2026-08-04", "briefing_date": "2026-08-09"}
+        self.assertTrue(build_data.in_news_window(item, self.CUTOFF))
+
+    def test_briefing_leaves_the_window_whole(self):
+        item = {"article_date": "2026-08-04", "briefing_date": "2026-08-08"}
+        self.assertFalse(build_data.in_news_window(item, self.CUTOFF))
+
+    def test_unsent_articles_are_cut_by_article_date(self):
+        self.assertTrue(build_data.in_news_window({"article_date": "2026-08-09"}, self.CUTOFF))
+        self.assertFalse(build_data.in_news_window(
+            {"article_date": "2026-08-08", "briefing_date": None}, self.CUTOFF))
+
+
 class EmptyBriefingRowTests(unittest.TestCase):
     """하한에 전부 걸린 날은 브리핑 행 자체가 안 생긴다 — 그러면 화면이 사유를 못 말한다.
 
