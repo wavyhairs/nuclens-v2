@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-10-08"
   },
   "retired": {
@@ -140,6 +140,14 @@
       "type": "company",
       "until": "2026-10-12T18:40:48.265607+00:00"
     },
+    "pctc": {
+      "new_articles": 1,
+      "reason": "성과 없음",
+      "retired_at": "2026-10-08T09:44:15.024077+00:00",
+      "term": "PCTC",
+      "type": "company",
+      "until": "2026-10-22T09:44:15.024077+00:00"
+    },
     "pmdc": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -267,6 +275,14 @@
       "term": "규제기술 개발",
       "type": "plant",
       "until": "2026-09-19T03:40:24.750424+00:00"
+    },
+    "기에한국형": {
+      "new_articles": 9,
+      "reason": "질의 횟수 소진",
+      "retired_at": "2026-10-08T09:44:15.024077+00:00",
+      "term": "기에 한국형",
+      "type": "plant",
+      "until": "2026-10-22T09:44:15.024077+00:00"
     },
     "기후에너지환경노동위원회": {
       "new_articles": 4,
@@ -894,92 +910,56 @@
     }
   },
   "spent": {
-    "count": 9,
+    "count": 12,
     "date": "2026-10-08"
   },
   "terms": {
-    "pctc": {
+    "feed1": {
       "articles": 3,
-      "created_at": "2026-10-06T15:42:21.522794+00:00",
+      "created_at": "2026-10-08T09:44:11.159283+00:00",
       "domains": [
-        "khan.co.kr",
-        "fnnews.com",
-        "seoul.co.kr"
+        "economist.co.kr",
+        "newsworks.co.kr",
+        "finomy.com"
       ],
       "evidence": [
         {
-          "domain": "khan.co.kr",
-          "hash": "4d3ef3bb0f941dab",
+          "domain": "economist.co.kr",
+          "hash": "fdb6a693ee9e49a5",
           "importance": "nice_to_know",
-          "title": "현대글로비스, 미국 LGL과 SMR 추진 자동차운반선 운항 공동 검토"
+          "title": "현대건설, 네덜란드 신규 대형원전 2기 기본설계(FEED 1) 착수"
         },
         {
-          "domain": "fnnews.com",
-          "hash": "3aefb2e5a73ffe50",
-          "importance": "nice_to_know",
-          "title": "현대글로비스, SMR 추진 자동차운반선 상업운항 검토"
+          "domain": "newsworks.co.kr",
+          "hash": "35e11efb8b41136b",
+          "importance": "noise",
+          "title": "현대건설, 네덜란드 신규 대형원전 FEED 1 계약 체결"
         },
         {
-          "domain": "seoul.co.kr",
-          "hash": "7c904f53ed74f76d",
-          "importance": "nice_to_know",
-          "title": "현대글로비스, SMR 추진 자동차운반선 상업운항 검토"
+          "domain": "finomy.com",
+          "hash": "3f674d5f91676c71",
+          "importance": "must_read",
+          "title": "현대건설, 웨스팅하우스와 네덜란드 대형원전 1단계 기본설계 계약 체결"
         }
       ],
-      "expires_at": "2026-10-08T15:42:21.522794+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-10-08T00:42:01.156336+00:00",
-      "new_articles": 1,
+      "expires_at": "2026-10-11T09:44:11.159283+00:00",
+      "importance": "must_read",
+      "last_result_count": 29,
+      "last_run": "2026-10-08T09:44:15.023966+00:00",
+      "new_articles": 29,
       "origin": "auto",
-      "planned_at": "2026-10-08T00:41:57.125694+00:00",
-      "queries_run": 4,
-      "query": "PCTC 원자력",
-      "score": 4.6,
+      "planned_at": "2026-10-08T09:44:11.159283+00:00",
+      "queries_run": 1,
+      "query": "FEED 1 원자력",
+      "score": 6.04,
       "status": "extended",
-      "term": "PCTC",
-      "ttl_hours": 48,
+      "term": "FEED 1",
+      "ttl_hours": 72,
       "type": "company",
       "yield_days": [
-        "2026-10-07"
-      ],
-      "yields": 1,
-      "zero_streak": 2
-    },
-    "기에한국형": {
-      "articles": 1,
-      "created_at": "2026-10-05T12:40:59.955086+00:00",
-      "domains": [
-        "newscj.com"
-      ],
-      "evidence": [
-        {
-          "domain": "newscj.com",
-          "hash": "da897a670de07a06",
-          "importance": "must_read",
-          "title": "한미, 미국 내 대형 원전 8기 건설 합의…APR1400 2기 적용"
-        }
-      ],
-      "expires_at": "2026-10-09T00:42:01.156336+00:00",
-      "importance": "must_read",
-      "last_result_count": 2,
-      "last_run": "2026-10-08T00:42:01.156336+00:00",
-      "new_articles": 8,
-      "origin": "auto",
-      "planned_at": "2026-10-08T00:41:57.125694+00:00",
-      "queries_run": 7,
-      "query": "기에 한국형 원전",
-      "score": 3.6,
-      "status": "promote_candidate",
-      "term": "기에 한국형",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-10-06",
-        "2026-10-07",
         "2026-10-08"
       ],
-      "yields": 4,
+      "yields": 1,
       "zero_streak": 0
     },
     "정부가한미": {
