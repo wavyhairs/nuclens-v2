@@ -5803,7 +5803,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-10-08T21:57:24+00:00",
+    "updated_at": "2026-10-08T21:58:48+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -5883,7 +5883,7 @@
         "title": "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
         "detail": "AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 2건을 두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 만들어 봅니다. 예: 「Slovakia buys out Czech stake in new nu…」, 「Energy Department Announces New Genesis…」.",
         "severity": "critical",
-        "last_seen_at": "2026-10-08T21:57:24+00:00",
+        "last_seen_at": "2026-10-08T21:58:48+00:00",
         "last_observation_id": "2026-10-09T06:56:52.384778+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-24T18:55:00+00:00",
@@ -5907,7 +5907,7 @@
         "title": "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
         "detail": "AI 요약을 받지 못해 원문 첫 문장만 있는 기사 1건을 브리핑 후보에 넣지 않았습니다. 1건은 두 번 모두 실패해 더 시도하지 않고 뺐습니다. 예: 「‘K-GX’에 전선업계 수혜 기대감…전력망 구축 ‘속도전’은 과제」.",
         "severity": "warning",
-        "last_seen_at": "2026-10-08T21:57:24+00:00",
+        "last_seen_at": "2026-10-08T21:58:48+00:00",
         "last_observation_id": "2026-10-09T00:48:05.244057+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-26T21:11:41+00:00",
@@ -6816,7 +6816,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=40 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-10-08T21:57:24+00:00",
+        "last_seen_at": "2026-10-08T21:58:48+00:00",
         "last_observation_id": "2026-10-08T21:57:24+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6854,7 +6854,7 @@
         "action": "필요 없음 — 원자력 기사가 여기 들어 있으면 topic_gate 의 어휘를 봐 주세요.",
         "technical": "demoted=2 energy.gov:not_required:1.5; energy.gov:not_required:1.5",
         "fingerprint": "off-topic~1",
-        "last_seen_at": "2026-10-08T21:57:24+00:00",
+        "last_seen_at": "2026-10-08T21:58:48+00:00",
         "last_observation_id": "2026-10-09T06:56:54.028322+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6862,24 +6862,23 @@
         "pending_notification": false
       },
       "quality-event:story-echo-held": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "quality_event",
-        "active": false,
+        "active": true,
         "title": "며칠 전 보도의 되풀이 기사를 걸렀습니다",
-        "detail": "이미 브리핑에 나간 소식을 다시 쓴 기사 1건을 뺐습니다. 먼저 보도된 소식을 늦게 쓴 기사 1건은 '중요' 표시를 내리고 첫 보도 날짜를 달아 실었습니다.",
+        "detail": "먼저 보도된 소식을 늦게 쓴 기사 3건은 '중요' 표시를 내리고 첫 보도 날짜를 달아 실었습니다.",
         "severity": "info",
         "level": "attention",
         "impact": "없음 — 새 소식은 그대로 나갔습니다.",
         "action": "필요 없음 — 새 소식이 여기 섞여 있으면 알려 주세요.",
-        "technical": "dnews.co.kr←dnews.co.kr@2026-10-06 sim=0.741; seoul.co.kr←seoul.co.kr@2026-10-06 sim=1.0",
+        "technical": "mil.kr←fnnews.com@2026-10-07 sim=0.857; ksilbo.co.kr←newsis.com@2026-10-07 sim=0.745; enewstoday.co.kr←kpenews.com@2026-10-07 sim=0.6",
         "fingerprint": "story-echo~1",
-        "last_seen_at": "2026-10-08T18:46:03+00:00",
-        "last_observation_id": "2026-10-07T20:42:31.555686+00:00",
+        "last_seen_at": "2026-10-08T21:58:48+00:00",
+        "last_observation_id": "2026-10-08T21:57:39.994483+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
-        "first_seen_at": "2026-10-07T20:43:32+00:00",
-        "pending_notification": false,
-        "resolved_at": "2026-10-08T21:46:26+00:00"
+        "first_seen_at": "2026-10-08T21:58:48+00:00",
+        "pending_notification": false
       }
     }
   },
