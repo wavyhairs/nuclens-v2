@@ -5803,7 +5803,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-10-08T21:58:48+00:00",
+    "updated_at": "2026-10-08T22:20:31+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -5883,7 +5883,7 @@
         "title": "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
         "detail": "AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 2건을 두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 만들어 봅니다. 예: 「Slovakia buys out Czech stake in new nu…」, 「Energy Department Announces New Genesis…」.",
         "severity": "critical",
-        "last_seen_at": "2026-10-08T21:58:48+00:00",
+        "last_seen_at": "2026-10-08T22:20:31+00:00",
         "last_observation_id": "2026-10-09T06:56:52.384778+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-24T18:55:00+00:00",
@@ -5907,7 +5907,7 @@
         "title": "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
         "detail": "AI 요약을 받지 못해 원문 첫 문장만 있는 기사 1건을 브리핑 후보에 넣지 않았습니다. 1건은 두 번 모두 실패해 더 시도하지 않고 뺐습니다. 예: 「‘K-GX’에 전선업계 수혜 기대감…전력망 구축 ‘속도전’은 과제」.",
         "severity": "warning",
-        "last_seen_at": "2026-10-08T21:58:48+00:00",
+        "last_seen_at": "2026-10-08T22:20:31+00:00",
         "last_observation_id": "2026-10-09T00:48:05.244057+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-26T21:11:41+00:00",
@@ -5966,14 +5966,14 @@
         "resolved_at": "2026-09-19T15:43:07+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 75,
+        "consecutive": 76,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
         "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 8건. 사건일 73건은 사이트에 표시하지 않았습니다 — 원문 근거를 다시 확인할 수 없음 73건 · 날짜 이상 0건.",
         "severity": "critical",
-        "last_seen_at": "2026-10-08T18:46:03+00:00",
-        "last_observation_id": "github-run:37683131095",
+        "last_seen_at": "2026-10-08T22:20:31+00:00",
+        "last_observation_id": "github-run:37849687158",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
@@ -5983,7 +5983,7 @@
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=22349 quarantined=8 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 54abc319758c",
+        "technical": "checked=22752 quarantined=8 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 54abc319758c",
         "fingerprint": "q=8:650c9bfbffcf6cf5",
         "last_notified_fingerprint": "q=35:37a796ac13006af0",
         "delivery": "digest"
@@ -6037,16 +6037,16 @@
         "resolved_at": "2026-09-13T06:43:34+00:00"
       },
       "quality-event:audio-script-claim-removed": {
-        "consecutive": 0,
+        "consecutive": 1,
         "scope": "quality_event",
-        "active": false,
+        "active": true,
         "title": "전문가 브리핑 대본에서 근거 없는 문단을 뺐습니다",
-        "detail": "2026-10-08 전문가 브리핑 대본에서 기사 근거로 확인되지 않는 문단 3건을 빼고 내보냈습니다.",
+        "detail": "2026-10-09 전문가 브리핑 대본에서 기사 근거로 확인되지 않는 문단 2건을 빼고 내보냈습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-10-08T18:46:03+00:00",
-        "last_observation_id": "2026-10-08T05:53:23.943161+09:00",
+        "last_seen_at": "2026-10-08T22:20:31+00:00",
+        "last_observation_id": "2026-10-09T07:10:17.485663+09:00",
         "min_occurrences": 2,
-        "first_seen_at": "2026-10-07T20:59:57+00:00",
+        "first_seen_at": "2026-10-08T22:20:31+00:00",
         "pending_notification": false,
         "last_notified_at": "2026-09-09T22:08:27+00:00",
         "last_notified_severity": "warning",
@@ -6054,11 +6054,10 @@
         "level": "attention",
         "impact": "없음 — 음원은 정상 발송됐고, 뺀 문단 외의 내용은 그대로입니다.",
         "action": "필요 없음 — 자동으로 정리됐습니다.",
-        "technical": "variant=expert date=2026-10-08 removed=3 action=sanitize",
-        "fingerprint": "removed:2026-10-08:expert:3:sanitize",
+        "technical": "variant=expert date=2026-10-09 removed=2 action=sanitize",
+        "fingerprint": "removed:2026-10-09:expert:2:sanitize",
         "resolution_notified_at": "2026-09-26T15:42:21+00:00",
-        "delivery": "digest",
-        "resolved_at": "2026-10-08T21:46:26+00:00"
+        "delivery": "digest"
       },
       "source:DOE:partial-parse": {
         "consecutive": 0,
@@ -6816,7 +6815,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=40 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-10-08T21:58:48+00:00",
+        "last_seen_at": "2026-10-08T22:20:31+00:00",
         "last_observation_id": "2026-10-08T21:57:24+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6854,7 +6853,7 @@
         "action": "필요 없음 — 원자력 기사가 여기 들어 있으면 topic_gate 의 어휘를 봐 주세요.",
         "technical": "demoted=2 energy.gov:not_required:1.5; energy.gov:not_required:1.5",
         "fingerprint": "off-topic~1",
-        "last_seen_at": "2026-10-08T21:58:48+00:00",
+        "last_seen_at": "2026-10-08T22:20:31+00:00",
         "last_observation_id": "2026-10-09T06:56:54.028322+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6873,7 +6872,7 @@
         "action": "필요 없음 — 새 소식이 여기 섞여 있으면 알려 주세요.",
         "technical": "mil.kr←fnnews.com@2026-10-07 sim=0.857; ksilbo.co.kr←newsis.com@2026-10-07 sim=0.745; enewstoday.co.kr←kpenews.com@2026-10-07 sim=0.6",
         "fingerprint": "story-echo~1",
-        "last_seen_at": "2026-10-08T21:58:48+00:00",
+        "last_seen_at": "2026-10-08T22:20:31+00:00",
         "last_observation_id": "2026-10-08T21:57:39.994483+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6883,7 +6882,7 @@
     }
   },
   "operational_digest": {
-    "last_sent_date": "2026-10-08",
-    "last_sent_at": "2026-10-07T20:59:57+00:00"
+    "last_sent_date": "2026-10-09",
+    "last_sent_at": "2026-10-08T22:20:31+00:00"
   }
 }
