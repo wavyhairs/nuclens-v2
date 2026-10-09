@@ -1064,6 +1064,83 @@ def load_deliveries() -> dict[str, dict]:
     return out
 
 
+def load_delivery_aliases() -> dict[str, str]:
+    """발송 해시 → 아카이브 해시 별칭 (`delivery_hash_aliases.json`).
+
+    같은 기사가 두 경로로 들어와 해시가 둘이 됐을 때, 아카이브에는 첫 사본만 남고
+    발송은 두 번째 사본으로 나간 **과거** 기록을 사람이 이어 붙이는 자리다.
+    `tools/delivery_orphans.py --write-aliases` 가 채운다. 앞으로는 수집 단계가
+    회차 간 같은 제목을 접으므로(news_bot.fold_cross_run_duplicates) 새 항목이 거의
+    생기지 않아야 한다 — 생기면 그 접기가 못 본 경로가 있다는 뜻이다.
+    """
+    path = BOT_DIR / "delivery_hash_aliases.json"
+    if not path.exists():
+        return {}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    aliases = raw.get("aliases") if isinstance(raw, dict) else None
+    if not isinstance(aliases, dict):
+        return {}
+    return {str(k): str(v) for k, v in aliases.items() if k and v}
+
+
+def resolve_delivery_orphans(deliveries: dict[str, dict], records: list[dict],
+                             aliases: dict[str, str] | None = None,
+                             brief_ranks: dict[str, int] | None = None) -> dict:
+    """아카이브에 없는 발송 해시(고아)를 같은 기사의 아카이브 레코드에 잇는다.
+
+    왜: 웹은 발송 기록을 아카이브 레코드와 **해시로만** 조인한다. 같은 기사가
+    네이버 경로와 Google News 경로로 따로 들어오면 아카이브는 제목 완전일치로
+    첫 사본만 남기고, 발송은 등급 높은 두 번째 사본으로 나가 해시가 어긋난다.
+    그러면 그 기사는 발송됐는데도 `briefing_date` 가 비어 이슈 카드가 되지 못하고,
+    탐색 검색은 이슈만 훑으니 검색에도 안 나온다 (2026-10-09 월성 2~4호기 계속운전,
+    9/29 이후 7건).
+
+    잇는 순서: ① 별칭 파일 ② 발송 기록의 원제목(`title`) 완전일치. 아카이브
+    해시에 이미 제 발송 기록이 있으면 더 늦은 발송일만 덮는다. `deliveries` 와
+    `brief_ranks` 는 제자리에서 보강한다(고아 키는 그대로 둔다 — 해시가 맞는 레코드가
+    없으니 아무 데도 안 붙는다). 반환값은 빌드 로그용 통계다.
+    """
+    aliases = aliases or {}
+    archive_hashes = {str(r.get("hash") or "") for r in records}
+    by_title: dict[str, str] = {}
+    for record in records:
+        key = title_key(record.get("title"))
+        if key and record.get("hash"):
+            by_title.setdefault(key, str(record["hash"]))
+
+    stats = {"orphans": 0, "by_alias": 0, "by_title": 0, "unresolved": 0,
+             "unresolved_samples": []}
+    for orphan_hash, delivery in list(deliveries.items()):
+        if orphan_hash in archive_hashes:
+            continue
+        stats["orphans"] += 1
+        target = aliases.get(orphan_hash)
+        how = "by_alias"
+        if not (target and target in archive_hashes):
+            target = by_title.get(title_key(delivery.get("title") or ""))
+            how = "by_title"
+        if not target or target not in archive_hashes:
+            stats["unresolved"] += 1
+            if len(stats["unresolved_samples"]) < 5:
+                stats["unresolved_samples"].append(
+                    f"{orphan_hash[:8]} {str(delivery.get('date') or '')} "
+                    f"{str(delivery.get('title_kr') or '')[:40]}")
+            continue
+        current = deliveries.get(target)
+        if current and str(current.get("date") or "") >= str(delivery.get("date") or ""):
+            # 아카이브 해시가 제 발송 기록을 이미 갖고 있고 그쪽이 더 늦거나 같다.
+            stats[how] += 1
+            continue
+        deliveries[target] = {**delivery, "hash": target, "delivery_hash_alias": orphan_hash}
+        if brief_ranks is not None and orphan_hash in brief_ranks and target not in brief_ranks:
+            brief_ranks[target] = brief_ranks[orphan_hash]
+        stats[how] += 1
+    return stats
+
+
 # 선정 통계는 hash 가 없어 (date, hash) 멱등이 안 걸린다. 워크플로 재실행이 같은
 # 날짜에 여러 줄을 남기므로 읽는 쪽에서 하나를 고른다.
 #   ① pipeline_status 가 좋은 것 우선 (실패한 재실행이 정상 기록을 덮지 않게)
@@ -7275,6 +7352,14 @@ def build() -> None:
     validate_archive_records(records)
     deliveries = load_deliveries()
     brief_ranks = brief_ranks_by_hash()
+    orphan_stats = resolve_delivery_orphans(
+        deliveries, records, load_delivery_aliases(), brief_ranks)
+    if orphan_stats["orphans"]:
+        print(f"[delivery] 아카이브에 없는 발송 해시 {orphan_stats['orphans']}건 — "
+              f"별칭 복원 {orphan_stats['by_alias']} · 제목 복원 {orphan_stats['by_title']} · "
+              f"미복원 {orphan_stats['unresolved']}")
+        for sample in orphan_stats["unresolved_samples"]:
+            print(f"  · 미복원 {sample}")
     now = _build_now()
     generation_id = GENERATION_ID or now.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     cutoff_news = (now - timedelta(days=NEWS_WINDOW_DAYS)).strftime("%Y-%m-%d")
