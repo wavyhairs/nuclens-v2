@@ -14,3 +14,5 @@ archive/*.jsonl merge=union
 # 요약 사실검증 기록(summary_verify.py). crawl 과 daily-brief 가 둘 다 news_bot 을 돌려
 # 같은 파일 끝에 줄을 붙인다 — 위와 같은 이유로 union.
 summary_checks.jsonl merge=union
+# 원문 대조 격리 재검 기록(integrity_shadow.py) — 같은 이유로 union.
+integrity_shadow.jsonl merge=union
