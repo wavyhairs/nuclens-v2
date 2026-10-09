@@ -301,6 +301,9 @@ jobs:
           GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
           # reasoning 검증용 passive capture (기본 꺼짐 — vars.NUCLENS_LLM_CAPTURE).
           NUCLENS_LLM_CAPTURE_DIR: ${{ vars.NUCLENS_LLM_CAPTURE == 'on' && '.eval/capture' || '' }}
+          # 그림자 하루치 순위(발송 불변, 기록만 — shadow_rank.py). 1주 측정 뒤 끄려면
+          # 저장소 변수 SHADOW_RANK=off. 지역당 2회 + 경계 재질문 ≤10회, 하루 14회 안팎.
+          SHADOW_RANK: ${{ vars.SHADOW_RANK || 'on' }}
         run: python daily_brief.py --plan
 
       - name: Push claim (발송 전 커밋 — 실패 시 발송 중단)
@@ -322,6 +325,9 @@ jobs:
             # 그때 텍스트가 지워지고 채널에는 오디오만 뜬다. 큐가 비는 날
             # (outbox=empty)에는 파일이 없을 수 있어 존재를 확인하고 add 한다.
             if [ -f channel_outbox.json ]; then git add channel_outbox.json; fi
+            # 그림자 하루치 순위 기록(발송 불변, 1주 비교용). plan 이 (날짜, 지역) 멱등으로
+            # 쌓으므로 재실행에도 안전하다. 없는 날(empty·꺼짐)이 있어 존재를 확인한다.
+            if [ -f shadow_rank_log.jsonl ]; then git add shadow_rank_log.jsonl; fi
             if git diff --cached --quiet; then echo "변경 없음 (재실행/empty)"; exit 0; fi
             git commit -m "chore: daily brief claim"
             if git push origin HEAD:main; then echo "claim push 성공"; exit 0; fi
