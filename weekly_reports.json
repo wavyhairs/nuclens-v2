@@ -2927,6 +2927,414 @@
         },
         "confirmed_at": "2026-10-02T17:10:43.944768+09:00"
       }
+    },
+    "2026-W41": {
+      "week_id": "2026-W41",
+      "week_start": "2026-10-03",
+      "week_end": "2026-10-09",
+      "generated_at": "2026-10-09T17:09:06.913035+09:00",
+      "timezone": "Asia/Seoul",
+      "schema_version": 1,
+      "source_issue_count": 857,
+      "article_count": 1192,
+      "weekly_intro": "이번 주는 정부의 1000조원 규모 '한국형 녹색대전환(K-GX)' 전략 발표와 함께 SMR 국가전략기술 지정 추진 및 네덜란드 대형원전 기본설계 착수 등 원전 수출과 미래 기술 확보 가속화가 두드러진 한 주였다. AI 데이터센터 전력 수요 급증에 대응하기 위한 제12차 전력수급기본계획상 최대전력수요 전망 상향과 송전망 확충 논의가 국정감사의 핵심 쟁점으로 부상했다. 또한 한미 원전 프레임워크에 따른 후속 협상과 웨스팅하우스 지분 인수 및 기술료 협의가 본격화되면서 원전 생태계 전반의 전략적 재편이 가속화되고 있다.",
+      "policy_shifts": [
+        {
+          "what": "정부가 2035년까지 10년간 1,000조 원을 투입하는 '한국형 녹색대전환(K-GX)' 전략을 발표하며 SMR 세제 지원 및 파운드리 생태계 구축을 공식화했다.",
+          "so_what": "국가 차원의 대규모 재정 투입을 통해 미래형 원자력 기술과 청정에너지 인프라의 상용화 기반이 한층 공고해질 전망이다.",
+          "evidence_hashes": [
+            "50afdea5",
+            "36a787df",
+            "1bd7926a"
+          ]
+        },
+        {
+          "what": "한미 양국이 2,000억 달러 규모의 전략적 에너지 투자 프로젝트를 공식화하고 미국 내 대형원전 8기 건설 및 공급망 참여 방안을 구체화했다.",
+          "so_what": "국내 원전 기업들의 글로벌 공급망 진입과 대형 프로젝트 수주 가시성이 높아지는 동시에 상업적 합리성 검증이 주요 과제로 대두됐다.",
+          "evidence_hashes": [
+            "63e19996",
+            "5f8714e7",
+            "3f674d5f"
+          ]
+        },
+        {
+          "what": "제12차 전력수급기본계획상 2040년 최대전력수요가 165GW로 전망되고 AI 데이터센터 수요가 상향 조정됨에 따라 전력망 계획의 원점 재검토가 추진된다.",
+          "so_what": "급증하는 AI 전력 수요에 맞춰 송변전 설비 확충과 분산형 에너지 인프라 구축의 시급성이 더욱 강조되고 있다.",
+          "evidence_hashes": [
+            "94b2bccb",
+            "54926bf5",
+            "cc18d018"
+          ]
+        }
+      ],
+      "theme_moves": [
+        {
+          "theme": "SMR",
+          "direction": "강화",
+          "why": "미국 NRC의 클린치리버 SMR 건설허가 발급과 정부의 K-GX 전략을 통한 SMR 파운드리 생태계 구축 및 전용 공장 건립 추진이 맞물려 실증 단계로 진입했다.",
+          "evidence_hashes": [
+            "7b332936",
+            "a0bd91f2",
+            "50afdea5"
+          ]
+        },
+        {
+          "theme": "전력수요",
+          "direction": "강화",
+          "why": "AI 데이터센터의 급격한 전력 수요 증가로 제12차 전기본의 최대전력수요 전망이 상향 조정되고 빅테크 기업들의 대규모 원전 전력구매계약이 이어지고 있다.",
+          "evidence_hashes": [
+            "94b2bccb",
+            "f3213d55",
+            "c3a556e6"
+          ]
+        },
+        {
+          "theme": "규제",
+          "direction": "유지",
+          "why": "원안위의 한울 4호기 재가동 승인과 SMR 규제 체계 정비가 진행되는 동시에 국정감사 등에서 제도 개선과 안전 기준 마련 요구가 지속되고 있다.",
+          "evidence_hashes": [
+            "7b332936",
+            "33f9354a",
+            "d5e8953d"
+          ]
+        },
+        {
+          "theme": "공급망",
+          "direction": "강화",
+          "why": "한미 에너지 투자 프로젝트 합의와 빅테크 기업들의 장기 원전 PPA 체결을 통해 글로벌 전력 인프라 및 핵심 기자재 공급망 연계가 빠르게 강화되고 있다.",
+          "evidence_hashes": [
+            "63e19996",
+            "a973fa86",
+            "f3213d55"
+          ]
+        },
+        {
+          "theme": "신규건설",
+          "direction": "강화",
+          "why": "미국 내 SMR 건설허가 승인과 현대건설의 네덜란드 대형원전 기본설계 착수 등 국내외 신규 원전 건설 프로젝트가 가시적인 성과를 내고 있다.",
+          "evidence_hashes": [
+            "7b332936",
+            "e6e494d1",
+            "3f674d5f"
+          ]
+        },
+        {
+          "theme": "원전운영",
+          "direction": "유지",
+          "why": "미국의 원전 출력증강 대출 지원과 한울 4호기의 정상 운전 복귀 등 설비 개선과 안정적 가동 유지가 병행되고 있다.",
+          "evidence_hashes": [
+            "8080802f",
+            "33f9354a",
+            "9d9dc27c"
+          ]
+        },
+        {
+          "theme": "핵연료",
+          "direction": "유지",
+          "why": "핵추진잠수함 특별법 통과에 따른 한미 핵연료 협상 재개 기대감과 웨스팅하우스의 기술사용료 및 핵연료 공급권 요구가 교차하고 있다.",
+          "evidence_hashes": [
+            "18f59f59",
+            "f392125d",
+            "45906396"
+          ]
+        },
+        {
+          "theme": "수출",
+          "direction": "강화",
+          "why": "원전수출 리더스포럼 출범과 함께 한미 원전 프레임워크에 기반한 미국 내 원전 8기 건설 및 국내 기업의 글로벌 공급망 진입 지원이 본격화되고 있다.",
+          "evidence_hashes": [
+            "5b333df4",
+            "a0bd91f2",
+            "0babf9c3"
+          ]
+        },
+        {
+          "theme": "전력망",
+          "direction": "유지",
+          "why": "AI 데이터센터 확산에 따른 송전망 포화와 계통 접속 지연 문제가 대두되면서 전력망 확충 및 지역별 전력도매가격제 도입 검토가 병행되고 있다.",
+          "evidence_hashes": [
+            "a973fa86",
+            "a4c84e63",
+            "94b2bccb"
+          ]
+        }
+      ],
+      "khnp_direct": "한수원은 미국 EPRI와의 기술 워크숍 개최 및 체코 원전 보조기기 입찰 지원을 통해 글로벌 협력을 강화하는 한편, 월성 2~4호기 계속운전 연내 신청을 추진하고 있다. 또한 웨스팅하우스 지분 인수 및 미국 원전 프로젝트 참여에 따른 인재 관리와 방호 체계 고도화 등 후속 대응에 주력하고 있다.",
+      "watchpoints": [
+        "제12차 전력수급기본계획 내 신규 원전 적정 설비 규모 및 공론화 위원회 권고안 진행 상황을 점검해야 한다.",
+        "한미 원전 프레임워크 후속 조치에 따른 웨스팅하우스 지분 인수 협상 및 기술료 조건 조율 결과를 확인해야 한다.",
+        "한수원의 월성 2~4호기 계속운전 운영변경허가 신청 준비 현황과 원안위 심사 동향을 모니터링해야 한다.",
+        "AI 데이터센터 전력 수요 급증에 따른 송전망 확충 계획 및 지역별 전력도매가격제 도입 논의를 주시해야 한다."
+      ],
+      "report_candidates": [
+        {
+          "topic": "제12차 전력수급기본계획상 AI 전력수요 전망과 신규 원전 반영 시나리오 분석",
+          "basis": "AI 데이터센터 수요 급증에 따른 전력수급기본계획 수정 및 원전 공론화 추진"
+        },
+        {
+          "topic": "한미 원전 프레임워크에 따른 미국 시장 진출 전략과 지분 인수 리스크 점검",
+          "basis": "미국 내 대형원전 8기 건설 합의 및 웨스팅하우스 지분 인수 추진"
+        }
+      ],
+      "key_events": [
+        {
+          "hash": "5f8714e7",
+          "headline": "한미, 대미 투자 자금 활용해 미국 내 APR-1400 2기 건설 확정",
+          "implication": "한미 전략투자 자금을 활용한 미국 내 한국형 원전 건설이 확정되며 수출 가시성이 높아졌다."
+        },
+        {
+          "hash": "50afdea5",
+          "headline": "정부, 10년간 1,000조원 투자 '한국형 녹색대전환(K-GX)' 전략 발표",
+          "implication": "대규모 재정 투입을 통해 SMR과 청정에너지 중심의 산업 구조 재편이 본격화된다."
+        },
+        {
+          "hash": "7b332936",
+          "headline": "미국 NRC, 클린치리버 BWRX-300 SMR 건설허가 발급",
+          "implication": "미국 내 상업용 SMR 건설 승인으로 차세대 원전 상용화 일정이 한층 빨라졌다."
+        },
+        {
+          "hash": "f3213d55",
+          "headline": "구글, 컨스텔레이션 에너지와 3.6GW 원전 전력구매계약 체결",
+          "implication": "AI 데이터센터 전력 확보를 위해 빅테크 기업과 원전 업계 간 대규모 장기 계약이 정착되고 있다."
+        },
+        {
+          "hash": "ca6e1b2e",
+          "headline": "한수원, 월성 2~4호기 계속운전 연내 신청 추진",
+          "implication": "노후 원전의 안정적 운영 연장을 위한 행정 절차가 본격적으로 추진된다."
+        }
+      ],
+      "top_stories": [
+        {
+          "key": "50afdea5",
+          "hash": "50afdea503d2b90c",
+          "title": "정부, 10년간 1,000조원 투자 '한국형 녹색대전환(K-GX)' 전략 발표",
+          "summary": "정부가 2026년부터 2035년까지 1,000조원 규모의 재정을 투입해 산업 경쟁력을 강화하고 탄소중립을 실현하는 '한국형 녹색대전환(K-GX)' 전략을 발표했다.",
+          "link": "https://www.motir.go.kr/kor/article/ATCL3f49a5a8c/172270/view",
+          "articles": 9,
+          "outlets": 9,
+          "published_at": "2026-10-06T15:00:00+00:00",
+          "score": 13.4
+        },
+        {
+          "key": "3f674d5f",
+          "hash": "3f674d5f91676c71",
+          "title": "현대건설, 웨스팅하우스와 네덜란드 대형원전 1단계 기본설계 계약 체결",
+          "summary": "현대건설이 웨스팅하우스와 네덜란드 신규 대형원전 건설 사업의 1단계 기본설계(FEED 1) 계약을 체결하며 유럽 원전 시장 진출을 가속화했다.",
+          "link": "http://www.finomy.com/news/articleView.html?idxno=263222",
+          "articles": 4,
+          "outlets": 4,
+          "published_at": "2026-10-08T05:28:00+00:00",
+          "score": 12.2
+        },
+        {
+          "key": "72ed0940",
+          "hash": "72ed0940c8cd2d64",
+          "title": "미국 정부, 웨스팅하우스 황금주 확보…韓 지분투자 실효성 논란",
+          "summary": "미국 정부가 웨스팅하우스의 황금주를 확보한 사실이 확인됨에 따라, 한국전력 등 국내 기업의 지분 투자 실효성에 대한 의문이 제기된다.",
+          "link": "https://www.hankyung.com/article/202610077863i",
+          "articles": 3,
+          "outlets": 2,
+          "published_at": "2026-10-07T22:01:00+00:00",
+          "score": 12.2
+        }
+      ],
+      "country_briefs": [
+        {
+          "key": "5b333df4",
+          "hash": "5b333df404e24c58",
+          "title": "한미 원전 8기 건설 프로젝트 2028년 구체화…정부, 공급망 진입 지원",
+          "summary": "한미 양국이 추진하는 미국 내 원전 8기 건설 프로젝트가 2028년 구체화될 전망이며, 정부는 국내 기업의 공급망 진입과 웨스팅하우스 지분 인수를 지원한다.",
+          "link": "https://biz.chosun.com/policy/policy_sub/2026/10/07/QNRC52B67NEAHIKLVL3C7VKNXU",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-10-07T09:12:00+00:00",
+          "country": "KR",
+          "country_kr": "한국",
+          "score": 12.1
+        },
+        {
+          "key": "f392125d",
+          "hash": "f392125d2fd94ad5",
+          "title": "웨스팅하우스, 미국 내 APR1400 로열티 인상 요구",
+          "summary": "웨스팅하우스가 미국 내 APR1400 건설과 관련해 기존 협약보다 높은 로열티와 역무, 핵연료 공급권 확대를 요구하며 협상이 난항을 겪고 있다.",
+          "link": "https://www.sedaily.com/article/20098176",
+          "articles": 4,
+          "outlets": 2,
+          "published_at": "2026-10-05T08:25:00+00:00",
+          "country": "US",
+          "country_kr": "미국",
+          "score": 11.9
+        },
+        {
+          "key": "c176460f",
+          "hash": "c176460fb6acc7cd",
+          "title": "대우건설, 조직개편 단행…체코 원전 등 메가 프로젝트 역량 집중",
+          "summary": "대우건설이 이강석 대표 체제 첫 조직개편을 통해 체코 두코바니 원전 등 대형 프로젝트 리스크 관리와 전략사업 경쟁력 강화에 나선다.",
+          "link": "https://biz.heraldcorp.com/article/10897080",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-10-08T05:49:00+00:00",
+          "country": "CZ",
+          "country_kr": "체코",
+          "score": 7.6
+        },
+        {
+          "key": "239fa6a5",
+          "hash": "239fa6a5ffedfd26",
+          "title": "BWXT, 캐나다 뉴브런즈윅 원전 프로젝트에 BANR 선정",
+          "summary": "BWXT의 소형 원자로 BANR이 캐나다 뉴브런즈윅주 원전 프로젝트에 선정되어 첫 상업용 및 해외 배치를 추진함.",
+          "link": "https://www.ans.org/news/2026-10-07/article-8471/bwxts-banr-selected-for-canadian-project",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-10-07T19:55:52+00:00",
+          "country": "CA",
+          "country_kr": "캐나다",
+          "score": 7.0
+        },
+        {
+          "key": "89ba0cf9",
+          "hash": "89ba0cf9ed760ab3",
+          "title": "일본, 원전 인력난 대응 위해 민관 합작 '원자력 인재 컨소시엄' 출범",
+          "summary": "일본 정부가 원전 재가동 및 노후 원전 교체 건설에 따른 인력 부족 문제를 해결하기 위해 84개 기관이 참여하는 민관 합작 기구를 출범했다.",
+          "link": "https://www.cbci.co.kr/news/articleView.html?idxno=613581",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-10-09T01:16:00+00:00",
+          "country": "JP",
+          "country_kr": "일본",
+          "score": 6.5
+        },
+        {
+          "key": "c7c3d084",
+          "hash": "c7c3d084a49f596b",
+          "title": "폴란드 투자자그룹, 삼성물산 참여 SGE 유럽 SMR 사업에 1720억 투자",
+          "summary": "폴란드 투자자 10명이 삼성물산이 EPC 파트너로 참여하는 SGE의 유럽 BWRX-300 SMR 사업에 5억 즈워티(약 1720억 원)를 투자할 예정이다.",
+          "link": "https://www.g-enews.com/view.php?ud=2026100606120063762bd56fbc3c_1",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-10-05T21:24:00+00:00",
+          "country": "PL",
+          "country_kr": "폴란드",
+          "score": 6.5
+        }
+      ],
+      "publications": [
+        {
+          "org": "에너지경제연구원(KEEI)",
+          "title": "[격주간] 세계 원전시장 인사이트(2026.10.02.)",
+          "url": "https://www.keei.re.kr/board.es?act=view&bid=0002&list_no=128283&mid=a10102050000",
+          "date": "2026-10-02",
+          "gist": "",
+          "relevance": ""
+        },
+        {
+          "org": "국제원자력기구(IAEA)",
+          "title": "국제원자력기구(IAEA)/세계보건기구(WHO) 2차 표준 선량측정 실험실(SSDL) 네트워크 헌장",
+          "url": "http://www.iaea.org/publications/16075/the-iaeawho-network-of-secondary-standards-dosimetry-laboratories-charter",
+          "date": "2026-08-10",
+          "gist": "방사선 측정 표준화를 위한 국제 협력 네트워크의 운영 원칙 및 규정",
+          "relevance": "technical"
+        }
+      ],
+      "upcoming": [
+        {
+          "key": "012dd611",
+          "hash": "012dd6118008d06b",
+          "title": "원전 공론화위원회 1차 회의 개최…300명 규모 시민참여단 구성 의결",
+          "summary": "원전 공론화위원회가 1차 회의를 열어 300명 규모의 시민참여단 구성 등 조사용역 계획을 의결했다.",
+          "link": "https://news.google.com/rss/articles/CBMib0FVX3lxTFBhZk84TEo5ZEpGYjNyMDNkeE9NM3hwdlhpZnl5eUNtSGN5a3BRbU16dTNvYnVETTEwYlA1bGNYZVlFcW9BOTlsd1U4MGRZWmVjMXRQYmJHOWRLZEs1TGpJZ21LN00tNFJnQlZxeUFSVdIBb0FVX3lxTFBhZk84TEo5ZEpGYjNyMDNkeE9NM3hwdlhpZnl5eUNtSGN5a3BRbU16dTNvYnVETTEwYlA1bGNYZVlFcW9BOTlsd1U4MGRZWmVjMXRQYmJHOWRLZEs1TGpJZ21LN00tNFJnQlZxeUFSVQ?oc=5",
+          "articles": 7,
+          "outlets": 5,
+          "published_at": "2026-10-08T12:12:04+00:00",
+          "date": "2026-10-13",
+          "precision": "day"
+        },
+        {
+          "key": "59021107",
+          "hash": "590211076f4e1bac",
+          "title": "산업부, 원전수출 리더스포럼 발족 및 지원 방안 논의",
+          "summary": "산업통상자원부가 원전 수출 확대를 위한 산·학·연·관 소통 채널인 '원전수출 리더스포럼'을 발족했다.",
+          "link": "https://www.newsis.com/view/NISX20261006_0003816150",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-10-06T21:00:00+00:00",
+          "date": "2026-10-27",
+          "precision": "day"
+        },
+        {
+          "key": "6136331c",
+          "hash": "6136331c60c44a46",
+          "title": "한미 안보협의, 대미 투자 진전과 연계해 모멘텀 확보 주력",
+          "summary": "정부가 핵추진잠수함 도입 및 원자력 협력 등 한미 안보 현안의 후속 협의를 추진 중인 가운데, 최근 대미 투자 진전을 안보 협상 동력으로 활용하겠다는 전략이다.",
+          "link": "https://www.news1.kr/diplomacy/defense-diplomacy/6310436",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-10-05T04:20:00+00:00",
+          "date": "2026-11-01",
+          "precision": "month"
+        },
+        {
+          "key": "fbcb9d7a",
+          "hash": "fbcb9d7a85d6755f",
+          "title": "정부, 한미 원전 프레임워크 통해 국내 기업의 웨스팅하우스 지분 인수 추진",
+          "summary": "정부가 한미 원전 협력 프레임워크를 통해 국내 기업들이 웨스팅하우스 지분을 5~10% 미만 인수할 수 있는 권한을 확보했다.",
+          "link": "http://www.enewstoday.co.kr/news/articleView.html?idxno=2477817",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-10-07T06:24:00+00:00",
+          "date": "2026-12-31",
+          "precision": "day"
+        }
+      ],
+      "repeat_filter": {
+        "previous_week": "2026-W40",
+        "excluded": [
+          {
+            "hash": "388e5eb757c94f59",
+            "title": "한·미 원전 프레임워크 합의…미국 내 원전 8기 건설 투자 본격화",
+            "prior_hash": "ce0e9262f34b144d",
+            "progression": "none"
+          },
+          {
+            "hash": "da897a670de07a06",
+            "title": "한미, 미국 내 대형 원전 8기 건설 합의…APR1400 2기 적용",
+            "prior_hash": "ce0e9262f34b144d",
+            "progression": "none"
+          },
+          {
+            "hash": "28afd79f14faf672",
+            "title": "한미, 원전 협정 개정 합의…미국 내 APR1400 2기 건설 길 열려",
+            "prior_hash": "ce0e9262f34b144d",
+            "progression": "none"
+          },
+          {
+            "hash": "1c71816673a8e378",
+            "title": "트럼프 대통령, 한국에 알래스카 LNG 프로젝트 투자 압박",
+            "prior_hash": "5af90dc99671f3dd",
+            "progression": "none"
+          },
+          {
+            "hash": "7e97d83f7e6ba897",
+            "title": "한국형 원전 APR1400, 미국 본토 건설 확정",
+            "prior_hash": "ce0e9262f34b144d",
+            "progression": "none"
+          },
+          {
+            "hash": "c2e6d326513ee0aa",
+            "title": "한미 원전 프레임워크 추진…미국 내 한국형 원전 2기 건설 등 협의",
+            "prior_hash": "ce0e9262f34b144d",
+            "progression": "none"
+          }
+        ],
+        "material_progress": []
+      },
+      "_automation": {
+        "created_at": "2026-10-09T17:09:06.913035+09:00",
+        "message_html": "📅 <b>10/3-10/9 원자력 주간 판세</b>\n<i>총 1192건 검토 · must_read 56건</i>\n\n<b>이번 주 핵심</b>\n이번 주는 정부의 1000조원 규모 &#x27;한국형 녹색대전환(K-GX)&#x27; 전략 발표와 함께 SMR 국가전략기술 지정 추진 및 네덜란드 대형원전 기본설계 착수 등 원전 수출과 미래 기술 확보 가속화가 두드러진 한 주였다. AI 데이터센터 전력 수요 급증에 대응하기 위한 제12차 전력수급기본계획상 최대전력수요 전망 상향과 송전망 확충 논의가 국정감사의 핵심 쟁점으로 부상했다. 또한 한미 원전 프레임워크에 따른 후속 협상과 웨스팅하우스 지분 인수 및 기술료 협의가 본격화되면서 원전 생태계 전반의 전략적 재편이 가속화되고 있다.\n\n━━ <b>📌 이번 주</b> (10월 3일–10월 9일 · 주요 사건) ━━\n• <b>정부, 10년간 1,000조원 투자 &#x27;한국형 녹색대전환(K-GX)&#x27; 전략 발표</b>\n  정부가 2026년부터 2035년까지 1,000조원 규모의 재정을 투입해 산업 경쟁력을 강화하고 탄소중립을 실현하는 &#x27;한국형 녹색대전환(K-GX)&#x27; 전략을 발표했다.\n  이어지는 이슈 · 9건 · 매체 9곳\n  🔗 https://www.motir.go.kr/kor/article/ATCL3f49a5a8c/172270/view\n• <b>현대건설, 웨스팅하우스와 네덜란드 대형원전 1단계 기본설계 계약 체결</b>\n  현대건설이 웨스팅하우스와 네덜란드 신규 대형원전 건설 사업의 1단계 기본설계(FEED 1) 계약을 체결하며 유럽 원전 시장 진출을 가속화했다.\n  이어지는 이슈 · 4건 · 매체 4곳\n  🔗 http://www.finomy.com/news/articleView.html?idxno=263222\n• <b>미국 정부, 웨스팅하우스 황금주 확보…韓 지분투자 실효성 논란</b>\n  미국 정부가 웨스팅하우스의 황금주를 확보한 사실이 확인됨에 따라, 한국전력 등 국내 기업의 지분 투자 실효성에 대한 의문이 제기된다.\n  이어지는 이슈 · 3건 · 매체 2곳\n  🔗 https://www.hankyung.com/article/202610077863i\n\n━━ <b>🌍 국가별 단신</b> ━━\n• <b>한국</b> — 한미 원전 8기 건설 프로젝트 2028년 구체화…정부, 공급망 진입 지원\n• <b>미국</b> — 웨스팅하우스, 미국 내 APR1400 로열티 인상 요구\n• <b>체코</b> — 대우건설, 조직개편 단행…체코 원전 등 메가 프로젝트 역량 집중\n• <b>캐나다</b> — BWXT, 캐나다 뉴브런즈윅 원전 프로젝트에 BANR 선정\n• <b>일본</b> — 일본, 원전 인력난 대응 위해 민관 합작 &#x27;원자력 인재 컨소시엄&#x27; 출범\n• <b>폴란드</b> — 폴란드 투자자그룹, 삼성물산 참여 SGE 유럽 SMR 사업에 1720억 투자\n\n━━ <b>📚 이번 주 발간물</b> ━━\n• 에너지경제연구원(KEEI) · <b>[격주간] 세계 원전시장 인사이트(2026.10.02.)</b>\n  🔗 https://www.keei.re.kr/board.es?act=view&bid=0002&list_no=128283&mid=a10102050000\n• 국제원자력기구(IAEA) · <b>국제원자력기구(IAEA)/세계보건기구(WHO) 2차 표준 선량측정 실험실(SSDL) 네트워크 헌장</b>\n  🔗 http://www.iaea.org/publications/16075/the-iaeawho-network-of-secondary-standards-dosimetry-laboratories-charter\n\n━━ <b>🏛 정책 변화</b> ━━\n• <b>정부가 2035년까지 10년간 1,000조 원을 투입하는 &#x27;한국형 녹색대전환(K-GX)&#x27; 전략을 발표하며 SMR 세제 지원 및 파운드리 생태계 구축을 공식화했다.</b>\n  → 국가 차원의 대규모 재정 투입을 통해 미래형 원자력 기술과 청정에너지 인프라의 상용화 기반이 한층 공고해질 전망이다.\n• <b>한미 양국이 2,000억 달러 규모의 전략적 에너지 투자 프로젝트를 공식화하고 미국 내 대형원전 8기 건설 및 공급망 참여 방안을 구체화했다.</b>\n  → 국내 원전 기업들의 글로벌 공급망 진입과 대형 프로젝트 수주 가시성이 높아지는 동시에 상업적 합리성 검증이 주요 과제로 대두됐다.\n• <b>제12차 전력수급기본계획상 2040년 최대전력수요가 165GW로 전망되고 AI 데이터센터 수요가 상향 조정됨에 따라 전력망 계획의 원점 재검토가 추진된다.</b>\n  → 급증하는 AI 전력 수요에 맞춰 송변전 설비 확충과 분산형 에너지 인프라 구축의 시급성이 더욱 강조되고 있다.\n\n━━ <b>주제별 강약</b> ━━\n▲ <b>SMR</b> — 미국 NRC의 클린치리버 SMR 건설허가 발급과 정부의 K-GX 전략을 통한 SMR 파운드리 생태계 구축 및 전용 공장 건립 추진이 맞물려 실증 단계로 진입했다.\n▲ <b>전력수요</b> — AI 데이터센터의 급격한 전력 수요 증가로 제12차 전기본의 최대전력수요 전망이 상향 조정되고 빅테크 기업들의 대규모 원전 전력구매계약이 이어지고 있다.\n― <b>규제</b> — 원안위의 한울 4호기 재가동 승인과 SMR 규제 체계 정비가 진행되는 동시에 국정감사 등에서 제도 개선과 안전 기준 마련 요구가 지속되고 있다.\n▲ <b>공급망</b> — 한미 에너지 투자 프로젝트 합의와 빅테크 기업들의 장기 원전 PPA 체결을 통해 글로벌 전력 인프라 및 핵심 기자재 공급망 연계가 빠르게 강화되고 있다.\n\n━━ <b>🇰🇷 한국·한수원 직접 영향</b> ━━\n한수원은 미국 EPRI와의 기술 워크숍 개최 및 체코 원전 보조기기 입찰 지원을 통해 글로벌 협력을 강화하는 한편, 월성 2~4호기 계속운전 연내 신청을 추진하고 있다. 또한 웨스팅하우스 지분 인수 및 미국 원전 프로젝트 참여에 따른 인재 관리와 방호 체계 고도화 등 후속 대응에 주력하고 있다.\n\n━━ <b>📌 그 밖에 짚어 둘 사건</b> ━━\n• <b>한미, 대미 투자 자금 활용해 미국 내 APR-1400 2기 건설 확정</b>\n  → 한미 전략투자 자금을 활용한 미국 내 한국형 원전 건설이 확정되며 수출 가시성이 높아졌다.\n  🔗 https://www.sedaily.com/article/20097976\n• <b>미국 NRC, 클린치리버 BWRX-300 SMR 건설허가 발급</b>\n  → 미국 내 상업용 SMR 건설 승인으로 차세대 원전 상용화 일정이 한층 빨라졌다.\n  🔗 https://www.digitaltoday.co.kr/news/articleView.html?idxno=705182\n• <b>구글, 컨스텔레이션 에너지와 3.6GW 원전 전력구매계약 체결</b>\n  → AI 데이터센터 전력 확보를 위해 빅테크 기업과 원전 업계 간 대규모 장기 계약이 정착되고 있다.\n  🔗 https://biz.sbs.co.kr/article_hub/20000338610?division=NAVER\n• <b>한수원, 월성 2~4호기 계속운전 연내 신청 추진</b>\n  → 노후 원전의 안정적 운영 연장을 위한 행정 절차가 본격적으로 추진된다.\n  🔗 https://news.google.com/rss/articles/CBMieEFVX3lxTFBpTWJEbVIzWFNGOW9YU3FnMFFUdWxyci1ybVVpYURSUG1OeGEzWlcxMjdGTEkxUlRwUVIxNFVVWkVHZ0xTNFpEMFBXVUcteWVxLWVzLVduZ1Z1ZW1sWEZZTm5nTXhnWmxHOVhXTFhtTG5UcDVrQ2NOV9IBeEFVX3lxTFBpTWJEbVIzWFNGOW9YU3FnMFFUdWxyci1ybVVpYURSUG1OeGEzWlcxMjdGTEkxUlRwUVIxNFVVWkVHZ0xTNFpEMFBXVUcteWVxLWVzLVduZ1Z1ZW1sWEZZTm5nTXhnWmxHOVhXTFhtTG5UcDVrQ2NOVw?oc=5\n\n━━ <b>📝 보고서 검토 후보</b> ━━\n• <b>제12차 전력수급기본계획상 AI 전력수요 전망과 신규 원전 반영 시나리오 분석</b> — AI 데이터센터 수요 급증에 따른 전력수급기본계획 수정 및 원전 공론화 추진\n• <b>한미 원전 프레임워크에 따른 미국 시장 진출 전략과 지분 인수 리스크 점검</b> — 미국 내 대형원전 8기 건설 합의 및 웨스팅하우스 지분 인수 추진\n\n📋 <b>다음 주 모니터링 포인트</b>\n• 제12차 전력수급기본계획 내 신규 원전 적정 설비 규모 및 공론화 위원회 권고안 진행 상황을 점검해야 한다.\n• 한미 원전 프레임워크 후속 조치에 따른 웨스팅하우스 지분 인수 협상 및 기술료 조건 조율 결과를 확인해야 한다.\n• 한수원의 월성 2~4호기 계속운전 운영변경허가 신청 준비 현황과 원안위 심사 동향을 모니터링해야 한다.\n• AI 데이터센터 전력 수요 급증에 따른 송전망 확충 계획 및 지역별 전력도매가격제 도입 논의를 주시해야 한다.\n\n🔁 <b>반복 등장</b>: #데이터센터 (274회), #SMR (174회), #전력망 (91회), #원전수출 (78회), #AI (70회)\n🕳 <b>이번 주 소스 공백</b>: IAEA, OECD NEA, US NRC, 산업통상자원부, 한국수력원자력, 한국원자력연구원",
+        "telegram": {
+          "status": "pending"
+        }
+      }
     }
   }
 }
