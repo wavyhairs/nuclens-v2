@@ -97,14 +97,18 @@ def _month_files_all() -> list[Path]:
     return sorted(ARCHIVE_DIR.glob("*.jsonl"))
 
 
-def load_recent_identities() -> dict[str, set[str]]:
+def load_recent_identities() -> dict:
     """아카이브 **전체**의 해시·정규화 URL·정확 제목 키를 함께 읽는다.
 
     적재 검사는 웹 빌드의 중복 게이트와 범위가 같아야 한다. 최근 2개월만 보던
     때는 월이 바뀌면 그 앞달 기록이 창 밖으로 빠져, 같은 제목이 다시 적재되고
     빌드가 duplicate_title 로 멈췄다(2026-10-01, 08월 기록과 겹친 10월 적재).
     """
-    identities = {"hashes": set(), "urls": set(), "titles": set()}
+    identities: dict = {"hashes": set(), "urls": set(), "titles": set(),
+                        # title_key → 그 제목을 가진 아카이브 해시. 회차 간 같은-제목
+                        # 접기(news_bot.fold_cross_run_duplicates)가 웹이 아는 신원을
+                        # 찾는 데 쓴다. 집합 셋과 달리 dict 이라 위 호출자는 영향 없다.
+                        "title_hash": {}}
     for path in _month_files_all():
         if not path.exists():
             continue
@@ -121,6 +125,8 @@ def load_recent_identities() -> dict[str, set[str]]:
             normalized_title = title_key(record.get("title"))
             if normalized_title:
                 identities["titles"].add(normalized_title)
+                if record.get("hash"):
+                    identities["title_hash"].setdefault(normalized_title, record["hash"])
     return identities
 
 
