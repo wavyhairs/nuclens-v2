@@ -3534,6 +3534,131 @@ def dedup_exact_candidates(articles: list[dict]) -> list[dict]:
     return list(by_title.values())
 
 
+def copy_richness(link: object, description: object, title: object) -> int:
+    """같은 기사 두 사본 중 어느 쪽 재료가 더 충실한가 — 결정적 0~2점.
+
+    +1  링크가 매체 원문 주소다 (Google News 리다이렉트가 아님)
+    +1  요약 줄이 정보를 담는다 (비어 있지 않고, 제목 되읊기가 아니고, 40자 이상)
+
+    Google News 검색 RSS 는 요약 칸이 비어 온다(2026-10-09 실측: 14일 캐시의
+    Google 사본 전건 source_excerpt 공란). 그래서 같은 기사가 네이버와 Google 로
+    들어오면 네이버 사본이 2점, Google 사본이 0점이다.
+    """
+    score = 0
+    url = str(link or "")
+    if url and "news.google." not in url:
+        score += 1
+    desc = clean_text(description)
+    if desc and len(desc) >= 40 and title_key(desc) != title_key(title):
+        score += 1
+    return score
+
+
+def fold_cross_run_duplicates(
+    articles: list[dict],
+    curated: dict,
+    queue: list[dict],
+    state: dict,
+    now_iso: str,
+    *,
+    archive_titles: dict[str, str] | None = None,
+) -> tuple[list[dict], set[str], dict]:
+    """이전 회차에 이미 판정된 **같은 제목**의 기사를 그 신원(해시)으로 접는다.
+
+    왜: 같은 기사가 네이버 경로와 Google News 경로로 몇 시간 간격으로 들어오면
+    URL 해시가 달라 두 번 큐레이션됐다 (2026-10-09 실측: 14일 캐시에 86쌍, 그중
+    등급이 갈린 쌍 17). 아카이브는 제목 완전일치로 두 번째를 버리는데 발송은 등급
+    높은 쪽을 고르니, **발송된 해시가 아카이브에 없는 고아**가 생겨 웹에서 그
+    기사가 사라졌다 (월성 2~4호기 계속운전 — 10/9 국내 2위, 9/29 이후 7건).
+    `dedup_exact_candidates` 는 같은 회차 안에서만 접는다. 이 함수가 회차 사이를
+    잇는다.
+
+    규칙 (사용자 결정 2026-10-09):
+      · 두 번째 사본이 더 빈약하거나 같으면 묻지 않고 접는다 (86쌍 중 85쌍).
+      · 더 충실하고 기존 신원이 **아직 발송 전**(큐에 있음)이면 기존 해시를 유지한
+        채 충실한 재료로 다시 판정한다 — 반환 기사의 hash 가 기존 해시로 바뀌고
+        큐의 옛 항목은 빠지며, 그 해시가 `rejudge` 집합에 들어간다. 호출자는 이
+        해시의 캐시를 무시해야 한다.
+      · 이미 발송된 신원이면 충실해도 접는다 — 판정은 이미 나갔고 아카이브는 첫
+        사본을 들고 있다.
+    접힌 URL 은 sent 로 표시해 다음 회차에 같은 접기를 반복하지 않는다.
+
+    `archive_titles` 는 title_key → 아카이브 해시. 캐시(14일)가 만료된 뒤 같은
+    제목이 다시 오면 판정할 기존 레코드가 없으므로 그냥 접는다 — 아카이브가 그
+    제목을 받지 않으니 통과시켜도 웹에는 못 오르고, 발송되면 고아가 될 뿐이다.
+    """
+    archive_titles = archive_titles or {}
+    curated_titles: dict[str, str] = {}
+    for existing_hash, cached in curated.items():
+        if not isinstance(cached, dict):
+            continue
+        key = title_key(cached.get("title"))
+        if key:
+            # 아카이브가 아는 해시가 우선 — 웹이 들고 있는 신원이 그것이다.
+            if archive_titles.get(key) == existing_hash or key not in curated_titles:
+                curated_titles[key] = existing_hash
+
+    queued: dict[str, dict] = {}
+    for entry in queue:
+        if isinstance(entry, dict) and entry.get("hash"):
+            queued.setdefault(entry["hash"], entry)
+
+    kept: list[dict] = []
+    rejudge: set[str] = set()
+    stats = {"folded": 0, "rejudged": 0, "reasons": {}, "samples": []}
+
+    def _fold(article: dict, existing_hash: str, reason: str) -> None:
+        state.setdefault("sent", {})[article["hash"]] = now_iso
+        stats["folded"] += 1
+        stats["reasons"][reason] = stats["reasons"].get(reason, 0) + 1
+        if len(stats["samples"]) < 5:
+            stats["samples"].append(
+                f"{article.get('title', '')[:40]} ← {existing_hash[:8]} ({reason})")
+
+    for article in articles:
+        current_hash = article.get("hash", "")
+        if not current_hash or current_hash in curated:
+            kept.append(article)
+            continue
+        key = title_key(article.get("title"))
+        existing_hash = archive_titles.get(key) or curated_titles.get(key) if key else ""
+        if not existing_hash or existing_hash == current_hash:
+            kept.append(article)
+            continue
+
+        previous = curated.get(existing_hash)
+        if not isinstance(previous, dict):
+            _fold(article, existing_hash, "archive_only")
+            continue
+        queue_entry = queued.get(existing_hash)
+        if queue_entry is None:
+            _fold(article, existing_hash, "already_sent")
+            continue
+        new_rich = copy_richness(article.get("link"), article.get("description"),
+                                 article.get("title"))
+        old_rich = copy_richness(previous.get("link"), queue_entry.get("source_excerpt"),
+                                 previous.get("title"))
+        if new_rich <= old_rich:
+            _fold(article, existing_hash, "poorer_or_equal")
+            continue
+
+        # 더 충실한 사본 — 기존 신원으로 다시 판정한다.
+        state.setdefault("sent", {})[current_hash] = now_iso
+        queue[:] = [entry for entry in queue
+                    if not (isinstance(entry, dict) and entry.get("hash") == existing_hash)]
+        promoted = dict(article)
+        promoted["hash"] = existing_hash
+        kept.append(promoted)
+        rejudge.add(existing_hash)
+        stats["rejudged"] += 1
+        if len(stats["samples"]) < 5:
+            stats["samples"].append(
+                f"{article.get('title', '')[:40]} → {existing_hash[:8]} 재판정"
+                f"(재료 {old_rich}→{new_rich})")
+
+    return kept, rejudge, stats
+
+
 SECTION_LABEL = {
     "khnp": "🇰🇷 한수원",
     "domestic": "🏛️ 국내",
@@ -3704,6 +3829,28 @@ def main() -> None:
               f"— 예: {stage_vetoes[0]['explanation']}")
 
     final_articles = sorted(semantically_unique, key=lambda x: x["pub"])
+
+    # 회차를 넘는 같은-제목 접기. 위 dedup 셋은 이번 회차 안에서만 본다 — 같은
+    # 기사가 3시간 뒤 다른 경로(Google News)로 오면 새 해시로 다시 큐레이션됐다.
+    # 비치명: 접기가 실패하면 예전처럼 전부 통과시킨다.
+    rejudge_hashes: set[str] = set()
+    try:
+        archive_title_hash = news_archive.load_recent_identities().get("title_hash") or {}
+        final_articles, rejudge_hashes, fold_stats = fold_cross_run_duplicates(
+            final_articles, curated, queue, state, now_iso,
+            archive_titles=archive_title_hash)
+        if fold_stats["folded"] or fold_stats["rejudged"]:
+            reasons = fold_stats["reasons"]
+            print(f"[중복] 이전 회차와 같은 제목 {fold_stats['folded']}건 접음"
+                  f"(더 빈약·같음 {reasons.get('poorer_or_equal', 0)} · 이미 발송 "
+                  f"{reasons.get('already_sent', 0)} · 캐시 만료 {reasons.get('archive_only', 0)})"
+                  f" · 충실한 사본으로 재판정 {fold_stats['rejudged']}건")
+            for sample in fold_stats["samples"][:3]:
+                print(f"  · {sample}")
+    except Exception as exc:  # noqa: BLE001 — 접기 실패가 수집을 멈추면 안 된다
+        print(f"[중복] 회차 간 접기 건너뜀 — {type(exc).__name__}: {exc}")
+        rejudge_hashes = set()
+
     durable_retries = pending_fallback_articles(
         curated, {article["hash"] for article in final_articles})
     if durable_retries:
@@ -3716,6 +3863,9 @@ def main() -> None:
     new_articles = [
         article for article in final_articles
         if (article["hash"] not in curated
+            # 더 충실한 사본이 뒤에 와서 기존 신원으로 접힌 기사 — 캐시를 두고
+            # 다시 묻는다(fold_cross_run_duplicates).
+            or article["hash"] in rejudge_hashes
             or needs_recuration(curated[article["hash"]])
             # 완결성 검사를 통과한 캐시라도 제목·요약이 현재 원문과 다른 사건이면
             # 다시 묻는다. 잘못 붙은 cache hit가 그대로 큐로 가는 뒷문을 닫는다.
@@ -3796,7 +3946,7 @@ def main() -> None:
         cached_integrity = (audit_curation_integrity(article, previous)
                             if previous else None)
 
-        if (previous and not needs_recuration(previous)
+        if (previous and h not in rejudge_hashes and not needs_recuration(previous)
                 and cached_integrity is not None and cached_integrity.eligible):
             # 불가능하거나 근거 없는 사건일은 캐시 hit에서도 비우고 계속 쓴다.
             cur = cached_integrity.value
