@@ -43,7 +43,9 @@ EVIDENCE_MANIFEST_VERSION = 2
 # build_evidence_manifest 의 event date 와 같은 방식). 키가 없는 옛 manifest 는
 # 복합 금액(`13억 1600만 달러`)의 마지막 조각만 적어 두었으므로, 그 옛 값과
 # 맞는 복합 금액은 같은 금액으로 봐 준다 — 새 manifest 에는 그 관용을 주지 않는다.
-QUANTITY_RULES_VERSION = 2
+# 3: 쉼표 낀 복합 금액(`1억 8,900만 유로`)도 통째로 읽는다. 2 로 봉인된 manifest 는
+# 그 금액을 아직 마지막 조각(`8,900만`)으로 적어 두었으므로 같은 관용을 받는다.
+QUANTITY_RULES_VERSION = 3
 # Bump whenever the narrative rules below change what they accept.  Cached audio
 # stores this number, so an older cache stops being trusted automatically.
 NARRATIVE_GATE_VERSION = 2
@@ -243,13 +245,20 @@ _MODEL_ID_RE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z]{2,8}[- ]?\d{2,4}(?![A-Za-z0
 # 사이의 '억' 이 매칭을 끊어 `1050억 달러` 가 통째로 수치로 안 잡혔고, 그래서 달러
 # 금액은 문자열이 글자 그대로 같을 때만 검증됐다. 아래 _SPOKEN_UNIT_TAIL_RE 는
 # 처음부터 `억\s*달러` 를 알고 있었으므로 이쪽이 빠진 것이 맞다.
+#
+# `기` 뒤에 한글이 바로 붙으면 조사일 때만 기수다. 실측 2026-10-09 ANS 기사의 번역
+# "토륨-229 기반 핵시계"가 `229기`(원전 229기)로 읽혀 4회 연속 격리됐다. 아카이브
+# 22,935건에서 숫자 뒤 `기`+한글은 조사(를·의·가·에·는·와·당·로·까지·급·도·씩·분·만·뿐·
+# 중·보다·이며·서·째)와 낱말(기후·기업·기술·기반·기준·기조·기압·기판·기록·기자재)로
+# 갈렸다. 낱말 쪽은 끝이 없으니 조사 쪽(과 서술어 `2기다`·`4기였다`)을 적는다.
 _NUMBER_UNIT_RE = re.compile(
     r"(?P<number>(?:\d{1,3}(?:[ ,]\d{3})+|\d+(?:[.,]\d+)?))"
     r"[-\s]*"
     r"(?P<unit>%|퍼센트|mw|gw|kw|twh|mwh|억원|억 원|조원|조 원|"
     r"만\s*달러|억\s*달러|조\s*달러|달러|만\s*유로|억\s*유로|유로|"
     r"만\s*弗|억\s*弗|조\s*弗|弗|"
-    r"기|호기|개|건|명|년|개월|월|일)",
+    r"기(?=$|[^가-힣]|[가는를의에와과당로까급도씩분만뿐중보이서째며다였나])|"
+    r"호기|개|건|명|년|개월|월|일)",
     re.IGNORECASE,
 )
 _UNIT_LIST_RE = re.compile(
@@ -271,14 +280,21 @@ _UNIT_LIST_RE = re.compile(
 # `milliard`(불어)도 같은 종류의 구멍이고 실측 오차단을 냈다 — 2026-08-20
 # "Nvidia garantit 105 milliards de dollars" 가 source 에서 아예 안 읽혀
 # 1,050억 달러가 근거 없는 수치로 몰렸다. milliard 는 10^9 다(영어 trillion 이 아니다).
+#
+# 유로도 같은 구멍이었다. 실측 2026-10-09 WNN "ČEZ has sold its 49% stake ... for
+# EUR189 million (USD211 million)" 에서 원문 쪽 유로·달러가 하나도 안 읽혀(`USD211` 은
+# 붙어 있어 `\busd\b` 가 끊겼다) 충실한 요약 "1억 8,900만 유로"가 8회 연속 격리됐다.
+# 불어 `8,2 milliards d’euros` 의 쉼표는 소수점이다 — 세 자리가 아닐 때만.
+_MONEY_EN_NUMBER = r"\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+,\d{1,2}(?!\d)"
 _MONEY_EN_RE = re.compile(
-    r"(?:\$|\busd\b\s*)\s*(?P<pre_number>\d{1,3}(?:,\d{3})*(?:\.\d+)?)"
+    r"(?P<pre_currency>\$|€|\busd|\beur)\s*(?P<pre_number>" + _MONEY_EN_NUMBER + r")"
     r"\s*(?P<pre_scale>millions?|billions?|trillions?|milliards?|bn|mn|tn|m|b)?\b"
-    r"|(?P<post_number>\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*"
-    r"(?P<post_scale>millions?|billions?|trillions?|milliards?|bn|mn|tn)\s+"
-    r"(?:de\s+)?(?:us\s+)?(?:dollars?|usd)",
+    r"|(?P<post_number>" + _MONEY_EN_NUMBER + r")\s*"
+    r"(?P<post_scale>millions?|billions?|trillions?|milliards?|bn|mn|tn)\s*"
+    r"(?:de\s+|d['’]\s*)?(?:us\s+)?(?P<post_currency>dollars?|usd|euros?|€)",
     re.IGNORECASE,
 )
+_MONEY_EN_EURO = frozenset({"€", "eur", "euro", "euros"})
 _MONEY_EN_SCALES: Mapping[str, Decimal] = {
     "": Decimal(1),
     "million": Decimal(10) ** 6, "millions": Decimal(10) ** 6,
@@ -336,8 +352,12 @@ _CANONICAL_UNITS: Mapping[str, tuple[str, Decimal]] = {
 # 2 로만 읽어 4호기 번역이 격리됐다). 그래서 범위·단위어·달 이름을 가려 읽고, 바꿀
 # 때마다 아카이브 전량을 build_data 와 같은 호출로 다시 돌려 본다 — 2026-09-27
 # 18,516건: 새로 격리 0 · 풀림 3(전부 `25억6000만달러`=`25.6억 달러` 같은 오탐).
+#
+# `single` 도 1 이다. 실측 2026-10-09 WNN "replacing a single nuclear power plant" 의
+# 번역 "원전 1기당"이, 원문에서 읽힌 기수가 `54 reactors`·`33 units` 뿐이라 모순으로
+# 몰려 4회 연속 격리됐다.
 _EN_COUNT_RE = re.compile(
-    r"(?<![\d,.\-])\b(?P<number>\d+|one|two|three|four|five|six|seven|eight|nine|"
+    r"(?<![\d,.\-])\b(?P<number>\d+|single|one|two|three|four|five|six|seven|eight|nine|"
     r"ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|"
     r"nineteen|twenty)\s+(?:[a-z][\w-]*\s+){0,4}?"
     r"(?:reactors?|units?|smrs?|mmrs?|microreactors?|plants?)\b",
@@ -402,8 +422,11 @@ _ROMAN_UNITS = {"II": "2", "III": "3", "IV": "4", "V": "5", "VI": "6"}
 # (`7500만 달러`)만 잡아 전혀 다른 금액으로 읽는다. 실측 2026-09-20 전문가
 # 대본 "1억 7500만 달러 규모 ARC 프로그램" 이 영문 원문 `$175 million` 과 맞지
 # 않아 멀쩡한 문단이 방송에서 빠졌다. 원화는 기존 `조원`·`억원` 축을 그대로 둔다.
+# 조각 안의 천 단위 쉼표(`1억 8,900만 유로`)도 받는다 — 못 받으면 다시 마지막 조각만
+# 읽힌다(실측 2026-10-09 슬로바키아 JESS 지분 인수 요약).
+_KO_COMPOSITE_NUMBER = r"\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?"
 _KO_COMPOSITE_MONEY_RE = re.compile(
-    r"(?<![\d.,])(?P<parts>(?:\d+(?:\.\d+)?\s*(?:조|억|만)\s*){2,3})"
+    r"(?<![\d.,])(?P<parts>(?:(?:" + _KO_COMPOSITE_NUMBER + r")\s*(?:조|억|만)\s*){2,3})"
     r"(?P<unit>달러|弗|유로)"
 )
 _KO_UNIT_RANGE_RE = re.compile(
@@ -427,7 +450,8 @@ def _composite_money(text: str) -> list[tuple[int, int, str, str, str]]:
     """
     found: list[tuple[int, int, str, str, str]] = []
     for match in _KO_COMPOSITE_MONEY_RE.finditer(text):
-        pieces = re.findall(r"(\d+(?:\.\d+)?)\s*(조|억|만)", match.group("parts"))
+        pieces = [(number.replace(",", ""), scale) for number, scale in re.findall(
+            r"(" + _KO_COMPOSITE_NUMBER + r")\s*(조|억|만)", match.group("parts"))]
         scales = [_KO_MULTIPLIERS[scale] for _number, scale in pieces]
         if scales != sorted(scales, reverse=True) or len(set(scales)) != len(scales):
             continue
@@ -747,6 +771,12 @@ def _canonical_quantity(unit: str, number: str) -> tuple[str, str]:
 def _quantity_map(text: object) -> dict[str, set[str]]:
     result: dict[str, set[str]] = {}
     original = clean_text(text)
+    # 한국어 기사는 단위를 한글로 풀어 쓰기도 한다. 실측 2026-10-09 에너지안전신문
+    # "1200메가와트(MW)급" 이 안 읽혀 요약의 `1,200MW급` 이 지어낸 수치로 몰렸다(4회
+    # 연속 격리). 대본 비교가 쓰는 같은 표로 기호로 바꿔 읽는다 — `1기가와트` 가
+    # `1기` 로 읽히던 것도 함께 사라진다.
+    for spoken, symbol in _SPOKEN_UNIT_ALIASES:
+        original = original.replace(spoken, symbol)
     compact = original.casefold()
     composite = _composite_money(compact)
     for _start, _end, unit, value, _tail in composite:
@@ -772,14 +802,19 @@ def _quantity_map(text: object) -> dict[str, set[str]]:
     for match in _MONEY_EN_RE.finditer(compact):
         number = match.group("pre_number") or match.group("post_number") or ""
         scale = (match.group("pre_scale") or match.group("post_scale") or "").lower()
+        currency = (match.group("pre_currency") or match.group("post_currency") or "").lower()
+        if re.fullmatch(r"\d+,\d{1,2}", number):
+            number = number.replace(",", ".")
         try:
             value = Decimal(number.replace(",", "")) * _MONEY_EN_SCALES[scale]
         except (InvalidOperation, ValueError, KeyError):
             continue
-        result.setdefault("달러", set()).add(_render_quantity(value))
+        unit = "유로" if currency in _MONEY_EN_EURO else "달러"
+        result.setdefault(unit, set()).add(_render_quantity(value))
     for match in _EN_COUNT_RE.finditer(compact):
         number = match.group("number").lower()
-        result.setdefault("기", set()).add(_EN_NUMBERS.get(number, number))
+        result.setdefault("기", set()).add(
+            "1" if number == "single" else _EN_NUMBERS.get(number, number))
     unit_ids = _english_unit_ids(original)
     if unit_ids:
         result.setdefault("호기", set()).update(unit_ids)
