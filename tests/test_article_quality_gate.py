@@ -1541,5 +1541,128 @@ class CompositeKoreanMoneyTests(unittest.TestCase):
         self.assertFalse(result.eligible)
 
 
+class RepeatQuarantineQuantityTests(unittest.TestCase):
+    """원문 표기를 못 읽어 충실한 요약이 수집마다 다시 격리되던 기사들.
+
+    실측 2026-10-09~10: 아래 네 기사가 '같은 이유로 4회째'로 하루 요약에 올랐다.
+    모델 출력은 원문과 맞았고, 게이트가 원문(또는 출력)의 수치를 잘못 읽었다.
+    수집 캡처 5,931건 재생: 새 격리 0 · 최종 격리 고유 기사 143 → 100.
+    """
+
+    CASES = (
+        # (원문 제목, 원문 요약, 본문 발췌, 충실한 요약, 틀린 요약)
+        ("Researchers in Vienna and Beijing report nuclear clock “milestone”",
+         "Two papers published recently in Nature report the first implementation "
+         "of a nuclear clock.",
+         "The research behind both papers involve the radioisotope thorium-229. "
+         "Teams in Vienna and Beijing reached operating thorium-229 nuclear clocks.",
+         "빈·베이징 연구팀, 토륨-229 기반 핵시계 구현 성공",
+         "빈·베이징 연구팀, 원전 2기에 핵시계 설치"),
+        ("JAIF estimates economic impact from nuclear power plants",
+         "The economic impact generated over the lifecycle of a single 1,200 MWe nuclear "
+         "power plant is about JPY4.3 trillion (USD27.2 billion).",
+         "JAIF estimates that replacing a single nuclear power plant would generate a total "
+         "economic impact of approximately JPY4.3 trillion. Prior to the March 2011 accident "
+         "Japan's 54 reactors provided about 30% of the country's electricity. Of the 33 "
+         "units that remain operable, 15 have so far been restarted.",
+         "일본 원자력산업회의(JAIF), 원전 1기당 경제적 파급효과 4.3조 엔 추산",
+         "일본 원자력산업회의(JAIF), 원전 2기당 경제적 파급효과 4.3조 엔 추산"),
+        ("Slovakia buys out Czech stake in new nuclear project company",
+         "ČEZ has sold its 49% stake in JESS, the company formed to develop new nuclear "
+         "capacity in Slovakia, for EUR189 million (USD211 million).",
+         "Slovakia's state-owned JAVYS now holds 100% of JESS.",
+         "슬로바키아 국영 JAVYS가 체코 ČEZ로부터 JESS 지분 49%를 1억 8,900만 유로"
+         "(2억 1,100만 달러)에 인수했다.",
+         "슬로바키아 국영 JAVYS가 체코 ČEZ로부터 JESS 지분 49%를 1억 9,800만 유로에 인수했다."),
+        ("원전 1기가 36조 낳는 일본과 대한민국 원자력 르네상스",
+         "원전 1기가 36조 낳는 일본과 대한민국 원자력 르네상스  에너지안전신문",
+         "최근 일본원자력산업협회(JAIF)는 1200메가와트(MW)급 대형 원자력 발전소 1기가 수명을 "
+         "다할 때까지 무려 36조 원(4조 3000억 엔)의 경제적 파급 효과를 낸다고 밝혔다.",
+         "일본원자력산업협회(JAIF)는 1,200MW급 원전 1기가 수명 기간 약 36조 원의 경제적 "
+         "파급효과를 낸다고 분석했다.",
+         "일본원자력산업협회(JAIF)는 1,400MW급 원전 1기가 수명 기간 약 36조 원의 경제적 "
+         "파급효과를 낸다고 분석했다."),
+    )
+
+    def audit(self, title, description, body, summary):
+        return gate.audit_article_integrity(
+            {"title": title, "title_kr": summary[:60], "summary": summary},
+            source={"title": title, "description": description, "article_text": body},
+            reference_date="2026-10-09")
+
+    def test_faithful_summaries_pass(self):
+        for title, description, body, faithful, _wrong in self.CASES:
+            with self.subTest(title=title):
+                result = self.audit(title, description, body, faithful)
+                self.assertTrue(result.eligible, [f.details for f in result.findings])
+
+    def test_wrong_quantities_still_quarantine(self):
+        for title, description, body, _faithful, wrong in self.CASES:
+            with self.subTest(title=title):
+                self.assertFalse(self.audit(title, description, body, wrong).eligible)
+
+    def test_unit_count_needs_a_particle_after_it(self):
+        """숫자 뒤 `기`+한글은 조사일 때만 기수다(아카이브 22,935건의 실제 쓰임)."""
+        for text, count in (("SMR 2기를 동력원으로", "2"), ("원전 1기당 1.4조", "1"),
+                            ("국내 원전 4기의 계속운전", "4"), ("원전 1기가 36조", "1"),
+                            ("한빛원전 6기와 재생에너지", "6"), ("원전 4기", "4")):
+            with self.subTest(text=text):
+                self.assertEqual(gate._quantity_map(text).get("기"), {count})
+        for text in ("토륨-229 기반 핵시계", "APR1400 기술사용료", "RE100 기반 산업",
+                     "2026 기후정의행진", "대한민국 AI 50 기업", "경쟁률 408대 1 기록",
+                     "AP1000 기자재 공급"):
+            with self.subTest(text=text):
+                self.assertNotIn("기", gate._quantity_map(text))
+
+    def test_spelled_out_power_units(self):
+        self.assertEqual(gate._quantity_map("1200메가와트(MW)급"), {"mw": {"1200"}})
+        self.assertEqual(gate._quantity_map("2.5기가와트 규모"), {"mw": {"2500"}})
+        # `1기가와트` 는 1GW 다 — 원전 1기가 아니다.
+        self.assertEqual(gate._quantity_map("1기가와트 데이터센터"), {"mw": {"1000"}})
+
+    def test_euro_and_glued_usd_amounts(self):
+        self.assertEqual(gate._quantity_map("for EUR189 million (USD211 million)"),
+                         {"유로": {"189000000"}, "달러": {"211000000"}})
+        self.assertEqual(gate._quantity_map("€22 Billion ITER project"),
+                         {"유로": {"22000000000"}})
+        # 불어 쉼표는 소수점이다 — 세 자리가 아닐 때만.
+        self.assertEqual(gate._quantity_map("8,2 milliards d’euros"),
+                         {"유로": {"8200000000"}})
+        self.assertEqual(gate._quantity_map("153 milliards d'euros"),
+                         {"유로": {"153000000000"}})
+        self.assertEqual(gate._quantity_map("$1,200 million"), {"달러": {"1200000000"}})
+
+    def test_composite_amount_with_thousands_comma(self):
+        self.assertEqual(gate._quantity_map("1억 8,900만 유로"), {"유로": {"189000000"}})
+        self.assertEqual(gate._quantity_map("10조 3,000억 달러"), {"달러": {"10300000000000"}})
+
+    def test_single_is_one_unit(self):
+        self.assertEqual(gate._quantity_map("replacing a single nuclear power plant"),
+                         {"기": {"1"}})
+
+    def test_v2_manifest_keeps_the_comma_tail_leniency(self):
+        """규칙 2 로 봉인된 manifest 는 `1억 8,900만 유로`를 `8,900만 유로`로 적어 두었다."""
+        article = {
+            "hash": "v2-comma-1", "title": "슬로바키아, 신규 원전 법인 지분 인수",
+            "source_excerpt": "슬로바키아가 신규 원전 법인 지분을 인수했다.",
+            "published_at": "2026-10-08T09:00:00+09:00", "features": {},
+            "title_kr": "슬로바키아, 신규 원전 법인 지분 1억 8,900만 유로에 인수", "summary": "",
+        }
+        manifest = gate.build_evidence_manifest(
+            {"title": article["title"], "description": article["source_excerpt"],
+             "published_at": article["published_at"]}, article=article)
+        manifest = {key: value for key, value in manifest.items()
+                    if key != "manifest_fingerprint"}
+        manifest["quantities"] = {"유로": ["89000000"]}
+        manifest["quantity_rules"] = 2
+        manifest["manifest_fingerprint"] = gate._digest_payload(manifest)
+        article["verified_evidence"] = manifest
+        result = gate.audit_article_integrity(
+            article, source={"title": article["title"],
+                             "description": article["source_excerpt"]},
+            reference_date=article["published_at"])
+        self.assertTrue(result.eligible)
+
+
 if __name__ == "__main__":
     unittest.main()
