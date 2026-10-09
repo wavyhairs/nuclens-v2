@@ -44,6 +44,7 @@ except (AttributeError, ValueError):
 
 from gemini_client import GeminiError, call_json, is_available, synthesis_model
 import llm_policy
+import shadow_rank
 from sources import credibility
 import article_quality_gate
 import brief_kind
@@ -1125,6 +1126,15 @@ def plan_briefs(queue: list[dict],
           f"연속일 반복 {len(dom_diag.get('dropped_repeat') or []) + len(forn_diag.get('dropped_repeat') or [])}건 제외 "
           f"/ 감점 {dom_cont['matched'] + forn_cont['matched']}건 판정)")
 
+    # 그림자 하루치 순위 — 발송은 바꾸지 않고 기록만 남긴다(shadow_rank docstring).
+    # 위 선별이 끝난 뒤, 같은 풀·같은 점수를 보고 '하루치를 한꺼번에 비교한 순위'를
+    # 따로 받아 outbox 에 싣는다. cmd_plan 이 shadow_rank_log.jsonl 로 옮긴다.
+    # 어떤 실패도 레코드의 error 로만 남는다 — 여기서 예외가 나면 그 자체가 버그다.
+    shadow_records = shadow_rank.run_all(today, {
+        "국내": (dom_pool, dom, dom_diag.get("scores") or {}),
+        "해외": (forn_pool, forn, forn_diag.get("scores") or {}),
+    })
+
     # 1번 자리는 그날 소식에만 준다 — 날짜를 단 묵은 must_read 가 1위면 새 기사를 앞으로.
     dom = freshness.fresh_first(dom)
     forn = freshness.fresh_first(forn)
@@ -1381,6 +1391,8 @@ def plan_briefs(queue: list[dict],
         "report_diag": report_diag,
         "field_diag": field_diag,
         "quality_diag": quality_diag,
+        # 그림자 하루치 순위 기록(발송 불변). cmd_plan 이 shadow_rank_log.jsonl 로 옮긴다.
+        "shadow_rank": shadow_records,
         "selection_stats": {
             "domestic": {
                 **region_stats(dom_diag, dom, dom_pool, dom_cont),
@@ -2042,6 +2054,12 @@ def cmd_plan() -> int:
             # 재사용 경로에서도 적재한다 — claim 재시도의 reset 으로 큐 파일만
             # 되돌아간 경우, 여기서 다시 채우지 않으면 채널이 통째로 빈다.
             _sync_channel_batch(existing)
+            # 그림자 순위도 같은 이유로 — reset 이 shadow_rank_log 를 되돌려도 outbox
+            # (보존본)에 실린 기록으로 다시 채운다. (날짜, 지역) 멱등이라 중복은 없다.
+            try:
+                shadow_rank.append_log(existing.get("shadow_rank") or [])
+            except Exception as exc:  # noqa: BLE001
+                print(f"[shadow_rank] 재사용 경로 적재 실패 — {type(exc).__name__}: {exc}")
             return 0
         if (existing.get("status") in ("pending", "partial")
                 and _outbox_age_hours(existing) <= RESEND_WINDOW_H):
@@ -2052,6 +2070,15 @@ def cmd_plan() -> int:
     queue = load_queue()
     outbox = plan_briefs(queue)
     save_outbox(outbox)
+    # 그림자 순위는 outbox 와 별도 파일에 (날짜, 지역) 멱등으로 쌓인다 — outbox 는
+    # 매일 덮어써서 어제 기록을 잃고, delivery_log 는 record_type 을 안 거르는 독자가
+    # 여럿이라 새 레코드 종류를 섞지 않는다. 적재 실패는 브리핑을 막지 않는다.
+    try:
+        shadow_added = shadow_rank.append_log(outbox.get("shadow_rank") or [])
+        if shadow_added:
+            print(f"[shadow_rank] 기록 {shadow_added}벌 적재 → {shadow_rank.LOG_FILE.name}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[shadow_rank] 적재 실패 — {type(exc).__name__}: {exc}")
     if outbox["status"] == "empty":
         print("[daily_brief] 큐 비어있음 → outbox=empty (발송 스킵)")
         return 0

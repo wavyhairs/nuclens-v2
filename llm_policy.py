@@ -178,6 +178,10 @@ _PROFILES: dict[str, TaskProfile] = {
     "expert_verify": _entry(FINAL_SEMANTIC_VERIFY, _verify_model, strict=True),
     "fast_verify": _entry(FINAL_SEMANTIC_VERIFY, _verify_model, strict=True),
     "fast_semantic_repair": _entry(NARRATIVE_GENERATION, _script_model),
+    # 그림자 하루치 순위(shadow_rank). 발송을 바꾸지 않는 기록용 — 큐레이션과 **같은
+    # 버킷**을 쓴다. 비교 대상이 큐레이션 등급이라 모델이 다르면 무엇을 잰 건지 모른다.
+    "shadow_rank": _entry(CONTEXT_SYNTHESIS, _main_model),
+    "shadow_rank_reask": _entry(BULK_CURATION, _main_model),
 }
 
 
