@@ -1206,6 +1206,10 @@ def plan_briefs(queue: list[dict],
         meta = {
             "hash": h,
             "title_kr": (a.get("title_kr") or a.get("title") or "")[:100],
+            # 원제목. 웹 빌드가 발송 해시를 아카이브에서 못 찾을 때(같은 기사가 다른
+            # 경로로 먼저 적재된 경우) 제목 완전일치로 잇는 열쇠다 — title_kr 은
+            # 큐레이션 호출마다 달라져 열쇠가 못 된다.
+            "title": (a.get("title") or "")[:200],
             "region": reg,
             # 텔레그램 카드에 실제로 찍힌 번호(지역별 1부터). 오디오 브리핑이
             # 기사를 설명하는 순서의 기준이다 — 웹의 이슈 정렬은 점수를 다시
