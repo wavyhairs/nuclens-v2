@@ -26,6 +26,8 @@ from ranking import prior_coverage_count, sanitize_features
 import article_body
 import article_quality_gate
 import entity_match
+import integrity_hold
+import integrity_shadow
 import news_archive
 import summary_verify
 # 반복 알림 억제 규칙을 여기서 다시 쓰지 않는다 — 규칙이 두 곳에 있으면 어긋난다.
@@ -2040,6 +2042,12 @@ QUOTA_EXHAUSTED = False
 # 그래서 이쪽은 보류에 더해 **종료 코드로도 알린다**(main 끝).
 CONFIG_ERROR = ""
 
+# 이번 실행에서 원문 대조로 끝내 격리된 큐레이션 출력. hash → {curation, codes,
+# concerns, stage}. 예전엔 재생성에도 실패한 출력을 버렸는데, 그러면 '무엇이 왜
+# 걸렸나'를 원문을 읽는 검사기에 다시 물을 수도(integrity_shadow), 운영자에게 걸린
+# 구절을 보여 줄 수도(integrity_hold) 없다. main 이 큐레이션 직후에 꺼내 간다.
+INTEGRITY_QUARANTINE_OUTPUTS: dict[str, dict] = {}
+
 
 def request_failure_reason(failures: dict[str, list[str]], chunk: list[dict]) -> str:
     """chunk 가 '호출 자체 실패'로 전건 날아갔으면 그 사유 라벨, 아니면 빈 문자열.
@@ -2424,6 +2432,8 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
     # 재생성 후에도 원문과 다른 사건을 가리킨 항목만 남긴다. 첫 출력의 일시적
     # 오류는 여기 들어와도 재생성에서 정상화되면 관리자 경고 대상이 아니다.
     final_integrity_quarantines: dict[str, dict] = {}
+    # 원문 대조에 걸린 마지막 출력(재생성이 덮어쓴다). 끝내 격리된 것만 밖으로 낸다.
+    last_integrity_failure: dict[str, dict] = {}
 
     initial_notes = {h: list(v) for h, v in (error_notes or {}).items() if v}
     chunk_size = max(1, int(chunk_size or BATCH_CHUNK))
@@ -2548,6 +2558,10 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
             if not integrity.eligible:
                 codes = [finding.code for finding in integrity.findings]
                 errors.append("integrity:" + ",".join(codes or ["mismatch"]))
+                last_integrity_failure[art["hash"]] = {
+                    "curation": normalized, "codes": codes, "stage": "curation-regen",
+                    "concerns": article_quality_gate.integrity_concerns(integrity.findings),
+                }
             if errors:
                 failures[art["hash"]] = errors
             else:
@@ -2649,12 +2663,16 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 if art["hash"] in remaining:
                     reasons = remaining[art["hash"]]
                     if any(reason.startswith("integrity:") for reason in reasons):
+                        failure = last_integrity_failure.get(art["hash"]) or {}
                         final_integrity_quarantines[art["hash"]] = {
                             "hash": art["hash"],
                             "title": (art.get("title") or "")[:120],
                             "link": art.get("link", ""),
                             "reason": ", ".join(reasons)[:240],
+                            "concerns": list(failure.get("concerns") or ())[:4],
                         }
+                        if failure:
+                            INTEGRITY_QUARANTINE_OUTPUTS[art["hash"]] = failure
                     print(
                         f"  ! 큐레이션 격리 '{art['title'][:35]}': "
                         + ", ".join(reasons)
@@ -2683,7 +2701,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
             "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
             (f"AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 {count}건을 "
              "두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 "
-             "만들어 봅니다."
+             f"만들어 보고, {integrity_hold.HOLD_AFTER_RUNS}번 연속이면 보류합니다."
              + example_titles(list(final_integrity_quarantines.values()))),
             severity="critical", min_occurrences=1,
             level="attention",
@@ -3733,6 +3751,10 @@ def main() -> None:
     global QUOTA_EXHAUSTED, CONFIG_ERROR
     QUOTA_EXHAUSTED = False
     CONFIG_ERROR = ""
+    INTEGRITY_QUARANTINE_OUTPUTS.clear()
+    # 원문 대조 격리의 뒤처리 재료(integrity_shadow · integrity_hold).
+    collect_quarantines: dict[str, dict] = {}
+    integrity_passed: set[str] = set()
     run_now = datetime.now(timezone.utc)
     now_iso = run_now.isoformat()
 
@@ -3872,6 +3894,13 @@ def main() -> None:
             or not audit_curation_integrity(
                 article, curated[article["hash"]]).eligible)
     ]
+    # 원문 대조에서 연달아 격리돼 보류한 기사는 다시 요약하지 않는다(integrity_hold).
+    # 큐레이션 대상에서만 빠지고 sent 마킹은 하지 않는다 — 보류를 풀면 다시 돈다.
+    held = integrity_hold.held_hashes(state)
+    held_skipped = sum(1 for article in new_articles if article["hash"] in held)
+    if held_skipped:
+        new_articles = [article for article in new_articles if article["hash"] not in held]
+        print(f"Batch curation: 원문 대조 보류 {held_skipped}건은 다시 요약하지 않음")
     deferred = 0
     if len(new_articles) > MAX_CURATION_PER_RUN:
         deferred = len(new_articles) - MAX_CURATION_PER_RUN
@@ -3923,6 +3952,9 @@ def main() -> None:
         evidence_sink=(source_complete_producer.record_curation_event
                        if source_complete_producer is not None else None),
     )
+    # 뒤에서 부르는 요약 재생성도 curate_batch 를 타므로 지금 것만 떼어 둔다.
+    curation_quarantines = dict(INTEGRITY_QUARANTINE_OUTPUTS)
+    INTEGRITY_QUARANTINE_OUTPUTS.clear()
     if source_complete_producer is not None:
         try:
             source_complete_report = source_complete_producer.finalize()
@@ -4043,13 +4075,20 @@ def main() -> None:
             )
         curated[h] = cur
         if not integrity.eligible:
+            concerns = article_quality_gate.integrity_concerns(integrity.findings)
             integrity_held.append({
                 "hash": h,
                 "title": article.get("title", "")[:120],
                 "link": article.get("link", ""),
                 "reason": ",".join(f.code for f in integrity.findings)[:240],
+                "concerns": concerns[:4],
             })
+            collect_quarantines[h] = {
+                "curation": cur, "codes": [f.code for f in integrity.findings],
+                "concerns": concerns, "stage": "collect",
+            }
             continue
+        integrity_passed.add(h)
 
         importance = cur.get("importance", "nice_to_know")
 
@@ -4207,7 +4246,8 @@ def main() -> None:
             "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
             (f"AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 "
              f"{len(integrity_held)}건을 이번 수집에서 뺐습니다. 다음 수집에서 다시 "
-             "확인합니다." + example_titles(integrity_held)),
+             f"확인하고, {integrity_hold.HOLD_AFTER_RUNS}번 연속이면 보류합니다."
+             + example_titles(integrity_held)),
             severity="critical", min_occurrences=1,
             level="attention",
             impact="없음 — 해당 기사만 늦어지거나 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
@@ -4217,6 +4257,62 @@ def main() -> None:
                 "collect", len(integrity_held)),
             items=integrity_held,
         )
+
+    # ---- 원문 대조 격리의 뒤처리: 그림자 재검 · 보류 -------------------------
+    # 재검은 그림자 모드다 — 판정을 integrity_shadow.jsonl 에 남기기만 하고 격리는
+    # 그대로 둔다. 보류는 재시도만 멈춘다(내보내지도 지우지도 않는다).
+    quarantine_outputs = {**collect_quarantines, **curation_quarantines}
+    articles_by_hash = {article["hash"]: article for article in final_articles}
+    if (quarantine_outputs and integrity_shadow.enabled()
+            and not (QUOTA_EXHAUSTED or CONFIG_ERROR)):
+        try:
+            shadow_rows, shadow_stats = integrity_shadow.run(integrity_shadow.targets(
+                quarantine_outputs, articles_by_hash, bodies))
+            for line in integrity_shadow.report(shadow_rows, shadow_stats):
+                print(line)
+        except Exception as exc:  # noqa: BLE001 — 재검 실패가 수집을 멈추면 안 된다
+            print(f"[격리 재검] 건너뜀 — {type(exc).__name__}: {exc}")
+    try:
+        quarantined_now = {}
+        for h, row in quarantine_outputs.items():
+            if h in integrity_passed:
+                continue  # 큐레이션에선 걸렸어도 이번 회차에 통과한 판(fallback 등)이 있다
+            article = articles_by_hash.get(h) or {}
+            quarantined_now[h] = {
+                "title": (article.get("title") or "")[:120],
+                "link": article.get("link", ""),
+                "reason": ",".join(row.get("codes") or ())[:240],
+                "concerns": list(row.get("concerns") or ())[:4],
+            }
+        newly_held = integrity_hold.record_run(
+            state, quarantined_now, integrity_passed, now=run_now)
+        integrity_hold.prune(state, now=run_now)
+        if newly_held:
+            verdicts = integrity_shadow.latest_decisions(row["hash"] for row in newly_held)
+            items = [{
+                "hash": row["hash"], "title": row.get("title", ""),
+                "link": row.get("link", ""), "reason": row.get("reason", ""),
+                "concerns": row.get("concerns") or [], "runs": row.get("runs", 0),
+                "shadow": verdicts.get(row["hash"], ""),
+            } for row in newly_held]
+            print(f"[보류] 원문 대조에서 {integrity_hold.HOLD_AFTER_RUNS}회 연속 격리된 "
+                  f"기사 {len(items)}건 — 더 다시 요약하지 않음")
+            append_quality_event(
+                "article-integrity-held",
+                "원문 대조에서 연달아 빠진 기사를 보류했습니다",
+                (f"AI 요약이 원문과 맞지 않는다는 판정을 {integrity_hold.HOLD_AFTER_RUNS}번 "
+                 f"연속 받은 기사 {len(items)}건을 더는 다시 요약하지 않습니다."
+                 + example_titles(items)),
+                severity="warning", min_occurrences=1, level="attention",
+                impact="해당 기사만 브리핑에서 빠집니다. 나머지 뉴스와 서비스는 정상입니다.",
+                action=("필요 없음 — 원문과 맞는데 빠진 기사면 알려 주세요. 보류를 풀면 "
+                        "다음 수집이 다시 요약합니다."),
+                technical=f"held={len(items)} after_runs={integrity_hold.HOLD_AFTER_RUNS}",
+                fingerprint=operational_monitoring.count_fingerprint("held", len(items)),
+                items=items,
+            )
+    except Exception as exc:  # noqa: BLE001 — 보류 기록 실패가 수집을 멈추면 안 된다
+        print(f"[보류] 건너뜀 — {type(exc).__name__}: {exc}")
 
     # ---- 요약 사실검증 (경고 모드 — 요약·등급·발송은 바꾸지 않는다) ----------
     # 본문이 손에 있는 곳은 여기뿐이다(본문은 저장하지 않는다). 검사는 요약과 다른

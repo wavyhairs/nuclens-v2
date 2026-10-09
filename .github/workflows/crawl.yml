@@ -388,6 +388,9 @@ jobs:
           # 요약 사실검증 기록(경고 모드). 커밋 안 하면 같은 요약을 빌드마다 다시
           # 묻고, 하루 상한도 러너마다 0 부터 다시 센다.
           if [ -f summary_checks.jsonl ]; then git add summary_checks.jsonl; fi
+          # 원문 대조 격리 재검 기록(그림자 모드). 같은 이유로 커밋한다 — 같은 출력을
+          # 회차마다 다시 묻지 않고, 하루 상한도 이어서 센다.
+          if [ -f integrity_shadow.jsonl ]; then git add integrity_shadow.jsonl; fi
           # discovery 쿼리 상태(성과·냉각). 커밋 안 하면 매 시각 같은 쿼리를
           # 다시 던지고 헛도는 조합을 영영 못 재운다 — 캐시와 같은 함정이다.
           if [ -f discovery_state.json ]; then git add discovery_state.json; fi

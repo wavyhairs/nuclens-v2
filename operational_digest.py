@@ -57,7 +57,7 @@ _TODO_KEYS = frozenset({
 })
 # 품질 이벤트 중 아래에서 따로 풀어 쓰는 것. 나머지는 제목 한 줄로 싣는다.
 _DETAILED_EVENTS = frozenset({
-    "article-integrity-quarantine", "unverified-fallback-held",
+    "article-integrity-quarantine", "article-integrity-held", "unverified-fallback-held",
     "audio-script-claim-removed", "audio-script-unverified", "off-topic-demoted",
 })
 
@@ -199,10 +199,40 @@ def _event_items(events: Sequence[Mapping]) -> list[Mapping]:
             if isinstance(item, Mapping)]
 
 
+# 그림자 재검(integrity_shadow) 판정을 운영자 말로. 비어 있으면 적지 않는다.
+_SHADOW_PHRASE = {
+    "would_release": "원문 대조 검사기는 원문과 맞다고 봄",
+    "would_repair": "원문 대조 검사기도 원문과 다르다고 봄",
+    "would_strip": "원문 대조 검사기는 원문에 없는 내용이 있다고 봄",
+}
+
+
+def _held_line(items: Sequence[Mapping]) -> str:
+    """보류한 기사 — 무엇이 걸렸는지와 재검 판정을 기사마다 붙인다."""
+    shown = []
+    for item in items[:3]:
+        notes = [str(note) for note in (item.get("concerns") or ())[:2] if note]
+        shadow = _SHADOW_PHRASE.get(str(item.get("shadow") or ""))
+        if shadow:
+            notes.append(shadow)
+        shown.append(f"「{_short(item.get('title'))}」"
+                     + (f"({' / '.join(notes)})" if notes else ""))
+    more = f" 외 {len(items) - len(shown)}건" if len(items) > len(shown) else ""
+    return (f"원문과 안 맞는다는 판정이 연달아 나와 더는 다시 요약하지 않고 보류한 기사 "
+            f"{len(items)}건 — " + ", ".join(shown) + more
+            + ". 원문과 맞는데 빠진 기사면 알려 주세요.")
+
+
 def _article_lines(by_key: Mapping[str, list[Mapping]]) -> list[str]:
     lines: list[str] = []
-    integrity = _event_items(by_key.get("article-integrity-quarantine", ()))
-    integrity_hashes = {str(item.get("hash")) for item in integrity if item.get("hash")}
+    held_items: dict[str, Mapping] = {}
+    for item in _event_items(by_key.get("article-integrity-held", ())):
+        held_items.setdefault(str(item.get("hash") or item.get("title")), item)
+    # 보류된 기사는 보류 줄에서만 말한다 — 같은 기사를 두 줄에 세지 않는다.
+    integrity = [item for item in _event_items(by_key.get("article-integrity-quarantine", ()))
+                 if str(item.get("hash")) not in held_items]
+    integrity_hashes = ({str(item.get("hash")) for item in integrity if item.get("hash")}
+                        | set(held_items))
     if integrity:
         repeats = Counter(str(item.get("hash")) for item in integrity if item.get("hash"))
         titles: dict[str, str] = {}
@@ -216,6 +246,8 @@ def _article_lines(by_key: Mapping[str, list[Mapping]]) -> list[str]:
             line += (f". 이 중 {len(stuck)}건은 {max(repeats.values())}회째 같은 이유로 빠지고 "
                      "있어 한 번 볼 만합니다")
         lines.append(line.rstrip(" .") + ".")
+    if held_items:
+        lines.append(_held_line(list(held_items.values())))
 
     held = [item for item in _event_items(by_key.get("unverified-fallback-held", ()))
             if str(item.get("hash")) not in integrity_hashes]

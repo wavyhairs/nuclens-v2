@@ -1672,6 +1672,65 @@ def audit_article_integrity(
     return GateResult(cleaned, action, tuple(dict.fromkeys(removed)), tuple(findings))
 
 
+_CONCERN_FIELDS = {"title_source_mismatch": "제목", "summary_source_mismatch": "요약"}
+_CONCERN_UNITS = {"mw": "MW", "mwh": "MWh"}
+
+
+@lru_cache(maxsize=1)
+def _entity_names() -> dict[str, str]:
+    try:
+        return {str(row.get("id")): str(row.get("name_kr") or row.get("id"))
+                for row in entity_match.load_entity_registry() if row.get("id")}
+    except Exception:  # noqa: BLE001 — 이름을 못 읽으면 id 로 적는다
+        return {}
+
+
+def _concern_quantity(unit: str, value: object) -> str:
+    try:
+        rendered = f"{Decimal(str(value)):,f}"
+    except (InvalidOperation, ValueError):
+        rendered = str(value)
+    if "." in rendered:
+        rendered = rendered.rstrip("0").rstrip(".")
+    return rendered + _CONCERN_UNITS.get(unit, unit)
+
+
+def integrity_concerns(findings: Iterable[Finding]) -> list[str]:
+    """격리 사유를 사람이 읽는 말로 — 무엇을 원문에서 못 찾았는지 구절 단위로.
+
+    코드(`title_source_mismatch`)만으로는 운영자도 재생성 모델도 고칠 곳을 모른다
+    (실측 2026-10-10: 끝내 격리된 107건 중 100건이 게이트가 원문 표기를 잘못 읽은
+    것이었고, 그걸 알아본 단서는 전부 '원문에서 읽은 값'이었다 — `1천570억` 을
+    570억으로 읽었다는 식). 그래서 원문 쪽에서 읽은 값을 함께 적는다.
+    """
+    out: list[str] = []
+    names = _entity_names()
+    for finding in findings:
+        if finding.severity != "quarantine":
+            continue
+        details = finding.details if isinstance(finding.details, Mapping) else {}
+        parts: list[str] = []
+        conflicts = details.get("quantity_conflicts")
+        for unit, row in sorted((conflicts if isinstance(conflicts, Mapping) else {}).items()):
+            if not isinstance(row, Mapping):
+                continue
+            seen = [_concern_quantity(unit, value) for value in (row.get("source") or ())[:2]]
+            for value in row.get("unsupported_output") or ():
+                parts.append(f"수치 {_concern_quantity(unit, value)}"
+                             + (f"(원문에서 읽은 값 {'·'.join(seen)})" if seen else ""))
+        for entity in details.get("introduced_entities") or ():
+            parts.append(f"대상 {names.get(str(entity), str(entity))}")
+        if details.get("country_conflict") or details.get("country_replacement"):
+            parts.append("나라")
+        if details.get("stage_conflict"):
+            parts.append("진행 단계")
+        if details.get("entity_conflict") and not details.get("introduced_entities"):
+            parts.append("대상")
+        label = _CONCERN_FIELDS.get(finding.code, finding.field or finding.code)
+        out.append(f"{label}: " + (", ".join(parts[:4]) if parts else "원문과 다른 내용"))
+    return out
+
+
 def infer_curation_status(article: Mapping[str, object]) -> str:
     """Classify explicit new records and old-schema records conservatively."""
     explicit = clean_text(article.get("curation_status")).lower()

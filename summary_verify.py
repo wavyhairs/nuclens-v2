@@ -304,7 +304,8 @@ def verify(targets: list[dict], *, client=None, now: datetime | None = None,
         targets: [{"hash", "title", "body", "title_kr", "summary", "detail"}, ...]
         row_extra: 기록 행마다 덧붙일 표식. 재생성 뒤 다시 검사한 행은
             ``{"stage": "after_repair"}`` 로 구분한다 — 같은 기사의 두 행이
-            전후 비교에서 섞이지 않게.
+            전후 비교에서 섞이지 않게. 기사마다 다른 표식은 대상의
+            ``log_extra`` 에 둔다(격리 재검이 검사기 사유를 같이 적는다).
     Returns:
         (이번에 기록한 행, 통계)
     """
@@ -348,6 +349,7 @@ def verify(targets: list[dict], *, client=None, now: datetime | None = None,
             "title_kr": _clip(target.get("title_kr")), "rule": rule,
             "called": False, "verdict": "",
             **(row_extra or {}),
+            **(target.get("log_extra") or {}),
         }
         if not available or stats["stopped"] or budget <= 0:
             stats["skipped_cap"] += bool(available and not stats["stopped"])
