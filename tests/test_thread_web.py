@@ -429,5 +429,61 @@ class IdentityContractTests(unittest.TestCase):
                 self.assertEqual(row["date_kind"], "first_seen")
 
 
+class AttachArticlesTests(unittest.TestCase):
+    """흐름 칸마다 그 칸 기사의 원문 주소·보도일 — 「이 사건의 근거」와 같은 값으로.
+
+    2026-10-10 라이브: 타임라인 1,597행 중 기사로 가는 행 0, 단계 행 87%가 근거
+    목록과 날짜가 달랐다(브리핑 첫 등장일 vs 보도일).
+    """
+
+    ARTICLES = {
+        "h-stage": {"url": "https://a.example/stage", "article_date": "2026-08-21",
+                    "title_kr": "펜실베이니아주, 데이터센터 전력망 규제 강화"},
+        "h-row": {"url": "https://a.example/row", "article_date": "2026-08-07",
+                  "title_kr": "미국 에너지부, 80 클럽 발표"},
+        "h-other": {"url": "https://a.example/other", "article_date": "2026-08-05",
+                    "title_kr": "다른 제목의 기사"},
+    }
+
+    def payload(self):
+        return {"threads": [{"flow": [
+            {"event_id": "e1", "title": "펜실베이니아주, 데이터센터 전력망 규제 강화",
+             "date": "2026-08-22", "evidence_hashes": ["h-stage"],
+             "stages": [{"date": "2026-08-22", "title": "펜실베이니아주, 데이터센터 전력망 규제 강화",
+                         "hash": "h-stage"}]},
+            {"event_id": "e2", "title": "미국 에너지부,  80 클럽 발표", "date": "2026-08-08",
+             "evidence_hashes": ["h-other", "h-row"], "stages": []},
+            {"event_id": "e3", "title": "근거가 아카이브에 없는 사건", "date": "2026-08-09",
+             "evidence_hashes": ["h-missing"], "stages": []},
+        ]}]}
+
+    def test_stage_and_title_matched_rows_get_their_own_article(self):
+        payload = self.payload()
+        stats = thread_web.attach_articles(payload, self.ARTICLES)
+        stage_row, plain_row, missing_row = payload["threads"][0]["flow"]
+        self.assertEqual(stage_row["stages"][0]["url"], "https://a.example/stage")
+        self.assertEqual(stage_row["stages"][0]["article_date"], "2026-08-21")
+        self.assertEqual(stage_row["stages"][0]["date"], "2026-08-22", "브리핑 첫 등장일은 지우지 않는다")
+        # 단계 없는 칸은 제목이 같은 기사만 — 앞에 있는 다른 기사(h-other)를 붙이지 않는다.
+        self.assertEqual((plain_row["hash"], plain_row["url"]), ("h-row", "https://a.example/row"))
+        self.assertNotIn("url", missing_row)
+        self.assertEqual(stats, {"stages": 1, "stages_linked": 1, "rows": 2, "rows_linked": 1})
+
+    def test_a_row_whose_articles_have_other_titles_stays_unlinked(self):
+        payload = self.payload()
+        payload["threads"][0]["flow"][1]["evidence_hashes"] = ["h-other"]
+        thread_web.attach_articles(payload, self.ARTICLES)
+        self.assertNotIn("url", payload["threads"][0]["flow"][1])
+
+    def test_build_uses_the_same_functions_as_the_evidence_list(self):
+        """다른 함수로 만들면 같은 기사가 두 목록에서 다른 날짜로 선다."""
+        source = (ROOT / "web" / "build_data.py").read_text(encoding="utf-8")
+        call = source[source.index("thread_web.attach_articles(threads_payload"):]
+        call = call[:call.index("})") + 2]
+        self.assertIn('"url": source_url(record)', call)
+        self.assertIn('"article_date": date_of(record)', call)
+        self.assertIn("for record in records", call)
+
+
 if __name__ == "__main__":
     unittest.main()

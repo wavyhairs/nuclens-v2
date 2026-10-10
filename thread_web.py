@@ -242,6 +242,54 @@ def evidence_hashes(events: list) -> list[str]:
     return out
 
 
+def _title_key(value: object) -> str:
+    return "".join(str(value or "").split())
+
+
+def _article_fields(article: dict) -> dict:
+    return {key: str(article[key]) for key in ("url", "article_date") if article.get(key)}
+
+
+def attach_articles(payload: dict, articles: dict) -> dict:
+    """흐름 칸마다 **그 칸의 기사**의 원문 주소와 보도일을 붙인다. 통계를 돌려준다.
+
+    칸의 날짜·제목은 이미 한 기사에서 온다(`event_retrieval.with_catalog_stages`).
+    그런데 그 기사로 가는 길이 없었다 — 칸은 다른 사건의 상세를 여는 버튼이거나,
+    지금 사건·흡수·카탈로그 밖이면 누를 수 없는 글자였다. 날짜도 브리핑 첫 등장일
+    이라 같은 기사를 보도일로 적는 「이 사건의 근거」와 어긋났다. 실측 2026-10-10
+    라이브(20261009T220926Z): 이슈 상세 244개의 타임라인 1,597행 중 기사로 가는 행 0,
+    누를 수 없는 행 513. 단계 행 447 중 87%가 근거 목록과 날짜가 달랐다(77% 하루).
+
+    ``articles`` 는 hash → {url, article_date, title_kr} — 「이 사건의 근거」와 같은
+    함수(`source_url` · `date_of`)로 만든 값이어야 두 목록의 날짜가 같다.
+
+    다른 사건의 근거를 이 칸으로 옮기지 않는다. 붙이는 것은 칸에 이미 보이는 그
+    기사 하나다. 단계가 없는 칸(카탈로그 밖 사건)은 그 사건의 기사 가운데 **제목이
+    칸 제목과 같은 것**만 쓴다 — 다른 기사를 붙이면 보이는 글과 열리는 원문이 갈린다.
+    """
+    stats = {"stages": 0, "stages_linked": 0, "rows": 0, "rows_linked": 0}
+    for thread in payload.get("threads") or ():
+        for row in thread.get("flow") or ():
+            stages = [stage for stage in (row.get("stages") or ()) if stage.get("date")]
+            if stages:
+                for stage in stages:
+                    stats["stages"] += 1
+                    article = articles.get(str(stage.get("hash") or ""))
+                    if article:
+                        stage.update(_article_fields(article))
+                        stats["stages_linked"] += 1
+                continue
+            stats["rows"] += 1
+            key = _title_key(row.get("title"))
+            for article_hash in row.get("evidence_hashes") or ():
+                article = articles.get(str(article_hash))
+                if article and key and _title_key(article.get("title_kr")) == key:
+                    row.update({"hash": str(article_hash), **_article_fields(article)})
+                    stats["rows_linked"] += 1
+                    break
+    return stats
+
+
 def _collapse_ghosts(members: list, by_id: dict) -> tuple[list, dict]:
     """같은 이슈로 흡수되면서 **제목까지 같은** 행은 한 번만 세운다.
 

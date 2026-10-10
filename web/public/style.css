@@ -3208,6 +3208,25 @@ dialog::backdrop { background: rgb(18 41 76 / 48%); }
 .dialog-thread li.is-current .timeline-date span { color: var(--c-secondary); font-weight: 600; }
 .dialog-thread .longterm-event.is-absorbed { display: block; color: var(--c-text-secondary); cursor: default; }
 .dialog-thread .longterm-absorbed { color: var(--c-text-muted); font-size: var(--t-min); }
+/* 행의 글은 그 기사 원문으로 가는 링크다(「이 사건의 근거」와 같은 동작). 지금 사건·
+   흡수·카탈로그 밖 행도 기사는 열리므로, 상태 색은 두되 누를 수 있게 보인다. */
+.dialog-thread a.longterm-event.is-article { cursor: pointer; text-decoration: none; }
+.dialog-thread a.longterm-event.is-article:hover { color: var(--c-secondary); text-decoration: underline; }
+/* 다른 사건의 상세로 가는 길. 글이 기사로 가게 되면서 따로 세웠다 — 제목보다
+   한 단 물러선 크기로, 그 사건의 마지막 행 제목 아래('이번 사건' 표시와 같은 자리)에
+   단다. .timeline-copy 가 grid 라 그대로 두면 버튼이 칸 너비로 늘어나 글자가 가운데에
+   선다 — 왼쪽에 붙인다. */
+.dialog-thread .longterm-open {
+  justify-self: start;
+  text-align: left;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-secondary);
+  font-size: var(--t-min);
+  cursor: pointer;
+}
+.dialog-thread .longterm-open:hover { text-decoration: underline; }
 .dialog-thread li.is-current small { color: var(--c-secondary); font-size: var(--t-min); }
 /* ── 변화 이력 ─────────────────────────────────────────────────────────────
    회차와 회차의 **짝**을 세운다. 아래 타임라인은 같은 기사들을 날짜순 한 줄씩

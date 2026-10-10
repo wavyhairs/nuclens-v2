@@ -8189,6 +8189,14 @@ def build() -> None:
         threads_payload = thread_web.build_payload(
             now=now,
             events=event_retrieval.with_catalog_stages(event_retrieval.load_events(), issue_catalog))
+        # 칸마다 그 기사의 원문 주소·보도일. 「이 사건의 근거」와 같은 함수로 만든다 —
+        # 다르면 같은 기사가 두 목록에서 다른 날짜로 선다(thread_web.attach_articles).
+        linked = thread_web.attach_articles(threads_payload, {
+            str(record.get("hash")): {"url": source_url(record), "article_date": date_of(record),
+                                      "title_kr": record.get("title_kr") or record.get("title", "")}
+            for record in records if record.get("hash")})
+        print(f"[build_data:threads] 타임라인 기사 연결 — 단계 {linked['stages_linked']}/{linked['stages']}"
+              f" · 단계 없는 칸 {linked['rows_linked']}/{linked['rows']}")
     except Exception as exc:  # noqa: BLE001
         print(f"[build_data:threads] 투영 실패 — 장기 스토리 화면 숨김 ({type(exc).__name__}: {exc})")
         threads_payload = {
