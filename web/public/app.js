@@ -3327,14 +3327,23 @@ function threadStepSources(step) {
 // 이음매: 판정된 관계 라벨은 **그 사건의 마지막 단계 바로 다음이 다음 사건의 첫
 // 단계일 때만** 붙인다. 날짜 순서로 섞이면 두 사건이 이웃하지 않을 수 있고, 그때
 // 라벨을 달면 판정하지 않은 두 행 사이의 관계를 주장하게 된다.
+//
+// 날짜는 그 행 기사의 **보도일**이다(빌드가 `article_date` 로 싣는다) — 「이 사건의
+// 근거」가 같은 기사를 보도일로 적으므로, 브리핑 첫 등장일을 쓰면 같은 기사가 두
+// 목록에서 하루씩 어긋났다(2026-10-10 라이브: 단계 행 87%가 달랐다). 기사를 못 찾은
+// 행만 브리핑 첫 등장일로 물러나고, 그 날짜에는 무슨 날짜인지 title 로 알린다.
 function threadFlowRows(steps) {
   const rows = [];
   steps.forEach((step, stepIndex) => {
     const stages = (step.stages || []).filter(stage => stage && stage.date);
-    const list = stages.length ? stages : [{ date: step.date, title: step.title }];
+    const list = stages.length ? stages
+      : [{ date: step.date, title: step.title, url: step.url, article_date: step.article_date }];
     list.forEach((stage, stageIndex) => rows.push({
       step, stepIndex, stageIndex, stageCount: list.length,
-      date: String(stage.date || ""), title: String(stage.title || step.title || ""),
+      date: String(stage.article_date || stage.date || ""),
+      dateKind: stage.article_date ? "article" : "first_seen",
+      title: String(stage.title || step.title || ""),
+      url: safeUrl(stage.url),
     }));
   });
   // 흡수된 옛 사건은 단계 없이 한 줄로 오는데, 그 기사는 흡수한 사건의 단계에도
@@ -3358,15 +3367,18 @@ function threadFlowRows(steps) {
   return rows;
 }
 
-// 흐름 한 줄. 지금 보고 있는 사건은 링크가 아니라 제자리 표시다 — 자기 자신을
-// 여는 버튼은 누르면 아무 일도 안 일어나는 것으로 읽힌다.
+// 흐름 한 줄. **글을 누르면 그 행 기사의 원문**이 열린다 — 「이 사건의 근거」와
+// 같은 동작이다. 예전에는 글이 다른 사건의 상세를 여는 버튼이었고, 지금 사건·흡수·
+// 카탈로그 밖 행은 누를 수 없는 글자라 같은 모양의 행이 눌리기도 하고 안 눌리기도
+// 했다(2026-10-10 라이브: 1,597행 중 기사로 가는 행 0, 누를 수 없는 행 513).
 //
-// **흡수 행**(라우트는 지금 이슈인데 원래는 다른 사건)도 같은 이유로 버튼이 아니다.
-// 누르면 지금 이 화면이 다시 열릴 뿐이다. 행을 현재 행에 합치지는 않는다 —
-// 흐름에서 그 사건이 언제 있었는지가 사라진다(2026-09-24 합의).
+// 다른 사건의 상세로 가는 길은 **열 수 있는 다른 사건**에만, 그 사건의 마지막 행 끝에
+// '사건 보기'로 남긴다. 지금 사건·흡수 행은 그 버튼이 없다 — 누르면 지금 이 화면이
+// 다시 열릴 뿐이다. 행을 현재 행에 합치지는 않는다 — 흐름에서 그 사건이 언제
+// 있었는지가 사라진다(2026-09-24 합의).
 //
-// 날짜 축은 `date`(= date_kind, 브리핑 첫 등장일) 하나다. 보도일을 섞으면 한 축에
-// 두 종류의 날짜가 선다 — 무슨 날짜인지는 title 로만 알린다.
+// 기사를 못 찾은 행(빌드가 url 을 못 붙인 행)은 예전 그대로다 — 다른 사건이면
+// 상세 버튼, 아니면 글자.
 // 인자를 구조분해로 받지 않는다 — web/tests 의 함수 추출기가 매개변수의 중괄호를
 // 본문 시작으로 오해해서 블록을 반 토막 낸다(long_term_gate.mjs 와 같은 추출기).
 function threadStepRow(row, currentId, isCurrentLatest) {
@@ -3374,19 +3386,28 @@ function threadStepRow(row, currentId, isCurrentLatest) {
   const inCurrent = threadStepSources(step).includes(currentId);
   const isCurrent = inCurrent && isCurrentLatest;
   const isAbsorbed = !inCurrent && step.event_id === currentId;
+  const openable = !inCurrent && !isAbsorbed && threadEventOpenable(step);
+  const rowState = inCurrent ? "is-current" : isAbsorbed ? "is-absorbed" : openable ? "" : "is-closed";
+  const closedNote = rowState === "is-closed" ? ' title="이 사건은 현재 이슈 목록에 없습니다"' : "";
   let title;
-  if (inCurrent || isAbsorbed) {
-    title = `<span class="longterm-event ${inCurrent ? "is-current" : "is-absorbed"}">${esc(row.title)}</span>`;
-  } else if (!threadEventOpenable(step)) {
-    title = `<span class="longterm-event is-closed" title="이 사건은 현재 이슈 목록에 없습니다">${esc(row.title)}</span>`;
+  if (row.url) {
+    title = `<a class="longterm-event is-article${rowState ? ` ${rowState}` : ""}" href="${esc(row.url)}" target="_blank" rel="noopener noreferrer">${esc(row.title)}</a>`;
+  } else if (inCurrent || isAbsorbed) {
+    title = `<span class="longterm-event ${rowState}">${esc(row.title)}</span>`;
+  } else if (!openable) {
+    title = `<span class="longterm-event is-closed"${closedNote}>${esc(row.title)}</span>`;
   } else {
     title = `<button type="button" class="longterm-event" data-issue-id="${esc(step.event_id)}" data-force-dialog="1">${esc(row.title)}</button>`;
   }
-  const dateTitle = step.date_kind === "first_seen" ? ' title="브리핑에 처음 오른 날"' : "";
+  const openEvent = row.url && openable && row.stageIndex === row.stageCount - 1
+    ? `<button type="button" class="longterm-open" data-issue-id="${esc(step.event_id)}" data-force-dialog="1">사건 보기</button>`
+    : "";
+  const dateTitle = row.dateKind === "article" ? ' title="보도일"'
+    : step.date_kind === "first_seen" ? ' title="브리핑에 처음 오른 날"' : "";
   return `<li${isCurrent ? ' class="is-current"' : ""}>
     <div class="timeline-date"><span${dateTitle}>${esc(dateLabel(row.date))}</span></div>
     <div class="timeline-copy">
-      ${title}
+      ${title}${openEvent}
       ${isCurrent ? '<small>이번 사건</small>' : ""}
       ${isAbsorbed && row.stageIndex === 0 ? '<small class="longterm-absorbed">이 이슈에 합쳐진 사건</small>' : ""}
       ${row.isLast ? "" : `<p class="longterm-relation"><span aria-hidden="true">↓</span>${
@@ -3426,7 +3447,7 @@ function threadDialogSection(issue) {
       <div class="dialog-section-head"><h3 id="issueHistoryTitle">주요 사건 타임라인</h3><span>같은 흐름의 사건 ${steps.length}건 · ${esc(threadPeriodText(thread))}</span></div>
       ${missingNote}
       <ol class="timeline longterm-timeline longterm-flow">${threadDialogRows(steps, currentId)}</ol>
-      <p class="dialog-evidence-note">서로 다른 사건이 시간에 따라 이어진 흐름입니다. 각 사건의 근거 기사는 그 사건의 상세에 있습니다.</p>
+      <p class="dialog-evidence-note">서로 다른 사건이 시간에 따라 이어진 흐름입니다. 제목을 누르면 그 기사 원문이 열리고, 날짜는 보도일입니다. 각 사건의 근거 기사는 그 사건의 상세에 있습니다.</p>
     </section>`;
 }
 
@@ -5393,10 +5414,18 @@ function longTermSorted() {
   return rows;
 }
 
+// 기간은 아래 흐름 행이 보이는 날짜와 **같은 축**에서 잰다. 행이 보도일로 서는데
+// 머리만 브리핑 첫 등장일이면 첫 행이 8월 7일인데 기간은 8월 8일부터라고 적힌다.
+// 흐름이 없는 옛 계약에서만 스토리의 브리핑 기간으로 물러난다.
 function threadPeriodText(thread) {
-  const span = thread.lifespan_days;
+  const dates = threadFlowRows(thread.flow || []).map(row => row.date).filter(Boolean).sort();
+  const first = dates[0] || thread.first_seen;
+  const last = dates[dates.length - 1] || thread.last_seen;
+  const span = dates.length
+    ? Math.round((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / 86400000)
+    : thread.lifespan_days;
   const days = Number.isFinite(span) ? `${span}일` : "기간 미상";
-  return `${dateLabel(thread.first_seen)} – ${dateLabel(thread.last_seen)} · ${days}`;
+  return `${dateLabel(first)} – ${dateLabel(last)} · ${days}`;
 }
 
 function threadChips(thread) {

@@ -86,6 +86,19 @@ function threadsPayload(overrides = {}) {
   };
 }
 
+// 빌드가 칸마다 그 기사의 원문 주소·보도일을 붙인 모양(thread_web.attach_articles).
+// 8/23 은 단계 없는 칸(행에 바로), 9/18 은 단계 칸이다. 보도일은 브리핑 하루 전.
+const AUG_URL = "https://www.example.kr/news/aug-sar";
+const SEP_URL = "https://www.example.kr/news/sep-sar";
+function linkedThreads() {
+  const payload = threadsPayload();
+  const [aug, sep] = payload.threads[0].flow;
+  Object.assign(aug, { hash: "099ce0d43f46036a", url: AUG_URL, article_date: "2026-08-23" });
+  sep.stages = [{ date: "2026-09-19", title: SAR_SEP_TITLE, hash: "9e227f9daff25cd5",
+                  url: SEP_URL, article_date: "2026-09-18" }];
+  return payload;
+}
+
 // 9/18 이슈 — 선정 1건 + 추가 근거 5건. 라이브 실측 그대로다.
 function sepIssue(overrides = {}) {
   return {
@@ -150,6 +163,7 @@ function build(state) {
     ${extract("threadPeriodText")}
     ${extract("threadForIssue")}
     ${extract("threadStepSources")}
+    ${extract("safeUrl")}
     ${extract("threadFlowRows")}
     ${extract("threadStepRow")}
     ${extract("threadDialogRows")}
@@ -229,8 +243,12 @@ check("지금 보고 있는 사건은 링크가 아니다", () => {
     "8/23 으로 가는 링크가 없다");
 });
 
-check("타임라인은 **사건 링크**만 싣는다 — 남의 기사를 끌어오지 않는다", () => {
-  const html = build(defaultState()).threadDialogSection(sepIssue());
+check("타임라인은 **행마다 그 행의 기사 하나**만 싣는다 — 남의 근거를 끌어오지 않는다", () => {
+  // 2026-10-10: 행의 글이 그 행 기사의 원문으로 가게 됐다. 그 기사는 행에 이미 보이는
+  // 제목의 기사다 — 다른 사건의 근거 목록이 이 타임라인으로 새는 것은 여전히 금지다.
+  const html = build(defaultState({ threads: linkedThreads() })).threadDialogSection(sepIssue());
+  assert.deepEqual([...html.matchAll(/href="([^"]+)"/g)].map(m => m[1]).sort(), [AUG_URL, SEP_URL].sort(),
+    "행의 기사 말고 다른 원문이 붙었다");
   // 대표 기사 해시는 사건 id 안에 들어 있는 것이 정상이다(issue-<hash>). 여기서
   // 보는 것은 **근거 기사**가 남의 타임라인으로 샜는가다.
   const evidence = augIssue().related_articles
@@ -325,6 +343,62 @@ check("카탈로그에서 내려간 사건은 글자로 남고 버튼이 되지 
   assert.ok(html.includes("is-closed"), "열 수 없다는 표시가 없다");
 });
 
+console.log("행의 글은 그 행 기사로 간다 — 「이 사건의 근거」와 같은 동작·같은 날짜");
+
+check("다른 사건의 행은 기사 원문으로 가고, 그 사건의 상세는 '사건 보기'로 간다", () => {
+  const html = build(defaultState({ threads: linkedThreads() })).threadDialogSection(sepIssue());
+  assert.ok(html.includes(`href="${AUG_URL}" target="_blank" rel="noopener noreferrer">${AUG_SHOWN}</a>`),
+    "8/23 행의 제목이 기사 링크가 아니다");
+  assert.equal((html.match(new RegExp(`data-issue-id="${SAR_AUG}"`, "g")) || []).length, 1,
+    "8/23 상세로 가는 길이 없거나 둘이다");
+  assert.ok(html.includes(`class="longterm-open" data-issue-id="${SAR_AUG}"`), "'사건 보기'가 없다");
+});
+
+check("지금 보고 있는 사건의 행도 기사는 열린다 — 자기 상세 버튼은 없다", () => {
+  const html = build(defaultState({ threads: linkedThreads() })).threadDialogSection(sepIssue());
+  assert.ok(html.includes(`href="${SEP_URL}"`), "현재 사건 행이 기사로 가지 않는다");
+  assert.ok(html.includes("is-current"), "현재 사건 표시가 사라졌다");
+  assert.ok(!html.includes(`data-issue-id="${SAR_SEP}"`), "자기 자신을 여는 버튼이 생겼다");
+});
+
+check("날짜는 보도일이다 — 「이 사건의 근거」와 같은 날", () => {
+  const html = build(defaultState({ threads: linkedThreads() })).threadDialogSection(sepIssue());
+  // 구역 머리의 기간(8월 24일~)은 스토리의 브리핑 기간이라 그대로다. 행만 본다.
+  const rows = html.slice(html.indexOf("<ol"), html.indexOf("</ol>"));
+  assert.ok(rows.includes('<span title="보도일">8월 23일</span>'), "8/23 보도일이 없다");
+  assert.ok(rows.includes('<span title="보도일">9월 18일</span>'), "9/18 보도일이 없다");
+  assert.ok(!rows.includes("8월 24일") && !rows.includes("9월 19일"), "브리핑 첫 등장일이 남았다");
+});
+
+check("구역 머리의 기간도 행과 같은 날짜(보도일)로 잰다", () => {
+  const html = build(defaultState({ threads: linkedThreads() })).threadDialogSection(sepIssue());
+  assert.ok(html.includes("8월 23일 – 9월 18일 · 26일"), "머리 기간이 브리핑 첫 등장일로 남았다");
+});
+
+check("카탈로그에서 내려간 사건도 기사는 열린다 — 사건 버튼은 아니다", () => {
+  const html = build(defaultState({ threads: linkedThreads(), issues: [sepIssue()] }))
+    .threadDialogSection(sepIssue());
+  assert.ok(html.includes(`href="${AUG_URL}"`), "내려간 사건의 기사가 안 열린다");
+  assert.ok(html.includes("is-closed"), "열 수 없다는 표시가 사라졌다");
+  assert.ok(!html.includes(`data-issue-id="${SAR_AUG}"`), "열 수 없는 사건에 상세 버튼이 생겼다");
+});
+
+check("기사를 못 찾은 행은 예전 그대로다", () => {
+  const html = build(defaultState()).threadDialogSection(sepIssue());
+  assert.ok(!html.includes("is-article"), "url 없는 행이 링크가 됐다");
+  assert.ok(html.includes(`class="longterm-event" data-issue-id="${SAR_AUG}"`), "상세 버튼이 사라졌다");
+  assert.ok(html.includes('title="브리핑에 처음 오른 날"') || !html.includes('title="보도일"'),
+    "보도일이 없는데 보도일이라고 적었다");
+});
+
+check("안전하지 않은 주소는 링크가 되지 않는다", () => {
+  const payload = linkedThreads();
+  payload.threads[0].flow[0].url = "javascript:alert(1)";
+  const html = build(defaultState({ threads: payload })).threadDialogSection(sepIssue());
+  assert.ok(!html.includes("javascript:"), "위험한 주소가 그대로 나갔다");
+  assert.ok(html.includes(`class="longterm-event" data-issue-id="${SAR_AUG}"`), "예전 버튼으로 물러나지 않았다");
+});
+
 check("제목에 든 따옴표가 마크업을 깨지 않는다", () => {
   // 8/23 제목에 작은따옴표가 실제로 들어 있다 — '계절별 송전용량'.
   const html = build(defaultState()).threadDialogSection(sepIssue());
@@ -383,7 +457,7 @@ check("흐름에 현재 사건이 없으면 없다고 말한다 — 아무 행�
   assert.ok(!html.includes('<li class="is-current"'), "없는 현재 행이 생겼다");
 });
 
-check("날짜 축은 브리핑 첫 등장일 하나다 — 무슨 날짜인지는 title 로만", () => {
+check("기사를 못 찾아 브리핑 첫 등장일로 물러난 행은 그렇다고 title 로 알린다", () => {
   const html = build(defaultState({ threads: absorbedPayload() })).threadDialogSection(sepIssue());
   assert.ok(html.includes('title="브리핑에 처음 오른 날"'), "날짜 종류 안내가 없다");
 });
