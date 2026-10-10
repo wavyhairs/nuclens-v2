@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 2,
-    "date": "2026-10-10"
+    "count": 0,
+    "date": "2026-10-11"
   },
   "retired": {
     "ap1000vsapr1400": {
@@ -467,6 +467,22 @@
       "term": "본토에 한국형",
       "type": "plant",
       "until": "2026-10-16T00:41:22.412305+00:00"
+    },
+    "비스트라에너지": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-10-10T15:41:19.348561+00:00",
+      "term": "비스트라 에너지",
+      "type": "plant",
+      "until": "2026-10-24T15:41:19.348561+00:00"
+    },
+    "비스트라에너지에": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-10-10T15:41:19.348561+00:00",
+      "term": "비스트라 에너지에",
+      "type": "plant",
+      "until": "2026-10-24T15:41:19.348561+00:00"
     },
     "산업연구원": {
       "new_articles": 0,
@@ -958,8 +974,8 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-10-10"
+    "count": 3,
+    "date": "2026-10-11"
   },
   "terms": {
     "feed1": {
@@ -992,12 +1008,12 @@
       ],
       "expires_at": "2026-10-11T09:44:11.159283+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-10-10T00:41:26.975459+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-10-10T15:41:19.348497+00:00",
       "new_articles": 32,
       "origin": "auto",
-      "planned_at": "2026-10-10T00:41:23.324203+00:00",
-      "queries_run": 4,
+      "planned_at": "2026-10-10T15:41:16.088353+00:00",
+      "queries_run": 5,
       "query": "FEED 1 원자력",
       "score": 6.04,
       "status": "promote_candidate",
@@ -1010,71 +1026,7 @@
         "2026-10-10"
       ],
       "yields": 4,
-      "zero_streak": 0
-    },
-    "비스트라에너지": {
-      "articles": 1,
-      "created_at": "2026-10-09T18:23:03.513677+00:00",
-      "domains": [
-        "theguru.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "theguru.co.kr",
-          "hash": "ca7942d2e94e2755",
-          "importance": "must_read",
-          "title": "미 DOE, 비스트라 에너지에 원전 출력 증강용 42억 달러 조건부 대출 승인"
-        }
-      ],
-      "expires_at": "2026-10-10T18:23:03.513677+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-10-10T00:41:26.975459+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-10-10T00:41:23.324203+00:00",
-      "queries_run": 2,
-      "query": "비스트라 에너지 원전",
-      "score": 3.6,
-      "status": "tracking",
-      "term": "비스트라 에너지",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
-    "비스트라에너지에": {
-      "articles": 1,
-      "created_at": "2026-10-09T18:23:03.513677+00:00",
-      "domains": [
-        "theguru.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "theguru.co.kr",
-          "hash": "ca7942d2e94e2755",
-          "importance": "must_read",
-          "title": "미 DOE, 비스트라 에너지에 원전 출력 증강용 42억 달러 조건부 대출 승인"
-        }
-      ],
-      "expires_at": "2026-10-10T18:23:03.513677+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-10-10T00:41:26.975459+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-10-10T00:41:23.324203+00:00",
-      "queries_run": 2,
-      "query": "비스트라 에너지에 원전",
-      "score": 3.6,
-      "status": "tracking",
-      "term": "비스트라 에너지에",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
+      "zero_streak": 1
     },
     "정부가한미": {
       "articles": 1,
