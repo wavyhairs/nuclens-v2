@@ -201,8 +201,55 @@ def compare(cands: list[dict], first: dict[str, dict], second: dict[str, dict],
     return rows
 
 
+ACTUAL_OUTCOMES = ("selected", "duplicate", "repeat", "below_floor", "ranked_out")
+
+
+def actual_outcomes(selected: list[dict], diag: dict | None) -> dict[str, dict]:
+    """실제 선별이 후보마다 무엇을 했나 — hash → {actual, dup_of?, follow_up?}.
+
+    그림자는 선별 **전** 풀을 줄 세운다. 그래서 실제가 중복(같은 사건의 다른 기사)·
+    연속일 반복(어제 이미 보낸 사건)·하한 미달로 정당하게 뺀 기사가 그림자 상위에
+    남고, 보고서는 그것을 '그림자가 넣었을 기사'로 셌다. 첫 기록(2026-10-10)에서
+    넣음 13건 중 3건이 중복으로 빠진 must_read 였다. 여기 적은 것으로 보고서가 같은
+    사건을 하나로 묶고, 게이트를 통과한 후보끼리만 순위를 비교한다.
+
+    ``follow_up`` 은 최근 보도의 후속이라 받은 감점(음수). 빠지지는 않았지만 그림자는
+    어제 무엇이 나갔는지 모르므로 이 기사들을 그대로 올린다 — 따로 센다.
+    """
+    out: dict[str, dict] = {}
+    diag = diag if isinstance(diag, dict) else {}
+    for key, outcome in (("dropped_below_floor", "below_floor"),
+                         ("dropped_repeat", "repeat"),
+                         ("dropped_duplicates", "duplicate")):
+        for row in diag.get(key) or ():
+            h = str((row or {}).get("hash") or "")
+            # 사건을 합칠 때 대표 기사가 자기 자신을 짝으로 남긴다(dup_of == hash).
+            # 그건 중복이 아니라 대표다 — 10/10 비스트라 대표는 그 뒤 반복으로 빠졌다.
+            if key == "dropped_duplicates" and str(row.get("dup_of") or "") == h:
+                continue
+            if h:
+                out[h] = {"actual": outcome}
+                if outcome == "duplicate" and row.get("dup_of"):
+                    out[h]["dup_of"] = str(row["dup_of"])
+    for h, parts in (diag.get("breakdowns") or {}).items():
+        if not isinstance(parts, dict):
+            continue
+        penalty = sum(float(value) for name, value in parts.items()
+                      if str(name).startswith("continuity:")
+                      and isinstance(value, (int, float)) and value < 0)
+        if penalty:
+            out.setdefault(str(h), {})["follow_up"] = round(penalty, 2)
+    for article in selected:
+        h = str(article.get("hash") or "")
+        if h:
+            out.setdefault(h, {}).update({"actual": "selected"})
+            out[h].pop("dup_of", None)
+    return out
+
+
 def run(region: str, pool: list[dict], selected: list[dict], scores: dict[str, float],
-        today: str, *, call=None, top_n: int = TOP_N, now: datetime | None = None) -> dict:
+        today: str, *, call=None, top_n: int = TOP_N, now: datetime | None = None,
+        diag: dict | None = None) -> dict:
     """한 지역의 그림자 기록 한 벌. 절대 raise 하지 않는다."""
     record: dict = {
         "record_type": "shadow_rank",
@@ -218,6 +265,10 @@ def run(region: str, pool: list[dict], selected: list[dict], scores: dict[str, f
         "boundary": [],
         "reask": [],
         "error": None,
+        # 실제 선정 전체(후보 30건 밖에서 대표로 올라온 기사까지)와, 행마다 실제 결과를
+        # 적었는지. 2026-10-10 기록은 이 필드 없이 쌓였다(보고서는 '사유 미기록').
+        "selected_hashes": [str(a.get("hash") or "") for a in selected],
+        "actual_recorded": diag is not None,
     }
     try:
         record["model"] = llm_policy.profile("shadow_rank").model()
@@ -231,6 +282,10 @@ def run(region: str, pool: list[dict], selected: list[dict], scores: dict[str, f
         second = rank_once(cands, seed=2, call=call)
         record["calls"] += 1
         rows = compare(cands, first, second, selected, scores)
+        if diag is not None:
+            outcomes = actual_outcomes(selected, diag)
+            for row in rows:
+                row.update({"actual": "ranked_out", **outcomes.get(row["hash"], {})})
         record["rows"] = rows
         boundary = [r for r in rows if r["boundary"]]
         # 경계 중에서도 실제 선정 경계(k)에 가까운 것부터 재질문한다.
@@ -279,17 +334,21 @@ def append_log(records: list[dict], path: Path | None = None) -> int:
     return added
 
 
-def run_all(today: str, regions: dict[str, tuple[list[dict], list[dict], dict[str, float]]],
-            *, call=None) -> list[dict]:
-    """{지역: (풀, 선정, 점수)} → 레코드 목록. 꺼져 있거나 키가 없으면 빈 목록."""
+def run_all(today: str, regions: dict[str, tuple], *, call=None) -> list[dict]:
+    """{지역: (풀, 선정, 점수[, 진단])} → 레코드 목록. 꺼져 있거나 키가 없으면 빈 목록.
+
+    진단(``ranking.rank_and_select`` 의 diag)을 주면 행마다 실제 결과를 적는다.
+    """
     if not enabled():
         return []
     if call is None and not gemini_client.is_available():
         print("[shadow_rank] Gemini 키 없음 — 건너뜀")
         return []
     records: list[dict] = []
-    for region, (pool, selected, scores) in regions.items():
-        record = run(region, pool, selected, scores, today, call=call)
+    for region, spec in regions.items():
+        pool, selected, scores = spec[:3]
+        diag = spec[3] if len(spec) > 3 else None
+        record = run(region, pool, selected, scores, today, call=call, diag=diag)
         records.append(record)
         if record["error"]:
             print(f"[shadow_rank] {region}: 실패 — {record['error']}")

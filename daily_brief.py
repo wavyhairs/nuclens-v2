@@ -1131,8 +1131,8 @@ def plan_briefs(queue: list[dict],
     # 따로 받아 outbox 에 싣는다. cmd_plan 이 shadow_rank_log.jsonl 로 옮긴다.
     # 어떤 실패도 레코드의 error 로만 남는다 — 여기서 예외가 나면 그 자체가 버그다.
     shadow_records = shadow_rank.run_all(today, {
-        "국내": (dom_pool, dom, dom_diag.get("scores") or {}),
-        "해외": (forn_pool, forn, forn_diag.get("scores") or {}),
+        "국내": (dom_pool, dom, dom_diag.get("scores") or {}, dom_diag),
+        "해외": (forn_pool, forn, forn_diag.get("scores") or {}, forn_diag),
     })
 
     # 1번 자리는 그날 소식에만 준다 — 날짜를 단 묵은 must_read 가 1위면 새 기사를 앞으로.
