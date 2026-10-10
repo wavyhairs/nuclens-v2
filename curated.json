@@ -494881,32 +494881,55 @@
     "published_at": "2026-10-10T21:00:00+00:00"
   },
   "9938493ec210a996": {
+    "features": {
+      "event_type": "project_milestone",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "발전은 티벳, 사용은 광둥…2700㎞ 전력망 건설하는 중국",
-    "summary": "지난 달 29일 윈난 구간이 전면 착공하면서 시짱~광둥 간 전체 송전망 건설이 본격적인 시공 단계에 들어갔다.",
-    "implication": "",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "power_market"
+    ],
+    "countries": [
+      "CN"
+    ],
+    "article_type": "news",
+    "title_kr": "중국, 티벳~광둥 2700km 특고압 직류송전망 건설 본격화",
+    "summary": "중국이 티벳의 청정에너지를 광둥으로 보내는 2681km 규모의 ±800kV 특고압 직류송전 프로젝트를 본격 착공함.",
+    "detail": "",
+    "implication": "대규모 재생에너지 단지와 수요지를 연결하는 특고압 직류송전 기술은 향후 국가 간 또는 광역 단위 전력망 구축의 표준 모델로 활용될 가능성이 크다.",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#송전망",
+      "#중국",
+      "#에너지인프라"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-10-10T21:38:58.664833+00:00",
+    "topic_verdict": "adjacent",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-10T21:52:06.284093+00:00",
     "title": "발전은 티벳, 사용은 광둥…2700㎞ 전력망 건설하는 중국",
     "link": "https://www.mt.co.kr/world/2026/10/11/2026100716571343003",
     "feed": "정책",
     "domain": "mt.co.kr",
     "matched": "송전망 건설",
-    "source_excerpt": "지난 달 29일 윈난 구간이 전면 착공하면서 시짱~광둥 간 전체 송전망 건설이 본격적인 시공 단계에 들어갔다. 지난 1월에는 광둥성 후이저우에서 전 구간 첫 기초 공사가 시작됐고, 6월에는 시짱 린즈시 차와룽향에서...",
-    "published_at": "2026-10-10T21:00:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "9938493ec210a996",
@@ -494990,7 +495013,8 @@
       "source_excerpt": "17127cb1651cb914ecbf6cba7dfd453aca53daa7e6331695e38bafe86b560f14",
       "published_at": "393b96673a351d4b692008752346691233c5ccad523b9f11179f828de4df58c1"
     },
-    "hash": "9938493ec210a996"
+    "hash": "9938493ec210a996",
+    "published_at": "2026-10-10T21:00:00+00:00"
   },
   "cfe4561f5df1bd65": {
     "features": {
@@ -495587,5 +495611,484 @@
     },
     "hash": "a445c2d5cf7ba76b",
     "published_at": "2026-10-10T21:36:00+00:00"
+  },
+  "7f2e6d71140e7a8a": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "CA"
+    ],
+    "article_type": "news",
+    "title_kr": "캘거리 러프넥스, 릴 게임 결과 확인 단계 안내",
+    "summary": "캘거리 러프넥스(Calgary Roughnecks)가 릴 게임 종료 후 결과 확인 단계를 진행함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "off_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-10T21:52:06.284093+00:00",
+    "title": "릴이 멈춘 뒤 이어지는 다재 다복 결과 확인 단계",
+    "link": "https://news.google.com/rss/articles/CBMivgFBVV95cUxQTUt5bVlZcHY0SmMyTEhjXzZtMndrVW0yTGVGY3FYTW55d3BNcHNxYlVXTHN5eWhTQWM5MlFYT2lFUU1MMF9idmg2X2I3UjhSMDI2UW1vVjVGN0dxc1FrVl90b2l2dDBzRGdDZ19Nb0Q4Tlp4ckxUek15Vm1hUWZZek03MGl5T0hnSmpVR0xQb3BsS252WTdMV1VDMG9UUU1QTkJIR3NFM2d4RkhvREZyYy1taXI2dzR4QjdidHpn?oc=5",
+    "feed": "정책",
+    "domain": "calgaryroughnecks.com",
+    "matched": "국내 원자력 보도",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "7f2e6d71140e7a8a",
+      "source_components": {
+        "article_hash": "7f2e6d71140e7a8a",
+        "title": "8c66f5833bc5337d86306a1c9bd564d9f6db1b1d86afae676e5b364a89143ced",
+        "source_excerpt": "bb0d888ee734a0f0a926e49ea0b7c25ef88c1be2a5c7484359c65e0c4a549e13",
+        "published_at": "436838489ec0bc829ed552b202d8a60d8cf96c1430df32b5c150095cef6f764f"
+      },
+      "source_fingerprint": "ef32484fc100344e8637a6870849ba0ce95071804cbcecf5e1a54e6ac4dbde0e",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [],
+      "claims": [],
+      "quantities": {},
+      "quantity_rules": 3,
+      "manifest_fingerprint": "826b737b5e96ea815b32f7332e462979cd7df1a9003a38bf24158c1581d487dd"
+    },
+    "verified_source_components": {
+      "article_hash": "7f2e6d71140e7a8a",
+      "title": "8c66f5833bc5337d86306a1c9bd564d9f6db1b1d86afae676e5b364a89143ced",
+      "source_excerpt": "bb0d888ee734a0f0a926e49ea0b7c25ef88c1be2a5c7484359c65e0c4a549e13",
+      "published_at": "436838489ec0bc829ed552b202d8a60d8cf96c1430df32b5c150095cef6f764f"
+    },
+    "hash": "7f2e6d71140e7a8a",
+    "published_at": "2026-10-10T00:20:37+00:00"
+  },
+  "781bb64826ee7db0": {
+    "features": {
+      "event_type": "research_report",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [
+      "power_market"
+    ],
+    "countries": [
+      "GLOBAL"
+    ],
+    "article_type": "report",
+    "title_kr": "IEA, 아세안 전력망 확충에 2040년까지 3000억 달러 전망",
+    "summary": "IEA는 10월 6일 발표한 보고서에서 아세안 지역의 냉방·산업·데이터센터 수요 급증으로 2040년까지 전력망 현대화에 3000억 달러가 필요하다고 추산함.",
+    "detail": "국제에너지기구(IEA)는 10월 6일 발표한 ‘아세안 에너지 안보 리뷰’를 통해 동남아시아의 전력 수요가 2026~2030년 연평균 5.4% 증가할 것으로 전망했다. 보고서는 냉방 수요와 산업화, 데이터센터 확충이 전력 소비 증가를 주도할 것으로 분석했다. 이에 따라 2025년부터 2040년까지 전력망 확충 및 현대화에 최소 3000억 달러(약 40조 원) 이상의 투자가 필요할 것으로 추산했다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#전력망",
+      "#아세안",
+      "#에너지안보"
+    ],
+    "related_reports": [],
+    "event_date": "2026-10-06",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-10T21:52:06.284093+00:00",
+    "title": "[모닝 뉴스브리핑] PERM 중단에 MS 등 8곳 영향 外",
+    "link": "https://www.tokenpost.kr/news/briefing/420961",
+    "feed": "정책",
+    "domain": "tokenpost.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "781bb64826ee7db0",
+      "source_components": {
+        "article_hash": "781bb64826ee7db0",
+        "title": "7cf2eedac0e13f316e63c3d6d8c5e4781249628ba29e999d18dbedeea0eef0f6",
+        "source_excerpt": "621423158813faef333188f4fa9b382ba5472c201acb3063037d123ee37a9666",
+        "published_at": "31a4d47f09efa3c1ef1a68fbddcd43f29056d276ac7b045c8728f275f9f2e6fa"
+      },
+      "source_fingerprint": "c52014b8920e85fae447a5fee313f578a7385547d2ddb75ea0b01cd90b4e0560",
+      "entities": [
+        "iea"
+      ],
+      "countries": [
+        "US"
+      ],
+      "topics": [
+        "grid"
+      ],
+      "stages": [
+        "application",
+        "approval"
+      ],
+      "claims": [
+        "10월",
+        "6일",
+        "2040년",
+        "3000억달러",
+        "40조원",
+        "8개",
+        "8일",
+        "10일",
+        "2030년",
+        "5.4%",
+        "11일",
+        "7일",
+        "6140건",
+        "813건",
+        "6개월",
+        "2025년",
+        "190억달러",
+        "5000억원",
+        "47.2%",
+        "30일",
+        "1614억달러",
+        "5988억원",
+        "2028년",
+        "seal911"
+      ],
+      "quantities": {
+        "%": [
+          "11.5",
+          "20.7",
+          "47.2",
+          "5.4"
+        ],
+        "개": [
+          "6",
+          "8"
+        ],
+        "건": [
+          "6140",
+          "813"
+        ],
+        "년": [
+          "1",
+          "2025",
+          "2026",
+          "2028",
+          "2030",
+          "2040"
+        ],
+        "달러": [
+          "161400000000",
+          "19000000000",
+          "300000000000"
+        ],
+        "억원": [
+          "5000",
+          "5988"
+        ],
+        "월": [
+          "10"
+        ],
+        "일": [
+          "10",
+          "11",
+          "30",
+          "6",
+          "7",
+          "8"
+        ],
+        "조원": [
+          "40"
+        ]
+      },
+      "quantity_rules": 3,
+      "verified_event_date": {
+        "value": "2026-10-06",
+        "type": "announcement",
+        "precision": "day",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "94d15c6430a6b2b01ab4758e02a3acac66dc64310bea576e4cd4ea95eccb1007"
+    },
+    "verified_source_components": {
+      "article_hash": "781bb64826ee7db0",
+      "title": "7cf2eedac0e13f316e63c3d6d8c5e4781249628ba29e999d18dbedeea0eef0f6",
+      "source_excerpt": "621423158813faef333188f4fa9b382ba5472c201acb3063037d123ee37a9666",
+      "published_at": "31a4d47f09efa3c1ef1a68fbddcd43f29056d276ac7b045c8728f275f9f2e6fa"
+    },
+    "hash": "781bb64826ee7db0",
+    "published_at": "2026-10-10T20:02:00+00:00"
+  },
+  "f03e635259ba383a": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "미국 중간선거 앞두고 에너지 가격 및 AI 전력망 이슈 부상",
+    "summary": "미국 중간선거를 앞두고 에너지 가격과 AI 데이터센터의 전력망 영향이 주요 정치적 이슈로 부상함.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#미국",
+      "#에너지가격",
+      "#데이터센터"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-10T21:52:06.284093+00:00",
+    "title": "미국 11월 중간선거 이슈는 '에너지 가격', 트럼프 AI 정책과 이란 전쟁...",
+    "link": "https://www.businesspost.co.kr/BP?command=article_view&num=448928",
+    "feed": "정책",
+    "domain": "businesspost.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "f03e635259ba383a",
+      "source_components": {
+        "article_hash": "f03e635259ba383a",
+        "title": "18efa5018b06601ad856501edd0f6f0ce88e48a560406a8d3f54b7eebc83eae0",
+        "source_excerpt": "7558358215c761dc48a3ed3e98f6d451bc9ebc17ea74763f1f6d899588bae8a1",
+        "published_at": "f082ea893b19921f95c9a02d109dd63ec6dacc16b444bb7693e030d97f39e960"
+      },
+      "source_fingerprint": "5b6d8cfa3619f6dbf54a9582476b19c0f2135e04e341a54d7e6494c35b4554f9",
+      "entities": [],
+      "countries": [
+        "US"
+      ],
+      "topics": [
+        "grid"
+      ],
+      "stages": [
+        "approval"
+      ],
+      "claims": [
+        "11월"
+      ],
+      "quantities": {
+        "월": [
+          "11"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "61be2303a18a75ee24a7723511048307fe7311e24e626e5cb4ec4a92f7af7734"
+    },
+    "verified_source_components": {
+      "article_hash": "f03e635259ba383a",
+      "title": "18efa5018b06601ad856501edd0f6f0ce88e48a560406a8d3f54b7eebc83eae0",
+      "source_excerpt": "7558358215c761dc48a3ed3e98f6d451bc9ebc17ea74763f1f6d899588bae8a1",
+      "published_at": "f082ea893b19921f95c9a02d109dd63ec6dacc16b444bb7693e030d97f39e960"
+    },
+    "hash": "f03e635259ba383a",
+    "published_at": "2026-10-10T21:02:00+00:00"
+  },
+  "6c050f07b7feaaef": {
+    "features": {
+      "event_type": "contract_award",
+      "korea_relevance": 3,
+      "market_materiality": 3,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 3
+    },
+    "importance": "must_read",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "newbuild"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "policy",
+    "title_kr": "한미 원전 프레임워크 합의…미국 내 한국형 원전 2기 건설 추진",
+    "summary": "미국에 대형 원전 8기를 건설하는 한미 원전 협력 구상이 발표된 가운데, 한국형 원전 2기 건설과 웨스팅하우스 지분 5~10% 인수 추진 방안이 포함됐다.",
+    "detail": "한미 양국은 2000억달러 규모의 대미 전략투자기금 중 1200억달러를 투입해 미국에 대형 원전 8기를 건설하는 방안에 큰 틀에서 합의했다. 이 중 2기는 한국형 원전 APR1400, 6기는 웨스팅하우스 AP1000 노형으로 추진된다. 또한 한국전력·한수원과 웨스팅하우스 간 지식재산권 타협협정 개정을 추진하며, 한국은 웨스팅하우스 지분 5~10%를 인수하는 방안도 추진하기로 했다.",
+    "implication": "미국 내 원전 확대를 위한 시공 역량과 한국의 자본·공급망 필요성이 맞물리며 지식재산권 협정 개정과 지분 인수 추진의 돌파구가 마련됐다.",
+    "why_important": "미국 시장 진출이 제약되던 한국형 원전의 본토 건설 추진과 핵심 기업 지분 참여가 공식화되면서 한미 원전 협력이 실질적 이행 단계로 진전됐다.",
+    "why_short": "",
+    "open_question": "지식재산권 협정 개정의 구체적인 범위와 후속 투자 일정은 아직 확정되지 않았다.",
+    "open_question_source": "article_text",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#한미원전협력",
+      "#APR1400",
+      "#웨스팅하우스"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-10T21:52:06.284093+00:00",
+    "title": "한국형 원전 2기 미국에 짓는다…웨스팅하우스 지분까지 확보",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=494114",
+    "feed": "정책",
+    "domain": "pinpointnews.co.kr",
+    "matched": "한미 원자력협정",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "6c050f07b7feaaef",
+      "source_components": {
+        "article_hash": "6c050f07b7feaaef",
+        "title": "837ee86e1c7e478990fafe7072d291681226843cc488bb73c0f169ce25635658",
+        "source_excerpt": "3a3762a4f688e88bdcc02e56a860940cbcde46b55d305a4182480bf62245957e",
+        "published_at": "31901d49aad5bc747924fe217edd60691e4677f797f29900c20e915dfb1c65a9"
+      },
+      "source_fingerprint": "5b60ab21997b7fcf7df60b0263c8ba70ae32f601aa2e8c2f289bce92090fa812",
+      "entities": [
+        "cameco",
+        "kepco",
+        "khnp",
+        "westinghouse"
+      ],
+      "countries": [
+        "CA",
+        "JP",
+        "KR",
+        "US"
+      ],
+      "topics": [
+        "fuel_supply",
+        "reactor_project"
+      ],
+      "stages": [
+        "approval",
+        "review",
+        "shutdown"
+      ],
+      "claims": [
+        "2기",
+        "8기",
+        "11일",
+        "2000억달러",
+        "60%",
+        "1200억달러",
+        "6기",
+        "10%",
+        "51%",
+        "49%",
+        "100%",
+        "10월",
+        "800억달러",
+        "175억달러",
+        "20%",
+        "500억달러",
+        "65억달러",
+        "apr1400",
+        "ap1000"
+      ],
+      "quantities": {
+        "%": [
+          "10",
+          "100",
+          "20",
+          "49",
+          "51",
+          "60"
+        ],
+        "기": [
+          "2",
+          "6",
+          "8"
+        ],
+        "달러": [
+          "120000000000",
+          "17500000000",
+          "200000000000",
+          "50000000000",
+          "6500000000",
+          "80000000000"
+        ],
+        "월": [
+          "10"
+        ],
+        "일": [
+          "11"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "49a9a53d7135a7650cd823bd63ae2257d83f3b08208437cc13cd3ecdea855646"
+    },
+    "verified_source_components": {
+      "article_hash": "6c050f07b7feaaef",
+      "title": "837ee86e1c7e478990fafe7072d291681226843cc488bb73c0f169ce25635658",
+      "source_excerpt": "3a3762a4f688e88bdcc02e56a860940cbcde46b55d305a4182480bf62245957e",
+      "published_at": "31901d49aad5bc747924fe217edd60691e4677f797f29900c20e915dfb1c65a9"
+    },
+    "hash": "6c050f07b7feaaef",
+    "published_at": "2026-10-10T21:24:00+00:00",
+    "summary_repair": {
+      "at": "2026-10-10T21:52:06.284093+00:00",
+      "note": "사실검사 모순[detail]: 요약이 '한국은 웨스팅하우스 지분 5~10% 인수 및 지식재산권 타협협정(SA) 개정에 합의했다.' 라고 썼으나 원문은 '한국은 웨스팅하우스 지분 5~10%를 인수하는 방안도 추진한다.' — 원문은 지분 인수를 '추진한다'고 하였고, 지식재산권 타협협정(SA)도 '개정하기로 했다' 또는 개정이 추진되는 단계이나 요약 상세에서는 '합의했다'고 확정적으로 표현함. 다만 지식재산권 협정 개정 외에 지분 인수 추진 주체에서 '합의'와 '추진'의 차이가 있음. 특히 원문은 2000억달러 규모의 대미 전략투자기금",
+      "before": {
+        "title_kr": "한미, 미국 내 신규 원전 8기 건설 및 한국형 원전 2기 도입 합의",
+        "summary": "한미 양국이 총 2000억 달러 규모의 전략투자기금을 통해 미국 내 대형 원전 8기 건설에 합의했으며, 이 중 2기는 한국형 APR1400으로 추진됨."
+      }
+    }
   }
 }
