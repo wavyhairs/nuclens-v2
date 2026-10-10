@@ -3302,7 +3302,14 @@ function threadForIssue(issue) {
   // 화면이 스스로 다시 재는 가시성 판정을 그대로 탄다. 판정 그래프가 반쪽인
   // 회차·배포가 멈춘 CDN 에서는 장기 스토리 화면과 **같이** 사라진다.
   if (!longTermVisible(state.threads)) return null;
-  const threadId = resolveThreadId(issue?.thread_id || "");
+  // 지난 브리핑에서 연 이슈는 그날의 모양(briefings.json)이라 스토리 주소 칸이 없다 —
+  // 빌드는 그 칸을 이슈 목록(issues.json)에만 찍는다(build_data.stamp_thread_ids).
+  // 그래서 날짜가 지나는 순간 같은 이슈의 타임라인이 사라졌다(실측 2026-10-10: 지난
+  // 브리핑 이슈 440건, 「원안위, 한울 4호기 재가동 승인」이 10/8 화면에서 흐름을 잃음).
+  // 같은 issue_id 의 목록 쪽 주소를 쓴다 — 흐름은 사건 계층이라 그날 모양과 무관하다.
+  const listed = issue?.thread_id ? null
+    : (state.issues || []).find(candidate => candidate.issue_id === issue?.issue_id);
+  const threadId = resolveThreadId(issue?.thread_id || listed?.thread_id || "");
   if (!threadId) return null;
   return longTermThreads().find(thread => thread.thread_id === threadId) || null;
 }

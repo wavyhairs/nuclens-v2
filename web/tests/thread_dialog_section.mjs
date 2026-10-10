@@ -308,9 +308,19 @@ check("2단계 부팅 전(threads 미도착)에는 조용히 없다", () => {
   assert.equal(build(defaultState({ threads: null })).threadDialogSection(sepIssue()), "");
 });
 
-check("thread_id 가 없는 이슈는 구역을 세우지 않는다", () => {
+check("어디에도 스토리가 없는 이슈는 구역을 세우지 않는다", () => {
   const lone = sepIssue({ thread_id: "" });
-  assert.equal(build(defaultState()).threadDialogSection(lone), "");
+  const state = defaultState({ issues: [lone, augIssue()] });
+  assert.equal(build(state).threadDialogSection(lone), "");
+});
+
+check("지난 브리핑에서 연 이슈도 타임라인이 있다 — 스토리 주소는 목록 쪽에서 찾는다", () => {
+  // 2026-10-10 라이브: briefings.json 의 이슈에는 thread_id 칸이 없어, 10/8 브리핑에서 연
+  // 「원안위, 한울 4호기 재가동 승인」이 8/20 자동정지부터의 흐름을 잃었다(지난 브리핑 440건).
+  const { thread_id: _dropped, ...pastBriefing } = sepIssue();
+  const html = build(defaultState()).threadDialogSection(pastBriefing);
+  assert.ok(html.includes("주요 사건 타임라인"), "지난 브리핑 이슈에서 타임라인이 빠졌다");
+  assert.ok(html.includes(AUG_SHOWN), "앞선 사건(8/23)이 없다");
 });
 
 check("원장에 없는 thread_id 를 들고 와도 죽지 않는다", () => {
