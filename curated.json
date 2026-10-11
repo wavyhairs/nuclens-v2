@@ -492461,32 +492461,56 @@
     "published_at": "2026-10-11T15:42:00+00:00"
   },
   "52fde51600afefc3": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "민주당 이기면 ‘재생에너지’ 공화당 수성 땐 ‘금융’",
-    "summary": "한편 선거 결과와 상관없이 트럼프 행정부의 관세 부과와 수출 통제 기조는 지속될 전망이다.",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "power_market",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "analysis",
+    "title_kr": "미국 중간선거 결과에 따른 에너지·금융 섹터별 증시 영향 전망",
+    "summary": "미국 중간선거 결과에 따라 민주당 압승 시 재생에너지, 공화당 수성 시 원자력과 금융주가 수혜를 입을 것으로 분석됐다.",
+    "detail": "모건스탠리와 JP모간의 보고서에 따르면, 민주당이 의회를 장악할 경우 재생에너지와 바이오주가 유망하며, 공화당이 양원을 수성할 경우 규제 완화로 원자력, 화석연료, 금융, 방산 섹터가 우호적인 환경을 맞이할 것으로 평가됐다. 의회 분할 시에는 데이터센터 리츠가 대안으로 제시되었다. 선거 결과와 무관하게 트럼프 행정부의 관세 및 수출 통제 기조는 지속될 전망이다.",
     "implication": "",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#미국선거",
+      "#에너지정책",
+      "#원자력"
+    ],
     "related_reports": [],
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "cached_at": "2026-10-11T18:39:04.255414+00:00",
+    "event_date": "2026-11-03",
+    "event_date_type": "scheduled",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-11T19:33:29.666249+00:00",
     "title": "민주당 이기면 ‘재생에너지’ 공화당 수성 땐 ‘금융’",
     "link": "https://www.joongang.co.kr/article/25468809",
     "feed": "정책",
     "domain": "joongang.co.kr",
     "matched": "원자력 수출통제",
-    "source_excerpt": "이 경우 화석연료와 원자력, 뱅크오브아메리카 등 금융주, 록히드마틴 등 방산주, 연료전지 기업... 한편 선거 결과와 상관없이 트럼프 행정부의 관세 부과와 수출 통제 기조는 지속될 전망이다. 모건스탠리는 민주당이...",
-    "published_at": "2026-10-11T16:00:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "52fde51600afefc3",
@@ -492540,7 +492564,13 @@
         ]
       },
       "quantity_rules": 3,
-      "manifest_fingerprint": "d565c0b7efa4657d2dc482574f66e9e67757292da44f6facc5efc51bfbbe2e0c"
+      "verified_event_date": {
+        "value": "2026-11-03",
+        "type": "scheduled",
+        "precision": "day",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "68c228872025e8471be37b819c370c3a3f3e9a92031c73567a9a42b1549fcfe1"
     },
     "verified_source_components": {
       "article_hash": "52fde51600afefc3",
@@ -492548,7 +492578,8 @@
       "source_excerpt": "70c0e7dd532e8c964d475a13f0cb0b3bc0a59f79083b1c0927e15964e03ddc7d",
       "published_at": "c146b92b79835f8ece2e5917df05de7a6d27b959b7b072b1ceb4f0eeaaa683bc"
     },
-    "hash": "52fde51600afefc3"
+    "hash": "52fde51600afefc3",
+    "published_at": "2026-10-11T16:00:00+00:00"
   },
   "2d27226ab3caa56f": {
     "features": {
@@ -492849,5 +492880,415 @@
     },
     "hash": "93b1dbbb1d6f3782",
     "published_at": "2026-10-11T17:42:00+00:00"
+  },
+  "04cad652655fb5e1": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "finance"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "코스피 박스권 장세 지속…실적시즌 및 미 중간선거 변수 주목",
+    "summary": "코스피가 금리와 지정학적 리스크로 박스권에 머무는 가운데, 전문가들은 미 물가지표와 기업 실적 발표를 주시할 것을 조언했다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-11T19:33:29.666249+00:00",
+    "title": "박스피 고차방정식… '실적시즌'에 풀릴까",
+    "link": "https://www.mt.co.kr/stock/2026/10/12/2026101119430475445",
+    "feed": "정책",
+    "domain": "mt.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "04cad652655fb5e1",
+      "source_components": {
+        "article_hash": "04cad652655fb5e1",
+        "title": "11b48bc70714b4b7546f0e0eb5f8e85700c0969702d7a43a86be026b87d60eb2",
+        "source_excerpt": "a093e9df4e130491742c7b529cf0525c125c3698cb81389f927418b8752d0f00",
+        "published_at": "07861213a4089fa30a6ab1feef6c3f028a6a8fd9ad8e75c20c5381b245c8dc76"
+      },
+      "source_fingerprint": "2761e67435b6245d47d92bd6d44cb3ddcf00e8984ad788a609fa553d553c69b9",
+      "entities": [],
+      "countries": [
+        "KR",
+        "US"
+      ],
+      "topics": [],
+      "stages": [
+        "contract",
+        "review"
+      ],
+      "claims": [
+        "11일",
+        "8일",
+        "5.39%",
+        "4823억원",
+        "4692억원",
+        "106.7%",
+        "83.3%",
+        "9월",
+        "14일",
+        "15일",
+        "8월",
+        "12개월"
+      ],
+      "quantities": {
+        "%": [
+          "106.7",
+          "5.39",
+          "83.3"
+        ],
+        "개": [
+          "12"
+        ],
+        "억원": [
+          "3591",
+          "3887",
+          "4692",
+          "4823"
+        ],
+        "월": [
+          "8",
+          "9"
+        ],
+        "일": [
+          "11",
+          "14",
+          "15",
+          "8"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "d036fae2f9e20bf2c4cb2e2655915e15d1667ebbde9e23a227fdbc9fa273b83c"
+    },
+    "verified_source_components": {
+      "article_hash": "04cad652655fb5e1",
+      "title": "11b48bc70714b4b7546f0e0eb5f8e85700c0969702d7a43a86be026b87d60eb2",
+      "source_excerpt": "a093e9df4e130491742c7b529cf0525c125c3698cb81389f927418b8752d0f00",
+      "published_at": "07861213a4089fa30a6ab1feef6c3f028a6a8fd9ad8e75c20c5381b245c8dc76"
+    },
+    "hash": "04cad652655fb5e1",
+    "published_at": "2026-10-11T19:00:00+00:00"
+  },
+  "7082ae8c43cd171e": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "기술",
+    "topics": [],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "휴머노이드 로봇 D램 수요 급증 및 국내 기업 기술 수출 동향",
+    "summary": "휴머노이드 로봇 산업의 성장으로 2030년 D램 수요가 20배 증가할 전망이며, 바디프랜드 등 국내 기업의 기술 수출이 확대되고 있다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-11T19:33:29.666249+00:00",
+    "title": "[출근길 포인트] 휴머노이드 로봇용 D램 수요 2030년 20배로…삼성·SK 새...",
+    "link": "https://www.pointdaily.co.kr/news/articleView.html?idxno=321826",
+    "feed": "정책",
+    "domain": "pointdaily.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "7082ae8c43cd171e",
+      "source_components": {
+        "article_hash": "7082ae8c43cd171e",
+        "title": "76f79205e77cfaf91179af8a6ba03938cf12f70da9f28457b2c2ba777ecb7818",
+        "source_excerpt": "fc9098411f28c5ae9963791d621f16ba0bec249b12fb8c6330bd2c3aaa7af935",
+        "published_at": "07861213a4089fa30a6ab1feef6c3f028a6a8fd9ad8e75c20c5381b245c8dc76"
+      },
+      "source_fingerprint": "433c1c1c6786003b992979b594ba3ccb9934bff6552330a3e52fe59e601799d8",
+      "entities": [],
+      "countries": [
+        "FR",
+        "KR",
+        "US"
+      ],
+      "topics": [
+        "safety"
+      ],
+      "stages": [
+        "approval",
+        "incident",
+        "review"
+      ],
+      "claims": [
+        "2030년",
+        "11일",
+        "19기",
+        "30일",
+        "2016년",
+        "4월",
+        "7월",
+        "10일",
+        "11월",
+        "6개",
+        "2023년",
+        "115억원",
+        "2년",
+        "8월",
+        "5319건",
+        "1626건",
+        "2976건",
+        "2882건",
+        "564건",
+        "2024년",
+        "112건",
+        "4년",
+        "1개",
+        "3월",
+        "12일",
+        "10월",
+        "9일",
+        "100년",
+        "200년",
+        "2021년",
+        "141%",
+        "72%",
+        "85%",
+        "6545개",
+        "6090개",
+        "93%"
+      ],
+      "quantities": {
+        "%": [
+          "141",
+          "72",
+          "85",
+          "93"
+        ],
+        "개": [
+          "1",
+          "33",
+          "39",
+          "6",
+          "6090",
+          "6545"
+        ],
+        "건": [
+          "112",
+          "1626",
+          "2882",
+          "2976",
+          "5319",
+          "564",
+          "717",
+          "803",
+          "949"
+        ],
+        "기": [
+          "19"
+        ],
+        "년": [
+          "100",
+          "2",
+          "200",
+          "2016",
+          "2021",
+          "2023",
+          "2024",
+          "2026",
+          "2030",
+          "4"
+        ],
+        "억원": [
+          "115",
+          "450"
+        ],
+        "월": [
+          "10",
+          "11",
+          "3",
+          "4",
+          "7",
+          "8"
+        ],
+        "일": [
+          "10",
+          "11",
+          "12",
+          "30",
+          "9"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "8b4ff2e6b240c6b2aeffdc659028d5b362535d53c26c5092acfdde9f753a93a5"
+    },
+    "verified_source_components": {
+      "article_hash": "7082ae8c43cd171e",
+      "title": "76f79205e77cfaf91179af8a6ba03938cf12f70da9f28457b2c2ba777ecb7818",
+      "source_excerpt": "fc9098411f28c5ae9963791d621f16ba0bec249b12fb8c6330bd2c3aaa7af935",
+      "published_at": "07861213a4089fa30a6ab1feef6c3f028a6a8fd9ad8e75c20c5381b245c8dc76"
+    },
+    "hash": "7082ae8c43cd171e",
+    "published_at": "2026-10-11T19:00:00+00:00"
+  },
+  "b1d97c9282f3c693": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "미국 중간선거 앞두고 AI 데이터센터 건설 인허가 논란 부상",
+    "summary": "미국 중간선거를 앞두고 AI 데이터센터가 국가 필수 인프라와 혐오시설이라는 양면적 평가를 받으며 핵심 쟁점으로 떠올랐다.",
+    "detail": "트럼프 행정부는 데이터센터를 AI 산업의 필수 인프라로 규정하고 지원하고 있으나, 전력 소비 급증과 환경 문제로 인해 뉴욕주 등 일부 지역에서는 인허가 중단 조치를 내리는 등 갈등이 심화되고 있다. IEA는 데이터센터 전력 소비량이 2030년까지 426TWh로 133% 증가할 것으로 전망했다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#데이터센터",
+      "#전력수요",
+      "#미국정책"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-11T19:33:29.666249+00:00",
+    "title": "‘경제 성장동력’ vs ‘혐오시설’… 美중간선거 AI데이터센터 논란",
+    "link": "https://www.donga.com/news/Inter/article/all/20261011/134822340/2",
+    "feed": "discovery:iea",
+    "domain": "donga.com",
+    "matched": "국제에너지기구 허가",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "b1d97c9282f3c693",
+      "source_components": {
+        "article_hash": "b1d97c9282f3c693",
+        "title": "00db3d59fd6c62680588c0e6e39b0dcf8a44358aa98597409c4f354e51b14724",
+        "source_excerpt": "dcfb11704b642eaa085601996eefd30de3bf7c8bf4f9d2b3780371ba2ce5c25c",
+        "published_at": "bf89d259aa46b150f3eb7b482eab5c63e9f464c4bb23d3f19f995587df4f8f69"
+      },
+      "source_fingerprint": "cfd1d91a5a8a2daff50e9e826baca09cab122a3e445bf6a1e8f5f46289089cb1",
+      "entities": [
+        "iea"
+      ],
+      "countries": [
+        "US"
+      ],
+      "topics": [],
+      "stages": [
+        "approval"
+      ],
+      "claims": [
+        "7월",
+        "50mw",
+        "2030년",
+        "426twh",
+        "133%",
+        "3일"
+      ],
+      "quantities": {
+        "%": [
+          "133"
+        ],
+        "mw": [
+          "50"
+        ],
+        "mwh": [
+          "426000000"
+        ],
+        "년": [
+          "1",
+          "2030"
+        ],
+        "월": [
+          "7"
+        ],
+        "일": [
+          "3"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "4095c4b279c3874ef7e1ff1e7fc4bfa35609474857ace681b3695665d2bf5330"
+    },
+    "verified_source_components": {
+      "article_hash": "b1d97c9282f3c693",
+      "title": "00db3d59fd6c62680588c0e6e39b0dcf8a44358aa98597409c4f354e51b14724",
+      "source_excerpt": "dcfb11704b642eaa085601996eefd30de3bf7c8bf4f9d2b3780371ba2ce5c25c",
+      "published_at": "bf89d259aa46b150f3eb7b482eab5c63e9f464c4bb23d3f19f995587df4f8f69"
+    },
+    "hash": "b1d97c9282f3c693",
+    "published_at": "2026-10-11T19:32:00+00:00"
   }
 }
