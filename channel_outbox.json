@@ -352,25 +352,50 @@
       "kind": "daily",
       "date": "2026-10-14",
       "created_at": "2026-10-13T19:15:33.186365+00:00",
-      "status": "pending",
+      "status": "sent",
       "items": [
         {
           "kind": "text",
           "name": "보고서추천",
           "text": "<b>📝 보고서 검토 추천 (2026-10-14)</b>\n<i>오늘 동향 중 부서 보고서로 다룰 만한 사안</i>\n\n<b>1. 해수온도 상승에 따른 국내 원전 냉각수 설계 상한 도달 및 한수원 설비 개선 대책</b>\n   • <b>왜:</b> 기후변화로 인한 해수온도 상승은 원전 가동률과 안전운영에 직결되는 중대한 물리적 리스크로, 기존 10년 단위 설비 기준의 전면 개편과 즉각적인 투자 우선순위 재조정이 시급합니다.\n   • <b>추천 각도:</b> 취수 구조물 및 열교환기 설계 기준의 기후변화 스트레스 테스트 도입 / 냉각수 한계 도달 시 비상 감출 및 출력 조절 프로토콜 재정비 / 중장기 설비 개선 투자비용 추산 및 재원 조달 방안 마련\n\n<b>2. 발전공기업 5사 통합 법안 발의에 따른 한수원 경영 환경 및 전력시장 영향 분석</b>\n   • <b>왜:</b> 발전공기업 통합 추진은 국내 전력 공공기관 거버넌스의 대변혁을 예고하는 사안으로, 한수원의 시장 지위, 원전 운영 독립성, 그리고 향후 전력시장 구조개편에 미치는 파급효과에 대한 선제적 분석이 필수적입니다.\n   • <b>추천 각도:</b> 발전공기업 통합 법안의 주요 쟁점 및 국회 통과 가능성 시나리오 분석 / 공공기관 통합이 한수원의 경영 효율성 및 원전 수출 전략에 미치는 영향 / 전력시장가격(SMP) 및 전력계통운영 측면에서의 잠재적 리스크 도출",
-          "status": "pending"
+          "status": "sent",
+          "sent_at": "2026-10-13T19:35:01.769967+00:00"
         },
         {
           "kind": "text",
           "name": "국내",
           "text": "<b>📰 🇰🇷 원자력 국내 브리핑 (2026-10-14)</b>\n\n<b>📌 1. 한국원자력환경공단, 제6대 이사장으로 이진호 전 원안기술원 부원장 선임</b>\n   • <b>무슨 일:</b> 한국원자력환경공단 임원추천위원회는 6일 이진호 전 한국원자력안전기술원 부원장을 제6대 이사장으로 선임했다.\n   • <b>🇰🇷 한수원 시사점:</b> 규제기관 출신 인사가 이사장으로 임명됨에 따라 향후 방사성폐기물 관리 사업의 안전성 강화와 규제기관과의 협력 체계가 더욱 긴밀해질 것으로 보인다.\n   🔗 <a href=\"http://www.knpnews.com/news/articleView.html?idxno=34629\">출처</a> · <code>한국원자력신문</code>\n\n<b>📌 2. 국내 원전 8기 해수온도 설계 상한 육박…한수원, 설비 개선 시급</b>\n   • <b>무슨 일:</b> 기후변화로 국내 원전 8기의 해수온도가 설계 상한치에 2도 미만으로 근접함에 따라 한수원의 조기 설비 개선이 요구된다.\n   • <b>왜 중요:</b> 원전 안전운영의 핵심인 냉각수 확보 여유가 급격히 축소됨에 따라, 한수원의 설비 개선 기준이 기존 10년 단위에서 수온 변동성을 반영한 즉각 대응 체계로 전환될 필요가 있다.\n   • <b>🇰🇷 한수원 시사점:</b> 기존의 &#x27;10년 이내 도달&#x27; 설비 개선 기준이 기후변화 속도를 따라가지 못하고 있어, 향후 수온 변동 폭을 반영한 개선 기준 재설정이 불가피하다.\n   🔗 <a href=\"https://www.hani.co.kr/arti/society/environment/1282150.html\">출처</a> · <code>한겨레</code>\n\n<b>📌 3. 당정, 발전공기업 5사 통합 법안 발의…내년 10월 &#x27;한국발전&#x27; 출범 추진</b>\n   • <b>무슨 일:</b> 당정이 발전공기업 5사 통합을 위한 법안을 발의하고 공정거래법상 기업결합신고 예외 허용과 한전 지분 100% 소유 방안을 추진한다.\n   • <b>왜 중요:</b> 발전공기업 통합을 위한 법적 근거가 마련되고 기업결합신고 예외 등 신속 추진을 위한 정책적 결단이 내려짐에 따라 통합 작업이 본격적인 추진 단계로 진입했다.\n   🔗 <a href=\"https://www.mk.co.kr/article/12174496\">출처</a> · <code>매일경제</code>\n\n<b>📌 4. 한수원, 발전소 주변지역 지원사업 계약 절차 및 자재 관리 부실 논란</b>\n   • <b>무슨 일:</b> 한수원이 발전소 주변지역 지원사업에서 경쟁입찰 대신 협약 방식을 사용하여 국가계약법 위반 의혹이 제기되었으며, 자재 재고 관리 부실 문제도 지적되었다.\n   • <b>왜 중요:</b> 국정감사를 통해 한수원의 계약 절차와 자재 관리 전반에 대한 심각한 내부 통제 결함이 드러났으며, 이에 대한 전면적인 감사와 개선책 마련이 요구되는 상황이다.\n   🔗 <a href=\"https://www.edaily.co.kr/News/Read?mediaCodeNo=257&amp;newsId=03644086645612592\">출처</a> · <code>이데일리</code>\n\n<b>📌 5. 한국원자력연구원, SMR 가속화 위한 전문가 심포지엄 개최</b>  ✅ 한국원자력연구원\n   • <b>무슨 일:</b> 한국원자력연구원이 10월 13일 서울에서 전문가 심포지엄을 열고 한국형 SMR의 상용화 과제와 정책적 지원 방안을 논의했다.\n   • <b>🇰🇷 한수원 시사점:</b> 연구개발 단계에서 사업화 단계로의 전환을 위해 규제체계 정비와 초도호기 비용 부담 완화 등 정책적 지원이 SMR 상용화의 핵심 변수로 부상했다.\n   🔗 <a href=\"https://www.kaeri.re.kr/board/view?boardStyle=Image&amp;categoryId=&amp;continent=&amp;country=&amp;linkId=13143&amp;menuId=MENU00326&amp;no1=1524&amp;pageNum=1&amp;rowCnt=10&amp;schText=&amp;schType=0&amp;schYear=\">출처</a> · <code>한국원자력연구원</code>\n\n<b>📌 6. 강경화 주미대사, 한미 정보협력 현안 및 원자력 협정 논의 진행 중</b>\n   • <b>무슨 일:</b> 강경화 주미대사는 한미 간 정보협력 이슈가 장기화될 가능성을 시사하며, 원자력 협정 개정 등 다양한 옵션을 놓고 논의가 진행 중이라고 밝혔다.\n   • <b>🇰🇷 한수원 시사점:</b> 한미 원자력 협정 관련 논의가 실무적 차원에서 진행 중이나, 정보협력 등 외교적 현안이 복합적으로 얽혀 있어 협상 속도와 결과에 영향을 미칠 가능성이 있다.\n   🔗 <a href=\"https://www.yna.co.kr/view/AKR20261013002153071?input=1195m\">출처</a> · <code>연합뉴스</code>\n\n<b>📌 7. 정부, 2차 중앙행정기관 이전 계획 발표…2031년까지 세종 이전</b>\n   • <b>무슨 일:</b> 정부가 외교·국방·통일부 등 44개 중앙행정기관을 2031년까지 세종으로 이전하는 2차 이전 계획을 발표했다.\n   🔗 <a href=\"https://www.seoul.co.kr/news/society/2026/10/13/20261013500277?wlog_tag3=naver\">출처</a> · <code>서울신문</code>\n\n<b>📌 8. 울산·포항·경주, 해오름동맹 10주년 맞아 초광역 상생 비전 발표</b>\n   • <b>무슨 일:</b> 울산·포항·경주시가 해오름동맹 10주년을 맞아 무탄소에너지 통합공급망 구축 등 10개 신규 사업을 포함한 초광역 상생 발전 비전을 발표했다.\n   🔗 <a href=\"https://www.munhwa.com/article/11623067\">출처</a> · <code>문화일보</code>\n",
-          "status": "pending"
+          "status": "sent",
+          "sent_at": "2026-10-13T19:35:01.769967+00:00"
         },
         {
           "kind": "text",
           "name": "해외",
           "text": "<b>📰 🌐 원자력 해외 브리핑 (2026-10-14)</b>\n\n<b>📌 1. 백악관 대변인, 한국의 대미 에너지 투자 패키지 2000억 달러 공식 언급</b>\n   • <b>무슨 일:</b> 재커리아 백악관 대변인이 한국의 대미 에너지 투자 패키지 2000억 달러를 공개하며 알래스카 LNG 사업 540억 달러 투입을 언급했다.\n   • <b>왜 중요:</b> 트럼프 행정부가 한국의 대미 투자를 기정사실화하며 조기 이행을 압박하는 기조가 강화되고 있다.\n   🔗 <a href=\"https://www.newsis.com/view/NISX20261014_0003824743\">출처</a> · <code>뉴시스</code>\n\n<b>📌 2. LS일렉트릭, 블룸에너지와 1853억원 규모 북미 데이터센터 배전설비 공급 계약</b>\n   • <b>무슨 일:</b> LS일렉트릭이 블룸에너지와 약 1,853억원 규모의 수배전반 및 배전용 변압기 공급 계약을 체결하며 북미 AI 데이터센터 전력 인프라 시장 공략을 강화함.\n   • <b>🇰🇷 한수원 시사점:</b> 북미 데이터센터 전력 인프라 시장의 수요가 국내 전력기기 기업들의 대규모 수주로 이어지는 흐름이 지속되고 있다.\n   🔗 <a href=\"https://biz.heraldcorp.com/article/10900504\">출처</a> · <code>헤럴드경제</code>\n\n<b>📌 3. 미국 ABS-DOE, 해상 원자력 기술 개발 위한 MOU 체결</b>\n   • <b>무슨 일:</b> 미국 선급협회(ABS)와 에너지부(DOE)가 해상 원자력 기술 및 상업용 원자력 선박 개발을 위한 협력 협약을 체결했다.\n   • <b>왜 중요:</b> 해상 원자력 분야의 기술 표준화 및 규제 프레임워크 구축이 가속화됨에 따라, 향후 선박용 SMR 시장의 상업적 타당성 검토가 본격화될 것으로 보인다.\n   🔗 <a href=\"https://www.world-nuclear-news.org/articles/agreements-and-deals-support-us-maritime-nuclear-developments\">출처</a> · <code>World Nuclear News</code>\n\n<b>📌 4. 에너지엑스, 트라피구라와 20억 달러 규모 리튬 공급 계약 체결</b>\n   • <b>무슨 일:</b> 미국 리튬 스타트업 에너지엑스가 트라피구라와 10년간 20억 달러 규모의 리튬 공급 계약을 체결하고 향후 우라늄 사업 확장을 예고했다.\n   • <b>왜 중요:</b> 에너지엑스의 우라늄 사업 진출 계획은 향후 미국 내 핵연료 공급망 구축 전략과 연계될 가능성이 있다.\n   🔗 <a href=\"https://www.g-enews.com/view.php?ud=2026101321561056552bd56fbc3c_1\">출처</a> · <code>글로벌이코노믹</code>\n\n<b>📌 5. 한중 통상당국, 제4차 공급망 핫라인 및 제6차 산단 실무회의 개최</b>  ✅ 산업통상부\n   • <b>무슨 일:</b> 산업통상자원부와 중국 상무부가 공급망 안정화 및 새만금 등 한중 산업협력단지 활성화를 위한 실무회의를 개최함.\n   • <b>🇰🇷 한수원 시사점:</b> 한중 공급망 핫라인을 통해 주요 품목의 수급 안정성을 확보하고, 새만금 투자 협력을 구체화하는 계기가 됨.\n   🔗 <a href=\"https://www.motir.go.kr/kor/article/ATCL3f49a5a8c/172281/view\">출처</a> · <code>산업통상부</code>\n\n<b>📌 6. 미 에너지부, 중부 대서양 지역 전력망 안정화 긴급 명령 발령</b>  ✅ US DOE\n   • <b>무슨 일:</b> 크리스 라이트 미 에너지부 장관이 전력 수요 급증과 발전소 정비 기간이 겹침에 따라 중부 대서양 지역 전력망 안정화를 위한 긴급 명령을 발령함.\n   • <b>왜 중요:</b> 전력망 신뢰성 확보를 위해 연방 정부가 PJM에 긴급 발전 가동 권한을 부여한 것으로, 향후 유사한 전력 수급 위기 시 연방 차원의 개입 모델로 활용될 가능성이 있음.\n   🔗 <a href=\"https://www.energy.gov/articles/energy-secretary-secures-mid-atlantic-grid-ahead-anticipated-stressed-system-conditions\">출처</a> · <code>US DOE</code>\n\n<b>📌 7. 삼성SDI, 말레이시아 공장에 AI 서버용 원통형 LFP 배터리 생산설비 증설</b>\n   • <b>무슨 일:</b> 삼성SDI가 AI 데이터센터 서버용 무정전전원장치(BBU) 수요 대응을 위해 말레이시아 공장에 원통형 리튬인산철(LFP) 배터리 생산설비를 추가함.\n   • <b>왜 중요:</b> AI 데이터센터 전력 수요 급증에 따라 배터리 제조사들의 데이터센터용 에너지 저장 솔루션 시장 진출이 가속화되고 있다.\n   🔗 <a href=\"https://biz.heraldcorp.com/article/10900502\">출처</a> · <code>헤럴드경제</code>\n\n<b>📌 8. GMI클라우드 CEO, AI 데이터센터 전력난 해소를 위해 아시아 사업 확대</b>\n   • <b>무슨 일:</b> GMI클라우드 창업자가 AI 산업의 최대 병목으로 전력을 지목하며, 미국 내 인허가 갈등을 피해 아시아 지역 데이터센터 구축을 가속화하겠다고 밝혔다.\n   • <b>🇰🇷 한수원 시사점:</b> 미국 내 데이터센터 전력 인허가 지연이 장기화됨에 따라, 전력망 확보가 용이한 아시아 지역으로 글로벌 AI 인프라 투자가 분산되는 추세다.\n   🔗 <a href=\"https://www.sedaily.com/article/20101138\">출처</a> · <code>서울경제</code>\n\n<b>📌 9. 미 의회, 사우디 원자력 협정 수정 권한 보유…자동 발효 주장 반박</b>\n   • <b>무슨 일:</b> 미 의회가 사우디아라비아와의 원자력 협정을 수정할 법적 권한을 보유하고 있으며, 원자력법에 따라 협정 검토를 위한 9개월의 기간이 보장된다는 분석이 제기됐다.\n   🔗 <a href=\"https://thebulletin.org/2026/10/congress-has-the-power-to-fix-the-trump-saudi-nuclear-deal\">출처</a> · <code>Bulletin of the Atomic Scientists</code>\n\n<b>📌 10. 미 DOE, Last Energy의 파일럿 원자로 프로젝트 승인</b>\n   • <b>무슨 일:</b> 미국 에너지부(DOE)가 Last Energy의 소형 원자로 파일럿 프로젝트를 공식 승인함.\n   🔗 <a href=\"https://news.google.com/rss/articles/CBMigwFBVV95cUxNU1A2Sm4tTjJoSmJndXpQeVBMQ2d0WmhzemRUWF9fV0hqMDJ0RTVna0RNUzNZcjE2a2cydzlpYXZFd2ZERDlsd3FWYmFzLUNQM2N1bVhyR1FIcEsxVFBpcWZCQmpvVEo1SjkyeTlWS2pxUFl3V19aOWRfWDRPRFo2R0ZzZw?oc=5\">출처</a> · <code>Nuclear Engineering International</code>\n",
-          "status": "pending"
+          "status": "sent",
+          "sent_at": "2026-10-13T19:35:01.769967+00:00"
+        },
+        {
+          "kind": "audio",
+          "name": "빠른 브리핑",
+          "file_id": "CQACAgUAAxkDAAICK2rOhaBjFQVsN-J51goXg0TW4kzSAAK5IwACIYJxVoSuNvsjkEsKPQQ",
+          "caption": "🎧 2026-10-14 빠른 브리핑 (2분 04초)\n오늘의 핵심 원자력 뉴스를 약 3분 안팎으로 빠르게 훑는 라디오형 브리핑입니다.\nnuclens-v2.pages.dev",
+          "title": "Nuclens 빠른 브리핑 2026-10-14",
+          "performer": "Nuclens",
+          "duration": 124,
+          "status": "sent",
+          "sent_at": "2026-10-13T19:35:01.769967+00:00"
+        },
+        {
+          "kind": "audio",
+          "name": "전문가 브리핑",
+          "file_id": "CQACAgUAAxkDAAICLGrOh-WlrC1MMVgO99sR_4f45SHPAAK7IwACIYJxVlVOh01UjtyBPQQ",
+          "caption": "🎧 2026-10-14 전문가 브리핑 (13분 57초)\n선정된 핵심 이슈를 수석 원자력 분석가가 사업 단계·기술·정책 의미까지 약 14분간 통합 해설합니다.\nnuclens-v2.pages.dev",
+          "title": "Nuclens 전문가 브리핑 2026-10-14",
+          "performer": "Nuclens",
+          "duration": 837,
+          "status": "sent",
+          "sent_at": "2026-10-13T19:35:01.769967+00:00"
         }
       ]
     }
