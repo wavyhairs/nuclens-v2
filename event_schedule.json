@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-13T00:49:21+09:00",
+ "generated_at": "2026-10-14T02:10:39+09:00",
  "events": [
   {
    "id": "of-d461711de05a",
@@ -19,70 +19,6 @@
    "topics": [],
    "relevance": "nuclear",
    "significance": "세미나"
-  },
-  {
-   "id": "of-f5863a8da632",
-   "date": "2026-09-29",
-   "end_date": "2026-09-29",
-   "kind": "point",
-   "time": "10:00",
-   "label": "에너지 산업국가전략 국회 연속토론회: 4차- 새로운 전력 미래 비전-해상 SMR",
-   "host": "박정 의원실",
-   "organizer": "박정 의원실",
-   "place": "의원회관 제2간담회의실(202호)",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "에너지 산업국가전략 국회 연속토론회: 4차- 새로운 전력 미래 비전-해상 SMR",
-   "first_seen": "2026-08-29",
-   "topics": [
-    "smr"
-   ],
-   "relevance": "smr",
-   "significance": "토론회"
-  },
-  {
-   "id": "of-e7fa3f0b7d10",
-   "date": "2026-09-29",
-   "end_date": "2026-09-29",
-   "kind": "deadline",
-   "time": "",
-   "label": "제38회 한일 원자력산업세미나 및 제12회 동아시아 원자력포럼 참가 신청 안내",
-   "host": "한국원자력산업협회",
-   "organizer": "",
-   "place": "",
-   "url": "https://www.kaif.or.kr/ko?c=193&gbn=view&gp=1&ix=30060&s=",
-   "source_id": "kaif_notice",
-   "publisher": "한국원자력산업협회",
-   "notice_title": "제38회 한일 원자력산업세미나 및 제12회 동아시아 원자력포럼 참가 신청 안내 (~9. 29. / 선착순)",
-   "first_seen": "2026-09-15",
-   "topics": [
-    "finance"
-   ],
-   "relevance": "원자력산업",
-   "significance": "세미나"
-  },
-  {
-   "id": "of-bb143ed5ac92",
-   "date": "2026-09-29",
-   "end_date": "2026-09-29",
-   "kind": "point",
-   "time": "10:00~12:00",
-   "label": "첨단산업 전력수요 급증, 원전이 해답인가?",
-   "host": "우원식·최기상·김주영·곽상언 의원실, 국회 기후위기 탈탄소 경제포럼, 에너지전환포럼",
-   "organizer": "우원식·최기상·김주영·곽상언 의원실, 국회 기후위기 탈탄소 경제포럼, 에너지전환포럼",
-   "place": "의원회관 제5간담회의실(208호)",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "첨단산업 전력수요 급증, 원전이 해답인가?",
-   "first_seen": "2026-09-22",
-   "topics": [
-    "power_market",
-    "carbon_free"
-   ],
-   "relevance": "전력수요",
-   "significance": "포럼"
   },
   {
    "id": "of-c56dcf7f0eba",
@@ -417,7 +353,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-10-13T00:49:21+09:00",
+   "at": "2026-10-14T02:10:39+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -425,19 +361,19 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-10-13T00:49:21+09:00",
+   "at": "2026-10-14T02:10:39+09:00",
    "ok": true,
-   "parsed": 9,
+   "parsed": 10,
    "kept": 1,
    "new": 0,
    "dropped": {
-    "no_interest_match": 1,
-    "low_significance": 3,
-    "not_an_event": 4
+    "not_an_event": 5,
+    "no_interest_match": 2,
+    "low_significance": 2
    }
   },
   "kaif_calendar": {
-   "at": "2026-10-13T00:49:21+09:00",
+   "at": "2026-10-14T02:10:39+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -450,7 +386,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-10-13T00:49:21+09:00",
+   "at": "2026-10-14T02:10:39+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -458,25 +394,20 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-10-13T00:49:21+09:00",
-   "ok": true,
-   "parsed": 9,
-   "kept": 0,
-   "new": 0,
-   "dropped": {
-    "no_interest_match": 9
-   }
+   "at": "2026-10-14T02:10:39+09:00",
+   "ok": false,
+   "error": "ConnectTimeout: HTTPSConnectionPool(host='www.assembly.go.kr', port=443): Max retries exceeded with url: /portal/noti/seminar/scheduleSmn.do?menuNo=600102 (Caused by ConnectTimeoutError(<HTTPSConnecti"
   },
   "kpx_notice": {
-   "at": "2026-10-13T00:49:21+09:00",
+   "at": "2026-10-14T02:10:39+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
    "new": 0,
    "dropped": {
-    "no_interest_match": 6,
+    "no_interest_match": 7,
     "not_an_event": 6,
-    "no_event_date": 2,
+    "no_event_date": 1,
     "low_significance": 4
    }
   }
