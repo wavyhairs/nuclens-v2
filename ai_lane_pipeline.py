@@ -309,6 +309,7 @@ def make_record(article: dict, verdict: dict, *, judged_at: str, model: str = ""
         "implication": verdict.get("implication") or article.get("implication", ""),
         "countries": verdict.get("countries") or article.get("countries") or [],
         "main_importance": article.get("main_importance", ""),
+        "main_scope": article.get("scope", ""),
         "application_area": verdict.get("application_area", ""),
         "ai_tech": verdict.get("ai_tech", "other"),
         "actor_type": verdict.get("actor_type", "other"),
@@ -320,6 +321,24 @@ def make_record(article: dict, verdict: dict, *, judged_at: str, model: str = ""
         "judge_model": model,
         "prompt_version": ai_lane.PROMPT_VERSION,
     }
+
+
+def domestic_guard(article: dict, verdict: dict | None) -> dict | None:
+    """국내 주체 기사는 판정과 무관하게 포함하지 않는다(사용자 결정: 해외만).
+
+    메인 큐레이션의 scope 는 '기사를 쓴 매체'가 아니라 '기사가 다루는 대상'으로 판정된다
+    (news_bot 프롬프트 B-2). 그래서 해외 사례를 다룬 국내 매체 기사는 overseas 이고,
+    여기서 걸리는 것은 한국이 주체·무대인 기사뿐이다.
+
+    실측(2026-10-14 첫 실전 회차): 「현대차·HD현대, AI 자율운항 선박·SMR 추진 선박 협력」
+    을 판정기가 포함으로 냈다(국가 KR·US). 메인은 이 기사를 kr 로 봤다.
+    """
+    if not verdict or not verdict.get("in_scope"):
+        return verdict
+    countries = {str(c).upper() for c in verdict.get("countries") or [] if c}
+    if article.get("scope") == "kr" or countries == {"KR"}:
+        return {"in_scope": False, "exclude_reason": "domestic", "reason": "국내 주체(결정적 규칙)"}
+    return verdict
 
 
 # ── 한 회차 ──────────────────────────────────────────────────────────────────
@@ -393,6 +412,7 @@ def run(main_records: list[dict], *, fetch: Callable[[str, str], list[dict]] | N
     stats.update({"judged": 0, "included": 0, "excluded": 0, "failed": 0})
     for article, verdict in zip(batch, verdicts):
         digest = article["hash"]
+        verdict = domestic_guard(article, verdict)
         if verdict is None:
             stats["failed"] += 1
             state["attempts"][digest] = int(state["attempts"].get(digest, 0)) + 1

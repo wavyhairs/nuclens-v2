@@ -257,3 +257,14 @@ class TrendSectionTests(unittest.TestCase):
         self.assertIn('id="trendAi"', html)
         self.assertIn('data-go-view="ai"', html)
         self.assertIn("renderTrendTopicFlow();\n  renderTrendAi();", app)
+class BuildGuardTests(unittest.TestCase):
+    def test_load_rows_skips_main_scope_kr(self):
+        import json as _json  # noqa: PLC0415
+        import tempfile  # noqa: PLC0415
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            rows = [dict(row("a", "2026-10-09T03:00:00+00:00", title="t"), main_scope="kr"),
+                    dict(row("b", "2026-10-09T03:00:00+00:00", title="u"), main_scope="overseas")]
+            (d / "2026-10.jsonl").write_text("".join(_json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+            got = web.load_rows(d)
+        self.assertEqual([r["hash"] for r in got], ["b"])

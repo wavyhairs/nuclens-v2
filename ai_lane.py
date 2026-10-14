@@ -42,7 +42,7 @@ import json
 import re
 from typing import Callable, Iterable
 
-PROMPT_VERSION = 4
+PROMPT_VERSION = 5
 POLICY_TASK = "ai_lane_judge"
 
 # ── 1. 프리필터 어휘 ─────────────────────────────────────────────────────────
@@ -232,6 +232,8 @@ ML 로 학습·갱신되는 디지털 트윈 / 규제기관의 AI 지침·심사
   · 방사성 폐기물 처리시설·핵연료 시설의 AI 적용 → 포함 (발전소가 아니어도 원자력 사업이다)
   · 해커가 AI 로 원자력 기관을 공격 → 제외 not_ai_use (원전이 AI 를 쓴 것이 아니다)
   · 총회·인력 프로그램·인허가 해설에서 AI 가 여러 의제 중 하나로만 언급 → 제외 not_ai_use
+  · 한국 기업·기관(한수원·두산·현대·HD현대·삼성 등)이 주체 → 제외 domestic (해외 파트너·시장이 나와도)
+  · 선박·자동차·공장 등 원전 밖의 AI (SMR 추진 선박의 자율운항 AI 등) → 제외 not_nuclear
 
 [제외] exclude_reason 하나를 고른다.
   datacenter_power    AI 데이터센터 전력수요·전력구매계약·전력난 (AI 가 전력을 쓰는 이야기)
