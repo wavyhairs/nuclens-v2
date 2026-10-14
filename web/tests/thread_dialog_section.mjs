@@ -155,6 +155,9 @@ function build(state) {
     ${extractConst("THREAD_CONTRACT")}
     ${extract("esc")}
     ${extract("dateLabel")}
+    ${extract("aiIssues")}
+    ${extract("isAiIssueId")}
+    ${extract("aiIssueById")}
     ${extract("currentIssueById")}
     ${extract("longTermVisible")}
     ${extract("longTermThreads")}

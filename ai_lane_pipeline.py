@@ -211,6 +211,9 @@ def from_main_record(record: dict) -> dict:
         "scope": record.get("scope", ""),
         "countries": record.get("countries") if isinstance(record.get("countries"), list) else [],
         "main_importance": record.get("importance", ""),
+        # 회차는 이 시각을 따른다. 레인이 한도 때문에 하루 늦게 판정해도 기사는
+        # 메인이 수집한 날의 회차에 들어간다.
+        "collected_at": record.get("archived_at", ""),
     }
 
 
@@ -285,6 +288,7 @@ def make_record(article: dict, verdict: dict, *, judged_at: str, model: str = ""
         "origin": article.get("origin", ""),
         "hash": article.get("hash", ""),
         "archived_at": judged_at,
+        "collected_at": article.get("collected_at") or judged_at,
         "pub": article.get("pub", ""),
         "url": article.get("url", ""),
         "resolved_url": article.get("resolved_url", ""),
@@ -294,13 +298,15 @@ def make_record(article: dict, verdict: dict, *, judged_at: str, model: str = ""
         "evidence_role": profile.get("evidence_role", ""),
         "source_tier": profile.get("source_tier", 3),
         "title": article.get("title", ""),
-        # 메인 큐레이션이 쓴 제목·요약이 있으면 그것이 우선이다 — 메인 헤드라인 규칙과
-        # 결정적 정리기를 이미 거쳤다. 해석 문장은 noise 기사에선 비어 있으므로 레인이 쓴다.
+        # 사실 문장(제목·요약·기사 내용)은 메인 큐레이션 것이 우선이다 — 메인 헤드라인
+        # 규칙과 결정적 정리기를 이미 거쳤다. 해석 문장(왜 중요한가·시사점)은 **레인 것이
+        # 우선**이다. 메인 해석은 정책·투자 관점이라 "원전 AI 도입 흐름에서 무슨 뜻인가"를
+        # 말하지 않고, noise 기사에서는 아예 비어 있다.
         "title_kr": main_title_kr or verdict.get("title_kr") or article.get("title", ""),
         "summary": article.get("summary") or verdict.get("summary", ""),
         "detail": article.get("detail", ""),
-        "why_important": article.get("why_important") or verdict.get("why_important", ""),
-        "implication": article.get("implication") or verdict.get("implication", ""),
+        "why_important": verdict.get("why_important") or article.get("why_important", ""),
+        "implication": verdict.get("implication") or article.get("implication", ""),
         "countries": verdict.get("countries") or article.get("countries") or [],
         "main_importance": article.get("main_importance", ""),
         "application_area": verdict.get("application_area", ""),

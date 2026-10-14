@@ -67,6 +67,7 @@ import issue_change_log  # noqa: E402
 import issue_headline  # noqa: E402
 import issue_insight  # noqa: E402
 import issue_ledger  # noqa: E402
+import ai_lane_web  # noqa: E402
 import issue_review  # noqa: E402
 import keei_match  # noqa: E402
 import story_cluster  # noqa: E402
@@ -4125,6 +4126,23 @@ TODAY_DROP_FIELDS = frozenset({
 
 def _today_issue(row: dict) -> dict:
     return {key: value for key, value in row.items() if key not in TODAY_DROP_FIELDS}
+
+
+def build_ai_payload(now: datetime) -> dict:
+    """「해외 AI」탭·탐색 '해외 AI' 범위·AI 이슈 상세가 읽는 ai_issues.json.
+
+    데이터는 ai_archive/(ai_lane_pipeline 이 크롤마다 쌓는다)이고 묶기·회차·점수는
+    ai_lane_web 이 정한다. 근거 배지는 메인과 **같은 규칙**(verification_state)을 쓴다 —
+    벤더 보도자료만 있는 사건이 '독립 출처 확인'으로 보이면 안 된다.
+
+    실패해도 빌드를 멈추지 않는다. 빈 페이로드면 화면이 탭을 숨긴다(syncAiChrome).
+    """
+    try:
+        return ai_lane_web.build_payload(
+            now=now, verify=lambda articles: verification_state(articles, now.isoformat()))
+    except Exception as exc:  # noqa: BLE001 — 부가 화면 하나가 배포를 막으면 안 된다
+        print(f"[build_data:ai] 실패 — 빈 탭으로 내보냄: {type(exc).__name__}: {exc}")
+        return {"schema": ai_lane_web.SCHEMA, "rounds": [], "issues": [], "labels": {}, "stats": {}}
 
 
 def build_today_payload(briefings: list[dict], issue_catalog: list[dict],
@@ -8244,6 +8262,7 @@ def build() -> None:
         # 원본이 아니라 사본을 싣는다 — 아래 admin_outputs 는 전수를 봐야 한다.
         ("issue_audit.json", shipped_audit),
         ("threads.json", threads_payload),
+        ("ai_issues.json", build_ai_payload(now)),
         ("manifest.json", manifest),
         ("status.json", status),
     )
