@@ -1,15 +1,15 @@
 {
  "build": {
-  "asked": 234,
-  "at": "2026-10-14T04:37:31+09:00",
-  "candidates": 11579,
+  "asked": 179,
+  "at": "2026-10-15T07:29:19+09:00",
+  "candidates": 11813,
   "contract": "thread-judge-v1",
-  "events": 508,
+  "events": 525,
   "failed": 0,
   "status": "ok",
-  "threads": 149
+  "threads": 154
  },
- "generated_at": "2026-10-14T04:37:31+09:00",
+ "generated_at": "2026-10-15T07:29:19+09:00",
  "live_thread_ids": [
   "thread-044cae32a463ac8a",
   "thread-04919c08038dfeb8",
@@ -39,15 +39,16 @@
   "thread-2ef118177115966b",
   "thread-2efcf9553e93f031",
   "thread-31b97f4a12124a13",
-  "thread-3378977d103200c2",
   "thread-34b1a4acda66f2da",
   "thread-358ba2b6e59bbe03",
   "thread-35ede1880324769c",
   "thread-3776c3bf06447bd5",
   "thread-387e3d2ac7f18815",
+  "thread-39e5132a404c5308",
   "thread-3a7bc82547a4150f",
   "thread-3b73a15eaa576d15",
   "thread-3f7e6e90200f5249",
+  "thread-400f5b5c36a96901",
   "thread-4273ed185038512c",
   "thread-441d337ec7aa5692",
   "thread-44da967711b0e4da",
@@ -57,6 +58,7 @@
   "thread-4d2b6267593aff2f",
   "thread-4efc8c3a4610e215",
   "thread-4f45103c2ed5ff95",
+  "thread-50c4b8e5aa30962c",
   "thread-56f2b9377a0764c1",
   "thread-577cc392b1cd9f48",
   "thread-57e37a44d59bf880",
@@ -94,6 +96,7 @@
   "thread-89abaed0e49fe4a9",
   "thread-8adba34ad1db6e59",
   "thread-8af19edd71ae748c",
+  "thread-950f209b2e65fa2c",
   "thread-95ca554f1054d9fe",
   "thread-962113dbb5dd28c1",
   "thread-980da1a26f7ee307",
@@ -103,6 +106,8 @@
   "thread-9cb27397953cada7",
   "thread-a10322d8d852b520",
   "thread-a1214bf8ac033dd6",
+  "thread-a1f6bba0262f575b",
+  "thread-a5b5b6fe3f457b9d",
   "thread-a83aa53c7cf0a846",
   "thread-a882a62299d62022",
   "thread-aa291bdf20aa36cb",
@@ -111,7 +116,6 @@
   "thread-ae15d64339d5f6f7",
   "thread-afd65aac42c18e94",
   "thread-b005442e0cda5cfa",
-  "thread-b14dcb2565ec29de",
   "thread-b154723b566a2a9e",
   "thread-b178f0909efc7126",
   "thread-b2d115875e934c80",
@@ -128,7 +132,6 @@
   "thread-c9d314260c44013f",
   "thread-cab5dd4ba2db705a",
   "thread-cd50f9b3b06b9131",
-  "thread-cd78bac167d47d58",
   "thread-cd81d0ca72da4d62",
   "thread-ce0d08e95c95bf8e",
   "thread-cf04bcb246ae57cf",
@@ -139,6 +142,7 @@
   "thread-da681f6ea5c1f8d8",
   "thread-dab13f1f031e55f6",
   "thread-dcd1e4c73244fec1",
+  "thread-de081d7cc6e35266",
   "thread-de620680b402c64f",
   "thread-e1781f17a8efa712",
   "thread-e65f970c3afe2b24",
@@ -157,6 +161,7 @@
   "thread-fa5d3a2df88ab82e",
   "thread-fc7ff9793c0a01c8",
   "thread-fc8a39a5ba778454",
+  "thread-fcc1579f256eefcf",
   "thread-fdae7d5dfcf79c5e",
   "thread-ff1b1e811ae2db83",
   "thread-ff962f8f7fb015bb"
@@ -179,26 +184,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-0d29e5a153e4d297",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-0115d97f3d8970ac",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-417bacb5581d9fcd",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-0115d97f3d8970ac",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-0d29e5a153e4d297",
@@ -570,6 +555,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-417bacb5581d9fcd",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-0115d97f3d8970ac",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-0d29e5a153e4d297",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-0115d97f3d8970ac",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-417bacb5581d9fcd",
      "evidence": [],
@@ -994,6 +999,16 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-c45a602bd034d8ae",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-03c4a5b77f814f16",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-c45a602bd034d8ae",
      "evidence": [],
@@ -1486,60 +1501,6 @@
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "merge",
-     "event_id": "thread-ed9e07bb0703d938",
-     "evidence": [
-      "issue-4da5b7ab6c225c78",
-      "issue-63c61266bb0dc771",
-      "issue-b0cdd490f0e1afe3",
-      "issue-bdf0fa9bc581aaa0",
-      "story-34b54b6a74dfabbb",
-      "story-c6ba35ab708d60f5",
-      "story-d186fd7060c89e35"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-04919c08038dfeb8",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-01T07:31:23+09:00",
-     "decision": "attach",
-     "event_id": "story-34b54b6a74dfabbb",
-     "evidence": [
-      "issue-4da5b7ab6c225c78",
-      "issue-63c61266bb0dc771",
-      "issue-b0cdd490f0e1afe3",
-      "issue-bdf0fa9bc581aaa0",
-      "story-34b54b6a74dfabbb",
-      "story-c6ba35ab708d60f5",
-      "story-d186fd7060c89e35"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-04919c08038dfeb8",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-01T07:31:23+09:00",
-     "decision": "merge",
-     "event_id": "thread-ed9e07bb0703d938",
-     "evidence": [
-      "issue-4da5b7ab6c225c78",
-      "issue-63c61266bb0dc771",
-      "issue-b0cdd490f0e1afe3",
-      "issue-bdf0fa9bc581aaa0",
-      "story-34b54b6a74dfabbb",
-      "story-c6ba35ab708d60f5",
-      "story-d186fd7060c89e35"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-04919c08038dfeb8",
-     "version": "thread-identity-v1"
-    },
     {
      "decided_at": "2026-10-01T08:21:55+09:00",
      "decision": "attach",
@@ -2205,6 +2166,60 @@
      "reason": "first_seen 이 이른 쪽이 주소를 가진다",
      "thread_id": "thread-04919c08038dfeb8",
      "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-03e750bdec0ed533",
+     "evidence": [
+      "issue-03e750bdec0ed533",
+      "issue-4da5b7ab6c225c78",
+      "issue-63c61266bb0dc771",
+      "issue-bdf0fa9bc581aaa0",
+      "story-34b54b6a74dfabbb",
+      "story-c6ba35ab708d60f5",
+      "story-d186fd7060c89e35"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-04919c08038dfeb8",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-34b54b6a74dfabbb",
+     "evidence": [
+      "issue-03e750bdec0ed533",
+      "issue-4da5b7ab6c225c78",
+      "issue-63c61266bb0dc771",
+      "issue-bdf0fa9bc581aaa0",
+      "story-34b54b6a74dfabbb",
+      "story-c6ba35ab708d60f5",
+      "story-d186fd7060c89e35"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-04919c08038dfeb8",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-ed9e07bb0703d938",
+     "evidence": [
+      "issue-03e750bdec0ed533",
+      "issue-4da5b7ab6c225c78",
+      "issue-63c61266bb0dc771",
+      "issue-bdf0fa9bc581aaa0",
+      "story-34b54b6a74dfabbb",
+      "story-c6ba35ab708d60f5",
+      "story-d186fd7060c89e35"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-04919c08038dfeb8",
+     "version": "thread-identity-v1"
     }
    ],
    "scope": {
@@ -2288,80 +2303,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-10-07T07:23:28+09:00",
-     "decision": "detach",
-     "event_id": "story-0aaa2fb5b006150b",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-04eb4cdac0b39106",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-08T06:01:09+09:00",
-     "decision": "attach",
-     "event_id": "issue-3c3357d444dad489",
-     "evidence": [
-      "issue-114d22fbd5a28b36",
-      "issue-3c3357d444dad489",
-      "issue-76e475ad2520cd4f",
-      "story-6002bbd9aac821c7",
-      "story-74e5378ee7284fb8"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-04eb4cdac0b39106",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-08T06:01:09+09:00",
-     "decision": "attach",
-     "event_id": "story-74e5378ee7284fb8",
-     "evidence": [
-      "issue-114d22fbd5a28b36",
-      "issue-3c3357d444dad489",
-      "issue-76e475ad2520cd4f",
-      "story-6002bbd9aac821c7",
-      "story-74e5378ee7284fb8"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-04eb4cdac0b39106",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-08T06:01:09+09:00",
-     "decision": "attach",
-     "event_id": "story-6002bbd9aac821c7",
-     "evidence": [
-      "issue-114d22fbd5a28b36",
-      "issue-3c3357d444dad489",
-      "issue-76e475ad2520cd4f",
-      "story-6002bbd9aac821c7",
-      "story-74e5378ee7284fb8"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-04eb4cdac0b39106",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-08T06:01:09+09:00",
-     "decision": "merge",
-     "event_id": "thread-75e4598e5d4612a6",
-     "evidence": [
-      "issue-114d22fbd5a28b36",
-      "issue-3c3357d444dad489",
-      "issue-76e475ad2520cd4f",
-      "story-6002bbd9aac821c7",
-      "story-74e5378ee7284fb8"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-04eb4cdac0b39106",
-     "version": "thread-identity-v1"
-    },
-    {
      "decided_at": "2026-10-08T06:01:09+09:00",
      "decision": "merge",
      "event_id": "thread-8d5cf200c8530d8b",
@@ -2907,6 +2848,86 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "merge",
+     "event_id": "thread-8d5cf200c8530d8b",
+     "evidence": [
+      "issue-114d22fbd5a28b36",
+      "issue-3c3357d444dad489",
+      "issue-76e475ad2520cd4f",
+      "story-6002bbd9aac821c7",
+      "story-74e5378ee7284fb8"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-04eb4cdac0b39106",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-3c3357d444dad489",
+     "evidence": [
+      "issue-114d22fbd5a28b36",
+      "issue-3c3357d444dad489",
+      "issue-76e475ad2520cd4f",
+      "story-6002bbd9aac821c7",
+      "story-74e5378ee7284fb8"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-04eb4cdac0b39106",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-74e5378ee7284fb8",
+     "evidence": [
+      "issue-114d22fbd5a28b36",
+      "issue-3c3357d444dad489",
+      "issue-76e475ad2520cd4f",
+      "story-6002bbd9aac821c7",
+      "story-74e5378ee7284fb8"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-04eb4cdac0b39106",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-6002bbd9aac821c7",
+     "evidence": [
+      "issue-114d22fbd5a28b36",
+      "issue-3c3357d444dad489",
+      "issue-76e475ad2520cd4f",
+      "story-6002bbd9aac821c7",
+      "story-74e5378ee7284fb8"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-04eb4cdac0b39106",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-75e4598e5d4612a6",
+     "evidence": [
+      "issue-114d22fbd5a28b36",
+      "issue-3c3357d444dad489",
+      "issue-76e475ad2520cd4f",
+      "story-6002bbd9aac821c7",
+      "story-74e5378ee7284fb8"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-04eb4cdac0b39106",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "merge",
      "event_id": "thread-8d5cf200c8530d8b",
      "evidence": [
@@ -4051,6 +4072,16 @@
      "decided_at": "2026-10-14T04:37:31+09:00",
      "decision": "detach",
      "event_id": "story-f69c839a824cf47d",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-095b87b8f54fd70e",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-f396174affa85472",
      "evidence": [],
      "method": "thread_judge",
      "reason": "이번 판정에서 같은 스토리로 보지 않았다",
@@ -6111,26 +6142,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-23637045fa235993",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-138fc90e98d9254b",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-627ba69c29d4adc5",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-138fc90e98d9254b",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "story-23637045fa235993",
@@ -6502,6 +6513,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "story-627ba69c29d4adc5",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-138fc90e98d9254b",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-23637045fa235993",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-138fc90e98d9254b",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "story-627ba69c29d4adc5",
      "evidence": [],
@@ -6900,26 +6931,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-50a0d5222dadcb85",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-17346e3a426d30ab",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-844109b3a19e53b5",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-17346e3a426d30ab",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "story-50a0d5222dadcb85",
@@ -7291,6 +7302,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "story-844109b3a19e53b5",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-17346e3a426d30ab",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-50a0d5222dadcb85",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-17346e3a426d30ab",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "story-844109b3a19e53b5",
      "evidence": [],
@@ -7387,24 +7418,27 @@
    "units": []
   },
   "thread-1929635946b16ab9": {
-   "anchor_event_id": "story-b8c7780770dee3c7",
+   "anchor_event_id": "issue-f33f228a288946ee",
    "entity_ids": [
-    "nrc"
+    "doe",
+    "nrc",
+    "nssc",
+    "terrapower"
    ],
    "event_ids": [
-    "story-b8c7780770dee3c7",
+    "issue-f33f228a288946ee",
     "story-4770ee8ed1867728"
    ],
-   "first_seen": "2026-09-30",
+   "first_seen": "2026-07-26",
    "identity_evidence": [
-    "story-4770ee8ed1867728",
-    "story-b8c7780770dee3c7"
+    "issue-f33f228a288946ee",
+    "story-4770ee8ed1867728"
    ],
    "identity_origin": "inherited",
    "last_seen": "2026-10-09",
    "links": [
     {
-     "from": "story-b8c7780770dee3c7",
+     "from": "issue-f33f228a288946ee",
      "relationship": "stage_progress",
      "to": "story-4770ee8ed1867728"
     }
@@ -7434,6 +7468,29 @@
      "reason": "판정이 같은 스토리로 보았다",
      "thread_id": "thread-1929635946b16ab9",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-f33f228a288946ee",
+     "evidence": [
+      "issue-f33f228a288946ee",
+      "story-4770ee8ed1867728"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-1929635946b16ab9",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-b8c7780770dee3c7",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-1929635946b16ab9",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -7444,7 +7501,10 @@
     "includes": {
      "actions": [],
      "entity_ids": [
-      "nrc"
+      "doe",
+      "nrc",
+      "nssc",
+      "terrapower"
      ],
      "event_families": [
       "regulatory_action"
@@ -7453,7 +7513,7 @@
     }
    },
    "thread_id": "thread-1929635946b16ab9",
-   "title": "미국 NRC, 미국 최초 소형모듈원자로(SMR) 건설 승인",
+   "title": "미국 NRC, DOE 및 캐나다 CNSC, SMR 개발사들과 선진원자로 전망 논의",
    "units": []
   },
   "thread-1a37362b98e517f2": {
@@ -8663,6 +8723,82 @@
      "reason": "first_seen 이 이른 쪽이 주소를 가진다",
      "thread_id": "thread-1b2159428e9c9dd9",
      "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-4d4464de943be9a8",
+     "evidence": [
+      "issue-076036e9576007bc",
+      "issue-1f5270f31d6e57ef",
+      "issue-414635dfc63ab9c4",
+      "issue-4d4464de943be9a8",
+      "issue-51dcb7c7707f1ab4",
+      "issue-86025b5da7ff3e53",
+      "issue-b445f28b575da231",
+      "story-e370c941ec2c02f6"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-1b2159428e9c9dd9",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-51dcb7c7707f1ab4",
+     "evidence": [
+      "issue-076036e9576007bc",
+      "issue-1f5270f31d6e57ef",
+      "issue-414635dfc63ab9c4",
+      "issue-4d4464de943be9a8",
+      "issue-51dcb7c7707f1ab4",
+      "issue-86025b5da7ff3e53",
+      "issue-b445f28b575da231",
+      "story-e370c941ec2c02f6"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-1b2159428e9c9dd9",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-414635dfc63ab9c4",
+     "evidence": [
+      "issue-076036e9576007bc",
+      "issue-1f5270f31d6e57ef",
+      "issue-414635dfc63ab9c4",
+      "issue-4d4464de943be9a8",
+      "issue-51dcb7c7707f1ab4",
+      "issue-86025b5da7ff3e53",
+      "issue-b445f28b575da231",
+      "story-e370c941ec2c02f6"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-1b2159428e9c9dd9",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-b7d01535019a34dd",
+     "evidence": [
+      "issue-076036e9576007bc",
+      "issue-1f5270f31d6e57ef",
+      "issue-414635dfc63ab9c4",
+      "issue-4d4464de943be9a8",
+      "issue-51dcb7c7707f1ab4",
+      "issue-86025b5da7ff3e53",
+      "issue-b445f28b575da231",
+      "story-e370c941ec2c02f6"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-1b2159428e9c9dd9",
+     "version": "thread-identity-v1"
     }
    ],
    "scope": {
@@ -9682,26 +9818,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-2cd9a95afd7c96a0",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-1e284778c81d81c8",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-6c95b950a031c36a",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-1e284778c81d81c8",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-2cd9a95afd7c96a0",
@@ -10073,6 +10189,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-6c95b950a031c36a",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-1e284778c81d81c8",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-2cd9a95afd7c96a0",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-1e284778c81d81c8",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-6c95b950a031c36a",
      "evidence": [],
@@ -10393,26 +10529,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-6833a35dd8fc11fe",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-208cff113856419c",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-c924b8fc99b091ba",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-208cff113856419c",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-6833a35dd8fc11fe",
@@ -10784,6 +10900,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "story-c924b8fc99b091ba",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-208cff113856419c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-6833a35dd8fc11fe",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-208cff113856419c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "story-c924b8fc99b091ba",
      "evidence": [],
@@ -10914,26 +11050,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-538c53ac4627ea3f",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-24d9de032ba463e5",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-09465180cdc8f102",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-24d9de032ba463e5",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-538c53ac4627ea3f",
@@ -11305,6 +11421,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-09465180cdc8f102",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-24d9de032ba463e5",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-538c53ac4627ea3f",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-24d9de032ba463e5",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-09465180cdc8f102",
      "evidence": [],
@@ -11333,25 +11469,26 @@
    "units": []
   },
   "thread-262c345d5c8a262a": {
-   "anchor_event_id": "story-4af2a74e5a3eb0e3",
+   "anchor_event_id": "story-2eba66f067fdc974",
    "entity_ids": [
     "kepco",
     "khnp",
     "westinghouse"
    ],
    "event_ids": [
-    "story-4af2a74e5a3eb0e3",
+    "story-2eba66f067fdc974",
     "story-afa0cf52daa8ec64"
    ],
-   "first_seen": "2026-09-11",
+   "first_seen": "2026-09-10",
    "identity_evidence": [
-    "story-4af2a74e5a3eb0e3"
+    "story-2eba66f067fdc974",
+    "story-afa0cf52daa8ec64"
    ],
-   "identity_origin": "minted",
+   "identity_origin": "inherited",
    "last_seen": "2026-10-13",
    "links": [
     {
-     "from": "story-4af2a74e5a3eb0e3",
+     "from": "story-2eba66f067fdc974",
      "relationship": "same_matter",
      "to": "story-afa0cf52daa8ec64"
     }
@@ -11381,6 +11518,29 @@
      "reason": "스토리가 합쳐졌다",
      "thread_id": "thread-262c345d5c8a262a",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-2eba66f067fdc974",
+     "evidence": [
+      "story-2eba66f067fdc974",
+      "story-afa0cf52daa8ec64"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-262c345d5c8a262a",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-4af2a74e5a3eb0e3",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-262c345d5c8a262a",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -11396,14 +11556,13 @@
       "westinghouse"
      ],
      "event_families": [
-      "project_oversight",
       "corporate_move"
      ],
      "units": []
     }
    },
    "thread_id": "thread-262c345d5c8a262a",
-   "title": "한수원, 이집트 엘다바 원전 건설 현장 점검 및 협력 강화",
+   "title": "한수원-웨스팅하우스, 미국 내 원전 8기 건설 협력 잠정 합의",
    "units": []
   },
   "thread-273ae57b65a3005d": {
@@ -11738,6 +11897,19 @@
      "reason": "스토리가 합쳐졌다",
      "thread_id": "thread-273ae57b65a3005d",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-e014872747c23fbc",
+     "evidence": [
+      "issue-e014872747c23fbc",
+      "story-e014872747c23fbc"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-273ae57b65a3005d",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -11768,25 +11940,23 @@
    "event_ids": [
     "issue-147ece88607645c4",
     "issue-0678181c2a17bb92",
-    "issue-065dc3057ee2df9d",
-    "story-7524648ff8032947",
     "story-7d19110e0c58b28f",
-    "story-3f2df935d0158def",
-    "story-0128ba39e1aa2927",
+    "story-fc64f50e257b3a0a",
+    "story-110514064e83212b",
     "story-4e1bbcf5fe2a6b99",
-    "story-8e205925596e9fd2",
-    "issue-fb600cacc188187d"
+    "story-5b6800e87ec40aa0",
+    "story-35cdc875abed895f"
    ],
    "first_seen": "2026-08-17",
    "identity_evidence": [
-    "issue-065dc3057ee2df9d",
     "issue-0678181c2a17bb92",
     "issue-147ece88607645c4",
-    "issue-fb600cacc188187d",
-    "story-0128ba39e1aa2927",
-    "story-3f2df935d0158def",
+    "story-110514064e83212b",
+    "story-35cdc875abed895f",
     "story-4e1bbcf5fe2a6b99",
-    "story-7524648ff8032947"
+    "story-5b6800e87ec40aa0",
+    "story-7d19110e0c58b28f",
+    "story-fc64f50e257b3a0a"
    ],
    "identity_origin": "merged",
    "last_seen": "2026-10-09",
@@ -11798,191 +11968,37 @@
     },
     {
      "from": "issue-0678181c2a17bb92",
-     "relationship": "",
-     "to": "issue-065dc3057ee2df9d"
-    },
-    {
-     "from": "issue-065dc3057ee2df9d",
      "relationship": "stage_progress",
-     "to": "story-7524648ff8032947"
-    },
-    {
-     "from": "story-7524648ff8032947",
-     "relationship": "",
      "to": "story-7d19110e0c58b28f"
     },
     {
      "from": "story-7d19110e0c58b28f",
      "relationship": "",
-     "to": "story-3f2df935d0158def"
+     "to": "story-fc64f50e257b3a0a"
     },
     {
-     "from": "story-3f2df935d0158def",
-     "relationship": "same_matter",
-     "to": "story-0128ba39e1aa2927"
+     "from": "story-fc64f50e257b3a0a",
+     "relationship": "stage_progress",
+     "to": "story-110514064e83212b"
     },
     {
-     "from": "story-0128ba39e1aa2927",
-     "relationship": "same_matter",
+     "from": "story-110514064e83212b",
+     "relationship": "stage_progress",
      "to": "story-4e1bbcf5fe2a6b99"
     },
     {
      "from": "story-4e1bbcf5fe2a6b99",
-     "relationship": "same_matter",
-     "to": "story-8e205925596e9fd2"
+     "relationship": "",
+     "to": "story-5b6800e87ec40aa0"
     },
     {
-     "from": "story-8e205925596e9fd2",
+     "from": "story-5b6800e87ec40aa0",
      "relationship": "same_matter",
-     "to": "issue-fb600cacc188187d"
+     "to": "story-35cdc875abed895f"
     }
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-10-09T07:22:11+09:00",
-     "decision": "attach",
-     "event_id": "story-110514064e83212b",
-     "evidence": [
-      "issue-0678181c2a17bb92",
-      "issue-147ece88607645c4",
-      "story-110514064e83212b",
-      "story-4e1bbcf5fe2a6b99",
-      "story-5b6800e87ec40aa0",
-      "story-7d19110e0c58b28f",
-      "story-fc64f50e257b3a0a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-28abc4b5d85d3bdd",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-09T07:22:11+09:00",
-     "decision": "attach",
-     "event_id": "story-4e1bbcf5fe2a6b99",
-     "evidence": [
-      "issue-0678181c2a17bb92",
-      "issue-147ece88607645c4",
-      "story-110514064e83212b",
-      "story-4e1bbcf5fe2a6b99",
-      "story-5b6800e87ec40aa0",
-      "story-7d19110e0c58b28f",
-      "story-fc64f50e257b3a0a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-28abc4b5d85d3bdd",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-09T07:22:11+09:00",
-     "decision": "merge",
-     "event_id": "thread-69334fcff32b6984",
-     "evidence": [
-      "issue-0678181c2a17bb92",
-      "issue-147ece88607645c4",
-      "story-110514064e83212b",
-      "story-4e1bbcf5fe2a6b99",
-      "story-5b6800e87ec40aa0",
-      "story-7d19110e0c58b28f",
-      "story-fc64f50e257b3a0a"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-28abc4b5d85d3bdd",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-09T07:22:11+09:00",
-     "decision": "merge",
-     "event_id": "thread-fcc1579f256eefcf",
-     "evidence": [
-      "issue-0678181c2a17bb92",
-      "issue-147ece88607645c4",
-      "story-110514064e83212b",
-      "story-4e1bbcf5fe2a6b99",
-      "story-5b6800e87ec40aa0",
-      "story-7d19110e0c58b28f",
-      "story-fc64f50e257b3a0a"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-28abc4b5d85d3bdd",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "story-fc64f50e257b3a0a",
-     "evidence": [
-      "issue-0678181c2a17bb92",
-      "issue-147ece88607645c4",
-      "story-110514064e83212b",
-      "story-4e1bbcf5fe2a6b99",
-      "story-5b6800e87ec40aa0",
-      "story-7d19110e0c58b28f",
-      "story-fc64f50e257b3a0a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-28abc4b5d85d3bdd",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "story-110514064e83212b",
-     "evidence": [
-      "issue-0678181c2a17bb92",
-      "issue-147ece88607645c4",
-      "story-110514064e83212b",
-      "story-4e1bbcf5fe2a6b99",
-      "story-5b6800e87ec40aa0",
-      "story-7d19110e0c58b28f",
-      "story-fc64f50e257b3a0a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-28abc4b5d85d3bdd",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "story-4e1bbcf5fe2a6b99",
-     "evidence": [
-      "issue-0678181c2a17bb92",
-      "issue-147ece88607645c4",
-      "story-110514064e83212b",
-      "story-4e1bbcf5fe2a6b99",
-      "story-5b6800e87ec40aa0",
-      "story-7d19110e0c58b28f",
-      "story-fc64f50e257b3a0a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-28abc4b5d85d3bdd",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "merge",
-     "event_id": "thread-69334fcff32b6984",
-     "evidence": [
-      "issue-0678181c2a17bb92",
-      "issue-147ece88607645c4",
-      "story-110514064e83212b",
-      "story-4e1bbcf5fe2a6b99",
-      "story-5b6800e87ec40aa0",
-      "story-7d19110e0c58b28f",
-      "story-fc64f50e257b3a0a"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-28abc4b5d85d3bdd",
-     "version": "thread-identity-v1"
-    },
     {
      "decided_at": "2026-10-10T07:26:03+09:00",
      "decision": "merge",
@@ -12589,6 +12605,158 @@
      "reason": "first_seen 이 이른 쪽이 주소를 가진다",
      "thread_id": "thread-28abc4b5d85d3bdd",
      "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-fc64f50e257b3a0a",
+     "evidence": [
+      "issue-0678181c2a17bb92",
+      "issue-147ece88607645c4",
+      "story-110514064e83212b",
+      "story-35cdc875abed895f",
+      "story-4e1bbcf5fe2a6b99",
+      "story-5b6800e87ec40aa0",
+      "story-7d19110e0c58b28f",
+      "story-fc64f50e257b3a0a"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-28abc4b5d85d3bdd",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-110514064e83212b",
+     "evidence": [
+      "issue-0678181c2a17bb92",
+      "issue-147ece88607645c4",
+      "story-110514064e83212b",
+      "story-35cdc875abed895f",
+      "story-4e1bbcf5fe2a6b99",
+      "story-5b6800e87ec40aa0",
+      "story-7d19110e0c58b28f",
+      "story-fc64f50e257b3a0a"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-28abc4b5d85d3bdd",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-4e1bbcf5fe2a6b99",
+     "evidence": [
+      "issue-0678181c2a17bb92",
+      "issue-147ece88607645c4",
+      "story-110514064e83212b",
+      "story-35cdc875abed895f",
+      "story-4e1bbcf5fe2a6b99",
+      "story-5b6800e87ec40aa0",
+      "story-7d19110e0c58b28f",
+      "story-fc64f50e257b3a0a"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-28abc4b5d85d3bdd",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-5b6800e87ec40aa0",
+     "evidence": [
+      "issue-0678181c2a17bb92",
+      "issue-147ece88607645c4",
+      "story-110514064e83212b",
+      "story-35cdc875abed895f",
+      "story-4e1bbcf5fe2a6b99",
+      "story-5b6800e87ec40aa0",
+      "story-7d19110e0c58b28f",
+      "story-fc64f50e257b3a0a"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-28abc4b5d85d3bdd",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-35cdc875abed895f",
+     "evidence": [
+      "issue-0678181c2a17bb92",
+      "issue-147ece88607645c4",
+      "story-110514064e83212b",
+      "story-35cdc875abed895f",
+      "story-4e1bbcf5fe2a6b99",
+      "story-5b6800e87ec40aa0",
+      "story-7d19110e0c58b28f",
+      "story-fc64f50e257b3a0a"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-28abc4b5d85d3bdd",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-69334fcff32b6984",
+     "evidence": [
+      "issue-0678181c2a17bb92",
+      "issue-147ece88607645c4",
+      "story-110514064e83212b",
+      "story-35cdc875abed895f",
+      "story-4e1bbcf5fe2a6b99",
+      "story-5b6800e87ec40aa0",
+      "story-7d19110e0c58b28f",
+      "story-fc64f50e257b3a0a"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-28abc4b5d85d3bdd",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-b14dcb2565ec29de",
+     "evidence": [
+      "issue-0678181c2a17bb92",
+      "issue-147ece88607645c4",
+      "story-110514064e83212b",
+      "story-35cdc875abed895f",
+      "story-4e1bbcf5fe2a6b99",
+      "story-5b6800e87ec40aa0",
+      "story-7d19110e0c58b28f",
+      "story-fc64f50e257b3a0a"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-28abc4b5d85d3bdd",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-cd78bac167d47d58",
+     "evidence": [
+      "issue-0678181c2a17bb92",
+      "issue-147ece88607645c4",
+      "story-110514064e83212b",
+      "story-35cdc875abed895f",
+      "story-4e1bbcf5fe2a6b99",
+      "story-5b6800e87ec40aa0",
+      "story-7d19110e0c58b28f",
+      "story-fc64f50e257b3a0a"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-28abc4b5d85d3bdd",
+     "version": "thread-identity-v1"
     }
    ],
    "scope": {
@@ -12605,8 +12773,7 @@
      ],
      "event_families": [
       "policy_decision",
-      "international_cooperation",
-      "contract_award"
+      "policy_discussion"
      ],
      "units": []
     }
@@ -15530,12 +15697,13 @@
     "issue-341fae7beffafdcb",
     "issue-d1e966b5772613fd",
     "issue-dc1e6a30e09ccefd",
+    "issue-baf86b26077f0bc1",
     "story-e3337315de9c0677",
-    "story-35258fc2445fec63",
     "issue-c635ceb310705bc0",
     "story-4796900841f0262b",
     "story-e317f8765b0d98e2",
-    "story-6abecf0e1542a9e5"
+    "story-6abecf0e1542a9e5",
+    "story-c3385d89bd3acd6d"
    ],
    "first_seen": "2026-08-08",
    "identity_evidence": [
@@ -15543,10 +15711,10 @@
     "issue-6a25f94bf83612cd",
     "issue-737df86cf04543b5",
     "issue-a4fec121e2c54527",
+    "issue-baf86b26077f0bc1",
     "issue-c635ceb310705bc0",
     "issue-d1e966b5772613fd",
-    "issue-dc1e6a30e09ccefd",
-    "issue-f9836d3cb1423104"
+    "issue-dc1e6a30e09ccefd"
    ],
    "identity_origin": "merged",
    "last_seen": "2026-10-14",
@@ -15583,17 +15751,17 @@
     },
     {
      "from": "issue-dc1e6a30e09ccefd",
-     "relationship": "stage_progress",
+     "relationship": "",
+     "to": "issue-baf86b26077f0bc1"
+    },
+    {
+     "from": "issue-baf86b26077f0bc1",
+     "relationship": "",
      "to": "story-e3337315de9c0677"
     },
     {
      "from": "story-e3337315de9c0677",
      "relationship": "",
-     "to": "story-35258fc2445fec63"
-    },
-    {
-     "from": "story-35258fc2445fec63",
-     "relationship": "same_matter",
      "to": "issue-c635ceb310705bc0"
     },
     {
@@ -15610,138 +15778,15 @@
      "from": "story-e317f8765b0d98e2",
      "relationship": "same_matter",
      "to": "story-6abecf0e1542a9e5"
+    },
+    {
+     "from": "story-6abecf0e1542a9e5",
+     "relationship": "",
+     "to": "story-c3385d89bd3acd6d"
     }
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-10-04T09:06:56+09:00",
-     "decision": "attach",
-     "event_id": "issue-b817c7c00ad978ec",
-     "evidence": [
-      "issue-6a25f94bf83612cd",
-      "issue-737df86cf04543b5",
-      "issue-b817c7c00ad978ec",
-      "issue-dc1e6a30e09ccefd",
-      "story-b102c0c44bc0f2ba"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-35ede1880324769c",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T09:06:56+09:00",
-     "decision": "attach",
-     "event_id": "story-b102c0c44bc0f2ba",
-     "evidence": [
-      "issue-6a25f94bf83612cd",
-      "issue-737df86cf04543b5",
-      "issue-b817c7c00ad978ec",
-      "issue-dc1e6a30e09ccefd",
-      "story-b102c0c44bc0f2ba"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-35ede1880324769c",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T09:06:56+09:00",
-     "decision": "merge",
-     "event_id": "thread-fc8a39a5ba778454",
-     "evidence": [
-      "issue-6a25f94bf83612cd",
-      "issue-737df86cf04543b5",
-      "issue-b817c7c00ad978ec",
-      "issue-dc1e6a30e09ccefd",
-      "story-b102c0c44bc0f2ba"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-35ede1880324769c",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-04T09:18:58+09:00",
-     "decision": "attach",
-     "event_id": "issue-b817c7c00ad978ec",
-     "evidence": [
-      "issue-6a25f94bf83612cd",
-      "issue-737df86cf04543b5",
-      "issue-b817c7c00ad978ec",
-      "issue-dc1e6a30e09ccefd",
-      "story-b102c0c44bc0f2ba"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-35ede1880324769c",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T09:18:58+09:00",
-     "decision": "attach",
-     "event_id": "story-b102c0c44bc0f2ba",
-     "evidence": [
-      "issue-6a25f94bf83612cd",
-      "issue-737df86cf04543b5",
-      "issue-b817c7c00ad978ec",
-      "issue-dc1e6a30e09ccefd",
-      "story-b102c0c44bc0f2ba"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-35ede1880324769c",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T09:18:58+09:00",
-     "decision": "merge",
-     "event_id": "thread-fc8a39a5ba778454",
-     "evidence": [
-      "issue-6a25f94bf83612cd",
-      "issue-737df86cf04543b5",
-      "issue-b817c7c00ad978ec",
-      "issue-dc1e6a30e09ccefd",
-      "story-b102c0c44bc0f2ba"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-35ede1880324769c",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-05T07:10:43+09:00",
-     "decision": "attach",
-     "event_id": "issue-b817c7c00ad978ec",
-     "evidence": [
-      "issue-6a25f94bf83612cd",
-      "issue-737df86cf04543b5",
-      "issue-b817c7c00ad978ec",
-      "issue-dc1e6a30e09ccefd",
-      "story-b102c0c44bc0f2ba"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-35ede1880324769c",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-05T07:10:43+09:00",
-     "decision": "attach",
-     "event_id": "story-b102c0c44bc0f2ba",
-     "evidence": [
-      "issue-6a25f94bf83612cd",
-      "issue-737df86cf04543b5",
-      "issue-b817c7c00ad978ec",
-      "issue-dc1e6a30e09ccefd",
-      "story-b102c0c44bc0f2ba"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-35ede1880324769c",
-     "version": "thread-judge-v1"
-    },
     {
      "decided_at": "2026-10-05T07:10:43+09:00",
      "decision": "merge",
@@ -16298,6 +16343,158 @@
      "reason": "first_seen 이 이른 쪽이 주소를 가진다",
      "thread_id": "thread-35ede1880324769c",
      "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-341fae7beffafdcb",
+     "evidence": [
+      "issue-341fae7beffafdcb",
+      "issue-6a25f94bf83612cd",
+      "issue-737df86cf04543b5",
+      "issue-a4fec121e2c54527",
+      "issue-baf86b26077f0bc1",
+      "issue-c635ceb310705bc0",
+      "issue-d1e966b5772613fd",
+      "issue-dc1e6a30e09ccefd"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-35ede1880324769c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-baf86b26077f0bc1",
+     "evidence": [
+      "issue-341fae7beffafdcb",
+      "issue-6a25f94bf83612cd",
+      "issue-737df86cf04543b5",
+      "issue-a4fec121e2c54527",
+      "issue-baf86b26077f0bc1",
+      "issue-c635ceb310705bc0",
+      "issue-d1e966b5772613fd",
+      "issue-dc1e6a30e09ccefd"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-35ede1880324769c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-c635ceb310705bc0",
+     "evidence": [
+      "issue-341fae7beffafdcb",
+      "issue-6a25f94bf83612cd",
+      "issue-737df86cf04543b5",
+      "issue-a4fec121e2c54527",
+      "issue-baf86b26077f0bc1",
+      "issue-c635ceb310705bc0",
+      "issue-d1e966b5772613fd",
+      "issue-dc1e6a30e09ccefd"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-35ede1880324769c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-4796900841f0262b",
+     "evidence": [
+      "issue-341fae7beffafdcb",
+      "issue-6a25f94bf83612cd",
+      "issue-737df86cf04543b5",
+      "issue-a4fec121e2c54527",
+      "issue-baf86b26077f0bc1",
+      "issue-c635ceb310705bc0",
+      "issue-d1e966b5772613fd",
+      "issue-dc1e6a30e09ccefd"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-35ede1880324769c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-e317f8765b0d98e2",
+     "evidence": [
+      "issue-341fae7beffafdcb",
+      "issue-6a25f94bf83612cd",
+      "issue-737df86cf04543b5",
+      "issue-a4fec121e2c54527",
+      "issue-baf86b26077f0bc1",
+      "issue-c635ceb310705bc0",
+      "issue-d1e966b5772613fd",
+      "issue-dc1e6a30e09ccefd"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-35ede1880324769c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-c3385d89bd3acd6d",
+     "evidence": [
+      "issue-341fae7beffafdcb",
+      "issue-6a25f94bf83612cd",
+      "issue-737df86cf04543b5",
+      "issue-a4fec121e2c54527",
+      "issue-baf86b26077f0bc1",
+      "issue-c635ceb310705bc0",
+      "issue-d1e966b5772613fd",
+      "issue-dc1e6a30e09ccefd"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-35ede1880324769c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-41e4b7d1fc2fbe83",
+     "evidence": [
+      "issue-341fae7beffafdcb",
+      "issue-6a25f94bf83612cd",
+      "issue-737df86cf04543b5",
+      "issue-a4fec121e2c54527",
+      "issue-baf86b26077f0bc1",
+      "issue-c635ceb310705bc0",
+      "issue-d1e966b5772613fd",
+      "issue-dc1e6a30e09ccefd"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-35ede1880324769c",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-e115483d62d321f4",
+     "evidence": [
+      "issue-341fae7beffafdcb",
+      "issue-6a25f94bf83612cd",
+      "issue-737df86cf04543b5",
+      "issue-a4fec121e2c54527",
+      "issue-baf86b26077f0bc1",
+      "issue-c635ceb310705bc0",
+      "issue-d1e966b5772613fd",
+      "issue-dc1e6a30e09ccefd"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-35ede1880324769c",
+     "version": "thread-identity-v1"
     }
    ],
    "scope": {
@@ -16342,8 +16539,8 @@
     "issue-c693db7134e6be68",
     "issue-e9c761ed60c251fb",
     "issue-16e489350f2e52bd",
-    "issue-5190f5f0f0d050de",
     "issue-f2d43a7242adb5b7",
+    "issue-5190f5f0f0d050de",
     "issue-9dac780789493824",
     "issue-a267fd2b0c6cf19b",
     "issue-b5078cd9e9f6cf5f"
@@ -16359,7 +16556,7 @@
     "issue-b5078cd9e9f6cf5f",
     "issue-c693db7134e6be68"
    ],
-   "identity_origin": "inherited",
+   "identity_origin": "merged",
    "last_seen": "2026-08-22",
    "links": [
     {
@@ -16399,16 +16596,16 @@
     },
     {
      "from": "issue-16e489350f2e52bd",
-     "relationship": "cause_effect",
-     "to": "issue-5190f5f0f0d050de"
-    },
-    {
-     "from": "issue-5190f5f0f0d050de",
      "relationship": "same_matter",
      "to": "issue-f2d43a7242adb5b7"
     },
     {
      "from": "issue-f2d43a7242adb5b7",
+     "relationship": "same_matter",
+     "to": "issue-5190f5f0f0d050de"
+    },
+    {
+     "from": "issue-5190f5f0f0d050de",
      "relationship": "same_matter",
      "to": "issue-9dac780789493824"
     },
@@ -16838,6 +17035,44 @@
      "reason": "스토리가 합쳐졌다",
      "thread_id": "thread-3776c3bf06447bd5",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-ca20b30862dbeec1",
+     "evidence": [
+      "issue-16e489350f2e52bd",
+      "issue-4cda2ddfbef9ef4c",
+      "issue-5190f5f0f0d050de",
+      "issue-9dac780789493824",
+      "issue-a267fd2b0c6cf19b",
+      "issue-ab4182f3fbeab74b",
+      "issue-b5078cd9e9f6cf5f",
+      "issue-c693db7134e6be68"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-3776c3bf06447bd5",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-5e475750797a4e05",
+     "evidence": [
+      "issue-16e489350f2e52bd",
+      "issue-4cda2ddfbef9ef4c",
+      "issue-5190f5f0f0d050de",
+      "issue-9dac780789493824",
+      "issue-a267fd2b0c6cf19b",
+      "issue-ab4182f3fbeab74b",
+      "issue-b5078cd9e9f6cf5f",
+      "issue-c693db7134e6be68"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-3776c3bf06447bd5",
+     "version": "thread-identity-v1"
     }
    ],
    "scope": {
@@ -16941,158 +17176,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "issue-02a4ae90b447d0fb",
-     "evidence": [
-      "issue-02a4ae90b447d0fb",
-      "issue-658e7fc2f563ff54",
-      "issue-e40a9585f266cf82",
-      "story-9af72c1f7069a074",
-      "story-9f4c99f51b32e804",
-      "story-a3e57010d24635a7",
-      "story-cc3d72dc836c7750",
-      "story-cf2a564da87ca921"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-387e3d2ac7f18815",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "issue-e40a9585f266cf82",
-     "evidence": [
-      "issue-02a4ae90b447d0fb",
-      "issue-658e7fc2f563ff54",
-      "issue-e40a9585f266cf82",
-      "story-9af72c1f7069a074",
-      "story-9f4c99f51b32e804",
-      "story-a3e57010d24635a7",
-      "story-cc3d72dc836c7750",
-      "story-cf2a564da87ca921"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-387e3d2ac7f18815",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "story-a3e57010d24635a7",
-     "evidence": [
-      "issue-02a4ae90b447d0fb",
-      "issue-658e7fc2f563ff54",
-      "issue-e40a9585f266cf82",
-      "story-9af72c1f7069a074",
-      "story-9f4c99f51b32e804",
-      "story-a3e57010d24635a7",
-      "story-cc3d72dc836c7750",
-      "story-cf2a564da87ca921"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-387e3d2ac7f18815",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "story-f298fadfdbc98ba8",
-     "evidence": [
-      "issue-02a4ae90b447d0fb",
-      "issue-658e7fc2f563ff54",
-      "issue-e40a9585f266cf82",
-      "story-9af72c1f7069a074",
-      "story-9f4c99f51b32e804",
-      "story-a3e57010d24635a7",
-      "story-cc3d72dc836c7750",
-      "story-cf2a564da87ca921"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-387e3d2ac7f18815",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "story-cf2a564da87ca921",
-     "evidence": [
-      "issue-02a4ae90b447d0fb",
-      "issue-658e7fc2f563ff54",
-      "issue-e40a9585f266cf82",
-      "story-9af72c1f7069a074",
-      "story-9f4c99f51b32e804",
-      "story-a3e57010d24635a7",
-      "story-cc3d72dc836c7750",
-      "story-cf2a564da87ca921"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-387e3d2ac7f18815",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "story-cc3d72dc836c7750",
-     "evidence": [
-      "issue-02a4ae90b447d0fb",
-      "issue-658e7fc2f563ff54",
-      "issue-e40a9585f266cf82",
-      "story-9af72c1f7069a074",
-      "story-9f4c99f51b32e804",
-      "story-a3e57010d24635a7",
-      "story-cc3d72dc836c7750",
-      "story-cf2a564da87ca921"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-387e3d2ac7f18815",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "merge",
-     "event_id": "thread-60d5814c68118798",
-     "evidence": [
-      "issue-02a4ae90b447d0fb",
-      "issue-658e7fc2f563ff54",
-      "issue-e40a9585f266cf82",
-      "story-9af72c1f7069a074",
-      "story-9f4c99f51b32e804",
-      "story-a3e57010d24635a7",
-      "story-cc3d72dc836c7750",
-      "story-cf2a564da87ca921"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-387e3d2ac7f18815",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "merge",
-     "event_id": "thread-9ab04d354d6a5b7a",
-     "evidence": [
-      "issue-02a4ae90b447d0fb",
-      "issue-658e7fc2f563ff54",
-      "issue-e40a9585f266cf82",
-      "story-9af72c1f7069a074",
-      "story-9f4c99f51b32e804",
-      "story-a3e57010d24635a7",
-      "story-cc3d72dc836c7750",
-      "story-cf2a564da87ca921"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-387e3d2ac7f18815",
-     "version": "thread-identity-v1"
-    },
-    {
      "decided_at": "2026-10-11T07:18:58+09:00",
      "decision": "attach",
      "event_id": "issue-02a4ae90b447d0fb",
@@ -17683,6 +17766,158 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "merge",
+     "event_id": "thread-9ab04d354d6a5b7a",
+     "evidence": [
+      "issue-02a4ae90b447d0fb",
+      "issue-658e7fc2f563ff54",
+      "issue-e40a9585f266cf82",
+      "story-9af72c1f7069a074",
+      "story-9f4c99f51b32e804",
+      "story-a3e57010d24635a7",
+      "story-cc3d72dc836c7750",
+      "story-cf2a564da87ca921"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-387e3d2ac7f18815",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-02a4ae90b447d0fb",
+     "evidence": [
+      "issue-02a4ae90b447d0fb",
+      "issue-658e7fc2f563ff54",
+      "issue-e40a9585f266cf82",
+      "story-9af72c1f7069a074",
+      "story-9f4c99f51b32e804",
+      "story-a3e57010d24635a7",
+      "story-cc3d72dc836c7750",
+      "story-cf2a564da87ca921"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-387e3d2ac7f18815",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-e40a9585f266cf82",
+     "evidence": [
+      "issue-02a4ae90b447d0fb",
+      "issue-658e7fc2f563ff54",
+      "issue-e40a9585f266cf82",
+      "story-9af72c1f7069a074",
+      "story-9f4c99f51b32e804",
+      "story-a3e57010d24635a7",
+      "story-cc3d72dc836c7750",
+      "story-cf2a564da87ca921"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-387e3d2ac7f18815",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-a3e57010d24635a7",
+     "evidence": [
+      "issue-02a4ae90b447d0fb",
+      "issue-658e7fc2f563ff54",
+      "issue-e40a9585f266cf82",
+      "story-9af72c1f7069a074",
+      "story-9f4c99f51b32e804",
+      "story-a3e57010d24635a7",
+      "story-cc3d72dc836c7750",
+      "story-cf2a564da87ca921"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-387e3d2ac7f18815",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-f298fadfdbc98ba8",
+     "evidence": [
+      "issue-02a4ae90b447d0fb",
+      "issue-658e7fc2f563ff54",
+      "issue-e40a9585f266cf82",
+      "story-9af72c1f7069a074",
+      "story-9f4c99f51b32e804",
+      "story-a3e57010d24635a7",
+      "story-cc3d72dc836c7750",
+      "story-cf2a564da87ca921"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-387e3d2ac7f18815",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-cf2a564da87ca921",
+     "evidence": [
+      "issue-02a4ae90b447d0fb",
+      "issue-658e7fc2f563ff54",
+      "issue-e40a9585f266cf82",
+      "story-9af72c1f7069a074",
+      "story-9f4c99f51b32e804",
+      "story-a3e57010d24635a7",
+      "story-cc3d72dc836c7750",
+      "story-cf2a564da87ca921"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-387e3d2ac7f18815",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-cc3d72dc836c7750",
+     "evidence": [
+      "issue-02a4ae90b447d0fb",
+      "issue-658e7fc2f563ff54",
+      "issue-e40a9585f266cf82",
+      "story-9af72c1f7069a074",
+      "story-9f4c99f51b32e804",
+      "story-a3e57010d24635a7",
+      "story-cc3d72dc836c7750",
+      "story-cf2a564da87ca921"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-387e3d2ac7f18815",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-60d5814c68118798",
+     "evidence": [
+      "issue-02a4ae90b447d0fb",
+      "issue-658e7fc2f563ff54",
+      "issue-e40a9585f266cf82",
+      "story-9af72c1f7069a074",
+      "story-9f4c99f51b32e804",
+      "story-a3e57010d24635a7",
+      "story-cc3d72dc836c7750",
+      "story-cf2a564da87ca921"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-387e3d2ac7f18815",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "merge",
      "event_id": "thread-9ab04d354d6a5b7a",
      "evidence": [
@@ -17725,6 +17960,72 @@
    },
    "thread_id": "thread-387e3d2ac7f18815",
    "title": "미국 원자력 기업 웨스팅하우스, 기업공개(IPO) 신청",
+   "units": []
+  },
+  "thread-39e5132a404c5308": {
+   "anchor_event_id": "story-9c60daa87694cd64",
+   "entity_ids": [],
+   "event_ids": [
+    "story-9c60daa87694cd64",
+    "story-ab527e887f2c2010"
+   ],
+   "first_seen": "2026-10-03",
+   "identity_evidence": [
+    "story-9c60daa87694cd64"
+   ],
+   "identity_origin": "minted",
+   "last_seen": "2026-10-15",
+   "links": [
+    {
+     "from": "story-9c60daa87694cd64",
+     "relationship": "same_matter",
+     "to": "story-ab527e887f2c2010"
+    }
+   ],
+   "moved_to": "",
+   "relations": [
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-9c60daa87694cd64",
+     "evidence": [
+      "story-9c60daa87694cd64"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-39e5132a404c5308",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-ab527e887f2c2010",
+     "evidence": [
+      "story-9c60daa87694cd64"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-39e5132a404c5308",
+     "version": "thread-judge-v1"
+    }
+   ],
+   "scope": {
+    "derived_by": "thread-identity-v1",
+    "excludes": {
+     "units": []
+    },
+    "includes": {
+     "actions": [],
+     "entity_ids": [],
+     "event_families": [
+      "regulatory_action",
+      "regulatory_proposal"
+     ],
+     "units": []
+    }
+   },
+   "thread_id": "thread-39e5132a404c5308",
+   "title": "미국 사법당국, 오픈AI 및 앤스로픽의 AI 에이전트 사고 조사 착수",
    "units": []
   },
   "thread-3a7bc82547a4150f": {
@@ -17866,82 +18167,6 @@
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "merge",
-     "event_id": "thread-8d5cf200c8530d8b",
-     "evidence": [
-      "issue-02e1bb4b9e238254",
-      "issue-5dd57acfbbc87613",
-      "issue-6b4bcffb54f95abb",
-      "issue-76ffb07f2b6ccb8d",
-      "issue-8d4e6351d6c710b2",
-      "issue-ad1dfc1516ce97b7",
-      "story-5fe3eac18a020401",
-      "story-6002bbd9aac821c7"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-3b73a15eaa576d15",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-04T09:06:56+09:00",
-     "decision": "attach",
-     "event_id": "issue-5dd57acfbbc87613",
-     "evidence": [
-      "issue-02e1bb4b9e238254",
-      "issue-5dd57acfbbc87613",
-      "issue-6b4bcffb54f95abb",
-      "issue-76ffb07f2b6ccb8d",
-      "issue-8d4e6351d6c710b2",
-      "issue-ad1dfc1516ce97b7",
-      "story-5fe3eac18a020401",
-      "story-6002bbd9aac821c7"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-3b73a15eaa576d15",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T09:06:56+09:00",
-     "decision": "attach",
-     "event_id": "issue-02e1bb4b9e238254",
-     "evidence": [
-      "issue-02e1bb4b9e238254",
-      "issue-5dd57acfbbc87613",
-      "issue-6b4bcffb54f95abb",
-      "issue-76ffb07f2b6ccb8d",
-      "issue-8d4e6351d6c710b2",
-      "issue-ad1dfc1516ce97b7",
-      "story-5fe3eac18a020401",
-      "story-6002bbd9aac821c7"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-3b73a15eaa576d15",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T09:06:56+09:00",
-     "decision": "attach",
-     "event_id": "story-5fe3eac18a020401",
-     "evidence": [
-      "issue-02e1bb4b9e238254",
-      "issue-5dd57acfbbc87613",
-      "issue-6b4bcffb54f95abb",
-      "issue-76ffb07f2b6ccb8d",
-      "issue-8d4e6351d6c710b2",
-      "issue-ad1dfc1516ce97b7",
-      "story-5fe3eac18a020401",
-      "story-6002bbd9aac821c7"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-3b73a15eaa576d15",
-     "version": "thread-judge-v1"
-    },
     {
      "decided_at": "2026-10-04T09:06:56+09:00",
      "decision": "attach",
@@ -18616,6 +18841,82 @@
      "reason": "first_seen 이 이른 쪽이 주소를 가진다",
      "thread_id": "thread-3b73a15eaa576d15",
      "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-a1912ae6be142db4",
+     "evidence": [
+      "issue-05da702fed62250a",
+      "issue-76ffb07f2b6ccb8d",
+      "issue-ad1dfc1516ce97b7",
+      "issue-d1e54858467d9da4",
+      "story-012dd6118008d06b",
+      "story-39a2e5de12c38fe1",
+      "story-546ff1104f5728a1",
+      "story-5fe3eac18a020401"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-3b73a15eaa576d15",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-5fe3eac18a020401",
+     "evidence": [
+      "issue-05da702fed62250a",
+      "issue-76ffb07f2b6ccb8d",
+      "issue-ad1dfc1516ce97b7",
+      "issue-d1e54858467d9da4",
+      "story-012dd6118008d06b",
+      "story-39a2e5de12c38fe1",
+      "story-546ff1104f5728a1",
+      "story-5fe3eac18a020401"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-3b73a15eaa576d15",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-6710e97b1d3dceb6",
+     "evidence": [
+      "issue-05da702fed62250a",
+      "issue-76ffb07f2b6ccb8d",
+      "issue-ad1dfc1516ce97b7",
+      "issue-d1e54858467d9da4",
+      "story-012dd6118008d06b",
+      "story-39a2e5de12c38fe1",
+      "story-546ff1104f5728a1",
+      "story-5fe3eac18a020401"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-3b73a15eaa576d15",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-9f04f12dad83a5db",
+     "evidence": [
+      "issue-05da702fed62250a",
+      "issue-76ffb07f2b6ccb8d",
+      "issue-ad1dfc1516ce97b7",
+      "issue-d1e54858467d9da4",
+      "story-012dd6118008d06b",
+      "story-39a2e5de12c38fe1",
+      "story-546ff1104f5728a1",
+      "story-5fe3eac18a020401"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-3b73a15eaa576d15",
+     "version": "thread-identity-v1"
     }
    ],
    "scope": {
@@ -18954,6 +19255,16 @@
      "reason": "이번 판정에서 같은 스토리로 보지 않았다",
      "thread_id": "thread-3d313c3dc066f9b2",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-b0e178ca6114b1a9",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-3d313c3dc066f9b2",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -19047,125 +19358,53 @@
    "units": []
   },
   "thread-400f5b5c36a96901": {
-   "anchor_event_id": "issue-63d944c5faf26b32",
+   "anchor_event_id": "issue-8db4836106efc88d",
    "entity_ids": [
     "doosan",
-    "khnp",
     "nrc",
     "terrapower"
    ],
    "event_ids": [
-    "issue-63d944c5faf26b32",
     "issue-8db4836106efc88d",
     "issue-591caac62d5f3545",
-    "issue-0a3a69c9a73e8bbe",
     "issue-d5147918f97d542d",
-    "issue-953414e97d3544c5",
-    "story-371b3e95bd53df77",
-    "story-1a5d92dbd0371e7c"
+    "issue-719103e4dd4fefb1",
+    "story-8a4787f6f9b21f3b"
    ],
    "first_seen": "2026-08-12",
    "identity_evidence": [
-    "issue-0a3a69c9a73e8bbe",
     "issue-591caac62d5f3545",
-    "issue-63d944c5faf26b32",
+    "issue-719103e4dd4fefb1",
     "issue-8db4836106efc88d",
-    "issue-953414e97d3544c5",
     "issue-d5147918f97d542d",
-    "story-1a5d92dbd0371e7c",
-    "story-371b3e95bd53df77"
+    "story-8a4787f6f9b21f3b"
    ],
    "identity_origin": "merged",
-   "last_seen": "2026-09-23",
+   "last_seen": "2026-09-08",
    "links": [
     {
-     "from": "issue-63d944c5faf26b32",
-     "relationship": "stage_progress",
-     "to": "issue-8db4836106efc88d"
-    },
-    {
      "from": "issue-8db4836106efc88d",
-     "relationship": "",
+     "relationship": "cause_effect",
      "to": "issue-591caac62d5f3545"
     },
     {
      "from": "issue-591caac62d5f3545",
-     "relationship": "stage_progress",
-     "to": "issue-0a3a69c9a73e8bbe"
-    },
-    {
-     "from": "issue-0a3a69c9a73e8bbe",
-     "relationship": "stage_progress",
+     "relationship": "same_matter",
      "to": "issue-d5147918f97d542d"
     },
     {
      "from": "issue-d5147918f97d542d",
-     "relationship": "",
-     "to": "issue-953414e97d3544c5"
-    },
-    {
-     "from": "issue-953414e97d3544c5",
-     "relationship": "",
-     "to": "story-371b3e95bd53df77"
-    },
-    {
-     "from": "story-371b3e95bd53df77",
      "relationship": "same_matter",
-     "to": "story-1a5d92dbd0371e7c"
+     "to": "issue-719103e4dd4fefb1"
+    },
+    {
+     "from": "issue-719103e4dd4fefb1",
+     "relationship": "",
+     "to": "story-8a4787f6f9b21f3b"
     }
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-10-02T19:48:41+09:00",
-     "decision": "detach",
-     "event_id": "issue-d32ad97e6decc8fb",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-400f5b5c36a96901",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-03T07:30:17+09:00",
-     "decision": "detach",
-     "event_id": "issue-a5a1ef68231b4e51",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-400f5b5c36a96901",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-03T07:30:17+09:00",
-     "decision": "detach",
-     "event_id": "issue-d32ad97e6decc8fb",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-400f5b5c36a96901",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "detach",
-     "event_id": "issue-a5a1ef68231b4e51",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-400f5b5c36a96901",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "detach",
-     "event_id": "issue-d32ad97e6decc8fb",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-400f5b5c36a96901",
-     "version": "thread-judge-v1"
-    },
     {
      "decided_at": "2026-10-04T09:06:56+09:00",
      "decision": "detach",
@@ -19677,6 +19916,86 @@
      "reason": "first_seen 이 이른 쪽이 주소를 가진다",
      "thread_id": "thread-400f5b5c36a96901",
      "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-591caac62d5f3545",
+     "evidence": [
+      "issue-591caac62d5f3545",
+      "issue-719103e4dd4fefb1",
+      "issue-8db4836106efc88d",
+      "issue-d5147918f97d542d",
+      "story-8a4787f6f9b21f3b"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-400f5b5c36a96901",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-719103e4dd4fefb1",
+     "evidence": [
+      "issue-591caac62d5f3545",
+      "issue-719103e4dd4fefb1",
+      "issue-8db4836106efc88d",
+      "issue-d5147918f97d542d",
+      "story-8a4787f6f9b21f3b"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-400f5b5c36a96901",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-8a4787f6f9b21f3b",
+     "evidence": [
+      "issue-591caac62d5f3545",
+      "issue-719103e4dd4fefb1",
+      "issue-8db4836106efc88d",
+      "issue-d5147918f97d542d",
+      "story-8a4787f6f9b21f3b"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-400f5b5c36a96901",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-af20a2f707713963",
+     "evidence": [
+      "issue-591caac62d5f3545",
+      "issue-719103e4dd4fefb1",
+      "issue-8db4836106efc88d",
+      "issue-d5147918f97d542d",
+      "story-8a4787f6f9b21f3b"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-400f5b5c36a96901",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-d2d1d0f2d0f00c55",
+     "evidence": [
+      "issue-591caac62d5f3545",
+      "issue-719103e4dd4fefb1",
+      "issue-8db4836106efc88d",
+      "issue-d5147918f97d542d",
+      "story-8a4787f6f9b21f3b"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-400f5b5c36a96901",
+     "version": "thread-identity-v1"
     }
    ],
    "scope": {
@@ -19688,20 +20007,18 @@
      "actions": [],
      "entity_ids": [
       "doosan",
-      "khnp",
       "nrc",
       "terrapower"
      ],
      "event_families": [
       "project_milestone",
-      "contract_award",
-      "corporate_move"
+      "contract_award"
      ],
      "units": []
     }
    },
    "thread_id": "thread-400f5b5c36a96901",
-   "title": "[해설] 빌 게이츠까지 뛰어든 SMR, 무엇이 다른가",
+   "title": "두산에너빌리티, 美 테라파워 SMR 핵심 기자재 공급 계약 체결",
    "units": []
   },
   "thread-41e4b7d1fc2fbe83": {
@@ -20235,54 +20552,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-10-03T07:30:17+09:00",
-     "decision": "merge",
-     "event_id": "thread-d6a1fa1d2a4befde",
-     "evidence": [
-      "issue-57d05d467873020d",
-      "issue-616c6b13d9f03cfa",
-      "issue-d5488ec8773bdc1a",
-      "issue-e53a1ba2dfe73d05",
-      "issue-f3aaecbf767f005c"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-45b1030339ac2703",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "issue-616c6b13d9f03cfa",
-     "evidence": [
-      "issue-57d05d467873020d",
-      "issue-616c6b13d9f03cfa",
-      "issue-d5488ec8773bdc1a",
-      "issue-e53a1ba2dfe73d05",
-      "issue-f3aaecbf767f005c"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-45b1030339ac2703",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "issue-d5488ec8773bdc1a",
-     "evidence": [
-      "issue-57d05d467873020d",
-      "issue-616c6b13d9f03cfa",
-      "issue-d5488ec8773bdc1a",
-      "issue-e53a1ba2dfe73d05",
-      "issue-f3aaecbf767f005c"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-45b1030339ac2703",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-04T06:57:31+09:00",
      "decision": "merge",
      "event_id": "thread-d6a1fa1d2a4befde",
@@ -20860,6 +21129,54 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "merge",
+     "event_id": "thread-d6a1fa1d2a4befde",
+     "evidence": [
+      "issue-57d05d467873020d",
+      "issue-616c6b13d9f03cfa",
+      "issue-d5488ec8773bdc1a",
+      "issue-e53a1ba2dfe73d05",
+      "issue-f3aaecbf767f005c"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-45b1030339ac2703",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-616c6b13d9f03cfa",
+     "evidence": [
+      "issue-57d05d467873020d",
+      "issue-616c6b13d9f03cfa",
+      "issue-d5488ec8773bdc1a",
+      "issue-e53a1ba2dfe73d05",
+      "issue-f3aaecbf767f005c"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-45b1030339ac2703",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-d5488ec8773bdc1a",
+     "evidence": [
+      "issue-57d05d467873020d",
+      "issue-616c6b13d9f03cfa",
+      "issue-d5488ec8773bdc1a",
+      "issue-e53a1ba2dfe73d05",
+      "issue-f3aaecbf767f005c"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-45b1030339ac2703",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "merge",
      "event_id": "thread-d6a1fa1d2a4befde",
      "evidence": [
@@ -20995,26 +21312,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-9208e4c486afc0eb",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-493d208673261b48",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-9139fd0916b49ade",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-493d208673261b48",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "story-9208e4c486afc0eb",
@@ -21386,6 +21683,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "story-9139fd0916b49ade",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-493d208673261b48",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-9208e4c486afc0eb",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-493d208673261b48",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "story-9139fd0916b49ade",
      "evidence": [],
@@ -21763,6 +22080,72 @@
    "title": "인도네시아-캐나다, 핵심광물 및 SMR 협력 확대",
    "units": []
   },
+  "thread-50c4b8e5aa30962c": {
+   "anchor_event_id": "story-39b9fb2610e9bb2a",
+   "entity_ids": [],
+   "event_ids": [
+    "story-39b9fb2610e9bb2a",
+    "story-7a64fc7eaf9a27df"
+   ],
+   "first_seen": "2026-10-06",
+   "identity_evidence": [
+    "story-39b9fb2610e9bb2a"
+   ],
+   "identity_origin": "minted",
+   "last_seen": "2026-10-15",
+   "links": [
+    {
+     "from": "story-39b9fb2610e9bb2a",
+     "relationship": "stage_progress",
+     "to": "story-7a64fc7eaf9a27df"
+    }
+   ],
+   "moved_to": "",
+   "relations": [
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-39b9fb2610e9bb2a",
+     "evidence": [
+      "story-39b9fb2610e9bb2a"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-50c4b8e5aa30962c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-7a64fc7eaf9a27df",
+     "evidence": [
+      "story-39b9fb2610e9bb2a"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-50c4b8e5aa30962c",
+     "version": "thread-judge-v1"
+    }
+   ],
+   "scope": {
+    "derived_by": "thread-identity-v1",
+    "excludes": {
+     "units": []
+    },
+    "includes": {
+     "actions": [],
+     "entity_ids": [],
+     "event_families": [
+      "policy_reform",
+      "policy_decision"
+     ],
+     "units": []
+    }
+   },
+   "thread_id": "thread-50c4b8e5aa30962c",
+   "title": "정부, 공공기관 통폐합 추진…에너지 공기업 기능 재편 및 전략 체계 구축 필요",
+   "units": []
+  },
   "thread-56f2b9377a0764c1": {
    "anchor_event_id": "story-02ad6d0d0f2be7f7",
    "entity_ids": [
@@ -21879,54 +22262,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-10-03T07:30:17+09:00",
-     "decision": "merge",
-     "event_id": "thread-9bead4735b0a6e05",
-     "evidence": [
-      "issue-2dfe611832eac5a2",
-      "issue-72fdb8f9c170e368",
-      "story-26620a5b42ec18ee",
-      "story-4264ca81d83eb2dc",
-      "story-9f958d229ac5734a"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-577cc392b1cd9f48",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "issue-2dfe611832eac5a2",
-     "evidence": [
-      "issue-2dfe611832eac5a2",
-      "issue-72fdb8f9c170e368",
-      "story-26620a5b42ec18ee",
-      "story-4264ca81d83eb2dc",
-      "story-9f958d229ac5734a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-577cc392b1cd9f48",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "story-4264ca81d83eb2dc",
-     "evidence": [
-      "issue-2dfe611832eac5a2",
-      "issue-72fdb8f9c170e368",
-      "story-26620a5b42ec18ee",
-      "story-4264ca81d83eb2dc",
-      "story-9f958d229ac5734a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-577cc392b1cd9f48",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-04T06:57:31+09:00",
      "decision": "merge",
      "event_id": "thread-9bead4735b0a6e05",
@@ -22504,6 +22839,54 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "merge",
+     "event_id": "thread-9bead4735b0a6e05",
+     "evidence": [
+      "issue-2dfe611832eac5a2",
+      "issue-72fdb8f9c170e368",
+      "story-26620a5b42ec18ee",
+      "story-4264ca81d83eb2dc",
+      "story-9f958d229ac5734a"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-577cc392b1cd9f48",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-2dfe611832eac5a2",
+     "evidence": [
+      "issue-2dfe611832eac5a2",
+      "issue-72fdb8f9c170e368",
+      "story-26620a5b42ec18ee",
+      "story-4264ca81d83eb2dc",
+      "story-9f958d229ac5734a"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-577cc392b1cd9f48",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-4264ca81d83eb2dc",
+     "evidence": [
+      "issue-2dfe611832eac5a2",
+      "issue-72fdb8f9c170e368",
+      "story-26620a5b42ec18ee",
+      "story-4264ca81d83eb2dc",
+      "story-9f958d229ac5734a"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-577cc392b1cd9f48",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "merge",
      "event_id": "thread-9bead4735b0a6e05",
      "evidence": [
@@ -22773,26 +23156,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-d0468add0e6e8f36",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-5ac80d57c88d8c37",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-73914fa5b8bbb317",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-5ac80d57c88d8c37",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-d0468add0e6e8f36",
@@ -23164,6 +23527,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "story-73914fa5b8bbb317",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-5ac80d57c88d8c37",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-d0468add0e6e8f36",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-5ac80d57c88d8c37",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "story-73914fa5b8bbb317",
      "evidence": [],
@@ -23302,18 +23685,6 @@
    "last_seen": "2026-08-10",
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-09-13T12:01:24+09:00",
-     "decision": "attach",
-     "event_id": "issue-195a5cc0f97befa7",
-     "evidence": [
-      "issue-195a5cc0f97befa7"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-5b100744efcc21cd",
-     "version": "thread-judge-v1"
-    },
     {
      "decided_at": "2026-09-13T12:01:24+09:00",
      "decision": "attach",
@@ -23728,6 +24099,16 @@
      "reason": "이번 판정에서 같은 스토리로 보지 않았다",
      "thread_id": "thread-5b100744efcc21cd",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-bf5ea0f3606646e1",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-5b100744efcc21cd",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -24085,177 +24466,6 @@
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-10-09T07:22:11+09:00",
-     "decision": "attach",
-     "event_id": "issue-c50e1b9e7a78a81e",
-     "evidence": [
-      "issue-397c97cc02966102",
-      "issue-627ba69c29d4adc5",
-      "issue-adfbe2085bf6c11e",
-      "issue-c50e1b9e7a78a81e",
-      "story-0fe1e5be66a5cb09",
-      "story-5277aaa44d58c710",
-      "story-884457c4a9305b01",
-      "story-989a6f3c0c2b539a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-5dbf6e540130abc5",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-09T07:22:11+09:00",
-     "decision": "attach",
-     "event_id": "issue-627ba69c29d4adc5",
-     "evidence": [
-      "issue-397c97cc02966102",
-      "issue-627ba69c29d4adc5",
-      "issue-adfbe2085bf6c11e",
-      "issue-c50e1b9e7a78a81e",
-      "story-0fe1e5be66a5cb09",
-      "story-5277aaa44d58c710",
-      "story-884457c4a9305b01",
-      "story-989a6f3c0c2b539a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-5dbf6e540130abc5",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-09T07:22:11+09:00",
-     "decision": "attach",
-     "event_id": "story-5277aaa44d58c710",
-     "evidence": [
-      "issue-397c97cc02966102",
-      "issue-627ba69c29d4adc5",
-      "issue-adfbe2085bf6c11e",
-      "issue-c50e1b9e7a78a81e",
-      "story-0fe1e5be66a5cb09",
-      "story-5277aaa44d58c710",
-      "story-884457c4a9305b01",
-      "story-989a6f3c0c2b539a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-5dbf6e540130abc5",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-09T07:22:11+09:00",
-     "decision": "attach",
-     "event_id": "story-989a6f3c0c2b539a",
-     "evidence": [
-      "issue-397c97cc02966102",
-      "issue-627ba69c29d4adc5",
-      "issue-adfbe2085bf6c11e",
-      "issue-c50e1b9e7a78a81e",
-      "story-0fe1e5be66a5cb09",
-      "story-5277aaa44d58c710",
-      "story-884457c4a9305b01",
-      "story-989a6f3c0c2b539a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-5dbf6e540130abc5",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-09T07:22:11+09:00",
-     "decision": "merge",
-     "event_id": "thread-c3f8b0f9c51035eb",
-     "evidence": [
-      "issue-397c97cc02966102",
-      "issue-627ba69c29d4adc5",
-      "issue-adfbe2085bf6c11e",
-      "issue-c50e1b9e7a78a81e",
-      "story-0fe1e5be66a5cb09",
-      "story-5277aaa44d58c710",
-      "story-884457c4a9305b01",
-      "story-989a6f3c0c2b539a"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-5dbf6e540130abc5",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-09T07:22:11+09:00",
-     "decision": "merge",
-     "event_id": "thread-d205bec846a6e001",
-     "evidence": [
-      "issue-397c97cc02966102",
-      "issue-627ba69c29d4adc5",
-      "issue-adfbe2085bf6c11e",
-      "issue-c50e1b9e7a78a81e",
-      "story-0fe1e5be66a5cb09",
-      "story-5277aaa44d58c710",
-      "story-884457c4a9305b01",
-      "story-989a6f3c0c2b539a"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-5dbf6e540130abc5",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "issue-c50e1b9e7a78a81e",
-     "evidence": [
-      "issue-397c97cc02966102",
-      "issue-627ba69c29d4adc5",
-      "issue-adfbe2085bf6c11e",
-      "issue-c50e1b9e7a78a81e",
-      "story-0fe1e5be66a5cb09",
-      "story-5277aaa44d58c710",
-      "story-884457c4a9305b01",
-      "story-989a6f3c0c2b539a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-5dbf6e540130abc5",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "issue-627ba69c29d4adc5",
-     "evidence": [
-      "issue-397c97cc02966102",
-      "issue-627ba69c29d4adc5",
-      "issue-adfbe2085bf6c11e",
-      "issue-c50e1b9e7a78a81e",
-      "story-0fe1e5be66a5cb09",
-      "story-5277aaa44d58c710",
-      "story-884457c4a9305b01",
-      "story-989a6f3c0c2b539a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-5dbf6e540130abc5",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-10T07:26:03+09:00",
-     "decision": "attach",
-     "event_id": "story-5277aaa44d58c710",
-     "evidence": [
-      "issue-397c97cc02966102",
-      "issue-627ba69c29d4adc5",
-      "issue-adfbe2085bf6c11e",
-      "issue-c50e1b9e7a78a81e",
-      "story-0fe1e5be66a5cb09",
-      "story-5277aaa44d58c710",
-      "story-884457c4a9305b01",
-      "story-989a6f3c0c2b539a"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-5dbf6e540130abc5",
-     "version": "thread-judge-v1"
-    },
     {
      "decided_at": "2026-10-10T07:26:03+09:00",
      "decision": "attach",
@@ -24828,6 +25038,177 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "merge",
+     "event_id": "thread-dd64f2459b18900b",
+     "evidence": [
+      "issue-397c97cc02966102",
+      "issue-627ba69c29d4adc5",
+      "issue-adfbe2085bf6c11e",
+      "issue-c50e1b9e7a78a81e",
+      "issue-d2b22e8f275e5662",
+      "story-0fe1e5be66a5cb09",
+      "story-5277aaa44d58c710",
+      "story-884457c4a9305b01"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-5dbf6e540130abc5",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-397c97cc02966102",
+     "evidence": [
+      "issue-397c97cc02966102",
+      "issue-627ba69c29d4adc5",
+      "issue-adfbe2085bf6c11e",
+      "issue-c50e1b9e7a78a81e",
+      "issue-d2b22e8f275e5662",
+      "story-0fe1e5be66a5cb09",
+      "story-5277aaa44d58c710",
+      "story-884457c4a9305b01"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-5dbf6e540130abc5",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-c50e1b9e7a78a81e",
+     "evidence": [
+      "issue-397c97cc02966102",
+      "issue-627ba69c29d4adc5",
+      "issue-adfbe2085bf6c11e",
+      "issue-c50e1b9e7a78a81e",
+      "issue-d2b22e8f275e5662",
+      "story-0fe1e5be66a5cb09",
+      "story-5277aaa44d58c710",
+      "story-884457c4a9305b01"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-5dbf6e540130abc5",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-d2b22e8f275e5662",
+     "evidence": [
+      "issue-397c97cc02966102",
+      "issue-627ba69c29d4adc5",
+      "issue-adfbe2085bf6c11e",
+      "issue-c50e1b9e7a78a81e",
+      "issue-d2b22e8f275e5662",
+      "story-0fe1e5be66a5cb09",
+      "story-5277aaa44d58c710",
+      "story-884457c4a9305b01"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-5dbf6e540130abc5",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-627ba69c29d4adc5",
+     "evidence": [
+      "issue-397c97cc02966102",
+      "issue-627ba69c29d4adc5",
+      "issue-adfbe2085bf6c11e",
+      "issue-c50e1b9e7a78a81e",
+      "issue-d2b22e8f275e5662",
+      "story-0fe1e5be66a5cb09",
+      "story-5277aaa44d58c710",
+      "story-884457c4a9305b01"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-5dbf6e540130abc5",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-5277aaa44d58c710",
+     "evidence": [
+      "issue-397c97cc02966102",
+      "issue-627ba69c29d4adc5",
+      "issue-adfbe2085bf6c11e",
+      "issue-c50e1b9e7a78a81e",
+      "issue-d2b22e8f275e5662",
+      "story-0fe1e5be66a5cb09",
+      "story-5277aaa44d58c710",
+      "story-884457c4a9305b01"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-5dbf6e540130abc5",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-989a6f3c0c2b539a",
+     "evidence": [
+      "issue-397c97cc02966102",
+      "issue-627ba69c29d4adc5",
+      "issue-adfbe2085bf6c11e",
+      "issue-c50e1b9e7a78a81e",
+      "issue-d2b22e8f275e5662",
+      "story-0fe1e5be66a5cb09",
+      "story-5277aaa44d58c710",
+      "story-884457c4a9305b01"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-5dbf6e540130abc5",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-c3f8b0f9c51035eb",
+     "evidence": [
+      "issue-397c97cc02966102",
+      "issue-627ba69c29d4adc5",
+      "issue-adfbe2085bf6c11e",
+      "issue-c50e1b9e7a78a81e",
+      "issue-d2b22e8f275e5662",
+      "story-0fe1e5be66a5cb09",
+      "story-5277aaa44d58c710",
+      "story-884457c4a9305b01"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-5dbf6e540130abc5",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-d205bec846a6e001",
+     "evidence": [
+      "issue-397c97cc02966102",
+      "issue-627ba69c29d4adc5",
+      "issue-adfbe2085bf6c11e",
+      "issue-c50e1b9e7a78a81e",
+      "issue-d2b22e8f275e5662",
+      "story-0fe1e5be66a5cb09",
+      "story-5277aaa44d58c710",
+      "story-884457c4a9305b01"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-5dbf6e540130abc5",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "merge",
      "event_id": "thread-dd64f2459b18900b",
      "evidence": [
@@ -25636,16 +26017,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-13T13:01:12+09:00",
-     "decision": "detach",
-     "event_id": "story-724a3270a5cb5092",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-60d5814c68118798",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-09-14T04:40:14+09:00",
      "decision": "detach",
      "event_id": "story-724a3270a5cb5092",
@@ -26052,6 +26423,16 @@
      "reason": "이번 판정에서 같은 스토리로 보지 않았다",
      "thread_id": "thread-60d5814c68118798",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-c437e5bbe337d46e",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-60d5814c68118798",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -26111,48 +26492,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-10-03T07:30:17+09:00",
-     "decision": "merge",
-     "event_id": "thread-f4862628fa0ff35e",
-     "evidence": [
-      "issue-d080a8fb0f8f4da1",
-      "story-553e1be597c2755f",
-      "story-5f68b58b2fb338e3"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-61ff5cf49cb1ad3c",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "story-5f68b58b2fb338e3",
-     "evidence": [
-      "issue-d080a8fb0f8f4da1",
-      "story-553e1be597c2755f",
-      "story-5f68b58b2fb338e3"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-61ff5cf49cb1ad3c",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "story-553e1be597c2755f",
-     "evidence": [
-      "issue-d080a8fb0f8f4da1",
-      "story-553e1be597c2755f",
-      "story-5f68b58b2fb338e3"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-61ff5cf49cb1ad3c",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-04T06:57:31+09:00",
      "decision": "merge",
      "event_id": "thread-f4862628fa0ff35e",
@@ -26658,6 +26997,48 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "merge",
+     "event_id": "thread-f4862628fa0ff35e",
+     "evidence": [
+      "issue-d080a8fb0f8f4da1",
+      "story-553e1be597c2755f",
+      "story-5f68b58b2fb338e3"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-61ff5cf49cb1ad3c",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-5f68b58b2fb338e3",
+     "evidence": [
+      "issue-d080a8fb0f8f4da1",
+      "story-553e1be597c2755f",
+      "story-5f68b58b2fb338e3"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-61ff5cf49cb1ad3c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-553e1be597c2755f",
+     "evidence": [
+      "issue-d080a8fb0f8f4da1",
+      "story-553e1be597c2755f",
+      "story-5f68b58b2fb338e3"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-61ff5cf49cb1ad3c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "merge",
      "event_id": "thread-f4862628fa0ff35e",
      "evidence": [
@@ -26731,26 +27112,6 @@
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-09-22T04:58:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-02e1bb4b9e238254",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-6710e97b1d3dceb6",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-23T05:06:21+09:00",
-     "decision": "detach",
-     "event_id": "issue-5dd57acfbbc87613",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-6710e97b1d3dceb6",
-     "version": "thread-judge-v1"
-    },
     {
      "decided_at": "2026-09-23T05:06:21+09:00",
      "decision": "detach",
@@ -27138,6 +27499,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-02e1bb4b9e238254",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-6710e97b1d3dceb6",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-5dd57acfbbc87613",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-6710e97b1d3dceb6",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-02e1bb4b9e238254",
      "evidence": [],
@@ -28046,16 +28427,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-10-01T09:32:18+09:00",
-     "decision": "detach",
-     "event_id": "story-51c2f9141fbf7dee",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-6a37449f3c2fd150",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-02T05:32:09+09:00",
      "decision": "detach",
      "event_id": "issue-bccf5f15f321ec1b",
@@ -28437,6 +28808,20 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "attach",
+     "event_id": "story-03e750bdec0ed533",
+     "evidence": [
+      "story-03e750bdec0ed533",
+      "story-706bd2b20f78dfa3",
+      "story-87c6c33c04c22365"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-6a37449f3c2fd150",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "attach",
      "event_id": "story-03e750bdec0ed533",
      "evidence": [
@@ -29257,27 +29642,20 @@
    ],
    "event_ids": [
     "issue-09d2791626624247",
-    "issue-beff8f802cca43be",
-    "story-caef49e6fcaeb916"
+    "issue-beff8f802cca43be"
    ],
    "first_seen": "2026-07-20",
    "identity_evidence": [
     "issue-09d2791626624247",
-    "issue-beff8f802cca43be",
-    "story-caef49e6fcaeb916"
+    "issue-beff8f802cca43be"
    ],
    "identity_origin": "inherited",
-   "last_seen": "2026-10-13",
+   "last_seen": "2026-08-06",
    "links": [
     {
      "from": "issue-09d2791626624247",
      "relationship": "same_matter",
      "to": "issue-beff8f802cca43be"
-    },
-    {
-     "from": "issue-beff8f802cca43be",
-     "relationship": "stage_progress",
-     "to": "story-caef49e6fcaeb916"
     }
    ],
    "moved_to": "",
@@ -29754,9 +30132,7 @@
      "entity_ids": [
       "nssc"
      ],
-     "event_families": [
-      "regulatory_action"
-     ],
+     "event_families": [],
      "units": [
       "kori-3",
       "kori-4"
@@ -30455,26 +30831,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-527b59fbfa3806a7",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-785519e4d0b0081e",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-cad8f7d2c2d3c640",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-785519e4d0b0081e",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-527b59fbfa3806a7",
@@ -30846,6 +31202,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-cad8f7d2c2d3c640",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-785519e4d0b0081e",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-527b59fbfa3806a7",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-785519e4d0b0081e",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-cad8f7d2c2d3c640",
      "evidence": [],
@@ -30890,26 +31266,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-1f235e424372ff51",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-798fb63e9556c461",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-a3880024de8c77cf",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-798fb63e9556c461",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-1f235e424372ff51",
@@ -31281,6 +31637,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-a3880024de8c77cf",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-798fb63e9556c461",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-1f235e424372ff51",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-798fb63e9556c461",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-a3880024de8c77cf",
      "evidence": [],
@@ -31325,26 +31701,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-dbc2743e407e894e",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-7bf036608b52d057",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-349fee0c20bfbf28",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-7bf036608b52d057",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "story-dbc2743e407e894e",
@@ -31716,6 +32072,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "story-349fee0c20bfbf28",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-7bf036608b52d057",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-dbc2743e407e894e",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-7bf036608b52d057",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "story-349fee0c20bfbf28",
      "evidence": [],
@@ -32929,51 +33305,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-10-03T07:30:17+09:00",
-     "decision": "merge",
-     "event_id": "thread-a7c783e9f0d034bb",
-     "evidence": [
-      "issue-d5c99163163d6cfe",
-      "story-14abbebf6bb0a431",
-      "story-198277cd2a64d1ea",
-      "story-8670d0ff62f2c4a6"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-81f404f1be9ed8e8",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "story-14abbebf6bb0a431",
-     "evidence": [
-      "issue-d5c99163163d6cfe",
-      "story-14abbebf6bb0a431",
-      "story-198277cd2a64d1ea",
-      "story-8670d0ff62f2c4a6"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-81f404f1be9ed8e8",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "story-8670d0ff62f2c4a6",
-     "evidence": [
-      "issue-d5c99163163d6cfe",
-      "story-14abbebf6bb0a431",
-      "story-198277cd2a64d1ea",
-      "story-8670d0ff62f2c4a6"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-81f404f1be9ed8e8",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-04T06:57:31+09:00",
      "decision": "merge",
      "event_id": "thread-a7c783e9f0d034bb",
@@ -33515,6 +33846,51 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "merge",
+     "event_id": "thread-a7c783e9f0d034bb",
+     "evidence": [
+      "issue-d5c99163163d6cfe",
+      "story-14abbebf6bb0a431",
+      "story-198277cd2a64d1ea",
+      "story-8670d0ff62f2c4a6"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-81f404f1be9ed8e8",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-14abbebf6bb0a431",
+     "evidence": [
+      "issue-d5c99163163d6cfe",
+      "story-14abbebf6bb0a431",
+      "story-198277cd2a64d1ea",
+      "story-8670d0ff62f2c4a6"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-81f404f1be9ed8e8",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-8670d0ff62f2c4a6",
+     "evidence": [
+      "issue-d5c99163163d6cfe",
+      "story-14abbebf6bb0a431",
+      "story-198277cd2a64d1ea",
+      "story-8670d0ff62f2c4a6"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-81f404f1be9ed8e8",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "merge",
      "event_id": "thread-a7c783e9f0d034bb",
      "evidence": [
@@ -33566,26 +33942,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-0abd318976122879",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-8271dd55f10f7e7c",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-bf6d688ab21e07ed",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-8271dd55f10f7e7c",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-0abd318976122879",
@@ -33957,6 +34313,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-bf6d688ab21e07ed",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-8271dd55f10f7e7c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-0abd318976122879",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-8271dd55f10f7e7c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-bf6d688ab21e07ed",
      "evidence": [],
@@ -34002,22 +34378,6 @@
    "last_seen": "2026-07-31",
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-09-14T04:40:14+09:00",
-     "decision": "attach",
-     "event_id": "story-249bbc59c86e42a7",
-     "evidence": [
-      "issue-9846193b68301679",
-      "issue-a3e13685ce3cf3f9",
-      "issue-d4658d844ee27556",
-      "story-249bbc59c86e42a7",
-      "story-39a2e5de12c38fe1"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-82fc3698f5658906",
-     "version": "thread-judge-v1"
-    },
     {
      "decided_at": "2026-09-14T04:40:14+09:00",
      "decision": "detach",
@@ -34412,6 +34772,16 @@
      "reason": "이번 판정에서 같은 스토리로 보지 않았다",
      "thread_id": "thread-82fc3698f5658906",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-9846193b68301679",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-82fc3698f5658906",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -34617,51 +34987,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-10-03T07:30:17+09:00",
-     "decision": "merge",
-     "event_id": "thread-b7e5146694cc0b4c",
-     "evidence": [
-      "issue-1182253279c464e4",
-      "issue-15e2626e3102dcd5",
-      "issue-457aa2e1b508d72c",
-      "issue-562a6126b2b20d7b"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-87aeb0c721547d83",
-     "version": "thread-identity-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "issue-1182253279c464e4",
-     "evidence": [
-      "issue-1182253279c464e4",
-      "issue-15e2626e3102dcd5",
-      "issue-457aa2e1b508d72c",
-      "issue-562a6126b2b20d7b"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-87aeb0c721547d83",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "issue-562a6126b2b20d7b",
-     "evidence": [
-      "issue-1182253279c464e4",
-      "issue-15e2626e3102dcd5",
-      "issue-457aa2e1b508d72c",
-      "issue-562a6126b2b20d7b"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-87aeb0c721547d83",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-04T06:57:31+09:00",
      "decision": "merge",
      "event_id": "thread-b7e5146694cc0b4c",
@@ -35203,6 +35528,51 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "merge",
+     "event_id": "thread-b7e5146694cc0b4c",
+     "evidence": [
+      "issue-1182253279c464e4",
+      "issue-15e2626e3102dcd5",
+      "issue-457aa2e1b508d72c",
+      "issue-562a6126b2b20d7b"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-87aeb0c721547d83",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-1182253279c464e4",
+     "evidence": [
+      "issue-1182253279c464e4",
+      "issue-15e2626e3102dcd5",
+      "issue-457aa2e1b508d72c",
+      "issue-562a6126b2b20d7b"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-87aeb0c721547d83",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-562a6126b2b20d7b",
+     "evidence": [
+      "issue-1182253279c464e4",
+      "issue-15e2626e3102dcd5",
+      "issue-457aa2e1b508d72c",
+      "issue-562a6126b2b20d7b"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-87aeb0c721547d83",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "merge",
      "event_id": "thread-b7e5146694cc0b4c",
      "evidence": [
@@ -36750,36 +37120,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-10-03T07:30:17+09:00",
-     "decision": "detach",
-     "event_id": "story-fbd73d44c5f2d4f3",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-8fe8b2a82a430fd4",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "detach",
-     "event_id": "issue-d5f14a4cd0093d3c",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-8fe8b2a82a430fd4",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "detach",
-     "event_id": "issue-847628d41db4bfcc",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-8fe8b2a82a430fd4",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-04T06:57:31+09:00",
      "decision": "detach",
      "event_id": "story-fbd73d44c5f2d4f3",
@@ -37141,6 +37481,36 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "story-fbd73d44c5f2d4f3",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-8fe8b2a82a430fd4",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-d5f14a4cd0093d3c",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-8fe8b2a82a430fd4",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-847628d41db4bfcc",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-8fe8b2a82a430fd4",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "story-fbd73d44c5f2d4f3",
      "evidence": [],
@@ -37387,6 +37757,26 @@
      "reason": "이번 판정에서 같은 스토리로 보지 않았다",
      "thread_id": "thread-93f0c2e63d2f32cb",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-a587d096a9a94b15",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-93f0c2e63d2f32cb",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-c0f630a0bffe6168",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-93f0c2e63d2f32cb",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -37465,6 +37855,19 @@
      "reason": "이번 판정에서 같은 스토리로 보지 않았다",
      "thread_id": "thread-950f209b2e65fa2c",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-68885aae6c1451bc",
+     "evidence": [
+      "issue-ddd7d2806859e642",
+      "story-68885aae6c1451bc"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-950f209b2e65fa2c",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -37496,7 +37899,8 @@
     "issue-756c2e6e80bbd36e",
     "issue-8087dd0c3497cc5f",
     "issue-9a7b23e4ae5be6f3",
-    "issue-7025587664fd73f5"
+    "issue-7025587664fd73f5",
+    "story-caef49e6fcaeb916"
    ],
    "first_seen": "2026-08-05",
    "identity_evidence": [
@@ -37504,10 +37908,11 @@
     "issue-756c2e6e80bbd36e",
     "issue-8087dd0c3497cc5f",
     "issue-9a7b23e4ae5be6f3",
-    "issue-da9a4893cdd4761d"
+    "issue-da9a4893cdd4761d",
+    "story-caef49e6fcaeb916"
    ],
    "identity_origin": "inherited",
-   "last_seen": "2026-09-12",
+   "last_seen": "2026-10-13",
    "links": [
     {
      "from": "issue-da9a4893cdd4761d",
@@ -37528,6 +37933,11 @@
      "from": "issue-9a7b23e4ae5be6f3",
      "relationship": "same_matter",
      "to": "issue-7025587664fd73f5"
+    },
+    {
+     "from": "issue-7025587664fd73f5",
+     "relationship": "stage_progress",
+     "to": "story-caef49e6fcaeb916"
     }
    ],
    "moved_to": "",
@@ -37817,6 +38227,23 @@
      ],
      "method": "thread_judge",
      "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-95ca554f1054d9fe",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-caef49e6fcaeb916",
+     "evidence": [
+      "issue-7025587664fd73f5",
+      "issue-756c2e6e80bbd36e",
+      "issue-8087dd0c3497cc5f",
+      "issue-9a7b23e4ae5be6f3",
+      "issue-da9a4893cdd4761d",
+      "story-caef49e6fcaeb916"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
      "thread_id": "thread-95ca554f1054d9fe",
      "version": "thread-judge-v1"
     }
@@ -38331,48 +38758,6 @@
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "issue-17feaa64491a40f8",
-     "evidence": [
-      "issue-17feaa64491a40f8",
-      "issue-b55e201374267ece",
-      "story-17feaa64491a40f8"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-9a6c34f5160f26bc",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "story-17feaa64491a40f8",
-     "evidence": [
-      "issue-17feaa64491a40f8",
-      "issue-b55e201374267ece",
-      "story-17feaa64491a40f8"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-9a6c34f5160f26bc",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "merge",
-     "event_id": "thread-ba7c4962cfce86ed",
-     "evidence": [
-      "issue-17feaa64491a40f8",
-      "issue-b55e201374267ece",
-      "story-17feaa64491a40f8"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-9a6c34f5160f26bc",
-     "version": "thread-identity-v1"
-    },
     {
      "decided_at": "2026-10-04T09:06:56+09:00",
      "decision": "attach",
@@ -38906,6 +39291,51 @@
      "reason": "first_seen 이 이른 쪽이 주소를 가진다",
      "thread_id": "thread-9a6c34f5160f26bc",
      "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-17feaa64491a40f8",
+     "evidence": [
+      "issue-17feaa64491a40f8",
+      "issue-267f758041b9a4ca",
+      "issue-b55e201374267ece",
+      "story-17feaa64491a40f8"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-9a6c34f5160f26bc",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-17feaa64491a40f8",
+     "evidence": [
+      "issue-17feaa64491a40f8",
+      "issue-267f758041b9a4ca",
+      "issue-b55e201374267ece",
+      "story-17feaa64491a40f8"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-9a6c34f5160f26bc",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-ba7c4962cfce86ed",
+     "evidence": [
+      "issue-17feaa64491a40f8",
+      "issue-267f758041b9a4ca",
+      "issue-b55e201374267ece",
+      "story-17feaa64491a40f8"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-9a6c34f5160f26bc",
+     "version": "thread-identity-v1"
     }
    ],
    "scope": {
@@ -39072,26 +39502,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-99fb7b94934451e5",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-9bdf55aede5eb187",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-43f9d6d14c4dcd39",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-9bdf55aede5eb187",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-99fb7b94934451e5",
@@ -39463,6 +39873,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "story-43f9d6d14c4dcd39",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-9bdf55aede5eb187",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-99fb7b94934451e5",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-9bdf55aede5eb187",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "story-43f9d6d14c4dcd39",
      "evidence": [],
@@ -39762,24 +40192,26 @@
   "thread-9cb27397953cada7": {
    "anchor_event_id": "issue-8d4e6351d6c710b2",
    "entity_ids": [
-    "kepco"
+    "basic-plan",
+    "kepco",
+    "khnp"
    ],
    "event_ids": [
     "issue-8d4e6351d6c710b2",
-    "story-68885aae6c1451bc"
+    "issue-6b4bcffb54f95abb"
    ],
    "first_seen": "2026-08-21",
    "identity_evidence": [
-    "issue-8d4e6351d6c710b2",
-    "story-68885aae6c1451bc"
+    "issue-6b4bcffb54f95abb",
+    "issue-8d4e6351d6c710b2"
    ],
-   "identity_origin": "merged",
-   "last_seen": "2026-09-28",
+   "identity_origin": "inherited",
+   "last_seen": "2026-08-25",
    "links": [
     {
      "from": "issue-8d4e6351d6c710b2",
-     "relationship": "stage_progress",
-     "to": "story-68885aae6c1451bc"
+     "relationship": "cause_effect",
+     "to": "issue-6b4bcffb54f95abb"
     }
    ],
    "moved_to": "",
@@ -39869,6 +40301,19 @@
      "reason": "first_seen 이 이른 쪽이 주소를 가진다",
      "thread_id": "thread-9cb27397953cada7",
      "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-6b4bcffb54f95abb",
+     "evidence": [
+      "issue-6b4bcffb54f95abb",
+      "issue-8d4e6351d6c710b2"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-9cb27397953cada7",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -39879,10 +40324,13 @@
     "includes": {
      "actions": [],
      "entity_ids": [
-      "kepco"
+      "basic-plan",
+      "kepco",
+      "khnp"
      ],
      "event_families": [
-      "policy_decision"
+      "policy_decision",
+      "policy_recommendation"
      ],
      "units": []
     }
@@ -39923,24 +40371,6 @@
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-09-16T07:48:12+09:00",
-     "decision": "attach",
-     "event_id": "story-414635dfc63ab9c4",
-     "evidence": [
-      "issue-3c3357d444dad489",
-      "issue-726ce5e20cdd473d",
-      "story-3aa4064dc574b3f6",
-      "story-414635dfc63ab9c4",
-      "story-4c9acb05e565646d",
-      "story-74e5378ee7284fb8",
-      "story-bbc7b1d19ffb0c94"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-9f04f12dad83a5db",
-     "version": "thread-judge-v1"
-    },
     {
      "decided_at": "2026-09-16T07:48:12+09:00",
      "decision": "attach",
@@ -40502,6 +40932,16 @@
      "reason": "이번 판정에서 같은 스토리로 보지 않았다",
      "thread_id": "thread-9f04f12dad83a5db",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-249bbc59c86e42a7",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-9f04f12dad83a5db",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -40764,6 +41204,76 @@
    "title": "트럼프 미국 대통령, 데이터센터 건설 반대 여론에 정면 대응",
    "units": []
   },
+  "thread-a1f6bba0262f575b": {
+   "anchor_event_id": "story-53bce9fe9fcb6487",
+   "entity_ids": [
+    "westinghouse"
+   ],
+   "event_ids": [
+    "story-53bce9fe9fcb6487",
+    "story-4c72df21fde87f87"
+   ],
+   "first_seen": "2026-09-24",
+   "identity_evidence": [
+    "story-53bce9fe9fcb6487"
+   ],
+   "identity_origin": "minted",
+   "last_seen": "2026-10-15",
+   "links": [
+    {
+     "from": "story-53bce9fe9fcb6487",
+     "relationship": "same_matter",
+     "to": "story-4c72df21fde87f87"
+    }
+   ],
+   "moved_to": "",
+   "relations": [
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-53bce9fe9fcb6487",
+     "evidence": [
+      "story-53bce9fe9fcb6487"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-a1f6bba0262f575b",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-4c72df21fde87f87",
+     "evidence": [
+      "story-53bce9fe9fcb6487"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-a1f6bba0262f575b",
+     "version": "thread-judge-v1"
+    }
+   ],
+   "scope": {
+    "derived_by": "thread-identity-v1",
+    "excludes": {
+     "units": []
+    },
+    "includes": {
+     "actions": [],
+     "entity_ids": [
+      "westinghouse"
+     ],
+     "event_families": [
+      "policy_decision",
+      "supply_chain"
+     ],
+     "units": []
+    }
+   },
+   "thread_id": "thread-a1f6bba0262f575b",
+   "title": "폴란드, 원전 프로그램 업데이트…1호기 상업운전 2036년으로 3년 연기",
+   "units": []
+  },
   "thread-a4e6d6c8e459da3d": {
    "anchor_event_id": "issue-4e6a1d2c0301a4d0",
    "entity_ids": [
@@ -40783,26 +41293,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-4e6a1d2c0301a4d0",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-a4e6d6c8e459da3d",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-89a559f17ff440e3",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-a4e6d6c8e459da3d",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-4e6a1d2c0301a4d0",
@@ -41174,6 +41664,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-89a559f17ff440e3",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-a4e6d6c8e459da3d",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-4e6a1d2c0301a4d0",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-a4e6d6c8e459da3d",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-89a559f17ff440e3",
      "evidence": [],
@@ -41199,6 +41709,72 @@
    },
    "thread_id": "thread-a4e6d6c8e459da3d",
    "title": "롱비치 항만, 미 해양청(MARAD)과 해상 원자로 개발 협력 첫 파트너십 체결",
+   "units": []
+  },
+  "thread-a5b5b6fe3f457b9d": {
+   "anchor_event_id": "story-51d3a3db028877fb",
+   "entity_ids": [],
+   "event_ids": [
+    "story-51d3a3db028877fb",
+    "story-12364691119b8b52"
+   ],
+   "first_seen": "2026-10-09",
+   "identity_evidence": [
+    "story-51d3a3db028877fb"
+   ],
+   "identity_origin": "minted",
+   "last_seen": "2026-10-15",
+   "links": [
+    {
+     "from": "story-51d3a3db028877fb",
+     "relationship": "stage_progress",
+     "to": "story-12364691119b8b52"
+    }
+   ],
+   "moved_to": "",
+   "relations": [
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-51d3a3db028877fb",
+     "evidence": [
+      "story-51d3a3db028877fb"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-a5b5b6fe3f457b9d",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-12364691119b8b52",
+     "evidence": [
+      "story-51d3a3db028877fb"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-a5b5b6fe3f457b9d",
+     "version": "thread-judge-v1"
+    }
+   ],
+   "scope": {
+    "derived_by": "thread-identity-v1",
+    "excludes": {
+     "units": []
+    },
+    "includes": {
+     "actions": [],
+     "entity_ids": [],
+     "event_families": [
+      "policy_decision",
+      "diplomatic_agreement"
+     ],
+     "units": []
+    }
+   },
+   "thread_id": "thread-a5b5b6fe3f457b9d",
+   "title": "한-이집트, 청정에너지 및 전력 인프라 협력 MOU 체결",
    "units": []
   },
   "thread-a7c783e9f0d034bb": {
@@ -43970,6 +44546,16 @@
      "reason": "first_seen 이 이른 쪽이 주소를 가진다",
      "thread_id": "thread-b14dcb2565ec29de",
      "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-b674a830b574b651",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-b14dcb2565ec29de",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -44326,7 +44912,8 @@
     "story-9b8254df89532e88",
     "story-5e301c2826a5be47",
     "story-b19bf85ff7ba03d3",
-    "story-191eef6537a68089"
+    "story-191eef6537a68089",
+    "story-b2040ca721749870"
    ],
    "first_seen": "2026-08-12",
    "identity_evidence": [
@@ -44335,10 +44922,11 @@
     "story-191eef6537a68089",
     "story-5e301c2826a5be47",
     "story-9b8254df89532e88",
-    "story-b19bf85ff7ba03d3"
+    "story-b19bf85ff7ba03d3",
+    "story-b2040ca721749870"
    ],
    "identity_origin": "inherited",
-   "last_seen": "2026-09-30",
+   "last_seen": "2026-10-15",
    "links": [
     {
      "from": "issue-185f6731e1e3e3d4",
@@ -44364,6 +44952,11 @@
      "from": "story-b19bf85ff7ba03d3",
      "relationship": "same_matter",
      "to": "story-191eef6537a68089"
+    },
+    {
+     "from": "story-191eef6537a68089",
+     "relationship": "stage_progress",
+     "to": "story-b2040ca721749870"
     }
    ],
    "moved_to": "",
@@ -44545,6 +45138,24 @@
      "reason": "판정이 같은 스토리로 보았다",
      "thread_id": "thread-b31f9a9f37a6e3ec",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-b2040ca721749870",
+     "evidence": [
+      "issue-185f6731e1e3e3d4",
+      "issue-e0c2d46c6a2b5c2a",
+      "story-191eef6537a68089",
+      "story-5e301c2826a5be47",
+      "story-9b8254df89532e88",
+      "story-b19bf85ff7ba03d3",
+      "story-b2040ca721749870"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-b31f9a9f37a6e3ec",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -44559,8 +45170,7 @@
       "nssc"
      ],
      "event_families": [
-      "policy_decision",
-      "diplomatic_summit"
+      "policy_decision"
      ],
      "units": []
     }
@@ -44582,9 +45192,10 @@
    ],
    "first_seen": "2026-08-12",
    "identity_evidence": [
-    "issue-86e4dae2b967494f"
+    "issue-86e4dae2b967494f",
+    "issue-b0cdd490f0e1afe3"
    ],
-   "identity_origin": "minted",
+   "identity_origin": "inherited",
    "last_seen": "2026-08-13",
    "links": [
     {
@@ -46301,26 +46912,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-78926903156f16fa",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-c5762c665b04391c",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-176b1c2fe840d724",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-c5762c665b04391c",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-78926903156f16fa",
@@ -46692,6 +47283,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-176b1c2fe840d724",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-c5762c665b04391c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-78926903156f16fa",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-c5762c665b04391c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-176b1c2fe840d724",
      "evidence": [],
@@ -47037,6 +47648,16 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "story-80d868494eefad16",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-c8a5add2be47664c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "story-80d868494eefad16",
      "evidence": [],
@@ -47487,44 +48108,6 @@
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-09-15T04:38:01+09:00",
-     "decision": "attach",
-     "event_id": "issue-591caac62d5f3545",
-     "evidence": [
-      "issue-0a3a69c9a73e8bbe",
-      "issue-3733dacb6eb9bc94",
-      "issue-3e7a0e79ed144761",
-      "issue-591caac62d5f3545",
-      "issue-63d944c5faf26b32",
-      "issue-66d8933507f8bf75",
-      "issue-8db4836106efc88d",
-      "issue-953414e97d3544c5"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-cac0caa738748119",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-15T04:38:01+09:00",
-     "decision": "attach",
-     "event_id": "issue-953414e97d3544c5",
-     "evidence": [
-      "issue-0a3a69c9a73e8bbe",
-      "issue-3733dacb6eb9bc94",
-      "issue-3e7a0e79ed144761",
-      "issue-591caac62d5f3545",
-      "issue-63d944c5faf26b32",
-      "issue-66d8933507f8bf75",
-      "issue-8db4836106efc88d",
-      "issue-953414e97d3544c5"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-cac0caa738748119",
-     "version": "thread-judge-v1"
-    },
     {
      "decided_at": "2026-09-15T07:53:15+09:00",
      "decision": "attach",
@@ -48148,6 +48731,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-3733dacb6eb9bc94",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-cac0caa738748119",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-064c34cfad2c8142",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-cac0caa738748119",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-3733dacb6eb9bc94",
      "evidence": [],
@@ -49626,26 +50229,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-cad7ad5a754410fe",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-d3e440290036d62c",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "story-77f943b6f74f4e27",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-d3e440290036d62c",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-cad7ad5a754410fe",
@@ -50017,6 +50600,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "story-77f943b6f74f4e27",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-d3e440290036d62c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-cad7ad5a754410fe",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-d3e440290036d62c",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "story-77f943b6f74f4e27",
      "evidence": [],
@@ -50156,54 +50759,6 @@
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "story-f1ecac74ad93af10",
-     "evidence": [
-      "issue-1a48967b5795e76b",
-      "issue-2bdc5f2fb94508de",
-      "issue-d8ff953b5bf78b3c",
-      "story-ae1881fd98d4b999",
-      "story-f1ecac74ad93af10"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-d729161d601cbf40",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "attach",
-     "event_id": "story-ae1881fd98d4b999",
-     "evidence": [
-      "issue-1a48967b5795e76b",
-      "issue-2bdc5f2fb94508de",
-      "issue-d8ff953b5bf78b3c",
-      "story-ae1881fd98d4b999",
-      "story-f1ecac74ad93af10"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-d729161d601cbf40",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-10-04T06:57:31+09:00",
-     "decision": "merge",
-     "event_id": "thread-f8353d1643d2f35c",
-     "evidence": [
-      "issue-1a48967b5795e76b",
-      "issue-2bdc5f2fb94508de",
-      "issue-d8ff953b5bf78b3c",
-      "story-ae1881fd98d4b999",
-      "story-f1ecac74ad93af10"
-     ],
-     "method": "thread_identity",
-     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
-     "thread_id": "thread-d729161d601cbf40",
-     "version": "thread-identity-v1"
-    },
     {
      "decided_at": "2026-10-04T09:06:56+09:00",
      "decision": "attach",
@@ -50800,6 +51355,57 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "merge",
+     "event_id": "thread-f8353d1643d2f35c",
+     "evidence": [
+      "issue-1a48967b5795e76b",
+      "issue-2bdc5f2fb94508de",
+      "issue-d8ff953b5bf78b3c",
+      "story-374a0710f843fd7c",
+      "story-ae1881fd98d4b999",
+      "story-f1ecac74ad93af10"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-d729161d601cbf40",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-f1ecac74ad93af10",
+     "evidence": [
+      "issue-1a48967b5795e76b",
+      "issue-2bdc5f2fb94508de",
+      "issue-d8ff953b5bf78b3c",
+      "story-374a0710f843fd7c",
+      "story-ae1881fd98d4b999",
+      "story-f1ecac74ad93af10"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-d729161d601cbf40",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-ae1881fd98d4b999",
+     "evidence": [
+      "issue-1a48967b5795e76b",
+      "issue-2bdc5f2fb94508de",
+      "issue-d8ff953b5bf78b3c",
+      "story-374a0710f843fd7c",
+      "story-ae1881fd98d4b999",
+      "story-f1ecac74ad93af10"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-d729161d601cbf40",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "merge",
      "event_id": "thread-f8353d1643d2f35c",
      "evidence": [
@@ -51603,26 +52209,6 @@
    "moved_to": "",
    "relations": [
     {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-53c3e58995054339",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-dafe117565f2980a",
-     "version": "thread-judge-v1"
-    },
-    {
-     "decided_at": "2026-09-30T05:26:59+09:00",
-     "decision": "detach",
-     "event_id": "issue-f20992e2e97d00e7",
-     "evidence": [],
-     "method": "thread_judge",
-     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
-     "thread_id": "thread-dafe117565f2980a",
-     "version": "thread-judge-v1"
-    },
-    {
      "decided_at": "2026-10-01T07:31:23+09:00",
      "decision": "detach",
      "event_id": "issue-53c3e58995054339",
@@ -51994,6 +52580,26 @@
     },
     {
      "decided_at": "2026-10-14T04:37:31+09:00",
+     "decision": "detach",
+     "event_id": "issue-f20992e2e97d00e7",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-dafe117565f2980a",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-53c3e58995054339",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-dafe117565f2980a",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
      "decision": "detach",
      "event_id": "issue-f20992e2e97d00e7",
      "evidence": [],
@@ -52205,25 +52811,33 @@
    "units": []
   },
   "thread-de081d7cc6e35266": {
-   "anchor_event_id": "story-c5acbde6bff5c3ae",
+   "anchor_event_id": "story-1f8e829fa562808f",
    "entity_ids": [
     "doe"
    ],
    "event_ids": [
-    "story-c5acbde6bff5c3ae",
-    "story-8e677ed54388e688"
+    "story-1f8e829fa562808f",
+    "story-8e677ed54388e688",
+    "story-a60b4b66bae1dfe3"
    ],
-   "first_seen": "2026-09-25",
+   "first_seen": "2026-09-05",
    "identity_evidence": [
-    "story-c5acbde6bff5c3ae"
+    "story-1f8e829fa562808f",
+    "story-8e677ed54388e688",
+    "story-a60b4b66bae1dfe3"
    ],
-   "identity_origin": "minted",
-   "last_seen": "2026-10-13",
+   "identity_origin": "inherited",
+   "last_seen": "2026-10-15",
    "links": [
     {
-     "from": "story-c5acbde6bff5c3ae",
-     "relationship": "cause_effect",
+     "from": "story-1f8e829fa562808f",
+     "relationship": "stage_progress",
      "to": "story-8e677ed54388e688"
+    },
+    {
+     "from": "story-8e677ed54388e688",
+     "relationship": "cause_effect",
+     "to": "story-a60b4b66bae1dfe3"
     }
    ],
    "moved_to": "",
@@ -52266,6 +52880,44 @@
      "decided_at": "2026-10-14T04:37:31+09:00",
      "decision": "detach",
      "event_id": "story-8e677ed54388e688",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-de081d7cc6e35266",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-1f8e829fa562808f",
+     "evidence": [
+      "story-1f8e829fa562808f",
+      "story-8e677ed54388e688",
+      "story-a60b4b66bae1dfe3"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-de081d7cc6e35266",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-a60b4b66bae1dfe3",
+     "evidence": [
+      "story-1f8e829fa562808f",
+      "story-8e677ed54388e688",
+      "story-a60b4b66bae1dfe3"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-de081d7cc6e35266",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "story-c5acbde6bff5c3ae",
      "evidence": [],
      "method": "thread_judge",
      "reason": "이번 판정에서 같은 스토리로 보지 않았다",
@@ -52284,14 +52936,14 @@
       "doe"
      ],
      "event_families": [
-      "policy_decision",
-      "legislative_action"
+      "legislative_action",
+      "infrastructure_expansion"
      ],
      "units": []
     }
    },
    "thread_id": "thread-de081d7cc6e35266",
-   "title": "미 에너지부, 전력망 현대화 위해 31개 프로젝트에 52.5억 달러 투자",
+   "title": "미국, 에너지 인프라 규제 개혁 및 송전망 확충 위한 초당파 법안 논의",
    "units": []
   },
   "thread-de620680b402c64f": {
@@ -52307,6 +52959,7 @@
     "issue-63d944c5faf26b32",
     "issue-0a3a69c9a73e8bbe",
     "issue-aafd59741b95cafa",
+    "issue-953414e97d3544c5",
     "story-371b3e95bd53df77",
     "story-1a5d92dbd0371e7c"
    ],
@@ -52314,11 +52967,12 @@
    "identity_evidence": [
     "issue-0a3a69c9a73e8bbe",
     "issue-63d944c5faf26b32",
+    "issue-953414e97d3544c5",
     "issue-aafd59741b95cafa",
     "story-1a5d92dbd0371e7c",
     "story-371b3e95bd53df77"
    ],
-   "identity_origin": "merged",
+   "identity_origin": "inherited",
    "last_seen": "2026-09-23",
    "links": [
     {
@@ -52333,6 +52987,11 @@
     },
     {
      "from": "issue-aafd59741b95cafa",
+     "relationship": "same_matter",
+     "to": "issue-953414e97d3544c5"
+    },
+    {
+     "from": "issue-953414e97d3544c5",
      "relationship": "",
      "to": "story-371b3e95bd53df77"
     },
@@ -52344,25 +53003,6 @@
    ],
    "moved_to": "",
    "relations": [
-    {
-     "decided_at": "2026-09-19T05:06:20+09:00",
-     "decision": "attach",
-     "event_id": "issue-3e7a0e79ed144761",
-     "evidence": [
-      "issue-3e7a0e79ed144761",
-      "issue-66d8933507f8bf75",
-      "issue-796f3139d1f97809",
-      "issue-895b471e7f2e1d4c",
-      "issue-d31013e6bf533618",
-      "issue-dcf7c30e7fd1692d",
-      "story-371b3e95bd53df77",
-      "story-8a4787f6f9b21f3b"
-     ],
-     "method": "thread_judge",
-     "reason": "스토리가 합쳐졌다",
-     "thread_id": "thread-de620680b402c64f",
-     "version": "thread-judge-v1"
-    },
     {
      "decided_at": "2026-09-19T05:06:20+09:00",
      "decision": "attach",
@@ -53018,6 +53658,23 @@
      "reason": "first_seen 이 이른 쪽이 주소를 가진다",
      "thread_id": "thread-de620680b402c64f",
      "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-953414e97d3544c5",
+     "evidence": [
+      "issue-0a3a69c9a73e8bbe",
+      "issue-63d944c5faf26b32",
+      "issue-953414e97d3544c5",
+      "issue-aafd59741b95cafa",
+      "story-1a5d92dbd0371e7c",
+      "story-371b3e95bd53df77"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-de620680b402c64f",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -55341,27 +55998,50 @@
    ],
    "event_ids": [
     "issue-5085332ba448f2a6",
+    "story-35258fc2445fec63",
+    "story-6ca36fe31334fe1a",
     "story-a1afaab89027710f",
+    "story-f69c839a824cf47d",
     "story-c18f833fc4e7bff0",
-    "story-50afdea503d2b90c"
+    "story-50afdea503d2b90c",
+    "story-503c05fc3096ddcc"
    ],
    "first_seen": "2026-08-26",
    "identity_evidence": [
     "issue-5085332ba448f2a6",
+    "story-35258fc2445fec63",
+    "story-503c05fc3096ddcc",
     "story-50afdea503d2b90c",
+    "story-6ca36fe31334fe1a",
     "story-a1afaab89027710f",
-    "story-c18f833fc4e7bff0"
+    "story-c18f833fc4e7bff0",
+    "story-f69c839a824cf47d"
    ],
-   "identity_origin": "inherited",
-   "last_seen": "2026-10-11",
+   "identity_origin": "merged",
+   "last_seen": "2026-10-15",
    "links": [
     {
      "from": "issue-5085332ba448f2a6",
-     "relationship": "stage_progress",
+     "relationship": "",
+     "to": "story-35258fc2445fec63"
+    },
+    {
+     "from": "story-35258fc2445fec63",
+     "relationship": "same_matter",
+     "to": "story-6ca36fe31334fe1a"
+    },
+    {
+     "from": "story-6ca36fe31334fe1a",
+     "relationship": "same_matter",
      "to": "story-a1afaab89027710f"
     },
     {
      "from": "story-a1afaab89027710f",
+     "relationship": "",
+     "to": "story-f69c839a824cf47d"
+    },
+    {
+     "from": "story-f69c839a824cf47d",
      "relationship": "same_matter",
      "to": "story-c18f833fc4e7bff0"
     },
@@ -55369,6 +56049,11 @@
      "from": "story-c18f833fc4e7bff0",
      "relationship": "same_matter",
      "to": "story-50afdea503d2b90c"
+    },
+    {
+     "from": "story-50afdea503d2b90c",
+     "relationship": "",
+     "to": "story-503c05fc3096ddcc"
     }
    ],
    "moved_to": "",
@@ -55446,6 +56131,120 @@
      "reason": "스토리가 합쳐졌다",
      "thread_id": "thread-f1807034380e0867",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-35258fc2445fec63",
+     "evidence": [
+      "issue-5085332ba448f2a6",
+      "story-35258fc2445fec63",
+      "story-503c05fc3096ddcc",
+      "story-50afdea503d2b90c",
+      "story-6ca36fe31334fe1a",
+      "story-a1afaab89027710f",
+      "story-c18f833fc4e7bff0",
+      "story-f69c839a824cf47d"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-f1807034380e0867",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-6ca36fe31334fe1a",
+     "evidence": [
+      "issue-5085332ba448f2a6",
+      "story-35258fc2445fec63",
+      "story-503c05fc3096ddcc",
+      "story-50afdea503d2b90c",
+      "story-6ca36fe31334fe1a",
+      "story-a1afaab89027710f",
+      "story-c18f833fc4e7bff0",
+      "story-f69c839a824cf47d"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-f1807034380e0867",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-f69c839a824cf47d",
+     "evidence": [
+      "issue-5085332ba448f2a6",
+      "story-35258fc2445fec63",
+      "story-503c05fc3096ddcc",
+      "story-50afdea503d2b90c",
+      "story-6ca36fe31334fe1a",
+      "story-a1afaab89027710f",
+      "story-c18f833fc4e7bff0",
+      "story-f69c839a824cf47d"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-f1807034380e0867",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "story-503c05fc3096ddcc",
+     "evidence": [
+      "issue-5085332ba448f2a6",
+      "story-35258fc2445fec63",
+      "story-503c05fc3096ddcc",
+      "story-50afdea503d2b90c",
+      "story-6ca36fe31334fe1a",
+      "story-a1afaab89027710f",
+      "story-c18f833fc4e7bff0",
+      "story-f69c839a824cf47d"
+     ],
+     "method": "thread_judge",
+     "reason": "판정이 같은 스토리로 보았다",
+     "thread_id": "thread-f1807034380e0867",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-095b87b8f54fd70e",
+     "evidence": [
+      "issue-5085332ba448f2a6",
+      "story-35258fc2445fec63",
+      "story-503c05fc3096ddcc",
+      "story-50afdea503d2b90c",
+      "story-6ca36fe31334fe1a",
+      "story-a1afaab89027710f",
+      "story-c18f833fc4e7bff0",
+      "story-f69c839a824cf47d"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-f1807034380e0867",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-c8a5add2be47664c",
+     "evidence": [
+      "issue-5085332ba448f2a6",
+      "story-35258fc2445fec63",
+      "story-503c05fc3096ddcc",
+      "story-50afdea503d2b90c",
+      "story-6ca36fe31334fe1a",
+      "story-a1afaab89027710f",
+      "story-c18f833fc4e7bff0",
+      "story-f69c839a824cf47d"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-f1807034380e0867",
+     "version": "thread-identity-v1"
     }
    ],
    "scope": {
@@ -56418,6 +57217,16 @@
      "reason": "이번 판정에서 같은 스토리로 보지 않았다",
      "thread_id": "thread-f8353d1643d2f35c",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "detach",
+     "event_id": "issue-2ee56fe1780454f0",
+     "evidence": [],
+     "method": "thread_judge",
+     "reason": "이번 판정에서 같은 스토리로 보지 않았다",
+     "thread_id": "thread-f8353d1643d2f35c",
+     "version": "thread-judge-v1"
     }
    ],
    "scope": {
@@ -57147,6 +57956,7 @@
   "thread-fcc1579f256eefcf": {
    "anchor_event_id": "issue-065dc3057ee2df9d",
    "entity_ids": [
+    "doosan",
     "kepco",
     "khnp",
     "team-korea",
@@ -57175,7 +57985,7 @@
     "story-8e205925596e9fd2"
    ],
    "identity_origin": "inherited",
-   "last_seen": "2026-10-08",
+   "last_seen": "2026-10-15",
    "links": [
     {
      "from": "issue-065dc3057ee2df9d",
@@ -57514,6 +58324,7 @@
     "includes": {
      "actions": [],
      "entity_ids": [
+      "doosan",
       "kepco",
       "khnp",
       "team-korea",
@@ -57521,8 +58332,8 @@
      ],
      "event_families": [
       "policy_decision",
-      "contract_award",
-      "project_delay"
+      "project_delay",
+      "international_cooperation"
      ],
      "units": []
     }
@@ -58168,11 +58979,14 @@
    ],
    "event_ids": [
     "issue-66d8933507f8bf75",
-    "issue-895b471e7f2e1d4c",
+    "issue-a5a1ef68231b4e51",
     "issue-3e7a0e79ed144761",
     "issue-d31013e6bf533618",
     "issue-aee00725a324e9a4",
     "issue-f179a670a63aab2a",
+    "issue-f796c0b6619106a8",
+    "issue-895b471e7f2e1d4c",
+    "issue-9177c575aca6c154",
     "issue-dcf7c30e7fd1692d",
     "issue-796f3139d1f97809",
     "story-8efc86ce47ad1b25"
@@ -58183,22 +58997,22 @@
     "issue-66d8933507f8bf75",
     "issue-796f3139d1f97809",
     "issue-895b471e7f2e1d4c",
+    "issue-9177c575aca6c154",
+    "issue-a5a1ef68231b4e51",
     "issue-aee00725a324e9a4",
-    "issue-d31013e6bf533618",
-    "issue-dcf7c30e7fd1692d",
-    "issue-f179a670a63aab2a"
+    "issue-d31013e6bf533618"
    ],
-   "identity_origin": "inherited",
+   "identity_origin": "merged",
    "last_seen": "2026-09-19",
    "links": [
     {
      "from": "issue-66d8933507f8bf75",
      "relationship": "cause_effect",
-     "to": "issue-895b471e7f2e1d4c"
+     "to": "issue-a5a1ef68231b4e51"
     },
     {
-     "from": "issue-895b471e7f2e1d4c",
-     "relationship": "stage_progress",
+     "from": "issue-a5a1ef68231b4e51",
+     "relationship": "",
      "to": "issue-3e7a0e79ed144761"
     },
     {
@@ -58218,6 +59032,21 @@
     },
     {
      "from": "issue-f179a670a63aab2a",
+     "relationship": "",
+     "to": "issue-f796c0b6619106a8"
+    },
+    {
+     "from": "issue-f796c0b6619106a8",
+     "relationship": "same_matter",
+     "to": "issue-895b471e7f2e1d4c"
+    },
+    {
+     "from": "issue-895b471e7f2e1d4c",
+     "relationship": "same_matter",
+     "to": "issue-9177c575aca6c154"
+    },
+    {
+     "from": "issue-9177c575aca6c154",
      "relationship": "",
      "to": "issue-dcf7c30e7fd1692d"
     },
@@ -58770,6 +59599,101 @@
      "reason": "스토리가 합쳐졌다",
      "thread_id": "thread-ff1b1e811ae2db83",
      "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-a5a1ef68231b4e51",
+     "evidence": [
+      "issue-3e7a0e79ed144761",
+      "issue-66d8933507f8bf75",
+      "issue-796f3139d1f97809",
+      "issue-895b471e7f2e1d4c",
+      "issue-9177c575aca6c154",
+      "issue-a5a1ef68231b4e51",
+      "issue-aee00725a324e9a4",
+      "issue-d31013e6bf533618"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-ff1b1e811ae2db83",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-f796c0b6619106a8",
+     "evidence": [
+      "issue-3e7a0e79ed144761",
+      "issue-66d8933507f8bf75",
+      "issue-796f3139d1f97809",
+      "issue-895b471e7f2e1d4c",
+      "issue-9177c575aca6c154",
+      "issue-a5a1ef68231b4e51",
+      "issue-aee00725a324e9a4",
+      "issue-d31013e6bf533618"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-ff1b1e811ae2db83",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "attach",
+     "event_id": "issue-9177c575aca6c154",
+     "evidence": [
+      "issue-3e7a0e79ed144761",
+      "issue-66d8933507f8bf75",
+      "issue-796f3139d1f97809",
+      "issue-895b471e7f2e1d4c",
+      "issue-9177c575aca6c154",
+      "issue-a5a1ef68231b4e51",
+      "issue-aee00725a324e9a4",
+      "issue-d31013e6bf533618"
+     ],
+     "method": "thread_judge",
+     "reason": "스토리가 합쳐졌다",
+     "thread_id": "thread-ff1b1e811ae2db83",
+     "version": "thread-judge-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-3378977d103200c2",
+     "evidence": [
+      "issue-3e7a0e79ed144761",
+      "issue-66d8933507f8bf75",
+      "issue-796f3139d1f97809",
+      "issue-895b471e7f2e1d4c",
+      "issue-9177c575aca6c154",
+      "issue-a5a1ef68231b4e51",
+      "issue-aee00725a324e9a4",
+      "issue-d31013e6bf533618"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-ff1b1e811ae2db83",
+     "version": "thread-identity-v1"
+    },
+    {
+     "decided_at": "2026-10-15T07:29:19+09:00",
+     "decision": "merge",
+     "event_id": "thread-cac0caa738748119",
+     "evidence": [
+      "issue-3e7a0e79ed144761",
+      "issue-66d8933507f8bf75",
+      "issue-796f3139d1f97809",
+      "issue-895b471e7f2e1d4c",
+      "issue-9177c575aca6c154",
+      "issue-a5a1ef68231b4e51",
+      "issue-aee00725a324e9a4",
+      "issue-d31013e6bf533618"
+     ],
+     "method": "thread_identity",
+     "reason": "first_seen 이 이른 쪽이 주소를 가진다",
+     "thread_id": "thread-ff1b1e811ae2db83",
+     "version": "thread-identity-v1"
     }
    ],
    "scope": {
@@ -58791,8 +59715,8 @@
       "x-energy"
      ],
      "event_families": [
-      "project_milestone",
       "contract_award",
+      "project_milestone",
       "corporate_move"
      ],
      "units": []
