@@ -71,6 +71,9 @@ def load_rows(archive_dir: Path = ARCHIVE_DIR) -> list[dict]:
             except ValueError:
                 continue
             digest = str((row or {}).get("hash") or "")
+            # 메인이 국내로 본 기사는 싣지 않는다(ai_lane_pipeline.domestic_guard 와 같은 규칙).
+            if isinstance(row, dict) and row.get("main_scope") == "kr":
+                continue
             if isinstance(row, dict) and digest and digest not in seen:
                 seen.add(digest)
                 rows.append(row)

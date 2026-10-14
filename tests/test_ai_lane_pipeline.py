@@ -222,3 +222,39 @@ class NewsBotHookTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DomesticGuardTests(unittest.TestCase):
+    IN = {"in_scope": True, "exclude_reason": "none", "countries": ["KR", "US"]}
+
+    def test_main_scope_kr_is_excluded_even_if_judge_included(self):
+        out = lane.domestic_guard({"scope": "kr"}, dict(self.IN))
+        self.assertFalse(out["in_scope"])
+        self.assertEqual(out["exclude_reason"], "domestic")
+
+    def test_korean_outlet_on_overseas_case_stays(self):
+        # 국내 매체가 쓴 도쿄전력 기사 — 메인 scope 는 overseas 다.
+        out = lane.domestic_guard({"scope": "overseas"}, {"in_scope": True, "countries": ["JP"]})
+        self.assertTrue(out["in_scope"])
+
+    def test_dedicated_item_with_only_korea_is_excluded(self):
+        out = lane.domestic_guard({"scope": ""}, {"in_scope": True, "countries": ["kr"]})
+        self.assertFalse(out["in_scope"])
+
+    def test_exclusions_and_failures_pass_through(self):
+        self.assertIsNone(lane.domestic_guard({"scope": "kr"}, None))
+        out = lane.domestic_guard({"scope": "kr"}, {"in_scope": False, "exclude_reason": "fusion"})
+        self.assertEqual(out["exclude_reason"], "fusion")
+
+    def test_run_applies_guard_and_records_scope(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            kr = main_record("k", "Hyundai AI ship with SMR nuclear propulsion")
+            kr["scope"] = "kr"
+            ov = main_record("o", "NIVA nuclear AI fleetwide")
+            stats = lane.run([kr, ov], judge_call=judge_all(["Hyundai", "NIVA"]), now=NOW,
+                             state_file=base / "s.json", archive_dir=base / "a")
+            rows = lane.load_archive(base / "a")
+        self.assertEqual(stats["included"], 1)
+        self.assertEqual([r["hash"] for r in rows], ["o"])
+        self.assertEqual(rows[0]["main_scope"], "overseas")
