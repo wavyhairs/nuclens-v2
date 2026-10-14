@@ -84,11 +84,15 @@ AI_SOURCES: list[dict] = [
      "url": _gnews('("Atomic Canyon" OR Nuclearn OR "Blue Wave AI" OR NIVA OR AtomAssist '
                    'OR AtomMind OR Metroscope OR "PRO-AID" OR "nuclear AI") nuclear when:2d',
                    "en-US", "US", "US:en")},
-    {"name": "AI·Google 사업자·제작사 AI(EN)", "lang": "en",
+    # 질의는 **200자 미만**으로 둔다. 실측(crawl #673, 2026-10-14): 278자·213자 질의는 when: 창이
+    # 무시돼 100건·67건이 전부 3일 넘은 기사였고(창 안 0), 184자 이하 질의는 창이 지켜졌다.
+    {"name": "AI·Google 사업자 AI(EN)", "lang": "en",
      "url": _gnews('(Constellation OR "Duke Energy" OR TVA OR "Southern Nuclear" OR Dominion '
-                   'OR "Ontario Power Generation" OR "Bruce Power" OR EDF OR Westinghouse '
-                   'OR Framatome OR "GE Vernova" OR "Rolls-Royce SMR" OR NuScale) nuclear '
-                   '("AI" OR "artificial intelligence" OR "machine learning") when:1d',
+                   'OR "Ontario Power Generation" OR "Bruce Power" OR EDF) nuclear '
+                   '("AI" OR "artificial intelligence") when:1d', "en-US", "US", "US:en")},
+    {"name": "AI·Google 제작사 AI(EN)", "lang": "en",
+     "url": _gnews('(Westinghouse OR Framatome OR "GE Vernova" OR "Rolls-Royce SMR" OR NuScale '
+                   'OR X-energy OR Kairos) nuclear ("AI" OR "artificial intelligence") when:1d',
                    "en-US", "US", "US:en")},
     {"name": "AI·Google 규제·연구소 AI(EN)", "lang": "en",
      "url": _gnews('(NRC OR IAEA OR "OECD NEA" OR "Idaho National Laboratory" OR "Argonne" '
@@ -96,11 +100,12 @@ AI_SOURCES: list[dict] = [
                    '("artificial intelligence" OR "machine learning" OR "AI") when:2d',
                    "en-US", "US", "US:en")},
     # 4단계 A2 — 미국 밖 규제기관·운영사. 기존 검색에 NRC 외 규제기관 이름이 없었다.
-    {"name": "AI·Google 해외 규제기관 AI(EN)", "lang": "en",
-     "url": _gnews('(FANR OR ENEC OR Barakah OR ONR OR CNSC OR ASNR OR STUK OR "SSM" '
-                   'OR "Nuclear Regulation Authority" OR CNCAN OR "Rosatom") nuclear '
-                   '("AI" OR "artificial intelligence" OR "machine learning" OR "digital twin") when:3d',
-                   "en-US", "US", "US:en")},
+    {"name": "AI·Google 해외 규제기관 AI(EN) 1", "lang": "en",
+     "url": _gnews('(FANR OR ENEC OR Barakah OR ONR OR CNSC OR ASNR) nuclear '
+                   '("AI" OR "artificial intelligence" OR "digital twin") when:3d', "en-US", "US", "US:en")},
+    {"name": "AI·Google 해외 규제기관 AI(EN) 2", "lang": "en",
+     "url": _gnews('(STUK OR "SSM" OR "Nuclear Regulation Authority" OR CNCAN OR Rosatom) nuclear '
+                   '("AI" OR "artificial intelligence" OR "digital twin") when:3d', "en-US", "US", "US:en")},
     {"name": "AI·Google NEI AI", "lang": "en",
      "url": _gnews('site:neimagazine.com (AI OR "artificial intelligence" OR "machine learning" '
                    'OR "digital twin" OR robot OR drone) when:3d', "en-US", "US", "US:en")},
@@ -120,13 +125,17 @@ AI_SOURCES: list[dict] = [
     {"name": "AI·Google 원전 AI(ZH)", "lang": "zh",
      "url": _gnews('(核电 OR 核能 OR 中广核 OR 中核) (人工智能 OR 大模型 OR 机器学习 OR 智能体 '
                    'OR 数字孪生 OR 机器人) when:2d', "zh-CN", "CN", "CN:zh-Hans")},
-    # 직접 RSS (주소 미확인 — 첫 크롤 로그로 확인).
+    # NRC·atomic-energy.ru 는 직접 RSS 주소가 틀렸다(crawl #673: 받음 0). NEI 처럼 site: 우회.
+    # atomic-energy.ru 는 RU Google 피드가 이미 받는다(루푸르 건이 그 경로로 들어왔다) — 보강용.
+    {"name": "AI·Google NRC AI", "lang": "en",
+     "url": _gnews('site:nrc.gov (AI OR "artificial intelligence" OR "machine learning") when:7d',
+                   "en-US", "US", "US:en")},
+    {"name": "AI·Google Атомная энергия 2.0", "lang": "ru",
+     "url": _gnews('site:atomic-energy.ru (ИИ OR "искусственный интеллект" OR цифровой OR робот) when:3d',
+                   "ru", "RU", "RU:ru")},
+    # 직접 RSS. 열리는 것은 확인했다(crawl #673: 받음 15). 보도자료가 드물어 창 안 0 인 날이 많다.
     {"name": "AI·IAEA 보도자료", "lang": "en", "kind": "rss",
      "url": "https://www.iaea.org/feeds/pressalerts"},
-    {"name": "AI·NRC 보도자료", "lang": "en", "kind": "rss",
-     "url": "https://www.nrc.gov/public-involve/rss-feeds/news-releases.xml"},
-    {"name": "AI·Атомная энергия 2.0", "lang": "ru", "kind": "rss",
-     "url": "https://www.atomic-energy.ru/rss.xml"},
 ]
 # 전용 피드의 수집 창. when:1d 를 넘는 오래된 항목은 버린다(관련도순 대비).
 FEED_LOOKBACK = timedelta(days=3)

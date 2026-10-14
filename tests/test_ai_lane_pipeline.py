@@ -201,8 +201,18 @@ class LaneRunTests(unittest.TestCase):
         langs = {src["lang"] for src in lane.AI_SOURCES}
         self.assertTrue({"ru", "zh"} <= langs)
         urls = " ".join(src["url"] for src in lane.AI_SOURCES)
-        for name in ("FANR", "ONR", "CNSC", "iaea.org/feeds", "nrc.gov"):
+        for name in ("FANR", "ONR", "CNSC", "iaea.org/feeds", "nrc.gov", "atomic-energy.ru"):
             self.assertIn(name, urls)
+
+    def test_google_queries_stay_under_the_when_window_limit(self):
+        # 실측(crawl #673): 278자·213자 질의는 when: 이 무시돼 전부 오래된 기사였다. 184자는 지켜졌다.
+        from urllib.parse import parse_qs, urlparse  # noqa: PLC0415
+        for src in lane.AI_SOURCES:
+            if src.get("kind") == "rss":
+                continue
+            query = parse_qs(urlparse(src["url"]).query).get("q", [""])[0]
+            with self.subTest(src=src["name"], length=len(query)):
+                self.assertLessEqual(len(query), 190)
 
     def test_url_date_guard(self):
         self.assertTrue(lane.stale_by_url("https://energynow.com/2026/06/canadas-atkinsrealis-seeks/", NOW))
