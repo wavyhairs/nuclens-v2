@@ -5682,7 +5682,7 @@ function aiDialogFacts(issue) {
   ].filter(([, value]) => value);
   const vendor = issue.vendor_claim
     ? '<span class="topic-chip ai-flag" title="AI 제공사·제작사의 발표입니다. 운영사 실적용과 구분해 읽으세요.">벤더 발표</span>' : "";
-  return `<div class="topic-row ai-facts" aria-label="해외 AI·디지털 분류">${facts.map(([key, value]) => (
+  return `<div class="topic-row ai-facts" aria-label="해외 AI·DX 분류">${facts.map(([key, value]) => (
     `<span class="topic-chip"><b>${esc(key)}</b> ${esc(value)}</span>`)).join("")}${vendor}</div>`;
 }
 
@@ -5698,7 +5698,7 @@ function aiTocRow(issue, index, day) {
   return `<div class="toc-row ai-toc-row"${score ? ` title="중요도 ${esc(score.score)} = ${esc(score.breakdown)}"` : ""}>
   <span class="toc-num" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
   <span class="toc-body">
-    <span class="toc-meta-line"><span class="toc-region">${esc(countries)}</span><span class="toc-chips"><span class="chip">${esc(aiLabel(issue.application_area))}</span>${issue.tech_scope === "digital" ? '<span class="chip chip-digital">디지털</span>' : ""}</span><span class="ai-maturity m-${esc(issue.maturity || "")}">${esc(aiLabel(issue.maturity))}</span>${extra}</span>
+    <span class="toc-meta-line"><span class="toc-region">${esc(countries)}</span><span class="toc-chips"><span class="chip">${esc(aiLabel(issue.application_area))}</span>${issue.tech_scope === "digital" ? '<span class="chip chip-digital">DX</span>' : ""}</span><span class="ai-maturity m-${esc(issue.maturity || "")}">${esc(aiLabel(issue.maturity))}</span>${extra}</span>
     <span class="toc-title"><button type="button" class="toc-link" data-issue-id="${esc(issue.issue_id)}">${esc(issue.title)}</button></span>
   </span>
   <span class="toc-arrow" aria-hidden="true">→</span>
@@ -5768,8 +5768,8 @@ function renderAi() {
   if (state.aiScope !== "전체" && !scopes.includes(state.aiScope)) state.aiScope = "전체";
   const weekCount = week.rounds.reduce((sum, row) => sum + row.issue_ids.length, 0);
   const scopeNote = state.ai.stats?.by_scope?.digital
-    ? `해외 원전이 AI 를 쓴 사례와, 현장에 실제 적용된 디지털 기술(로봇·드론·VR·디지털 트윈·계측제어) 사례를 따로 모읍니다.`
-    : `해외 원전이 AI·디지털 기술을 쓴 사례만 따로 모읍니다.`;
+    ? `해외 원전이 AI 를 쓴 사례와, 현장에 실제 적용된 DX(로봇·드론·VR·디지털 트윈·계측제어) 사례를 따로 모읍니다.`
+    : `해외 원전이 AI·DX(디지털 전환) 기술을 쓴 사례만 따로 모읍니다.`;
   document.getElementById("aiLede").textContent =
     `${weekMode ? `최근 7일 ${weekCount}건` : `이 회차 ${issues.length}건 · 최근 7일 ${weekCount}건`} · 누적 사건 ${aiIssues().length}개(기사 ${state.ai.stats?.articles ?? 0}건) — ${scopeNote}`;
   const stale = document.getElementById("aiStale");

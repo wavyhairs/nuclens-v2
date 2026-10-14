@@ -4232,7 +4232,7 @@ button.agenda-head[aria-expanded="true"]::after { content: "▾"; }
   .today-head { margin-bottom: var(--sp-2); }
   .today-head-row { flex-wrap: nowrap; gap: var(--sp-2); }
   .today-head h1 { font-size: 17px; flex: 0 0 auto; }
-  /* 해외 AI·디지털 머리는 「오늘」보다 길다 — 날짜 컨트롤(208px)이 밀려 나가지 않게 줄어들 수 있어야 한다. */
+  /* 해외 AI·DX 머리는 「오늘」보다 길다 — 날짜 컨트롤(208px)이 밀려 나가지 않게 줄어들 수 있어야 한다. */
   #view-ai .today-head h1 { flex: 0 1 auto; min-width: 0; }
   .date-nav { width: auto; flex: 1 1 auto; justify-content: flex-end; }
   .date-nav button, .date-nav select { height: 36px; }

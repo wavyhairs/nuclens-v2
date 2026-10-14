@@ -277,7 +277,8 @@ LABELS_KR = {
     "digital_twin_ai": "AI 디지털 트윈", "other": "기타",
     "robotics_drone": "로봇·드론", "vr_immersive": "VR·몰입형", "digital_twin": "디지털 트윈",
     "digital_ic_automation": "디지털 계측제어·자동화",
-    "ai": "AI", "digital": "디지털",
+    # 화면 라벨은 DX(사용자 결정 2026-10-14). 판정 프롬프트 안의 "디지털"은 모델용 설명이라 그대로 둔다.
+    "ai": "AI", "digital": "DX",
     "utility": "사업자", "vendor": "벤더", "regulator": "규제기관", "national_lab": "연구소",
     "ai_startup": "AI 스타트업", "international_org": "국제기구",
     "none": "포함", "datacenter_power": "데이터센터 전력", "robotics_only": "로봇·드론 (현장 적용 아님)",
