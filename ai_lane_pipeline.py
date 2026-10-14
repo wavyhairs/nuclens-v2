@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Iterable
@@ -62,35 +63,95 @@ def _gnews(query: str, hl: str, gl: str, ceid: str) -> str:
 #
 # 0단계 gold 의 진짜 사례 25건 중 11건이 NEI·ANS 에서 왔다. ANS 는 메인 RSS 가 이미
 # 받으므로 공유 풀로 들어온다. NEI 는 직접 RSS 가 Cloudflare 403 이라 site: 우회다.
+#
+# 4단계(2026-10-14) 추가 근거 — 지난 30일 언어권별 소급 조사(docs §12): 우리가 놓친 사건
+# 7건 중 4건이 러시아어(로사톰·루푸르), 1건이 중국어(CGN), 2건이 규제기관·국제기구(NRC
+# 워크숍·FANR IAEA 혁신상)였다. 메인 아카이브 30일 10,974건에 러시아어·중국어 기사는 0건.
+#   · ``kind``: "gnews"(기본) 는 when: 창이 있어야 한다. "rss" 는 매체 직접 피드 — 주소를
+#     이 환경에서 열어 확인할 수 없어(프록시 차단) 넣고 첫 크롤 로그로 확인한다. 실패해도
+#     레인은 멈추지 않는다(collect_feeds).
+#   · ``lang``: 통계 라벨. 판정 프롬프트는 언어와 무관하다.
 AI_SOURCES: list[dict] = [
-    {"name": "AI·Google 원전 AI(EN)",
+    {"name": "AI·Google 원전 AI(EN)", "lang": "en",
      "url": _gnews('(nuclear OR reactor) ("artificial intelligence" OR "machine learning" '
                    'OR "generative AI" OR "AI") -"data center" -"data centers" when:1d',
                    "en-US", "US", "US:en")},
-    {"name": "AI·Google 원전 AI 벤더(EN)",
-     "url": _gnews('("Atomic Canyon" OR Nuclearn OR "Blue Wave AI" OR "NIVA" nuclear '
-                   'OR "nuclear AI") when:2d', "en-US", "US", "US:en")},
-    {"name": "AI·Google 사업자·제작사 AI(EN)",
+    {"name": "AI·Google 원전 디지털(EN)", "lang": "en",
+     "url": _gnews('(nuclear OR reactor) (robot OR robotic OR drone OR "digital twin" '
+                   'OR "virtual reality" OR "immersive" OR "I&C" OR "instrumentation and control") '
+                   '-attack -strike -Zaporizhzhia when:1d', "en-US", "US", "US:en")},
+    {"name": "AI·Google 원전 AI 벤더·제품(EN)", "lang": "en",
+     "url": _gnews('("Atomic Canyon" OR Nuclearn OR "Blue Wave AI" OR NIVA OR AtomAssist '
+                   'OR AtomMind OR Metroscope OR "PRO-AID" OR "nuclear AI") nuclear when:2d',
+                   "en-US", "US", "US:en")},
+    {"name": "AI·Google 사업자·제작사 AI(EN)", "lang": "en",
      "url": _gnews('(Constellation OR "Duke Energy" OR TVA OR "Southern Nuclear" OR Dominion '
                    'OR "Ontario Power Generation" OR "Bruce Power" OR EDF OR Westinghouse '
                    'OR Framatome OR "GE Vernova" OR "Rolls-Royce SMR" OR NuScale) nuclear '
                    '("AI" OR "artificial intelligence" OR "machine learning") when:1d',
                    "en-US", "US", "US:en")},
-    {"name": "AI·Google 규제·연구소 AI(EN)",
+    {"name": "AI·Google 규제·연구소 AI(EN)", "lang": "en",
      "url": _gnews('(NRC OR IAEA OR "OECD NEA" OR "Idaho National Laboratory" OR "Argonne" '
                    'OR "Oak Ridge" OR EPRI OR INPO OR WANO) nuclear '
                    '("artificial intelligence" OR "machine learning" OR "AI") when:2d',
                    "en-US", "US", "US:en")},
-    {"name": "AI·Google NEI AI",
+    # 4단계 A2 — 미국 밖 규제기관·운영사. 기존 검색에 NRC 외 규제기관 이름이 없었다.
+    {"name": "AI·Google 해외 규제기관 AI(EN)", "lang": "en",
+     "url": _gnews('(FANR OR ENEC OR Barakah OR ONR OR CNSC OR ASNR OR STUK OR "SSM" '
+                   'OR "Nuclear Regulation Authority" OR CNCAN OR "Rosatom") nuclear '
+                   '("AI" OR "artificial intelligence" OR "machine learning" OR "digital twin") when:3d',
+                   "en-US", "US", "US:en")},
+    {"name": "AI·Google NEI AI", "lang": "en",
      "url": _gnews('site:neimagazine.com (AI OR "artificial intelligence" OR "machine learning" '
-                   'OR "digital twin") when:3d', "en-US", "US", "US:en")},
-    {"name": "AI·Google 원전 AI(JA)",
-     "url": _gnews('(原子力 OR 原発) (AI OR 人工知能 OR 機械学習) when:1d', "ja", "JP", "JP:ja")},
-    {"name": "AI·Google 원전 AI(FR)",
-     "url": _gnews('nucléaire ("intelligence artificielle" OR IA) when:1d', "fr", "FR", "FR:fr")},
+                   'OR "digital twin" OR robot OR drone) when:3d', "en-US", "US", "US:en")},
+    {"name": "AI·Google 원전 AI(JA)", "lang": "ja",
+     "url": _gnews('(原子力 OR 原発) (AI OR 人工知能 OR 機械学習 OR ロボット OR デジタルツイン) when:1d',
+                   "ja", "JP", "JP:ja")},
+    {"name": "AI·Google 원전 AI(FR)", "lang": "fr",
+     "url": _gnews('nucléaire ("intelligence artificielle" OR IA OR robotique OR "jumeau numérique") when:1d',
+                   "fr", "FR", "FR:fr")},
+    # 4단계 A1 — 러시아어·중국어. Google 은 2022년부터 RT 등 러시아 국영매체를 Google 뉴스에서
+    # 뺐으므로 TASS·RIA 는 안 나올 수 있다. 민간 매체(atomic-energy.ru·ComNews·Vedomosti)는
+    # 지난달 루푸르 건을 10곳 넘게 실었다. 중국은 첫 보도가 회사 위챗이라 행사급만 잡힌다.
+    {"name": "AI·Google 원전 AI(RU)", "lang": "ru",
+     "url": _gnews('(АЭС OR Росатом OR Росэнергоатом OR атомной) (ИИ OR "искусственный интеллект" '
+                   'OR нейросеть OR "машинное обучение" OR "цифровой двойник" OR робот) when:2d',
+                   "ru", "RU", "RU:ru")},
+    {"name": "AI·Google 원전 AI(ZH)", "lang": "zh",
+     "url": _gnews('(核电 OR 核能 OR 中广核 OR 中核) (人工智能 OR 大模型 OR 机器学习 OR 智能体 '
+                   'OR 数字孪生 OR 机器人) when:2d', "zh-CN", "CN", "CN:zh-Hans")},
+    # 직접 RSS (주소 미확인 — 첫 크롤 로그로 확인).
+    {"name": "AI·IAEA 보도자료", "lang": "en", "kind": "rss",
+     "url": "https://www.iaea.org/feeds/pressalerts"},
+    {"name": "AI·NRC 보도자료", "lang": "en", "kind": "rss",
+     "url": "https://www.nrc.gov/public-involve/rss-feeds/news-releases.xml"},
+    {"name": "AI·Атомная энергия 2.0", "lang": "ru", "kind": "rss",
+     "url": "https://www.atomic-energy.ru/rss.xml"},
 ]
 # 전용 피드의 수집 창. when:1d 를 넘는 오래된 항목은 버린다(관련도순 대비).
 FEED_LOOKBACK = timedelta(days=3)
+# 기사 주소에 날짜가 박혀 있고(/2026/06/ 처럼) 그보다 오래됐으면 버린다. 실측(2026-10-14 두 번째
+# 실전 회차): 6월 기사(energynow.com/2026/06/…)를 Google 뉴스가 오늘 다시 띄워 pub 이 오늘로
+# 찍혔고, 그대로 오늘 회차에 들어갔다.
+URL_DATE_LOOKBACK = timedelta(days=30)
+_URL_DATE = re.compile(r"/((?:20)\d{2})[/-](\d{2})(?:[/-](\d{2}))?(?=[/-])")
+
+
+def url_date(url: str) -> datetime | None:
+    """주소 경로의 연/월(/일) → datetime(UTC). 일이 없으면 그 달 1일. 없거나 말이 안 되면 None."""
+    m = _URL_DATE.search(url or "")
+    if not m:
+        return None
+    year, month, day = int(m.group(1)), int(m.group(2)), int(m.group(3) or 1)
+    try:
+        return datetime(year, month, day, tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def stale_by_url(url: str, now: datetime) -> bool:
+    stamped = url_date(url)
+    return stamped is not None and stamped < now - URL_DATE_LOOKBACK
 
 
 # ── 상태 ─────────────────────────────────────────────────────────────────────
@@ -217,12 +278,15 @@ def from_main_record(record: dict) -> dict:
     }
 
 
-def from_feed_item(item: dict, hasher: Callable[[str], str]) -> dict:
+def from_feed_item(item: dict, hasher: Callable[[str], str], source: dict | None = None) -> dict:
     """전용 피드 항목 → 레인 입력. 제목뿐이라 판정 전에 본문을 붙인다."""
     domain = item.get("publisher_domain") or ""
+    source = source or {}
     return {
         "hash": hasher(item.get("raw_link") or item.get("link") or ""),
         "origin": "dedicated",
+        "feed": source.get("name", ""),
+        "lang": source.get("lang", ""),
         "title": item.get("title", ""),
         "description": item.get("description", ""),
         "link": item.get("link", ""),
@@ -236,24 +300,41 @@ def from_feed_item(item: dict, hasher: Callable[[str], str]) -> dict:
     }
 
 
+def _feed_stat() -> dict:
+    return {"fetched": 0, "fresh": 0, "stale_url": 0, "failed": 0, "candidates": 0,
+            "judged": 0, "included": 0}
+
+
 def collect_feeds(fetch: Callable[[str, str], list[dict]], hasher: Callable[[str], str],
                   *, now: datetime | None = None,
-                  sources: list[dict] | None = None) -> tuple[list[dict], dict[str, int]]:
+                  sources: list[dict] | None = None) -> tuple[list[dict], dict[str, dict]]:
+    """전용 피드 전부 → (레인 입력 목록, 피드별 통계).
+
+    피드별 통계는 4단계부터 로그와 ``ai_state.json`` 의 runs 에 함께 남는다 — 어느 경로가
+    실제로 사건을 내는지 2주 뒤에 세어 보기 위해서다(docs §12). 피드 하나의 실패는 그 피드의
+    ``failed`` 에만 적히고 나머지는 계속 간다.
+    """
     now = now or datetime.now(timezone.utc)
     out: list[dict] = []
-    counts: dict[str, int] = {}
+    counts: dict[str, dict] = {}
     for src in sources if sources is not None else AI_SOURCES:
+        stat = counts[src["name"]] = _feed_stat()
         try:
             items = fetch(src["url"], src["name"]) or []
         except Exception as exc:  # noqa: BLE001 — 피드 하나가 레인을 멈추면 안 된다
             print(f"  ! [AI] {src['name']} 실패: {type(exc).__name__}")
+            stat["failed"] = 1
             items = []
-        counts[src["name"]] = len(items)
+        stat["fetched"] = len(items)
         for item in items:
             pub = item.get("pub")
             if isinstance(pub, datetime) and pub < now - FEED_LOOKBACK:
                 continue
-            out.append(from_feed_item(item, hasher))
+            if stale_by_url(item.get("raw_link") or item.get("link") or "", now):
+                stat["stale_url"] += 1
+                continue
+            stat["fresh"] += 1
+            out.append(from_feed_item(item, hasher, src))
     return out, counts
 
 
@@ -310,6 +391,9 @@ def make_record(article: dict, verdict: dict, *, judged_at: str, model: str = ""
         "countries": verdict.get("countries") or article.get("countries") or [],
         "main_importance": article.get("main_importance", ""),
         "main_scope": article.get("scope", ""),
+        "feed": article.get("feed", ""),
+        "lang": article.get("lang", ""),
+        "tech_scope": verdict.get("tech_scope") or ("digital" if verdict.get("ai_tech") in ai_lane.DIGITAL_AI_TECH else "ai"),
         "application_area": verdict.get("application_area", ""),
         "ai_tech": verdict.get("ai_tech", "other"),
         "actor_type": verdict.get("actor_type", "other"),
@@ -341,9 +425,27 @@ def domestic_guard(article: dict, verdict: dict | None) -> dict | None:
     return verdict
 
 
+def datacenter_guard(article: dict, verdict: dict | None) -> dict | None:
+    """프리필터가 '데이터센터 전력' 표시를 붙인 기사는 판정이 포함이라 해도 넣지 않는다.
+
+    실측(2026-10-14 두 번째 실전 회차): 「AtkinsRealis, AI 데이터센터 전력 공급용 원전 기술
+    미국 인허가 추진」을 판정기가 포함으로 냈다 — 원전이 AI 를 쓰는 기사가 아니라 AI 에
+    전기를 대는 기사다. 0단계 gold 226건으로 미리 따져 보면 이 표시가 붙은 기사는 제외 37건·
+    포함 0건이라, 이 규칙으로 잃는 진짜 사례는 없었다. 그래도 사유를 따로 남겨 되돌릴 수 있게 한다.
+    """
+    if not verdict or not verdict.get("in_scope"):
+        return verdict
+    marks = (article.get("_prefilter") or {}).get("hints") or []
+    if "datacenter_power" in marks:
+        return {"in_scope": False, "exclude_reason": "datacenter_power",
+                "reason": "데이터센터 전력 표시(결정적 규칙)"}
+    return verdict
+
+
 # ── 한 회차 ──────────────────────────────────────────────────────────────────
 def select_candidates(pool: list[dict], state: dict, identities: dict[str, set[str]]) -> tuple[list[dict], dict]:
-    stats = {"pool": len(pool), "seen": 0, "duplicate": 0, "prefilter_out": 0, "candidates": 0}
+    stats = {"pool": len(pool), "seen": 0, "duplicate": 0, "prefilter_out": 0,
+             "conflict_drop": 0, "candidates": 0}
     chosen: list[dict] = []
     titles: set[str] = set()
     for article in pool:
@@ -357,11 +459,13 @@ def select_candidates(pool: list[dict], state: dict, identities: dict[str, set[s
                 or (tkey and (tkey in identities["titles"] or tkey in titles))):
             stats["duplicate"] += 1
             continue
-        if not ai_lane.prefilter(article)["passed"]:
+        verdict = ai_lane.prefilter(article)
+        if not verdict["passed"]:
             # 탈락은 상태에 적지 않는다. 정규식이라 다시 걸러도 거의 공짜고, 적으면
             # 상태 파일이 회차마다 수백 줄씩 자란다(공유 풀은 최근 3일 전량이다).
-            stats["prefilter_out"] += 1
+            stats["conflict_drop" if verdict["dropped"] == "conflict" else "prefilter_out"] += 1
             continue
+        article["_prefilter"] = verdict  # 판정 뒤 가드(datacenter_guard)가 읽는다. 저장되지 않는다.
         titles.add(tkey)
         chosen.append(article)
     # 공유 풀(메인 큐레이션 문장이 있는 쪽)을 먼저 묻는다 — 상한에 걸리면 전용 피드가 다음 회차로 밀린다.
@@ -384,20 +488,27 @@ def run(main_records: list[dict], *, fetch: Callable[[str, str], list[dict]] | N
     identities = archive_identities(archive)
 
     pool = [from_main_record(r) for r in main_records or []]
-    feed_counts: dict[str, int] = {}
+    feed_counts: dict[str, dict] = {"공유 풀": _feed_stat()}
+    feed_counts["공유 풀"]["fetched"] = feed_counts["공유 풀"]["fresh"] = len(pool)
     if fetch is not None and hasher is not None:
-        feed_items, feed_counts = collect_feeds(fetch, hasher, now=now)
+        feed_items, counts = collect_feeds(fetch, hasher, now=now)
         pool.extend(feed_items)
+        feed_counts.update(counts)
 
     candidates, stats = select_candidates(pool, state, identities)
-    stats["feeds"] = feed_counts
     batch = candidates[:MAX_JUDGE_PER_RUN]
     stats["deferred"] = len(candidates) - len(batch)
+    feed_of = lambda a: a.get("feed") or "공유 풀"  # noqa: E731
+    for article in candidates:
+        feed_counts.setdefault(feed_of(article), _feed_stat())["candidates"] += 1
 
     dedicated = [a for a in batch if a.get("origin") == "dedicated"]
+    stats["body"] = {"attempted": 0, "ok": 0}
     if dedicated and body_fetcher is not None:
         try:
-            bodies, _ = body_fetcher(dedicated[:MAX_BODY_PER_RUN])
+            targets = dedicated[:MAX_BODY_PER_RUN]
+            bodies, _ = body_fetcher(targets)
+            stats["body"] = {"attempted": len(targets), "ok": sum(1 for a in targets if bodies.get(a["hash"]))}
             for article in dedicated:
                 body = bodies.get(article["hash"])
                 if body:
@@ -409,10 +520,13 @@ def run(main_records: list[dict], *, fetch: Callable[[str, str], list[dict]] | N
 
     verdicts = ai_lane.judge(batch, call=judge_call) if batch else []
     records = []
-    stats.update({"judged": 0, "included": 0, "excluded": 0, "failed": 0})
+    stats.update({"judged": 0, "included": 0, "excluded": 0, "failed": 0, "guarded": 0})
     for article, verdict in zip(batch, verdicts):
         digest = article["hash"]
-        verdict = domestic_guard(article, verdict)
+        guarded = datacenter_guard(article, domestic_guard(article, verdict))
+        if guarded is not verdict and guarded is not None:
+            stats["guarded"] += 1
+        verdict = guarded
         if verdict is None:
             stats["failed"] += 1
             state["attempts"][digest] = int(state["attempts"].get(digest, 0)) + 1
@@ -420,25 +534,40 @@ def run(main_records: list[dict], *, fetch: Callable[[str, str], list[dict]] | N
                 state["judged"][digest] = {"at": judged_at, "in": False, "reason": "judge_failed"}
             continue
         stats["judged"] += 1
+        feed_counts.setdefault(feed_of(article), _feed_stat())["judged"] += 1
         state["judged"][digest] = {"at": judged_at, "in": verdict["in_scope"],
-                                   "reason": verdict.get("exclude_reason", "")}
+                                   "reason": verdict.get("exclude_reason", ""),
+                                   "feed": article.get("feed", ""), "v": ai_lane.PROMPT_VERSION}
         if verdict["in_scope"]:
             stats["included"] += 1
+            feed_counts[feed_of(article)]["included"] += 1
             records.append(make_record(article, verdict, judged_at=judged_at, model=model))
         else:
             stats["excluded"] += 1
     append_records(records, archive_dir)
     stats["at"] = judged_at
-    state["runs"].append({k: v for k, v in stats.items() if k != "feeds"})
+    stats["feeds"] = feed_counts
+    state["runs"].append(dict(stats))
     save_state(state, state_file, now=now)
     return stats
 
 
 def format_stats(stats: dict) -> str:
     feeds = stats.get("feeds") or {}
-    feed_total = sum(feeds.values())
-    return (f"[AI 레인] 풀 {stats.get('pool', 0)}(전용 피드 {feed_total}) · 기판정 {stats.get('seen', 0)}"
+    feed_total = sum(int((v or {}).get("fresh") or 0) for k, v in feeds.items() if k != "공유 풀")
+    body = stats.get("body") or {}
+    head = (f"[AI 레인] 풀 {stats.get('pool', 0)}(전용 피드 {feed_total}) · 기판정 {stats.get('seen', 0)}"
             f" · 중복 {stats.get('duplicate', 0)} · 프리필터 탈락 {stats.get('prefilter_out', 0)}"
+            f" · 공격문맥 탈락 {stats.get('conflict_drop', 0)}"
             f" · 판정 {stats.get('judged', 0)} → 포함 {stats.get('included', 0)}"
-            f" / 제외 {stats.get('excluded', 0)} · 실패 {stats.get('failed', 0)}"
-            f" · 다음 회차로 {stats.get('deferred', 0)}")
+            f" / 제외 {stats.get('excluded', 0)}(가드 {stats.get('guarded', 0)}) · 실패 {stats.get('failed', 0)}"
+            f" · 다음 회차로 {stats.get('deferred', 0)}"
+            f" · 본문 {body.get('ok', 0)}/{body.get('attempted', 0)}")
+    lines = [head]
+    for name, v in feeds.items():
+        v = v or {}
+        mark = " ✗실패" if v.get("failed") else ""
+        lines.append(f"  [AI 피드] {name}: 받음 {v.get('fetched', 0)} · 창 안 {v.get('fresh', 0)}"
+                     f" · 주소 날짜 탈락 {v.get('stale_url', 0)} · 후보 {v.get('candidates', 0)}"
+                     f" · 판정 {v.get('judged', 0)} · 포함 {v.get('included', 0)}{mark}")
+    return "\n".join(lines)

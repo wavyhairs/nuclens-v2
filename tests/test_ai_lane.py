@@ -256,3 +256,47 @@ class GoldArtifactTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DigitalScopeTests(unittest.TestCase):
+    """4단계 — 포함 범위 ②(AI + 현장 디지털 기술)와 러시아어·중국어 어휘."""
+
+    def test_digital_terms_pass_without_ai(self):
+        for title in ("영국 셀라필드, 원전 해체 가속화 위한 몰입형 환경 시설 구축",
+                      "Framatome unveils digital I&C modernization strategy for nuclear plants",
+                      "«Росатом» оснастил АЭС «Руппур» цифровым помощником операторов"):
+            with self.subTest(title=title):
+                verdict = ai_lane.prefilter(art(title))
+                self.assertTrue(verdict["passed"], verdict)
+                self.assertEqual(verdict["ai_terms"], [])
+                self.assertTrue(verdict["digital_terms"])
+
+    def test_conflict_context_blocks_digital_only_but_not_ai(self):
+        drone_attack = ai_lane.prefilter(art("IAEA, 자포리자 원전 부지 드론 피격 사건 발생 확인"))
+        self.assertFalse(drone_attack["passed"])
+        self.assertEqual(drone_attack["dropped"], "conflict")
+        ai_in_conflict = ai_lane.prefilter(art("AI 기반 드론 탐지 체계로 원전 공격 대비 — 운영사 발표"))
+        self.assertTrue(ai_in_conflict["passed"])
+        self.assertIn("conflict", ai_in_conflict["hints"])
+
+    def test_russian_and_chinese_terms(self):
+        ru = ai_lane.prefilter(art("Росатом с помощью ИИ разработал состав материалов для реакторов БРЕСТ"))
+        self.assertTrue(ru["passed"])
+        self.assertIn("ИИ", ru["ai_terms"])
+        zh = ai_lane.prefilter(art("中广核发布核电人工智能大模型，用于核电站智能运维"))
+        self.assertTrue(zh["passed"])
+        # 키릴 약어도 라틴 약어처럼 경계를 본다 — 단어 속 ИИ 는 아니다.
+        self.assertEqual(ai_lane.ai_terms("ЛИНИИ электропередачи АЭС"), [])
+
+    def test_tech_scope_defaults_from_ai_tech(self):
+        base = {"in_scope": True, "exclude_reason": "none"}
+        self.assertEqual(ai_lane.normalize_judgment({**base, "ai_tech": "vr_immersive"})["tech_scope"], "digital")
+        self.assertEqual(ai_lane.normalize_judgment({**base, "ai_tech": "genai_llm"})["tech_scope"], "ai")
+        self.assertEqual(ai_lane.normalize_judgment({**base, "ai_tech": "other", "tech_scope": "digital"})["tech_scope"], "digital")
+        self.assertEqual(ai_lane.normalize_judgment({**base, "ai_tech": "other", "tech_scope": "nope"})["tech_scope"], "ai")
+
+    def test_prompt_asks_for_english_actor_names_and_scope(self):
+        self.assertIn("영어 공식 표기", ai_lane.SYSTEM_PROMPT)
+        self.assertIn("tech_scope", ai_lane.SYSTEM_PROMPT)
+        for value in ai_lane.TECH_SCOPES:
+            self.assertIn(value, ai_lane.LABELS_KR)

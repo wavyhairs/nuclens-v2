@@ -31,7 +31,7 @@ GOLD = ROOT / "eval_artifacts" / "ai_lane" / "gold_labels.jsonl"
 SEED = ROOT / "eval_artifacts" / "ai_lane" / "seed_manual.json"
 MAIN_ARCHIVE = ROOT / "archive"
 VERDICT_FIELDS = ("application_area", "ai_tech", "actor_type", "actor_names", "maturity",
-                  "adoption_significance", "countries")
+                  "adoption_significance", "countries", "tech_scope")
 
 
 def build_records(*, now: datetime) -> list[dict]:

@@ -59,7 +59,7 @@
     <nav class="main-tabs" id="mainTabs" aria-label="주요 화면">
       <button class="main-tab active" data-view="news" aria-pressed="true">오늘</button>
       <!-- 해외 원전 AI 동향. ai_issues.json 이 없거나 비면 syncAiChrome 이 숨긴 채로 둔다. -->
-      <button class="main-tab" data-view="ai" aria-pressed="false" hidden>해외 AI</button>
+      <button class="main-tab" data-view="ai" aria-pressed="false" hidden>해외 AI·디지털</button>
       <button class="main-tab" data-view="trend" aria-pressed="false">흐름</button>
       <button class="main-tab" data-view="search" aria-pressed="false">탐색</button>
       <button class="main-tab" data-view="longterm" aria-pressed="false" hidden>장기 스토리<span class="beta-dot" aria-hidden="true">β</span></button>
@@ -276,7 +276,7 @@
   <section id="view-ai" hidden aria-labelledby="aiTitle">
     <header class="today-head">
       <div class="today-head-row">
-        <h1 id="aiTitle">해외 원전 AI 동향</h1>
+        <h1 id="aiTitle">해외 AI·디지털 동향</h1>
         <div class="date-nav" aria-label="해외 AI 회차 선택">
           <button id="aiPrevDay" type="button" aria-label="이전 회차">←</button>
           <select id="aiDateSel" aria-label="해외 AI 회차"></select>
@@ -286,10 +286,16 @@
       <p class="today-lede" id="aiLede"></p>
       <p class="ai-stale" id="aiStale" hidden></p>
     </header>
+    <!-- 하루치 / 최근 7일. 해당 기사는 주 3~5건이라 하루 회차는 비는 날이 많다 — 오늘 회차가
+         없으면 7일 보기로 연다(app.js renderAi). 회차 이동(←·→·셀렉트)은 하루치로 돌아간다. -->
+    <div class="ai-span segmented" id="aiSpan" role="group" aria-label="보기 범위">
+      <button type="button" data-ai-span="day" aria-pressed="false">하루</button>
+      <button type="button" data-ai-span="week" aria-pressed="false">최근 7일</button>
+    </div>
     <div class="ai-filters" id="aiFilters"></div>
-    <section class="brief-panel ai-panel" aria-label="이 회차의 해외 AI 기사">
-      <h2 class="brief-panel-title">이 회차의 기사 · 중요도순</h2>
-      <nav id="aiTocList" class="toc" aria-label="이 회차의 해외 AI 기사"></nav>
+    <section class="brief-panel ai-panel" aria-label="해외 AI·디지털 기사">
+      <h2 class="brief-panel-title" id="aiPanelTitle">이 회차의 기사 · 중요도순</h2>
+      <nav id="aiTocList" class="toc" aria-label="해외 AI·디지털 기사"></nav>
       <div class="brief-foot"><span id="aiPanelFoot"></span><span class="brief-foot-actions"><button type="button" id="aiToSearch" class="brief-more">지난 기사 전체 검색 →</button></span></div>
     </section>
   </section>
@@ -348,7 +354,7 @@
         <div class="archive-scope segmented" id="archiveScope" role="group" aria-label="목록 범위">
           <button class="active" type="button" data-scope="stories" aria-pressed="true">추적 중인 이슈</button>
           <button type="button" data-scope="all" aria-pressed="false">모든 이슈</button>
-          <button type="button" data-scope="ai" aria-pressed="false">해외 AI</button>
+          <button type="button" data-scope="ai" aria-pressed="false">해외 AI·디지털</button>
         </div>
         <div class="archive-result-head">
           <div><h2>검색 결과</h2><p id="archiveSummary" aria-live="polite"></p></div>
@@ -568,11 +574,11 @@
          「해외 AI」탭이 하루치 목록이라면 여기는 한 달 흐름이다. 데이터가 없으면 숨는다. -->
     <section id="trendAi" class="home-intelligence trend-ai" aria-labelledby="trendAiTitle" hidden>
       <div class="section-heading compact">
-        <div class="section-title"><span class="sec-no" aria-hidden="true">07</span><h2 id="trendAiTitle">해외 원전 AI, 최근 30일</h2></div>
+        <div class="section-title"><span class="sec-no" aria-hidden="true">07</span><h2 id="trendAiTitle">해외 원전 AI·디지털, 최근 30일</h2></div>
         <span class="data-note" id="trendAiMeta"></span>
       </div>
       <div id="trendAiBody" class="trend-ai-body"></div>
-      <button type="button" class="brief-more" data-go-view="ai">해외 AI 탭에서 보기 →</button>
+      <button type="button" class="brief-more" data-go-view="ai">해외 AI·디지털 탭에서 보기 →</button>
     </section>
     <!-- Carbon Brief 관행(2026-08-16 슈퍼샘플 계획): 집계 기준을 화면에 상시 공개
          한다 — "이 숫자 어디서 났냐"에 먼저 답해 두는 것이 신뢰 확보의 최저비용.
@@ -688,7 +694,7 @@
 
 <nav id="mobileTabs" class="mobile-tabs" aria-label="모바일 주요 화면">
   <button class="active" type="button" data-view="news" aria-pressed="true"><span>오늘</span></button>
-  <button type="button" data-view="ai" aria-pressed="false" hidden><span>해외 AI</span></button>
+  <button type="button" data-view="ai" aria-pressed="false" hidden><span>AI·디지털</span></button>
   <button type="button" data-view="trend" aria-pressed="false"><span>흐름</span></button>
   <button type="button" data-view="search" aria-pressed="false"><span>탐색</span></button>
   <!-- 장기 스토리. 상단 탭에만 두면 폰에서는 **존재 자체가 안 보인다** —

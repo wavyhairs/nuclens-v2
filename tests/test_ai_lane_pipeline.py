@@ -188,9 +188,93 @@ class LaneRunTests(unittest.TestCase):
         self.assertEqual(len(saved["runs"]), lane.RUN_LOG_KEEP)
 
     def test_sources_are_time_bounded_google_news(self):
+        # Google 뉴스 검색은 when: 창이 있어야 한다(관련도순 대비). 매체 직접 RSS(kind=rss)는 예외.
         for src in lane.AI_SOURCES:
             with self.subTest(src=src["name"]):
-                self.assertIn("when%3A", src["url"])
+                if src.get("kind") == "rss":
+                    self.assertNotIn("news.google.com", src["url"])
+                else:
+                    self.assertIn("when%3A", src["url"])
+                self.assertIn(src.get("lang"), ("en", "ja", "fr", "ru", "zh"))
+
+    def test_sources_cover_russian_chinese_and_foreign_regulators(self):
+        langs = {src["lang"] for src in lane.AI_SOURCES}
+        self.assertTrue({"ru", "zh"} <= langs)
+        urls = " ".join(src["url"] for src in lane.AI_SOURCES)
+        for name in ("FANR", "ONR", "CNSC", "iaea.org/feeds", "nrc.gov"):
+            self.assertIn(name, urls)
+
+    def test_url_date_guard(self):
+        self.assertTrue(lane.stale_by_url("https://energynow.com/2026/06/canadas-atkinsrealis-seeks/", NOW))
+        self.assertFalse(lane.stale_by_url("https://x.test/2026/10/12/story/", NOW))
+        self.assertFalse(lane.stale_by_url("https://x.test/news/story-12345", NOW))
+        self.assertIsNone(lane.url_date("https://x.test/2026/13/bad/"))
+
+    def test_feed_items_with_old_url_dates_are_dropped_and_counted(self):
+        fresh = NOW - timedelta(hours=2)
+
+        def fetch(url, name):
+            return [{"link": "https://news.google.com/rss/articles/a", "raw_link": "https://e.test/2026/06/old-story/",
+                     "title": "Nuclear AI story", "pub": fresh, "publisher": "E", "publisher_domain": "e.test"},
+                    {"link": "https://news.google.com/rss/articles/b", "raw_link": "https://e.test/2026/10/13/new-story/",
+                     "title": "Nuclear AI story two", "pub": fresh, "publisher": "E", "publisher_domain": "e.test"}]
+        items, counts = lane.collect_feeds(fetch, lambda u: u[-5:], now=NOW,
+                                           sources=[{"name": "F", "lang": "en", "url": "u"}])
+        self.assertEqual([i["title"] for i in items], ["Nuclear AI story two"])
+        self.assertEqual(counts["F"]["stale_url"], 1)
+        self.assertEqual(counts["F"]["fresh"], 1)
+        self.assertEqual(items[0]["feed"], "F")
+
+    def test_run_records_per_feed_stats_in_state(self):
+        first = lane.AI_SOURCES[0]["name"]
+
+        def fetch(url, name):
+            if name != first:
+                return []
+            return [{"link": "https://news.google.com/rss/articles/d", "title": "NIVA nuclear AI rollout",
+                     "pub": NOW - timedelta(hours=1), "publisher": "P", "publisher_domain": "p.test"}]
+        stats = lane.run([main_record("s", "nuclear AI shared story")], fetch=fetch, hasher=lambda u: u[-1],
+                         judge_call=judge_all(["NIVA"]), now=NOW, state_file=self.state, archive_dir=self.archive)
+        feeds = stats["feeds"]
+        self.assertEqual(feeds["공유 풀"]["candidates"], 1)
+        dedicated = [k for k in feeds if k != "공유 풀"]
+        self.assertTrue(dedicated)
+        self.assertEqual(sum(feeds[k]["included"] for k in dedicated), 1)
+        saved = json.loads(self.state.read_text(encoding="utf-8"))
+        self.assertIn("feeds", saved["runs"][-1])
+        self.assertIn("[AI 피드]", lane.format_stats(stats))
+
+    def test_conflict_context_drops_digital_only_candidates_before_judge(self):
+        pool = [{"hash": "w", "origin": "shared", "title": "IAEA, 자포리자 원전 부지 드론 피격 사건 확인"},
+                {"hash": "r", "origin": "shared", "title": "Sellafield deploys immersive VR facility for nuclear decommissioning"}]
+        chosen, stats = lane.select_candidates(pool, lane.load_state(self.state),
+                                               {"hashes": set(), "urls": set(), "titles": set()})
+        self.assertEqual([c["hash"] for c in chosen], ["r"])
+        self.assertEqual(stats["conflict_drop"], 1)
+
+
+class DatacenterGuardTests(unittest.TestCase):
+    def test_included_verdict_with_datacenter_hint_is_excluded(self):
+        article = {"_prefilter": {"hints": ["datacenter_power"]}}
+        verdict = lane.datacenter_guard(article, {"in_scope": True, "countries": ["US"]})
+        self.assertFalse(verdict["in_scope"])
+        self.assertEqual(verdict["exclude_reason"], "datacenter_power")
+
+    def test_no_hint_passes_through(self):
+        verdict = {"in_scope": True, "countries": ["US"]}
+        self.assertIs(lane.datacenter_guard({"_prefilter": {"hints": []}}, verdict), verdict)
+        self.assertIsNone(lane.datacenter_guard({}, None))
+
+    def test_run_applies_guard(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            stats = lane.run([main_record("a", "AtkinsRealis seeks US approval for nuclear tech to power AI boom data centers")],
+                             judge_call=judge_all(["AtkinsRealis"]), now=NOW,
+                             state_file=base / "s.json", archive_dir=base / "a")
+            self.assertEqual(stats["included"], 0)
+            self.assertEqual(stats["guarded"], 1)
+            saved = json.loads((base / "s.json").read_text(encoding="utf-8"))
+            self.assertEqual(saved["judged"]["a"]["reason"], "datacenter_power")
 
     def test_module_does_not_import_news_bot(self):
         self.assertNotIn("news_bot", lane.__dict__)

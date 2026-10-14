@@ -4232,6 +4232,8 @@ button.agenda-head[aria-expanded="true"]::after { content: "▾"; }
   .today-head { margin-bottom: var(--sp-2); }
   .today-head-row { flex-wrap: nowrap; gap: var(--sp-2); }
   .today-head h1 { font-size: 17px; flex: 0 0 auto; }
+  /* 해외 AI·디지털 머리는 「오늘」보다 길다 — 날짜 컨트롤(208px)이 밀려 나가지 않게 줄어들 수 있어야 한다. */
+  #view-ai .today-head h1 { flex: 0 1 auto; min-width: 0; }
   .date-nav { width: auto; flex: 1 1 auto; justify-content: flex-end; }
   .date-nav button, .date-nav select { height: 36px; }
   .date-nav button { width: 36px; }
@@ -4351,6 +4353,18 @@ button.agenda-head[aria-expanded="true"]::after { content: "▾"; }
 .ai-pill.is-on { background: var(--c-secondary); border-color: var(--c-secondary); color: #fff; }
 .ai-pill:focus-visible { outline: none; box-shadow: var(--fo-ring); }
 .ai-facts .topic-chip b { font-weight: 700; margin-right: 2px; }
+/* 4단계 — 보기 범위(하루/최근 7일)와 디지털 범위 표시. 둘 다 기존 segmented·chip 어법을 쓴다. */
+.ai-span { margin-top: var(--sp-3); width: max-content; }
+.ai-span button { min-height: 32px; padding: 0 12px; font-size: 12.5px; }
+.chip-digital { background: var(--c-surface-sunken); border: 1px solid var(--c-border-strong); color: var(--c-text-secondary); }
+.ai-day-head {
+  display: flex; align-items: baseline; gap: var(--sp-2);
+  margin: var(--sp-3) 0 var(--sp-1); padding-bottom: 4px;
+  border-bottom: 1px solid var(--c-border);
+  font-size: 12.5px; font-weight: 700; color: var(--c-text-secondary);
+}
+.ai-day-head:first-child { margin-top: 0; }
+.ai-day-head .ai-day-n { font-weight: 400; color: var(--c-text-muted); }
 @media (max-width: 520px) {
   .ai-toc-row .toc-meta-line { flex-wrap: wrap; row-gap: 4px; }
 }
