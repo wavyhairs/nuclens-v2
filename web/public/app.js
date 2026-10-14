@@ -4511,6 +4511,36 @@ function weeklySection(title, note, body) {
 // 주제는 고정 분류라 라벨 공간이 다르다(실측 2026-08-08: 4건 중 SMR·핵융합
 // 2건만 일치). 붙이면 맞는 두 줄만 접히고 그 문장은 바로 아래 '조용하지만
 // 놓치면 안 되는 것'에도 그대로 있어 새 중복이 된다. 해설은 그 코너가 맡는다.
+// 흐름 탭 07 — 해외 원전 AI 의 한 달. 사건(이슈) 단위로 세고, 막대는 글자 표(▮)가
+// 아니라 길이 하나만 쓴다 — 단일 계열이라 색은 하나다.
+function renderTrendAi() {
+  const section = document.getElementById("trendAi");
+  if (!section) return;
+  const today = state.ai?.today || "";
+  const cut = new Date(`${today || "1970-01-01"}T00:00:00Z`);
+  cut.setUTCDate(cut.getUTCDate() - 29);
+  const key = cut.toISOString().slice(0, 10);
+  const recent = aiIssues().filter(issue => String(issue.last_seen || "") >= key);
+  section.hidden = !today || recent.length === 0;
+  if (section.hidden) return;
+  const count = field => {
+    const map = new Map();
+    recent.forEach(issue => { const k = issue[field]; if (k) map.set(k, (map.get(k) || 0) + 1); });
+    return [...map].sort((a, b) => b[1] - a[1]);
+  };
+  const block = (title, rows) => {
+    const max = Math.max(...rows.map(([, n]) => n), 1);
+    return `<div class="trend-ai-block"><h3>${esc(title)}</h3><ul>${rows.map(([k, n]) => `<li>
+      <span class="trend-ai-label">${esc(aiLabel(k))}</span>
+      <span class="trend-ai-track"><span class="trend-ai-bar" style="width:${Math.max(4, Math.round(n / max * 88))}%" aria-hidden="true"></span><span class="trend-ai-n">${n}</span></span></li>`).join("")}</ul></div>`;
+  };
+  const deployed = recent.filter(issue => ["deployed", "contract", "regulatory"].includes(issue.maturity)).length;
+  document.getElementById("trendAiMeta").textContent =
+    `사건 ${recent.length}개 · 실적용·계약·규제 ${deployed}개 · ${dateLabel(key)}–${dateLabel(today)}`;
+  document.getElementById("trendAiBody").innerHTML =
+    block("적용 영역", count("application_area")) + block("성숙도", count("maturity"));
+}
+
 function renderTrendTopicFlow() {
   const section = document.getElementById("trendTopicFlow");
   if (!section) return;
@@ -5286,6 +5316,7 @@ function renderWordCloud() {
 
 function renderTrend() {
   renderTrendTopicFlow();
+  renderTrendAi();
   renderWeeklyReport();
   renderInsights();
   renderTrendReadiness();
