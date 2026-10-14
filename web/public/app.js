@@ -137,7 +137,9 @@ const state = {
   // 그리지 않으려는 것 — 다시 그리면 사용자가 펼쳐 둔 목차가 도로 접힌다.
   homeShownIds: new Set(), homePickCount: 0,
   // 해외 AI 탭(ai_issues.json). 회차·필터는 이 탭 안에서만 산다.
-  ai: null, aiDate: "", aiArea: "전체", aiMaturity: "전체",
+  // aiScope: 기술 범위 칩(전체·AI·디지털, 4단계). aiSpan: "day" | "week" | ""(미정 — 첫 렌더가
+  // 오늘 회차 유무로 정한다).
+  ai: null, aiDate: "", aiArea: "전체", aiMaturity: "전체", aiScope: "전체", aiSpan: "",
 };
 
 let eventsBound = false;
@@ -1029,6 +1031,7 @@ function syncUrl(mode = "replace") {
   if (state.agendaId) params.set("agenda", state.agendaId);
   if (state.view === "longterm" && state.threadId) params.set("th", state.threadId);
   if (state.view === "ai" && state.aiDate && state.aiDate !== aiRounds()[0]?.date) params.set("aid", state.aiDate);
+  if (state.view === "ai" && state.aiSpan === "week") params.set("aw", "1");
   // AI 이슈에는 /issue/<id>/ 정적 페이지가 없다 — 그 경로를 쓰면 새로고침이 404 다.
   if (state.issueId && isAiIssueId(state.issueId)) params.set("issue", state.issueId);
   if (state.archiveScope !== "stories") params.set("as", state.archiveScope);
@@ -1071,6 +1074,7 @@ function restoreUrlState() {
   if (state.view === "longterm" && !longTermReady()) { state.view = "news"; state.threadId = ""; }
   state.archiveScope = ["all", "ai"].includes(params.get("as")) ? params.get("as") : "stories";
   state.aiDate = params.get("aid") || "";
+  state.aiSpan = params.get("aw") === "1" ? "week" : (state.aiDate ? "day" : "");
   state.archiveRegion = ["전체", "국내", "해외"].includes(params.get("ar")) ? params.get("ar") : "전체";
   state.archiveTopic = params.get("at") || "전체";
   state.archiveDomain = params.get("ad") || "";
@@ -5671,13 +5675,14 @@ function syncAiChrome() {
 
 function aiDialogFacts(issue) {
   const facts = [
+    ["범위", aiLabel(issue.tech_scope)],
     ["성숙도", aiLabel(issue.maturity)],
-    ["AI 기술", aiLabel(issue.ai_tech)],
+    ["기술", aiLabel(issue.ai_tech)],
     ["주체", (issue.actor_names || []).slice(0, 3).join(", ")],
   ].filter(([, value]) => value);
   const vendor = issue.vendor_claim
     ? '<span class="topic-chip ai-flag" title="AI 제공사·제작사의 발표입니다. 운영사 실적용과 구분해 읽으세요.">벤더 발표</span>' : "";
-  return `<div class="topic-row ai-facts" aria-label="해외 AI 분류">${facts.map(([key, value]) => (
+  return `<div class="topic-row ai-facts" aria-label="해외 AI·디지털 분류">${facts.map(([key, value]) => (
     `<span class="topic-chip"><b>${esc(key)}</b> ${esc(value)}</span>`)).join("")}${vendor}</div>`;
 }
 
@@ -5693,7 +5698,7 @@ function aiTocRow(issue, index, day) {
   return `<div class="toc-row ai-toc-row"${score ? ` title="중요도 ${esc(score.score)} = ${esc(score.breakdown)}"` : ""}>
   <span class="toc-num" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
   <span class="toc-body">
-    <span class="toc-meta-line"><span class="toc-region">${esc(countries)}</span><span class="toc-chips"><span class="chip">${esc(aiLabel(issue.application_area))}</span></span><span class="ai-maturity m-${esc(issue.maturity || "")}">${esc(aiLabel(issue.maturity))}</span>${extra}</span>
+    <span class="toc-meta-line"><span class="toc-region">${esc(countries)}</span><span class="toc-chips"><span class="chip">${esc(aiLabel(issue.application_area))}</span>${issue.tech_scope === "digital" ? '<span class="chip chip-digital">디지털</span>' : ""}</span><span class="ai-maturity m-${esc(issue.maturity || "")}">${esc(aiLabel(issue.maturity))}</span>${extra}</span>
     <span class="toc-title"><button type="button" class="toc-link" data-issue-id="${esc(issue.issue_id)}">${esc(issue.title)}</button></span>
   </span>
   <span class="toc-arrow" aria-hidden="true">→</span>
@@ -5701,9 +5706,30 @@ function aiTocRow(issue, index, day) {
 }
 
 function aiFilterChips(kind, values, selected) {
-  const label = kind === "area" ? "적용 영역" : "성숙도";
+  const label = kind === "area" ? "적용 영역" : kind === "scope" ? "기술 범위" : "성숙도";
   return `<div class="ai-filter-row" role="group" aria-label="${label}"><span class="ai-filter-label">${label}</span>${
     ["전체", ...values].map(value => `<button type="button" class="ai-pill${value === selected ? " is-on" : ""}" aria-pressed="${value === selected}" data-ai-${kind}="${esc(value)}">${esc(value === "전체" ? "전체" : aiLabel(value))}</button>`).join("")}</div>`;
+}
+
+function aiWeekWindow(rounds) {
+  // 오늘(KST 날짜 문자열)로 끝나는 7일. 그 안에 회차가 하나도 없으면 가장 최근 회차로 끝나는
+  // 7일 — 빈 목록을 보여 주느니 "가장 최근 한 주"를 보여 준다. 날짜 문자열끼리만 계산한다
+  // (KST 자정을 Date 로 만들어 toISOString 하면 UTC 로 하루 밀린다).
+  const endOf = anchor => {
+    const cut = new Date(`${anchor}T00:00:00Z`);
+    cut.setUTCDate(cut.getUTCDate() - 6);
+    return [cut.toISOString().slice(0, 10), anchor];
+  };
+  const today = state.ai?.today || rounds[0].date;
+  let [from, to] = endOf(today);
+  if (!rounds.some(round => round.date >= from && round.date <= to)) [from, to] = endOf(rounds[0].date);
+  return { from, to, rounds: rounds.filter(round => round.date >= from && round.date <= to) };
+}
+
+function aiFilterIssue(issue) {
+  return (state.aiArea === "전체" || issue.application_area === state.aiArea)
+    && (state.aiMaturity === "전체" || issue.maturity === state.aiMaturity)
+    && (state.aiScope === "전체" || (issue.tech_scope || "ai") === state.aiScope);
 }
 
 function renderAi() {
@@ -5713,37 +5739,62 @@ function renderAi() {
   if (!rounds.some(round => round.date === state.aiDate)) state.aiDate = rounds[0].date;
   const index = rounds.findIndex(round => round.date === state.aiDate);
   const round = rounds[index];
+  const latestIsToday = rounds[0].date === state.ai.today;
+  // 보기 범위가 정해지지 않았으면: 오늘 회차가 있으면 하루치, 없으면 최근 7일(4단계 결정).
+  if (!state.aiSpan) state.aiSpan = latestIsToday ? "day" : "week";
+  const week = aiWeekWindow(rounds);
+  const weekMode = state.aiSpan === "week";
+  document.querySelectorAll("#aiSpan [data-ai-span]").forEach(button => {
+    const on = button.dataset.aiSpan === state.aiSpan;
+    button.classList.toggle("active", on);
+    button.setAttribute("aria-pressed", String(on));
+  });
   const select = document.getElementById("aiDateSel");
   select.innerHTML = rounds.map(row => (
     `<option value="${esc(row.date)}">${esc(dateWeekdayLabel(row.date))} · ${row.issue_ids.length}건</option>`)).join("");
   select.value = state.aiDate;
   document.getElementById("aiPrevDay").disabled = index >= rounds.length - 1;
   document.getElementById("aiNextDay").disabled = index <= 0;
-  const issues = round.issue_ids.map(aiIssueById).filter(Boolean);
+  // 필터 칩의 선택지는 지금 보이는 묶음(하루치 또는 7일치)에서 뽑는다.
+  const groups = weekMode
+    ? week.rounds.map(row => ({ date: row.date, issues: row.issue_ids.map(aiIssueById).filter(Boolean) }))
+    : [{ date: round.date, issues: round.issue_ids.map(aiIssueById).filter(Boolean) }];
+  const issues = groups.flatMap(group => group.issues);
   const areas = [...new Set(issues.map(issue => issue.application_area).filter(Boolean))];
   const maturities = [...new Set(issues.map(issue => issue.maturity).filter(Boolean))];
+  const scopes = [...new Set(issues.map(issue => issue.tech_scope || "ai"))];
   if (state.aiArea !== "전체" && !areas.includes(state.aiArea)) state.aiArea = "전체";
   if (state.aiMaturity !== "전체" && !maturities.includes(state.aiMaturity)) state.aiMaturity = "전체";
-  const shown = issues.filter(issue => (state.aiArea === "전체" || issue.application_area === state.aiArea)
-    && (state.aiMaturity === "전체" || issue.maturity === state.aiMaturity));
-  // 날짜 문자열끼리만 계산한다 — KST 자정을 Date 로 만들어 toISOString 하면 UTC 로
-  // 하루 밀린다.
-  const weekCut = new Date(`${state.ai.today || round.date}T00:00:00Z`);
-  weekCut.setUTCDate(weekCut.getUTCDate() - 6);
-  const weekKey = weekCut.toISOString().slice(0, 10);
-  const weekCount = rounds.filter(row => row.date >= weekKey).reduce((sum, row) => sum + row.issue_ids.length, 0);
+  if (state.aiScope !== "전체" && !scopes.includes(state.aiScope)) state.aiScope = "전체";
+  const weekCount = week.rounds.reduce((sum, row) => sum + row.issue_ids.length, 0);
+  const scopeNote = state.ai.stats?.by_scope?.digital
+    ? `해외 원전이 AI 를 쓴 사례와, 현장에 실제 적용된 디지털 기술(로봇·드론·VR·디지털 트윈·계측제어) 사례를 따로 모읍니다.`
+    : `해외 원전이 AI·디지털 기술을 쓴 사례만 따로 모읍니다.`;
   document.getElementById("aiLede").textContent =
-    `이 회차 ${issues.length}건 · 최근 7일 ${weekCount}건 · 누적 사건 ${aiIssues().length}개(기사 ${state.ai.stats?.articles ?? 0}건) — 해외 원전이 AI 를 쓴 사례만 따로 모읍니다.`;
+    `${weekMode ? `최근 7일 ${weekCount}건` : `이 회차 ${issues.length}건 · 최근 7일 ${weekCount}건`} · 누적 사건 ${aiIssues().length}개(기사 ${state.ai.stats?.articles ?? 0}건) — ${scopeNote}`;
   const stale = document.getElementById("aiStale");
-  const latestIsToday = rounds[0].date === state.ai.today;
-  stale.hidden = latestIsToday || index !== 0;
-  stale.textContent = stale.hidden ? "" : `오늘(${dateLabel(state.ai.today)}) 새로 잡힌 기사는 없습니다. 가장 최근 회차를 보여 줍니다.`;
-  document.getElementById("aiFilters").innerHTML = issues.length > 1
-    ? aiFilterChips("area", areas, state.aiArea) + aiFilterChips("maturity", maturities, state.aiMaturity) : "";
-  document.getElementById("aiTocList").innerHTML = shown.length
-    ? shown.map((issue, i) => aiTocRow(issue, i, round.date)).join("")
-    : '<p class="empty">조건에 맞는 기사가 없습니다.</p>';
-  document.getElementById("aiPanelFoot").textContent = `${dateWeekdayLabel(round.date)} 회차 · ${shown.length}건`;
+  stale.hidden = latestIsToday || (!weekMode && index !== 0);
+  stale.textContent = stale.hidden ? "" : (weekMode
+    ? `오늘(${dateLabel(state.ai.today)}) 새로 잡힌 기사는 없습니다. ${dateLabel(week.from)}–${dateLabel(week.to)} 기사를 날짜별로 보여 줍니다.`
+    : `오늘(${dateLabel(state.ai.today)}) 새로 잡힌 기사는 없습니다. 가장 최근 회차를 보여 줍니다.`);
+  const chipRows = [];
+  if (scopes.length > 1) chipRows.push(aiFilterChips("scope", ["ai", "digital"].filter(v => scopes.includes(v)), state.aiScope));
+  if (issues.length > 1) chipRows.push(aiFilterChips("area", areas, state.aiArea), aiFilterChips("maturity", maturities, state.aiMaturity));
+  document.getElementById("aiFilters").innerHTML = chipRows.join("");
+  document.getElementById("aiPanelTitle").textContent = weekMode ? "최근 7일의 기사 · 날짜별, 중요도순" : "이 회차의 기사 · 중요도순";
+  let shownCount = 0;
+  const html = groups.map(group => {
+    const shown = group.issues.filter(aiFilterIssue);
+    if (!shown.length) return "";
+    const head = weekMode
+      ? `<div class="ai-day-head"><span>${esc(dateWeekdayLabel(group.date))}</span><span class="ai-day-n">${shown.length}건</span></div>` : "";
+    const rows = shown.map(issue => aiTocRow(issue, shownCount++, group.date)).join("");
+    return head + rows;
+  }).join("");
+  document.getElementById("aiTocList").innerHTML = html || '<p class="empty">조건에 맞는 기사가 없습니다.</p>';
+  document.getElementById("aiPanelFoot").textContent = weekMode
+    ? `${dateLabel(week.from)}–${dateLabel(week.to)} · ${shownCount}건`
+    : `${dateWeekdayLabel(round.date)} 회차 · ${shownCount}건`;
 }
 
 function stepAiRound(delta) {
@@ -5752,6 +5803,7 @@ function stepAiRound(delta) {
   const next = rounds[index + delta];
   if (!next) return;
   state.aiDate = next.date;
+  state.aiSpan = "day";
   renderAi();
   syncUrl();
 }
@@ -6508,14 +6560,24 @@ function bind() {
   document.getElementById("aiNextDay").addEventListener("click", () => stepAiRound(-1));
   document.getElementById("aiDateSel").addEventListener("change", event => {
     state.aiDate = event.target.value;
+    state.aiSpan = "day";
+    renderAi();
+    syncUrl();
+  });
+  document.getElementById("aiSpan").addEventListener("click", event => {
+    const button = event.target.closest("[data-ai-span]");
+    if (!button || button.dataset.aiSpan === state.aiSpan) return;
+    state.aiSpan = button.dataset.aiSpan;
     renderAi();
     syncUrl();
   });
   document.getElementById("aiFilters").addEventListener("click", event => {
     const area = event.target.closest("[data-ai-area]");
     const maturity = event.target.closest("[data-ai-maturity]");
+    const scope = event.target.closest("[data-ai-scope]");
     if (area) state.aiArea = area.dataset.aiArea;
     else if (maturity) state.aiMaturity = maturity.dataset.aiMaturity;
+    else if (scope) state.aiScope = scope.dataset.aiScope;
     else return;
     renderAi();
   });

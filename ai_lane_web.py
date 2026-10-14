@@ -1,4 +1,4 @@
-"""해외 AI 레인 → 웹 산출물(ai_issues.json).
+"""해외 AI 레인 → 웹 산출물(ai_issues.json). 4단계부터 이슈에 tech_scope(ai|digital)가 붙는다.
 
 `ai_archive/` 의 판정 통과 기사를 **회차**와 **이슈**로 묶는다. 화면(「해외 AI」탭)·탐색의
 "해외 AI" 범위·이슈 상세가 이 파일 하나만 읽는다.
@@ -154,6 +154,14 @@ def score(row: dict, verification: dict | None = None) -> tuple[int, str]:
     return total, " · ".join(parts)
 
 
+def _tech_scope(row: dict) -> str:
+    """ai | digital. 4단계 전 레코드(수동 백필·v5 판정)에는 칸이 없다 — 전부 AI 범위였다."""
+    scope = row.get("tech_scope")
+    if scope in ai_lane.TECH_SCOPES:
+        return scope
+    return "digital" if row.get("ai_tech") in ai_lane.DIGITAL_AI_TECH else "ai"
+
+
 def _issue_id(first: dict) -> str:
     return "ai-" + hashlib.sha1(str(first.get("hash") or "").encode("utf-8")).hexdigest()[:12]
 
@@ -241,6 +249,7 @@ def build_issue(rows: list[dict], *, today: str,
         "verification": verification,
         "application_area": latest.get("application_area", ""),
         "maturity": latest.get("maturity", ""),
+        "tech_scope": _tech_scope(latest),
         "ai_tech": latest.get("ai_tech", ""),
         "actor_type": latest.get("actor_type", ""),
         "actor_names": actors,
@@ -275,7 +284,8 @@ def build_payload(rows: list[dict] | None = None, *, now: datetime | None = None
     recent_cut = (now.astimezone(KST) - timedelta(days=14)).date().isoformat()
     recent_events = sum(len(r["issue_ids"]) for r in round_rows if r["date"] > recent_cut)
     labels = {key: ai_lane.LABELS_KR[key] for key in
-              ai_lane.APPLICATION_AREAS + ai_lane.MATURITY + ai_lane.AI_TECH + ai_lane.ACTOR_TYPES}
+              ai_lane.APPLICATION_AREAS + ai_lane.MATURITY + ai_lane.AI_TECH + ai_lane.ACTOR_TYPES
+              + ai_lane.TECH_SCOPES}
     return {
         "schema": SCHEMA,
         "generated_at": now.isoformat(timespec="seconds"),
@@ -291,13 +301,20 @@ def build_payload(rows: list[dict] | None = None, *, now: datetime | None = None
             "last_14d_daily_avg": round(recent_events / 14, 2),
             "by_area": dict(Counter(i["application_area"] for i in issues).most_common()),
             "by_maturity": dict(Counter(i["maturity"] for i in issues).most_common()),
+            "by_scope": dict(Counter(i["tech_scope"] for i in issues).most_common()),
         },
     }
 
 
 COUNTRY_KR = {"US": "미국", "CA": "캐나다", "JP": "일본", "CN": "중국", "FR": "프랑스", "GB": "영국",
               "SE": "스웨덴", "FI": "핀란드", "DE": "독일", "KR": "한국", "IN": "인도", "RU": "러시아",
-              "GLOBAL": "글로벌", "EU": "EU"}
+              "GLOBAL": "글로벌", "EU": "EU",
+              # 4단계 — 러시아어·중국어·규제기관 피드가 들어오며 늘어난 나라.
+              "BD": "방글라데시", "AE": "UAE", "CZ": "체코", "UA": "우크라이나", "ES": "스페인",
+              "BR": "브라질", "AR": "아르헨티나", "ZA": "남아공", "TR": "튀르키예", "EG": "이집트",
+              "CH": "스위스", "BE": "벨기에", "NL": "네덜란드", "PL": "폴란드", "HU": "헝가리",
+              "RO": "루마니아", "SK": "슬로바키아", "SI": "슬로베니아", "BG": "불가리아", "TW": "대만",
+              "AU": "호주", "SA": "사우디", "IT": "이탈리아"}
 
 
 def weekly_digest(week_start: str, week_end: str, rows: list[dict] | None = None,
@@ -321,6 +338,7 @@ def weekly_digest(week_start: str, week_end: str, rows: list[dict] | None = None
             "country_kr": " · ".join(COUNTRY_KR.get(c, c) for c in countries[:2]),
             "area_kr": ai_lane.LABELS_KR.get(latest.get("application_area"), ""),
             "maturity_kr": ai_lane.LABELS_KR.get(latest.get("maturity"), ""),
+            "scope_kr": ai_lane.LABELS_KR.get(_tech_scope(latest), ""),
             "vendor_claim": latest.get("actor_type") in VENDOR_ACTORS
             and latest.get("maturity") in ("announced", "contract"),
         })

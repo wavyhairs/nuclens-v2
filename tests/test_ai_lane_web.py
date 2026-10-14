@@ -237,7 +237,7 @@ class WeeklyMessageTests(unittest.TestCase):
             {"title": "AI 제품 출시 <b>", "country_kr": "", "area_kr": "운영·정비",
              "maturity_kr": "발표", "vendor_claim": True}]}
         text = weekly_bot.format_weekly([], dict(self.EMPTY), {"overseas_ai": section}, now=now)
-        self.assertIn("🤖 해외 원전 AI</b> (이번 주 사건 2건)", text)
+        self.assertIn("🤖 해외 원전 AI·디지털</b> (이번 주 사건 2건)", text)
         self.assertIn("미국 · 운영·정비 · 실적용", text)
         self.assertIn("운영·정비 · 발표 · 벤더 발표", text)
         self.assertIn("AI 제품 출시 &lt;b&gt;", text)  # 제목은 이스케이프한다

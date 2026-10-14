@@ -1117,7 +1117,7 @@ def build_week_sections(items: list[dict], now: datetime | None = None) -> dict:
 
 
 def weekly_ai_section(now: datetime | None = None) -> dict:
-    """「해외 원전 AI」 단락 재료(ai_lane_web.weekly_digest). 판세와 같은 주 창을 쓴다.
+    """「해외 원전 AI·디지털」 단락 재료(ai_lane_web.weekly_digest). 판세와 같은 주 창을 쓴다.
 
     build_week_sections 에 넣지 않는다 — 그 함수는 기사 묶음만으로 결과가 정해지는
     결정적 코너이고 테스트가 그 계약을 잠근다. 이 단락은 다른 DB(ai_archive)를 읽으므로
@@ -1266,11 +1266,13 @@ def format_weekly(items: list[dict], synthesis: dict | None = None,
     # 버렸거나 브리핑에 못 실은 '원전 현장의 AI 활용'이 이 단락으로 주 1회 닿는다.
     overseas_ai = sections.get("overseas_ai") or {}
     if overseas_ai.get("items"):
-        parts.append(f"━━ <b>🤖 해외 원전 AI</b> (이번 주 사건 {overseas_ai['count']}건) ━━")
+        parts.append(f"━━ <b>🤖 해외 원전 AI·디지털</b> (이번 주 사건 {overseas_ai['count']}건) ━━")
         for row in overseas_ai["items"]:
             parts.append(f"• <b>{html.escape(row['title'])}</b>")
             meta = " · ".join(x for x in (row.get("country_kr"), row.get("area_kr"),
-                                          row.get("maturity_kr")) if x)
+                                          row.get("maturity_kr"),
+                                          # AI 가 아닌 디지털 사례만 표시 — 단락 이름이 AI 로 시작한다.
+                                          "디지털" if row.get("scope_kr") == "디지털" else "") if x)
             if row.get("vendor_claim"):
                 meta = f"{meta} · 벤더 발표" if meta else "벤더 발표"
             if meta:
