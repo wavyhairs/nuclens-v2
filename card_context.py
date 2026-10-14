@@ -132,6 +132,12 @@ def load_site_data(date: str, data_dir: Path | None = None) -> SiteData:
         raise ContextError(f"{date} 재료 없음 — today.json 도 briefings.json 도 없다")
     for briefing in _read(briefings_path) or ():
         if str(briefing.get("date") or "") == date:
+            if briefing.get("issues_in_shard") and briefing.get("issues_shard"):
+                # 오래된 날짜는 이슈가 그날 조각에 있다(build_data.split_briefings_payload).
+                shard_path = data_dir / str(briefing["issues_shard"])
+                if not shard_path.exists():
+                    raise ContextError(f"{date} 이슈 조각 없음 — {briefing['issues_shard']} 를 받아야 한다")
+                briefing = _read(shard_path) or {}
             # 과거 재생성 경로. 이슈에 `thread_id` 가 없으므로 아래
             # `resolve_thread` 가 **정확한 issue_id ↔ source_event_id 일치**로
             # 떨어진다. 제목으로 잇지 않는다.

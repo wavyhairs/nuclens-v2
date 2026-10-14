@@ -2070,7 +2070,7 @@ class GeneratedDataTests(unittest.TestCase):
     def setUpClass(cls):
         data_dir = DATA_DIR
         cls.news = build_data.load_news_payload(data_dir)
-        cls.briefings = json.loads((data_dir / "briefings.json").read_text(encoding="utf-8"))
+        cls.briefings = build_data.load_briefings_payload(data_dir)
         cls.meta = json.loads((data_dir / "meta.json").read_text(encoding="utf-8"))
         cls.issue_audit = json.loads((data_dir / "issue_audit.json").read_text(encoding="utf-8"))
         cls.insights = json.loads((data_dir / "insights.json").read_text(encoding="utf-8"))
@@ -2496,7 +2496,7 @@ class GeneratedDataTests(unittest.TestCase):
 
     def test_p4_brief_pages_have_unique_open_graph_metadata_and_boot_date(self):
         script = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        briefings = json.loads((DATA_DIR / "briefings.json").read_text(encoding="utf-8"))
+        briefings = build_data.load_briefings_payload(DATA_DIR)
         brief_root = ROOT / "public" / "brief"
         pages = list(brief_root.glob("*/index.html"))
         self.assertEqual(len(pages), len(briefings))
@@ -2551,7 +2551,7 @@ class GeneratedDataTests(unittest.TestCase):
         self.assertIn("window.setInterval(checkForNewGeneration, 60000)", script)
 
     def test_ongoing_issues_expose_tracking_metadata(self):
-        briefings = json.loads((DATA_DIR / "briefings.json").read_text(encoding="utf-8"))
+        briefings = build_data.load_briefings_payload(DATA_DIR)
         ongoing = [issue for briefing in briefings for issue in briefing["issues"] if issue["status"] == "ongoing"]
         self.assertTrue(ongoing)
         self.assertTrue(all(issue["tracked_briefings"] >= 2 for issue in ongoing))
@@ -4394,7 +4394,7 @@ class TopicWeekAggregationTests(unittest.TestCase):
         않는다. 로컬·수동 실행에서는 계속 켜져 있어 눈에 띈다.
         """
         catalog = json.loads((ROOT / "public" / "data" / "issues.json").read_text(encoding="utf-8"))
-        briefings = json.loads((ROOT / "public" / "data" / "briefings.json").read_text(encoding="utf-8"))
+        briefings = build_data.load_briefings_payload(ROOT / "public" / "data")
         weeks, series = build_data.build_topic_weeks(
             catalog, [row["date"] for row in briefings])
         if len(weeks) < 2:

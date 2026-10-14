@@ -139,6 +139,8 @@ jobs:
       # 비교하고, 다르면 한 번 다시 받는다. 두 번째도 다르면 스토리만 빼고
       # 일일 카드는 그대로 간다(일일 카드는 threads 를 안 본다).
       - name: Fetch live site data (한 세대)
+        env:
+          CARDS_DATE: ${{ inputs.date }}
         run: |
           mkdir -p web/public/data
           base="https://nuclens-v2.pages.dev/data"
@@ -158,6 +160,15 @@ jobs:
             echo "::warning::배포 세대가 받는 중에 바뀌었다 — 스토리는 건너뛴다"
             echo "### ⚠️ 스토리 건너뜀 — 라이브 배포 세대가 받는 중에 바뀌었다. Cards 를 다시 돌리면 복구된다" >> "$GITHUB_STEP_SUMMARY"
             echo "STORY_SKIP=true" >> "$GITHUB_ENV"
+          fi
+          # 과거 날짜 재생성: 오래된 날짜의 이슈는 briefings.json 이 아니라 그날 조각에
+          # 있다(build_data.split_briefings_payload). 요청한 날짜의 조각만 더 받는다.
+          if [ -n "$CARDS_DATE" ]; then
+            shard=$(python -c 'import json,sys; d=sys.argv[1]; print(next((r.get("issues_shard","") for r in json.load(open("web/public/data/briefings.json")) if r.get("date")==d and r.get("issues_in_shard")), ""))' "$CARDS_DATE")
+            if [ -n "$shard" ]; then
+              mkdir -p "web/public/data/$(dirname "$shard")"
+              curl -fsS "$base/$shard?cb=$(date +%s)" -o "web/public/data/$shard" && echo "과거 날짜 조각 받음: $shard"
+            fi
           fi
 
       # 받은 재료는 **오늘 판정이 실리기 전의 배포본**이다. Daily Brief 는
