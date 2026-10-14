@@ -122,6 +122,16 @@ def pages_dir() -> Path:
 GENERATION_ID = os.environ.get("GENERATION_ID", "")
 DATA_CONTRACT_VERSION = 1
 NEWS_SHARD_MAX_BYTES = 6 * 1024 * 1024
+# briefings.json 은 **최근 N일만 이슈를 통째로** 싣는다. 나머지 날짜는 머리 행(날짜·제목·
+# 집계)만 싣고 이슈는 날짜별 조각(briefings/<날짜>-<지문>.json)에 둔다.
+# 실측(2026-10-15): 60일치를 한 파일에 담다가 20.2 MiB 가 되어 Cloudflare 파일 상한
+# 25 MiB 의 80% 경고선을 넘었고(카드가 부른 배포가 막혔다), 하루치는 첫 주 50~300 KB
+# → 최근 30일 평균 400 KB 로 커지는 중이었다. 날짜 수와 무관하게 크기가 N×하루치로
+# 묶이도록 나눈다. 14일 × 0.43 MB ≈ 6 MB — 하루치가 세 배 넘게 커지기 전에는 경고선에
+# 닿지 않는다. 14 인 이유: 오디오·푸시·카드·스모크·지표가 읽는 것은 최신 회차와
+# 최근 며칠의 날짜뿐이고, 화면은 그보다 오래된 날짜를 열 때 그날 조각만 받는다.
+BRIEFINGS_FULL_DAYS = 14
+BRIEFING_SHARD_DIR = "briefings"
 
 # Diagnostic-only controls.  Production keeps using the real KST clock and writes no
 # benchmark artifacts unless these variables are explicitly supplied.
@@ -6097,6 +6107,63 @@ def write_news_payload(news_items: list[dict], out_dir: Path = OUT_DIR,
     return manifest
 
 
+def split_briefings_payload(briefings: list[dict],
+                            full_days: int = BRIEFINGS_FULL_DAYS) -> tuple[list[dict], dict[str, bytes]]:
+    """briefings(최신이 먼저) → (briefings.json 행 목록, {조각 경로: 조각 바이트}).
+
+    모든 날짜가 조각을 갖는다(최근 N일 포함) — 소비자가 날짜 하나만 필요할 때 어느
+    날짜든 같은 방법으로 받는다. briefings.json 에서는 최근 N일만 이슈를 그대로 두고,
+    그보다 오래된 날짜는 ``issues: []`` + ``issues_shard`` 로 바꾼다. ``issues`` 키를
+    지우지 않는 이유: 그 키를 읽는 소비자(화면·도구)가 빈 목록으로 견디게 하려고다.
+    조각 이름에 내용 지문을 싣는 이유는 news 조각과 같다(write_news_payload) —
+    배포 전환 창에 새 목록이 옛 조각을 받아 섞이지 않는다.
+    """
+    head: list[dict] = []
+    shards: dict[str, bytes] = {}
+    for index, briefing in enumerate(briefings):
+        date = str(briefing.get("date") or "")
+        payload = json.dumps(briefing, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        digest = hashlib.sha256(payload).hexdigest()[:12]
+        path = f"{BRIEFING_SHARD_DIR}/{date}-{digest}.json"
+        shards[path] = payload
+        if index < full_days:
+            head.append({**briefing, "issues_shard": path})
+        else:
+            head.append({**briefing, "issues": [], "issues_shard": path, "issues_in_shard": True})
+    return head, shards
+
+
+def write_briefings_payload(briefings: list[dict], out_dir: Path = OUT_DIR,
+                            full_days: int = BRIEFINGS_FULL_DAYS) -> dict:
+    """briefings.json + 날짜별 조각을 쓴다. 반환값은 통계."""
+    head, shards = split_briefings_payload(briefings, full_days)
+    shard_dir = out_dir / BRIEFING_SHARD_DIR
+    if shard_dir.exists():
+        shutil.rmtree(shard_dir)
+    shard_dir.mkdir(parents=True, exist_ok=True)
+    for path, payload in shards.items():
+        (out_dir / path).write_bytes(payload)
+    encoded = json.dumps(head, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    (out_dir / "briefings.json").write_bytes(encoded)
+    return {"dates": len(head), "full_days": min(full_days, len(head)),
+            "head_bytes": len(encoded), "shards": len(shards),
+            "max_shard_bytes": max((len(b) for b in shards.values()), default=0)}
+
+
+def load_briefings_payload(data_dir: Path = OUT_DIR) -> list[dict]:
+    """briefings.json 을 읽고 조각으로 옮긴 날짜의 이슈를 다시 붙인다(도구·테스트용)."""
+    rows = json.loads((data_dir / "briefings.json").read_text(encoding="utf-8"))
+    out = []
+    for row in rows:
+        if row.get("issues_in_shard") and row.get("issues_shard"):
+            full = json.loads((data_dir / str(row["issues_shard"])).read_text(encoding="utf-8"))
+            if str(full.get("date") or "") != str(row.get("date") or ""):
+                raise ValueError(f"briefing shard date mismatch: {row['issues_shard']}")
+            row = {**row, "issues": full.get("issues") or [], "issues_in_shard": False}
+        out.append(row)
+    return out
+
+
 def load_news_payload(data_dir: Path = OUT_DIR) -> list[dict]:
     """Read current sharded output, with a legacy news.json fallback."""
     manifest_path = data_dir / "news-manifest.json"
@@ -8252,7 +8319,7 @@ def build() -> None:
     shipped_audit = shipped_issue_audit(issue_audit)
     outputs = (
         ("today.json", build_today_payload(briefings, issue_catalog, meta)),
-        ("briefings.json", briefings),
+        # briefings.json 은 아래 write_briefings_payload 가 조각과 함께 쓴다.
         ("issues.json", issue_catalog),
         ("trend.json", trend),
         ("meta.json", meta),
@@ -8279,6 +8346,10 @@ def build() -> None:
             encoding="utf-8",
         )
     write_news_payload(news_items)
+    briefing_stats = write_briefings_payload(briefings)
+    print(f"[build_data:briefings] {briefing_stats['dates']}일 · 전체 {briefing_stats['full_days']}일 · "
+          f"briefings.json {briefing_stats['head_bytes'] / 1048576:.1f} MiB · 조각 {briefing_stats['shards']}개"
+          f"(최대 {briefing_stats['max_shard_bytes'] / 1024:.0f} KiB)")
     full_audit_path = write_full_issue_audit(issue_audit)
     publish_artifact_ready(shipped_audit, full_audit_path, candidate_diagnostics)
     for name, payload in admin_outputs:

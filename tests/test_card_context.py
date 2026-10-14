@@ -313,6 +313,25 @@ class LoadTests(unittest.TestCase):
         # 그 행에는 칸이 없다 — 위 legacy 폴백이 그래서 존재한다.
         self.assertEqual(past.issues[0]["thread_id"], "")
 
+    def test_a_past_date_reads_its_shard_when_issues_moved_out(self):
+        """오래된 날짜는 briefings.json 에 머리 행만 있고 이슈는 그날 조각에 있다."""
+        from contextlib import ExitStack
+        with ExitStack() as stack:
+            tmp = self._dir(stack, today=False, briefings=False)
+            shard = "briefings/2026-09-20-abc123.json"
+            (tmp / "briefings").mkdir()
+            (tmp / shard).write_text(json.dumps(
+                {"date": "2026-09-20", "issues": [issue(SAR_SEP, SAR_SEP_TITLE)]}), encoding="utf-8")
+            (tmp / "briefings.json").write_text(json.dumps(
+                [{"date": "2026-09-20", "issues": [], "issues_in_shard": True, "issues_shard": shard}]),
+                encoding="utf-8")
+            past = card_context.load_site_data("2026-09-20", tmp)
+            self.assertEqual(past.source, "briefings")
+            self.assertEqual(len(past.issues), 1)
+            (tmp / shard).unlink()
+            with self.assertRaises(card_context.ContextError):
+                card_context.load_site_data("2026-09-20", tmp)
+
     def test_a_missing_day_is_an_error_not_an_empty_card(self):
         from contextlib import ExitStack
         with ExitStack() as stack:

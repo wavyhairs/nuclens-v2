@@ -122,6 +122,9 @@ def probe(date: str, data_dir: Path) -> dict:
     issues = json.loads((data_dir / "issues.json").read_text(encoding="utf-8"))
     briefings = json.loads((data_dir / "briefings.json").read_text(encoding="utf-8"))
     briefing = next((b for b in briefings if b.get("date") == date), None)
+    if briefing and briefing.get("issues_in_shard") and briefing.get("issues_shard"):
+        # 오래된 날짜는 이슈가 그날 조각에 있다(build_data.split_briefings_payload).
+        briefing = json.loads((data_dir / briefing["issues_shard"]).read_text(encoding="utf-8"))
     exposed = (briefing or {}).get("issues", []) or []
 
     results = []

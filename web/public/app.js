@@ -352,6 +352,31 @@ function currentBriefing() {
   return state.briefings.find(briefing => briefing.date === state.briefingDate) || null;
 }
 
+// 오래된 날짜의 이슈는 briefings.json 이 아니라 그날 조각(briefings/<날짜>-<지문>.json)에
+// 있다(build_data.split_briefings_payload, 2026-10-15). 60일치를 한 파일에 담다가
+// Cloudflare 파일 상한의 80% 를 넘겨 배포가 막혔다. 그날을 열 때 그 조각만 받는다.
+const briefingShardRequests = new Map();
+
+function briefingNeedsShard(briefing) {
+  return Boolean(briefing?.issues_in_shard && briefing.issues_shard);
+}
+
+function loadBriefingShard(briefing) {
+  const key = briefing.issues_shard;
+  if (!briefingShardRequests.has(key)) {
+    briefingShardRequests.set(key, loadJSON(key).then(full => {
+      if (String(full?.date || "") !== briefing.date) throw new Error(`${key} 날짜가 다르다`);
+      briefing.issues = Array.isArray(full.issues) ? full.issues : [];
+      briefing.issues_in_shard = false;
+    }).catch(error => {
+      // 실패는 기억하지 않는다 — 다음에 그 날짜를 열면 다시 받는다.
+      briefingShardRequests.delete(key);
+      throw error;
+    }));
+  }
+  return briefingShardRequests.get(key);
+}
+
 const VERIFICATION_ORDER = ["official", "corroborated", "partial", "unverified"];
 const VERIFICATION_VIEW = {
   official: { mark: "✓", label: "공식 원문 포함", detail: "이 이슈의 근거에 규제기관 또는 사업자 공식 문서가 포함돼 있습니다" },
@@ -852,7 +877,8 @@ function renderReturnNote() {
   catch { /* 저장 실패가 화면을 죽이면 안 된다 */ }
   if (!latest || !since || since >= latest) { box.hidden = true; return; }
   const missed = state.briefings
-    .filter(briefing => briefing.date > since && (briefing.issues || []).length)
+    .filter(briefing => briefing.date > since
+      && ((briefing.issues || []).length || Number(briefing.issue_count || 0)))
     .sort((a, b) => a.date.localeCompare(b.date));
   const fresh = state.issues.filter(issue => (issue.first_seen || "") > since).length;
   const moved = state.issues.filter(issue =>
@@ -2278,6 +2304,21 @@ function renderBriefing() {
   const tocList = document.getElementById("tocList");
   document.body.classList.remove("booting");
   renderAudioBrief(briefing);
+  if (briefingNeedsShard(briefing)) {
+    // 앞 날짜의 카드가 남아 이 날짜 것처럼 읽히지 않게 먼저 걷는다.
+    const pickList = document.getElementById("pickList");
+    if (pickList) { pickList.innerHTML = ""; pickList.hidden = true; }
+    tocList.innerHTML = '<p class="empty">이날 브리핑을 불러오는 중입니다…</p>';
+    const date = briefing.date;
+    loadBriefingShard(briefing)
+      .then(() => { if (state.briefingDate === date) renderBriefing(); })
+      .catch(() => {
+        if (state.briefingDate === date) {
+          tocList.innerHTML = '<p class="empty">이날 브리핑을 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.</p>';
+        }
+      });
+    return;
+  }
   if (!briefing) {
     renderEmptyBriefing(null, tocList);
     return;

@@ -15,6 +15,7 @@ today.json 과 issues.json 이 다르게 말하는 날이 오고, 그 증상은 
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -101,3 +102,53 @@ class TodayPayloadTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BriefingShardTests(unittest.TestCase):
+    """briefings.json 은 최근 N일만 이슈를 통째로 싣고 나머지는 날짜별 조각(2026-10-15)."""
+
+    def _rows(self, n):
+        return [_briefing(f"2026-09-{30 - i:02d}", [f"i{i}a", f"i{i}b"]) for i in range(n)]
+
+    def test_recent_days_keep_issues_and_old_days_point_to_shards(self):
+        rows = self._rows(5)
+        head, shards = bd.split_briefings_payload(rows, full_days=2)
+        self.assertEqual([r["date"] for r in head], [r["date"] for r in rows])
+        self.assertTrue(all(r["issues"] for r in head[:2]))
+        self.assertTrue(all(r["issues"] == [] and r["issues_in_shard"] for r in head[2:]))
+        self.assertEqual(len(shards), 5)  # 최근 날짜도 조각이 있다
+        for row in head:
+            self.assertIn(row["issues_shard"], shards)
+            self.assertTrue(row["issues_shard"].startswith("briefings/" + row["date"] + "-"))
+
+    def test_round_trip_restores_every_issue(self):
+        rows = self._rows(4)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            stats = bd.write_briefings_payload(rows, out, full_days=1)
+            self.assertEqual(stats["shards"], 4)
+            back = bd.load_briefings_payload(out)
+        self.assertEqual([[i["issue_id"] for i in r["issues"]] for r in back],
+                         [[i["issue_id"] for i in r["issues"]] for r in rows])
+
+    def test_shard_name_changes_when_content_changes(self):
+        rows = self._rows(1)
+        _, first = bd.split_briefings_payload(rows, full_days=0)
+        rows[0]["headline"] = "바뀐 제목"
+        _, second = bd.split_briefings_payload(rows, full_days=0)
+        self.assertNotEqual(set(first), set(second))
+
+    def test_head_size_is_bounded_by_full_days_not_history(self):
+        rows = self._rows(28)
+        small, _ = bd.split_briefings_payload(rows[:14], full_days=7)
+        large, _ = bd.split_briefings_payload(rows, full_days=7)
+        full_rows = lambda head: sum(len(r["issues"]) for r in head)  # noqa: E731
+        self.assertEqual(full_rows(small), full_rows(large))
+        self.assertEqual(full_rows(large), 7 * 2)
+
+    def test_app_loads_the_shard_before_rendering_an_old_date(self):
+        app = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("function loadBriefingShard(briefing)", app)
+        render = app.split("function renderBriefing() {", 1)[1].split("\n}", 1)[0]
+        self.assertIn("briefingNeedsShard(briefing)", render)
+        self.assertLess(render.index("briefingNeedsShard(briefing)"), render.index("if (!briefing) {"))
