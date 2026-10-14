@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-14T02:10:39+09:00",
+ "generated_at": "2026-10-15T00:47:43+09:00",
  "events": [
   {
    "id": "of-d461711de05a",
@@ -18,50 +18,6 @@
    "first_seen": "2026-08-29",
    "topics": [],
    "relevance": "nuclear",
-   "significance": "세미나"
-  },
-  {
-   "id": "of-c56dcf7f0eba",
-   "date": "2026-09-30",
-   "end_date": "2026-09-30",
-   "kind": "point",
-   "time": "14:00",
-   "label": "'26년 ESS 중앙계약시장 사업자 설명회 개최",
-   "host": "한국전력거래소",
-   "organizer": "",
-   "place": "스페이스쉐어 서울중부센터 9층 스카이홀",
-   "url": "https://new.kpx.or.kr/board.es?act=view&bid=0042&list_no=78169&mid=a10501010000",
-   "source_id": "kpx_notice",
-   "publisher": "한국전력거래소",
-   "notice_title": "'26년 ESS 중앙계약시장 사업자 설명회 개최",
-   "first_seen": "2026-09-23",
-   "topics": [
-    "renewable_grid"
-   ],
-   "relevance": "ess 중앙계약",
-   "significance": "설명회",
-   "post_id": "78169",
-   "when_clause": "2026년 9월 30일(수) 14:00 ~ 15:30"
-  },
-  {
-   "id": "of-5de35584127e",
-   "date": "2026-09-30",
-   "end_date": "2026-09-30",
-   "kind": "point",
-   "time": "10:00",
-   "label": "탄소중립 성과관리를 위한 기후정책 성과감사 세미나",
-   "host": "김용태 의원실, 한국에너지공단",
-   "organizer": "김용태 의원실, 한국에너지공단",
-   "place": "의원회관 제6간담회의실(209호)",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "탄소중립 성과관리를 위한 기후정책 성과감사 세미나",
-   "first_seen": "2026-09-22",
-   "topics": [
-    "carbon_free"
-   ],
-   "relevance": "탄소중립",
    "significance": "세미나"
   },
   {
@@ -189,19 +145,19 @@
    "significance": "세미나"
   },
   {
-   "id": "of-b404d7cf4768",
+   "id": "of-710c13f3b7d2",
    "date": "2026-10-15",
    "end_date": "2026-10-15",
    "kind": "point",
    "time": "13:00",
-   "label": "가상환경 기반 VPP용 분산자원연계장치 의견수렴 안내",
+   "label": "가상환경 기반 VPP용 분산자원연계장치 의견수렴 안내(10.15)(세션시간 수정)",
    "host": "한국전력거래소",
    "organizer": "",
-   "place": "스파크플러스 삼성2호점",
+   "place": "삼성역 부근",
    "url": "https://new.kpx.or.kr/board.es?act=view&bid=0042&list_no=78252&mid=a10501010000",
    "source_id": "kpx_notice",
    "publisher": "한국전력거래소",
-   "notice_title": "가상환경 기반 VPP용 분산자원연계장치 의견수렴 안내(10.15)",
+   "notice_title": "가상환경 기반 VPP용 분산자원연계장치 의견수렴 안내(10.15)(세션시간 수정)",
    "first_seen": "2026-10-06",
    "topics": [
     "renewable_grid"
@@ -292,6 +248,27 @@
    "significance": "학술발표회"
   },
   {
+   "id": "of-1589b1818ed7",
+   "date": "2026-11-10",
+   "end_date": "2026-11-10",
+   "kind": "deadline",
+   "time": "",
+   "label": "★ 2026 경남 SMR 국제 콘퍼런스 참석자 모집",
+   "host": "한국원자력산업협회",
+   "organizer": "",
+   "place": "",
+   "url": "https://www.kaif.or.kr/ko?c=193&gbn=view&gp=1&ix=30103&s=",
+   "source_id": "kaif_notice",
+   "publisher": "한국원자력산업협회",
+   "notice_title": "★ 2026 경남 SMR 국제 콘퍼런스 참석자 모집(~11.10. 까지)",
+   "first_seen": "2026-10-14",
+   "topics": [
+    "smr"
+   ],
+   "relevance": "smr",
+   "significance": "콘퍼런스"
+  },
+  {
    "id": "of-165097f37d1c",
    "date": "2026-11-13",
    "end_date": "2026-11-14",
@@ -353,7 +330,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-10-14T02:10:39+09:00",
+   "at": "2026-10-15T00:47:43+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -361,19 +338,19 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-10-14T02:10:39+09:00",
+   "at": "2026-10-15T00:47:43+09:00",
    "ok": true,
    "parsed": 10,
-   "kept": 1,
-   "new": 0,
+   "kept": 2,
+   "new": 1,
    "dropped": {
-    "not_an_event": 5,
+    "not_an_event": 4,
     "no_interest_match": 2,
     "low_significance": 2
    }
   },
   "kaif_calendar": {
-   "at": "2026-10-14T02:10:39+09:00",
+   "at": "2026-10-15T00:47:43+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -386,7 +363,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-10-14T02:10:39+09:00",
+   "at": "2026-10-15T00:47:43+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -394,21 +371,27 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-10-14T02:10:39+09:00",
-   "ok": false,
-   "error": "ConnectTimeout: HTTPSConnectionPool(host='www.assembly.go.kr', port=443): Max retries exceeded with url: /portal/noti/seminar/scheduleSmn.do?menuNo=600102 (Caused by ConnectTimeoutError(<HTTPSConnecti"
+   "at": "2026-10-15T00:47:43+09:00",
+   "ok": true,
+   "parsed": 11,
+   "kept": 0,
+   "new": 0,
+   "dropped": {
+    "no_interest_match": 10,
+    "not_an_event": 1
+   }
   },
   "kpx_notice": {
-   "at": "2026-10-14T02:10:39+09:00",
+   "at": "2026-10-15T00:47:43+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
    "new": 0,
    "dropped": {
-    "no_interest_match": 7,
+    "no_interest_match": 8,
+    "low_significance": 3,
     "not_an_event": 6,
-    "no_event_date": 1,
-    "low_significance": 4
+    "no_event_date": 1
    }
   }
  }
