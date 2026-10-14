@@ -211,6 +211,9 @@ def from_main_record(record: dict) -> dict:
         "scope": record.get("scope", ""),
         "countries": record.get("countries") if isinstance(record.get("countries"), list) else [],
         "main_importance": record.get("importance", ""),
+        # 회차는 이 시각을 따른다. 레인이 한도 때문에 하루 늦게 판정해도 기사는
+        # 메인이 수집한 날의 회차에 들어간다.
+        "collected_at": record.get("archived_at", ""),
     }
 
 
@@ -285,6 +288,7 @@ def make_record(article: dict, verdict: dict, *, judged_at: str, model: str = ""
         "origin": article.get("origin", ""),
         "hash": article.get("hash", ""),
         "archived_at": judged_at,
+        "collected_at": article.get("collected_at") or judged_at,
         "pub": article.get("pub", ""),
         "url": article.get("url", ""),
         "resolved_url": article.get("resolved_url", ""),
@@ -294,15 +298,18 @@ def make_record(article: dict, verdict: dict, *, judged_at: str, model: str = ""
         "evidence_role": profile.get("evidence_role", ""),
         "source_tier": profile.get("source_tier", 3),
         "title": article.get("title", ""),
-        # 메인 큐레이션이 쓴 제목·요약이 있으면 그것이 우선이다 — 메인 헤드라인 규칙과
-        # 결정적 정리기를 이미 거쳤다. 해석 문장은 noise 기사에선 비어 있으므로 레인이 쓴다.
+        # 사실 문장(제목·요약·기사 내용)은 메인 큐레이션 것이 우선이다 — 메인 헤드라인
+        # 규칙과 결정적 정리기를 이미 거쳤다. 해석 문장(왜 중요한가·시사점)은 **레인 것이
+        # 우선**이다. 메인 해석은 정책·투자 관점이라 "원전 AI 도입 흐름에서 무슨 뜻인가"를
+        # 말하지 않고, noise 기사에서는 아예 비어 있다.
         "title_kr": main_title_kr or verdict.get("title_kr") or article.get("title", ""),
         "summary": article.get("summary") or verdict.get("summary", ""),
         "detail": article.get("detail", ""),
-        "why_important": article.get("why_important") or verdict.get("why_important", ""),
-        "implication": article.get("implication") or verdict.get("implication", ""),
+        "why_important": verdict.get("why_important") or article.get("why_important", ""),
+        "implication": verdict.get("implication") or article.get("implication", ""),
         "countries": verdict.get("countries") or article.get("countries") or [],
         "main_importance": article.get("main_importance", ""),
+        "main_scope": article.get("scope", ""),
         "application_area": verdict.get("application_area", ""),
         "ai_tech": verdict.get("ai_tech", "other"),
         "actor_type": verdict.get("actor_type", "other"),
@@ -314,6 +321,24 @@ def make_record(article: dict, verdict: dict, *, judged_at: str, model: str = ""
         "judge_model": model,
         "prompt_version": ai_lane.PROMPT_VERSION,
     }
+
+
+def domestic_guard(article: dict, verdict: dict | None) -> dict | None:
+    """국내 주체 기사는 판정과 무관하게 포함하지 않는다(사용자 결정: 해외만).
+
+    메인 큐레이션의 scope 는 '기사를 쓴 매체'가 아니라 '기사가 다루는 대상'으로 판정된다
+    (news_bot 프롬프트 B-2). 그래서 해외 사례를 다룬 국내 매체 기사는 overseas 이고,
+    여기서 걸리는 것은 한국이 주체·무대인 기사뿐이다.
+
+    실측(2026-10-14 첫 실전 회차): 「현대차·HD현대, AI 자율운항 선박·SMR 추진 선박 협력」
+    을 판정기가 포함으로 냈다(국가 KR·US). 메인은 이 기사를 kr 로 봤다.
+    """
+    if not verdict or not verdict.get("in_scope"):
+        return verdict
+    countries = {str(c).upper() for c in verdict.get("countries") or [] if c}
+    if article.get("scope") == "kr" or countries == {"KR"}:
+        return {"in_scope": False, "exclude_reason": "domestic", "reason": "국내 주체(결정적 규칙)"}
+    return verdict
 
 
 # ── 한 회차 ──────────────────────────────────────────────────────────────────
@@ -387,6 +412,7 @@ def run(main_records: list[dict], *, fetch: Callable[[str, str], list[dict]] | N
     stats.update({"judged": 0, "included": 0, "excluded": 0, "failed": 0})
     for article, verdict in zip(batch, verdicts):
         digest = article["hash"]
+        verdict = domestic_guard(article, verdict)
         if verdict is None:
             stats["failed"] += 1
             state["attempts"][digest] = int(state["attempts"].get(digest, 0)) + 1

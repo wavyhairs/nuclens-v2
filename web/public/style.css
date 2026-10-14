@@ -4322,3 +4322,35 @@ button.agenda-head[aria-expanded="true"]::after { content: "▾"; }
 .classification-note { margin: var(--sp-2) 0 0; color: var(--c-text-muted); font-size: var(--t-min); line-height: 1.55; }
 .classification-note .issue-line-label { margin-right: var(--sp-2); }
 .classification-link { padding: 0; border: 0; background: transparent; color: var(--c-secondary); font: inherit; text-decoration: underline; cursor: pointer; }
+
+/* ── 해외 AI ─────────────────────────────────────────────────────────────
+   목차 행은 「그 밖의 이슈」(.brief-panel .toc-row)를 그대로 쓴다. 다른 점은 셋:
+   제목이 링크가 아니라 버튼이다(AI 이슈엔 /issue/ 정적 페이지가 없다), 메타 줄에
+   성숙도 글자가 붙는다, 벤더 발표 표시가 있다. 색은 새로 만들지 않는다. */
+.ai-toc-row .toc-link {
+  background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit;
+  text-align: left; cursor: pointer; word-break: keep-all;
+}
+.ai-toc-row .toc-link:focus-visible { outline: none; box-shadow: var(--fo-ring); border-radius: var(--r-1); }
+.ai-maturity { font-weight: 700; color: var(--c-text-secondary); letter-spacing: .3px; }
+.ai-maturity.m-deployed, .ai-maturity.m-contract, .ai-maturity.m-regulatory { color: var(--c-accent-text); }
+.ai-flag {
+  font-size: 12.5px; font-weight: 600; letter-spacing: .2px; color: var(--c-text-muted);
+  border: var(--bd-1) solid var(--c-border-strong); border-radius: var(--r-4); padding: 0 7px;
+}
+.ai-count { color: var(--c-text-muted); letter-spacing: .2px; }
+.ai-stale { margin: var(--sp-2) 0 0; font-size: var(--t-caption); color: var(--c-text-muted); }
+.ai-filters { display: grid; gap: var(--sp-2); margin-top: var(--sp-4); }
+.ai-filters:empty { display: none; }
+.ai-filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ai-filter-label { font-size: 12.5px; font-weight: 650; color: var(--c-text-muted); min-width: 4.5em; }
+.ai-pill {
+  font: inherit; font-size: 13px; padding: 3px 11px; border-radius: var(--r-4); cursor: pointer;
+  background: var(--c-surface); color: var(--c-text-secondary); border: var(--bd-1) solid var(--c-border);
+}
+.ai-pill.is-on { background: var(--c-secondary); border-color: var(--c-secondary); color: #fff; }
+.ai-pill:focus-visible { outline: none; box-shadow: var(--fo-ring); }
+.ai-facts .topic-chip b { font-weight: 700; margin-right: 2px; }
+@media (max-width: 520px) {
+  .ai-toc-row .toc-meta-line { flex-wrap: wrap; row-gap: 4px; }
+}
