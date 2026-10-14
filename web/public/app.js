@@ -4520,7 +4520,7 @@ function weeklySection(title, note, body) {
 function renderTrendAi() {
   const section = document.getElementById("trendAi");
   if (!section) return;
-  const today = state.ai?.today || "";
+  const today = aiBriefingDay();
   const cut = new Date(`${today || "1970-01-01"}T00:00:00Z`);
   cut.setUTCDate(cut.getUTCDate() - 29);
   const key = cut.toISOString().slice(0, 10);
@@ -5663,7 +5663,15 @@ function aiIssues() { return state.ai?.issues || []; }
 function aiRounds() { return state.ai?.rounds || []; }
 function aiReady() { return aiIssues().length > 0 && aiRounds().length > 0; }
 function isAiIssueId(issueId) { return String(issueId || "").startsWith("ai-"); }
-function aiIssueById(issueId) { return aiIssues().find(issue => issue.issue_id === issueId) || null; }
+// 마지막 아침 브리핑 뒤에 들어온 기사 — 다음 브리핑 회차로 들어갈 것들(ai_lane_web.is_pending).
+// 회차·검색·흐름 집계에는 넣지 않고, 탭 아래 '다음 브리핑에 실릴 기사'로만 보인다.
+function aiPending() { return state.ai?.pending?.issues || []; }
+// 회차의 기준일. 아침 브리핑과 같은 축이다 — 달력의 '오늘'이 아니다(2026-10-15 정정).
+function aiBriefingDay() { return state.ai?.latest_briefing || state.ai?.today || ""; }
+function aiIssueById(issueId) {
+  return aiIssues().find(issue => issue.issue_id === issueId)
+    || aiPending().find(issue => issue.issue_id === issueId) || null;
+}
 function aiLabel(key) { return state.ai?.labels?.[key] || TOPIC_LABELS[key] || key || ""; }
 function archivePool() { return state.archiveScope === "ai" ? aiIssues() : state.issues; }
 
@@ -5688,7 +5696,7 @@ function aiDialogFacts(issue) {
 
 function aiTocRow(issue, index, day) {
   const countries = (issue.countries || []).filter(code => code !== "GLOBAL")
-    .slice(0, 2).map(code => COUNTRY_LABELS[code] || code).join(" · ")
+    .slice(0, 2).map(code => COUNTRY_LABELS[code] || state.ai?.country_labels?.[code] || code).join(" · ")
     || ((issue.countries || []).includes("GLOBAL") ? "글로벌" : "해외");
   const score = issue.round_scores?.[day];
   const extra = [
@@ -5720,7 +5728,7 @@ function aiWeekWindow(rounds) {
     cut.setUTCDate(cut.getUTCDate() - 6);
     return [cut.toISOString().slice(0, 10), anchor];
   };
-  const today = state.ai?.today || rounds[0].date;
+  const today = aiBriefingDay() || rounds[0].date;
   let [from, to] = endOf(today);
   if (!rounds.some(round => round.date >= from && round.date <= to)) [from, to] = endOf(rounds[0].date);
   return { from, to, rounds: rounds.filter(round => round.date >= from && round.date <= to) };
@@ -5739,7 +5747,8 @@ function renderAi() {
   if (!rounds.some(round => round.date === state.aiDate)) state.aiDate = rounds[0].date;
   const index = rounds.findIndex(round => round.date === state.aiDate);
   const round = rounds[index];
-  const latestIsToday = rounds[0].date === state.ai.today;
+  // 최신 회차가 마지막 아침 브리핑 회차인가. 아니면 그 브리핑에는 해외 AI·DX 기사가 없었다.
+  const latestIsToday = rounds[0].date === aiBriefingDay();
   // 보기 범위가 정해지지 않았으면: 오늘 회차가 있으면 하루치, 없으면 최근 7일(4단계 결정).
   if (!state.aiSpan) state.aiSpan = latestIsToday ? "day" : "week";
   const week = aiWeekWindow(rounds);
@@ -5775,8 +5784,8 @@ function renderAi() {
   const stale = document.getElementById("aiStale");
   stale.hidden = latestIsToday || (!weekMode && index !== 0);
   stale.textContent = stale.hidden ? "" : (weekMode
-    ? `오늘(${dateLabel(state.ai.today)}) 새로 잡힌 기사는 없습니다. ${dateLabel(week.from)}–${dateLabel(week.to)} 기사를 날짜별로 보여 줍니다.`
-    : `오늘(${dateLabel(state.ai.today)}) 새로 잡힌 기사는 없습니다. 가장 최근 회차를 보여 줍니다.`);
+    ? `${dateLabel(aiBriefingDay())} 브리핑 회차에는 해외 AI·DX 기사가 없습니다. ${dateLabel(week.from)}–${dateLabel(week.to)} 기사를 날짜별로 보여 줍니다.`
+    : `${dateLabel(aiBriefingDay())} 브리핑 회차에는 해외 AI·DX 기사가 없습니다. 가장 최근 회차를 보여 줍니다.`);
   const chipRows = [];
   if (scopes.length > 1) chipRows.push(aiFilterChips("scope", ["ai", "digital"].filter(v => scopes.includes(v)), state.aiScope));
   if (issues.length > 1) chipRows.push(aiFilterChips("area", areas, state.aiArea), aiFilterChips("maturity", maturities, state.aiMaturity));
@@ -5795,6 +5804,20 @@ function renderAi() {
   document.getElementById("aiPanelFoot").textContent = weekMode
     ? `${dateLabel(week.from)}–${dateLabel(week.to)} · ${shownCount}건`
     : `${dateWeekdayLabel(round.date)} 회차 · ${shownCount}건`;
+  renderAiPending();
+}
+
+function renderAiPending() {
+  const panel = document.getElementById("aiPending");
+  if (!panel) return;
+  const pending = aiPending();
+  panel.hidden = pending.length === 0;
+  if (panel.hidden) return;
+  const day = state.ai.pending?.date || "";
+  document.getElementById("aiPendingTitle").textContent =
+    `다음 브리핑${day ? `(${dateLabel(day)})` : ""}에 실릴 기사 · ${pending.length}건`;
+  document.getElementById("aiPendingList").innerHTML =
+    pending.map((issue, i) => aiTocRow(issue, i, day)).join("");
 }
 
 function stepAiRound(delta) {
@@ -6361,7 +6384,7 @@ function bind() {
   // 홈 목차(#tocList)는 이 위임을 타지 않는다 — 행이 통째로 <a href> 라 브라우저가
   // 상세 페이지로 보낸다. 반면 '먼저 볼 3건'(#pickList)은 <button> 이라 위임이
   // 필요하다(펼침·전체 내용 보기·저장). 나머지는 다이얼로그를 여는 화면들이다.
-  ["pickList", "aiTocList",
+  ["pickList", "aiTocList", "aiPendingList",
    "archiveIssueList", "savedIssueList", "reportCandidateList", "issueDialog", "thisWeekBody",
    "weeklyReportBody", "insightList",
    "recentIssueList"].forEach(id => {
