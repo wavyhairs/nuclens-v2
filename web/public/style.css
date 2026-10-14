@@ -4362,6 +4362,6 @@ button.agenda-head[aria-expanded="true"]::after { content: "▾"; }
 .trend-ai-block li { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); align-items: center; gap: var(--sp-2); }
 .trend-ai-track { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .trend-ai-label { font-size: 13px; color: var(--c-text-secondary); text-align: right; white-space: nowrap; }
-.trend-ai-bar { display: block; flex: 0 0 auto; height: 10px; background: var(--c-chart-1); border-radius: 0 4px 4px 0; }
+.trend-ai-bar { display: block; flex: 0 0 auto; height: 10px; background: var(--c-chart-1); border-radius: 0 var(--r-1) var(--r-1) 0; }
 .trend-ai-n { font-size: 13px; font-weight: 700; color: var(--c-text); font-variant-numeric: tabular-nums; }
 .trend-ai .brief-more { margin-top: var(--sp-3); }
