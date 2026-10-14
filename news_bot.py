@@ -4374,6 +4374,22 @@ def main() -> None:
     except Exception as e:
         print(f"[archive] 적재 실패 (크롤은 계속): {type(e).__name__}: {e}")
 
+    # ---- 해외 AI 레인 (별도 기준·별도 DB — 실패해도 크롤은 계속) -----------------
+    # 메인 등급과 무관하게 '해외 원전의 AI 활용' 기사를 따로 판정해 ai_archive/ 에 쌓는다.
+    # 메인 상태·큐는 건드리지 않는다. 설계: docs/2026-10-14-overseas-ai-in-nuclear-tab-direction.md
+    try:
+        import ai_lane_pipeline  # noqa: PLC0415
+        if QUOTA_EXHAUSTED or CONFIG_ERROR or not gemini_client.is_available():
+            print("[AI 레인] Gemini 사용 불가 — 이번 회차 건너뜀(다음 회차가 이어서 묻는다)")
+        else:
+            ai_stats = ai_lane_pipeline.run(
+                ai_lane_pipeline.recent_main_records(),
+                fetch=fetch_rss, hasher=url_hash, body_fetcher=article_body.fetch_bodies,
+                model=llm_policy.profile("ai_lane_judge").model())
+            print(ai_lane_pipeline.format_stats(ai_stats))
+    except Exception as e:  # noqa: BLE001
+        print(f"[AI 레인] 실패 (크롤은 계속): {type(e).__name__}: {e}")
+
     save_state(state)
     save_curated(curated)
     save_queue(queue)

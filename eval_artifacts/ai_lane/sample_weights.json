@@ -1,0 +1,37 @@
+{
+  "seed": 20261014,
+  "plan": {
+    "overseas_core": null,
+    "overseas_datacenter": 20,
+    "domestic_core": 25,
+    "domestic_hinted": 10,
+    "unscoped": null
+  },
+  "strata": {
+    "overseas_core": {
+      "population": 149,
+      "sampled": 149,
+      "weight": 1.0
+    },
+    "overseas_datacenter": {
+      "population": 210,
+      "sampled": 20,
+      "weight": 10.5
+    },
+    "domestic_core": {
+      "population": 526,
+      "sampled": 25,
+      "weight": 21.04
+    },
+    "domestic_hinted": {
+      "population": 907,
+      "sampled": 10,
+      "weight": 90.7
+    },
+    "unscoped": {
+      "population": 22,
+      "sampled": 22,
+      "weight": 1.0
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "gold_summary": {
+    "positives": 25,
+    "negatives": 201,
+    "low_confidence": 0,
+    "exclude_reasons": {
+      "datacenter_power": 58,
+      "ai_industry_general": 48,
+      "domestic": 46,
+      "diplomatic_mention": 22,
+      "not_ai_use": 21,
+      "defense_weapons": 3,
+      "robotics_only": 1,
+      "fusion": 1,
+      "not_nuclear": 1
+    },
+    "application_area": {
+      "operations_maintenance": 9,
+      "design_engineering": 5,
+      "fuel_cycle": 4,
+      "licensing_regulation": 3,
+      "inspection_diagnostics": 3,
+      "workforce_governance": 1
+    },
+    "maturity": {
+      "deployed": 9,
+      "announced": 5,
+      "discussion": 5,
+      "contract": 3,
+      "research": 2,
+      "pilot": 1
+    },
+    "ai_tech": {
+      "other": 10,
+      "genai_llm": 9,
+      "ml_predictive": 5,
+      "computer_vision": 1
+    },
+    "actor_type": {
+      "vendor": 7,
+      "ai_startup": 6,
+      "other": 5,
+      "utility": 3,
+      "national_lab": 3,
+      "international_org": 1
+    },
+    "countries": {
+      "US": 18,
+      "CA": 2,
+      "JP": 2,
+      "CN": 1,
+      "SE": 1,
+      "GLOBAL": 1
+    }
+  },
+  "population_estimate": {
+    "by_stratum": {
+      "overseas_core": {
+        "gold_positive": 22,
+        "sampled": 149,
+        "population": 149,
+        "estimated_positive": 22.0
+      },
+      "overseas_datacenter": {
+        "gold_positive": 0,
+        "sampled": 20,
+        "population": 210,
+        "estimated_positive": 0.0
+      },
+      "domestic_core": {
+        "gold_positive": 0,
+        "sampled": 25,
+        "population": 526,
+        "estimated_positive": 0.0
+      },
+      "domestic_hinted": {
+        "gold_positive": 0,
+        "sampled": 10,
+        "population": 907,
+        "estimated_positive": 0.0
+      },
+      "unscoped": {
+        "gold_positive": 3,
+        "sampled": 22,
+        "population": 22,
+        "estimated_positive": 3.0
+      }
+    },
+    "estimated_positive_total": 25.0,
+    "days": 90,
+    "estimated_per_day": 0.28,
+    "estimated_per_week": 1.9
+  }
+}

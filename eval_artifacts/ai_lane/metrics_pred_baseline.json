@@ -1,0 +1,961 @@
+{
+  "gold_summary": {
+    "positives": 25,
+    "negatives": 201,
+    "low_confidence": 0,
+    "exclude_reasons": {
+      "datacenter_power": 58,
+      "ai_industry_general": 48,
+      "domestic": 46,
+      "diplomatic_mention": 22,
+      "not_ai_use": 21,
+      "defense_weapons": 3,
+      "robotics_only": 1,
+      "fusion": 1,
+      "not_nuclear": 1
+    },
+    "application_area": {
+      "operations_maintenance": 9,
+      "design_engineering": 5,
+      "fuel_cycle": 4,
+      "licensing_regulation": 3,
+      "inspection_diagnostics": 3,
+      "workforce_governance": 1
+    },
+    "maturity": {
+      "deployed": 9,
+      "announced": 5,
+      "discussion": 5,
+      "contract": 3,
+      "research": 2,
+      "pilot": 1
+    },
+    "ai_tech": {
+      "other": 10,
+      "genai_llm": 9,
+      "ml_predictive": 5,
+      "computer_vision": 1
+    },
+    "actor_type": {
+      "vendor": 7,
+      "ai_startup": 6,
+      "other": 5,
+      "utility": 3,
+      "national_lab": 3,
+      "international_org": 1
+    },
+    "countries": {
+      "US": 18,
+      "CA": 2,
+      "JP": 2,
+      "CN": 1,
+      "SE": 1,
+      "GLOBAL": 1
+    }
+  },
+  "population_estimate": {
+    "by_stratum": {
+      "overseas_core": {
+        "gold_positive": 22,
+        "sampled": 149,
+        "population": 149,
+        "estimated_positive": 22.0
+      },
+      "overseas_datacenter": {
+        "gold_positive": 0,
+        "sampled": 20,
+        "population": 210,
+        "estimated_positive": 0.0
+      },
+      "domestic_core": {
+        "gold_positive": 0,
+        "sampled": 25,
+        "population": 526,
+        "estimated_positive": 0.0
+      },
+      "domestic_hinted": {
+        "gold_positive": 0,
+        "sampled": 10,
+        "population": 907,
+        "estimated_positive": 0.0
+      },
+      "unscoped": {
+        "gold_positive": 3,
+        "sampled": 22,
+        "population": 22,
+        "estimated_positive": 3.0
+      }
+    },
+    "estimated_positive_total": 25.0,
+    "days": 90,
+    "estimated_per_day": 0.28,
+    "estimated_per_week": 1.9
+  },
+  "predictor": "pred_baseline",
+  "metrics": {
+    "gold": 226,
+    "judged": 226,
+    "missing": 0,
+    "confusion": {
+      "tp": 23,
+      "fp": 91,
+      "fn": 2,
+      "tn": 110
+    },
+    "precision": 0.2018,
+    "recall": 0.92,
+    "f1": 0.331,
+    "per_stratum": {
+      "domestic_core": {
+        "tn": 25
+      },
+      "domestic_hinted": {
+        "tn": 10
+      },
+      "overseas_core": {
+        "tp": 20,
+        "fp": 84,
+        "tn": 43,
+        "fn": 2
+      },
+      "overseas_datacenter": {
+        "tn": 20
+      },
+      "unscoped": {
+        "fp": 7,
+        "tn": 12,
+        "tp": 3
+      }
+    },
+    "negative_reason_agreement": 0.8273,
+    "negative_reason_confusion": [
+      {
+        "gold": "diplomatic_mention",
+        "pred": "defense_weapons",
+        "count": 2
+      },
+      {
+        "gold": "not_ai_use",
+        "pred": "diplomatic_mention",
+        "count": 2
+      },
+      {
+        "gold": "domestic",
+        "pred": "datacenter_power",
+        "count": 2
+      },
+      {
+        "gold": "domestic",
+        "pred": "ai_industry_general",
+        "count": 2
+      },
+      {
+        "gold": "datacenter_power",
+        "pred": "diplomatic_mention",
+        "count": 1
+      },
+      {
+        "gold": "ai_industry_general",
+        "pred": "diplomatic_mention",
+        "count": 1
+      },
+      {
+        "gold": "datacenter_power",
+        "pred": "ai_industry_general",
+        "count": 1
+      },
+      {
+        "gold": "datacenter_power",
+        "pred": "robotics_only",
+        "count": 1
+      },
+      {
+        "gold": "diplomatic_mention",
+        "pred": "robotics_only",
+        "count": 1
+      },
+      {
+        "gold": "ai_industry_general",
+        "pred": "academic_only",
+        "count": 1
+      },
+      {
+        "gold": "ai_industry_general",
+        "pred": "robotics_only",
+        "count": 1
+      },
+      {
+        "gold": "domestic",
+        "pred": "defense_weapons",
+        "count": 1
+      },
+      {
+        "gold": "not_ai_use",
+        "pred": "ai_industry_general",
+        "count": 1
+      },
+      {
+        "gold": "not_ai_use",
+        "pred": "datacenter_power",
+        "count": 1
+      },
+      {
+        "gold": "ai_industry_general",
+        "pred": "datacenter_power",
+        "count": 1
+      }
+    ],
+    "field_agreement_on_tp": {
+      "application_area": 0.0,
+      "maturity": 0.0,
+      "ai_tech": 0.0,
+      "actor_type": 0.0
+    },
+    "disagreements": [
+      {
+        "id": "8013b24c7adfbaf4",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "cb38eed27ac4ccd4",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "ab4182f3fbeab74b",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "045e219a3deeafe8",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "865ca61bd542699b",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": "검토 확정 2026-10-14 · AI 해킹이 원자력 기관을 노림 — 원전의 AI 활용 아님. 사이버보안 관점은 별도 결정"
+      },
+      {
+        "id": "f6ce62826b17cb20",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": "검토 확정 2026-10-14 · AI 해킹이 원자력 기관을 노림 — 원전의 AI 활용 아님. 사이버보안 관점은 별도 결정"
+      },
+      {
+        "id": "9ddff9f82d2068a6",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "diplomatic_mention",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "35df5b1854c92043",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": "검토 확정 2026-10-14 · AI 해킹이 원자력 기관을 노림 — 원전의 AI 활용 아님. 사이버보안 관점은 별도 결정"
+      },
+      {
+        "id": "0c155146bf3d1c38",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "70f67226b66f525f",
+        "cell": "fn",
+        "stratum": "overseas_core",
+        "gold_reason": "none",
+        "pred_reason": "ai_industry_general",
+        "note": "NIVA 북미 상업 원전 배치"
+      },
+      {
+        "id": "98599b2fafbd9c83",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "dc41ebf8ced102d8",
+        "cell": "fn",
+        "stratum": "overseas_core",
+        "gold_reason": "none",
+        "pred_reason": "ai_industry_general",
+        "note": "인허가·설계 문서 AI 협력"
+      },
+      {
+        "id": "013b0007d6fc3eb1",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "621c2317b609281f",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "9cdb07def94ed429",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "49e79d3358533618",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": "검토 확정 2026-10-14 · 인허가 동향 해설 안의 AI 언급 — AI 가 핵심 아님"
+      },
+      {
+        "id": "dfefe63feed70827",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "f1f4a9733a1bafa4",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": "검토 확정 2026-10-14 · 인허가 동향 해설 안의 AI 언급 — AI 가 핵심 아님"
+      },
+      {
+        "id": "744d0d66bcc9354f",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "defense_weapons",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "74932071d3fd56c1",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "123f2f830a48f708",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": "검토 확정 2026-10-14 · 디지털 트윈 웨비나 — ML 언급 없음"
+      },
+      {
+        "id": "3a5f323d33bf8bf6",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": "검토 확정 2026-10-14 · AI 보안 스타트업 투자 기사. 원자력 AI 프로젝트(Prometheus) 참여는 부수"
+      },
+      {
+        "id": "18c200b7dddf8008",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "diplomatic_mention",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "960f72ba9fd3624f",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "diplomatic_mention",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "3ae3fd527b2386e6",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": "검토 확정 2026-10-14 · 국내 SCM 기업의 유럽 SMR 공급 — AI 핵심 아님"
+      },
+      {
+        "id": "a5f885014ccabf60",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "b83d5447ee4e13be",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "e27239b08aa3ebe6",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "f4b94910ef13757f",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "6b8ebdf7478b76d2",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "6ba44d80f64972a5",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "diplomatic_mention",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "a2f38ddfcdd897a1",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "cb7185a11651c282",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "902179cbfb300390",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "b2c7a52b6c39d63f",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "d74d24b446604277",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "46841cf48cb84a40",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "9f8c6921fb72cae1",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "9ccb7611f07d4f94",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "c7136deac5190c83",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "dbda6164230fdf97",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "2c44b6ae873731ff",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "a1255d3fc13d7a56",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "de133449f636f1a6",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "83eb5774e5f5cdf7",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "6523340c9c20362c",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "8f393c8e86cf5a90",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "e54314233dfee564",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "fa8e91105325c82b",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "07f979d46a5efe28",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "55f52fa09a737792",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "9b18bac17dc88c0e",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "e510bf281ec91836",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "02b30d617aa234e3",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "0cbce83f4657d8c9",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "db54c3e7ef9c4ad6",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "6803caf3506312fd",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_nuclear",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "54af90dcac1cfbe3",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "9fc71e71c28c8a49",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "1c21dd30eba72d5c",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "c3cecdd05bae1058",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "diplomatic_mention",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "07823b3485f8eff7",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "2541ebf920b34685",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "c9fa065b0a3c6622",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "f9b47c512ca02813",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "fe02eea61ab38842",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "c5070558d0e86c59",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "domestic",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "1889bba241d90234",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "3ec5ab9e81bd0f8e",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "ae8e3056ac078804",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "9dea5ce13d816013",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": "검토 확정 2026-10-14 · 인력 프로그램 구성 요소로 AI 교육"
+      },
+      {
+        "id": "c3ad74a0316e821c",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "37394924c836d905",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "8a49af4b3c11d97a",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "05ac84b7a3f7fc7f",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "857c53861b776f5a",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "a0a3a32874a012a9",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "bb12b041c6ca2577",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "da9f1d85039eab33",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "04bbf4c672f74f26",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": "검토 확정 2026-10-14 · 중국 AI 제조 정책 — 원자력은 적용 산업 나열"
+      },
+      {
+        "id": "7874637d6701781d",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "d5e7e207c22b31a1",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "ai_industry_general",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "3375bd3b4d5de7f2",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "b75eb4ed342d7c82",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "domestic",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "a25d114be2cb2055",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "not_ai_use",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "db0e91023c32d5a0",
+        "cell": "fp",
+        "stratum": "overseas_core",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "08977815cb720974",
+        "cell": "fp",
+        "stratum": "unscoped",
+        "gold_reason": "domestic",
+        "pred_reason": "none",
+        "note": "국내 기업(케이엔알시스템)의 해외 해체 시장 진출 — AI·원격 자동화"
+      },
+      {
+        "id": "2389e9da1a0af324",
+        "cell": "fp",
+        "stratum": "unscoped",
+        "gold_reason": "domestic",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "5b839201c8b2255b",
+        "cell": "fp",
+        "stratum": "unscoped",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "94e6f4ad8a0d305b",
+        "cell": "fp",
+        "stratum": "unscoped",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "b3adbd243878a3c3",
+        "cell": "fp",
+        "stratum": "unscoped",
+        "gold_reason": "domestic",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "cf8b5849c87d1193",
+        "cell": "fp",
+        "stratum": "unscoped",
+        "gold_reason": "domestic",
+        "pred_reason": "none",
+        "note": ""
+      },
+      {
+        "id": "129e05fa0f979f2e",
+        "cell": "fp",
+        "stratum": "unscoped",
+        "gold_reason": "datacenter_power",
+        "pred_reason": "none",
+        "note": ""
+      }
+    ]
+  }
+}
