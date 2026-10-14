@@ -1,270 +1,195 @@
-# 해외 AI 탭 — 방향성 검토 v3 (코드 변경 없음)
+# 해외 AI 탭 — 방향성 검토 v4 (코드 변경 없음)
 
-> 2026-10-14. 세 차례 검토의 결정을 모두 반영한 판이다. 이전 판(v1·v2)의 "이슈 원장·스토리
-> 클러스터는 쓰지 않는다"는 **철회**한다 — 상세 화면을 "오늘"과 같게 하기로 했으므로 이슈
-> 계약을 그대로 타는 쪽이 유일하게 싼 길이다(§3).
+> 2026-10-14. 네 차례 검토의 결정을 반영하고, 마지막으로 **독립 재검토**(§7)를 더했다.
+> v3 와 달라진 것: 화면이 연속 스크롤에서 **"오늘"과 같은 하루치 모드**로 바뀌었고(D3'),
+> 그에 따라 **회차·중요도·빈 날** 세 가지를 새로 정했다(§4). 이전 판은 git 이력에 있다.
 
 ## 확정된 결정
 
 | # | 결정 |
 |---|---|
-| D1 | 현재 뉴스 수집과 **별도 기준**으로 "해외 원전이 AI 를 활용했다"는 기사를 매일 뽑는다. 수집 구조가 못 잡으면 별도 구조. 중복은 현재 Nuclens 알고리즘대로. **별도의 AI 데이터베이스** |
+| D1 | 현재 뉴스 수집과 **별도 기준**으로 "해외 원전이 AI 를 활용했다"는 기사를 매일 뽑는다. 못 잡는 구조면 별도 구조. 중복은 현재 Nuclens 알고리즘대로. **별도의 AI 데이터베이스** |
 | D2 | 수집원이 더 필요하면 추가 |
-| D3 | 화면은 "오늘"처럼. 카드뉴스·스토리 제외. **누적 리스트 + 날짜 구분바 + 연속 스크롤**. 하루 신규 5건 이상이 되면 하루치 모드 전환 가능 |
-| D4 | **해외만.** 국내 기사 미고려 (해외 사례를 다룬 국내 매체 기사는 포함) |
-| D5 | **순수 AI 기술**만. 로봇·드론·VR 자체는 제외하되, "AI 비전으로 판독하는 검사 로봇"처럼 **AI 기술이 쓰인 경우는 포함** |
+| **D3'** | 화면은 **"오늘 → 그 밖의 이슈"와 같은 구성**. 카드뉴스·스토리 제외. **그날 기사를 중요도순**으로. **날짜 이동은 기존 방식**(이전/다음·셀렉트). 연속 스크롤은 취소 |
+| D4 | **해외만.** 국내 미고려 (해외 사례를 다룬 국내 매체 기사는 포함) |
+| D5 | **순수 AI 기술**만. 로봇·드론·VR 자체는 제외하되, "AI 비전 판독 검사 로봇"처럼 AI 기술이 쓰인 경우는 포함 |
 | D6 | 핵융합 제외 |
-| D7 | 연구소 뉴스룸 기사 포함, 논문 자체는 제외 |
+| D7 | 연구소 뉴스룸 기사 포함, 논문 자체 제외 |
 | D8 | 탭 이름 **「해외 AI」** |
-| D9 | **탐색 탭에서 "AI" 범위로 검색**되도록 별도 DB 로 구축 |
-| D10 | 목록 행은 "오늘 → 그 밖의 이슈"와 같은 형태. 클릭하면 **한 줄 결론 · 기사 내용 · 시사점 · … · 타임라인 · 이 사건의 근거 · 추가 근거 · 관련 이슈**를 보여준다 (= 기존 이슈 상세 전체) |
+| D9 | **탐색 탭에서 "AI" 범위로 검색**되도록 별도 DB |
+| D10 | 클릭하면 기존 이슈 상세 전체(한 줄 결론 · 기사 내용 · 시사점 · 타임라인 · 이 사건의 근거 · 추가 근거 · 관련 이슈) |
+| D11 | 그 밖의 소소한 결정은 검토자가 정한다 → §5 |
 
 ---
 
 ## 0. 설계를 결정한 구조적 사실
 
-1. **현재 파이프라인은 AI 활용 기사를 수집은 하되 두 번 버린다.** 큐레이션 LLM 이 정책·투자 기준으로 `noise` 를 매기고(실측: NEI 「Tianwan puts AI to work」·「NIVA takes nuclear AI fleetwide」, POWER 「Predictive Digital Twins」 전부 noise), 그 즉시 `state["sent"][h]` 가 찍혀(`news_bot.py` 4095행) 14일간 재수집이 막힌다. 다만 noise 도 `archive/` 에는 남는다.
-2. 그러므로 별도 기준은 **같은 크롤 프로세스 안, 수집 직후의 후보 풀**에 걸어야 한다. 큐 뒤는 이미 버린 뒤다.
-3. **이슈 상세는 "기사"가 아니라 "이슈 레코드"를 읽는다.** `openIssueDialog` 가 읽는 것: `title`·`summary`(한 줄 결론)·`detail`(기사 내용)·`why_important`·`implication`(시사점)·`open_question`·`related_articles`(member_role=card → 이 사건의 근거, evidence → 추가 근거, 날짜 정렬 → 타임라인)·`verification`·`entity_ids`·같은 주제의 다른 이슈(관련 이슈). 이 레코드는 `web/build_data.py` 의 `cluster_selected_articles` → `attach_evidence_articles` → `build_issue_catalog` 가 만든다.
-4. **중복 제거·이슈 묶기 부품은 전부 재사용 가능**하고 입력만 바꾸면 된다. 단 상태 파일(seen·원장·캐시)은 레인별로 분리해야 한다.
-5. 이 세션 환경은 news.google.com 에 닿지 못한다(프록시 403·DNS 실패). 전용 피드 건수는 **Actions 러너에서** 잰다. 아래 건수는 전부 추정이다.
+1. 현재 파이프라인은 AI 활용 기사를 **수집은 하되 두 번 버린다.** 큐레이션 LLM 이 정책·투자 기준으로 `noise` 를 매기고(실측: NEI 「Tianwan puts AI to work」·「NIVA takes nuclear AI fleetwide」, POWER 「Predictive Digital Twins」), 즉시 `state["sent"]` 가 찍혀(`news_bot.py` 4095행) 14일간 재수집이 막힌다. noise 도 `archive/` 엔 남는다.
+2. 그러므로 별도 기준은 **같은 크롤 프로세스 안, 수집 직후의 후보 풀**에 건다.
+3. 이슈 상세(`openIssueDialog`)는 기사가 아니라 **이슈 레코드**를 읽는다: `summary`(한 줄 결론)·`detail`(기사 내용)·`implication`(시사점)·`why_important`·`open_question`·`related_articles`(card → 이 사건의 근거, evidence → 추가 근거, 날짜 정렬 → 타임라인)·`verification`·같은 주제의 다른 이슈. 이 레코드는 `cluster_selected_articles` → `attach_evidence_articles` → `build_issue_catalog` 가 만든다. **입력만 바꾸면 그대로 쓸 수 있다.**
+4. "오늘"의 날짜 단위는 **아침 브리핑 회차**다(04:25 KST 전후 마감, `daily-brief.yml`). 날짜 이동(`briefingDates`·`stepBriefing`)은 회차가 있는 날만 오간다.
+5. 메인 아카이브의 noise 레코드는 `title_kr`·`summary` 는 있지만 **`detail`·`implication`·`why_important` 가 빈 값**이다(실측). 공유 풀 기사도 AI 레인이 해석을 **다시 써야** 상세가 찬다.
+6. 이 세션 환경은 news.google.com 에 닿지 못한다. 전용 피드 건수는 **Actions 러너에서** 잰다.
 
 ---
 
 ## 1. 전체 그림
 
 ```
-                 메인 레인 (변경 없음)                      AI 레인 (신설)
-─────────────────────────────────────────────   ──────────────────────────────────────────────
-RSS·공식·Naver 수집 ──┐                           lane=ai 전용 피드 ──┐
-                      ├─ 이번 run 신규 후보 풀 ─────────────────────┤  (importance 무관, 전건)
-                      ▼                                              ▼
-            큐레이션 LLM (정책 중요도)                    AI 프리필터 (결정적: AI 어휘 ∧ 원자력 어휘, 넓게)
-                      ▼                                              ▼
-            digest_queue → 아침 브리핑                  AI 판정+작성 LLM (전용 프롬프트 · ai_judgments.json)
-                      ▼                                   in_scope / exclude_reason / country≠KR
-            archive/ (noise 포함)                         title_kr · summary · detail · implication ·
-                      ▼                                   why_important · open_question · 분류 축
-      build_data: 이슈 묶기 → issues.json                            ▼
-                                                        레인 내 중복 제거 (url_hash → title_key → 의미 그룹핑)
-                                                                     ▼
-                                                        ai_archive/YYYY-MM.jsonl  +  ai_state.json
-                                                                     ▼
-                                      build_data: 같은 함수로 이슈 묶기 → ai_issues.json · ai_issue_ledger.json
-                                                                     ▼
-                                      웹: 「해외 AI」탭 (목차 행 스트림) · 탐색 탭 "AI" 범위 · 기존 이슈 상세
+   메인 레인 (변경 없음)                              AI 레인 (신설)
+───────────────────────────────────    ────────────────────────────────────────────────────────
+RSS·공식·Naver 수집 ─┐                   lane=ai 전용 피드 ─┐
+                     ├─ 이번 run 신규 후보 풀 (전건) ─────┤
+                     ▼                                     ▼
+       큐레이션 LLM (정책 중요도)            [매 크롤, 3h]  AI 프리필터 → AI 판정+작성 LLM (전용 캐시)
+                     ▼                                     → ai_archive/ + ai_state.json
+       digest_queue → 아침 브리핑                          ▼
+                     ▼                      [하루 1회, 아침 브리핑 회차에 맞춰]  AI 회차 마감
+       archive/ (noise 포함)                  의미 그룹핑(같은 사건) → 대표 선정 → AI 중요도 점수 → ai_rounds.json
+                     ▼                                     ▼
+       build_data → issues.json              build_data (같은 함수) → ai_issues.json · ai_issue_ledger.json · ai_today.json
+                                                           ▼
+                                             웹: 「해외 AI」탭(하루치·중요도순·날짜 이동) · 탐색 "해외 AI" 범위 · 기존 상세
 ```
 
-세 층의 **별도 DB** (D1·D9):
+**별도 DB 네 층** (D1·D9):
 
-| 층 | 메인 | AI 레인 | 성격 |
-|---|---|---|---|
-| 기사 | `archive/YYYY-MM.jsonl` | `ai_archive/YYYY-MM.jsonl` | append-only, 멱등, git 이 DB |
-| 이슈 원장 | `issue_ledger.json` | `ai_issue_ledger.json` | 이슈 신원·이동·개정 기억 |
-| 웹 산출 | `issues.json`·`news-manifest.json`+shards | `ai_issues.json`·`ai_news-manifest.json`+shards | 탭·탐색·상세가 읽는 것 |
+| 층 | 메인 | AI 레인 |
+|---|---|---|
+| 기사 | `archive/YYYY-MM.jsonl` | `ai_archive/YYYY-MM.jsonl` (append-only·멱등) |
+| 회차 | `delivery_log.jsonl`(브리핑 선정분) | `ai_rounds.json` — 날짜별 사건 목록·대표·점수·breakdown |
+| 이슈 원장 | `issue_ledger.json` | `ai_issue_ledger.json` |
+| 웹 산출 | `today.json`·`issues.json`·shards | `ai_today.json`·`ai_issues.json`·shards |
 
-공유 풀에서 온 기사는 **양쪽 아카이브에 다 남는다**(메인엔 noise 로, AI 엔 in_scope 로). 이중 적재를 허용한다 — 두 DB 의 질문이 다르고 hash 로 조인된다. 메인 레코드는 고치지 않는다.
+공유 풀 기사는 양쪽 아카이브에 다 남는다(이중 적재 허용, hash 로 조인). 메인 레코드는 고치지 않는다.
 
 ---
 
-## 2. AI 레인 — 수집·판정·중복 제거 (D1·D2·D4~D7)
+## 2. 수집·판정·중복 제거 (D1·D2·D4~D7) — v3 와 동일, 요약
 
-### 2-1. 입력 두 갈래
-
-- **공유 풀**: 이번 run 에 메인이 수집한 신규 기사 전건(큐레이션 결과와 무관). 메인 큐레이션의 `title_kr`·`summary` 가 있으면 재사용(호출 절약).
-- **전용 피드**: 소스 레코드에 `lane: "ai"` 속성. 이 기사는 **메인 큐에 들어가지 않는다**(아침 브리핑 불변). 게이트는 메인의 `NUCLEAR_TITLE_KEYWORDS` 가 아니라 **AI 어휘 ∧ 원자력 어휘**. `tests/test_collect.py` 가 메인 게이트를 잠그듯 테스트로 잠근다.
-
-### 2-2. 전용 피드 후보 (실측 전)
-
-| 군 | 후보 | 비고 |
-|---|---|---|
-| 검색 피드 (핵심) | Google News EN 일반 `(nuclear OR reactor) ("artificial intelligence" OR "machine learning" OR "generative AI") when:1d` / EN 사업자·벤더명 / EN AI 벤더(`"Atomic Canyon" OR Nuclearn OR "Blue Wave AI" OR NPX`) / JA `(原子力 OR 原発) (AI OR 人工知能 OR 機械学習)` / FR `nucléaire ("intelligence artificielle" OR IA)` | `when:1d` 필수(관련도순). `resolve_publisher` 로 매체 복원 |
-| 규제·국제기구 | NRC 뉴스릴리스·AI 페이지, ONR, ASN, IAEA 뉴스, OECD NEA | primary |
-| 연구소 (D7) | INL·ORNL·ANL·PNNL 뉴스룸, EPRI | 뉴스룸 기사만. arXiv·학회지 피드는 등록하지 않는다 |
-| 사업자·벤더 뉴스룸 | Constellation·Duke·TVA·OPG·EDF·Westinghouse·Framatome·GE Vernova·Rolls-Royce SMR | stakeholder/distributed_claim. 대표 기사 불가 |
-| AI 벤더 | Atomic Canyon·Nuclearn·Blue Wave AI Labs | peripheral. 성숙도 기본 `announced` |
-| 비영어 전문지 | 原子力産業新聞(JAIF)·電気新聞, NIA, RGN | 실측 필요 |
-
-Naver 피드는 쓰지 않는다(D4). 전용 피드는 `admin_overrides` `feed_add` 로 섀도 등록하되, **`lane` 속성이 `feed_add` 에 먼저 추가돼야 한다** — 없으면 메인 큐로 들어간다.
-
-### 2-3. 판정 기준
-
-**포함**: 해외 원전 사업(설계·건설·운영·정비·검사·인허가·규제·해체·핵연료·안전조치·인력)에 다음 AI 기술을 적용·시범·계약·승인·발표.
-
-| 기술 | 예 |
-|---|---|
-| 기계학습·예측분석 | 예측정비, 이상징후 탐지, 가상계측, 연료 성능 예측 |
-| 생성형 AI·LLM | 절차서·인허가 문서 검색/작성 보조(NIVA·Nuclearn), 운전원 지식 보조 |
-| 컴퓨터 비전 | 검사 영상·용접부·연료봉 결함 자동 판독 — **AI 판독 로봇 포함(D5)** |
-| AI 디지털 트윈 | 모델이 ML 로 학습·갱신되는 것만. 단순 3D·시뮬레이터 제외 |
-| AI 와 규제 | NRC·ONR 의 AI 지침·심사 AI·AI 이용 인허가 신청 |
-| AI 거버넌스·인력 | 사업자 AI 전략, INPO·WANO 가이드, AI 인력 양성 |
-
-**제외 코드** (`exclude_reason`, 캐시에 남겨 소급 셈):
-
-| 코드 | 내용 |
-|---|---|
-| `datacenter_power` | AI 데이터센터 전력수요·PPA·전력난 — 정규식 1차 통과분의 과반 |
-| `robotics_only` | 로봇·드론·VR/AR 이 주제이고 AI 가 수식어(D5). "AI 탑재" 한 단어는 여기 |
-| `ai_industry_general` | 오픈AI·엔비디아 등 AI 산업 일반, "원전처럼 안전하게" 류 비유 |
-| `diplomatic_mention` | 정상회담·MOU 의 "AI·원자력 협력" 나열 |
-| `domestic` | 한국이 주체·무대(D4) |
-| `fusion` | 핵융합(D6) |
-| `academic_only` | 논문·학회 발표 자체(D7) |
-| `defense_weapons` | 핵무기·핵잠·군사 AI |
-
-경계 규칙: **AI 기술이 그 기사의 주어·목적어이거나, 보도된 성과를 만든 핵심 수단이어야 한다.** 이 선은 프롬프트 예시 + gold 세트로 잠근다.
-
-### 2-4. 판정+작성 한 호출 — 메인 큐레이션과 같은 필드를 만든다 (D10 의 전제)
-
-상세 화면이 이슈 레코드의 `summary`·`detail`·`implication`·`why_important`·`open_question` 을 읽으므로 AI 판정 호출은 **분류와 작성을 함께** 한다. 메인 프롬프트의 작성 규칙(헤드라인 = 주체+행동, 수치·단계 보존, 본문 없으면 `detail` 빈 값, 해석 과잉 금지)을 그대로 옮기고, 메인의 결정적 정리기(`drop_hollow_implication`·`strip_unsourced_person_names`·`drop_interpretation_without_body` 등)를 그대로 거친다. 본문은 `article_body` 경로를 공유한다.
-
-```
-# 메인 레코드와 같은 필드 (이슈 묶기·상세가 읽는다)
-hash, url, resolved_url, domain, publisher, source_type, evidence_role, source_tier, pub, archived_at
-title, title_kr, summary, detail, implication, why_important, open_question(+source)
-scope: "overseas"(고정), countries, topics(메인 통제 목록 그대로 — 탐색 필터 호환), tags, article_type,
-event_date(+type/precision/source), verified_evidence
-# AI 레인 고유
-lane: "ai", in_scope, exclude_reason
-ai_tech: ml_predictive | genai_llm | computer_vision | digital_twin_ai | other
-application_area: operations | maintenance_inspection | licensing_regulation | design_engineering
-               | fuel_cycle | decommissioning | safeguards_security | workforce_governance
-actor_type: utility | vendor | regulator | national_lab | ai_startup | international_org | other
-actor_names, maturity: research | pilot | deployed | announced | contract | regulatory
-judge_model, judge_prompt_version, judged_at
-```
-
-`maturity`·`actor_type` 이 이 분야의 핵심 축이다. 벤더 보도자료가 많아 "실적용"과 "발표"를 구분하지 않으면 화면이 홍보로 덮인다.
-
-### 2-5. 중복 제거 — "현재 알고리즘대로"
-
-| 단계 | 재사용 부품 | AI 레인 |
-|---|---|---|
-| URL 정규화·해시 | `normalize_url`·`url_hash`·`legacy_url_hash` | **`ai_state.json` 별도** |
-| 수집 단계 동일 기사 | `dedup_exact_candidates`·`canonical_replacement_allowed` | 공식·전문지 원문 우선 |
-| 크로스런 접기 | `fold_cross_run_duplicates` | 3시간 run 사이 |
-| 의미 그룹핑 | `dedup.py`(Gemini 1호출, "같은 사건" 엄격) | 하루 1회, 당일 통과분 |
-| 아카이브 멱등 | `news_archive.load_recent_hashes` 패턴 | `ai_archive/` 최근 2개월 |
-| 이슈 묶기(날짜 넘어) | `cluster_selected_articles` + `attach_evidence_articles` (story_fingerprint·event_identity·임베딩·관리자 override) | §3-1 |
-
-### 2-6. 건수 — 측정 설계
-
-라이브 실측 불가라 추정만 둔다. **1단계 섀도 2주로 대체할 숫자다.**
-
-| 층 | 추정(하루) |
-|---|---|
-| 전용 피드 원시 유입 | 20~60 (대부분 `datacenter_power`·`ai_industry_general`) |
-| 프리필터 통과 | 10~30 |
-| 판정 통과(해외·순수 AI) | 1~4 |
-| **중복 제거 후 사건 수** | **1~3** |
-
-근거: 아카이브 70일 소급 15~20건 ≈ 0.25건/일이 현재 수집 기준이고, 전용 피드로 영어 트레이드·벤더·연구소·일본·프랑스를 더하면 수 배. 주제는 가속 중(IEEE Spectrum 2026-10-08: 미국 94기 거의 전부에 AI 도구 도입 제안·다수 수용, INPO 연내 회원사 과반 전망). **D3 의 분기점(하루 5건)은 중복 제거 후 사건 수로 잰다.** 원시 유입으로 재면 늘 넘고 화면은 같은 발표 다섯 벌이 된다.
-
-Gemini: 판정 2~4 호출/일 + 그룹핑 1회 + 이슈 해석(issue_insight) 소량. 500 RPD 에서 무시할 수준. 메인 프롬프트 불변이라 캐시 무효화 없음. 메인이 `QUOTA_EXHAUSTED` 면 AI 레인도 멈추고 다음 run 재시도(seen 마킹은 판정 **뒤** — 메인 1894행 원칙).
+- **입력 두 갈래**: 공유 풀(메인 신규 전건) + `lane: "ai"` 전용 피드(메인 큐 진입 금지, 게이트 = AI 어휘 ∧ 원자력 어휘, 테스트로 잠금).
+- **전용 피드 후보**: Google News 검색(EN 일반·EN 사업자/벤더명·EN AI 벤더·JA·FR, `when:1d`), NRC·ONR·ASN·IAEA·OECD NEA, INL·ORNL·ANL·PNNL·EPRI 뉴스룸(D7: 논문 피드 없음), 사업자·벤더 뉴스룸, Atomic Canyon·Nuclearn·Blue Wave AI, JAIF·電気新聞·NIA·RGN. Naver 는 쓰지 않는다(D4). `feed_add` 섀도 등록은 **`lane` 속성 추가가 선행**.
+- **포함**: 기계학습·예측정비 / 생성형 AI·LLM 문서 보조 / 컴퓨터 비전 판독(AI 판독 로봇 포함, D5) / ML 기반 디지털 트윈 / 규제기관의 AI 지침·심사 / 사업자 AI 거버넌스·인력.
+- **제외 코드**: `datacenter_power`·`robotics_only`·`ai_industry_general`·`diplomatic_mention`·`domestic`·`fusion`·`academic_only`·`defense_weapons`. 경계: **AI 기술이 기사의 주어·목적어이거나 보도된 성과의 핵심 수단**.
+- **판정+작성 한 호출**이 메인과 같은 필드(`title_kr`·`summary`·`detail`·`implication`·`why_important`·`open_question`·`topics`·`countries`·`event_date`…)를 만들고, 메인 헤드라인 규칙과 결정적 정리기를 그대로 거친다. 공유 풀 기사는 `title_kr` 만 재사용하고 **해석은 다시 쓴다**(§0-5). 고유 축: `ai_tech`·`application_area`·`actor_type`·`actor_names`·`maturity`·`adoption_significance`(§4-2).
+- **중복 제거**: `url_hash` → `title_key` → `fold_cross_run_duplicates` → `dedup.py` 의미 그룹핑(회차 마감 때 1회) → 날짜 넘는 이슈 매칭(`cluster_selected_articles`·`attach_evidence_articles`). seen 은 `ai_state.json` 별도.
+- **건수(추정, 섀도 2주로 대체)**: 원시 20~60 → 프리필터 10~30 → 판정 통과 1~4 → **중복 제거 후 사건 1~3/일**. Gemini 2~4 호출/일 + 그룹핑 1회. 메인 `QUOTA_EXHAUSTED` 면 AI 레인은 멈추고 다음 run 재시도(seen 마킹은 판정 뒤).
 
 ---
 
-## 3. 이슈 묶기와 상세 — 기존 계약을 그대로 탄다 (D10)
-
-### 3-1. 입력만 바꾼 같은 함수
-
-메인은 `delivery_log`(브리핑 선정분)를 "카드 멤버"로, 미선정 아카이브를 "근거 멤버"로 넣는다. AI 레인에는 브리핑이 없으므로 역할을 이렇게 정한다.
+## 3. 이슈 묶기와 상세 (D10) — v3 와 동일, 요약
 
 | 메인 | AI 레인 |
 |---|---|
-| 카드 멤버 = 브리핑 선정 기사 | **대표 기사** = 의미 그룹핑에서 사건마다 고른 1건(공식·전문지 우선) |
-| 근거 멤버 = 뒤에 매칭된 미선정 보도 | **같은 사건의 다른 매체 기사** + 날짜 넘어 매칭된 후속 보도 |
-| `briefing_date` | `judged_at` 의 날짜(KST). 함수가 요구하는 칸을 이 값으로 채운다 |
-| `selection_reasons`·`importance` | 빈 값 / `nice_to_know` 고정. 상세는 이 칸을 쓰지 않는다 |
+| 카드 멤버 = 브리핑 선정 기사 | **대표 기사** = 회차 마감의 의미 그룹핑이 사건마다 고른 1건(공식·전문지 우선) |
+| 근거 멤버 = 뒤에 매칭된 미선정 보도 | 같은 사건의 다른 매체 + 날짜 넘어 매칭된 후속 보도 |
+| `briefing_date` | **AI 회차 날짜** (§4-1) |
 
-그 다음은 **메인과 동일**: `build_issue_catalog` → `ai_issues.json`, `issue_ledger.merge/resolve_moves` → `ai_issue_ledger.json`, `issue_insight`(타임라인 2건 이상인 이슈의 해석) · `issue_headline` 그대로. 함수에 `ISSUE_LEDGER_FILE` 같은 경로 주입이 이미 있으므로(진단용 구멍) 레인별 파일은 그 자리에 들어간다.
+이후 `build_issue_catalog`·`issue_ledger`·`issue_insight`·`issue_headline` 전부 동일. 레인별 파일은 기존 경로 주입(`ISSUE_LEDGER_FILE` 류)에 들어간다. 웹은 상세가 이슈를 찾는 자리에 **레인별 조회 함수 하나**만 끼운다. "관련 이슈"는 AI 카탈로그 안에서 찾고, 같은 기사 hash 를 공유하는 메인 이슈가 있으면 "원전 이슈에서 보기" 1줄.
 
-### 3-2. 상세 화면 섹션 ↔ 데이터
+---
 
-| 상세 섹션 | 읽는 필드 | AI 레인에서 채우는 곳 |
+## 4. 화면 (D3'·D8) — 이번에 새로 정한 것
+
+### 4-1. 회차 = 아침 브리핑 회차
+
+- AI 레인의 "그날"은 달력 날짜도 발행일도 아니고 **아침 브리핑 회차와 같은 마감**이다. `daily-brief.yml` 의 Collect 뒤에 `AI 회차 마감` 스텝이 서서, 직전 마감 이후 판정 통과분을 한 회차로 묶는다.
+- 이유: ① "오늘"과 날짜 축이 같아야 두 탭을 오가며 읽힌다. ② 3시간마다 회차를 갱신하면 하루 안에 같은 날짜 페이지의 내용이 바뀌어 날짜 이동과 충돌한다. ③ 의미 그룹핑·중요도 산정은 **그날 전체**를 놓고 한 번 하는 것이 정확하다(오전에 벤더 PR, 오후에 WNN 기사가 오면 한 사건이다).
+- 판정 자체는 매 크롤에서 해 두므로(캐시) 아침 마감은 빠르다.
+- 날짜 목록(`ai_today.json.dates`)은 **회차에 사건이 1건 이상인 날만** 싣는다. 이전/다음은 그 목록 안에서만 움직인다 — 빈 날을 넘겨 다니지 않는다.
+
+### 4-2. 중요도 = AI 레인 전용 점수 (메인 importance 는 쓰지 않는다)
+
+메인 `importance` 는 정책·투자 중요도라 이 기사들 대부분이 noise 다. 대신 **설명 가능한 결정적 점수**를 `ranking.py` 의 방식(LLM 은 feature 만, 점수는 Python, breakdown 기록)으로 둔다.
+
+| 재료 | 출처 | 가중(초안, `ranking_config.json` 의 `ai` 절) |
 |---|---|---|
-| 제목 | `title` | 대표 기사 `title_kr` (issue_headline) |
-| 한 줄 결론 | `summary` | AI 판정 호출 |
-| 기사 내용 | `detail` | AI 판정 호출(본문 있을 때) |
-| 왜 중요한가 / 시사점 | `why_important` / `implication` | AI 판정 호출 → `split_interpretation` → 2건 이상이면 `issue_insight` 가 이슈 단위로 다시 씀 |
-| 아직 확정되지 않은 것 | `open_question` | AI 판정 호출 |
-| 사건 타임라인 | `related_articles` 날짜 정렬 | 카탈로그 |
-| 이 사건의 근거 | `member_role=card` | 대표 기사 (+ 같은 날 같은 사건) |
-| 추가 근거 | `member_role=evidence` | 다른 매체·후속 보도 |
-| 근거 구성 배지 | `verification` | 카탈로그(공식 원문·독립 출처 수) — 벤더 PR 은 `distributed_claim` 이라 독립 출처로 안 센다. 그대로 둔다 |
-| 관련 이슈 | 같은 topics/entity 의 다른 이슈 | **AI 카탈로그 안에서** 우선. 같은 기사 hash 를 공유하는 메인 이슈가 있으면 "원전 이슈에서 보기" 링크 1줄 |
-| 에경연 인사이트 | KEEI 매칭 | 그대로(해외 AI 는 대부분 비어 있을 것) |
+| `adoption_significance` 0~3 | AI 판정 LLM. 3 = 함대 전체 실적용·규제 결정·최초 인허가 / 2 = 단일 호기 실적용·계약 / 1 = 시범·발표·MOU / 0 = 의견·전망·일반 | ×3 |
+| `maturity` | deployed·regulatory·contract > pilot > announced > research | +3 / +2 / +1 / 0 |
+| `actor_type` | utility·regulator·international_org > national_lab > vendor > ai_startup | +2 / +1 / 0 / −1 |
+| 근거 구성 | 공식 원문·독립 출처 수(`verification`) | 출처당 +1, 상한 +3 |
+| 매체 등급 | `source_tier` | tier1 +1 |
+| 동률 | 발행 시각 최신 | — |
 
-웹 변경은 작다: `openIssueDialog` 가 이슈를 찾는 자리가 `state.issues` 하나이므로 **레인별 컬렉션에서 찾는 조회 함수 하나**를 끼운다. 섹션 마크업·CSS 는 손대지 않는다.
+같은 날 1~3건이면 순서가 큰 의미는 없지만, 양이 늘었을 때 그대로 쓰이고 breakdown 이 `ai_rounds.json` 에 남아 "왜 위인가"를 설명한다.
 
----
+### 4-3. 구성
 
-## 4. 화면 (D3·D8·D10)
+- 탭 순서 `오늘 · 해외 AI · 흐름 · 탐색 · 보고서`. 상단 `main-tabs` + 하단 `mobileTabs` 둘 다. `longterm` 과 같은 `hidden` + 데이터 게이트(누적 20건)로 연다.
+- "오늘"에서 **쓰는 것**: 머리(제목·날짜 이동·한 줄 안내), 목차 패널(`briefPanel`·`tocRow`), 상세. **빼는 것**: 카드뉴스·오디오·먼저 볼 3건·한 주의 원자력·푸시 버튼.
+- 행 = `tocRow` 그대로. 지역 칸 → **국가**, 대분류 칸 → **적용영역**, 꼬리에 **성숙도** 칩. 벤더·AI 스타트업 발표는 "벤더 발표" 라벨을 달아 독자가 가중을 낮출 수 있게 한다. 요약은 행에 안 쓴다.
+- 한 줄 안내: "이 회차 N건 · 이번 주 N건 · 누적 N건".
+- **빈 회차 폴백**: 날짜 목록에 빈 날이 없으므로 보통은 생기지 않지만, **가장 최근 회차가 오늘이 아닐 때** 머리에 "오늘 신규 없음 · 최근 회차 MM-DD" 한 줄을 띄우고 그 회차를 보여준다. 빈 화면·죽은 버튼은 두지 않는다(index.html 의 원칙).
+- 산출물: `ai_today.json`(최신 회차 + dates — today.json 과 같은 모양), `ai_issues.json`, `ai_news-manifest.json`+shards, `meta.ai{total, rounds, last_round}`. 이미 지은 레코드에서 **잘라 담기만**.
 
-### 4-1. 「해외 AI」탭
+### 4-4. 탐색 탭 "해외 AI" 범위 (D9)
 
-- 탭 순서(안): `오늘 · 해외 AI · 흐름 · 탐색 · 보고서`. 상단 `main-tabs` 와 하단 `mobileTabs` **둘 다**(폰에선 하단이 유일한 통로). `longterm` 처럼 `hidden` + 데이터 게이트(누적 20건) 로 연다.
-- 구성 = 머리 한 줄 + 칩 필터 + **목차 행 스트림**. 카드뉴스·오디오·먼저 볼 3건·한 주의 원자력·날짜 셀렉트는 없다.
-- 행 = 기존 `tocRow`(번호·지역·대분류·제목·왜 중요한가·화살표)를 그대로 쓰되, 지역 칸은 **국가**, 대분류 칸은 **적용영역**, 꼬리에 **성숙도** 칩. 요약은 행에 안 쓴다("오늘"과 같은 원칙).
-- **날짜 구분바** = 이슈 `last_seen`(KST) 기준, 바 오른쪽에 그날 건수. 0건인 날은 세우지 않는다.
-- **연속 스크롤** = `ai_issues.json` 은 최근 90일 전량, 그 이전은 월별 shard 를 끝에서 로드(`news-manifest.json` 과 같은 방식). 초기엔 한 파일로 충분(하루 1~3건 × 90일).
-- **모드 스위치(D3 후반)**: 빌드가 `meta.ai.last_14d_daily_avg`(중복 제거 후 사건 수)를 싣고, 5 이상이면 화면이 `daily`(오늘 하루치 + 날짜 이동)로 선다. 코드 상수가 아니라 데이터가 정하므로 양이 줄면 스트림으로 돌아온다.
-- 클릭 → §3-2 의 기존 이슈 상세.
-
-```
-┌ 해외 AI                                     오늘 2건 · 이번 주 9건 · 누적 143건 ┐
-│ [전체] [운영·정비] [인허가·규제] [설계·엔지니어링] [핵연료] [해체] [안전조치] [인력·거버넌스]
-│ [전체] [실적용] [계약] [시범] [발표] [연구] [규제]
-├──────────────── 10월 14일 (화) ───────────────────────────────────── 2건 ─┤
-│ 01  🇺🇸 운영·정비   Constellation, 21기에 Atomic Canyon NIVA 전면 적용     실적용 ›│
-│     왜 중요한가 한 줄 …                                                          │
-│ 02  🇯🇵 인허가·규제  도쿄전력, 서류 업무 80% 감축 'AI 원전 시스템' 재가동   발표  ›│
-├──────────────── 10월 13일 (월) ───────────────────────────────────── 1건 ─┤
-│ 03  …                                                                            │
-```
-
-### 4-2. 탐색 탭의 "AI" 범위 (D9)
-
-- 기존 `archiveScope` 세그먼트(`추적 중인 이슈 | 모든 이슈`)에 **`해외 AI`** 를 더한다. 선택하면 조회 대상이 `ai_issues.json` 으로 바뀌고, 나머지 필터(기간·주제·근거 구성·검색어·정렬)와 `archiveIssueMatches` 는 그대로 동작한다 — 레코드 모양이 같기 때문이다.
-- 지역 필터는 이 범위에서 `해외` 고정(숨김). 주제 셀렉트에는 메인 `topics` 외에 **적용영역**을 더 보여준다(AI 레코드의 `application_area` 를 topics 와 같은 문법으로 노출).
-- 탐색 허브(지금 많이 등장하는 대상)에 AI 범위의 엔티티(Constellation·Atomic Canyon…)가 서려면 `entity_registry` 에 그 이름들이 등록돼야 한다. 2단계 뒤 보강.
-- URL 상태 `as=ai` 로 공유 가능(기존 `as=all` 과 같은 자리).
-
-### 4-3. 산출물
-
-`build_data.py` outputs 에 `ai_issues.json`, `ai_news-manifest.json`(+shards), `meta.ai{total,last_14d_daily_avg,mode}`. today.json 의 원칙대로 **이미 지은 레코드에서 잘라 담기만** 한다.
-
-텔레그램·푸시 발송은 하지 않는다(요청에 없음).
+`archiveScope` 세그먼트에 `해외 AI` 추가(`as=ai`). 조회 대상만 `ai_issues.json` 으로 바뀌고 기간·주제·근거 구성·검색어·정렬·`archiveIssueMatches` 는 그대로. 지역 필터는 `해외` 고정(숨김). 주제 셀렉트에 적용영역 8종을 추가 노출.
 
 ---
 
-## 5. 단계안
+## 5. 소소한 결정 (D11 — 검토자가 정함)
+
+| 항목 | 결정 | 이유 |
+|---|---|---|
+| 적용영역 라벨 | 운영·정비 / 검사·진단 / 인허가·규제 / 설계·엔지니어링 / 핵연료 / 해체 / 안전조치·보안 / 인력·거버넌스 (8) | 한수원 부서 구분과 가깝고 칩 한 줄에 들어간다 |
+| 성숙도 라벨 | 연구 / 시범 / 발표 / 계약 / 실적용 / 규제 (6) | 점수 가중과 1:1 |
+| 탭 노출 게이트 | 누적 사건 20건 | 2~3주 분량. 그 전엔 "탭을 열었는데 몇 줄"이 된다 |
+| 관련 이슈 교차 링크 | 같은 기사 hash 를 공유할 때만 1줄 | 제목 유사도로 잇지 않는다(이 저장소의 오병합 교훈) |
+| 사람 교정 경로 | `admin_overrides` 에 `ai_include`·`ai_exclude` kind 를 **1단계부터** | D5 경계는 판정이 틀릴 자리다. 교정 경로가 없으면 틀린 것이 DB 에 굳는다 |
+| 검수 큐 | 이슈 매칭 검수 후보(`review_candidates`)는 레인별로 분리 | 메인 콘솔 큐에 AI 후보가 섞이면 운영자가 두 기준으로 판단해야 한다 |
+| 발송 | 텔레그램·푸시 없음 | 요청에 없음. 데이터가 쌓인 뒤 결정 |
+| 근거 배지 | 레인별로 기준을 낮추지 않는다 | 단일 출처·벤더 PR 이 많은 것은 사실이고 그게 보여야 한다 |
+
+---
+
+## 6. 단계안
 
 | 단계 | 내용 | 코드 | 판단 |
 |---|---|---|---|
-| **0. 기준 고정 + gold** | §2-3 기준으로 아카이브 3개월 후보 ~300건에서 **손라벨 50~80건**(in/out·exclude_reason·D5 경계 사례). 판정 프롬프트 초안을 gold 로 평가 | 로컬 스크립트만 | 정밀도·재현율. 경계 확정 |
-| **1. 레인 + 섀도** | `lane` 소스 속성, 프리필터·판정 모듈, `ai_archive/`·`ai_state.json`·`ai_judgments.json`, 전용 피드 등록, 아카이브 3개월 **소급 1회**(메인 `sent` 가 막은 과거분 복구). **화면 없음.** 운영 요약(📋)에 "AI 레인: 원시 n · 프리필터 n · 통과 n · 사건 n" 한 줄 | 있음 | **2주 관측** → D3 분기 데이터 |
-| **2. 이슈 + 화면** | 같은 함수로 `ai_issues.json`·`ai_issue_ledger.json`, 「해외 AI」탭(상단+하단, 게이트, 날짜 구분바, 칩), 상세 조회 레인화, 탐색 `해외 AI` 범위, 모드 스위치 | 있음 | 누적 20건에 자동 노출 |
-| **3. 보강** | 엔티티 등록, 월별 shard, (요청 시) 주간 요약·발송 | 선택 | 데이터 보고 결정 |
-
-0단계는 코드 없이 지금 가능하고, 그 결과가 1단계의 프롬프트와 테스트 fixture 가 된다.
+| **0. 기준 고정 + gold** | 아카이브 3개월 후보 ~300건에서 손라벨 50~80건(in/out·exclude_reason·D5 경계). 판정 프롬프트 초안 평가 | 로컬 스크립트 | 정밀도·재현율 |
+| **1. 레인 + 섀도** | `lane` 소스 속성, 프리필터·판정·작성 모듈, `ai_archive/`·`ai_state.json`·`ai_judgments.json`, 전용 피드, 소급 1회, `ai_include/exclude`. **화면 없음.** 운영 요약 한 줄 | 있음 | **2주 관측** — 사건/일, 벤더 비중, 오병합률 |
+| **2. 회차 + 이슈 + 화면** | 회차 마감 스텝·AI 점수, 같은 함수로 `ai_issues.json`·원장, 「해외 AI」탭, 상세 레인화, 탐색 범위 | 있음 | 누적 20건 자동 노출 |
+| **3. 보강** | 흐름 탭 "해외 AI" 소절, 주간 판세 한 단락, 엔티티 등록, 월별 shard | 선택 | §7 |
 
 ---
 
-## 6. 리스크
+## 7. 독립 재검토 — 다르게 보는 것과 개선 제안
 
-- **재현율 구멍**: ① AI 가 본문에만 있는 기사 — 전용 검색 피드(Google 은 본문 색인)가 메움. ② 메인 `sent` 가 이미 막은 과거분 — 1단계 소급 1회.
-- **벤더 편중**: Atomic Canyon·Nuclearn 발표 반복. `maturity`·`actor_type` + 의미 그룹핑으로 "같은 제품의 n번째 고객"이 n행이 되지 않게. 그래도 많으면 성숙도 기본 필터를 `실적용·계약·규제`.
-- **근거 배지가 약하게 나온다**: 이 분야는 단일 매체·벤더 PR 이 많아 "단일 출처·확인 중"이 다수일 것. 배지 기준을 레인별로 낮추지 **않는다** — 근거 구성은 사실이고, 그것이 보이는 게 맞다.
-- **이슈 묶기 오병합**: 같은 벤더 제품의 서로 다른 고객 발표가 한 이슈로 접힐 수 있다. 메인의 `event_stage`·관리자 `issue_split` 경로가 그대로 쓰이므로 콘솔 교정이 가능하다. 1단계 관측에서 이 비율을 센다.
-- **전용 피드 잡음**: 관련도순·부정 연산자 무시 → `when:1d` + 게이트 + 판정 3중.
-- **번역 품질**: 전용 피드 기사의 `title_kr` 은 AI 판정 호출이 만든다. 메인 헤드라인 규칙을 그대로 옮기고 같은 정리기를 거친다.
+요청대로 지금까지의 방향(사용자 결정 포함)을 전제 없이 다시 봤다. 결론부터: **큰 틀(별도 레인·별도 DB·이슈 계약 재사용·해외·순수 AI)은 맞다.** 아래는 바꾸거나 더하면 좋겠다고 보는 것이다. 각각 이유와 비용을 적었다.
 
----
+### 7-1. 하루치 모드의 대가 — 그래도 하루치가 맞지만, 두 가지를 같이 가져가야 한다
 
-## 7. 남은 결정 (착수 전, 소소함)
+하루 1~3건, 0건인 날이 많은 흐름에 하루치 모드를 쓰면 "오늘 들어가면 두 줄"이 일상이 된다. 연속 스크롤이 이 문제엔 더 자연스러웠다. 그럼에도 하루치를 지지하는 이유는 ① "오늘"과 같은 읽기 습관, ② 회차 단위 중복 제거·중요도가 정확해진다는 것이다. 대신 **(a) 날짜 목록은 사건이 있는 날만**, **(b) 최근 회차가 오늘이 아니면 그 사실을 한 줄로 말하고 그 회차를 보여준다** — 이 둘이 없으면 하루치 모드는 빈 화면 모드가 된다. 양이 늘면(일 5건+) 이 걱정은 사라진다.
 
-1. 적용영역 8종·성숙도 6종의 **한국어 라벨** 확정(칩·탐색 셀렉트에 그대로 쓰인다).
-2. "관련 이슈"에서 메인 이슈로 넘어가는 링크를 둘 것인가(제안: 같은 기사 hash 를 공유할 때만 1줄).
-3. 탭 노출 게이트 수치(제안: 누적 20건) 와 모드 전환 기준 산정 창(제안: 최근 14일).
+### 7-2. "그날"은 달력 날짜가 아니라 아침 브리핑 회차여야 한다 (§4-1)
+
+사용자 결정은 "날짜 변경 시 그 날짜 내용"인데, 그 날짜의 정의를 정하지 않으면 3시간마다 바뀌는 페이지가 된다. 아침 회차에 맞추면 "오늘"과 축이 같고, 그룹핑·점수를 하루 한 번만 하면 된다. 비용은 **최대 하루 지연**(오후 기사가 다음 날 아침 회차에 실림)이다. 메인 브리핑도 같은 지연을 받아들이고 있다.
+
+### 7-3. 중요도는 메인 것을 빌리지 말 것 (§4-2)
+
+메인 `importance` 는 이 기사들에 대해 noise 를 매긴 바로 그 축이다. 전용 점수가 필요하고, 그것도 LLM 에게 "중요도"를 직접 묻지 말고 `ranking.py` 처럼 feature 하나(`adoption_significance`)만 받아 Python 이 점수를 매기는 편이 설명 가능하다.
+
+### 7-4. 공유 풀 재사용은 제목까지만 — 해석은 다시 써야 한다 (§0-5)
+
+v2·v3 는 "메인 큐레이션 결과가 있으면 재사용해 호출을 아낀다"고 했는데, noise 레코드는 `detail`·`implication`·`why_important` 가 비어 있다. 상세의 기사 내용·시사점이 비게 된다. **정정**: `title_kr` 만 재사용, 나머지는 AI 레인이 쓴다. 호출 수는 어차피 하루 몇 회다.
+
+### 7-5. 이슈 묶기 기계를 통째로 태우는 것은 과한가 — 아니다, 단 검수 큐는 가르라
+
+하루 1~3건에 임베딩·사건 정체성·검수 큐까지 도는 것은 과해 보인다. 그러나 대안(사건당 1 이슈를 손으로 만들기)은 날짜를 넘는 타임라인(같은 벤더 제품의 2호기·3호기 적용, 규제 지침 초안→확정)을 잃고, 상세의 "추가 근거"가 영영 비게 된다. 함수가 입력 주입을 이미 받으므로 비용은 작다. 유일한 부작용은 **관리자 검수 큐에 AI 후보가 섞이는 것**이라 레인별로 가른다(§5).
+
+### 7-6. 측정 없이 화면을 짓지 말 것 — 1단계 섀도 2주는 생략 불가
+
+모든 건수가 추정이다. 전용 Google News 질의가 하루 60건을 돌려주는지 6건인지, 그중 벤더 PR 이 7할인지 3할인지에 따라 점수 가중·게이트·칩 구성이 달라진다. 화면(2단계)을 먼저 지으면 두 번 짓게 된다.
+
+### 7-7. 더하면 좋은 것 (3단계, 저비용)
+
+- **흐름 탭에 "해외 AI" 소절**: 적용영역·국가·성숙도별 주간 건수. 데이터가 이미 통제 태그라 `trend.json` 집계에 한 묶음 더하는 수준. 이 탭의 존재 이유("동향")에 가장 직접적이다.
+- **주간 판세에 "해외 AI 한 주" 한 단락**: 사용자의 업무가 동향 보고라면 매일 보는 탭보다 금요일 한 단락이 더 쓰일 수 있다. `weekly_bot` 에 섹션 하나.
+- **국내 비교는 스위치 하나로 켤 수 있게 설계해 둔다**: 판정이 `country` 를 내고 `domestic` 은 제외 사유로 캐시에 남으므로, 나중에 "한수원 AI 사례를 참고로"가 필요해지면 DB 재구축 없이 필터만 바꾸면 된다. 지금은 D4 대로 끈다 — 결정을 바꾸자는 게 아니라 되돌릴 수 있게 짓자는 것이다.
+
+### 7-8. 바꾸지 않아도 된다고 본 것
+
+- 탭 이름 「해외 AI」· 위치(오늘 바로 뒤) — 좋다.
+- 순수 AI 범위(D5~D7) — 좁은 정의가 초기 정밀도를 지킨다. 넓히는 것은 나중에 싸고, 좁히는 것은 비싸다.
+- 별도 파일 DB — 같은 아카이브에 레인 필드를 넣는 대안은 append-only JSONL 에 뒤늦게 필드를 더하는 것이라 성립하지 않는다.
