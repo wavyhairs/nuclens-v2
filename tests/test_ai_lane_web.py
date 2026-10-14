@@ -200,3 +200,60 @@ class CommittedArchiveTests(unittest.TestCase):
                 self.assertTrue(str(r.get("title_kr") or "").strip())
                 self.assertTrue(r.get("collected_at"))
                 self.assertIn(r.get("judge"), ("gemini", "manual-claude"))
+
+
+class WeeklyDigestTests(unittest.TestCase):
+    ROWS = [row("a", "2026-10-06T03:00:00+00:00", title="도쿄전력 서류 AI", actors=("TEPCO",),
+                area="licensing_regulation", maturity="announced", sig=2, actor_type="utility"),
+            row("b", "2026-10-09T03:00:00+00:00", title="미국 원전 AI 확산", sig=3, actor_type="utility"),
+            row("c", "2026-10-08T03:00:00+00:00", title="AI 진단 웨비나", actors=("ANS",),
+                area="inspection_diagnostics", maturity="discussion", sig=0, actor_type="other"),
+            row("d", "2026-09-01T03:00:00+00:00", title="지난 달", actors=("X",))]
+
+    def test_picks_this_week_by_score(self):
+        out = web.weekly_digest("2026-10-05", "2026-10-11", self.ROWS, limit=2)
+        self.assertEqual(out["count"], 3)
+        self.assertEqual(out["articles"], 3)
+        self.assertEqual([i["title"] for i in out["items"]], ["미국 원전 AI 확산", "도쿄전력 서류 AI"])
+        self.assertEqual(out["items"][0]["country_kr"], "미국")
+        self.assertEqual(out["items"][1]["area_kr"], "인허가·규제")
+
+    def test_empty_week_is_empty(self):
+        self.assertEqual(web.weekly_digest("2026-11-02", "2026-11-08", self.ROWS), {})
+
+
+class WeeklyMessageTests(unittest.TestCase):
+    EMPTY = {"weekly_intro": "", "policy_shifts": [], "theme_moves": [], "khnp_direct": "",
+             "watchpoints": [], "report_candidates": [], "key_events": []}
+
+    def test_section_renders_only_when_present(self):
+        import weekly_bot  # noqa: PLC0415
+        now = datetime(2026, 10, 9, 17, 0, tzinfo=weekly_bot.KST)
+        without = weekly_bot.format_weekly([], dict(self.EMPTY), {}, now=now)
+        self.assertNotIn("해외 원전 AI", without)
+        section = {"count": 2, "articles": 3, "items": [
+            {"title": "미국 원전 AI 확산", "country_kr": "미국", "area_kr": "운영·정비",
+             "maturity_kr": "실적용", "vendor_claim": False},
+            {"title": "AI 제품 출시 <b>", "country_kr": "", "area_kr": "운영·정비",
+             "maturity_kr": "발표", "vendor_claim": True}]}
+        text = weekly_bot.format_weekly([], dict(self.EMPTY), {"overseas_ai": section}, now=now)
+        self.assertIn("🤖 해외 원전 AI</b> (이번 주 사건 2건)", text)
+        self.assertIn("미국 · 운영·정비 · 실적용", text)
+        self.assertIn("운영·정비 · 발표 · 벤더 발표", text)
+        self.assertIn("AI 제품 출시 &lt;b&gt;", text)  # 제목은 이스케이프한다
+
+    def test_attached_only_in_plan_not_in_deterministic_sections(self):
+        src = (ROOT / "weekly_bot.py").read_text(encoding="utf-8")
+        plan = src.split("def cmd_plan(", 1)[1].split("\ndef ", 1)[0]
+        self.assertIn('sections["overseas_ai"] = overseas_ai', plan)
+        sections_fn = src.split("def build_week_sections(", 1)[1].split("\ndef ", 1)[0]
+        self.assertNotIn("ai_lane", sections_fn)
+
+
+class TrendSectionTests(unittest.TestCase):
+    def test_flow_tab_has_ai_section_wired(self):
+        app = (ROOT / "web" / "public" / "app.js").read_text(encoding="utf-8")
+        html = (ROOT / "web" / "public" / "index.html").read_text(encoding="utf-8")
+        self.assertIn('id="trendAi"', html)
+        self.assertIn('data-go-view="ai"', html)
+        self.assertIn("renderTrendTopicFlow();\n  renderTrendAi();", app)

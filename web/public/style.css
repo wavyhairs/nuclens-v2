@@ -4354,3 +4354,14 @@ button.agenda-head[aria-expanded="true"]::after { content: "▾"; }
 @media (max-width: 520px) {
   .ai-toc-row .toc-meta-line { flex-wrap: wrap; row-gap: 4px; }
 }
+
+/* 흐름 탭 07 — 해외 원전 AI 한 달. 단일 계열 막대(한 색), 값은 글자색으로. */
+.trend-ai-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sp-5); margin-top: var(--sp-3); }
+.trend-ai-block h3 { font-size: var(--t-caption); color: var(--c-text-secondary); margin: 0 0 var(--sp-2); font-weight: 700; }
+.trend-ai-block ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.trend-ai-block li { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); align-items: center; gap: var(--sp-2); }
+.trend-ai-track { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.trend-ai-label { font-size: 13px; color: var(--c-text-secondary); text-align: right; white-space: nowrap; }
+.trend-ai-bar { display: block; flex: 0 0 auto; height: 10px; background: var(--c-chart-1); border-radius: 0 4px 4px 0; }
+.trend-ai-n { font-size: 13px; font-weight: 700; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.trend-ai .brief-more { margin-top: var(--sp-3); }

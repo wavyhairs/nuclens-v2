@@ -1116,6 +1116,22 @@ def build_week_sections(items: list[dict], now: datetime | None = None) -> dict:
         week_start=start.isoformat(), week_end=end.isoformat())
 
 
+def weekly_ai_section(now: datetime | None = None) -> dict:
+    """「해외 원전 AI」 단락 재료(ai_lane_web.weekly_digest). 판세와 같은 주 창을 쓴다.
+
+    build_week_sections 에 넣지 않는다 — 그 함수는 기사 묶음만으로 결과가 정해지는
+    결정적 코너이고 테스트가 그 계약을 잠근다. 이 단락은 다른 DB(ai_archive)를 읽으므로
+    발송 계획(cmd_plan)에서만 붙인다. 실패하면 단락만 빠진다.
+    """
+    try:
+        import ai_lane_web  # noqa: PLC0415
+        start, end = week_label(now)
+        return ai_lane_web.weekly_digest(start.isoformat(), end.isoformat())
+    except Exception as exc:  # noqa: BLE001 — 부가 단락이 주간 판세를 막으면 안 된다
+        print(f"[weekly] 해외 AI 단락 생략 — {type(exc).__name__}: {exc}")
+        return {}
+
+
 def save_weekly_report(synthesis: dict, agg: dict, items: list[dict],
                        now: datetime | None = None,
                        path: Path | None = None,
@@ -1244,6 +1260,21 @@ def format_weekly(items: list[dict], synthesis: dict | None = None,
             head = f"{html.escape(row['org'])} · " if row.get("org") else ""
             parts.append(f"• {head}<b>{html.escape(row['title'])}</b>")
             parts.append(f"  🔗 {row['url']}")
+        parts.append("")
+
+    # 해외 원전 AI — 메인 판세와 다른 기준(ai_lane)으로 고른 사건. 메인이 noise 로
+    # 버렸거나 브리핑에 못 실은 '원전 현장의 AI 활용'이 이 단락으로 주 1회 닿는다.
+    overseas_ai = sections.get("overseas_ai") or {}
+    if overseas_ai.get("items"):
+        parts.append(f"━━ <b>🤖 해외 원전 AI</b> (이번 주 사건 {overseas_ai['count']}건) ━━")
+        for row in overseas_ai["items"]:
+            parts.append(f"• <b>{html.escape(row['title'])}</b>")
+            meta = " · ".join(x for x in (row.get("country_kr"), row.get("area_kr"),
+                                          row.get("maturity_kr")) if x)
+            if row.get("vendor_claim"):
+                meta = f"{meta} · 벤더 발표" if meta else "벤더 발표"
+            if meta:
+                parts.append(f"  {html.escape(meta)}")
         parts.append("")
 
     # 예정 코너는 flag 로 꺼 둔다(weekly_sections.SHOW_WEEKLY_UPCOMING).
@@ -1380,6 +1411,9 @@ def cmd_plan(now: datetime | None = None) -> int:
         agg = build_aggregates(items)
         synthesis = batch_synthesize(items, agg)
         sections = build_week_sections(items, now)
+        overseas_ai = weekly_ai_section(now)
+        if overseas_ai:
+            sections["overseas_ai"] = overseas_ai
         message = format_weekly(items, synthesis, sections, now=now)
         automation = {
             "created_at": now.isoformat(),

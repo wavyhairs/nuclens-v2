@@ -290,3 +290,36 @@ def build_payload(rows: list[dict] | None = None, *, now: datetime | None = None
             "by_maturity": dict(Counter(i["maturity"] for i in issues).most_common()),
         },
     }
+
+
+COUNTRY_KR = {"US": "미국", "CA": "캐나다", "JP": "일본", "CN": "중국", "FR": "프랑스", "GB": "영국",
+              "SE": "스웨덴", "FI": "핀란드", "DE": "독일", "KR": "한국", "IN": "인도", "RU": "러시아",
+              "GLOBAL": "글로벌", "EU": "EU"}
+
+
+def weekly_digest(week_start: str, week_end: str, rows: list[dict] | None = None,
+                  *, limit: int = 3) -> dict:
+    """주간 판세의 「해외 원전 AI」 단락. LLM 없이 이번 주 회차의 사건을 점수순으로 고른다.
+
+    그 주에 회차가 하나도 없으면 빈 dict — 단락이 서지 않는다(수를 채우지 않는다).
+    """
+    rows = load_rows() if rows is None else rows
+    week_rows = [r for r in rows if week_start <= round_date(r) <= week_end]
+    if not week_rows:
+        return {}
+    picked = []
+    for group in group_rows(week_rows):
+        best = max(group, key=lambda r: (score(r)[0], str(r.get("pub") or "")))
+        latest = max(group, key=lambda r: round_date(r))
+        countries = [c for c in (latest.get("countries") or []) if c]
+        picked.append({
+            "title": latest.get("title_kr") or latest.get("title", ""),
+            "score": score(best)[0],
+            "country_kr": " · ".join(COUNTRY_KR.get(c, c) for c in countries[:2]),
+            "area_kr": ai_lane.LABELS_KR.get(latest.get("application_area"), ""),
+            "maturity_kr": ai_lane.LABELS_KR.get(latest.get("maturity"), ""),
+            "vendor_claim": latest.get("actor_type") in VENDOR_ACTORS
+            and latest.get("maturity") in ("announced", "contract"),
+        })
+    picked.sort(key=lambda row: -row["score"])
+    return {"count": len(picked), "articles": len(week_rows), "items": picked[:limit]}
