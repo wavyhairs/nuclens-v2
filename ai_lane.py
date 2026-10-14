@@ -42,7 +42,7 @@ import json
 import re
 from typing import Callable, Iterable
 
-PROMPT_VERSION = 2
+PROMPT_VERSION = 4
 POLICY_TASK = "ai_lane_judge"
 
 # ── 1. 프리필터 어휘 ─────────────────────────────────────────────────────────
@@ -228,6 +228,10 @@ ML 로 학습·갱신되는 디지털 트윈 / 규제기관의 AI 지침·심사
   · "원격 해체 로봇 투입", "VR 훈련 시설 개소" → 제외 robotics_only (AI 가 없거나 수식어)
   · "물리 기반 3D 시뮬레이터" → 제외 not_ai_use (ML 학습이 없는 디지털 트윈)
   · 한국 매체가 쓴 해외 사례(예: 일본 도쿄전력 AI 도입 보도) → 포함
+  · 원전 AI 가 주제인 해설·기고·인터뷰·웨비나·행사 → 포함 (maturity=discussion, adoption_significance=0)
+  · 방사성 폐기물 처리시설·핵연료 시설의 AI 적용 → 포함 (발전소가 아니어도 원자력 사업이다)
+  · 해커가 AI 로 원자력 기관을 공격 → 제외 not_ai_use (원전이 AI 를 쓴 것이 아니다)
+  · 총회·인력 프로그램·인허가 해설에서 AI 가 여러 의제 중 하나로만 언급 → 제외 not_ai_use
 
 [제외] exclude_reason 하나를 고른다.
   datacenter_power    AI 데이터센터 전력수요·전력구매계약·전력난 (AI 가 전력을 쓰는 이야기)
@@ -258,10 +262,18 @@ ML 로 학습·갱신되는 디지털 트윈 / 규제기관의 AI 지침·심사
                     2=단일 호기·단일 사업 실적용·계약 / 1=시범·발표·MOU·연구 / 0=해설·기고·행사
   countries         ISO 3166-1 alpha-2, 사업이 일어나는 나라 (예: US, JP, FR, GB, CA, CN)
 
+[포함 기사에만 쓰는 문장 — 모두 한국어. 원문에 없는 사실·수치를 만들지 말 것]
+  title_kr          30~60자 뉴스 헤드라인. `주체 + 핵심 행동` 형태. 수치는 보존하고 단계를 올려 쓰지 않는다.
+                    입력에 '한글 제목'이 있으면 그것을 다듬어 쓴다.
+  summary           한 줄 결론 1문장(80자 안팎). 누가 무엇을 했는지.
+  why_important     왜 중요한가 1문장. 해외 원전 AI 도입 흐름에서 이 사건의 의미. 근거 없으면 빈 문자열.
+  implication       시사점 1문장. 원전 운영사·규제기관이 참고할 점. 근거 없으면 빈 문자열.
+
 [출력] JSON 하나. 다른 텍스트·코드펜스 금지.
 {"items": [{"idx": 0, "in_scope": true, "exclude_reason": "none",
   "application_area": "...", "ai_tech": "...", "actor_type": "...", "actor_names": ["..."],
-  "maturity": "...", "adoption_significance": 0, "countries": ["US"], "reason": "30자 이내 근거"}]}
+  "maturity": "...", "adoption_significance": 0, "countries": ["US"], "reason": "30자 이내 근거",
+  "title_kr": "...", "summary": "...", "why_important": "...", "implication": "..."}]}
 제외 기사는 {"idx": 3, "in_scope": false, "exclude_reason": "...", "reason": "..."} 만 쓴다.
 모든 idx 가 정확히 한 번씩 등장해야 한다. 확신이 없으면 제외 쪽으로 판정한다."""
 
@@ -278,8 +290,9 @@ def request_lines(article: dict, idx: int) -> str:
         lines.append(f"한글 제목: {_clip(article.get('title_kr'), 160)}")
     if article.get("summary"):
         lines.append(f"요약: {_clip(article.get('summary'), 400)}")
-    if article.get("detail"):
-        lines.append(f"본문 발췌: {_clip(article.get('detail'), 600)}")
+    excerpt = article.get("detail") or article.get("body_excerpt")
+    if excerpt:
+        lines.append(f"본문 발췌: {_clip(excerpt, 900)}")
     lines.append(f"출처: {_clip(article.get('publisher') or article.get('domain'), 60)}")
     return "\n".join(lines)
 
@@ -326,6 +339,10 @@ def normalize_judgment(item: dict) -> dict:
         "adoption_significance": significance,
         "countries": countries,
         "reason": _clip(item.get("reason"), 60),
+        "title_kr": _clip(item.get("title_kr"), 90),
+        "summary": _clip(item.get("summary"), 220),
+        "why_important": _clip(item.get("why_important"), 220),
+        "implication": _clip(item.get("implication"), 220),
     }
 
 
@@ -361,8 +378,9 @@ def judge(articles: list[dict], *, call: Callable | None = None,
 
         def call(system: str, user: str):  # type: ignore[misc]
             return gemini_client.call_json(
-                system, user, temperature=0.1, max_output_tokens=4096,
-                model=profile.model(), label=POLICY_TASK, **profile.reasoning_kwargs())
+                system, user, temperature=0.1,
+                max_output_tokens=8192, model=profile.model(), label=POLICY_TASK,
+                **profile.reasoning_kwargs())
 
     results: list[dict | None] = []
     for start in range(0, len(articles), batch_size):

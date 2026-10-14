@@ -52,7 +52,8 @@ python tools/ai_lane_stage0.py evaluate --pred eval_artifacts/ai_lane/pred_judge
   논문 자체 · 군사 · AI 적용 아님 · 원전 아님.
 - `confidence: low` 는 지침으로 가르기 어려웠던 경계 사례다. `note` 에 이유를 적었다.
 
-**이 gold 는 Claude 가 지침에 따라 매긴 초안이다.** 확신 낮음 20건은 사람이 검토해야 한다.
+**이 gold 는 Claude 가 지침에 따라 매겼다.** 처음 확신 낮음이던 20건은 2026-10-14 검토로 확정했다
+(`note` 가 "검토 확정"으로 시작). 해설·기고·웨비나는 사용자 결정으로 포함한다.
 `eval_artifacts/event_judgments_claude.jsonl` 과 같은 성격이다.
 
 ## 결과 (2026-10-14)
@@ -61,7 +62,7 @@ python tools/ai_lane_stage0.py evaluate --pred eval_artifacts/ai_lane/pred_judge
 |---|---|
 | 아카이브 | 24,143건 · 90일(2026-07-17 ~ 10-14) |
 | 프리필터 통과 | 1,814건 |
-| gold | 226건 — 포함 25 · 제외 201 · 확신 낮음 20 |
+| gold | 226건 — 포함 25 · 제외 201 (경계 20건 검토 확정) |
 | 90일 진짜 건수 추정 | 25건 → 주 1.9건 · 하루 0.28건 (지금 수집원 기준의 하한) |
 | 그중 메인이 noise 로 버린 것 | 6 / 25 |
 | 그중 아침 브리핑에 실린 것 | 6 / 25 |

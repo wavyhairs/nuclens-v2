@@ -401,6 +401,10 @@ jobs:
           # 콘솔 판정. 커밋해야 git 이 계속 DB 이고, 판정 하나하나가 이력에 남는다 —
           # KV 만 진실이면 "언제 누가 이 키워드를 지웠나"를 되짚을 곳이 없다.
           if [ -f admin_overrides.json ]; then git add admin_overrides.json; fi
+          # 해외 AI 레인 — 판정 통과 기사 DB 와 판정 이력. 커밋 안 하면 같은 기사를
+          # 회차마다 다시 판정하고, 쌓은 기사가 러너와 함께 사라진다.
+          if [ -d ai_archive ]; then git add ai_archive/; fi
+          if [ -f ai_state.json ]; then git add ai_state.json; fi
           # schedule 미생성·workflow 실패·성공 0건을 slot별로 구분하는 durable log.
           git add crawl_runs.json
           git diff --cached --quiet || git commit -m "chore: update bot state"
