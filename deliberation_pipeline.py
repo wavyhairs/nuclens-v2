@@ -94,6 +94,30 @@ GNEWS_SOURCES: list[dict] = [
 ]
 
 
+# 기간 백필용 Google 뉴스 질의 — when: 대신 after:/before: 로 기간을 자른다. 네이버 검색 API 는 기간 지정이
+# 없고 최신순 1,000건까지만 주므로, 「원전 공론화」처럼 하루 수십 건 나오는 질의는 한 달 전까지 닿지 못한다
+# (crawl #681: 전체 32,337건). 그 공백을 기간별 Google 질의가 메운다. 주제 질의는 기사가 몰리는 주제라 3일씩,
+# 사설·지역은 7일씩 자른다(Google 뉴스 RSS 는 질의당 100건 안팎을 준다).
+BACKFILL_GNEWS: tuple[tuple[str, str, int], ...] = (
+    ("주제", "(원전 OR 원자력) (공론화 OR 공론화위원회 OR 시민참여단 OR 숙의)", 3),
+    ("사설", "(사설 OR 칼럼 OR 기고 OR 시론) (원전 OR 원자력) 공론화", 7),
+    ("지역", "(영덕 OR 울진 OR 삼척 OR 경주 OR 기장 OR 영광 OR 울주) 원전 공론화", 7),
+)
+
+
+def gnews_range_sources(since: datetime, until: datetime) -> list[dict]:
+    """[since, until) 을 질의별 간격으로 잘라 Google 뉴스 KR 피드 목록을 만든다."""
+    out: list[dict] = []
+    for label, query, step in BACKFILL_GNEWS:
+        start = since.date()
+        while start < until.date():
+            end = min(start + timedelta(days=step), until.date() + timedelta(days=1))
+            out.append({"name": f"공론화·Google 백필 {label} {start.isoformat()}", "lang": "ko",
+                        "url": _gnews(f"{query} after:{start.isoformat()} before:{end.isoformat()}")})
+            start = end
+    return out
+
+
 # ── 상태 ─────────────────────────────────────────────────────────────────────
 def load_state(path: Path = STATE_FILE) -> dict:
     state = shared.load_state(path)
@@ -187,14 +211,15 @@ def naver_item(item: dict, hasher: Callable[[str], str], query: str, *, now_iso:
 
 
 def collect_naver(search: Callable[..., dict], hasher: Callable[[str], str], *, now: datetime,
-                  queries: Iterable[str] = NAVER_QUERIES) -> tuple[list[dict], dict[str, dict]]:
+                  queries: Iterable[str] = NAVER_QUERIES,
+                  window: timedelta = WINDOW) -> tuple[list[dict], dict[str, dict]]:
     """질의마다 3일 창을 다 덮을 때까지 100건씩 페이지를 넘긴다.
 
     ``search(query, display=, start=)`` 은 네이버 응답 JSON 전체({"total", "items"})를 돌려준다.
     통계의 ``total`` 은 창과 무관한 전체 건수, ``covered`` 는 창의 끝까지 닿았는지다 — 닿지 못하면
     (상한 1,000건에 걸리면) 놓침이 생긴 것이라 로그에 ✗ 로 남는다.
     """
-    cutoff = now - WINDOW
+    cutoff = now - window
     now_iso = now.isoformat()
     out: list[dict] = []
     counts: dict[str, dict] = {}
@@ -350,9 +375,19 @@ def run(main_records: list[dict], *, collected: list[dict] | None = None,
         naver: Callable[..., dict] | None = None, fetch: Callable[[str, str], list[dict]] | None = None,
         hasher: Callable[[str], str] | None = None, judge_call: Callable | None = None, model: str = "",
         now: datetime | None = None, state_file: Path = STATE_FILE,
-        archive_dir: Path = ARCHIVE_DIR) -> dict:
-    """한 회차. 반환값은 운영 로그용 통계."""
+        archive_dir: Path = ARCHIVE_DIR, since: datetime | None = None,
+        max_judge: int | None = None) -> dict:
+    """한 회차. 반환값은 운영 로그용 통계.
+
+    ``since`` 를 주면 **기간 백필**이다(tools/deliberation_backfill.py --research). 네이버는 since 까지
+    페이지를 넘기고, Google 은 기간별 질의(gnews_range_sources)로 바꾸며, 기사의 수집 시각을 발행
+    시각으로 찍는다 — 그래야 9월 기사가 오늘 회차가 아니라 그 무렵의 아침 브리핑 회차에 선다.
+    ``max_judge`` 는 판정 상한(기본은 정기 회차 상한). 넘친 것은 정기 회차처럼 이월된다.
+    """
     now = now or datetime.now(timezone.utc)
+    limit = MAX_JUDGE_PER_RUN if max_judge is None else max_judge
+    window = (now - since) if since is not None else WINDOW
+    sources = gnews_range_sources(since, now) if since is not None else GNEWS_SOURCES
     judged_at = now.isoformat()
     state = load_state(state_file)
     archive = shared.load_archive(archive_dir)
@@ -365,15 +400,19 @@ def run(main_records: list[dict], *, collected: list[dict] | None = None,
     feeds: dict[str, dict] = {}
     dedicated: list[dict] = []
     if naver is not None and hasher is not None:
-        items, counts = collect_naver(naver, hasher, now=now)
+        items, counts = collect_naver(naver, hasher, now=now, window=window)
         dedicated.extend(items)
         feeds.update(counts)
     if fetch is not None and hasher is not None:
-        items, counts = shared.collect_feeds(fetch, hasher, now=now, sources=GNEWS_SOURCES)
+        items, counts = shared.collect_feeds(fetch, hasher, now=now, sources=sources,
+                                             lookback=window if since is not None else None)
         for item in items:
             item["collected_at"] = judged_at
         dedicated.extend(items)
         feeds.update(counts)
+    if since is not None:
+        for item in dedicated:
+            item["collected_at"] = item.get("pub") or judged_at
 
     pool = build_pool(main_records, collected or [], dedicated, (state.get("backlog") or {}).values(),
                       now_iso=judged_at)
@@ -458,8 +497,8 @@ def run(main_records: list[dict], *, collected: list[dict] | None = None,
 
     for article in candidates:
         feeds.setdefault(feed_of(article), shared._feed_stat())["candidates"] += 1
-    batch = candidates[:MAX_JUDGE_PER_RUN]
-    for article in candidates[MAX_JUDGE_PER_RUN:]:
+    batch = candidates[:limit]
+    for article in candidates[limit:]:
         backlog[article["hash"]] = _queued(article, judged_at)
     judge_batch(batch)
 
@@ -494,7 +533,7 @@ def run(main_records: list[dict], *, collected: list[dict] | None = None,
             stats["prefilter_out"] += 1
             continue
         second.append(article)
-    room = max(0, MAX_JUDGE_PER_RUN - len(batch))
+    room = max(0, limit - len(batch))
     for article in second[room:]:
         backlog[article["hash"]] = _queued(article, judged_at)
     for article in second:

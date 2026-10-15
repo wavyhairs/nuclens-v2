@@ -2,6 +2,13 @@
 
     python tools/deliberation_backfill.py            # deliberation_archive/ · deliberation_state.json 갱신
     python tools/deliberation_backfill.py --dry-run
+    python tools/deliberation_backfill.py --research --since 2026-09-01 [--max-judge 480]
+
+``--research`` 는 **기사 원천을 다시 검색**하는 기간 백필이다(아래 1~3 은 메인 아카이브에서 옮기는 것).
+지금 레인의 수집·판정을 그대로 쓴다 — 네이버 전용 질의 29개를 since 까지 페이지 넘김, Google 뉴스 KR 을
+기간별(after:/before:)로 잘라 검색, 공론화∧원전 프리필터, Gemini 판정(확신 없으면 포함). 이미 판정한
+기사는 다시 묻지 않는다. 판정 상한을 넘은 후보는 정기 회차처럼 이월돼 다음 크롤들이 이어서 판정한다.
+네이버·Gemini 키가 필요해 Actions(`.github/workflows/deliberation-backfill.yml`)에서 돈다.
 
 무엇을 넣나
   1. gold 포함 140건(메인 아카이브 2026-09-01~10-15) — 판정자 ``manual-claude``. 사실 문장은 메인
@@ -17,7 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
@@ -142,10 +149,40 @@ def build(now: datetime) -> tuple[list[dict], dict[str, dict]]:
     return records, judged
 
 
+KST = timezone(timedelta(hours=9))
+
+
+def research(since: str, max_judge: int) -> dict:
+    """원천 재검색 백필. news_bot 은 여기서만 import 한다(네이버 검색·RSS·해시 함수)."""
+    import gemini_client  # noqa: PLC0415
+    import llm_policy  # noqa: PLC0415
+    import news_bot  # noqa: PLC0415
+
+    if not gemini_client.is_available():
+        sys.exit("ERROR: Gemini 키가 없다 — Actions 의 deliberation-backfill 워크플로에서 실행할 것")
+    start = datetime.fromisoformat(since).replace(tzinfo=KST)
+    stats = pipe.run([], naver=news_bot.search_naver_page, fetch=news_bot.fetch_rss, hasher=news_bot.url_hash,
+                     model=llm_policy.profile(lane.POLICY_TASK).model(), since=start, max_judge=max_judge)
+    print(pipe.format_stats(stats))
+    print(f"[공론화 백필] {since} 부터 · 판정 {stats.get('judged', 0)} · 포함 {stats.get('included', 0)}"
+          f" · 이월 {stats.get('deferred', 0)}(다음 크롤들이 이어서 판정)")
+    try:
+        print(gemini_client.format_call_stats())
+    except Exception as exc:  # noqa: BLE001 — 계측이 본 작업을 죽이면 안 된다
+        print(f"[gemini] 호출 통계 실패: {exc}")
+    return stats
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--research", action="store_true", help="기사 원천을 다시 검색하는 기간 백필")
+    parser.add_argument("--since", default="2026-09-01")
+    parser.add_argument("--max-judge", type=int, default=480)
     args = parser.parse_args()
+    if args.research:
+        research(args.since, args.max_judge)
+        return
     now = datetime.now(timezone.utc)
     records, judged = build(now)
     existing = {r["hash"] for r in pipe.shared.load_archive(pipe.ARCHIVE_DIR)}
