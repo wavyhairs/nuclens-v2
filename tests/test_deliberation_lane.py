@@ -82,6 +82,21 @@ class PrefilterTests(unittest.TestCase):
         self.assertEqual(sum(1 for g in gold if g["in_scope"]), 140)
         self.assertTrue(all(g.get("event_key") for g in gold if g["in_scope"]))
 
+    def test_listing_titles_never_reach_the_judge(self):
+        # 백필 실측(2026-10-15): 일정·인사·사설 모음이 본문 한 줄 때문에 포함으로 올라왔다.
+        for title in ("[오늘의 주요일정·10일] 한성숙 총리 비상경제점검회의", "[인사] 기후에너지환경부(국과장급 겸임)",
+                      "[전국 주요 신문 사설](23일 조간)", "[산업부·기후부 장차관 일정(2026년 9월 22일)]",
+                      "[오늘의 신문] 서울 월세 100만원대 확산"):
+            self.assertFalse(lane.prefilter({"title": title, "description": "신규 원전 공론화 착수"})["passed"], title)
+        for title in ("[사설] 원전 공론화, 숫자 놀음 안 된다", "[2026 국감] 12차 전기본 도마에", "[포토] 원전 공론화위 출범"):
+            self.assertTrue(lane.prefilter({"title": title, "description": "신규 원전 공론화 착수"})["passed"], title)
+
+    def test_title_on_topic(self):
+        self.assertTrue(lane.title_on_topic("‘원전 역할’ 국민의견 석달간 수렴한다"))
+        self.assertTrue(lane.title_on_topic("시민참여단 300명 2박3일 토론"))
+        self.assertFalse(lane.title_on_topic('韓총리 "檢개혁 마무리 단계…총리실 경찰개혁위 신설"'))
+        self.assertFalse(lane.title_on_topic("기원전 아테네의 민회"))
+
     def test_editorial_title(self):
         self.assertTrue(lane.is_editorial_title("[사설] 원전 공론화, 숫자 놀음 안 된다"))
         self.assertTrue(lane.is_editorial_title("【기고】 숙의의 조건"))
@@ -203,6 +218,30 @@ class RunTests(unittest.TestCase):
         row = self.archived()[0]
         self.assertEqual((row["lane"], row["summary"], row["why_important"]), ("deliberation", "메인 요약", "왜"))
         self.assertEqual((row["stage"], row["event_key"], row["significance"]), ("agenda_design", "원전 공론화 의제 확정", 3))
+
+    def test_off_title_inclusion_is_review_and_keeps_its_own_title(self):
+        # 백필 실측(2026-10-15): 국무회의 기사 「경찰개혁위 신설」이 본문의 원전 공론화 한 단락으로 포함됐고,
+        # 판정기는 제목을 「국무회의서 원전 공론화 추진계획 논의」로 바꿔 적었다.
+        def call(system, user):
+            items = []
+            for block in user.split("\n\n"):
+                m = _HEAD.match(block.split("\n", 1)[0])
+                if m:
+                    items.append({"idx": int(m.group(1)), "in_scope": True, "exclude_reason": "none",
+                                  "stage": "pre_launch", "actor_type": "government", "actor_names": [],
+                                  "stance": "neutral", "article_type": "report", "significance": 2,
+                                  "event_key": "원전 공론화 추진 결정", "event_date": "", "confidence": "high",
+                                  "reason": "r", "title_kr": "정부, 국무회의서 원전 공론화 추진계획 논의",
+                                  "summary": "s", "why_important": "", "implication": ""})
+            return {"items": items}
+        police = {"hash": "p1", "title": '韓총리 "총리실에 경찰개혁위 신설"', "link": "https://x.test/p1", "pub": NOW,
+                  "description": "국무회의에서는 신규 원전 공론화 추진계획도 보고됐다"}
+        plan = {"hash": "p2", "title": "정부, 3개월간 원전 공론화 착수", "link": "https://y.test/p2", "pub": NOW}
+        stats = self.run_lane([], call, collected=[police, plan])
+        self.assertEqual(stats["included"], 2)
+        rows = {r["hash"]: r for r in self.archived()}
+        self.assertEqual((rows["p1"]["title_kr"], rows["p1"]["confidence"]), (police["title"], "low"))
+        self.assertEqual((rows["p2"]["title_kr"], rows["p2"]["confidence"]), (plan["title"], "high"))
 
     def test_folded_articles_inherit_without_a_call(self):
         calls = []

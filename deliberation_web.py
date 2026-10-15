@@ -83,7 +83,12 @@ def _publisher(row: dict) -> str:
 
 
 def group_rows(rows: list[dict]) -> list[list[dict]]:
-    """기사 → 사건 묶음. 수집 순서로 훑으며 앞선 묶음에 붙일 수 있으면 붙인다."""
+    """기사 → 사건 묶음. 수집 순서로 훑으며 앞선 묶음에 붙일 수 있으면 붙인다.
+
+    창은 묶음의 **첫날**부터 잰다. 마지막 날부터 재면 같은 사건 이름이 엿새마다 한 번씩만 나와도
+    끝없이 이어 붙는다 — 원천 재검색 백필(2026-10-15) 실측: 「기후부 신규 원전 규모 공론화 거쳐 결정
+    방침」 하나가 9/20~10/13 기사 257건을 삼켰다. 접힌 기사는 창과 상관없이 대표를 따라간다.
+    """
     groups: list[dict] = []
     home_of: dict[str, dict] = {}
     for row in sorted(rows, key=lambda r: (str(r.get("collected_at") or ""), r.get("origin") == "folded",
@@ -94,20 +99,19 @@ def group_rows(rows: list[dict]) -> list[list[dict]]:
         home = home_of.get(str(row.get("folded_into") or ""))
         if home is None:
             for group in reversed(groups):
-                if (day - group["last_day"]).days > GROUP_WINDOW_DAYS:
+                if (day - group["first_day"]).days > GROUP_WINDOW_DAYS:
                     continue
                 if (key and key in group["keys"]) or (tkey and tkey in group["titles"]):
                     home = group
                     break
         if home is None:
-            home = {"rows": [], "keys": set(), "titles": set(), "last_day": day}
+            home = {"rows": [], "keys": set(), "titles": set(), "first_day": day}
             groups.append(home)
         home["rows"].append(row)
         if key:
             home["keys"].add(key)
         if tkey:
             home["titles"].add(tkey)
-        home["last_day"] = max(home["last_day"], day)
         home_of[row["hash"]] = home
     return [group["rows"] for group in groups]
 
@@ -175,7 +179,10 @@ def build_issue(rows: list[dict], *, today: str, verify: Callable[[list[dict]], 
     reps = {day: min(members, key=_strength) for day, members in by_round.items()}
     rep_hashes = {rep["hash"] for rep in reps.values()}
     latest_day = max(by_round)
-    latest = reps[latest_day]
+    # 제목·요약은 기사가 가장 많이 나온 회차의 대표에서 — 사건이 알려진 날이다. 마지막 회차 대표는
+    # 뒤늦게 사건 이름을 빌려 단 곁가지 기사일 때가 많다(백필 실측: 국감 기사가 「추진 결정」의 제목이 됐다).
+    peak_day = max(by_round, key=lambda day: (len(by_round[day]), day))
+    headline = reps[peak_day]
     related = [_article_view(row, "card" if row["hash"] in rep_hashes else "evidence") for row in rows]
     related.sort(key=lambda a: (a["article_date"], a["member_role"] == "card"), reverse=True)
     verification = verify(related) if verify else {}
@@ -195,13 +202,13 @@ def build_issue(rows: list[dict], *, today: str, verify: Callable[[list[dict]], 
     return {
         "issue_id": _issue_id(rows[0]),
         "lane": "deliberation",
-        "title": latest.get("title_kr") or latest.get("title", ""),
-        "headline_display": latest.get("title_kr") or latest.get("title", ""),
-        "event_key": latest.get("event_key", ""),
-        "summary": latest.get("summary") or pick("summary"),
+        "title": headline.get("title_kr") or headline.get("title", ""),
+        "headline_display": headline.get("title_kr") or headline.get("title", ""),
+        "event_key": headline.get("event_key", ""),
+        "summary": headline.get("summary") or pick("summary"),
         "detail": (detail_row or {}).get("detail", ""),
         "detail_source": ((detail_row or {}).get("title_kr", "")
-                          if detail_row and detail_row is not latest else ""),
+                          if detail_row and detail_row is not headline else ""),
         "why_important": pick("why_important"),
         "implication": pick("implication"),
         "open_question": "",
@@ -225,14 +232,14 @@ def build_issue(rows: list[dict], *, today: str, verify: Callable[[list[dict]], 
         "story_outlet_count": len({a["publisher"].lower() for a in related if a["publisher"]}),
         "related_articles": related,
         "verification": verification,
-        "stage": latest.get("stage", ""),
-        "actor_type": latest.get("actor_type", ""),
+        "stage": headline.get("stage", ""),
+        "actor_type": headline.get("actor_type", ""),
         "actor_names": actor_names,
         "actor_types": [k for k, _ in Counter(r.get("actor_type") for r in rows if r.get("actor_type")).most_common()],
-        "stance": latest.get("stance", ""),
+        "stance": headline.get("stance", ""),
         "stance_counts": dict(Counter(r.get("stance") for r in rows if r.get("stance")).most_common()),
-        "article_type": latest.get("article_type", ""),
-        "editorial": latest.get("article_type") == "editorial",
+        "article_type": headline.get("article_type", ""),
+        "editorial": headline.get("article_type") == "editorial",
         "significance": max(int(r.get("significance") or 0) for r in rows),
         # 모든 기사가 '검토'(확신 낮음)면 사건 자체가 범위 경계에 있다 — 화면이 표시한다.
         "review": all(r.get("confidence") == "low" for r in rows),

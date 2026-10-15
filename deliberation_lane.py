@@ -61,6 +61,12 @@ HINT_TERMS: dict[str, tuple[str, ...]] = {
 _EDITORIAL = re.compile(r"^\s*[\[【(〈<]?\s*(사설|칼럼|기고|시론|논설|오피니언|데스크|기자수첩|기자의\s*눈|"
                         r"특별기고|아침을\s*열며|여적|만물상|분수대)")
 
+# 목록 기사 — 일정·인사·부고·사설 모음은 본문 한 줄에 공론화가 걸려도 기사가 아니다. 프리필터에서 뺀다.
+# 백필 실측(2026-10-15, 9/1~): 「[오늘의 주요일정]」「[인사] 기후에너지환경부」「[전국 주요 신문 사설]」
+# 「[산업부·기후부 장차관 일정]」이 Gemini 판정에서 포함으로 올라왔다. 사설 모음의 사설은 따로 잡힌다.
+_LISTING = re.compile(r"^\s*[\[【]\s*(?:오늘의\s*)?(?:주요\s*)?일정|^\s*[\[【]\s*(?:인사|부고|동정)\s*[\]】]"
+                      r"|^\s*[\[【][^\]】]*(?:주요\s*일정|장차관\s*일정|주요\s*신문\s*사설|오늘의\s*(?:신문|사설))")
+
 TEXT_FIELDS = ("title", "title_kr", "summary", "detail", "description")
 
 
@@ -81,6 +87,16 @@ def is_editorial_title(title: object) -> bool:
     return bool(_EDITORIAL.match(str(title or "")))
 
 
+def is_listing_title(title: object) -> bool:
+    return bool(_LISTING.search(str(title or "")))
+
+
+def title_on_topic(title: object) -> bool:
+    """제목에 공론화 어휘나 원전 어휘가 하나라도 있나. 없으면 본문 한 단락에서 걸린 기사일 수 있다."""
+    text = _HOMONYM.sub(" ", str(title or ""))
+    return bool(_terms(text, DELIB_TERMS) or _terms(text, NUCLEAR_TERMS))
+
+
 def hints(text: str) -> list[str]:
     return [name for name, phrases in HINT_TERMS.items() if _terms(text, phrases)]
 
@@ -90,7 +106,7 @@ def prefilter(article: dict) -> dict:
     text = _HOMONYM.sub(" ", article_text(article))
     delib = _terms(text, DELIB_TERMS)
     nuclear = _terms(text, NUCLEAR_TERMS)
-    passed = bool(delib and nuclear)
+    passed = bool(delib and nuclear) and not is_listing_title(article.get("title"))
     return {"passed": passed, "delib_terms": delib, "nuclear_terms": nuclear,
             "hints": hints(text) if passed else []}
 
