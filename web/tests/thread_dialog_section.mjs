@@ -158,6 +158,7 @@ function build(state) {
     ${extract("aiIssues")}
     ${extract("isAiIssueId")}
     ${extract("aiIssueById")}
+    ${extract("isDlIssueId")}
     ${extract("currentIssueById")}
     ${extract("longTermVisible")}
     ${extract("longTermThreads")}

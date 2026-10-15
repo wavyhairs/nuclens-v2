@@ -185,6 +185,9 @@ _PROFILES: dict[str, TaskProfile] = {
     # 해외 AI 레인 판정(ai_lane). 메인 큐레이션과 **다른 질문**(원전의 AI 활용인가)이라
     # 프롬프트·캐시가 따로지만, 하루 몇 회의 짧은 분류라 같은 기본 버킷을 쓴다.
     "ai_lane_judge": _entry(BULK_CURATION, _main_model),
+    # 신규원전 공론화 레인 판정(deliberation_lane). 질문이 다르고(이 공론화 기사인가, 재현율 우선)
+    # 프롬프트·상태가 따로지만, 짧은 분류라 같은 기본 버킷을 쓴다.
+    "deliberation_judge": _entry(BULK_CURATION, _main_model),
 }
 
 

@@ -405,6 +405,9 @@ jobs:
           # 회차마다 다시 판정하고, 쌓은 기사가 러너와 함께 사라진다.
           if [ -d ai_archive ]; then git add ai_archive/; fi
           if [ -f ai_state.json ]; then git add ai_state.json; fi
+          # 신규원전 공론화 레인 — 같은 이유. 상태 파일에는 판정 한도로 밀린 이월 후보도 있다.
+          if [ -d deliberation_archive ]; then git add deliberation_archive/; fi
+          if [ -f deliberation_state.json ]; then git add deliberation_state.json; fi
           # schedule 미생성·workflow 실패·성공 0건을 slot별로 구분하는 durable log.
           git add crawl_runs.json
           git diff --cached --quiet || git commit -m "chore: update bot state"

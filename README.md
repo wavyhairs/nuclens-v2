@@ -56,6 +56,8 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `functions/admin/api/overrides.js` | 콘솔의 쓰기 창구 — 사람 판정을 KV 에 적는다(종류 화이트리스트·교차출처 확인·낙관적 동시성) |
 | `admin_overrides.py` + `admin_overrides.json` | 그 판정을 수집·선정에 얹는 **덧칠**. 기본 설정 파일을 덮어쓰지 않는다 |
 | `tools/sync_admin_overrides.py` | KV → `admin_overrides.json`. 워크플로 시작에서 돌고, 실패해도 커밋된 판정을 지우지 않는다 |
+| `deliberation_lane.py` + `deliberation_pipeline.py` → `deliberation_archive/` | **신규원전 공론화 레인** — 12차 전기본을 위한 원전 공론화 기사를 메인과 별도 기준으로 **놓치지 않고** 모은다(크롤 회차마다). 메인 아카이브 + 이번 회차 수집 후보와 거기 접힌 기사(대표 판정 상속) + 네이버 전용 질의(3일 창을 덮을 때까지 페이지) + Google 뉴스 KR. 확신 없으면 포함(「검토」), 한도 초과는 3일 이월. 메인 큐·상태는 읽기만. 설계: `docs/2026-10-15-new-build-deliberation-tab-direction.md` |
+| `deliberation_web.py` → `deliberation_issues.json` | 공론화 레인의 회차(아침 브리핑 마감)·사건 묶기(접힌 관계·사건 이름·제목)·점수. 「신규원전 공론화」 탭, 탐색 '공론화' 범위, 이슈 상세가 읽는다 |
 | `scorer.py` `synthesize.py` `send_research.py` | 소셜(last30days) 경로 — 수동 실행 전용 |
 
 ## 상태 파일 (git 이 DB)
@@ -71,6 +73,7 @@ weekly (금 17:00 KST)   weekly_bot.py  주간 판세 (정책 변화·테마 강
 | `delivery_log.jsonl` | 발송 이력 + 점수 내역 + 모든 선정 story의 fingerprint/보도매체/병합 근거 — 뉴스와 Nuclens의 공통 계약 |
 | `discovery_state.json` | 후속 발굴 쿼리별 성과·냉각 (60일 보존). 커밋 안 하면 헛도는 조합을 영영 못 재운다 |
 | `adaptive_state.json` | 신규 이슈 탐색의 임시 검색어·TTL·성과·폐기 이력. 커밋 안 하면 매 회차 같은 이름을 새로 '발견'하고 연장도 폐기도 안 일어난다 |
+| `deliberation_state.json` | 공론화 레인 판정 이력(60일)·실패 횟수·**판정 한도로 밀린 이월 후보(3일)**·회차별 피드 통계. 커밋 안 하면 같은 기사를 다시 판정하고 이월분이 사라진다 |
 | `issue_ledger.json` | 이슈 신원 원장 — issue_id·제목 이력·기사 해시·`moved_to`. 커밋 안 하면 옛 이슈 주소가 다시 404 가 된다. `deploy-web.yml` 에는 커밋 스텝이 없으므로 daily-brief 의 `Commit issue review cache` 스텝이 싣는다 |
 
 

@@ -58,6 +58,8 @@
     </a>
     <nav class="main-tabs" id="mainTabs" aria-label="주요 화면">
       <button class="main-tab active" data-view="news" aria-pressed="true">오늘</button>
+      <!-- 12차 전기본을 위한 신규원전 공론화. deliberation_issues.json 이 비면 syncDlChrome 이 숨긴 채로 둔다. -->
+      <button class="main-tab" data-view="deliberation" aria-pressed="false" hidden>신규원전 공론화</button>
       <!-- 해외 원전 AI 동향. ai_issues.json 이 없거나 비면 syncAiChrome 이 숨긴 채로 둔다. -->
       <button class="main-tab" data-view="ai" aria-pressed="false" hidden>해외 AI·DX</button>
       <button class="main-tab" data-view="trend" aria-pressed="false">흐름</button>
@@ -270,6 +272,47 @@
     <p class="notice">날짜·수치·기관명은 원문에서 확인하세요.</p>
   </section>
 
+  <!-- 신규원전 공론화 — 「해외 AI·DX」와 같은 골격(회차 이동·하루/7일·필터·목차 행·기존 상세).
+       다른 점: ① 마지막 아침 브리핑 뒤 들어온 기사를 목록 **위**에 둔다(3시간마다 갱신),
+       ② 「사건 / 기사 전체」 보기, ③ 국면·주체·입장 필터. 데이터: deliberation_issues.json
+       (deliberation_web.py). 상세는 아래 #issueDialog 를 같이 쓴다. -->
+  <section id="view-deliberation" hidden aria-labelledby="dlTitle">
+    <header class="today-head">
+      <div class="today-head-row">
+        <h1 id="dlTitle">신규원전 공론화</h1>
+        <div class="date-nav" aria-label="공론화 회차 선택">
+          <button id="dlPrevDay" type="button" aria-label="이전 회차">←</button>
+          <select id="dlDateSel" aria-label="공론화 회차"></select>
+          <button id="dlNextDay" type="button" aria-label="다음 회차">→</button>
+        </div>
+      </div>
+      <p class="today-lede" id="dlLede"></p>
+      <p class="dl-stage" id="dlStage" hidden></p>
+      <p class="ai-stale" id="dlStale" hidden></p>
+    </header>
+    <section class="brief-panel ai-panel dl-live" id="dlPending" aria-labelledby="dlPendingTitle" hidden>
+      <h2 class="brief-panel-title" id="dlPendingTitle">오늘 들어온 기사</h2>
+      <p class="dl-live-note" id="dlPendingNote"></p>
+      <nav id="dlPendingList" class="toc" aria-label="오늘 들어온 공론화 기사"></nav>
+    </section>
+    <div class="dl-controls">
+      <div class="ai-span segmented" id="dlSpan" role="group" aria-label="보기 범위">
+        <button type="button" data-dl-span="day" aria-pressed="false">하루</button>
+        <button type="button" data-dl-span="week" aria-pressed="false">최근 7일</button>
+      </div>
+      <div class="ai-span segmented" id="dlMode" role="group" aria-label="목록 단위">
+        <button type="button" data-dl-mode="events" aria-pressed="false">사건</button>
+        <button type="button" data-dl-mode="articles" aria-pressed="false">기사 전체</button>
+      </div>
+    </div>
+    <div class="ai-filters" id="dlFilters"></div>
+    <section class="brief-panel ai-panel" aria-label="공론화 기사">
+      <h2 class="brief-panel-title" id="dlPanelTitle">이 회차의 사건 · 중요도순</h2>
+      <nav id="dlTocList" class="toc" aria-label="공론화 기사"></nav>
+      <div class="brief-foot"><span id="dlPanelFoot"></span><span class="brief-foot-actions"><button type="button" id="dlToSearch" class="brief-more">지난 기사 전체 검색 →</button></span></div>
+    </section>
+  </section>
+
   <!-- 해외 AI — 「오늘 → 그 밖의 이슈」와 같은 목차 행으로 한 회차씩. 카드뉴스·오디오·
        먼저 볼 3건은 없다. 회차는 기사가 수집된 날이고 기사가 없는 날은 회차가 없다.
        데이터: ai_issues.json(ai_lane_web.py). 상세는 아래 #issueDialog 를 같이 쓴다. -->
@@ -361,6 +404,7 @@
           <button class="active" type="button" data-scope="stories" aria-pressed="true">추적 중인 이슈</button>
           <button type="button" data-scope="all" aria-pressed="false">모든 이슈</button>
           <button type="button" data-scope="ai" aria-pressed="false">해외 AI·DX</button>
+          <button type="button" data-scope="deliberation" aria-pressed="false">신규원전 공론화</button>
         </div>
         <div class="archive-result-head">
           <div><h2>검색 결과</h2><p id="archiveSummary" aria-live="polite"></p></div>
@@ -700,6 +744,7 @@
 
 <nav id="mobileTabs" class="mobile-tabs" aria-label="모바일 주요 화면">
   <button class="active" type="button" data-view="news" aria-pressed="true"><span>오늘</span></button>
+  <button type="button" data-view="deliberation" aria-pressed="false" hidden><span>공론화</span></button>
   <button type="button" data-view="ai" aria-pressed="false" hidden><span>AI·DX</span></button>
   <button type="button" data-view="trend" aria-pressed="false"><span>흐름</span></button>
   <button type="button" data-view="search" aria-pressed="false"><span>탐색</span></button>

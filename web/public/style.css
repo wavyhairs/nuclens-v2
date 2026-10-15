@@ -4372,6 +4372,34 @@ button.agenda-head[aria-expanded="true"]::after { content: "▾"; }
   .ai-toc-row .toc-meta-line { flex-wrap: wrap; row-gap: 4px; }
 }
 
+/* ── 신규원전 공론화 ───────────────────────────────────────────────────────
+   해외 AI 탭의 목차 행·필터·segmented 를 그대로 쓴다. 새로 만드는 것은 넷:
+   지금 국면 한 줄, 「오늘 들어온 기사」(목록 위, 왼쪽 강조선), 보기 토글 두 개를 한 줄에,
+   기사 행 꼬리의 「사건」 버튼. 색은 새로 만들지 않는다. */
+.dl-stage { margin: var(--sp-2) 0 0; font-size: var(--t-caption); color: var(--c-text-secondary); }
+.dl-stage b { font-weight: 700; margin-right: 4px; color: var(--c-text); }
+.dl-live { margin-top: var(--sp-4); border-left: 3px solid var(--c-secondary); }
+.dl-live-note { margin: 0 0 var(--sp-2); font-size: var(--t-min); color: var(--c-text-muted); line-height: 1.55; }
+.dl-controls { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+.dl-controls .ai-span { margin-top: var(--sp-3); }
+.dl-stance { font-size: 12.5px; font-weight: 650; color: var(--c-text-secondary); }
+.dl-stance.s-process_critique, .dl-stance.s-reduce { color: var(--c-accent-text); }
+.dl-review { border-style: dashed; }
+.dl-article-row .toc-link { color: inherit; text-decoration: none; }
+.dl-article-row .toc-link:hover { text-decoration: underline; }
+/* 기사 행은 꼬리가 화살표(20px)가 아니라 「사건」 버튼이다 — 칸을 버튼 폭만큼 연다. */
+.brief-panel .toc-row.dl-article-row { grid-template-columns: 40px minmax(0, 1fr) auto; }
+@media (max-width: 520px) {
+  .brief-panel .toc-row.dl-article-row { grid-template-columns: 28px minmax(0, 1fr) auto; }
+}
+.dl-event-link {
+  white-space: nowrap;
+  align-self: center; font: inherit; font-size: 12.5px; padding: 2px 9px; cursor: pointer;
+  border-radius: var(--r-4); border: var(--bd-1) solid var(--c-border); background: var(--c-surface);
+  color: var(--c-text-secondary);
+}
+.dl-event-link:focus-visible { outline: none; box-shadow: var(--fo-ring); }
+
 /* 흐름 탭 07 — 해외 원전 AI 한 달. 단일 계열 막대(한 색), 값은 글자색으로. */
 .trend-ai-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sp-5); margin-top: var(--sp-3); }
 .trend-ai-block h3 { font-size: var(--t-caption); color: var(--c-text-secondary); margin: 0 0 var(--sp-2); font-weight: 700; }

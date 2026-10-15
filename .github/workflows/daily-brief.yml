@@ -267,7 +267,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add sent.json curated.json digest_queue.json archive/
           if [ -d ai_archive ]; then git add ai_archive/; fi
-          for f in delivery_log.jsonl discovery_state.json publications.json admin_overrides.json summary_checks.jsonl integrity_shadow.jsonl ai_state.json; do
+          if [ -d deliberation_archive ]; then git add deliberation_archive/; fi
+          for f in delivery_log.jsonl discovery_state.json publications.json admin_overrides.json summary_checks.jsonl integrity_shadow.jsonl ai_state.json deliberation_state.json; do
             if [ -f "$f" ]; then git add "$f"; fi
           done
           git diff --cached --quiet && { echo "수집분 없음 — 커밋 생략"; exit 0; }

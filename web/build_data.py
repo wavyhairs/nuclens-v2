@@ -68,6 +68,7 @@ import issue_headline  # noqa: E402
 import issue_insight  # noqa: E402
 import issue_ledger  # noqa: E402
 import ai_lane_web  # noqa: E402
+import deliberation_web  # noqa: E402
 import issue_review  # noqa: E402
 import keei_match  # noqa: E402
 import story_cluster  # noqa: E402
@@ -4153,6 +4154,22 @@ def build_ai_payload(now: datetime) -> dict:
     except Exception as exc:  # noqa: BLE001 — 부가 화면 하나가 배포를 막으면 안 된다
         print(f"[build_data:ai] 실패 — 빈 탭으로 내보냄: {type(exc).__name__}: {exc}")
         return {"schema": ai_lane_web.SCHEMA, "rounds": [], "issues": [], "labels": {}, "stats": {}}
+
+
+def build_deliberation_payload(now: datetime) -> dict:
+    """「신규원전 공론화」탭·탐색 '공론화' 범위·공론화 이슈 상세가 읽는 deliberation_issues.json.
+
+    데이터는 deliberation_archive/(deliberation_pipeline 이 크롤마다 쌓는다), 회차·사건 묶기·점수는
+    deliberation_web 이 정한다. 근거 배지는 메인과 같은 규칙(verification_state)이다.
+    실패해도 빌드를 멈추지 않는다. 빈 페이로드면 화면이 탭을 숨긴다(syncDlChrome).
+    """
+    try:
+        return deliberation_web.build_payload(
+            now=now, verify=lambda articles: verification_state(articles, now.isoformat()))
+    except Exception as exc:  # noqa: BLE001 — 부가 화면 하나가 배포를 막으면 안 된다
+        print(f"[build_data:deliberation] 실패 — 빈 탭으로 내보냄: {type(exc).__name__}: {exc}")
+        return {"schema": deliberation_web.SCHEMA, "rounds": [], "issues": [], "labels": {}, "stats": {},
+                "pending": {"issues": []}}
 
 
 def build_today_payload(briefings: list[dict], issue_catalog: list[dict],
@@ -8330,6 +8347,7 @@ def build() -> None:
         ("issue_audit.json", shipped_audit),
         ("threads.json", threads_payload),
         ("ai_issues.json", build_ai_payload(now)),
+        ("deliberation_issues.json", build_deliberation_payload(now)),
         ("manifest.json", manifest),
         ("status.json", status),
     )
