@@ -29,6 +29,7 @@ from __future__ import annotations
 from typing import NamedTuple
 from urllib.parse import urlparse
 
+import event_stage
 import story_identity
 
 # 대표 하나에 매달 수 있는 수집 단계 근거의 상한. 큐(JSON)에 그대로 실려 나가므로
@@ -661,10 +662,32 @@ def choose_display_representative(
 
     # hash 는 **동점 후보 사이의 결정성**에만 쓴다. 아래 비교는 hash 없는 품질
     # 키로만 하므로, 동점이면 현재 대표가 그대로 남는다.
-    best = max(pool, key=lambda art: (display_rank_key(art, score_of(art)),
-                                      str(art.get("hash") or "")))
+    def pick(rows: list[dict]) -> dict:
+        return max(rows, key=lambda art: (display_rank_key(art, score_of(art)),
+                                          str(art.get("hash") or "")))
+
+    best = pick(pool)
     if best is current:
         return current, "keep"
+    # 매체 급 상승 교체는 아래에서 **점수를 보지 않는** 유일한 경로다. 그 경로로
+    # 사건 단계까지 뒤집으면 안 된다. 2026-10-16 국내 1위: 원안위 회의 '개최' 공지
+    # (tier1, 회의 당일 0시 게재)가 '사고관리계획서 승인' 결과 보도(머니투데이)를 급
+    # 하나로 밀어내, 승인 소식이 '계속운전 심의 착수'로 나갔다. 단계가 갈리는 상위
+    # 매체 후보만 이 경로에서 빼고 나머지로 다시 고른다. 본문 요지·점수로 이기는
+    # 교체는 그대로 둔다 — 그쪽은 점수 차 상한이 따로 지킨다.
+    current_stages = event_stage.article_stages(current)
+
+    def stage_jump_by_outlet(art: dict) -> bool:
+        return (outlet_rank(art) > outlet_rank(current)
+                and _content_rank(art) >= _content_rank(current)
+                and event_stage.stage_conflict(event_stage.article_stages(art),
+                                               current_stages))
+
+    if stage_jump_by_outlet(best):
+        pool = [art for art in pool if art is current or not stage_jump_by_outlet(art)]
+        best = pick(pool)
+        if best is current:
+            return current, "keep_stage_conflict"
     if display_rank_key(best, score_of(best)) <= display_rank_key(current, score_of(current)):
         return current, "keep"
     # 매체 급이 올라가는 교체는 점수 차를 보지 않는다. 2026-10-03 국내 1위: 글로벌E
@@ -716,5 +739,7 @@ def mark_display_representative(article: dict, *, candidates: int, reason: str) 
         article["story_display_reason"] = _clean(
             "story 완성 후 유지" if reason == "keep"
             else "점수 차가 커서 유지" if reason == "keep_score_gap"
+            else "사건 단계가 달라 상위 매체로 교체하지 않음"
+            if reason == "keep_stage_conflict"
             else reason)[:200]
     return article

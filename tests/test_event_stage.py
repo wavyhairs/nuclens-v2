@@ -339,6 +339,48 @@ class TestDisplayRepresentative(unittest.TestCase):
             [rich_minor, thin_major], {"a": 10.0, "b": 9.0}, current=rich_minor)
         self.assertIs(winner, rich_minor)
 
+    def test_outlet_upgrade_does_not_cross_an_event_stage(self):
+        """2026-10-16 국내 1위: 원안위 회의 '개최' 공지(tier1)가 같은 회의의
+        '사고관리계획서 승인' 결과 보도를 급 하나로 밀어내 '심의 착수'로 나갔다."""
+        result = item("mt", "원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 승인",
+                      summary="한 줄", detail="찬성 7표 반대 2표로 의결한 회의 결과 본문 " * 3,
+                      domain="mt.co.kr", publisher="머니투데이")
+        notice = item("nssc", "원안위, 고리 3·4호기 및 한빛 1·2호기 계속운전 심의 착수",
+                      summary="한 줄", detail="제2026-16회 회의 개최 공지 본문 요지 " * 3,
+                      domain="nssc.go.kr", publisher="원자력안전위원회",
+                      evidence_role="primary")
+        winner, reason = story_cluster.choose_display_representative(
+            [result, notice], {"mt": 20.0, "nssc": 5.0}, current=result)
+        self.assertIs(winner, result)
+        self.assertEqual(reason, "keep_stage_conflict")
+        story_cluster.mark_display_representative(winner, candidates=2, reason=reason)
+        self.assertIn("사건 단계", winner["story_display_reason"])
+
+    def test_same_stage_upgrade_still_wins_past_a_conflicting_one(self):
+        """단계가 갈리는 상위 매체만 빠진다 — 같은 단계의 상위 매체는 그대로 올라간다."""
+        result = item("mt", "원안위, 고리 3·4호기 사고관리계획서 승인", summary="한 줄",
+                      domain="mt.co.kr", publisher="머니투데이")
+        notice = item("nssc", "원안위, 고리 3·4호기 계속운전 심의 착수", summary="한 줄",
+                      domain="nssc.go.kr", publisher="원자력안전위원회",
+                      evidence_role="primary")
+        ministry = item("motie", "고리 3·4호기 사고관리계획서 승인", summary="한 줄",
+                        domain="motie.go.kr", publisher="산업통상자원부")
+        winner, reason = story_cluster.choose_display_representative(
+            [result, notice, ministry], {"mt": 20.0, "nssc": 5.0, "motie": 5.0},
+            current=result)
+        self.assertIs(winner, ministry)
+        self.assertIn("출처 등급", reason)
+
+    def test_content_swap_across_stages_is_unchanged(self):
+        """본문 요지로 이기는 교체는 손대지 않는다 — 점수 차 상한이 따로 지킨다."""
+        thin = item("a", "원안위, 사고관리계획서 심의 재차 보류", summary="한 줄")
+        thick = item("b", "원안위, 사고관리계획서 승인 보류", summary="한 줄",
+                     detail="보류 사유와 다음 회의 일정을 적은 본문 요지 " * 3)
+        winner, reason = story_cluster.choose_display_representative(
+            [thin, thick], {"a": 6.0, "b": 5.0}, current=thin)
+        self.assertIs(winner, thick)
+        self.assertIn("본문", reason)
+
     def test_promoted_representative_keeps_the_story_score(self):
         import ranking
         scores = {"old": 26.8, "new": 5.0}
