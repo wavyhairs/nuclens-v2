@@ -5,9 +5,10 @@
 
 회차
 ----
-기사가 메인에 수집된 날(KST, ``collected_at``)이 회차 날짜다. 레인이 한도 때문에 하루
-늦게 판정해도 기사는 원래 날의 회차에 들어간다. 기사가 없는 날은 회차가 없다 — 날짜
-이동은 회차가 있는 날만 오간다.
+기사가 메인에 수집된 뒤(``collected_at``) **처음 나가는 아침 브리핑의 날짜**가 회차 날짜다
+(2026-10-15 정정 — 아래 round_date). 레인이 한도 때문에 늦게 판정해도 기사는 수집 시각의
+회차에 들어간다. 기사가 없는 날은 회차가 없다 — 날짜 이동은 회차가 있는 날만 오간다.
+마지막 브리핑 뒤 기사는 ``pending`` 으로 따로 싣는다.
 
 이슈 (같은 사건 묶기)
 --------------------
@@ -32,6 +33,7 @@ LLM 에 중요도를 묻지 않는다. 판정이 낸 feature 로 Python 이 점�
 """
 from __future__ import annotations
 
+import bisect
 import hashlib
 import json
 import os
@@ -80,12 +82,101 @@ def load_rows(archive_dir: Path = ARCHIVE_DIR) -> list[dict]:
     return rows
 
 
-def round_date(row: dict) -> str:
+# ── 회차 = 아침 브리핑 회차 (2026-10-15) ────────────────────────────────────
+# 방향 문서 §4-1·§7-2 의 설계는 "그날 = 아침 브리핑과 같은 마감"이었는데, 2단계 구현은
+# 수집 시각의 한국 날짜를 썼다. 그래서 새벽 크롤이 잡은 기사가 아침 브리핑이 나가기 전에
+# 이미 「10월 15일」로 화면에 서고, 하루 동안 같은 날짜 목록이 계속 바뀌었다(사용자 지적).
+# 이제 기사는 **수집된 뒤 처음 나가는 아침 브리핑의 날짜**로 간다. 브리핑 마감 시각은
+# delivery_log.jsonl 의 selection_stats(그날 첫 선정 시각)다 — freshness.last_brief_at 과
+# 같은 기준. 마지막 브리핑 뒤에 들어온 기사는 '다음 브리핑에 실릴 기사'(pending)로 따로 싣는다.
+DELIVERY_LOG = Path(os.environ.get("AI_DELIVERY_LOG") or (BASE / "delivery_log.jsonl"))
+_CUTOFFS: list[tuple[datetime, str]] | None = None
+
+
+def load_briefing_cutoffs(path: Path = DELIVERY_LOG) -> list[tuple[datetime, str]]:
+    """[(그날 첫 선정 시각, 브리핑 날짜)] 시각순. 재실행으로 줄이 여럿이면 가장 이른 것."""
+    first: dict[str, datetime] = {}
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+    for line in lines:
+        if '"selection_stats"' not in line:
+            continue
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        day = str(row.get("date") or "")
+        try:
+            at = datetime.fromisoformat(str(row.get("generated_at") or ""))
+        except ValueError:
+            continue
+        if row.get("record_type") != "selection_stats" or not day or at.tzinfo is None:
+            continue
+        if day not in first or at < first[day]:
+            first[day] = at
+    return sorted((at, day) for day, at in first.items())
+
+
+def set_briefing_cutoffs(cutoffs: list[tuple[datetime, str]] | None) -> None:
+    """테스트·빌드가 마감 목록을 주입한다. None 이면 다음 호출 때 파일에서 다시 읽는다."""
+    global _CUTOFFS
+    _CUTOFFS = cutoffs
+
+
+def briefing_cutoffs() -> list[tuple[datetime, str]]:
+    global _CUTOFFS
+    if _CUTOFFS is None:
+        _CUTOFFS = load_briefing_cutoffs()
+    return _CUTOFFS
+
+
+def latest_briefing_date() -> str:
+    cutoffs = briefing_cutoffs()
+    return cutoffs[-1][1] if cutoffs else ""
+
+
+def _collected(row: dict) -> datetime | None:
+    stamp = str(row.get("collected_at") or row.get("archived_at") or "")
+    try:
+        value = datetime.fromisoformat(stamp)
+    except ValueError:
+        return None
+    return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+
+def _calendar_day(row: dict) -> str:
     stamp = str(row.get("collected_at") or row.get("archived_at") or "")
     try:
         return datetime.fromisoformat(stamp).astimezone(KST).date().isoformat()
     except ValueError:
         return stamp[:10]
+
+
+def is_pending(row: dict) -> bool:
+    """마지막 아침 브리핑보다 뒤에 수집된 기사 — 아직 어느 브리핑에도 실리지 않았다."""
+    cutoffs = briefing_cutoffs()
+    collected = _collected(row)
+    return bool(cutoffs) and collected is not None and collected > cutoffs[-1][0]
+
+
+def round_date(row: dict) -> str:
+    """기사가 실리는 아침 브리핑 날짜. 마감 기록이 없거나 기록보다 앞선 기사는 달력 날짜.
+
+    마지막 브리핑 뒤 기사(is_pending)는 **다음 브리핑 날짜**(마지막 브리핑 다음 날)를 받는다 —
+    화면은 그 회차를 확정 회차와 따로 '다음 브리핑에 실릴 기사'로 보인다.
+    """
+    cutoffs = briefing_cutoffs()
+    collected = _collected(row)
+    if not cutoffs or collected is None or collected < cutoffs[0][0] - timedelta(days=2):
+        return _calendar_day(row)
+    times = [at for at, _ in cutoffs]
+    index = bisect.bisect_left(times, collected)
+    if index < len(cutoffs):
+        return cutoffs[index][1]
+    nxt = datetime.fromisoformat(cutoffs[-1][1]) + timedelta(days=1)
+    return nxt.date().isoformat()
 
 
 def article_date(row: dict) -> str:
@@ -266,7 +357,14 @@ def build_payload(rows: list[dict] | None = None, *, now: datetime | None = None
     now = now or datetime.now(timezone.utc)
     rows = load_rows() if rows is None else rows
     today = now.astimezone(KST).date().isoformat()
+    # 마지막 아침 브리핑 뒤에 들어온 기사는 확정 회차에 넣지 않는다 — 다음 브리핑이 나가면
+    # 그 날짜 회차로 들어간다. 그때까지는 '다음 브리핑에 실릴 기사'로 따로 보인다.
+    pending_rows = [r for r in rows if is_pending(r)]
+    rows = [r for r in rows if not is_pending(r)]
     issues = [build_issue(group, today=today, verify=verify) for group in group_rows(rows)]
+    pending_issues = [dict(build_issue(group, today=today, verify=verify), pending=True)
+                      for group in group_rows(pending_rows)]
+    pending_issues.sort(key=lambda i: (-max(v["score"] for v in i["round_scores"].values()), i["issue_id"]))
     rounds: dict[str, list[dict]] = {}
     for issue in issues:
         for day in issue["rounds"]:
@@ -291,9 +389,19 @@ def build_payload(rows: list[dict] | None = None, *, now: datetime | None = None
         "generated_at": now.isoformat(timespec="seconds"),
         "today": today,
         "latest_round": round_rows[0]["date"] if round_rows else "",
+        # 회차의 기준. 화면은 '오늘'이 아니라 이 날짜와 최신 회차를 비교한다.
+        "latest_briefing": latest_briefing_date(),
+        "pending": {
+            "date": round_date(pending_rows[0]) if pending_rows else "",
+            "issues": pending_issues,
+            "article_count": len(pending_rows),
+        },
         "rounds": round_rows,
         "issues": issues,
         "labels": labels,
+        # 화면의 나라 표(COUNTRY_LABELS)는 지도 격자와 함께 잠겨 있다 — 거기 없는 나라
+        # (BD 방글라데시 등)는 이 표로 받는다. 없으면 코드가 그대로 화면에 나갔다(2026-10-15).
+        "country_labels": dict(COUNTRY_KR),
         "stats": {
             "articles": len(rows),
             "issues": len(issues),
@@ -324,7 +432,7 @@ def weekly_digest(week_start: str, week_end: str, rows: list[dict] | None = None
     그 주에 회차가 하나도 없으면 빈 dict — 단락이 서지 않는다(수를 채우지 않는다).
     """
     rows = load_rows() if rows is None else rows
-    week_rows = [r for r in rows if week_start <= round_date(r) <= week_end]
+    week_rows = [r for r in rows if week_start <= round_date(r) <= week_end and not is_pending(r)]
     if not week_rows:
         return {}
     picked = []

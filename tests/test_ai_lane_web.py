@@ -12,6 +12,16 @@ import ai_lane_web as web  # noqa: E402
 NOW = datetime(2026, 10, 14, 9, 0, tzinfo=timezone.utc)
 
 
+def setUpModule():
+    # 아래 기존 테스트는 회차 규칙과 무관한 것(묶기·점수·상세)을 본다 — 마감 목록을 비워
+    # 달력 날짜 규칙으로 고정한다. 브리핑 회차 규칙은 BriefingRoundTests 가 따로 본다.
+    web.set_briefing_cutoffs([])
+
+
+def tearDownModule():
+    web.set_briefing_cutoffs(None)
+
+
 def row(digest, collected, *, title, actors=("Atomic Canyon",), area="operations_maintenance",
         maturity="deployed", sig=2, actor_type="ai_startup", role="independent", tier=1,
         pub=None, detail="", publisher="WNN"):
@@ -268,3 +278,69 @@ class BuildGuardTests(unittest.TestCase):
             (d / "2026-10.jsonl").write_text("".join(_json.dumps(r) + "\n" for r in rows), encoding="utf-8")
             got = web.load_rows(d)
         self.assertEqual([r["hash"] for r in got], ["b"])
+
+
+class BriefingRoundTests(unittest.TestCase):
+    """회차 = 수집 뒤 처음 나가는 아침 브리핑(2026-10-15 정정, 방향 문서 §4-1)."""
+    KST9 = "+09:00"
+
+    def setUp(self):
+        at = lambda stamp: datetime.fromisoformat(stamp)  # noqa: E731
+        web.set_briefing_cutoffs([(at("2026-10-14T04:15:41+09:00"), "2026-10-14"),
+                                  (at("2026-10-15T07:06:14+09:00"), "2026-10-15")])
+
+    def tearDown(self):
+        web.set_briefing_cutoffs([])
+
+    def test_night_crawl_belongs_to_the_next_morning_briefing(self):
+        # 10-15 01:50 KST 수집 → 10-15 아침 브리핑(07:06) 회차. 달력 날짜도 같지만 이유가 다르다.
+        self.assertEqual(web.round_date({"collected_at": "2026-10-14T16:50:50+00:00"}), "2026-10-15")
+
+    def test_afternoon_article_moves_to_the_next_day_briefing(self):
+        # 10-14 15:00 KST 수집 — 10-14 브리핑(04:15)은 이미 나갔다 → 10-15 회차.
+        row = {"collected_at": "2026-10-14T06:00:00+00:00"}
+        self.assertEqual(web.round_date(row), "2026-10-15")
+        self.assertFalse(web.is_pending(row))
+
+    def test_after_the_last_briefing_is_pending_for_the_next_day(self):
+        row = {"collected_at": "2026-10-15T09:00:00+09:00"}
+        self.assertTrue(web.is_pending(row))
+        self.assertEqual(web.round_date(row), "2026-10-16")
+
+    def test_rows_older_than_the_log_keep_calendar_days(self):
+        self.assertEqual(web.round_date({"collected_at": "2026-08-01T01:00:00+00:00"}), "2026-08-01")
+
+    def test_payload_holds_pending_apart_from_rounds(self):
+        rows = [row("a", "2026-10-14T16:50:00+00:00", title="루푸르 디지털 트윈", actors=("Rosatom",)),
+                row("b", "2026-10-15T03:00:00+00:00", title="브리핑 뒤 기사", actors=("EDF",))]
+        payload = web.build_payload(rows, now=datetime(2026, 10, 15, 4, 0, tzinfo=timezone.utc))
+        self.assertEqual(payload["latest_briefing"], "2026-10-15")
+        self.assertEqual([r["date"] for r in payload["rounds"]], ["2026-10-15"])
+        self.assertEqual(payload["pending"]["date"], "2026-10-16")
+        self.assertEqual([i["title"] for i in payload["pending"]["issues"]], ["브리핑 뒤 기사"])
+        self.assertNotIn("브리핑 뒤 기사", [i["title"] for i in payload["issues"]])
+        self.assertEqual(payload["stats"]["articles"], 1)
+
+    def test_weekly_digest_skips_pending(self):
+        rows = [row("b", "2026-10-15T03:00:00+00:00", title="브리핑 뒤 기사")]
+        self.assertEqual(web.weekly_digest("2026-10-12", "2026-10-18", rows), {})
+
+    def test_cutoffs_come_from_selection_stats_first_line(self):
+        import json as _json  # noqa: PLC0415
+        import tempfile  # noqa: PLC0415
+        lines = [{"record_type": "selection_stats", "date": "2026-10-15", "generated_at": "2026-10-15T07:30:00+09:00"},
+                 {"record_type": "selection_stats", "date": "2026-10-15", "generated_at": "2026-10-15T07:06:14+09:00"},
+                 {"record_type": "quality_event", "date": "2026-10-16", "generated_at": "2026-10-16T07:00:00+09:00"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "delivery_log.jsonl"
+            path.write_text("".join(_json.dumps(x) + "\n" for x in lines), encoding="utf-8")
+            cutoffs = web.load_briefing_cutoffs(path)
+        self.assertEqual([(at.isoformat(), day) for at, day in cutoffs],
+                         [("2026-10-15T07:06:14+09:00", "2026-10-15")])
+
+    def test_front_end_shows_pending_apart_and_uses_briefing_day(self):
+        app = (ROOT / "web" / "public" / "app.js").read_text(encoding="utf-8")
+        html = (ROOT / "web" / "public" / "index.html").read_text(encoding="utf-8")
+        self.assertIn('id="aiPendingList"', html)
+        self.assertIn('"aiTocList", "aiPendingList"', app)
+        self.assertIn("const latestIsToday = rounds[0].date === aiBriefingDay();", app)

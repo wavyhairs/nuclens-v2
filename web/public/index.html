@@ -298,6 +298,12 @@
       <nav id="aiTocList" class="toc" aria-label="해외 AI·DX 기사"></nav>
       <div class="brief-foot"><span id="aiPanelFoot"></span><span class="brief-foot-actions"><button type="button" id="aiToSearch" class="brief-more">지난 기사 전체 검색 →</button></span></div>
     </section>
+    <!-- 마지막 아침 브리핑 뒤에 들어온 기사. 회차는 아침 브리핑과 같은 마감이라(방향 문서 §4-1)
+         이 기사들은 다음 브리핑이 나가면 그 날짜 회차로 옮겨 간다. 그때까지 여기서만 보인다. -->
+    <section class="brief-panel ai-panel ai-pending" id="aiPending" aria-labelledby="aiPendingTitle" hidden>
+      <h2 class="brief-panel-title" id="aiPendingTitle">다음 브리핑에 실릴 기사</h2>
+      <nav id="aiPendingList" class="toc" aria-label="다음 브리핑에 실릴 해외 AI·DX 기사"></nav>
+    </section>
   </section>
 
   <section id="view-search" hidden aria-labelledby="archiveTitle">

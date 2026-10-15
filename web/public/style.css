@@ -4365,6 +4365,9 @@ button.agenda-head[aria-expanded="true"]::after { content: "▾"; }
 }
 .ai-day-head:first-child { margin-top: 0; }
 .ai-day-head .ai-day-n { font-weight: 400; color: var(--c-text-muted); }
+/* 다음 브리핑 대기 — 확정 회차와 구분되게 한 단계 흐리게. */
+.ai-pending { margin-top: var(--sp-4); background: var(--c-surface-sunken); }
+.ai-pending .brief-panel-title { color: var(--c-text-secondary); }
 @media (max-width: 520px) {
   .ai-toc-row .toc-meta-line { flex-wrap: wrap; row-gap: 4px; }
 }
