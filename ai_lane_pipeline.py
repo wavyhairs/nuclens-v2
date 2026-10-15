@@ -137,6 +137,49 @@ AI_SOURCES: list[dict] = [
     {"name": "AI·IAEA 보도자료", "lang": "en", "kind": "rss",
      "url": "https://www.iaea.org/feeds/pressalerts"},
 ]
+# 기간 백필용 Google 뉴스 질의 (tools/ai_lane_research_backfill.py). 정기 피드(AI_SOURCES)는 when: 창이라
+# 지난 기간을 못 뒤진다 — 같은 주제를 after:/before: 로 잘라 다시 묻는다. 질의는 **기간을 붙여도 190자 이하**로
+# 둔다(crawl #673 실측: 200자 넘는 질의는 기간 조건이 무시됐다). 그래서 정기 피드 질의를 그대로 쓰지 않고
+# 짧게 다시 썼다. 간격(일)은 기사가 몰리는 질의일수록 짧다 — Google 뉴스 RSS 는 질의당 100건 안팎을 준다.
+BACKFILL_QUERIES: tuple[tuple[str, str, str, int], ...] = (
+    ("EN 원전 AI", "en", 'nuclear ("artificial intelligence" OR "machine learning" OR "generative AI")', 3),
+    ("EN 원전 AI 약어", "en", '(nuclear OR reactor) AI -"data center" -"data centers"', 3),
+    ("EN 원전 디지털", "en", 'nuclear (robot OR drone OR "digital twin" OR "virtual reality" OR immersive)', 7),
+    ("EN 원전 계측제어", "en", 'nuclear ("I&C" OR "instrumentation and control" OR digitalization)', 7),
+    ("EN 원전 AI 제품", "en", '("Atomic Canyon" OR Nuclearn OR "Blue Wave AI" OR NIVA OR AtomAssist OR Metroscope) nuclear', 14),
+    ("EN 사업자 AI", "en", '(Constellation OR "Duke Energy" OR TVA OR "Southern Nuclear" OR Dominion OR EDF) nuclear AI', 7),
+    ("EN 제작사 AI", "en", '(Westinghouse OR Framatome OR "GE Vernova" OR NuScale OR "Rolls-Royce SMR" OR X-energy) nuclear AI', 7),
+    ("EN 규제·연구소 AI", "en", '(NRC OR IAEA OR "OECD NEA" OR INL OR Argonne OR "Oak Ridge" OR EPRI OR INPO OR WANO) nuclear AI', 7),
+    ("EN 해외 규제기관 AI", "en", '(FANR OR ENEC OR ONR OR CNSC OR ASNR OR STUK OR Rosatom) nuclear AI', 7),
+    ("EN NEI", "en", 'site:neimagazine.com (AI OR "machine learning" OR "digital twin" OR robot)', 14),
+    ("EN NRC", "en", 'site:nrc.gov (AI OR "artificial intelligence")', 30),
+    ("JA 원전 AI", "ja", "(原子力 OR 原発) (AI OR 人工知能 OR 機械学習 OR ロボット OR デジタルツイン)", 7),
+    ("FR 원전 AI", "fr", 'nucléaire ("intelligence artificielle" OR IA OR robotique OR "jumeau numérique")', 7),
+    ("RU 원전 AI", "ru", '(АЭС OR Росатом OR атомной) (ИИ OR "искусственный интеллект" OR нейросеть OR "цифровой двойник" OR робот)', 7),
+    ("RU 아톰에네르기야", "ru", 'site:atomic-energy.ru (ИИ OR "искусственный интеллект" OR цифровой OR робот)', 7),
+    ("ZH 원전 AI", "zh", "(核电 OR 核能 OR 中广核 OR 中核) (人工智能 OR 大模型 OR 机器学习 OR 数字孪生 OR 机器人)", 7),
+)
+_GNEWS_LOCALE = {"en": ("en-US", "US", "US:en"), "ja": ("ja", "JP", "JP:ja"), "fr": ("fr", "FR", "FR:fr"),
+                 "ru": ("ru", "RU", "RU:ru"), "zh": ("zh-CN", "CN", "CN:zh-Hans")}
+
+
+def backfill_query(query: str, start, end) -> str:
+    return f"{query} after:{start.isoformat()} before:{end.isoformat()}"
+
+
+def backfill_sources(since, until) -> list[dict]:
+    """[since, until] 날짜(date)를 질의별 간격으로 잘라 기간 질의 피드 목록을 만든다."""
+    out: list[dict] = []
+    for label, lang, query, step in BACKFILL_QUERIES:
+        start = since
+        while start <= until:
+            end = min(start + timedelta(days=step), until + timedelta(days=1))
+            out.append({"name": f"AI 백필 {label} {start.isoformat()}", "lang": lang, "label": label,
+                        "url": _gnews(backfill_query(query, start, end), *_GNEWS_LOCALE[lang])})
+            start = end
+    return out
+
+
 # 전용 피드의 수집 창. when:1d 를 넘는 오래된 항목은 버린다(관련도순 대비).
 FEED_LOOKBACK = timedelta(days=3)
 # 기사 주소에 날짜가 박혀 있고(/2026/06/ 처럼) 그보다 오래됐으면 버린다. 실측(2026-10-14 두 번째
