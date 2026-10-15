@@ -1257,6 +1257,26 @@ def search_naver(query: str, display: int = 30) -> list[dict]:
     return r.json().get("items", [])
 
 
+def search_naver_page(query: str, display: int = 100, start: int = 1) -> dict:
+    """네이버 뉴스 검색 한 페이지 — 응답 전체({"total", "items", …})를 돌려준다.
+
+    공론화 레인(deliberation_pipeline.collect_naver)이 쓴다. 그 레인은 질의마다 3일 창을 다 덮을
+    때까지 페이지를 넘기고 ``total`` 로 놓침을 감시한다. 메인 수집(search_naver)은 그대로 둔다.
+    """
+    import requests
+
+    client_id, client_secret = _naver_auth()
+    headers = {
+        "X-NCP-APIGW-API-KEY-ID": client_id,
+        "X-NCP-APIGW-API-KEY": client_secret,
+    }
+    params = {"query": query, "display": display, "start": start, "sort": "date"}
+    r = requests.get(NAVER_URL, headers=headers, params=params, timeout=10)
+    r.raise_for_status()
+    time.sleep(0.1)
+    return r.json()
+
+
 # '원전' 앵커에 걸리지만 원자력이 아닌 동음이의. '기원전 8세기', '호메로스를 원전(原典)
 # 으로 한 각색' 류가 실제로 검색에 섞인다(2026-08-05 '원전' 최신순 실측). 앵커 판정 전에
 # 지워 버리면 다른 앵커가 없는 한 걸리지 않는다.
@@ -4389,6 +4409,25 @@ def main() -> None:
             print(ai_lane_pipeline.format_stats(ai_stats))
     except Exception as e:  # noqa: BLE001
         print(f"[AI 레인] 실패 (크롤은 계속): {type(e).__name__}: {e}")
+
+    # ---- 신규원전 공론화 레인 (별도 기준·별도 DB — 실패해도 크롤은 계속) -----------
+    # 12차 전기본을 위한 원전 공론화 기사를 놓치지 않고 모아 deliberation_archive/ 에 쌓는다.
+    # 메인 아카이브(대표)뿐 아니라 이번 회차 수집 후보와 거기 접힌 기사(raw_sources)까지 받는다 —
+    # 아카이브 한 줄 뒤에 같은 사건 기사 20~30건이 접혀 있다(설계 §0-1).
+    # 메인 상태·큐는 건드리지 않는다. 설계: docs/2026-10-15-new-build-deliberation-tab-direction.md
+    try:
+        import ai_lane_pipeline  # noqa: PLC0415
+        import deliberation_pipeline  # noqa: PLC0415
+        if QUOTA_EXHAUSTED or CONFIG_ERROR or not gemini_client.is_available():
+            print("[공론화 레인] Gemini 사용 불가 — 이번 회차 건너뜀(다음 회차가 3일 창으로 이어서 받는다)")
+        else:
+            delib_stats = deliberation_pipeline.run(
+                ai_lane_pipeline.recent_main_records(),
+                collected=semantically_unique, naver=search_naver_page, fetch=fetch_rss,
+                hasher=url_hash, model=llm_policy.profile("deliberation_judge").model())
+            print(deliberation_pipeline.format_stats(delib_stats))
+    except Exception as e:  # noqa: BLE001
+        print(f"[공론화 레인] 실패 (크롤은 계속): {type(e).__name__}: {e}")
 
     save_state(state)
     save_curated(curated)
