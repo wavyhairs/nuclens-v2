@@ -696,6 +696,14 @@ class TestWeaponsScopeRule(unittest.TestCase):
             self.assertIn(token, nb.CURATION_SYSTEM_PROMPT)
         self.assertIn("한국이 당사자가 아니면 noise", nb.CURATION_SYSTEM_PROMPT)
 
+    def test_prompt_keeps_meeting_notices_at_the_scheduled_stage(self):
+        """2026-10-15 원안위 '회의 개최' 공지가 '계속운전 심의 착수'로 쓰여
+        같은 회의의 승인 결과 보도를 대표 자리에서 밀어냈다."""
+        prompt = nb.CURATION_SYSTEM_PROMPT
+        self.assertIn("회의 개최 공지는 결과 보도가 아니다", prompt)
+        for token in ("심의 착수", "상정", "must_read 가 아니다"):
+            self.assertIn(token, prompt)
+
     def test_prompt_keeps_the_korean_fuel_cycle_exception(self):
         """일괄 차단으로 바뀌면 우라늄 농축권한 기사가 같이 죽는다."""
         prompt = nb.CURATION_SYSTEM_PROMPT
