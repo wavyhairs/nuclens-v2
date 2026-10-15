@@ -2389,10 +2389,12 @@ class GeneratedDataTests(unittest.TestCase):
         self.assertIn("const ISSUE_ROUTE", script)
         self.assertIn("function issuePath", script)
         self.assertIn('return `/issue/${encodeURIComponent(issueId)}`;', script)
-        # 쿼리 주소는 **AI 이슈에만** 쓴다 — 그쪽엔 /issue/<id>/ 정적 페이지가 없어
-        # 경로를 쓰면 새로고침이 404 다. 메인 이슈는 여전히 경로 주소다.
+        # 쿼리 주소는 **별도 레인 이슈(해외 AI·신규원전 공론화)에만** 쓴다 — 그쪽엔
+        # /issue/<id>/ 정적 페이지가 없어 경로를 쓰면 새로고침이 404 다. 메인 이슈는 여전히
+        # 경로 주소다. 쿼리를 다는 자리는 여전히 한 곳이고, 그 판정이 두 레인을 다 덮는다.
         self.assertEqual(script.count('params.set("issue", state.issueId)'), 1)
-        self.assertIn('if (state.issueId && isAiIssueId(state.issueId)) params.set("issue", state.issueId);', script)
+        self.assertIn('if (state.issueId && isLaneIssueId(state.issueId)) params.set("issue", state.issueId);', script)
+        self.assertIn('function isLaneIssueId(issueId) { return isAiIssueId(issueId) || isDlIssueId(issueId); }', script)
         self.assertIn('state.issueId && state.view !== "trend" && !isAiIssueId(state.issueId)', script)
         self.assertIn('class="issue-detail-button"', script)
         self.assertIn('id="issueDialogTitle" tabindex="-1"', script)
@@ -4930,10 +4932,11 @@ class SavedFollowTests(unittest.TestCase):
         # (2026-09-19). 다섯 번째는 `hidden` 으로 서 있고 데이터 게이트가
         # 열릴 때만 걸린다. **그리는 칸 수는 4 또는 5로 런타임에 오간다** —
         # CSS 가 열 수를 박지 않는 이유가 그것이다(아래 전용 검사).
-        # 해외 AI 가 들어와 마크업 6칸이다(2026-10-14). 장기 스토리·해외 AI 둘 다
-        # hidden 으로 서 있다가 각자의 데이터 게이트가 열 때만 걸린다.
+        # 해외 AI 가 들어와 마크업 6칸이다(2026-10-14). 신규원전 공론화가 들어와 7칸이다
+        # (2026-10-15). 장기 스토리·해외 AI·공론화 셋 다 hidden 으로 서 있다가 각자의
+        # 데이터 게이트가 열 때만 걸린다.
         mobile_nav = self.html.split('id="mobileTabs"', 1)[1].split("</nav>", 1)[0]
-        self.assertEqual(mobile_nav.count("<button"), 6)
+        self.assertEqual(mobile_nav.count("<button"), 7)
 
     def test_saved_meta_snapshot_and_tombstone(self):
         self.assertIn("nuclens-saved-meta", self.script)
@@ -5806,7 +5809,9 @@ class MainNavOrderTests(unittest.TestCase):
 
     # 해외 AI(2026-10-14)는 오늘 바로 뒤다 — 같은 '하루치 목차' 화면이고, 데이터가
     # 없으면 hidden 으로 빠져 나머지 차례는 그대로다.
-    ORDER = ["news", "ai", "trend", "search", "longterm", "report"]
+    # 신규원전 공론화(2026-10-15)는 「오늘」 바로 뒤 — 국내·시한부 주제라 해외 동향보다 앞에 둔다
+    # (docs/2026-10-15-new-build-deliberation-tab-direction.md §7-2).
+    ORDER = ["news", "deliberation", "ai", "trend", "search", "longterm", "report"]
 
     @classmethod
     def setUpClass(cls):
@@ -8255,8 +8260,9 @@ class ArchiveScopeTests(unittest.TestCase):
 
     def test_the_default_is_the_tracked_list(self):
         self.assertIn('archiveScope: "stories",', self.script)
-        # 해외 AI(2026-10-14)가 세 번째 범위다. 모르는 값은 여전히 '추적 중인 이슈'로 떨어진다.
-        self.assertIn('state.archiveScope = ["all", "ai"].includes(params.get("as")) ? params.get("as") : "stories";', self.script)
+        # 해외 AI(2026-10-14)가 세 번째, 신규원전 공론화(2026-10-15)가 네 번째 범위다.
+        # 모르는 값은 여전히 '추적 중인 이슈'로 떨어진다.
+        self.assertIn('state.archiveScope = ["all", "ai", "deliberation"].includes(params.get("as")) ? params.get("as") : "stories";', self.script)
         self.assertIn('if (state.archiveScope !== "stories") params.set("as", state.archiveScope);', self.script)
 
     def test_scope_is_the_first_gate_not_another_filter(self):
