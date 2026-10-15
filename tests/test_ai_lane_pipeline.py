@@ -352,3 +352,106 @@ class DomesticGuardTests(unittest.TestCase):
         self.assertEqual(stats["included"], 1)
         self.assertEqual([r["hash"] for r in rows], ["o"])
         self.assertEqual(rows[0]["main_scope"], "overseas")
+
+
+class ResearchBackfillTests(unittest.TestCase):
+    """원천 재검색 기간 백필(tools/ai_lane_research_backfill.py, 2026-10-15)."""
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import ai_lane_research_backfill as bf  # noqa: PLC0415
+        self.bf = bf
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name)
+        self.state = base / "ai_state.json"
+        self.archive = base / "ai_archive"
+        self.main = base / "archive"
+        self.main.mkdir()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_period_queries_stay_short_and_cover_every_day(self):
+        from datetime import date  # noqa: PLC0415
+        from urllib.parse import parse_qs, urlparse  # noqa: PLC0415
+        sources = lane.backfill_sources(date(2026, 7, 1), date(2026, 10, 15))
+        for src in sources:
+            q = parse_qs(urlparse(src["url"]).query)["q"][0]
+            self.assertLessEqual(len(q), 190, src["name"])
+            self.assertIn("after:", q)
+            self.assertIn("before:", q)
+            self.assertNotIn("when:", q)
+        # 질의마다 7/1~10/15 를 빈틈없이 덮는다.
+        for label, _, _, _ in lane.BACKFILL_QUERIES:
+            rows = [parse_qs(urlparse(s["url"]).query)["q"][0] for s in sources if s["label"] == label]
+            self.assertIn("after:2026-07-01", rows[0])
+            self.assertIn("before:2026-10-16", rows[-1])
+        self.assertEqual({lang for _, lang, _, _ in lane.BACKFILL_QUERIES}, {"en", "ja", "fr", "ru", "zh"})
+
+    def _main(self, rows):
+        (self.main / "2026-08.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+    def test_fetch_only_counts_without_judging_or_writing(self):
+        from datetime import date  # noqa: PLC0415
+        self._main([main_record("a", "NIVA nuclear AI rollout", archived_at="2026-08-10T01:00:00+00:00"),
+                    dict(main_record("k", "한수원 원전 AI 도입", archived_at="2026-08-10T01:00:00+00:00"), scope="kr"),
+                    main_record("d", "Nuclear to power AI data centers", archived_at="2026-08-10T01:00:00+00:00"),
+                    main_record("old", "NIVA nuclear AI", archived_at="2026-06-01T01:00:00+00:00")])
+
+        def boom(system, user):
+            raise AssertionError("fetch_only 는 판정하지 않는다")
+        stats = self.bf.run(date(2026, 7, 1), date(2026, 10, 15), judge_call=boom, fetch_only=True,
+                            now=NOW, state_file=self.state, archive_dir=self.archive, main_archive_dir=self.main)
+        self.assertEqual(stats["shared_pool"], 3)
+        self.assertEqual(stats["pre_excluded"], {"domestic": 1, "datacenter_power": 1})
+        self.assertEqual(stats["to_judge"], 1)
+        self.assertFalse(self.state.exists())
+
+    def test_judges_records_with_publication_time_and_skips_on_rerun(self):
+        from datetime import date  # noqa: PLC0415
+        self._main([main_record("a", "NIVA nuclear AI rollout", archived_at="2026-08-10T01:00:00+00:00"),
+                    main_record("b", "Reactor AI inspection pilot", archived_at="2026-08-11T01:00:00+00:00")])
+        pub = datetime(2026, 7, 20, 3, 0, tzinfo=timezone.utc)
+
+        def fetch(url, name):
+            if "EN 원전 AI 2026-07-19" not in name:
+                return []
+            return [{"link": "https://news.google.com/rss/articles/r1", "title": "Rosatom NIVA nuclear AI digital twin",
+                     "pub": pub, "publisher": "TASS", "publisher_domain": "tass.com"}]
+        calls = []
+
+        def call(system, user):
+            calls.append(user)
+            return judge_all(["NIVA"])(system, user)
+        stats = self.bf.run(date(2026, 7, 1), date(2026, 10, 15), fetch=fetch, hasher=lambda u: "h" + u[-2:],
+                            judge_call=call, max_judge=10, now=NOW, state_file=self.state,
+                            archive_dir=self.archive, main_archive_dir=self.main)
+        self.assertEqual(stats["included"], 2)
+        self.assertEqual(stats["excluded"], 1)
+        rows = {r["hash"]: r for r in lane.load_archive(self.archive)}
+        self.assertEqual(rows["hr1"]["collected_at"], pub.isoformat())
+        self.assertEqual(rows["hr1"]["backfill"], "research")
+        self.assertTrue((self.archive / "2026-07.jsonl").exists())  # 수집 달의 파일
+        again = self.bf.run(date(2026, 7, 1), date(2026, 10, 15), fetch=fetch, hasher=lambda u: "h" + u[-2:],
+                            judge_call=call, max_judge=10, now=NOW, state_file=self.state,
+                            archive_dir=self.archive, main_archive_dir=self.main)
+        self.assertEqual(again["to_judge"], 0)
+
+    def test_cap_leaves_the_rest_for_the_next_run(self):
+        from datetime import date  # noqa: PLC0415
+        self._main([main_record(f"m{i}", f"NIVA nuclear AI story {i}",
+                                archived_at=f"2026-08-{10 + i:02d}T01:00:00+00:00") for i in range(5)])
+        first = self.bf.run(date(2026, 7, 1), date(2026, 10, 15), judge_call=judge_all(["NIVA"]), max_judge=2,
+                            now=NOW, state_file=self.state, archive_dir=self.archive, main_archive_dir=self.main)
+        self.assertEqual((first["judged"], first["deferred"]), (2, 3))
+        second = self.bf.run(date(2026, 7, 1), date(2026, 10, 15), judge_call=judge_all(["NIVA"]), max_judge=10,
+                             now=NOW, state_file=self.state, archive_dir=self.archive, main_archive_dir=self.main)
+        self.assertEqual(second["judged"], 3)
+
+    def test_workflow_is_manual_locked_and_redeploys(self):
+        wf = (ROOT / ".github" / "workflows" / "ai-lane-backfill.yml").read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", wf)
+        self.assertIn("group: nuclens-state", wf)
+        self.assertIn("python tools/ai_lane_research_backfill.py", wf)
+        self.assertIn("git add ai_archive/", wf)
+        self.assertIn("deploy-web.yml", wf)

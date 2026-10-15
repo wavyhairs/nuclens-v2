@@ -1,0 +1,115 @@
+name: AI lane backfill (해외 AI·DX 기간 재검색)
+
+# 해외 AI·DX 레인의 **기간 백필** — since 부터 기사 원천을 다시 검색해 지금 레인의 알고리즘(프리필터
+# AI ∨ DX·러·중 어휘, 판정 v6, 국내·데이터센터 가드)으로 ai_archive/ 를 채운다(tools/ai_lane_research_backfill.py).
+#   · 메인 아카이브 since 이후 전부 + Google 뉴스 기간 질의(영·일·불·러·중, after:/before:).
+#   · fetch_only 로 먼저 돌리면 판정 없이 수만 센다(Gemini 0회).
+#   · max_judge 를 넘은 후보는 남는다. 같은 입력으로 다시 돌리면 판정 이력에 없는 것만 이어서 묻는다.
+# 수동 실행 전용. 크롤·브리핑과 같은 락(ai_state.json 을 함께 쓴다). 끝나면 커밋하고 full 배포를 부른다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "재검색 시작일 (KST, YYYY-MM-DD)"
+        type: string
+        default: "2026-07-01"
+      max_judge:
+        description: "이번 실행의 판정 상한(기사 수, 16건당 Gemini 1회)"
+        type: string
+        default: "640"
+      fetch_only:
+        description: "판정 없이 재검색·프리필터 수만 센다"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  # crawl·daily-brief 와 같은 락 — ai_state.json 을 함께 쓴다.
+  group: nuclens-state
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # crawl.yml 과 같은 검증 스크립트(tests/test_gemini_key_mode.py 가 같음을 잠근다).
+      - name: Verify Gemini key selection
+        env:
+          PAID_MODE: ${{ vars.GEMINI_PAID_MODE }}
+          SELECTED: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
+          PAID_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FREE_KEY: ${{ secrets.GEMINI_FREE_API_KEY }}
+        run: |
+          if [ "$PAID_MODE" = "ON" ]; then
+            mode=paid; want="$PAID_KEY"; name=secrets.GEMINI_API_KEY
+          else
+            mode=free; want="$FREE_KEY"; name=secrets.GEMINI_FREE_API_KEY
+          fi
+          echo "Gemini key mode: $mode"
+          if [ -z "$want" ]; then
+            echo "::error::Gemini key mode: $mode 인데 $name 가 비어 있다 — 반대쪽 키로 넘어가지 않고 여기서 멈춘다"
+            exit 1
+          fi
+          if [ "$SELECTED" != "$want" ]; then
+            echo "::error::Gemini key mode: $mode 인데 선택 식이 다른 키를 골랐다 — 빈 시크릿으로 인한 폴백을 의심할 것"
+            exit 1
+          fi
+
+      - name: Re-search and judge
+        env:
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          # 입력은 셸에 직접 펼치지 않고 환경변수로만 넘긴다.
+          SINCE: ${{ inputs.since }}
+          MAX_JUDGE: ${{ inputs.max_judge }}
+          FETCH_ONLY: ${{ inputs.fetch_only }}
+        run: |
+          if [ "$FETCH_ONLY" = "true" ]; then
+            python tools/ai_lane_research_backfill.py --since "$SINCE" --fetch-only
+          else
+            python tools/ai_lane_research_backfill.py --since "$SINCE" --max-judge "$MAX_JUDGE"
+          fi
+
+      - name: Commit backfill
+        if: ${{ !inputs.fetch_only }}
+        env:
+          SINCE: ${{ inputs.since }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -d ai_archive ]; then git add ai_archive/; fi
+          if [ -f ai_state.json ]; then git add ai_state.json; fi
+          git diff --cached --quiet && { echo "새로 들어간 기사 없음 — 커밋 생략"; exit 0; }
+          git commit -m "chore: ai lane research backfill since ${SINCE}"
+          for i in 1 2 3 4 5; do
+            if git push; then exit 0; fi
+            echo "push 충돌 — rebase 후 재시도 $i/5"
+            git fetch origin main
+            git rebase origin/main || { git rebase --abort; echo "!! rebase 충돌 — 수동 확인 필요"; exit 1; }
+            sleep $((RANDOM % 8 + 4))
+          done
+          echo "!! push 5회 실패"
+          exit 1
+
+      # 크롤의 배포는 '라이브가 105분 넘게 낡았을 때만'이라 바로 보이지 않는다.
+      - name: Redeploy site
+        if: ${{ !inputs.fetch_only }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-web.yml -R "${{ github.repository }}" -f mode_hint=full
