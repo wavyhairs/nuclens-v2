@@ -5948,10 +5948,11 @@ function dlDialogFacts(issue) {
     `<span class="topic-chip"><b>${esc(key)}</b> ${esc(value)}</span>`)).join("")}${dlFlags(issue)}</div>`;
 }
 
-function dlTocRow(issue, index, day) {
+function dlTocRow(issue, index, day, span = null) {
   const score = issue.round_scores?.[day];
-  const articles = score?.articles ?? issue.article_count ?? 0;
-  const outlets = score?.outlets ?? issue.story_outlet_count ?? 0;
+  // 최근 7일 보기에서는 사건이 한 번만 서고, 수는 7일 합이다(span).
+  const articles = span?.articles ?? score?.articles ?? issue.article_count ?? 0;
+  const outlets = span?.outlets ?? score?.outlets ?? issue.story_outlet_count ?? 0;
   const stance = issue.stance && issue.stance !== "neutral" ? `<span class="dl-stance s-${esc(issue.stance)}">${esc(dlLabel(issue.stance))}</span>` : "";
   const count = articles > 1 ? `<span class="ai-count">기사 ${articles}건 · 매체 ${outlets}곳</span>` : "";
   return `<div class="toc-row ai-toc-row dl-toc-row"${score ? ` title="중요도 ${esc(score.score)} = ${esc(score.breakdown)}"` : ""}>
@@ -6015,15 +6016,28 @@ function dlWeekWindow(rounds) {
   return { from, to, rounds: rounds.filter(round => round.date >= from && round.date <= to) };
 }
 
+// 7일 창 안에서 한 사건의 기사·매체 수. 같은 사건이 여러 회차에 걸쳐 들어오므로(「1차 회의」는
+// 9·10·13·14일 회차에 다 있다) 날짜마다 다시 세우지 않고 가장 최근 날짜에 한 번, 수는 합으로.
+function dlSpanCounts(issue, days) {
+  const rows = (issue.related_articles || []).filter(article => days.has(article.round));
+  return { articles: rows.length, outlets: new Set(rows.map(article => article.publisher).filter(Boolean)).size };
+}
+
 function dlList(groups, weekMode) {
   // groups: [{date, issues}] — 사건 모드는 회차 안 중요도순, 기사 모드는 회차 안 시각 역순.
   let shown = 0;
+  const placed = new Set();
+  const days = new Set(groups.map(group => group.round));
   const html = groups.map(group => {
-    const issues = group.issues.filter(dlFilterIssue);
+    let issues = group.issues.filter(dlFilterIssue);
+    if (weekMode && state.dlMode !== "articles") {
+      issues = issues.filter(issue => !placed.has(issue.issue_id));
+      issues.forEach(issue => placed.add(issue.issue_id));
+    }
     if (!issues.length) return "";
     const body = state.dlMode === "articles"
       ? dlArticlesOf(issues, group.round).map(row => dlArticleRow(row.article, row.issue, shown++)).join("")
-      : issues.map(issue => dlTocRow(issue, shown++, group.round)).join("");
+      : issues.map(issue => dlTocRow(issue, shown++, group.round, weekMode ? dlSpanCounts(issue, days) : null)).join("");
     const count = state.dlMode === "articles" ? `${dlArticlesOf(issues, group.round).length}건` : `${issues.length}개 사건`;
     const head = weekMode ? `<div class="ai-day-head"><span>${esc(dateWeekdayLabel(group.date))}</span><span class="ai-day-n">${count}</span></div>` : "";
     return head + body;
@@ -6677,7 +6691,7 @@ function bind() {
   // 홈 목차(#tocList)는 이 위임을 타지 않는다 — 행이 통째로 <a href> 라 브라우저가
   // 상세 페이지로 보낸다. 반면 '먼저 볼 3건'(#pickList)은 <button> 이라 위임이
   // 필요하다(펼침·전체 내용 보기·저장). 나머지는 다이얼로그를 여는 화면들이다.
-  ["pickList", "aiTocList", "aiPendingList",
+  ["pickList", "aiTocList", "aiPendingList", "dlTocList", "dlPendingList", "dlStage",
    "archiveIssueList", "savedIssueList", "reportCandidateList", "issueDialog", "thisWeekBody",
    "weeklyReportBody", "insightList",
    "recentIssueList"].forEach(id => {

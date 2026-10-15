@@ -256,6 +256,10 @@ def build_payload(rows: list[dict] | None = None, *, now: datetime | None = None
     issues = [build_issue(group, today=today, verify=verify) for group in group_rows(rows)]
     pending_issues = [dict(build_issue(group, today=today, verify=verify), pending=True)
                       for group in group_rows(pending_rows)]
+    # 오늘 들어온 사건의 회차는 내일이다 — 상세의 「○월 ○일 시작」은 회차가 아니라 기사 날짜로 둔다.
+    for issue in pending_issues:
+        issue["first_seen"] = min((a["article_date"] for a in issue["related_articles"] if a["article_date"]),
+                                  default=issue["first_seen"])
     pending_day = round_date(pending_rows[0]) if pending_rows else ""
     pending_issues = _ordered(pending_issues, pending_day) if pending_issues else []
     by_day: dict[str, list[dict]] = {}
@@ -275,7 +279,8 @@ def build_payload(rows: list[dict] | None = None, *, now: datetime | None = None
     recent_cut = (now.astimezone(KST) - timedelta(days=14)).date().isoformat()
     recent_articles = sum(r["article_count"] for r in round_rows if r["date"] > recent_cut)
     # 지금 국면 — 가장 최근의 공식 사건(중대성 3)의 국면. 입장·반응은 국면이 아니다.
-    milestones = [i for i in issues if i["significance"] >= 3 and i["stage"] != "reaction"]
+    # 오늘 들어온 기사(pending)도 본다 — 「의제 확정」처럼 오늘의 공식 사건이 곧 지금 국면이다.
+    milestones = [i for i in issues + pending_issues if i["significance"] >= 3 and i["stage"] != "reaction"]
     current = max(milestones, key=lambda i: (i["last_seen"], i["first_seen"]), default=None)
     labels = {key: lane.LABELS_KR[key] for key in
               lane.STAGES + lane.ACTOR_TYPES + lane.STANCES + lane.ARTICLE_TYPES + lane.CONFIDENCE}
@@ -288,7 +293,9 @@ def build_payload(rows: list[dict] | None = None, *, now: datetime | None = None
         "latest_briefing": rounds_of.latest_briefing_date(),
         "current_stage": ({"stage": current["stage"], "label": lane.LABELS_KR.get(current["stage"], ""),
                            "issue_id": current["issue_id"], "title": current["title"],
-                           "date": current["first_seen"]} if current else {}),
+                           # 회차 날짜가 아니라 기사 날짜 — 오늘 들어온 사건의 회차는 내일이다.
+                           "date": min((a["article_date"] for a in current["related_articles"] if a["article_date"]),
+                                       default=current["first_seen"])} if current else {}),
         "pending": {
             "date": pending_day,
             "issues": pending_issues,
