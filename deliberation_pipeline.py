@@ -463,11 +463,20 @@ def run(main_records: list[dict], *, collected: list[dict] | None = None,
         backlog[article["hash"]] = _queued(article, judged_at)
     judge_batch(batch)
 
-    # 접힌 기사: 대표가 포함이면 상속, 대표가 제외·후보 밖이면 스스로 판정, 대표가 밀렸으면 함께 이월.
+    # 접힌 기사: 대표가 포함이고 **제목도 공론화 기사로 보이면** 상속. 대표가 포함이어도 제목이 프리필터를
+    # 못 넘으면 스스로 판정한다 — 첫 실전 회차(2026-10-15 crawl #681)에서 메인의 수집 단계 접기가
+    # 「고리 3·4호기 계속운전 심의」 12건을 「원전 공론화 의제 확정」 대표 밑에 접었다(둘 다 '계속운전'을
+    # 말한다). 상속했으면 사건 하나가 엉뚱한 기사 12건을 달고 섰다. 판정은 재현율 규칙 그대로라
+    # 애매하면 포함·검토가 되고, 분명한 계속운전 기사만 빠진다. 대표가 제외·후보 밖이면 스스로 판정,
+    # 대표가 밀렸으면 함께 이월.
     second: list[dict] = []
     for article in folded:
         rep_hash = article.get("folded_into") or ""
         rep = by_hash.get(rep_hash)
+        titled = lane.prefilter({"title": article.get("title")})["passed"]
+        if rep is not None and not titled:
+            second.append(article)
+            continue
         if rep is not None:
             record = inherit(article, rep, judged_at=judged_at)
             records.append(record)
