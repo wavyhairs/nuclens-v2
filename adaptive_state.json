@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-10-15"
   },
   "retired": {
@@ -1022,10 +1022,58 @@
     }
   },
   "spent": {
-    "count": 4,
+    "count": 5,
     "date": "2026-10-15"
   },
   "terms": {
+    "macst": {
+      "articles": 3,
+      "created_at": "2026-10-15T06:41:05.586524+00:00",
+      "domains": [
+        "fnnews.com",
+        "inthenews.co.kr",
+        "yna.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "fnnews.com",
+          "hash": "186b9f4fa021f07c",
+          "importance": "nice_to_know",
+          "title": "고리원자력본부, 고리2호기 대상 '다중방호 사고관리전략' 최초 훈련 실시"
+        },
+        {
+          "domain": "inthenews.co.kr",
+          "hash": "5f951a2dc263ffdf",
+          "importance": "nice_to_know",
+          "title": "고리원자력본부, 고리2호기 대상 '다중방호 사고관리전략' 첫 훈련 실시"
+        },
+        {
+          "domain": "yna.co.kr",
+          "hash": "cde686060fceaca0",
+          "importance": "nice_to_know",
+          "title": "한수원 고리본부, 고리2호기 대상 ‘다중방호 사고관리전략’ 훈련 실시"
+        }
+      ],
+      "expires_at": "2026-10-16T06:41:07.015353+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 8,
+      "last_run": "2026-10-15T06:41:07.015353+00:00",
+      "new_articles": 8,
+      "origin": "auto",
+      "planned_at": "2026-10-15T06:41:05.586524+00:00",
+      "queries_run": 1,
+      "query": "MACST 원자력",
+      "score": 3.82,
+      "status": "extended",
+      "term": "MACST",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [
+        "2026-10-15"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    },
     "기후변화로": {
       "articles": 1,
       "created_at": "2026-10-13T15:41:21.164868+00:00",
