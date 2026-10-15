@@ -15,6 +15,10 @@ const TOPIC_LABELS = {
   operations_maintenance: "운영·정비", inspection_diagnostics: "검사·진단",
   licensing_regulation: "인허가·규제", design_engineering: "설계·엔지니어링",
   safeguards_security: "안전조치·보안", workforce_governance: "인력·거버넌스",
+  // 신규원전 공론화 레인의 국면(deliberation_lane.STAGES). 공론화 이슈의 topics 가 이 키다.
+  pre_launch: "추진 결정", committee_setup: "위원회 구성", agenda_design: "의제·절차",
+  panel_deliberation: "시민참여단 숙의", result: "결과·권고", plan_reflection: "정부안 반영",
+  aftermath: "후속", reaction: "입장·반응",
 };
 
 const COUNTRY_LABELS = {
@@ -92,7 +96,7 @@ const COUNTRY_MAP_LABELS = [
 ];
 
 const OFFICIAL_HINTS = ["go.kr", "khnp", "kaeri", "iaea.org", "energy.gov", "nrc.gov"];
-const VIEW_IDS = ["news", "ai", "trend", "search", "longterm", "report"];
+const VIEW_IDS = ["news", "deliberation", "ai", "trend", "search", "longterm", "report"];
 const ISSUE_ROUTE = /^\/issue\/([^/]+)\/?$/;
 const BRIEF_ROUTE = /^\/brief\/(\d{4}-\d{2}-\d{2})\/?$/;
 
@@ -140,6 +144,8 @@ const state = {
   // aiScope: 기술 범위 칩(전체·AI·디지털, 4단계). aiSpan: "day" | "week" | ""(미정 — 첫 렌더가
   // 오늘 회차 유무로 정한다).
   ai: null, aiDate: "", aiArea: "전체", aiMaturity: "전체", aiScope: "전체", aiSpan: "",
+  // 신규원전 공론화 탭(deliberation_issues.json). dlMode: "events"(사건) | "articles"(기사 전체).
+  dl: null, dlDate: "", dlSpan: "", dlMode: "events", dlStage: "전체", dlActor: "전체", dlStance: "전체",
 };
 
 let eventsBound = false;
@@ -1058,8 +1064,11 @@ function syncUrl(mode = "replace") {
   if (state.view === "longterm" && state.threadId) params.set("th", state.threadId);
   if (state.view === "ai" && state.aiDate && state.aiDate !== aiRounds()[0]?.date) params.set("aid", state.aiDate);
   if (state.view === "ai" && state.aiSpan === "week") params.set("aw", "1");
-  // AI 이슈에는 /issue/<id>/ 정적 페이지가 없다 — 그 경로를 쓰면 새로고침이 404 다.
-  if (state.issueId && isAiIssueId(state.issueId)) params.set("issue", state.issueId);
+  if (state.view === "deliberation" && state.dlDate && state.dlDate !== dlRounds()[0]?.date) params.set("did", state.dlDate);
+  if (state.view === "deliberation" && state.dlSpan === "week") params.set("dw", "1");
+  if (state.view === "deliberation" && state.dlMode === "articles") params.set("dm", "a");
+  // AI·공론화 이슈에는 /issue/<id>/ 정적 페이지가 없다 — 그 경로를 쓰면 새로고침이 404 다.
+  if (state.issueId && isLaneIssueId(state.issueId)) params.set("issue", state.issueId);
   if (state.archiveScope !== "stories") params.set("as", state.archiveScope);
   if (state.archiveRegion !== "전체") params.set("ar", state.archiveRegion);
   if (state.archiveTopic !== "전체") params.set("at", state.archiveTopic);
@@ -1067,7 +1076,7 @@ function syncUrl(mode = "replace") {
   if (state.archivePeriod !== "all") params.set("ap", state.archivePeriod);
   if (state.archiveVerification !== "전체") params.set("av", state.archiveVerification);
   const query = params.toString();
-  const path = state.issueId && state.view !== "trend" && !isAiIssueId(state.issueId)
+  const path = state.issueId && state.view !== "trend" && !isLaneIssueId(state.issueId)
     ? issuePath(state.issueId)
     : (briefRouteOwned && state.view === "news" && state.briefingDate ? briefPath(state.briefingDate) : "/");
   const url = `${path}${query ? `?${query}` : ""}`;
@@ -1098,7 +1107,10 @@ function restoreUrlState() {
   state.threadId = resolveThreadId(params.get("th") || "");
   if (state.threadId && !params.get("view") && longTermReady()) state.view = "longterm";
   if (state.view === "longterm" && !longTermReady()) { state.view = "news"; state.threadId = ""; }
-  state.archiveScope = ["all", "ai"].includes(params.get("as")) ? params.get("as") : "stories";
+  state.archiveScope = ["all", "ai", "deliberation"].includes(params.get("as")) ? params.get("as") : "stories";
+  state.dlDate = params.get("did") || "";
+  state.dlSpan = params.get("dw") === "1" ? "week" : (state.dlDate ? "day" : "");
+  state.dlMode = params.get("dm") === "a" ? "articles" : "events";
   state.aiDate = params.get("aid") || "";
   state.aiSpan = params.get("aw") === "1" ? "week" : (state.aiDate ? "day" : "");
   state.archiveRegion = ["전체", "국내", "해외"].includes(params.get("ar")) ? params.get("ar") : "전체";
@@ -2638,7 +2650,7 @@ function storyEligible(issue) {
 // 범위 전환은 필터 변경이 아니라 **화면 이동에 가깝다** — 목록의 단위가 바뀐다.
 // 그래서 다른 탭에서 눌러도(빈 목록의 '모든 이슈 보기') 탐색으로 데려간다.
 function setArchiveScope(scope) {
-  if (!["stories", "all", "ai"].includes(scope) || state.archiveScope === scope) return;
+  if (!["stories", "all", "ai", "deliberation"].includes(scope) || state.archiveScope === scope) return;
   state.archiveScope = scope;
   renderTopicSelects();
   if (state.view !== "search") switchView("search");
@@ -2650,6 +2662,7 @@ function archiveIssueMatches(issue) {
   // 범위가 맨 앞 — '추적 중인 이슈'는 목록의 성격이고, 아래 필터는 그 안에서의 교집합이다.
   if (state.archiveScope === "stories" && !storyEligible(issue)) return false;
   if (state.archiveScope !== "ai" && isAiIssueId(issue.issue_id)) return false;
+  if (state.archiveScope !== "deliberation" && isDlIssueId(issue.issue_id)) return false;
   // 엔티티 필터가 그 다음 — 엔티티 페이지는 "이 대상의 이슈"가 전제고,
   // 나머지 필터(주제·기간·검색어)는 그 안에서의 교집합이다.
   if (state.archiveEntity && !(issue.entity_ids || []).includes(state.archiveEntity)) return false;
@@ -3254,6 +3267,7 @@ function timelineList(articles, options) {
 
 function currentIssueById(issueId) {
   if (isAiIssueId(issueId)) return aiIssueById(issueId);
+  if (isDlIssueId(issueId)) return dlIssueById(issueId);
   const catalogIssue = state.issues.find(issue => issue.issue_id === issueId) || null;
   if (state.view !== "news") return catalogIssue;
   const briefingIssue = currentBriefing()?.issues.find(issue => issue.issue_id === issueId) || null;
@@ -3283,7 +3297,7 @@ function relatedIssues(issue, limit = 3) {
   const tags = new Set(issue.tags || []);
   if (!topics.size && !tags.size) return [];
   // AI 이슈의 관련 이슈는 AI 카탈로그 안에서 찾는다 — 주제 키가 다른 체계다.
-  const pool = isAiIssueId(issue.issue_id) ? aiIssues() : state.issues;
+  const pool = isAiIssueId(issue.issue_id) ? aiIssues() : isDlIssueId(issue.issue_id) ? dlIssues() : state.issues;
   return pool
     .filter(other => other.issue_id !== issue.issue_id)
     .map(other => {
@@ -3922,10 +3936,15 @@ function openIssueDialog(issueId, updateUrl = true) {
     .filter(reason => String(reason || "").trim())
     .map(reason => `<span class="topic-chip">${esc(reason)}</span>`).join("");
   const isAi = isAiIssueId(issue.issue_id);
+  const isDl = isDlIssueId(issue.issue_id);
+  // 별도 레인(해외 AI·공론화)은 브리핑 선정이 아니라 회차 대표로 읽는다.
+  const isLane = isAi || isDl;
   const contextDate = isAi
     ? (state.view === "ai" && (issue.rounds || []).includes(state.aiDate) ? state.aiDate : issue.last_seen)
-    : (state.view === "news" ? state.briefingDate : issue.last_seen);
-  const stageLabel = isAi ? "이 회차" : (state.view === "news" ? "이번 브리핑" : "최근 브리핑");
+    : isDl
+      ? (state.view === "deliberation" && (issue.rounds || []).includes(state.dlDate) ? state.dlDate : issue.last_seen)
+      : (state.view === "news" ? state.briefingDate : issue.last_seen);
+  const stageLabel = isLane ? "이 회차" : (state.view === "news" ? "이번 브리핑" : "최근 브리핑");
   // member_role 이 두 종류를 가른다: card 는 실제로 브리핑에 나간 기사,
   // evidence 는 뒤에 매칭으로 붙은 미선정 보도다(build_data.py 가 그렇게 싣고,
   // test_global_issue_catalog_contains_each_delivered_article_once 가 잠근다).
@@ -3942,7 +3961,7 @@ function openIssueDialog(issueId, updateUrl = true) {
     <h2 id="issueDialogTitle" tabindex="-1">${esc(issue.title)}</h2>
     <div class="dialog-meta"><span>${esc(issueStatusText(issue, state.view !== "news"))}</span><span>${dateLabel(issue.first_seen)} 시작</span><span>${
       evidenceArticles.length
-        ? `${isAi ? "회차 대표" : "선정"} ${cardArticles.length}건 · 추가 근거 ${evidenceArticles.length}건`
+        ? `${isLane ? "회차 대표" : "선정"} ${cardArticles.length}건 · 추가 근거 ${evidenceArticles.length}건`
         : `누적 ${issue.article_count}건`}</span></div>
     ${classificationNote(issue)}
     ${splitLineageNote(issue)}
@@ -3952,7 +3971,7 @@ function openIssueDialog(issueId, updateUrl = true) {
       ${issueDetail ? `<div class="dialog-detail"><strong>${issue.detail_source ? "관련 기사 내용" : "기사 내용"}</strong>${issue.detail_source ? `<small>이 이슈의 다른 기사 「${esc(issue.detail_source)}」에서</small>` : ""}<p>${esc(issueDetail)}</p></div>` : ""}
       ${issueChangeText(issue) ? `<p class="dialog-change"><strong>이번에 달라진 점</strong>${esc(issueChangeText(issue))}</p>` : ""}
       <p class="dialog-verification">${verificationBadge(issue, { always: true })}${reportPickBadge(issue)}<span>${esc(issueEvidenceText(issue))}</span></p>
-      ${isAi ? aiDialogFacts(issue) : ""}
+      ${isAi ? aiDialogFacts(issue) : isDl ? dlDialogFacts(issue) : ""}
       ${issue.why_important ? `<p class="dialog-meaning"><strong>왜 중요한가 <span class="ai-badge">AI</span></strong>${esc(issue.why_important)}</p>` : ""}
       ${issue.implication ? `<p class="dialog-meaning"><strong>시사점 <span class="ai-badge">AI</span></strong>${esc(issue.implication)}</p>` : ""}
       ${issue.open_question ? `<p class="dialog-open"><strong>아직 확정되지 않은 것</strong>${esc(issue.open_question)}</p>` : ""}
@@ -3974,7 +3993,7 @@ function openIssueDialog(issueId, updateUrl = true) {
     ${keeiDialogSection(issue)}
     ${threadDialogSection(issue)}
     <section class="dialog-history dialog-basis" aria-labelledby="issueBasisTitle">
-      <div class="dialog-section-head"><h3 id="issueBasisTitle">이 사건의 근거</h3><span>${isAi ? `회차마다 근거가 가장 강한 기사 ${cardArticles.length}건` : `브리핑에 선정된 ${cardArticles.length}건`}</span></div>
+      <div class="dialog-section-head"><h3 id="issueBasisTitle">이 사건의 근거</h3><span>${isLane ? `회차마다 근거가 가장 강한 기사 ${cardArticles.length}건` : `브리핑에 선정된 ${cardArticles.length}건`}</span></div>
       ${cardArticles.length
         ? timelineList(cardArticles, {
             contextDate,
@@ -3986,7 +4005,7 @@ function openIssueDialog(issueId, updateUrl = true) {
     </section>
     ${evidenceArticles.length ? `<details class="dialog-evidence">
       <summary>추가 근거 원문 ${evidenceArticles.length}건</summary>
-      <p class="dialog-evidence-note">${isAi ? "같은 사건을 다룬 다른 매체·후속 보도입니다. 검증에는 함께 셉니다." : "브리핑에 선정되지는 않았지만 같은 사건을 다룬 보도입니다. 검증에는 함께 셉니다."}</p>
+      <p class="dialog-evidence-note">${isLane ? "같은 사건을 다룬 다른 매체·후속 보도입니다. 검증에는 함께 셉니다." : "브리핑에 선정되지는 않았지만 같은 사건을 다룬 보도입니다. 검증에는 함께 셉니다."}</p>
       ${timelineList(evidenceArticles, {
         contextDate,
         stage: stageLabel,
@@ -5714,7 +5733,11 @@ function aiIssueById(issueId) {
     || aiPending().find(issue => issue.issue_id === issueId) || null;
 }
 function aiLabel(key) { return state.ai?.labels?.[key] || TOPIC_LABELS[key] || key || ""; }
-function archivePool() { return state.archiveScope === "ai" ? aiIssues() : state.issues; }
+function archivePool() {
+  if (state.archiveScope === "ai") return aiIssues();
+  if (state.archiveScope === "deliberation") return dlIssues();
+  return state.issues;
+}
 
 function syncAiChrome() {
   const ready = aiReady();
@@ -5872,12 +5895,240 @@ function stepAiRound(delta) {
   syncUrl();
 }
 
+// ── 신규원전 공론화 ─────────────────────────────────────────────────────────
+// 「해외 AI·DX」와 같은 골격(회차 이동·하루/최근 7일·필터·목차 행·기존 상세)을 쓰되 셋이 다르다.
+//  ① 마지막 아침 브리핑 뒤 들어온 기사를 목록 **위**에 「오늘 들어온 기사」로 둔다 — 이 탭의 요청이
+//     "3시간마다 계속 띄우기"다. 다음 브리핑이 나가면 그 날짜 회차로 옮겨 간다(deliberation_web).
+//  ② 「사건 / 기사 전체」 — 사건 행(매체 N곳)과, 그 회차에 실린 기사 하나하나(매체·시각순).
+//  ③ 필터는 국면·주체·입장이다. 「검토」는 범위 경계라 판정기가 확신하지 못한 기사다(재현율 우선).
+// AI 탭 코드는 건드리지 않는다 — 세 번째 레인이 오면 그때 둘을 묶는다.
+function dlIssues() { return state.dl?.issues || []; }
+function dlRounds() { return state.dl?.rounds || []; }
+function dlPending() { return state.dl?.pending?.issues || []; }
+function dlReady() { return dlIssues().length > 0 && dlRounds().length > 0; }
+function isDlIssueId(issueId) { return String(issueId || "").startsWith("dl-"); }
+function isLaneIssueId(issueId) { return isAiIssueId(issueId) || isDlIssueId(issueId); }
+function dlIssueById(issueId) {
+  return dlIssues().find(issue => issue.issue_id === issueId)
+    || dlPending().find(issue => issue.issue_id === issueId) || null;
+}
+function dlLabel(key) { return state.dl?.labels?.[key] || TOPIC_LABELS[key] || key || ""; }
+function dlBriefingDay() { return state.dl?.latest_briefing || state.dl?.today || ""; }
+
+function syncDlChrome() {
+  const ready = dlReady();
+  document.querySelectorAll('[data-view="deliberation"]').forEach(button => { button.hidden = !ready; });
+  if (!ready && state.view === "deliberation") switchView("news");
+}
+
+function dlClock(iso) {
+  const parsed = new Date(iso || "");
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+function dlFlags(row) {
+  return [
+    row.editorial || row.article_type === "editorial" ? '<span class="ai-flag">사설·칼럼</span>' : "",
+    row.review || row.confidence === "low"
+      ? '<span class="ai-flag dl-review" title="공론화 범위에 드는지 판정기가 확신하지 못한 기사입니다. 놓치지 않으려고 싣습니다.">검토</span>' : "",
+  ].join("");
+}
+
+function dlDialogFacts(issue) {
+  const stances = Object.entries(issue.stance_counts || {})
+    .filter(([key]) => key !== "neutral").map(([key, n]) => `${dlLabel(key)} ${n}`).join(" · ");
+  const facts = [
+    ["국면", dlLabel(issue.stage)],
+    ["주체", (issue.actor_names || []).slice(0, 3).join(", ") || dlLabel(issue.actor_type)],
+    ["입장", stances],
+    ["보도", `매체 ${issue.story_outlet_count || 0}곳 · 기사 ${issue.article_count || 0}건`],
+  ].filter(([, value]) => value);
+  return `<div class="topic-row ai-facts" aria-label="공론화 분류">${facts.map(([key, value]) => (
+    `<span class="topic-chip"><b>${esc(key)}</b> ${esc(value)}</span>`)).join("")}${dlFlags(issue)}</div>`;
+}
+
+function dlTocRow(issue, index, day) {
+  const score = issue.round_scores?.[day];
+  const articles = score?.articles ?? issue.article_count ?? 0;
+  const outlets = score?.outlets ?? issue.story_outlet_count ?? 0;
+  const stance = issue.stance && issue.stance !== "neutral" ? `<span class="dl-stance s-${esc(issue.stance)}">${esc(dlLabel(issue.stance))}</span>` : "";
+  const count = articles > 1 ? `<span class="ai-count">기사 ${articles}건 · 매체 ${outlets}곳</span>` : "";
+  return `<div class="toc-row ai-toc-row dl-toc-row"${score ? ` title="중요도 ${esc(score.score)} = ${esc(score.breakdown)}"` : ""}>
+  <span class="toc-num" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
+  <span class="toc-body">
+    <span class="toc-meta-line"><span class="toc-region">${esc(dlLabel(issue.stage))}</span><span class="toc-chips"><span class="chip">${esc(dlLabel(issue.actor_type))}</span></span>${stance}${dlFlags(issue)}${count}</span>
+    <span class="toc-title"><button type="button" class="toc-link" data-issue-id="${esc(issue.issue_id)}">${esc(issue.title)}</button></span>
+  </span>
+  <span class="toc-arrow" aria-hidden="true">→</span>
+</div>`;
+}
+
+// 기사 전체 — 기사 한 건이 한 줄. 제목은 원문으로 가고, 꼬리의 「사건」이 상세를 연다.
+function dlArticleRow(article, issue, index) {
+  const when = article.pub ? `${dateLabel(String(article.article_date || ""))} ${dlClock(article.pub)}`.trim() : dateLabel(article.article_date);
+  const href = safeUrl(article.url);
+  const title = href
+    ? `<a class="toc-link" href="${esc(href)}" target="_blank" rel="noopener">${esc(article.title_kr || article.title)}</a>`
+    : `<span class="toc-link">${esc(article.title_kr || article.title)}</span>`;
+  const kind = ["editorial", "analysis", "interview"].includes(article.article_type)
+    ? `<span class="chip">${esc(dlLabel(article.article_type))}</span>` : "";
+  return `<div class="toc-row ai-toc-row dl-article-row">
+  <span class="toc-num" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
+  <span class="toc-body">
+    <span class="toc-meta-line"><span class="toc-region">${esc(article.publisher || article.domain || "")}</span><span class="toc-chips">${kind}</span><span class="ai-count">${esc(when)}</span>${article.confidence === "low" ? dlFlags({ confidence: "low" }) : ""}</span>
+    <span class="toc-title">${title}</span>
+  </span>
+  <button type="button" class="dl-event-link" data-issue-id="${esc(issue.issue_id)}" title="${esc(issue.title)}">사건</button>
+</div>`;
+}
+
+function dlArticlesOf(issues, day) {
+  const rows = [];
+  issues.forEach(issue => (issue.related_articles || []).forEach(article => {
+    if (!day || article.round === day) rows.push({ article, issue });
+  }));
+  const at = row => String(row.article.pub || row.article.collected_at || row.article.article_date || "");
+  return rows.sort((a, b) => at(b).localeCompare(at(a)));
+}
+
+function dlFilterIssue(issue) {
+  return (state.dlStage === "전체" || issue.stage === state.dlStage)
+    && (state.dlActor === "전체" || (issue.actor_types || [issue.actor_type]).includes(state.dlActor))
+    && (state.dlStance === "전체" || Boolean(issue.stance_counts?.[state.dlStance]));
+}
+
+function dlFilterChips(kind, values, selected) {
+  const label = { stage: "국면", actor: "주체", stance: "입장" }[kind];
+  return `<div class="ai-filter-row" role="group" aria-label="${label}"><span class="ai-filter-label">${label}</span>${
+    ["전체", ...values].map(value => `<button type="button" class="ai-pill${value === selected ? " is-on" : ""}" aria-pressed="${value === selected}" data-dl-${kind}="${esc(value)}">${esc(value === "전체" ? "전체" : dlLabel(value))}</button>`).join("")}</div>`;
+}
+
+function dlWeekWindow(rounds) {
+  const endOf = anchor => {
+    const cut = new Date(`${anchor}T00:00:00Z`);
+    cut.setUTCDate(cut.getUTCDate() - 6);
+    return [cut.toISOString().slice(0, 10), anchor];
+  };
+  let [from, to] = endOf(dlBriefingDay() || rounds[0].date);
+  if (!rounds.some(round => round.date >= from && round.date <= to)) [from, to] = endOf(rounds[0].date);
+  return { from, to, rounds: rounds.filter(round => round.date >= from && round.date <= to) };
+}
+
+function dlList(groups, weekMode) {
+  // groups: [{date, issues}] — 사건 모드는 회차 안 중요도순, 기사 모드는 회차 안 시각 역순.
+  let shown = 0;
+  const html = groups.map(group => {
+    const issues = group.issues.filter(dlFilterIssue);
+    if (!issues.length) return "";
+    const body = state.dlMode === "articles"
+      ? dlArticlesOf(issues, group.round).map(row => dlArticleRow(row.article, row.issue, shown++)).join("")
+      : issues.map(issue => dlTocRow(issue, shown++, group.round)).join("");
+    const count = state.dlMode === "articles" ? `${dlArticlesOf(issues, group.round).length}건` : `${issues.length}개 사건`;
+    const head = weekMode ? `<div class="ai-day-head"><span>${esc(dateWeekdayLabel(group.date))}</span><span class="ai-day-n">${count}</span></div>` : "";
+    return head + body;
+  }).join("");
+  return { html, shown };
+}
+
+function renderDl() {
+  const rounds = dlRounds();
+  const section = document.getElementById("view-deliberation");
+  if (!section || !rounds.length) return;
+  if (!rounds.some(round => round.date === state.dlDate)) state.dlDate = rounds[0].date;
+  const index = rounds.findIndex(round => round.date === state.dlDate);
+  const round = rounds[index];
+  const latestIsToday = rounds[0].date === dlBriefingDay();
+  if (!state.dlSpan) state.dlSpan = latestIsToday ? "day" : "week";
+  const week = dlWeekWindow(rounds);
+  const weekMode = state.dlSpan === "week";
+  [["#dlSpan [data-dl-span]", "dlSpan", state.dlSpan], ["#dlMode [data-dl-mode]", "dlMode", state.dlMode]].forEach(([selector, key, value]) => {
+    document.querySelectorAll(selector).forEach(button => {
+      const on = button.dataset[key] === value;
+      button.classList.toggle("active", on);
+      button.setAttribute("aria-pressed", String(on));
+    });
+  });
+  const select = document.getElementById("dlDateSel");
+  select.innerHTML = rounds.map(row => (
+    `<option value="${esc(row.date)}">${esc(dateWeekdayLabel(row.date))} · 기사 ${row.article_count}건</option>`)).join("");
+  select.value = state.dlDate;
+  document.getElementById("dlPrevDay").disabled = index >= rounds.length - 1;
+  document.getElementById("dlNextDay").disabled = index <= 0;
+  const groups = (weekMode ? week.rounds : [round]).map(row => (
+    { date: row.date, round: row.date, issues: row.issue_ids.map(dlIssueById).filter(Boolean) }));
+  const issues = groups.flatMap(group => group.issues);
+  const pick = (values, selected) => (selected === "전체" || values.includes(selected) ? selected : "전체");
+  const stages = [...new Set(issues.map(issue => issue.stage).filter(Boolean))];
+  const actors = [...new Set(issues.flatMap(issue => issue.actor_types || [issue.actor_type]).filter(Boolean))];
+  const stances = [...new Set(issues.flatMap(issue => Object.keys(issue.stance_counts || {})))].filter(key => key !== "neutral");
+  state.dlStage = pick(stages, state.dlStage);
+  state.dlActor = pick(actors, state.dlActor);
+  state.dlStance = pick(stances, state.dlStance);
+  const scope = weekMode ? week.rounds : [round];
+  const articles = scope.reduce((sum, row) => sum + (row.article_count || 0), 0);
+  const stats = state.dl.stats || {};
+  document.getElementById("dlLede").textContent =
+    `${weekMode ? "최근 7일" : "이 회차"} 사건 ${issues.length}개 · 기사 ${articles}건 — 누적 기사 ${stats.articles ?? 0}건(매체 ${stats.outlets ?? 0}곳, 사설·칼럼 ${stats.editorials ?? 0}건). 12차 전력수급기본계획을 위한 원전 공론화 기사를 3시간마다 모읍니다.`;
+  const current = state.dl.current_stage || {};
+  const stageLine = document.getElementById("dlStage");
+  stageLine.hidden = !current.stage;
+  stageLine.innerHTML = current.stage
+    ? `<b>지금 국면</b> ${esc(current.label)} · <button type="button" class="classification-link" data-issue-id="${esc(current.issue_id)}" data-force-dialog="1">${esc(current.title)}</button> <span class="ai-count">${esc(dateLabel(current.date))}</span>` : "";
+  const stale = document.getElementById("dlStale");
+  stale.hidden = latestIsToday || (!weekMode && index !== 0);
+  stale.textContent = stale.hidden ? "" : `${dateLabel(dlBriefingDay())} 브리핑 회차에는 새 공론화 기사가 없습니다. ${weekMode ? `${dateLabel(week.from)}–${dateLabel(week.to)} 기사를 날짜별로 보여 줍니다.` : "가장 최근 회차를 보여 줍니다."}`;
+  const chipRows = [];
+  if (stages.length > 1) chipRows.push(dlFilterChips("stage", stages, state.dlStage));
+  if (actors.length > 1) chipRows.push(dlFilterChips("actor", actors, state.dlActor));
+  if (stances.length) chipRows.push(dlFilterChips("stance", stances, state.dlStance));
+  document.getElementById("dlFilters").innerHTML = chipRows.join("");
+  const unit = state.dlMode === "articles" ? "기사 · 최신순" : "사건 · 중요도순";
+  document.getElementById("dlPanelTitle").textContent = weekMode ? `최근 7일의 ${unit} · 날짜별` : `이 회차의 ${unit}`;
+  const { html, shown } = dlList(groups, weekMode);
+  document.getElementById("dlTocList").innerHTML = html || '<p class="empty">조건에 맞는 기사가 없습니다.</p>';
+  const suffix = state.dlMode === "articles" ? `기사 ${shown}건` : `사건 ${shown}개`;
+  document.getElementById("dlPanelFoot").textContent = weekMode
+    ? `${dateLabel(week.from)}–${dateLabel(week.to)} · ${suffix}`
+    : `${dateWeekdayLabel(round.date)} 회차 · ${suffix}`;
+  renderDlPending();
+}
+
+function renderDlPending() {
+  const panel = document.getElementById("dlPending");
+  if (!panel) return;
+  const pending = state.dl?.pending || {};
+  const issues = pending.issues || [];
+  panel.hidden = issues.length === 0;
+  if (panel.hidden) return;
+  document.getElementById("dlPendingTitle").textContent =
+    `오늘 들어온 기사 · ${pending.article_count || 0}건 · 매체 ${pending.outlet_count || 0}곳`;
+  const updated = dlClock(state.dl.generated_at);
+  document.getElementById("dlPendingNote").textContent =
+    `마지막 아침 브리핑 뒤에 모인 기사입니다. 3시간마다 갱신${updated ? `(마지막 ${updated})` : ""}되고, ${pending.date ? `${dateLabel(pending.date)} ` : "다음 "}브리핑 회차로 넘어갑니다.`;
+  document.getElementById("dlPendingList").innerHTML = state.dlMode === "articles"
+    ? dlArticlesOf(issues, "").map((row, i) => dlArticleRow(row.article, row.issue, i)).join("")
+    : issues.map((issue, i) => dlTocRow(issue, i, pending.date)).join("");
+}
+
+function stepDlRound(delta) {
+  const rounds = dlRounds();
+  const index = rounds.findIndex(round => round.date === state.dlDate);
+  const next = rounds[index + delta];
+  if (!next) return;
+  state.dlDate = next.date;
+  state.dlSpan = "day";
+  renderDl();
+  syncUrl();
+}
+
 function switchView(view, updateUrl = true) {
   if (!VIEW_IDS.includes(view)) return;
   // 딥링크·뒤로가기로도 닫힌 화면에 들어갈 수 없다. 게이트는 크롬 한 군데가
   // 아니라 진입 경로 전부에 서 있어야 안전장치다.
   if (view === "longterm" && !longTermReady()) view = "news";
   if (view === "ai" && !aiReady()) view = "news";
+  if (view === "deliberation" && !dlReady()) view = "news";
   if (view !== state.view && state.issueId) closeIssueDialog(false);
   state.view = view;
   VIEW_IDS.forEach(id => {
@@ -5907,6 +6158,7 @@ function switchView(view, updateUrl = true) {
     if (view === "longterm") renderLongTerm();
     if (view === "report") { renderReportCandidates(); renderPubs(); }
     if (view === "ai") renderAi();
+    if (view === "deliberation") renderDl();
   }
   if (updateUrl) syncUrl();
   scrollToPageTop();
@@ -6650,6 +6902,44 @@ function bind() {
     renderTopicSelects();
     switchView("search");
   });
+  // 신규원전 공론화 — 회차 이동·보기 범위·목록 단위·필터. 방향은 AI 탭과 같다.
+  document.getElementById("dlPrevDay").addEventListener("click", () => stepDlRound(1));
+  document.getElementById("dlNextDay").addEventListener("click", () => stepDlRound(-1));
+  document.getElementById("dlDateSel").addEventListener("change", event => {
+    state.dlDate = event.target.value;
+    state.dlSpan = "day";
+    renderDl();
+    syncUrl();
+  });
+  document.getElementById("dlSpan").addEventListener("click", event => {
+    const button = event.target.closest("[data-dl-span]");
+    if (!button || button.dataset.dlSpan === state.dlSpan) return;
+    state.dlSpan = button.dataset.dlSpan;
+    renderDl();
+    syncUrl();
+  });
+  document.getElementById("dlMode").addEventListener("click", event => {
+    const button = event.target.closest("[data-dl-mode]");
+    if (!button || button.dataset.dlMode === state.dlMode) return;
+    state.dlMode = button.dataset.dlMode;
+    renderDl();
+    syncUrl();
+  });
+  document.getElementById("dlFilters").addEventListener("click", event => {
+    const stage = event.target.closest("[data-dl-stage]");
+    const actor = event.target.closest("[data-dl-actor]");
+    const stance = event.target.closest("[data-dl-stance]");
+    if (stage) state.dlStage = stage.dataset.dlStage;
+    else if (actor) state.dlActor = actor.dataset.dlActor;
+    else if (stance) state.dlStance = stance.dataset.dlStance;
+    else return;
+    renderDl();
+  });
+  document.getElementById("dlToSearch").addEventListener("click", () => {
+    state.archiveScope = "deliberation";
+    renderTopicSelects();
+    switchView("search");
+  });
   document.getElementById("nextDay").addEventListener("click", () => stepBriefing(-1));
 
   document.getElementById("archiveRegion").addEventListener("change", event => { state.archiveRegion = event.target.value; renderArchiveSearch(true); syncUrl(); });
@@ -6923,6 +7213,8 @@ function loadFullData() {
       loadJSON("threads.json").catch(() => null),
       // 해외 AI 탭도 부가 데이터 — 없으면 탭이 숨고 나머지는 산다.
       loadJSON("ai_issues.json").catch(() => null),
+      // 신규원전 공론화 탭도 부가 데이터 — 없으면 탭이 숨고 나머지는 산다.
+      loadJSON("deliberation_issues.json").catch(() => null),
     ]);
   }
   return fullDataRequest;
@@ -6930,7 +7222,7 @@ function loadFullData() {
 
 function applyFullData(rows) {
   [state.news, state.briefings, state.issues, state.trend, state.meta,
-   state.insights, state.pubs, state.audio, state.entities, state.threads, state.ai] = rows;
+   state.insights, state.pubs, state.audio, state.entities, state.threads, state.ai, state.dl] = rows;
   state.briefingDates = state.briefings.map(briefing => briefing.date);
   state.partial = false;
 }
@@ -7021,6 +7313,7 @@ function finishBoot(painted) {
   renderSaved();
   syncLongTermChrome();
   syncAiChrome();
+  syncDlChrome();
   renderLongTerm();
   renderSystemStatus();
   renderReturnNote();
