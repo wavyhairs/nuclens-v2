@@ -1,25 +1,6 @@
 {
- "generated_at": "2026-10-15T00:47:43+09:00",
+ "generated_at": "2026-10-16T00:49:20+09:00",
  "events": [
-  {
-   "id": "of-d461711de05a",
-   "date": "2026-09-28",
-   "end_date": "2026-10-01",
-   "kind": "range",
-   "time": "",
-   "label": "The 15th International Topical Meeting on Nuclear Reactor Thermal-Hydraulics, Operation, and Safety (NUTHOS-15)",
-   "host": "",
-   "organizer": "",
-   "place": "Kashiwa-no-ha, Japan",
-   "url": "https://www.ans.org/meetings/view-471",
-   "source_id": "kaif_calendar",
-   "publisher": "한국원자력산업협회",
-   "notice_title": "The 15th International Topical Meeting on Nuclear Reactor Thermal-Hydraulics, Operation, and Safety (NUTHOS-15) (세미나)",
-   "first_seen": "2026-08-29",
-   "topics": [],
-   "relevance": "nuclear",
-   "significance": "세미나"
-  },
   {
    "id": "of-0cd365ab1808",
    "date": "2026-10-02",
@@ -330,7 +311,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-10-15T00:47:43+09:00",
+   "at": "2026-10-16T00:49:20+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -338,11 +319,11 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-10-15T00:47:43+09:00",
+   "at": "2026-10-16T00:49:20+09:00",
    "ok": true,
    "parsed": 10,
    "kept": 2,
-   "new": 1,
+   "new": 0,
    "dropped": {
     "not_an_event": 4,
     "no_interest_match": 2,
@@ -350,7 +331,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-10-15T00:47:43+09:00",
+   "at": "2026-10-16T00:49:20+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -363,7 +344,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-10-15T00:47:43+09:00",
+   "at": "2026-10-16T00:49:20+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -371,27 +352,28 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-10-15T00:47:43+09:00",
+   "at": "2026-10-16T00:49:20+09:00",
    "ok": true,
-   "parsed": 11,
+   "parsed": 14,
    "kept": 0,
    "new": 0,
    "dropped": {
-    "no_interest_match": 10,
+    "no_interest_match": 13,
     "not_an_event": 1
    }
   },
   "kpx_notice": {
-   "at": "2026-10-15T00:47:43+09:00",
+   "at": "2026-10-16T00:49:20+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
-   "new": 0,
+   "new": 1,
    "dropped": {
-    "no_interest_match": 8,
+    "unreadable_event_date": 1,
+    "no_event_date": 2,
+    "no_interest_match": 7,
     "low_significance": 3,
-    "not_an_event": 6,
-    "no_event_date": 1
+    "not_an_event": 5
    }
   }
  }

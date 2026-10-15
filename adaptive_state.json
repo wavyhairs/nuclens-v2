@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 3,
-    "date": "2026-10-15"
+    "count": 1,
+    "date": "2026-10-16"
   },
   "retired": {
     "ap1000vsapr1400": {
@@ -403,6 +403,14 @@
       "term": "문무대왕과학연구소",
       "type": "org",
       "until": "2026-10-02T15:40:41.667920+00:00"
+    },
+    "미국선급협회": {
+      "new_articles": 1,
+      "reason": "성과 없음",
+      "retired_at": "2026-10-15T15:41:26.796592+00:00",
+      "term": "미국선급협회",
+      "type": "org",
+      "until": "2026-10-29T15:41:26.796592+00:00"
     },
     "미사일방어사령부": {
       "new_articles": 0,
@@ -1022,10 +1030,57 @@
     }
   },
   "spent": {
-    "count": 10,
-    "date": "2026-10-15"
+    "count": 3,
+    "date": "2026-10-16"
   },
   "terms": {
+    "bwxt캐나다와": {
+      "articles": 4,
+      "created_at": "2026-10-15T15:41:22.756445+00:00",
+      "domains": [
+        "edaily.co.kr",
+        "yna.co.kr",
+        "sisaon.co.kr",
+        "ebn.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "edaily.co.kr",
+          "hash": "453a2dbe47fed4f1",
+          "importance": "nice_to_know",
+          "title": "세아베스틸, BWXT 캐나다와 원전 고부가 기자재 공급 협력 MOU 체결"
+        },
+        {
+          "domain": "yna.co.kr",
+          "hash": "9c343e22b0f1e1c8",
+          "importance": "nice_to_know",
+          "title": "세아베스틸, BWXT 캐나다와 원전 부품 공급 협력 MOU 체결"
+        },
+        {
+          "domain": "sisaon.co.kr",
+          "hash": "a6d24d2f12c4010a",
+          "importance": "nice_to_know",
+          "title": "세아베스틸, BWXT 캐나다와 원전 기자재 협력 MOU 체결"
+        }
+      ],
+      "expires_at": "2026-10-16T15:41:22.756445+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-10-15T15:41:26.796519+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-10-15T15:41:22.756445+00:00",
+      "queries_run": 1,
+      "query": "BWXT 캐나다와 원전",
+      "score": 3.9,
+      "status": "tracking",
+      "term": "BWXT 캐나다와",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "iaa": {
       "articles": 3,
       "created_at": "2026-10-15T09:41:11.426996+00:00",
@@ -1136,12 +1191,12 @@
       ],
       "expires_at": "2026-10-16T09:41:15.417968+00:00",
       "importance": "must_read",
-      "last_result_count": 2,
-      "last_run": "2026-10-15T09:41:15.417968+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-10-15T15:41:26.796519+00:00",
       "new_articles": 13,
       "origin": "auto",
-      "planned_at": "2026-10-15T09:41:11.426996+00:00",
-      "queries_run": 6,
+      "planned_at": "2026-10-15T15:41:22.756445+00:00",
+      "queries_run": 7,
       "query": "기후변화로 원전",
       "score": 3.6,
       "status": "promote_candidate",
@@ -1153,55 +1208,7 @@
         "2026-10-15"
       ],
       "yields": 4,
-      "zero_streak": 0
-    },
-    "미국선급협회": {
-      "articles": 3,
-      "created_at": "2026-10-14T09:41:16.873180+00:00",
-      "domains": [
-        "hdhy.co.kr",
-        "eagle.org",
-        "ebn.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "hdhy.co.kr",
-          "hash": "88b879fa2f76ef41",
-          "importance": "nice_to_know",
-          "title": "선박해양플랜트연구소, SMR 추진 컨테이너선 개념설계 ABS 기본승인 획득"
-        },
-        {
-          "domain": "eagle.org",
-          "hash": "45a473cb74d36ba6",
-          "importance": "nice_to_know",
-          "title": "미국 ABS, 에너지부(DOE)와 해양 원자력 기술 적용을 위한 MOU 체결"
-        },
-        {
-          "domain": "ebn.co.kr",
-          "hash": "bab83954fd04029e",
-          "importance": "nice_to_know",
-          "title": "미 에너지부-미국선급협회, 해양 원자력 기술 적용 MOU 체결"
-        }
-      ],
-      "expires_at": "2026-10-15T15:42:15.639532+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-10-15T09:41:15.417968+00:00",
-      "new_articles": 1,
-      "origin": "auto",
-      "planned_at": "2026-10-15T09:41:11.426996+00:00",
-      "queries_run": 4,
-      "query": "미국선급협회 원자력",
-      "score": 3.7,
-      "status": "extended",
-      "term": "미국선급협회",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [
-        "2026-10-15"
-      ],
-      "yields": 1,
-      "zero_streak": 2
+      "zero_streak": 1
     },
     "선급협회": {
       "articles": 3,
