@@ -177,12 +177,74 @@ def run(since: date, until: date, *, fetch=None, hasher=None, body_fetcher=None,
     return stats
 
 
+def recheck(*, judge_call=None, now: datetime | None = None, state_file: Path = lane.STATE_FILE,
+            archive_dir: Path = lane.ARCHIVE_DIR) -> dict:
+    """이미 들어간 Gemini 판정 레코드를 **지금 판정 기준**으로 다시 묻고, 이제 제외되는 것을 DB 에서 뺀다.
+
+    판정 기준을 좁힌 뒤(v7) 앞선 판정이 남긴 오판을 걷어 내는 용도다. 손으로 적은 레코드
+    (judge=manual-claude)는 건드리지 않는다. 판정 실패는 그대로 둔다(빼지 않는다).
+    """
+    now = now or datetime.now(timezone.utc)
+    judged_at = now.isoformat()
+    rows = lane.load_archive(archive_dir)
+    targets = [r for r in rows if r.get("judge") == "gemini"
+               and int(r.get("prompt_version") or 0) < ai_lane.PROMPT_VERSION]
+    articles = []
+    for r in targets:
+        article = {"hash": r["hash"], "title": r.get("title", ""), "title_kr": r.get("title_kr", ""),
+                   "summary": r.get("summary", ""), "detail": r.get("detail", ""),
+                   "publisher": r.get("publisher", ""), "domain": r.get("domain", ""),
+                   "scope": r.get("main_scope", ""), "countries": r.get("countries") or []}
+        article["_prefilter"] = ai_lane.prefilter(article)
+        articles.append(article)
+    verdicts = ai_lane.judge(articles, call=judge_call, batch_size=BATCH_SIZE) if articles else []
+    state = lane.load_state(state_file)
+    drop: set[str] = set()
+    reasons: Counter = Counter()
+    failed = 0
+    for article, verdict in zip(articles, verdicts):
+        verdict = lane.datacenter_guard(article, lane.domestic_guard(article, verdict))
+        if verdict is None:
+            failed += 1
+            continue
+        if not verdict.get("in_scope"):
+            drop.add(article["hash"])
+            reasons[verdict.get("exclude_reason", "")] += 1
+            state["judged"][article["hash"]] = {"at": judged_at, "in": False,
+                                                "reason": verdict.get("exclude_reason", ""),
+                                                "v": ai_lane.PROMPT_VERSION, "recheck": True}
+    asked = {a["hash"] for a in articles}
+    removed_titles = []
+    for path in sorted(archive_dir.glob("*.jsonl")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        keep = []
+        for line in lines:
+            try:
+                row = json.loads(line)
+            except ValueError:
+                keep.append(line)
+                continue
+            if row.get("hash") in drop:
+                removed_titles.append(row.get("title_kr", ""))
+                continue
+            if row.get("hash") in asked:
+                row["prompt_version"] = ai_lane.PROMPT_VERSION   # 다시 물어 살아남았다
+                line = json.dumps(row, ensure_ascii=False)
+            keep.append(line)
+        path.write_text("".join(x + "\n" for x in keep), encoding="utf-8")
+    lane.save_state(state, state_file, now=now)
+    return {"rechecked": len(articles), "removed": len(drop), "failed": failed,
+            "reasons": dict(reasons), "removed_titles": removed_titles}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--since", default="2026-07-01")
     parser.add_argument("--until", default="", help="KST 날짜, 비우면 오늘")
     parser.add_argument("--max-judge", type=int, default=640)
     parser.add_argument("--fetch-only", action="store_true", help="재검색·프리필터까지만 하고 수를 센다(판정 0)")
+    parser.add_argument("--recheck", action="store_true",
+                        help="먼저 기존 Gemini 레코드를 지금 기준으로 다시 묻고 제외되는 것을 뺀다")
     args = parser.parse_args()
 
     import article_body  # noqa: PLC0415
@@ -192,6 +254,12 @@ def main() -> None:
 
     if not args.fetch_only and not gemini_client.is_available():
         sys.exit("ERROR: Gemini 키가 없다 — Actions 의 ai-lane-backfill 워크플로에서 실행할 것")
+    if args.recheck and not args.fetch_only:
+        result = recheck()
+        removed = result.pop("removed_titles", [])
+        print("[AI 백필 재검사] " + json.dumps(result, ensure_ascii=False))
+        for title in removed:
+            print(f"  - {title}")
     since = date.fromisoformat(args.since)
     until = date.fromisoformat(args.until) if args.until else datetime.now(KST).date()
     stats = run(since, until, fetch=throttled(news_bot.fetch_rss), hasher=news_bot.url_hash,

@@ -455,3 +455,41 @@ class ResearchBackfillTests(unittest.TestCase):
         self.assertIn("python tools/ai_lane_research_backfill.py", wf)
         self.assertIn("git add ai_archive/", wf)
         self.assertIn("deploy-web.yml", wf)
+
+
+class RecheckTests(unittest.TestCase):
+    """기준을 좁힌 뒤 기존 Gemini 레코드를 다시 묻는다(tools/ai_lane_research_backfill.recheck)."""
+
+    def test_old_version_records_are_rejudged_and_dropped_when_excluded(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import ai_lane_research_backfill as bf  # noqa: PLC0415
+        import ai_lane  # noqa: PLC0415
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            archive = base / "ai_archive"
+            archive.mkdir()
+            rows = [
+                {"hash": "keep", "judge": "gemini", "prompt_version": 6, "title": "NIVA nuclear AI rollout",
+                 "title_kr": "NIVA 도입", "summary": "s", "main_scope": "overseas", "archived_at": "2026-08-01T00:00:00+00:00"},
+                {"hash": "drop", "judge": "gemini", "prompt_version": 6, "title": "Rosatom mining robots",
+                 "title_kr": "광산 로봇", "summary": "s", "main_scope": "overseas", "archived_at": "2026-08-01T00:00:00+00:00"},
+                {"hash": "hand", "judge": "manual-claude", "prompt_version": 4, "title": "Rosatom mining robots",
+                 "title_kr": "손 라벨", "summary": "s", "main_scope": "overseas", "archived_at": "2026-08-01T00:00:00+00:00"},
+            ]
+            (archive / "2026-08.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+            asked = []
+
+            def call(system, user):
+                asked.append(user)
+                return judge_all(["NIVA"])(system, user)
+            result = bf.recheck(judge_call=call, now=NOW, state_file=base / "s.json", archive_dir=archive)
+            left = {r["hash"]: r for r in lane.load_archive(archive)}
+        self.assertEqual(result["rechecked"], 2)            # 손 라벨은 묻지 않는다
+        self.assertEqual(result["removed"], 1)
+        self.assertEqual(set(left), {"keep", "hand"})
+        self.assertEqual(left["keep"]["prompt_version"], ai_lane.PROMPT_VERSION)
+
+    def test_v7_hint_catches_ai_chip_power_supply_without_losing_gold(self):
+        import ai_lane  # noqa: PLC0415
+        self.assertIn("datacenter_power", ai_lane.prefilter({"title": "미국 원전, 엔비디아 AI 칩 가동을 위한 전력 공급 시작"})["hints"])
+        self.assertNotIn("datacenter_power", ai_lane.prefilter({"title": "Atomic Canyon launches NIVA nuclear AI assistant"})["hints"])
