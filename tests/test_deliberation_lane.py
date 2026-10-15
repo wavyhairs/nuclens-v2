@@ -208,16 +208,28 @@ class RunTests(unittest.TestCase):
         calls = []
         rep = {"hash": "a1", "title": "정부, 원전 공론화 의제 확정", "link": "https://yna.test/a1",
                "domain": "yna.co.kr", "publisher": "연합뉴스", "pub": NOW,
-               "raw_sources": [{"hash": f"f{i}", "title": f"계속운전 등 제외…의제 정했다 {i}",
+               "raw_sources": [{"hash": f"f{i}", "title": f"원전 공론화위, 계속운전 제외…의제 정했다 {i}",
                                 "link": f"https://local{i}.test/x", "publisher": f"지역지{i}",
                                 "domain": f"local{i}.test"} for i in range(5)]}
         stats = self.run_lane([main_record("a1", rep["title"])], fake_judge(calls=calls), collected=[rep])
-        # 대표 1건만 판정기에 갔다. 접힌 5건은 제목에 '공론화'가 없어도 상속으로 들어온다.
+        # 대표 1건만 판정기에 갔다. 제목이 공론화 기사로 보이는 접힌 5건은 호출 없이 상속으로 들어온다
+        # (제목이 프리필터를 못 넘는 접힌 기사는 스스로 판정한다 — 아래 별도 검사).
         self.assertEqual(calls, ["정부, 원전 공론화 의제 확정"])
         self.assertEqual((stats["included"], stats["inherited"]), (6, 5))
         folded = [r for r in self.archived() if r["origin"] == "folded"]
         self.assertTrue(all(r["judge"] == "inherited" and r["folded_into"] == "a1" for r in folded))
         self.assertEqual({r["event_key"] for r in folded}, {"원전 공론화 의제 확정"})
+
+    def test_folded_article_without_deliberation_title_is_judged_not_inherited(self):
+        # crawl #681 실측: 「의제 확정」 대표 밑에 「고리 3·4호기 계속운전 심의」가 접혀 왔다.
+        calls = []
+        rep = {"hash": "a1", "title": "정부, 원전 공론화 의제 확정", "link": "https://yna.test/a1", "pub": NOW,
+               "raw_sources": [{"hash": "f1", "title": "원전 공론화위, 계속운전 논의서 제외", "link": "https://b.test/f1"},
+                               {"hash": "f2", "title": "고리 3·4호기 계속운전 허가안 원안위 상정", "link": "https://c.test/f2"}]}
+        stats = self.run_lane([main_record("a1", rep["title"])], fake_judge(calls=calls), collected=[rep])
+        self.assertEqual(calls, ["정부, 원전 공론화 의제 확정", "고리 3·4호기 계속운전 허가안 원안위 상정"])
+        self.assertEqual((stats["inherited"], stats["included"], stats["excluded"]), (1, 2, 1))
+        self.assertEqual({r["hash"] for r in self.archived()}, {"a1", "f1"})
 
     def test_folded_article_of_an_excluded_rep_is_judged_on_its_own(self):
         rep = {"hash": "a1", "title": "울진 원전 고준위 방폐장 공론화", "link": "https://x.test/a1", "pub": NOW,
