@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-10-15"
   },
   "retired": {
@@ -1022,10 +1022,56 @@
     }
   },
   "spent": {
-    "count": 5,
+    "count": 8,
     "date": "2026-10-15"
   },
   "terms": {
+    "iaa": {
+      "articles": 3,
+      "created_at": "2026-10-15T09:41:11.426996+00:00",
+      "domains": [
+        "motir.go.kr",
+        "munhwa.com",
+        "ekn.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "motir.go.kr",
+          "hash": "6148e83f9ecd1df7",
+          "importance": "nice_to_know",
+          "title": "산업부, EU 산업가속화법(IAA) 대응 민관합동 TF 출범"
+        },
+        {
+          "domain": "munhwa.com",
+          "hash": "7c4bf61cc5cc3186",
+          "importance": "must_read",
+          "title": "정부, EU '산업가속화법(IAA)' 대응 민관합동 TF 가동"
+        },
+        {
+          "domain": "ekn.kr",
+          "hash": "897a738231e5912e",
+          "importance": "nice_to_know",
+          "title": "정부, EU 산업가속화법 대응 민관 TF 가동…국내 기업 차별 우려"
+        }
+      ],
+      "expires_at": "2026-10-16T09:41:11.426996+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-10-15T09:41:15.417968+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-10-15T09:41:11.426996+00:00",
+      "queries_run": 1,
+      "query": "IAA 원자력",
+      "score": 3.1,
+      "status": "tracking",
+      "term": "IAA",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "macst": {
       "articles": 3,
       "created_at": "2026-10-15T06:41:05.586524+00:00",
@@ -1088,25 +1134,26 @@
           "title": "국내 원전 8기 해수온도 설계 상한 육박…한수원, 설비 개선 시급"
         }
       ],
-      "expires_at": "2026-10-15T09:41:19.598251+00:00",
+      "expires_at": "2026-10-16T09:41:15.417968+00:00",
       "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-10-15T00:41:17.938935+00:00",
-      "new_articles": 11,
+      "last_result_count": 2,
+      "last_run": "2026-10-15T09:41:15.417968+00:00",
+      "new_articles": 13,
       "origin": "auto",
-      "planned_at": "2026-10-15T00:41:15.279985+00:00",
-      "queries_run": 5,
+      "planned_at": "2026-10-15T09:41:11.426996+00:00",
+      "queries_run": 6,
       "query": "기후변화로 원전",
       "score": 3.6,
-      "status": "extended",
+      "status": "promote_candidate",
       "term": "기후변화로",
       "ttl_hours": 24,
       "type": "plant",
       "yield_days": [
-        "2026-10-14"
+        "2026-10-14",
+        "2026-10-15"
       ],
-      "yields": 3,
-      "zero_streak": 2
+      "yields": 4,
+      "zero_streak": 0
     },
     "미국선급협회": {
       "articles": 3,
@@ -1139,11 +1186,11 @@
       "expires_at": "2026-10-15T15:42:15.639532+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-10-15T00:41:17.938935+00:00",
+      "last_run": "2026-10-15T09:41:15.417968+00:00",
       "new_articles": 1,
       "origin": "auto",
-      "planned_at": "2026-10-15T00:41:15.279985+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-10-15T09:41:11.426996+00:00",
+      "queries_run": 4,
       "query": "미국선급협회 원자력",
       "score": 3.7,
       "status": "extended",
@@ -1154,7 +1201,7 @@
         "2026-10-15"
       ],
       "yields": 1,
-      "zero_streak": 1
+      "zero_streak": 2
     }
   },
   "version": 1
