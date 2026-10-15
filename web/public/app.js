@@ -1076,7 +1076,7 @@ function syncUrl(mode = "replace") {
   if (state.archivePeriod !== "all") params.set("ap", state.archivePeriod);
   if (state.archiveVerification !== "전체") params.set("av", state.archiveVerification);
   const query = params.toString();
-  const path = state.issueId && state.view !== "trend" && !isLaneIssueId(state.issueId)
+  const path = state.issueId && state.view !== "trend" && !isAiIssueId(state.issueId) && !isDlIssueId(state.issueId)
     ? issuePath(state.issueId)
     : (briefRouteOwned && state.view === "news" && state.briefingDate ? briefPath(state.briefingDate) : "/");
   const url = `${path}${query ? `?${query}` : ""}`;
