@@ -46,7 +46,10 @@ from typing import Callable, Iterable
 # VR·디지털 트윈·디지털 계측제어)」로 넓혔다. 90일 해외 기사 10,256건 실측: AI 진짜 사례 25건,
 # 로봇·드론·VR 진짜 5건, 디지털 5건 — 넓혀도 주 3건 안팎이다. 주체 이름은 영어 공식 표기로
 # 통일한다(러시아어·중국어 피드가 들어오면서 「Росатом」·「Rosatom」이 다른 사건으로 갈라졌다).
-PROMPT_VERSION = 6
+# v7 (2026-10-15, 원천 재검색 백필 첫 640건 점검): 포함 162건 중 명확한 오판 17건의 유형을 경계
+# 규칙에 더했다 — AI 칩·데이터센터 전력 공급, 광산·채굴 로봇, 지역 행정 디지털화·지역 협력, 로봇 제품
+# 시장 출시 계획, 핵무기 위험·드론 방어 훈련, 원자력이 여러 의제 중 하나인 국가 전략.
+PROMPT_VERSION = 7
 POLICY_TASK = "ai_lane_judge"
 
 # ── 1. 프리필터 어휘 ─────────────────────────────────────────────────────────
@@ -124,7 +127,8 @@ HINT_TERMS: dict[str, tuple[str, ...]] = {
     "datacenter_power": (
         "data center", "data centre", "datacenter", "datacentre", "hyperscaler",
         "power demand", "electricity demand", "power purchase", "power-hungry",
-        "power ai", "to power ai", "ai boom",
+        "power ai", "to power ai", "ai boom", "ai chips", "ai chip", "power supply for ai",
+        "전력 공급", "전력을 공급", "칩 가동",
         "데이터센터", "데이터 센터", "전력수요", "전력 수요", "전력난", "전력망",
         "データセンター", "centre de données", "centres de données",
         "дата-центр", "цод", "数据中心", "算力",
@@ -316,6 +320,13 @@ SYSTEM_PROMPT = """당신은 '해외 원전의 AI·디지털 기술 활용' 기�
   · 총회·인력 프로그램·인허가 해설에서 AI 가 여러 의제 중 하나로만 언급 → 제외 not_ai_use
   · AI 데이터센터에 **전력을 공급**하려는 원전 사업(인허가 추진·전력구매계약·SMR 배치) → 제외 datacenter_power
     (AI 가 전력을 쓰는 이야기이지 원전이 AI 를 쓰는 이야기가 아니다. "AI 붐에 원전 기술 공급" 류가 전부 여기다)
+  · "원전이 엔비디아 AI 칩·데이터센터 가동용 전력 공급" → 제외 datacenter_power (디지털 제어가 언급돼도 마찬가지)
+  · 우라늄 광산·채굴·탐사의 로봇·데이터 디지털화 → 제외 not_nuclear (원자력 시설 현장이 아니다)
+  · 원자력 기업이 **지역 행정·도시 관리·지자체 협력**에 디지털·AI 를 쓰거나 협약 → 제외 not_nuclear / diplomatic_mention
+  · 로봇·AI **제품의 시장 출시 계획·양산 계획·투자 유치**뿐이고 원자력 시설 적용이 없음 → 제외 robotics_only / ai_industry_general
+  · 핵무기·핵 위험과 AI 의 관계, 원전에 대한 드론 공격 대비 훈련 → 제외 defense_weapons
+  · 국가 AI·과학 전략에 원자력이 여러 분야 중 하나로 들어감 → 제외 not_ai_use (원자력 AI 사업 자체가 주제일 때만 포함)
+  · 디지털 교육 과정·인력 양성 과정 개설(무엇에 쓰는지 원전 적용이 없음) → 제외 not_ai_use
   · 한국 기업·기관(한수원·두산·현대·HD현대·삼성 등)이 주체 → 제외 domestic (해외 파트너·시장이 나와도)
   · 선박·자동차·공장 등 원전 밖의 AI (SMR 추진 선박의 자율운항 AI 등) → 제외 not_nuclear
 

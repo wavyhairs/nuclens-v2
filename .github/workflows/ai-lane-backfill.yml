@@ -22,6 +22,10 @@ on:
         description: "판정 없이 재검색·프리필터 수만 센다"
         type: boolean
         default: true
+      recheck:
+        description: "판정 전에 기존 Gemini 레코드를 지금 판정 기준으로 다시 묻고 제외되는 것을 뺀다"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -79,9 +83,12 @@ jobs:
           SINCE: ${{ inputs.since }}
           MAX_JUDGE: ${{ inputs.max_judge }}
           FETCH_ONLY: ${{ inputs.fetch_only }}
+          RECHECK: ${{ inputs.recheck }}
         run: |
           if [ "$FETCH_ONLY" = "true" ]; then
             python tools/ai_lane_research_backfill.py --since "$SINCE" --fetch-only
+          elif [ "$RECHECK" = "true" ]; then
+            python tools/ai_lane_research_backfill.py --since "$SINCE" --max-judge "$MAX_JUDGE" --recheck
           else
             python tools/ai_lane_research_backfill.py --since "$SINCE" --max-judge "$MAX_JUDGE"
           fi
