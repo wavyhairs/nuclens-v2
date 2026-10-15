@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-10-16"
   },
   "retired": {
@@ -1030,7 +1030,7 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 6,
     "date": "2026-10-16"
   },
   "terms": {
@@ -1112,11 +1112,11 @@
       "expires_at": "2026-10-16T09:41:11.426996+00:00",
       "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-10-15T09:41:15.417968+00:00",
+      "last_run": "2026-10-15T18:41:29.544756+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-10-15T09:41:11.426996+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-15T18:41:25.700923+00:00",
+      "queries_run": 2,
       "query": "IAA 원자력",
       "score": 3.1,
       "status": "tracking",
@@ -1125,7 +1125,7 @@
       "type": "company",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "macst": {
       "articles": 3,
@@ -1157,12 +1157,12 @@
       ],
       "expires_at": "2026-10-16T12:41:08.659058+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 3,
-      "last_run": "2026-10-15T12:41:08.659058+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-10-15T18:41:29.544756+00:00",
       "new_articles": 11,
       "origin": "auto",
-      "planned_at": "2026-10-15T12:41:06.060768+00:00",
-      "queries_run": 2,
+      "planned_at": "2026-10-15T18:41:25.700923+00:00",
+      "queries_run": 3,
       "query": "MACST 원자력",
       "score": 3.82,
       "status": "extended",
@@ -1173,7 +1173,39 @@
         "2026-10-15"
       ],
       "yields": 2,
-      "zero_streak": 0
+      "zero_streak": 1
+    },
+    "mcre": {
+      "articles": 1,
+      "created_at": "2026-10-15T18:41:25.700923+00:00",
+      "domains": [
+        "world-nuclear-news.org"
+      ],
+      "evidence": [
+        {
+          "domain": "world-nuclear-news.org",
+          "hash": "766f0df7a5fe1853",
+          "importance": "must_read",
+          "title": "미 DOE, 용융염 원자로(MCRE) 개발 가속화 위한 자금 지원 승인"
+        }
+      ],
+      "expires_at": "2026-10-16T18:41:25.700923+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-10-15T18:41:29.544756+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-10-15T18:41:25.700923+00:00",
+      "queries_run": 1,
+      "query": "MCRE 원자력",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "MCRE",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     },
     "기후변화로": {
       "articles": 1,
