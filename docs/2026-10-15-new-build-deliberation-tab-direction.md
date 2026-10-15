@@ -392,3 +392,14 @@ AI 레인 코드는 한 줄도 바뀌지 않았다.
 - 판정 포함/제외 비율과 「사설 되살림」·「검토」 건수. 첫 3회차의 포함 기사 제목을 훑어 오포함을 본다.
 - 큰 사건 날(권고안 발표 등) 이월이 3일 안에 소진되는지 — 안 되면 `DELIBERATION_MAX_JUDGE` 를 올린다.
 - 금요일 표본 검사(§2-4): 네이버 웹 검색 「원전 공론화」 7일 상위 50건 대조 → `eval_artifacts/deliberation/recall-YYYY-WW.md`.
+
+### 9-5. 검증 (2026-10-15, 이 세션)
+
+| 항목 | 결과 |
+|---|---|
+| 새 테스트 | `tests/test_deliberation_lane.py` 31건 · `tests/test_deliberation_web.py` 10건 통과 |
+| 전체 파이썬 테스트 | 3,168건 — 실패 0 (로컬에 없던 `feedparser` 를 설치한 뒤 다시 돌린 4개 모듈 포함) |
+| CI 노드 검사 | `node --check app.js` 와 CI 목록의 노드 테스트 전부 통과(`thread_dialog_section.mjs` 는 새 의존 함수 1줄 추가) |
+| 로컬 사이트 빌드 | `web/build_data.py` 정상 종료, `deliberation_issues.json` 289 KB(사건 34 · 오늘 들어온 사건 2) |
+| 렌더 스모크 | `SMOKE_URL=로컬` 로 `render_smoke.mjs` 통과. 공론화 탭·기사 전체·최근 7일·상세·모바일·탐색 범위를 스크린샷으로 확인 — 그 과정에서 상세가 안 열리던 것(클릭 위임 누락) 등 넷을 고쳤다 |
+| 실제 수집·판정 | **미검증** — 이 환경은 네이버·Google 뉴스·Gemini 에 닿지 못한다. 머지 뒤 첫 크롤 로그로 본다(§9-4) |
