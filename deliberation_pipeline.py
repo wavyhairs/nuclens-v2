@@ -290,7 +290,10 @@ def make_record(article: dict, verdict: dict, *, judged_at: str, model: str = ""
         "evidence_role": profile.get("evidence_role", ""),
         "source_tier": profile.get("source_tier", 3),
         "title": title,
-        "title_kr": article.get("title_kr") or verdict.get("title_kr") or title,
+        # 국내 기사는 원제목을 쓴다. 판정기의 정리 제목은 쓰지 않는다 — 백필 실측(2026-10-15): 「韓총리
+        # "檢개혁 마무리 단계…경찰개혁위 신설"」을 본문 한 단락에서 「정부, 국무회의서 원전 공론화 추진계획
+        # 논의」로 바꿔 적었고, 총리 이름까지 틀렸다.
+        "title_kr": article.get("title_kr") or title or verdict.get("title_kr", ""),
         "summary": article.get("summary") or verdict.get("summary", "") or article.get("description", ""),
         "detail": article.get("detail", ""),
         "why_important": verdict.get("why_important") or article.get("why_important", ""),
@@ -341,6 +344,20 @@ def recall_guard(article: dict, verdict: dict | None) -> dict | None:
             "event_key": title[:40], "event_date": "", "confidence": "low",
             "reason": "사설·칼럼 배경 언급 → 검토(결정적 규칙)", "title_kr": "", "summary": "",
             "why_important": "", "implication": ""}
+
+
+def title_guard(article: dict, verdict: dict | None) -> dict | None:
+    """포함 판정인데 제목에 공론화·원전 어휘가 하나도 없으면 「검토」로 낮춘다(빼지는 않는다 — 재현율 우선).
+
+    백필 실측(2026-10-15, 9/1~): 국무회의 기사 「경찰개혁위 신설」 20건이 본문의 원전 공론화 한 단락으로
+    포함(확신 높음)이 됐다. 사진 기사(「브리핑하는 김성환 장관」)처럼 제대로 붙은 것도 이 규칙에 걸리지만
+    「검토」 표시만 붙을 뿐 사건에는 남는다.
+    """
+    if not verdict or not verdict.get("in_scope") or verdict.get("confidence") == "low":
+        return verdict
+    if lane.title_on_topic(article.get("title")):
+        return verdict
+    return {**verdict, "confidence": "low", "reason": f"제목에 공론화·원전 어휘 없음 → 검토 · {verdict.get('reason', '')}"}
 
 
 def known_event_keys(archive: list[dict], *, now: datetime) -> list[str]:
@@ -469,7 +486,7 @@ def run(main_records: list[dict], *, collected: list[dict] | None = None,
             guarded = recall_guard(article, verdict)
             if guarded is not verdict:
                 stats["guarded"] += 1
-            verdict = guarded
+            verdict = title_guard(article, guarded)
             if verdict is None:
                 stats["failed"] += 1
                 state["attempts"][digest] = int(state["attempts"].get(digest, 0)) + 1

@@ -66,8 +66,24 @@ class WebTests(unittest.TestCase):
         groups = web.group_rows(rows)
         keys_per_group = [{gold[r["hash"]] for r in group} for group in groups]
         self.assertTrue(all(len(keys) == 1 for keys in keys_per_group), "서로 다른 gold 사건이 한 이슈로 합쳐졌다")
-        # 갈라지는 것은 7일 창을 넘긴 같은 이름(9/22 연기 발표와 10/7 국감의 연기 보도)뿐이다.
-        self.assertLessEqual(len(groups) - len(set(gold.values())), 1)
+        # 갈라지는 것은 첫날부터 7일 창을 넘긴 같은 이름뿐이다 — 9/23 연기 발표와 10/6 이후 연기 보도,
+        # 9/29 국감 예고와 10/6 이후 국감, 10/2 출범과 10/12 뒤늦은 출범 기사(3곳).
+        self.assertLessEqual(len(groups) - len(set(gold.values())), 3)
+
+    def test_headline_comes_from_the_busiest_round(self):
+        # 마지막 회차 대표가 아니라 기사가 가장 많이 나온 회차의 대표가 제목이 된다.
+        rows = [row(f"a{i}", "공론화위 출범", at("2026-10-13", 8 + i), title=f"공론화위 출범 {i}",
+                    publisher=f"매체{i}") for i in range(3)]
+        rows.append(row("late", "공론화위 출범", at("2026-10-14", 9), title="[국감] 곁가지 기사"))
+        issue = web.build_issue(rows, today="2026-10-15")
+        self.assertTrue(issue["title"].startswith("공론화위 출범"), issue["title"])
+        self.assertEqual(issue["last_seen"], "2026-10-15")
+
+    def test_a_recurring_key_does_not_chain_past_the_window(self):
+        # 백필 실측: 같은 사건 이름이 엿새마다 나오면 마지막 날 기준 창으로는 9/20~10/13 이 한 사건이 됐다.
+        rows = [row(f"r{i}", "기후부 신규 원전 규모 공론화 거쳐 결정 방침", at(day))
+                for i, day in enumerate(("2026-09-20", "2026-09-26", "2026-10-02", "2026-10-08"))]
+        self.assertEqual([len(g) for g in web.group_rows(rows)], [2, 2])
 
     def test_payload_rounds_pending_and_scores(self):
         rows = [row("a", "공론화위 1차 회의", at("2026-10-14", 3), significance=3),
