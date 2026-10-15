@@ -158,9 +158,9 @@ def url_date(url: str) -> datetime | None:
         return None
 
 
-def stale_by_url(url: str, now: datetime) -> bool:
+def stale_by_url(url: str, now: datetime, lookback: timedelta = URL_DATE_LOOKBACK) -> bool:
     stamped = url_date(url)
-    return stamped is not None and stamped < now - URL_DATE_LOOKBACK
+    return stamped is not None and stamped < now - lookback
 
 
 # ── 상태 ─────────────────────────────────────────────────────────────────────
@@ -316,7 +316,8 @@ def _feed_stat() -> dict:
 
 def collect_feeds(fetch: Callable[[str, str], list[dict]], hasher: Callable[[str], str],
                   *, now: datetime | None = None,
-                  sources: list[dict] | None = None) -> tuple[list[dict], dict[str, dict]]:
+                  sources: list[dict] | None = None,
+                  lookback: timedelta | None = None) -> tuple[list[dict], dict[str, dict]]:
     """전용 피드 전부 → (레인 입력 목록, 피드별 통계).
 
     피드별 통계는 4단계부터 로그와 ``ai_state.json`` 의 runs 에 함께 남는다 — 어느 경로가
@@ -324,6 +325,10 @@ def collect_feeds(fetch: Callable[[str, str], list[dict]], hasher: Callable[[str
     ``failed`` 에만 적히고 나머지는 계속 간다.
     """
     now = now or datetime.now(timezone.utc)
+    # lookback 은 공론화 레인의 기간 백필(after:/before: 로 자른 Google 뉴스 질의)이 넘긴다.
+    # 기본값은 그대로다 — 정기 회차는 3일 창, 주소 날짜는 30일.
+    window = lookback or FEED_LOOKBACK
+    url_window = max(window, URL_DATE_LOOKBACK)
     out: list[dict] = []
     counts: dict[str, dict] = {}
     for src in sources if sources is not None else AI_SOURCES:
@@ -337,9 +342,9 @@ def collect_feeds(fetch: Callable[[str, str], list[dict]], hasher: Callable[[str
         stat["fetched"] = len(items)
         for item in items:
             pub = item.get("pub")
-            if isinstance(pub, datetime) and pub < now - FEED_LOOKBACK:
+            if isinstance(pub, datetime) and pub < now - window:
                 continue
-            if stale_by_url(item.get("raw_link") or item.get("link") or "", now):
+            if stale_by_url(item.get("raw_link") or item.get("link") or "", now, url_window):
                 stat["stale_url"] += 1
                 continue
             stat["fresh"] += 1

@@ -1,0 +1,107 @@
+name: Deliberation backfill (공론화 레인 기간 재검색)
+
+# 신규원전 공론화 레인의 **기간 백필** — 기사 원천(네이버 전용 질의·Google 뉴스 KR 기간별 질의)을
+# since 부터 다시 검색해 지금 레인의 판정(deliberation_lane)으로 deliberation_archive/ 를 채운다.
+# 메인 아카이브에서 옮겨 온 0단계 백필과 달리 메인 수집이 놓친 기사까지 닿는다.
+#
+# 수동 실행 전용(workflow_dispatch). 판정 상한(max_judge)을 넘은 후보는 이월돼 정기 크롤이
+# 회차당 64건씩 이어서 판정한다 — 한 번에 Gemini 일일 한도를 다 쓰지 않으려는 것이다.
+# 끝나면 커밋하고 사이트를 full 로 다시 배포한다(크롤의 배포는 105분 게이트가 있어 늦다).
+
+on:
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "재검색 시작일 (KST, YYYY-MM-DD)"
+        type: string
+        default: "2026-09-01"
+      max_judge:
+        description: "이번 실행의 판정 상한(기사 수). 넘친 것은 정기 크롤이 이어서 판정"
+        type: string
+        default: "480"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  # crawl·daily-brief 와 같은 락 — deliberation_state.json 을 함께 쓴다.
+  group: nuclens-state
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # crawl.yml 과 같은 검증 스크립트(tests/test_gemini_key_mode.py 가 같음을 잠근다).
+      - name: Verify Gemini key selection
+        env:
+          PAID_MODE: ${{ vars.GEMINI_PAID_MODE }}
+          SELECTED: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
+          PAID_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FREE_KEY: ${{ secrets.GEMINI_FREE_API_KEY }}
+        run: |
+          if [ "$PAID_MODE" = "ON" ]; then
+            mode=paid; want="$PAID_KEY"; name=secrets.GEMINI_API_KEY
+          else
+            mode=free; want="$FREE_KEY"; name=secrets.GEMINI_FREE_API_KEY
+          fi
+          echo "Gemini key mode: $mode"
+          if [ -z "$want" ]; then
+            echo "::error::Gemini key mode: $mode 인데 $name 가 비어 있다 — 반대쪽 키로 넘어가지 않고 여기서 멈춘다"
+            exit 1
+          fi
+          if [ "$SELECTED" != "$want" ]; then
+            echo "::error::Gemini key mode: $mode 인데 선택 식이 다른 키를 골랐다 — 빈 시크릿으로 인한 폴백을 의심할 것"
+            exit 1
+          fi
+
+      - name: Re-search and judge
+        env:
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          # 입력은 셸에 직접 펼치지 않고 환경변수로만 넘긴다.
+          SINCE: ${{ inputs.since }}
+          MAX_JUDGE: ${{ inputs.max_judge }}
+        run: python tools/deliberation_backfill.py --research --since "$SINCE" --max-judge "$MAX_JUDGE"
+
+      - name: Commit backfill
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -d deliberation_archive ]; then git add deliberation_archive/; fi
+          if [ -f deliberation_state.json ]; then git add deliberation_state.json; fi
+          git diff --cached --quiet && { echo "새로 들어간 기사 없음 — 커밋 생략"; exit 0; }
+          git commit -m "chore: deliberation backfill since ${SINCE}"
+          for i in 1 2 3 4 5; do
+            if git push; then exit 0; fi
+            echo "push 충돌 — rebase 후 재시도 $i/5"
+            git fetch origin main
+            git rebase origin/main || { git rebase --abort; echo "!! rebase 충돌 — 수동 확인 필요"; exit 1; }
+            sleep $((RANDOM % 8 + 4))
+          done
+          echo "!! push 5회 실패"
+          exit 1
+        env:
+          SINCE: ${{ inputs.since }}
+
+      # 크롤의 배포는 '라이브가 105분 넘게 낡았을 때만'이라 바로 보이지 않는다. 백필은 사람이 기다리는
+      # 작업이므로 끝나자마자 full 배포를 부른다.
+      - name: Redeploy site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-web.yml -R "${{ github.repository }}" -f mode_hint=full

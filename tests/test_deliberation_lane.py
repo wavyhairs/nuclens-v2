@@ -318,6 +318,58 @@ class RunTests(unittest.TestCase):
         self.assertIn("[공론화 피드] 네이버 「삼척 공론화」: 받음 1", pipe.format_stats(stats))
 
 
+class ResearchBackfillTests(unittest.TestCase):
+    """기간 백필(since) — 원천 재검색. 정기 회차와 같은 판정, 다른 창·시각."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name)
+        self.state_file = base / "deliberation_state.json"
+        self.archive_dir = base / "deliberation_archive"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_window_reaches_since_and_rounds_follow_publication(self):
+        def search(query, display, start):
+            if query != "원전 공론화":
+                return naver_page([])
+            return naver_page([naver_item(1, 24 * 40, title="9월 원전 공론화 착수"),
+                               naver_item(2, 24 * 60, title="8월 원전 공론화 예고")])
+        since = NOW - timedelta(days=44)
+        stats = pipe.run([], naver=search, hasher=lambda url: "h" + url[-2:], judge_call=fake_judge(),
+                         now=NOW, state_file=self.state_file, archive_dir=self.archive_dir, since=since)
+        self.assertEqual(stats["included"], 1)          # 60일 전 기사는 since 밖
+        row = pipe.shared.load_archive(self.archive_dir)[0]
+        self.assertEqual(row["collected_at"][:10], (NOW - timedelta(days=40)).date().isoformat())
+
+    def test_judge_limit_carries_the_rest_over(self):
+        def search(query, display, start):
+            if query != "원전 공론화":
+                return naver_page([])
+            return naver_page([naver_item(i, 24 * (i + 1), title=f"원전 공론화 기사 {i}") for i in range(5)])
+        stats = pipe.run([], naver=search, hasher=lambda url: "h" + url[-2:], judge_call=fake_judge(),
+                         now=NOW, state_file=self.state_file, archive_dir=self.archive_dir,
+                         since=NOW - timedelta(days=30), max_judge=2)
+        self.assertEqual((stats["judged"], stats["deferred"]), (2, 3))
+
+    def test_google_queries_are_cut_by_date(self):
+        sources = pipe.gnews_range_sources(datetime(2026, 9, 1, tzinfo=timezone.utc),
+                                           datetime(2026, 10, 15, 10, tzinfo=timezone.utc))
+        from urllib.parse import parse_qs, urlparse
+        queries = [parse_qs(urlparse(src["url"]).query)["q"][0] for src in sources]
+        self.assertTrue(all("after:" in q and "before:" in q and "when:" not in q for q in queries))
+        self.assertTrue(all(len(q) < 200 for q in queries))
+        self.assertIn("after:2026-09-01 before:2026-09-04", queries[0])
+        self.assertTrue(any("after:2026-10-13" in q for q in queries))
+
+    def test_workflow_runs_the_tool_with_inputs_through_env(self):
+        text = (ROOT / ".github/workflows/deliberation-backfill.yml").read_text(encoding="utf-8")
+        self.assertIn('python tools/deliberation_backfill.py --research --since "$SINCE" --max-judge "$MAX_JUDGE"', text)
+        self.assertIn("group: nuclens-state", text)
+        self.assertIn("gh workflow run deploy-web.yml", text)
+
+
 class WiringTests(unittest.TestCase):
     def test_news_bot_runs_the_lane_with_folded_candidates(self):
         src = (ROOT / "news_bot.py").read_text(encoding="utf-8")
