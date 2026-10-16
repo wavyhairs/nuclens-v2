@@ -31,7 +31,7 @@ import json
 import re
 from typing import Callable, Iterable
 
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2   # 2: 대응 필요(response_*) 3칸 추가
 POLICY_TASK = "deliberation_judge"
 
 # ── 1. 프리필터 어휘 ─────────────────────────────────────────────────────────
@@ -191,12 +191,23 @@ SYSTEM_PROMPT = """당신은 '12차 전력수급기본계획을 위한 신규원
   summary        한 줄 결론 1문장(80자 안팎).
   why_important  공론화 절차에서 이 사건이 갖는 의미 1문장. 근거 없으면 빈 문자열.
   implication    공론화 일정·의제·여론 지형에 미치는 영향 1문장. 근거 없으면 빈 문자열.
+[포함 기사에만 — 대응 필요 판정]
+  response_needed  true | false. 한수원·원자력계가 **근거 자료를 준비해야 하는 글**이면 true.
+                 true: 원전의 안전·비용·건설 공기·전력수요 전제·사용후핵연료·규제 신뢰·정보 제공 공정성을
+                 **구체적 수치·사례**를 들어 비판하거나 문제 삼는 글(사설·칼럼·기고·성명·국회 질의 포함),
+                 한수원을 직접 거론한 주장.
+                 false: 회의·일정·출범·의제 확정 같은 사실 보도, 근거 없는 일반적 찬반, 원전 확대 쪽 주장
+                 (원전 확대를 위해 공론화 절차를 비판하는 글도 false).
+  response_issue   true 일 때만. 글이 문제 삼는 쟁점 25자 이내(예: "전력수요 전망 고정·과다 반영").
+  response_prep    true 일 때만. 담당자가 준비할 근거 40자 이내(예: "2040 최대전력 전망 산정 근거·반도체 반영 기준").
+                 원문에 나온 수치·주장을 가리키게 쓴다. false 이면 둘 다 빈 문자열.
 
 [출력] JSON 하나. 다른 텍스트·코드펜스 금지.
 {"items": [{"idx": 0, "in_scope": true, "exclude_reason": "none", "stage": "...", "actor_type": "...",
   "actor_names": ["..."], "stance": "...", "article_type": "...", "significance": 2, "event_key": "...",
   "event_date": "", "confidence": "high", "reason": "30자 이내 근거",
-  "title_kr": "...", "summary": "...", "why_important": "...", "implication": "..."}]}
+  "title_kr": "...", "summary": "...", "why_important": "...", "implication": "...",
+  "response_needed": false, "response_issue": "", "response_prep": ""}]}
 제외 기사는 {"idx": 3, "in_scope": false, "exclude_reason": "...", "reason": "..."} 만 쓴다.
 모든 idx 가 정확히 한 번씩 등장해야 한다. 확신이 없으면 포함 쪽으로 판정한다."""
 
@@ -254,6 +265,7 @@ def normalize_judgment(item: dict) -> dict:
     except (TypeError, ValueError):
         significance = 0
     event_date = str(item.get("event_date") or "").strip()
+    needed = item.get("response_needed") in (True, "true")
     return {
         "in_scope": True,
         "exclude_reason": "none",
@@ -272,6 +284,9 @@ def normalize_judgment(item: dict) -> dict:
         "summary": _clip(item.get("summary"), 220),
         "why_important": _clip(item.get("why_important"), 220),
         "implication": _clip(item.get("implication"), 220),
+        "response_needed": needed,
+        "response_issue": _clip(item.get("response_issue"), 40) if needed else "",
+        "response_prep": _clip(item.get("response_prep"), 60) if needed else "",
     }
 
 
