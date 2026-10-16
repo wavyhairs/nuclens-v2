@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 2,
-    "date": "2026-10-16"
+    "count": 1,
+    "date": "2026-10-17"
   },
   "retired": {
     "ap1000vsapr1400": {
@@ -27,6 +27,14 @@
       "term": "Bechtel",
       "type": "company",
       "until": "2026-10-07T21:31:32.857575+00:00"
+    },
+    "bwxt캐나다와": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-10-16T15:41:33.586487+00:00",
+      "term": "BWXT 캐나다와",
+      "type": "plant",
+      "until": "2026-10-30T15:41:33.586487+00:00"
     },
     "dlr": {
       "new_articles": 0,
@@ -155,6 +163,14 @@
       "term": "MARAD",
       "type": "company",
       "until": "2026-09-09T16:20:45.746050+00:00"
+    },
+    "mcre": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-10-16T15:41:36.055509+00:00",
+      "term": "MCRE",
+      "type": "company",
+      "until": "2026-10-30T15:41:36.055509+00:00"
     },
     "mra": {
       "new_articles": 0,
@@ -1062,88 +1078,55 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-10-16"
+    "count": 2,
+    "date": "2026-10-17"
   },
   "terms": {
-    "bwxt캐나다와": {
-      "articles": 4,
-      "created_at": "2026-10-15T15:41:22.756445+00:00",
+    "의제확정": {
+      "articles": 3,
+      "created_at": "2026-10-16T15:41:33.586487+00:00",
       "domains": [
-        "edaily.co.kr",
-        "yna.co.kr",
-        "sisaon.co.kr",
-        "ebn.co.kr"
+        "electimes.com",
+        "newdaily.co.kr",
+        "energytimes.kr"
       ],
       "evidence": [
         {
-          "domain": "edaily.co.kr",
-          "hash": "453a2dbe47fed4f1",
+          "domain": "electimes.com",
+          "hash": "1e294bda40e284e6",
           "importance": "nice_to_know",
-          "title": "세아베스틸, BWXT 캐나다와 원전 고부가 기자재 공급 협력 MOU 체결"
+          "title": "원전 공론화위원회, '미래 전력수요 속 원전 역할' 공론화 의제 확정"
         },
         {
-          "domain": "yna.co.kr",
-          "hash": "9c343e22b0f1e1c8",
+          "domain": "newdaily.co.kr",
+          "hash": "a6fe9e773b1a64e7",
           "importance": "nice_to_know",
-          "title": "세아베스틸, BWXT 캐나다와 원전 부품 공급 협력 MOU 체결"
+          "title": "기후에너지환경부, 차기 전력계획 원전 공론화 의제 확정"
         },
         {
-          "domain": "sisaon.co.kr",
-          "hash": "a6d24d2f12c4010a",
+          "domain": "energytimes.kr",
+          "hash": "9aa33a39ae2f6e63",
           "importance": "nice_to_know",
-          "title": "세아베스틸, BWXT 캐나다와 원전 기자재 협력 MOU 체결"
+          "title": "원전공론화위, '미래 전력수요 대비 원전 역할과 비중' 의제 확정"
         }
       ],
-      "expires_at": "2026-10-16T15:41:22.756445+00:00",
+      "expires_at": "2026-10-18T15:41:33.586487+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-10-16T00:41:40.954816+00:00",
+      "last_run": "2026-10-16T15:41:36.055440+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-10-16T00:41:36.877362+00:00",
-      "queries_run": 2,
-      "query": "BWXT 캐나다와 원전",
-      "score": 3.9,
+      "planned_at": "2026-10-16T15:41:33.586487+00:00",
+      "queries_run": 1,
+      "query": "의제 확정 원전",
+      "score": 4.6,
       "status": "tracking",
-      "term": "BWXT 캐나다와",
-      "ttl_hours": 24,
+      "term": "의제 확정",
+      "ttl_hours": 48,
       "type": "plant",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 2
-    },
-    "mcre": {
-      "articles": 1,
-      "created_at": "2026-10-15T18:41:25.700923+00:00",
-      "domains": [
-        "world-nuclear-news.org"
-      ],
-      "evidence": [
-        {
-          "domain": "world-nuclear-news.org",
-          "hash": "766f0df7a5fe1853",
-          "importance": "must_read",
-          "title": "미 DOE, 용융염 원자로(MCRE) 개발 가속화 위한 자금 지원 승인"
-        }
-      ],
-      "expires_at": "2026-10-16T18:41:25.700923+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-10-16T03:41:21.846003+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-10-16T03:41:19.601933+00:00",
-      "queries_run": 2,
-      "query": "MCRE 원자력",
-      "score": 3.6,
-      "status": "tracking",
-      "term": "MCRE",
-      "ttl_hours": 24,
-      "type": "company",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
+      "zero_streak": 1
     }
   },
   "version": 1
