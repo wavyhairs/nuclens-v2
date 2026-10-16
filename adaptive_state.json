@@ -140,6 +140,14 @@
       "type": "company",
       "until": "2026-10-02T15:40:41.667920+00:00"
     },
+    "macst": {
+      "new_articles": 11,
+      "reason": "기간 만료",
+      "retired_at": "2026-10-16T12:41:28.265195+00:00",
+      "term": "MACST",
+      "type": "company",
+      "until": "2026-10-30T12:41:28.265195+00:00"
+    },
     "marad": {
       "new_articles": 4,
       "reason": "기간 만료",
@@ -555,6 +563,14 @@
       "term": "상원이 보르셀레",
       "type": "plant",
       "until": "2026-10-14T21:41:07.793427+00:00"
+    },
+    "선급협회": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-10-16T12:41:28.265195+00:00",
+      "term": "선급협회",
+      "type": "org",
+      "until": "2026-10-30T12:41:28.265195+00:00"
     },
     "세계원자력사업자협회": {
       "new_articles": 2,
@@ -1097,54 +1113,6 @@
       "yields": 0,
       "zero_streak": 2
     },
-    "macst": {
-      "articles": 3,
-      "created_at": "2026-10-15T06:41:05.586524+00:00",
-      "domains": [
-        "fnnews.com",
-        "inthenews.co.kr",
-        "yna.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "fnnews.com",
-          "hash": "186b9f4fa021f07c",
-          "importance": "nice_to_know",
-          "title": "고리원자력본부, 고리2호기 대상 '다중방호 사고관리전략' 최초 훈련 실시"
-        },
-        {
-          "domain": "inthenews.co.kr",
-          "hash": "5f951a2dc263ffdf",
-          "importance": "nice_to_know",
-          "title": "고리원자력본부, 고리2호기 대상 '다중방호 사고관리전략' 첫 훈련 실시"
-        },
-        {
-          "domain": "yna.co.kr",
-          "hash": "cde686060fceaca0",
-          "importance": "nice_to_know",
-          "title": "한수원 고리본부, 고리2호기 대상 ‘다중방호 사고관리전략’ 훈련 실시"
-        }
-      ],
-      "expires_at": "2026-10-16T12:41:08.659058+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-10-16T00:41:40.954816+00:00",
-      "new_articles": 11,
-      "origin": "auto",
-      "planned_at": "2026-10-16T00:41:36.877362+00:00",
-      "queries_run": 4,
-      "query": "MACST 원자력",
-      "score": 3.82,
-      "status": "extended",
-      "term": "MACST",
-      "ttl_hours": 24,
-      "type": "company",
-      "yield_days": [
-        "2026-10-15"
-      ],
-      "yields": 2,
-      "zero_streak": 2
-    },
     "mcre": {
       "articles": 1,
       "created_at": "2026-10-15T18:41:25.700923+00:00",
@@ -1173,52 +1141,6 @@
       "term": "MCRE",
       "ttl_hours": 24,
       "type": "company",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
-    "선급협회": {
-      "articles": 3,
-      "created_at": "2026-10-15T12:41:06.060768+00:00",
-      "domains": [
-        "world-nuclear-news.org",
-        "ans.org",
-        "gndomin.com"
-      ],
-      "evidence": [
-        {
-          "domain": "world-nuclear-news.org",
-          "hash": "6dc56735f22d7120",
-          "importance": "nice_to_know",
-          "title": "미국 ABS-DOE, 해상 원자력 기술 개발 위한 MOU 체결"
-        },
-        {
-          "domain": "ans.org",
-          "hash": "47b6d3b39c1526d6",
-          "importance": "nice_to_know",
-          "title": "미국 ABS-DOE, 해양 원자력 기술 상용화 위한 MOU 체결"
-        },
-        {
-          "domain": "gndomin.com",
-          "hash": "7edb6fe3ea0d0a2a",
-          "importance": "nice_to_know",
-          "title": "삼성중공업, 셔틀탱커용 배터리 하이브리드 시스템 기본 인증 획득"
-        }
-      ],
-      "expires_at": "2026-10-16T12:41:06.060768+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-10-15T21:22:34.596086+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-10-15T21:22:33.118957+00:00",
-      "queries_run": 2,
-      "query": "선급협회 원자력",
-      "score": 3.12,
-      "status": "tracking",
-      "term": "선급협회",
-      "ttl_hours": 24,
-      "type": "org",
       "yield_days": [],
       "yields": 0,
       "zero_streak": 2
