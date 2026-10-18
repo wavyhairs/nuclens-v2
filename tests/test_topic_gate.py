@@ -191,6 +191,21 @@ class DirectLinkTests(unittest.TestCase):
             with self.subTest(title):
                 self.assertEqual(topic_gate.direct_link(card(title)), topic_gate.LINK_NONE)
 
+    def test_us_energy_permitting_reform_is_linked(self):
+        """사용자 지목 2026-10-18 — 원전 인허가 기간을 함께 정하는 법안이다."""
+        for title in ("미 상원, 에너지 프로젝트 인허가 간소화 법안 합의",
+                      "미국 상원, 인프라 건설 인허가 개혁 법안 논의 진전",
+                      "Senate strikes deal on permitting reform"):
+            with self.subTest(title):
+                self.assertEqual(topic_gate.direct_link(card(title)), topic_gate.LINK_POWER)
+
+    def test_ai_datacenter_permit_relief_stays_unlinked(self):
+        """맨 '인허가 간소화'는 AI 데이터센터 특별법 기사도 쓴다."""
+        self.assertEqual(
+            topic_gate.direct_link(card("정부, AI 데이터센터 특별법으로 인허가 지원 및 수용성 확보 추진",
+                                        "데이터센터 인허가 간소화를 추진한다.")),
+            topic_gate.LINK_NONE)
+
     def test_bare_baljeon_is_not_power(self):
         """'발전' 하나는 '경제 발전'에 걸린다."""
         self.assertEqual(

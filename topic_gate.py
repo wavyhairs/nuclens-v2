@@ -166,10 +166,15 @@ POWER_TERMS_KO: tuple[str, ...] = (
     # 대미 투자 패키지는 원전 8기 프레임워크와 한 묶음이라 제목에 원전이 없어도 잇는다
     # (`백악관, 한국의 대미 에너지 투자 패키지 2000억 달러` 는 '에너지투자'로 걸린다).
     "대미투자", "대미전략투자", "에너지투자",
+    # 미국 에너지 인허가 개혁 — 원전 인허가 기간을 함께 정하는 법안이다(사용자 지목
+    # 2026-10-18: `미 상원, 에너지 프로젝트 인허가 간소화 법안 합의`). 맨 '인허가
+    # 간소화'는 넣지 않는다 — AI 데이터센터 특별법 기사가 같은 말을 쓴다.
+    "인허가개혁", "에너지인허가", "에너지프로젝트인허가",
 )
 POWER_TERMS_EN: tuple[str, ...] = (
     "electricity", "power grid", "grid", "utility", "utilities", "power plant",
     "transmission", "megawatt", "gigawatt", "power purchase", "ppa", "energy policy",
+    "permitting reform", "energy permitting",
 )
 # 위 NUCLEAR_TERMS_KO 에 없는 원자력 어휘. 덴마크 `핵폐기물 심층처분장`, 원안위의
 # `생활 방사선` 제품 관리가 이 낱말로만 원자력이다.
