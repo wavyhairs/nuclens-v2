@@ -257,7 +257,7 @@ def collect_naver(search: Callable[..., dict], hasher: Callable[[str], str], *, 
 
 # ── 판정 결과 → 레코드 ───────────────────────────────────────────────────────
 CLASS_FIELDS = ("stage", "actor_type", "actor_names", "stance", "article_type", "significance",
-                "event_key", "event_date", "confidence")
+                "event_key", "event_date", "confidence", "response_needed", "response_issue", "response_prep")
 
 
 def _publisher_name(article: dict) -> str:
@@ -307,7 +307,7 @@ def make_record(article: dict, verdict: dict, *, judged_at: str, model: str = ""
         "prompt_version": lane.PROMPT_VERSION,
     }
     for key in CLASS_FIELDS:
-        record[key] = verdict.get(key, "" if key != "significance" else 0)
+        record[key] = verdict.get(key, {"significance": 0, "response_needed": False}.get(key, ""))
     if not record["event_key"]:
         record["event_key"] = record["title_kr"][:40]
     return record

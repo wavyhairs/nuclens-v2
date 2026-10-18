@@ -275,6 +275,16 @@ jobs:
           --collect-outcome "${{ steps.collect.outcome }}"
           --collection-observation-id "crawl:${{ github.run_id }}"
 
+      # 공론화 레인 → 관리자 방. 사건(event_key) 단위 1회, 대응 필요는 🔴. 채널로 폴백하지 않는다.
+      # 실패해도 크롤은 계속 — 커서를 안 옮기므로 다음 회차가 다시 보낸다.
+      - name: Notify administrator of deliberation events
+        if: steps.collect.outcome == 'success'
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+        run: python tools/deliberation_notify.py
+
       # 수집 후보가 아니라 실제 최근 브리핑 기사 기준으로 캐시를 백필한다. 창은
       # embedding_pipeline.ISSUE_WINDOW_DAYS 를 따라간다 — 여기에 숫자를 적으면
       # 이슈 창을 옮길 때 이 줄이 조용히 뒤처진다.
@@ -408,6 +418,7 @@ jobs:
           # 신규원전 공론화 레인 — 같은 이유. 상태 파일에는 판정 한도로 밀린 이월 후보도 있다.
           if [ -d deliberation_archive ]; then git add deliberation_archive/; fi
           if [ -f deliberation_state.json ]; then git add deliberation_state.json; fi
+          if [ -f deliberation_notify.json ]; then git add deliberation_notify.json; fi
           # schedule 미생성·workflow 실패·성공 0건을 slot별로 구분하는 durable log.
           git add crawl_runs.json
           git diff --cached --quiet || git commit -m "chore: update bot state"
