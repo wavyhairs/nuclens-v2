@@ -110,7 +110,8 @@ def freeze_rows(rows: list[dict], briefing_date: str, frozen_at: str) -> dict:
 # 카드 제목은 대표 기사의 제목이다(2026-09-26 원장 885장 중 884장 일치, 나머지
 # 1장은 빌드의 복합 제목 다듬기). 표시 제목도 같은 기사에서 나왔으므로 같이 고친다.
 REPAIRED_FIELDS = (("title", "title_kr"), ("headline_display", "title_kr"),
-                   ("summary", "summary"), ("detail", "detail"))
+                   ("summary", "summary"), ("detail", "detail"),
+                   ("implication", "implication"), ("why_important", "why_important"))
 
 
 def repair_text(row: dict, repair: dict | None) -> bool:
@@ -245,7 +246,7 @@ def apply(briefings: list[dict], payload: dict, frozen_at: str,
           repairs: dict[str, dict] | None = None) -> dict:
     """모든 날짜에 대해 얼리거나(처음 본 날) 맞댄다(이미 얼린 날). 통계를 돌려준다.
 
-    ``repairs`` 는 기사 해시 → {title_kr, summary, detail} 정정(build_data.text_repairs).
+    ``repairs`` 는 기사 해시 → {title_kr, summary, detail, implication, why_important} 정정(build_data.text_repairs).
     얼린 문장으로 세우는 카드에만 얹고, 원장(payload)은 바꾸지 않는다.
     """
     dates = payload.setdefault("dates", {})

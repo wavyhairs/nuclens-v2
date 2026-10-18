@@ -843,11 +843,13 @@ def apply_event_date_seal(record: dict) -> dict:
 
 
 _TEXT_REPAIRS: dict[str, dict[str, str]] | None = None
-TEXT_REPAIR_FIELDS = ("title_kr", "summary", "detail")
+# 해석 칸(implication·why_important)도 news_archive._upgrade_record 와 같이 정정한다 —
+# 사실을 고쳐도 해석이 옛 오류를 되풀이하면 화면에 그대로 남는다(2026-10-18 영덕 사설).
+TEXT_REPAIR_FIELDS = ("title_kr", "summary", "detail", "implication", "why_important")
 
 
 def text_repairs() -> dict[str, dict[str, str]]:
-    """`archive_repairs.json` 의 제목·요약·상세 수선 — `country_repairs` 와 같은 자리.
+    """`archive_repairs.json` 의 제목·요약·상세(·해석) 수선 — `country_repairs` 와 같은 자리.
 
     2026-09-26 발송분 1,044건 점검에서 제목이 틀린 28건을 찾았다(배경 사실을 새
     사건처럼 17·칼럼을 기관 조치처럼 6·날짜/인명 오류 3 등). 아카이브를 다시 쓰지

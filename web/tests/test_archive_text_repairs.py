@@ -33,6 +33,14 @@ class ApplyTests(unittest.TestCase):
         self.assertEqual((record["title_kr"], record["summary"], record["detail"]),
                          ("고친 제목", "고친 요약", "상세"))
 
+    def test_the_real_file_repairs_the_interpretation_too(self):
+        """사실만 고치고 해석을 두면 옛 오류가 시사점으로 남는다(2026-10-18 영덕 사설)."""
+        bd._TEXT_REPAIRS = None
+        record = bd.apply_text_repairs({"hash": "a8dcae323fe6d0b4",
+                                        "implication": "기존 신규 원전 사업의 추진 동력이 약화될 가능성이 있음."})
+        self.assertIn("영덕 신규원전", record["implication"])
+        self.assertNotIn("추진 동력", record["implication"])
+
     def test_other_records_are_untouched(self):
         record = {"hash": "h2", "title_kr": "그대로"}
         self.assertEqual(bd.apply_text_repairs(dict(record)), record)
