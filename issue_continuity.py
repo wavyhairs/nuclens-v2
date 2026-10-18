@@ -268,11 +268,14 @@ PROGRESSION_SCALES: dict[str, tuple[tuple[str, tuple[str, ...], tuple[str, ...]]
                       "본입찰통과", "최종후보", "우선공급자"),
          ("preferred bidder", "shortlisted", "provisional agreement",
           "selected as preferred")),
+        # `epc계약` — 실측 2026-09-23 `테라파워, 나트륨 원전 EPC 계약` 이 전날
+        # `개발 협력` 대비 본계약인데 이 칸에 표현이 없어 탐색(0)에 머물렀다.
         ("본계약", ("본계약", "정식계약", "최종계약", "공급계약", "계약체결",
                     "계약을체결", "수주", "발주", "낙찰", "ppa체결", "구매계약",
-                    "납품계약", "협정체결"),
+                    "납품계약", "협정체결", "epc계약"),
          ("signs contract", "contract award", "awarded a contract", "wins order",
-          "definitive agreement", "power purchase agreement", "signed a contract")),
+          "definitive agreement", "power purchase agreement", "signed a contract",
+          "epc contract")),
         ("착공", ("착공", "기공식", "본공사착수", "첫콘크리트", "최초콘크리트",
                   "굴착개시", "부지정지공사"),
          ("starts construction", "begins construction", "first concrete",
@@ -316,6 +319,10 @@ PROGRESSION_SCALES: dict[str, tuple[tuple[str, tuple[str, ...], tuple[str, ...]]
 # 그 척도에서 '실질적 진전'이라 부를 만한 최소 칸. 어제 표식이 아예 없던
 # 경우의 판정에 쓴다 (아래 progression() rule 4 참조).
 MATERIAL_TIER = {"deal": 4, "permit": 2, "certainty": 1}
+
+# 사건 자체의 단계를 말하는 척도. certainty 는 여기 없다 — 그것은 같은 사건을
+# 기사가 어떤 동사로 썼는지를 읽는다(progression() rule ④ 참조).
+_EVENT_SCALES = ("deal", "permit")
 
 # 같은 칸에 머물러도 규모가 커진 것은 진전이다 (사용자 지목:
 # "기존 계약 → 계약 규모 확대 또는 신규 품목 추가"). 수치가 함께 새로 붙을 때만
@@ -450,6 +457,79 @@ def title_similarity(left: dict, right: dict) -> float:
 _HANGUL_RE = re.compile(r"[가-힣]")
 
 
+# story 하나에서 비교에 쓸 제목 상한. 실측 발송 레코드는 구성 제목이 최대 30건
+# 안팎이고, 쌍 비교라 양쪽 곱이 비용이 된다.
+_STORY_TITLE_LIMIT = 32
+
+
+def story_titles(row: dict) -> list[str]:
+    """이 카드가 들고 있는 제목 전부 — 대표 제목과 story 구성 기사 제목.
+
+    랭킹 중인 후보는 수집 단계에서 접힌 기사를 `raw_sources` 에, 발송 레코드는
+    `story_raw_sources` 에 들고 있다. 어느 쪽이든 같은 뜻이라 함께 읽는다.
+    """
+    seen: list[str] = []
+
+    def add(value: object) -> None:
+        text = str(value or "").strip()
+        if text and text not in seen and len(seen) < _STORY_TITLE_LIMIT:
+            seen.append(text)
+
+    add(row.get("title_kr"))
+    add(row.get("title"))
+    for value in row.get("story_related_titles") or []:
+        add(value)
+    for key in ("story_members", "raw_sources", "story_raw_sources"):
+        for member in row.get(key) or []:
+            if isinstance(member, dict):
+                add(member.get("title"))
+    return seen
+
+
+def restatement_title_similarity(candidate: dict, prior: dict, *,
+                                 core_similarity: float = 0.62) -> float:
+    """오늘 카드 제목과 어제 카드 **핵심 구성 기사** 제목 사이의 최대 유사도.
+
+    대표 제목 하나끼리만 재면 '다른 매체가 다른 표현으로 쓴 같은 사건'은 정의상
+    재전송 문턱(0.85)을 못 넘는다(모듈 docstring 의 8/22 국회 사례). 근거 교집합
+    (`evidence_overlap`)이 그 구멍을 hash 로 메우지만, 오늘 카드가 **단독 기사**면
+    공유할 hash 가 없다.
+
+    실측 2026-10-18 고리 3·4호기: 오늘 카드는 구성 1건짜리 `…승인…계속운전 허가는
+    미뤄져(종합)` 이었고, 대표 제목 유사도는 0.714 였다. 그런데 어제 발송한 story
+    의 핵심 구성 기사에 같은 기사의 다른 판 `원안위, 고리 3·4호기 사고관리계획서
+    승인…계속운전 허가는 미뤄져` 가 있었다(0.943). 어제 이미 보낸 묶음의 한 조각을
+    오늘 다시 보낸 것이다.
+
+    어제 쪽은 **핵심** 구성원만 본다 — 어제 카드의 대표 제목과 같은 이슈 문턱
+    (`core_similarity`, `same_issue` 의 0.62)만큼 닮은 것. story 는 배경 기사까지
+    접어 두므로 구성원 전부를 보면 '어제 카드 구석에 근거로 접혀 있던 다른 뉴스'가
+    재전송으로 잡힌다. 실측 2026-08-17→18: 8/17 카드(두산 공급계약) story 안에
+    8/18 대표 `SK이노베이션-테라파워 … 공조 합의` 가 글자 그대로 접혀 있었는데,
+    독자가 8/17 에 본 것은 두산 계약이었다(모듈 docstring 이 진짜 후속으로 꼽은 쌍).
+    오늘 쪽도 구성원이 아니라 **자기 제목**만 본다 — 오늘 독자가 읽는 것은 그것이다.
+
+    이 값은 재전송의 **세기**(⑤·⑥ 게이트, 감점 창, hard_drop 문턱)에만 쓴다.
+    같은 이슈 매칭(`same_issue`)이나 진전 판정 ①~④ 에는 넣지 않는다 — 비교
+    대상을 넓히면 그쪽에서는 면제가 늘어난다. 삭제의 안전장치는 여전히
+    `progression == none` 이다.
+    """
+    best = title_similarity(candidate, prior)
+    own = [t for t in (candidate.get("title_kr"), candidate.get("title")) if t]
+    heads = [{"title_kr": t} for t in (prior.get("title_kr"), prior.get("title")) if t]
+    if not own or not heads:
+        return best
+    for member in story_titles(prior):
+        row = {"title_kr": member}
+        if max(title_similarity(row, head) for head in heads) < core_similarity:
+            continue
+        for title in own:
+            best = max(best, title_similarity({"title_kr": title}, row))
+            if best >= 1.0:
+                return 1.0
+    return round(best, 3)
+
+
 def subject_titles(row: dict) -> tuple[str, ...]:
     """이 기사의 **주제**를 말하는 제목들. 단계 판정의 입력이다.
 
@@ -537,7 +617,8 @@ def _quantities(row: dict) -> set[str]:
 
 def progression(prior: dict, candidate: dict, *,
                 restatement_similarity: float = 0.85,
-                evidence_confirmed: bool = False) -> dict:
+                evidence_confirmed: bool = False,
+                title_sim: float | None = None) -> dict:
     """전일 기사 대비 오늘 기사가 실제로 나아갔는가.
 
     판정을 세 등급으로 나누는 이유는 **모르는 경우가 실제로 많기 때문**이다.
@@ -553,6 +634,9 @@ def progression(prior: dict, candidate: dict, *,
             같은 기사 뭉치를 근거로 들고 있다는 것은 모르는 상태가 아니다.
             ①~③(척도 이동·규모 확대·상태 전환)은 그대로 위에 남는다: 근거가
             겹쳐도 단계가 실제로 넘어갔으면 그것은 진전이다.
+        title_sim: ⑤·⑥ 앞의 '제목이 사실상 같은가' 게이트에 쓸 값. None 이면
+            대표 제목끼리 잰다. `verdict_for` 는 story 구성 기사 제목까지 본
+            값(`restatement_title_similarity`)을 넘긴다.
 
     Returns:
         {"verdict": "material"|"minor"|"none", "kind": str, "detail": str}
@@ -611,6 +695,18 @@ def progression(prior: dict, candidate: dict, *,
     reached = [f"{name}:{PROGRESSION_SCALES[name][tier][0]}"
                for name, tier in cand_tiers.items()
                if prior_tiers[name] < 0 and tier >= MATERIAL_TIER[name]]
+    # 사건 단계 척도(deal·permit)가 양쪽에 다 찍혀 있고 ① 이 안 걸렸다면 — 즉
+    # 같은 칸이거나 뒤로 갔다면 — certainty 만으로는 ④ 를 세우지 않는다.
+    # certainty 는 사건이 아니라 **기사 문체**(밝혔다·결정했다)를 읽는 척도라,
+    # 사건 척도가 '그대로'라고 말한 것을 뒤집을 자격이 없다.
+    #
+    # 실측 2026-10-17→18 고리 3·4호기: 양쪽 다 `permit:승인`(같은 칸)인데 오늘
+    # 요약의 "재논의하기로 **결정**했다" 하나로 `certainty:확정` 이 서서 minor
+    # (감점 절반)가 됐고, 어제와 같은 승인 소식이 국내 1위로 다시 나갔다.
+    settled = any(prior_tiers[name] >= 0 and cand_tiers[name] >= 0
+                  for name in _EVENT_SCALES)
+    if settled:
+        reached = [r for r in reached if not r.startswith("certainty:")]
     if reached:
         return {"verdict": "minor", "kind": "unmarked_prior",
                 "detail": " / ".join(reached)}
@@ -623,7 +719,9 @@ def progression(prior: dict, candidate: dict, *,
     #   오늘 `두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결`
     # 포함 유사도 1.0 인데 요약의 숫자 하나로 minor 를 받아 감점이 절반이 됐다.
     # 척도가 실제로 올라간 ①~④ 는 이 게이트 위에 있으므로 영향받지 않는다.
-    if title_similarity(candidate, prior) < restatement_similarity:
+    if title_sim is None:
+        title_sim = title_similarity(candidate, prior)
+    if title_sim < restatement_similarity:
         # ⑤ 새 수치만 붙었다.
         if new_numbers:
             return {"verdict": "minor", "kind": "new_quantities",
@@ -977,6 +1075,8 @@ def as_sent_record(item: dict, briefing_date: str) -> dict:
         "title_kr": item.get("title_kr") or item.get("title") or "",
         "title": item.get("title") or "",
         "summary": item.get("summary") or "",
+        # 의미 대조(dedup.cross_day_repeats)가 '독자가 받은 것'으로 읽는다.
+        "detail": item.get("detail") or "",
         "tags": item.get("tags") or [],
         "region": item.get("region") or "",
         "story_fingerprint": item.get("story_fingerprint") or {},
@@ -985,6 +1085,10 @@ def as_sent_record(item: dict, briefing_date: str) -> dict:
         # 안 실으면 그 경로만 눈이 없다.
         "story_members": item.get("story_members") or [],
         "story_article_hashes": item.get("story_article_hashes") or [],
+        # 구성 기사 제목 — `restatement_title_similarity` 가 같은 날 다른 지역
+        # 대조에서도 같은 재료를 보게 한다.
+        "story_related_titles": item.get("story_related_titles") or [],
+        "raw_sources": item.get("raw_sources") or [],
         "story_id": story_id,
         "story_id_source": item.get("story_id_source") or "generated",
         "story_id_trust": item.get("story_id_trust") or "legacy",
@@ -1085,17 +1189,24 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
     stamp, prior, match = best
     days_ago = _days_between(today, stamp)
     evidence_confirmed = bool(match.get("evidence_confirmed"))
+    # 재전송의 세기는 대표 제목이 아니라 구성 기사 제목까지 보고 잰다
+    # (`restatement_title_similarity` 주석). 매칭 자체(`match["similarity"]`)는
+    # 그대로 대표 제목 값이다.
+    restated_sim = restatement_title_similarity(
+        candidate, prior,
+        core_similarity=float(cfg.get("title_similarity", 0.62)))
     prog = progression(prior, candidate,
                        restatement_similarity=float(
                            cfg.get("restatement_similarity", 0.85)),
-                       evidence_confirmed=evidence_confirmed)
+                       evidence_confirmed=evidence_confirmed,
+                       title_sim=restated_sim)
 
     ratio = {"material": float(cfg.get("progression_penalty", 0.5))
              / max(1e-9, float(cfg.get("repeat_penalty", 5.0))),
              "minor": float(cfg.get("minor_penalty_ratio", 0.5)),
              "none": 1.0}[prog["verdict"]]
     base = float(cfg.get("repeat_penalty", 5.0))
-    window = penalty_window(prog["verdict"], match["similarity"],
+    window = penalty_window(prog["verdict"], restated_sim,
                             bool(match.get("anchor_only")), cfg,
                             evidence_confirmed=evidence_confirmed)
     # 창 안은 만액, 창 밖은 하루마다 감쇠. 예전에는 창이 없어 발송 당일부터
@@ -1144,7 +1255,7 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
         hard.get("enabled")
         and prog["verdict"] == "none"
         and (evidence_confirmed or match.get("identity_confirmed")
-             or match["similarity"] >= need)
+             or restated_sim >= need)
         and days_ago <= int(hard.get("max_days", 14))
     )
 
@@ -1155,6 +1266,11 @@ def verdict_for(candidate: dict, recent: list[dict], cfg: dict,
         "prior_date": stamp,
         "prior_region": str(prior.get("region") or ""),
         "days_ago": days_ago,
+        # 대표 제목 유사도. 창·hard_drop 은 구성 기사 제목까지 본 값을 쓰는데, 그 값을
+        # 여기 새 칸으로 싣지 않는다 — 판정 dict 의 모양은 V5 업무 산출물 digest
+        # (tests/fixtures/v5_characterization.json, 갱신 금지)가 잠그고 있다.
+        # drop 인데 similarity 가 hard_drop 문턱 아래이고 evidence·identity 확정도
+        # 없으면 구성 기사 제목 경로로 걸린 것이다.
         "similarity": match["similarity"],
         "evidence_shared": match.get("evidence_shared", 0),
         "evidence_ratio": match.get("evidence_ratio", 0.0),

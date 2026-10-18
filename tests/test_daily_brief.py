@@ -918,6 +918,22 @@ class TestOutboxFlow(OutboxBase):
         rec = self._log_rows()[0]
         self.assertIn("breakdown", rec)  # 점수 내역이 남는다
 
+    def test_delivery_log_keeps_card_detail(self):
+        """내일의 의미 대조가 '독자가 받은 것'으로 읽는 본문 요지가 발송 줄에 남는다.
+
+        실측 2026-10-18: 10/17 카드 요지의 '29일 재논의'가 기록에 없어서, 다음 날
+        `…계속운전 심의는 보류` 가 새 전개로 통과했다(dedup._sent_lines 주석).
+        """
+        queue = self._queue()
+        queue[0]["detail"] = "계속운전 허가안은 29일 회의에서 논의를 이어가기로 했다."
+        self.seed_queue(queue)
+        db.cmd_plan()
+        db.cmd_send()
+        self.assertEqual(db.cmd_confirm(), 0)
+        logged = {r["hash"]: r for r in self._log_rows()}
+        self.assertEqual(logged["d1"]["detail"],
+                         "계속운전 허가안은 29일 회의에서 논의를 이어가기로 했다.")
+
     def test_selection_stats_appended_and_deduped_by_reader(self):
         """통계 레코드는 hash 가 없어 append 로 쌓인다 — 읽는 쪽이 하나를 고른다."""
         self.seed_queue(self._queue())

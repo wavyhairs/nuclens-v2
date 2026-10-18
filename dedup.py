@@ -628,6 +628,11 @@ relation 은 다섯 중 하나:
   상원 통과→하원 통과, 협상→잠정 합의→서명, 협약→구속력 있는 계약, 정지→재가동,
   발표→착공, 사고→조사 착수, 제안→합의·채택, 방문·회담 예정→실제 개최,
   새 당사자 합류, 증액·축소·취소·연기 결정.
+
+SENT 는 독자가 이미 받은 카드입니다 — TITLE·TITLE_ORIGINAL·SUMMARY·DETAIL 전부를 봅니다.
+그 안에 이미 있는 결정·일정은 CANDIDATE 가 제목 앞에 내세워도 새로 일어난 일이 아닙니다.
+SENT 와 **같은 회의·발표에서 함께 나온** 다른 결정(예: 승인과 함께 나온 보류·연기·재논의)도
+next_step 이 아니라 same_detail 입니다.
 """
 
 # 지울 수 있는 관계 — 같은 사건을 다시 말한 것뿐인 둘. 분석·해설(same_reaction)은
@@ -709,12 +714,33 @@ def _candidate_block(idx: int, article: dict, suspects: list[dict]) -> str:
         f"DETAIL: {_trim(article.get('detail'), 500)}",
     ]
     for label, row in zip(_SUSPECT_LABELS, suspects):
-        lines += [
-            f"  (SENT {label}) date={_trim(row.get('date'), 10)}",
-            f"  TITLE: {_trim(row.get('title_kr') or row.get('title'), 200)}",
-            f"  SUMMARY: {_trim(row.get('summary'), 350)}",
-        ]
+        lines += [f"  (SENT {label}) date={_trim(row.get('date'), 10)}"]
+        lines += _sent_lines(row, summary_limit=350)
     return "\n".join(lines)
+
+
+def _sent_lines(row: dict, *, summary_limit: int) -> list[str]:
+    """이미 보낸 카드를 **독자가 받은 그대로** 보여 준다.
+
+    실측 2026-10-18 고리 3·4호기: 10/17 카드의 본문 요지에 "계속운전 허가안은 …
+    29일 회의에서 논의를 이어가기로 했다"가 있었는데, 판정기는 제목과 200자
+    요약("사고관리계획서 승인")만 받았다. 그래서 10/18 `…승인…계속운전 심의는
+    보류` 의 '보류'를 새로 일어난 일로 읽고 next_step 을 냈다. 원문 제목
+    (`'원전 4기 재가동' 29일 결론`)도 같은 사실을 말하고 있었다.
+
+    발송 기록은 `detail` 을 2026-10-18 전까지 저장하지 않았다(daily_brief 의
+    발송 줄). 그 전 기록은 이 줄이 비어 있고, 이레가 지나면 대조 창에서 빠진다.
+    """
+    title = _trim(row.get("title_kr") or row.get("title"), 200)
+    lines = [f"  TITLE: {title}"]
+    original = _trim(row.get("title"), 200)
+    if original and original != title:
+        lines.append(f"  TITLE_ORIGINAL: {original}")
+    lines.append(f"  SUMMARY: {_trim(row.get('summary'), summary_limit)}")
+    detail = _trim(row.get("detail"), 400)
+    if detail:
+        lines.append(f"  DETAIL: {detail}")
+    return lines
 
 
 def _title_overlap(left: str, right: str) -> float:
@@ -790,11 +816,11 @@ def _confirm_no_new_action(proposals: list[tuple[dict, dict, dict]], *,
         "\n".join([
             f"[PAIR {i}]",
             f"SENT date={_trim(prior.get('date'), 10)}",
-            f"  TITLE: {_trim(prior.get('title_kr') or prior.get('title'), 200)}",
-            f"  SUMMARY: {_trim(prior.get('summary'), 400)}",
             # 발송 카드의 본문 요지도 보여 준다 — 10/2 카드는 제목·요약이 '24억 송금'
             # 이었고 '원전 8기 합의'는 요지에만 있어서, 10/3 되풀이가 새 사실로 통과했다.
-            f"  DETAIL: {_trim(prior.get('detail'), 400)}",
+            # (그 요지는 2026-10-18 전까지 발송 기록에 저장되지 않아 이 줄이 늘 비어
+            # 있었다 — `_sent_lines` 주석.)
+            *_sent_lines(prior, summary_limit=400),
             f"CANDIDATE published={_published_day(cand)}",
             f"  TITLE: {_trim(cand.get('title_kr') or cand.get('title'), 200)}",
             f"  SUMMARY: {_trim(cand.get('summary'), 500)}",

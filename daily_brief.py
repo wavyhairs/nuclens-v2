@@ -1231,6 +1231,11 @@ def plan_briefs(queue: list[dict],
             # 얇아진다 — '협의'와 '본계약'이 요약에만 있는 날이 흔하다.
             # (issue_continuity.load_recent_sent 가 이 줄을 그대로 읽는다.)
             "summary": (a.get("summary") or "")[:200],
+            # 카드 본문 요지 — 독자가 받은 사실의 나머지 절반. 연속일 의미 대조
+            # (dedup.cross_day_repeats)가 '이미 보낸 것'으로 읽는다. 2026-10-18 전에는
+            # 저장하지 않아서, 10/17 카드 요지에 있던 '29일 재논의'를 판정기가 못 보고
+            # 10/18 `…심의는 보류` 를 새 전개로 통과시켰다.
+            "detail": (a.get("detail") or "")[:400],
             "tags": (a.get("tags") or [])[:6],
             "event_date": a.get("event_date"),
             "published_at": a.get("published_at", ""),
