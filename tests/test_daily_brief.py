@@ -934,6 +934,21 @@ class TestOutboxFlow(OutboxBase):
         self.assertEqual(logged["d1"]["detail"],
                          "계속운전 허가안은 29일 회의에서 논의를 이어가기로 했다.")
 
+    def test_plan_marks_unlinked_cards_for_the_tail_penalty(self):
+        """원자력·전력과 이어지지 않는 카드는 점수 내역에 topic_link 감점이 남는다."""
+        queue = self._queue() + [
+            qitem(h="x1", section="domestic", domain="news.example.kr",
+                  title="부산시, 35조 규모 민선9기 시정 청사진 확정"),
+        ]
+        self.seed_queue(queue)
+        db.cmd_plan()
+        db.cmd_send()
+        self.assertEqual(db.cmd_confirm(), 0)
+        logged = {r["hash"]: r for r in self._log_rows()}
+        self.assertNotIn("topic_link:none", logged["d1"]["breakdown"])
+        # 지우지 않고 감점만 한다 — 대신할 후보가 없는 이 큐에서는 그대로 실린다.
+        self.assertEqual(logged["x1"]["breakdown"]["topic_link:none"], -5.0)
+
     def test_selection_stats_appended_and_deduped_by_reader(self):
         """통계 레코드는 hash 가 없어 append 로 쌓인다 — 읽는 쪽이 하나를 고른다."""
         self.seed_queue(self._queue())

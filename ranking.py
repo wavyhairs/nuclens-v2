@@ -449,6 +449,17 @@ def score_item(item: dict, cfg: dict,
         score += delta
         breakdown[f"continuity:{cont.get('progression') or 'repeat'}"] = round(delta, 2)
 
+    # 원자력·전력과 직접 이어지지 않는 기사는 막차에서 밀린다(topic_gate.direct_link).
+    # 판정은 daily_brief 가 ``topic_link`` 로 싣는다 — 실려 있지 않으면 아무것도 안 한다.
+    # must_read 는 손대지 않는다(topic_gate.apply 와 같은 예외).
+    link_cfg = cfg.get("topic_link") or {}
+    if (link_cfg.get("enabled") and item.get("topic_link") == "none"
+            and _get_importance(item) != "must_read"):
+        penalty = float(link_cfg.get("indirect_penalty", 0.0))
+        if penalty:
+            score -= penalty
+            breakdown["topic_link:none"] = round(-penalty, 2)
+
     return round(score, 3), breakdown
 
 

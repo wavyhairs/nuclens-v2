@@ -57,6 +57,7 @@ import operational_monitoring
 import khnp_relevance
 import ranking
 import story_cluster
+import topic_gate
 
 ROOT = Path(__file__).parent
 QUEUE_FILE = ROOT / "digest_queue.json"
@@ -1023,6 +1024,8 @@ def plan_briefs(queue: list[dict],
         print(f"[daily_brief] 자동 발송 전 품질 보류 {len(quality_held)}건 "
               f"(fallback {fallbacks} / 무결성 격리 {quarantined})")
 
+    # 원자력·전력 직접 연결 판정 — ranking 이 막차 감점(`topic_link`)에 읽는다.
+    topic_gate.annotate_links(items)
     dom_pool = [a for a in items if region(a) == "국내"]
     forn_pool = [a for a in items if region(a) == "해외"]
     # 캡은 ranking_config.json 의 selection_caps 가 정한다. 설정이 없으면

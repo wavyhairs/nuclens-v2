@@ -565,6 +565,49 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(cfg["schema_version"], 1)
 
 
+class TestTopicLink(unittest.TestCase):
+    """원자력·전력 직접 연결이 없는 nice_to_know 는 막차에서 밀린다(topic_gate.direct_link)."""
+
+    def score(self, **kw):
+        return ranking.score_item(item(features=feat(), **kw), CFG, NOW)
+
+    def test_unlinked_nice_is_penalised(self):
+        base, _ = self.score()
+        s, bd = self.score(topic_link="none")
+        self.assertAlmostEqual(base - s, CFG["topic_link"]["indirect_penalty"])
+        self.assertEqual(bd["topic_link:none"], -CFG["topic_link"]["indirect_penalty"])
+
+    def test_linked_and_unannotated_are_untouched(self):
+        base, base_bd = self.score()
+        for link in ("nuclear", "power"):
+            s, bd = self.score(topic_link=link)
+            self.assertEqual(s, base)
+            self.assertNotIn("topic_link:none", bd)
+        self.assertNotIn("topic_link:none", base_bd)
+
+    def test_must_read_is_exempt(self):
+        base, _ = self.score(importance="must_read")
+        s, bd = self.score(importance="must_read", topic_link="none")
+        self.assertEqual(s, base)
+        self.assertNotIn("topic_link:none", bd)
+
+    def test_switch_off(self):
+        cfg = {**CFG, "topic_link": {**CFG["topic_link"], "enabled": False}}
+        base, _ = ranking.score_item(item(features=feat()), cfg, NOW)
+        s, _ = ranking.score_item(item(features=feat(), topic_link="none"), cfg, NOW)
+        self.assertEqual(s, base)
+
+    def test_unlinked_card_yields_the_tail_slot(self):
+        """실측 2026-10-17 국내: 석유 최고가격 동결(연결 없음)이 한전기술-한수원 계약 위에 있었다."""
+        oil = item("oil", title="산업부, 11차 석유 최고가격 10차 수준으로 동결",
+                   features=feat(policy_materiality=3), topic_link="none")
+        khnp = item("khnp", title="한전기술, 한수원과 264억원 규모 공급계약 체결",
+                    features=feat(policy_materiality=1), topic_link="nuclear")
+        self.assertGreater(ranking.score_item(oil, {**CFG, "topic_link": {"enabled": False}}, NOW)[0],
+                           ranking.score_item(khnp, CFG, NOW)[0])
+        self.assertLess(ranking.score_item(oil, CFG, NOW)[0], ranking.score_item(khnp, CFG, NOW)[0])
+
+
 if __name__ == "__main__":
     unittest.main()
 
