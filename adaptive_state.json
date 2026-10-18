@@ -540,6 +540,14 @@
       "type": "plant",
       "until": "2026-10-16T00:41:22.412305+00:00"
     },
+    "브루스": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-10-18T00:40:59.395409+00:00",
+      "term": "브루스",
+      "type": "plant",
+      "until": "2026-11-01T00:40:59.395409+00:00"
+    },
     "비스트라에너지": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -1086,56 +1094,9 @@
     }
   },
   "spent": {
-    "count": 1,
+    "count": 2,
     "date": "2026-10-18"
   },
-  "terms": {
-    "브루스": {
-      "articles": 3,
-      "created_at": "2026-10-17T09:40:32.519197+00:00",
-      "domains": [
-        "world-nuclear-news.org",
-        "esnews.kr",
-        "neimagazine.com"
-      ],
-      "evidence": [
-        {
-          "domain": "world-nuclear-news.org",
-          "hash": "83687e33430ede56",
-          "importance": "nice_to_know",
-          "title": "캐나다 브루스 원전 4호기, 주요 부품 교체(MCR) 공정 이정표 달성"
-        },
-        {
-          "domain": "esnews.kr",
-          "hash": "8f188814a02dc20a",
-          "importance": "noise",
-          "title": "로봇 활용 원전 정비 기술 동향"
-        },
-        {
-          "domain": "neimagazine.com",
-          "hash": "720d12a2a42fd544",
-          "importance": "nice_to_know",
-          "title": "캐나다 브루스 원전 4호기, 캔두(Candu) 원전 개보수 최단 기록 달성"
-        }
-      ],
-      "expires_at": "2026-10-18T09:40:32.519197+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-10-17T18:40:31.319694+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-10-17T18:40:30.175178+00:00",
-      "queries_run": 2,
-      "query": "브루스 원전",
-      "score": 3.64,
-      "status": "tracking",
-      "term": "브루스",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    }
-  },
+  "terms": {},
   "version": 1
 }
