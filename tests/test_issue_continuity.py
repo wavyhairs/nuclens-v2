@@ -1014,5 +1014,134 @@ class ContinuityRecheckTests(unittest.TestCase):
         self.assertEqual(diag["checked"], 2)
 
 
+# ---- 사건이 그대로인데 보도 동사만 붙은 날 · 어제 묶음의 조각을 다시 보낸 날 ------------
+#
+# 실측 2026-10-16·17·18 고리 3·4호기 사고관리계획서. 10/16 `심의 착수` → 10/17
+# `승인` 은 진짜 진전이고(연속 등재가 맞다), 10/17 `승인` → 10/18 `승인…심의 보류`
+# 는 같은 10/15 회의 결과의 재전송이었다. 게이트가 10/18 을 minor(감점 절반)로
+# 통과시켜 국내 1위로 다시 나갔다.
+
+KORI_1016 = {
+    "date": "2026-10-16", "hash": "k16",
+    "title_kr": "원안위, 고리 3·4호기 및 한빛 1·2호기 계속운전 심의 착수",
+    "title": "제2026-16회 원자력안전위원회 개최",
+    "summary": "원자력안전위원회가 고리 3·4호기 및 한빛 1·2호기 계속운전 심의에 착수했다.",
+    "region": "국내", "tags": [], "story_fingerprint": {},
+}
+KORI_1017 = {
+    "date": "2026-10-17", "hash": "k17",
+    "title_kr": "원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 승인",
+    "title": "고리 3·4호기- 한빛 1·2호 '원전 4기 재가동' 29일 결론",
+    "summary": ("원자력안전위원회가 고리 3·4호기 및 한빛 1·2호기의 사고관리계획서를 "
+                "승인하며 계속운전을 위한 첫 관문을 통과시켰다."),
+    "region": "국내", "tags": [], "story_fingerprint": {},
+    # 실측 발송 레코드의 story 구성 기사 일부. 둘째가 핵심(대표와 0.714),
+    # 첫째는 같은 기사의 (종합)판인데 대표와 0.6 이라 핵심 문턱 아래, 마지막은
+    # 배경으로 접힌 다른 이야기다.
+    "story_members": [
+        {"hash": "m1", "title": "고리 3·4호기 사고관리계획서 승인…계속운전 허가는 미뤄져(종합)"},
+        {"hash": "m2", "title": "원안위, 고리 3·4호기 사고관리계획서 승인…계속운전 허가는 미뤄져"},
+        {"hash": "m3", "title": "'고리' 재가동땐 1900㎿… '메가프로젝트' 전력수요 숨통"},
+    ],
+}
+
+
+def kori_1018(**extra):
+    row = {
+        "hash": "k18",
+        "title_kr": "원안위, 고리 3·4호기 사고관리계획서 승인…계속운전 심의는 보류",
+        "title": "고리 3·4호기 사고관리계획서 승인…계속운전 허가는 미뤄져(종합)",
+        "summary": ("원자력안전위원회가 고리 3·4호기 사고관리계획서를 승인했으나, "
+                    "계속운전 허가 안건은 추후 재논의하기로 결정했다."),
+        "importance": "nice_to_know", "section": "domestic", "domain": "kmkj.kr",
+        "link": "https://kmkj.kr/k18", "tags": [], "story_fingerprint": {},
+        "queued_at": "2026-10-17T20:00:00+00:00",
+    }
+    row.update(extra)
+    return row
+
+
+class SameEventRestatedTests(unittest.TestCase):
+    def test_certainty_verb_does_not_override_settled_event_scale(self):
+        """양쪽 다 permit:승인 이면 '결정했다' 하나로 진전이 되지 않는다."""
+        self.assertEqual(continuity.scale_tiers(KORI_1017)["permit"],
+                         continuity.scale_tiers(kori_1018())["permit"])
+        verdict = continuity.progression(KORI_1017, kori_1018())
+        self.assertNotEqual(verdict["kind"], "unmarked_prior")
+
+    def test_certainty_alone_still_counts_when_no_event_scale_on_both_sides(self):
+        """사건 척도가 한쪽에라도 비어 있으면 예전 규칙 ④ 그대로 — 절반 인정."""
+        verdict = continuity.progression(
+            sent("정부, 원전 수출 전략 검토"),
+            article("정부, 원전 수출 전략 공식 발표"))
+        self.assertEqual(verdict["verdict"], "minor")
+        self.assertEqual(verdict["kind"], "unmarked_prior")
+
+    def test_real_stage_advance_the_day_before_stays_material(self):
+        """10/16 심의 착수 → 10/17 승인 — 연속 등재가 맞는 쌍은 그대로 산다."""
+        verdict = continuity.progression(KORI_1016, KORI_1017)
+        self.assertEqual(verdict["verdict"], "material")
+        self.assertEqual(verdict["kind"], "scale_advance")
+
+    def test_core_member_title_measures_restatement(self):
+        self.assertLess(continuity.title_similarity(kori_1018(), KORI_1017), 0.85)
+        self.assertGreaterEqual(
+            continuity.restatement_title_similarity(kori_1018(), KORI_1017), 0.85)
+
+    def test_background_member_is_not_a_restatement(self):
+        """어제 카드 구석에 접혀 있던 다른 뉴스는 재전송 근거가 아니다.
+
+        실측 2026-08-17→18: 두산 공급계약 카드의 story 안에 다음 날 대표
+        `SK이노베이션-테라파워 … 공조 합의` 가 그대로 접혀 있었다.
+        """
+        prior = sent("두산에너빌리티, 美 테라파워 차세대 SMR 핵심 기자재 공급 계약 체결")
+        prior["story_members"] = [
+            {"hash": "x1", "title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의"}]
+        cand = article("SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의")
+        self.assertLess(continuity.restatement_title_similarity(cand, prior), 0.85)
+
+    def test_candidate_members_are_not_compared(self):
+        """오늘 쪽은 자기 제목만 — 오늘 독자가 읽는 것은 그것이다."""
+        cand = article("원안위, 한빛 2호기 정기검사 결과 보고")
+        cand["story_members"] = [{"hash": "z", "title": KORI_1017["title_kr"]}]
+        self.assertLess(continuity.restatement_title_similarity(cand, KORI_1017), 0.85)
+
+    def test_next_day_restatement_is_dropped(self):
+        item = kori_1018(features=feat(event_type="regulatory_action"))
+        continuity.annotate([item], [KORI_1016, KORI_1017], CFG, "2026-10-18")
+        cont = item["continuity"]
+        self.assertEqual(cont["prior_hash"], "k17")
+        self.assertEqual(cont["progression"], "none")
+        self.assertTrue(cont["drop"])
+        # 대표 제목만으로는 문턱 아래 — 구성 기사 제목 경로로 걸렸다.
+        self.assertLess(cont["similarity"], 0.85)
+        self.assertFalse(cont["evidence_confirmed"])
+        self.assertFalse(cont["identity_confirmed"])
+
+    def test_next_day_real_advance_is_kept(self):
+        item = {**KORI_1017, "importance": "nice_to_know", "section": "domestic",
+                "domain": "todayenergy.kr", "link": "https://todayenergy.kr/k17",
+                "queued_at": "2026-10-16T20:00:00+00:00",
+                "features": feat(event_type="regulatory_action")}
+        item.pop("date")
+        continuity.annotate([item], [KORI_1016], CFG, "2026-10-17")
+        self.assertEqual(item["continuity"]["progression"], "material")
+        self.assertFalse(item["continuity"]["drop"])
+
+    def test_epc_contract_is_a_definitive_contract(self):
+        """실측 2026-09-23 테라파워 `나트륨 원전 EPC 계약` — 협력 다음 칸은 본계약이다."""
+        verdict = continuity.progression(
+            sent("테라파워, 나트륨 원전 개발 협력 및 SK 참여 확대"),
+            article("테라파워(TerraPower), 나트륨(Natrium) 원전 EPC 계약"))
+        self.assertEqual(verdict["verdict"], "material")
+        self.assertIn("본계약", verdict["detail"])
+
+    def test_sent_record_keeps_member_titles_for_same_day_check(self):
+        rec = continuity.as_sent_record(
+            {"hash": "d1", "title_kr": "국내 카드", "story_related_titles": ["t1"],
+             "raw_sources": [{"hash": "r1", "title": "t2"}]}, "2026-10-18")
+        self.assertEqual(continuity.story_titles(rec), ["국내 카드", "t1", "t2"])
+
+
 if __name__ == "__main__":
     unittest.main()

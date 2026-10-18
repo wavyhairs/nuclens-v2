@@ -362,5 +362,68 @@ class RankingHookTests(unittest.TestCase):
         self.assertEqual(diag["cross_day"], [])
 
 
+# 실측 2026-10-17·18 고리 3·4호기. 10/17 카드 요지에 이미 '29일 재논의'가 있었는데
+# 판정기는 제목과 요약만 받아 10/18 `…심의는 보류` 를 next_step 으로 읽었다.
+KORI_SENT = {
+    "date": "2026-10-17", "hash": "865faac86a1d5bd9",
+    "title_kr": "원안위, 고리 3·4호기 및 한빛 1·2호기 사고관리계획서 승인",
+    "title": "고리 3·4호기- 한빛 1·2호 '원전 4기 재가동' 29일 결론",
+    "summary": ("원자력안전위원회가 고리 3·4호기 및 한빛 1·2호기의 사고관리계획서를 "
+                "승인하며 계속운전을 위한 첫 관문을 통과시켰다."),
+    "detail": ("원안위는 15일 제16회 전체회의에서 찬성 7표, 반대 2표로 사고관리계획서를 "
+               "의결했다. 계속운전 허가안은 심의에 착수했으나 추가 자료 요청으로 29일 "
+               "회의에서 논의를 이어가기로 했다."),
+    "tags": [], "region": "국내", "story_fingerprint": {},
+}
+KORI_CAND = candidate(
+    "727d06348551a08a", "원안위, 고리 3·4호기 사고관리계획서 승인…계속운전 심의는 보류",
+    "원자력안전위원회가 고리 3·4호기 사고관리계획서를 승인했으나, 계속운전 허가 안건은 "
+    "추후 재논의하기로 결정했다.")
+KORI_CAND["title"] = "고리 3·4호기 사고관리계획서 승인…계속운전 허가는 미뤄져(종합)"
+
+
+class SentCardIsShownWholeTests(unittest.TestCase):
+    """판정기는 이미 보낸 카드를 독자가 받은 그대로 봐야 한다."""
+
+    def setUp(self):
+        self._avail = dedup.is_available
+        dedup.is_available = lambda: True
+        dedup.reset_failures()
+
+    def tearDown(self):
+        dedup.is_available = self._avail
+        dedup.reset_failures()
+
+    def test_first_pass_sees_sent_detail_and_original_title(self):
+        block = dedup._candidate_block(0, KORI_CAND, [KORI_SENT])
+        self.assertIn("29일 회의에서 논의를 이어가기로", block)
+        self.assertIn("TITLE_ORIGINAL: 고리 3·4호기- 한빛 1·2호 '원전 4기 재가동' 29일 결론", block)
+
+    def test_original_title_line_is_omitted_when_same(self):
+        row = dict(KORI_SENT, title=KORI_SENT["title_kr"], detail="")
+        lines = dedup._sent_lines(row, summary_limit=350)
+        self.assertFalse(any(l.strip().startswith("TITLE_ORIGINAL") for l in lines))
+        self.assertFalse(any(l.strip().startswith("DETAIL") for l in lines))
+
+    def test_confirm_sees_sent_detail(self):
+        client = FakeClient(
+            response={"verdicts": [verdict(title=KORI_SENT["title_kr"], relation="same_detail")]},
+            confirm={"pairs": [{"pair": 0, "new_facts": [], "new_action": False}]})
+        cand = dict(KORI_CAND)
+        dedup.cross_day_repeats([cand], [KORI_SENT], client=client)
+        confirm = [c for c in client.calls if c["confirm"]]
+        self.assertEqual(len(confirm), 1)
+        self.assertIn("29일 회의에서 논의를 이어가기로", confirm[0]["payload"])
+        self.assertTrue(cand["continuity"]["drop"])
+
+    def test_prompt_says_same_meeting_decisions_are_detail(self):
+        self.assertIn("같은 회의·발표에서 함께 나온", dedup.CROSS_DAY_PROMPT)
+        self.assertIn("DETAIL", dedup.CROSS_DAY_PROMPT)
+
+    def test_sent_record_for_same_day_carries_detail(self):
+        rec = issue_continuity.as_sent_record(dict(KORI_CAND, detail="요지"), "2026-10-18")
+        self.assertEqual(rec["detail"], "요지")
+
+
 if __name__ == "__main__":
     unittest.main()
