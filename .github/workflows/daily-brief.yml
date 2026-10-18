@@ -303,9 +303,10 @@ jobs:
           GEMINI_SCRIPT_MODEL: ${{ vars.GEMINI_SCRIPT_MODEL }}
           # reasoning 검증용 passive capture (기본 꺼짐 — vars.NUCLENS_LLM_CAPTURE).
           NUCLENS_LLM_CAPTURE_DIR: ${{ vars.NUCLENS_LLM_CAPTURE == 'on' && '.eval/capture' || '' }}
-          # 그림자 하루치 순위(발송 불변, 기록만 — shadow_rank.py). 1주 측정 뒤 끄려면
-          # 저장소 변수 SHADOW_RANK=off. 지역당 2회 + 경계 재질문 ≤10회, 하루 14회 안팎.
-          SHADOW_RANK: ${{ vars.SHADOW_RANK || 'on' }}
+          # 그림자 하루치 순위(발송 불변, 기록만 — shadow_rank.py). 2026-10-10~18 측정을
+          # 마치고 기본값을 끔으로 돌렸다 — 결론은 ranking_config.json `topic_link` 로
+          # 옮겼다. 다시 재려면 저장소 변수 SHADOW_RANK=on (하루 24회 안팎).
+          SHADOW_RANK: ${{ vars.SHADOW_RANK || 'off' }}
         run: python daily_brief.py --plan
 
       - name: Push claim (발송 전 커밋 — 실패 시 발송 중단)

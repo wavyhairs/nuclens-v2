@@ -135,5 +135,79 @@ class ApplyTests(unittest.TestCase):
         self.assertEqual(topic_gate.DEMOTED, [])
 
 
+# ---- 직접 연결 — 막차 감점의 재료 ------------------------------------------------
+#
+# 그림자 하루치 순위(2026-10-10~18)가 내렸을 기사와 올렸을 기사에서 옮겼다.
+
+def card(title_kr, summary="", **kw):
+    return {"title_kr": title_kr, "title": kw.pop("title", title_kr), "summary": summary,
+            "importance": "nice_to_know", **kw}
+
+
+class DirectLinkTests(unittest.TestCase):
+    def test_unrelated_industry_cards_have_no_link(self):
+        for row in (
+            card("美 a16z, 11억 달러 AI 인프라 펀드 조성…한국 반도체·로봇 투자 모색"),
+            card("삼성SDI, 말레이시아 공장에 AI 서버용 원통형 LFP 배터리 생산설비 증설"),
+            card("EU, 중국산 하이브리드카 수출 제한 합의…주력 산업 규제 확대 우려"),
+            card("산업부, 11차 석유 최고가격 10차 수준으로 동결"),
+            card("부산시, 35조 규모 민선9기 시정 청사진 확정"),
+        ):
+            with self.subTest(row["title_kr"]):
+                self.assertEqual(topic_gate.direct_link(row), topic_gate.LINK_NONE)
+
+    def test_nuclear_cards(self):
+        for row in (
+            card("한전기술, 한수원과 264억원 규모 공급계약 체결"),
+            card("덴마크, 핵폐기물 심층처분장 건설을 위한 프레임워크 제안서 제출"),
+            card("생활 방사선 결함 제품 10년간 35건 적발…회수율 18%대 저조"),
+            card("말레이시아 야당, 261조원 규모 희토류 관리 기구 '리나스' 설립 제안",
+                 "희토류 자원 관리 일원화와 원전 건설 로드맵 수립을 포함한 국가 전략 기구"),
+        ):
+            with self.subTest(row["title_kr"]):
+                self.assertEqual(topic_gate.direct_link(row), topic_gate.LINK_NUCLEAR)
+
+    def test_power_cards_survive_spacing_and_english(self):
+        for row in (
+            card("벤처 글로벌, 가스 발전 설비 최대 16기 공급 기본 계약 체결"),
+            card("국회 국정감사 시작…에너지 믹스 및 대미 투자 사업 검증 예고"),
+            card("백악관 대변인, 한국의 대미 에너지 투자 패키지 2000억 달러 공식 언급"),
+            card("IEA, 아세안 전력망 확충에 2040년까지 3000억 달러 전망"),
+            card("Texas regulators pause new grid connections", title="Texas regulators pause new grid connections"),
+        ):
+            with self.subTest(row["title_kr"]):
+                self.assertEqual(topic_gate.direct_link(row), topic_gate.LINK_POWER)
+
+    def test_industry_names_are_nuclear(self):
+        """이름만 쓰는 기사 — `카자톰프롬` 은 세계 최대 우라늄 생산사다."""
+        for title in ("카자톰프롬, 2027 생산 가이던스 하향", "X-energy, 텍사스 착공",
+                      "Kairos, 건설허가 취득", "로사톰, 핀란드 중재 승소", "한울 4호기 재가동",
+                      "황이주 울진군수, '울진행복 에너지연금' 정책 추진"):
+            with self.subTest(title):
+                self.assertEqual(topic_gate.direct_link(card(title)), topic_gate.LINK_NUCLEAR)
+
+    def test_short_place_names_do_not_overmatch(self):
+        for title in ("민간 보글보글 축제 개막", "한울타리 나눔 행사", "산업 연결고리 강화"):
+            with self.subTest(title):
+                self.assertEqual(topic_gate.direct_link(card(title)), topic_gate.LINK_NONE)
+
+    def test_bare_baljeon_is_not_power(self):
+        """'발전' 하나는 '경제 발전'에 걸린다."""
+        self.assertEqual(
+            topic_gate.direct_link(card("정부, 지역 균형 발전 방안 발표")), topic_gate.LINK_NONE)
+
+    def test_curation_topics_are_not_used(self):
+        """LLM 주제 태그는 두 번 물으면 59% 만 같다 — 낱말로만 판정한다."""
+        row = card("미국 빅테크, 고금리에도 AI 인프라 투자 위해 회사채 발행 급증",
+                   topics=["datacenter_ai", "power_market"])
+        self.assertEqual(topic_gate.direct_link(row), topic_gate.LINK_NONE)
+
+    def test_annotate_marks_every_item(self):
+        rows = [card("한전기술, 한수원과 264억원 규모 공급계약 체결"),
+                card("부산시, 35조 규모 민선9기 시정 청사진 확정")]
+        topic_gate.annotate_links(rows)
+        self.assertEqual([r["topic_link"] for r in rows], ["nuclear", "none"])
+
+
 if __name__ == "__main__":
     unittest.main()
