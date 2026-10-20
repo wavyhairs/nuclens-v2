@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-10-21"
   },
   "retired": {
@@ -1110,9 +1110,44 @@
     }
   },
   "spent": {
-    "count": 0,
+    "count": 1,
     "date": "2026-10-21"
   },
-  "terms": {},
+  "terms": {
+    "협의체를열고": {
+      "articles": 1,
+      "created_at": "2026-10-20T18:40:38.851295+00:00",
+      "domains": [
+        "enewstoday.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "enewstoday.co.kr",
+          "hash": "e78317b0b3d11e27",
+          "importance": "must_read",
+          "title": "정부, 체코 두코바니 원전 이행 점검 및 테믈린 추가 수주 협력 논의"
+        }
+      ],
+      "expires_at": "2026-10-21T18:40:40.168512+00:00",
+      "importance": "must_read",
+      "last_result_count": 1,
+      "last_run": "2026-10-20T18:40:40.168512+00:00",
+      "new_articles": 1,
+      "origin": "auto",
+      "planned_at": "2026-10-20T18:40:38.851295+00:00",
+      "queries_run": 1,
+      "query": "협의체를 열고 원전",
+      "score": 3.6,
+      "status": "extended",
+      "term": "협의체를 열고",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [
+        "2026-10-21"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    }
+  },
   "version": 1
 }
