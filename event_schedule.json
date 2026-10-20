@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-20T00:48:58+09:00",
+ "generated_at": "2026-10-21T01:01:53+09:00",
  "events": [
   {
    "id": "of-e84de075fb02",
@@ -19,27 +19,6 @@
    "topics": [],
    "relevance": "nuclear",
    "significance": "세미나"
-  },
-  {
-   "id": "of-df334db1a902",
-   "date": "2026-10-06",
-   "end_date": "2026-10-06",
-   "kind": "point",
-   "time": "10:00",
-   "label": "주계약자 공동도급제도 개선방안 토론회",
-   "host": "김남근·민병덕·송재봉·안태준·연태영·이강일 의원실, 더불어민주당 을지로위원회, 대한전문건설협회, 대한기계설비건설협회",
-   "organizer": "김남근·민병덕·송재봉·안태준·연태영·이강일 의원실, 더불어민주당 을지로위원회, 대한전문건설협회, 대한기계설비건설협회",
-   "place": "의원회관 제9간담회의실(212호)",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "주계약자 공동도급제도 개선방안 토론회",
-   "first_seen": "2026-10-05",
-   "topics": [
-    "power_market"
-   ],
-   "relevance": "한전",
-   "significance": "토론회"
   },
   {
    "id": "of-9e9fe4b73339",
@@ -208,6 +187,27 @@
    "significance": "콘퍼런스"
   },
   {
+   "id": "of-9f6ceaa754bd",
+   "date": "2026-11-12",
+   "end_date": "2026-11-12",
+   "kind": "point",
+   "time": "",
+   "label": "2026 DETO - 원자력·핵융합 분야 기술포럼",
+   "host": "",
+   "organizer": "",
+   "place": "그랜드하얏트 서울 1층 그랜드볼룸3",
+   "url": "https://deepdiveinto.kr/",
+   "source_id": "kaif_calendar",
+   "publisher": "한국원자력산업협회",
+   "notice_title": "2026 DETO - 원자력·핵융합 분야 기술포럼 (세미나)",
+   "first_seen": "2026-10-21",
+   "topics": [
+    "fusion"
+   ],
+   "relevance": "핵융합",
+   "significance": "세미나"
+  },
+  {
    "id": "of-165097f37d1c",
    "date": "2026-11-13",
    "end_date": "2026-11-14",
@@ -269,7 +269,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-10-20T00:48:58+09:00",
+   "at": "2026-10-21T01:01:53+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -277,19 +277,19 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-10-20T00:48:58+09:00",
+   "at": "2026-10-21T01:01:53+09:00",
    "ok": true,
-   "parsed": 10,
+   "parsed": 11,
    "kept": 2,
    "new": 0,
    "dropped": {
+    "low_significance": 3,
     "not_an_event": 4,
-    "no_interest_match": 2,
-    "low_significance": 2
+    "no_interest_match": 2
    }
   },
   "kaif_calendar": {
-   "at": "2026-10-20T00:48:58+09:00",
+   "at": "2026-10-21T01:01:53+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -302,7 +302,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-10-20T00:48:58+09:00",
+   "at": "2026-10-21T01:01:53+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -310,18 +310,18 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-10-20T00:48:58+09:00",
+   "at": "2026-10-21T01:01:53+09:00",
    "ok": true,
-   "parsed": 17,
+   "parsed": 21,
    "kept": 0,
    "new": 0,
    "dropped": {
-    "no_interest_match": 16,
+    "no_interest_match": 20,
     "not_an_event": 1
    }
   },
   "kpx_notice": {
-   "at": "2026-10-20T00:48:58+09:00",
+   "at": "2026-10-21T01:01:53+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
