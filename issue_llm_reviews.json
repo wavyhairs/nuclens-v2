@@ -22582,6 +22582,17 @@
       "right_title": "LG에너지솔루션, 엔비디아 AI 팩토리 ESS 파트너 선정",
       "same_event": false
     },
+    "045eb5b647a346a3--4d2f3fff4e759e9f": {
+      "embedding_similarity": 0.8618,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "NERC, 데이터센터 전력망 연결 관련 신규 규제 도입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "규제와 변압기 수주는 다른 사안",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "LS일렉트릭, 북미 AI 데이터센터향 1,800억원 규모 초고압 변압기 수주",
+      "same_event": false
+    },
     "045eb5b647a346a3--4d9df5c0d3e40eff": {
       "embedding_similarity": 0.8888,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -59513,6 +59524,17 @@
       "right_title": "미국 텍사스주, 전력망 감사 완료까지 데이터센터 인허가 중단",
       "same_event": false
     },
+    "0ca57fd637cf38ac--5a90405a6e0d4491": {
+      "embedding_similarity": 0.9045,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "텍사스주, 데이터센터 환경 인허가 중단…엔시날 발전소 전력 판매처 불확실성",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스주 데이터센터 인허가 중단 동일 사건",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 텍사스주, 전력망 감사 완료까지 데이터센터 인허가 중단",
+      "same_event": true
+    },
     "0ca57fd637cf38ac--67c693714bcd14b1": {
       "embedding_similarity": 0.8705,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -71529,6 +71551,17 @@
       "reviewed_at": "2026-09-29T21:58:56.681955+00:00",
       "right_title": "미국 ESS 시장 급성장…국내 배터리 3사 생산라인 전환",
       "same_event": true
+    },
+    "115b3f66054c75dd--cf169f7352e07914": {
+      "embedding_similarity": 0.8508,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 PJM, AI 데이터센터 전력난 해소 위해 신속 연계 트랙 가동",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "PJM 트랙과 미국 ESS 시장은 무관",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 ESS 시장 급성장…국내 배터리 3사 생산라인 전환",
+      "same_event": false
     },
     "115b3f66054c75dd--f3213d555f9b9f44": {
       "embedding_similarity": 0.8421,
@@ -90125,6 +90158,17 @@
       "right_title": "삼성물산, 유럽 SMR 공급 참여…미국 200조원 투자 촉진 목표",
       "same_event": false
     },
+    "17c8d67f7d4938d7--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8769,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "행정처분과 개별 SMR 연결 신청은 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "美 블루에너지, 텍사스 SMR 전력망 연결 신청",
+      "same_event": false
+    },
     "17c8d67f7d4938d7--f7171121578ea039": {
       "embedding_similarity": 0.8467,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -103351,6 +103395,17 @@
       "right_title": "LG전자, 미국 버지니아주에 데이터센터용 칠러 생산공장 신설",
       "same_event": false
     },
+    "1aa17bd5a079c022--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.856,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스 규제와 FERC 전력 차단 기각은 같은 맥락",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미 FERC, 데이터센터 전력 차단 계획 기각…빅테크 SMR 자체 발전 선회 가속",
+      "same_event": true
+    },
     "1aa17bd5a079c022--f9bfa1bc554c3fb9": {
       "embedding_similarity": 0.8456,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -116173,12 +116228,13 @@
     },
     "1ed65047cf5ae6d0--c7f9b3d08bc22513": {
       "embedding_similarity": 0.8443,
-      "left_title": "정부, 호남 반도체 산단 전력·용수 인프라 예타 면제 및 6조 원 지원 확정",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "하정우 전 수석, 광주·전남 AI 반도체 메가클러스터 구축 제안",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "정부 지원 확정과 인물의 제안은 다른 사건임",
-      "reviewed_at": "2026-08-28T17:48:58.392793+00:00",
-      "right_title": "하정우 전 수석, 광주·전남 AI 반도체 메가클러스터 구축 제안",
+      "reason": "제안과 예타 면제 확정은 다른 단계의 사안",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "정부, 호남 반도체 산단 전력·용수 인프라 예타 면제 및 6조 원 지원 확정",
       "same_event": false
     },
     "1ed65047cf5ae6d0--cdd5f9ed8f148233": {
@@ -147072,6 +147128,28 @@
       "right_title": "미국 데이터센터 전력난 심화…송전망 부족으로 전력기기 수요 급증",
       "same_event": false
     },
+    "286c8dddf44cf443--cf169f7352e07914": {
+      "embedding_similarity": 0.8427,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 PJM, AI 데이터센터 전력난 해소 위해 신속 연계 트랙 가동",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "PJM 트랙 가동과 전력망 부족 분석은 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 데이터센터 전력난 심화…송전망 부족으로 전력기기 수요 급증",
+      "same_event": false
+    },
+    "286c8dddf44cf443--d1a3ae6ff00225f9": {
+      "embedding_similarity": 0.8607,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "전문가 진단, AI 데이터센터 전력 인프라 10년 사이클 진입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "전문가 진단과 송전망 부족 보도는 다른 사안",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 데이터센터 전력난 심화…송전망 부족으로 전력기기 수요 급증",
+      "same_event": false
+    },
     "286c8dddf44cf443--d589d53fe167f206": {
       "embedding_similarity": 0.8495,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -155445,6 +155523,17 @@
       "reviewed_at": "2026-10-20T00:34:51.484711+00:00",
       "right_title": "미국 데이터센터 건설, 전력망 승인 지연 및 인허가 난항으로 차질",
       "same_event": false
+    },
+    "2b35e540aa5c9cf6--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8674,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스주의 데이터센터 및 인프라 관련 조치",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 텍사스주 Fermi America 원전 건설 환경영향평가 초안 완료",
+      "same_event": true
     },
     "2b39eb26a692eb80--5acc5e77897a84d4": {
       "embedding_similarity": 0.8514,
@@ -168987,6 +169076,17 @@
       "right_title": "미국, 데이터센터 전력난 해소 위한 에너지 인허가 간소화 법안 합의",
       "same_event": false
     },
+    "2fd5fc5cc5bc0a08--96099f60056fd1a3": {
+      "embedding_similarity": 0.849,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "GMI클라우드 CEO, AI 데이터센터 전력난 해소를 위해 아시아 사업 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "아시아 사업 확대와 연방 법안 합의는 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국, 데이터센터 전력난 해소 위한 에너지 인허가 간소화 법안 합의",
+      "same_event": false
+    },
     "2fd5fc5cc5bc0a08--a52d37bb447c57ac": {
       "embedding_similarity": 0.8801,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -169083,6 +169183,28 @@
       "prompt_version": 2,
       "reason": "합병 조건과 인허가 간소화 법안은 다른 사안임",
       "reviewed_at": "2026-10-20T19:26:10.257299+00:00",
+      "right_title": "미국, 데이터센터 전력난 해소 위한 에너지 인허가 간소화 법안 합의",
+      "same_event": false
+    },
+    "2fd5fc5cc5bc0a08--cf169f7352e07914": {
+      "embedding_similarity": 0.8795,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 PJM, AI 데이터센터 전력난 해소 위해 신속 연계 트랙 가동",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "PJM 트랙 가동과 연방 법안 합의는 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국, 데이터센터 전력난 해소 위한 에너지 인허가 간소화 법안 합의",
+      "same_event": false
+    },
+    "2fd5fc5cc5bc0a08--d1a3ae6ff00225f9": {
+      "embedding_similarity": 0.854,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "전문가 진단, AI 데이터센터 전력 인프라 10년 사이클 진입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "전문가 진단과 연방 법안 합의는 무관",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "미국, 데이터센터 전력난 해소 위한 에너지 인허가 간소화 법안 합의",
       "same_event": false
     },
@@ -169522,6 +169644,17 @@
       "prompt_version": 2,
       "reason": "서로 다른 기업의 SMR 프로젝트",
       "reviewed_at": "2026-10-07T15:56:03.584592+00:00",
+      "right_title": "블루 에너지(Blue Energy), 텍사스 전력망에 SMR 5기 연결 신청",
+      "same_event": false
+    },
+    "30361a6cb02a5fe5--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8473,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스 인허가 중단과 SMR 연결 신청은 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "블루 에너지(Blue Energy), 텍사스 전력망에 SMR 5기 연결 신청",
       "same_event": false
     },
@@ -193570,6 +193703,17 @@
       "right_title": "구글, 10월 우주 기반 AI 칩 실증 '선캐처 프로젝트' 착수",
       "same_event": false
     },
+    "374a0710f843fd7c--9cfd425260ba57a7": {
+      "embedding_similarity": 0.9011,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "글로벌 데이터센터 전력망 및 환경 규제 강화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "데이터센터 환경 규제 강화의 구체적 사례",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "핀란드·미국, 환경영향평가 이유로 데이터센터 건설 제동",
+      "same_event": true
+    },
     "374a0710f843fd7c--a45477728709007a": {
       "embedding_similarity": 0.8549,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -209010,6 +209154,17 @@
       "reviewed_at": "2026-09-29T21:58:56.681955+00:00",
       "right_title": "미국 ESS 시장 급성장… 국내 배터리 3사 생산라인 전환",
       "same_event": true
+    },
+    "3b4cc6962ee82884--cf169f7352e07914": {
+      "embedding_similarity": 0.8522,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 PJM, AI 데이터센터 전력난 해소 위해 신속 연계 트랙 가동",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "PJM 트랙과 미국 ESS 시장은 무관",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 ESS 시장 급성장… 국내 배터리 3사 생산라인 전환",
+      "same_event": false
     },
     "3b4cc6962ee82884--f3213d555f9b9f44": {
       "embedding_similarity": 0.8418,
@@ -257783,6 +257938,17 @@
       "right_title": "NERC, 데이터센터 전력망 연결 관련 신규 규제 도입",
       "same_event": false
     },
+    "4d2f3fff4e759e9f--68885aae6c1451bc": {
+      "embedding_similarity": 0.844,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "NERC, 데이터센터 전력망 연결 관련 신규 규제 도입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "규제 도입과 전력망 보완 정책은 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "주요국, 전력망 병목 해소 위해 HVDC 지중화 및 NWA 도입 가속",
+      "same_event": false
+    },
     "4d2f3fff4e759e9f--696ee787e2300ab5": {
       "embedding_similarity": 0.8679,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -257970,6 +258136,17 @@
       "right_title": "미국 전력설비 업계, AI 데이터센터 수요 급증으로 일감 폭주",
       "same_event": false
     },
+    "4d2f3fff4e759e9f--b49c429873583746": {
+      "embedding_similarity": 0.8549,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "NERC, 데이터센터 전력망 연결 관련 신규 규제 도입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "규제와 ESS 구축 목표는 다른 사안",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 ESS 업계, 2032년까지 1TWh 규모 구축 목표 제시",
+      "same_event": false
+    },
     "4d2f3fff4e759e9f--bdb0ea1d9afd545f": {
       "embedding_similarity": 0.854,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -258023,6 +258200,17 @@
       "reason": "전력망 규제와 AI 추론망 구축은 다른 사건이다",
       "reviewed_at": "2026-09-18T22:03:27.473607+00:00",
       "right_title": "에퀴닉스, 엔비디아·투게더AI와 글로벌 AI 추론망 구축",
+      "same_event": false
+    },
+    "4d2f3fff4e759e9f--cdafcc8ca14b489b": {
+      "embedding_similarity": 0.8502,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "NERC, 데이터센터 전력망 연결 관련 신규 규제 도입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 서로 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "오라클, 2.45GW 데이터센터 전력 차질에 불가항력 통보",
       "same_event": false
     },
     "4d2f3fff4e759e9f--cdf70137fedc6079": {
@@ -282827,6 +283015,17 @@
       "right_title": "美 하원, 데이터센터 전력 인프라 비용 부담 검토 법안 통과",
       "same_event": false
     },
+    "55cc7d1f3fc2d44c--cf169f7352e07914": {
+      "embedding_similarity": 0.8566,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 PJM, AI 데이터센터 전력난 해소 위해 신속 연계 트랙 가동",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 세부 안건이 서로 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "美 하원, 데이터센터 전력 인프라 비용 부담 검토 법안 통과",
+      "same_event": false
+    },
     "55cc7d1f3fc2d44c--d3effaaae45ac23b": {
       "embedding_similarity": 0.8765,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -295463,6 +295662,17 @@
       "right_title": "텍사스 가스복합발전소 30조 투자, 데이터센터 전력 수요 불확실성 제기",
       "same_event": true
     },
+    "5a90405a6e0d4491--64dbd75ba01f9421": {
+      "embedding_similarity": 0.8425,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "텍사스주, 데이터센터 환경 인허가 중단…엔시날 발전소 전력 판매처 불확실성",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스 인허가 중단과 가스발전 확정은 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "대미 투자 1호 텍사스 가스발전 확정…국내 전력기기 업계 수혜 기대",
+      "same_event": false
+    },
     "5a90405a6e0d4491--67c693714bcd14b1": {
       "embedding_similarity": 0.8428,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -295516,6 +295726,17 @@
       "reason": "텍사스주 엔시널 사업과 일반 데이터센터 갈등은 다름",
       "reviewed_at": "2026-09-24T19:16:23.959162+00:00",
       "right_title": "데이터센터 입지 갈등 심화…주민 수용성 확보 과제 부상",
+      "same_event": false
+    },
+    "5a90405a6e0d4491--8524f0ab6cf373ec": {
+      "embedding_similarity": 0.885,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "텍사스주, 데이터센터 환경 인허가 중단…엔시날 발전소 전력 판매처 불확실성",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "인허가 중단과 인프라 단지 조성은 다른 사안",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 텍사스주 220억 달러 에너지 인프라 단지 조성에 한국 기업 참여",
       "same_event": false
     },
     "5a90405a6e0d4491--8c38b91a2101deb7": {
@@ -317708,12 +317929,13 @@
     },
     "6364a2515606a465--e014872747c23fbc": {
       "embedding_similarity": 0.8555,
-      "left_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 새너제이 주민들, 데이터센터 전력 소비 급증에 반발",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "인프라 투자 의무화와 주민 반발 시위는 다른 사안",
-      "reviewed_at": "2026-09-01T22:20:20.151162+00:00",
-      "right_title": "미국 새너제이 주민들, 데이터센터 전력 소비 급증에 반발",
+      "reason": "주민 반발과 칼럼 기고는 다른 내용",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "[기고] 모든 데이터센터를 전력 허브로 만들자",
       "same_event": false
     },
     "6364a2515606a465--f1ecac74ad93af10": {
@@ -376471,6 +376693,17 @@
       "right_title": "엔비디아, 전력 효율 극대화로 AI 연산 성능 40% 향상",
       "same_event": false
     },
+    "770a1ccef10a297c--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8429,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "행정처분과 원전 대출 지원은 별개 사안",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미 에너지부, 비스트라 원전 3곳 출력증강에 42억달러 대출 지원",
+      "same_event": false
+    },
     "770a1ccef10a297c--f6d2e0e3f856d41b": {
       "embedding_similarity": 0.8408,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -380890,6 +381123,17 @@
       "prompt_version": 2,
       "reason": "전문가 진단과 LS일렉트릭 공급 계약은 별개",
       "reviewed_at": "2026-10-13T03:54:20.919355+00:00",
+      "right_title": "LS일렉트릭, 블룸에너지와 1,850억 원 규모 배전 솔루션 공급 계약",
+      "same_event": false
+    },
+    "79e4022ccb9a6037--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8413,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스 인허가 중단과 배전 솔루션 계약은 무관",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "LS일렉트릭, 블룸에너지와 1,850억 원 규모 배전 솔루션 공급 계약",
       "same_event": false
     },
@@ -389099,6 +389343,17 @@
       "right_title": "글로벌 데이터센터 전력 공급 병목 현상 심화",
       "same_event": false
     },
+    "7d5a056b5bc87986--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.848,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스 감사 착수와 글로벌 병목 현상은 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "글로벌 데이터센터 전력 공급 병목 현상 심화",
+      "same_event": false
+    },
     "7d604ab595035fb4--7e15902d9739039a": {
       "embedding_similarity": 0.8422,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -394591,6 +394846,17 @@
       "prompt_version": 2,
       "reason": "PJM 관련 주체와 조치가 다름",
       "reviewed_at": "2026-10-13T19:20:43.153496+00:00",
+      "right_title": "미 DOE, PJM 전력망 긴급명령 발령…비상 발전 자원 가동",
+      "same_event": false
+    },
+    "81252f915ed7dbd8--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8437,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스 인허가 중단과 DOE 긴급명령은 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "미 DOE, PJM 전력망 긴급명령 발령…비상 발전 자원 가동",
       "same_event": false
     },
@@ -402142,6 +402408,17 @@
       "reason": "미국 인프라 단지와 현대엔지니어링 AI 인프라",
       "reviewed_at": "2026-10-15T08:45:00.902013+00:00",
       "right_title": "현대엔지니어링, 2.4조 규모 발전소 건설 등 AI 인프라 시장 확대",
+      "same_event": false
+    },
+    "8524f0ab6cf373ec--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8782,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "규제 조치와 대규모 인프라 단지 조성은 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 텍사스주 220억 달러 에너지 인프라 단지 조성에 한국 기업 참여",
       "same_event": false
     },
     "8524f0ab6cf373ec--f8353654abc8a9ac": {
@@ -419664,6 +419941,17 @@
       "right_title": "미 전직 고위관료들, 에너지 인프라 인허가 개혁 및 확충 촉구",
       "same_event": true
     },
+    "8e677ed54388e688--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8512,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스 규제와 미국의 인프라 법안 논의는 연동됨",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국, 에너지 인프라 규제 개혁 및 송전망 확충 위한 초당파 법안 논의",
+      "same_event": true
+    },
     "8e7124db931e5428--dc617ac727429a81": {
       "embedding_similarity": 0.8477,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -433819,6 +434107,17 @@
       "right_title": "도시바의 HDD 증산 계획에도 AI 데이터센터 공급난은 2028년까지 지속 전망",
       "same_event": false
     },
+    "96099f60056fd1a3--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.849,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "행정처분과 아시아 사업 확대는 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "GMI클라우드 CEO, AI 데이터센터 전력난 해소를 위해 아시아 사업 확대",
+      "same_event": false
+    },
     "96099f60056fd1a3--fe0f923c3a1cca9d": {
       "embedding_similarity": 0.8549,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -437731,12 +438030,13 @@
     },
     "991f0fbcbef486cd--f1ecac74ad93af10": {
       "embedding_similarity": 0.8629,
-      "left_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 정치권, 데이터센터 과세 및 공시 의무화 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "원인자 부담 법안과 과세/공시 의무화는 다른 법안임",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "미국 정치권, 데이터센터 과세 및 공시 의무화 추진",
+      "reason": "과세·공시 추진과 인프라 비용 법안은 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
       "same_event": false
     },
     "991f0fbcbef486cd--f6bc38f8c3e83779": {
@@ -443590,6 +443890,17 @@
       "right_title": "글로벌 AI 데이터센터, 전력·용수 부족으로 지역사회 반발 확산",
       "same_event": false
     },
+    "9cfd425260ba57a7--b6a9932bed566e25": {
+      "embedding_similarity": 0.874,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "글로벌 데이터센터 전력망 및 환경 규제 강화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "글로벌 규제와 버지니아주 규제 강화는 같은 맥락",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 버지니아주, 데이터센터 등 대규모 전력 수요 대응 위한 규제 전략 강화",
+      "same_event": true
+    },
     "9cfd425260ba57a7--b6ad2a199a2f80c9": {
       "embedding_similarity": 0.8744,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -443655,6 +443966,17 @@
       "reviewed_at": "2026-09-26T15:45:01.926038+00:00",
       "right_title": "미 데이터센터 전력 확보 경쟁, 발전설비 선택 기준 변화",
       "same_event": false
+    },
+    "9cfd425260ba57a7--cf169f7352e07914": {
+      "embedding_similarity": 0.844,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "글로벌 데이터센터 전력망 및 환경 규제 강화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "글로벌 데이터센터 규제와 PJM 신속 연계 트랙",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 PJM, AI 데이터센터 전력난 해소 위해 신속 연계 트랙 가동",
+      "same_event": true
     },
     "9cfd425260ba57a7--d3effaaae45ac23b": {
       "embedding_similarity": 0.8962,
@@ -443742,6 +444064,17 @@
       "reason": "규제 강화 동향과 개별 투자 차질은 다름",
       "reviewed_at": "2026-10-04T21:48:20.139013+00:00",
       "right_title": "주민 반발로 유럽·한국 데이터센터 투자 차질 확산",
+      "same_event": false
+    },
+    "9cfd425260ba57a7--f9bfa1bc554c3fb9": {
+      "embedding_similarity": 0.8494,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "글로벌 데이터센터 전력망 및 환경 규제 강화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "데이터센터 규제와 AI 킬스위치는 무관",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "뉴욕시, AI 킬스위치 의무화 추진…AI 안전 시장 부상",
       "same_event": false
     },
     "9cfd425260ba57a7--fa04c3648cd56f1e": {
@@ -453674,6 +454007,17 @@
       "right_title": "글로벌 데이터센터 건설, 주민 반대 및 환경 규제로 지연 확산",
       "same_event": true
     },
+    "a45477728709007a--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8406,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스주 중단과 글로벌 지연은 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "글로벌 데이터센터 건설, 주민 반대 및 환경 규제로 지연 확산",
+      "same_event": false
+    },
     "a455bf451abe1d73--ae1881fd98d4b999": {
       "embedding_similarity": 0.8441,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -458471,13 +458815,14 @@
     },
     "a7857266a1eed500--a906966348221102": {
       "embedding_similarity": 0.8774,
-      "left_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국, 전력망 안보 행정명령 시행…국내 배터리 업계 공급망 현지화 가속",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "미국 ESS 시장 확대와 행정명령은 동일 사건",
-      "reviewed_at": "2026-08-30T06:49:39.014405+00:00",
-      "right_title": "미국, 전력망 안보 행정명령 시행…국내 배터리 업계 공급망 현지화 가속",
-      "same_event": true
+      "reason": "행정명령 시행과 ESS 시장 확대 전망은 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
+      "same_event": false
     },
     "a7902d8290928b64--ca3992537f3681e5": {
       "embedding_similarity": 0.8485,
@@ -458501,12 +458846,13 @@
     },
     "a7ac7b8829932607--dcf7c30e7fd1692d": {
       "embedding_similarity": 0.8485,
-      "left_title": "빌 게이츠 테라파워, AI 데이터센터용 2호 SMR 프로젝트 추진",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "최태원, 美사업 직접 지휘 1년…SK '현지경영' 달라졌다",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "2호 SMR 프로젝트 추진과 SK 협력은 다른 사건",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
-      "right_title": "SK그룹, 미국 테라파워와 SMR 사업 협력 강화",
+      "reason": "주체와 세부 사안이 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "빌 게이츠 테라파워, AI 데이터센터용 2호 SMR 프로젝트 추진",
       "same_event": false
     },
     "a7ac7b8829932607--f796c0b6619106a8": {
@@ -459108,12 +459454,13 @@
     },
     "a84a7ad51857b714--ff43b2c5d0246488": {
       "embedding_similarity": 0.8639,
-      "left_title": "경남도, 2027년 국비 11조 6,811억 확보…SMR 등 신산업 육성",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "경남도, 창원·김해 도심융합특구 후보지 지정 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "경남도 예산 확보와 도심융합특구 지정은 별개",
-      "reviewed_at": "2026-09-03T19:20:26.065657+00:00",
-      "right_title": "경남도, 창원·김해 도심융합특구 후보지 지정 추진",
+      "reason": "도심융합특구와 국비 확보는 다른 안건임",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "경남도, 2027년 국비 11조 6,811억 확보…SMR 등 신산업 육성",
       "same_event": false
     },
     "a855e97044907c25--dffe5181d554fc6d": {
@@ -459587,12 +459934,13 @@
     },
     "a8d30600b22b8452--d080a8fb0f8f4da1": {
       "embedding_similarity": 0.8794,
-      "left_title": "한-베트남, 핵심광물 공급망 및 산업기술 협력 강화",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한-베트남, 2030년 교역 1500억 달러 목표 및 원자력 협력 지속",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "핵심광물 협력과 2030 교역 목표 다름",
-      "reviewed_at": "2026-08-26T21:56:15.851985+00:00",
-      "right_title": "한-베트남, 2030년 교역 1500억 달러 목표 및 원자력 협력 지속",
+      "reason": "원자력 협력과 핵심광물 협력은 다른 사안임",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "한-베트남, 핵심광물 공급망 및 산업기술 협력 강화",
       "same_event": false
     },
     "a8dcae323fe6d0b4--f32282e2622e8e98": {
@@ -459618,32 +459966,35 @@
     },
     "a8df8017c9033bda--bbc7b1d19ffb0c94": {
       "embedding_similarity": 0.8893,
-      "left_title": "산업용 전기요금 지역차등제 설계안 공개, 실효성 논란 지속",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 산업용 전기요금 지역별 차등화 추진…한전 연간 3조원 수입 감소 전망",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "전기요금 차등제 설계 및 영향",
-      "reviewed_at": "2026-09-04T19:21:20.456055+00:00",
-      "right_title": "정부, 산업용 전기요금 지역별 차등화 추진…한전 연간 3조원 수입 감소 전망",
+      "reason": "산업용 전기요금 지역차등제 관련 동일 사안",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "산업용 전기요금 지역차등제 설계안 공개, 실효성 논란 지속",
       "same_event": true
     },
     "a8df8017c9033bda--c008c848aabfbd44": {
       "embedding_similarity": 0.8621,
-      "left_title": "이철우 경북지사, 산업용 전기요금 차등제 인하폭 30% 이상 확대 요구",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 산업용 전기요금 지역별 차등화 추진…한전 연간 3조원 수입 감소 전망",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "산업용 전기요금 차등제 인하폭 요구 사안",
-      "reviewed_at": "2026-09-02T06:55:10.723482+00:00",
-      "right_title": "정부, 산업용 전기요금 지역별 차등화 추진…한전 연간 3조원 수입 감소 전망",
-      "same_event": true
+      "reason": "정부 추진 보도와 지자체장의 개별 요구임",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "이철우 경북지사, 산업용 전기요금 차등제 인하폭 30% 이상 확대 요구",
+      "same_event": false
     },
     "a8df8017c9033bda--e7194df18af9a0fe": {
       "embedding_similarity": 0.8611,
-      "left_title": "한전, 배전선로별 정전비용 산출 착수…투자 우선순위 활용",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 산업용 전기요금 지역별 차등화 추진…한전 연간 3조원 수입 감소 전망",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "배전선로별 정전비용 산출과 전기요금 차등제는 별개",
-      "reviewed_at": "2026-09-02T06:55:10.723482+00:00",
-      "right_title": "정부, 산업용 전기요금 지역별 차등화 추진…한전 연간 3조원 수입 감소 전망",
+      "reason": "전기요금 차등제와 한전 배전선로 정전비용은 무관",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "한전, 배전선로별 정전비용 산출 착수…투자 우선순위 활용",
       "same_event": false
     },
     "a8df8017c9033bda--ff194befff09fb10": {
@@ -459659,12 +460010,13 @@
     },
     "a8df8017c9033bda--ff6b831bee753ecc": {
       "embedding_similarity": 0.8826,
-      "left_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 산업용 전기요금 지역별 차등화 추진…한전 연간 3조원 수입 감소 전망",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "전기요금 관련 서로 다른 사안",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "정부, 산업용 전기요금 지역별 차등화 추진…한전 연간 3조원 수입 감소 전망",
+      "reason": "전기요금 차등제와 국회의 부채 해결 촉구는 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
       "same_event": false
     },
     "a8e11fc26fdc59f9--e6859bf499f688fe": {
@@ -459779,11 +460131,12 @@
     },
     "a906966348221102--ad20c9db68d9e571": {
       "embedding_similarity": 0.8546,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주체와 구체적 계약 건이 다름",
-      "reviewed_at": "2026-08-29T22:06:03.224740+00:00",
+      "reason": "미국 ESS 수혜 전망과 LS일렉트릭 계약은 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "LS일렉트릭, 북미 AI 데이터센터 전력설비 2309억원 공급",
       "same_event": false
     },
@@ -459799,21 +460152,23 @@
     },
     "a906966348221102--b0cba6a4bb7ec3b3": {
       "embedding_similarity": 0.8485,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주제만 유사하고 사안이 다름",
-      "reviewed_at": "2026-08-29T22:06:03.224740+00:00",
+      "reason": "미국 ESS 수혜와 AI 전력기기 수요 증가는 다른 사안",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "AI 투자 확대에 따른 HBM 및 전력기기 수요 증가",
       "same_event": false
     },
     "a906966348221102--b3be3b0a4e0c12af": {
       "embedding_similarity": 0.8405,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주체와 사안이 다름",
-      "reviewed_at": "2026-09-03T03:56:43.465030+00:00",
+      "reason": "미국 ESS 수혜와 남부발전 지원 사업은 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "남부발전, 미국 발전자산 활용해 중소기업 북미 전력시장 진출 지원",
       "same_event": false
     },
@@ -459830,11 +460185,12 @@
     },
     "a906966348221102--b8f71a4cfe31b163": {
       "embedding_similarity": 0.8711,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "미국 ESS 수혜와 일본의 배터리 산업 전략은 국가와 대상이 다름",
-      "reviewed_at": "2026-08-29T22:06:03.224740+00:00",
+      "reason": "미국 ESS 수혜와 일본의 배터리 산업 전략은 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "일본, 배터리 산업 전략을 전원 시스템으로 확장",
       "same_event": false
     },
@@ -459851,13 +460207,14 @@
     },
     "a906966348221102--c230ebf0425a1566": {
       "embedding_similarity": 0.8538,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "미국 ESS 수혜와 트럼프 행정부의 전력망 기자재 규제 행정명령임",
-      "reviewed_at": "2026-08-29T22:06:03.224740+00:00",
+      "reason": "ESS 수혜 전망과 트럼프 행정부 행정명령 보도는 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "美 트럼프 행정부, 외국산 전력망 기자재 규제 행정명령 14420호 서명",
-      "same_event": true
+      "same_event": false
     },
     "a906966348221102--c42f92f04b29f0f7": {
       "embedding_similarity": 0.8779,
@@ -459883,11 +460240,12 @@
     },
     "a906966348221102--c98b67c81afd59e0": {
       "embedding_similarity": 0.8545,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주체와 구체적 사안이 다름",
-      "reviewed_at": "2026-08-29T22:06:03.224740+00:00",
+      "reason": "ESS 수혜 전망과 LS전선의 북미 공략은 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "LS전선, 북미 전력 인프라 시장 공략 가속화",
       "same_event": false
     },
@@ -459904,11 +460262,12 @@
     },
     "a906966348221102--d059722f69616516": {
       "embedding_similarity": 0.8539,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "미국 시장과 국내 입찰",
-      "reviewed_at": "2026-08-31T03:54:44.815706+00:00",
+      "reason": "미국 ESS 시장 수혜와 국내 ESS 중앙계약시장은 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "제3차 ESS 중앙계약시장 입찰 임박…물량 1GW 확대 전망",
       "same_event": false
     },
@@ -459924,21 +460283,23 @@
     },
     "a906966348221102--d8950ff32d90fa88": {
       "embedding_similarity": 0.8447,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "미국 ESS 규제와 수혜 기대",
-      "reviewed_at": "2026-08-31T03:54:44.815706+00:00",
+      "reason": "미국 ESS 수혜 전망과 미국의 전력장비 규제 강화 배경임",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "미국, ESS 국가안보 핵심 장비 지정 및 외국산 전력장비 규제 강화",
-      "same_event": true
+      "same_event": false
     },
     "a906966348221102--db9bf9b22a71b1bd": {
       "embedding_similarity": 0.8661,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 ESS 시장 확대 및 중국산 배터리 배제에 국내 기업 수혜 기대",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "서로 다른 사안임",
-      "reviewed_at": "2026-08-30T12:49:11.801222+00:00",
+      "reason": "미국 ESS 수혜와 국내 ESS 중앙계약시장 입찰은 다름",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
       "right_title": "제3차 ESS 중앙계약시장 물량 최대 1GW 확대 전망",
       "same_event": false
     },
@@ -473184,6 +473545,17 @@
       "right_title": "한화 트랜스그리드 에너지, AI 기반 에너지 관리 기술 '차세대 신기술' 선정",
       "same_event": false
     },
+    "b48b10277724a425--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8492,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스 규제와 PJM 비용 부담 촉구는 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미 DOE, PJM에 데이터센터 전력망 비용 부담 주체 명확화 촉구",
+      "same_event": false
+    },
     "b48b10277724a425--f73dbe8406b488f5": {
       "embedding_similarity": 0.8611,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -475440,6 +475812,17 @@
       "reviewed_at": "2026-10-07T22:44:39.806786+00:00",
       "right_title": "오라클, 뉴멕시코 AI 데이터센터 전력 확보 차질로 불가항력 통지",
       "same_event": false
+    },
+    "b6a9932bed566e25--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8569,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "데이터센터 전력난 대응 규제 강화로 동일 사건",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 버지니아주, 데이터센터 등 대규모 전력 수요 대응 위한 규제 전략 강화",
+      "same_event": true
     },
     "b6a9932bed566e25--f8353654abc8a9ac": {
       "embedding_similarity": 0.8471,
@@ -496052,6 +496435,17 @@
       "right_title": "[사설] 급증한 전력수요, 현실적 공급계획 마련 시급",
       "same_event": false
     },
+    "cb59a8015639dd30--d1a3ae6ff00225f9": {
+      "embedding_similarity": 0.8447,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "전문가 진단, AI 데이터센터 전력 인프라 10년 사이클 진입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "인프라 진단과 신규 건설 제동은 별개",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "미국 데이터센터 밀집 지역, 전력난으로 신규 건설 제동",
+      "same_event": false
+    },
     "cb59a8015639dd30--d3effaaae45ac23b": {
       "embedding_similarity": 0.8686,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -501763,6 +502157,17 @@
       "reason": "전문가 진단과 글로벌 전망",
       "reviewed_at": "2026-10-11T19:43:04.572940+00:00",
       "right_title": "글로벌 AI 데이터센터 투자 2050년까지 30조 달러 전망",
+      "same_event": false
+    },
+    "d1a3ae6ff00225f9--f6bc38f8c3e83779": {
+      "embedding_similarity": 0.8572,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "규제 조치와 시장 전망 리포트는 다른 사안",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "전문가 진단, AI 데이터센터 전력 인프라 10년 사이클 진입",
       "same_event": false
     },
     "d1a3ae6ff00225f9--f73dbe8406b488f5": {
@@ -517067,6 +517472,17 @@
       "reviewed_at": "2026-10-01T22:31:00.740591+00:00",
       "right_title": "정부, 기장 SMR 부지 선정 및 전주기 지원 특별법 추진",
       "same_event": true
+    },
+    "f6bc38f8c3e83779--f9bfa1bc554c3fb9": {
+      "embedding_similarity": 0.8499,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 텍사스주, 데이터센터 신규 허가 전면 중단 및 전력망 감사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "텍사스주 허가 중단과 뉴욕 킬스위치는 무관",
+      "reviewed_at": "2026-10-21T15:54:31.620294+00:00",
+      "right_title": "뉴욕시, AI 킬스위치 의무화 추진…AI 안전 시장 부상",
+      "same_event": false
     },
     "f6cca926ebb3cd2c--f8c7352740e28772": {
       "embedding_similarity": 0.8476,
