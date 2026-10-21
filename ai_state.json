@@ -749,6 +749,13 @@
    "reason": "datacenter_power",
    "v": 6
   },
+  "05a44d08cfb5de94": {
+   "at": "2026-10-21T03:49:42.228648+00:00",
+   "feed": "",
+   "in": false,
+   "reason": "ai_industry_general",
+   "v": 7
+  },
   "05ac84b7a3f7fc7f": {
    "at": "2026-10-15T15:00:02.718376+00:00",
    "backfill": "research",
@@ -2682,6 +2689,13 @@
    "reason": "diplomatic_mention",
    "v": 7
   },
+  "1573a8a9784c1959": {
+   "at": "2026-10-21T03:49:42.228648+00:00",
+   "feed": "",
+   "in": false,
+   "reason": "datacenter_power",
+   "v": 7
+  },
   "1579e73f14f8789f": {
    "at": "2026-10-15T14:31:47.852905+00:00",
    "backfill": "research",
@@ -3895,6 +3909,13 @@
    "in": false,
    "reason": "domestic",
    "v": 6
+  },
+  "1f5b9b8e7725714e": {
+   "at": "2026-10-21T03:49:42.228648+00:00",
+   "feed": "",
+   "in": false,
+   "reason": "robotics_only",
+   "v": 7
   },
   "1f6065f6472a6ffb": {
    "at": "2026-10-15T14:31:47.852905+00:00",
@@ -13358,6 +13379,13 @@
    "reason": "none",
    "v": 6
   },
+  "7839e9be6b83008e": {
+   "at": "2026-10-21T03:49:42.228648+00:00",
+   "feed": "AI·Google 원전 AI(FR)",
+   "in": false,
+   "reason": "datacenter_power",
+   "v": 7
+  },
   "784d51db2716601c": {
    "at": "2026-10-15T14:31:47.852905+00:00",
    "backfill": "research",
@@ -20422,6 +20450,13 @@
    "reason": "ai_industry_general",
    "v": 6
   },
+  "b99383ef6fa11ad7": {
+   "at": "2026-10-21T03:49:42.228648+00:00",
+   "feed": "AI·Google 원전 AI(RU)",
+   "in": false,
+   "reason": "datacenter_power",
+   "v": 7
+  },
   "b994a767641a7efc": {
    "at": "2026-10-15T14:31:47.852905+00:00",
    "backfill": "research",
@@ -25579,6 +25614,13 @@
    "reason": "domestic",
    "v": 6
   },
+  "e70ad8ad03230c64": {
+   "at": "2026-10-21T03:49:42.228648+00:00",
+   "feed": "",
+   "in": false,
+   "reason": "domestic",
+   "v": 7
+  },
   "e70f95ed5a22acd7": {
    "at": "2026-10-15T14:31:47.852905+00:00",
    "backfill": "research",
@@ -27895,6 +27937,13 @@
    "reason": "domestic",
    "v": 6
   },
+  "fd1aec73b8544af3": {
+   "at": "2026-10-21T03:49:42.228648+00:00",
+   "feed": "",
+   "in": false,
+   "reason": "diplomatic_mention",
+   "v": 7
+  },
   "fd2337d02d9e3622": {
    "at": "2026-10-14T12:52:45.189965+00:00",
    "in": false,
@@ -28224,180 +28273,6 @@
   }
  },
  "runs": [
-  {
-   "at": "2026-10-16T18:45:51.554450+00:00",
-   "body": {
-    "attempted": 6,
-    "ok": 3
-   },
-   "candidates": 7,
-   "conflict_drop": 0,
-   "deferred": 0,
-   "duplicate": 5,
-   "excluded": 5,
-   "failed": 0,
-   "feeds": {
-    "AI·Google NEI AI": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 3,
-     "fresh": 3,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "AI·Google NRC AI": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 1,
-     "fresh": 1,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "AI·Google Атомная энергия 2.0": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 34,
-     "fresh": 33,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "AI·Google 규제·연구소 AI(EN)": {
-     "candidates": 1,
-     "failed": 0,
-     "fetched": 34,
-     "fresh": 34,
-     "included": 1,
-     "judged": 1,
-     "stale_url": 0
-    },
-    "AI·Google 사업자 AI(EN)": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 8,
-     "fresh": 8,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "AI·Google 원전 AI 벤더·제품(EN)": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 7,
-     "fresh": 7,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "AI·Google 원전 AI(EN)": {
-     "candidates": 1,
-     "failed": 0,
-     "fetched": 53,
-     "fresh": 53,
-     "included": 0,
-     "judged": 1,
-     "stale_url": 0
-    },
-    "AI·Google 원전 AI(FR)": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 25,
-     "fresh": 25,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "AI·Google 원전 AI(JA)": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 49,
-     "fresh": 49,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "AI·Google 원전 AI(RU)": {
-     "candidates": 2,
-     "failed": 0,
-     "fetched": 25,
-     "fresh": 25,
-     "included": 0,
-     "judged": 2,
-     "stale_url": 0
-    },
-    "AI·Google 원전 AI(ZH)": {
-     "candidates": 1,
-     "failed": 0,
-     "fetched": 30,
-     "fresh": 30,
-     "included": 0,
-     "judged": 1,
-     "stale_url": 0
-    },
-    "AI·Google 원전 디지털(EN)": {
-     "candidates": 1,
-     "failed": 0,
-     "fetched": 24,
-     "fresh": 24,
-     "included": 1,
-     "judged": 1,
-     "stale_url": 0
-    },
-    "AI·Google 제작사 AI(EN)": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 19,
-     "fresh": 19,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "AI·Google 해외 규제기관 AI(EN) 1": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 8,
-     "fresh": 8,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "AI·Google 해외 규제기관 AI(EN) 2": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 18,
-     "fresh": 18,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "AI·IAEA 보도자료": {
-     "candidates": 0,
-     "failed": 0,
-     "fetched": 15,
-     "fresh": 0,
-     "included": 0,
-     "judged": 0,
-     "stale_url": 0
-    },
-    "공유 풀": {
-     "candidates": 1,
-     "failed": 0,
-     "fetched": 1053,
-     "fresh": 1053,
-     "included": 0,
-     "judged": 1,
-     "stale_url": 0
-    }
-   },
-   "guarded": 0,
-   "included": 2,
-   "judged": 7,
-   "pool": 1390,
-   "prefilter_out": 1262,
-   "seen": 116
-  },
   {
    "at": "2026-10-16T21:09:25.098348+00:00",
    "body": {
@@ -35183,6 +35058,180 @@
    "pool": 1381,
    "prefilter_out": 1226,
    "seen": 145
+  },
+  {
+   "at": "2026-10-21T03:49:42.228648+00:00",
+   "body": {
+    "attempted": 2,
+    "ok": 2
+   },
+   "candidates": 7,
+   "conflict_drop": 6,
+   "deferred": 0,
+   "duplicate": 0,
+   "excluded": 7,
+   "failed": 0,
+   "feeds": {
+    "AI·Google NEI AI": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 5,
+     "fresh": 5,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google NRC AI": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 3,
+     "fresh": 2,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google Атомная энергия 2.0": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 13,
+     "fresh": 13,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google 규제·연구소 AI(EN)": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 36,
+     "fresh": 36,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google 사업자 AI(EN)": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 29,
+     "fresh": 29,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google 원전 AI 벤더·제품(EN)": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 3,
+     "fresh": 3,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google 원전 AI(EN)": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 32,
+     "fresh": 32,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google 원전 AI(FR)": {
+     "candidates": 1,
+     "failed": 0,
+     "fetched": 27,
+     "fresh": 27,
+     "included": 0,
+     "judged": 1,
+     "stale_url": 0
+    },
+    "AI·Google 원전 AI(JA)": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 23,
+     "fresh": 23,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google 원전 AI(RU)": {
+     "candidates": 1,
+     "failed": 0,
+     "fetched": 49,
+     "fresh": 49,
+     "included": 0,
+     "judged": 1,
+     "stale_url": 0
+    },
+    "AI·Google 원전 AI(ZH)": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 25,
+     "fresh": 25,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google 원전 디지털(EN)": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 27,
+     "fresh": 27,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google 제작사 AI(EN)": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 34,
+     "fresh": 34,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google 해외 규제기관 AI(EN) 1": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 4,
+     "fresh": 4,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·Google 해외 규제기관 AI(EN) 2": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 10,
+     "fresh": 10,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "AI·IAEA 보도자료": {
+     "candidates": 0,
+     "failed": 0,
+     "fetched": 15,
+     "fresh": 1,
+     "included": 0,
+     "judged": 0,
+     "stale_url": 0
+    },
+    "공유 풀": {
+     "candidates": 5,
+     "failed": 0,
+     "fetched": 1100,
+     "fresh": 1100,
+     "included": 0,
+     "judged": 5,
+     "stale_url": 0
+    }
+   },
+   "guarded": 0,
+   "included": 0,
+   "judged": 7,
+   "pool": 1420,
+   "prefilter_out": 1269,
+   "seen": 138
   }
  ]
 }
