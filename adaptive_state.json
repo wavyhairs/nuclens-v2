@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 2,
+    "count": 3,
     "date": "2026-10-21"
   },
   "retired": {
@@ -1110,7 +1110,7 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 5,
     "date": "2026-10-21"
   },
   "terms": {
@@ -1145,17 +1145,63 @@
       "expires_at": "2026-10-23T00:40:32.502793+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-10-21T00:40:33.924728+00:00",
+      "last_run": "2026-10-21T06:40:43.309312+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-10-21T00:40:32.502793+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-21T06:40:40.589131+00:00",
+      "queries_run": 2,
       "query": "CANDU 원전",
       "score": 4.6,
       "status": "tracking",
       "term": "CANDU",
       "ttl_hours": 48,
       "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 2
+    },
+    "집행위원회": {
+      "articles": 3,
+      "created_at": "2026-10-21T06:40:40.589131+00:00",
+      "domains": [
+        "electimes.com",
+        "nucnet.org",
+        "etoday.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "electimes.com",
+          "hash": "b6a2b771f20bcee8",
+          "importance": "nice_to_know",
+          "title": "EU, 혁신기금 통해 SMR 프로젝트 최초 선정…34억 유로 지원"
+        },
+        {
+          "domain": "nucnet.org",
+          "hash": "05ae3f0f920ff555",
+          "importance": "nice_to_know",
+          "title": "유럽 원자력 업계, EU 2030년 이후 에너지 정책에 구체적 지원 촉구"
+        },
+        {
+          "domain": "etoday.co.kr",
+          "hash": "5a2c93f903d81ca2",
+          "importance": "nice_to_know",
+          "title": "EU, 혁신기금 통해 SMR 등 청정기술 프로젝트 77개 지원 선정"
+        }
+      ],
+      "expires_at": "2026-10-22T06:40:40.589131+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-10-21T06:40:43.309312+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-10-21T06:40:40.589131+00:00",
+      "queries_run": 1,
+      "query": "집행위원회 원자력",
+      "score": 3.7,
+      "status": "tracking",
+      "term": "집행위원회",
+      "ttl_hours": 24,
+      "type": "org",
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
