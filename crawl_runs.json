@@ -92,19 +92,6 @@
       "new_article_count": 29,
       "collect_outcome": "success"
     },
-    "2026-09-30T15:00:00Z": {
-      "slot": "2026-09-30T15:00:00Z",
-      "attempt_id": "36738224607",
-      "attempts": 1,
-      "claimed_at": "2026-09-30T15:38:22.307860Z",
-      "finished_at": "2026-09-30T15:50:34.442752Z",
-      "event_name": "workflow_dispatch",
-      "trigger_source": "backup_watchdog",
-      "trigger_state": "schedule_missing_recovery",
-      "status": "success_with_articles",
-      "new_article_count": 61,
-      "collect_outcome": "success"
-    },
     "2026-09-30T18:00:00Z": {
       "slot": "2026-09-30T18:00:00Z",
       "attempt_id": "36759964363",
@@ -2288,6 +2275,18 @@
       "status": "success_with_articles",
       "new_article_count": 44,
       "collect_outcome": "success"
+    },
+    "2026-10-21T15:00:00Z": {
+      "slot": "2026-10-21T15:00:00Z",
+      "attempt_id": "39627296432",
+      "attempts": 1,
+      "claimed_at": "2026-10-21T15:37:29.524166Z",
+      "finished_at": null,
+      "event_name": "workflow_dispatch",
+      "trigger_source": "backup_watchdog",
+      "trigger_state": "schedule_missing_recovery",
+      "status": "running",
+      "new_article_count": null
     }
   }
 }
