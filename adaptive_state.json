@@ -980,6 +980,14 @@
       "type": "plant",
       "until": "2026-09-25T03:40:58.660278+00:00"
     },
+    "한국경제인협회": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-10-22T18:41:06.623629+00:00",
+      "term": "한국경제인협회",
+      "type": "org",
+      "until": "2026-11-05T18:41:06.623629+00:00"
+    },
     "한국기계연구원": {
       "new_articles": 1,
       "reason": "기간 만료",
@@ -1110,7 +1118,7 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 4,
     "date": "2026-10-23"
   },
   "terms": {
@@ -1243,52 +1251,6 @@
       ],
       "yields": 2,
       "zero_streak": 1
-    },
-    "한국경제인협회": {
-      "articles": 3,
-      "created_at": "2026-10-22T00:41:17.204319+00:00",
-      "domains": [
-        "ziksir.com",
-        "yna.co.kr",
-        "edaily.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "ziksir.com",
-          "hash": "8969895539ad348b",
-          "importance": "nice_to_know",
-          "title": "한경협, 2027 경제계 정책의견서 제출…SMR 등 119개 과제 건의"
-        },
-        {
-          "domain": "yna.co.kr",
-          "hash": "14bed64cf0baf3f5",
-          "importance": "nice_to_know",
-          "title": "한경협, 국내생산세액공제 대상에 SMR 등 5개 품목 추가 건의"
-        },
-        {
-          "domain": "edaily.co.kr",
-          "hash": "530e01fd675816f0",
-          "importance": "nice_to_know",
-          "title": "한경협, SMR 등 첨단산업 생산세액공제 확대 건의"
-        }
-      ],
-      "expires_at": "2026-10-23T00:41:17.204319+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-10-22T09:40:54.338650+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-10-22T09:40:52.013914+00:00",
-      "queries_run": 2,
-      "query": "한국경제인협회 원자력",
-      "score": 3.7,
-      "status": "tracking",
-      "term": "한국경제인협회",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
     }
   },
   "version": 1
