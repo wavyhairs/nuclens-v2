@@ -1,25 +1,6 @@
 {
- "generated_at": "2026-10-23T01:16:03+09:00",
+ "generated_at": "2026-10-24T00:50:22+09:00",
  "events": [
-  {
-   "id": "of-e84de075fb02",
-   "date": "2026-10-04",
-   "end_date": "2026-10-09",
-   "kind": "range",
-   "time": "",
-   "label": "International Youth Nuclear Congress 2026",
-   "host": "",
-   "organizer": "",
-   "place": "Avignon, France",
-   "url": "https://iync.org/iync2026",
-   "source_id": "kaif_calendar",
-   "publisher": "한국원자력산업협회",
-   "notice_title": "International Youth Nuclear Congress 2026 (세미나)",
-   "first_seen": "2026-08-29",
-   "topics": [],
-   "relevance": "nuclear",
-   "significance": "세미나"
-  },
   {
    "id": "of-7d35885d1832",
    "date": "2026-10-12",
@@ -143,6 +124,48 @@
    "topics": [],
    "relevance": "원자력",
    "significance": "학술발표회"
+  },
+  {
+   "id": "of-6f85147ebcc3",
+   "date": "2026-10-30",
+   "end_date": "2026-10-30",
+   "kind": "point",
+   "time": "14:00",
+   "label": "지방재정 확충을 위한 지방세제 개편 정책토론회",
+   "host": "이광재·김태년·이학영·문정복·서영석·최민희·김영환·김준혁·손명수·안태준·이광희·이상식 의원실",
+   "organizer": "이광재·김태년·이학영·문정복·서영석·최민희·김영환·김준혁·손명수·안태준·이광희·이상식 의원실",
+   "place": "의원회관 신관 제1세미나실",
+   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
+   "source_id": "assembly_events",
+   "publisher": "국회",
+   "notice_title": "지방재정 확충을 위한 지방세제 개편 정책토론회",
+   "first_seen": "2026-10-24",
+   "topics": [
+    "regulation"
+   ],
+   "relevance": "방재",
+   "significance": "토론회"
+  },
+  {
+   "id": "of-04b2c6a755c9",
+   "date": "2026-11-02",
+   "end_date": "2026-11-02",
+   "kind": "point",
+   "time": "18:00",
+   "label": "우주데이터센터포럼 3차 국회토론회",
+   "host": "이주희·김현·최형두·이재강 의원실",
+   "organizer": "이주희·김현·최형두·이재강 의원실",
+   "place": "의원회관 대회의실",
+   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
+   "source_id": "assembly_events",
+   "publisher": "국회",
+   "notice_title": "우주데이터센터포럼 3차 국회토론회",
+   "first_seen": "2026-10-24",
+   "topics": [
+    "datacenter_ai"
+   ],
+   "relevance": "데이터센터",
+   "significance": "토론회"
   },
   {
    "id": "of-1589b1818ed7",
@@ -269,7 +292,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-10-23T01:16:03+09:00",
+   "at": "2026-10-24T00:50:22+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -277,11 +300,11 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-10-23T01:16:03+09:00",
+   "at": "2026-10-24T00:50:22+09:00",
    "ok": true,
    "parsed": 12,
    "kept": 3,
-   "new": 1,
+   "new": 0,
    "dropped": {
     "low_significance": 3,
     "not_an_event": 4,
@@ -289,7 +312,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-10-23T01:16:03+09:00",
+   "at": "2026-10-24T00:50:22+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -302,7 +325,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-10-23T01:16:03+09:00",
+   "at": "2026-10-24T00:50:22+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -310,17 +333,17 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-10-23T01:16:03+09:00",
+   "at": "2026-10-24T00:50:22+09:00",
    "ok": true,
-   "parsed": 35,
-   "kept": 0,
-   "new": 0,
+   "parsed": 48,
+   "kept": 2,
+   "new": 2,
    "dropped": {
-    "no_interest_match": 35
+    "no_interest_match": 46
    }
   },
   "kpx_notice": {
-   "at": "2026-10-23T01:16:03+09:00",
+   "at": "2026-10-24T00:50:22+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
