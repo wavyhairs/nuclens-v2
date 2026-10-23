@@ -3718,6 +3718,432 @@
         },
         "confirmed_at": "2026-10-16T17:10:11.929813+09:00"
       }
+    },
+    "2026-W43": {
+      "week_id": "2026-W43",
+      "week_start": "2026-10-17",
+      "week_end": "2026-10-23",
+      "generated_at": "2026-10-23T17:13:04.411908+09:00",
+      "timezone": "Asia/Seoul",
+      "schema_version": 1,
+      "source_issue_count": 973,
+      "article_count": 1291,
+      "weekly_intro": "이번 주는 AI 데이터센터 전력 수요 급증에 대응하기 위한 글로벌 빅테크의 대규모 SMR 투자와 국내 전력망 확충 정책이 맞물려 핵심 변곡점을 맞이했다. 정부는 제12차 전력수급기본계획 수립을 위한 원전 공론화위원회를 공식 출범시키며 무탄소 전원 비중 확대에 착수했다. 한편, 월성 2호기가 설계수명 만료로 가동을 중단한 가운데 계속운전 심사 지연에 따른 전력 공백 우려가 고조되고 있다.",
+      "policy_shifts": [
+        {
+          "what": "정부가 SMR, 핵융합 등 7대 첨단기술을 국가 미래성장동력으로 육성하기 위한 세부 실행전략을 마련했다.",
+          "so_what": "차세대 원전 기술 확보와 민관 합동 R&D가 가속화될 전망이다.",
+          "evidence_hashes": [
+            "b058b1d9"
+          ]
+        },
+        {
+          "what": "기후에너지환경부가 송전선로 신설 시 다른 선로와 송전탑을 공동 이용하는 방안을 우선 검토하도록 하는 개정안을 마련했다.",
+          "so_what": "송전탑 건설 갈등을 줄이고 전력망 확충 효율성이 높아질 것이다.",
+          "evidence_hashes": [
+            "ccee5844"
+          ]
+        },
+        {
+          "what": "기후에너지환경부가 신규 원전 건설 및 노후 원전 계속운전 등 핵심 쟁점을 다룰 원전 공론화위원회를 구성했다.",
+          "so_what": "제12차 전력수급기본계획의 원전 비중 결정에 시민 참여가 본격화된다.",
+          "evidence_hashes": [
+            "dc524bb9"
+          ]
+        }
+      ],
+      "theme_moves": [
+        {
+          "theme": "규제",
+          "direction": "강화",
+          "why": "원안위의 고리 3·4호기 계속운전 심의 착수와 미 NRC의 AP1000 표준설계 인증 갱신 등 주요 규제 기관의 절차가 진전되었다.",
+          "evidence_hashes": [
+            "f7fb078b",
+            "77a6705d"
+          ]
+        },
+        {
+          "theme": "공급망",
+          "direction": "강화",
+          "why": "한수원의 SMR 및 초도기 건설 추진과 함께 글로벌 빅테크의 대규모 SMR 도입 계약이 이어지며 공급망 구축이 구체화되고 있다.",
+          "evidence_hashes": [
+            "8e91f8a0",
+            "e964163c"
+          ]
+        },
+        {
+          "theme": "신규건설",
+          "direction": "강화",
+          "why": "아마존의 인디애나주 SMR 12기 건설 추진과 체코 두코바니 원전 이행 점검 등 국내외 신규 건설 프로젝트가 가속화되고 있다.",
+          "evidence_hashes": [
+            "e964163c",
+            "e78317b0"
+          ]
+        },
+        {
+          "theme": "수출",
+          "direction": "강화",
+          "why": "한수원의 체코 두코바니 원전 건설허가 신청 준비와 정부의 추가 수주 지원 협의가 활발히 진행되고 있다.",
+          "evidence_hashes": [
+            "dc7e7c49",
+            "bb5be47b"
+          ]
+        },
+        {
+          "theme": "SMR",
+          "direction": "강화",
+          "why": "한수원의 혁신형 SMR 개발 착수와 더불어 미국 내 대규모 SMR 건설 계약 및 7대 SEED 프로젝트 이행전략이 수립되었다.",
+          "evidence_hashes": [
+            "8e91f8a0",
+            "e964163c",
+            "b058b1d9"
+          ]
+        },
+        {
+          "theme": "원전운영",
+          "direction": "약화",
+          "why": "고리 3·4호기 계속운전 심의 보류와 월성 2호기 설계수명 만료에 따른 가동 중단으로 운영 공백 우려가 커졌다.",
+          "evidence_hashes": [
+            "f7fb078b",
+            "9734764f"
+          ]
+        },
+        {
+          "theme": "전력망",
+          "direction": "강화",
+          "why": "한전의 345kV 신고창 변전소 부지 확정과 송전탑 공동 이용 규정 신설 등 전력망 확충 대책이 가시화되고 있다.",
+          "evidence_hashes": [
+            "dffe5181",
+            "ccee5844"
+          ]
+        },
+        {
+          "theme": "핵연료",
+          "direction": "강화",
+          "why": "미국 에너지부의 HALEU 생산 지원과 웨스팅하우스의 연료 공장 투자, 핀란드의 심층처분시설 운영허가 발급이 동시에 이루어졌다.",
+          "evidence_hashes": [
+            "334af665",
+            "5f997f55",
+            "84eb28ab"
+          ]
+        },
+        {
+          "theme": "전력수요",
+          "direction": "강화",
+          "why": "AI 데이터센터 확산에 따른 전력 수요 급증으로 제12차 전기본에서 전력수요 전망치가 대폭 상향 조정되었다.",
+          "evidence_hashes": [
+            "e964163c",
+            "dc524bb9"
+          ]
+        },
+        {
+          "theme": "우라늄",
+          "direction": "강화",
+          "why": "미국 에너지부의 HALEU 생산 대규모 예산 지원과 웨스팅하우스의 핵연료 공장 투자가 단행되었다.",
+          "evidence_hashes": [
+            "334af665",
+            "5f997f55"
+          ]
+        },
+        {
+          "theme": "핵융합",
+          "direction": "유지",
+          "why": "정부의 7대 미래기술 육성 전략에 핵융합 투자가 포함되었으나 단기적인 실질 진전은 제한적이다.",
+          "evidence_hashes": [
+            "b058b1d9"
+          ]
+        }
+      ],
+      "khnp_direct": "한수원은 고리 3·4호기 계속운전 심의 착수와 월성 2호기 운영 중단에 직면했으며, 혁신형 SMR 개발 및 기장 초도기 건설 준비에 박차를 가하고 있다. 또한 국정감사에서 발전공기업 통폐합 및 사용후핵연료 저장시설 대책 마련을 요구받았다.",
+      "watchpoints": [
+        "제12차 전력수급기본계획 원전 공론화위원회의 숙의 토론 진행 과정을 모니터링해야 한다.",
+        "월성 2호기 가동 중단에 따른 전력 수급 영향과 계속운전 심사 일정을 확인해야 한다.",
+        "체코 두코바니 원전 이행 점검 및 후속 건설허가 신청 준비 상황을 점검해야 한다.",
+        "미국 웨스팅하우스 지분 투자 및 로열티 협상 관련 후속 동향을 파악해야 한다."
+      ],
+      "report_candidates": [
+        {
+          "topic": "고리 3·4호기 계속운전 심의 지연 및 월성 2호기 수명 만료에 따른 원전 운영 리스크 분석",
+          "basis": "계속운전 심사 보류와 설계수명 만료로 인한 발전 공백 및 전력 수급 영향이 가중되고 있다."
+        },
+        {
+          "topic": "제12차 전력수급기본계획 원전 공론화 추진에 따른 한수원 신규원전 전략 대응 방안",
+          "basis": "정부의 원전 공론화위원회 출범으로 차기 전력수급기본계획 내 원전 비중 확정이 가속화되고 있다."
+        }
+      ],
+      "key_events": [
+        {
+          "hash": "f7fb078b",
+          "headline": "원안위, 고리 3·4호기 계속운전 심의 착수 및 사고관리계획서 승인",
+          "implication": "계속운전 심사가 착수되었으나 일부 보류되면서 노후 원전 운영의 불확실성이 지속된다."
+        },
+        {
+          "hash": "8e91f8a0",
+          "headline": "한수원, 혁신형 SMR 개발 및 기장 초도기 건설 본격 추진",
+          "implication": "혁신형 SMR 기술 개발과 초도기 건설이 본격화되며 미래 성장동력 확보가 가속화된다."
+        },
+        {
+          "hash": "29ef7d7d",
+          "headline": "고준위방폐물관리위, 2027년 부지공모 시 지원금 규모 제시",
+          "implication": "고준위 방폐장 부지 공모를 앞두고 구체적인 지원 규모가 제시되어 지자체 수용성에 영향을 미친다."
+        },
+        {
+          "hash": "9734764f",
+          "headline": "월성 2호기 11월 1일 설계수명 만료로 가동 중단…계속운전 심사 지연",
+          "implication": "설계수명 만료에 따른 가동 중단으로 전력 공급 차질 및 계속운전 인허가 지연 문제가 부각된다."
+        },
+        {
+          "hash": "bb5be47b",
+          "headline": "한수원, 체코 두코바니 원전 건설허가 신청 준비…2029년 착공 목표",
+          "implication": "체코 원전 사업의 부지 조사가 완료되며 2029년 착공을 위한 후속 인허가 절차가 본격화된다."
+        }
+      ],
+      "top_stories": [
+        {
+          "key": "f7fb078b",
+          "hash": "f7fb078b486e181e",
+          "title": "원안위, 고리 3·4호기 계속운전 심의 착수 및 사고관리계획서 승인",
+          "summary": "원안위가 고리 3·4호기 및 한빛 1·2호기의 사고관리계획서를 승인하고, 고리 3·4호기 계속운전허가 심의에 착수했다.",
+          "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE9PNHNucUFJdHdLX21yaUM4aENwTXlraVJqYUlIcGx0QUlZTWpnOHdyU2xXTzlKaGFqczU3VXp5ZXVHRG5DN1c0d0llYnZxWk5KRFhHZjV0Q1lYdDVudVRHQmQxTHlXSnFX?oc=5",
+          "articles": 8,
+          "outlets": 7,
+          "published_at": "2026-10-16T08:15:36+00:00",
+          "score": 12.9
+        },
+        {
+          "key": "dc7e7c49",
+          "hash": "dc7e7c49253c4576",
+          "title": "산업부, 체코에 EU 산업가속화법안 대응 및 원전 협력 강화 요청",
+          "summary": "김정관 산업통상부 장관이 체코 산업부 장관과 회의를 열고, EU 산업가속화법안이 한국의 원전 시장 진출을 제한하지 않도록 체코 측의 외교적 노력을 당부했다.",
+          "link": "https://www.edaily.co.kr/News/Read?mediaCodeNo=257&newsId=03965526645614888",
+          "articles": 6,
+          "outlets": 6,
+          "published_at": "2026-10-20T05:46:00+00:00",
+          "score": 12.4
+        },
+        {
+          "key": "e78317b0",
+          "hash": "e78317b0b3d11e27",
+          "title": "정부, 체코 두코바니 원전 이행 점검 및 테믈린 추가 수주 협력 논의",
+          "summary": "정부가 체코와 제3차 두코바니 이행점검 협의체를 열고 원전 사업 추진 현황을 점검하며 테믈린 3·4호기 추가 수주 의지를 밝혔다.",
+          "link": "http://www.enewstoday.co.kr/news/articleView.html?idxno=2482473",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-10-20T10:05:00+00:00",
+          "score": 12.1
+        }
+      ],
+      "country_briefs": [
+        {
+          "key": "e964163c",
+          "hash": "e964163c0248e64d",
+          "title": "아마존, 미국 인디애나주에 SMR 12기 건설 추진",
+          "summary": "아마존이 미국 인디애나주 설리번 카운티에 SMR 12기를 건설하는 사업을 추진한다.",
+          "link": "https://biz.sbs.co.kr/article_hub/20000340961?division=NAVER",
+          "articles": 5,
+          "outlets": 5,
+          "published_at": "2026-10-20T01:12:00+00:00",
+          "country": "US",
+          "country_kr": "미국",
+          "score": 11.9
+        },
+        {
+          "key": "dc524bb9",
+          "hash": "dc524bb93bb2ad3f",
+          "title": "정부, 원전 공론화위원회 출범…12월 시민참여단 숙의 토론 착수",
+          "summary": "기후에너지환경부가 신규 원전 건설 및 노후 원전 계속운전 등 핵심 쟁점을 다룰 '원전 공론화위원회'를 구성하고 12월 11일부터 13일까지 시민참여단 숙의 토론을 진행한다.",
+          "link": "https://news.google.com/rss/articles/CBMiakFVX3lxTE5odGNFZGhFdm1PM1p4bFU5d3BRQnR4VmYzUW9aM2ZMY2d2eDkxY1dkVXRValJlZHN4RUtVaG9UUi1CQnZjQ0syZnpSbnJ4Rkx3R0U0THdvRnc2V3JBeDV0SURLbkZSUldwQkE?oc=5",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-10-22T10:13:46+00:00",
+          "country": "KR",
+          "country_kr": "한국",
+          "score": 11.5
+        },
+        {
+          "key": "bb5be47b",
+          "hash": "bb5be47ba3fd8a11",
+          "title": "한수원, 체코 두코바니 원전 건설허가 신청 준비…2029년 착공 목표",
+          "summary": "한수원이 수주한 체코 두코바니 5·6호기 원전 사업이 부지 조사를 마치고 내년 4월 건설허가 신청을 앞두고 있다.",
+          "link": "https://www.newsis.com/view/NISX20261022_0003837295",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-10-22T21:00:00+00:00",
+          "country": "CZ",
+          "country_kr": "체코",
+          "score": 10.5
+        },
+        {
+          "key": "1db684bc",
+          "hash": "1db684bcf1a90d4f",
+          "title": "현대건설, 호주 오스넷·CIP와 에너지 인프라 협력 확대",
+          "summary": "현대건설이 호주 오스넷 및 CIP와 협력해 송변전 인프라, BESS, 데이터센터 등 전력망 계통 연계 사업을 확대한다.",
+          "link": "https://biz.chosun.com/real_estate/real_estate_general/2026/10/19/ECYJAXS2OJH35ETQR6OJXQK7IQ",
+          "articles": 11,
+          "outlets": 11,
+          "published_at": "2026-10-18T23:45:00+00:00",
+          "country": "AU",
+          "country_kr": "호주",
+          "score": 8.4
+        },
+        {
+          "key": "84eb28ab",
+          "hash": "84eb28ab7174e37f",
+          "title": "핀란드, 세계 최초 사용후핵연료 심층처분시설 운영허가 발급",
+          "summary": "핀란드 정부가 올킬루오토의 온칼로(Onkalo) 심층처분시설에 대해 세계 최초로 운영허가를 발급했다.",
+          "link": "https://www.nucnet.org/news/finland-grants-operating-licence-to-world-s-first-deep-geologic-nuclear-repository-10-4-2026",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-10-22T12:11:35+00:00",
+          "country": "FI",
+          "country_kr": "핀란드",
+          "score": 8.4
+        },
+        {
+          "key": "c240162c",
+          "hash": "c240162c8ab52a53",
+          "title": "EU, 혁신기금 통해 SMR 및 직접공기포집 사업 첫 지원",
+          "summary": "EU가 34억유로 규모의 혁신기금 지원 대상 77개 사업을 선정했으며, 소형모듈원전(SMR)과 직접공기포집(DACCS) 사업이 최초로 포함됐다.",
+          "link": "https://www.impacton.net/news/articleView.html?idxno=30340",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-10-21T05:36:00+00:00",
+          "country": "FR",
+          "country_kr": "프랑스",
+          "score": 8.1
+        }
+      ],
+      "publications": [
+        {
+          "org": "에너지경제연구원(KEEI)",
+          "title": "[격주간] 세계 원전시장 인사이트(2026.10.16.)",
+          "url": "https://www.keei.re.kr/board.es?act=view&bid=0002&list_no=128360&mid=a10102050000",
+          "date": "2026-10-16",
+          "gist": "",
+          "relevance": ""
+        },
+        {
+          "org": "국제원자력기구(IAEA)",
+          "title": "Nuclear Energy in the Age of Artificial Intelligence",
+          "url": "http://www.iaea.org/publications/16113/nuclear-energy-in-the-age-of-artificial-intelligence",
+          "date": "2026-08-10",
+          "gist": "",
+          "relevance": ""
+        }
+      ],
+      "upcoming": [
+        {
+          "key": "d2d61ae3",
+          "hash": "d2d61ae3e85dd5cc",
+          "title": "국제 원전 공급망 협력 콘펙스 'NES 2026' 27일 경주 개최",
+          "summary": "한국원전수출산업협회는 10월 27일부터 29일까지 경주에서 'NES 2026'을 개최하여 글로벌 원전 공급망 협력과 국내 기업의 해외 진출 방안을 논의한다.",
+          "link": "https://www.energydaily.co.kr/news/articleView.html?idxno=204226",
+          "articles": 4,
+          "outlets": 4,
+          "published_at": "2026-10-20T09:00:00+00:00",
+          "date": "2026-10-27",
+          "precision": "day"
+        },
+        {
+          "key": "9734764f",
+          "hash": "9734764f6b62cf6e",
+          "title": "월성 2호기 11월 1일 설계수명 만료로 가동 중단…계속운전 심사 지연",
+          "summary": "월성 2호기가 설계수명 30년 만료로 11월 1일 운전을 멈추며, 경제성 평가 지연으로 계속운전 신청이 늦어지고 있다.",
+          "link": "https://www.imaeil.com/page/view/2026101522490658128",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-10-21T05:59:00+00:00",
+          "date": "2026-11-01",
+          "precision": "day"
+        },
+        {
+          "key": "bb5be47b",
+          "hash": "bb5be47ba3fd8a11",
+          "title": "한수원, 체코 두코바니 원전 건설허가 신청 준비…2029년 착공 목표",
+          "summary": "한수원이 수주한 체코 두코바니 5·6호기 원전 사업이 부지 조사를 마치고 내년 4월 건설허가 신청을 앞두고 있다.",
+          "link": "https://www.newsis.com/view/NISX20261022_0003837295",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-10-22T21:00:00+00:00",
+          "date": "2026-11-01",
+          "precision": "month"
+        },
+        {
+          "key": "25944eb8",
+          "hash": "25944eb82cbce9f9",
+          "title": "원전 공론화 전문위원회 9명으로 구성…27일 첫 회의",
+          "summary": "신규 원전 건설 논의를 위한 공론화위원회 전문위원회가 9명으로 구성되어 27일 첫 회의를 개최할 예정이다.",
+          "link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9fQ0FzNzg2dzdMMk9yRF9JM0VGYmlxZjNWaWJPZ2w3TnZRZmVZS3M1N3ZWOXBoazNjX2wzQ01QLWlqdFl4ai1MdDRoWDNTUF9sUnh3WFhXMGhnY2xwaDhManBidUoxU2t5QzRHYk1B0gFzQVVfeXFMTlhuZnI1Vm12NUtUb1ZERERrVnk5N1pHSG9CYU9yTk85WnZid0lFZzZQWWRvajd1cjFtN1E1b3B4UlMzZ1NDRHhhYjBWVDA1em9QVFJNTmlFN1lkOGRxLWFZOFZkQVJEbU1vU0Z3MTZvN0JqZw?oc=5",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-10-22T06:01:00+00:00",
+          "date": "2026-12-11",
+          "precision": "day"
+        },
+        {
+          "key": "511bf39d",
+          "hash": "511bf39d60c520a4",
+          "title": "정부, 제12차 전기본 원전 비중 범위 시민참여단에 묻는다",
+          "summary": "정부가 제12차 전력수급기본계획 수립을 위해 시민참여단을 구성하여 원전 발전 비중의 적정 범위를 조사하기로 했다.",
+          "link": "https://www.segye.com/newsView/20261022513177?OutUrl=naver",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-10-22T04:30:00+00:00",
+          "date": "2026-12-11",
+          "precision": "day"
+        },
+        {
+          "key": "c53b9393",
+          "hash": "c53b939310a49e20",
+          "title": "제12차 전력수급기본계획 원전 공론화, 발전 비중 숙의 착수",
+          "summary": "정부가 제12차 전력수급기본계획 수립을 위한 원전 공론화에서 찬반 대신 적정 발전량 비중과 역할을 논의하기로 하고, 12월 시민 숙의토론을 진행한다.",
+          "link": "https://www.edaily.co.kr/News/Read?mediaCodeNo=257&newsId=03289846645615544",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-10-22T01:24:00+00:00",
+          "date": "2026-12-11",
+          "precision": "day"
+        }
+      ],
+      "repeat_filter": {
+        "previous_week": "2026-W42",
+        "excluded": [
+          {
+            "hash": "e7751e117f0c2671",
+            "title": "한미 원전 프레임워크 발표…미국 내 대형 원전 8기 건설",
+            "prior_hash": "7a48026e317d9fe5",
+            "progression": "minor"
+          },
+          {
+            "hash": "474ca2254299ba85",
+            "title": "고준위방폐물관리위원회, 2027년 방폐장 부지 공모 실시",
+            "prior_hash": "15db1989da5ad8bb",
+            "progression": "minor"
+          },
+          {
+            "hash": "995644b6aeaad981",
+            "title": "국회 국감서 원전 4기 계속운전 심사 신속 추진 지적",
+            "prior_hash": "360db0c07be666bb",
+            "progression": "none"
+          }
+        ],
+        "material_progress": [
+          {
+            "hash": "3fc95c88d659f5c8",
+            "title": "원안위, 고리 3·4호기 계속운전 허가안 심의 보류",
+            "prior_hash": "caef49e6fcaeb916",
+            "progression_kind": "stage_flip",
+            "progression_detail": "재가동·재개"
+          }
+        ]
+      },
+      "_automation": {
+        "created_at": "2026-10-23T17:13:04.411908+09:00",
+        "message_html": "📅 <b>10/17-10/23 원자력 주간 판세</b>\n<i>총 1291건 검토 · must_read 42건</i>\n\n<b>이번 주 핵심</b>\n이번 주는 AI 데이터센터 전력 수요 급증에 대응하기 위한 글로벌 빅테크의 대규모 SMR 투자와 국내 전력망 확충 정책이 맞물려 핵심 변곡점을 맞이했다. 정부는 제12차 전력수급기본계획 수립을 위한 원전 공론화위원회를 공식 출범시키며 무탄소 전원 비중 확대에 착수했다. 한편, 월성 2호기가 설계수명 만료로 가동을 중단한 가운데 계속운전 심사 지연에 따른 전력 공백 우려가 고조되고 있다.\n\n━━ <b>📌 이번 주</b> (10월 17일–10월 23일 · 주요 사건) ━━\n• <b>원안위, 고리 3·4호기 계속운전 심의 착수 및 사고관리계획서 승인</b>\n  원안위가 고리 3·4호기 및 한빛 1·2호기의 사고관리계획서를 승인하고, 고리 3·4호기 계속운전허가 심의에 착수했다.\n  이어지는 이슈 · 8건 · 매체 7곳\n  🔗 https://news.google.com/rss/articles/CBMiaEFVX3lxTE9PNHNucUFJdHdLX21yaUM4aENwTXlraVJqYUlIcGx0QUlZTWpnOHdyU2xXTzlKaGFqczU3VXp5ZXVHRG5DN1c0d0llYnZxWk5KRFhHZjV0Q1lYdDVudVRHQmQxTHlXSnFX?oc=5\n• <b>산업부, 체코에 EU 산업가속화법안 대응 및 원전 협력 강화 요청</b>\n  김정관 산업통상부 장관이 체코 산업부 장관과 회의를 열고, EU 산업가속화법안이 한국의 원전 시장 진출을 제한하지 않도록 체코 측의 외교적 노력을 당부했다.\n  이어지는 이슈 · 6건 · 매체 6곳\n  🔗 https://www.edaily.co.kr/News/Read?mediaCodeNo=257&newsId=03965526645614888\n• <b>정부, 체코 두코바니 원전 이행 점검 및 테믈린 추가 수주 협력 논의</b>\n  정부가 체코와 제3차 두코바니 이행점검 협의체를 열고 원전 사업 추진 현황을 점검하며 테믈린 3·4호기 추가 수주 의지를 밝혔다.\n  이어지는 이슈 · 3건 · 매체 3곳\n  🔗 http://www.enewstoday.co.kr/news/articleView.html?idxno=2482473\n\n━━ <b>🌍 국가별 단신</b> ━━\n• <b>미국</b> — 아마존, 미국 인디애나주에 SMR 12기 건설 추진\n• <b>한국</b> — 정부, 원전 공론화위원회 출범…12월 시민참여단 숙의 토론 착수\n• <b>체코</b> — 한수원, 체코 두코바니 원전 건설허가 신청 준비…2029년 착공 목표\n• <b>호주</b> — 현대건설, 호주 오스넷·CIP와 에너지 인프라 협력 확대\n• <b>핀란드</b> — 핀란드, 세계 최초 사용후핵연료 심층처분시설 운영허가 발급\n• <b>프랑스</b> — EU, 혁신기금 통해 SMR 및 직접공기포집 사업 첫 지원\n\n━━ <b>📚 이번 주 발간물</b> ━━\n• 에너지경제연구원(KEEI) · <b>[격주간] 세계 원전시장 인사이트(2026.10.16.)</b>\n  🔗 https://www.keei.re.kr/board.es?act=view&bid=0002&list_no=128360&mid=a10102050000\n• 국제원자력기구(IAEA) · <b>Nuclear Energy in the Age of Artificial Intelligence</b>\n  🔗 http://www.iaea.org/publications/16113/nuclear-energy-in-the-age-of-artificial-intelligence\n\n━━ <b>🤖 해외 원전 AI·DX</b> (이번 주 사건 19건) ━━\n• <b>미국 원자력 산업, 운영 효율화를 위한 AI 기술 도입 본격화</b>\n  미국 · 운영·정비 · 실적용\n• <b>캐나다 브루스 파워, 원자로 정비에 6축 로봇 시스템 실적용</b>\n  캐나다 · 운영·정비 · 실적용 · DX\n• <b>도쿄전력, 로봇 팔을 활용한 원자로 격납용기 내부 조사 실시</b>\n  일본 · 검사·진단 · 실적용 · DX\n\n━━ <b>🏛 정책 변화</b> ━━\n• <b>정부가 SMR, 핵융합 등 7대 첨단기술을 국가 미래성장동력으로 육성하기 위한 세부 실행전략을 마련했다.</b>\n  → 차세대 원전 기술 확보와 민관 합동 R&amp;D가 가속화될 전망이다.\n• <b>기후에너지환경부가 송전선로 신설 시 다른 선로와 송전탑을 공동 이용하는 방안을 우선 검토하도록 하는 개정안을 마련했다.</b>\n  → 송전탑 건설 갈등을 줄이고 전력망 확충 효율성이 높아질 것이다.\n• <b>기후에너지환경부가 신규 원전 건설 및 노후 원전 계속운전 등 핵심 쟁점을 다룰 원전 공론화위원회를 구성했다.</b>\n  → 제12차 전력수급기본계획의 원전 비중 결정에 시민 참여가 본격화된다.\n\n━━ <b>주제별 강약</b> ━━\n▲ <b>규제</b> — 원안위의 고리 3·4호기 계속운전 심의 착수와 미 NRC의 AP1000 표준설계 인증 갱신 등 주요 규제 기관의 절차가 진전되었다.\n▲ <b>공급망</b> — 한수원의 SMR 및 초도기 건설 추진과 함께 글로벌 빅테크의 대규모 SMR 도입 계약이 이어지며 공급망 구축이 구체화되고 있다.\n▲ <b>신규건설</b> — 아마존의 인디애나주 SMR 12기 건설 추진과 체코 두코바니 원전 이행 점검 등 국내외 신규 건설 프로젝트가 가속화되고 있다.\n▲ <b>수출</b> — 한수원의 체코 두코바니 원전 건설허가 신청 준비와 정부의 추가 수주 지원 협의가 활발히 진행되고 있다.\n\n━━ <b>🇰🇷 한국·한수원 직접 영향</b> ━━\n한수원은 고리 3·4호기 계속운전 심의 착수와 월성 2호기 운영 중단에 직면했으며, 혁신형 SMR 개발 및 기장 초도기 건설 준비에 박차를 가하고 있다. 또한 국정감사에서 발전공기업 통폐합 및 사용후핵연료 저장시설 대책 마련을 요구받았다.\n\n━━ <b>📌 그 밖에 짚어 둘 사건</b> ━━\n• <b>한수원, 혁신형 SMR 개발 및 기장 초도기 건설 본격 추진</b>\n  → 혁신형 SMR 기술 개발과 초도기 건설이 본격화되며 미래 성장동력 확보가 가속화된다.\n  🔗 https://www.ajunews.com/view/20261019124129454\n• <b>고준위방폐물관리위, 2027년 부지공모 시 지원금 규모 제시</b>\n  → 고준위 방폐장 부지 공모를 앞두고 구체적인 지원 규모가 제시되어 지자체 수용성에 영향을 미친다.\n  🔗 https://www.electimes.com/news/articleView.html?idxno=373614\n• <b>월성 2호기 11월 1일 설계수명 만료로 가동 중단…계속운전 심사 지연</b>\n  → 설계수명 만료에 따른 가동 중단으로 전력 공급 차질 및 계속운전 인허가 지연 문제가 부각된다.\n  🔗 https://www.imaeil.com/page/view/2026101522490658128\n\n━━ <b>📝 보고서 검토 후보</b> ━━\n• <b>고리 3·4호기 계속운전 심의 지연 및 월성 2호기 수명 만료에 따른 원전 운영 리스크 분석</b> — 계속운전 심사 보류와 설계수명 만료로 인한 발전 공백 및 전력 수급 영향이 가중되고 있다.\n• <b>제12차 전력수급기본계획 원전 공론화 추진에 따른 한수원 신규원전 전략 대응 방안</b> — 정부의 원전 공론화위원회 출범으로 차기 전력수급기본계획 내 원전 비중 확정이 가속화되고 있다.\n\n📋 <b>다음 주 모니터링 포인트</b>\n• 제12차 전력수급기본계획 원전 공론화위원회의 숙의 토론 진행 과정을 모니터링해야 한다.\n• 월성 2호기 가동 중단에 따른 전력 수급 영향과 계속운전 심사 일정을 확인해야 한다.\n• 체코 두코바니 원전 이행 점검 및 후속 건설허가 신청 준비 상황을 점검해야 한다.\n• 미국 웨스팅하우스 지분 투자 및 로열티 협상 관련 후속 동향을 파악해야 한다.\n\n🔁 <b>반복 등장</b>: #데이터센터 (312회), #SMR (161회), #전력망 (119회), #AI (95회), #한수원 (57회)\n🕳 <b>이번 주 소스 공백</b>: OECD NEA, US NRC, 원자력안전위원회, 산업통상자원부, 한국원자력안전기술원, 한국원자력환경공단",
+        "telegram": {
+          "status": "pending"
+        }
+      }
     }
   }
 }
