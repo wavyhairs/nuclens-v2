@@ -2452,6 +2452,17 @@
       "right_title": "전남광주통합특별시, 재생에너지-AI 데이터센터 연계 직류송전 모델 구축",
       "same_event": false
     },
+    "00cfc1ff4005fddc--31848b6c7d33fc80": {
+      "embedding_similarity": 0.8555,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "전북도, 현대차 투자 연계 새만금 AI데이터센터 특구 조성 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "전북도의 특구 추진과 정부의 규제 완화는 별개",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "정부, 인공지능 데이터센터 산업 육성 위한 인허가·규제 완화 추진",
+      "same_event": false
+    },
     "00cfc1ff4005fddc--31c584315df3ae07": {
       "embedding_similarity": 0.8454,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -18135,12 +18146,13 @@
     },
     "03e342de773dd9bc--ff6b831bee753ecc": {
       "embedding_similarity": 0.8405,
-      "left_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 지역별 전기 차등요금제 도입안 발표",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "전기요금 정상화 촉구와 차등요금제 발표는 다름",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "정부, 지역별 전기 차등요금제 도입안 발표",
+      "reason": "차등요금제와 한전 부채 해결 촉구는 다른 사안",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
       "same_event": false
     },
     "03e750bdec0ed533--052d632b536184fe": {
@@ -141389,6 +141401,17 @@
       "right_title": "한빛 1·2호기 계속운전 심사 지연에 따른 발전 손실 분석",
       "same_event": false
     },
+    "2517b7fefec98c47--ed5160733af2dcd1": {
+      "embedding_similarity": 0.8445,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 원전 공론화 의제 확정…개별 사업 및 입지 논의 배제",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "공론화 의제 확정과 전문위원 확정은 별개 사안",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "제12차 전력수급기본계획 원전 공론화 전문위원 9명 확정",
+      "same_event": false
+    },
     "2518355866b56b86--28afd79f14faf672": {
       "embedding_similarity": 0.8532,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -159205,6 +159228,17 @@
       "reviewed_at": "2026-08-09T21:58:11.456426+00:00",
       "right_title": "국민의힘 부산시당, 지역별 전기요금 차등제 '부산형 설계' 요구",
       "same_event": true
+    },
+    "29c20ba64e34faf6--334af665a204cf4d": {
+      "embedding_similarity": 0.8501,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 에너지부, 차세대 핵연료 HALEU 생산에 27억 달러 지원",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "HALEU 지원과 헬륨 핵심 소재 지정은 다른 사안",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "미 에너지부, 헬륨을 핵심 소재(Critical Material)로 지정",
+      "same_event": false
     },
     "29d057f974ab017e--856306e2074349b4": {
       "embedding_similarity": 0.8462,
@@ -182435,6 +182469,50 @@
       "right_title": "충남도, 발전공기업 통합본사 유치 총력",
       "same_event": true
     },
+    "31848b6c7d33fc80--72c781ab79d1fca5": {
+      "embedding_similarity": 0.8423,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국내 중후장대 기업, 미국 AI 데이터센터 전력설비 수주 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "기업 수주와 정부의 규제 완화는 다른 사건",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "정부, 인공지능 데이터센터 산업 육성 위한 인허가·규제 완화 추진",
+      "same_event": false
+    },
+    "31848b6c7d33fc80--89f6eadbd62c85e8": {
+      "embedding_similarity": 0.8678,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "새만금개발청, AI 데이터센터 대응 위한 전력·용수 인프라 확충",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "새만금 인프라 확충과 정부의 규제 완화는 다름",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "정부, 인공지능 데이터센터 산업 육성 위한 인허가·규제 완화 추진",
+      "same_event": false
+    },
+    "31848b6c7d33fc80--9109294f3e2479b1": {
+      "embedding_similarity": 0.8416,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "서울시의회, 주거지역 내 데이터센터 입지 규제 강화 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서울시의회 규제 강화와 정부의 규제 완화는 반대",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "정부, 인공지능 데이터센터 산업 육성 위한 인허가·규제 완화 추진",
+      "same_event": false
+    },
+    "31848b6c7d33fc80--d1a3ae6ff00225f9": {
+      "embedding_similarity": 0.8448,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "전문가 진단, AI 데이터센터 전력 인프라 10년 사이클 진입",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "전문가 진단과 정부의 규제 완화는 다른 사건",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "정부, 인공지능 데이터센터 산업 육성 위한 인허가·규제 완화 추진",
+      "same_event": false
+    },
     "31854eab28ff8b15--3c615ec18eb64c65": {
       "embedding_similarity": 0.8719,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -186339,6 +186417,17 @@
       "reason": "핵연료 생산 지원과 에너지 투자 프로젝트는 다름",
       "reviewed_at": "2026-10-21T22:15:18.126127+00:00",
       "right_title": "한미, 2천억 달러 규모 전략적 에너지 투자 프로젝트 공식 발표",
+      "same_event": false
+    },
+    "334af665a204cf4d--659305d9602d1480": {
+      "embedding_similarity": 0.8561,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 에너지부, 차세대 핵연료 HALEU 생산에 27억 달러 지원",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "HALEU 생산 지원과 센트러스 연료 공급망은 다름",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "센트러스(Centrus), 원전 연료 공급망 강화",
       "same_event": false
     },
     "334af665a204cf4d--69aad61450fd8247": {
@@ -207618,6 +207707,17 @@
       "reviewed_at": "2026-09-27T11:27:36.072984+00:00",
       "right_title": "한미 핵추진잠수함 연료 협력 합의 10개월, 실무 협상 가속화 필요",
       "same_event": true
+    },
+    "395dc79243a2c16c--a280397d1bfe1325": {
+      "embedding_similarity": 0.855,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "Deployable Energy, 미 DOE DOME 시설서 1MWe급 마이크로원자로 테스트",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 기업의 마이크로원자로 테스트와 배치",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "미 해군, 인디애나주 NWS 크레인 기지에 Radiant Industries 마이크로원자로 배치",
+      "same_event": false
     },
     "396255ddaecb4647--39d2da80812a25d1": {
       "embedding_similarity": 0.8942,
@@ -236444,12 +236544,13 @@
     },
     "406c83aae90714b4--f1ecac74ad93af10": {
       "embedding_similarity": 0.8419,
-      "left_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "데이터센터 전력 수요 급증에 따른 인력 시장 변화",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "법안 추진과 인력 시장 변화는 다른 사안",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "데이터센터 전력 수요 급증에 따른 인력 시장 변화",
+      "reason": "인력 시장 변화와 원인자 부담 법안은 별개",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
       "same_event": false
     },
     "406d8e81abb50d7d--4eaf2a9ac4f9dee2": {
@@ -239913,6 +240014,17 @@
       "reviewed_at": "2026-10-22T03:56:05.860451+00:00",
       "right_title": "웨스팅하우스, 미국 내 10억 달러 규모 LEU+ 연료 공장 투자",
       "same_event": false
+    },
+    "4195f1773a557ac5--60c1036c2eab00a2": {
+      "embedding_similarity": 0.8982,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "더 뉴클리어 컴퍼니, 켄터키주 6.6GW 원전 단지 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "켄터키주 원전 단지 6기 건설 추진 동일 사안",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "미국 켄터키주, 원전 캠퍼스 내 원자로 6기 건설 계획",
+      "same_event": true
     },
     "4195f1773a557ac5--6c050f07b7feaaef": {
       "embedding_similarity": 0.8522,
@@ -281245,6 +281357,17 @@
       "right_title": "정부, 10년간 1,000조원 투자 '한국형 녹색대전환(K-GX)' 전략 발표",
       "same_event": false
     },
+    "50afe360ab3fd971--5474cbd7c755a4ac": {
+      "embedding_similarity": 0.8971,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "IAEA, UAE 바라카 원전 2026년 5월 사건 대응 효과적이었다고 평가",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "바라카 원전 대응에 대한 IAEA 평가와 UAE 입장",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "UAE, 바라카 원전 드론 공격 대응 체계 호평",
+      "same_event": true
+    },
     "50b3d9d2a6549580--a86e0c9be2c3aaf5": {
       "embedding_similarity": 0.842,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -319117,12 +319240,13 @@
     },
     "5e6263d2694ee7fc--ff6b831bee753ecc": {
       "embedding_similarity": 0.8405,
-      "left_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "이철규 의원, 전력계통 운영기준 정비 위한 전기사업법 개정안 발의",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주체가 다르고 안건이 다름",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "이철규 의원, 전력계통 운영기준 정비 위한 전기사업법 개정안 발의",
+      "reason": "전기사업법 개정안 발의와 한전 부채 해결 촉구",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
       "same_event": false
     },
     "5e66521031f7a94e--70660ea6df92a32f": {
@@ -322340,6 +322464,17 @@
       "reason": "건의와 지원단 출범으로 사안이 다름",
       "reviewed_at": "2026-10-06T15:56:40.257795+00:00",
       "right_title": "제주도, 해상풍력 추진지원단 출범…국가계통 접속 및 실증 과제 대응",
+      "same_event": false
+    },
+    "5fe522b1401865bd--659305d9602d1480": {
+      "embedding_similarity": 0.8444,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미 DOE, 차세대 원전 연료 피복재 연구에 5천만 달러 지원",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "피복재 연구 지원과 연료 공급망 강화는 별개",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "센트러스(Centrus), 원전 연료 공급망 강화",
       "same_event": false
     },
     "5fe522b1401865bd--70ef22d42129ca0c": {
@@ -328257,12 +328392,13 @@
     },
     "6201d3e36476bd5f--f1ecac74ad93af10": {
       "embedding_similarity": 0.842,
-      "left_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "AI 데이터센터 전력난 심화, 가스터빈 공급 병목 현상 발생",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "미국 의회 법안과 가스터빈 병목은 별개 사안",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "AI 데이터센터 전력난 심화, 가스터빈 공급 병목 현상 발생",
+      "reason": "가스터빈 병목 현상과 원인자 부담 법안은 다름",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
       "same_event": false
     },
     "6201d3e36476bd5f--f6cca926ebb3cd2c": {
@@ -357306,12 +357442,13 @@
     },
     "6d1af9b91814d382--ff6b831bee753ecc": {
       "embedding_similarity": 0.8401,
-      "left_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "2026 KEPIC-Week 개최, AI 전력 수요 대응 기술기준 논의",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "전기요금 정상화와 KEPIC-Week는 무관함",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "2026 KEPIC-Week 개최, AI 전력 수요 대응 기술기준 논의",
+      "reason": "KEPIC-Week 개최와 한전 부채 해결 촉구는 별개",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
       "same_event": false
     },
     "6d38b9cc52ecb8a1--86025b5da7ff3e53": {
@@ -381862,12 +381999,13 @@
     },
     "73d5ddb5f795e1b6--f1ecac74ad93af10": {
       "embedding_similarity": 0.8426,
-      "left_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 빅테크, AI 데이터센터 전력난에 천연가스 발전 직접 구축 확대",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "입법 추진과 빅테크 전력 대책",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "미국 빅테크, AI 데이터센터 전력난에 천연가스 발전 직접 구축 확대",
+      "reason": "천연가스 발전 구축과 원인자 부담 법안은 다름",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
       "same_event": false
     },
     "73d5ddb5f795e1b6--f6cca926ebb3cd2c": {
@@ -521165,12 +521303,13 @@
     },
     "ced701a959eec550--f1ecac74ad93af10": {
       "embedding_similarity": 0.8424,
-      "left_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "트럼프 대통령, AI 데이터센터 반대 여론에 강경 대응 시사",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "의회 법안과 대통령 발언",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "트럼프 대통령, AI 데이터센터 반대 여론에 강경 대응 시사",
+      "reason": "트럼프 대통령 발언과 원인자 부담 법안은 별개",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
       "same_event": false
     },
     "cedb67358e7b9ba4--f0f475db89c402cf": {
@@ -528605,12 +528744,13 @@
     },
     "d5bcde9a507cc07d--ff43b2c5d0246488": {
       "embedding_similarity": 0.8604,
-      "left_title": "경남도, 2027년 국비 11조 6,811억 확보…SMR 등 신산업 육성",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "경남도, 창원·김해 도심융합특구 지정 신청…방위·원전 산업 육성",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "경남도의 서로 다른 정책 및 신청 사안임",
-      "reviewed_at": "2026-09-03T19:20:26.065657+00:00",
-      "right_title": "경남도, 창원·김해 도심융합특구 지정 신청…방위·원전 산업 육성",
+      "reason": "도심융합특구 지정 신청과 국비 확보는 다른 사건",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "경남도, 2027년 국비 11조 6,811억 확보…SMR 등 신산업 육성",
       "same_event": false
     },
     "d5bf89af347de483--e0dd333f959cbd3d": {
@@ -528786,22 +528926,24 @@
     },
     "d5f3ca38f807e170--e7194df18af9a0fe": {
       "embedding_similarity": 0.8511,
-      "left_title": "한전, 배전선로별 정전비용 산출 착수…투자 우선순위 활용",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 한전·수자원공사 출자 통해 전력·용수 인프라 투자 가속화",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "한전 배전선로 정전비용과 정부의 인프라 투자 출자는 별개임",
-      "reviewed_at": "2026-08-29T22:06:03.224740+00:00",
-      "right_title": "정부, 한전·수자원공사 출자 통해 전력·용수 인프라 투자 가속화",
+      "reason": "한전의 서로 다른 사안",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "한전, 배전선로별 정전비용 산출 착수…투자 우선순위 활용",
       "same_event": false
     },
     "d5f3ca38f807e170--ff6b831bee753ecc": {
       "embedding_similarity": 0.8411,
-      "left_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 한전·수자원공사 출자 통해 전력·용수 인프라 투자 가속화",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주체와 안건이 다름",
-      "reviewed_at": "2026-09-05T21:41:42.300060+00:00",
-      "right_title": "정부, 한전·수자원공사 출자 통해 전력·용수 인프라 투자 가속화",
+      "reason": "한전 관련 서로 다른 안건",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
       "same_event": false
     },
     "d5f4164c53991de6--e009af115f0ba074": {
@@ -528839,12 +528981,13 @@
     },
     "d600dad5ceacf104--fa158b18eaf726af": {
       "embedding_similarity": 0.8422,
-      "left_title": "SK그룹, 일본 내 반도체 생산 거점 확보 및 투자 방안 연내 발표",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "SK텔레콤, AIDC 사업 분할 및 SK호라이즌에 3조 800억 원 투자 유치",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "SK그룹 일본 투자와 SKT 투자 유치는 다른 사안임",
-      "reviewed_at": "2026-09-02T22:06:43.202034+00:00",
-      "right_title": "SK텔레콤, AIDC 사업 분할 및 SK호라이즌에 3조 800억 원 투자 유치",
+      "reason": "SK의 서로 다른 투자 건",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "SK그룹, 일본 내 반도체 생산 거점 확보 및 투자 방안 연내 발표",
       "same_event": false
     },
     "d607a7b0d630e5ef--de451dcbb84936da": {
@@ -529600,12 +529743,13 @@
     },
     "d8950ff32d90fa88--e014872747c23fbc": {
       "embedding_similarity": 0.8459,
-      "left_title": "미국, 데이터센터 전력 공급망 통합 및 인프라 투자 의무화 추진",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국, ESS 국가안보 핵심 장비 지정 및 외국산 전력장비 규제 강화",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주제만 같은 다른 사안임",
-      "reviewed_at": "2026-09-02T03:50:42.435128+00:00",
-      "right_title": "미국, ESS 국가안보 핵심 장비 지정 및 외국산 전력장비 규제 강화",
+      "reason": "규제 강화와 기고문 차이",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "[기고] 모든 데이터센터를 전력 허브로 만들자",
       "same_event": false
     },
     "d89841f94826a510--e0dd333f959cbd3d": {
@@ -529851,11 +529995,12 @@
     },
     "d8ddeb54d18d01d7--faeb4006882785a4": {
       "embedding_similarity": 0.8403,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미 DOE NRIC, 차세대 원자로 및 핵연료 주기 프로젝트 13개 선정",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "DOE NRIC 프로젝트와 REDUCE 프로젝트는 다름",
-      "reviewed_at": "2026-08-27T22:22:36.177497+00:00",
+      "reason": "DOE 프로젝트와 핵연료 처리",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
       "right_title": "미국, 사용후핵연료 처리 가속화 'REDUCE' 프로젝트 추진",
       "same_event": false
     },
@@ -529938,31 +530083,34 @@
     },
     "d8ff953b5bf78b3c--df31824727d491e8": {
       "embedding_similarity": 0.8411,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 주정부 데이터센터 인허가 규제 강화, 전력망 비용 분담 법제화 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주정부 전반 규제와 오스틴시 기준은 별개임",
-      "reviewed_at": "2026-08-28T21:49:23.380147+00:00",
+      "reason": "광역 규제와 오스틴시 개별 사례",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
       "right_title": "미 오스틴시, AI 데이터센터 전력·수자원 영향 평가 및 허가 기준 마련 착수",
       "same_event": false
     },
     "d8ff953b5bf78b3c--e13a29a8683f935e": {
       "embedding_similarity": 0.8407,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 주정부 데이터센터 인허가 규제 강화, 전력망 비용 분담 법제화 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주정부 인허가 규제와 주민 반대 확산은 다른 주제임",
-      "reviewed_at": "2026-08-31T09:51:09.683065+00:00",
+      "reason": "규제 법제화와 주민 반대 동향",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
       "right_title": "미국 내 데이터센터 전력·물 소비로 인한 주민 반대 확산",
       "same_event": false
     },
     "d8ff953b5bf78b3c--e6b2f47ece653670": {
       "embedding_similarity": 0.8712,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 주정부 데이터센터 인허가 규제 강화, 전력망 비용 분담 법제화 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주체와 사안이 완전히 다름",
-      "reviewed_at": "2026-08-28T21:49:23.380147+00:00",
+      "reason": "전력망 법제화와 EPA 비상발전기 규제",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
       "right_title": "미 환경청(EPA), 데이터센터 비상발전기 대기허가 주민참여 요건 완화 추진",
       "same_event": false
     },
@@ -529989,13 +530137,14 @@
     },
     "d8ff953b5bf78b3c--f1ecac74ad93af10": {
       "embedding_similarity": 0.8876,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "미국 주정부 데이터센터 인허가 규제 강화, 전력망 비용 분담 법제화 추진",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "주정부 규제와 연방 의회 법안 추진은 별개",
-      "reviewed_at": "2026-09-05T18:53:46.543714+00:00",
+      "reason": "데이터센터 비용 분담 법안 추진",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
       "right_title": "미국 의회, 데이터센터 인프라 비용 원인자 부담 법안 추진",
-      "same_event": false
+      "same_event": true
     },
     "d8ff953b5bf78b3c--f8729b9ad3d35dd4": {
       "embedding_similarity": 0.8567,
@@ -530327,12 +530476,13 @@
     },
     "d9fcb9220230541d--ff6b831bee753ecc": {
       "embedding_similarity": 0.8577,
-      "left_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "AI 산업의 병목 현상, 전력망 확충 시급",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "국회 촉구와 AI 병목 현상은 다른 사안임",
-      "reviewed_at": "2026-09-05T19:20:47.585314+00:00",
-      "right_title": "AI 산업의 병목 현상, 전력망 확충 시급",
+      "reason": "AI 전력망 보도와 한전 부채 문제",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
       "same_event": false
     },
     "da0327c7086557b2--e83fff73156ff7f4": {
@@ -530601,11 +530751,12 @@
     },
     "dabac4707357c487--dbe669519b0bd065": {
       "embedding_similarity": 0.9001,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
       "left_title": "IAEA, 해상원자력 국제협력체 'ATLAS' 출범",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "IAEA 해상원자력협력체 ATLAS 출범 동일 사건",
-      "reviewed_at": "2026-08-28T21:49:23.380147+00:00",
+      "reason": "IAEA 해상원자력 ATLAS 출범",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
       "right_title": "IAEA, 부유식 원전(FNPP) 위한 ATLAS 이니셔티브 출범",
       "same_event": true
     },
@@ -530676,13 +530827,14 @@
     },
     "db1a3e3b0929bbf8--f1f4a9733a1bafa4": {
       "embedding_similarity": 0.8504,
-      "left_title": "미국 원자력 인허가 체계, 규제 속도 경쟁력 강화 방향으로 전환",
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미국 원전 정책, 공급망 구축 단계로 전환",
       "model": "gemini-3.5-flash-lite",
       "prompt_version": 2,
-      "reason": "미국 원자력 인허가 규제 완화 및 정책 전환",
-      "reviewed_at": "2026-08-31T06:48:46.474180+00:00",
-      "right_title": "미국 원전 정책, 공급망 구축 단계로 전환",
-      "same_event": true
+      "reason": "공급망 구축과 인허가 체계 개편",
+      "reviewed_at": "2026-10-23T18:50:54.789243+00:00",
+      "right_title": "미국 원자력 인허가 체계, 규제 속도 경쟁력 강화 방향으로 전환",
+      "same_event": false
     },
     "db1a3e3b0929bbf8--ffdb243b18554e80": {
       "embedding_similarity": 0.8576,
