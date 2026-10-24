@@ -5342,7 +5342,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-10-24T20:50:27+00:00",
+    "updated_at": "2026-10-24T21:04:44+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -5422,7 +5422,7 @@
         "title": "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
         "detail": "AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 2건을 두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 만들어 보고, 6번 연속이면 보류합니다. 예: 「한전채 한도 특례 끝나면 19조 초과…김동철 \"최소한 요금 인상 필요\"」, 「한전, 특례 종료 땐 사채 19조 초과…요금 인상 압박 가중」.",
         "severity": "critical",
-        "last_seen_at": "2026-10-24T20:50:27+00:00",
+        "last_seen_at": "2026-10-24T21:04:44+00:00",
         "last_observation_id": "2026-10-25T05:48:12.597123+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-24T18:55:00+00:00",
@@ -5446,7 +5446,7 @@
         "title": "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
         "detail": "AI 요약을 받지 못해 원문 첫 문장만 있는 기사 2건을 브리핑 후보에 넣지 않았습니다. 1건은 다음 수집(약 3시간 뒤)에서 다시 요약합니다. 1건은 두 번 모두 실패해 더 시도하지 않고 뺐습니다. 예: 「한전채 한도 특례 끝나면 19조 초과…김동철 \"최소한 요금 인상 필요\"」, 「한전, 특례 종료 땐 사채 19조 초과…요금 인상 압박 가중」.",
         "severity": "warning",
-        "last_seen_at": "2026-10-24T20:50:27+00:00",
+        "last_seen_at": "2026-10-24T21:04:44+00:00",
         "last_observation_id": "2026-10-25T05:48:14.998856+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-26T21:11:41+00:00",
@@ -5505,14 +5505,14 @@
         "resolved_at": "2026-09-19T15:43:07+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 91,
+        "consecutive": 92,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
         "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 4건. 사건일 73건은 사이트에 표시하지 않았습니다 — 원문 근거를 다시 확인할 수 없음 73건 · 날짜 이상 0건.",
         "severity": "critical",
-        "last_seen_at": "2026-10-24T20:50:27+00:00",
-        "last_observation_id": "github-run:40027023162",
+        "last_seen_at": "2026-10-24T21:04:44+00:00",
+        "last_observation_id": "github-run:40131080258",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
@@ -5522,7 +5522,7 @@
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=27259 quarantined=4 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 5c87f37d62e3",
+        "technical": "checked=27365 quarantined=4 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 5c87f37d62e3",
         "fingerprint": "q=4:ca2b08fddaf1eafc",
         "last_notified_fingerprint": "q=35:37a796ac13006af0",
         "delivery": "digest"
@@ -5576,14 +5576,14 @@
         "resolved_at": "2026-09-13T06:43:34+00:00"
       },
       "quality-event:audio-script-claim-removed": {
-        "consecutive": 3,
+        "consecutive": 4,
         "scope": "quality_event",
         "active": true,
         "title": "전문가 브리핑 대본에서 근거 없는 문단을 뺐습니다",
-        "detail": "2026-10-24 전문가 브리핑 대본에서 기사 근거로 확인되지 않는 문단 1건을 빼고 내보냈습니다.",
+        "detail": "2026-10-25 전문가 브리핑 대본에서 기사 근거로 확인되지 않는 문단 1건을 빼고 내보냈습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-10-24T20:50:27+00:00",
-        "last_observation_id": "2026-10-24T06:46:04.182976+09:00",
+        "last_seen_at": "2026-10-24T21:04:44+00:00",
+        "last_observation_id": "2026-10-25T06:00:59.786167+09:00",
         "min_occurrences": 2,
         "first_seen_at": "2026-10-21T22:38:56+00:00",
         "pending_notification": false,
@@ -5593,8 +5593,8 @@
         "level": "attention",
         "impact": "없음 — 음원은 정상 발송됐고, 뺀 문단 외의 내용은 그대로입니다.",
         "action": "필요 없음 — 자동으로 정리됐습니다.",
-        "technical": "variant=expert date=2026-10-24 removed=1 action=sanitize",
-        "fingerprint": "removed:2026-10-24:expert:1:sanitize",
+        "technical": "variant=expert date=2026-10-25 removed=1 action=sanitize",
+        "fingerprint": "removed:2026-10-25:expert:1:sanitize",
         "resolution_notified_at": "2026-09-26T15:42:21+00:00",
         "delivery": "digest"
       },
@@ -5629,7 +5629,7 @@
         "title": "구글 AI 서버가 붐벼 기사 요약이 늦어졌습니다",
         "detail": "기사 4건을 이번 수집에서 AI로 요약하지 못했습니다. 구글이 '지금 요청이 몰려 있다'고 답했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-10-24T20:50:27+00:00",
+        "last_seen_at": "2026-10-24T21:04:44+00:00",
         "last_observation_id": "2026-10-25:2026-10-24T18:46:20.629779+09:00:4",
         "min_occurrences": 2,
         "first_seen_at": "2026-10-24T09:47:20+00:00",
@@ -5802,7 +5802,7 @@
         "action": "해당 사이트에 실제로 새 글이 있는지 한 번만 확인해 주세요.",
         "technical": "newest_pub=2026-10-05T15:48:55+00:00 quiet_days=19 threshold=14 observed_normal_gap_max=5",
         "fingerprint": "newest=2026-10-05T15:48:55+00:00",
-        "last_seen_at": "2026-10-24T20:50:27+00:00",
+        "last_seen_at": "2026-10-24T21:04:44+00:00",
         "last_observation_id": "2026-10-24T20:49:25+00:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-10-19T18:56:01+00:00",
@@ -6352,7 +6352,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=51 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-10-24T20:50:27+00:00",
+        "last_seen_at": "2026-10-24T21:04:44+00:00",
         "last_observation_id": "2026-10-24T20:49:25+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6390,7 +6390,7 @@
         "action": "필요 없음 — 원자력 기사가 여기 들어 있으면 topic_gate 의 어휘를 봐 주세요.",
         "technical": "demoted=1 g-enews.com:not_required:0.0",
         "fingerprint": "off-topic~1",
-        "last_seen_at": "2026-10-24T20:50:27+00:00",
+        "last_seen_at": "2026-10-24T21:04:44+00:00",
         "last_observation_id": "2026-10-25T05:48:14.998728+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6429,7 +6429,7 @@
         "action": "해당 사이트에 실제로 새 글이 있는지 한 번만 확인해 주세요.",
         "technical": "newest_pub=2026-09-28T02:04:56+00:00 quiet_days=26 threshold=14 observed_normal_gap_max=5",
         "fingerprint": "newest=2026-09-28T02:04:56+00:00",
-        "last_seen_at": "2026-10-24T20:50:27+00:00",
+        "last_seen_at": "2026-10-24T21:04:44+00:00",
         "last_observation_id": "2026-10-24T20:49:25+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6448,7 +6448,7 @@
         "action": "필요 없음 — 원문과 맞는데 빠진 기사면 알려 주세요. 보류를 풀면 다음 수집이 다시 요약합니다.",
         "technical": "held=1 after_runs=6",
         "fingerprint": "held~1",
-        "last_seen_at": "2026-10-24T20:50:27+00:00",
+        "last_seen_at": "2026-10-24T21:04:44+00:00",
         "last_observation_id": "2026-10-25T00:44:20.701868+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6458,8 +6458,8 @@
     }
   },
   "operational_digest": {
-    "last_sent_date": "2026-10-24",
-    "last_sent_at": "2026-10-23T21:52:02+00:00"
+    "last_sent_date": "2026-10-25",
+    "last_sent_at": "2026-10-24T21:04:44+00:00"
   },
   "integrity_holds": {
     "54268037b32e364c": {
