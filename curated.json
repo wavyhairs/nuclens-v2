@@ -1,535 +1,4 @@
 {
-  "52fde51600afefc3": {
-    "features": {
-      "event_type": "market_signal",
-      "korea_relevance": 1,
-      "market_materiality": 2,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "시장",
-    "topics": [
-      "power_market",
-      "datacenter_ai"
-    ],
-    "countries": [
-      "US"
-    ],
-    "article_type": "analysis",
-    "title_kr": "미국 중간선거 결과에 따른 에너지·금융 섹터별 증시 영향 전망",
-    "summary": "미국 중간선거 결과에 따라 민주당 압승 시 재생에너지, 공화당 수성 시 원자력과 금융주가 수혜를 입을 것으로 분석됐다.",
-    "detail": "모건스탠리와 JP모간의 보고서에 따르면, 민주당이 의회를 장악할 경우 재생에너지와 바이오주가 유망하며, 공화당이 양원을 수성할 경우 규제 완화로 원자력, 화석연료, 금융, 방산 섹터가 우호적인 환경을 맞이할 것으로 평가됐다. 의회 분할 시에는 데이터센터 리츠가 대안으로 제시되었다. 선거 결과와 무관하게 트럼프 행정부의 관세 및 수출 통제 기조는 지속될 전망이다.",
-    "implication": "",
-    "why_important": "",
-    "why_short": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "open_question_reject": "",
-    "watch_next": "",
-    "tags": [
-      "#미국선거",
-      "#에너지정책",
-      "#원자력"
-    ],
-    "related_reports": [],
-    "event_date": "2026-11-03",
-    "event_date_type": "scheduled",
-    "event_date_precision": "day",
-    "event_date_source": "article_text",
-    "topic_verdict": "on_topic",
-    "curation_status": "reviewed",
-    "curation_source": "gemini",
-    "cached_at": "2026-10-11T19:33:29.666249+00:00",
-    "title": "민주당 이기면 ‘재생에너지’ 공화당 수성 땐 ‘금융’",
-    "link": "https://www.joongang.co.kr/article/25468809",
-    "feed": "정책",
-    "domain": "joongang.co.kr",
-    "matched": "원자력 수출통제",
-    "verified_evidence": {
-      "version": 2,
-      "article_hash": "52fde51600afefc3",
-      "source_components": {
-        "article_hash": "52fde51600afefc3",
-        "title": "d9b73ff3a97d15f983a9818c4e79509974105c9be8241ee9fb723dfc5bc9f942",
-        "source_excerpt": "70c0e7dd532e8c964d475a13f0cb0b3bc0a59f79083b1c0927e15964e03ddc7d",
-        "published_at": "c146b92b79835f8ece2e5917df05de7a6d27b959b7b072b1ceb4f0eeaaa683bc"
-      },
-      "source_fingerprint": "63c67bc5e62cb08215f8ebfd4134dd4c6c58ca43e0fcac142c1ab85df18e8a30",
-      "entities": [],
-      "countries": [
-        "US"
-      ],
-      "topics": [
-        "reactor_operation",
-        "reactor_project"
-      ],
-      "stages": [
-        "approval",
-        "shutdown"
-      ],
-      "claims": [
-        "11월",
-        "3일",
-        "11일",
-        "61%",
-        "29%",
-        "9.9%",
-        "22%"
-      ],
-      "quantities": {
-        "%": [
-          "22",
-          "29",
-          "61",
-          "9.9"
-        ],
-        "개": [
-          "12"
-        ],
-        "년": [
-          "2026"
-        ],
-        "월": [
-          "11"
-        ],
-        "일": [
-          "11",
-          "3"
-        ]
-      },
-      "quantity_rules": 3,
-      "verified_event_date": {
-        "value": "2026-11-03",
-        "type": "scheduled",
-        "precision": "day",
-        "source": "article_text"
-      },
-      "manifest_fingerprint": "68c228872025e8471be37b819c370c3a3f3e9a92031c73567a9a42b1549fcfe1"
-    },
-    "verified_source_components": {
-      "article_hash": "52fde51600afefc3",
-      "title": "d9b73ff3a97d15f983a9818c4e79509974105c9be8241ee9fb723dfc5bc9f942",
-      "source_excerpt": "70c0e7dd532e8c964d475a13f0cb0b3bc0a59f79083b1c0927e15964e03ddc7d",
-      "published_at": "c146b92b79835f8ece2e5917df05de7a6d27b959b7b072b1ceb4f0eeaaa683bc"
-    },
-    "hash": "52fde51600afefc3",
-    "published_at": "2026-10-11T16:00:00+00:00"
-  },
-  "04cad652655fb5e1": {
-    "features": {
-      "event_type": "market_signal",
-      "korea_relevance": 1,
-      "market_materiality": 2,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "importance": "noise",
-    "section": "international",
-    "scope": "kr",
-    "category": "시장",
-    "topics": [
-      "finance"
-    ],
-    "countries": [
-      "KR",
-      "US"
-    ],
-    "article_type": "news",
-    "title_kr": "코스피 박스권 장세 지속…실적시즌 및 미 중간선거 변수 주목",
-    "summary": "코스피가 금리와 지정학적 리스크로 박스권에 머무는 가운데, 전문가들은 미 물가지표와 기업 실적 발표를 주시할 것을 조언했다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "why_short": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "open_question_reject": "",
-    "watch_next": "",
-    "tags": [],
-    "related_reports": [],
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "topic_verdict": "on_topic",
-    "curation_status": "reviewed",
-    "curation_source": "gemini",
-    "cached_at": "2026-10-11T19:33:29.666249+00:00",
-    "title": "박스피 고차방정식… '실적시즌'에 풀릴까",
-    "link": "https://www.mt.co.kr/stock/2026/10/12/2026101119430475445",
-    "feed": "정책",
-    "domain": "mt.co.kr",
-    "matched": "데이터센터 전력",
-    "verified_evidence": {
-      "version": 2,
-      "article_hash": "04cad652655fb5e1",
-      "source_components": {
-        "article_hash": "04cad652655fb5e1",
-        "title": "11b48bc70714b4b7546f0e0eb5f8e85700c0969702d7a43a86be026b87d60eb2",
-        "source_excerpt": "a093e9df4e130491742c7b529cf0525c125c3698cb81389f927418b8752d0f00",
-        "published_at": "07861213a4089fa30a6ab1feef6c3f028a6a8fd9ad8e75c20c5381b245c8dc76"
-      },
-      "source_fingerprint": "2761e67435b6245d47d92bd6d44cb3ddcf00e8984ad788a609fa553d553c69b9",
-      "entities": [],
-      "countries": [
-        "KR",
-        "US"
-      ],
-      "topics": [],
-      "stages": [
-        "contract",
-        "review"
-      ],
-      "claims": [
-        "11일",
-        "8일",
-        "5.39%",
-        "4823억원",
-        "4692억원",
-        "106.7%",
-        "83.3%",
-        "9월",
-        "14일",
-        "15일",
-        "8월",
-        "12개월"
-      ],
-      "quantities": {
-        "%": [
-          "106.7",
-          "5.39",
-          "83.3"
-        ],
-        "개": [
-          "12"
-        ],
-        "억원": [
-          "3591",
-          "3887",
-          "4692",
-          "4823"
-        ],
-        "월": [
-          "8",
-          "9"
-        ],
-        "일": [
-          "11",
-          "14",
-          "15",
-          "8"
-        ]
-      },
-      "quantity_rules": 3,
-      "manifest_fingerprint": "d036fae2f9e20bf2c4cb2e2655915e15d1667ebbde9e23a227fdbc9fa273b83c"
-    },
-    "verified_source_components": {
-      "article_hash": "04cad652655fb5e1",
-      "title": "11b48bc70714b4b7546f0e0eb5f8e85700c0969702d7a43a86be026b87d60eb2",
-      "source_excerpt": "a093e9df4e130491742c7b529cf0525c125c3698cb81389f927418b8752d0f00",
-      "published_at": "07861213a4089fa30a6ab1feef6c3f028a6a8fd9ad8e75c20c5381b245c8dc76"
-    },
-    "hash": "04cad652655fb5e1",
-    "published_at": "2026-10-11T19:00:00+00:00"
-  },
-  "7082ae8c43cd171e": {
-    "features": {
-      "event_type": "corporate_move",
-      "korea_relevance": 1,
-      "market_materiality": 1,
-      "policy_materiality": 0,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 0
-    },
-    "importance": "noise",
-    "section": "domestic",
-    "scope": "kr",
-    "category": "기술",
-    "topics": [],
-    "countries": [
-      "KR"
-    ],
-    "article_type": "news",
-    "title_kr": "휴머노이드 로봇 D램 수요 급증 및 국내 기업 기술 수출 동향",
-    "summary": "휴머노이드 로봇 산업의 성장으로 2030년 D램 수요가 20배 증가할 전망이며, 바디프랜드 등 국내 기업의 기술 수출이 확대되고 있다.",
-    "detail": "",
-    "implication": "",
-    "why_important": "",
-    "why_short": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "open_question_reject": "",
-    "watch_next": "",
-    "tags": [],
-    "related_reports": [],
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "topic_verdict": "on_topic",
-    "curation_status": "reviewed",
-    "curation_source": "gemini",
-    "cached_at": "2026-10-11T19:33:29.666249+00:00",
-    "title": "[출근길 포인트] 휴머노이드 로봇용 D램 수요 2030년 20배로…삼성·SK 새...",
-    "link": "https://www.pointdaily.co.kr/news/articleView.html?idxno=321826",
-    "feed": "정책",
-    "domain": "pointdaily.co.kr",
-    "matched": "데이터센터 전력",
-    "verified_evidence": {
-      "version": 2,
-      "article_hash": "7082ae8c43cd171e",
-      "source_components": {
-        "article_hash": "7082ae8c43cd171e",
-        "title": "76f79205e77cfaf91179af8a6ba03938cf12f70da9f28457b2c2ba777ecb7818",
-        "source_excerpt": "fc9098411f28c5ae9963791d621f16ba0bec249b12fb8c6330bd2c3aaa7af935",
-        "published_at": "07861213a4089fa30a6ab1feef6c3f028a6a8fd9ad8e75c20c5381b245c8dc76"
-      },
-      "source_fingerprint": "433c1c1c6786003b992979b594ba3ccb9934bff6552330a3e52fe59e601799d8",
-      "entities": [],
-      "countries": [
-        "FR",
-        "KR",
-        "US"
-      ],
-      "topics": [
-        "safety"
-      ],
-      "stages": [
-        "approval",
-        "incident",
-        "review"
-      ],
-      "claims": [
-        "2030년",
-        "11일",
-        "19기",
-        "30일",
-        "2016년",
-        "4월",
-        "7월",
-        "10일",
-        "11월",
-        "6개",
-        "2023년",
-        "115억원",
-        "2년",
-        "8월",
-        "5319건",
-        "1626건",
-        "2976건",
-        "2882건",
-        "564건",
-        "2024년",
-        "112건",
-        "4년",
-        "1개",
-        "3월",
-        "12일",
-        "10월",
-        "9일",
-        "100년",
-        "200년",
-        "2021년",
-        "141%",
-        "72%",
-        "85%",
-        "6545개",
-        "6090개",
-        "93%"
-      ],
-      "quantities": {
-        "%": [
-          "141",
-          "72",
-          "85",
-          "93"
-        ],
-        "개": [
-          "1",
-          "33",
-          "39",
-          "6",
-          "6090",
-          "6545"
-        ],
-        "건": [
-          "112",
-          "1626",
-          "2882",
-          "2976",
-          "5319",
-          "564",
-          "717",
-          "803",
-          "949"
-        ],
-        "기": [
-          "19"
-        ],
-        "년": [
-          "100",
-          "2",
-          "200",
-          "2016",
-          "2021",
-          "2023",
-          "2024",
-          "2026",
-          "2030",
-          "4"
-        ],
-        "억원": [
-          "115",
-          "450"
-        ],
-        "월": [
-          "10",
-          "11",
-          "3",
-          "4",
-          "7",
-          "8"
-        ],
-        "일": [
-          "10",
-          "11",
-          "12",
-          "30",
-          "9"
-        ]
-      },
-      "quantity_rules": 3,
-      "manifest_fingerprint": "8b4ff2e6b240c6b2aeffdc659028d5b362535d53c26c5092acfdde9f753a93a5"
-    },
-    "verified_source_components": {
-      "article_hash": "7082ae8c43cd171e",
-      "title": "76f79205e77cfaf91179af8a6ba03938cf12f70da9f28457b2c2ba777ecb7818",
-      "source_excerpt": "fc9098411f28c5ae9963791d621f16ba0bec249b12fb8c6330bd2c3aaa7af935",
-      "published_at": "07861213a4089fa30a6ab1feef6c3f028a6a8fd9ad8e75c20c5381b245c8dc76"
-    },
-    "hash": "7082ae8c43cd171e",
-    "published_at": "2026-10-11T19:00:00+00:00"
-  },
-  "b1d97c9282f3c693": {
-    "features": {
-      "event_type": "policy_decision",
-      "korea_relevance": 1,
-      "market_materiality": 1,
-      "policy_materiality": 2,
-      "novelty": 0,
-      "evidence_strength": 0,
-      "report_worthiness": 1
-    },
-    "importance": "nice_to_know",
-    "section": "international",
-    "scope": "overseas",
-    "category": "정책",
-    "topics": [
-      "datacenter_ai",
-      "power_market"
-    ],
-    "countries": [
-      "US"
-    ],
-    "article_type": "news",
-    "title_kr": "미국 중간선거 앞두고 AI 데이터센터 건설 인허가 논란 부상",
-    "summary": "미국 중간선거를 앞두고 AI 데이터센터가 국가 필수 인프라와 혐오시설이라는 양면적 평가를 받으며 핵심 쟁점으로 떠올랐다.",
-    "detail": "트럼프 행정부는 데이터센터를 AI 산업의 필수 인프라로 규정하고 지원하고 있으나, 전력 소비 급증과 환경 문제로 인해 뉴욕주 등 일부 지역에서는 인허가 중단 조치를 내리는 등 갈등이 심화되고 있다. IEA는 데이터센터 전력 소비량이 2030년까지 426TWh로 133% 증가할 것으로 전망했다.",
-    "implication": "",
-    "why_important": "",
-    "why_short": "",
-    "open_question": "",
-    "open_question_source": "unknown",
-    "open_question_reject": "",
-    "watch_next": "",
-    "tags": [
-      "#데이터센터",
-      "#전력수요",
-      "#미국정책"
-    ],
-    "related_reports": [],
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "topic_verdict": "on_topic",
-    "curation_status": "reviewed",
-    "curation_source": "gemini",
-    "cached_at": "2026-10-11T19:33:29.666249+00:00",
-    "title": "‘경제 성장동력’ vs ‘혐오시설’… 美중간선거 AI데이터센터 논란",
-    "link": "https://www.donga.com/news/Inter/article/all/20261011/134822340/2",
-    "feed": "discovery:iea",
-    "domain": "donga.com",
-    "matched": "국제에너지기구 허가",
-    "verified_evidence": {
-      "version": 2,
-      "article_hash": "b1d97c9282f3c693",
-      "source_components": {
-        "article_hash": "b1d97c9282f3c693",
-        "title": "00db3d59fd6c62680588c0e6e39b0dcf8a44358aa98597409c4f354e51b14724",
-        "source_excerpt": "dcfb11704b642eaa085601996eefd30de3bf7c8bf4f9d2b3780371ba2ce5c25c",
-        "published_at": "bf89d259aa46b150f3eb7b482eab5c63e9f464c4bb23d3f19f995587df4f8f69"
-      },
-      "source_fingerprint": "cfd1d91a5a8a2daff50e9e826baca09cab122a3e445bf6a1e8f5f46289089cb1",
-      "entities": [
-        "iea"
-      ],
-      "countries": [
-        "US"
-      ],
-      "topics": [],
-      "stages": [
-        "approval"
-      ],
-      "claims": [
-        "7월",
-        "50mw",
-        "2030년",
-        "426twh",
-        "133%",
-        "3일"
-      ],
-      "quantities": {
-        "%": [
-          "133"
-        ],
-        "mw": [
-          "50"
-        ],
-        "mwh": [
-          "426000000"
-        ],
-        "년": [
-          "1",
-          "2030"
-        ],
-        "월": [
-          "7"
-        ],
-        "일": [
-          "3"
-        ]
-      },
-      "quantity_rules": 3,
-      "manifest_fingerprint": "4095c4b279c3874ef7e1ff1e7fc4bfa35609474857ace681b3695665d2bf5330"
-    },
-    "verified_source_components": {
-      "article_hash": "b1d97c9282f3c693",
-      "title": "00db3d59fd6c62680588c0e6e39b0dcf8a44358aa98597409c4f354e51b14724",
-      "source_excerpt": "dcfb11704b642eaa085601996eefd30de3bf7c8bf4f9d2b3780371ba2ce5c25c",
-      "published_at": "bf89d259aa46b150f3eb7b482eab5c63e9f464c4bb23d3f19f995587df4f8f69"
-    },
-    "hash": "b1d97c9282f3c693",
-    "published_at": "2026-10-11T19:32:00+00:00"
-  },
   "6599a292ec58c1ef": {
     "features": {
       "event_type": "corporate_move",
@@ -499242,7 +498711,7 @@
   },
   "981c4c705faafbab": {
     "importance": "nice_to_know",
-    "curation_status": "fallback",
+    "curation_status": "quarantined",
     "curation_source": "fallback",
     "section": "domestic",
     "category": "정책",
@@ -499258,7 +498727,7 @@
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-10-25T18:38:35.758105+00:00",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
     "title": "우진엔텍 거래 재개…실질심사 제외 결정 배경",
     "link": "https://www.vegannews.co.kr/news/article.html?no=397125",
     "feed": "정책",
@@ -499266,7 +498735,7 @@
     "matched": "한국수력원자력",
     "source_excerpt": "거래 중단의 배경에는 한국수력원자력의 공공 입찰참가자격 3개월 제한 처분이 있었다. 우진엔텍은 처분 취소소송과 집행정지를 신청했고, 회사 발표에 따르면 법원의 집행정지 신청 인용으로 처분 효력은 본안 판결...",
     "published_at": "2026-10-25T18:26:00+00:00",
-    "features_attempts": 1,
+    "features_attempts": 2,
     "verified_evidence": {
       "version": 2,
       "article_hash": "981c4c705faafbab",
@@ -499320,5 +498789,1417 @@
       "published_at": "7fee9fe4a86a51aeaf1c0f5a9684f496b97b4c264bba2edbddc9a177e0664a5e"
     },
     "hash": "981c4c705faafbab"
+  },
+  "a1d571d6a3a19ad6": {
+    "importance": "nice_to_know",
+    "curation_status": "fallback",
+    "curation_source": "fallback",
+    "section": "domestic",
+    "category": "정책",
+    "title_kr": "미·중 AI 패권 경쟁, 자본·반도체·재정 한계 부각",
+    "summary": "경쟁이 전력, 광물, 반도체, 자본을 둘러싼 거대한 지정학적 제약에 직면해 있다고 보도했다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "미·중 AI 패권 경쟁, 자본·반도체·재정 한계 부각",
+    "link": "https://www.g-enews.com/view.php?ud=2026102523473713652bd56fbc3c_1",
+    "feed": "정책",
+    "domain": "g-enews.com",
+    "matched": "데이터센터 전력",
+    "source_excerpt": "경쟁이 전력, 광물, 반도체, 자본을 둘러싼 거대한 지정학적 제약에 직면해 있다고 보도했다. 세 저자는 인공... 이와 함께 텍사스와 유타 등지에서는 데이터센터 설립을 반대하는 시위가 이어지고 있으며 오픈AI 모델의...",
+    "published_at": "2026-10-25T19:02:00+00:00",
+    "features_attempts": 1,
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "a1d571d6a3a19ad6",
+      "source_components": {
+        "article_hash": "a1d571d6a3a19ad6",
+        "title": "2246af6904639001525683be045a6dfe35e473dae6b462a6dc3f3d3588651ba4",
+        "source_excerpt": "14f843b9b0734b3aa87ee23853f9ffa2a80987875a481c6c05d37e8e2351e3f8",
+        "published_at": "a9a8aaf2659f76496ac95f6727fd3ab4294d24324c2fe388593de6c26e66fd8b"
+      },
+      "source_fingerprint": "de543d16774772b38e321d573bec90fd8edb8b428c15e19d30fbcc7693299bfa",
+      "entities": [],
+      "countries": [
+        "CN",
+        "US"
+      ],
+      "topics": [],
+      "stages": [
+        "shutdown"
+      ],
+      "claims": [
+        "1억5000만달러",
+        "10월",
+        "25일",
+        "7250억달러",
+        "2950억달러",
+        "2024년",
+        "2036년",
+        "1100명",
+        "2012년",
+        "8월",
+        "9일",
+        "gv60"
+      ],
+      "quantities": {
+        "년": [
+          "2012",
+          "2024",
+          "2026",
+          "2036",
+          "5"
+        ],
+        "달러": [
+          "150000000",
+          "295000000000",
+          "725000000000"
+        ],
+        "명": [
+          "1100"
+        ],
+        "월": [
+          "10",
+          "8"
+        ],
+        "일": [
+          "25",
+          "9"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "08c6f33567f590d269e2252f51e9e5076ced15bac098e068e9410df45e755861"
+    },
+    "verified_source_components": {
+      "article_hash": "a1d571d6a3a19ad6",
+      "title": "2246af6904639001525683be045a6dfe35e473dae6b462a6dc3f3d3588651ba4",
+      "source_excerpt": "14f843b9b0734b3aa87ee23853f9ffa2a80987875a481c6c05d37e8e2351e3f8",
+      "published_at": "a9a8aaf2659f76496ac95f6727fd3ab4294d24324c2fe388593de6c26e66fd8b"
+    },
+    "hash": "a1d571d6a3a19ad6"
+  },
+  "fe6b57b93ed7cf89": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "티앤이코리아 등 3개사 코스닥 상장 및 수요예측 결과",
+    "summary": "티앤이코리아 등 3개 기업이 코스닥 상장을 앞두고 있으며, 기관 수요예측에서 1041.02대 1의 경쟁률을 기록했다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "off_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "[IPO 워치] 티앤이코리아·크리에이츠·인텔리빅스 상장…수요예측 7곳",
+    "link": "https://www.news2day.co.kr/article/20261024500039",
+    "feed": "정책",
+    "domain": "news2day.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "fe6b57b93ed7cf89",
+      "source_components": {
+        "article_hash": "fe6b57b93ed7cf89",
+        "title": "689674f1103b5fc69a0490e8bd49b57c857064dda4b49e353bd97906a6adef6d",
+        "source_excerpt": "1b039163f12846634e19f57b122bd646844b5af440187d0f1003919cd3c0a23f",
+        "published_at": "385c85533b8673050d7add7e248779900652fad853d6fe7456474288b59bd8b8"
+      },
+      "source_fingerprint": "4420b4d7220c86225592cb75db547c8c8641d3bc8c4f38c51736229c004a8c94",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [
+        "approval"
+      ],
+      "claims": [
+        "10월",
+        "30일"
+      ],
+      "quantities": {
+        "월": [
+          "10"
+        ],
+        "일": [
+          "30"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "17c8364a38e87b337c89869dee907d5ff4642f71bb443707fe8b94b507b28898"
+    },
+    "verified_source_components": {
+      "article_hash": "fe6b57b93ed7cf89",
+      "title": "689674f1103b5fc69a0490e8bd49b57c857064dda4b49e353bd97906a6adef6d",
+      "source_excerpt": "1b039163f12846634e19f57b122bd646844b5af440187d0f1003919cd3c0a23f",
+      "published_at": "385c85533b8673050d7add7e248779900652fad853d6fe7456474288b59bd8b8"
+    },
+    "hash": "fe6b57b93ed7cf89",
+    "published_at": "2026-10-25T19:22:00+00:00"
+  },
+  "0488aadc0e225ca1": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 2,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "newbuild"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "corporate",
+    "title_kr": "한수원, 새울 3·4호기 안전 설계 강화 및 협력사 ESG 컨설팅 성과",
+    "summary": "한수원이 새울 3·4호기에 다중 고장 대응 설계를 적용해 안전성을 높이고, 협력사 ESG 컨설팅을 통해 지표 준수율을 49.5%에서 75.9%로 개선했다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#새울원전",
+      "#ESG경영"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "integrity_release": {
+      "v": 1,
+      "fp": "3eaf2b280aaba348",
+      "verdict": "ok",
+      "checked_at": "2026-10-25T20:55:01+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "source_kind": "description",
+      "codes": [
+        "title_source_mismatch"
+      ]
+    },
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "원전-풍력-수소… 친환경 에너지 영토 확장",
+    "link": "https://www.donga.com/news/Economy/article/all/20261024/134898760/2",
+    "feed": "정책",
+    "domain": "donga.com",
+    "matched": "원자력안전위원회",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "0488aadc0e225ca1",
+      "source_components": {
+        "article_hash": "0488aadc0e225ca1",
+        "title": "e29512304c6a79f1e1c1ab50782888b946e7d9f300cba1093d9997ae12686ca2",
+        "source_excerpt": "83cf05c42ee8afb1a266fae009df041540dcbd0051e23a892641e4c76e19fc74",
+        "published_at": "2128650ed7d1d34552290078d011bbf98dfe79954017bba0193b08561fd409a9"
+      },
+      "source_fingerprint": "9f0ea1dba5f4b33a73e852fd8e9e957c5e0ef43fbcda071f57feae849f6eee2c",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "reactor_project",
+        "safety"
+      ],
+      "stages": [
+        "cancellation",
+        "incident"
+      ],
+      "claims": [
+        "4호기",
+        "49.5%",
+        "75.9%"
+      ],
+      "quantities": {
+        "%": [
+          "49.5",
+          "75.9"
+        ],
+        "호기": [
+          "3",
+          "4"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "cf55fc2b976476f47a2f8c138e85d7148c917836713136eddf105ab68528ee36"
+    },
+    "verified_source_components": {
+      "article_hash": "0488aadc0e225ca1",
+      "title": "e29512304c6a79f1e1c1ab50782888b946e7d9f300cba1093d9997ae12686ca2",
+      "source_excerpt": "83cf05c42ee8afb1a266fae009df041540dcbd0051e23a892641e4c76e19fc74",
+      "published_at": "2128650ed7d1d34552290078d011bbf98dfe79954017bba0193b08561fd409a9"
+    },
+    "hash": "0488aadc0e225ca1",
+    "published_at": "2026-10-25T19:32:00+00:00"
+  },
+  "2848acfdf2e7091d": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "아마존, AI 데이터센터 전력 수요 급증으로 인프라 투자 확대",
+    "summary": "아마존은 AI 데이터센터 컴퓨팅 수요가 공급을 초과함에 따라 전력 및 냉각 장치 등 관련 산업 인프라 투자를 지속 확대할 방침이다.",
+    "detail": "아마존은 AI 데이터센터에 대한 과잉투자 우려에도 불구하고 컴퓨팅 공급이 수요를 따라가지 못하고 있다고 밝혔다. AI 반도체 성능 향상에 따라 전력 공급과 냉각 장치 등 산업 장비 업체들의 수혜가 예상되며, AI 산업계는 투자 확대의 필요성을 강조하고 있다.",
+    "implication": "AI 데이터센터의 전력 수요가 발전 및 배전 설비 시장의 성장을 견인하는 핵심 동력으로 작용하고 있다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#데이터센터",
+      "#전력수요"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "AI 과잉투자 우려에도...아마존 \"2028년 물량까지 완판\"",
+    "link": "https://biz.sbs.co.kr/article_hub/20000341979?division=NAVER",
+    "feed": "정책",
+    "domain": "sbs.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "2848acfdf2e7091d",
+      "source_components": {
+        "article_hash": "2848acfdf2e7091d",
+        "title": "41c7d560ee5e1a2904a79474665d7d5cd4411a48b5e244e5d7ca9d80ab328176",
+        "source_excerpt": "6cbb1b41cd7bc33917248385d2f8c85785c26a9b2cd9311b00adc55f3dbb1d72",
+        "published_at": "2128650ed7d1d34552290078d011bbf98dfe79954017bba0193b08561fd409a9"
+      },
+      "source_fingerprint": "8ba7a2bb3df1ab8a7694c07245a611a3e246b98a0e9518631feb0a3f57a2b92c",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [
+        "2028년"
+      ],
+      "quantities": {
+        "년": [
+          "2028"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "3ce7892bd942fc79ecb078a246c046d0d5e006b9dcfa8e6156d49398029a9e5c"
+    },
+    "verified_source_components": {
+      "article_hash": "2848acfdf2e7091d",
+      "title": "41c7d560ee5e1a2904a79474665d7d5cd4411a48b5e244e5d7ca9d80ab328176",
+      "source_excerpt": "6cbb1b41cd7bc33917248385d2f8c85785c26a9b2cd9311b00adc55f3dbb1d72",
+      "published_at": "2128650ed7d1d34552290078d011bbf98dfe79954017bba0193b08561fd409a9"
+    },
+    "hash": "2848acfdf2e7091d",
+    "published_at": "2026-10-25T19:32:00+00:00"
+  },
+  "06c7b8088243953b": {
+    "features": {
+      "event_type": "incident_safety",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "US",
+      "IR"
+    ],
+    "article_type": "news",
+    "title_kr": "미국-이란 긴장 고조에 따른 중동 에너지 시설 타격 우려",
+    "summary": "미국이 중간선거 이후 이란에 대한 무력 사용 가능성을 시사하자, 이란은 대응 조치로 걸프 지역 에너지 시설을 표적으로 삼을 수 있다고 경고했다.",
+    "detail": "트럼프 미국 대통령이 이란에 대한 무력 사용 가능성을 내비친 가운데, 미군 중부 사령부가 공격 선택지를 국방장관에게 보고했다. 이란은 호르무즈 해협 정책 변화가 없을 것임을 강조하며, 전쟁 재개 시 걸프 지역의 데이터센터와 발전소, 석유 시설을 표적으로 삼겠다고 대응했다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "off_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "\"이란 재타격 승인 대기\" vs \"공격할 테면 해보라\"",
+    "link": "https://www.ytn.co.kr/_ln/0104_202610260436380400",
+    "feed": "정책",
+    "domain": "ytn.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "06c7b8088243953b",
+      "source_components": {
+        "article_hash": "06c7b8088243953b",
+        "title": "2783a94184621cf7ae37939bcbdc4a18005ece9b738982f66306c39f638d584f",
+        "source_excerpt": "4f2682665da2ace42d6b141fc907cf9e690e09d733ac05910ede83eeea3508d5",
+        "published_at": "e2d8d2b8449fc27c31a99a2e7fbd12f27450de6f3d77e22a9a18d9866e8c0eca"
+      },
+      "source_fingerprint": "2ba05e68757a59321fd4372117d31477a99d49dbda5f0013242ac338e17feb93",
+      "entities": [],
+      "countries": [
+        "US"
+      ],
+      "topics": [],
+      "stages": [
+        "approval",
+        "restart"
+      ],
+      "claims": [
+        "23일"
+      ],
+      "quantities": {
+        "일": [
+          "23"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "26d32bfa0ea31f10033defacd11ecaa34dadabe59980a134c364f6cae5373e89"
+    },
+    "verified_source_components": {
+      "article_hash": "06c7b8088243953b",
+      "title": "2783a94184621cf7ae37939bcbdc4a18005ece9b738982f66306c39f638d584f",
+      "source_excerpt": "4f2682665da2ace42d6b141fc907cf9e690e09d733ac05910ede83eeea3508d5",
+      "published_at": "e2d8d2b8449fc27c31a99a2e7fbd12f27450de6f3d77e22a9a18d9866e8c0eca"
+    },
+    "hash": "06c7b8088243953b",
+    "published_at": "2026-10-25T19:36:00+00:00"
+  },
+  "12435fae8182654d": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [],
+    "countries": [
+      "US",
+      "FR"
+    ],
+    "article_type": "news",
+    "title_kr": "미 공군 전력 확대 및 프랑스 항공모함 운용 방안 검토",
+    "summary": "미 공군이 2035년까지 유인 전투기 1509대 확보를 목표로 전력을 수정했으며, 프랑스는 샤를 드골함 퇴역 연장을 통해 항공모함 2척 운용을 검토 중이다.",
+    "detail": "미 공군은 2035년까지 유인 전투기 1509대 보유를 목표로 수정 계획을 의회에 제출했다. 프랑스 해군은 샤를 드골함의 2038년 퇴역 연장을 통해 항공모함 2척 운용을 검토하며, 원자력 추진체계 상태를 평가할 예정이다. 한편 미 우주군은 달 주변 시스루나 공간을 전략적 전투 영역으로 규정하고 관련 기술 확보에 나섰다.",
+    "implication": "프랑스 해군의 항공모함 운용 연장 여부는 K15 원자로의 노후도 평가 결과에 따라 결정될 예정이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#국방",
+      "#항공모함"
+    ],
+    "related_reports": [],
+    "event_date": "2026-10-16",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "topic_verdict": "off_topic",
+    "importance_llm": "nice_to_know",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "지구와 달 사이 ‘이곳’도 전장 됐다…美 우주군 공개 선언 [밀리터리...",
+    "link": "https://www.joongang.co.kr/article/25472704",
+    "feed": "정책",
+    "domain": "joongang.co.kr",
+    "matched": "원자력 정책",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "12435fae8182654d",
+      "source_components": {
+        "article_hash": "12435fae8182654d",
+        "title": "693f835d3c0dc2053cb389027dfade9ac530286a95532c581624ab38c49750df",
+        "source_excerpt": "528a437cc19d5f662c91606410ae0d6bb3c751d9657e977194775c3673863d92",
+        "published_at": "17c404a3a1b1ec17ea367835f9172e3ccdd613bb60c524390361d0c368d38261"
+      },
+      "source_fingerprint": "3e0561232a97621150110ae74c48c4da4d19ad4ab483e1d9d1f0e39a40f29978",
+      "entities": [],
+      "countries": [
+        "CN",
+        "FR",
+        "IN",
+        "US"
+      ],
+      "topics": [
+        "fuel_supply",
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [
+        "approval",
+        "investigation"
+      ],
+      "claims": [
+        "2035년",
+        "2025년",
+        "2030년",
+        "40%",
+        "20%",
+        "10월",
+        "16일",
+        "20일",
+        "2026년",
+        "45%",
+        "30%",
+        "15%",
+        "10%",
+        "2032년",
+        "2038년",
+        "21일",
+        "14일",
+        "1997년",
+        "2029년",
+        "2036년",
+        "2년",
+        "19일",
+        "9월",
+        "30기",
+        "5월"
+      ],
+      "quantities": {
+        "%": [
+          "10",
+          "15",
+          "20",
+          "30",
+          "40",
+          "45"
+        ],
+        "기": [
+          "30"
+        ],
+        "년": [
+          "1997",
+          "2",
+          "2025",
+          "2026",
+          "2029",
+          "2030",
+          "2032",
+          "2035",
+          "2036",
+          "2038"
+        ],
+        "월": [
+          "10",
+          "5",
+          "9"
+        ],
+        "일": [
+          "14",
+          "16",
+          "19",
+          "20",
+          "21"
+        ]
+      },
+      "quantity_rules": 3,
+      "verified_event_date": {
+        "value": "2026-10-16",
+        "type": "announcement",
+        "precision": "day",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "b3a2e7ebfe7cdfa0466be96e38c01f3e407fa17d21cd24f1b4940fd778110be8"
+    },
+    "verified_source_components": {
+      "article_hash": "12435fae8182654d",
+      "title": "693f835d3c0dc2053cb389027dfade9ac530286a95532c581624ab38c49750df",
+      "source_excerpt": "528a437cc19d5f662c91606410ae0d6bb3c751d9657e977194775c3673863d92",
+      "published_at": "17c404a3a1b1ec17ea367835f9172e3ccdd613bb60c524390361d0c368d38261"
+    },
+    "hash": "12435fae8182654d",
+    "published_at": "2026-10-25T20:00:00+00:00"
+  },
+  "d60bc842e70d741c": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai",
+      "power_market"
+    ],
+    "countries": [
+      "FI"
+    ],
+    "article_type": "news",
+    "title_kr": "핀란드, 유휴 제지공장 부지 활용한 데이터센터 투자 유치",
+    "summary": "핀란드가 가동이 중단된 제지공장의 전력 기반시설을 활용해 데이터센터를 유치하는 브라운필드 전략으로 대규모 투자를 이끌어내고 있다.",
+    "detail": "핀란드 카야니시는 폐쇄된 제지공장의 230MW급 변압설비와 송배전망을 활용해 데이터센터를 유치했다. 이는 전력망 확충 비용과 시간을 절감하는 이점이 있다. 구글은 이를 바탕으로 2027~2028년까지 핀란드 전역에 130억 유로를 투자할 계획이다.",
+    "implication": "기존 산업 인프라를 재활용하는 브라운필드 전략이 AI 데이터센터의 전력 수급 문제를 해결하는 핵심 모델로 부상하고 있다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#데이터센터",
+      "#전력망"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "문 닫은 제지 공장, AI 거점이 되다",
+    "link": "https://www.mt.co.kr/industry/2026/10/26/2026102209542551254",
+    "feed": "정책",
+    "domain": "mt.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "d60bc842e70d741c",
+      "source_components": {
+        "article_hash": "d60bc842e70d741c",
+        "title": "1ba979459854ddf52f288d5e1d99b86a9115c451f743f1b3be174c2c2d3eeb64",
+        "source_excerpt": "db51a61297791080b3f34b20d58f8ac466d1c1c787477bdf4c9f5fac006430ee",
+        "published_at": "17c404a3a1b1ec17ea367835f9172e3ccdd613bb60c524390361d0c368d38261"
+      },
+      "source_fingerprint": "fca2661de124424cd298aba5c4c624d17fa2a70f51041e66368c40acec71beaf",
+      "entities": [],
+      "countries": [
+        "FI"
+      ],
+      "topics": [
+        "grid",
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [
+        "shutdown"
+      ],
+      "claims": [
+        "100개",
+        "2008년",
+        "2010년",
+        "2007년",
+        "2009년",
+        "17일",
+        "2027년",
+        "9일",
+        "2028년",
+        "19조원"
+      ],
+      "quantities": {
+        "mw": [
+          "1877000",
+          "230",
+          "475000"
+        ],
+        "개": [
+          "100"
+        ],
+        "년": [
+          "2007",
+          "2008",
+          "2009",
+          "2010",
+          "2027",
+          "2028"
+        ],
+        "유로": [
+          "13000000000"
+        ],
+        "일": [
+          "17",
+          "9"
+        ],
+        "조원": [
+          "19"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "95288b37c664905344ee0b7dc77b34981b8322d51507eae2d9ec251a33f3e78e"
+    },
+    "verified_source_components": {
+      "article_hash": "d60bc842e70d741c",
+      "title": "1ba979459854ddf52f288d5e1d99b86a9115c451f743f1b3be174c2c2d3eeb64",
+      "source_excerpt": "db51a61297791080b3f34b20d58f8ac466d1c1c787477bdf4c9f5fac006430ee",
+      "published_at": "17c404a3a1b1ec17ea367835f9172e3ccdd613bb60c524390361d0c368d38261"
+    },
+    "hash": "d60bc842e70d741c",
+    "published_at": "2026-10-25T20:00:00+00:00"
+  },
+  "80ef7cd0c953a6b7": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "power_market"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "호남 반도체 클러스터 생태계 구축 및 인프라 갈등 관리 과제",
+    "summary": "호남 반도체 클러스터가 성공하려면 단순 공장 유치를 넘어 후공정 및 유틸리티 중심의 자체 생태계 구축과 용수·전력 등 인프라 갈등 해결이 시급하다.",
+    "detail": "호남 지역 반도체 클러스터는 수도권과 차별화된 후공정 및 유틸리티 분야를 집중 육성해야 한다는 지적이 나왔다. 용수 확보를 위한 동복댐 하류 댐 건설로 인한 주민 이주 문제와 극한 가뭄 시 식수-산업용수 충돌 우려가 제기됐다. 또한 2034년까지 급증할 전력 수요에 대비한 송·변전망 확충과 현장 맞춤형 인력 양성 속도 개선이 과제로 꼽혔다.",
+    "implication": "반도체 클러스터의 성공은 대규모 전력망 확충과 용수 공급 계획의 실현 가능성 및 지역사회 수용성 확보에 달려 있다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#반도체",
+      "#전력망",
+      "#지역수용성"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "단순 공장 넘어 ‘공급망·인프라·인력 반도체 생태계’ 뿌리 내려야",
+    "link": "https://www.hani.co.kr/arti/society/society_general/1284093.html",
+    "feed": "정책",
+    "domain": "hani.co.kr",
+    "matched": "전력수급 대책",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "80ef7cd0c953a6b7",
+      "source_components": {
+        "article_hash": "80ef7cd0c953a6b7",
+        "title": "ba76c97ecfc899a75e4f05112eea20d490de9da838455ea7e194c69e80e6bd8b",
+        "source_excerpt": "23ea8aa8bf9d305245ec97914bdd7e9b821818ddd486a0039028283c5e094c89",
+        "published_at": "731f4a9b4d3dc5445b05d238f822573fa03143281a8fbdc4c4c9158d608d20c9"
+      },
+      "source_fingerprint": "629271e0a03945ebdb2f8672b89a348f23808e4b3eb1808b97a04ed1f0d54b43",
+      "entities": [],
+      "countries": [
+        "JP",
+        "KR"
+      ],
+      "topics": [
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [
+        "approval",
+        "cancellation",
+        "completion",
+        "shutdown"
+      ],
+      "claims": [
+        "4기",
+        "15일",
+        "2024년",
+        "30%",
+        "2034년",
+        "6.3기",
+        "21개",
+        "42개",
+        "10개",
+        "6333명",
+        "2029년",
+        "2027년",
+        "2028년"
+      ],
+      "quantities": {
+        "%": [
+          "3.2",
+          "30"
+        ],
+        "mw": [
+          "6300"
+        ],
+        "개": [
+          "10",
+          "21",
+          "42"
+        ],
+        "기": [
+          "4"
+        ],
+        "년": [
+          "2024",
+          "2027",
+          "2028",
+          "2029",
+          "2034"
+        ],
+        "명": [
+          "6333"
+        ],
+        "일": [
+          "15"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "f8c0e63fe73fc7318e59f2ad32549beeb0d7287208833b738e47cb9183ce2e56"
+    },
+    "verified_source_components": {
+      "article_hash": "80ef7cd0c953a6b7",
+      "title": "ba76c97ecfc899a75e4f05112eea20d490de9da838455ea7e194c69e80e6bd8b",
+      "source_excerpt": "23ea8aa8bf9d305245ec97914bdd7e9b821818ddd486a0039028283c5e094c89",
+      "published_at": "731f4a9b4d3dc5445b05d238f822573fa03143281a8fbdc4c4c9158d608d20c9"
+    },
+    "hash": "80ef7cd0c953a6b7",
+    "published_at": "2026-10-25T20:02:00+00:00"
+  },
+  "590c594f9e0eb31f": {
+    "features": {
+      "event_type": "project_milestone",
+      "korea_relevance": 3,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "newbuild",
+      "smr"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "경주서 'NES 2026' 개최…국내 원전기업 해외 진출 지원",
+    "summary": "국내 원전기업의 해외 진출과 글로벌 공급망 협력을 위한 '2026 국제원자력수출 및 안전콘펙스(NES 2026)'가 27일부터 경주에서 개최된다.",
+    "detail": "이번 행사에는 17개국 50여 개사 바이어가 참여해 국내 기업과 수출 상담을 진행한다. SMR 개발, AI 산업의 원자력 수요, 글로벌 공급망 전략 등을 논의하며 세계원전도시서밋도 함께 열린다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#원전수출",
+      "#공급망"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "경주서 27일 'NES 2026' 개막…17개국 원전 바이어 참여",
+    "link": "https://www.ajunews.com/view/20261026001107606",
+    "feed": "정책",
+    "domain": "ajunews.com",
+    "matched": "원전 수출",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "590c594f9e0eb31f",
+      "source_components": {
+        "article_hash": "590c594f9e0eb31f",
+        "title": "b40be71774df23865f1fe64a7eaf50d863352c814cf6692db3811151a5cbce78",
+        "source_excerpt": "3ff47f8db25d0270d75f74fa396f13941f6fffce2390cb076ecd912032c44931",
+        "published_at": "731f4a9b4d3dc5445b05d238f822573fa03143281a8fbdc4c4c9158d608d20c9"
+      },
+      "source_fingerprint": "4d38f73664827196f64012f9d32967b20441c96724ec1f2bcaa8b92dba92da8c",
+      "entities": [
+        "edf",
+        "framatome",
+        "iaea"
+      ],
+      "countries": [
+        "CA",
+        "CZ",
+        "FR",
+        "KR",
+        "PL",
+        "US"
+      ],
+      "topics": [
+        "decommissioning",
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [
+        "27일",
+        "77개",
+        "182개",
+        "29일",
+        "25일",
+        "28일",
+        "nes2026"
+      ],
+      "quantities": {
+        "개": [
+          "17",
+          "182",
+          "77"
+        ],
+        "일": [
+          "25",
+          "27",
+          "28",
+          "29"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "0fd1f165cc89cd6c39560779ec50802b987fdca5549f5a868c7d17334aac9db7"
+    },
+    "verified_source_components": {
+      "article_hash": "590c594f9e0eb31f",
+      "title": "b40be71774df23865f1fe64a7eaf50d863352c814cf6692db3811151a5cbce78",
+      "source_excerpt": "3ff47f8db25d0270d75f74fa396f13941f6fffce2390cb076ecd912032c44931",
+      "published_at": "731f4a9b4d3dc5445b05d238f822573fa03143281a8fbdc4c4c9158d608d20c9"
+    },
+    "hash": "590c594f9e0eb31f",
+    "published_at": "2026-10-25T20:02:00+00:00"
+  },
+  "97496ecc2f8f0974": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 1,
+      "market_materiality": 3,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai",
+      "finance"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "美 S&P500 3분기 순이익 30% 증가 전망…AI 대형주 의존도 심화",
+    "summary": "S&P500 기업의 3분기 순이익이 전년 대비 30% 증가할 것으로 예상되나, 엔비디아와 마이크론 등 일부 AI 대형주가 증가분의 34%를 차지하는 등 실적 편중 현상이 뚜렷하다.",
+    "detail": "월스트리트저널은 팩트셋 데이터를 인용해 S&P500 기업의 3분기 순이익이 전년 동기 대비 30% 증가할 것으로 보도했다. 엔비디아와 마이크론 등 상위 10개 기업이 전체 이익 증가분의 약 3분의 2를 담당할 것으로 예상된다. AI 인프라 투자 확대가 기술주 실적을 견인하고 있으나, 투자 대비 실제 수익 창출 가능성에 대한 시장의 의구심은 여전하다. 상위 10개 기업을 제외한 나머지 기업들의 순이익도 10% 증가할 것으로 보여 실적 개선이 전반적으로 확산되고 있다는 반론도 존재한다.",
+    "implication": "AI 인프라 투자가 실제 현금흐름과 수익으로 이어지는지 여부가 향후 시장 변동성을 결정할 핵심 변수이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#AI",
+      "#실적",
+      "#데이터센터"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "off_topic",
+    "importance_llm": "nice_to_know",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "美 기업 3분기 순이익 30% 증가 전망…엔비디아·마이크론이 34% 차지",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=498263",
+    "feed": "정책",
+    "domain": "pinpointnews.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "97496ecc2f8f0974",
+      "source_components": {
+        "article_hash": "97496ecc2f8f0974",
+        "title": "4aea0f4c9c0835383585dad2a356352c2aa9e0207d44afe214c9adf41fd93cef",
+        "source_excerpt": "8ad407a57aae4549a28d1bc193d9bf675c315ed65c0d41699b8930f9c4c502e1",
+        "published_at": "ec14b20f6cc094a9c66cb779a297b606a87f1f84e7d5aa4cdf9d161ebb0efc29"
+      },
+      "source_fingerprint": "e932d170d850dc6397673380743ed64f5ca8c92fc7c31434762f5208061b02ef",
+      "entities": [],
+      "countries": [
+        "US"
+      ],
+      "topics": [],
+      "stages": [],
+      "claims": [
+        "30%",
+        "34%",
+        "25일",
+        "10개",
+        "90%",
+        "10%",
+        "1990년"
+      ],
+      "quantities": {
+        "%": [
+          "10",
+          "30",
+          "34",
+          "90"
+        ],
+        "개": [
+          "10"
+        ],
+        "년": [
+          "1990"
+        ],
+        "일": [
+          "25"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "f477faf9dcd18c6f48b07acd5734247c777658e5a09f9f4fadc5a3cbc4aff49a"
+    },
+    "verified_source_components": {
+      "article_hash": "97496ecc2f8f0974",
+      "title": "4aea0f4c9c0835383585dad2a356352c2aa9e0207d44afe214c9adf41fd93cef",
+      "source_excerpt": "8ad407a57aae4549a28d1bc193d9bf675c315ed65c0d41699b8930f9c4c502e1",
+      "published_at": "ec14b20f6cc094a9c66cb779a297b606a87f1f84e7d5aa4cdf9d161ebb0efc29"
+    },
+    "hash": "97496ecc2f8f0974",
+    "published_at": "2026-10-25T20:20:00+00:00"
+  },
+  "2e27b04fece49428": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 3,
+      "market_materiality": 3,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "finance",
+      "power_market"
+    ],
+    "countries": [
+      "US",
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "반도체 3배 레버리지 ETF 'SOXL' 사상 최대 자금 유입 속 43% 폭락",
+    "summary": "미국 반도체 지수 3배 레버리지 ETF인 SOXL에 주간 기준 사상 최대인 61억 달러가 유입되었으나, 10월 한 달간 가격은 43% 이상 급락하며 투자자 손실이 확대되었다.",
+    "detail": "10월 셋째 주 SOXL에 61억 달러가 유입되었으나, AI 설비투자의 채산성 논란과 변동성 장세 속 복리 효과로 인해 10월 누적 낙폭이 43%를 넘어섰다. 한국 투자자들은 9월 18일부터 10월 21일까지 약 3조 6622억 원을 순매수했다. 북미 하이퍼스케일러 기업들의 데이터센터 지출 회수 속도 재계산에 따라 삼성전자와 SK하이닉스의 HBM 및 서버용 D램 공급 일정에 불확실성이 커지고 있다.",
+    "implication": "빅테크 기업들의 AI 설비투자 집행 내역이 향후 글로벌 반도체 공급망의 실질적 흐름을 결정할 분수령이 될 것이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#반도체",
+      "#레버리지",
+      "#공급망"
+    ],
+    "related_reports": [],
+    "event_date": "2026-10-24",
+    "event_date_type": "occurrence",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "8조원 쏟아붓고도 43% 폭락…반도체 레버리지 개미들 '발칵'",
+    "link": "https://www.g-enews.com/view.php?ud=202610260516521918fbbec65dfb_1",
+    "feed": "정책",
+    "domain": "g-enews.com",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "2e27b04fece49428",
+      "source_components": {
+        "article_hash": "2e27b04fece49428",
+        "title": "7eaa5d03b3cc0d81f96fb9278a34d3fa50302dda57996ac2cec770715359a6af",
+        "source_excerpt": "59ca2bd46ed6333c53264a378ce5e49cab33b0f4b3268f1b978082b3a5ac8c6d",
+        "published_at": "ec14b20f6cc094a9c66cb779a297b606a87f1f84e7d5aa4cdf9d161ebb0efc29"
+      },
+      "source_fingerprint": "94e4ec38f263b2373f807057b8887bf3e6add44fd8190bb7c73538bcacb708ba",
+      "entities": [],
+      "countries": [
+        "CN",
+        "KR",
+        "US"
+      ],
+      "topics": [],
+      "stages": [
+        "contract"
+      ],
+      "claims": [
+        "60억3000만달러",
+        "32억7000만달러",
+        "27억6000만달러",
+        "28억3000만달러",
+        "27억4000만달러",
+        "1억5000만달러",
+        "8조원",
+        "43%",
+        "61억달러",
+        "6300억원",
+        "2026년",
+        "10월",
+        "9409억원",
+        "24일",
+        "22일",
+        "20.5%",
+        "6월",
+        "23일",
+        "6.8%",
+        "15.9%",
+        "9월",
+        "18일",
+        "21일",
+        "120억원",
+        "3390억원",
+        "6622억원",
+        "15일",
+        "7551억원",
+        "6357억원",
+        "1100명",
+        "2012년",
+        "8월",
+        "9일",
+        "csi300",
+        "gv60"
+      ],
+      "quantities": {
+        "%": [
+          "15.9",
+          "20.5",
+          "43",
+          "6.8"
+        ],
+        "년": [
+          "2012",
+          "2026"
+        ],
+        "달러": [
+          "150000000",
+          "2740000000",
+          "2760000000",
+          "2830000000",
+          "3270000000",
+          "6030000000",
+          "6100000000"
+        ],
+        "명": [
+          "1100"
+        ],
+        "억원": [
+          "120",
+          "3390",
+          "6300",
+          "6357",
+          "6622",
+          "7551",
+          "9409"
+        ],
+        "월": [
+          "10",
+          "6",
+          "8",
+          "9"
+        ],
+        "일": [
+          "15",
+          "18",
+          "21",
+          "22",
+          "23",
+          "24",
+          "9"
+        ],
+        "조원": [
+          "8"
+        ]
+      },
+      "quantity_rules": 3,
+      "verified_event_date": {
+        "value": "2026-10-24",
+        "type": "occurrence",
+        "precision": "day",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "90e3f5c8fde5f52659a3eb4ee884e0853826662ddf7d24a15a5c0a134084c13f"
+    },
+    "verified_source_components": {
+      "article_hash": "2e27b04fece49428",
+      "title": "7eaa5d03b3cc0d81f96fb9278a34d3fa50302dda57996ac2cec770715359a6af",
+      "source_excerpt": "59ca2bd46ed6333c53264a378ce5e49cab33b0f4b3268f1b978082b3a5ac8c6d",
+      "published_at": "ec14b20f6cc094a9c66cb779a297b606a87f1f84e7d5aa4cdf9d161ebb0efc29"
+    },
+    "hash": "2e27b04fece49428",
+    "published_at": "2026-10-25T20:20:00+00:00"
+  },
+  "d944a87772e7456b": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 1,
+      "market_materiality": 3,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "finance",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "이번 주 빅테크 실적 발표 및 FOMC 금리 결정…AI 수혜주 향방 주목",
+    "summary": "이번 주 마이크로소프트, 알파벳, 아마존 등 빅테크 실적 발표와 FOMC 금리 결정이 예정되어 있어 AI 수혜주의 향방과 시장 변동성에 큰 영향을 미칠 전망이다.",
+    "detail": "28일 마이크로소프트와 알파벳, 29일 아마존이 실적을 발표하며, AI 인프라 관련 기업인 버티브 홀딩스, 인텔, GE 버노바 등도 실적을 공개한다. 27~28일 열리는 FOMC에서는 금리 동결이 유력시되나, 워시 의장의 향후 정책 방향성 언급이 시장의 신뢰도에 영향을 줄 것으로 보인다. 29일에는 3분기 GDP 성장률과 9월 PCE 물가지수가 발표되어 인플레이션 통제 의지를 확인할 수 있는 지표가 될 예정이다.",
+    "implication": "빅테크 기업들의 자본지출 계획이 AI 인프라 수요의 지속성을 가늠할 핵심 지표로 작용할 것이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#빅테크",
+      "#FOMC",
+      "#실적"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "off_topic",
+    "importance_llm": "nice_to_know",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-25T20:48:00.875610+00:00",
+    "title": "AI주 줄줄이 실적, 반등 기회 잡을까…FOMC, 금리 동결 예상되지만[이번...",
+    "link": "https://www.mt.co.kr/world/2026/10/26/2026102418384484983",
+    "feed": "정책",
+    "domain": "mt.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "d944a87772e7456b",
+      "source_components": {
+        "article_hash": "d944a87772e7456b",
+        "title": "911d3b4c88c79ffc0533bf60a90855a12172ffb6da97766d0ee547519c9d9883",
+        "source_excerpt": "0d33ac0ddbff37b2bd1da4607ef6e25140619c0cac8266dcfa77c94eb49be504",
+        "published_at": "ea78dc2ddce53ab8d2a9543737ecc66c856afc3438dbb226cf48981a838335ef"
+      },
+      "source_fingerprint": "7494d27fd07b372bd7ea4c36a67f78f8bc4ae8a4a3e2c1f15f07bbb11b19b481",
+      "entities": [],
+      "countries": [
+        "US"
+      ],
+      "topics": [],
+      "stages": [
+        "approval"
+      ],
+      "claims": [
+        "27일",
+        "28일",
+        "29일",
+        "0.7%",
+        "0.9%",
+        "0.8%",
+        "6.0%",
+        "10월",
+        "14.6%",
+        "3.2%",
+        "23일",
+        "0.4%",
+        "26일",
+        "30일",
+        "9월",
+        "2%",
+        "90%",
+        "5%",
+        "0.5%",
+        "3.7%",
+        "8월",
+        "0.3%",
+        "3.4%",
+        "3.1%"
+      ],
+      "quantities": {
+        "%": [
+          "0.1",
+          "0.3",
+          "0.4",
+          "0.5",
+          "0.7",
+          "0.8",
+          "0.9",
+          "14.6",
+          "2",
+          "2.2",
+          "3.1",
+          "3.2",
+          "3.4",
+          "3.7",
+          "5",
+          "6",
+          "90"
+        ],
+        "년": [
+          "10"
+        ],
+        "월": [
+          "10",
+          "8",
+          "9"
+        ],
+        "일": [
+          "23",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "e472386633e7c470bb74d2635c462704f6bf972a0feaca66d49d91e64af7dba0"
+    },
+    "verified_source_components": {
+      "article_hash": "d944a87772e7456b",
+      "title": "911d3b4c88c79ffc0533bf60a90855a12172ffb6da97766d0ee547519c9d9883",
+      "source_excerpt": "0d33ac0ddbff37b2bd1da4607ef6e25140619c0cac8266dcfa77c94eb49be504",
+      "published_at": "ea78dc2ddce53ab8d2a9543737ecc66c856afc3438dbb226cf48981a838335ef"
+    },
+    "hash": "d944a87772e7456b",
+    "published_at": "2026-10-25T20:35:00+00:00"
   }
 }
