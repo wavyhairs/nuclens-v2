@@ -307,6 +307,9 @@ jobs:
           # 마치고 기본값을 끔으로 돌렸다 — 결론은 ranking_config.json `topic_link` 로
           # 옮겼다. 다시 재려면 저장소 변수 SHADOW_RANK=on (하루 24회 안팎).
           SHADOW_RANK: ${{ vars.SHADOW_RANK || 'off' }}
+          # 재발송 그림자 판정(발송 불변, 기록만 — repeat_shadow.py). 2026-10-26부터 2주
+          # 측정한다. 끄려면 저장소 변수 REPEAT_SHADOW=off (하루 호출 4회 이하).
+          REPEAT_SHADOW: ${{ vars.REPEAT_SHADOW || 'on' }}
         run: python daily_brief.py --plan
 
       - name: Push claim (발송 전 커밋 — 실패 시 발송 중단)
@@ -331,6 +334,8 @@ jobs:
             # 그림자 하루치 순위 기록(발송 불변, 1주 비교용). plan 이 (날짜, 지역) 멱등으로
             # 쌓으므로 재실행에도 안전하다. 없는 날(empty·꺼짐)이 있어 존재를 확인한다.
             if [ -f shadow_rank_log.jsonl ]; then git add shadow_rank_log.jsonl; fi
+            # 재발송 그림자 판정 기록(발송 불변, 2주 비교용). 같은 (날짜, 지역) 멱등.
+            if [ -f repeat_shadow_log.jsonl ]; then git add repeat_shadow_log.jsonl; fi
             if git diff --cached --quiet; then echo "변경 없음 (재실행/empty)"; exit 0; fi
             git commit -m "chore: daily brief claim"
             if git push origin HEAD:main; then echo "claim push 성공"; exit 0; fi
