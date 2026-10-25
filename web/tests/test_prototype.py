@@ -2122,7 +2122,9 @@ class GeneratedDataTests(unittest.TestCase):
         2026-08-11 에 실제로 그랬다(날조 카드 하나를 내리자 16 != 17). 배포 경로에
         데이터 조건이 사는 것을 라운드 5 에서 두 번 걷어냈는데 여기 하나가 더 있었다.
         """
-        hidden = set(build_data.load_selection_overrides()["demote"])
+        # demote_only 는 순위만 내리고 기사를 남긴다 — 빌드처럼 숨김만 뺀다.
+        hidden = {key for key, action in build_data.load_selection_overrides()["demote"].items()
+                  if action == build_data.HIDE_ACTION}
         for briefing in self.briefings:
             delivered = [article for article in self.news
                          if article.get("briefing_date") == briefing["date"]]
@@ -3897,12 +3899,28 @@ class SelectionOverrideTests(unittest.TestCase):
         self.assertEqual(visible[0]["briefing_date"], None)
         build_data.report_unmatched_overrides(over)  # 죽지 않는다
 
-    def test_hide_applies_to_the_whole_cluster(self):
-        """클러스터의 다른 멤버가 살아 있어도 이슈 카드가 사라져야 한다."""
+    def test_hide_takes_only_the_listed_article(self):
+        """클러스터째 숨기면 나중에 합쳐진 정상 기사까지 사라진다(2026-10-25 9/24 실측)."""
         over = self._load({"demote": [{"hash8": "aaaa1111", "date": "2026-08-03",
                                        "action": "hide_from_today"}]})
         members = [{"hash": "aaaa1111zzzz"}, {"hash": "bbbb2222zzzz"}]
-        self.assertEqual(build_data.override_verdict(members, "2026-08-03", over), "hide")
+        kept, hidden = build_data.split_hidden_members(members, "2026-08-03", over)
+        self.assertEqual([m["hash"] for m in kept], ["bbbb2222zzzz"])
+        self.assertEqual([m["hash"] for m in hidden], ["aaaa1111zzzz"])
+        self.assertIn(("aaaa1111", "2026-08-03"), over["matched"])
+
+    def test_hide_is_scoped_to_the_date(self):
+        over = self._load({"demote": [{"hash8": "aaaa1111", "date": "2026-08-03"}]})
+        kept, hidden = build_data.split_hidden_members(
+            [{"hash": "aaaa1111zzzz"}], "2026-08-02", over)
+        self.assertEqual((len(kept), len(hidden)), (1, 0))
+
+    def test_demote_only_is_not_hidden(self):
+        over = self._load({"demote": [{"hash8": "aaaa1111", "date": "2026-08-03",
+                                       "action": "demote_only"}]})
+        kept, hidden = build_data.split_hidden_members(
+            [{"hash": "aaaa1111zzzz"}], "2026-08-03", over)
+        self.assertEqual((len(kept), len(hidden)), (1, 0))
 
     def test_verdict_is_scoped_to_the_date(self):
         over = self._load({"demote": [{"hash8": "aaaa1111", "date": "2026-08-03"}]})
@@ -4030,23 +4048,41 @@ class SelectionOverrideTests(unittest.TestCase):
                    self._member("bbbb2222zzzz", day, "묶인 기사 둘")]
         return members, [{"issue_id": "issue-x", "first_seen": day, "members": members}]
 
-    def test_hiding_one_member_removes_the_whole_issue_card(self):
-        """멤버 하나만 지우면 다른 멤버가 briefing_date 를 갖고 있어 카드가 남는다."""
+    def test_hiding_one_member_keeps_the_card_on_the_other(self):
+        """나중에 같은 묶음에 합쳐진 정상 기사까지 숨기면 안 된다 — 카드는 남은 기사로 선다.
+
+        2026-10-25 빌드에서 9/24 c437e5bb 를 내린 묶음에 70ef22d4 가 붙어 같이 빠졌다.
+        """
         day = "2026-08-03"
         members, issues = self._two_member_issue(day)
         over = self._load({"demote": [{"hash8": "aaaa1111", "date": day,
                                        "action": "hide_from_today"}]})
         rows = build_data.build_briefings(members, issues, "", {}, None, over)
+        self.assertEqual(rows[0]["issue_count"], 1)
+        issue = rows[0]["issues"][0]
+        self.assertEqual(issue["current_article_count"], 1)
+        self.assertEqual(issue["representative_article"]["hash"], "bbbb2222zzzz")
+        self.assertNotIn("aaaa1111zzzz",
+                         [article["hash"] for article in issue["related_articles"]])
+
+    def test_hiding_every_member_removes_the_card(self):
+        """그날 같은 사건 기사가 여럿이면 전부 적어야 카드가 사라진다."""
+        day = "2026-08-03"
+        members, issues = self._two_member_issue(day)
+        over = self._load({"demote": [{"hash8": "aaaa1111", "date": day},
+                                      {"hash8": "bbbb2222", "date": day}]})
+        rows = build_data.build_briefings(members, issues, "", {}, None, over)
         self.assertEqual(rows[0]["issue_count"], 0)
         self.assertEqual(rows[0]["issues"], [])
+        self.assertEqual(rows[0]["article_count"], 0)
 
-    def test_hidden_issue_articles_drop_from_counts(self):
-        """카드는 사라졌는데 '오늘 수집 기사 N건'만 그대로면 화면이 자기모순."""
+    def test_hidden_articles_drop_from_counts(self):
+        """숨긴 기사만 '오늘 수집 기사 N건'에서 빠진다 — 남은 카드 기사는 그대로 센다."""
         day = "2026-08-03"
         members, issues = self._two_member_issue(day)
         over = self._load({"demote": [{"hash8": "aaaa1111", "date": day}]})
         rows = build_data.build_briefings(members, issues, "", {}, None, over)
-        self.assertEqual(rows[0]["article_count"], 0)
+        self.assertEqual(rows[0]["article_count"], 1)
 
     def test_without_override_the_issue_survives(self):
         day = "2026-08-03"

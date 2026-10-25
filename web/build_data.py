@@ -2042,9 +2042,11 @@ def load_match_overrides(path: Path = MATCH_OVERRIDES_FILE) -> dict[str, set[str
 #   ① 클러스터링 전 — promote 대상에 briefing_date 를 주입한다. 브리핑 이슈는
 #      '발송된 기사'에서만 나오므로(delivery_log 조인), 이걸 안 하면 미발송 기사는
 #      배열에 없어서 정렬로는 절대 올릴 수 없다.
-#   ② 클러스터링 후 — hash 가 속한 **이슈 클러스터 전체**에 적용한다. 기사 하나만
-#      건드리면 같은 클러스터의 다른 멤버가 briefing_date 를 갖고 있어 카드가 그대로
-#      남는다. 사용자에게 보이는 단위가 이슈 카드이므로 판정 단위도 이슈여야 한다.
+#   ② 클러스터링 후 — 순위(promote·demote_only)는 hash 가 속한 **이슈 클러스터**에
+#      적용한다. 숨김(hide_from_today)은 **적힌 기사만** 뺀다 — 클러스터는 빌드마다
+#      다시 짜여서, 클러스터째 숨기면 나중에 합쳐진 정상 기사까지 소급해 사라진다
+#      (2026-10-25 실측: 9/24 c437e5bb 를 내린 묶음에 70ef22d4 가 붙어 같이 빠짐).
+#      그날 카드에 같은 사건 기사가 여럿이면 전부 적어야 카드가 사라진다.
 SELECTION_OVERRIDES_FILE = BOT_DIR / "selection_overrides.json"
 
 HIDE_ACTION = "hide_from_today"
@@ -2112,8 +2114,31 @@ def apply_promotions(visible: list[dict], overrides: dict) -> int:
     return count
 
 
+def split_hidden_members(members: list[dict], briefing_date: str,
+                         overrides: dict) -> tuple[list[dict], list[dict]]:
+    """2단계(숨김) — 그날 `hide_from_today` 로 적힌 기사만 골라낸다. (남길 것, 숨길 것).
+
+    클러스터째 숨기지 않는다. 클러스터는 빌드마다 다시 짜여 나중에 붙은 정상 기사까지
+    소급해 사라진다.
+    """
+    demote = overrides.get("demote") or {}
+    kept: list[dict] = []
+    hidden: list[dict] = []
+    for member in members:
+        key = (_short_hash(member.get("hash")), briefing_date)
+        if demote.get(key) == HIDE_ACTION:
+            overrides.setdefault("matched", set()).add(key)
+            hidden.append(member)
+        else:
+            kept.append(member)
+    return kept, hidden
+
+
 def override_verdict(members: list[dict], briefing_date: str, overrides: dict) -> str:
     """2단계 — 이슈 클러스터 단위 판정. '' | 'promote' | 'hide' | 'demote'.
+
+    `build_briefings` 는 `split_hidden_members` 로 숨길 기사를 먼저 뺀 뒤 부르므로
+    거기서는 'hide' 가 나오지 않는다(순위 판정 promote·demote 만 남는다).
 
     한 클러스터에 promote 와 demote 가 섞이면 demote 가 이긴다(로더와 같은 원칙).
     """
@@ -5167,14 +5192,17 @@ def build_briefings(news_items: list[dict], issues: list[dict], checked_at: str 
             current = [member for member in issue["members"] if member["briefing_date"] == briefing_date]
             if not current:
                 continue
-            # 편집 override ② — 판정 단위는 기사가 아니라 **이슈 클러스터**다.
-            # 기사 하나만 지우면 같은 클러스터의 다른 멤버가 briefing_date 를 갖고
-            # 있어 카드가 그대로 남는다. 이슈 병합은 LLM 검수까지 거친 2차 결과이므로
-            # 여기(=최종 클러스터)에서 적용해야 올바른 묶음에 걸린다.
-            verdict = override_verdict(current, briefing_date, selection_overrides or {})
-            if verdict == "hide":
-                hidden_hashes.update(str(member.get("hash") or "") for member in current)
+            # 편집 override ② — 숨김은 **적힌 기사만** 뺀다. 남은 멤버가 있으면
+            # 카드는 그 멤버로 다시 선다. 예전에는 클러스터째 숨겼는데, 클러스터는
+            # 빌드마다 다시 짜이므로 나중에 붙은 정상 기사까지 소급해 사라졌다 —
+            # 2026-10-25 빌드에서 9/24 '400GW 행정명령'(c437e5bb)을 내린 묶음에
+            # 'AI 캠퍼스 원전 4기 FEED'(70ef22d4)가 합쳐져 같이 빠졌다(17 != 18).
+            # 그날 같은 사건 기사가 여럿이면 편집자가 전부 적는다.
+            current, hidden = split_hidden_members(current, briefing_date, selection_overrides or {})
+            hidden_hashes.update(str(member.get("hash") or "") for member in hidden)
+            if not current:
                 continue
+            verdict = override_verdict(current, briefing_date, selection_overrides or {})
             history = [member for member in issue["members"] if member["briefing_date"] < briefing_date]
             representative = max(current, key=_representative_key)
             regions = {member.get("region") for member in current if member.get("region")}
