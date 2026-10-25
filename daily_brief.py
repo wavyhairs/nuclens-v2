@@ -45,6 +45,7 @@ except (AttributeError, ValueError):
 from gemini_client import GeminiError, call_json, is_available, synthesis_model
 import llm_policy
 import shadow_rank
+import repeat_shadow
 from sources import credibility
 import article_quality_gate
 import brief_kind
@@ -1143,6 +1144,15 @@ def plan_briefs(queue: list[dict],
     forn = freshness.fresh_first(forn)
     allsel = dom + forn
 
+    # 재발송 그림자 판정 — 발송은 바꾸지 않고 기록만 남긴다(repeat_shadow docstring).
+    # 1번 자리가 정해진 뒤의 선정분을 발송 원장(told_ledger)에 대 '새 사실이 있나'를 묻는다.
+    # cmd_plan 이 repeat_shadow_log.jsonl 로 옮긴다. 실패는 레코드의 error 로만 남는다.
+    try:
+        repeat_records = repeat_shadow.run_all(today, {"국내": dom, "해외": forn})
+    except Exception as exc:  # noqa: BLE001 — 그림자는 브리핑을 막지 않는다(이중 안전망)
+        print(f"[repeat_shadow] 실패 — {type(exc).__name__}: {exc}")
+        repeat_records = []
+
     # 조건부 필수 항목 보완 — '한수원 시사점이 있어야 하는데 빈' 카드만.
     # 카드 조립 **앞**이어야 한다 — item_to_card 가 implication 을 읽어 카드를 만든다.
     field_diag = complete_required_fields(allsel)
@@ -1401,6 +1411,8 @@ def plan_briefs(queue: list[dict],
         "quality_diag": quality_diag,
         # 그림자 하루치 순위 기록(발송 불변). cmd_plan 이 shadow_rank_log.jsonl 로 옮긴다.
         "shadow_rank": shadow_records,
+        # 재발송 그림자 판정(발송 불변). cmd_plan 이 repeat_shadow_log.jsonl 로 옮긴다.
+        "repeat_shadow": repeat_records,
         "selection_stats": {
             "domestic": {
                 **region_stats(dom_diag, dom, dom_pool, dom_cont),
@@ -2068,6 +2080,10 @@ def cmd_plan() -> int:
                 shadow_rank.append_log(existing.get("shadow_rank") or [])
             except Exception as exc:  # noqa: BLE001
                 print(f"[shadow_rank] 재사용 경로 적재 실패 — {type(exc).__name__}: {exc}")
+            try:
+                repeat_shadow.append_log(existing.get("repeat_shadow") or [])
+            except Exception as exc:  # noqa: BLE001
+                print(f"[repeat_shadow] 재사용 경로 적재 실패 — {type(exc).__name__}: {exc}")
             return 0
         if (existing.get("status") in ("pending", "partial")
                 and _outbox_age_hours(existing) <= RESEND_WINDOW_H):
@@ -2087,6 +2103,12 @@ def cmd_plan() -> int:
             print(f"[shadow_rank] 기록 {shadow_added}벌 적재 → {shadow_rank.LOG_FILE.name}")
     except Exception as exc:  # noqa: BLE001
         print(f"[shadow_rank] 적재 실패 — {type(exc).__name__}: {exc}")
+    try:
+        repeat_added = repeat_shadow.append_log(outbox.get("repeat_shadow") or [])
+        if repeat_added:
+            print(f"[repeat_shadow] 기록 {repeat_added}벌 적재 → {repeat_shadow.LOG_FILE.name}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[repeat_shadow] 적재 실패 — {type(exc).__name__}: {exc}")
     if outbox["status"] == "empty":
         print("[daily_brief] 큐 비어있음 → outbox=empty (발송 스킵)")
         return 0

@@ -182,6 +182,9 @@ _PROFILES: dict[str, TaskProfile] = {
     # 버킷**을 쓴다. 비교 대상이 큐레이션 등급이라 모델이 다르면 무엇을 잰 건지 모른다.
     "shadow_rank": _entry(CONTEXT_SYNTHESIS, _main_model),
     "shadow_rank_reask": _entry(BULK_CURATION, _main_model),
+    # 재발송 그림자 판정(repeat_shadow). 발송 불변 기록용. 비교 대상인 현행
+    # `dedup_cross_day` 와 **같은 버킷**을 쓴다 — 모델이 다르면 무엇이 나아졌는지 모른다.
+    "repeat_shadow": _entry(IDENTITY_REVIEW, _synthesis_model),
     # 해외 AI 레인 판정(ai_lane). 메인 큐레이션과 **다른 질문**(원전의 AI 활용인가)이라
     # 프롬프트·캐시가 따로지만, 하루 몇 회의 짧은 분류라 같은 기본 버킷을 쓴다.
     "ai_lane_judge": _entry(BULK_CURATION, _main_model),
