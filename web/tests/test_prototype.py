@@ -2121,29 +2121,13 @@ class GeneratedDataTests(unittest.TestCase):
         발송분과 화면분을 1:1 로 못 박고 있어서 **그 도구를 쓰면 빌드가 깨졌다** —
         2026-08-11 에 실제로 그랬다(날조 카드 하나를 내리자 16 != 17). 배포 경로에
         데이터 조건이 사는 것을 라운드 5 에서 두 번 걷어냈는데 여기 하나가 더 있었다.
-
-        숨김은 기사가 아니라 **이슈 클러스터** 단위다(`build_briefings` 의 편집
-        override ②). 적힌 hash 만 빼면 나중에 같은 클러스터로 합쳐진 그날 기사가
-        빌드에서는 같이 빠지는데 여기서는 남는다 — 2026-10-25 에 실제로 그랬다
-        (재발송 카드를 내린 뒤 LLM 병합이 그날 기사 하나를 그 묶음에 붙이자 17 != 18).
-        그래서 빌드와 같은 클러스터(`issues.json` 의 card 멤버)로 숨긴 기사를 센다.
         """
-        hide = {key for key, action in build_data.load_selection_overrides()["demote"].items()
-                if action == build_data.HIDE_ACTION}
-        hidden_hashes: set[tuple[str, str]] = set()
-        for issue in self.issue_catalog:
-            by_date: dict[str, list[str]] = {}
-            for article in issue["related_articles"]:
-                if article.get("member_role") == "card" and article.get("briefing_date"):
-                    by_date.setdefault(article["briefing_date"], []).append(article["hash"])
-            for day, hashes in by_date.items():
-                if any((build_data._short_hash(h), day) in hide for h in hashes):
-                    hidden_hashes.update((h, day) for h in hashes)
+        hidden = set(build_data.load_selection_overrides()["demote"])
         for briefing in self.briefings:
             delivered = [article for article in self.news
                          if article.get("briefing_date") == briefing["date"]]
             expected = sum(1 for article in delivered
-                           if (article.get("hash", ""), briefing["date"]) not in hidden_hashes)
+                           if (article.get("hash", "")[:8], briefing["date"]) not in hidden)
             current = sum(issue["current_article_count"] for issue in briefing["issues"])
             self.assertEqual(briefing["article_count"], expected)
             self.assertEqual(current, expected)
