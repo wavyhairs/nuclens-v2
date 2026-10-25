@@ -1174,6 +1174,39 @@ def audit_curation_integrity(article: dict, curation: dict, body: str = ""):
     )
 
 
+def release_integrity_quarantines(quarantines: dict[str, dict], articles: dict[str, dict],
+                                  bodies: dict[str, str], released: list[dict]) -> dict[str, dict]:
+    """원문 대조 격리 중 원문 검사기가 '맞음'이라 한 것 → hash → 해제 표식 붙은 큐레이션.
+
+    해제한 기사는 ``released`` 에 적는다(하루 점검 목록). 한도·설정 오류 회차, 꺼진
+    설정(INTEGRITY_RELEASE=off), 검사 실패는 모두 '해제 없음' — 예전처럼 격리된다.
+    """
+    if (not quarantines or not integrity_shadow.release_enabled()
+            or QUOTA_EXHAUSTED or CONFIG_ERROR):
+        return {}
+    try:
+        out = integrity_shadow.release(quarantines, articles, bodies)
+    except Exception as exc:  # noqa: BLE001 — 재검 실패가 수집을 멈추면 안 된다
+        print(f"[격리 해제] 건너뜀 — {type(exc).__name__}: {exc}")
+        return {}
+    for h, cur in out.items():
+        row = quarantines[h]
+        article = articles.get(h) or {}
+        released.append({
+            "hash": h, "title": (article.get("title") or "")[:120],
+            "title_kr": (cur.get("title_kr") or "")[:120],
+            "link": article.get("link", ""),
+            "reason": ",".join(row.get("codes") or ())[:240],
+            "concerns": list(row.get("concerns") or ())[:4],
+            "stage": row.get("stage") or "",
+            "source_kind": (cur.get(article_quality_gate.INTEGRITY_RELEASE_KEY) or {}).get(
+                "source_kind", ""),
+        })
+        print(f"  ✓ 격리 해제(원문 검사기 '맞음') '{(article.get('title') or '')[:35]}': "
+              + ", ".join(row.get("concerns") or row.get("codes") or ()))
+    return out
+
+
 def evidence_binding(article: dict, *, now: datetime | None = None) -> dict:
     """manifest 가 묶이는 네 값 — 저장 레코드와 manifest 가 갈라지지 않게 한 곳에서 만든다.
 
@@ -2566,6 +2599,7 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
                 item, art, (bodies or {}).get(art.get("hash", "")) or "")
             integrity = audit_curation_integrity(
                 art, normalized, (bodies or {}).get(art.get("hash", "")) or "")
+            pre_integrity = normalized
             normalized = integrity.value
             # open_question 게이트 계측. hash 로 덮어쓰므로 분할 재시도가 같은 기사를
             # 두 번 세지 않는다(마지막 판정이 남는다). 판정 자체는 바꾸지 않는다.
@@ -2585,11 +2619,18 @@ def curate_batch(articles: list[dict], reports_kb: list[dict],
             errors = curation_errors(normalized, require_features=True)
             if not integrity.eligible:
                 codes = [finding.code for finding in integrity.findings]
-                errors.append("integrity:" + ",".join(codes or ["mismatch"]))
+                # 검사기에는 게이트가 비우기 **전** 글을 넘긴다 — 비운 요약을 보고 받은
+                # '맞음'은 요약을 보증하지 않는다. 다른 결손(features 등)이 있으면
+                # 검사기가 맞다고 해도 내보낼 수 없으므로 함께 적어 둔다.
+                checked = dict(normalized)
+                if "summary" in integrity.removed_fields:
+                    checked["summary"] = pre_integrity.get("summary", "")
                 last_integrity_failure[art["hash"]] = {
-                    "curation": normalized, "codes": codes, "stage": "curation-regen",
+                    "curation": checked, "codes": codes, "stage": "curation-regen",
                     "concerns": article_quality_gate.integrity_concerns(integrity.findings),
+                    "other_errors": curation_errors(checked, require_features=True),
                 }
+                errors.append("integrity:" + ",".join(codes or ["mismatch"]))
             if errors:
                 failures[art["hash"]] = errors
             else:
@@ -3783,6 +3824,8 @@ def main() -> None:
     # 원문 대조 격리의 뒤처리 재료(integrity_shadow · integrity_hold).
     collect_quarantines: dict[str, dict] = {}
     integrity_passed: set[str] = set()
+    # 원문 대조엔 걸렸지만 원문 검사기가 '맞음'이라 해 내보낸 기사(하루 점검에 나열).
+    integrity_released: list[dict] = []
     run_now = datetime.now(timezone.utc)
     now_iso = run_now.isoformat()
 
@@ -3983,6 +4026,18 @@ def main() -> None:
     # 뒤에서 부르는 요약 재생성도 curate_batch 를 타므로 지금 것만 떼어 둔다.
     curation_quarantines = dict(INTEGRITY_QUARANTINE_OUTPUTS)
     INTEGRITY_QUARANTINE_OUTPUTS.clear()
+    # 두 번 만들어도 원문 대조에 걸린 요약 중 원문 검사기가 '맞음'이라 한 것은 내보낸다
+    # (integrity_shadow.release). 표식이 붙은 글은 아래 원문 대조를 다시 지나도
+    # 통과한다 — 검사기가 본 바로 그 제목·요약일 때만. 다른 결손이 있는 글은 그대로 둔다.
+    articles_to_curate = {article["hash"]: article for article in new_articles}
+    for h, cur in release_integrity_quarantines(
+            {h: row for h, row in curation_quarantines.items()
+             if not row.get("other_errors")},
+            articles_to_curate, bodies, integrity_released).items():
+        cur["curation_status"] = "reviewed"
+        cur["curation_source"] = "gemini"
+        batch_results[h] = cur
+        curation_quarantines.pop(h, None)
     if source_complete_producer is not None:
         try:
             source_complete_report = source_complete_producer.finalize()
@@ -4053,6 +4108,21 @@ def main() -> None:
 
         integrity = audit_curation_integrity(
             article, cur, bodies.get(h, "") if h in curation_attempted_hashes else "")
+        unaudited_summary = cur.get("summary", "")
+        if (not integrity.eligible
+                and article_quality_gate.infer_curation_status(cur) != "fallback"):
+            # 수집 단계에서 처음 걸린 글도 검사기에 묻는다. 비우기 전 글을 넘긴다.
+            row = {"curation": cur, "codes": [f.code for f in integrity.findings],
+                   "concerns": article_quality_gate.integrity_concerns(integrity.findings),
+                   "stage": "collect"}
+            released = release_integrity_quarantines(
+                {h: row}, {h: article},
+                {h: bodies.get(h, "")} if h in curation_attempted_hashes else {},
+                integrity_released).get(h)
+            if released is not None:
+                cur = released
+                integrity = audit_curation_integrity(
+                    article, cur, bodies.get(h, "") if h in curation_attempted_hashes else "")
         cur = integrity.value
         # 본문은 저장하지 않는다. 대신 최종 카드가 본문에서 확인된 구체적
         # 엔티티·수치·단계를 나중에도 검증할 수 있도록 비가역 fingerprint만 남긴다.
@@ -4112,7 +4182,10 @@ def main() -> None:
                 "concerns": concerns[:4],
             })
             collect_quarantines[h] = {
-                "curation": cur, "codes": [f.code for f in integrity.findings],
+                # 그림자 재검도 게이트가 비우기 전 요약을 본다(해제 판정과 같은 글).
+                "curation": ({**cur, "summary": unaudited_summary}
+                             if "summary" in integrity.removed_fields else cur),
+                "codes": [f.code for f in integrity.findings],
                 "concerns": concerns, "stage": "collect",
             }
             continue
@@ -4202,6 +4275,10 @@ def main() -> None:
             # archive는 source_excerpt 원문을 보존하지 않는다. 본문·스니펫을
             # 저장하지 않고도 같은 manifest의 출처 결속을 확인할 component hash.
             "verified_source_components": cur.get("verified_source_components") or {},
+            # 원문 검사기가 '맞음'이라 해 원문 대조 격리를 푼 표식. 브리핑·웹의 같은
+            # 게이트가 이 표식을 읽는다 — 큐에 없으면 브리핑에서 다시 격리된다.
+            **({"integrity_release": cur["integrity_release"]}
+               if cur.get("integrity_release") else {}),
             # 큐 등록 시각과 기사 발행 시각은 서로 다른 사실이다. 늦게 발견한
             # 오래된 기사가 새 기사처럼 점수를 받지 않도록 원 발행 시각을 보존한다.
             # 깨졌거나 먼 미래인 출처 값은 빈 문자열로 남겨 ranking의 하위 호환
@@ -4286,9 +4363,32 @@ def main() -> None:
             items=integrity_held,
         )
 
+    if integrity_released:
+        # 사람이 보는 목록이다 — 검사기 '맞음'에도 진짜 오류가 섞일 수 있다
+        # (10/25 대조: 67건 중 2건). 틀린 게 자주 보이면 INTEGRITY_RELEASE=off 로 끈다.
+        append_quality_event(
+            "article-integrity-released",
+            "원문 대조에 걸렸지만 원문 검사기가 맞다고 해 내보낸 기사",
+            (f"자동 원문 대조가 '원문과 다르다'고 본 기사 {len(integrity_released)}건을 "
+             "원문을 읽는 검사기가 '원문과 맞다'고 판정해 브리핑 후보에 넣었습니다. "
+             "제목·요약이 원문과 맞는지 한 번 봐 주세요."
+             + example_titles(integrity_released)),
+            severity="info", min_occurrences=1, level="attention",
+            impact="없음 — 예전에는 빠졌을 기사가 브리핑 후보에 들어갑니다.",
+            action=("틀린 기사가 보이면 알려 주세요. 자주 틀리면 저장소 변수 "
+                    "INTEGRITY_RELEASE 를 off 로 두면 예전처럼 보류합니다."),
+            technical="released=" + "; ".join(
+                f"{row['hash'][:8]}:{row['stage']}:{row['source_kind']}:{row['reason'][:40]}"
+                for row in integrity_released[:6]),
+            fingerprint=operational_monitoring.count_fingerprint(
+                "released", len(integrity_released)),
+            items=integrity_released,
+        )
+
     # ---- 원문 대조 격리의 뒤처리: 그림자 재검 · 보류 -------------------------
-    # 재검은 그림자 모드다 — 판정을 integrity_shadow.jsonl 에 남기기만 하고 격리는
-    # 그대로 둔다. 보류는 재시도만 멈춘다(내보내지도 지우지도 않는다).
+    # 여기까지 남은 격리는 해제를 못 받은 것이다('맞음'은 위에서 이미 풀었다). 판정을
+    # integrity_shadow.jsonl 에 남기고(같은 글은 다시 묻지 않는다) 격리는 그대로 둔다.
+    # 보류는 재시도만 멈춘다(내보내지도 지우지도 않는다).
     quarantine_outputs = {**collect_quarantines, **curation_quarantines}
     articles_by_hash = {article["hash"]: article for article in final_articles}
     if (quarantine_outputs and integrity_shadow.enabled()

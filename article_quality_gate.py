@@ -1568,6 +1568,52 @@ def _event_date_claim(article: Mapping[str, object]) -> dict[str, str]:
     }
 
 
+# ── 원문 검사기 해제 ────────────────────────────────────────────────────────
+# 원문 대조 게이트는 원문에서 **못 읽은** 수치·엔티티를 원문에 **없는** 것으로 본다.
+# 9/26~10/25 격리 중 원문을 읽는 검사기(summary_verify)가 '맞음'이라 한 67건을
+# 원문과 하나씩 맞대 보니 57건이 게이트 오탐, 2건이 진짜 오류였다(그 뒤 '다름·없음'
+# 11건은 전부 진짜 문제). 그래서 검사기가 '맞음'이라 한 글은 내보낸다 — 단, 검사기가
+# 본 **바로 그 제목·요약**일 때만. 표식에 그 글의 지문을 적고, 뒤 단계(브리핑·웹)가
+# 글을 고쳤으면 지문이 어긋나 예전처럼 격리한다. 표식은 수집 단계만 붙인다
+# (news_bot · integrity_shadow.release). '다름·없음' 판정은 표식을 받지 못한다.
+INTEGRITY_RELEASE_KEY = "integrity_release"
+INTEGRITY_RELEASE_VERSION = 1
+_RELEASE_SOURCE_KINDS = frozenset({"body", "description"})
+
+
+def release_fingerprint(article: Mapping[str, object]) -> str:
+    """검사기가 맞다고 한 글의 지문 — 게이트가 보는 제목·요약 두 칸."""
+    raw = "\x1f".join(clean_text(article.get(key)) for key in ("title_kr", "summary"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+
+def make_integrity_release(article: Mapping[str, object], verdict_row: Mapping[str, object],
+                           *, codes: Iterable[str] = ()) -> dict:
+    return {
+        "v": INTEGRITY_RELEASE_VERSION,
+        "fp": release_fingerprint(article),
+        "verdict": "ok",
+        "checked_at": str(verdict_row.get("checked_at") or ""),
+        "model": str(verdict_row.get("model") or ""),
+        "source_kind": str(verdict_row.get("source_kind") or ""),
+        "codes": list(codes)[:6],
+    }
+
+
+def integrity_release_valid(article: Mapping[str, object]) -> bool:
+    marker = article.get(INTEGRITY_RELEASE_KEY)
+    return (isinstance(marker, Mapping)
+            and marker.get("v") == INTEGRITY_RELEASE_VERSION
+            and marker.get("verdict") == "ok"
+            and marker.get("source_kind") in _RELEASE_SOURCE_KINDS
+            and bool(marker.get("fp"))
+            and marker.get("fp") == release_fingerprint(article))
+
+
+def _released(finding: Finding) -> Finding:
+    return dataclass_replace(finding, severity="released")
+
+
 def audit_article_integrity(
     article: Mapping[str, object],
     *,
@@ -1662,6 +1708,15 @@ def audit_article_integrity(
             "검증할 수 없는 사건일을 비웠습니다.",
             {"value": article.get("event_date"), "reference_date": ref.isoformat()},
         ))
+
+    if quarantine and integrity_release_valid(article):
+        # 검사기가 맞다고 한 바로 그 글이다 — 격리하지 않고 비운 요약도 되돌린다.
+        # 사건일 정리(sanitize)는 그대로 둔다. 검사기는 사건일을 보증하지 않는다.
+        quarantine = False
+        if "summary" in removed:
+            cleaned["summary"] = article.get("summary")
+            removed.remove("summary")
+        findings = [_released(f) if f.severity == "quarantine" else f for f in findings]
 
     if quarantine:
         action = "quarantine"
@@ -2267,6 +2322,10 @@ def validate_final_card(
     evidence_stages = frozenset(set(evidence_stages) | set(manifest.get("stages") or ()))
     source_parts = _source_parts(article, source)
     core_evidence = " ".join(filter(None, source_parts.values()))
+    # 카드 제목·'무엇'이 검사기가 맞다고 한 기사 제목·요약 그대로일 때만 해제한다.
+    released_text = ({"headline": clean_text(article.get("title_kr")),
+                      "what": clean_text(article.get("summary"))}
+                     if integrity_release_valid(article) else {})
 
     for key in (*CORE_CARD_FIELDS, *OPTIONAL_CARD_FIELDS):
         text = clean_text(card.get(key))
@@ -2287,9 +2346,16 @@ def validate_final_card(
                     directional_is_hard=bool(
                         source_parts["description"] or source_parts["article_text"]),
                 ):
-                    quarantine = True
                     code = ("card_headline_unsupported" if key == "headline"
                             else "card_what_unsupported")
+                    if released_text.get(key) == text:
+                        findings.append(Finding(
+                            code, "released", key,
+                            "원문 검사기가 원문과 맞다고 확인한 글이라 격리하지 않았습니다.",
+                            signals,
+                        ))
+                        continue
+                    quarantine = True
                     if key == "what":
                         cleaned[key] = None
                         removed.append(key)
