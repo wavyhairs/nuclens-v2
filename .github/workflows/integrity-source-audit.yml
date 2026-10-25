@@ -1,0 +1,36 @@
+name: Integrity source audit (원문 대조 격리 재검 확인 · 일회성)
+
+# 원문 대조 게이트가 격리한 기사에 대해 원문 검사기가 '원문과 맞음'이라 한 판정을
+# 원문으로 다시 확인한다(tools/integrity_source_audit.py 머리말). 개발 환경에서는
+# 언론사에 접속할 수 없어서 Actions 에서 돌린다. 저장소에는 아무것도 쓰지 않는다 —
+# 결과는 로그와 짧은 보존 기간의 산출물에만 남는다(본문 비저장 계약, article_body).
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/integrity-source-audit.yml"
+      - "tools/integrity_source_audit.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GEMINI_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Fetch sources and extract snippets
+        run: python -u tools/integrity_source_audit.py --out integrity_source_audit.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: integrity-source-audit
+          path: integrity_source_audit.jsonl
+          retention-days: 3
