@@ -57,8 +57,8 @@ _TODO_KEYS = frozenset({
 })
 # 품질 이벤트 중 아래에서 따로 풀어 쓰는 것. 나머지는 제목 한 줄로 싣는다.
 _DETAILED_EVENTS = frozenset({
-    "article-integrity-quarantine", "article-integrity-held", "unverified-fallback-held",
-    "audio-script-claim-removed", "audio-script-unverified", "off-topic-demoted",
+    "article-integrity-quarantine", "article-integrity-held", "article-integrity-released",
+    "unverified-fallback-held", "audio-script-claim-removed", "audio-script-unverified", "off-topic-demoted",
 })
 
 
@@ -223,14 +223,33 @@ def _held_line(items: Sequence[Mapping]) -> str:
             + ". 원문과 맞는데 빠진 기사면 알려 주세요.")
 
 
+def _released_line(items: Sequence[Mapping]) -> str:
+    """원문 검사기 '맞음'으로 격리를 푼 기사 — 사람이 맞는지 볼 목록이라 다 적는다."""
+    shown = []
+    for item in items[:6]:
+        notes = [str(note) for note in (item.get("concerns") or ())[:2] if note]
+        shown.append(f"「{_short(item.get('title_kr') or item.get('title'))}」"
+                     + (f"(걸린 곳 {' / '.join(notes)})" if notes else ""))
+    more = f" 외 {len(items) - len(shown)}건" if len(items) > len(shown) else ""
+    return (f"원문 대조에 걸렸지만 원문 검사기가 맞다고 해 내보낸 기사 {len(items)}건 — "
+            + ", ".join(shown) + more
+            + ". 제목·요약이 원문과 다르면 알려 주세요.")
+
+
 def _article_lines(by_key: Mapping[str, list[Mapping]]) -> list[str]:
     lines: list[str] = []
+    released_items: dict[str, Mapping] = {}
+    for item in _event_items(by_key.get("article-integrity-released", ())):
+        released_items.setdefault(str(item.get("hash") or item.get("title")), item)
     held_items: dict[str, Mapping] = {}
     for item in _event_items(by_key.get("article-integrity-held", ())):
-        held_items.setdefault(str(item.get("hash") or item.get("title")), item)
-    # 보류된 기사는 보류 줄에서만 말한다 — 같은 기사를 두 줄에 세지 않는다.
+        if str(item.get("hash") or item.get("title")) not in released_items:
+            held_items.setdefault(str(item.get("hash") or item.get("title")), item)
+    # 보류된 기사는 보류 줄에서만, 내보낸 기사는 해제 줄에서만 말한다 — 같은 기사를
+    # 두 줄에 세지 않는다(앞 회차에 뺐다가 다음 회차에 내보낸 기사도 해제 줄 하나).
     integrity = [item for item in _event_items(by_key.get("article-integrity-quarantine", ()))
-                 if str(item.get("hash")) not in held_items]
+                 if str(item.get("hash")) not in held_items
+                 and str(item.get("hash")) not in released_items]
     integrity_hashes = ({str(item.get("hash")) for item in integrity if item.get("hash")}
                         | set(held_items))
     if integrity:
@@ -248,6 +267,8 @@ def _article_lines(by_key: Mapping[str, list[Mapping]]) -> list[str]:
         lines.append(line.rstrip(" .") + ".")
     if held_items:
         lines.append(_held_line(list(held_items.values())))
+    if released_items:
+        lines.append(_released_line(list(released_items.values())))
 
     held = [item for item in _event_items(by_key.get("unverified-fallback-held", ()))
             if str(item.get("hash")) not in integrity_hashes]

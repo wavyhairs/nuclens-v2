@@ -1,4 +1,4 @@
-"""원문 대조 게이트가 격리한 기사를 원문을 읽는 검사기에 한 번 더 묻는다 — **그림자 모드**.
+"""원문 대조 게이트가 격리한 기사를 원문을 읽는 검사기에 한 번 더 묻고, '맞음'이면 격리를 푼다.
 
 왜 (2026-10-10 실측)
 --------------------
@@ -18,15 +18,22 @@
 ------
 끝내 격리된 기사마다 마지막 출력과 원문을 ``summary_verify.verify`` 에 넘긴다 —
 기사 1건씩, 원문 인용을 원문에 대 보는 그 검사기다(별도 버킷·상한·429/402 즉시
-중단이 이미 있다). 판정은 ``integrity_shadow.jsonl`` 에만 남기고 **격리·보류·발송은
-하나도 바꾸지 않는다.** 1주 기록을 사람이 본 뒤(``tools/integrity_shadow_report.py``)
-판정을 격리에 반영할지 정한다 — ``summary_verify`` 를 경고 모드로 들인 것과 같은 길.
+중단이 이미 있다). 판정은 ``integrity_shadow.jsonl`` 에 남긴다.
 
-판정 → 반영했다면 할 일(지금은 기록만):
+반영 (2026-10-25~)
+------------------
+9/26~10/25 기록 중 '맞음' 67건을 원문과 하나씩 맞대 보니 게이트 오탐 57, 진짜 오류 2,
+확인 불가 8이었고, '다름·없음' 11건은 전부 진짜 문제였다. 그래서 **'맞음'만** 반영한다
+— ``release`` 가 검사한 바로 그 제목·요약에 해제 표식을 붙이고(``article_quality_gate.
+INTEGRITY_RELEASE_KEY``), 수집·브리핑·웹의 원문 대조가 그 표식을 읽어 격리하지 않는다.
+글이 바뀌면 표식은 무효다. 풀어 준 기사는 하루 점검에 나열한다. 끄려면
+``INTEGRITY_RELEASE=off`` (판정 기록은 계속).
 
-* ok              → would_release (게이트 오탐으로 보고 내보낸다)
-* contradiction   → would_repair  (검사기가 인용한 원문 구절로 재생성)
-* unsupported     → would_strip   (원문에 없는 구절을 빼라고 재생성)
+판정 → 할 일:
+
+* ok              → would_release (내보낸다 — 원문 요약·본문을 보고 받은 판정만)
+* contradiction   → would_repair  (지금처럼 격리 — 재생성 반영은 아직)
+* unsupported     → would_strip   (지금처럼 격리)
 * stale·그 밖     → uncertain
 * 호출 못 함      → no_verdict    (지금처럼 격리)
 """
@@ -38,6 +45,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Mapping
 
+import article_quality_gate
 from data_quality import clean_text
 import summary_verify
 
@@ -121,6 +129,50 @@ def run(items: list[dict], *, client=None, now: datetime | None = None,
         per_run_cap=_int_env("INTEGRITY_SHADOW_RUN_CAP", DEFAULT_RUN_CAP),
         row_extra={"stage": "integrity_shadow"},
     )
+
+
+def release_enabled() -> bool:
+    """검사기 '맞음'을 격리 해제로 반영할지. 끄면 예전처럼 기록만 한다."""
+    return enabled() and os.environ.get("INTEGRITY_RELEASE", "on").strip().lower() not in {
+        "0", "off", "false", "no"}
+
+
+def release(quarantines: Mapping[str, Mapping], articles: Mapping[str, Mapping],
+            bodies: Mapping[str, str], *, client=None, now: datetime | None = None,
+            path: Path = LOG_FILE) -> dict[str, dict]:
+    """격리 → 검사기에 묻고, '맞음'을 받은 기사만 hash → 해제 표식을 붙인 큐레이션.
+
+    판정은 검사한 글(input_sha)에 묶는다. 같은 글은 다시 묻지 않으므로(상한 절약)
+    이번 회차에 새로 받은 판정이 없으면 기록에서 그 글의 판정을 찾는다. 원문 요약도
+    본문도 없이 제목만 보고 받은 '맞음'은 쓰지 않는다. 판정을 못 받으면 격리 그대로다.
+    """
+    items = [item for item in targets(quarantines, articles, bodies)
+             if item["log_extra"]["source_kind"] in ("body", "description")]
+    if not items:
+        return {}
+    run(items, client=client, now=now, path=path)
+    wanted = {(item["hash"], summary_verify.input_sha(item)) for item in items}
+    latest: dict[tuple, dict] = {}
+    for row in summary_verify.load_log(path):
+        key = (row.get("hash"), row.get("input_sha"))
+        if key in wanted and row.get("called"):
+            if key not in latest or str(row.get("checked_at") or "") >= str(
+                    latest[key].get("checked_at") or ""):
+                latest[key] = row
+    out: dict[str, dict] = {}
+    for item in items:
+        row = latest.get((item["hash"], summary_verify.input_sha(item)))
+        # 규칙 검사(단계어 불일치)가 따로 걸린 글도 내보내지 않는다.
+        if not row or row.get("verdict") != "ok" or row.get("rule"):
+            continue
+        quarantine = quarantines[item["hash"]]
+        curation = dict(quarantine["curation"])
+        curation[article_quality_gate.INTEGRITY_RELEASE_KEY] = (
+            article_quality_gate.make_integrity_release(
+                curation, {**row, "source_kind": item["log_extra"]["source_kind"]},
+                codes=quarantine.get("codes") or ()))
+        out[item["hash"]] = curation
+    return out
 
 
 def decision(row: Mapping) -> str:

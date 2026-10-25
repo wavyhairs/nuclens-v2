@@ -263,6 +263,10 @@ def make_record(article: dict, cur: dict, archived_at: str) -> dict:
         "verified_evidence": verified_evidence,
         "verified_source_components": verified_source_components,
     }
+    # 원문 대조 격리를 원문 검사기 '맞음'으로 푼 표식. 웹 빌드도 같은 게이트를
+    # 다시 돌리므로 여기 없으면 사이트에서만 다시 격리된다.
+    if isinstance(cur.get("integrity_release"), dict):
+        record["integrity_release"] = cur["integrity_release"]
     record.update(event_fields)
     return record
 
