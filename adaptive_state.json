@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-10-26"
   },
   "retired": {
@@ -1126,9 +1126,42 @@
     }
   },
   "spent": {
-    "count": 0,
+    "count": 1,
     "date": "2026-10-26"
   },
-  "terms": {},
+  "terms": {
+    "외부파견직원에": {
+      "articles": 1,
+      "created_at": "2026-10-26T03:40:47.598380+00:00",
+      "domains": [
+        "job-post.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "job-post.co.kr",
+          "hash": "812ba6100657c8fa",
+          "importance": "must_read",
+          "title": "한국전력기술, 외부 파견직원에 원전 핵심 설계 도면 5년간 노출 방치"
+        }
+      ],
+      "expires_at": "2026-10-27T03:40:47.598380+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-10-26T03:40:48.796669+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-10-26T03:40:47.598380+00:00",
+      "queries_run": 1,
+      "query": "외부 파견직원에 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "외부 파견직원에",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    }
+  },
   "version": 1
 }
