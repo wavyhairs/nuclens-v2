@@ -92,45 +92,6 @@
       "new_article_count": 29,
       "collect_outcome": "success"
     },
-    "2026-10-05T06:00:00Z": {
-      "slot": "2026-10-05T06:00:00Z",
-      "attempt_id": "37273405677",
-      "attempts": 1,
-      "claimed_at": "2026-10-05T06:38:37.780612Z",
-      "finished_at": "2026-10-05T06:47:09.826136Z",
-      "event_name": "workflow_dispatch",
-      "trigger_source": "backup_watchdog",
-      "trigger_state": "schedule_missing_recovery",
-      "status": "success_with_articles",
-      "new_article_count": 40,
-      "collect_outcome": "success"
-    },
-    "2026-10-05T09:00:00Z": {
-      "slot": "2026-10-05T09:00:00Z",
-      "attempt_id": "37291332950",
-      "attempts": 1,
-      "claimed_at": "2026-10-05T09:38:22.257637Z",
-      "finished_at": "2026-10-05T09:46:19.525256Z",
-      "event_name": "workflow_dispatch",
-      "trigger_source": "backup_watchdog",
-      "trigger_state": "schedule_missing_recovery",
-      "status": "success_with_articles",
-      "new_article_count": 53,
-      "collect_outcome": "success"
-    },
-    "2026-10-05T12:00:00Z": {
-      "slot": "2026-10-05T12:00:00Z",
-      "attempt_id": "37310887788",
-      "attempts": 1,
-      "claimed_at": "2026-10-05T12:38:24.122747Z",
-      "finished_at": "2026-10-05T12:44:53.308726Z",
-      "event_name": "workflow_dispatch",
-      "trigger_source": "backup_watchdog",
-      "trigger_state": "schedule_missing_recovery",
-      "status": "success_with_articles",
-      "new_article_count": 31,
-      "collect_outcome": "success"
-    },
     "2026-10-05T15:00:00Z": {
       "slot": "2026-10-05T15:00:00Z",
       "attempt_id": "37334396620",
@@ -2288,6 +2249,18 @@
       "status": "success_with_articles",
       "new_article_count": 56,
       "collect_outcome": "success"
+    },
+    "2026-10-26T12:00:00Z": {
+      "slot": "2026-10-26T12:00:00Z",
+      "attempt_id": "40326088141",
+      "attempts": 1,
+      "claimed_at": "2026-10-26T12:54:18.971137Z",
+      "finished_at": null,
+      "event_name": "schedule",
+      "trigger_source": "schedule",
+      "trigger_state": "schedule_trigger_created",
+      "status": "running",
+      "new_article_count": null
     }
   }
 }
