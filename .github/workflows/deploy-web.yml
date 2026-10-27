@@ -153,6 +153,29 @@ jobs:
         if: steps.effective-mode.outputs.mode == 'fast'
         run: python tools/web_snapshot.py restore
 
+      # 복원한 snapshot 은 Daily Brief 가 **장기 스토리 판정 전에** 만든 것이다
+      # (`Build web data → Deploy → Build long-term stories → 원장 커밋`). 그래서
+      # 그날 새로 나온 이슈는 다음 크롤 빌드(보통 2~3시간, 배포 간격 미달이면 6시간
+      # 뒤)까지 사이트에서 타임라인이 빈칸이었다 — 10/7~10/28 브리핑 카드 294장 중
+      # 아침 배포 시점 16%, 판정 뒤 원장으로는 40%. 카드는 07:28 에 이미 같은 투영을
+      # 쓰므로 그동안 카드와 화면이 서로 다른 스토리를 말했다.
+      #
+      # 카드 배포가 이 FAST 경로를 탄다. 체크아웃 원장이 받은 파일보다 새로울 때만
+      # 손대는 도구라(그 밖엔 아무것도 안 바꾼다) FAST 배포마다 돌려도 결과가 같다 —
+      # 오전 중 재배포가 snapshot 을 다시 복원해도 타임라인이 되살아난다.
+      # 판 번호(generation_id)·순위·본문은 건드리지 않아 guard-live(equal)를 그대로
+      # 통과한다. LLM 을 부르지 않는다.
+      #
+      # 실패하면 snapshot 을 다시 복원한다 — 세 파일 중 일부만 고친 채 올라가면 이슈와
+      # 스토리가 서로 다른 원장을 가리킨다. 그 경우 결과는 지금까지와 같다(아침 자료).
+      - name: Re-project today's story ledger onto restored data
+        if: steps.effective-mode.outputs.mode == 'fast'
+        run: |
+          python tools/reproject_threads.py || {
+            echo "::warning::장기 스토리 재투영 실패 — 복원한 snapshot 그대로 배포한다"
+            python tools/web_snapshot.py restore
+          }
+
       # ── Gemini 키 모드 (이 잡의 유일한 확인 지점) ───────────────────────
       #
       # 무료/유료는 코드가 아니라 Repository Variable `GEMINI_PAID_MODE` 하나로
