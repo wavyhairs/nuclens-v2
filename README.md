@@ -319,8 +319,11 @@ tests.test_expert_audio_order tests.test_expert_audio_brief`
 들어 있다. 화면만 가리는 것은 가린 게 아니므로 **엣지에서** 막는다
 (`functions/admin/_middleware.js` — Cloudflare Pages Function).
 
-- 서비스 화면 우측 상단 톱니바퀴 → `/admin/` → 비밀번호 화면.
-  주소를 직접 쳐도 같은 화면이 나온다.
+- 들어가는 길은 **주소 직접 입력(즐겨찾기)** 하나다. 서비스 화면 우측 상단에
+  있던 톱니바퀴 링크는 2026-10-27 보안 점검('관리자 페이지 노출')으로 뗐다.
+- 자물쇠는 두 겹이다. 바깥은 **Cloudflare Access**(등록된 이메일로 받은 일회용
+  코드), 안쪽은 이 미들웨어의 비밀번호. 링크를 뗀 것만으로는 `/admin` 이
+  닫히지 않으므로 바깥 자물쇠가 실제 조치다 — 설정은 아래 "이메일 인증".
 - 콘솔 데이터는 `/data` 가 아니라 `/admin/data` 아래에 둔다. `/data` 는 독자 화면이
   쓰는 공개 경로라 미들웨어가 닿지 않는다.
 - 세션은 서명된 HttpOnly 쿠키(8시간). 비밀번호를 바꾸면 서명 키가 갈려서 다른
@@ -361,9 +364,37 @@ tests.test_expert_audio_order tests.test_expert_audio_brief`
 - **이미 비밀번호를 정해 둔 환경은 영향이 없다.** KV 에 기록이 있으면 부트스트랩
   경로 자체가 돌지 않는다.
 
+### 이메일 인증 — 바깥 자물쇠 (Cloudflare Access, 2026-10-27)
+
+비밀번호 한 겹은 아이디도 2단계 인증도 없는 공용 열쇠이고, 시도 제한은 IP 마다
+세서 IP 를 바꾸면 다시 센다. 그런데 이 열쇠로 피드·매체 등급·키워드를 바꾸면
+다음 수집에 그대로 발행된다. 그래서 `/admin` 앞에 Cloudflare Access 를 세운다 —
+**등록된 이메일로 받은 일회용 코드**를 넣어야 비밀번호 화면이 나온다. 코드는
+안 바뀌고 대시보드 설정뿐이다(Zero Trust Free, 50명까지 0원).
+
+1. Cloudflare 대시보드 → **Zero Trust**. 처음이면 팀 이름을 정하고 Free 플랜을
+   고른다(0원이어도 결제 수단 등록을 요구할 수 있다).
+2. **Settings → Authentication → Login methods** 에 **One-time PIN** 이 있는지
+   본다(기본으로 켜져 있다).
+3. **Access → Applications → Add an application → Self-hosted**
+   - 도메인 두 줄: `nuclens-v2.pages.dev` 경로 `admin`, 그리고
+     `*.nuclens-v2.pages.dev` 경로 `admin` — 미리보기 배포 주소에도 같은 콘솔이
+     올라간다.
+   - Session duration: `24 hours`
+   - Policy: Action **Allow**, Include → **Emails** → 운영자 이메일
+4. 확인: 시크릿 창에서 `/admin/` → 이메일 코드 화면 → 코드 → 기존 비밀번호 화면.
+
+- 수집·발송에는 영향이 없다. `tools/sync_admin_overrides.py` 는 `/admin` 을 거치지
+  않고 Cloudflare API 로 KV 를 직접 읽는다.
+- Access 세션이 끝난 뒤 열어 둔 콘솔에서 저장하면 실패로 보인다(요청이 이메일
+  인증으로 돌려보내진다). **새로고침해서 다시 인증**한다.
+- 사람을 빼려면 정책의 이메일 목록에서 지운다. 비밀번호는 그대로 둬도 된다.
+
 배포 워크플로는 매번 살아 있는 사이트에 `/admin/` 이 인증 없이 200 을 내는지 물어본다
 (`web/tools/verify_admin_gate.sh`). Function 폴더가 업로드에서 빠져도 배포는 조용히
-성공하므로, 그 실패를 시끄럽게 만드는 유일한 방법이다.
+성공하므로, 그 실패를 시끄럽게 만드는 유일한 방법이다. Access 가 서 있으면 답이
+Access 로그인으로 가는 **302** 이고, 비밀번호 화면(**401**)이 바로 나오면 바깥
+자물쇠가 빠졌다는 경고를 남긴다.
 
 로컬에서 확인하려면 KV 를 흉내 낸 채로 띄운다:
 
