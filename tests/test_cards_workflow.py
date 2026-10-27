@@ -389,3 +389,36 @@ class WorkflowShapeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FastSiteDeployCarriesTodaysStoriesTest(unittest.TestCase):
+    """카드가 깨우는 FAST 사이트 배포도 오늘 원장을 다시 투영한다 (2026-10-28).
+
+    Daily Brief 의 사이트 배포는 장기 스토리 판정 **전**이라, 그날 새 이슈의
+    타임라인은 다음 크롤 빌드까지 빈칸이었다(아침 배포 시점 16% · 판정 뒤 40%).
+    카드는 이미 같은 투영을 쓰므로 사이트만 2~3시간 다른 스토리를 말했다.
+    """
+
+    blocks = step_blocks("deploy-web.yml", "deploy")
+
+    def test_reprojection_runs_between_restore_and_upload_in_fast_mode_only(self):
+        restore = self.blocks.index(step(self.blocks, "Restore production data into current shell"))
+        title = "Re-project today's story ledger onto restored data"
+        block = step(self.blocks, title)
+        upload = self.blocks.index(step(self.blocks, "Deploy to Cloudflare Pages"))
+        self.assertLess(restore, self.blocks.index(block))
+        self.assertLess(self.blocks.index(block), upload)
+        self.assertIn("if: steps.effective-mode.outputs.mode == 'fast'", block)
+        self.assertIn("python tools/reproject_threads.py", block)
+
+    def test_a_failed_reprojection_falls_back_to_the_restored_snapshot(self):
+        """세 파일 중 일부만 고친 채 올라가지 않는다 — 실패하면 snapshot 을 다시 깐다."""
+        block = step(self.blocks, "Re-project today's story ledger onto restored data")
+        self.assertIn("python tools/web_snapshot.py restore", block.split("||", 1)[1])
+        self.assertNotIn("continue-on-error", block)
+
+    def test_reprojection_never_touches_the_generation_the_live_guard_compares(self):
+        """guard-live(equal)는 meta.json 의 generation_id 만 본다. 투영은 그 파일을 안 쓴다."""
+        source = (ROOT / "tools" / "reproject_threads.py").read_text(encoding="utf-8")
+        written = set(re.findall(r'_write\(data_dir / "([^"]+)"', source))
+        self.assertEqual(written, {"issues.json", "today.json", "threads.json"})
