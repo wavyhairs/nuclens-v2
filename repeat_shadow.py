@@ -19,13 +19,27 @@
 3. 처분은 모델이 아니라 이 모듈이 정한다(``disposition``).
 
     new_issue    원장에 같은 이야기가 없다 — 묻지 않는다
-    drop         TOLD 에 없는 사실이 0개 (인용이 후보 원문에 있는 사실만 센다)
-    late         없는 사실이 있으나 전부 직전 브리핑일보다 앞서 일어났다
-    new          직전 브리핑일 이후 일어난 사실이 하나라도 있다
-    new_undated  없는 사실이 있으나 날짜를 모른다(그리고 늦은 것으로 확정되지도 않았다)
+    drop         TOLD 에 없는 **진전**이 0개 (인용이 후보 원문에 있는 사실만 센다).
+                 배경 설명만 새로우면 이것이다(row.drop_reason = background_only)
+    late         없는 진전이 있으나 전부 직전 브리핑일보다 앞서 일어났다
+    new          직전 브리핑일 이후 일어난 진전이 하나라도 있다
+    new_undated  없는 진전이 있으나 날짜를 모른다(그리고 늦은 것으로 확정되지도 않았다)
     unverified   모델이 적은 사실의 인용이 하나도 후보 원문에 없다
     error        호출 실패 — 전환 뒤 처분은 'late 와 같게'(빼지도 올리지도 않는다)
     skipped      호출 상한에 걸려 묻지 못함
+
+v2 (2026-10-28) — 진전과 배경을 가른다
+---------------------------------------
+v1 첫 3일(10/26~28, 46장) drop 0. 10/27 「DL이앤씨, 엑스에너지와 4세대 SMR 표준화 설계 계약
+체결」은 10/12 카드와 제목까지 같았는데, 모델이 '국내 건설사 최초'·'SMR 시장 2035년 5000억
+달러'를 TOLD 에 없는 사실로 적어 new_undated 가 됐다. 지시문은 배경을 빼라고 했지만 지켜지지
+않았고, 사실 하나의 성격을 코드가 볼 수 없었다. 그래서 사실마다 ``kind`` 를 받는다 —
+``development``(결정·계약·발표·수치 변화·새 일정·사고·발견처럼 **일이 달라진 것**) 와
+``background``(위치·규모 같은 고정 속성, 연혁, 시장 전망, 의의, '최초' 같은 수식). 처분은
+development 만 센다. kind 가 없거나 이상하면 development 로 본다(빼는 쪽으로 기울지 않는다).
+
+date 는 일이 일어났거나 **처음 드러난** 날이다. v1 은 「한국전력기술, 도면 5년간 노출 방치」
+에서 노출이 시작된 2020-07-01 을 적어 late 가 됐다 — 이번에 감사로 드러난 일이다.
 
 안전장치
 --------
@@ -53,7 +67,7 @@ from gemini_client import GeminiError, call_json
 ROOT = Path(__file__).resolve().parent
 KST = timezone(timedelta(hours=9))
 LOG_FILE = ROOT / "repeat_shadow_log.jsonl"
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 
 CASES_PER_CALL = 6
 MAX_CALLS = 4
@@ -74,13 +88,20 @@ SYSTEM_PROMPT = """당신은 원자력 아침 브리핑의 사실 확인 담당�
   달라도 같은 사실입니다(예: '1.07조'='1조 722억', '고리 3·4호기 승인'='고리 3, 4호기 의결').
 - 같은 회의·발표·행사에서 나온 다른 세부(다른 안건, 표결 수, 발언)라도 TOLD 에 없으면 적습니다.
   그 사실의 date 는 그 회의·발표가 열린 날입니다.
-- 전망·의견·배경 설명·해설·평가는 사실로 적지 않습니다.
-- date 는 그 일이 **일어난** 날(YYYY-MM-DD)입니다. 기사 게재일이 아닙니다. '지난 15일',
-  '지난달' 같은 표현은 CANDIDATE published 기준으로 풉니다. 알 수 없으면 null.
+- 전망·의견·해설·평가는 적지 않습니다.
+- 적은 사실마다 kind 를 붙입니다.
+  · "development": **일이 달라진 것** — 결정·의결·승인·계약·발표·착수·완료·사고·발견,
+    수치나 일정의 변경·확정. 같은 사건의 새 세부라도 이런 행동이면 development 입니다.
+  · "background": 일이 달라지지 않은 것 — 위치·용량·노형 같은 고정 속성, 연혁, 시장 규모·전망,
+    의의·목적, '국내 최초'·'업계 첫' 같은 수식, TOLD 의 사건을 다른 말로 다시 설명한 것.
+  헷갈리면 "이 문장이 없었다면 독자가 놓친 **새 소식**이 있는가"로 가르세요.
+- date 는 그 일이 **일어났거나 처음 드러난** 날(YYYY-MM-DD)입니다. 기사 게재일이 아닙니다.
+  '5년간 방치'처럼 기간이면 시작일이 아니라 그것이 드러난(감사·발표·보도된) 날입니다.
+  '지난 15일', '지난달' 같은 표현은 CANDIDATE published 기준으로 풉니다. 알 수 없으면 null.
 - quote 는 CANDIDATE 의 제목·요약·상세에서 **그대로 옮긴** 짧은 구절입니다(바꿔 쓰지 마세요).
 
 ⚠️ 출력은 JSON 하나만:
-{"cases": [{"case": 0, "untold": [{"fact": "짧게", "date": "YYYY-MM-DD 또는 null", "quote": "원문 그대로"}]}]}
+{"cases": [{"case": 0, "untold": [{"fact": "짧게", "kind": "development 또는 background", "date": "YYYY-MM-DD 또는 null", "quote": "원문 그대로"}]}]}
 TOLD 에 없는 사실이 없으면 "untold": [] 입니다. 모든 case 를 빠짐없이 답하세요."""
 
 
@@ -161,7 +182,10 @@ def parse_cases(payload: object, count: int) -> dict[int, list[dict]]:
         facts = []
         for fact in entry.get("untold") or []:
             if isinstance(fact, dict) and str(fact.get("fact") or "").strip():
+                kind = str(fact.get("kind") or "").strip().lower()
                 facts.append({"fact": _trim(fact.get("fact"), 120),
+                              # 모르는 값은 development — 빼는 쪽으로 기울지 않는다.
+                              "kind": "background" if kind == "background" else "development",
                               "date": _valid_date(fact.get("date")),
                               "quote": _trim(fact.get("quote"), 160)})
         out[index] = facts
@@ -175,7 +199,13 @@ def disposition(facts: list[dict], cand: dict, last_brief_day: str) -> str:
     verified = [f for f in facts if f.get("quote_ok")]
     if not verified:
         return "unverified"
-    dates = [f.get("date") for f in verified]
+    developments = [f for f in verified if f.get("kind", "development") != "background"]
+    if not developments:
+        # 원문에서 확인된 새것이 배경뿐이다. 인용을 못 맞춘 진전이 있으면 빼지 않는다.
+        if any(f.get("kind", "development") != "background" for f in facts):
+            return "unverified"
+        return "drop"
+    dates = [f.get("date") for f in developments]
     if any(d and d >= last_brief_day for d in dates):
         return "new"
     if all(d for d in dates):
@@ -266,6 +296,8 @@ def run(today: str, regions: dict[str, list[dict]], *, call=None,
                 facts = [{**f, "quote_ok": quote_ok(f.get("quote"), cand)} for f in parsed[index]]
                 row["untold"] = facts
                 row["verdict"] = disposition(facts, cand, last_brief_day)
+                if row["verdict"] == "drop":
+                    row["drop_reason"] = "background_only" if facts else "no_untold"
     except Exception as exc:  # noqa: BLE001 — 그림자는 브리핑을 절대 막지 않는다
         message = f"{type(exc).__name__}: {str(exc)[:200]}"
         for record in records:

@@ -2,7 +2,7 @@
 
 잠그는 것
 ---------
-- 처분은 모델이 아니라 코드가 정한다: 없는 사실 0 → drop, 전부 직전 브리핑일 전 → late,
+- 처분은 모델이 아니라 코드가 정한다: 없는 사실 0(또는 배경뿐) → drop, 전부 직전 브리핑일 전 → late,
   그 뒤 사실이 하나라도 → new, 날짜 모름 → new_undated, 인용이 원문에 없음 → unverified.
 - 원장에 같은 이야기가 없으면 묻지 않는다(new_issue, 호출 0).
 - 응답에서 case 가 빠지거나 호출이 실패하면 그 묶음은 error — 예외는 밖으로 나가지 않는다.
@@ -61,6 +61,33 @@ class DispositionTests(unittest.TestCase):
         self.assertEqual(rs.disposition(self._facts(("2026-10-25", False)), REPEAT, last), "unverified")
         # 인용이 없는 사실은 처분에 쓰지 않는다 — 검증된 것이 늦은 사실뿐이면 late
         self.assertEqual(rs.disposition(self._facts(("2026-10-15", True), ("2026-10-25", False)), REPEAT, last), "late")
+
+    def test_background_alone_is_not_news(self):
+        """v2 (10/27 DL이앤씨): 새것이 '국내 최초'·'시장 전망' 같은 배경뿐이면 재탕이다."""
+        last = "2026-10-24"
+        background = [{"fact": "국내 건설사 최초", "kind": "background", "date": None,
+                       "quote": "q", "quote_ok": True}]
+        self.assertEqual(rs.disposition(background, REPEAT, last), "drop")
+        # 원문에서 확인된 진전이 하나라도 있으면 배경은 상관없다
+        development = {"fact": "계약 체결", "kind": "development", "date": "2026-10-25",
+                       "quote": "q", "quote_ok": True}
+        self.assertEqual(rs.disposition(background + [development], REPEAT, last), "new")
+        # 인용을 못 맞춘 진전이 있으면 빼지 않는다
+        self.assertEqual(rs.disposition(background + [{**development, "quote_ok": False}],
+                                        REPEAT, last), "unverified")
+
+    def test_unknown_kind_counts_as_development(self):
+        parsed = rs.parse_cases({"cases": [{"case": 0, "untold": [
+            {"fact": "a", "kind": "background"}, {"fact": "b", "kind": "??"}, {"fact": "c"}]}]}, 1)
+        self.assertEqual([f["kind"] for f in parsed[0]], ["background", "development", "development"])
+
+    def test_drop_records_why(self):
+        call = _answer(lambda i: [{"fact": "국내 최초", "kind": "background", "date": None,
+                                   "quote": "고리 3·4호기 및 한빛 1·2호기"}])
+        records = rs.run("2026-10-25", {"국내": [REPEAT]}, call=call, told=TOLD, issues={}, cfg={})
+        row = records[0]["rows"][0]
+        self.assertEqual((row["verdict"], row["drop_reason"]), ("drop", "background_only"))
+        self.assertEqual(records[0]["prompt_version"], 2)
 
 
 class QuoteTests(unittest.TestCase):
