@@ -7717,13 +7717,17 @@ class AdminConsoleTests(unittest.TestCase):
         """독자 앱의 **코드**와는 계속 분리한다.
 
         합치면 독자가 받는 번들에 아무도 안 보는 진단 코드가 얹히고, 콘솔을 고칠
-        때마다 독자 화면 회귀를 걱정하게 된다. 다만 독자 화면에서 콘솔로 **가는
-        링크**는 2026-08-16에 생겼다(톱니바퀴). 링크가 보인다고 열리는 것은
-        아니다 — 자물쇠는 엣지에 있다.
+        때마다 독자 화면 회귀를 걱정하게 된다.
+
+        독자 화면에서 콘솔로 **가는 링크**도 두지 않는다. 2026-08-16 에 톱니바퀴로
+        달았다가 2026-10-27 보안 점검('관리자 페이지 노출')으로 뗐다 — 모든 독자에게
+        로그인 창 위치를 알리는 안내판이었다. 운영자는 즐겨찾기로 연다. 링크를
+        뗀다고 문이 닫히는 것은 아니라서 자물쇠는 여전히 엣지에 있다(아래 테스트).
         """
         reader_html = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
         reader_js = (ROOT / "public" / "app.js").read_text(encoding="utf-8")
-        self.assertIn('href="/admin/"', reader_html, "독자 화면에 콘솔 입구가 없다")
+        self.assertNotIn('href="/admin', reader_html, "독자 화면에 콘솔 입구가 다시 생겼다")
+        self.assertNotIn('id="adminEntry"', reader_html)
         # 독자 번들은 콘솔 데이터를 몰라야 한다. 진단 JSON 은 /admin/data 아래에
         # 있고 그 경로는 인증 없이는 401 이라, 여기서 부르면 조용히 실패한다.
         self.assertNotIn("/admin/data", reader_js)
