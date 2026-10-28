@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 2,
+    "count": 4,
     "date": "2026-10-28"
   },
   "retired": {
@@ -1118,7 +1118,7 @@
     }
   },
   "spent": {
-    "count": 4,
+    "count": 6,
     "date": "2026-10-28"
   },
   "terms": {
@@ -1226,6 +1226,94 @@
         "2026-10-28"
       ],
       "yields": 3,
+      "zero_streak": 0
+    },
+    "체코관광청": {
+      "articles": 4,
+      "created_at": "2026-10-28T00:40:46.471938+00:00",
+      "domains": [
+        "travie.com",
+        "tournews21.com",
+        "ajunews.com",
+        "dizzo.com"
+      ],
+      "evidence": [
+        {
+          "domain": "travie.com",
+          "hash": "4934cb0edc9a069d",
+          "importance": "noise",
+          "title": "체코관광청, 원전 건설 지역 '비소치나' 관광 홍보"
+        },
+        {
+          "domain": "tournews21.com",
+          "hash": "1e9a7619d0d53e1e",
+          "importance": "noise",
+          "title": "체코관광청, 한국 관광객 유치 위한 로드쇼 개최"
+        },
+        {
+          "domain": "ajunews.com",
+          "hash": "9f542c4a03d8ac9a",
+          "importance": "nice_to_know",
+          "title": "체코관광청, 두코바니 원전 계기로 비소치나주 한국 관광 홍보"
+        }
+      ],
+      "expires_at": "2026-10-29T00:40:46.471938+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-10-28T00:40:48.803927+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-10-28T00:40:46.471938+00:00",
+      "queries_run": 1,
+      "query": "체코관광청 원자력",
+      "score": 3.32,
+      "status": "tracking",
+      "term": "체코관광청",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "콘스텔레이션에너지의": {
+      "articles": 2,
+      "created_at": "2026-10-28T00:40:46.471938+00:00",
+      "domains": [
+        "reuters.com",
+        "energy.gov"
+      ],
+      "evidence": [
+        {
+          "domain": "reuters.com",
+          "hash": "23e8a39c3216ac04",
+          "importance": "must_read",
+          "title": "미 DOE, 콘스텔레이션 원전 성능 개선에 50억 달러 대출 보증"
+        },
+        {
+          "domain": "energy.gov",
+          "hash": "9aa7e3cac0d94b77",
+          "importance": "must_read",
+          "title": "미 에너지부, 콘스텔레이션 원전 현대화에 50억 달러 조건부 대출 지원 발표"
+        }
+      ],
+      "expires_at": "2026-10-29T00:40:48.803927+00:00",
+      "importance": "must_read",
+      "last_result_count": 2,
+      "last_run": "2026-10-28T00:40:48.803927+00:00",
+      "new_articles": 2,
+      "origin": "auto",
+      "planned_at": "2026-10-28T00:40:46.471938+00:00",
+      "queries_run": 1,
+      "query": "콘스텔레이션 에너지의 원전",
+      "score": 4.1,
+      "status": "extended",
+      "term": "콘스텔레이션 에너지의",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [
+        "2026-10-28"
+      ],
+      "yields": 1,
       "zero_streak": 0
     }
   },
