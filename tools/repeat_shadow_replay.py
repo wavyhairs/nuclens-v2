@@ -74,7 +74,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--since", required=True)
     parser.add_argument("--until", required=True)
-    parser.add_argument("--max-calls", type=int, default=200, help="전체 호출 상한")
+    parser.add_argument("--max-calls", type=int, default=60, help="전체 호출 상한")
     parser.add_argument("--pause", type=float, default=2.0, help="호출 사이 대기(초)")
     parser.add_argument("--out", type=Path, default=ROOT / "repeat_shadow_replay.json")
     args = parser.parse_args()
@@ -94,6 +94,10 @@ def main() -> int:
         records += recs
         summary = collections.Counter(row["verdict"] for r in recs for row in r["rows"])
         print(f"{day}: {dict(summary)} · 남은 호출 {budget}")
+        # 하루치가 판정 없이 전부 실패면 한도·설정 문제다 — 더 부르면 운영 버킷만 깎는다.
+        if summary.get("error") and not any(v for v in summary if v not in ("error", "skipped", "new_issue")):
+            print(f"{day}: 판정이 전부 실패 — 한도·설정 문제로 보고 여기서 멈춤")
+            break
 
     table: collections.Counter = collections.Counter()
     misses: list[str] = []
