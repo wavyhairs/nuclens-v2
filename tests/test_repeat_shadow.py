@@ -41,11 +41,18 @@ FRESH = {"hash": "ffffffffffffffff", "published_at": "2026-10-24T22:00:00+00:00"
          "title_kr": "LS일렉트릭, 미국 데이터센터 배전반 공급 계약", "summary": "새 계약을 체결했다."}
 
 
-def _answer(untold_by_case):
+def _answer(facts_by_case):
+    """사실 목록을 돌려주는 대역. told_in 이 없는 사실은 TOLD 에 없는 사실이다."""
     def call(system, user, **kwargs):
         count = user.count("[CASE ")
-        return {"cases": [{"case": i, "untold": untold_by_case(i)} for i in range(count)]}
+        return {"cases": [{"case": i, "facts": facts_by_case(i)} for i in range(count)]}
     return call
+
+
+def ALL_TOLD(_index):
+    """핵심 사실을 적었고 전부 앞선 카드(T1)가 이미 전했다 — 재탕."""
+    return [{"fact": "사고관리계획서 승인", "told_in": "T1", "kind": "development",
+             "date": "2026-10-15", "quote": "사고관리계획서를 승인"}]
 
 
 class DispositionTests(unittest.TestCase):
@@ -75,6 +82,27 @@ class DispositionTests(unittest.TestCase):
         # 인용을 못 맞춘 진전이 있으면 빼지 않는다
         self.assertEqual(rs.disposition(background + [{**development, "quote_ok": False}],
                                         REPEAT, last), "unverified")
+
+    def test_facts_must_be_matched_to_a_real_told_card(self):
+        parsed = rs.parse_cases({"cases": [{"case": 0, "facts": [
+            {"fact": "a", "told_in": "T2"}, {"fact": "b", "told_in": "T9"},
+            {"fact": "c", "told_in": "null"}, {"fact": "d", "told_in": " t1 "}]}]}, 1, [2])
+        self.assertEqual([f["told_in"] for f in parsed[0]], ["T2", None, None, "T1"])
+
+    def test_no_listed_fact_is_not_a_repeat(self):
+        """사실을 하나도 못 적은 답은 비교를 안 한 것이다 — 빼지 않는다."""
+        [record] = rs.run("2026-10-25", {"국내": [REPEAT]}, call=_answer(lambda i: []),
+                          told=TOLD, issues={}, cfg={})
+        self.assertEqual(record["rows"][0]["verdict"], "unverified")
+
+    def test_untold_development_keeps_the_card(self):
+        call = _answer(lambda i: [*ALL_TOLD(i), {
+            "fact": "운영변경허가 20건 의결", "told_in": None, "kind": "development",
+            "date": "2026-10-24", "quote": "운영변경허가 20건을 의결"}])
+        [record] = rs.run("2026-10-25", {"국내": [REPEAT]}, call=call, told=TOLD, issues={}, cfg={})
+        row = record["rows"][0]
+        self.assertEqual(row["verdict"], "new")
+        self.assertEqual(row["told_facts"], [{"fact": "사고관리계획서 승인", "told_in": "T1"}])
 
     def test_unknown_kind_counts_as_development(self):
         parsed = rs.parse_cases({"cases": [{"case": 0, "untold": [
@@ -127,7 +155,7 @@ class RunTests(unittest.TestCase):
 
         def call(system, user, **kwargs):
             calls.append(user)
-            return _answer(lambda i: [])(system, user)
+            return _answer(ALL_TOLD)(system, user)
 
         [record] = self._run(call)
         rows = {r["hash"]: r for r in record["rows"]}
@@ -168,7 +196,7 @@ class RunTests(unittest.TestCase):
 
     def test_call_cap_skips_rest(self):
         cards = [{**REPEAT, "hash": f"{i:016x}"} for i in range(rs.CASES_PER_CALL + 1)]
-        [record] = self._run(_answer(lambda i: []), cards=cards, max_calls=1)
+        [record] = self._run(_answer(ALL_TOLD), cards=cards, max_calls=1)
         verdicts = [r["verdict"] for r in record["rows"]]
         self.assertEqual(verdicts.count("drop"), rs.CASES_PER_CALL)
         self.assertEqual(verdicts.count("skipped"), 1)
@@ -179,7 +207,7 @@ class RunTests(unittest.TestCase):
         cards = [{**REPEAT, "hash": f"{i:016x}"} for i in range(rs.CASES_PER_CALL + 1)]
         ticks = iter([0.0, 0.0, 999.0])          # 시작 · 첫 묶음 직전 · 둘째 묶음 직전
 
-        [record] = self._run(_answer(lambda i: []), cards=cards, clock=lambda: next(ticks))
+        [record] = self._run(_answer(ALL_TOLD), cards=cards, clock=lambda: next(ticks))
         verdicts = [r["verdict"] for r in record["rows"]]
         self.assertEqual(verdicts.count("skipped"), 1)
         self.assertEqual(record["calls"], 1)
@@ -189,7 +217,7 @@ class RunTests(unittest.TestCase):
 
         def call(system, user, **kwargs):
             seen.update(kwargs)
-            return _answer(lambda i: [])(system, user)
+            return _answer(ALL_TOLD)(system, user)
         self._run(call, cards=[REPEAT])
         self.assertEqual(seen["timeout"], rs.CALL_TIMEOUT_S)
         self.assertEqual(seen["retries"], rs.CALL_RETRIES)
@@ -204,7 +232,7 @@ class SwitchAndLogTests(unittest.TestCase):
 
     def test_enabled_runs(self):
         with patch.dict(os.environ, {"REPEAT_SHADOW": "on"}):
-            records = rs.run_all("2026-10-25", {"국내": [REPEAT]}, call=_answer(lambda i: []),
+            records = rs.run_all("2026-10-25", {"국내": [REPEAT]}, call=_answer(ALL_TOLD),
                                  told=TOLD, issues={}, cfg={})
         self.assertEqual(records[0]["rows"][0]["verdict"], "drop")
 

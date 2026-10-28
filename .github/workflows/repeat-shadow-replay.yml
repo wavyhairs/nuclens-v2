@@ -22,7 +22,7 @@ on:
       max_calls:
         description: "전체 호출 상한"
         required: true
-        default: "120"
+        default: "200"
 
 permissions:
   contents: read
@@ -34,7 +34,7 @@ concurrency:
 jobs:
   replay:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -50,7 +50,7 @@ jobs:
         run: |
           python -u tools/repeat_shadow_replay.py \
             --since "${{ inputs.since || '2026-09-26' }}" --until "${{ inputs.until || '2026-10-28' }}" \
-            --max-calls "${{ inputs.max_calls || '120' }}" | tee replay.txt
+            --max-calls "${{ inputs.max_calls || '200' }}" | tee replay.txt
           { echo '```'; tail -c 60000 replay.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()

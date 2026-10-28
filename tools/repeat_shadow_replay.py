@@ -74,8 +74,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--since", required=True)
     parser.add_argument("--until", required=True)
-    parser.add_argument("--max-calls", type=int, default=120, help="전체 호출 상한")
-    parser.add_argument("--pause", type=float, default=3.0, help="호출 사이 대기(초)")
+    parser.add_argument("--max-calls", type=int, default=200, help="전체 호출 상한")
+    parser.add_argument("--pause", type=float, default=2.0, help="호출 사이 대기(초)")
     parser.add_argument("--out", type=Path, default=ROOT / "repeat_shadow_replay.json")
     args = parser.parse_args()
 
@@ -106,11 +106,13 @@ def main() -> int:
             if wrong or (label == "-" and row["verdict"] == "drop"):
                 facts = "; ".join(f"[{f.get('kind')}/{f.get('date')}/{'Q' if f.get('quote_ok') else 'x'}] "
                                   f"{f.get('fact', '')[:60]}" for f in row.get("untold") or [])
+                told = "; ".join(f"{f['told_in']}:{f['fact'][:40]}" for f in row.get("told_facts") or [])
                 prior = (row.get("told") or [{}])[-1]
                 misses.append(f"  {'틀림' if wrong else '확인'} {rec['date']} {rec['region']} #{row['position']} "
                               f"라벨={label} 판정={row['verdict']} {row['title'][:44]}\n"
                               f"      ← {prior.get('date')} {str(prior.get('title') or '')[:44]}\n"
-                              f"      새것: {facts or '(없음)'}")
+                              f"      새것: {facts or '(없음)'}\n"
+                              f"      이미 전함: {told or '(없음)'}")
 
     def count(label: str, verdicts: tuple[str, ...]) -> tuple[int, int]:
         hit = sum(n for (lab, v), n in table.items() if lab == label and v in verdicts)
