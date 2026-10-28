@@ -208,6 +208,28 @@ def _item_text(item: dict) -> str:
     return " ".join(str(item.get(key) or "") for key in ("title_kr", "title", "summary"))
 
 
+# 계약이 **아직 안 된** 기사를 계약 체결로 셈하지 않는다. 2026-10-29 국내 1번 「한수원, 체코
+# 원전 시공계약 협상 난항…1조원 감액 요구 논란」을 모델이 contract_award 로 매겨 가점 6점을
+# 받았다(빼면 3~4위). 발송 이력 1,4xx건에 대 보면 제목이 갈등·지연을 말하고 완료 표현이 없는
+# contract_award 는 이것과 9/12 「한-미, 대미 에너지 투자 협상 막판 조율」 두 건뿐이고, 둘 다
+# 계약이 아니다. 완료 표현(체결·합의·선정·발주…)이 제목에 하나라도 있으면 손대지 않는다.
+_CONTRACT_DONE = re.compile(
+    r"체결|서명|수주|낙찰|합의|선정|계약 연장|발주|인수|약정|종결|타결|따[냈내]|확보|착수|설립|송금"
+    r"|\b(signs?|signed|inks?|awarded|wins?|won|secures?)\b", re.I)
+_CONTRACT_TROUBLE = re.compile(
+    r"난항|요구|논란|지연|무산|결렬|불발|막판|진통|갈등|이견|재협상|협상 중|좌초|표류|교착")
+
+
+def derive_event_type(item: dict, event_type: str) -> str:
+    """모델이 매긴 사건 유형 중 제목과 어긋나는 계약 체결을 '기타'로 내린다."""
+    if event_type != "contract_award":
+        return event_type
+    title = str(item.get("title_kr") or item.get("title") or "")
+    if _CONTRACT_TROUBLE.search(title) and not _CONTRACT_DONE.search(title):
+        return "other"
+    return event_type
+
+
 def derive_evidence_strength(item: dict) -> int:
     """확정 표현·수치 유무로 근거 강도를 판정한다 (LLM 추측 대체).
 
@@ -381,6 +403,7 @@ def score_item(item: dict, cfg: dict,
     else:
         # LLM 값이 남아 있어도 코드 판정으로 덮는다. 두 항목은 더 이상 프롬프트에
         # 없지만 옛 큐 항목에는 값이 실려 있다.
+        feats["event_type"] = derive_event_type(item, feats["event_type"])
         feats["novelty"] = derive_novelty(item)
         feats["evidence_strength"] = derive_evidence_strength(item)
         breakdown = {}

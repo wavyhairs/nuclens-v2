@@ -113,6 +113,34 @@ class TestNewScore(unittest.TestCase):
         self.assertGreaterEqual(b["time_decay"], -CFG["time_decay"]["max"])
 
 
+class TestContractEventCheck(unittest.TestCase):
+    """2026-10-29: 협상 난항 기사가 계약 체결 가점(6)을 받아 국내 1번이 됐다."""
+
+    def test_negotiation_trouble_is_not_a_contract(self):
+        a = item(title="한수원, 체코 원전 시공계약 협상 난항…1조원 감액 요구 논란",
+                 features=feat(event_type="contract_award"), queued_hours_ago=0)
+        _, b = ranking.score_item(a, CFG, now=NOW)
+        self.assertNotIn("event:contract_award", b)
+        self.assertEqual(b["event:other"], CFG["event_weights"]["other"])
+
+    def test_completed_contracts_keep_the_bonus(self):
+        for title in ("HD현대중공업, 미국 AI 데이터센터에 1조원 규모 발전용 엔진 공급 계약",
+                      "두산에너빌리티, 해상풍력 사업 우선협상대상자 선정",
+                      "폴란드 원전 건설 컨소시엄, EPC 계약 주요 상업 조건 합의",
+                      # 갈등 표현이 있어도 완료 표현이 있으면 계약이다
+                      "난항 끝에 체코 원전 시공계약 체결"):
+            with self.subTest(title=title):
+                a = item(title=title, features=feat(event_type="contract_award"))
+                _, b = ranking.score_item(a, CFG, now=NOW)
+                self.assertIn("event:contract_award", b)
+
+    def test_other_event_types_untouched(self):
+        a = item(title="한빛 2호기, 계속운전 심사 지연으로 가동 중단",
+                 features=feat(event_type="regulatory_action"))
+        _, b = ranking.score_item(a, CFG, now=NOW)
+        self.assertIn("event:regulatory_action", b)
+
+
 class TestCodeDerivedFeatures(unittest.TestCase):
     """novelty·evidence_strength 는 LLM 이 아니라 코드가 판정한다."""
 
