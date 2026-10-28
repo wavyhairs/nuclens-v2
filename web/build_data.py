@@ -2157,6 +2157,57 @@ def override_verdict(members: list[dict], briefing_date: str, overrides: dict) -
     return "promote" if hit_promote else ""
 
 
+def apply_editor_order(briefings: list[dict], overrides: dict) -> int:
+    """발송 당시 순서로 붙잡은 뒤(briefing_snapshot)에도 편집 순위 판정을 지킨다.
+
+    스냅샷은 그날 카드 순서를 얼린 순서대로 되세운다. 그래서 발송 뒤에 적은
+    promote·demote_only 는 빌드가 `editor_pin` 으로 정렬해 놓아도 스냅샷에 덮여
+    화면·카드에 닿지 않았다(2026-10-29: 국내 2·3번을 올렸는데 체코 기사가 1번 그대로).
+    숨김(hide_from_today)은 기사가 빠지므로 원래도 지켜졌다.
+
+    지역마다 얼린 순서 안에서 편집 판정 순(올림 → 그대로 → 내림)으로 바꾼 뒤, 지역 안
+    순위끼리 다시 맞물린다. 판정이 없는 날짜는 건드리지 않는다. 순서를 바꾼 날짜 수를
+    돌려준다.
+    """
+    promote = overrides.get("promote") or {}
+    demote = overrides.get("demote") or {}
+    changed = 0
+    for briefing in briefings:
+        day = str(briefing.get("date") or "")
+        rows = briefing.get("issues") or []
+        pins: dict[int, int] = {}
+        for row in rows:
+            keys = {(_short_hash(h), day) for h in briefing_snapshot.card_hashes(row, day)}
+            if any(demote.get(key) == "demote_only" for key in keys):
+                pins[id(row)] = -1
+            elif any(key in promote for key in keys):
+                pins[id(row)] = 1
+        if not pins:
+            continue
+        # 지역 안 순위(n번째)끼리 맞물린다 — order_issue_rows 와 같은 모양. 같은 n번째에서
+        # 어느 지역이 앞인지는 원래 그 자리의 카드 위치로 정한다. 숨김으로 한쪽 카드가
+        # 빠진 날도 국내 1·해외 1·국내 2 … 로 다시 맞물린다.
+        position = {id(row): index for index, row in enumerate(rows)}
+        new_key: dict[int, tuple[int, int]] = {}
+        for domestic in (True, False):
+            group = [row for row in rows if (row.get("region") == "국내") == domestic]
+            slots = [position[id(row)] for row in group]
+            ordered = sorted(group, key=lambda row: -pins.get(id(row), 0))   # 안정 정렬
+            for rank, (slot, row) in enumerate(zip(slots, ordered)):
+                new_key[id(row)] = (rank, slot)
+        reordered = sorted(rows, key=lambda row: new_key[id(row)])
+        if [id(row) for row in reordered] == [id(row) for row in rows]:
+            continue
+        briefing["issues"] = reordered
+        briefing["highlights"] = [row.get("title", "") for row in reordered[:3]]
+        briefing["highlight_issues"] = [
+            {"issue_id": row.get("issue_id"), "title": row.get("title", "")}
+            for row in reordered[:3]
+        ]
+        changed += 1
+    return changed
+
+
 def report_unmatched_overrides(overrides: dict) -> None:
     """없는 hash 는 조용히 무시하되 흔적은 남긴다 — 오타를 영영 모르면 안 된다."""
     everything = set(overrides.get("promote") or {}) | set(overrides.get("demote") or {})
@@ -8360,6 +8411,9 @@ def build() -> None:
     print(f"[build_data:snapshot] 새로 얼린 날짜 {snapshot_stats['frozen_new']} · "
           f"분류 정정 안내 {snapshot_stats['cards_corrected']}장"
           f"({snapshot_stats['dates_corrected']}일)")
+    reordered_days = apply_editor_order(briefings, selection_overrides)
+    if reordered_days:
+        print(f"[overrides] 얼린 순서 위에 편집 순위 반영 {reordered_days}일")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ADMIN_OUT_DIR.mkdir(parents=True, exist_ok=True)
