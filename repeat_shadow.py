@@ -19,19 +19,42 @@
 3. 처분은 모델이 아니라 이 모듈이 정한다(``disposition``).
 
     new_issue    원장에 같은 이야기가 없다 — 묻지 않는다
-    drop         TOLD 에 없는 사실이 0개 (인용이 후보 원문에 있는 사실만 센다)
-    late         없는 사실이 있으나 전부 직전 브리핑일보다 앞서 일어났다
-    new          직전 브리핑일 이후 일어난 사실이 하나라도 있다
-    new_undated  없는 사실이 있으나 날짜를 모른다(그리고 늦은 것으로 확정되지도 않았다)
+    drop         TOLD 에 없는 **진전**이 0개 (인용이 후보 원문에 있는 사실만 센다).
+                 배경 설명만 새로우면 이것이다(row.drop_reason = background_only)
+    late         없는 진전이 있으나 전부 직전 브리핑일보다 앞서 일어났다
+    new          직전 브리핑일 이후 일어난 진전이 하나라도 있다
+    new_undated  없는 진전이 있으나 날짜를 모른다(그리고 늦은 것으로 확정되지도 않았다)
     unverified   모델이 적은 사실의 인용이 하나도 후보 원문에 없다
     error        호출 실패 — 전환 뒤 처분은 'late 와 같게'(빼지도 올리지도 않는다)
     skipped      호출 상한에 걸려 묻지 못함
+
+v2 (2026-10-28) — 진전과 배경을 가른다
+---------------------------------------
+v1 첫 3일(10/26~28, 46장) drop 0. 10/27 「DL이앤씨, 엑스에너지와 4세대 SMR 표준화 설계 계약
+체결」은 10/12 카드와 제목까지 같았는데, 모델이 '국내 건설사 최초'·'SMR 시장 2035년 5000억
+달러'를 TOLD 에 없는 사실로 적어 new_undated 가 됐다. 지시문은 배경을 빼라고 했지만 지켜지지
+않았고, 사실 하나의 성격을 코드가 볼 수 없었다. 그래서 사실마다 ``kind`` 를 받는다 —
+``development``(결정·계약·발표·수치 변화·새 일정·사고·발견처럼 **일이 달라진 것**) 와
+``background``(위치·규모 같은 고정 속성, 연혁, 시장 전망, 의의, '최초' 같은 수식). 처분은
+development 만 센다. kind 가 없거나 이상하면 development 로 본다(빼는 쪽으로 기울지 않는다).
+
+사실마다 ``told_in`` 도 받는다 — 그 사실을 이미 전한 TOLD 번호(T3) 또는 null. 회귀셋 재생
+(9/26~10/25, 사람 라벨 256건)에서 '없는 사실만 적어라'고 하면 모델이 비교를 건너뛰고 핵심
+사건을 그대로 새 사실로 적었다(재탕 50건 중 16건만 잡음 — 10/7 에 보낸 「구글·콘스텔레이션
+20년 계약」을 10/8 카드에서 '새 사실'로 적는 식). 사실을 먼저 다 적고 하나씩 카드 번호를
+대게 하면 비교를 건너뛸 수 없다. 번호가 범위 밖이면 '확인 안 됨'(=새 사실)으로 읽는다.
+이름 있는 주체가 새로 낸 전망·보고서는 development 다 — 같은 재생에서 「JP모건, 전력난 2030년까지
+지속 전망」 같은 별건 15건이 '전망은 적지 마라' 지시 때문에 사실 0개로 빠졌다.
+
+date 는 일이 일어났거나 **처음 드러난** 날이다. v1 은 「한국전력기술, 도면 5년간 노출 방치」
+에서 노출이 시작된 2020-07-01 을 적어 late 가 됐다 — 이번에 감사로 드러난 일이다.
 
 안전장치
 --------
 - 어떤 예외도 밖으로 내지 않는다. 실패는 레코드의 ``error`` 로 남는다.
 - REPEAT_SHADOW=on 일 때만 돈다(워크플로가 켠다). 키가 없으면 건너뛴다.
-- 호출 상한 MAX_CALLS(하루, 두 지역 합). 기본 버킷 500 RPD 의 1% 미만이다.
+- 호출 상한 MAX_CALLS(하루, 두 지역 합). 한 번에 CASES_PER_CALL 건만 묻는다 — 많이 묶으면
+  비교가 얕아진다. 하루 카드 20장 안팎이라 평소 7회쯤, 버킷 500 RPD 의 2% 안이다.
 - 시간 예산 TIME_BUDGET_S. 호출 하나는 최대 2회 시도 × CALL_TIMEOUT_S 라, 모델이 느린 날에도
   plan 을 붙잡는 시간은 최악 약 4.5분(예산 직전에 시작한 호출 하나까지)이다. 평소는 수 초.
 """
@@ -53,10 +76,10 @@ from gemini_client import GeminiError, call_json
 ROOT = Path(__file__).resolve().parent
 KST = timezone(timedelta(hours=9))
 LOG_FILE = ROOT / "repeat_shadow_log.jsonl"
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 
-CASES_PER_CALL = 6
-MAX_CALLS = 4
+CASES_PER_CALL = 3
+MAX_CALLS = 10
 # 그림자가 아침 발송을 늦추지 않게 하는 시간 예산. 호출 하나는 CALL_TIMEOUT_S·재시도 1회,
 # 전체가 TIME_BUDGET_S 를 넘으면 남은 묶음은 skipped. (기본값 120초×재시도 3회×4회면 20분을 넘는다.)
 CALL_TIMEOUT_S = 60.0
@@ -67,21 +90,27 @@ VERDICTS = ("new_issue", "drop", "late", "new", "new_undated", "unverified", "er
 
 SYSTEM_PROMPT = """당신은 원자력 아침 브리핑의 사실 확인 담당입니다.
 
-각 CASE 는 오늘 보낼 후보(CANDIDATE) 하나와, 같은 이야기로 이미 독자에게 보낸 카드(TOLD)들입니다.
-**후보가 전하는 사실 가운데 TOLD 어디에도 없는 것만** 고르세요.
+각 CASE 는 오늘 보낼 후보(CANDIDATE) 하나와, 같은 이야기로 이미 독자에게 보낸 카드(T1, T2, …)들입니다.
+CANDIDATE 가 전하는 **핵심 사실을 최대 5개** 적고, 사실마다 이미 전한 카드가 있는지 표시하세요.
 
-- TOLD 의 제목·요약·상세 중 어디에든 있으면 이미 전한 사실입니다. 매체·표현·언어·수치 표기만
-  달라도 같은 사실입니다(예: '1.07조'='1조 722억', '고리 3·4호기 승인'='고리 3, 4호기 의결').
-- 같은 회의·발표·행사에서 나온 다른 세부(다른 안건, 표결 수, 발언)라도 TOLD 에 없으면 적습니다.
-  그 사실의 date 는 그 회의·발표가 열린 날입니다.
-- 전망·의견·배경 설명·해설·평가는 사실로 적지 않습니다.
-- date 는 그 일이 **일어난** 날(YYYY-MM-DD)입니다. 기사 게재일이 아닙니다. '지난 15일',
-  '지난달' 같은 표현은 CANDIDATE published 기준으로 풉니다. 알 수 없으면 null.
-- quote 는 CANDIDATE 의 제목·요약·상세에서 **그대로 옮긴** 짧은 구절입니다(바꿔 쓰지 마세요).
+1. 첫 사실은 CANDIDATE **제목이 전하는 일**입니다. 나머지는 요약·상세에서 중요한 순서로.
+2. told_in: 그 사실을 이미 전한 카드 번호("T3"). 표현·언어·매체·수치 표기가 달라도 같은 일이면
+   같은 사실입니다('1.07조'='1조 722억', '3.6GW 계약'='20년 전력구매계약'). 같은 계약·결정·
+   발표를 다른 날 기사가 다시 전해도 같은 사실입니다. **어느 카드에도 없을 때만** null.
+3. kind:
+   · "development": 일이 달라진 것 — 결정·의결·승인·보류·계약·착수·완료·사고·발견, 수치나
+     일정의 변경·확정. 이름 있는 주체(기관·기업·인물)가 **새로 낸** 발표·보고서·전망·발언도
+     그 자체가 development 입니다.
+   · "background": 일이 달라지지 않은 것 — 위치·용량 같은 고정 속성, 연혁, 주체 없는 해설·
+     일반론, 의의·목적, '국내 최초' 같은 수식.
+4. date: 그 일이 **일어났거나 처음 드러난** 날(YYYY-MM-DD). 기사 게재일이 아닙니다. '5년간
+   방치'처럼 기간이면 드러난(감사·발표·보도된) 날입니다. '지난 15일'은 CANDIDATE published
+   기준으로 풉니다. 모르면 null.
+5. quote: CANDIDATE 의 제목·요약·상세에서 **그대로 옮긴** 짧은 구절(바꿔 쓰지 마세요).
 
 ⚠️ 출력은 JSON 하나만:
-{"cases": [{"case": 0, "untold": [{"fact": "짧게", "date": "YYYY-MM-DD 또는 null", "quote": "원문 그대로"}]}]}
-TOLD 에 없는 사실이 없으면 "untold": [] 입니다. 모든 case 를 빠짐없이 답하세요."""
+{"cases": [{"case": 0, "facts": [{"fact": "짧게", "told_in": "T2 또는 null", "kind": "development 또는 background", "date": "YYYY-MM-DD 또는 null", "quote": "원문 그대로"}]}]}
+모든 case 를 빠짐없이 답하세요."""
 
 
 def enabled() -> bool:
@@ -148,8 +177,21 @@ def _valid_date(value: object) -> str | None:
     return text if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text) else None
 
 
-def parse_cases(payload: object, count: int) -> dict[int, list[dict]]:
-    """{case 번호: untold 목록}. 형식이 어긋난 항목은 버린다. 빠진 case 는 결과에 없다."""
+def _told_ref(value: object, told_count: int) -> str | None:
+    """'T3' → 'T3'. 범위 밖·형식 밖은 None — 이미 전했다고 **확인되지 않은** 것으로 본다."""
+    match = re.fullmatch(r"\s*[Tt]\s*(\d+)\s*", str(value or ""))
+    if not match or not 1 <= int(match.group(1)) <= told_count:
+        return None
+    return f"T{int(match.group(1))}"
+
+
+def parse_cases(payload: object, count: int,
+                told_counts: list[int] | None = None) -> dict[int, list[dict]]:
+    """{case 번호: 사실 목록}. 형식이 어긋난 항목은 버린다. 빠진 case 는 결과에 없다.
+
+    사실마다 ``told_in`` (이미 전한 카드 번호, 없으면 None)과 ``kind`` 가 붙는다. 옛 응답
+    형식(``untold``)은 전부 told_in=None 으로 읽는다.
+    """
     out: dict[int, list[dict]] = {}
     cases = payload.get("cases") if isinstance(payload, dict) else None
     for entry in cases if isinstance(cases, list) else []:
@@ -158,10 +200,16 @@ def parse_cases(payload: object, count: int) -> dict[int, list[dict]]:
         index = entry["case"]
         if not 0 <= index < count or index in out:
             continue
+        told_count = told_counts[index] if told_counts else 99
+        listed = entry.get("facts") if "facts" in entry else entry.get("untold")
         facts = []
-        for fact in entry.get("untold") or []:
+        for fact in listed or []:
             if isinstance(fact, dict) and str(fact.get("fact") or "").strip():
+                kind = str(fact.get("kind") or "").strip().lower()
                 facts.append({"fact": _trim(fact.get("fact"), 120),
+                              "told_in": _told_ref(fact.get("told_in"), told_count),
+                              # 모르는 값은 development — 빼는 쪽으로 기울지 않는다.
+                              "kind": "background" if kind == "background" else "development",
                               "date": _valid_date(fact.get("date")),
                               "quote": _trim(fact.get("quote"), 160)})
         out[index] = facts
@@ -169,13 +217,22 @@ def parse_cases(payload: object, count: int) -> dict[int, list[dict]]:
 
 
 def disposition(facts: list[dict], cand: dict, last_brief_day: str) -> str:
-    """모델이 적은 '없는 사실'로 처분을 정한다(결정적). facts 에 quote_ok 가 붙어 있어야 한다."""
+    """모델이 적은 '없는 사실'로 처분을 정한다(결정적). facts 에 quote_ok 가 붙어 있어야 한다.
+
+    ``facts`` 는 TOLD 에 없는 사실(told_in 이 빈 것)만이다 — ``run`` 이 거른다.
+    """
     if not facts:
         return "drop"
     verified = [f for f in facts if f.get("quote_ok")]
     if not verified:
         return "unverified"
-    dates = [f.get("date") for f in verified]
+    developments = [f for f in verified if f.get("kind", "development") != "background"]
+    if not developments:
+        # 원문에서 확인된 새것이 배경뿐이다. 인용을 못 맞춘 진전이 있으면 빼지 않는다.
+        if any(f.get("kind", "development") != "background" for f in facts):
+            return "unverified"
+        return "drop"
+    dates = [f.get("date") for f in developments]
     if any(d and d >= last_brief_day for d in dates):
         return "new"
     if all(d for d in dates):
@@ -192,7 +249,7 @@ def judge(cases: list[tuple[dict, list[dict]]], *, call=None,
     payload = caller(SYSTEM_PROMPT, user, temperature=0.05, max_output_tokens=4096,
                      timeout=CALL_TIMEOUT_S, retries=CALL_RETRIES, model=policy.model(),
                      label=label, **policy.reasoning_kwargs())
-    parsed = parse_cases(payload, len(cases))
+    parsed = parse_cases(payload, len(cases), [len(told) for _cand, told in cases])
     missing = [i for i in range(len(cases)) if i not in parsed]
     if missing:
         raise ValueError(f"빠진 case {len(missing)}건: {missing[:5]}")
@@ -263,9 +320,18 @@ def run(today: str, regions: dict[str, list[dict]], *, call=None,
                     row["error"] = message
                 continue
             for index, (_record, row, cand, _rel) in enumerate(chunk):
-                facts = [{**f, "quote_ok": quote_ok(f.get("quote"), cand)} for f in parsed[index]]
-                row["untold"] = facts
-                row["verdict"] = disposition(facts, cand, last_brief_day)
+                listed = [{**f, "quote_ok": quote_ok(f.get("quote"), cand)} for f in parsed[index]]
+                untold = [f for f in listed if not f.get("told_in")]
+                row["told_facts"] = [{"fact": f["fact"], "told_in": f["told_in"]}
+                                     for f in listed if f.get("told_in")]
+                row["untold"] = untold
+                if not listed:
+                    # 핵심 사실을 하나도 못 적었다 — 비교를 안 한 것이지 재탕의 증거가 아니다.
+                    row["verdict"] = "unverified"
+                    continue
+                row["verdict"] = disposition(untold, cand, last_brief_day)
+                if row["verdict"] == "drop":
+                    row["drop_reason"] = "background_only" if untold else "all_told"
     except Exception as exc:  # noqa: BLE001 — 그림자는 브리핑을 절대 막지 않는다
         message = f"{type(exc).__name__}: {str(exc)[:200]}"
         for record in records:

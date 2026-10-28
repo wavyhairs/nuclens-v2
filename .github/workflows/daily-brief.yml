@@ -310,7 +310,7 @@ jobs:
           # 옮겼다. 다시 재려면 저장소 변수 SHADOW_RANK=on (하루 24회 안팎).
           SHADOW_RANK: ${{ vars.SHADOW_RANK || 'off' }}
           # 재발송 그림자 판정(발송 불변, 기록만 — repeat_shadow.py). 2026-10-26부터 2주
-          # 측정한다. 끄려면 저장소 변수 REPEAT_SHADOW=off (하루 호출 4회 이하).
+          # 측정한다. 끄려면 저장소 변수 REPEAT_SHADOW=off (하루 호출 10회 이하).
           REPEAT_SHADOW: ${{ vars.REPEAT_SHADOW || 'on' }}
         run: python daily_brief.py --plan
 

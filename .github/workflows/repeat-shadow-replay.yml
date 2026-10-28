@@ -1,0 +1,63 @@
+name: Repeat shadow replay (재발송 판정 질문 재생 · 수동)
+
+# 재발송 그림자 판정(repeat_shadow)의 질문을 바꿨을 때, 지난 발송에 다시 물어 사람
+# 라벨(eval_artifacts/repeat_send)과 맞대 본다(tools/repeat_shadow_replay.py 머리말).
+# 개발 환경에는 Gemini 키가 없어서 Actions 에서 돌린다. 저장소에는 아무것도 쓰지 않는다 —
+# 결과는 로그와 짧은 보존 기간의 산출물에만 남는다. 호출은 --max-calls 로 묶는다.
+#
+# ⚠️ 운영과 같은 모델 버킷을 쓴다. 2026-10-28 회귀셋 전체(약 270회)를 두 번 돌렸더니 그날
+# gemini-3.5-flash-lite 일일 한도가 바닥나 요약 사실검사·격리 해제가 오후까지 멈췄다. 그래서
+# 수동 실행만 두고, 상한 기본값을 낮췄다. 회귀셋 전체가 필요하면 브리핑 직후(07:30 KST) 이후
+# 한도가 넉넉한 날, 기간을 나눠 돌린다(태평양 자정 = 16:00/17:00 KST 에 한도가 다시 찬다).
+on:
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "시작일 (YYYY-MM-DD)"
+        required: true
+        default: "2026-09-26"
+      until:
+        description: "끝일 (YYYY-MM-DD)"
+        required: true
+        default: "2026-10-28"
+      max_calls:
+        description: "전체 호출 상한"
+        required: true
+        default: "60"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repeat-shadow-replay
+  cancel-in-progress: false
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Replay sent cards against the labels
+        env:
+          GEMINI_API_KEY: ${{ vars.GEMINI_PAID_MODE == 'ON' && secrets.GEMINI_API_KEY || secrets.GEMINI_FREE_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+          GEMINI_SYNTHESIS_MODEL: ${{ vars.GEMINI_SYNTHESIS_MODEL }}
+        run: |
+          python -u tools/repeat_shadow_replay.py \
+            --since "${{ inputs.since || '2026-09-26' }}" --until "${{ inputs.until || '2026-10-28' }}" \
+            --max-calls "${{ inputs.max_calls || '60' }}" | tee replay.txt
+          { echo '```'; tail -c 60000 replay.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repeat-shadow-replay
+          path: |
+            replay.txt
+            repeat_shadow_replay.json
+          retention-days: 7
