@@ -852,14 +852,6 @@
       "type": "plant",
       "until": "2026-11-03T12:40:11.816846+00:00"
     },
-    "제작한": {
-      "new_articles": 32,
-      "reason": "질의 횟수 소진",
-      "retired_at": "2026-08-30T00:39:53.359389+00:00",
-      "term": "제작한",
-      "type": "plant",
-      "until": "2026-09-13T00:39:53.359389+00:00"
-    },
     "조지아주": {
       "new_articles": 11,
       "reason": "기간 만료",
@@ -899,6 +891,14 @@
       "term": "첨단방사선연구소",
       "type": "org",
       "until": "2026-10-02T18:40:49.780254+00:00"
+    },
+    "체코관광청": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-10-29T00:41:15.568337+00:00",
+      "term": "체코관광청",
+      "type": "org",
+      "until": "2026-11-12T00:41:15.568337+00:00"
     },
     "체코수소협회": {
       "new_articles": 12,
@@ -955,6 +955,14 @@
       "term": "콘스텔레이션에너지와 20년간",
       "type": "plant",
       "until": "2026-10-22T03:41:22.711999+00:00"
+    },
+    "콘스텔레이션에너지의": {
+      "new_articles": 2,
+      "reason": "기간 만료",
+      "retired_at": "2026-10-29T00:41:15.568337+00:00",
+      "term": "콘스텔레이션 에너지의",
+      "type": "plant",
+      "until": "2026-11-12T00:41:15.568337+00:00"
     },
     "타보로공장에": {
       "new_articles": 11,
@@ -1134,7 +1142,7 @@
     }
   },
   "spent": {
-    "count": 9,
+    "count": 11,
     "date": "2026-10-29"
   },
   "terms": {
@@ -1190,11 +1198,11 @@
       "expires_at": "2026-10-29T15:41:04.544632+00:00",
       "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-10-28T15:41:07.864622+00:00",
+      "last_run": "2026-10-29T00:41:18.344287+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-10-28T15:41:04.544632+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-29T00:41:15.568337+00:00",
+      "queries_run": 2,
       "query": "에너지의 8개 원전",
       "score": 3.6,
       "status": "tracking",
@@ -1203,7 +1211,7 @@
       "type": "plant",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "원자력발전소3": {
       "articles": 1,
@@ -1274,53 +1282,6 @@
       "yields": 1,
       "zero_streak": 1
     },
-    "체코관광청": {
-      "articles": 4,
-      "created_at": "2026-10-28T00:40:46.471938+00:00",
-      "domains": [
-        "travie.com",
-        "tournews21.com",
-        "ajunews.com",
-        "dizzo.com"
-      ],
-      "evidence": [
-        {
-          "domain": "travie.com",
-          "hash": "4934cb0edc9a069d",
-          "importance": "noise",
-          "title": "체코관광청, 원전 건설 지역 '비소치나' 관광 홍보"
-        },
-        {
-          "domain": "tournews21.com",
-          "hash": "1e9a7619d0d53e1e",
-          "importance": "noise",
-          "title": "체코관광청, 한국 관광객 유치 위한 로드쇼 개최"
-        },
-        {
-          "domain": "ajunews.com",
-          "hash": "9f542c4a03d8ac9a",
-          "importance": "nice_to_know",
-          "title": "체코관광청, 두코바니 원전 계기로 비소치나주 한국 관광 홍보"
-        }
-      ],
-      "expires_at": "2026-10-29T00:40:46.471938+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-10-28T15:41:07.864622+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-10-28T15:41:04.544632+00:00",
-      "queries_run": 2,
-      "query": "체코관광청 원자력",
-      "score": 3.32,
-      "status": "tracking",
-      "term": "체코관광청",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
     "콘스텔레이션에너지": {
       "articles": 4,
       "created_at": "2026-10-28T15:41:04.544632+00:00",
@@ -1353,11 +1314,11 @@
       "expires_at": "2026-10-31T15:41:04.544632+00:00",
       "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-10-28T15:41:07.864622+00:00",
+      "last_run": "2026-10-29T00:41:18.344287+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-10-28T15:41:04.544632+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-29T00:41:15.568337+00:00",
+      "queries_run": 2,
       "query": "콘스텔레이션 에너지 원전",
       "score": 15.9,
       "status": "tracking",
@@ -1366,48 +1327,7 @@
       "type": "plant",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
-    },
-    "콘스텔레이션에너지의": {
-      "articles": 2,
-      "created_at": "2026-10-28T00:40:46.471938+00:00",
-      "domains": [
-        "reuters.com",
-        "energy.gov"
-      ],
-      "evidence": [
-        {
-          "domain": "reuters.com",
-          "hash": "23e8a39c3216ac04",
-          "importance": "must_read",
-          "title": "미 DOE, 콘스텔레이션 원전 성능 개선에 50억 달러 대출 보증"
-        },
-        {
-          "domain": "energy.gov",
-          "hash": "9aa7e3cac0d94b77",
-          "importance": "must_read",
-          "title": "미 에너지부, 콘스텔레이션 원전 현대화에 50억 달러 조건부 대출 지원 발표"
-        }
-      ],
-      "expires_at": "2026-10-29T00:40:48.803927+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-10-28T09:41:01.977509+00:00",
-      "new_articles": 2,
-      "origin": "auto",
-      "planned_at": "2026-10-28T09:40:59.668344+00:00",
-      "queries_run": 2,
-      "query": "콘스텔레이션 에너지의 원전",
-      "score": 4.1,
-      "status": "extended",
-      "term": "콘스텔레이션 에너지의",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-10-28"
-      ],
-      "yields": 1,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "콘스텔레이션의8개": {
       "articles": 1,
