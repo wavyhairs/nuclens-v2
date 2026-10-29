@@ -5234,7 +5234,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-10-29T22:01:25+00:00",
+    "updated_at": "2026-10-29T22:26:20+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -5314,7 +5314,7 @@
         "title": "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
         "detail": "AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 1건을 두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 만들어 보고, 6번 연속이면 보류합니다. 예: 「대한민국 산업수도 울산… ‘세계 1위 수소도시’로 도약한다 [다시 뛰.…」.",
         "severity": "critical",
-        "last_seen_at": "2026-10-29T22:01:25+00:00",
+        "last_seen_at": "2026-10-29T22:26:20+00:00",
         "last_observation_id": "2026-10-30T06:42:55.299758+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-09-24T18:55:00+00:00",
@@ -5338,7 +5338,7 @@
         "title": "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
         "detail": "AI 요약을 받지 못해 원문 첫 문장만 있는 기사 1건을 브리핑 후보에 넣지 않았습니다. 1건은 다음 수집(약 3시간 뒤)에서 다시 요약합니다. 예: 「GPU 20만장 목표 내건 베슬AI…글로벌 AI 인프라 시장 도전 [K…」.",
         "severity": "warning",
-        "last_seen_at": "2026-10-29T22:01:25+00:00",
+        "last_seen_at": "2026-10-29T22:26:20+00:00",
         "last_observation_id": "2026-10-30T06:58:12.359455+09:00",
         "min_occurrences": 2,
         "first_seen_at": "2026-09-26T21:11:41+00:00",
@@ -5399,14 +5399,14 @@
         "resolved_at": "2026-10-26T21:06:21+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 96,
+        "consecutive": 97,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
         "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 4건. 사건일 73건은 사이트에 표시하지 않았습니다 — 원문 근거를 다시 확인할 수 없음 73건 · 날짜 이상 0건.",
         "severity": "critical",
-        "last_seen_at": "2026-10-29T18:36:25+00:00",
-        "last_observation_id": "github-run:40750407346",
+        "last_seen_at": "2026-10-29T22:26:20+00:00",
+        "last_observation_id": "github-run:40961441372",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
@@ -5416,7 +5416,7 @@
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=28590 quarantined=4 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 5c87f37d62e3",
+        "technical": "checked=29052 quarantined=4 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 5c87f37d62e3",
         "fingerprint": "q=4:ca2b08fddaf1eafc",
         "last_notified_fingerprint": "q=35:37a796ac13006af0",
         "delivery": "digest"
@@ -6249,7 +6249,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=4 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-10-29T22:01:25+00:00",
+        "last_seen_at": "2026-10-29T22:26:20+00:00",
         "last_observation_id": "2026-10-29T21:59:10+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6287,7 +6287,7 @@
         "action": "필요 없음 — 원자력 기사가 여기 들어 있으면 topic_gate 의 어휘를 봐 주세요.",
         "technical": "demoted=3 pinpointnews.co.kr:not_required:0.0; g-enews.com:not_required:0.0; g-enews.com:not_required:0.0",
         "fingerprint": "off-topic~1",
-        "last_seen_at": "2026-10-29T22:01:25+00:00",
+        "last_seen_at": "2026-10-29T22:26:20+00:00",
         "last_observation_id": "2026-10-30T06:58:12.359255+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6306,7 +6306,7 @@
         "action": "필요 없음 — 새 소식이 여기 섞여 있으면 알려 주세요.",
         "technical": "newsfreezone.co.kr←heraldcorp.com@2026-10-28 sim=0.857",
         "fingerprint": "story-echo~1",
-        "last_seen_at": "2026-10-29T22:01:25+00:00",
+        "last_seen_at": "2026-10-29T22:26:20+00:00",
         "last_observation_id": "2026-10-29T21:59:30.356647+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6325,7 +6325,7 @@
         "action": "해당 사이트에 실제로 새 글이 있는지 한 번만 확인해 주세요.",
         "technical": "newest_pub=2026-09-28T02:04:56+00:00 quiet_days=31 threshold=14 observed_normal_gap_max=5",
         "fingerprint": "newest=2026-09-28T02:04:56+00:00",
-        "last_seen_at": "2026-10-29T22:01:25+00:00",
+        "last_seen_at": "2026-10-29T22:26:20+00:00",
         "last_observation_id": "2026-10-29T21:59:10+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6364,7 +6364,7 @@
         "action": "틀린 기사가 보이면 알려 주세요. 자주 틀리면 저장소 변수 INTEGRITY_RELEASE 를 off 로 두면 예전처럼 보류합니다.",
         "technical": "released=6a128898:curation-regen:description:title_source_mismatch,event_date_source_",
         "fingerprint": "released~1",
-        "last_seen_at": "2026-10-29T22:01:25+00:00",
+        "last_seen_at": "2026-10-29T22:26:20+00:00",
         "last_observation_id": "2026-10-30T06:43:01.083392+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6392,9 +6392,9 @@
         "resolved_at": "2026-10-27T22:24:11+00:00"
       },
       "quality:tracking-rate": {
-        "consecutive": 1,
+        "consecutive": 0,
         "scope": "data_gate",
-        "active": true,
+        "active": false,
         "title": "이슈 추적률이 기준을 밑돕니다",
         "detail": "같은 이슈로 이어 붙는 기사 비율이 목표보다 낮습니다. 뉴스가 한산한 기간에도 나타나는 값입니다.",
         "severity": "warning",
@@ -6408,13 +6408,14 @@
         "min_occurrences": 2,
         "delivery": "dev",
         "first_seen_at": "2026-10-28T19:29:46+00:00",
-        "pending_notification": false
+        "pending_notification": false,
+        "resolved_at": "2026-10-29T22:26:20+00:00"
       }
     }
   },
   "operational_digest": {
-    "last_sent_date": "2026-10-29",
-    "last_sent_at": "2026-10-28T19:29:46+00:00"
+    "last_sent_date": "2026-10-30",
+    "last_sent_at": "2026-10-29T22:26:20+00:00"
   },
   "integrity_holds": {
     "da876a2fb3c1942b": {
