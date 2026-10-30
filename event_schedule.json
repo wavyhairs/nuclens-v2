@@ -1,27 +1,6 @@
 {
- "generated_at": "2026-10-30T01:12:01+09:00",
+ "generated_at": "2026-10-31T00:50:05+09:00",
  "events": [
-  {
-   "id": "of-7d35885d1832",
-   "date": "2026-10-12",
-   "end_date": "2026-10-16",
-   "kind": "range",
-   "time": "",
-   "label": "TopFuel 2026",
-   "host": "",
-   "organizer": "",
-   "place": "Tokyo, Japan",
-   "url": "https://www.ans.org/meetings/view-468",
-   "source_id": "kaif_calendar",
-   "publisher": "한국원자력산업협회",
-   "notice_title": "TopFuel 2026 (세미나)",
-   "first_seen": "2026-08-29",
-   "topics": [
-    "fuel_cycle"
-   ],
-   "relevance": "topfuel",
-   "significance": "세미나"
-  },
   {
    "id": "of-4806b4ba1a2c",
    "date": "2026-10-18",
@@ -290,7 +269,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-10-30T01:12:01+09:00",
+   "at": "2026-10-31T00:50:05+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -298,7 +277,7 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-10-30T01:12:01+09:00",
+   "at": "2026-10-31T00:50:05+09:00",
    "ok": true,
    "parsed": 11,
    "kept": 3,
@@ -310,7 +289,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-10-30T01:12:01+09:00",
+   "at": "2026-10-31T00:50:05+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -323,7 +302,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-10-30T01:12:01+09:00",
+   "at": "2026-10-31T00:50:05+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -331,26 +310,27 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-10-30T01:12:01+09:00",
+   "at": "2026-10-31T00:50:05+09:00",
    "ok": true,
-   "parsed": 46,
-   "kept": 3,
+   "parsed": 44,
+   "kept": 2,
    "new": 0,
    "dropped": {
-    "no_interest_match": 43
+    "no_interest_match": 41,
+    "not_an_event": 1
    }
   },
   "kpx_notice": {
-   "at": "2026-10-30T01:12:01+09:00",
+   "at": "2026-10-31T00:50:05+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
-   "new": 1,
+   "new": 2,
    "dropped": {
-    "no_interest_match": 7,
+    "no_interest_match": 8,
     "no_event_date": 3,
     "unreadable_event_date": 1,
-    "low_significance": 3,
+    "low_significance": 2,
     "not_an_event": 4
    }
   }

@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 4,
-    "date": "2026-10-30"
+    "count": 2,
+    "date": "2026-10-31"
   },
   "retired": {
     "antares": {
@@ -1174,8 +1174,8 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-10-30"
+    "count": 3,
+    "date": "2026-10-31"
   },
   "terms": {
     "antaresnuclear": {
@@ -1258,6 +1258,55 @@
       "yields": 1,
       "zero_streak": 0
     },
+    "농어촌공사": {
+      "articles": 4,
+      "created_at": "2026-10-30T15:40:51.609741+00:00",
+      "domains": [
+        "yna.co.kr",
+        "energydaily.co.kr",
+        "lcnews.co.kr",
+        "todayenergy.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "yna.co.kr",
+          "hash": "1da41a7bbe869501",
+          "importance": "nice_to_know",
+          "title": "한수원·농어촌공사·수자원공사, 새만금 조력발전 공동개발 협약"
+        },
+        {
+          "domain": "energydaily.co.kr",
+          "hash": "1cc13729091d7ce8",
+          "importance": "nice_to_know",
+          "title": "한수원·수자원공사·농어촌공사, 새만금 조력발전 공동개발 협약 체결"
+        },
+        {
+          "domain": "lcnews.co.kr",
+          "hash": "fecba99654384c9e",
+          "importance": "nice_to_know",
+          "title": "한수원·수자원공사·농어촌공사, 새만금 조력발전 공동개발 협약"
+        }
+      ],
+      "expires_at": "2026-10-31T15:40:55.602504+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 6,
+      "last_run": "2026-10-30T15:40:55.602504+00:00",
+      "new_articles": 6,
+      "origin": "auto",
+      "planned_at": "2026-10-30T15:40:51.609741+00:00",
+      "queries_run": 1,
+      "query": "농어촌공사 원자력",
+      "score": 3.34,
+      "status": "extended",
+      "term": "농어촌공사",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [
+        "2026-10-31"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    },
     "원자력발전소3": {
       "articles": 1,
       "created_at": "2026-10-28T03:40:49.323207+00:00",
@@ -1294,6 +1343,45 @@
       "yields": 4,
       "zero_streak": 0
     },
+    "이진숙의원": {
+      "articles": 2,
+      "created_at": "2026-10-30T15:40:51.609741+00:00",
+      "domains": [
+        "zdnet.co.kr",
+        "pressian.com"
+      ],
+      "evidence": [
+        {
+          "domain": "zdnet.co.kr",
+          "hash": "1acbc597f8055c60",
+          "importance": "must_read",
+          "title": "이진숙 의원, 원전 AI 개발 및 안전관리 특별법안 대표발의"
+        },
+        {
+          "domain": "pressian.com",
+          "hash": "a7c66c7df1deef61",
+          "importance": "must_read",
+          "title": "이진숙 의원, '원전 AI 개발 및 안전관리 특별법' 대표발의"
+        }
+      ],
+      "expires_at": "2026-11-02T15:40:51.609741+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-10-30T15:40:55.602504+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-10-30T15:40:51.609741+00:00",
+      "queries_run": 1,
+      "query": "이진숙 의원 원전",
+      "score": 7.7,
+      "status": "tracking",
+      "term": "이진숙 의원",
+      "ttl_hours": 72,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "중앙연구원": {
       "articles": 5,
       "created_at": "2026-10-29T21:40:36.651855+00:00",
@@ -1327,11 +1415,11 @@
       "expires_at": "2026-10-30T21:40:36.651855+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-10-29T21:40:39.124355+00:00",
+      "last_run": "2026-10-30T15:40:55.602504+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-10-29T21:40:36.651855+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-30T15:40:51.609741+00:00",
+      "queries_run": 2,
       "query": "중앙연구원 원자력",
       "score": 3.52,
       "status": "tracking",
@@ -1340,7 +1428,7 @@
       "type": "org",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "진행하던": {
       "articles": 2,
