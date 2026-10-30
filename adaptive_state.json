@@ -876,6 +876,14 @@
       "type": "plant",
       "until": "2026-10-07T18:41:05.315934+00:00"
     },
+    "중앙연구원": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-10-30T21:40:53.392615+00:00",
+      "term": "중앙연구원",
+      "type": "org",
+      "until": "2026-11-13T21:40:53.392615+00:00"
+    },
     "중인7기": {
       "new_articles": 2,
       "reason": "기간 만료",
@@ -1182,7 +1190,7 @@
     }
   },
   "spent": {
-    "count": 6,
+    "count": 8,
     "date": "2026-10-31"
   },
   "terms": {
@@ -1258,12 +1266,12 @@
       ],
       "expires_at": "2026-10-31T15:40:55.602504+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 6,
-      "last_run": "2026-10-30T15:40:55.602504+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-10-30T21:40:56.108032+00:00",
       "new_articles": 6,
       "origin": "auto",
-      "planned_at": "2026-10-30T15:40:51.609741+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-30T21:40:53.392615+00:00",
+      "queries_run": 2,
       "query": "농어촌공사 원자력",
       "score": 3.34,
       "status": "extended",
@@ -1274,7 +1282,7 @@
         "2026-10-31"
       ],
       "yields": 1,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "원자력발전소3": {
       "articles": 1,
@@ -1335,69 +1343,23 @@
       ],
       "expires_at": "2026-11-02T15:40:51.609741+00:00",
       "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-10-30T15:40:55.602504+00:00",
-      "new_articles": 0,
+      "last_result_count": 1,
+      "last_run": "2026-10-30T21:40:56.108032+00:00",
+      "new_articles": 1,
       "origin": "auto",
-      "planned_at": "2026-10-30T15:40:51.609741+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-10-30T21:40:53.392615+00:00",
+      "queries_run": 2,
       "query": "이진숙 의원 원전",
       "score": 7.7,
-      "status": "tracking",
+      "status": "extended",
       "term": "이진숙 의원",
       "ttl_hours": 72,
       "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 1
-    },
-    "중앙연구원": {
-      "articles": 5,
-      "created_at": "2026-10-29T21:40:36.651855+00:00",
-      "domains": [
-        "knpnews.com",
-        "khnp.co.kr",
-        "e-platform.net",
-        "lawissue.co.kr",
-        "cstimes.com"
+      "yield_days": [
+        "2026-10-31"
       ],
-      "evidence": [
-        {
-          "domain": "knpnews.com",
-          "hash": "a2b2d4ac6a47fd41",
-          "importance": "nice_to_know",
-          "title": "김회천 한수원 사장, 중앙연구원 현장 안전 점검 실시"
-        },
-        {
-          "domain": "khnp.co.kr",
-          "hash": "12e29cf87ad0fd24",
-          "importance": "noise",
-          "title": "한수원 김회천 사장, 중앙연구원 현장 안전점검 실시"
-        },
-        {
-          "domain": "e-platform.net",
-          "hash": "7a4aa7755fb56aa3",
-          "importance": "nice_to_know",
-          "title": "한수원 김회천 사장, 중앙연구원 안전관리 현장경영 시행"
-        }
-      ],
-      "expires_at": "2026-10-30T21:40:36.651855+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-10-30T15:40:55.602504+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-10-30T15:40:51.609741+00:00",
-      "queries_run": 2,
-      "query": "중앙연구원 원자력",
-      "score": 3.52,
-      "status": "tracking",
-      "term": "중앙연구원",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
+      "yields": 1,
+      "zero_streak": 0
     },
     "진행하던": {
       "articles": 2,
