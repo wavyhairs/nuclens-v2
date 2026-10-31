@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 2,
-    "date": "2026-10-31"
+    "count": 0,
+    "date": "2026-11-01"
   },
   "retired": {
     "antares": {
@@ -259,6 +259,14 @@
       "term": "Uprate",
       "type": "company",
       "until": "2026-10-07T03:40:48.097694+00:00"
+    },
+    "urpv": {
+      "new_articles": 3,
+      "reason": "성과 없음",
+      "retired_at": "2026-10-31T15:40:45.831863+00:00",
+      "term": "URPV",
+      "type": "company",
+      "until": "2026-11-14T15:40:45.831863+00:00"
     },
     "v900": {
       "new_articles": 0,
@@ -1190,51 +1198,10 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-10-31"
+    "count": 3,
+    "date": "2026-11-01"
   },
   "terms": {
-    "urpv": {
-      "articles": 2,
-      "created_at": "2026-10-30T03:40:39.491044+00:00",
-      "domains": [
-        "segye.com",
-        "mk.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "segye.com",
-          "hash": "f5dfda5d912c1de2",
-          "importance": "nice_to_know",
-          "title": "두산에너빌리티, 뉴스케일파워와 SMR 상부 원자로 모듈 제작 계약 체결"
-        },
-        {
-          "domain": "mk.co.kr",
-          "hash": "7af174e3fc3a25e8",
-          "importance": "must_read",
-          "title": "두산에너빌리티, 뉴스케일파워 SMR 상부 원자로 압력용기 모듈 수주"
-        }
-      ],
-      "expires_at": "2026-11-01T03:40:39.491044+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-10-31T00:40:55.275824+00:00",
-      "new_articles": 3,
-      "origin": "auto",
-      "planned_at": "2026-10-31T00:40:51.398948+00:00",
-      "queries_run": 3,
-      "query": "URPV 원자력",
-      "score": 5.3,
-      "status": "extended",
-      "term": "URPV",
-      "ttl_hours": 48,
-      "type": "company",
-      "yield_days": [
-        "2026-10-30"
-      ],
-      "yields": 1,
-      "zero_streak": 2
-    },
     "농어촌공사": {
       "articles": 4,
       "created_at": "2026-10-30T15:40:51.609741+00:00",
@@ -1264,14 +1231,14 @@
           "title": "한수원·수자원공사·농어촌공사, 새만금 조력발전 공동개발 협약"
         }
       ],
-      "expires_at": "2026-10-31T15:40:55.602504+00:00",
+      "expires_at": "2026-11-01T15:40:45.831769+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-10-30T21:40:56.108032+00:00",
-      "new_articles": 6,
+      "last_result_count": 1,
+      "last_run": "2026-10-31T15:40:45.831769+00:00",
+      "new_articles": 7,
       "origin": "auto",
-      "planned_at": "2026-10-30T21:40:53.392615+00:00",
-      "queries_run": 2,
+      "planned_at": "2026-10-31T15:40:42.584496+00:00",
+      "queries_run": 3,
       "query": "농어촌공사 원자력",
       "score": 3.34,
       "status": "extended",
@@ -1279,10 +1246,11 @@
       "ttl_hours": 24,
       "type": "org",
       "yield_days": [
-        "2026-10-31"
+        "2026-10-31",
+        "2026-11-01"
       ],
-      "yields": 1,
-      "zero_streak": 1
+      "yields": 2,
+      "zero_streak": 0
     },
     "원자력발전소3": {
       "articles": 1,
@@ -1383,14 +1351,14 @@
           "title": "한수원, 체코 원전 시공계약 협상 종료 소식에 원전주 급락"
         }
       ],
-      "expires_at": "2026-11-01T00:40:55.275824+00:00",
+      "expires_at": "2026-11-01T15:40:45.831769+00:00",
       "importance": "must_read",
-      "last_result_count": 10,
-      "last_run": "2026-10-31T00:40:55.275824+00:00",
-      "new_articles": 66,
+      "last_result_count": 2,
+      "last_run": "2026-10-31T15:40:45.831769+00:00",
+      "new_articles": 68,
       "origin": "auto",
-      "planned_at": "2026-10-31T00:40:51.398948+00:00",
-      "queries_run": 4,
+      "planned_at": "2026-10-31T15:40:42.584496+00:00",
+      "queries_run": 5,
       "query": "진행하던 원전",
       "score": 4.34,
       "status": "promote_candidate",
@@ -1399,9 +1367,10 @@
       "type": "plant",
       "yield_days": [
         "2026-10-30",
-        "2026-10-31"
+        "2026-10-31",
+        "2026-11-01"
       ],
-      "yields": 4,
+      "yields": 5,
       "zero_streak": 0
     }
   },
