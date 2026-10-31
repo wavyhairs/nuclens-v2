@@ -505740,32 +505740,49 @@
     "published_at": "2026-10-30T23:00:00+00:00"
   },
   "e3bdcdc868c7d38e": {
-    "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 1,
+      "market_materiality": 0,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
     "section": "domestic",
+    "scope": "kr",
     "category": "정책",
-    "title_kr": "이동학 \"'전두환 옹호' 사과 없는 김태규, 국힘 왜 조치 안하나\"[한판승...",
-    "summary": "보통 1기가와트 하면 원전 하나 정도 생각하시면 되는데 원전이 막 7개 차이가 있는 거예요.",
+    "topics": [],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "국회 국정감사 마무리…전력 수요 예측 및 원전 관련 질의 등 논의",
+    "summary": "국회 국정감사가 마무리된 가운데, 기후부 국감에서 정부의 전력 수요 예측 편차 문제와 원전 관련 질의가 제기되었다.",
+    "detail": "",
     "implication": "",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
     "tags": [],
     "related_reports": [],
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "cached_at": "2026-10-31T00:38:15.581178+00:00",
+    "event_date": "2026-10-31",
+    "event_date_type": "occurrence",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
     "title": "이동학 \"'전두환 옹호' 사과 없는 김태규, 국힘 왜 조치 안하나\"[한판승...",
     "link": "https://www.nocutnews.co.kr/news/6600080",
     "feed": "정책",
     "domain": "nocutnews.co.kr",
     "matched": "원전 전력시장",
-    "source_excerpt": "◆ 정옥임> 특히 사례를 두 가지를 들자면 오세훈 시장의 선고가 나기 전에 법사위원장으로서 유죄를 받아야... 보통 1기가와트 하면 원전 하나 정도 생각하시면 되는데 원전이 막 7개 차이가 있는 거예요. 앞으로의 전력...",
-    "published_at": "2026-10-30T23:01:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "e3bdcdc868c7d38e",
@@ -505828,7 +505845,13 @@
         ]
       },
       "quantity_rules": 3,
-      "manifest_fingerprint": "d0e5adee2c065e523a756de28effdc293271a36e2a44668046269bfe7df30067"
+      "verified_event_date": {
+        "value": "2026-10-31",
+        "type": "occurrence",
+        "precision": "day",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "83b2b49db247b79aba71f6d28c0aef5bcf1c88f773c2bf95de9c954d33c65fe2"
     },
     "verified_source_components": {
       "article_hash": "e3bdcdc868c7d38e",
@@ -505836,35 +505859,60 @@
       "source_excerpt": "c260d8c3a0274b8f91a1a3e2775d3ca83c1e2e4061c3e5e7d4148808c420d100",
       "published_at": "3d556a12c57b9a23ef1d0399de2dfac934c71b2aff3e14c17c30da55806d19e5"
     },
-    "hash": "e3bdcdc868c7d38e"
+    "hash": "e3bdcdc868c7d38e",
+    "published_at": "2026-10-30T23:01:00+00:00"
   },
   "ecc22bdd838cfb3d": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "러시아 로사톰, 아프리카 4개국과 대형 원전 건설 협의 추진",
-    "summary": "현재 로사톰은 이집트, 탄자니아, 토고, 나미비아 등 4개국과 부유식 원전 도입을 위한 구체적인 협상을 진행 중이다.",
-    "implication": "",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "newbuild"
+    ],
+    "countries": [
+      "RU",
+      "EG"
+    ],
+    "article_type": "news",
+    "title_kr": "러시아 로사톰, 우간다 등 아프리카 4개국과 대형 원전 건설 협의",
+    "summary": "로사톰은 우간다 등 4개국과 대형 원전 건설을 협의하고 이집트 등 4개국과는 부유식 원전 도입 협상을 진행 중이다.",
+    "detail": "러시아 국영 원전 기업 로사톰 최고경영자 알렉세이 리하체프는 우간다, 가나, 에티오피아, 이집트 등 4개국과 대규모 원자력 발전소 건설을 논의 중이라고 밝혔다. 또한 이집트, 탄자니아, 토고, 나미비아 등 4개국과는 부유식 원자력 발전소 도입을 위한 구체적인 협상을 진행하고 있다. 이번 협의는 모스크바에서 개최된 제3차 러시아-아프리카 정상회담을 계기로 본격화됐다.",
+    "implication": "러시아가 아프리카 신흥 원전 시장을 대상으로 대형 원전과 부유식 원전 투트랙 진 전략을 가속화하고 있다.",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#로사톰",
+      "#아프리카원전",
+      "#부유식원전"
+    ],
     "related_reports": [],
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "cached_at": "2026-10-31T00:38:15.581178+00:00",
+    "event_date": "2026-10-30",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
     "title": "러시아 로사톰, 아프리카 4개국과 대형 원전 건설 협의 추진",
     "link": "https://www.g-enews.com/view.php?ud=2026103108144913782bd56fbc3c_1",
     "feed": "정책",
     "domain": "g-enews.com",
     "matched": "이집트 원전",
-    "source_excerpt": "현재 로사톰은 이집트, 탄자니아, 토고, 나미비아 등 4개국과 부유식 원전 도입을 위한 구체적인 협상을 진행 중이다. 이집트 엘 다바 프로젝트와 정상회담 협력 이집트는 로사톰의 아프리카 진출 주요 거점 역할을 맡고...",
-    "published_at": "2026-10-30T23:20:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "ecc22bdd838cfb3d",
@@ -505941,7 +505989,13 @@
         ]
       },
       "quantity_rules": 3,
-      "manifest_fingerprint": "4d306aed46a684287c6541c03570b93dabc4143eb8542baba8d6957e0aa7c422"
+      "verified_event_date": {
+        "value": "2026-10-30",
+        "type": "announcement",
+        "precision": "day",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "cabbaee4d1739617b529300d0c66a47d73c4e13df2200d304c691c2929cf1272"
     },
     "verified_source_components": {
       "article_hash": "ecc22bdd838cfb3d",
@@ -505949,35 +506003,77 @@
       "source_excerpt": "82bc880df39c311fcbced43f914edcd6651ce52b37b1aca62195e3ad029af92c",
       "published_at": "28f3f221a1271611c4027a21471b722cbba8fd8bf2ac947c03a133d6637a3661"
     },
-    "hash": "ecc22bdd838cfb3d"
+    "hash": "ecc22bdd838cfb3d",
+    "published_at": "2026-10-30T23:20:00+00:00",
+    "summary_repair": {
+      "at": "2026-10-31T00:47:05.138192+00:00",
+      "note": "사실검사 모순[summary]: 요약이 '우간다, 가나, 에티오피아, 이집트 등 아프리카 4개국과 대형 원전 건설을 논의 중이며, 4개국과는 부유식 원전 도입도 협상하고 있다.' 라고 썼으나 원문은 '현재 로사톰은 이집트, 탄자니아, 토고, 나미비아 등 4개국과 부유식 원전 도입을 위한 구체적인 협상을 진행 중이다.' — 원문에서 대형 원전 협의 대상 4개국(우간다, 가나, 에티오피아, 이집트)과 부유식 원전 협상 대상 4개국(이집트, 탄자니아, 토고, 나미비아)은 완전히 일치하지 않는데, 요약은 동일한 4개국과 양쪽 모두 협상 중",
+      "before": {
+        "title_kr": "러시아 로사톰, 아프리카 4개국과 대형 원전 건설 협의 추진",
+        "summary": "러시아 로사톰이 우간다, 가나, 에티오피아, 이집트 등 아프리카 4개국과 대형 원전 건설을 논의 중이며, 4개국과는 부유식 원전 도입도 협상하고 있다."
+      }
+    }
   },
   "a5ba9923026edabc": {
-    "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "DL이앤씨, 누적 신규수주 7.2조…3분기 누적 영업이익률 8.4% 기록",
-    "summary": "북미 에너지 인프라, 소형모듈원전(SMR), 데이터센터 등 미래 성장 분야에서 사업기회를 확대하고 있다.",
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 1,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "corporate",
+    "title_kr": "DL이앤씨, 3분기 누적 신규수주 7.2조원 및 영업이익률 8.4% 기록",
+    "summary": "DL이앤씨가 3분기 누적 매출 5조 347억 원, 영업이익 4,241억 원, 신규수주 7조 2,154억 원을 달성했다.",
+    "detail": "DL이앤씨는 3분기 연결기준 매출 1조 5,065억 원, 영업이익 1,073억 원을 기록했다. 3분기 누적 영업이익률은 8.4%로 전년 동기 대비 2.7%p 상승했으며, 누적 신규수주는 전년 동기 대비 31.0% 증가한 7조 2,154억 원을 기록했다. 주택사업 원가율 안정화와 선별수주 전략이 실적에 반영되었다. 북미 에너지 인프라 및 SMR 분야에서 사업 기회를 모색 중이나, 샤힌 프로젝트 추가 비용 반영으로 3분기 영업이익은 전년 대비 감소했다.",
     "implication": "",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#DL이앤씨",
+      "#실적발표",
+      "#건설업"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-10-31T00:38:15.581178+00:00",
+    "topic_verdict": "on_topic",
+    "integrity_release": {
+      "v": 1,
+      "fp": "1ca1ebc5d3143794",
+      "verdict": "ok",
+      "checked_at": "2026-10-31T00:52:36+00:00",
+      "model": "gemini-3.5-flash-lite",
+      "source_kind": "body",
+      "codes": [
+        "title_source_mismatch",
+        "event_date_source_conflict"
+      ]
+    },
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
     "title": "DL이앤씨, 누적 신규수주 7.2조…3분기 누적 영업이익률 8.4% 기록",
     "link": "http://www.sisacast.kr/news/articleView.html?idxno=101497",
     "feed": "SMR",
     "domain": "sisacast.kr",
     "matched": "SMR",
-    "source_excerpt": "북미 에너지 인프라, 소형모듈원전(SMR), 데이터센터 등 미래 성장 분야에서 사업기회를 확대하고 있다. 북미에서는 캐나다 민간 및 공공 발주처가 추진 중인 가스발전 프로젝트에 입찰 추진 중에 있으며, 미국 내...",
-    "published_at": "2026-10-30T23:28:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "a5ba9923026edabc",
@@ -506065,35 +506161,60 @@
       "source_excerpt": "ca1fb12d47a9de4528121683f0dc4c83a88c7af560cdd674c39ba42afaec8570",
       "published_at": "ecce3f23738759a360d32b913c2e7ec31cc8c8d538a989718775fcad6cee36ec"
     },
-    "hash": "a5ba9923026edabc"
+    "hash": "a5ba9923026edabc",
+    "published_at": "2026-10-30T23:28:00+00:00"
   },
   "6909992e43aadcaa": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
     "section": "domestic",
+    "scope": "kr",
     "category": "정책",
-    "title_kr": "송전망 막힌 지방 발전소, 전기 직판 길 열린다…첨단산업 유치 '물꼬' ...",
-    "summary": "송전망을 새로 건설하지 않고도 발전소 인근에 데이터센터를 유치할 수 있는 전력 공급 수단이기 때문이다.",
+    "topics": [
+      "power_market",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "policy",
+    "title_kr": "정부, 송전망 혼잡 지역 발전소 인근 데이터센터 유치 위한 전기 직판 허용",
+    "summary": "정부가 송전망 혼잡 지역의 발전소 인근에 데이터센터를 유치할 수 있도록 전기 직접 판매를 허용하고, 지역별 차등요금제(LMP) 도입을 추진한다.",
+    "detail": "",
     "implication": "",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#전력시장",
+      "#데이터센터",
+      "#LMP"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-10-31T00:38:15.581178+00:00",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
     "title": "송전망 막힌 지방 발전소, 전기 직판 길 열린다…첨단산업 유치 '물꼬' ...",
     "link": "https://www.hankyung.com/article/202610280304i",
     "feed": "정책",
     "domain": "hankyung.com",
     "matched": "송전망 건설",
-    "source_excerpt": "송전망을 새로 건설하지 않고도 발전소 인근에 데이터센터를 유치할 수 있는 전력 공급 수단이기 때문이다. 정부가 추진하는 LMP 도입도 배경으로 꼽힌다. LMP는 송전망 혼잡 정도에 따라 지역별 전력 도매가격을 다르게...",
-    "published_at": "2026-10-30T23:31:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "6909992e43aadcaa",
@@ -506121,35 +506242,59 @@
       "source_excerpt": "26eb9d5b05d79967c452dfa8ec92daffed41222cd3fe774839da5f395e4d54eb",
       "published_at": "74a84897c710218b3b91c7f2a959bbfef33e9f8709805d97b58995b18e65bd47"
     },
-    "hash": "6909992e43aadcaa"
+    "hash": "6909992e43aadcaa",
+    "published_at": "2026-10-30T23:31:00+00:00"
   },
   "58b86d490299ba40": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 3,
+      "market_materiality": 0,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
+    "section": "khnp",
+    "scope": "kr",
     "category": "정책",
-    "title_kr": "영동양수건설소, 내년도 읍면별 지원사업 14건 선정",
-    "summary": "한국수력원자력 영동양수건설소는 내년도 지역지원 공모를 통해 14건의 사업을 선정했다고 31일 밝혔다.",
-    "implication": "",
+    "topics": [
+      "newbuild"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "한수원 영동양수건설소, 내년도 읍면별 지원사업 14건 선정",
+    "summary": "한수원 영동양수건설소는 발전소 주변지역 지원을 위한 내년도 공모 사업 14건을 선정했다.",
+    "detail": "한수원 영동양수건설소는 심의위원회를 열고 내년도 지역지원 공모에 접수된 17건 중 14건의 사업을 선정했다. 이번 공모는 8월 10일부터 한 달간 영동군 읍면을 대상으로 진행됐다. 발전소주변지역 지원에 관한 법률에 따라 교육장학, 지역경제협력, 환경개선, 복지, 문화진흥 등 6개 분야로 추진한다. 한수원은 충북 영동군 일대에 500㎿급 양수발전소를 건설 중이다.",
+    "implication": "발전소 주변지역 수용성 제고와 복지 증진을 위한 지원사업이 확정되어 본격적인 집행 절차에 들어간다.",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#영동양수",
+      "#지역지원",
+      "#한수원"
+    ],
     "related_reports": [],
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "cached_at": "2026-10-31T00:38:15.581178+00:00",
+    "event_date": "2026-10-31",
+    "event_date_type": "announcement",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
     "title": "영동양수건설소, 내년도 읍면별 지원사업 14건 선정",
     "link": "https://www.news1.kr/local/sejong-chungbuk/6337809",
     "feed": "정책",
     "domain": "news1.kr",
     "matched": "원자력진흥위원회",
-    "source_excerpt": "한국수력원자력 영동양수건설소는 내년도 지역지원 공모를 통해 14건의 사업을 선정했다고 31일 밝혔다. 영동양수건설소는 심의위원회를 열고 평가 기준을 토대로 심사를 벌여 이같이 결정했다. 지난 8월 10일부터 한...",
-    "published_at": "2026-10-31T00:00:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "58b86d490299ba40",
@@ -506213,7 +506358,13 @@
         ]
       },
       "quantity_rules": 3,
-      "manifest_fingerprint": "3b45623357d621d270c128ed0617c6ea93cd13104e9843772316225e69c3e162"
+      "verified_event_date": {
+        "value": "2026-10-31",
+        "type": "announcement",
+        "precision": "day",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "d993a2efecac330bc6fcf688d674ac51e6bcd8a76423708492179b6ad5d0ce1c"
     },
     "verified_source_components": {
       "article_hash": "58b86d490299ba40",
@@ -506221,35 +506372,67 @@
       "source_excerpt": "f46b1e8f51cfcffb04d34e1c82246bf3d3ddd18e9e23c7f633838a291c0799fa",
       "published_at": "37c271a98dcb42b2172ba4197b390b9bb42e15405c10f7d7f0fa2d5254af4a69"
     },
-    "hash": "58b86d490299ba40"
+    "hash": "58b86d490299ba40",
+    "published_at": "2026-10-31T00:00:00+00:00",
+    "summary_repair": {
+      "at": "2026-10-31T00:47:05.138192+00:00",
+      "note": "사실검사 모순[summary]: 요약이 '2026년도 지역지원사업' 라고 썼으나 원문은 '한국수력원자력 영동양수건설소는 내년도 지역지원 공모를 통해 14건의 사업을 선정했다고 31일 밝혔다.' — 원문은 '내년도(2027년도)' 지원사업이라고 명시했으나, 요약은 '2026년도'로 잘못 기재함.",
+      "before": {
+        "title_kr": "한수원 영동양수건설소, 내년도 지역지원사업 14건 선정",
+        "summary": "한수원 영동양수건설소가 지역 공모를 통해 2026년도 지역지원사업 14건을 최종 선정했다."
+      }
+    }
   },
   "d7ba9a22e866e6ac": {
-    "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "영광·래블업·이에스티 코스닥 데뷔…바로팜·동원파츠 등 청약 [주간 ...",
-    "summary": "북미 전력 인프라 등으로 사업 영역을 확대하고 있다.",
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 2,
+      "market_materiality": 2,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "market",
+    "section": "international",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "finance"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "코스닥 신규 상장 및 공모청약 주간 동향",
+    "summary": "다음 주 코스닥 시장에 영광, 래블업 등 4개 종목이 상장하며, 바로팜 등 5개 기업이 공모청약을 진행한다.",
+    "detail": "에너지·환경 엔지니어링 기업 영광이 11월 2일 상장하며, AI 인프라 플랫폼 래블업은 3일 상장한다. 바로팜, 동원파츠 등은 일반투자자 대상 공모청약을 실시한다. 영광은 원전 및 북미 전력 인프라로 사업 영역을 확장 중이며, 제이앤티지는 ESS 및 수소연료전지 탄소소재를 개발한다.",
     "implication": "",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#코스닥",
+      "#IPO",
+      "#전력인프라"
+    ],
     "related_reports": [],
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "cached_at": "2026-10-31T00:38:15.581178+00:00",
+    "event_date": "2026-11-02",
+    "event_date_type": "scheduled",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "topic_verdict": "adjacent",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
     "title": "영광·래블업·이에스티 코스닥 데뷔…바로팜·동원파츠 등 청약 [주간 ...",
     "link": "https://www.etoday.co.kr/news/view/2642501",
     "feed": "정책",
     "domain": "etoday.co.kr",
     "matched": "데이터센터 전력",
-    "source_excerpt": "북미 전력 인프라 등으로 사업 영역을 확대하고 있다. AI 인프라 소프트웨어 기업 래블업은 3일... 모션 솔루션 기업 씨앤엠은 자동차·가전용 모터 부품을 주력으로 생산하며 로봇과 데이터센터, 방산으로 사업을...",
-    "published_at": "2026-10-31T00:02:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "d7ba9a22e866e6ac",
@@ -506331,7 +506514,13 @@
         ]
       },
       "quantity_rules": 3,
-      "manifest_fingerprint": "809ef453a1a8fe621be7a3acad46fe7eebafc6eabc4deb3d2b34fb195afa343e"
+      "verified_event_date": {
+        "value": "2026-11-02",
+        "type": "scheduled",
+        "precision": "day",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "52dc7e95572551be09b3baada57f7fe478780b486da423c980e2593354659bee"
     },
     "verified_source_components": {
       "article_hash": "d7ba9a22e866e6ac",
@@ -506339,35 +506528,59 @@
       "source_excerpt": "2cb9d75fa5891a556412535dade8039539a49560b7d0411e92ceda1a9bca736e",
       "published_at": "aba39d6726e1269b37b754a119f43276f96443bd2a5395865812887dff9ad83e"
     },
-    "hash": "d7ba9a22e866e6ac"
+    "hash": "d7ba9a22e866e6ac",
+    "published_at": "2026-10-31T00:02:00+00:00"
   },
   "9cb9c32eb2e15c54": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 2,
+      "market_materiality": 0,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
     "section": "domestic",
+    "scope": "kr",
     "category": "정책",
-    "title_kr": "\"오라 교정시설, 가라 지역소멸\"… 교도소 유치에 지자체 7곳 경쟁",
-    "summary": "영덕은 지난 6월 신규 원자력발전소 건설 후보지로도 선정됐다.",
-    "implication": "",
+    "topics": [
+      "newbuild"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "법무부 교도소 신설 공모에 지자체 7곳 유치 경쟁",
+    "summary": "법무부의 교도소 신설 공모에 영덕군 등 7개 지자체가 지역 경제 활성화를 위해 유치 경쟁에 나섰다.",
+    "detail": "법무부는 전국 4곳에 교도소를 신설할 계획이며 12월 후보지를 선정한다. 영덕군은 신규 원전 건설 후보지로서 교정 시설과 지역 개발 사업의 시너지를 기대하고 있다. 영양, 청송, 의성, 제천, 보은, 정선 등도 유치 의사를 밝혔다.",
+    "implication": "지역 소멸 위기 대응을 위한 지자체의 기피 시설 유치 전략이 활발해지고 있으며, 원전 등 대형 국책 사업과 연계한 지역 개발 모델이 확산되고 있다.",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#지역소멸",
+      "#교도소유치",
+      "#영덕"
+    ],
     "related_reports": [],
-    "event_date": null,
-    "event_date_type": "unknown",
-    "event_date_precision": "unknown",
-    "event_date_source": "unknown",
-    "cached_at": "2026-10-31T00:38:15.581178+00:00",
+    "event_date": "2026-12-01",
+    "event_date_type": "scheduled",
+    "event_date_precision": "month",
+    "event_date_source": "article_text",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
     "title": "\"오라 교정시설, 가라 지역소멸\"… 교도소 유치에 지자체 7곳 경쟁",
     "link": "https://www.thepublic.kr/news/articleView.html?idxno=324503",
     "feed": "adaptive:원자력발전소3",
     "domain": "thepublic.kr",
     "matched": "원자력발전소 3",
-    "source_excerpt": "영덕은 지난 6월 신규 원자력발전소 건설 후보지로도 선정됐다. 영덕군 관계자는 \"교정 시설과 지역 개발 사업을 연계해 경제적으로 시너지를 낼 것\"이라고 했다. 의성군은 대구경북통합신공항 개항에 맞춰 확충될...",
-    "published_at": "2026-10-31T00:28:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "9cb9c32eb2e15c54",
@@ -506460,7 +506673,13 @@
         ]
       },
       "quantity_rules": 3,
-      "manifest_fingerprint": "51dd804d35624067626821b2c49b35d6a7205c8ef44a4857868d09b3cf2d801d"
+      "verified_event_date": {
+        "value": "2026-12-01",
+        "type": "scheduled",
+        "precision": "month",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "af2c313230666ea4ab1e52696f2f214d39d42e95cca3c4c65c8d02ef3d1ab85d"
     },
     "verified_source_components": {
       "article_hash": "9cb9c32eb2e15c54",
@@ -506468,35 +506687,61 @@
       "source_excerpt": "268db883172164fa2a3644ad548dfbbff5a4a194bff4afb0b9edb95dafe92345",
       "published_at": "f8bfbbe1fbc2092d2f7f2dae2cc94464c5b0d60017a898871de6b1952cb0392b"
     },
-    "hash": "9cb9c32eb2e15c54"
+    "hash": "9cb9c32eb2e15c54",
+    "published_at": "2026-10-31T00:28:00+00:00"
   },
   "2e3cb31c819662df": {
-    "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "앤트로픽 IPO에 웃고, AI 우려에 울고…하닉 11%↑[김근희의 증시 랩업]",
-    "summary": "삼성전자의 경우 기대했던 주주환원 정책이 나오지 않아 SK하이닉스보다 상승 폭이 더 낮았다....",
-    "implication": "",
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 3,
+      "market_materiality": 3,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "market",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "finance",
+      "newbuild"
+    ],
+    "countries": [
+      "KR",
+      "CZ"
+    ],
+    "article_type": "analysis",
+    "title_kr": "체코 원전 협상 결렬 여파로 대우건설·두산에너빌리티 주가 하락",
+    "summary": "체코 원전 시공 협상 결렬 소식으로 대우건설과 두산에너빌리티의 주가가 큰 폭으로 하락했다.",
+    "detail": "체코 원전 주설비공사 하도급계약 협상 결렬로 대우건설은 25.71%, 두산에너빌리티는 7.74% 하락했다. 시장에서는 대우건설의 원전 수혜 근거가 불확실해졌다고 분석하며 목표주가를 하향 조정했다. 반면 삼성SDI 등 AI 데이터센터 관련 ESS 매출 증가 기업은 상승세를 보였다.",
+    "implication": "원전 사업의 불확실성이 건설 및 기자재 기업의 주가 변동성을 키우고 있으며, AI 인프라 관련 실적주와 원전 관련주 간의 차별화가 심화되고 있다.",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#주가",
+      "#체코원전",
+      "#대우건설"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-10-31T00:38:15.581178+00:00",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
     "title": "앤트로픽 IPO에 웃고, AI 우려에 울고…하닉 11%↑[김근희의 증시 랩업]",
     "link": "https://www.mt.co.kr/stock/2026/10/31/2026103016390314231",
     "feed": "정책",
     "domain": "mt.co.kr",
     "matched": "원자력 정책",
-    "source_excerpt": "삼성전자의 경우 기대했던 주주환원 정책이 나오지 않아 SK하이닉스보다 상승 폭이 더 낮았다.... 시장에서는 그동안 원자력 관련 수혜를 보고 있었던 대우건설이 더 큰 타격을 받을 것이라고 분석했다. 김기룡...",
-    "published_at": "2026-10-31T00:30:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "2e3cb31c819662df",
@@ -506628,35 +506873,60 @@
       "source_excerpt": "e05a01bfad859393ec30e654ec79994c827a1725b1dfbd39f90ba625e50aefa4",
       "published_at": "fb797d1641bdd0dfb71f94a51391be8bbe0792d61c5cba9e816be89a6c96058e"
     },
-    "hash": "2e3cb31c819662df"
+    "hash": "2e3cb31c819662df",
+    "published_at": "2026-10-31T00:30:00+00:00"
   },
   "d8ad552fa30d8d15": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
     "importance": "nice_to_know",
-    "curation_status": "fallback",
-    "curation_source": "fallback",
-    "section": "domestic",
-    "category": "정책",
-    "title_kr": "미국 메릴랜드, 태양광·ESS 보조금 입찰 시작…2년간 최대 2억달러 추진",
-    "summary": "지원 대상은 메릴랜드주에 건설하는 대규모 재생에너지 발전설비와 ESS다.",
-    "implication": "",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "power_market",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "policy",
+    "title_kr": "미국 메릴랜드주, 재생에너지·ESS 보조금 경쟁입찰 개시",
+    "summary": "메릴랜드주가 2년간 최대 2억달러를 투입해 대규모 재생에너지 및 ESS 사업을 지원하는 경쟁입찰을 시작했다.",
+    "detail": "메릴랜드 에너지청(MEA)은 '메가와츠 포 메릴랜드' 프로그램을 통해 2027~2028회계연도에 걸쳐 최대 2억달러를 지원한다. 지원 대상은 5MWac 이상의 재생에너지 발전설비와 20MWh 이상의 배터리 ESS다. 사업자는 MWh당 보조금 단가를 경쟁적으로 제시하며, 1차 신청은 11월 30일까지다. 이번 조치는 데이터센터 확충 등으로 급증하는 전력 수요에 대응하고 전기요금 부담을 완화하기 위한 목적이다.",
+    "implication": "데이터센터 전력 수요 급증에 대응해 주정부가 직접 보조금 경쟁입찰을 통해 대규모 전력망 연계 설비를 확충하려는 사례다.",
     "why_important": "",
     "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
     "watch_next": "",
-    "tags": [],
+    "tags": [
+      "#ESS",
+      "#재생에너지",
+      "#전력망"
+    ],
     "related_reports": [],
     "event_date": null,
     "event_date_type": "unknown",
     "event_date_precision": "unknown",
     "event_date_source": "unknown",
-    "cached_at": "2026-10-31T00:38:15.581178+00:00",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
     "title": "미국 메릴랜드, 태양광·ESS 보조금 입찰 시작…2년간 최대 2억달러 추진",
     "link": "https://www.aitimes.com/news/articleView.html?idxno=216801",
     "feed": "정책",
     "domain": "aitimes.com",
     "matched": "송전망 건설",
-    "source_excerpt": "지원 대상은 메릴랜드주에 건설하는 대규모 재생에너지 발전설비와 ESS다. 지원금은 발전소와 저장장치의... 주정부는 지역 전력 수요가 공급 능력보다 빠르게 증가하면서 전력 구매비용과 송전망 관련 비용에 부담이...",
-    "published_at": "2026-10-31T00:30:00+00:00",
-    "features_attempts": 1,
     "verified_evidence": {
       "version": 2,
       "article_hash": "d8ad552fa30d8d15",
@@ -506746,6 +507016,1122 @@
       "source_excerpt": "e2f09f8b90fc9d138252f1837263e72ba345c0932f761191f39d5ffee52e4fd9",
       "published_at": "fb797d1641bdd0dfb71f94a51391be8bbe0792d61c5cba9e816be89a6c96058e"
     },
-    "hash": "d8ad552fa30d8d15"
+    "hash": "d8ad552fa30d8d15",
+    "published_at": "2026-10-31T00:30:00+00:00"
+  },
+  "8ab7322eff9b3d6c": {
+    "features": {
+      "event_type": "contract_award",
+      "korea_relevance": 3,
+      "market_materiality": 3,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 3
+    },
+    "importance": "must_read",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "newbuild"
+    ],
+    "countries": [
+      "CZ",
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "한수원, 대우건설 컨소시엄과 체코 원전 시공계약 협상 결렬…경쟁입찰 추진",
+    "summary": "한수원은 체코 두코바니 원전 시공계약을 위한 대우건설 컨소시엄과의 협상이 결렬됨에 따라 신규 시공사 선정을 위한 경쟁입찰을 추진하기로 했다.",
+    "detail": "한국수력원자력과 대우건설·두산에너빌리티 컨소시엄 간의 체코 두코바니 신규 원전 시공계약 협상이 1년 넘는 진통 끝에 최종 결렬됐다. 공사비 산정과 총액확정계약 방식, 설계 변경에 따른 추가 비용 부담을 두고 이견을 좁히지 못했다. 한수원은 협상 종료에 따라 국가계약법에 근거한 경쟁입찰을 거쳐 2027년 7월까지 신규 시공계약을 진행할 계획이다. 대우건설 측은 한수원이 변경된 계약 조건을 일방적으로 통보하고 3주 만에 협상을 종료했다고 반발하고 있다.",
+    "implication": "팀코리아의 협력 체계에 부담이 생긴 가운데, 2027년 7월까지 진행될 신규 시공사 선정 과정과 공사비 변동이 향후 체코 프로젝트의 주요 변수로 작용할 전망이다.",
+    "why_important": "한수원과 기존 컨소시엄 간의 시공계약 협상이 결렬되어 신규 시공사 선정 절차로 전환되면서 사업 주체 간 협력 구도에 변화가 생겼다.",
+    "why_short": "체코 원전 시공계약 협상 결렬로 경쟁입찰 전환됨",
+    "open_question": "신규 시공사 선정에 따른 공사비 변동 규모와 기존 현지 협력체계의 승계 방안은 미정이다.",
+    "open_question_source": "article_text",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#체코원전",
+      "#한수원",
+      "#시공계약"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
+    "title": "대우건설, 체코 원전 시공계약 파기에 \"일방적 협상 종료\" 반발…재협상...",
+    "link": "https://sports.hankooki.com/news/articleView.html?idxno=6942567",
+    "feed": "정책",
+    "domain": "hankooki.com",
+    "matched": "원전 수출",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "8ab7322eff9b3d6c",
+      "source_components": {
+        "article_hash": "8ab7322eff9b3d6c",
+        "title": "754e5d297d962a3759b5501496f82d71803f4ba228e1b0888fda266b7c88ca09",
+        "source_excerpt": "433e27ec41fb7ee523048073f95d2ae9a166e49a6f2d3d15d9ac59ea3d754e74",
+        "published_at": "5a52643e4943c5a60397127f8eac8e0c99ec7c7e1e00073d6523425c2c74cd18"
+      },
+      "source_fingerprint": "6f7bcc1e91c1c897c029d08a609e4e34c52f9edfb60db3b9b586f2b252fd1211",
+      "entities": [
+        "barakah",
+        "doosan",
+        "dukovany",
+        "khnp",
+        "shin-hanul",
+        "team-korea"
+      ],
+      "countries": [
+        "AE",
+        "CZ",
+        "KR"
+      ],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [
+        "approval",
+        "cancellation",
+        "contract",
+        "review"
+      ],
+      "claims": [
+        "1년",
+        "29일",
+        "7일",
+        "6월",
+        "6호기",
+        "2025년",
+        "2개",
+        "55%",
+        "4호기",
+        "2024년",
+        "1월",
+        "2027년",
+        "7월",
+        "apr1000"
+      ],
+      "quantities": {
+        "%": [
+          "55"
+        ],
+        "개": [
+          "2"
+        ],
+        "년": [
+          "1",
+          "2024",
+          "2025",
+          "2027"
+        ],
+        "월": [
+          "1",
+          "6",
+          "7"
+        ],
+        "일": [
+          "29",
+          "7"
+        ],
+        "조원": [
+          "27"
+        ],
+        "호기": [
+          "3",
+          "4",
+          "5",
+          "6"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "67806838421934365fcd63d2063f911f20027476862eba794b24b72aab7a92c5"
+    },
+    "verified_source_components": {
+      "article_hash": "8ab7322eff9b3d6c",
+      "title": "754e5d297d962a3759b5501496f82d71803f4ba228e1b0888fda266b7c88ca09",
+      "source_excerpt": "433e27ec41fb7ee523048073f95d2ae9a166e49a6f2d3d15d9ac59ea3d754e74",
+      "published_at": "5a52643e4943c5a60397127f8eac8e0c99ec7c7e1e00073d6523425c2c74cd18"
+    },
+    "hash": "8ab7322eff9b3d6c",
+    "published_at": "2026-10-30T23:00:00+00:00",
+    "summary_repair": {
+      "at": "2026-10-31T00:47:05.138192+00:00",
+      "note": "사실검사 모순[summary]: 요약이 '2027년 7월까지 계약을 완료할 계획이다.' 라고 썼으나 원문은 '입찰 공고 및 낙찰자 선정 절차를 거쳐 2027년 7월까지 신규 시공계약을 진행한다는 계획이다.' — 원문은 신규 시공계약을 '진행한다'고 하였으나, 요약은 이를 '완료할 계획'이라고 표현하여 단계가 다름",
+      "before": {
+        "title_kr": "한수원, 대우건설 컨소시엄과 체코 원전 시공계약 협상 결렬…경쟁입찰 전환",
+        "summary": "한수원이 체코 두코바니 원전 시공계약 협상 결렬에 따라 신규 시공사 선정을 위한 경쟁입찰을 추진하며 2027년 7월까지 계약을 완료할 계획이다."
+      }
+    }
+  },
+  "1704a0a6e9f2aa1b": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 2,
+      "market_materiality": 1,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [
+      "smr",
+      "security_trade"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "policy",
+    "title_kr": "한미일 외교장관, 북한 비핵화 의지 재확인 및 SMR 협력 이행 점검",
+    "summary": "한미일 외교장관이 애틀랜타에서 회담을 갖고 북한 비핵화 의지를 재확인하는 한편, 지난 7월 체결한 한미일 SMR 협력각서의 이행 상황을 점검했다.",
+    "detail": "루비오 미 국무장관과 한국, 일본 외교장관은 북한의 핵·탄도미사일 자금 조달 차단 및 다국적제재모니터링팀 활동을 평가했다. 또한 경제안보 협력의 일환으로 7월 튀르키예에서 체결된 한미일 SMR 협력각서의 이행 현황과 10월 서울에서 논의된 경제안보 과제들을 검토했다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#한미일협력",
+      "#SMR",
+      "#비핵화"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
+    "title": "한미일 외교장관 “北 완전한 비핵화 위한 확고한 의지 재확인”",
+    "link": "https://www.sedaily.com/article/20108558",
+    "feed": "SMR",
+    "domain": "sedaily.com",
+    "matched": "SMR",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "1704a0a6e9f2aa1b",
+      "source_components": {
+        "article_hash": "1704a0a6e9f2aa1b",
+        "title": "6811e7bec95aaf45c68095646ccc506b5f359f83c56423445dd922c1160a5c27",
+        "source_excerpt": "7cfb57a1d4de8c19adc713f1f06133e4b4f5484b5fa4e806f7b38a9492142b89",
+        "published_at": "1bc97eea82b357b1cb07a63ad99b2824042a06ecb06511c9aa3938d4a135ca16"
+      },
+      "source_fingerprint": "128672b131379604a5ac20d94921b7c310ceac5592815800c419960e6927788a",
+      "entities": [],
+      "countries": [
+        "CN",
+        "IN",
+        "JP",
+        "KR",
+        "RU",
+        "US"
+      ],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [],
+      "claims": [
+        "7월",
+        "7일",
+        "10월",
+        "15일",
+        "30일",
+        "9월",
+        "21일",
+        "40일"
+      ],
+      "quantities": {
+        "년": [
+          "2026"
+        ],
+        "월": [
+          "10",
+          "7",
+          "9"
+        ],
+        "일": [
+          "15",
+          "21",
+          "30",
+          "40",
+          "7"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "6cab9a3fffd0a8f7dad4595325bb68d19bc30aac4407d8d100d01da6f4f6e21a"
+    },
+    "verified_source_components": {
+      "article_hash": "1704a0a6e9f2aa1b",
+      "title": "6811e7bec95aaf45c68095646ccc506b5f359f83c56423445dd922c1160a5c27",
+      "source_excerpt": "7cfb57a1d4de8c19adc713f1f06133e4b4f5484b5fa4e806f7b38a9492142b89",
+      "published_at": "1bc97eea82b357b1cb07a63ad99b2824042a06ecb06511c9aa3938d4a135ca16"
+    },
+    "hash": "1704a0a6e9f2aa1b",
+    "published_at": "2026-10-30T23:11:00+00:00"
+  },
+  "992eaba96700ae56": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 1,
+      "market_materiality": 2,
+      "policy_materiality": 2,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "international",
+    "scope": "overseas",
+    "category": "정책",
+    "topics": [
+      "datacenter_ai",
+      "regulation"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "미국 AI 업계, 중간선거 앞두고 규제 강화 및 정치적 역풍 직면",
+    "summary": "미국 AI 기업들이 트럼프 행정부의 규제 완화 수혜를 입었으나, 중간선거 이후 의회의 데이터센터 전력 사용 및 환경 영향 조사 등 규제 강화 움직임에 직면했다.",
+    "detail": "연방의회는 데이터센터의 폭발적인 전력 소비와 환경 오염 문제에 대해 구체적인 조사를 요구하고 있다. 선거 결과에 따라 AI 안전성 기준 법안과 데이터 프라이버시 규제가 재추진될 가능성이 높으며, 지방정부의 독자적 규제 움직임도 기업의 준법 비용을 증가시키고 있다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#AI규제",
+      "#데이터센터",
+      "#전력망"
+    ],
+    "related_reports": [],
+    "event_date": "2026-11-03",
+    "event_date_type": "deadline",
+    "event_date_precision": "day",
+    "event_date_source": "article_text",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
+    "title": "트럼프 행정부 밀착한 AI 업계, 정치적 역풍 맞나",
+    "link": "http://www.choicenews.co.kr/news/articleView.html?idxno=172789",
+    "feed": "정책",
+    "domain": "choicenews.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "992eaba96700ae56",
+      "source_components": {
+        "article_hash": "992eaba96700ae56",
+        "title": "fbd9eb5fa4dade6836be014c9a2ba7bdbf1ff1773ec934b4c715e559c4de3edb",
+        "source_excerpt": "108144b9368c6d27aac4b4375917944ebb24131a05ce47eb812a3ee350b4eaca",
+        "published_at": "9ede6d5aa2b47e5dd856bf40c78fb24712e64deacb6388e4886bd039df43a76a"
+      },
+      "source_fingerprint": "3a7369d515021576c366cb80719e0838f8fb4f168d5e534015c4e865aae1c5e4",
+      "entities": [],
+      "countries": [
+        "US"
+      ],
+      "topics": [
+        "grid"
+      ],
+      "stages": [
+        "investigation",
+        "review"
+      ],
+      "claims": [
+        "11월",
+        "3일",
+        "30일"
+      ],
+      "quantities": {
+        "년": [
+          "2026"
+        ],
+        "월": [
+          "11"
+        ],
+        "일": [
+          "3",
+          "30"
+        ]
+      },
+      "quantity_rules": 3,
+      "verified_event_date": {
+        "value": "2026-11-03",
+        "type": "deadline",
+        "precision": "day",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "3159ac22fdb2c29e703325d067b387014d11e21c9459b61085ecae6c9cde639f"
+    },
+    "verified_source_components": {
+      "article_hash": "992eaba96700ae56",
+      "title": "fbd9eb5fa4dade6836be014c9a2ba7bdbf1ff1773ec934b4c715e559c4de3edb",
+      "source_excerpt": "108144b9368c6d27aac4b4375917944ebb24131a05ce47eb812a3ee350b4eaca",
+      "published_at": "9ede6d5aa2b47e5dd856bf40c78fb24712e64deacb6388e4886bd039df43a76a"
+    },
+    "hash": "992eaba96700ae56",
+    "published_at": "2026-10-30T23:44:00+00:00"
+  },
+  "bc9109bb7d9d9d5a": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 2,
+      "market_materiality": 3,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "market",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "newbuild",
+      "finance"
+    ],
+    "countries": [
+      "CZ",
+      "KR"
+    ],
+    "article_type": "report",
+    "title_kr": "KB증권, 대우건설 투자의견 하향…체코 원전 시공계약 협상 결렬 영향",
+    "summary": "KB증권이 체코 두코바니 원전 시공계약 협상 결렬에 따른 원전 수주 가능성 약화 등을 이유로 대우건설의 투자의견을 하향 조정했다.",
+    "detail": "",
+    "implication": "체코 원전 시공계약 결렬이 국내 건설사의 원전 사업 수익성 및 수주 경쟁력에 대한 시장의 부정적 평가로 이어지고 있다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#대우건설",
+      "#체코원전",
+      "#주식"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
+    "title": "KB증권, 10월 다섯째주 HD건설기계 등 29종목 매수 추천",
+    "link": "https://www.bigtanews.co.kr/article/view/big202610310004",
+    "feed": "정책",
+    "domain": "bigtanews.co.kr",
+    "matched": "원전 수출",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "bc9109bb7d9d9d5a",
+      "source_components": {
+        "article_hash": "bc9109bb7d9d9d5a",
+        "title": "4ad9dd64b7401da525598a10e8d1c1c6e3f67e3be3a6093df4ce0ad84204aa0c",
+        "source_excerpt": "ef06e457f21a5cc35400ae978659359e618c92bd50821a6d1b3603ea5df294cc",
+        "published_at": "9f337e8d9782edde351344fdf7322da2d36cd6613af2a3ae839eaa84a7eaaf19"
+      },
+      "source_fingerprint": "0951f26210a0eef7ec839d29ad3944a53aa881be6d67a4fd346536ea35554178",
+      "entities": [
+        "dukovany"
+      ],
+      "countries": [
+        "IN",
+        "PL"
+      ],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [
+        "contract"
+      ],
+      "claims": [
+        "10월",
+        "6호기",
+        "30일"
+      ],
+      "quantities": {
+        "억원": [
+          "5936"
+        ],
+        "월": [
+          "10"
+        ],
+        "일": [
+          "30"
+        ],
+        "호기": [
+          "5",
+          "6"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "d157e77629b6ac81784fd0955156099ab0bc85bc2260bc10b659e7a478268429"
+    },
+    "verified_source_components": {
+      "article_hash": "bc9109bb7d9d9d5a",
+      "title": "4ad9dd64b7401da525598a10e8d1c1c6e3f67e3be3a6093df4ce0ad84204aa0c",
+      "source_excerpt": "ef06e457f21a5cc35400ae978659359e618c92bd50821a6d1b3603ea5df294cc",
+      "published_at": "9f337e8d9782edde351344fdf7322da2d36cd6613af2a3ae839eaa84a7eaaf19"
+    },
+    "hash": "bc9109bb7d9d9d5a",
+    "published_at": "2026-10-30T23:48:00+00:00"
+  },
+  "51cbbbc46deae70d": {
+    "features": {
+      "event_type": "contract_award",
+      "korea_relevance": 3,
+      "market_materiality": 3,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 3
+    },
+    "importance": "must_read",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "newbuild"
+    ],
+    "countries": [
+      "KR",
+      "CZ"
+    ],
+    "article_type": "news",
+    "title_kr": "한수원, 체코 원전 시공 협상 결렬…경쟁 입찰로 전환",
+    "summary": "한수원이 체코 원전 시공 협력사 컨소시엄과 공사비 이견으로 협상을 종료하고 재입찰을 추진한다.",
+    "detail": "한수원은 대우건설·두산에너빌리티 컨소시엄과 설계 변경에 따른 추가 공사비 부담 문제로 합의에 이르지 못해 협상을 종료했다. 한수원은 2027년 7월 새 시공 계약 체결을 목표로 경쟁 입찰을 진행할 계획이다. 체코 발주사와의 주계약 및 두산에너빌리티의 주기기 공급 계약은 유효하다.",
+    "implication": "시공사 재선정 과정에서 공사 범위와 설계 변경 비용 분담 기준을 명확히 하는 것이 향후 공정 지연 방지의 핵심이다.",
+    "why_important": "체코 원전 사업의 시공사 선정 단계가 협상에서 경쟁 입찰로 전환됨에 따라 사업 추진 일정과 비용 구조의 불확실성이 커졌다.",
+    "why_short": "",
+    "open_question": "2027년 7월 새 시공 계약 체결 전까지의 필수 업무 수행 방안과 재입찰 참여 조건은 미정이다.",
+    "open_question_source": "article_text",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#체코원전",
+      "#한수원",
+      "#시공계약"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
+    "title": "체코 원전 '팀코리아' 균열… 한수원, 대우건설 컨소시엄과 시공협상 결...",
+    "link": "https://www.thepublic.kr/news/articleView.html?idxno=324483",
+    "feed": "정책",
+    "domain": "thepublic.kr",
+    "matched": "원전 수출",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "51cbbbc46deae70d",
+      "source_components": {
+        "article_hash": "51cbbbc46deae70d",
+        "title": "de873626b2771821288d12376bcf7c3f92f5a549278cd9f28e85b3eb89b55d73",
+        "source_excerpt": "b2300bf994e8660bacf4cda36c864fdb2bcb5018d108108c94a47f4fa442f5bf",
+        "published_at": "163550c51f15d80c6b26be17b3c8f770f535e7e5cb15e03e71b497de68d424e8"
+      },
+      "source_fingerprint": "6fbf5a2cdf417ea798931997bfa415e6c950b1b240f87192ac5284e3e81bfd85",
+      "entities": [
+        "doosan",
+        "dukovany",
+        "khnp",
+        "team-korea"
+      ],
+      "countries": [
+        "CZ",
+        "KR"
+      ],
+      "topics": [
+        "reactor_project"
+      ],
+      "stages": [
+        "approval",
+        "cancellation",
+        "contract",
+        "incident",
+        "shutdown"
+      ],
+      "claims": [
+        "6월",
+        "2기",
+        "12월",
+        "27조원",
+        "29일",
+        "2027년",
+        "7월"
+      ],
+      "quantities": {
+        "기": [
+          "2"
+        ],
+        "년": [
+          "2027"
+        ],
+        "월": [
+          "12",
+          "6",
+          "7"
+        ],
+        "일": [
+          "29"
+        ],
+        "조원": [
+          "27"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "83ee797b2cf8e4d2821c4b98d1c1da648c39ef17cb05711f178a2f9582b11048"
+    },
+    "verified_source_components": {
+      "article_hash": "51cbbbc46deae70d",
+      "title": "de873626b2771821288d12376bcf7c3f92f5a549278cd9f28e85b3eb89b55d73",
+      "source_excerpt": "b2300bf994e8660bacf4cda36c864fdb2bcb5018d108108c94a47f4fa442f5bf",
+      "published_at": "163550c51f15d80c6b26be17b3c8f770f535e7e5cb15e03e71b497de68d424e8"
+    },
+    "hash": "51cbbbc46deae70d",
+    "published_at": "2026-10-31T00:26:00+00:00"
+  },
+  "4761bbf84c8e7cbe": {
+    "features": {
+      "event_type": "policy_decision",
+      "korea_relevance": 3,
+      "market_materiality": 1,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 2
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "power_market",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "국민경제자문회의, 송전망 구축 속도 6배 제고 제언",
+    "summary": "국민경제자문회의는 AI·반도체 등 국가 전략사업 지원을 위해 송전망 건설 속도를 현재보다 6배 높여야 한다고 제언했다.",
+    "detail": "대통령 직속 국민경제자문회의와 서울대 국가미래전략원은 세미나를 통해 전력망 병목 해소를 강조했다. AI 데이터센터 수요에 맞춘 단계별 급전 계획 수립과 핵심 광물 공급망 안보 대책이 논의되었다. 정부는 제시된 정책을 적극 반영할 방침이다.",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#송전망",
+      "#전력수급",
+      "#AI"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
+    "title": "전기 없으면 AI·반도체 멈춘다…\"송전망 구축 6배 끌어올려 인프라 빗...",
+    "link": "https://www.thepublic.kr/news/articleView.html?idxno=324481",
+    "feed": "정책",
+    "domain": "thepublic.kr",
+    "matched": "송전망 건설",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "4761bbf84c8e7cbe",
+      "source_components": {
+        "article_hash": "4761bbf84c8e7cbe",
+        "title": "c992ec02ff26bb44b06dcf4753ea16cf035be0b6d2a8f7d0075890e6727a451f",
+        "source_excerpt": "4434bfb8be5f90b2d09105f7ac9bf8e8534be63508992deae6be35af61a65401",
+        "published_at": "163550c51f15d80c6b26be17b3c8f770f535e7e5cb15e03e71b497de68d424e8"
+      },
+      "source_fingerprint": "01d6150f947ffb09760c7044e8c4edca02c1cac7b7a0c6da4dbd4a086c21c73d",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "grid"
+      ],
+      "stages": [
+        "approval"
+      ],
+      "claims": [
+        "30일"
+      ],
+      "quantities": {
+        "일": [
+          "30"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "b1af23416cb034d77b4b17700d99e6ab027ad4e0c27f0915c4134ea23b163c83"
+    },
+    "verified_source_components": {
+      "article_hash": "4761bbf84c8e7cbe",
+      "title": "c992ec02ff26bb44b06dcf4753ea16cf035be0b6d2a8f7d0075890e6727a451f",
+      "source_excerpt": "4434bfb8be5f90b2d09105f7ac9bf8e8534be63508992deae6be35af61a65401",
+      "published_at": "163550c51f15d80c6b26be17b3c8f770f535e7e5cb15e03e71b497de68d424e8"
+    },
+    "hash": "4761bbf84c8e7cbe",
+    "published_at": "2026-10-31T00:26:00+00:00"
+  },
+  "5d37b89cc374274a": {
+    "features": {
+      "event_type": "project_milestone",
+      "korea_relevance": 2,
+      "market_materiality": 2,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "smr",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "현대차그룹, 새만금 AI 데이터센터 구축 본격화",
+    "summary": "현대차그룹이 9조원 규모의 새만금 AI 밸리 프로젝트를 위해 11월 데이터센터 SPC를 설립하고 2027년 착공한다.",
+    "detail": "현대차그룹은 데이터센터 구축과 GPU 운영을 분리한 두 개의 SPC를 설립한다. 2027년 3월 착공해 2030년 초 서비스 개시를 목표로 한다. 새만금 AI 데이터센터는 자율주행 및 피지컬 AI 학습을 위한 슈퍼컴퓨팅 허브로 활용될 예정이다.",
+    "implication": "대규모 전력 수요가 예상되는 AI 데이터센터 구축이 본격화됨에 따라, 향후 전력 공급 인프라와의 연계가 사업의 핵심 변수가 될 것이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#데이터센터",
+      "#AI",
+      "#새만금"
+    ],
+    "related_reports": [],
+    "event_date": "2027-03-01",
+    "event_date_type": "scheduled",
+    "event_date_precision": "month",
+    "event_date_source": "article_text",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
+    "title": "현대차·기아·모비스·오토에버 총출동…새만금 AI 데이터센터 구축에...",
+    "link": "https://www.thepublic.kr/news/articleView.html?idxno=324472",
+    "feed": "정책",
+    "domain": "thepublic.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "5d37b89cc374274a",
+      "source_components": {
+        "article_hash": "5d37b89cc374274a",
+        "title": "eb5a010ad7a5b4fcee61beb0493ec60ed02bb3f6d17ed78994b8cef92d15429d",
+        "source_excerpt": "f09d8814a7d912f15c6305fff5f7777fb134129e1a07caca2a931d4cf0365595",
+        "published_at": "163550c51f15d80c6b26be17b3c8f770f535e7e5cb15e03e71b497de68d424e8"
+      },
+      "source_fingerprint": "6a9988a33dd7a8c692bce1f13880599588ff478719450ac90b3807527c624904",
+      "entities": [],
+      "countries": [],
+      "topics": [
+        "reactor_operation",
+        "reactor_project"
+      ],
+      "stages": [
+        "approval",
+        "construction",
+        "contract",
+        "review"
+      ],
+      "claims": [
+        "9조원",
+        "30일",
+        "11월",
+        "9월",
+        "2027년",
+        "3월",
+        "2030년"
+      ],
+      "quantities": {
+        "mw": [
+          "200"
+        ],
+        "년": [
+          "2027",
+          "2030"
+        ],
+        "월": [
+          "11",
+          "3",
+          "9"
+        ],
+        "일": [
+          "30"
+        ],
+        "조원": [
+          "9"
+        ]
+      },
+      "quantity_rules": 3,
+      "verified_event_date": {
+        "value": "2027-03-01",
+        "type": "scheduled",
+        "precision": "month",
+        "source": "article_text"
+      },
+      "manifest_fingerprint": "9c0a3c5ee76739223a58c2bf5ce8fdd479947c2cf076f6ffeec4a6a04fd26e2a"
+    },
+    "verified_source_components": {
+      "article_hash": "5d37b89cc374274a",
+      "title": "eb5a010ad7a5b4fcee61beb0493ec60ed02bb3f6d17ed78994b8cef92d15429d",
+      "source_excerpt": "f09d8814a7d912f15c6305fff5f7777fb134129e1a07caca2a931d4cf0365595",
+      "published_at": "163550c51f15d80c6b26be17b3c8f770f535e7e5cb15e03e71b497de68d424e8"
+    },
+    "hash": "5d37b89cc374274a",
+    "published_at": "2026-10-31T00:26:00+00:00"
+  },
+  "54fb7e915041df9f": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 0,
+      "market_materiality": 1,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "시장",
+    "topics": [
+      "datacenter_ai"
+    ],
+    "countries": [
+      "US"
+    ],
+    "article_type": "analysis",
+    "title_kr": "빅테크 실적 발표에 따른 AI 투자 수익성 우려",
+    "summary": "미국 빅테크 기업들의 실적 발표 이후 AI 인프라 투자 비용 증가에 따른 수익성 우려가 제기되고 있다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#빅테크",
+      "#AI",
+      "#투자"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "off_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
+    "title": "클라우드 호황에도 엇갈린 빅테크…MS 웃고 구글 울었다",
+    "link": "https://www.thepublic.kr/news/articleView.html?idxno=324536",
+    "feed": "정책",
+    "domain": "thepublic.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "54fb7e915041df9f",
+      "source_components": {
+        "article_hash": "54fb7e915041df9f",
+        "title": "2cac20e9d3c420168f887daf721275049769e7fa83eaa61c86672ac5048a1e31",
+        "source_excerpt": "cf0be6f4b677c56fc967f2173852df9092712261be86cd9b2b092b930a69f305",
+        "published_at": "f8bfbbe1fbc2092d2f7f2dae2cc94464c5b0d60017a898871de6b1952cb0392b"
+      },
+      "source_fingerprint": "b3a930744bee5a72c8d1f5b011da483b82fe853d1151d2f1b35e304d883f97ff",
+      "entities": [],
+      "countries": [],
+      "topics": [],
+      "stages": [
+        "cancellation"
+      ],
+      "claims": [],
+      "quantities": {},
+      "quantity_rules": 3,
+      "manifest_fingerprint": "037b2282ad10ca94ff2658345c84aa20db4e781486cfc186397a85b31923f419"
+    },
+    "verified_source_components": {
+      "article_hash": "54fb7e915041df9f",
+      "title": "2cac20e9d3c420168f887daf721275049769e7fa83eaa61c86672ac5048a1e31",
+      "source_excerpt": "cf0be6f4b677c56fc967f2173852df9092712261be86cd9b2b092b930a69f305",
+      "published_at": "f8bfbbe1fbc2092d2f7f2dae2cc94464c5b0d60017a898871de6b1952cb0392b"
+    },
+    "hash": "54fb7e915041df9f",
+    "published_at": "2026-10-31T00:28:00+00:00"
+  },
+  "c02bb685a5520b11": {
+    "features": {
+      "event_type": "other",
+      "korea_relevance": 3,
+      "market_materiality": 0,
+      "policy_materiality": 3,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 1
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "정책",
+    "topics": [
+      "security_trade",
+      "fuel_cycle"
+    ],
+    "countries": [
+      "KR",
+      "US"
+    ],
+    "article_type": "analysis",
+    "title_kr": "한·미 동맹, 정보공유 제한 및 전작권 이견으로 신뢰 시험대",
+    "summary": "한·미 간 대북 정보공유 제한과 전작권 전환 속도에 대한 이견이 노출되며 동맹 신뢰도에 대한 우려가 제기되고 있다.",
+    "detail": "미국은 한국의 정보 유출 우려 등을 이유로 대북 정보공유를 일부 제한하고 있으며, 주한미군 사령관은 한국군의 상호운용성 부족을 공개 지적했다. 정부는 전작권 전환 로드맵을 통해 이를 해소하려 하지만, 미국 측의 신뢰 수준이 낮아 검증이 강화될 가능성이 있다. 과거 핵추진잠수함 추진이 미국의 비협조로 무산된 사례처럼, 신뢰 저하는 향후 원자력 연료 농축·재처리 등 핵심 현안 추진에도 부정적 영향을 미칠 수 있다.",
+    "implication": "한·미 간 신뢰 저하는 향후 핵추진잠수함 및 원자력 연료주기 관련 협력 추진 시 미국의 비협조 가능성을 높이는 핵심 변수다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#한미동맹",
+      "#전작권",
+      "#핵연료주기"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
+    "title": "정보공유 제한에 전작권 이견까지…한·미동맹 ‘신뢰’ 시험대 [박수찬...",
+    "link": "https://www.segye.com/newsView/20261030513705?OutUrl=naver",
+    "feed": "정책",
+    "domain": "segye.com",
+    "matched": "원자력 정책",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "c02bb685a5520b11",
+      "source_components": {
+        "article_hash": "c02bb685a5520b11",
+        "title": "2b36de0d0cf027b849e1073f79d7e0ca8203cb6d6e2aa33c764288cb0d783e1e",
+        "source_excerpt": "015a18b5cf4d022a2260eff47c080c9b90decaa890a9d35cb7630370167121d7",
+        "published_at": "7ef3c3b460990cd6a301ab3cec0761d57542d8ce522fb017313f102628c6f6a1"
+      },
+      "source_fingerprint": "95a8fbb51dd7a98f2f02e93f3c1bd4de449469ad7d239271bce429d5c1df66b2",
+      "entities": [],
+      "countries": [
+        "CN",
+        "KR",
+        "US"
+      ],
+      "topics": [
+        "fuel_supply"
+      ],
+      "stages": [
+        "approval",
+        "investigation"
+      ],
+      "claims": [
+        "21일",
+        "8500명",
+        "2월",
+        "3월",
+        "6월",
+        "8월",
+        "10월",
+        "2기",
+        "29일",
+        "12일",
+        "28일",
+        "12월",
+        "27일",
+        "2000년"
+      ],
+      "quantities": {
+        "개": [
+          "20"
+        ],
+        "기": [
+          "2"
+        ],
+        "년": [
+          "2000"
+        ],
+        "명": [
+          "8500"
+        ],
+        "월": [
+          "10",
+          "12",
+          "2",
+          "3",
+          "6",
+          "8"
+        ],
+        "일": [
+          "12",
+          "21",
+          "27",
+          "28",
+          "29"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "36c8fe88ad88429fb4195ebda5a990e158d532a1757fe84bbb2920577483e6e9"
+    },
+    "verified_source_components": {
+      "article_hash": "c02bb685a5520b11",
+      "title": "2b36de0d0cf027b849e1073f79d7e0ca8203cb6d6e2aa33c764288cb0d783e1e",
+      "source_excerpt": "015a18b5cf4d022a2260eff47c080c9b90decaa890a9d35cb7630370167121d7",
+      "published_at": "7ef3c3b460990cd6a301ab3cec0761d57542d8ce522fb017313f102628c6f6a1"
+    },
+    "hash": "c02bb685a5520b11",
+    "published_at": "2026-10-31T00:32:00+00:00"
+  },
+  "ed75e3373efd051e": {
+    "features": {
+      "event_type": "project_milestone",
+      "korea_relevance": 0,
+      "market_materiality": 0,
+      "policy_materiality": 0,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "noise",
+    "section": "international",
+    "scope": "overseas",
+    "category": "기술",
+    "topics": [],
+    "countries": [
+      "US"
+    ],
+    "article_type": "news",
+    "title_kr": "구글, 우주 데이터센터 시제품 위성서 첫 AI 응답 수신",
+    "summary": "구글이 우주 데이터센터 계획인 '프로젝트 선캐처'의 시제품 위성에서 AI 모델 '젬마4'를 구동해 첫 응답을 수신했다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "adjacent",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-10-31T00:47:05.138192+00:00",
+    "title": "\"아래엔 푸른 구슬\"…구글 첫 우주데이터센터 AI 응답은 시 한편",
+    "link": "https://www.yna.co.kr/view/AKR20261031019500091?input=1195m",
+    "feed": "정책",
+    "domain": "yna.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "ed75e3373efd051e",
+      "source_components": {
+        "article_hash": "ed75e3373efd051e",
+        "title": "65bf974dcca18bb16371dcf74f03ec7d09b17f8e7ff9d691435d41ad564e9c49",
+        "source_excerpt": "98d81643188fad3a91b99432b581469527521c0a22b48cc81e28b4f91dba9c75",
+        "published_at": "23fe8ed960cb5643cc066919e1e4607619daa536c17a501a8d2a0200d31470c5"
+      },
+      "source_fingerprint": "d03dd7413efbcd8599ae38e02fd57375105ff3ec741e45891934b6dea173d30f",
+      "entities": [],
+      "countries": [
+        "JP",
+        "US"
+      ],
+      "topics": [
+        "reactor_operation",
+        "reactor_project",
+        "safety"
+      ],
+      "stages": [],
+      "claims": [
+        "30일",
+        "1일",
+        "12월",
+        "2028년"
+      ],
+      "quantities": {
+        "년": [
+          "2028"
+        ],
+        "월": [
+          "12"
+        ],
+        "일": [
+          "1",
+          "30"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "ef8cb65a119511c3952f29f4547f2344cbc8126d006ab8374e64df5612308f86"
+    },
+    "verified_source_components": {
+      "article_hash": "ed75e3373efd051e",
+      "title": "65bf974dcca18bb16371dcf74f03ec7d09b17f8e7ff9d691435d41ad564e9c49",
+      "source_excerpt": "98d81643188fad3a91b99432b581469527521c0a22b48cc81e28b4f91dba9c75",
+      "published_at": "23fe8ed960cb5643cc066919e1e4607619daa536c17a501a8d2a0200d31470c5"
+    },
+    "hash": "ed75e3373efd051e",
+    "published_at": "2026-10-31T00:38:00+00:00"
   }
 }
