@@ -55429,6 +55429,17 @@
       "right_title": "원자력연구원, 덴마크 솔트포스에 MSR 기술 수출",
       "verdict": "different_thread"
     },
+    "issue-895b471e7f2e1d4c--story-72e9e37eb0bd5788": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "테라파워, 메타와 나트륨 원전 8기 개발 협력 및 SK 참여 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "테라파워의 SMR 프로젝트와 한미 대형원전 프레임워크는 다름.",
+      "relationship": "",
+      "reviewed_at": "2026-10-31T01:06:39.233055+00:00",
+      "right_title": "한미 원전 프레임워크 합의…미국 내 대형 원전 8기 건설 추진",
+      "verdict": "different_thread"
+    },
     "issue-895b471e7f2e1d4c--story-743ea92d59b8e9fe": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "두산에너빌리티, 테라파워 나트륨 냉각 고속로 핵심 기자재 공급 계약",
@@ -87304,6 +87315,17 @@
       "right_title": "한미 원전협력 프레임워크 가동, APR1400 미국 진출 길 열려",
       "verdict": "same_thread"
     },
+    "story-0128ba39e1aa2927--story-b674a830b574b651": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 경제계, 전략산업 협력 강화 및 에너지 인프라 구축 공동선언",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 경제계 전반의 선언과 개별 투자 송금 건임.",
+      "relationship": "",
+      "reviewed_at": "2026-10-31T01:06:39.233055+00:00",
+      "right_title": "정부, 텍사스 가스복합발전 사업에 24억 달러 투자금 송금",
+      "verdict": "different_thread"
+    },
     "story-0128ba39e1aa2927--story-d5217cd852b861bd": {
       "gate": {
         "at": "2026-09-27T21:51:44+00:00",
@@ -97595,6 +97617,17 @@
       "right_title": "정부, 내년 에너지 R&D 예산 48% 증액…원자력 R&D 역대 최대",
       "verdict": "different_thread"
     },
+    "story-1f8e829fa562808f--story-7d604ab595035fb4": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 상원, 인프라 건설 인허가 개혁 법안 논의 진전",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 인허가 개혁 법안과 한미 SMR/전력망 협력 채널 신설은 별개.",
+      "relationship": "",
+      "reviewed_at": "2026-10-31T01:06:39.233055+00:00",
+      "right_title": "정부, 미국과 전력망·SMR 협력 강화 위한 정례 에너지 협력 채널 신설",
+      "verdict": "different_thread"
+    },
     "story-1f8e829fa562808f--story-84184ba869024d4d": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 상원, 인프라 건설 인허가 개혁 법안 논의 진전",
@@ -97748,6 +97781,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-20T19:48:22.830744+00:00",
       "right_title": "美 a16z, 11억 달러 AI 인프라 펀드 조성…한국 반도체·로봇 투자 모색",
+      "verdict": "different_thread"
+    },
+    "story-1f8e829fa562808f--story-baca5170b9b93ee2": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 상원, 인프라 건설 인허가 개혁 법안 논의 진전",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 인허가 법안과 전력망 안보 행정명령은 별개 사안.",
+      "relationship": "",
+      "reviewed_at": "2026-10-31T01:06:39.233055+00:00",
+      "right_title": "미국, 전력망 인프라 안보 강화 위한 행정명령 발동",
       "verdict": "different_thread"
     },
     "story-1f8e829fa562808f--story-bb8a70beae9e901b": {
@@ -106894,6 +106938,34 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-29T22:26:30.611396+00:00",
       "right_title": "미국 기업 4곳, 한국에 20억 달러 규모 투자 신고",
+      "verdict": "different_thread"
+    },
+    "story-3d9d44aee5038551--story-b674a830b574b651": {
+      "gate": {
+        "at": "2026-10-31T01:06:41+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 텍사스 가스복합발전 사업에 24억 달러 투자금 송금",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "동일한 텍사스 가스발전 투자 송금 건임.",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-10-31T01:06:39.233055+00:00",
+      "right_title": "정부, 텍사스 가스복합발전 사업에 24억 달러 투자금 송금",
+      "verdict": "same_thread"
+    },
+    "story-3d9d44aee5038551--story-e68db7837910a70c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 텍사스 가스복합발전 사업에 24억 달러 투자금 송금",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "텍사스 가스발전 송금과 버지니아주 도미니언 가스발전 승인은 별개 사업.",
+      "relationship": "",
+      "reviewed_at": "2026-10-31T01:06:39.233055+00:00",
+      "right_title": "미국 버지니아주, 도미니언 에너지 3GW급 가스발전소 승인",
       "verdict": "different_thread"
     },
     "story-3d9d44aee5038551--story-ebf0ce9caced8edb": {
@@ -131123,6 +131195,17 @@
       "right_title": "미 에너지부, 국방물자생산법 활용해 정유시설 생산능력 확대 추진",
       "verdict": "different_thread"
     },
+    "story-a60b4b66bae1dfe3--story-dad000f44333a347": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 8개 주 송전망 확충에 5.8억 달러 지원 결정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 송전망 확충 지원과 독일 송전망 주민 갈등 제도는 다른 사안.",
+      "relationship": "",
+      "reviewed_at": "2026-10-31T01:06:39.233055+00:00",
+      "right_title": "독일, 송전망 건설 갈등 해결 위해 지중화 및 주민 참여 제도 개선",
+      "verdict": "different_thread"
+    },
     "story-a60b4b66bae1dfe3--story-e009af115f0ba074": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미 에너지부, 8개 주 송전망 확충에 5.8억 달러 지원 결정",
@@ -132550,6 +132633,28 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-19T21:20:37.113659+00:00",
       "right_title": "미국, AI 인프라와 달러 결제망 결합한 '컴퓨트달러' 구상",
+      "verdict": "different_thread"
+    },
+    "story-b674a830b574b651--story-e68db7837910a70c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 텍사스 가스복합발전 사업에 24억 달러 투자금 송금",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "텍사스 투자 송금과 버지니아주 도미니언 가스발전 승인은 다른 사업.",
+      "relationship": "",
+      "reviewed_at": "2026-10-31T01:06:39.233055+00:00",
+      "right_title": "미국 버지니아주, 도미니언 에너지 3GW급 가스발전소 승인",
+      "verdict": "different_thread"
+    },
+    "story-b674a830b574b651--story-ebf0ce9caced8edb": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 텍사스 가스복합발전 사업에 24억 달러 투자금 송금",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한국의 텍사스 투자 송금과 유럽의 러시아산 가스 갈등은 무관.",
+      "relationship": "",
+      "reviewed_at": "2026-10-31T01:06:39.233055+00:00",
+      "right_title": "트럼프 행정부, 러시아산 가스 수입 확대 제안에 유럽 주요국 반발",
       "verdict": "different_thread"
     },
     "story-b674a830b574b651--story-f224021b13b24f99": {
