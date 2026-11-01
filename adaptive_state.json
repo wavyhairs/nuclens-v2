@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 1,
-    "date": "2026-11-01"
+    "count": 3,
+    "date": "2026-11-02"
   },
   "retired": {
     "antares": {
@@ -1206,8 +1206,8 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-11-01"
+    "count": 3,
+    "date": "2026-11-02"
   },
   "terms": {
     "농어촌공사": {
@@ -1259,6 +1259,116 @@
       ],
       "yields": 3,
       "zero_streak": 0
+    },
+    "설계수명이만료된": {
+      "articles": 1,
+      "created_at": "2026-11-01T15:40:43.987653+00:00",
+      "domains": [
+        "kyongbuk.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "kyongbuk.co.kr",
+          "hash": "e32a53ae373b4575",
+          "importance": "must_read",
+          "title": "한수원, 월성 2·3·4호기 계속운전 허가 신청…2호기는 가동 정지"
+        }
+      ],
+      "expires_at": "2026-11-02T15:40:43.987653+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-01T15:40:47.720343+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-01T15:40:43.987653+00:00",
+      "queries_run": 1,
+      "query": "설계수명이 만료된 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "설계수명이 만료된",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "이노비즈협회": {
+      "articles": 4,
+      "created_at": "2026-11-01T15:40:43.987653+00:00",
+      "domains": [
+        "etnews.com",
+        "fnnews.com",
+        "ajunews.com"
+      ],
+      "evidence": [
+        {
+          "domain": "etnews.com",
+          "hash": "1803e7102e235451",
+          "importance": "nice_to_know",
+          "title": "이노비즈협회, SMR 등 7대 시드 분야 혁신기업 50곳 스케일업 지원"
+        },
+        {
+          "domain": "fnnews.com",
+          "hash": "4b75eb77063fe463",
+          "importance": "nice_to_know",
+          "title": "이노비즈협회, SMR 등 미래 전략산업 혁신기업 50곳 모집"
+        },
+        {
+          "domain": "ajunews.com",
+          "hash": "9f0d405cb3928bc2",
+          "importance": "noise",
+          "title": "이노비즈협회, SMR 등 첨단산업 혁신형 기업 50개사 모집"
+        }
+      ],
+      "expires_at": "2026-11-02T15:40:43.987653+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-11-01T15:40:47.720343+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-01T15:40:43.987653+00:00",
+      "queries_run": 1,
+      "query": "이노비즈협회 원자력",
+      "score": 3.16,
+      "status": "tracking",
+      "term": "이노비즈협회",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "제정안발": {
+      "articles": 1,
+      "created_at": "2026-11-01T15:40:43.987653+00:00",
+      "domains": [
+        "idaegu.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "idaegu.co.kr",
+          "hash": "a9f0ef6ad7385ccb",
+          "importance": "must_read",
+          "title": "이진숙 의원, 원전 AI 개발 촉진 및 안전관리법 제정안 발의"
+        }
+      ],
+      "expires_at": "2026-11-02T15:40:43.987653+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-01T15:40:47.720343+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-01T15:40:43.987653+00:00",
+      "queries_run": 1,
+      "query": "제정안 발 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "제정안 발",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     },
     "진행하던": {
       "articles": 2,
