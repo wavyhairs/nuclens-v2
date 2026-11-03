@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 4,
+    "count": 5,
     "date": "2026-11-03"
   },
   "retired": {
@@ -1238,7 +1238,7 @@
     }
   },
   "spent": {
-    "count": 7,
+    "count": 10,
     "date": "2026-11-03"
   },
   "terms": {
@@ -1304,12 +1304,12 @@
       ],
       "expires_at": "2026-11-05T15:41:15.965828+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-11-02T15:41:19.910525+00:00",
-      "new_articles": 1,
+      "last_result_count": 4,
+      "last_run": "2026-11-03T00:41:01.028390+00:00",
+      "new_articles": 5,
       "origin": "auto",
-      "planned_at": "2026-11-02T15:41:15.965828+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-03T00:40:57.114499+00:00",
+      "queries_run": 2,
       "query": "MSA 원자력",
       "score": 6.22,
       "status": "extended",
@@ -1319,7 +1319,7 @@
       "yield_days": [
         "2026-11-03"
       ],
-      "yields": 1,
+      "yields": 2,
       "zero_streak": 0
     },
     "ssn": {
@@ -1353,6 +1353,54 @@
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
+    },
+    "시노프": {
+      "articles": 3,
+      "created_at": "2026-11-03T00:40:57.114499+00:00",
+      "domains": [
+        "00news.co.kr",
+        "sateconomy.co.kr",
+        "yna.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "00news.co.kr",
+          "hash": "2bff275d10ef5b40",
+          "importance": "nice_to_know",
+          "title": "에르도안 튀르키예 대통령 방한…시노프 원전 후속 논의"
+        },
+        {
+          "domain": "sateconomy.co.kr",
+          "hash": "1f4d5298c37b1f2e",
+          "importance": "nice_to_know",
+          "title": "튀르키예 시노프 원전, 수주 핵심은 기술보다 금융조건"
+        },
+        {
+          "domain": "yna.co.kr",
+          "hash": "c4076a851bc8dbf1",
+          "importance": "nice_to_know",
+          "title": "한-튀르키예 정상회담 개최…시노프 원전 등 협력 논의"
+        }
+      ],
+      "expires_at": "2026-11-05T00:40:57.114499+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 3,
+      "last_run": "2026-11-03T00:41:01.028390+00:00",
+      "new_articles": 3,
+      "origin": "auto",
+      "planned_at": "2026-11-03T00:40:57.114499+00:00",
+      "queries_run": 1,
+      "query": "시노프 원전",
+      "score": 4.6,
+      "status": "extended",
+      "term": "시노프",
+      "ttl_hours": 48,
+      "type": "plant",
+      "yield_days": [
+        "2026-11-03"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     },
     "시노프제2": {
       "articles": 3,
@@ -1432,21 +1480,23 @@
       ],
       "expires_at": "2026-11-05T15:41:15.965828+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-02T15:41:19.910525+00:00",
-      "new_articles": 0,
+      "last_result_count": 3,
+      "last_run": "2026-11-03T00:41:01.028390+00:00",
+      "new_articles": 3,
       "origin": "auto",
-      "planned_at": "2026-11-02T15:41:15.965828+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-03T00:40:57.114499+00:00",
+      "queries_run": 2,
       "query": "정상회담을 갖고 원전",
       "score": 6.3,
-      "status": "tracking",
+      "status": "extended",
       "term": "정상회담을 갖고",
       "ttl_hours": 72,
       "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 1
+      "yield_days": [
+        "2026-11-03"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     },
     "한국농어촌공사": {
       "articles": 3,
