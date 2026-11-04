@@ -404,14 +404,6 @@
       "type": "plant",
       "until": "2026-10-03T06:40:35.483007+00:00"
     },
-    "규제기술개발": {
-      "new_articles": 7,
-      "reason": "성과 없음",
-      "retired_at": "2026-09-05T03:40:24.750424+00:00",
-      "term": "규제기술 개발",
-      "type": "plant",
-      "until": "2026-09-19T03:40:24.750424+00:00"
-    },
     "기에한국형": {
       "new_articles": 9,
       "reason": "질의 횟수 소진",
@@ -699,6 +691,14 @@
       "term": "세계원자력사업자협회",
       "type": "org",
       "until": "2026-10-16T15:43:54.067175+00:00"
+    },
+    "시노프제2": {
+      "new_articles": 2,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-04T03:41:30.789917+00:00",
+      "term": "시노프 제2",
+      "type": "plant",
+      "until": "2026-11-18T03:41:30.789917+00:00"
     },
     "심사중인": {
       "new_articles": 1,
@@ -1443,53 +1443,6 @@
       ],
       "yields": 2,
       "zero_streak": 0
-    },
-    "시노프제2": {
-      "articles": 3,
-      "created_at": "2026-11-02T15:41:15.965828+00:00",
-      "domains": [
-        "yna.co.kr",
-        "polinews.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "yna.co.kr",
-          "hash": "0e8c272ade16bfcd",
-          "importance": "nice_to_know",
-          "title": "에르도안 튀르키예 대통령, 한국과 원전·방산 협력 의지 표명"
-        },
-        {
-          "domain": "yna.co.kr",
-          "hash": "a385675f38625058",
-          "importance": "nice_to_know",
-          "title": "에르도안 튀르키예 대통령, 한국을 제2원전 유력 파트너로 언급"
-        },
-        {
-          "domain": "polinews.co.kr",
-          "hash": "863d6735d0b92a20",
-          "importance": "nice_to_know",
-          "title": "한-튀르키예 정상회담 개최…시노프 제2원전 협력 논의"
-        }
-      ],
-      "expires_at": "2026-11-04T03:40:57.774448+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-03T18:44:26.292383+00:00",
-      "new_articles": 2,
-      "origin": "auto",
-      "planned_at": "2026-11-03T18:44:22.683100+00:00",
-      "queries_run": 3,
-      "query": "시노프 제2 원전",
-      "score": 4.1,
-      "status": "extended",
-      "term": "시노프 제2",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-11-03"
-      ],
-      "yields": 2,
-      "zero_streak": 1
     },
     "원자력공사": {
       "articles": 3,
