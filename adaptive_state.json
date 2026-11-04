@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 6,
-    "date": "2026-11-04"
+    "count": 4,
+    "date": "2026-11-05"
   },
   "retired": {
     "antares": {
@@ -75,14 +75,6 @@
       "term": "DOE·DOD 승인",
       "type": "plant",
       "until": "2026-11-07T00:40:45.141234+00:00"
-    },
-    "epri": {
-      "new_articles": 0,
-      "reason": "성과 없음",
-      "retired_at": "2026-09-18T18:40:53.632345+00:00",
-      "term": "EPRI",
-      "type": "company",
-      "until": "2026-10-02T18:40:53.632345+00:00"
     },
     "erock": {
       "new_articles": 0,
@@ -892,14 +884,6 @@
       "type": "org",
       "until": "2026-10-03T18:40:53.720696+00:00"
     },
-    "전력연구원": {
-      "new_articles": 8,
-      "reason": "질의 횟수 소진",
-      "retired_at": "2026-10-06T00:41:26.320429+00:00",
-      "term": "전력연구원",
-      "type": "org",
-      "until": "2026-10-20T00:41:26.320429+00:00"
-    },
     "정부가방산": {
       "new_articles": 0,
       "reason": "관리자 삭제",
@@ -1254,10 +1238,58 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-11-04"
+    "count": 3,
+    "date": "2026-11-05"
   },
   "terms": {
+    "epri": {
+      "articles": 3,
+      "created_at": "2026-11-04T15:41:26.323249+00:00",
+      "domains": [
+        "energy-news.co.kr",
+        "khnp.co.kr",
+        "nocutnews.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "energy-news.co.kr",
+          "hash": "2e9f186e333b4100",
+          "importance": "nice_to_know",
+          "title": "한수원-EPRI, 청정수소 및 에너지저장 기술 공동연구 협약"
+        },
+        {
+          "domain": "khnp.co.kr",
+          "hash": "f009d85094ba4990",
+          "importance": "nice_to_know",
+          "title": "한수원, 미국 전력연구원(EPRI)과 청정수소 및 저탄소 에너지 기술협력 협약 체결"
+        },
+        {
+          "domain": "nocutnews.co.kr",
+          "hash": "6a797a88518f5276",
+          "importance": "nice_to_know",
+          "title": "한수원, 미국 전력연구원(EPRI)과 저탄소 에너지 기술 공동연구 추진"
+        }
+      ],
+      "expires_at": "2026-11-05T15:41:30.129105+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 1,
+      "last_run": "2026-11-04T15:41:30.129105+00:00",
+      "new_articles": 1,
+      "origin": "auto",
+      "planned_at": "2026-11-04T15:41:26.323249+00:00",
+      "queries_run": 1,
+      "query": "EPRI 원자력",
+      "score": 3.82,
+      "status": "extended",
+      "term": "EPRI",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [
+        "2026-11-05"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    },
     "msa": {
       "articles": 3,
       "created_at": "2026-11-02T15:41:15.965828+00:00",
@@ -1394,6 +1426,54 @@
       ],
       "yields": 1,
       "zero_streak": 0
+    },
+    "라인란드와": {
+      "articles": 5,
+      "created_at": "2026-11-04T15:41:26.323249+00:00",
+      "domains": [
+        "khnp.co.kr",
+        "metroseoul.co.kr",
+        "g-enews.com",
+        "knpnews.com",
+        "businesspost.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "khnp.co.kr",
+          "hash": "d625089cbbf4ff7f",
+          "importance": "nice_to_know",
+          "title": "한수원, TUV 라인란드와 유럽 원전 디지털 기기 인증 협력 MOU 체결"
+        },
+        {
+          "domain": "metroseoul.co.kr",
+          "hash": "1dc3b285038eb994",
+          "importance": "nice_to_know",
+          "title": "한수원, TUV 라인란드와 유럽 원전 디지털 기기 인허가 협력"
+        },
+        {
+          "domain": "g-enews.com",
+          "hash": "f9db8fb0a0422e03",
+          "importance": "nice_to_know",
+          "title": "한수원, TUV 라인란드와 유럽 원전 디지털 기기 인증 협력 MOU 체결"
+        }
+      ],
+      "expires_at": "2026-11-06T15:41:26.323249+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-11-04T15:41:30.129105+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-04T15:41:26.323249+00:00",
+      "queries_run": 1,
+      "query": "라인란드와 원전",
+      "score": 5.0,
+      "status": "tracking",
+      "term": "라인란드와",
+      "ttl_hours": 48,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     },
     "시노프": {
       "articles": 3,
@@ -1572,6 +1652,83 @@
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
+    },
+    "전력연구원": {
+      "articles": 3,
+      "created_at": "2026-11-04T15:41:26.323249+00:00",
+      "domains": [
+        "energy-news.co.kr",
+        "khnp.co.kr",
+        "nocutnews.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "energy-news.co.kr",
+          "hash": "2e9f186e333b4100",
+          "importance": "nice_to_know",
+          "title": "한수원-EPRI, 청정수소 및 에너지저장 기술 공동연구 협약"
+        },
+        {
+          "domain": "khnp.co.kr",
+          "hash": "f009d85094ba4990",
+          "importance": "nice_to_know",
+          "title": "한수원, 미국 전력연구원(EPRI)과 청정수소 및 저탄소 에너지 기술협력 협약 체결"
+        },
+        {
+          "domain": "nocutnews.co.kr",
+          "hash": "6a797a88518f5276",
+          "importance": "nice_to_know",
+          "title": "한수원, 미국 전력연구원(EPRI)과 저탄소 에너지 기술 공동연구 추진"
+        }
+      ],
+      "expires_at": "2026-11-05T15:41:26.323249+00:00",
+      "importance": "nice_to_know",
+      "new_articles": 0,
+      "origin": "auto",
+      "queries_run": 0,
+      "query": "전력연구원 원자력",
+      "score": 3.12,
+      "status": "tracking",
+      "term": "전력연구원",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 0
+    },
+    "정상회담계기": {
+      "articles": 1,
+      "created_at": "2026-11-04T15:41:26.323249+00:00",
+      "domains": [
+        "jtbc.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "jtbc.co.kr",
+          "hash": "a9b71e8113b87303",
+          "importance": "must_read",
+          "title": "한-튀르키예 정상회담 계기 원전 금융지원 협력 MOU 체결"
+        }
+      ],
+      "expires_at": "2026-11-05T15:41:30.129105+00:00",
+      "importance": "must_read",
+      "last_result_count": 1,
+      "last_run": "2026-11-04T15:41:30.129105+00:00",
+      "new_articles": 1,
+      "origin": "auto",
+      "planned_at": "2026-11-04T15:41:26.323249+00:00",
+      "queries_run": 1,
+      "query": "정상회담 계기 원전",
+      "score": 3.6,
+      "status": "extended",
+      "term": "정상회담 계기",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [
+        "2026-11-05"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     },
     "정상회담을갖고": {
       "articles": 4,
