@@ -276,6 +276,14 @@
       "type": "company",
       "until": "2026-11-17T15:42:15.926941+00:00"
     },
+    "tunas": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-05T21:41:03.253928+00:00",
+      "term": "TUNAS",
+      "type": "company",
+      "until": "2026-11-19T21:41:03.253928+00:00"
+    },
     "uprate": {
       "new_articles": 0,
       "reason": "기간 만료",
@@ -347,6 +355,14 @@
       "term": "가스복합화력발전소 내",
       "type": "plant",
       "until": "2026-10-07T00:40:32.414041+00:00"
+    },
+    "갖고시노프": {
+      "new_articles": 3,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-05T21:41:03.253928+00:00",
+      "term": "갖고 시노프",
+      "type": "plant",
+      "until": "2026-11-19T21:41:03.253928+00:00"
     },
     "고준위방폐물관리위원회": {
       "new_articles": 2,
@@ -1260,6 +1276,14 @@
       "type": "plant",
       "until": "2026-10-09T03:41:21.217536+00:00"
     },
+    "현판식을열고": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-11-05T21:41:06.821692+00:00",
+      "term": "현판식을 열고",
+      "type": "plant",
+      "until": "2026-11-19T21:41:06.821692+00:00"
+    },
     "협의체를열고": {
       "new_articles": 3,
       "reason": "기간 만료",
@@ -1286,7 +1310,7 @@
     }
   },
   "spent": {
-    "count": 6,
+    "count": 9,
     "date": "2026-11-06"
   },
   "terms": {
@@ -1384,79 +1408,6 @@
       ],
       "yields": 3,
       "zero_streak": 0
-    },
-    "tunas": {
-      "articles": 1,
-      "created_at": "2026-11-04T18:41:21.740708+00:00",
-      "domains": [
-        "weeklytrade.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "weeklytrade.co.kr",
-          "hash": "bc286a4ebf02a7cd",
-          "importance": "must_read",
-          "title": "수출입은행, 튀르키예 원전 프로젝트 금융협력 MOU 체결"
-        }
-      ],
-      "expires_at": "2026-11-05T18:41:21.740708+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-11-05T18:41:08.052227+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-11-05T18:41:04.366222+00:00",
-      "queries_run": 2,
-      "query": "TUNAS 원자력",
-      "score": 3.6,
-      "status": "tracking",
-      "term": "TUNAS",
-      "ttl_hours": 24,
-      "type": "company",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
-    "갖고시노프": {
-      "articles": 2,
-      "created_at": "2026-11-03T18:44:22.683100+00:00",
-      "domains": [
-        "tvchosun.com",
-        "newsis.com"
-      ],
-      "evidence": [
-        {
-          "domain": "tvchosun.com",
-          "hash": "ac137a2c45988f30",
-          "importance": "nice_to_know",
-          "title": "이재명 대통령, 3일 튀르키예 대통령과 정상회담…시노프 원전 논의"
-        },
-        {
-          "domain": "newsis.com",
-          "hash": "761cb33f563e0a9e",
-          "importance": "must_read",
-          "title": "한-튀르키예, 원전 프로젝트 금융 협력 MOU 체결"
-        }
-      ],
-      "expires_at": "2026-11-05T18:44:22.683100+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-11-05T18:41:08.052227+00:00",
-      "new_articles": 3,
-      "origin": "auto",
-      "planned_at": "2026-11-05T18:41:04.366222+00:00",
-      "queries_run": 3,
-      "query": "갖고 시노프 원전",
-      "score": 5.3,
-      "status": "extended",
-      "term": "갖고 시노프",
-      "ttl_hours": 48,
-      "type": "plant",
-      "yield_days": [
-        "2026-11-04"
-      ],
-      "yields": 1,
-      "zero_streak": 2
     },
     "라인란드와": {
       "articles": 5,
@@ -1575,23 +1526,24 @@
       ],
       "expires_at": "2026-11-06T21:42:42.300471+00:00",
       "importance": "must_read",
-      "last_result_count": 3,
-      "last_run": "2026-11-04T21:20:06.001288+00:00",
-      "new_articles": 6,
+      "last_result_count": 1,
+      "last_run": "2026-11-05T21:41:06.821652+00:00",
+      "new_articles": 7,
       "origin": "auto",
-      "planned_at": "2026-11-04T21:20:01.971986+00:00",
-      "queries_run": 2,
+      "planned_at": "2026-11-05T21:41:03.253928+00:00",
+      "queries_run": 3,
       "query": "원자력공사",
       "score": 7.3,
-      "status": "extended",
+      "status": "promote_candidate",
       "term": "원자력공사",
       "ttl_hours": 72,
       "type": "org",
       "yield_days": [
         "2026-11-04",
-        "2026-11-05"
+        "2026-11-05",
+        "2026-11-06"
       ],
-      "yields": 2,
+      "yields": 3,
       "zero_streak": 0
     },
     "원자력공사와": {
@@ -1721,11 +1673,11 @@
       "expires_at": "2026-11-05T15:41:15.965828+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-11-05T00:41:42.815568+00:00",
+      "last_run": "2026-11-05T21:41:06.821652+00:00",
       "new_articles": 24,
       "origin": "auto",
-      "planned_at": "2026-11-05T00:41:38.855738+00:00",
-      "queries_run": 5,
+      "planned_at": "2026-11-05T21:41:03.253928+00:00",
+      "queries_run": 6,
       "query": "정상회담을 갖고 원전",
       "score": 6.3,
       "status": "promote_candidate",
@@ -1737,53 +1689,6 @@
         "2026-11-04"
       ],
       "yields": 3,
-      "zero_streak": 1
-    },
-    "현판식을열고": {
-      "articles": 4,
-      "created_at": "2026-11-03T21:42:42.300471+00:00",
-      "domains": [
-        "heraldcorp.com",
-        "dongascience.com",
-        "ulsanpress.net",
-        "ksilbo.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "heraldcorp.com",
-          "hash": "7e9a9cab0ee9209f",
-          "importance": "nice_to_know",
-          "title": "UNIST-한수원, '에너지×AI 융합 연구혁신센터' 통해 원전 운영 기술 고도화"
-        },
-        {
-          "domain": "dongascience.com",
-          "hash": "bb4cf7e49c9dbe2a",
-          "importance": "nice_to_know",
-          "title": "한수원-UNIST, 에너지×AI 융합 연구혁신센터 현판식 개최"
-        },
-        {
-          "domain": "ulsanpress.net",
-          "hash": "97f7df5daa97f284",
-          "importance": "nice_to_know",
-          "title": "한수원-UNIST, 에너지×AI 융합 연구혁신센터 현판식 개최"
-        }
-      ],
-      "expires_at": "2026-11-06T21:42:42.300471+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-04T21:20:06.001288+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-11-04T21:20:01.971986+00:00",
-      "queries_run": 2,
-      "query": "현판식을 열고 원전",
-      "score": 6.3,
-      "status": "tracking",
-      "term": "현판식을 열고",
-      "ttl_hours": 72,
-      "type": "plant",
-      "yield_days": [],
-      "yields": 0,
       "zero_streak": 2
     }
   },
