@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-11-07"
   },
   "retired": {
@@ -468,6 +468,14 @@
       "type": "plant",
       "until": "2026-09-23T09:40:11.671058+00:00"
     },
+    "라인란드와": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-06T18:41:16.839391+00:00",
+      "term": "라인란드와",
+      "type": "plant",
+      "until": "2026-11-20T18:41:16.839391+00:00"
+    },
     "로비사": {
       "new_articles": 3,
       "reason": "성과 없음",
@@ -611,6 +619,14 @@
       "term": "본토에 한국형",
       "type": "plant",
       "until": "2026-10-16T00:41:22.412305+00:00"
+    },
+    "분쟁조정위원회": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-06T18:41:16.839391+00:00",
+      "term": "분쟁조정위원회",
+      "type": "org",
+      "until": "2026-11-20T18:41:16.839391+00:00"
     },
     "브루스": {
       "new_articles": 0,
@@ -956,6 +972,14 @@
       "type": "plant",
       "until": "2026-11-19T18:41:04.366222+00:00"
     },
+    "정상회담을갖고": {
+      "new_articles": 24,
+      "reason": "성과 없음",
+      "retired_at": "2026-11-06T18:41:20.804238+00:00",
+      "term": "정상회담을 갖고",
+      "type": "plant",
+      "until": "2026-11-20T18:41:20.804238+00:00"
+    },
     "정지중인": {
       "new_articles": 1,
       "reason": "성과 없음",
@@ -1294,7 +1318,7 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 6,
     "date": "2026-11-07"
   },
   "terms": {
@@ -1439,92 +1463,53 @@
       "yields": 0,
       "zero_streak": 1
     },
-    "라인란드와": {
-      "articles": 5,
-      "created_at": "2026-11-04T15:41:26.323249+00:00",
+    "방위사업청": {
+      "articles": 3,
+      "created_at": "2026-11-06T18:41:16.839391+00:00",
       "domains": [
-        "khnp.co.kr",
-        "metroseoul.co.kr",
-        "g-enews.com",
-        "knpnews.com",
-        "businesspost.co.kr"
+        "munhwa.com",
+        "businesskorea.co.kr",
+        "hani.co.kr"
       ],
       "evidence": [
         {
-          "domain": "khnp.co.kr",
-          "hash": "d625089cbbf4ff7f",
-          "importance": "nice_to_know",
-          "title": "한수원, TUV 라인란드와 유럽 원전 디지털 기기 인증 협력 MOU 체결"
-        },
-        {
-          "domain": "metroseoul.co.kr",
-          "hash": "1dc3b285038eb994",
-          "importance": "nice_to_know",
-          "title": "한수원, TUV 라인란드와 유럽 원전 디지털 기기 인허가 협력"
-        },
-        {
-          "domain": "g-enews.com",
-          "hash": "f9db8fb0a0422e03",
-          "importance": "nice_to_know",
-          "title": "한수원, TUV 라인란드와 유럽 원전 디지털 기기 인증 협력 MOU 체결"
-        }
-      ],
-      "expires_at": "2026-11-06T15:41:26.323249+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-05T18:41:08.052227+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-11-05T18:41:04.366222+00:00",
-      "queries_run": 2,
-      "query": "라인란드와 원전",
-      "score": 5.0,
-      "status": "tracking",
-      "term": "라인란드와",
-      "ttl_hours": 48,
-      "type": "plant",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
-    "분쟁조정위원회": {
-      "articles": 2,
-      "created_at": "2026-11-05T15:41:12.752030+00:00",
-      "domains": [
-        "mt.co.kr",
-        "widedaily.com"
-      ],
-      "evidence": [
-        {
-          "domain": "mt.co.kr",
-          "hash": "3a2b4dd76b8b84a0",
-          "importance": "nice_to_know",
-          "title": "정부, 원전수출진흥법 내 분쟁조정위원회 설치 추진"
-        },
-        {
-          "domain": "widedaily.com",
-          "hash": "3c8ac90639a80e9e",
+          "domain": "munhwa.com",
+          "hash": "dd126c4d0a15f202",
           "importance": "must_read",
-          "title": "한수원, 체코 원전 시공 협상 결렬…산업부, 원전수출진흥법 내 분쟁조정위 신설 추진"
+          "title": "정부, '장보고 N사업' 기본전략 의결…2030년대 후반 핵잠 전력화 추진"
+        },
+        {
+          "domain": "businesskorea.co.kr",
+          "hash": "b45d1fe2571abc56",
+          "importance": "nice_to_know",
+          "title": "방사청, 장보고-III 배치-III 사업 추진 전략 승인…내년 하반기 업체 선정"
+        },
+        {
+          "domain": "hani.co.kr",
+          "hash": "722ed86936a79077",
+          "importance": "must_read",
+          "title": "방사청, 한국형 핵추진잠수함 사업 타당성 조사 면제 및 내년 착수 확정"
         }
       ],
-      "expires_at": "2026-11-06T15:41:12.752030+00:00",
+      "expires_at": "2026-11-08T18:41:16.839391+00:00",
       "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-11-06T15:41:02.636033+00:00",
-      "new_articles": 0,
+      "last_result_count": 3,
+      "last_run": "2026-11-06T18:41:20.804137+00:00",
+      "new_articles": 3,
       "origin": "auto",
-      "planned_at": "2026-11-06T15:40:59.201086+00:00",
-      "queries_run": 2,
-      "query": "분쟁조정위원회 원자력",
-      "score": 4.1,
-      "status": "tracking",
-      "term": "분쟁조정위원회",
-      "ttl_hours": 24,
+      "planned_at": "2026-11-06T18:41:16.839391+00:00",
+      "queries_run": 1,
+      "query": "방위사업청 원자력",
+      "score": 5.04,
+      "status": "extended",
+      "term": "방위사업청",
+      "ttl_hours": 48,
       "type": "org",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
+      "yield_days": [
+        "2026-11-07"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     },
     "세일럼": {
       "articles": 3,
@@ -1600,14 +1585,14 @@
           "title": "한-튀르키예 정상회담 계기 원전 금융지원 협력 MOU 체결"
         }
       ],
-      "expires_at": "2026-11-06T21:42:42.300471+00:00",
+      "expires_at": "2026-11-07T18:41:20.804137+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-11-05T21:41:06.821652+00:00",
-      "new_articles": 7,
+      "last_result_count": 2,
+      "last_run": "2026-11-06T18:41:20.804137+00:00",
+      "new_articles": 9,
       "origin": "auto",
-      "planned_at": "2026-11-05T21:41:03.253928+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-11-06T18:41:16.839391+00:00",
+      "queries_run": 4,
       "query": "원자력공사",
       "score": 7.3,
       "status": "promote_candidate",
@@ -1617,9 +1602,10 @@
       "yield_days": [
         "2026-11-04",
         "2026-11-05",
-        "2026-11-06"
+        "2026-11-06",
+        "2026-11-07"
       ],
-      "yields": 3,
+      "yields": 4,
       "zero_streak": 0
     },
     "원자력공사와": {
@@ -1670,56 +1656,6 @@
       ],
       "yields": 2,
       "zero_streak": 0
-    },
-    "정상회담을갖고": {
-      "articles": 4,
-      "created_at": "2026-11-02T15:41:15.965828+00:00",
-      "domains": [
-        "einfomax.co.kr",
-        "shinailbo.co.kr",
-        "cbci.co.kr",
-        "polinews.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "einfomax.co.kr",
-          "hash": "07f0888763d55598",
-          "importance": "nice_to_know",
-          "title": "이재명 대통령, 2일 튀르키예 정상과 원전·방산 협력 논의"
-        },
-        {
-          "domain": "shinailbo.co.kr",
-          "hash": "43c53de9811540c3",
-          "importance": "nice_to_know",
-          "title": "이재명 대통령, 3일 튀르키예 에르도안 대통령과 정상회담 개최"
-        },
-        {
-          "domain": "cbci.co.kr",
-          "hash": "503b473503de2d05",
-          "importance": "nice_to_know",
-          "title": "이재명 대통령-에르도안 튀르키예 대통령 정상회담…원전·방산 협력 논의"
-        }
-      ],
-      "expires_at": "2026-11-05T15:41:15.965828+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-05T21:41:06.821652+00:00",
-      "new_articles": 24,
-      "origin": "auto",
-      "planned_at": "2026-11-05T21:41:03.253928+00:00",
-      "queries_run": 6,
-      "query": "정상회담을 갖고 원전",
-      "score": 6.3,
-      "status": "promote_candidate",
-      "term": "정상회담을 갖고",
-      "ttl_hours": 72,
-      "type": "plant",
-      "yield_days": [
-        "2026-11-03",
-        "2026-11-04"
-      ],
-      "yields": 3,
-      "zero_streak": 2
     }
   },
   "version": 1
