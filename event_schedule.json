@@ -1,27 +1,6 @@
 {
- "generated_at": "2026-11-06T00:53:15+09:00",
+ "generated_at": "2026-11-07T00:49:05+09:00",
  "events": [
-  {
-   "id": "of-61e8b9fce8e6",
-   "date": "2026-10-21",
-   "end_date": "2026-10-23",
-   "kind": "range",
-   "time": "",
-   "label": "제24회 한국방사성폐기물학회 정기총회 및 2026 추계 학술발표회",
-   "host": "",
-   "organizer": "",
-   "place": "제주 신화월드",
-   "url": "https://www.krs.or.kr/html?intAcSeq=278&part=1&pmode=inputList&smode=view",
-   "source_id": "kaif_calendar",
-   "publisher": "한국원자력산업협회",
-   "notice_title": "제24회 한국방사성폐기물학회 정기총회 및 2026 추계 학술발표회 (세미나)",
-   "first_seen": "2026-08-29",
-   "topics": [
-    "waste"
-   ],
-   "relevance": "방사성폐기물",
-   "significance": "세미나"
-  },
   {
    "id": "of-3b16bba455bc",
    "date": "2026-10-27",
@@ -248,7 +227,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-11-06T00:53:15+09:00",
+   "at": "2026-11-07T00:49:05+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -256,61 +235,43 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-11-06T00:53:15+09:00",
-   "ok": true,
-   "parsed": 12,
-   "kept": 3,
-   "new": 0,
-   "dropped": {
-    "no_interest_match": 2,
-    "not_an_event": 4,
-    "low_significance": 3
-   }
+   "at": "2026-11-07T00:49:05+09:00",
+   "ok": false,
+   "error": "ConnectionError: HTTPSConnectionPool(host='www.kaif.or.kr', port=443): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPSConnection(host='www.kaif.or.kr', port=443): Failed to estab"
   },
   "kaif_calendar": {
-   "at": "2026-11-06T00:53:15+09:00",
-   "ok": true,
-   "parsed": 60,
-   "kept": 36,
-   "new": 30,
-   "dropped": {
-    "no_interest_match": 18,
-    "off_topic": 4,
-    "not_an_event": 1,
-    "low_significance": 1
-   }
+   "at": "2026-11-07T00:49:05+09:00",
+   "ok": false,
+   "error": "ConnectionError: HTTPSConnectionPool(host='www.kaif.or.kr', port=443): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPSConnection(host='www.kaif.or.kr', port=443): Failed to estab"
   },
   "niftep_notice": {
-   "at": "2026-11-06T00:53:15+09:00",
-   "ok": true,
-   "parsed": 0,
-   "kept": 0,
-   "new": 0,
-   "dropped": {}
+   "at": "2026-11-07T00:49:05+09:00",
+   "ok": false,
+   "error": "ConnectTimeout: HTTPSConnectionPool(host='niftep.snu.ac.kr', port=443): Max retries exceeded with url: /kr/sub/notice/notice.asp (Caused by ConnectTimeoutError(<HTTPSConnection(host='niftep.snu.ac.kr'"
   },
   "assembly_events": {
-   "at": "2026-11-06T00:53:15+09:00",
+   "at": "2026-11-07T00:49:05+09:00",
    "ok": true,
-   "parsed": 37,
+   "parsed": 48,
    "kept": 0,
    "new": 0,
    "dropped": {
-    "not_an_event": 4,
-    "no_interest_match": 33
+    "no_interest_match": 46,
+    "not_an_event": 2
    }
   },
   "kpx_notice": {
-   "at": "2026-11-06T00:53:15+09:00",
+   "at": "2026-11-07T00:49:05+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
    "new": 2,
    "dropped": {
-    "no_interest_match": 9,
+    "not_an_event": 5,
+    "no_interest_match": 8,
     "no_event_date": 3,
     "unreadable_event_date": 1,
-    "low_significance": 1,
-    "not_an_event": 4
+    "low_significance": 1
    }
   }
  }
