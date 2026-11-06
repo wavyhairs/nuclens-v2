@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 3,
+    "count": 5,
     "date": "2026-11-06"
   },
   "retired": {
@@ -251,14 +251,6 @@
       "term": "PCTC",
       "type": "company",
       "until": "2026-10-22T09:44:15.024077+00:00"
-    },
-    "pmdc": {
-      "new_articles": 0,
-      "reason": "성과 없음",
-      "retired_at": "2026-09-07T00:40:30.090471+00:00",
-      "term": "PMDC",
-      "type": "company",
-      "until": "2026-09-21T00:40:30.090471+00:00"
     },
     "posiva": {
       "new_articles": 0,
@@ -868,6 +860,14 @@
       "type": "org",
       "until": "2026-10-19T00:44:11.377157+00:00"
     },
+    "원전특별위원회": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-06T00:40:59.989435+00:00",
+      "term": "원전특별위원회",
+      "type": "org",
+      "until": "2026-11-20T00:40:59.989435+00:00"
+    },
     "의제확정": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -1310,7 +1310,7 @@
     }
   },
   "spent": {
-    "count": 9,
+    "count": 12,
     "date": "2026-11-06"
   },
   "terms": {
@@ -1390,12 +1390,12 @@
       ],
       "expires_at": "2026-11-06T00:41:42.815568+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-11-05T00:41:42.815568+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-11-06T00:41:03.257168+00:00",
       "new_articles": 6,
       "origin": "auto",
-      "planned_at": "2026-11-05T00:41:38.855738+00:00",
-      "queries_run": 5,
+      "planned_at": "2026-11-06T00:40:59.989435+00:00",
+      "queries_run": 6,
       "query": "MSA 원자력",
       "score": 6.22,
       "status": "promote_candidate",
@@ -1407,7 +1407,53 @@
         "2026-11-05"
       ],
       "yields": 3,
-      "zero_streak": 0
+      "zero_streak": 1
+    },
+    "뉴저지주세일럼": {
+      "articles": 3,
+      "created_at": "2026-11-06T00:40:59.989435+00:00",
+      "domains": [
+        "utilitydive.com",
+        "esnews.kr",
+        "ans.org"
+      ],
+      "evidence": [
+        {
+          "domain": "utilitydive.com",
+          "hash": "5991529c23b75c4b",
+          "importance": "nice_to_know",
+          "title": "미국 세일럼 원전, 200MW 출력 증강 추진"
+        },
+        {
+          "domain": "esnews.kr",
+          "hash": "3de17f7a23e515c4",
+          "importance": "nice_to_know",
+          "title": "美 PSEG, 세일럼 원전 출력 200MW 증강 추진"
+        },
+        {
+          "domain": "ans.org",
+          "hash": "9808f49b2fe376bf",
+          "importance": "nice_to_know",
+          "title": "미국 세일럼 원전, 200MW 출력 상향 추진"
+        }
+      ],
+      "expires_at": "2026-11-08T00:40:59.989435+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-11-06T00:41:03.257168+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-06T00:40:59.989435+00:00",
+      "queries_run": 1,
+      "query": "뉴저지주 세일럼 원전",
+      "score": 4.6,
+      "status": "tracking",
+      "term": "뉴저지주 세일럼",
+      "ttl_hours": 48,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     },
     "라인란드와": {
       "articles": 5,
@@ -1492,6 +1538,52 @@
       "term": "분쟁조정위원회",
       "ttl_hours": 24,
       "type": "org",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "세일럼": {
+      "articles": 3,
+      "created_at": "2026-11-06T00:40:59.989435+00:00",
+      "domains": [
+        "utilitydive.com",
+        "esnews.kr",
+        "ans.org"
+      ],
+      "evidence": [
+        {
+          "domain": "utilitydive.com",
+          "hash": "5991529c23b75c4b",
+          "importance": "nice_to_know",
+          "title": "미국 세일럼 원전, 200MW 출력 증강 추진"
+        },
+        {
+          "domain": "esnews.kr",
+          "hash": "3de17f7a23e515c4",
+          "importance": "nice_to_know",
+          "title": "美 PSEG, 세일럼 원전 출력 200MW 증강 추진"
+        },
+        {
+          "domain": "ans.org",
+          "hash": "9808f49b2fe376bf",
+          "importance": "nice_to_know",
+          "title": "미국 세일럼 원전, 200MW 출력 상향 추진"
+        }
+      ],
+      "expires_at": "2026-11-08T00:40:59.989435+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-11-06T00:41:03.257168+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-06T00:40:59.989435+00:00",
+      "queries_run": 1,
+      "query": "세일럼 원전",
+      "score": 4.6,
+      "status": "tracking",
+      "term": "세일럼",
+      "ttl_hours": 48,
+      "type": "plant",
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
@@ -1593,53 +1685,6 @@
       ],
       "yields": 1,
       "zero_streak": 0
-    },
-    "원전특별위원회": {
-      "articles": 4,
-      "created_at": "2026-11-03T21:42:42.300471+00:00",
-      "domains": [
-        "iusm.co.kr",
-        "ujeil.com",
-        "ulsanpress.net",
-        "ksilbo.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "iusm.co.kr",
-          "hash": "386a61670db6b861",
-          "importance": "nice_to_know",
-          "title": "울산시의회 원전특위, 원전해체산업 지역기업 참여 확대 촉구"
-        },
-        {
-          "domain": "ujeil.com",
-          "hash": "294e4494d9b87fc7",
-          "importance": "nice_to_know",
-          "title": "울산시의회, 원전해체산업 지역기업 참여 확대 및 안전관리 점검"
-        },
-        {
-          "domain": "ulsanpress.net",
-          "hash": "574f07a184842efc",
-          "importance": "nice_to_know",
-          "title": "울산시의회 원전특위, 새울본부 방문 및 원전해체 산업 연계 논의"
-        }
-      ],
-      "expires_at": "2026-11-05T21:42:42.300471+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-05T00:41:42.815568+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-11-05T00:41:38.855738+00:00",
-      "queries_run": 2,
-      "query": "원전특별위원회",
-      "score": 5.1,
-      "status": "tracking",
-      "term": "원전특별위원회",
-      "ttl_hours": 48,
-      "type": "org",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
     },
     "정상회담을갖고": {
       "articles": 4,
