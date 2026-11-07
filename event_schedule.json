@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-07T00:49:05+09:00",
+ "generated_at": "2026-11-08T00:44:24+09:00",
  "events": [
   {
    "id": "of-3b16bba455bc",
@@ -227,7 +227,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-11-07T00:49:05+09:00",
+   "at": "2026-11-08T00:44:24+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -235,33 +235,36 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-11-07T00:49:05+09:00",
+   "at": "2026-11-08T00:44:24+09:00",
    "ok": false,
    "error": "ConnectionError: HTTPSConnectionPool(host='www.kaif.or.kr', port=443): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPSConnection(host='www.kaif.or.kr', port=443): Failed to estab"
   },
   "kaif_calendar": {
-   "at": "2026-11-07T00:49:05+09:00",
+   "at": "2026-11-08T00:44:24+09:00",
    "ok": false,
    "error": "ConnectionError: HTTPSConnectionPool(host='www.kaif.or.kr', port=443): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPSConnection(host='www.kaif.or.kr', port=443): Failed to estab"
   },
   "niftep_notice": {
-   "at": "2026-11-07T00:49:05+09:00",
-   "ok": false,
-   "error": "ConnectTimeout: HTTPSConnectionPool(host='niftep.snu.ac.kr', port=443): Max retries exceeded with url: /kr/sub/notice/notice.asp (Caused by ConnectTimeoutError(<HTTPSConnection(host='niftep.snu.ac.kr'"
+   "at": "2026-11-08T00:44:24+09:00",
+   "ok": true,
+   "parsed": 0,
+   "kept": 0,
+   "new": 0,
+   "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-11-07T00:49:05+09:00",
+   "at": "2026-11-08T00:44:24+09:00",
    "ok": true,
-   "parsed": 48,
+   "parsed": 47,
    "kept": 0,
    "new": 0,
    "dropped": {
-    "no_interest_match": 46,
+    "no_interest_match": 45,
     "not_an_event": 2
    }
   },
   "kpx_notice": {
-   "at": "2026-11-07T00:49:05+09:00",
+   "at": "2026-11-08T00:44:24+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
