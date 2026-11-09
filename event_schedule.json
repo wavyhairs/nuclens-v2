@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-09T00:43:19+09:00",
+ "generated_at": "2026-11-10T00:47:53+09:00",
  "events": [
   {
    "id": "of-3b16bba455bc",
@@ -227,7 +227,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-11-09T00:43:19+09:00",
+   "at": "2026-11-10T00:47:53+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -235,17 +235,32 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-11-09T00:43:19+09:00",
-   "ok": false,
-   "error": "ConnectionError: HTTPSConnectionPool(host='www.kaif.or.kr', port=443): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPSConnection(host='www.kaif.or.kr', port=443): Failed to estab"
+   "at": "2026-11-10T00:47:53+09:00",
+   "ok": true,
+   "parsed": 11,
+   "kept": 3,
+   "new": 0,
+   "dropped": {
+    "no_interest_match": 1,
+    "not_an_event": 4,
+    "low_significance": 3
+   }
   },
   "kaif_calendar": {
-   "at": "2026-11-09T00:43:19+09:00",
-   "ok": false,
-   "error": "ConnectionError: HTTPSConnectionPool(host='www.kaif.or.kr', port=443): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPSConnection(host='www.kaif.or.kr', port=443): Failed to estab"
+   "at": "2026-11-10T00:47:53+09:00",
+   "ok": true,
+   "parsed": 60,
+   "kept": 36,
+   "new": 31,
+   "dropped": {
+    "no_interest_match": 18,
+    "off_topic": 4,
+    "not_an_event": 1,
+    "low_significance": 1
+   }
   },
   "niftep_notice": {
-   "at": "2026-11-09T00:43:19+09:00",
+   "at": "2026-11-10T00:47:53+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -253,18 +268,17 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-11-09T00:43:19+09:00",
+   "at": "2026-11-10T00:47:53+09:00",
    "ok": true,
-   "parsed": 56,
+   "parsed": 62,
    "kept": 0,
    "new": 0,
    "dropped": {
-    "no_interest_match": 54,
-    "not_an_event": 2
+    "no_interest_match": 62
    }
   },
   "kpx_notice": {
-   "at": "2026-11-09T00:43:19+09:00",
+   "at": "2026-11-10T00:47:53+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,

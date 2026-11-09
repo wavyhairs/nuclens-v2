@@ -1,7 +1,7 @@
 {
   "minted": {
     "count": 0,
-    "date": "2026-11-09"
+    "date": "2026-11-10"
   },
   "retired": {
     "antares": {
@@ -860,6 +860,14 @@
       "type": "plant",
       "until": "2026-11-19T03:41:20.960618+00:00"
     },
+    "원자력공사와": {
+      "new_articles": 59,
+      "reason": "질의 횟수 소진",
+      "retired_at": "2026-11-09T15:40:49.750649+00:00",
+      "term": "원자력공사와",
+      "type": "plant",
+      "until": "2026-11-23T15:40:49.750649+00:00"
+    },
     "원자력발전소3": {
       "new_articles": 34,
       "reason": "질의 횟수 소진",
@@ -1342,8 +1350,8 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-11-09"
+    "count": 3,
+    "date": "2026-11-10"
   },
   "terms": {
     "규모한미": {
@@ -1360,25 +1368,26 @@
           "title": "미국 중간선거 여파로 1200억 달러 규모 한미 원전 프로젝트 재검토 목소리"
         }
       ],
-      "expires_at": "2026-11-10T03:40:41.621004+00:00",
+      "expires_at": "2026-11-10T15:40:49.750541+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-11-09T03:40:41.621004+00:00",
-      "new_articles": 2,
+      "last_result_count": 2,
+      "last_run": "2026-11-09T15:40:49.750541+00:00",
+      "new_articles": 4,
       "origin": "auto",
-      "planned_at": "2026-11-09T03:40:37.913100+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-11-09T15:40:46.045198+00:00",
+      "queries_run": 4,
       "query": "규모 한미 원전",
       "score": 3.6,
-      "status": "extended",
+      "status": "promote_candidate",
       "term": "규모 한미",
       "ttl_hours": 24,
       "type": "plant",
       "yield_days": [
         "2026-11-08",
-        "2026-11-09"
+        "2026-11-09",
+        "2026-11-10"
       ],
-      "yields": 2,
+      "yields": 3,
       "zero_streak": 0
     },
     "방위사업청": {
@@ -1411,12 +1420,12 @@
       ],
       "expires_at": "2026-11-10T03:40:41.621004+00:00",
       "importance": "must_read",
-      "last_result_count": 3,
-      "last_run": "2026-11-09T03:40:41.621004+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-11-09T15:40:49.750541+00:00",
       "new_articles": 9,
       "origin": "auto",
-      "planned_at": "2026-11-09T03:40:37.913100+00:00",
-      "queries_run": 5,
+      "planned_at": "2026-11-09T15:40:46.045198+00:00",
+      "queries_run": 6,
       "query": "방위사업청 원자력",
       "score": 5.04,
       "status": "promote_candidate",
@@ -1429,58 +1438,7 @@
         "2026-11-09"
       ],
       "yields": 4,
-      "zero_streak": 0
-    },
-    "원자력공사와": {
-      "articles": 3,
-      "created_at": "2026-11-05T15:41:12.752030+00:00",
-      "domains": [
-        "heraldcorp.com",
-        "etnews.com",
-        "webeconomy.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "heraldcorp.com",
-          "hash": "b4221092bf9d89eb",
-          "importance": "nice_to_know",
-          "title": "수출입은행, 튀르키예 시놉 원전 수주 위한 금융 협력 MOU 체결"
-        },
-        {
-          "domain": "etnews.com",
-          "hash": "354cbf68117caf21",
-          "importance": "must_read",
-          "title": "수출입은행, 튀르키예 원자력공사와 MOU…시놉 원전 금융지원 협력"
-        },
-        {
-          "domain": "webeconomy.co.kr",
-          "hash": "96f9a7de2bf4c4b7",
-          "importance": "nice_to_know",
-          "title": "한국수출입은행, 튀르키예 원전 프로젝트 금융협력 MOU 체결"
-        }
-      ],
-      "expires_at": "2026-11-10T03:40:41.621004+00:00",
-      "importance": "must_read",
-      "last_result_count": 26,
-      "last_run": "2026-11-09T03:40:41.621004+00:00",
-      "new_articles": 46,
-      "origin": "auto",
-      "planned_at": "2026-11-09T03:40:37.913100+00:00",
-      "queries_run": 7,
-      "query": "원자력공사와",
-      "score": 4.0,
-      "status": "promote_candidate",
-      "term": "원자력공사와",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-11-06",
-        "2026-11-07",
-        "2026-11-08",
-        "2026-11-09"
-      ],
-      "yields": 7,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "전력연구소": {
       "articles": 4,
