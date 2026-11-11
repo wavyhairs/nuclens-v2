@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-11-12"
   },
   "retired": {
@@ -1310,7 +1310,7 @@
     }
   },
   "spent": {
-    "count": 2,
+    "count": 4,
     "date": "2026-11-12"
   },
   "terms": {
@@ -1345,17 +1345,49 @@
       "expires_at": "2026-11-12T15:40:34.916347+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-11-11T15:40:36.238195+00:00",
+      "last_run": "2026-11-11T21:43:49.402978+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-11-11T15:40:34.916347+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-11T21:43:47.144380+00:00",
+      "queries_run": 2,
       "query": "KENTECH 원자력",
       "score": 3.64,
       "status": "tracking",
       "term": "KENTECH",
       "ttl_hours": 24,
       "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 2
+    },
+    "달링턴": {
+      "articles": 1,
+      "created_at": "2026-11-11T21:43:47.144380+00:00",
+      "domains": [
+        "world-nuclear-news.org"
+      ],
+      "evidence": [
+        {
+          "domain": "world-nuclear-news.org",
+          "hash": "7dd0752f226748ca",
+          "importance": "must_read",
+          "title": "온타리오전력(OPG), 달링턴 SMR 1호기 건설 일정 및 비용 초과 공식화"
+        }
+      ],
+      "expires_at": "2026-11-12T21:43:47.144380+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-11T21:43:49.402978+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-11T21:43:47.144380+00:00",
+      "queries_run": 1,
+      "query": "달링턴 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "달링턴",
+      "ttl_hours": 24,
+      "type": "plant",
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
