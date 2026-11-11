@@ -420,6 +420,14 @@
       "type": "plant",
       "until": "2026-10-03T06:40:35.483007+00:00"
     },
+    "규모한미": {
+      "new_articles": 14,
+      "reason": "질의 횟수 소진",
+      "retired_at": "2026-11-11T00:41:11.573159+00:00",
+      "term": "규모 한미",
+      "type": "plant",
+      "until": "2026-11-25T00:41:11.573159+00:00"
+    },
     "기에한국형": {
       "new_articles": 9,
       "reason": "질의 횟수 소진",
@@ -956,6 +964,14 @@
       "type": "plant",
       "until": "2026-10-08T15:40:46.551388+00:00"
     },
+    "전력연구소": {
+      "new_articles": 9,
+      "reason": "질의 횟수 소진",
+      "retired_at": "2026-11-11T00:41:11.573159+00:00",
+      "term": "전력연구소",
+      "type": "org",
+      "until": "2026-11-25T00:41:11.573159+00:00"
+    },
     "전력연구원": {
       "new_articles": 0,
       "reason": "기간 만료",
@@ -1318,46 +1334,10 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 6,
     "date": "2026-11-11"
   },
   "terms": {
-    "규모한미": {
-      "articles": 1,
-      "created_at": "2026-11-08T06:40:25.036689+00:00",
-      "domains": [
-        "etoday.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "etoday.co.kr",
-          "hash": "6d6f7b59bc8bf19e",
-          "importance": "must_read",
-          "title": "미국 중간선거 여파로 1200억 달러 규모 한미 원전 프로젝트 재검토 목소리"
-        }
-      ],
-      "expires_at": "2026-11-11T09:40:53.970284+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-11-10T15:41:24.622316+00:00",
-      "new_articles": 14,
-      "origin": "auto",
-      "planned_at": "2026-11-10T15:41:20.792363+00:00",
-      "queries_run": 7,
-      "query": "규모 한미 원전",
-      "score": 3.6,
-      "status": "promote_candidate",
-      "term": "규모 한미",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-11-08",
-        "2026-11-09",
-        "2026-11-10"
-      ],
-      "yields": 5,
-      "zero_streak": 1
-    },
     "용접부": {
       "articles": 2,
       "created_at": "2026-11-10T15:41:20.792363+00:00",
@@ -1380,12 +1360,12 @@
       ],
       "expires_at": "2026-11-12T15:41:20.792363+00:00",
       "importance": "must_read",
-      "last_result_count": 3,
-      "last_run": "2026-11-10T15:41:24.622316+00:00",
-      "new_articles": 3,
+      "last_result_count": 1,
+      "last_run": "2026-11-11T00:41:11.573056+00:00",
+      "new_articles": 4,
       "origin": "auto",
-      "planned_at": "2026-11-10T15:41:20.792363+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-11T00:41:07.642102+00:00",
+      "queries_run": 2,
       "query": "용접부 원자력",
       "score": 4.8,
       "status": "extended",
@@ -1395,58 +1375,8 @@
       "yield_days": [
         "2026-11-11"
       ],
-      "yields": 1,
+      "yields": 2,
       "zero_streak": 0
-    },
-    "전력연구소": {
-      "articles": 4,
-      "created_at": "2026-11-08T06:40:25.036689+00:00",
-      "domains": [
-        "etnews.com",
-        "khnp.co.kr",
-        "webeconomy.co.kr",
-        "metroseoul.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "etnews.com",
-          "hash": "1c20a18857088473",
-          "importance": "nice_to_know",
-          "title": "한수원, 美 EPRI와 청정수소 생산기술 실증 및 국산화 협력"
-        },
-        {
-          "domain": "khnp.co.kr",
-          "hash": "e51126f084fd26f4",
-          "importance": "noise",
-          "title": "한수원, 美 전력연구소(EPRI)와 청정수소 생산기술 포럼 개최"
-        },
-        {
-          "domain": "webeconomy.co.kr",
-          "hash": "85661b49ba96d92a",
-          "importance": "nice_to_know",
-          "title": "한수원, 양수발전 주민 소통 및 미국 전력연구소와 청정수소 협력 논의"
-        }
-      ],
-      "expires_at": "2026-11-11T09:40:53.970284+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-10T15:41:24.622316+00:00",
-      "new_articles": 7,
-      "origin": "auto",
-      "planned_at": "2026-11-10T15:41:20.792363+00:00",
-      "queries_run": 7,
-      "query": "전력연구소 원자력",
-      "score": 3.09,
-      "status": "promote_candidate",
-      "term": "전력연구소",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [
-        "2026-11-09",
-        "2026-11-10"
-      ],
-      "yields": 5,
-      "zero_streak": 1
     }
   },
   "version": 1
