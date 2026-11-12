@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-11-13"
   },
   "retired": {
@@ -1334,10 +1334,49 @@
     }
   },
   "spent": {
-    "count": 2,
+    "count": 3,
     "date": "2026-11-13"
   },
   "terms": {
+    "opg": {
+      "articles": 2,
+      "created_at": "2026-11-12T21:40:28.161766+00:00",
+      "domains": [
+        "world-nuclear-news.org",
+        "canarymedia.com"
+      ],
+      "evidence": [
+        {
+          "domain": "world-nuclear-news.org",
+          "hash": "7dd0752f226748ca",
+          "importance": "must_read",
+          "title": "온타리오전력(OPG), 달링턴 SMR 1호기 건설 일정 및 비용 초과 공식화"
+        },
+        {
+          "domain": "canarymedia.com",
+          "hash": "0576fd81ddfcfef1",
+          "importance": "nice_to_know",
+          "title": "온타리오 발전공사(OPG) SMR 프로젝트, 예산 초과 및 일정 지연 발생"
+        }
+      ],
+      "expires_at": "2026-11-14T21:40:28.161766+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-12T21:40:29.405858+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-12T21:40:28.161766+00:00",
+      "queries_run": 1,
+      "query": "OPG 원자력",
+      "score": 5.3,
+      "status": "tracking",
+      "term": "OPG",
+      "ttl_hours": 48,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "osart": {
       "articles": 2,
       "created_at": "2026-11-12T12:40:24.836269+00:00",
