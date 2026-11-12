@@ -2,6 +2,17 @@
   "_comment": "이슈 병합 회색지대 LLM 판정 캐시. 사람이 고쳐도 된다.",
   "prompt_version": 2,
   "reviews": {
+    "00012fa06ddefa38--17a9c7eaa8fc61be": {
+      "embedding_similarity": 0.8561,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 AI 기업 뉴스",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "아마존, 자체 개발 AI 반도체 외부 판매 선언…엔비디아와 경쟁 본격화",
+      "same_event": false
+    },
     "00012fa06ddefa38--2848acfdf2e7091d": {
       "embedding_similarity": 0.9052,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -3574,6 +3585,17 @@
       "right_title": "LG전자, 데이터센터 냉각 시장 공략 가속화",
       "same_event": false
     },
+    "005595761d2610e2--addb110563e56c1d": {
+      "embedding_similarity": 0.8425,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "HD현대, AI 데이터센터 전력 수요 대응 육상용 발전 엔진 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "HD현대 엔진과 KT클라우드 계획",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "KT클라우드, 2031년까지 전국 1GW 규모 AI 데이터센터 인프라 구축",
+      "same_event": false
+    },
     "005595761d2610e2--addf1e2ee5f478b9": {
       "embedding_similarity": 0.848,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -4683,6 +4705,17 @@
       "reason": "기업과 지역이 다름",
       "reviewed_at": "2026-11-04T21:35:51.875752+00:00",
       "right_title": "울산시, SK-AWS 데이터센터 연계 전력·냉각 연관기업 유치 추진",
+      "same_event": false
+    },
+    "0066ae6049ce02c5--1ec3e078cb668f94": {
+      "embedding_similarity": 0.8508,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 경제성 부각 보도는 별개임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "AI 전력 수요 급증에 따른 원전 계속운전의 경제성 및 필요성 부각",
       "same_event": false
     },
     "0066ae6049ce02c5--377fe68271be4d4f": {
@@ -23076,6 +23109,17 @@
       "right_title": "체코 원전 사업비 증가 우려 제기…현지 전문가 경고",
       "same_event": false
     },
+    "02d3ce9aceccb36b--40ea133cc22e3773": {
+      "embedding_similarity": 0.8435,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자와 현대차의 서로 다른 투자 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "현대차그룹, 새만금 AI 데이터센터 현장사무소 개소 및 착공 준비",
+      "same_event": false
+    },
     "02e1bb4b9e238254--08cc25cd258ff60b": {
       "embedding_similarity": 0.8704,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -24318,6 +24362,17 @@
       "reviewed_at": "2026-11-11T22:13:18.411675+00:00",
       "right_title": "캐나다-튀르키예 원자력 협력 강화 및 필리핀·태국 원전 계획 동향",
       "same_event": true
+    },
+    "030f0bc8c91f08c3--5f449b4df1388293": {
+      "embedding_similarity": 0.8621,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "칸두 원전 협약과 일반 동향",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "캐나다-튀르키예 원자력 협력 강화 및 필리핀·태국 원전 계획 동향",
+      "same_event": false
     },
     "032102bc9dfe788d--341fae7beffafdcb": {
       "embedding_similarity": 0.8653,
@@ -37192,6 +37247,17 @@
       "right_title": "포항시, 한국수력원자력 등과 공영주차장 RE100 태양광 사업 추진",
       "same_event": true
     },
+    "04d4ab6017e727a6--17a9c7eaa8fc61be": {
+      "embedding_similarity": 0.8407,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "계약 건과 보안 점검은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "AI 데이터센터 투자 성과 및 금융권 보안 취약점 점검",
+      "same_event": false
+    },
     "04d84cf78da980aa--377fe68271be4d4f": {
       "embedding_similarity": 0.8492,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -37683,6 +37749,17 @@
       "right_title": "산업부, 서남권 반도체·조선 등 권역별 성장엔진 육성 현장행보",
       "same_event": false
     },
+    "04fe1709f76bb333--508b8524eb822150": {
+      "embedding_similarity": 0.843,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체만 같고 안건이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "산업부, 서남권 반도체·조선 등 권역별 성장엔진 육성 현장행보",
+      "same_event": false
+    },
     "04fede27a83498ff--06b42322a35171f1": {
       "embedding_similarity": 0.8602,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -37991,6 +38068,17 @@
       "right_title": "한-튀르키예, 원전·핵심광물 등 에너지 협력 MOU 4건 체결",
       "same_event": true
     },
+    "05149a365c2a5427--5f449b4df1388293": {
+      "embedding_similarity": 0.8558,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "튀르키예 원전 관련 별개 안건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한-튀르키예, 원전·핵심광물 등 에너지 협력 MOU 4건 체결",
+      "same_event": false
+    },
     "05149a365c2a5427--99cf367c355e7825": {
       "embedding_similarity": 0.9156,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -38067,6 +38155,17 @@
       "reviewed_at": "2026-11-11T22:13:18.411675+00:00",
       "right_title": "튀르키예 신규 원전 수주전, 한국-캐나다 2파전 압축",
       "same_event": true
+    },
+    "05345774d799d107--5f449b4df1388293": {
+      "embedding_similarity": 0.852,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "타당성조사 협약과 수주전 압축 보도는 별개입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "튀르키예 신규 원전 수주전, 한국-캐나다 2파전 압축",
+      "same_event": false
     },
     "053bed7a9b6f7975--3d0e9259f5fb1aba": {
       "embedding_similarity": 0.8426,
@@ -42859,6 +42958,17 @@
       "reason": "핵잠수함 과제와 원자력협정 개정은 다른 사안",
       "reviewed_at": "2026-09-21T09:54:20.946471+00:00",
       "right_title": "한미 원자력협정 개정 및 후속 협의 지연",
+      "same_event": false
+    },
+    "05f314a805709996--17a9c7eaa8fc61be": {
+      "embedding_similarity": 0.8625,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 데이터센터 구축 지연 가능성 경고",
       "same_event": false
     },
     "05f314a805709996--2848acfdf2e7091d": {
@@ -53138,6 +53248,17 @@
       "right_title": "빌 게이츠 방한, 최태원·정기선과 SMR 협력 확대 논의",
       "same_event": false
     },
+    "06e85de71e6b930e--1ba790889636330a": {
+      "embedding_similarity": 0.8522,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 장관, 체코 원전 시공계약 협상 결렬에 \"무산은 없을 것\"",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공계약 협상 결렬에 관한 동일 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원-체코 원전 시공단, 공사비 갈등으로 협상 결렬",
+      "same_event": true
+    },
     "06e85de71e6b930e--33f93df9ed89016c": {
       "embedding_similarity": 0.8802,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -53697,6 +53818,17 @@
       "reason": "DL이앤씨와 현대엔지니어링의 서로 다른 협력",
       "reviewed_at": "2026-10-28T09:59:55.804251+00:00",
       "right_title": "현대엔지니어링, 美 NNE·ARC와 4세대 SMR 실증사업 협력",
+      "same_event": false
+    },
+    "06f0670553da9607--87c8b49972421246": {
+      "embedding_similarity": 0.8445,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한수원, 신고리 2호기 IAEA 운영안전점검(OSART) 성공적 마무리",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "신고리 점검과 성능검증기관 인증은 무관",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "에이치시티, 원자력 안전기기 성능검증기관 인증 확대",
       "same_event": false
     },
     "06f22aa88b138220--4d2f3fff4e759e9f": {
@@ -65337,6 +65469,17 @@
       "right_title": "이재명 대통령, 원전 PPA 도입에 '대기업 특혜' 우려 제기하며 제동",
       "same_event": false
     },
+    "08c1b7a5c1082124--1ec3e078cb668f94": {
+      "embedding_similarity": 0.8415,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 규제 논의와 지자체장 촉구는 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "경주시장, 월성 2·3·4호기 계속운전 절차 신속 추진 촉구",
+      "same_event": false
+    },
     "08c66cc9fd170569--1b42642232b1735c": {
       "embedding_similarity": 0.8429,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -66094,6 +66237,17 @@
       "reason": "효성중공업 설비 구축과 LS일렉트릭 행사가 다름",
       "reviewed_at": "2026-10-28T09:59:55.804251+00:00",
       "right_title": "LS일렉트릭, BIXPO 2026서 HVDC 및 AI 데이터센터 전력 솔루션 공개",
+      "same_event": false
+    },
+    "08fa6766ed8579c6--17a9c7eaa8fc61be": {
+      "embedding_similarity": 0.843,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 AI 팩토리와 엔비디아 규격 공개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 모듈형 AI 데이터센터 설계 규격 'DSX 포드' 공개",
       "same_event": false
     },
     "08fa6766ed8579c6--30917f1b6f14fabf": {
@@ -75855,6 +76009,17 @@
       "right_title": "원전업계, 계속운전 허가기간 산정 방식 개선 요구",
       "same_event": false
     },
+    "0aafa895a261612f--1ec3e078cb668f94": {
+      "embedding_similarity": 0.8632,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "계속운전 기간 산정 방식 개선 요구",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원전업계, 계속운전 허가기간 산정 방식 개선 요구",
+      "same_event": true
+    },
     "0aafa895a261612f--274511da46688793": {
       "embedding_similarity": 0.8732,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -78695,6 +78860,17 @@
       "reviewed_at": "2026-10-29T22:06:40.976855+00:00",
       "right_title": "한국선급, 암모니아·수소·SMR 등 대체연료 및 원자력 추진 선박 안전성 검증 역량 집중",
       "same_event": false
+    },
+    "0b9fb127c110afe4--9d1fe1976fd1a6a4": {
+      "embedding_similarity": 0.8494,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한국선급(KR), 부산서 '친환경기술 컨퍼런스' 개최…해양 SMR 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "한국선급의 해양 SMR 관련 동일 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한국선급, 암모니아·수소·SMR 등 대체연료 및 원자력 추진 선박 안전성 검증 역량 집중",
+      "same_event": true
     },
     "0babe700a58693c8--3fb25c8cd30fd600": {
       "embedding_similarity": 0.8476,
@@ -82767,6 +82943,17 @@
       "right_title": "인도 2분기 GDP 7.8% 성장, 민간 설비투자 11.9% 급증",
       "same_event": false
     },
+    "0ceaf0008f6b7064--242ac2ad82f1fa62": {
+      "embedding_similarity": 0.8524,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한전, 12차 전기본 따른 송배전망 투자비 급증…재원 마련 국감 쟁점",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 핵심 쟁점이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "전문가들, 3대 메가프로젝트 전력 공급 위한 송전망 확충 시급 지적",
+      "same_event": false
+    },
     "0cf1c2cb0373043d--0ea9933f4485ba0c": {
       "embedding_similarity": 0.842,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -84524,6 +84711,17 @@
       "reason": "두산에너빌리티와 삼성물산의 개별 실적 발표임",
       "reviewed_at": "2026-11-09T20:00:02.064569+00:00",
       "right_title": "삼성물산, 3분기 영업익 15% 증가…원전·SMR 사업 확대 지속",
+      "same_event": false
+    },
+    "0d2f65006b13fe30--1ec3e078cb668f94": {
+      "embedding_similarity": 0.8421,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 허가는 별개 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가…노후원전 수명연장 가속",
       "same_event": false
     },
     "0d2f65006b13fe30--274511da46688793": {
@@ -87938,6 +88136,17 @@
       "right_title": "SK이노베이션 E&S, AI·반도체 전력 수요 대응 위한 밸류체인 강화",
       "same_event": false
     },
+    "0e4796c1d9e5045c--17a9c7eaa8fc61be": {
+      "embedding_similarity": 0.8411,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 아카마이 매출 전망은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "아카마이, 2027년 AI 클라우드 인프라 매출 1.8조원 전망",
+      "same_event": false
+    },
     "0e4796c1d9e5045c--2848acfdf2e7091d": {
       "embedding_similarity": 0.8523,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -89147,6 +89356,17 @@
       "reviewed_at": "2026-10-31T19:27:34.280308+00:00",
       "right_title": "한수원, 두코바니 원전 시공계약 협상 결렬…유럽 첫 수출 차질",
       "same_event": true
+    },
+    "0e8991ec56610cd8--508b8524eb822150": {
+      "embedding_similarity": 0.8482,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의와 협상 결렬은 다른 국면의 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 두코바니 원전 시공계약 협상 결렬…유럽 첫 수출 차질",
+      "same_event": false
     },
     "0e8991ec56610cd8--591a5f15c778a824": {
       "embedding_similarity": 0.8826,
@@ -91066,6 +91286,17 @@
       "right_title": "국내 SI·IT 기업, AI 인프라 효율 위해 국산 NPU 도입 확대",
       "same_event": false
     },
+    "0ed85cc5401abf5a--508b8524eb822150": {
+      "embedding_similarity": 0.846,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 관련이나 주체와 세부 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "김정관 산업부 장관, 체코 국경일 리셉션서 두코바니 원전 협력 강조",
+      "same_event": false
+    },
     "0ed85cc5401abf5a--8ccbba2a3e6f3bd8": {
       "embedding_similarity": 0.8536,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -92814,6 +93045,17 @@
       "reviewed_at": "2026-11-03T06:55:29.578660+00:00",
       "right_title": "체코 원전 시공계약 협상 난항…정부·한수원·대우건설 책임 공방",
       "same_event": true
+    },
+    "0f22c0011d256cef--508b8524eb822150": {
+      "embedding_similarity": 0.8653,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의와 시공계약 갈등은 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "체코 원전 시공계약 협상 난항…정부·한수원·대우건설 책임 공방",
+      "same_event": false
     },
     "0f22c0011d256cef--591a5f15c778a824": {
       "embedding_similarity": 0.8819,
@@ -94657,6 +94899,17 @@
       "reason": "주체 또는 추진 주체가 다름",
       "reviewed_at": "2026-09-10T12:52:48.569897+00:00",
       "right_title": "삼성물산, 스웨덴 1.2GW SMR 사업 파트너 선정",
+      "same_event": false
+    },
+    "0f8268fae31ec408--17a9c7eaa8fc61be": {
+      "embedding_similarity": 0.846,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 냉각 시장 경쟁은 무관",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "LG전자·오텍캐리어, AI 데이터센터 냉각 시장 수주 경쟁 가속",
       "same_event": false
     },
     "0f8268fae31ec408--2c88a2ce1d9951c7": {
@@ -96544,6 +96797,17 @@
       "prompt_version": 2,
       "reason": "배전반 계약과 데이터센터 착공은 다름",
       "reviewed_at": "2026-11-02T21:54:54.474691+00:00",
+      "right_title": "삼성SDS, 경북 구미에 60MW급 AI 데이터센터 착공",
+      "same_event": false
+    },
+    "1023fdcaf7c45891--40ea133cc22e3773": {
+      "embedding_similarity": 0.8533,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자와 삼성SDS의 별개 투자",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
       "right_title": "삼성SDS, 경북 구미에 60MW급 AI 데이터센터 착공",
       "same_event": false
     },
@@ -103521,6 +103785,17 @@
       "right_title": "한-체코, 제3차 두코바니 이행점검 협의체 개최…사업 추진 현황 점검",
       "same_event": true
     },
+    "118e63ce8b3bbd85--508b8524eb822150": {
+      "embedding_similarity": 0.8682,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "제3차 한-체코 이행점검 협의체 개최",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한-체코, 제3차 두코바니 이행점검 협의체 개최…사업 추진 현황 점검",
+      "same_event": true
+    },
     "118e63ce8b3bbd85--b7ab289c1fa8f66d": {
       "embedding_similarity": 0.8421,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -104597,6 +104872,17 @@
       "right_title": "언론, 원전 계속운전 심사 절차 간소화 및 제도 개선 촉구",
       "same_event": false
     },
+    "1201c2fe8fbe900f--1ec3e078cb668f94": {
+      "embedding_similarity": 0.8658,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 언론 촉구 사안 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "언론, 원전 계속운전 심사 절차 간소화 및 제도 개선 촉구",
+      "same_event": false
+    },
     "1201c2fe8fbe900f--274511da46688793": {
       "embedding_similarity": 0.8627,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -105112,6 +105398,17 @@
       "right_title": "산업부, '원전수출 리더스포럼' 발족 및 원전 수출 지원 강화",
       "same_event": false
     },
+    "1245082b50c06462--17a9c7eaa8fc61be": {
+      "embedding_similarity": 0.846,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "기업과 사업 내용이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 구미 AI 데이터센터 기공…2028년 12월 준공 목표",
+      "same_event": false
+    },
     "1245082b50c06462--30917f1b6f14fabf": {
       "embedding_similarity": 0.8414,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -105120,6 +105417,17 @@
       "prompt_version": 2,
       "reason": "주체와 대상 안건이 다름",
       "reviewed_at": "2026-11-02T15:57:40.094522+00:00",
+      "right_title": "삼성SDS, 구미 AI 데이터센터 기공…2028년 12월 준공 목표",
+      "same_event": false
+    },
+    "1245082b50c06462--40ea133cc22e3773": {
+      "embedding_similarity": 0.8677,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자 팹과 삼성SDS 데이터센터는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
       "right_title": "삼성SDS, 구미 AI 데이터센터 기공…2028년 12월 준공 목표",
       "same_event": false
     },
@@ -106949,6 +107257,17 @@
       "right_title": "정부, 지역별 전력요금 차등화 방안 검토",
       "same_event": false
     },
+    "12830d7ba0d82f45--9d1fe1976fd1a6a4": {
+      "embedding_similarity": 0.8622,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한국선급(KR), 부산서 '친환경기술 컨퍼런스' 개최…해양 SMR 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "동일 주체와 해양 SMR 주제",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한국선급(KR), 해운 탈탄소화 및 SMR 기술 동향 매거진 발간",
+      "same_event": true
+    },
     "129e05fa0f979f2e--3c3560063b344488": {
       "embedding_similarity": 0.8443,
       "left_title": "원전 안전성 유지하며 SMR 및 신기술 상용화 노력 강조",
@@ -107610,6 +107929,17 @@
       "reason": "ESS 인허가 중단과 전력 과잉 공급 배경",
       "reviewed_at": "2026-09-13T21:45:19.870614+00:00",
       "right_title": "중국, 전력 과잉 공급 및 송전망 제약 문제 직면",
+      "same_event": false
+    },
+    "130122096b3756e9--1ec3e078cb668f94": {
+      "embedding_similarity": 0.8409,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 입법 논의와 고리 3·4호기 허가는 다른 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "고리 3·4호기 계속운전 허가…환경단체 반발 및 재가동 준비",
       "same_event": false
     },
     "130122096b3756e9--274511da46688793": {
@@ -108894,6 +109224,17 @@
       "prompt_version": 2,
       "reason": "국감 보도와 사설",
       "reviewed_at": "2026-10-28T12:59:40.481185+00:00",
+      "right_title": "파이낸셜뉴스 사설: 고리 3·4호기 계속운전 허가…심사 단축·기간 연장 필요",
+      "same_event": false
+    },
+    "135854ca67ea55fd--1ec3e078cb668f94": {
+      "embedding_similarity": 0.8666,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 입법 논의와 사설 및 고리 3·4호기 허가는 다른 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
       "right_title": "파이낸셜뉴스 사설: 고리 3·4호기 계속운전 허가…심사 단축·기간 연장 필요",
       "same_event": false
     },
@@ -112862,6 +113203,17 @@
       "reason": "송전선로 규정 신설과 전력망 확충 의견 수렴",
       "reviewed_at": "2026-10-28T09:59:55.804251+00:00",
       "right_title": "문신학 경제수석, 전력망 확충 위해 전문가 의견 수렴 및 정책 반영 강조",
+      "same_event": false
+    },
+    "13c4f0f727c6f6dc--508b8524eb822150": {
+      "embedding_similarity": 0.8411,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의 개최와 재입찰 추진은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공사 재입찰 추진…2027년 7월 선정 목표",
       "same_event": false
     },
     "13c799bd4452ab60--242ac2ad82f1fa62": {
@@ -128461,6 +128813,17 @@
       "right_title": "튀르키예 시놉 원전 프로젝트, 한국 지원 확보",
       "same_event": true
     },
+    "172fb880f0b62639--5f449b4df1388293": {
+      "embedding_similarity": 0.8573,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "캐나다 칸두와 한국 지원 프로젝트는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "튀르키예 시놉 원전 프로젝트, 한국 지원 확보",
+      "same_event": false
+    },
     "172fb880f0b62639--60d2bb04afcd6710": {
       "embedding_similarity": 0.879,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -134360,6 +134723,589 @@
       "right_title": "AI 데이터센터 전력난, 소프트웨어 최적화로 돌파구 모색",
       "same_event": false
     },
+    "17a9c7eaa8fc61be--1ab4babef2167f0d": {
+      "embedding_similarity": 0.8437,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 하이퍼엑셀 기술검증은 다른 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "하이퍼엑셀, 네이버클라우드와 LLM 추론용 AI 반도체 '베르다' 기술검증 착수",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--1e3c4254c3c500e0": {
+      "embedding_similarity": 0.8847,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 AI 팩토리 계약과 글로벌 공략은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "네이버, AI 사업 경험 바탕 글로벌 시장 공략…한수원 등 레퍼런스 활용",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--2642e5df5619fe7e": {
+      "embedding_similarity": 0.8428,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "LG CNS, 상반기 AI 데이터센터 1조 수주 및 해외 사업 확대",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--29f7693b238c7c6c": {
+      "embedding_similarity": 0.84,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 AMD 실적 전망은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "AMD, 2027년 매출 80% 성장 전망…데이터센터 AI 수요 견인",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--2b49eca844677ae2": {
+      "embedding_similarity": 0.8487,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국내 기업, 엔비디아와 AI 인프라 협력 확대…데이터센터 냉각 기술 강화",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--2d96208976e2904a": {
+      "embedding_similarity": 0.8403,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 SKT 등 협력은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "SK텔레콤·엔비디아·리벨리온, GPU-NPU 통합 AI 시스템 개발 협력",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--2ddb226bd5823428": {
+      "embedding_similarity": 0.8425,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 완전히 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "앤트로픽, 데이터센터 전력 확보 위해 34억 달러 규모 발전 설비 투자",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--2f7e7d8a4f1ef217": {
+      "embedding_similarity": 0.8866,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 AI 팩토리 2조원 계약",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "네이버, AI 팩토리 2조원 수주…데이터센터 운영 역량으로 글로벌 시장 공략",
+      "same_event": true
+    },
+    "17a9c7eaa8fc61be--31ab63d766495f89": {
+      "embedding_similarity": 0.8411,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 데이터센터 효율화 협력은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아-SKT-리벨리온, AI 데이터센터 전력 효율화 협력",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--3d22eb5c4ba7306d": {
+      "embedding_similarity": 0.8625,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "기업과 사안이 서로 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "코어위브, 3분기 매출 168% 급증…전력 계약 규모 4.6GW 확대",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--3eae05d546262392": {
+      "embedding_similarity": 0.8466,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 동해 데이터센터 착공은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "강원 동해 GS AI 데이터센터 이달 말 착공 및 1단계 전력계통 승인 완료",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--40efddf546191967": {
+      "embedding_similarity": 0.8679,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 엔비디아 데이터센터 설계",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 데이터센터 사전 제작 방식 도입…설치 기간 6개월에서 14일로 단축",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--41c9f5e2341c2da7": {
+      "embedding_similarity": 0.8507,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 대상이 완전히 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "미국 페르미, 하이퍼스케일러와 600MW 전력 공급 합의",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--4509b4bdeb6ba3f3": {
+      "embedding_similarity": 0.8455,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 엔비디아 데이터센터 구축 논의는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 아폴로와 노후 통신시설 활용 AI 데이터센터 구축 논의",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--4a6a97c46c27ed45": {
+      "embedding_similarity": 0.843,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 GS·포스코 MOU는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "GS그룹-포스코, AI 데이터센터 사업 전략적 협력 MOU 체결",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--4bf3c9f6c0fd38d4": {
+      "embedding_similarity": 0.8442,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 앤트로픽 발전기 계약은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "앤트로픽, AI 데이터센터 전력 확보 위해 4조원대 가스 발전기 계약 인수",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--4ce88c615ea3b439": {
+      "embedding_similarity": 0.867,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 엔비디아 AI 데이 개최는 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 서울서 'AI 데이' 개최…국내 기업과 전력 효율화 논의",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--4cf8dc4f0ee95f62": {
+      "embedding_similarity": 0.845,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 인프라 투자 확대는 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "맥쿼리·KB발해인프라, 도로 중심서 AI 데이터센터·에너지로 투자 확대",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--5310eb5888d19837": {
+      "embedding_similarity": 0.8456,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 한국형 AI 인프라 구축은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "SKT-엔비디아-리벨리온, 한국형 AI 인프라 구축 협력",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--535a4cdc96cdd72f": {
+      "embedding_similarity": 0.8459,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 남동발전 냉각 기술 개발",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "데이터빈·한국남동발전, 발전소 해수 활용 AI 데이터센터 냉각 기술 개발",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--5b2bbc038fe61010": {
+      "embedding_similarity": 0.8437,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 테라울프 계약은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "테라울프, 구글 신용 지원 확보…앤트로픽 데이터센터 190억 달러 계약 추진",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--5b41eb68290f2aaf": {
+      "embedding_similarity": 0.8434,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "미국 AI 빅테크, 발전설비 직접 확보 나서…공급망 변화 주목",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--5b5f52909eab9a5c": {
+      "embedding_similarity": 0.8444,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "앤트로픽, 상장 앞두고 기업가치 하향 및 1.7GW 발전기 계약 인수",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--5bc759f23649a064": {
+      "embedding_similarity": 0.8477,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 인피니언 전력 솔루션은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "인피니언, AI 데이터센터 전력 효율화 위한 '800VDC' 솔루션 확대",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--5d37b89cc374274a": {
+      "embedding_similarity": 0.8412,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 현대차 데이터센터 구축 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "현대차그룹, 새만금 AI 데이터센터 구축 본격화",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--5dc893cda8be2c15": {
+      "embedding_similarity": 0.8503,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 KT클라우드 공급 추진 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "KT클라우드, 2031년까지 1GW 규모 AI 데이터센터 공급 추진",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--62cf109529fae7ff": {
+      "embedding_similarity": 0.8482,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 메타 자금조달은 별개 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "메타, AI 데이터센터 인프라 구축 위해 최대 125조원 자금 조달 추진",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--636a5365c4fcb5a0": {
+      "embedding_similarity": 0.8592,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 컨테이너형 AI 데이터센터 'DSX POD' 공개…구축 기간 14일로 단축",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--63d9af72fb3c8e72": {
+      "embedding_similarity": 0.8477,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "개별 계약과 업계 전반 동향",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "빅테크 클라우드 매출 급증에 따른 원전 전력 확보 경쟁 본격화",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--6587cec73ec988d7": {
+      "embedding_similarity": 0.848,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "세종시, 데이터센터 투자 유치로 AI 산업 거점 도약",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--679a97194581b2c8": {
+      "embedding_similarity": 0.852,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "미 빅테크, 전력 확보 위해 자체 발전설비 투자 가속",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--69c7df7c2e5e30a5": {
+      "embedding_similarity": 0.8645,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아 젠슨 황 의혹 파장…네이버 AI 팩토리 GPU 수급 주목",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--6e1c321f7f87e597": {
+      "embedding_similarity": 0.8439,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 LG전자 냉각솔루션 수주 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "LG전자, AI 데이터센터 냉각솔루션 누적 수주 3조원 돌파",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--720b7c5d8ba53f3e": {
+      "embedding_similarity": 0.8492,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 기업의 별개 투자 및 보증 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 엔스케일 데이터센터 건설 자금 신용 보증 논의",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--7284a3ac7d966c6a": {
+      "embedding_similarity": 0.8766,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "계약과 투자는 다른 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 네이버에 1조 3412억 원 투자…글로벌 AI 인프라 협력 확대",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--734689ed1294e4e9": {
+      "embedding_similarity": 0.8547,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 기업의 별개 계약 및 지원 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 앤스로픽 AI 데이터센터 건설 및 전력비용 신용보증 검토",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--735e18c432468409": {
+      "embedding_similarity": 0.8507,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "SKT·엔비디아·리벨리온, GPU·NPU 통합 추론 시스템 개발 협약",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--78510cc5158ebcde": {
+      "embedding_similarity": 0.8479,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "앤스로픽, 데이터센터 전력 확보 위해 4.6조원 규모 발전기 구매",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--79ba1b0436e9d249": {
+      "embedding_similarity": 0.8487,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 냉각 솔루션 공개는 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "슈나이더 일렉트릭, AI 데이터센터용 2.9㎿급 액체냉각 솔루션 공개",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--7a1664ca53e58f8a": {
+      "embedding_similarity": 0.867,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 AI 및 건설 계약",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "선엔지니어링, 구미산단 200MW AI 데이터센터 설계·CM 수주",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--7b095729c72ca950": {
+      "embedding_similarity": 0.852,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 AI 및 통신 관련 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 미국 내 낡은 통신국사 활용 1GW 규모 AI망 구축 제안",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--8106f64cbb72a71d": {
+      "embedding_similarity": 0.8437,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "개별 계약과 업계 동향의 차이",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국내 이통3사, AI 데이터센터(AIDC) 사업 본격화로 실적 개선",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--8362aee8507db849": {
+      "embedding_similarity": 0.8431,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 엔비디아 구축 기간 단축",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, AI 데이터센터 구축 기간 6개월에서 14일로 단축",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--83feb96f7b2e1a3c": {
+      "embedding_similarity": 0.8438,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 오픈AI는 무관",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "오픈AI, 데이터센터 명칭 '컴퓨트 캠퍼스'로 변경 추진",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--8e7b5f12ab506c31": {
+      "embedding_similarity": 0.8412,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 AI 데이터센터 지표 논의",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "AI 데이터센터, 토큰 생산량보다 '성공 작업당 총비용'이 핵심 지표로 부상",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--91ba811d69cddb3a": {
+      "embedding_similarity": 0.8553,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 모듈형 AI 데이터센터 구축 솔루션 'DSX 포드' 공개",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--993fde88edf0e5e4": {
+      "embedding_similarity": 0.8636,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "AI 인프라 기업 코어위브, 차입 비용 급증으로 수익성 위기",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--9e4470589d6fd134": {
+      "embedding_similarity": 0.8413,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주제만 같고 구체적 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "AI 서버 랙 구성품 가치 중 반도체 비중 95% 상회",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--a275bccfffad9724": {
+      "embedding_similarity": 0.843,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 메타 자금조달은 별개 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "메타, AI 서비스 확대를 위해 125조원 규모 자금 조달 및 데이터센터 확충",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--a48530842d565a40": {
+      "embedding_similarity": 0.8451,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 IT 계약 건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "가온전선, 미국 AI 데이터센터용 배전케이블 1200억 공급",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--a70d10404a3db3fb": {
+      "embedding_similarity": 0.8496,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 엔비디아 해외 부지 검토는 무관",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 독일 폐원전 부지 AI 데이터센터 전환 타당성 검토",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--a9fead2a724ffe4b": {
+      "embedding_similarity": 0.8523,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "SK하이퍼, 울산 등 영남권에 2GW 규모 AI 데이터센터 클러스터 조성",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--addb110563e56c1d": {
+      "embedding_similarity": 0.8437,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 KT클라우드 계획",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "KT클라우드, 2031년까지 전국 1GW 규모 AI 데이터센터 인프라 구축",
+      "same_event": false
+    },
     "17a9c7eaa8fc61be--addf1e2ee5f478b9": {
       "embedding_similarity": 0.858,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -134369,6 +135315,226 @@
       "reason": "주체 및 안건이 서로 다름",
       "reviewed_at": "2026-11-12T06:53:32.960057+00:00",
       "right_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--c15fd3b584f6d956": {
+      "embedding_similarity": 0.8489,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 완전히 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "글로벌 빅테크, AI 인프라 투자 부담에 자체 칩 개발 가속화",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--c1aab1afe729a3bb": {
+      "embedding_similarity": 0.8601,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "다쏘시스템-버티브, AI 팩토리 설계·구축 가속화 협력",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--c40700f5efc73fe8": {
+      "embedding_similarity": 0.8479,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 현대차 새만금 투자 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "현대차그룹, 새만금에 9조 원 투자…AI 데이터센터 및 인프라 조성 추진",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--c425e88495a6ffa4": {
+      "embedding_similarity": 0.8431,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 래블업 솔루션은 서로 다른 기업의 뉴스",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "래블업, AI 인프라 효율화 솔루션으로 GPU 활용률 극대화 지원",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--c4357fc4068c2860": {
+      "embedding_similarity": 0.8589,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 재생에너지 개발 및 PPA 협력은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "거린에너지, 국내 재생에너지 600MW 개발 추진…네이버와 PPA 협력",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--cf9699492e63e949": {
+      "embedding_similarity": 0.8477,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "오텍캐리어, 비이랩과 AI 데이터센터 냉각솔루션 공급 협약",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--d7884b34af4f8054": {
+      "embedding_similarity": 0.8506,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 국내 클러스터 개발은 무관",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국내 컨소시엄, AI 데이터센터 전력 효율 높일 'K-컴포저블 클러스터' 개발 착수",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--dd7d50201fb5c506": {
+      "embedding_similarity": 0.8407,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "SK하이퍼, 15GW 데이터센터 구축 위해 3500억 달러 조달 추진",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--de97d1362619063e": {
+      "embedding_similarity": 0.8507,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 기업 간의 별개 계약 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "스페이스X, 앤스로픽과 1205억 달러 규모 AI 연산 인프라 계약 체결",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--e33cda951dde4acb": {
+      "embedding_similarity": 0.8452,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "미국 AI 데이터센터 건설 반대 확산…빅테크, 전력망 비용 직접 부담",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--e8061b57720a79b9": {
+      "embedding_similarity": 0.8506,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 완전히 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "슈나이더 일렉트릭, 엔비디아 협업 AI 데이터센터 전력 모듈 공개",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--e96c3710090cea69": {
+      "embedding_similarity": 0.8439,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "빅테크, AI 인프라 투자 급증에 따른 자금 조달 경쟁 심화",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--ec3f86d79d147ae8": {
+      "embedding_similarity": 0.8507,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "델 테크놀로지스, 엔비디아 기반 기업용 AI 인프라 신제품 공개",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--f0cd20c647674ecb": {
+      "embedding_similarity": 0.8494,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버 계약과 전문가 조언",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "전문가, AI 투자 시 프로젝트 성과와 자본비용 동시 점검 조언",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--f1893fd5034e8b13": {
+      "embedding_similarity": 0.8427,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "개별 계약과 업계 전망은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국내 AI 인프라 투자 지속성 우려…빅테크 현금흐름 악화 영향 주시",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--f3b6090fdd9fab64": {
+      "embedding_similarity": 0.8438,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 완전히 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "글로벌 AI 데이터센터 45% 완공 차질 위기…엔비디아 성장성 경고",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--f4bc12b429c120d7": {
+      "embedding_similarity": 0.8774,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국내 AI 데이터센터 사업, 국내 기업이 인프라·자금 부담",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--f8589af319bbdea8": {
+      "embedding_similarity": 0.8609,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "엔비디아, 9~10일 서울서 'AI 데이 2026' 개최…산업별 AI 적용 사례 공유",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--fa47bccd9d09faef": {
+      "embedding_similarity": 0.8525,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 제12차 전기본 AI 데이터센터 전력 수요 전망치 하향 검토",
+      "same_event": false
+    },
+    "17a9c7eaa8fc61be--faeb4d7e38453d89": {
+      "embedding_similarity": 0.8491,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버, AI 팩토리 첫 고객 확보…2조원 규모 컴퓨팅 서비스 계약",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국내 정유업계, AI 데이터센터용 액침냉각유 시장 진출 가속화",
       "same_event": false
     },
     "17b7a72592c14ad1--3f5d78931fa31362": {
@@ -137384,6 +138550,17 @@
       "reason": "현대건설 네덜란드 원전 기본설계 계약",
       "reviewed_at": "2026-10-30T12:56:06.836750+00:00",
       "right_title": "현대건설, 3분기 영업익 2배 급증…원전·데이터센터 등 신사업 확대",
+      "same_event": true
+    },
+    "1838a1c462245d94--40ea133cc22e3773": {
+      "embedding_similarity": 0.8703,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "충청권 메가프로젝트와 삼성 팹",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "충청권 메가프로젝트 착공…반도체·데이터센터 등 첨단 인프라 구축",
       "same_event": true
     },
     "1846c9a06ce24f3e--a17a67befd9de655": {
@@ -151481,6 +152658,17 @@
       "right_title": "원안위, 고리 3·4호기 계속운전 허가…내년 상반기 재가동",
       "same_event": false
     },
+    "1aa98625f88f24fc--1ec3e078cb668f94": {
+      "embedding_similarity": 0.866,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 입법 논의와 원안위 고리 3·4호기 허가는 다른 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가…내년 상반기 재가동",
+      "same_event": false
+    },
     "1aa98625f88f24fc--274511da46688793": {
       "embedding_similarity": 0.8871,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -153113,6 +154301,17 @@
       "right_title": "AI 데이터센터 투자 확대에 따른 국내 전력기기·설비 업계 수혜",
       "same_event": false
     },
+    "1b42642232b1735c--6be0e32f235a7430": {
+      "embedding_similarity": 0.8497,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, AI 데이터센터 전력 수요 전망치 3~4GW 하향 조정 검토",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "전력 수요 조정과 정책 제언",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부 AI 보급정책, 지속가능한 시장 생태계 조성 위한 성과지표 마련 필요",
+      "same_event": false
+    },
     "1b42642232b1735c--6ced111d70283a71": {
       "embedding_similarity": 0.8592,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -154521,6 +155720,17 @@
       "right_title": "원안위, 연구용 원자로 '하나로' 재가동 승인",
       "same_event": false
     },
+    "1ba790889636330a--1c1d581bcafd6247": {
+      "embedding_similarity": 0.8574,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 장관, 체코 원전 시공계약 협상 결렬에 \"무산은 없을 것\"",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공 협상 결렬 관련 보도",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원-대우건설 체코 원전 시공 협상 결렬…물량·비용 이견",
+      "same_event": true
+    },
     "1ba790889636330a--1ec27cbcbe1e55bf": {
       "embedding_similarity": 0.856,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -154598,6 +155808,17 @@
       "right_title": "산업부 장관, 체코 원전 시공계약 협상 결렬에 \"무산은 없을 것\"",
       "same_event": true
     },
+    "1ba790889636330a--37b786f439394804": {
+      "embedding_similarity": 0.8409,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 장관, 체코 원전 시공계약 협상 결렬에 \"무산은 없을 것\"",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공 협상 결렬 후속 보도임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원-대우건설 체코 원전 시공 협상 결렬…2027년 7월 재선정 추진",
+      "same_event": true
+    },
     "1ba790889636330a--39279f52682477f9": {
       "embedding_similarity": 0.8644,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -154607,6 +155828,17 @@
       "reason": "체코 두코바니 원전 시공 협상 관련 동일 사안",
       "reviewed_at": "2026-11-09T20:00:02.064569+00:00",
       "right_title": "한수원, 체코 두코바니 원전 시공계약 협상 종료",
+      "same_event": true
+    },
+    "1ba790889636330a--3b3935b8f7c084f7": {
+      "embedding_similarity": 0.8408,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 장관, 체코 원전 시공계약 협상 결렬에 \"무산은 없을 것\"",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공계약 협상 종료 동일 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 대우건설·두산에너빌리티와 체코 원전 시공계약 협상 종료",
       "same_event": true
     },
     "1ba790889636330a--3b51cf12f2223114": {
@@ -154774,6 +156006,17 @@
       "right_title": "한수원, 체코 원전 시공 협상 결렬…경쟁 입찰로 전환",
       "same_event": true
     },
+    "1ba790889636330a--54db834d2921fb3c": {
+      "embedding_similarity": 0.8435,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 장관, 체코 원전 시공계약 협상 결렬에 \"무산은 없을 것\"",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 협상 결렬 및 재선정 동일 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 두코바니 원전 시공계약 협상 결렬…2027년 7월까지 신규 시공사 선정",
+      "same_event": true
+    },
     "1ba790889636330a--5bd8d3a3ae80bcf8": {
       "embedding_similarity": 0.8769,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -154906,6 +156149,17 @@
       "right_title": "대우건설 노조, 한수원의 체코 원전 계약 협상 결렬 책임론 제기",
       "same_event": false
     },
+    "1ba790889636330a--7dd13d5d74e25076": {
+      "embedding_similarity": 0.8435,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 장관, 체코 원전 시공계약 협상 결렬에 \"무산은 없을 것\"",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공사 재선정 관련 동일 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공사 재선정…계약조건 조정이 핵심 과제",
+      "same_event": true
+    },
     "1ba790889636330a--7e03f3a7477747b1": {
       "embedding_similarity": 0.8789,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -155036,6 +156290,17 @@
       "reason": "체코 원전 시공 협상 결렬 및 후속 대응",
       "reviewed_at": "2026-11-10T16:07:27.877025+00:00",
       "right_title": "한수원, 대우건설과 체코 원전 시공 협상 종료 및 비상관리체제 가동",
+      "same_event": true
+    },
+    "1ba790889636330a--ab015e3221c49ca5": {
+      "embedding_similarity": 0.8403,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 장관, 체코 원전 시공계약 협상 결렬에 \"무산은 없을 것\"",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공계약 협상 결렬 관련 동일 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원·대우건설, 체코 두코바니 시공계약 협상 결렬…신규 시공사 입찰 추진",
       "same_event": true
     },
     "1ba790889636330a--b7ab289c1fa8f66d": {
@@ -170940,6 +172205,17 @@
       "right_title": "한수원-시공 컨소시엄, 체코 원전 하도급 협상 결렬",
       "same_event": true
     },
+    "1ec27cbcbe1e55bf--508b8524eb822150": {
+      "embedding_similarity": 0.8425,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 건설 관련 후속 보도",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원-시공 컨소시엄, 체코 원전 하도급 협상 결렬",
+      "same_event": true
+    },
     "1ec27cbcbe1e55bf--591a5f15c778a824": {
       "embedding_similarity": 0.8638,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -171039,6 +172315,226 @@
       "right_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
       "same_event": false
     },
+    "1ec3e078cb668f94--2cf7026e195267bb": {
+      "embedding_similarity": 0.8658,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 규제 개선 논의와 계속운전 심사 지연은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국내 노후 원전 계속운전 심사 지연…업계, 허가 기간 20년 확대 요구",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--2e726d7527e3727b": {
+      "embedding_similarity": 0.8467,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 OECD 통계는 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "OECD 원전 평균 연령 38년…한국, 노후 원전 계속운전이 전력수급 관건",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--3ef13d708426344d": {
+      "embedding_similarity": 0.8456,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 월성 2호기 허가 신청은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 월성 2호기 계속운전 운영변경 허가 신청…설계수명 만료 앞서",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--42af93381e945178": {
+      "embedding_similarity": 0.8466,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 일반 논의와 국감 지적은 별개 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국정감사서 노후원전 계속운전 심사 지연 질타",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--4fff8c7b13cfd2c1": {
+      "embedding_similarity": 0.8446,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 고리허가는 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가…심사 대기 7기 속도전",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--58ce92aa8b4800cf": {
+      "embedding_similarity": 0.842,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 심의는 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 27일 고리 3·4호기 계속운전 허가안 심의",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--6250150975492c28": {
+      "embedding_similarity": 0.8467,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 규제 논의와 지자체 촉구는 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "경주시, 월성 2·3·4호기 계속운전 절차 신속 추진 촉구",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--6382c159e540e16d": {
+      "embedding_similarity": 0.8453,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "법안 논의와 국감 지적은 다른 사건임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국회 기노위 국감서 원전 계속운전 심사 지연에 따른 전력수급 부담 지적",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--6858c896d4e8dbc1": {
+      "embedding_similarity": 0.8469,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 연구원 보고서는 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한전 경영연구원, 글로벌 원전 노후화에 따른 계속운전 중요성 강조",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--73927a2d8f447186": {
+      "embedding_similarity": 0.8501,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 언론 사설 주장",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "언론, 고리 3·4호기 재가동 계기로 원전 계속운전 제도 개선 주문",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--7647b42dcff51821": {
+      "embedding_similarity": 0.9078,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원전 계속운전 기간 산정 법안 추진",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국민의힘, 원전 계속운전 허가 심사 기간 가동기간서 제외 법안 추진",
+      "same_event": true
+    },
+    "1ec3e078cb668f94--7be32cbdb72f379d": {
+      "embedding_similarity": 0.8408,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 허가는 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가…2034·2035년까지 연장",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--857c0c9a1f95cbbb": {
+      "embedding_similarity": 0.8502,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 대상 원전이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가…2035년까지 운영",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--860929895d5754da": {
+      "embedding_similarity": 0.8609,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 입법 논의와 고리 계속운전 및 월성 논의는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "고리 3·4호기 계속운전 허가…월성 원전 수명연장 논의 주목",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--8663a0da7502f52f": {
+      "embedding_similarity": 0.8402,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 일반 논의와 국감 현안 논의는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국정감사서 원전 인허가 공백 및 건설비 검증 등 현안 논의",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--893c33bb37365a25": {
+      "embedding_similarity": 0.8454,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원전 계속운전 기간 산정 개선 관련",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "AI 시대 원전 규제 혁신 4대 과제 제언…심사 효율화 및 기간 합리화 필요",
+      "same_event": true
+    },
+    "1ec3e078cb668f94--8c97893e9cf03673": {
+      "embedding_similarity": 0.8451,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "규제 개선 논의와 전력수급기본계획은 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "제12차 전력수급기본계획 수립 앞두고 원전 공론화 결과 주목",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--8d0c0bf0ab31021d": {
+      "embedding_similarity": 0.8527,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 고리 3·4호기 허가는 다른 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "고리 3·4호기 계속운전 허가…내년 상반기 재가동 전망",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--93301d8bc4f04a29": {
+      "embedding_similarity": 0.8579,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 일반 논의와 월성2호기 신청은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "월성2호기 설계수명 만료…한수원, 계속운전 허가 신청 및 재가동 추진",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--948366889f58270f": {
+      "embedding_similarity": 0.8651,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 고리 3·4호기 허가는 다른 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가…2027년 상반기 재가동 목표",
+      "same_event": false
+    },
     "1ec3e078cb668f94--9734764f6b62cf6e": {
       "embedding_similarity": 0.8453,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -171049,6 +172545,248 @@
       "reviewed_at": "2026-11-12T03:51:50.329202+00:00",
       "right_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
       "same_event": false
+    },
+    "1ec3e078cb668f94--9d452482907b4095": {
+      "embedding_similarity": 0.8458,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 허가",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가…2034~2035년까지 연장",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--a75c7b6acac18c0e": {
+      "embedding_similarity": 0.8435,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 허가 건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가…내년 상반기 재가동 목표",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--aee72901ca96aec7": {
+      "embedding_similarity": 0.8435,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 심의는 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 27일 제17회 회의서 고리 3·4호기 계속운전 허가안 심의",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--b0a58e69547988ec": {
+      "embedding_similarity": 0.8502,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "규제 논의와 개별 원전 허가는 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "고리 3·4호기 계속운전 허가…후속 노후 원전 7기 심사 주목",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--b8aec38cd18c85e2": {
+      "embedding_similarity": 0.875,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 월성2호기 신청은 다른 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "월성 2호기 설계수명 만료…한수원, 계속운전 허가 신청",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--bd7efcdc5d5fabb3": {
+      "embedding_similarity": 0.8885,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원전 계속운전 심사기간 제외 법안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국민의힘, 원전 계속운전 심사기간을 수명 연장 기간에서 제외하는 법안 추진",
+      "same_event": true
+    },
+    "1ec3e078cb668f94--bfc40edcc6391ff9": {
+      "embedding_similarity": 0.8421,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 허가는 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가…2027년 상반기 1.9GW 전력 확보",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--c2f9e8552353c48a": {
+      "embedding_similarity": 0.8668,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 입법 논의와 고리 3·4호기 후속 심사 전망은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "고리 3·4호기 계속운전 허가…한빛 1·2호기 등 후속 심사 가속화 전망",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--c4ae3b96054bddcb": {
+      "embedding_similarity": 0.8447,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 입법 논의와 고리 3·4호기 승인 논란은 다른 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "고리 3·4호기 계속운전 승인에 따른 안전성 논란 지속",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--cb6cba70ded6e340": {
+      "embedding_similarity": 0.8548,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 심의는 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가안 2차 심의 진행",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--cde1253828ce9295": {
+      "embedding_similarity": 0.8463,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 심의는 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가안 2차 심의 진행",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--d8c5463c372f711c": {
+      "embedding_similarity": 0.8502,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 원안위 승인은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 운영변경허가 승인",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--e09598de0a308a42": {
+      "embedding_similarity": 0.8437,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 입법 논의와 환경단체 반발은 다른 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "환경단체, 고리 3·4호기 계속운전 허가에 반발",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--e32a53ae373b4575": {
+      "embedding_similarity": 0.8612,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 월성호기 계속운전 신청은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 월성 2·3·4호기 계속운전 허가 신청…2호기는 가동 정지",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--e86c06cfa407ee99": {
+      "embedding_similarity": 0.8557,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 경주시 촉구는 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "경주시, 월성 2~4호기 계속운전 심사 및 승인 절차 가속화 촉구",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--eaf3ce9a0f519876": {
+      "embedding_similarity": 0.863,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 진흥원 지적은 다른 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한국원자력문화진흥원, 원전 대상 RPS 비용 전가 등 시장 왜곡 지적",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--ebb0ac6f0e821152": {
+      "embedding_similarity": 0.8554,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 입법 논의와 원안위 고리 3·4호기 의결은 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 고리 3·4호기 계속운전 허가 의결",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--ecc9d28ff6045f8f": {
+      "embedding_similarity": 0.8562,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 입법 논의와 계속운전 심사 장기화 지적은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원전 계속운전 심사 장기화로 실제 가동 기간 단축 및 경제적 손실 발생",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--ef62dd7ead1c9b9e": {
+      "embedding_similarity": 0.8494,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 입법 논의와 원안위 심의는 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원안위, 27일 고리 3·4호기 계속운전 허가안 재심의",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--f164512876374d2b": {
+      "embedding_similarity": 0.8813,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원전 계속운전 법 개정 관련",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원전 계속운전 심사 기간 제외 법 개정 추진에 지역사회 반발",
+      "same_event": true
+    },
+    "1ec3e078cb668f94--f4d6815a753587e8": {
+      "embedding_similarity": 0.846,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "국회 논의와 한전KPS 계약은 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한전KPS, 한빛2호기 정비 계약 체결…계속운전 심사와는 별개",
+      "same_event": false
+    },
+    "1ec3e078cb668f94--f579c90f41ceb94a": {
+      "embedding_similarity": 0.8741,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "국회, 원전 사업자 재생에너지 의무 규제 개선 및 계속운전 기간 산정 합리화 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원전 재생에너지 의무 규제 개선 논의",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국회, 원전 발전량 재생에너지 공급의무(RPS) 산정 제외 추진",
+      "same_event": true
     },
     "1ec42f0546e1bbe9--33b53bc5a243a876": {
       "embedding_similarity": 0.8485,
@@ -182917,6 +184655,17 @@
       "right_title": "에너지경제연구원, 수도권 전력 공급 제약 대안으로 산단 내 자가발전 제시",
       "same_event": false
     },
+    "2152d683049a6428--508b8524eb822150": {
+      "embedding_similarity": 0.8741,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전사업 점검회의 관련 동일 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 11월 12일 체코 원전사업 점검회의 개최",
+      "same_event": true
+    },
     "2152d683049a6428--591a5f15c778a824": {
       "embedding_similarity": 0.843,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -192657,6 +194406,17 @@
       "right_title": "HD현대일렉트릭, 美 크레인 원전 재가동 프로젝트에 변압기 공급",
       "same_event": false
     },
+    "23e8a39c3216ac04--2d564d2e19503541": {
+      "embedding_similarity": 0.8461,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "콘스텔레이션, 270MW 규모 Peak+ 프로그램 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "콘스텔레이션 계약과 미 DOE 대출 보증은 별개 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "미 DOE, 콘스텔레이션 원전 성능 개선에 50억 달러 대출 보증",
+      "same_event": false
+    },
     "23e8a39c3216ac04--42140c47d3602872": {
       "embedding_similarity": 0.8817,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -192858,6 +194618,17 @@
       "reason": "폭염·가뭄으로 인한 유럽 원전 가동 중단",
       "reviewed_at": "2026-08-13T15:57:33.641934+00:00",
       "right_title": "프랑스, 폭염으로 금요일 원전 발전 용량 15% 감소 예상",
+      "same_event": true
+    },
+    "24145db32d82fc32--5f449b4df1388293": {
+      "embedding_similarity": 0.9036,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "튀르키예 칸두 원전 관련 동일 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "애트킨스 리얼리스(AtkinsRealis), 튀르키예 신규 원전 건설 사업 참여 검토",
       "same_event": true
     },
     "24145db32d82fc32--775f706b6461e058": {
@@ -199855,6 +201626,17 @@
       "right_title": "김정관 산업부 장관, 체코 원전 계약 협상 결렬 우려에 \"무산 안 되게 할 것\"",
       "same_event": true
     },
+    "250b26e4b3966f1f--508b8524eb822150": {
+      "embedding_similarity": 0.8821,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 계약 협상 관련 장관 발언",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "김정관 산업부 장관, 체코 원전 계약 협상 결렬 우려에 \"무산 안 되게 할 것\"",
+      "same_event": true
+    },
     "250b26e4b3966f1f--b7ab289c1fa8f66d": {
       "embedding_similarity": 0.9108,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -201820,6 +203602,17 @@
       "reviewed_at": "2026-10-22T10:01:00.105120+00:00",
       "right_title": "기후에너지환경부, 한국형 녹색대전환(K-GX) 10개년 전략 제도화 추진",
       "same_event": true
+    },
+    "25be4008c88988ac--508b8524eb822150": {
+      "embedding_similarity": 0.8529,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의와 밸류체인 강세 동향은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원전 밸류체인 전반 강세…해외 수주 기대 및 SMR 상용화 주목",
+      "same_event": false
     },
     "25be95adde6602bd--26118e1b5ab3595d": {
       "embedding_similarity": 0.8637,
@@ -230349,6 +232142,17 @@
       "right_title": "한국-튀르키예, 원전 및 핵심광물 협력 강화 MOU 4건 체결",
       "same_event": true
     },
+    "2b4b5db85a30e1b7--5f449b4df1388293": {
+      "embedding_similarity": 0.8449,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "칸두 원전 타당성조사와 한-튀르키예 MOU는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한국-튀르키예, 원전 및 핵심광물 협력 강화 MOU 4건 체결",
+      "same_event": false
+    },
     "2b4b5db85a30e1b7--60d2bb04afcd6710": {
       "embedding_similarity": 0.8951,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -239981,6 +241785,28 @@
       "right_title": "일본, 에너지 수급 강인화 패키지 발표…원전 재건축 및 SMR 도입 가속",
       "same_event": true
     },
+    "2d564d2e19503541--6ad885230bf82687": {
+      "embedding_similarity": 0.8539,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "콘스텔레이션, 270MW 규모 Peak+ 프로그램 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "콘스텔레이션 출력 증강과 미 DOE 대출 승인 관련 후속",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "미 에너지부, 콘스텔레이션 원전 출력 증강에 50억 달러 조건부 대출 승인",
+      "same_event": true
+    },
+    "2d564d2e19503541--772f5abe88f1ec20": {
+      "embedding_similarity": 0.8966,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "콘스텔레이션, 270MW 규모 Peak+ 프로그램 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "계약 체결과 분기 실적은 다른 사안입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "콘스텔레이션 에너지, 3분기 매출 95억5000만달러…연간 이익 전망 상향",
+      "same_event": false
+    },
     "2d564d2e19503541--86aee9f61d723483": {
       "embedding_similarity": 0.851,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -239991,6 +241817,28 @@
       "reviewed_at": "2026-11-12T21:52:30.788324+00:00",
       "right_title": "콘스텔레이션, 270MW 규모 Peak+ 프로그램 계약 체결",
       "same_event": false
+    },
+    "2d564d2e19503541--c35a3ec5676c8d64": {
+      "embedding_similarity": 0.8651,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "콘스텔레이션, 270MW 규모 Peak+ 프로그램 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "프로그램 계약과 DOE 지원은 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "미국 에너지부(DOE), 컨스텔레이션 원전 운영 개선 지원",
+      "same_event": false
+    },
+    "2d564d2e19503541--e7fd0a0b19535ff6": {
+      "embedding_similarity": 0.86,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "콘스텔레이션, 270MW 규모 Peak+ 프로그램 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "콘스텔레이션 출력 증강 대출 협약 체결 후속 보도",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "미 DOE, 콘스텔레이션 원전 출력 증강에 50억 달러 조건부 대출 협약 체결",
+      "same_event": true
     },
     "2d62da7103d62772--67b29b69bb768171": {
       "embedding_similarity": 0.9108,
@@ -278000,6 +279848,17 @@
       "right_title": "충남 태안군, 발전공기업 통합본사 유치 총력",
       "same_event": true
     },
+    "359efe43b9bf7e89--508b8524eb822150": {
+      "embedding_similarity": 0.8557,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 사업 추진 및 협상 관련 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "김정관 산업부 장관, 체코 원전 협상 결렬 질타…비상관리체제 가동",
+      "same_event": true
+    },
     "359efe43b9bf7e89--8ccbba2a3e6f3bd8": {
       "embedding_similarity": 0.8463,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -285771,6 +287630,17 @@
       "right_title": "호남 반도체 클러스터 가동에 1GW급 원전 6기 규모 전력 필요",
       "same_event": false
     },
+    "377fe68271be4d4f--6be0e32f235a7430": {
+      "embedding_similarity": 0.8505,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "에너지업계, AI 전력수요 급증 대응 위한 원전 비중 확대 필요성 제기",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "업계 요구와 정부 정책 제언",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부 AI 보급정책, 지속가능한 시장 생태계 조성 위한 성과지표 마련 필요",
+      "same_event": false
+    },
     "377fe68271be4d4f--6ced111d70283a71": {
       "embedding_similarity": 0.8636,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -287463,6 +289333,17 @@
       "reason": "주체와 핵심 사안이 다름",
       "reviewed_at": "2026-11-11T18:55:15.180365+00:00",
       "right_title": "SK이노베이션, 정승일 신임 사장 선임…전력 중심 에너지 기업 전환",
+      "same_event": false
+    },
+    "377fe68271be4d4f--f4334fdcfec96944": {
+      "embedding_similarity": 0.86,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "에너지업계, AI 전력수요 급증 대응 위한 원전 비중 확대 필요성 제기",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "원전 비중 확대 주장과 LNG 발전 확대 계획으로 사안 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 2038년까지 LNG 발전설비 69.2GW로 확대…용인 산단 전력공급 총력",
       "same_event": false
     },
     "377fe68271be4d4f--f60e2c55601c7479": {
@@ -293269,6 +295150,17 @@
       "reviewed_at": "2026-11-11T22:13:18.411675+00:00",
       "right_title": "원전 소재 5개 지자체, 사용후핵연료 저장시설 지원대책 마련 촉구",
       "same_event": false
+    },
+    "39279f52682477f9--508b8524eb822150": {
+      "embedding_similarity": 0.8475,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 계약 협상 관련 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 두코바니 원전 시공계약 협상 종료",
+      "same_event": true
     },
     "39279f52682477f9--591a5f15c778a824": {
       "embedding_similarity": 0.8666,
@@ -309004,6 +310896,17 @@
       "right_title": "일본, 미국 내 가스발전 및 SMR 등 6개 사업 투자 발표",
       "same_event": false
     },
+    "3c8ac90639a80e9e--508b8524eb822150": {
+      "embedding_similarity": 0.8446,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 점검회의와 협상 결렬 및 법안 추진은 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공 협상 결렬…산업부, 원전수출진흥법 내 분쟁조정위 신설 추진",
+      "same_event": false
+    },
     "3c8ac90639a80e9e--591a5f15c778a824": {
       "embedding_similarity": 0.8765,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -309339,6 +311242,17 @@
       "reviewed_at": "2026-08-14T03:31:15.641738+00:00",
       "right_title": "(공동) 첨단기술로 여는 미래, 미래성장동력 ｢7대 SEED｣ 보고회 개최",
       "same_event": true
+    },
+    "3ccb155de06b0bea--508b8524eb822150": {
+      "embedding_similarity": 0.862,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "산업부 점검회의와 한수원 협상 시한 논란은 별개 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공 계약 협상 시한 설정 논란",
+      "same_event": false
     },
     "3ccb155de06b0bea--591a5f15c778a824": {
       "embedding_similarity": 0.8734,
@@ -310327,6 +312241,17 @@
       "reason": "원전 전력 구매 계약과 디지털 인프라 투자는 다른 사건임",
       "reviewed_at": "2026-09-12T20:44:42.088635+00:00",
       "right_title": "구글, 핀란드 디지털 인프라에 130억 유로 투자",
+      "same_event": false
+    },
+    "3cfe3369edbf4cc2--508b8524eb822150": {
+      "embedding_similarity": 0.8608,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 관련 서로 다른 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공사 선정 재추진…내년 7월 완료 목표",
       "same_event": false
     },
     "3cfe3369edbf4cc2--591a5f15c778a824": {
@@ -331924,6 +333849,182 @@
       "right_title": "두산에너빌리티, 3분기 영업이익 2612억원으로 91% 증가",
       "same_event": false
     },
+    "40ea133cc22e3773--46de2686c8ed7fa9": {
+      "embedding_similarity": 0.8408,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자와 삼성SDS의 별개 사업",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 구미 AI데이터센터 착공…2029년 3월 본격 가동",
+      "same_event": false
+    },
+    "40ea133cc22e3773--52506296fd79b240": {
+      "embedding_similarity": 0.8485,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "충청권 팹 인프라 지원 약속 동일 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "이재명 대통령, 충청권 메가프로젝트 착공식서 전폭적 인프라 지원 약속",
+      "same_event": true
+    },
+    "40ea133cc22e3773--670e45c9d8c1c7a5": {
+      "embedding_similarity": 0.8481,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자와 삼성SDS의 별개 사업",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 구미에 60MW 규모 AI 데이터센터 착공",
+      "same_event": false
+    },
+    "40ea133cc22e3773--691c5f043811fbc1": {
+      "embedding_similarity": 0.864,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자 팹과 삼성SDS 데이터센터는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 구미 AI 데이터센터 착공…2028년 준공 목표",
+      "same_event": false
+    },
+    "40ea133cc22e3773--755962d298d731a5": {
+      "embedding_similarity": 0.8498,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 주제의 뉴스입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국내 AI 데이터센터 투자계획, 전력 확보 및 자금조달이 실현 관건",
+      "same_event": false
+    },
+    "40ea133cc22e3773--7cb7fd4f88a4bfb0": {
+      "embedding_similarity": 0.8442,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자와 삼성SDS의 별개 사업",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 구미 AI 데이터센터 착공…2028년 말 준공",
+      "same_event": false
+    },
+    "40ea133cc22e3773--87b2f8e78631d626": {
+      "embedding_similarity": 0.8445,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "주체와 세부 사안이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 충청권 392조 메가프로젝트 착공…AI 전력 인프라 지원 강조",
+      "same_event": false
+    },
+    "40ea133cc22e3773--99b6255fc2d34f3f": {
+      "embedding_similarity": 0.8471,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자 팹과 삼성SDS 구미 데이터센터는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 경북 구미에 4,273억 규모 AI 데이터센터 착공",
+      "same_event": false
+    },
+    "40ea133cc22e3773--9c0aad2259cac2aa": {
+      "embedding_similarity": 0.8671,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자 HBM 팹과 삼성SDS 구미 데이터센터는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 구미 AI 데이터센터 착공…초기 60MW 규모",
+      "same_event": false
+    },
+    "40ea133cc22e3773--9c0ccbbffdcdb3ff": {
+      "embedding_similarity": 0.8494,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자 팹과 삼성SDS 데이터센터는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 구미 AI 데이터센터 착공…최대 120MW 규모",
+      "same_event": false
+    },
+    "40ea133cc22e3773--9d1e5de432a6088f": {
+      "embedding_similarity": 0.8414,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "반도체 팹 인프라 지원 및 전력 공급",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 반도체 팹 전력 공급 위한 변전소 내년 1월 착공 계획",
+      "same_event": true
+    },
+    "40ea133cc22e3773--b18d8cd13931a460": {
+      "embedding_similarity": 0.8652,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자 팹과 삼성SDS 데이터센터는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 경북 구미에 60MW급 AI 데이터센터 착공",
+      "same_event": false
+    },
+    "40ea133cc22e3773--bf778d8363c1ca87": {
+      "embedding_similarity": 0.8552,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자와 삼성SDS의 별개 사업",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 구미 AI 데이터센터 착공…2028년 말 준공 목표",
+      "same_event": false
+    },
+    "40ea133cc22e3773--d3ed002c6a6b825f": {
+      "embedding_similarity": 0.8512,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성전자와 삼성SDS의 별개 사업",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성SDS, 구미에 60MW급 AI 데이터센터 착공…2028년 말 준공",
+      "same_event": false
+    },
+    "40ea133cc22e3773--e411c2d0eb4937f5": {
+      "embedding_similarity": 0.8679,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "삼성 아산 FAB 신규 건설 및 팹",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "충남, 392조 충청권 메가프로젝트 착공…삼성전자 아산 신규 FAB 건설",
+      "same_event": true
+    },
+    "40ea133cc22e3773--e62bf14a2801a5f8": {
+      "embedding_similarity": 0.8416,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "삼성전자, 충청권 HBM 팹 가동 1년 앞당겨…정부 인프라 지원 약속",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "충청권 팹 가동과 기흥 캠퍼스 구축은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "삼성전자, 기흥 캠퍼스에 첨단 파운드리 팹 및 패키징 시설 구축 추진",
+      "same_event": false
+    },
     "40ec19a4127d3147--5686581d64ffc19e": {
       "embedding_similarity": 0.8531,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -338135,6 +340236,17 @@
       "right_title": "국회, 1GW AI 데이터센터 연간 세수 9109억 원 추산",
       "same_event": false
     },
+    "42118f61b9245023--6be0e32f235a7430": {
+      "embedding_similarity": 0.8733,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 2035년까지 AI 데이터센터 10GW 추가 구축 및 전력망 확충 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "인프라 구축 계획과 정책 제언",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부 AI 보급정책, 지속가능한 시장 생태계 조성 위한 성과지표 마련 필요",
+      "same_event": false
+    },
     "42118f61b9245023--6d39abd9609a74eb": {
       "embedding_similarity": 0.8407,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -338991,6 +341103,17 @@
       "reason": "정부 데이터센터 정책과 HD현대 매출 목표는 다름",
       "reviewed_at": "2026-11-12T09:59:12.245109+00:00",
       "right_title": "HD현대 엔진사업, 선박·데이터센터 수요 기반 2030년 매출 10조 목표",
+      "same_event": false
+    },
+    "42118f61b9245023--addb110563e56c1d": {
+      "embedding_similarity": 0.8767,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 2035년까지 AI 데이터센터 10GW 추가 구축 및 전력망 확충 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "정부 계획과 민간 기업 계획",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "KT클라우드, 2031년까지 전국 1GW 규모 AI 데이터센터 인프라 구축",
       "same_event": false
     },
     "42118f61b9245023--addf1e2ee5f478b9": {
@@ -340137,6 +342260,28 @@
       "right_title": "국내 철강업계, AI 데이터센터 인프라 수요로 공급과잉 돌파구 모색",
       "same_event": false
     },
+    "42118f61b9245023--f39f84fbffcaad9b": {
+      "embedding_similarity": 0.8445,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 2035년까지 AI 데이터센터 10GW 추가 구축 및 전력망 확충 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "정부의 메가프로젝트 및 인프라 구축 관련 동일 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 1,600조 원 규모 3대 메가프로젝트 본격화…핵심 인프라 구축 지원",
+      "same_event": true
+    },
+    "42118f61b9245023--f4334fdcfec96944": {
+      "embedding_similarity": 0.8613,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 2035년까지 AI 데이터센터 10GW 추가 구축 및 전력망 확충 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "AI 데이터센터 전력망과 용인산단 LNG 공급으로 대상 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 2038년까지 LNG 발전설비 69.2GW로 확대…용인 산단 전력공급 총력",
+      "same_event": false
+    },
     "42118f61b9245023--f60e2c55601c7479": {
       "embedding_similarity": 0.8669,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -341215,6 +343360,17 @@
       "right_title": "국회입법조사처, 전기요금 정상화 계획 및 한전 부채 해결 방안 촉구",
       "same_event": false
     },
+    "421375f0d9d0f261--fb7bce837f9c420b": {
+      "embedding_similarity": 0.861,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한국원자력연구원, 말레이시아 원자력 인적자원개발 컨설팅 제공",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "기관 및 대상이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "KINGS, 케냐·베트남·미국 테네시주와 원자력 인력양성 협력 확대",
+      "same_event": false
+    },
     "4213b7845d65ad8a--7702358415bf7f3a": {
       "embedding_similarity": 0.8752,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -341587,6 +343743,17 @@
       "reason": "AI 보안 개발과 국가전 진화 동향으로 별개",
       "reviewed_at": "2026-10-08T15:56:42.723692+00:00",
       "right_title": "사이버 공격의 자동화·국가전 진화에 따른 핵심 인프라 보안 강화",
+      "same_event": false
+    },
+    "421dcf57195d8b59--508b8524eb822150": {
+      "embedding_similarity": 0.8506,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전과 중동 플랜트는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "산업부, 중동 플랜트 수주 부진 대응 민관 협력 강화",
       "same_event": false
     },
     "421dcf57195d8b59--e730ac1298490463": {
@@ -348436,6 +350603,17 @@
       "reviewed_at": "2026-10-23T08:34:02.354004+00:00",
       "right_title": "서해안 HVDC 해저구간 공사 내년 1월 발주…2030년 준공 목표",
       "same_event": false
+    },
+    "446d4465093c2d64--508b8524eb822150": {
+      "embedding_similarity": 0.8519,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 계약 협상 관련 동일 사안입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공사 내정설 부인…91차례 협상 결렬은 조건 이견 탓",
+      "same_event": true
     },
     "446d4465093c2d64--591a5f15c778a824": {
       "embedding_similarity": 0.8757,
@@ -366464,6 +368642,17 @@
       "right_title": "'빅배스' 끝낸 대우건설…수장 교체로 '영업·수주' 총력전",
       "same_event": false
     },
+    "4a8749afdc2a3d7e--508b8524eb822150": {
+      "embedding_similarity": 0.9029,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 이행점검 관련 동일 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한-체코, 제3차 두코바니 이행점검 협의체 개최…원전 협력 강화",
+      "same_event": true
+    },
     "4a8749afdc2a3d7e--591a5f15c778a824": {
       "embedding_similarity": 0.8737,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -367585,6 +369774,17 @@
       "right_title": "조현 외교부 장관, 우간다 부총리 면담…원전 협력 당부",
       "same_event": false
     },
+    "4af3d3f4f39f651a--508b8524eb822150": {
+      "embedding_similarity": 0.8639,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공사 재선정 관련 후속 보도",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "체코 원전 시공사 재선정 절차 돌입…한수원, 2029년 착공 목표 유지",
+      "same_event": true
+    },
     "4af3d3f4f39f651a--591a5f15c778a824": {
       "embedding_similarity": 0.8965,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -367932,6 +370132,17 @@
       "prompt_version": 2,
       "reason": "MSR 선박 건조 목표와 기술 전시회는 다름",
       "reviewed_at": "2026-10-29T22:06:40.976855+00:00",
+      "right_title": "스마트 에너지 플러스 2026, 차세대 탄소중립 에너지 기술 전시",
+      "same_event": false
+    },
+    "4b0233627678abc4--9d1fe1976fd1a6a4": {
+      "embedding_similarity": 0.8481,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한국선급(KR), 부산서 '친환경기술 컨퍼런스' 개최…해양 SMR 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "한국선급 컨퍼런스와 에너지 전시회는 다른 행사",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
       "right_title": "스마트 에너지 플러스 2026, 차세대 탄소중립 에너지 기술 전시",
       "same_event": false
     },
@@ -368707,6 +370918,17 @@
       "reviewed_at": "2026-09-01T12:53:02.569012+00:00",
       "right_title": "LS전선, AI 데이터센터 전력 인프라 공략 위한 5개사 협력체 합류",
       "same_event": false
+    },
+    "4b86976cc4f3f50b--508b8524eb822150": {
+      "embedding_similarity": 0.8585,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 계약 관련 후속 보도",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원-대우건설 컨소시엄, 체코 원전 시공계약 협상 난항",
+      "same_event": true
     },
     "4b86976cc4f3f50b--b7ab289c1fa8f66d": {
       "embedding_similarity": 0.8562,
@@ -370569,6 +372791,17 @@
       "right_title": "김의겸 의원, '해저통신케이블 특별법' 대표발의…국가 전략 인프라 육성",
       "same_event": false
     },
+    "4c5919596c3fc8e0--508b8524eb822150": {
+      "embedding_similarity": 0.8555,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공 협상 결렬 공방",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원-대우건설, 체코 원전 시공계약 협상 결렬 공방",
+      "same_event": true
+    },
     "4c5919596c3fc8e0--591a5f15c778a824": {
       "embedding_similarity": 0.8908,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -370677,6 +372910,17 @@
       "reason": "핵잠수함 협력 및 전담조직 신설 관련 동일 맥락",
       "reviewed_at": "2026-10-21T10:02:00.763105+00:00",
       "right_title": "국방부·한화오션, 핵추진잠수함 전담조직 신설…29조 사업비·핵연료 협상 과제",
+      "same_event": true
+    },
+    "4c619ceaeaecb364--508b8524eb822150": {
+      "embedding_similarity": 0.8698,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공사 교체 및 방한 논의",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "체코 부총리 12월 방한, 두코바니 원전 시공사 교체 논의",
       "same_event": true
     },
     "4c619ceaeaecb364--591a5f15c778a824": {
@@ -372742,6 +374986,17 @@
       "reason": "TRISO-X 보조금 vs X-에너지 흑연 공급망",
       "reviewed_at": "2026-08-09T05:45:24.592522+00:00",
       "right_title": "X-에너지, 흑연 공급망 확보",
+      "same_event": false
+    },
+    "4cb254f970995cc0--508b8524eb822150": {
+      "embedding_similarity": 0.8459,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 점검회의와 건정연의 결렬 원인 분석은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "건정연, 체코 원전 시공계약 결렬 원인으로 계약조건 이견 지목",
       "same_event": false
     },
     "4cb254f970995cc0--be3bc5ed213f191c": {
@@ -389444,6 +391699,39 @@
       "right_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
       "same_event": false
     },
+    "508b8524eb822150--51cbbbc46deae70d": {
+      "embedding_similarity": 0.8589,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의와 경쟁 입찰 전환은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공 협상 결렬…경쟁 입찰로 전환",
+      "same_event": false
+    },
+    "508b8524eb822150--51f3a9fab7d92112": {
+      "embedding_similarity": 0.8503,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 점검회의와 국제 콘펙스 개최는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "산업부, 10월 27일부터 경주서 국제 원자력수출 및 안전 콘펙스(NES 2026) 개최",
+      "same_event": false
+    },
+    "508b8524eb822150--53268a699d0d2763": {
+      "embedding_similarity": 0.872,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의와 포럼은 다른 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "제11차 한·체코 미래포럼 개최…원자력 R&D 및 추가 수주 협력 논의",
+      "same_event": false
+    },
     "508b8524eb822150--591a5f15c778a824": {
       "embedding_similarity": 0.8821,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -389455,6 +391743,83 @@
       "right_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
       "same_event": false
     },
+    "508b8524eb822150--5bd8d3a3ae80bcf8": {
+      "embedding_similarity": 0.882,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 두코바니 사업 점검 및 법안 대응",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "김정관 산업장관, 체코와 두코바니 사업 점검 및 EU 산업가속화법 대응 논의",
+      "same_event": true
+    },
+    "508b8524eb822150--744b8a2fc0c07822": {
+      "embedding_similarity": 0.8479,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 공사비 갈등 및 정부 대응",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원-시공사, 체코 원전 공사비 갈등…정부 비상관리체제 가동",
+      "same_event": true
+    },
+    "508b8524eb822150--76d5249a72a2c36e": {
+      "embedding_similarity": 0.8821,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 관련 EU 법안 대응 보도",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "산업부, 체코에 EU 산업가속화법의 원전 협력 저해 우려 전달",
+      "same_event": true
+    },
+    "508b8524eb822150--7a13338fec82158f": {
+      "embedding_similarity": 0.8471,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "행사 주체와 안건이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국회 산자위, 한전·한수원 국감서 전력망 적기 구축 및 해외 원전 수익성 집중 점검",
+      "same_event": false
+    },
+    "508b8524eb822150--7bac8a344af6105b": {
+      "embedding_similarity": 0.8728,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 협상 결렬 후속 신규 시공사",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 신규 시공사 2027년 7월 선정 추진",
+      "same_event": true
+    },
+    "508b8524eb822150--7dd13d5d74e25076": {
+      "embedding_similarity": 0.8476,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의와 시공사 재선정은 다른 국면임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공사 재선정…계약조건 조정이 핵심 과제",
+      "same_event": false
+    },
+    "508b8524eb822150--87b0d496f5ba1b2f": {
+      "embedding_similarity": 0.8641,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 이행 점검 및 추가 수주",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "산업부, 체코 두코바니 원전 이행 점검…테믈린 추가 수주 관심 표명",
+      "same_event": true
+    },
     "508b8524eb822150--9827a7be7b3e5390": {
       "embedding_similarity": 0.8516,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -389464,6 +391829,83 @@
       "reason": "청정수소 연구 성과와 체코 마일스톤 점검은 다름",
       "reviewed_at": "2026-11-12T16:13:26.975330+00:00",
       "right_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "same_event": false
+    },
+    "508b8524eb822150--9c4cd308884a4d58": {
+      "embedding_similarity": 0.851,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 협상 관련 동일 사안입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공계약 협상 일방 종료 주장 정면 반박",
+      "same_event": true
+    },
+    "508b8524eb822150--9dd8e15fcfe84298": {
+      "embedding_similarity": 0.8542,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 사업 계약 및 점검 관련",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "산업부, 대우건설의 체코 원전 시공계약 중재 요구에 '권한 없음' 입장 표명",
+      "same_event": true
+    },
+    "508b8524eb822150--9e3420606aeaf230": {
+      "embedding_similarity": 0.8552,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "산업부 점검회의와 한수원 계약 발표 예정은 다른 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공계약 협상 중 29일 관련 내용 발표 예정",
+      "same_event": false
+    },
+    "508b8524eb822150--a4791970d3e08eb6": {
+      "embedding_similarity": 0.8489,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의와 시공사 선정은 단계가 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공계약 결렬 후 신규 시공사 선정 착수",
+      "same_event": false
+    },
+    "508b8524eb822150--a69077ead3cab401": {
+      "embedding_similarity": 0.8574,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공 계약 협상 결렬 보도",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원·대우건설 체코 원전 시공 계약 협상 결렬…공사비·위험 분담 이견",
+      "same_event": true
+    },
+    "508b8524eb822150--a83837b14e796d2f": {
+      "embedding_similarity": 0.8493,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 협상 종료 및 후속 조치",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 대우건설과 체코 원전 시공 협상 종료 및 비상관리체제 가동",
+      "same_event": true
+    },
+    "508b8524eb822150--b00aa1e44a511e09": {
+      "embedding_similarity": 0.8454,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전과 기업 인사는 무관",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "두산에너빌리티, 박상현 부회장 승진 및 송용진 COO 선임",
       "same_event": false
     },
     "508b8524eb822150--b7ab289c1fa8f66d": {
@@ -389477,6 +391919,28 @@
       "right_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
       "same_event": true
     },
+    "508b8524eb822150--b7b1b6698168e58c": {
+      "embedding_similarity": 0.8473,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의와 시공계약 결렬은 다른 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공계약 협상 결렬…내년 7월 새 시공사 선정",
+      "same_event": false
+    },
+    "508b8524eb822150--bf254f79ce11da61": {
+      "embedding_similarity": 0.8541,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 관련 마일스톤 및 계약 이슈",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공 계약 결렬…새 시공사 선정 과제",
+      "same_event": true
+    },
     "508b8524eb822150--c0694e00b9d00938": {
       "embedding_similarity": 0.8477,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -389486,6 +391950,39 @@
       "reason": "국토부 장관 발언과 산업부 점검 회의는 다름",
       "reviewed_at": "2026-11-12T16:13:26.975330+00:00",
       "right_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "same_event": false
+    },
+    "508b8524eb822150--c08907e59c90471a": {
+      "embedding_similarity": 0.843,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "산업부 점검과 한전기술 논란은 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한국전력기술, 체코 원전 위험관리 계획 수립 지연 및 등급 하향 논란",
+      "same_event": false
+    },
+    "508b8524eb822150--c1523f62702d5bf0": {
+      "embedding_similarity": 0.851,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "정부 회의와 국감 질의는 별개 사안",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "국회 산자위 국감, 체코 원전 계약 및 호남 송전망 구축 현안 질의",
+      "same_event": false
+    },
+    "508b8524eb822150--cf11dd34f20b4f99": {
+      "embedding_similarity": 0.8501,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의와 시공계약 결렬은 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 두코바니 원전 시공계약 협상 결렬…경쟁입찰 전환",
       "same_event": false
     },
     "508b8524eb822150--cfd9dfccabd94472": {
@@ -389499,6 +391996,105 @@
       "right_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
       "same_event": true
     },
+    "508b8524eb822150--d742fef4198b028a": {
+      "embedding_similarity": 0.9011,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 마일스톤 및 장관 발언 동일 사안입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "김정관 산업장관, 체코 원전 사업 무산 방지 및 팀코리아 완수 의지 표명",
+      "same_event": true
+    },
+    "508b8524eb822150--d901565e26b284c7": {
+      "embedding_similarity": 0.8987,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 관련 동일 사안입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "김정관 산업장관, 체코 원전 사업 무산 방지 의지 표명",
+      "same_event": true
+    },
+    "508b8524eb822150--db33b1b62a5a2379": {
+      "embedding_similarity": 0.8537,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "점검회의와 시공사 선정 종료는 다른 사안임",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 두코바니 원전 시공계약 협상 종료…내년 7월 새 시공사 선정",
+      "same_event": false
+    },
+    "508b8524eb822150--dc7e7c49253c4576": {
+      "embedding_similarity": 0.8756,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 협력 및 법안 대응 요청",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "산업부, 체코에 EU 산업가속화법안 대응 및 원전 협력 강화 요청",
+      "same_event": true
+    },
+    "508b8524eb822150--e4aad4a798f6bcc3": {
+      "embedding_similarity": 0.8725,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 협상 관련 동일 사안입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "김정관 산업부 장관, 체코 원전 시공계약 협상 결렬에 “무산은 없을 것”",
+      "same_event": true
+    },
+    "508b8524eb822150--e78317b0b3d11e27": {
+      "embedding_similarity": 0.9028,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 이행 점검 및 추가 수주",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 체코 두코바니 원전 이행 점검 및 테믈린 추가 수주 협력 논의",
+      "same_event": true
+    },
+    "508b8524eb822150--edb5bc7f1fc0ba0a": {
+      "embedding_similarity": 0.8614,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공계약 관련 후속 점검",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "산업부, 체코 원전 시공계약 갈등 긴급 점검…한수원·대우건설 입장차 여전",
+      "same_event": true
+    },
+    "508b8524eb822150--f63b4ec690108f2f": {
+      "embedding_similarity": 0.8402,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 시공사 협상 결렬 후속",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한수원, 체코 원전 시공사 협상 결렬…내년 7월 새 시공사 선정",
+      "same_event": true
+    },
+    "508b8524eb822150--fb514b8cb3998016": {
+      "embedding_similarity": 0.9096,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 협상 및 장관 발언 동일 사안입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "김정관 산업장관, 체코 원전 시공계약 협상 결렬에 \"무산은 안 된다\"",
+      "same_event": true
+    },
     "508b8524eb822150--fb59cc80cb95f24a": {
       "embedding_similarity": 0.8542,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -389509,6 +392105,17 @@
       "reviewed_at": "2026-11-12T16:13:26.975330+00:00",
       "right_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
       "same_event": false
+    },
+    "508b8524eb822150--fd1aec73b8544af3": {
+      "embedding_similarity": 0.8541,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부, 체코 원전 건설허가 신청 및 착공 마일스톤 점검회의 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "체코 원전 사업 점검 및 법안 대응",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "산업부, 체코와 두코바니 원전 사업 점검 및 EU 산업가속화법 대응 논의",
+      "same_event": true
     },
     "508c2df8556e5b25--5277aaa44d58c710": {
       "embedding_similarity": 0.8401,
@@ -403175,6 +405782,17 @@
       "right_title": "기후부, 제12차 전력수급기본계획 11월 중 핵심 쟁점 정리",
       "same_event": true
     },
+    "541e02fafe550a27--b279e066324c8e48": {
+      "embedding_similarity": 0.8496,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 2035년 온실가스 감축목표 53~61% 확정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "온실가스 감축목표와 제12차 전기본 쟁점 정리는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "기후부, 제12차 전력수급기본계획 11월 중 핵심 쟁점 정리",
+      "same_event": false
+    },
     "541e02fafe550a27--c135d5e561238817": {
       "embedding_similarity": 0.8559,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -413743,6 +416361,17 @@
       "right_title": "정부 대미 투자 프로젝트, 수익성 불확실성으로 기업 참여 난항",
       "same_event": false
     },
+    "56d359c8aee15f67--b279e066324c8e48": {
+      "embedding_similarity": 0.8482,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 2035년 온실가스 감축목표 53~61% 확정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "온실가스 감축목표 확정 및 국제 서약",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한국, COP31서 '2035년 전기화 35%' 서약 동참…화석연료 의존 우려",
+      "same_event": true
+    },
     "56d7c3c2636ef3e4--8c6eb5250550b959": {
       "embedding_similarity": 0.8439,
       "left_title": "[시론] 호남 반도체 산업의 성패는 전력 공급에 달려있다",
@@ -415797,6 +418426,17 @@
       "reason": "실적 발표와 ESS 시장 동향은 무관",
       "reviewed_at": "2026-10-27T22:08:51.253106+00:00",
       "right_title": "국내 분리막 업체, 미국 ESS 시장에서 돌파구 모색",
+      "same_event": false
+    },
+    "57c7c30f8ab9905d--845fc087e6e3d5dc": {
+      "embedding_similarity": 0.8728,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한국방사선진흥협회, 방사성폐기물협회와 산업 발전 업무협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "기관 간 협약과 생태계 구축은 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "방사선진흥협회, 방사성동위원소 산업 생태계 구축 추진",
       "same_event": false
     },
     "57cfc84c702fe349--63c61266bb0dc771": {
@@ -440163,6 +442803,94 @@
       "reason": "한-튀르키예 MOU와 아킨스레알리스 협약은 다름",
       "reviewed_at": "2026-11-12T16:13:26.975330+00:00",
       "right_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "same_event": false
+    },
+    "5f449b4df1388293--6b9f433dd95491b4": {
+      "embedding_similarity": 0.8867,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "튀르키예 원전 도입 타당성 조사 관련",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "튀르키예, 미국 및 캐나다 원전 도입 검토",
+      "same_event": true
+    },
+    "5f449b4df1388293--7a08f403d601f75d": {
+      "embedding_similarity": 0.8494,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "타당성조사와 MOU는 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한-튀르키예, 원전 금융 협력 MOU 체결 및 시놉 원전 협력 재확인",
+      "same_event": false
+    },
+    "5f449b4df1388293--9eec0bd2920b2fc9": {
+      "embedding_similarity": 0.8407,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "튀르키예 원전 사업 협력 관련",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "에르도안 튀르키예 대통령, 시놉 원전 사업 한국과 협력 가능성 언급",
+      "same_event": true
+    },
+    "5f449b4df1388293--c1459f67a1c49d85": {
+      "embedding_similarity": 0.8464,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "개별 타당성조사와 국가간 협정은 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "캐나다·튀르키예, 전략적 동반자 협정 체결…원자력 등 에너지 협력 강화",
+      "same_event": false
+    },
+    "5f449b4df1388293--eaacd1042dfeb803": {
+      "embedding_similarity": 0.8463,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "타당성조사 협약과 정상회담 MOU는 별개입니다.",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한-튀르키예 정상회담, 원전 프로젝트 금융협력 MOU 체결",
+      "same_event": false
+    },
+    "5f449b4df1388293--f231a39a4268a34b": {
+      "embedding_similarity": 0.8669,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대형 원전과 SMR 타당성 조사 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "튀르키예 정유사 튀프라쉬(Tüpraş), SMR 도입 타당성 조사 착수",
+      "same_event": false
+    },
+    "5f449b4df1388293--f861227bf5a8541d": {
+      "embedding_similarity": 0.8606,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "대형 원전과 SMR 조사 지원 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "미국 USTDA, 튀르키예 정유사 Tüpraş의 SMR 도입 타당성 조사 지원",
+      "same_event": false
+    },
+    "5f449b4df1388293--fb9861b1b18d0a1b": {
+      "embedding_similarity": 0.8692,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "아킨스레알리스, 튀르키예 6기 규모 칸두 원전 타당성조사 협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "캐나다 원전과 한국 파트너십은 별개",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "튀르키예 에너지부 장관, 한국 원전 파트너십 기대 표명",
       "same_event": false
     },
     "5f4984ddc976b599--6958421adb3eed2a": {
@@ -466701,6 +469429,17 @@
       "right_title": "AI 데이터센터 투자 확대에 따른 국내 전력기기·설비 업계 수혜",
       "same_event": false
     },
+    "676079a6309ac357--6be0e32f235a7430": {
+      "embedding_similarity": 0.8701,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미·유럽 데이터센터 규제 강화…한국, 인프라 대안 부상",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "해외 규제 동향과 정책 제언",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부 AI 보급정책, 지속가능한 시장 생태계 조성 위한 성과지표 마련 필요",
+      "same_event": false
+    },
     "676079a6309ac357--6c164dc4ccd2f847": {
       "embedding_similarity": 0.8665,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -467645,6 +470384,17 @@
       "reason": "규제 동향과 개별 기업 진출",
       "reviewed_at": "2026-11-10T19:15:07.309195+00:00",
       "right_title": "LG전자, 데이터센터 냉각 시장 공략 가속화",
+      "same_event": false
+    },
+    "676079a6309ac357--addb110563e56c1d": {
+      "embedding_similarity": 0.8561,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "미·유럽 데이터센터 규제 강화…한국, 인프라 대안 부상",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "해외 규제와 국내 기업 계획",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "KT클라우드, 2031년까지 전국 1GW 규모 AI 데이터센터 인프라 구축",
       "same_event": false
     },
     "676079a6309ac357--ae757300a707c9d8": {
@@ -566736,6 +569486,17 @@
       "right_title": "오픈AI, 데이터센터 명칭 '컴퓨트 캠퍼스'로 변경 추진",
       "same_event": false
     },
+    "83ffa489e12caedf--9d1fe1976fd1a6a4": {
+      "embedding_similarity": 0.8628,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한국선급(KR), 부산서 '친환경기술 컨퍼런스' 개최…해양 SMR 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "한국선급 해양 SMR 매거진 발간",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한국선급, 친환경 매거진 통해 해양 SMR 규제 및 기술 동향 조명",
+      "same_event": true
+    },
     "83ffa489e12caedf--cff5be606c78be51": {
       "embedding_similarity": 0.8469,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -581689,6 +584450,17 @@
       "right_title": "정부, 호남 반도체 산단 전력 공급 위해 초고압 변압기 신규 발주 결정",
       "same_event": false
     },
+    "89f6eadbd62c85e8--addb110563e56c1d": {
+      "embedding_similarity": 0.8483,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "새만금개발청, AI 데이터센터 대응 위한 전력·용수 인프라 확충",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "새만금 인프라와 KT클라우드 계획",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "KT클라우드, 2031년까지 전국 1GW 규모 AI 데이터센터 인프라 구축",
+      "same_event": false
+    },
     "89f6eadbd62c85e8--addf1e2ee5f478b9": {
       "embedding_similarity": 0.84,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -583106,6 +585878,17 @@
       "reason": "주체와 사안이 다름",
       "reviewed_at": "2026-10-18T20:47:50.920158+00:00",
       "right_title": "SGC에너지, 발전소 인근 AI 데이터센터 유치 및 온사이트 전력 공급 추진",
+      "same_event": false
+    },
+    "89f6eadbd62c85e8--f39f84fbffcaad9b": {
+      "embedding_similarity": 0.8518,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "새만금개발청, AI 데이터센터 대응 위한 전력·용수 인프라 확충",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "새만금 개별 사업과 정부의 메가프로젝트로 대상이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 1,600조 원 규모 3대 메가프로젝트 본격화…핵심 인프라 구축 지원",
       "same_event": false
     },
     "89f6eadbd62c85e8--f59e6551e0e064d0": {
@@ -585090,6 +587873,17 @@
       "reviewed_at": "2026-10-26T03:52:22.629897+00:00",
       "right_title": "UNCTAD, AI 인프라 투자 격차 심화 경고",
       "same_event": false
+    },
+    "8ae486d37c00295a--9d1fe1976fd1a6a4": {
+      "embedding_similarity": 0.8521,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한국선급(KR), 부산서 '친환경기술 컨퍼런스' 개최…해양 SMR 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "해양 SMR 상용화 및 기술 논의",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "한국해양대, 해양SMR 상용화 위한 운용 기술 및 인력양성 체계 구축 제안",
+      "same_event": true
     },
     "8ae486d37c00295a--cff5be606c78be51": {
       "embedding_similarity": 0.8492,
@@ -627446,6 +630240,17 @@
       "right_title": "정부, 반도체 팹 전력 공급 위한 변전소 내년 1월 착공 계획",
       "same_event": false
     },
+    "9d1fe1976fd1a6a4--f7a491ef5fed2319": {
+      "embedding_similarity": 0.8455,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "한국선급(KR), 부산서 '친환경기술 컨퍼런스' 개최…해양 SMR 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "행사와 발표 내용이 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "원자력연구원, 해양용 MSR 및 SMART 원자로 기술 공개",
+      "same_event": false
+    },
     "9d21ff37ee02852d--b63bf0f025c2510d": {
       "embedding_similarity": 0.8414,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -650317,6 +653122,17 @@
       "right_title": "한국원자력학회, 한·미 원전 건설 협력 프레임워크 합의 환영",
       "same_event": false
     },
+    "aa1ee678a7906e79--fca0ee19bd879da4": {
+      "embedding_similarity": 0.8729,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 통상본부장, EU 보호무역 대응 위해 기업과 공동 설득전",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "EU 보호무역 및 규제 완화 대응 협력",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, EU 산업가속화법 철강 규제 완화 위해 독일과 협력",
+      "same_event": true
+    },
     "aa20684e355a9507--b8b92de9b5a487e2": {
       "embedding_similarity": 0.8494,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -655970,6 +658786,17 @@
       "reason": "해상 데이터센터와 SMR 도입은 별개",
       "reviewed_at": "2026-09-05T06:53:41.569093+00:00",
       "right_title": "AI 데이터센터 전력 확보를 위한 SMR 도입 논의 본격화",
+      "same_event": false
+    },
+    "addb110563e56c1d--addf1e2ee5f478b9": {
+      "embedding_similarity": 0.8632,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "네이버클라우드, AMD 에픽 CPU 도입 확대…데이터센터 전력 효율 개선",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "네이버클라우드와 KT클라우드",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "KT클라우드, 2031년까지 전국 1GW 규모 AI 데이터센터 인프라 구축",
       "same_event": false
     },
     "addf1e2ee5f478b9--af536fad50385d1d": {
@@ -664648,6 +667475,39 @@
       "right_title": "시지트로닉스, AI 데이터센터 전력 시스템용 광반도체 사업 확대",
       "same_event": false
     },
+    "b279e066324c8e48--baa0616d5d296317": {
+      "embedding_similarity": 0.8477,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 2035년 온실가스 감축목표 53~61% 확정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "2035년 온실가스 감축 및 전기화 목표",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 2035년 전기화율 35% 목표 지지",
+      "same_event": true
+    },
+    "b279e066324c8e48--f0c086e05ead8f09": {
+      "embedding_similarity": 0.8451,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 2035년 온실가스 감축목표 53~61% 확정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "온실가스 감축목표 확정과 RE100 기업 호소는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "RE100 기업, 재생에너지 조달 어려움 호소…제12차 전기본 수정 요구",
+      "same_event": false
+    },
+    "b279e066324c8e48--f9f5563c22e7a9d7": {
+      "embedding_similarity": 0.8538,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 2035년 온실가스 감축목표 53~61% 확정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "NDC 확정과 에너지 100GW는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 2030년 재생에너지 100GW 달성 및 원전 병행 추진",
+      "same_event": false
+    },
     "b279e969314e514e--bb5be47ba3fd8a11": {
       "embedding_similarity": 0.8626,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -671054,6 +673914,17 @@
       "reason": "코트라의 미 중간선거 후 전력 분야 전망 보도",
       "reviewed_at": "2026-11-06T08:30:46.040927+00:00",
       "right_title": "코트라, 미국 중간선거 이후 전력·조선 분야 초당적 지원 지속 전망",
+      "same_event": true
+    },
+    "b6eca08e0ca6cddc--fca0ee19bd879da4": {
+      "embedding_similarity": 0.8989,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 통상본부장, EU 보호무역 대응 위해 기업과 공동 설득전",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "산업부 통상본부장의 EU 대응 활동으로 동일 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "산업부, EU 산업가속화법 대응 총력…통상본부장 브뤼셀 방문",
       "same_event": true
     },
     "b6ed034c57699f22--d1a3ae6ff00225f9": {
@@ -694099,6 +696970,17 @@
       "right_title": "일본, AI·반도체 생태계 강화 전략 추진",
       "same_event": false
     },
+    "c6730350ada5c69a--fca0ee19bd879da4": {
+      "embedding_similarity": 0.8739,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 통상본부장, EU 보호무역 대응 위해 기업과 공동 설득전",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "서로 다른 통상 이슈",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "EU 산업가속화법(IAA) 추진에 따른 국내 기업 유럽 현지화 전략 재검토",
+      "same_event": false
+    },
     "c693db7134e6be68--f04c10e84e5022d9": {
       "embedding_similarity": 0.909,
       "left_title": "루마니아, 다뉴브강 수위 저하로 유일한 원전 가동 전면 중단",
@@ -713189,6 +716071,17 @@
       "right_title": "미국 민주당 의회 장악에 따른 전력기기주 단기 조정 및 중장기 수혜 전망",
       "same_event": false
     },
+    "d5fd2176dea29786--fca0ee19bd879da4": {
+      "embedding_similarity": 0.9025,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "산업부 통상본부장, EU 보호무역 대응 위해 기업과 공동 설득전",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "산업부의 EU 통상 대응 관련 정책 추진 동일 사건",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, EU 원산지 규정 등 통상 환경 변화에 따른 전략산업 예외 요구",
+      "same_event": true
+    },
     "d600dad5ceacf104--fa158b18eaf726af": {
       "embedding_similarity": 0.8422,
       "generation_policy_fingerprint": "ff0cd38b8e577971",
@@ -717476,6 +720369,17 @@
       "reason": "NDC 공청회와 제12차 전력수급기본계획은 별개 안건",
       "reviewed_at": "2026-11-12T03:51:50.329202+00:00",
       "right_title": "정부, 제12차 전력수급기본계획 수립 앞두고 원전 비중 공론화 착수",
+      "same_event": false
+    },
+    "dd44058b5c7f4872--f9f5563c22e7a9d7": {
+      "embedding_similarity": 0.8476,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 2035 NDC 감축목표 50~60%대 범위로 최종 공청회 개최",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "NDC 공청회와 에너지 100GW는 다름",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 2030년 재생에너지 100GW 달성 및 원전 병행 추진",
       "same_event": false
     },
     "dd4abf2176f6e728--f3213d555f9b9f44": {
@@ -729595,6 +732499,17 @@
       "reviewed_at": "2026-09-01T22:20:20.151162+00:00",
       "right_title": "정부, 반도체 초과세수 활용 '미래대응기금' 조성 추진",
       "same_event": false
+    },
+    "f39f84fbffcaad9b--fe08c83078ab105b": {
+      "embedding_similarity": 0.8511,
+      "generation_policy_fingerprint": "ff0cd38b8e577971",
+      "left_title": "정부, 3대 메가프로젝트 인프라 지원 위한 2.2조원 특별보증 신설 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 2,
+      "reason": "메가프로젝트 인프라 지원 정책의 세부 후속 보도",
+      "reviewed_at": "2026-11-12T22:09:02.019464+00:00",
+      "right_title": "정부, 1,600조 원 규모 3대 메가프로젝트 본격화…핵심 인프라 구축 지원",
+      "same_event": true
     },
     "f3a15408d90a7458--fbd73d44c5f2d4f3": {
       "embedding_similarity": 0.8414,
