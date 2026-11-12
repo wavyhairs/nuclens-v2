@@ -140,6 +140,14 @@
       "type": "company",
       "until": "2026-10-30T03:41:21.846051+00:00"
     },
+    "kentech": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-11-12T06:40:28.152592+00:00",
+      "term": "KENTECH",
+      "type": "company",
+      "until": "2026-11-26T06:40:28.152592+00:00"
+    },
     "kurt": {
       "new_articles": 2,
       "reason": "기간 만료",
@@ -1318,56 +1326,10 @@
     }
   },
   "spent": {
-    "count": 5,
+    "count": 7,
     "date": "2026-11-12"
   },
   "terms": {
-    "kentech": {
-      "articles": 3,
-      "created_at": "2026-11-11T15:40:34.916347+00:00",
-      "domains": [
-        "electimes.com",
-        "etnews.com",
-        "newsworker.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "electimes.com",
-          "hash": "50750438eda4c275",
-          "importance": "nice_to_know",
-          "title": "KINGS-KENTECH, 무탄소에너지 기술 및 인력 양성 MOU 체결"
-        },
-        {
-          "domain": "etnews.com",
-          "hash": "46c23d0a541bac1a",
-          "importance": "nice_to_know",
-          "title": "켄텍-킹스, 무탄소에너지 인재 양성 및 차세대 원전 공동연구 협력"
-        },
-        {
-          "domain": "newsworker.co.kr",
-          "hash": "50a1aea33eb00d4f",
-          "importance": "noise",
-          "title": "켄텍-킹스, 에너지 전문인력 양성 및 공동연구 협약 체결"
-        }
-      ],
-      "expires_at": "2026-11-12T15:40:34.916347+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-11T21:43:49.402978+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-11-11T21:43:47.144380+00:00",
-      "queries_run": 2,
-      "query": "KENTECH 원자력",
-      "score": 3.64,
-      "status": "tracking",
-      "term": "KENTECH",
-      "ttl_hours": 24,
-      "type": "company",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
     "달링턴": {
       "articles": 1,
       "created_at": "2026-11-11T21:43:47.144380+00:00",
@@ -1385,11 +1347,11 @@
       "expires_at": "2026-11-12T21:43:47.144380+00:00",
       "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-11-11T21:43:49.402978+00:00",
+      "last_run": "2026-11-12T06:40:28.152530+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-11-11T21:43:47.144380+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-12T06:40:25.870969+00:00",
+      "queries_run": 2,
       "query": "달링턴 원전",
       "score": 3.6,
       "status": "tracking",
@@ -1398,7 +1360,7 @@
       "type": "plant",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     }
   },
   "version": 1
