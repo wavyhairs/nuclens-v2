@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-11-13"
   },
   "retired": {
@@ -1334,7 +1334,7 @@
     }
   },
   "spent": {
-    "count": 5,
+    "count": 8,
     "date": "2026-11-13"
   },
   "terms": {
@@ -1361,12 +1361,12 @@
       ],
       "expires_at": "2026-11-14T21:40:28.161766+00:00",
       "importance": "must_read",
-      "last_result_count": 1,
-      "last_run": "2026-11-13T03:40:59.588582+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-11-13T12:40:42.360161+00:00",
       "new_articles": 1,
       "origin": "auto",
-      "planned_at": "2026-11-13T03:40:56.879546+00:00",
-      "queries_run": 2,
+      "planned_at": "2026-11-13T12:40:38.502806+00:00",
+      "queries_run": 3,
       "query": "OPG 원자력",
       "score": 5.3,
       "status": "extended",
@@ -1377,7 +1377,7 @@
         "2026-11-13"
       ],
       "yields": 1,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "osart": {
       "articles": 2,
@@ -1400,17 +1400,17 @@
           "title": "한수원, 신고리 2호기 IAEA 운영안전점검(OSART) 성공적 완료"
         }
       ],
-      "expires_at": "2026-11-14T12:40:24.836269+00:00",
+      "expires_at": "2026-11-14T12:40:42.360161+00:00",
       "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-11-13T03:40:59.588582+00:00",
-      "new_articles": 28,
+      "last_result_count": 1,
+      "last_run": "2026-11-13T12:40:42.360161+00:00",
+      "new_articles": 29,
       "origin": "auto",
-      "planned_at": "2026-11-13T03:40:56.879546+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-11-13T12:40:38.502806+00:00",
+      "queries_run": 4,
       "query": "OSART 원자력",
       "score": 5.3,
-      "status": "extended",
+      "status": "promote_candidate",
       "term": "OSART",
       "ttl_hours": 48,
       "type": "company",
@@ -1418,8 +1418,56 @@
         "2026-11-12",
         "2026-11-13"
       ],
-      "yields": 2,
-      "zero_streak": 1
+      "yields": 3,
+      "zero_streak": 0
+    },
+    "원자력공동조정위원회": {
+      "articles": 3,
+      "created_at": "2026-11-13T12:40:38.502806+00:00",
+      "domains": [
+        "yna.co.kr",
+        "edaily.co.kr",
+        "kbs.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "yna.co.kr",
+          "hash": "f7a0e47c037a890f",
+          "importance": "nice_to_know",
+          "title": "한-불 원자력공동조정위 개최…SMR·핵연료 등 협력 범위 확대"
+        },
+        {
+          "domain": "edaily.co.kr",
+          "hash": "d26a2f589c295e63",
+          "importance": "nice_to_know",
+          "title": "한·불, 원자력 협력 전주기로 확대…SMR·핵연료 공급망 협력"
+        },
+        {
+          "domain": "kbs.co.kr",
+          "hash": "c760e24ca60b2cb1",
+          "importance": "nice_to_know",
+          "title": "한·프랑스, 제27차 원자력공동조정위 개최…SMR·핵연료 협력 확대"
+        }
+      ],
+      "expires_at": "2026-11-14T12:40:42.360161+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 4,
+      "last_run": "2026-11-13T12:40:42.360161+00:00",
+      "new_articles": 4,
+      "origin": "auto",
+      "planned_at": "2026-11-13T12:40:38.502806+00:00",
+      "queries_run": 1,
+      "query": "원자력공동조정위원회",
+      "score": 3.7,
+      "status": "extended",
+      "term": "원자력공동조정위원회",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [
+        "2026-11-13"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     }
   },
   "version": 1
