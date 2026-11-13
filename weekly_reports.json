@@ -4871,6 +4871,401 @@
         },
         "confirmed_at": "2026-11-06T17:09:39.579122+09:00"
       }
+    },
+    "2026-W46": {
+      "week_id": "2026-W46",
+      "week_start": "2026-11-07",
+      "week_end": "2026-11-13",
+      "generated_at": "2026-11-13T17:08:20.320361+09:00",
+      "timezone": "Asia/Seoul",
+      "schema_version": 1,
+      "source_issue_count": 1136,
+      "article_count": 1513,
+      "weekly_intro": "이번 주는 체코 두코바니 원전 시공 협상 결렬과 미국 NRC의 SMR 건설 허가 승인이 동시에 맞물리며 해외 원전 시장의 불확실성과 실증 가속화가 교차한 한 주였다. 국내에서는 정부의 AI·반도체 메가프로젝트 추진에 따른 전력망 확충 및 신규 원전 공론화가 본격화되는 양상을 보였다. 한수원은 체코 시공사 재선정 절차와 함께 원자력 청정수소 및 양수발전 확충 등 미래 에너지 기반 다변화에 주력했다.",
+      "policy_shifts": [
+        {
+          "what": "정부가 8000t급 한국형 핵추진잠수함 건조를 위한 '장보고 N사업'의 추진 기본전략을 의결하고 사업타당성 조사를 면제하기로 했다.",
+          "so_what": "국방 안보 역량 강화를 위한 핵잠수함 도입이 본격적인 궤도에 올랐으나, 핵심 연료 확보와 국제 비확산 체제 대응이 향후 주요 과제로 남는다.",
+          "evidence_hashes": [
+            "ef58023b"
+          ]
+        },
+        {
+          "what": "기후에너지환경부가 호남 반도체 산단 전력 공급을 위해 700MW 규모의 ESS 보급과 초고압 변압기 신규 발주 계획을 확정했다.",
+          "so_what": "AI 및 반도체 등 첨단산업의 급증하는 전력 수요에 대응하기 위해 송전망 구축과 계통 안정화 조치가 실질적 집행 단계로 진입했다.",
+          "evidence_hashes": [
+            "acde4ef9"
+          ]
+        },
+        {
+          "what": "미국 원자력규제위원회(NRC)가 텍사스주 다우 화학단지 내 X-에너지의 Xe-100 SMR 4기 건설을 최종 승인했다.",
+          "so_what": "상업용 SMR의 인허가 관문이 실질적으로 통과되면서 글로벌 차세대 원전 시장의 실증 및 상용화 경쟁이 한층 가속화될 전망이다.",
+          "evidence_hashes": [
+            "9daf3d09"
+          ]
+        }
+      ],
+      "theme_moves": [
+        {
+          "theme": "SMR",
+          "direction": "강화",
+          "why": "미국 내 SMR 건설 허가 발급과 함께 국내 정부의 SMR 관급 방식 채택 및 7대 미래 성장동력 육성 정책이 구체화되었다.",
+          "evidence_hashes": [
+            "ac474b94",
+            "9daf3d09"
+          ]
+        },
+        {
+          "theme": "공급망",
+          "direction": "유지",
+          "why": "글로벌 전력 인프라 및 HVDC 수주가 확대되는 한편, 체코 원전 및 해외 프로젝트를 둘러싼 공사비와 금융 지원 이견이 상존하고 있다.",
+          "evidence_hashes": [
+            "744b8a2f",
+            "908bbc83"
+          ]
+        },
+        {
+          "theme": "수출",
+          "direction": "약화",
+          "why": "체코 원전 시공 협상 결렬로 인해 팀코리아의 당초 수출 계약 추진 일정에 제동이 걸리며 리스크 관리 체계가 가동되었다.",
+          "evidence_hashes": [
+            "d30116bc",
+            "744b8a2f"
+          ]
+        },
+        {
+          "theme": "전력망",
+          "direction": "강화",
+          "why": "미 상원의 인허가 간소화 법안 추진과 더불어 국내 호남 반도체 산단 전력 공급을 위한 변압기 신규 발주 및 송전망 확충 조치가 본격화되었다.",
+          "evidence_hashes": [
+            "5c8c32f2",
+            "acde4ef9"
+          ]
+        },
+        {
+          "theme": "전력수요",
+          "direction": "강화",
+          "why": "첨단 반도체 및 AI 데이터센터 투자 확대에 발맞춰 2040년 전력수요 전망치가 상향 조정되고 대규모 전력 인프라 투자 계획이 발표되었다.",
+          "evidence_hashes": [
+            "acde4ef9",
+            "fedaed34"
+          ]
+        }
+      ],
+      "khnp_direct": "한수원은 체코 두코바니 원전 시공 협상 결렬에 따른 신규 시공사 선정 절차에 착수했으며, 산업부 주관 점검회의를 통해 2029년 착공 목표를 유지하고 있다. 또한 사용후핵연료 저장시설 확보를 위한 지역 주민 공청회를 개최하고, 체코 UJV-Rez와의 청정수소 연구 성과 공유 등 글로벌 협력을 지속하고 있다.",
+      "watchpoints": [
+        "체코 두코바니 원전 신규 시공사 선정 절차 및 팀코리아 대응 방안을 확인한다.",
+        "제12차 전력수급기본계획 수립을 앞둔 신규 원전 적정 비중 공론화 진행 상황을 점검한다.",
+        "한빛원전 2호기 노심지지통 용접부 균열 관련 원안위의 안전성 검증 결과를 모니터링한다.",
+        "미국 의회의 핵연료 주기 및 대미 원자력 협력 관련 입법 동향을 주시한다."
+      ],
+      "report_candidates": [
+        {
+          "topic": "체코 원전 시공사 협상 결렬에 따른 리스크 분석 및 향후 대응 전략",
+          "basis": "한수원과 대우건설 간 체코 원전 시공계약 협상 종료 및 신규 시공사 선정 추진에 따른 파급효과 분석 필요"
+        },
+        {
+          "topic": "미국 NRC의 SMR 건설허가 승인이 글로벌 원전 시장에 미치는 시사점",
+          "basis": "엑스에너지 Xe-100 건설허가 발급으로 SMR 상용화 시점이 가구화됨에 따라 국내 i-SMR 전략 재점검 필요"
+        }
+      ],
+      "key_events": [
+        {
+          "hash": "d30116bc",
+          "headline": "한수원, 체코 원전 시공 협상 결렬…내년 7월 신규 시공사 선정 추진",
+          "implication": "공사비 및 위험 분담 이견으로 체코 원전 시공 협상이 결렬되면서 팀코리아의 후속 대응과 일정 관리 가속화가 불가피해졌다."
+        },
+        {
+          "hash": "9daf3d09",
+          "headline": "미 NRC, 다우 Seadrift 부지 Xe-100 SMR 건설허가 발급",
+          "implication": "미국 내 산업단지 연계 SMR 건설이 공식 허가되면서 차세대 원전 상용화 경쟁이 실질적인 실행 단계로 진입했다."
+        },
+        {
+          "hash": "ef58023b",
+          "headline": "정부, 핵추진잠수함 '장보고 N사업' 추진전략 의결…2030년대 후반 전력화",
+          "implication": "타당성 조사 면제를 통해 핵추진잠수함 개발이 본궤도에 올랐으나 향후 핵연료 확보를 위한 외교적 과제가 남았다."
+        },
+        {
+          "hash": "acde4ef9",
+          "headline": "정부, 호남 반도체 산단 전력 공급 위해 초고압 변압기 신규 발주 결정",
+          "implication": "첨단산업 클러스터의 전력난 해소를 위해 전력망 인프라 구축과 ESS 보급 등 정책 집행 속도가 대폭 빨라지고 있다."
+        },
+        {
+          "hash": "bf68bdfc",
+          "headline": "한빛원전 2호기 노심지지통 용접부 균열 징후 발견",
+          "implication": "원전 안전성에 대한 지역사회의 우려가 고조되는 가운데 철저한 원인 분석과 투명한 정보 공개가 요구된다."
+        }
+      ],
+      "top_stories": [
+        {
+          "key": "d30116bc",
+          "hash": "d30116bc5c0146f9",
+          "title": "한수원, 체코 원전 시공 협상 결렬…내년 7월 신규 시공사 선정 추진",
+          "summary": "한수원이 대우건설과의 체코 두코바니 원전 시공 계약 협상을 결렬하고, 내년 7월 신규 시공사 선정을 위한 경쟁입찰을 추진하기로 했다.",
+          "link": "https://weekly.hankooki.com/news/articleView.html?idxno=7192658",
+          "articles": 17,
+          "outlets": 16,
+          "published_at": "2026-11-06T09:44:00+00:00",
+          "score": 13.4
+        },
+        {
+          "key": "9daf3d09",
+          "hash": "9daf3d096927d6af",
+          "title": "미 NRC, 다우 Seadrift 부지 Xe-100 SMR 건설허가 발급",
+          "summary": "미국 원자력규제위원회(NRC)가 다우(Dow)의 Seadrift 부지에 건설될 4기 규모 Xe-100 SMR에 대한 건설허가를 발급했다.",
+          "link": "https://www.world-nuclear-news.org/articles/us-issues-landmark-construction-permit-for-texas-smr-plant",
+          "articles": 4,
+          "outlets": 4,
+          "published_at": "2026-11-10T12:38:31.263789+00:00",
+          "score": 13.2
+        },
+        {
+          "key": "51fd9fd1",
+          "hash": "51fd9fd18b967c89",
+          "title": "핵추진잠수함 사업타당성 조사 면제…내년 개발 착수",
+          "summary": "정부가 핵추진잠수함 개발을 위한 사업타당성 조사를 면제하고 내년 사업 착수를 확정했으며, 선체는 경쟁입찰, SMR은 관급 방식으로 확보하기로 했다.",
+          "link": "https://www.joongang.co.kr/article/25476423",
+          "articles": 5,
+          "outlets": 4,
+          "published_at": "2026-11-06T08:39:00+00:00",
+          "score": 12.9
+        }
+      ],
+      "country_briefs": [
+        {
+          "key": "f40dae1d",
+          "hash": "f40dae1d5f718cde",
+          "title": "한국형 핵추진잠수함 '장보고 N' 사업, 타당성 조사 면제 확정",
+          "summary": "방위사업청이 8000t급 한국형 핵추진잠수함 건조 사업의 타당성 조사를 면제하고 내년부터 사업에 착수하기로 의결함.",
+          "link": "https://www.getnews.co.kr/news/articleView.html?idxno=886368",
+          "articles": 4,
+          "outlets": 4,
+          "published_at": "2026-11-07T02:10:00+00:00",
+          "country": "KR",
+          "country_kr": "한국",
+          "score": 12.7
+        },
+        {
+          "key": "4dc2c369",
+          "hash": "4dc2c36977068987",
+          "title": "한수원, 체코 두코바니 원전사업 합동 점검…2029년 11월 착공 목표",
+          "summary": "한수원이 체코 발주사 EDU II와 합동 점검회의를 열고 두코바니 원전사업이 계획대로 진행 중임을 확인했다.",
+          "link": "https://www.g-enews.com/view.php?ud=2026111310250785921d2373fc0f_1",
+          "articles": 3,
+          "outlets": 2,
+          "published_at": "2026-11-13T01:56:00+00:00",
+          "country": "CZ",
+          "country_kr": "체코",
+          "score": 11.2
+        },
+        {
+          "key": "ffb24129",
+          "hash": "ffb241299901b3cc",
+          "title": "미 상원, 데이터센터 인허가 개혁안 심의 개시",
+          "summary": "미 상원이 20MW 이상 데이터센터에 대한 인허가 절차를 개선하는 H.R.2347 심의를 개시했다.",
+          "link": "https://www.tokenpost.kr/news/policy/436621",
+          "articles": 2,
+          "outlets": 2,
+          "published_at": "2026-11-11T15:20:00+00:00",
+          "country": "US",
+          "country_kr": "미국",
+          "score": 11.0
+        },
+        {
+          "key": "4586b570",
+          "hash": "4586b570702e9149",
+          "title": "한수원, 루마니아 원전 설비 사업 분쟁판정위원회 대응…EPC 리스크 현실화",
+          "summary": "한수원이 루마니아 체르나보다 원전 삼중수소제거설비 사업에서 발주처와 공기 지연 및 비용 부담을 두고 분쟁 조짐을 보여 법률자문 계약을 3.6배 증액했다.",
+          "link": "https://www.wowtv.co.kr/NewsCenter/News/Read?articleId=A202611090108&t=NNv",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-11-09T08:43:00+00:00",
+          "country": "RO",
+          "country_kr": "루마니아",
+          "score": 9.9
+        },
+        {
+          "key": "7dd0752f",
+          "hash": "7dd0752f226748ca",
+          "title": "온타리오전력(OPG), 달링턴 SMR 1호기 건설 일정 및 비용 초과 공식화",
+          "summary": "온타리오전력(OPG)이 달링턴 SMR 1호기의 2030년 상업운전 및 77억 캐나다달러 예산 달성이 불가능하다고 발표했다.",
+          "link": "https://www.world-nuclear-news.org/articles/opg-to-revise-timeline-and-cost-of-first-smr-unit",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-11-11T16:03:55+00:00",
+          "country": "CA",
+          "country_kr": "캐나다",
+          "score": 9.4
+        },
+        {
+          "key": "e666b4a7",
+          "hash": "e666b4a78c64a445",
+          "title": "프랑스 대선주자 멜랑숑, 원전 폐지 및 EPR2 백지화 공약 발표",
+          "summary": "프랑스 대선 후보 멜랑숑이 대통령 당선 시 원자력 발전 점진적 폐지, EPR2 프로그램 백지화, 원전 수명 연장 금지를 공약했다.",
+          "link": "https://www.newsis.com/view/NISX20261109_0003860037",
+          "articles": 4,
+          "outlets": 4,
+          "published_at": "2026-11-09T02:48:00+00:00",
+          "country": "FR",
+          "country_kr": "프랑스",
+          "score": 8.7
+        }
+      ],
+      "publications": [
+        {
+          "org": "국제원자력기구(IAEA)",
+          "title": "세계 핵융합 전망 2026",
+          "url": "http://www.iaea.org/publications/16135/iaea-world-fusion-outlook-2026",
+          "date": "2026-09-30",
+          "gist": "핵융합 에너지 기술 개발 현황과 상용화를 위한 글로벌 로드맵 및 주요 과제 분석",
+          "relevance": "market"
+        },
+        {
+          "org": "국제원자력기구(IAEA)",
+          "title": "미래를 위한 재원 조달",
+          "url": "http://www.iaea.org/publications/16133/financing-the-future",
+          "date": "2026-09-30",
+          "gist": "원자력 발전 프로젝트의 자본 조달 모델과 금융 리스크 관리 방안 분석",
+          "relevance": "market"
+        },
+        {
+          "org": "국제원자력기구(IAEA)",
+          "title": "금속 재활용 및 관련 공정 내 방사성 물질의 부주의한 유입 방지·탐지·대응 전략",
+          "url": "http://www.iaea.org/publications/16074/strategy-for-the-prevention-detection-and-response-to-the-inadvertent-presence-of-radioactive-material-in-metal-recycling-and-other-associated-processes-1",
+          "date": "2026-09-11",
+          "gist": "금속 재활용 산업 현장에서 방사성 물질 유입을 차단하기 위한 국제적 관리 체계와 대응 지침",
+          "relevance": "policy"
+        }
+      ],
+      "upcoming": [
+        {
+          "key": "5e402f4a",
+          "hash": "5e402f4a1ebbae12",
+          "title": "2026 대한민국원자력대전, 18일 창원서 개최…해외 수출상담회 진행",
+          "summary": "11월 18일부터 19일까지 창원컨벤션센터에서 '2026 대한민국원자력대전'이 개최되어 국내 원전 기업의 해외 판로 개척을 위한 수출상담회가 열린다.",
+          "link": "http://www.knpnews.com/news/articleView.html?idxno=34856",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-11-13T01:36:00+00:00",
+          "date": "2026-11-18",
+          "precision": "day"
+        },
+        {
+          "key": "391bff9e",
+          "hash": "391bff9ebdbcdc65",
+          "title": "한방유비스 등 5개 기관, 원전 화재 안전성 강화 연구성과 공유",
+          "summary": "한방유비스 등 5개 연구기관이 11월 19일 창원컨벤션센터에서 국내 원전 화재사고 저항성 강화 기술 연구성과 교류회를 개최한다.",
+          "link": "http://www.knpnews.com/news/articleView.html?idxno=34841",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-11-10T09:40:00+00:00",
+          "date": "2026-11-19",
+          "precision": "day"
+        },
+        {
+          "key": "35909b44",
+          "hash": "35909b44f0d3d6bc",
+          "title": "정부, 12월 신규 원전 적정 비중 공론화 착수",
+          "summary": "정부가 첨단산업 전력 수요 급증에 대응해 신규 원전 적정 비중을 결정하기 위한 공론화를 12월 11일부터 13일까지 진행한다.",
+          "link": "https://www.thepublic.kr/news/articleView.html?idxno=326068",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-11-11T01:56:00+00:00",
+          "date": "2026-12-11",
+          "precision": "day"
+        },
+        {
+          "key": "36e0d6d6",
+          "hash": "36e0d6d64bfc485b",
+          "title": "정부, 제12차 전력수급기본계획 수립 위한 원전 공론화위원회 출범",
+          "summary": "정부가 제12차 전력수급기본계획 반영을 위해 원전 발전 비중 범위를 결정할 원전 공론화위원회를 출범함.",
+          "link": "https://www.globalepic.co.kr/view.php?ud=20261110144025361048439a4874_29",
+          "articles": 6,
+          "outlets": 6,
+          "published_at": "2026-11-10T05:44:00+00:00",
+          "date": "2026-12-11",
+          "precision": "day"
+        },
+        {
+          "key": "15fc6634",
+          "hash": "15fc6634c514df6e",
+          "title": "경남도, 2027년 예산안 14.7조 편성…SMR 제조 거점 구축 예산 배정",
+          "summary": "경남도가 2027년 예산안을 14조 7,368억 원으로 편성하고, 글로벌 SMR 제조·검사 거점 구축에 31억 원을 배정했다.",
+          "link": "https://www.newspim.com/news/view/20261111000720",
+          "articles": 3,
+          "outlets": 3,
+          "published_at": "2026-11-11T02:52:00+00:00",
+          "date": "2026-12-15",
+          "precision": "day"
+        },
+        {
+          "key": "b3faed7a",
+          "hash": "b3faed7a2fd66eec",
+          "title": "원안위, 원자력시설 방호 심사 표준설계 단계부터 의무화",
+          "summary": "원안위가 원자력시설 물리적 방호 계획을 표준설계 단계부터 검토하도록 하는 시행령·시행규칙 개정안을 입법예고했다.",
+          "link": "https://www.energydaily.co.kr/news/articleView.html?idxno=205075",
+          "articles": 1,
+          "outlets": 1,
+          "published_at": "2026-11-13T06:00:00+00:00",
+          "date": "2026-12-23",
+          "precision": "day"
+        }
+      ],
+      "repeat_filter": {
+        "previous_week": "2026-W45",
+        "excluded": [
+          {
+            "hash": "2c39021a91c7156f",
+            "title": "원안위, 고리 3·4호기 계속운전 허가 의결…2034년까지 가동",
+            "prior_hash": "857c0c9a1f95cbbb",
+            "progression": "minor"
+          },
+          {
+            "hash": "1ba790889636330a",
+            "title": "산업부 장관, 체코 원전 시공계약 협상 결렬에 \"무산은 없을 것\"",
+            "prior_hash": "591a5f15c778a824",
+            "progression": "none"
+          },
+          {
+            "hash": "3ef13d708426344d",
+            "title": "한수원, 월성 2호기 계속운전 운영변경 허가 신청…설계수명 만료 앞서",
+            "prior_hash": "ffa4860464595c91",
+            "progression": "minor"
+          },
+          {
+            "hash": "c4cd833cdf3afc07",
+            "title": "고준위 방폐장 부지 선정, 2027년 초 지자체 공모 시작",
+            "prior_hash": "fdd7a526a397424c",
+            "progression": "minor"
+          },
+          {
+            "hash": "eaacd1042dfeb803",
+            "title": "한-튀르키예 정상회담, 원전 프로젝트 금융협력 MOU 체결",
+            "prior_hash": "761cb33f563e0a9e",
+            "progression": "none"
+          },
+          {
+            "hash": "241ff4aee7e64145",
+            "title": "고준위방폐물 관리시설 부적합지역 배제기준 의결",
+            "prior_hash": "733268aec6553898",
+            "progression": "none"
+          },
+          {
+            "hash": "92088cfe857c50ba",
+            "title": "산업부, 체코 원전 시공사 교체 대비 비상관리체제 가동",
+            "prior_hash": "591a5f15c778a824",
+            "progression": "none"
+          }
+        ],
+        "material_progress": []
+      },
+      "_automation": {
+        "created_at": "2026-11-13T17:08:20.320361+09:00",
+        "message_html": "📅 <b>11/7-11/13 원자력 주간 판세</b>\n<i>총 1513건 검토 · must_read 66건</i>\n\n<b>이번 주 핵심</b>\n이번 주는 체코 두코바니 원전 시공 협상 결렬과 미국 NRC의 SMR 건설 허가 승인이 동시에 맞물리며 해외 원전 시장의 불확실성과 실증 가속화가 교차한 한 주였다. 국내에서는 정부의 AI·반도체 메가프로젝트 추진에 따른 전력망 확충 및 신규 원전 공론화가 본격화되는 양상을 보였다. 한수원은 체코 시공사 재선정 절차와 함께 원자력 청정수소 및 양수발전 확충 등 미래 에너지 기반 다변화에 주력했다.\n\n━━ <b>📌 이번 주</b> (11월 7일–11월 13일 · 주요 사건) ━━\n• <b>한수원, 체코 원전 시공 협상 결렬…내년 7월 신규 시공사 선정 추진</b>\n  한수원이 대우건설과의 체코 두코바니 원전 시공 계약 협상을 결렬하고, 내년 7월 신규 시공사 선정을 위한 경쟁입찰을 추진하기로 했다.\n  이어지는 이슈 · 17건 · 매체 16곳\n  🔗 https://weekly.hankooki.com/news/articleView.html?idxno=7192658\n• <b>미 NRC, 다우 Seadrift 부지 Xe-100 SMR 건설허가 발급</b>\n  미국 원자력규제위원회(NRC)가 다우(Dow)의 Seadrift 부지에 건설될 4기 규모 Xe-100 SMR에 대한 건설허가를 발급했다.\n  이어지는 이슈 · 4건 · 매체 4곳\n  🔗 https://www.world-nuclear-news.org/articles/us-issues-landmark-construction-permit-for-texas-smr-plant\n• <b>핵추진잠수함 사업타당성 조사 면제…내년 개발 착수</b>\n  정부가 핵추진잠수함 개발을 위한 사업타당성 조사를 면제하고 내년 사업 착수를 확정했으며, 선체는 경쟁입찰, SMR은 관급 방식으로 확보하기로 했다.\n  이어지는 이슈 · 5건 · 매체 4곳\n  🔗 https://www.joongang.co.kr/article/25476423\n\n━━ <b>🌍 국가별 단신</b> ━━\n• <b>한국</b> — 한국형 핵추진잠수함 &#x27;장보고 N&#x27; 사업, 타당성 조사 면제 확정\n• <b>체코</b> — 한수원, 체코 두코바니 원전사업 합동 점검…2029년 11월 착공 목표\n• <b>미국</b> — 미 상원, 데이터센터 인허가 개혁안 심의 개시\n• <b>루마니아</b> — 한수원, 루마니아 원전 설비 사업 분쟁판정위원회 대응…EPC 리스크 현실화\n• <b>캐나다</b> — 온타리오전력(OPG), 달링턴 SMR 1호기 건설 일정 및 비용 초과 공식화\n• <b>프랑스</b> — 프랑스 대선주자 멜랑숑, 원전 폐지 및 EPR2 백지화 공약 발표\n\n━━ <b>📚 이번 주 발간물</b> ━━\n• 국제원자력기구(IAEA) · <b>세계 핵융합 전망 2026</b>\n  🔗 http://www.iaea.org/publications/16135/iaea-world-fusion-outlook-2026\n• 국제원자력기구(IAEA) · <b>미래를 위한 재원 조달</b>\n  🔗 http://www.iaea.org/publications/16133/financing-the-future\n• 국제원자력기구(IAEA) · <b>금속 재활용 및 관련 공정 내 방사성 물질의 부주의한 유입 방지·탐지·대응 전략</b>\n  🔗 http://www.iaea.org/publications/16074/strategy-for-the-prevention-detection-and-response-to-the-inadvertent-presence-of-radioactive-material-in-metal-recycling-and-other-associated-processes-1\n\n━━ <b>🤖 해외 원전 AI·DX</b> (이번 주 사건 20건) ━━\n• <b>스페인 아스코 원전, AI 활용 조류 증식 위협 탐지 시스템 도입</b>\n  스페인 · 운영·정비 · 실적용\n• <b>중국 국가에너지국, 원전 운영·정비 AI 시범 프로젝트 9건 선정</b>\n  중국 · 운영·정비 · 시범\n• <b>미국 NRC, 아스트리온과 사이버 보안 검사 지원 계약 체결</b>\n  미국 · 안전조치·보안 · 계약 · DX\n\n━━ <b>🏛 정책 변화</b> ━━\n• <b>정부가 8000t급 한국형 핵추진잠수함 건조를 위한 &#x27;장보고 N사업&#x27;의 추진 기본전략을 의결하고 사업타당성 조사를 면제하기로 했다.</b>\n  → 국방 안보 역량 강화를 위한 핵잠수함 도입이 본격적인 궤도에 올랐으나, 핵심 연료 확보와 국제 비확산 체제 대응이 향후 주요 과제로 남는다.\n• <b>기후에너지환경부가 호남 반도체 산단 전력 공급을 위해 700MW 규모의 ESS 보급과 초고압 변압기 신규 발주 계획을 확정했다.</b>\n  → AI 및 반도체 등 첨단산업의 급증하는 전력 수요에 대응하기 위해 송전망 구축과 계통 안정화 조치가 실질적 집행 단계로 진입했다.\n• <b>미국 원자력규제위원회(NRC)가 텍사스주 다우 화학단지 내 X-에너지의 Xe-100 SMR 4기 건설을 최종 승인했다.</b>\n  → 상업용 SMR의 인허가 관문이 실질적으로 통과되면서 글로벌 차세대 원전 시장의 실증 및 상용화 경쟁이 한층 가속화될 전망이다.\n\n━━ <b>주제별 강약</b> ━━\n▲ <b>SMR</b> — 미국 내 SMR 건설 허가 발급과 함께 국내 정부의 SMR 관급 방식 채택 및 7대 미래 성장동력 육성 정책이 구체화되었다.\n― <b>공급망</b> — 글로벌 전력 인프라 및 HVDC 수주가 확대되는 한편, 체코 원전 및 해외 프로젝트를 둘러싼 공사비와 금융 지원 이견이 상존하고 있다.\n▼ <b>수출</b> — 체코 원전 시공 협상 결렬로 인해 팀코리아의 당초 수출 계약 추진 일정에 제동이 걸리며 리스크 관리 체계가 가동되었다.\n▲ <b>전력망</b> — 미 상원의 인허가 간소화 법안 추진과 더불어 국내 호남 반도체 산단 전력 공급을 위한 변압기 신규 발주 및 송전망 확충 조치가 본격화되었다.\n\n━━ <b>🇰🇷 한국·한수원 직접 영향</b> ━━\n한수원은 체코 두코바니 원전 시공 협상 결렬에 따른 신규 시공사 선정 절차에 착수했으며, 산업부 주관 점검회의를 통해 2029년 착공 목표를 유지하고 있다. 또한 사용후핵연료 저장시설 확보를 위한 지역 주민 공청회를 개최하고, 체코 UJV-Rez와의 청정수소 연구 성과 공유 등 글로벌 협력을 지속하고 있다.\n\n━━ <b>📌 그 밖에 짚어 둘 사건</b> ━━\n• <b>정부, 핵추진잠수함 &#x27;장보고 N사업&#x27; 추진전략 의결…2030년대 후반 전력화</b>\n  → 타당성 조사 면제를 통해 핵추진잠수함 개발이 본궤도에 올랐으나 향후 핵연료 확보를 위한 외교적 과제가 남았다.\n  🔗 https://www.goodmorningcc.com/news/articleView.html?idxno=455335\n• <b>정부, 호남 반도체 산단 전력 공급 위해 초고압 변압기 신규 발주 결정</b>\n  → 첨단산업 클러스터의 전력난 해소를 위해 전력망 인프라 구축과 ESS 보급 등 정책 집행 속도가 대폭 빨라지고 있다.\n  🔗 https://www.mk.co.kr/article/12205355\n• <b>한빛원전 2호기 노심지지통 용접부 균열 징후 발견</b>\n  → 원전 안전성에 대한 지역사회의 우려가 고조되는 가운데 철저한 원인 분석과 투명한 정보 공개가 요구된다.\n  🔗 https://news.kbs.co.kr/news/pc/view/view.do?ncd=8708856\n\n━━ <b>📝 보고서 검토 후보</b> ━━\n• <b>체코 원전 시공사 협상 결렬에 따른 리스크 분석 및 향후 대응 전략</b> — 한수원과 대우건설 간 체코 원전 시공계약 협상 종료 및 신규 시공사 선정 추진에 따른 파급효과 분석 필요\n• <b>미국 NRC의 SMR 건설허가 승인이 글로벌 원전 시장에 미치는 시사점</b> — 엑스에너지 Xe-100 건설허가 발급으로 SMR 상용화 시점이 가구화됨에 따라 국내 i-SMR 전략 재점검 필요\n\n📋 <b>다음 주 모니터링 포인트</b>\n• 체코 두코바니 원전 신규 시공사 선정 절차 및 팀코리아 대응 방안을 확인한다.\n• 제12차 전력수급기본계획 수립을 앞둔 신규 원전 적정 비중 공론화 진행 상황을 점검한다.\n• 한빛원전 2호기 노심지지통 용접부 균열 관련 원안위의 안전성 검증 결과를 모니터링한다.\n• 미국 의회의 핵연료 주기 및 대미 원자력 협력 관련 입법 동향을 주시한다.\n\n🔁 <b>반복 등장</b>: #데이터센터 (429회), #SMR (161회), #전력망 (134회), #AI (103회), #한수원 (96회)\n🕳 <b>이번 주 소스 공백</b>: OECD NEA, US NRC, 원자력안전위원회, 산업통상자원부, 한국원자력안전기술원, 한국원자력환경공단",
+        "telegram": {
+          "status": "pending"
+        }
+      }
     }
   }
 }
