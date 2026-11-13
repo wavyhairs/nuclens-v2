@@ -1,46 +1,6 @@
 {
- "generated_at": "2026-11-13T01:06:31+09:00",
+ "generated_at": "2026-11-14T00:50:22+09:00",
  "events": [
-  {
-   "id": "of-db03345a710d",
-   "date": "2026-10-28",
-   "end_date": "2026-10-30",
-   "kind": "range",
-   "time": "",
-   "label": "2026년 한국원자력학회 추계학술발표회 및 제59회 정기총회",
-   "host": "",
-   "organizer": "",
-   "place": "경주화백컨벤션센터",
-   "url": "https://www.kns.org/",
-   "source_id": "kaif_calendar",
-   "publisher": "한국원자력산업협회",
-   "notice_title": "2026년 한국원자력학회 추계학술발표회 및 제59회 정기총회 (회의)",
-   "first_seen": "2026-08-29",
-   "topics": [],
-   "relevance": "원자력",
-   "significance": "학술발표회"
-  },
-  {
-   "id": "of-6f85147ebcc3",
-   "date": "2026-10-30",
-   "end_date": "2026-10-30",
-   "kind": "point",
-   "time": "14:00",
-   "label": "지방재정 확충을 위한 지방세제 개편 정책토론회",
-   "host": "이광재·김태년·이학영·문정복·서영석·최민희·김영환·김준혁·손명수·안태준·이광희·이상식 의원실",
-   "organizer": "이광재·김태년·이학영·문정복·서영석·최민희·김영환·김준혁·손명수·안태준·이광희·이상식 의원실",
-   "place": "의원회관 신관 제1세미나실",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "지방재정 확충을 위한 지방세제 개편 정책토론회",
-   "first_seen": "2026-10-24",
-   "topics": [
-    "regulation"
-   ],
-   "relevance": "방재",
-   "significance": "토론회"
-  },
   {
    "id": "of-04b2c6a755c9",
    "date": "2026-11-02",
@@ -204,11 +164,32 @@
    ],
    "relevance": "smr",
    "significance": "세미나"
+  },
+  {
+   "id": "of-37fc99b684df",
+   "date": "2026-11-18",
+   "end_date": "2026-11-18",
+   "kind": "point",
+   "time": "14:00",
+   "label": "기본소득당 현안정책 연속토론회: 1차 재난안전 소방재정 국가 책임 강화 방안 모색",
+   "host": "용혜인 의원실, 기본소득당 정책위원회",
+   "organizer": "용혜인 의원실, 기본소득당 정책위원회",
+   "place": "의원회관 제4간담회의실(204호)",
+   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
+   "source_id": "assembly_events",
+   "publisher": "국회",
+   "notice_title": "기본소득당 현안정책 연속토론회: 1차 재난안전 소방재정 국가 책임 강화 방안 모색",
+   "first_seen": "2026-11-14",
+   "topics": [
+    "regulation"
+   ],
+   "relevance": "방재",
+   "significance": "토론회"
   }
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-11-13T01:06:31+09:00",
+   "at": "2026-11-14T00:50:22+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -216,7 +197,7 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-11-13T01:06:31+09:00",
+   "at": "2026-11-14T00:50:22+09:00",
    "ok": true,
    "parsed": 10,
    "kept": 3,
@@ -228,11 +209,11 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-11-13T01:06:31+09:00",
+   "at": "2026-11-14T00:50:22+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
-   "new": 31,
+   "new": 32,
    "dropped": {
     "no_interest_match": 18,
     "off_topic": 4,
@@ -241,7 +222,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-11-13T01:06:31+09:00",
+   "at": "2026-11-14T00:50:22+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -249,12 +230,18 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-11-13T01:06:31+09:00",
-   "ok": false,
-   "error": "ConnectTimeout: HTTPSConnectionPool(host='www.assembly.go.kr', port=443): Max retries exceeded with url: /portal/noti/seminar/scheduleSmn.do?menuNo=600102 (Caused by ConnectTimeoutError(<HTTPSConnecti"
+   "at": "2026-11-14T00:50:22+09:00",
+   "ok": true,
+   "parsed": 50,
+   "kept": 1,
+   "new": 1,
+   "dropped": {
+    "no_interest_match": 48,
+    "not_an_event": 1
+   }
   },
   "kpx_notice": {
-   "at": "2026-11-13T01:06:31+09:00",
+   "at": "2026-11-14T00:50:22+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
