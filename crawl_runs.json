@@ -2255,12 +2255,13 @@
       "attempt_id": "43565178284",
       "attempts": 1,
       "claimed_at": "2026-11-14T06:12:41.656251Z",
-      "finished_at": null,
+      "finished_at": "2026-11-14T06:19:18.424265Z",
       "event_name": "schedule",
       "trigger_source": "schedule",
       "trigger_state": "schedule_trigger_created",
-      "status": "running",
-      "new_article_count": null
+      "status": "success_with_articles",
+      "new_article_count": 18,
+      "collect_outcome": "success"
     }
   }
 }
