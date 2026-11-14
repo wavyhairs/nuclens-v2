@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 3,
-    "date": "2026-11-14"
+    "count": 0,
+    "date": "2026-11-15"
   },
   "retired": {
     "antares": {
@@ -188,14 +188,6 @@
       "type": "company",
       "until": "2026-10-30T15:41:36.055509+00:00"
     },
-    "mra": {
-      "new_articles": 0,
-      "reason": "성과 없음",
-      "retired_at": "2026-09-15T15:40:44.660246+00:00",
-      "term": "MRA",
-      "type": "company",
-      "until": "2026-09-29T15:40:44.660246+00:00"
-    },
     "msa": {
       "new_articles": 6,
       "reason": "성과 없음",
@@ -371,6 +363,14 @@
       "term": "갖고 시노프",
       "type": "plant",
       "until": "2026-11-19T21:41:03.253928+00:00"
+    },
+    "경북연구원": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-11-14T15:40:45.554133+00:00",
+      "term": "경북연구원",
+      "type": "org",
+      "until": "2026-11-28T15:40:45.554133+00:00"
     },
     "고준위방폐물관리위원회": {
       "new_articles": 2,
@@ -1350,56 +1350,10 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-11-14"
+    "count": 3,
+    "date": "2026-11-15"
   },
   "terms": {
-    "경북연구원": {
-      "articles": 3,
-      "created_at": "2026-11-13T18:40:59.868160+00:00",
-      "domains": [
-        "dnews.co.kr",
-        "ekn.kr",
-        "kbs.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "dnews.co.kr",
-          "hash": "fcde51386e967bc2",
-          "importance": "nice_to_know",
-          "title": "경북연구원, 원자력·SMR 분야 산학연 협력 강화 업무협약 체결"
-        },
-        {
-          "domain": "ekn.kr",
-          "hash": "3f5681fad1ceedfd",
-          "importance": "nice_to_know",
-          "title": "경북연구원, 원자력·SMR 분야 협력 위한 다자간 업무협약 체결"
-        },
-        {
-          "domain": "kbs.co.kr",
-          "hash": "bd5551f54f7ff04d",
-          "importance": "nice_to_know",
-          "title": "경북연구원·원자력학회 등, SMR 연구 협력 업무협약 체결"
-        }
-      ],
-      "expires_at": "2026-11-14T18:40:59.868160+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-14T03:40:42.733674+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-11-14T03:40:40.238317+00:00",
-      "queries_run": 2,
-      "query": "경북연구원 원자력",
-      "score": 3.7,
-      "status": "tracking",
-      "term": "경북연구원",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
     "국제자문위원회": {
       "articles": 3,
       "created_at": "2026-11-14T06:15:48.872499+00:00",
@@ -1476,12 +1430,12 @@
       ],
       "expires_at": "2026-11-15T03:40:42.733674+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 2,
-      "last_run": "2026-11-14T03:40:42.733674+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-11-14T15:40:45.554062+00:00",
       "new_articles": 6,
       "origin": "auto",
-      "planned_at": "2026-11-14T03:40:40.238317+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-11-14T15:40:42.108905+00:00",
+      "queries_run": 4,
       "query": "원자력공동조정위원회",
       "score": 3.7,
       "status": "extended",
@@ -1493,7 +1447,7 @@
         "2026-11-14"
       ],
       "yields": 2,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "통상자원중소벤처기업위원회": {
       "articles": 4,
@@ -1527,11 +1481,11 @@
       "expires_at": "2026-11-15T15:41:00.630952+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-11-14T00:44:00.938977+00:00",
+      "last_run": "2026-11-14T15:40:45.554062+00:00",
       "new_articles": 2,
       "origin": "auto",
-      "planned_at": "2026-11-14T00:43:53.070133+00:00",
-      "queries_run": 2,
+      "planned_at": "2026-11-14T15:40:42.108905+00:00",
+      "queries_run": 3,
       "query": "통상자원중소벤처기업위원회 원자력",
       "score": 4.52,
       "status": "extended",
@@ -1542,7 +1496,7 @@
         "2026-11-14"
       ],
       "yields": 1,
-      "zero_streak": 1
+      "zero_streak": 2
     }
   },
   "version": 1
