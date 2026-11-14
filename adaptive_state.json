@@ -244,6 +244,14 @@
       "type": "company",
       "until": "2026-11-06T09:41:23.100038+00:00"
     },
+    "opg": {
+      "new_articles": 1,
+      "reason": "성과 없음",
+      "retired_at": "2026-11-14T00:44:00.939044+00:00",
+      "term": "OPG",
+      "type": "company",
+      "until": "2026-11-28T00:44:00.939044+00:00"
+    },
     "pctc": {
       "new_articles": 1,
       "reason": "성과 없음",
@@ -1334,51 +1342,10 @@
     }
   },
   "spent": {
-    "count": 5,
+    "count": 8,
     "date": "2026-11-14"
   },
   "terms": {
-    "opg": {
-      "articles": 2,
-      "created_at": "2026-11-12T21:40:28.161766+00:00",
-      "domains": [
-        "world-nuclear-news.org",
-        "canarymedia.com"
-      ],
-      "evidence": [
-        {
-          "domain": "world-nuclear-news.org",
-          "hash": "7dd0752f226748ca",
-          "importance": "must_read",
-          "title": "온타리오전력(OPG), 달링턴 SMR 1호기 건설 일정 및 비용 초과 공식화"
-        },
-        {
-          "domain": "canarymedia.com",
-          "hash": "0576fd81ddfcfef1",
-          "importance": "nice_to_know",
-          "title": "온타리오 발전공사(OPG) SMR 프로젝트, 예산 초과 및 일정 지연 발생"
-        }
-      ],
-      "expires_at": "2026-11-14T21:40:28.161766+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-11-13T18:41:03.833685+00:00",
-      "new_articles": 1,
-      "origin": "auto",
-      "planned_at": "2026-11-13T18:40:59.868160+00:00",
-      "queries_run": 4,
-      "query": "OPG 원자력",
-      "score": 5.3,
-      "status": "extended",
-      "term": "OPG",
-      "ttl_hours": 48,
-      "type": "company",
-      "yield_days": [
-        "2026-11-13"
-      ],
-      "yields": 1,
-      "zero_streak": 2
-    },
     "osart": {
       "articles": 2,
       "created_at": "2026-11-12T12:40:24.836269+00:00",
@@ -1403,11 +1370,11 @@
       "expires_at": "2026-11-14T12:40:42.360161+00:00",
       "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-11-13T18:41:03.833685+00:00",
+      "last_run": "2026-11-14T00:44:00.938977+00:00",
       "new_articles": 29,
       "origin": "auto",
-      "planned_at": "2026-11-13T18:40:59.868160+00:00",
-      "queries_run": 5,
+      "planned_at": "2026-11-14T00:43:53.070133+00:00",
+      "queries_run": 6,
       "query": "OSART 원자력",
       "score": 5.3,
       "status": "promote_candidate",
@@ -1419,7 +1386,7 @@
         "2026-11-13"
       ],
       "yields": 3,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "경북연구원": {
       "articles": 3,
@@ -1546,12 +1513,12 @@
       ],
       "expires_at": "2026-11-15T15:41:00.630952+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 2,
-      "last_run": "2026-11-13T15:41:02.052298+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-11-14T00:44:00.938977+00:00",
       "new_articles": 2,
       "origin": "auto",
-      "planned_at": "2026-11-13T15:41:00.630952+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-14T00:43:53.070133+00:00",
+      "queries_run": 2,
       "query": "통상자원중소벤처기업위원회 원자력",
       "score": 4.52,
       "status": "extended",
@@ -1562,7 +1529,7 @@
         "2026-11-14"
       ],
       "yields": 1,
-      "zero_streak": 0
+      "zero_streak": 1
     }
   },
   "version": 1
