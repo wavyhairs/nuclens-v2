@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-11-16"
   },
   "retired": {
@@ -515,14 +515,6 @@
       "term": "만료로 정지된",
       "type": "plant",
       "until": "2026-11-12T21:40:39.124423+00:00"
-    },
-    "만에탈": {
-      "new_articles": 0,
-      "reason": "성과 없음",
-      "retired_at": "2026-09-16T18:40:25.514802+00:00",
-      "term": "만에 탈",
-      "type": "plant",
-      "until": "2026-09-30T18:40:25.514802+00:00"
     },
     "만의탈": {
       "new_articles": 0,
@@ -1172,14 +1164,6 @@
       "type": "org",
       "until": "2026-10-02T15:40:41.667920+00:00"
     },
-    "테네시강유역개발공사": {
-      "new_articles": 0,
-      "reason": "기간 만료",
-      "retired_at": "2026-10-02T21:41:22.648027+00:00",
-      "term": "테네시강유역개발공사",
-      "type": "org",
-      "until": "2026-10-16T21:41:22.648027+00:00"
-    },
     "톈완": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -1342,7 +1326,7 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 6,
     "date": "2026-11-16"
   },
   "terms": {
@@ -1378,11 +1362,11 @@
       "expires_at": "2026-11-16T12:41:07.773869+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-11-15T12:41:10.241651+00:00",
+      "last_run": "2026-11-15T18:41:15.974260+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-11-15T12:41:07.773869+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-15T18:41:12.448142+00:00",
+      "queries_run": 2,
       "query": "보건환경연구원 원자력",
       "score": 3.66,
       "status": "tracking",
@@ -1391,7 +1375,7 @@
       "type": "org",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "복지환경위원회": {
       "articles": 4,
@@ -1425,11 +1409,11 @@
       "expires_at": "2026-11-16T12:41:07.773869+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-11-15T12:41:10.241651+00:00",
+      "last_run": "2026-11-15T18:41:15.974260+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-11-15T12:41:07.773869+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-15T18:41:12.448142+00:00",
+      "queries_run": 2,
       "query": "복지환경위원회 원자력",
       "score": 3.54,
       "status": "tracking",
@@ -1438,7 +1422,7 @@
       "type": "org",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "신규원전1": {
       "articles": 1,
@@ -1515,6 +1499,55 @@
       ],
       "yields": 1,
       "zero_streak": 1
+    },
+    "테네시강유역개발공사": {
+      "articles": 4,
+      "created_at": "2026-11-15T18:41:12.448142+00:00",
+      "domains": [
+        "heraldcorp.com",
+        "chosun.com",
+        "joongangenews.com",
+        "segye.com"
+      ],
+      "evidence": [
+        {
+          "domain": "heraldcorp.com",
+          "hash": "90bb570d75d3b301",
+          "importance": "noise",
+          "title": "고려아연, 미국 테네시주 핵심광물 통합제련소 전력 공급 승인 확보"
+        },
+        {
+          "domain": "chosun.com",
+          "hash": "e0aca7a5786e9733",
+          "importance": "nice_to_know",
+          "title": "고려아연, 미국 테네시주 제련소 전력 공급 승인…2029년 가동"
+        },
+        {
+          "domain": "joongangenews.com",
+          "hash": "e17a79ebf79be688",
+          "importance": "must_read",
+          "title": "고려아연, 美 테네시 제련소 230MW 전력 공급 승인…2027년 착공 준비"
+        }
+      ],
+      "expires_at": "2026-11-16T18:41:15.974260+00:00",
+      "importance": "must_read",
+      "last_result_count": 2,
+      "last_run": "2026-11-15T18:41:15.974260+00:00",
+      "new_articles": 2,
+      "origin": "auto",
+      "planned_at": "2026-11-15T18:41:12.448142+00:00",
+      "queries_run": 1,
+      "query": "테네시강유역개발공사 원자력",
+      "score": 3.14,
+      "status": "extended",
+      "term": "테네시강유역개발공사",
+      "ttl_hours": 24,
+      "type": "org",
+      "yield_days": [
+        "2026-11-16"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     },
     "한국무역보험공사": {
       "articles": 3,
