@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 1,
     "date": "2026-11-15"
   },
   "retired": {
@@ -852,6 +852,14 @@
       "type": "org",
       "until": "2026-11-26T03:40:34.000567+00:00"
     },
+    "원자력공동조정위원회": {
+      "new_articles": 6,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-15T06:22:56.821335+00:00",
+      "term": "원자력공동조정위원회",
+      "type": "org",
+      "until": "2026-11-29T06:22:56.821335+00:00"
+    },
     "원자력공사": {
       "new_articles": 19,
       "reason": "질의 횟수 소진",
@@ -883,14 +891,6 @@
       "term": "원자력발전소 3",
       "type": "plant",
       "until": "2026-11-15T03:40:35.427826+00:00"
-    },
-    "원자력안전재단": {
-      "new_articles": 1,
-      "reason": "기간 만료",
-      "retired_at": "2026-09-16T03:40:41.723753+00:00",
-      "term": "원자력안전재단",
-      "type": "org",
-      "until": "2026-09-30T03:40:41.723753+00:00"
     },
     "원자력협력협정": {
       "new_articles": 0,
@@ -1342,58 +1342,43 @@
     }
   },
   "spent": {
-    "count": 7,
+    "count": 8,
     "date": "2026-11-15"
   },
   "terms": {
-    "원자력공동조정위원회": {
-      "articles": 3,
-      "created_at": "2026-11-13T12:40:38.502806+00:00",
+    "신규원전1": {
+      "articles": 1,
+      "created_at": "2026-11-15T06:22:56.821335+00:00",
       "domains": [
-        "yna.co.kr",
-        "edaily.co.kr",
-        "kbs.co.kr"
+        "kbmaeil.com"
       ],
       "evidence": [
         {
-          "domain": "yna.co.kr",
-          "hash": "f7a0e47c037a890f",
-          "importance": "nice_to_know",
-          "title": "한-불 원자력공동조정위 개최…SMR·핵연료 등 협력 범위 확대"
-        },
-        {
-          "domain": "edaily.co.kr",
-          "hash": "d26a2f589c295e63",
-          "importance": "nice_to_know",
-          "title": "한·불, 원자력 협력 전주기로 확대…SMR·핵연료 공급망 협력"
-        },
-        {
-          "domain": "kbs.co.kr",
-          "hash": "c760e24ca60b2cb1",
-          "importance": "nice_to_know",
-          "title": "한·프랑스, 제27차 원자력공동조정위 개최…SMR·핵연료 협력 확대"
+          "domain": "kbmaeil.com",
+          "hash": "2d271934353c761b",
+          "importance": "must_read",
+          "title": "전기위원회, 영덕 신규원전 2기 발전사업 허가안 원안 의결"
         }
       ],
-      "expires_at": "2026-11-15T03:40:42.733674+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-14T21:40:48.027278+00:00",
-      "new_articles": 6,
+      "expires_at": "2026-11-16T06:22:58.019313+00:00",
+      "importance": "must_read",
+      "last_result_count": 3,
+      "last_run": "2026-11-15T06:22:58.019313+00:00",
+      "new_articles": 3,
       "origin": "auto",
-      "planned_at": "2026-11-14T21:40:45.581148+00:00",
-      "queries_run": 5,
-      "query": "원자력공동조정위원회",
-      "score": 3.7,
+      "planned_at": "2026-11-15T06:22:56.821335+00:00",
+      "queries_run": 1,
+      "query": "신규원전 1",
+      "score": 3.6,
       "status": "extended",
-      "term": "원자력공동조정위원회",
+      "term": "신규원전 1",
       "ttl_hours": 24,
-      "type": "org",
+      "type": "plant",
       "yield_days": [
-        "2026-11-13",
-        "2026-11-14"
+        "2026-11-15"
       ],
-      "yields": 2,
-      "zero_streak": 2
+      "yields": 1,
+      "zero_streak": 0
     }
   },
   "version": 1
