@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 3,
     "date": "2026-11-15"
   },
   "retired": {
@@ -1342,7 +1342,7 @@
     }
   },
   "spent": {
-    "count": 8,
+    "count": 10,
     "date": "2026-11-15"
   },
   "terms": {
@@ -1374,6 +1374,95 @@
       "term": "신규원전 1",
       "ttl_hours": 24,
       "type": "plant",
+      "yield_days": [
+        "2026-11-15"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    },
+    "전기위원회": {
+      "articles": 2,
+      "created_at": "2026-11-15T09:40:22.696352+00:00",
+      "domains": [
+        "kbmaeil.com",
+        "straightnews.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "kbmaeil.com",
+          "hash": "2d271934353c761b",
+          "importance": "must_read",
+          "title": "전기위원회, 영덕 신규원전 2기 발전사업 허가안 원안 의결"
+        },
+        {
+          "domain": "straightnews.co.kr",
+          "hash": "fed1e0fc52a6f777",
+          "importance": "must_read",
+          "title": "영덕 신규원전 2기, 전기위원회 발전사업 허가 심의 통과"
+        }
+      ],
+      "expires_at": "2026-11-17T09:40:22.696352+00:00",
+      "importance": "must_read",
+      "last_result_count": 3,
+      "last_run": "2026-11-15T09:40:24.965229+00:00",
+      "new_articles": 3,
+      "origin": "auto",
+      "planned_at": "2026-11-15T09:40:22.696352+00:00",
+      "queries_run": 1,
+      "query": "전기위원회 원자력",
+      "score": 5.9,
+      "status": "extended",
+      "term": "전기위원회",
+      "ttl_hours": 48,
+      "type": "org",
+      "yield_days": [
+        "2026-11-15"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    },
+    "한국무역보험공사": {
+      "articles": 3,
+      "created_at": "2026-11-15T09:40:22.696352+00:00",
+      "domains": [
+        "yna.co.kr",
+        "sbs.co.kr",
+        "fnnews.com"
+      ],
+      "evidence": [
+        {
+          "domain": "yna.co.kr",
+          "hash": "4b0e5131410290b0",
+          "importance": "nice_to_know",
+          "title": "무보, 슬로바키아 수출입은행과 원전·에너지 금융협력 협약"
+        },
+        {
+          "domain": "sbs.co.kr",
+          "hash": "42b28820df9cf171",
+          "importance": "nice_to_know",
+          "title": "한국무역보험공사, 슬로바키아 수출입은행과 원전 수출금융 협력 업무협약 체결"
+        },
+        {
+          "domain": "fnnews.com",
+          "hash": "6eeb62f28d9331b0",
+          "importance": "nice_to_know",
+          "title": "한국무역보험공사, 슬로바키아 수출입은행과 원전 금융협력 업무협약 체결"
+        }
+      ],
+      "expires_at": "2026-11-16T09:40:24.965229+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 1,
+      "last_run": "2026-11-15T09:40:24.965229+00:00",
+      "new_articles": 1,
+      "origin": "auto",
+      "planned_at": "2026-11-15T09:40:22.696352+00:00",
+      "queries_run": 1,
+      "query": "한국무역보험공사 원자력",
+      "score": 3.7,
+      "status": "extended",
+      "term": "한국무역보험공사",
+      "ttl_hours": 24,
+      "type": "org",
       "yield_days": [
         "2026-11-15"
       ],
