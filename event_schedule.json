@@ -1,27 +1,6 @@
 {
- "generated_at": "2026-11-16T00:48:52+09:00",
+ "generated_at": "2026-11-17T00:52:09+09:00",
  "events": [
-  {
-   "id": "of-04b2c6a755c9",
-   "date": "2026-11-02",
-   "end_date": "2026-11-02",
-   "kind": "point",
-   "time": "18:00",
-   "label": "우주데이터센터포럼 3차 국회토론회",
-   "host": "이주희·김현·최형두·이재강 의원실",
-   "organizer": "이주희·김현·최형두·이재강 의원실",
-   "place": "의원회관 대회의실",
-   "url": "https://ampos.nanet.go.kr:7443/seminarList.do",
-   "source_id": "assembly_events",
-   "publisher": "국회",
-   "notice_title": "우주데이터센터포럼 3차 국회토론회",
-   "first_seen": "2026-10-24",
-   "topics": [
-    "datacenter_ai"
-   ],
-   "relevance": "데이터센터",
-   "significance": "토론회"
-  },
   {
    "id": "of-b3a6850a8e99",
    "date": "2026-11-05",
@@ -189,7 +168,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-11-16T00:48:52+09:00",
+   "at": "2026-11-17T00:52:09+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -197,19 +176,19 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-11-16T00:48:52+09:00",
+   "at": "2026-11-17T00:52:09+09:00",
    "ok": true,
    "parsed": 10,
    "kept": 3,
    "new": 0,
    "dropped": {
+    "low_significance": 2,
     "not_an_event": 4,
-    "no_interest_match": 1,
-    "low_significance": 2
+    "no_interest_match": 1
    }
   },
   "kaif_calendar": {
-   "at": "2026-11-16T00:48:52+09:00",
+   "at": "2026-11-17T00:52:09+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -222,7 +201,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-11-16T00:48:52+09:00",
+   "at": "2026-11-17T00:52:09+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -230,18 +209,18 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-11-16T00:48:52+09:00",
+   "at": "2026-11-17T00:52:09+09:00",
    "ok": true,
-   "parsed": 70,
+   "parsed": 60,
    "kept": 1,
    "new": 0,
    "dropped": {
-    "no_interest_match": 67,
+    "no_interest_match": 57,
     "not_an_event": 2
    }
   },
   "kpx_notice": {
-   "at": "2026-11-16T00:48:52+09:00",
+   "at": "2026-11-17T00:52:09+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
