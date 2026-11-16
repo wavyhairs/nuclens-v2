@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 3,
+    "count": 5,
     "date": "2026-11-17"
   },
   "retired": {
@@ -371,14 +371,6 @@
       "term": "고준위방폐물관리위원회",
       "type": "org",
       "until": "2026-11-03T06:40:38.904809+00:00"
-    },
-    "공군미사일방어사령부": {
-      "new_articles": 0,
-      "reason": "기간 만료",
-      "retired_at": "2026-09-17T21:21:24.250114+00:00",
-      "term": "공군 미사일방어사령부",
-      "type": "plant",
-      "until": "2026-10-01T21:21:24.250114+00:00"
     },
     "공론화위원회": {
       "new_articles": 19,
@@ -1318,10 +1310,74 @@
     }
   },
   "spent": {
-    "count": 6,
+    "count": 9,
     "date": "2026-11-17"
   },
   "terms": {
+    "acrs": {
+      "articles": 1,
+      "created_at": "2026-11-16T21:41:06.119112+00:00",
+      "domains": [
+        "nrc.gov"
+      ],
+      "evidence": [
+        {
+          "domain": "nrc.gov",
+          "hash": "c60f9a709916a15a",
+          "importance": "must_read",
+          "title": "미국 NRC, 원자로 안전자문위원회(ACRS) 역할 개편…신규 노형 심사 효율화"
+        }
+      ],
+      "expires_at": "2026-11-17T21:41:06.119112+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-16T21:41:09.619085+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-16T21:41:06.119112+00:00",
+      "queries_run": 1,
+      "query": "ACRS 원자력",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "ACRS",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "edf의epr2": {
+      "articles": 1,
+      "created_at": "2026-11-16T21:41:06.119112+00:00",
+      "domains": [
+        "world-nuclear-news.org"
+      ],
+      "evidence": [
+        {
+          "domain": "world-nuclear-news.org",
+          "hash": "f02abff4b078be6e",
+          "importance": "must_read",
+          "title": "프랑스 감사원, 낮은 전기요금 시 EPR2 원전 건설 자금 조달 우려 제기"
+        }
+      ],
+      "expires_at": "2026-11-17T21:41:06.119112+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-16T21:41:09.619085+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-16T21:41:06.119112+00:00",
+      "queries_run": 1,
+      "query": "EDF의 EPR2 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "EDF의 EPR2",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "snf": {
       "articles": 4,
       "created_at": "2026-11-16T15:41:37.558902+00:00",
@@ -1621,12 +1677,12 @@
       ],
       "expires_at": "2026-11-17T00:44:17.538225+00:00",
       "importance": "must_read",
-      "last_result_count": 4,
-      "last_run": "2026-11-16T00:44:17.538225+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-11-16T21:41:09.619085+00:00",
       "new_articles": 6,
       "origin": "auto",
-      "planned_at": "2026-11-16T00:44:14.386996+00:00",
-      "queries_run": 2,
+      "planned_at": "2026-11-16T21:41:06.119112+00:00",
+      "queries_run": 3,
       "query": "테네시강유역개발공사 원자력",
       "score": 3.14,
       "status": "extended",
@@ -1637,7 +1693,7 @@
         "2026-11-16"
       ],
       "yields": 2,
-      "zero_streak": 0
+      "zero_streak": 1
     }
   },
   "version": 1
