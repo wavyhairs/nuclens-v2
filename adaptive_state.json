@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 5,
-    "date": "2026-11-17"
+    "count": 2,
+    "date": "2026-11-18"
   },
   "retired": {
     "antares": {
@@ -108,14 +108,6 @@
       "type": "company",
       "until": "2026-11-17T03:40:55.072559+00:00"
     },
-    "gda": {
-      "new_articles": 0,
-      "reason": "기간 만료",
-      "retired_at": "2026-09-18T15:40:41.667920+00:00",
-      "term": "GDA",
-      "type": "company",
-      "until": "2026-10-02T15:40:41.667920+00:00"
-    },
     "georgiapower": {
       "new_articles": 1,
       "reason": "기간 만료",
@@ -163,14 +155,6 @@
       "term": "Last Energy",
       "type": "company",
       "until": "2026-10-23T21:41:16.872212+00:00"
-    },
-    "lwa": {
-      "new_articles": 0,
-      "reason": "기간 만료",
-      "retired_at": "2026-09-18T15:40:41.667920+00:00",
-      "term": "LWA",
-      "type": "company",
-      "until": "2026-10-02T15:40:41.667920+00:00"
     },
     "macst": {
       "new_articles": 11,
@@ -323,14 +307,6 @@
       "term": "WANO",
       "type": "company",
       "until": "2026-10-17T03:40:54.771522+00:00"
-    },
-    "xe100": {
-      "new_articles": 0,
-      "reason": "기간 만료",
-      "retired_at": "2026-09-18T15:40:41.667920+00:00",
-      "term": "Xe-100",
-      "type": "tech",
-      "until": "2026-10-02T15:40:41.667920+00:00"
     },
     "가동이중단된": {
       "new_articles": 1,
@@ -523,14 +499,6 @@
       "term": "메타와 나트륨",
       "type": "plant",
       "until": "2026-10-03T06:40:35.483007+00:00"
-    },
-    "문무대왕과학연구소": {
-      "new_articles": 0,
-      "reason": "기간 만료",
-      "retired_at": "2026-09-18T15:40:41.667920+00:00",
-      "term": "문무대왕과학연구소",
-      "type": "org",
-      "until": "2026-10-02T15:40:41.667920+00:00"
     },
     "미국선급협회": {
       "new_articles": 1,
@@ -1148,14 +1116,6 @@
       "type": "plant",
       "until": "2026-10-28T06:44:08.622582+00:00"
     },
-    "태양광위원회": {
-      "new_articles": 0,
-      "reason": "기간 만료",
-      "retired_at": "2026-09-18T15:40:41.667920+00:00",
-      "term": "태양광위원회",
-      "type": "org",
-      "until": "2026-10-02T15:40:41.667920+00:00"
-    },
     "테네시강유역개발공사": {
       "new_articles": 6,
       "reason": "기간 만료",
@@ -1318,8 +1278,8 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-11-17"
+    "count": 3,
+    "date": "2026-11-18"
   },
   "terms": {
     "acrs": {
@@ -1497,20 +1457,54 @@
           "title": "KNA-스위스 원전발전협회, 원전 기자재 협력 MOU 체결"
         }
       ],
-      "expires_at": "2026-11-17T18:41:41.215634+00:00",
+      "expires_at": "2026-11-18T15:41:12.999000+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-16T18:41:45.093855+00:00",
-      "new_articles": 0,
+      "last_result_count": 2,
+      "last_run": "2026-11-17T15:41:12.999000+00:00",
+      "new_articles": 2,
       "origin": "auto",
-      "planned_at": "2026-11-16T18:41:41.215634+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-17T15:41:09.386444+00:00",
+      "queries_run": 2,
       "query": "원전발전협회",
       "score": 3.7,
-      "status": "tracking",
+      "status": "extended",
       "term": "원전발전협회",
       "ttl_hours": 24,
       "type": "org",
+      "yield_days": [
+        "2026-11-18"
+      ],
+      "yields": 1,
+      "zero_streak": 0
+    },
+    "이주희의원": {
+      "articles": 1,
+      "created_at": "2026-11-17T15:41:09.386444+00:00",
+      "domains": [
+        "energydaily.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "energydaily.co.kr",
+          "hash": "fd246ee78756c932",
+          "importance": "must_read",
+          "title": "원자력안전법 개정안 발의…원전 사고 은폐 시 종업원도 처벌"
+        }
+      ],
+      "expires_at": "2026-11-18T15:41:09.386444+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-17T15:41:12.999000+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-17T15:41:09.386444+00:00",
+      "queries_run": 1,
+      "query": "이주희 의원 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "이주희 의원",
+      "ttl_hours": 24,
+      "type": "plant",
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
@@ -1603,6 +1597,54 @@
         "2026-11-17"
       ],
       "yields": 2,
+      "zero_streak": 0
+    },
+    "제23회": {
+      "articles": 3,
+      "created_at": "2026-11-17T15:41:09.386444+00:00",
+      "domains": [
+        "todayenergy.kr",
+        "e-platform.net",
+        "news1.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "todayenergy.kr",
+          "hash": "a3d75840f669aa21",
+          "importance": "nice_to_know",
+          "title": "원자력안전기술원, 제23회 원전 운전경험반영 워크숍 개최"
+        },
+        {
+          "domain": "e-platform.net",
+          "hash": "ae9fd42617ff81f4",
+          "importance": "nice_to_know",
+          "title": "원자력안전기술원, 제23회 원전 운전경험반영 워크숍 개최"
+        },
+        {
+          "domain": "news1.kr",
+          "hash": "d21a90976aa00061",
+          "importance": "nice_to_know",
+          "title": "한국원자력안전기술원, 제23회 원전 운전경험반영 워크숍 개최"
+        }
+      ],
+      "expires_at": "2026-11-19T15:41:09.386444+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 1,
+      "last_run": "2026-11-17T15:41:12.999000+00:00",
+      "new_articles": 1,
+      "origin": "auto",
+      "planned_at": "2026-11-17T15:41:09.386444+00:00",
+      "queries_run": 1,
+      "query": "제23회 원전",
+      "score": 4.6,
+      "status": "extended",
+      "term": "제23회",
+      "ttl_hours": 48,
+      "type": "plant",
+      "yield_days": [
+        "2026-11-18"
+      ],
+      "yields": 1,
       "zero_streak": 0
     }
   },
