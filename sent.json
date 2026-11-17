@@ -5978,7 +5978,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-11-17T22:05:44+00:00",
+    "updated_at": "2026-11-17T22:26:55+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -6058,7 +6058,7 @@
         "title": "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
         "detail": "AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 3건을 두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 만들어 보고, 6번 연속이면 보류합니다. 예: 「우진 원전 노내핵계측기 계약금액 93억원으로 변경」, 「SpaceNukes announces the opening of a n…」, 「김산 무안군수, 2027년 예산 6,754억 편성…국가산단·공항 현안에…」.",
         "severity": "critical",
-        "last_seen_at": "2026-11-17T22:05:44+00:00",
+        "last_seen_at": "2026-11-17T22:26:55+00:00",
         "last_observation_id": "2026-11-18T00:44:58.418268+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-11-01T09:48:31+00:00",
@@ -6081,7 +6081,7 @@
         "title": "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
         "detail": "AI 요약을 받지 못해 원문 첫 문장만 있는 기사 3건을 브리핑 후보에 넣지 않았습니다. 2건은 다음 수집(약 3시간 뒤)에서 다시 요약합니다. 1건은 두 번 모두 실패해 더 시도하지 않고 뺐습니다. 예: 「글로벌 SMR 기업 창원 집결…경남, 세계 원전 공급망 공략」, 「미코파워, 200kW급 고체산화물연료전지 제품검사 통과」, 「美 의회 ‘블루웨이브’… 한·미 팩트시트 셈법 더 복잡해졌다 [심층기.…」.",
         "severity": "warning",
-        "last_seen_at": "2026-11-17T22:05:44+00:00",
+        "last_seen_at": "2026-11-17T22:26:55+00:00",
         "last_observation_id": "2026-11-17T21:45:05.453071+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-11-09T15:47:27+00:00",
@@ -6142,14 +6142,14 @@
         "resolved_at": "2026-11-11T21:49:35+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 119,
+        "consecutive": 120,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
         "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 4건. 사건일 73건은 사이트에 표시하지 않았습니다 — 원문 근거를 다시 확인할 수 없음 73건 · 날짜 이상 0건.",
         "severity": "critical",
-        "last_seen_at": "2026-11-17T18:46:26+00:00",
-        "last_observation_id": "github-run:43940311965",
+        "last_seen_at": "2026-11-17T22:26:55+00:00",
+        "last_observation_id": "github-run:44184974455",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
@@ -6159,7 +6159,7 @@
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=35097 quarantined=4 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 5c87f37d62e3",
+        "technical": "checked=35570 quarantined=4 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 5c87f37d62e3",
         "fingerprint": "q=4:ca2b08fddaf1eafc",
         "last_notified_fingerprint": "q=35:37a796ac13006af0",
         "delivery": "digest"
@@ -6267,7 +6267,7 @@
         "title": "구글 AI 서버가 붐벼 기사 요약이 늦어졌습니다",
         "detail": "기사 1건을 이번 수집에서 AI로 요약하지 못했습니다. 구글이 '지금 요청이 몰려 있다'고 답했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-11-17T22:05:44+00:00",
+        "last_seen_at": "2026-11-17T22:26:55+00:00",
         "last_observation_id": "2026-11-18:2026-11-17T18:55:56.882664+09:00:1",
         "min_occurrences": 2,
         "first_seen_at": "2026-11-16T15:51:44+00:00",
@@ -6314,7 +6314,7 @@
         "title": "SFEN에 새 기사가 27일째 없습니다",
         "detail": "수집 자체는 성공하고 있습니다. 그 사이트에 새 글이 올라오지 않았거나, 새 글을 목록에서 못 찾고 있습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-11-17T22:05:44+00:00",
+        "last_seen_at": "2026-11-17T22:26:55+00:00",
         "last_observation_id": "2026-11-17T22:02:45+00:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-11-04T10:15:47+00:00",
@@ -6511,7 +6511,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=7 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-11-17T22:05:44+00:00",
+        "last_seen_at": "2026-11-17T22:26:55+00:00",
         "last_observation_id": "2026-11-17T22:02:45+00:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-11-17T12:50:41+00:00",
@@ -6989,7 +6989,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=6 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-11-17T22:05:44+00:00",
+        "last_seen_at": "2026-11-17T22:26:55+00:00",
         "last_observation_id": "2026-11-17T22:02:45+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -7027,7 +7027,7 @@
         "action": "필요 없음 — 원자력 기사가 여기 들어 있으면 topic_gate 의 어휘를 봐 주세요.",
         "technical": "demoted=5 joongang.co.kr:not_required:0.0; voakorea.com:not_required:0.0; g-enews.com:not_required:0.0; g-enews.com:not_required:1.0; pinpointnews.co.kr:not_required:0.0",
         "fingerprint": "off-topic~1",
-        "last_seen_at": "2026-11-17T22:05:44+00:00",
+        "last_seen_at": "2026-11-17T22:26:55+00:00",
         "last_observation_id": "2026-11-18T06:44:12.893671+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -7046,7 +7046,7 @@
         "action": "필요 없음 — 새 소식이 여기 섞여 있으면 알려 주세요.",
         "technical": "ekn.kr←kbs.co.kr@2026-11-16 sim=0.75; kmib.co.kr←kmib.co.kr@2026-11-16 sim=0.857; joongang.co.kr←donga.com@2026-11-16 sim=1.0; issuenbiz.com←econonews.co.kr@2026-11-16 sim=1.0; newscj.com←energydaily.co.kr@2026-11-16 sim=0.75",
         "fingerprint": "story-echo~1",
-        "last_seen_at": "2026-11-17T22:05:44+00:00",
+        "last_seen_at": "2026-11-17T22:26:55+00:00",
         "last_observation_id": "2026-11-17T22:03:03.089873+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -7105,7 +7105,7 @@
         "action": "틀린 기사가 보이면 알려 주세요. 자주 틀리면 저장소 변수 INTEGRITY_RELEASE 를 off 로 두면 예전처럼 보류합니다.",
         "technical": "released=107d5dfc:curation-regen:body:summary_source_mismatch,event_date_sourc; 7cd655f8:curation-regen:body:title_source_mismatch; 1fdeca3d:curation-regen:body:summary_source_mismatch,event_date_sourc",
         "fingerprint": "released~1",
-        "last_seen_at": "2026-11-17T22:05:44+00:00",
+        "last_seen_at": "2026-11-17T22:26:55+00:00",
         "last_observation_id": "2026-11-18T00:45:47.351991+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -7175,8 +7175,8 @@
     }
   },
   "operational_digest": {
-    "last_sent_date": "2026-11-17",
-    "last_sent_at": "2026-11-16T19:59:24+00:00"
+    "last_sent_date": "2026-11-18",
+    "last_sent_at": "2026-11-17T22:26:55+00:00"
   },
   "integrity_holds": {
     "a63825e492fb5ca6": {
