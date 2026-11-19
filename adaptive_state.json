@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 4,
-    "date": "2026-11-19"
+    "count": 5,
+    "date": "2026-11-20"
   },
   "retired": {
     "acrs": {
@@ -395,6 +395,14 @@
       "term": "국민권익위원회",
       "type": "org",
       "until": "2026-10-21T09:41:07.157315+00:00"
+    },
+    "국방위원회": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-19T15:41:53.159143+00:00",
+      "term": "국방위원회",
+      "type": "org",
+      "until": "2026-12-03T15:41:53.159143+00:00"
     },
     "국세청": {
       "new_articles": 0,
@@ -996,6 +1004,14 @@
       "type": "org",
       "until": "2026-12-02T03:40:56.961073+00:00"
     },
+    "제23회": {
+      "new_articles": 1,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-19T15:41:53.159143+00:00",
+      "term": "제23회",
+      "type": "plant",
+      "until": "2026-12-03T15:41:53.159143+00:00"
+    },
     "제정안발": {
       "new_articles": 0,
       "reason": "기간 만료",
@@ -1278,8 +1294,8 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-11-19"
+    "count": 3,
+    "date": "2026-11-20"
   },
   "terms": {
     "baaja법안에": {
@@ -1310,6 +1326,45 @@
       "term": "BAAJA 법안에",
       "ttl_hours": 24,
       "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "cfd": {
+      "articles": 2,
+      "created_at": "2026-11-19T15:41:53.159143+00:00",
+      "domains": [
+        "khan.co.kr",
+        "etnews.com"
+      ],
+      "evidence": [
+        {
+          "domain": "khan.co.kr",
+          "hash": "ccb5279c0c4de8d2",
+          "importance": "must_read",
+          "title": "한수원-한전, 내년부터 원전 정부승인차액계약(CfD) 도입"
+        },
+        {
+          "domain": "etnews.com",
+          "hash": "7c25da23dad26e55",
+          "importance": "must_read",
+          "title": "한수원-한전, 내년 1월부터 원전 정부승인차액계약(CfD) 5년간 적용"
+        }
+      ],
+      "expires_at": "2026-11-22T15:41:53.159143+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-19T15:41:56.606476+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-19T15:41:53.159143+00:00",
+      "queries_run": 1,
+      "query": "CfD 원자력",
+      "score": 7.7,
+      "status": "tracking",
+      "term": "CfD",
+      "ttl_hours": 72,
+      "type": "company",
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
@@ -1360,52 +1415,75 @@
       "yields": 0,
       "zero_streak": 2
     },
-    "국방위원회": {
-      "articles": 4,
-      "created_at": "2026-11-18T15:41:17.818305+00:00",
+    "vestingcontract": {
+      "articles": 1,
+      "created_at": "2026-11-19T15:41:53.159143+00:00",
       "domains": [
-        "newsquest.co.kr",
-        "newsroad.co.kr",
-        "heraldcorp.com",
-        "natv.go.kr"
+        "energydaily.co.kr"
       ],
       "evidence": [
         {
-          "domain": "newsquest.co.kr",
-          "hash": "9fcaf638e939744e",
-          "importance": "nice_to_know",
-          "title": "국회 국방위, 핵잠수함 특별법 공청회 개최…독립 안전규제 체계 논의"
-        },
-        {
-          "domain": "newsroad.co.kr",
-          "hash": "9f08749842628349",
-          "importance": "nice_to_know",
-          "title": "국회, 핵추진잠수함사업 특별법 공청회 개최"
-        },
-        {
-          "domain": "heraldcorp.com",
-          "hash": "30cb3fbe4a54fd68",
-          "importance": "nice_to_know",
-          "title": "국회 국방위 공청회서 핵추진 잠수함 컨트롤타워 구축 논의"
+          "domain": "energydaily.co.kr",
+          "hash": "8920a6013328a936",
+          "importance": "must_read",
+          "title": "한수원·한전, 2027년부터 원전 정부승인차액계약(Vesting Contract) 도입"
         }
       ],
-      "expires_at": "2026-11-19T15:41:17.818305+00:00",
-      "importance": "nice_to_know",
+      "expires_at": "2026-11-20T15:41:53.159143+00:00",
+      "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-11-19T00:41:06.711549+00:00",
+      "last_run": "2026-11-19T15:41:56.606476+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-11-19T00:41:02.752071+00:00",
-      "queries_run": 2,
-      "query": "국방위원회 원자력",
-      "score": 3.34,
+      "planned_at": "2026-11-19T15:41:53.159143+00:00",
+      "queries_run": 1,
+      "query": "Vesting Contract 원자력",
+      "score": 3.6,
       "status": "tracking",
-      "term": "국방위원회",
+      "term": "Vesting Contract",
       "ttl_hours": 24,
-      "type": "org",
+      "type": "company",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 2
+      "zero_streak": 1
+    },
+    "산업계가요구해온": {
+      "articles": 2,
+      "created_at": "2026-11-19T15:41:53.159143+00:00",
+      "domains": [
+        "electimes.com"
+      ],
+      "evidence": [
+        {
+          "domain": "electimes.com",
+          "hash": "b9200ce4a34c5459",
+          "importance": "must_read",
+          "title": "정부, 원전 30기 '정부승인 차액계약(VC)' 체결…기업 PPA 사실상 차단"
+        },
+        {
+          "domain": "electimes.com",
+          "hash": "6b76ae3f10f348fd",
+          "importance": "nice_to_know",
+          "title": "정부, 원전 30기 대상 정부승인차액계약(VC) 체결…기업 PPA 사실상 차단"
+        }
+      ],
+      "expires_at": "2026-11-21T15:41:53.159143+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-19T15:41:56.606476+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-19T15:41:53.159143+00:00",
+      "queries_run": 1,
+      "query": "산업계가 요구해온 원전",
+      "score": 4.8,
+      "status": "tracking",
+      "term": "산업계가 요구해온",
+      "ttl_hours": 48,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     },
     "수정안이포함되어": {
       "articles": 1,
@@ -1519,53 +1597,63 @@
       "yields": 4,
       "zero_streak": 1
     },
-    "제23회": {
-      "articles": 3,
-      "created_at": "2026-11-17T15:41:09.386444+00:00",
+    "최대5gw": {
+      "articles": 1,
+      "created_at": "2026-11-19T15:41:53.159143+00:00",
       "domains": [
-        "todayenergy.kr",
-        "e-platform.net",
-        "news1.kr"
+        "theguru.co.kr"
       ],
       "evidence": [
         {
-          "domain": "todayenergy.kr",
-          "hash": "a3d75840f669aa21",
-          "importance": "nice_to_know",
-          "title": "원자력안전기술원, 제23회 원전 운전경험반영 워크숍 개최"
-        },
-        {
-          "domain": "e-platform.net",
-          "hash": "ae9fd42617ff81f4",
-          "importance": "nice_to_know",
-          "title": "원자력안전기술원, 제23회 원전 운전경험반영 워크숍 개최"
-        },
-        {
-          "domain": "news1.kr",
-          "hash": "d21a90976aa00061",
-          "importance": "nice_to_know",
-          "title": "한국원자력안전기술원, 제23회 원전 운전경험반영 워크숍 개최"
+          "domain": "theguru.co.kr",
+          "hash": "5ad02c774a4e3267",
+          "importance": "must_read",
+          "title": "미국 뉴욕주, 2033년 전력난 전망…최대 5GW 원전 추가 마스터플랜 발표"
         }
       ],
-      "expires_at": "2026-11-19T15:41:09.386444+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-18T21:41:21.281821+00:00",
-      "new_articles": 1,
+      "expires_at": "2026-11-20T15:41:53.159143+00:00",
+      "importance": "must_read",
+      "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-11-18T21:41:17.316717+00:00",
-      "queries_run": 3,
-      "query": "제23회 원전",
-      "score": 4.6,
-      "status": "extended",
-      "term": "제23회",
-      "ttl_hours": 48,
+      "queries_run": 0,
+      "query": "최대 5GW 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "최대 5GW",
+      "ttl_hours": 24,
       "type": "plant",
-      "yield_days": [
-        "2026-11-18"
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 0
+    },
+    "호기를포함한": {
+      "articles": 1,
+      "created_at": "2026-11-19T15:41:53.159143+00:00",
+      "domains": [
+        "electimes.com"
       ],
-      "yields": 1,
-      "zero_streak": 2
+      "evidence": [
+        {
+          "domain": "electimes.com",
+          "hash": "b9200ce4a34c5459",
+          "importance": "must_read",
+          "title": "정부, 원전 30기 '정부승인 차액계약(VC)' 체결…기업 PPA 사실상 차단"
+        }
+      ],
+      "expires_at": "2026-11-20T15:41:53.159143+00:00",
+      "importance": "must_read",
+      "new_articles": 0,
+      "origin": "auto",
+      "queries_run": 0,
+      "query": "호기를 포함한",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "호기를 포함한",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 0
     }
   },
   "version": 1
