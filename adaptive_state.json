@@ -532,14 +532,6 @@
       "type": "plant",
       "until": "2026-10-21T18:41:18.128900+00:00"
     },
-    "발생한국형": {
-      "new_articles": 2,
-      "reason": "기간 만료",
-      "retired_at": "2026-09-20T00:40:36.335664+00:00",
-      "term": "발생 한국형",
-      "type": "plant",
-      "until": "2026-10-04T00:40:36.335664+00:00"
-    },
     "발표한한미": {
       "new_articles": 12,
       "reason": "관리자 삭제",
@@ -860,6 +852,14 @@
       "type": "project",
       "until": "2026-10-19T03:41:25.681767+00:00"
     },
+    "원전발전협회": {
+      "new_articles": 3,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-19T00:41:02.752071+00:00",
+      "term": "원전발전협회",
+      "type": "org",
+      "until": "2026-12-03T00:41:02.752071+00:00"
+    },
     "원전소통위원회": {
       "new_articles": 4,
       "reason": "기간 만료",
@@ -899,6 +899,14 @@
       "term": "이노비즈협회",
       "type": "org",
       "until": "2026-11-16T15:41:15.965828+00:00"
+    },
+    "이주희의원": {
+      "new_articles": 1,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-19T00:41:02.752071+00:00",
+      "term": "이주희 의원",
+      "type": "plant",
+      "until": "2026-12-03T00:41:02.752071+00:00"
     },
     "이진숙의원": {
       "new_articles": 1,
@@ -1278,7 +1286,7 @@
     }
   },
   "spent": {
-    "count": 9,
+    "count": 12,
     "date": "2026-11-19"
   },
   "terms": {
@@ -1345,11 +1353,11 @@
       "expires_at": "2026-11-20T15:41:17.818305+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-11-18T15:41:21.305288+00:00",
+      "last_run": "2026-11-19T00:41:06.711549+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-11-18T15:41:17.818305+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-19T00:41:02.752071+00:00",
+      "queries_run": 2,
       "query": "NYPA 원자력",
       "score": 5.8,
       "status": "tracking",
@@ -1358,7 +1366,7 @@
       "type": "company",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "국방위원회": {
       "articles": 4,
@@ -1392,11 +1400,11 @@
       "expires_at": "2026-11-19T15:41:17.818305+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-11-18T15:41:21.305288+00:00",
+      "last_run": "2026-11-19T00:41:06.711549+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-11-18T15:41:17.818305+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-19T00:41:02.752071+00:00",
+      "queries_run": 2,
       "query": "국방위원회 원자력",
       "score": 3.34,
       "status": "tracking",
@@ -1405,7 +1413,7 @@
       "type": "org",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "수정안이포함되어": {
       "articles": 1,
@@ -1453,14 +1461,14 @@
           "title": "전기위원회, 영덕 신규원전 2기 발전사업 허가안 원안 의결"
         }
       ],
-      "expires_at": "2026-11-19T15:41:21.305288+00:00",
+      "expires_at": "2026-11-20T00:41:06.711549+00:00",
       "importance": "must_read",
       "last_result_count": 2,
-      "last_run": "2026-11-18T15:41:21.305288+00:00",
-      "new_articles": 10,
+      "last_run": "2026-11-19T00:41:06.711549+00:00",
+      "new_articles": 12,
       "origin": "auto",
-      "planned_at": "2026-11-18T15:41:17.818305+00:00",
-      "queries_run": 6,
+      "planned_at": "2026-11-19T00:41:02.752071+00:00",
+      "queries_run": 7,
       "query": "신규원전 1",
       "score": 3.6,
       "status": "promote_candidate",
@@ -1473,90 +1481,8 @@
         "2026-11-17",
         "2026-11-19"
       ],
-      "yields": 5,
+      "yields": 6,
       "zero_streak": 0
-    },
-    "원전발전협회": {
-      "articles": 3,
-      "created_at": "2026-11-16T18:41:41.215634+00:00",
-      "domains": [
-        "asiae.co.kr",
-        "worktoday.co.kr",
-        "lawissue.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "asiae.co.kr",
-          "hash": "77fc6fa3f5c43da0",
-          "importance": "nice_to_know",
-          "title": "한국원전수출산업협회, 스위스 원전발전협회와 MOU 체결"
-        },
-        {
-          "domain": "worktoday.co.kr",
-          "hash": "84c272e617628d57",
-          "importance": "nice_to_know",
-          "title": "한국원전수출산업협회, 스위스 원전발전협회와 업무협약 체결"
-        },
-        {
-          "domain": "lawissue.co.kr",
-          "hash": "856c7a5490f8ee5e",
-          "importance": "nice_to_know",
-          "title": "KNA-스위스 원전발전협회, 원전 기자재 협력 MOU 체결"
-        }
-      ],
-      "expires_at": "2026-11-19T00:40:59.178006+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-18T21:41:21.281821+00:00",
-      "new_articles": 3,
-      "origin": "auto",
-      "planned_at": "2026-11-18T21:41:17.316717+00:00",
-      "queries_run": 4,
-      "query": "원전발전협회",
-      "score": 3.7,
-      "status": "extended",
-      "term": "원전발전협회",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [
-        "2026-11-18"
-      ],
-      "yields": 2,
-      "zero_streak": 1
-    },
-    "이주희의원": {
-      "articles": 1,
-      "created_at": "2026-11-17T15:41:09.386444+00:00",
-      "domains": [
-        "energydaily.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "energydaily.co.kr",
-          "hash": "fd246ee78756c932",
-          "importance": "must_read",
-          "title": "원자력안전법 개정안 발의…원전 사고 은폐 시 종업원도 처벌"
-        }
-      ],
-      "expires_at": "2026-11-19T00:40:59.178006+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-11-18T21:41:21.281821+00:00",
-      "new_articles": 1,
-      "origin": "auto",
-      "planned_at": "2026-11-18T21:41:17.316717+00:00",
-      "queries_run": 3,
-      "query": "이주희 의원 원전",
-      "score": 3.6,
-      "status": "extended",
-      "term": "이주희 의원",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-11-18"
-      ],
-      "yields": 1,
-      "zero_streak": 1
     },
     "전기위원회": {
       "articles": 2,
