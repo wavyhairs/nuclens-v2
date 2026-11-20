@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-20T01:05:53+09:00",
+ "generated_at": "2026-11-21T00:53:20+09:00",
  "events": [
   {
    "id": "of-1589b1818ed7",
@@ -164,11 +164,35 @@
    ],
    "relevance": "재생에너지",
    "significance": "토론회"
+  },
+  {
+   "id": "of-77cf4888993c",
+   "date": "2026-11-27",
+   "end_date": "2026-11-27",
+   "kind": "point",
+   "time": "11:00",
+   "label": "한국전력거래소 2026년 임시총회 개최 공고",
+   "host": "한국전력거래소",
+   "organizer": "",
+   "place": "양재동 엘타워 2층 안단테홀",
+   "url": "https://new.kpx.or.kr/board.es?act=view&bid=0042&list_no=78557&mid=a10501010000",
+   "source_id": "kpx_notice",
+   "publisher": "한국전력거래소",
+   "notice_title": "한국전력거래소 2026년 임시총회 개최 공고",
+   "first_seen": "2026-11-20",
+   "topics": [
+    "power_market"
+   ],
+   "relevance": "전력거래",
+   "significance": "총회",
+   "post_id": "78557",
+   "audience": "회원대표(대리참석의 경우 총회 시작 전까지 위임장 제출)",
+   "when_clause": "2026. 11. 27(금) 11:00"
   }
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-11-20T01:05:53+09:00",
+   "at": "2026-11-21T00:53:20+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -176,7 +200,7 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-11-20T01:05:53+09:00",
+   "at": "2026-11-21T00:53:20+09:00",
    "ok": true,
    "parsed": 9,
    "kept": 3,
@@ -187,7 +211,7 @@
    }
   },
   "kaif_calendar": {
-   "at": "2026-11-20T01:05:53+09:00",
+   "at": "2026-11-21T00:53:20+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
@@ -200,7 +224,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-11-20T01:05:53+09:00",
+   "at": "2026-11-21T00:53:20+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -208,26 +232,26 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-11-20T01:05:53+09:00",
+   "at": "2026-11-21T00:53:20+09:00",
    "ok": true,
-   "parsed": 57,
+   "parsed": 61,
    "kept": 0,
    "new": 0,
    "dropped": {
-    "no_interest_match": 55,
+    "no_interest_match": 59,
     "not_an_event": 2
    }
   },
   "kpx_notice": {
-   "at": "2026-11-20T01:05:53+09:00",
+   "at": "2026-11-21T00:53:20+09:00",
    "ok": true,
    "parsed": 20,
-   "kept": 2,
-   "new": 2,
+   "kept": 3,
+   "new": 3,
    "dropped": {
     "no_event_date": 4,
     "not_an_event": 4,
-    "no_interest_match": 8,
+    "no_interest_match": 7,
     "unreadable_event_date": 1,
     "low_significance": 1
    }
