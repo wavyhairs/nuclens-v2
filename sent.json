@@ -5900,7 +5900,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-11-21T19:16:52+00:00",
+    "updated_at": "2026-11-21T19:34:53+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -5980,7 +5980,7 @@
         "title": "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
         "detail": "AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 1건을 두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 만들어 보고, 6번 연속이면 보류합니다. 예: 「[목민관 일기 ②] '초보' 조주홍 영덕군수의 140일 분투기」.",
         "severity": "critical",
-        "last_seen_at": "2026-11-21T19:16:52+00:00",
+        "last_seen_at": "2026-11-21T19:34:53+00:00",
         "last_observation_id": "2026-11-22T04:14:44.842751+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-11-01T09:48:31+00:00",
@@ -6003,7 +6003,7 @@
         "title": "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
         "detail": "AI 요약을 받지 못해 원문 첫 문장만 있는 기사 1건을 브리핑 후보에 넣지 않았습니다. 1건은 다음 수집(약 3시간 뒤)에서 다시 요약합니다. 예: 「[목민관 일기 ②] '초보' 조주홍 영덕군수의 140일 분투기」.",
         "severity": "warning",
-        "last_seen_at": "2026-11-21T19:16:52+00:00",
+        "last_seen_at": "2026-11-21T19:34:53+00:00",
         "last_observation_id": "2026-11-22T03:42:47.634904+09:00",
         "min_occurrences": 2,
         "first_seen_at": "2026-11-09T15:47:27+00:00",
@@ -6064,14 +6064,14 @@
         "resolved_at": "2026-11-20T21:44:42+00:00"
       },
       "quality:archive-integrity": {
-        "consecutive": 124,
+        "consecutive": 125,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
         "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 4건. 사건일 73건은 사이트에 표시하지 않았습니다 — 원문 근거를 다시 확인할 수 없음 73건 · 날짜 이상 0건.",
         "severity": "critical",
-        "last_seen_at": "2026-11-21T19:16:52+00:00",
-        "last_observation_id": "github-run:44823105051",
+        "last_seen_at": "2026-11-21T19:34:53+00:00",
+        "last_observation_id": "github-run:44939412105",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
@@ -6081,7 +6081,7 @@
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=36695 quarantined=4 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 5c87f37d62e3",
+        "technical": "checked=36813 quarantined=4 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 5c87f37d62e3",
         "fingerprint": "q=4:ca2b08fddaf1eafc",
         "last_notified_fingerprint": "q=35:37a796ac13006af0",
         "delivery": "digest"
@@ -6189,7 +6189,7 @@
         "title": "구글 AI 서버가 붐벼 기사 요약이 늦어졌습니다",
         "detail": "기사 8건을 이번 수집에서 AI로 요약하지 못했습니다. 구글이 '지금 요청이 몰려 있다'고 답했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-11-21T19:16:52+00:00",
+        "last_seen_at": "2026-11-21T19:34:53+00:00",
         "last_observation_id": "2026-11-22:2026-11-21T18:43:14.579128+09:00:8",
         "min_occurrences": 2,
         "first_seen_at": "2026-11-21T09:45:13+00:00",
@@ -6236,7 +6236,7 @@
         "title": "SFEN에 새 기사가 31일째 없습니다",
         "detail": "수집 자체는 성공하고 있습니다. 그 사이트에 새 글이 올라오지 않았거나, 새 글을 목록에서 못 찾고 있습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-11-21T19:16:52+00:00",
+        "last_seen_at": "2026-11-21T19:34:53+00:00",
         "last_observation_id": "2026-11-21T19:15:46+00:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-11-04T10:15:47+00:00",
@@ -6878,9 +6878,9 @@
         "resolution_notified_at": "2026-09-21T09:46:34+00:00"
       },
       "issue-candidate:evidence-attach-rate-drift": {
-        "consecutive": 1,
+        "consecutive": 0,
         "scope": "data_gate",
-        "active": true,
+        "active": false,
         "title": "이슈 묶음 정확도 점검 항목이 있습니다",
         "detail": "근거 기사 부착률이 최근 회차와 크게 다르다",
         "severity": "warning",
@@ -6897,7 +6897,8 @@
         "last_notified_at": "2026-09-24T19:40:32+00:00",
         "last_notified_severity": "warning",
         "notifications": 1,
-        "delivery": "dev"
+        "delivery": "dev",
+        "resolved_at": "2026-11-21T19:34:53+00:00"
       },
       "source:Euractiv 원자력:empty": {
         "consecutive": 40,
@@ -6911,7 +6912,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=42 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-11-21T19:16:52+00:00",
+        "last_seen_at": "2026-11-21T19:34:53+00:00",
         "last_observation_id": "2026-11-21T19:15:46+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6949,7 +6950,7 @@
         "action": "필요 없음 — 원자력 기사가 여기 들어 있으면 topic_gate 의 어휘를 봐 주세요.",
         "technical": "demoted=1 econovill.com:not_required:0.0",
         "fingerprint": "off-topic~1",
-        "last_seen_at": "2026-11-21T19:16:52+00:00",
+        "last_seen_at": "2026-11-21T19:34:53+00:00",
         "last_observation_id": "2026-11-22T00:42:59.013701+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6968,7 +6969,7 @@
         "action": "필요 없음 — 새 소식이 여기 섞여 있으면 알려 주세요.",
         "technical": "tokenpost.kr←impacton.net@2026-11-20 sim=0.75",
         "fingerprint": "story-echo~1",
-        "last_seen_at": "2026-11-21T19:16:52+00:00",
+        "last_seen_at": "2026-11-21T19:34:53+00:00",
         "last_observation_id": "2026-11-21T19:16:07.384922+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -7027,7 +7028,7 @@
         "action": "틀린 기사가 보이면 알려 주세요. 자주 틀리면 저장소 변수 INTEGRITY_RELEASE 를 off 로 두면 예전처럼 보류합니다.",
         "technical": "released=05bc7e51:curation-regen:description:title_source_mismatch,event_date_source_",
         "fingerprint": "released~1",
-        "last_seen_at": "2026-11-21T19:16:52+00:00",
+        "last_seen_at": "2026-11-21T19:34:53+00:00",
         "last_observation_id": "2026-11-22T04:14:47.467618+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -7106,7 +7107,7 @@
         "action": "반복되면 해당 사이트 형식이 바뀐 것입니다 — 수집 설정을 확인해 주세요.",
         "technical": "consecutive_bozo=24 usable=15/15 exception=<unknown>:55:138: undefined entity",
         "fingerprint": "",
-        "last_seen_at": "2026-11-21T19:16:52+00:00",
+        "last_seen_at": "2026-11-21T19:34:53+00:00",
         "last_observation_id": "2026-11-21T19:15:46+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -7141,8 +7142,8 @@
     }
   },
   "operational_digest": {
-    "last_sent_date": "2026-11-21",
-    "last_sent_at": "2026-11-20T20:36:08+00:00"
+    "last_sent_date": "2026-11-22",
+    "last_sent_at": "2026-11-21T19:34:53+00:00"
   },
   "integrity_holds": {
     "e9c4854b9b1a2645": {
