@@ -1202,6 +1202,47 @@ def audio_pipeline_signals(fast_outcome: str | None, expert_outcome: str | None,
     return signals
 
 
+# 렌더 스모크가 판정을 낸 outcome. `skipped`·`cancelled` 는 판정이 없었던 회차라
+# 신호도 해소도 만들지 않는다 — 안 돈 검사가 앞선 실패를 '정상'으로 덮으면 안 된다.
+RENDER_SMOKE_JUDGED = frozenset({"success", "failure"})
+
+
+def render_smoke_signals(outcome: str | None, *,
+                         observation_id: str = "") -> list[AlertSignal]:
+    """배포 뒤 실제 브라우저로 연 사이트가 제대로 그려졌는가.
+
+    2026-09-19 부터 11-21 까지 이 검사는 **매일** 실패했는데 아무도 몰랐다.
+    스텝이 continue-on-error 이고, tools/failure_domains.py 는 브리핑이 나간
+    날이면 web=failure 여도 잡을 초록으로 둔다 — 실패는 아무도 안 여는 로그
+    주석에만 남았다. 실패 원인은 검사 자신의 타이밍 문제였지만(render_smoke.mjs
+    주석), 같은 자리에 진짜 화면 고장이 왔어도 똑같이 묻혔을 것이다.
+
+    그래서 결과를 하루 요약의 '할 일'로 올린다. 즉시 알림이 아닌 이유: 브리핑은
+    이미 나갔고 사이트도 대개 떠 있다 — 새벽에 깨울 일은 아니지만, 사람이 한 번
+    열어 봐야 하는 일이다. min_occurrences=1: 하루 한 번 도는 검사라 '두 번
+    연속'을 기다리면 이틀을 잃는다.
+    """
+    normalized = str(outcome or "").strip().lower()
+    if normalized != "failure":
+        return []
+    return [AlertSignal(
+        key="quality:render-smoke-failure", scope="render_smoke",
+        severity="warning", level=LEVEL_ATTENTION,
+        title="사이트 화면 점검이 실패했습니다",
+        detail=("배포 뒤 실제 브라우저로 사이트를 열어 본 점검에서 화면 일부가 "
+                "그려지지 않았습니다."),
+        impact=("텔레그램 브리핑은 정상입니다. 사이트의 일부 화면이 독자에게 비어 "
+                "보이거나 깨져 보일 수 있습니다."),
+        action=("사이트를 직접 열어 홈과 보고서 탭이 제대로 보이는지 확인해 주세요. "
+                "무엇이 실패했는지는 Daily Brief 실행 기록의 '라이브 화면 검증' 단계에 "
+                "있습니다."),
+        technical=(f"render-smoke step outcome={normalized}. "
+                   "실패 항목·미완료 요청·JS 오류는 web/tests/render_smoke.mjs 출력에 "
+                   "'렌더링 스모크 실패:' 아래로 찍힌다."),
+        observation_id=str(observation_id).strip(), min_occurrences=1,
+    )]
+
+
 def latest_data_gate_record(records: Iterable[Mapping]) -> Mapping | None:
     """Return the newest usable quality record from an append-only log."""
     latest = None

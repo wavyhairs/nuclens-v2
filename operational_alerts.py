@@ -285,6 +285,7 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
         identity_quarantined: int = 0,
         audio_fast_outcome: str | None = None,
         audio_expert_outcome: str | None = None,
+        render_smoke_outcome: str | None = None,
         weekly_channel_required: bool | None = None,
         weekly_reports_path: Path | None = None,
         weekly_channel_path: Path | None = None,
@@ -339,6 +340,8 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
     audio_signals = monitor.audio_pipeline_signals(
         audio_fast_outcome, audio_expert_outcome,
         observation_id=pipeline_observation_id)
+    render_signals = monitor.render_smoke_signals(
+        render_smoke_outcome, observation_id=pipeline_observation_id)
     # 주간 판세는 **채널 필요 여부를 넘긴 호출자만** 판정한다. 넘기지 않은
     # 호출자까지 판정하면, 채널을 못 보는 쪽이 '이상 없음'으로 읽어 다른 쪽이
     # 올린 사건을 해소해 버린다 — 같은 scope 를 두 기준이 나눠 쓰면 안 된다.
@@ -352,7 +355,7 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
             now=now, observation_id=collection_observation_id or pipeline_observation_id)
     signals = (source_signals + quality_signals + pipeline_signals +
                collection_signals + identity_signals + audio_signals +
-               weekly_signals)
+               render_signals + weekly_signals)
     scopes = set(quality_scopes)
     if source_processed:
         scopes.add("source")
@@ -371,6 +374,10 @@ def run(*, sent_path: Path = SENT_FILE, log_path: Path = DELIVERY_LOG,
     # 끝났다는 뜻이다 — 둘 다 성공한 회차는 신호가 없으므로 앞선 누락이 해소된다.
     if audio_fast_outcome is not None or audio_expert_outcome is not None:
         scopes.add("audio_pipeline")
+    # 렌더 스모크가 실제로 판정한 회차만 평가한다. 스킵·취소된 회차가 '신호 없음'
+    # 으로 읽히면 어제의 화면 고장이 오늘 저절로 '정상'이 된다.
+    if str(render_smoke_outcome or "").strip().lower() in monitor.RENDER_SMOKE_JUDGED:
+        scopes.add("render_smoke")
     scopes |= weekly_scopes
 
     # 즉시 갈래만 여기서 보낸다. 나머지도 상태는 갱신되고, 하루 요약이 그 상태와
@@ -572,6 +579,11 @@ def main() -> int:
     parser.add_argument("--audio-expert-outcome", default="",
                         help="expert_audio_brief.py 종료 결과 "
                              "(success|delivery_failed|failure, 미실행이면 빈 값)")
+    # 라이브 화면 검증 스텝의 outcome. 같은 이유로 choices 를 쓰지 않는다 — 그
+    # 스텝이 안 돈 회차의 빈 값에 알림 스텝이 통째로 죽으면 안 된다.
+    parser.add_argument("--render-smoke-outcome", default="",
+                        help="render_smoke.mjs 스텝 outcome "
+                             "(success|failure|skipped|cancelled, 미실행이면 빈 값)")
     args = parser.parse_args()
     if args.check_admin_chat:
         return check_admin_chat()
@@ -607,6 +619,7 @@ def main() -> int:
             identity_quarantined=_int_or_zero(args.identity_quarantined),
             audio_fast_outcome=(args.audio_fast_outcome.strip() or None),
             audio_expert_outcome=(args.audio_expert_outcome.strip() or None),
+            render_smoke_outcome=(args.render_smoke_outcome.strip() or None),
             weekly_channel_required=weekly_channel_required,
             digest_requested=args.digest,
             # 아침 브리핑 실행이 빠진 날은 대체 시각 뒤 첫 실행이 대신 보낸다.

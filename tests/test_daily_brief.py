@@ -849,6 +849,18 @@ class TestOutboxFlow(OutboxBase):
         self.assertEqual(db.cmd_send(), 0)
         self.assertEqual(len(fake_tg.sent_messages), n_first)
 
+    def test_send_asks_for_an_in_run_network_retry(self):
+        """2026-11-21: 러너 네트워크가 몇 초 끊겨 두 브리핑이 다음 회차까지 1시간
+        35분 늦었다. 발송은 같은 회차 안에서 연결 오류 한 번을 다시 보내야 한다
+        (재시도 자체는 telegram_send 가 청크 단위로 한다 — test_telegram_send)."""
+        self.seed_queue(self._queue())
+        db.cmd_plan()
+        self.assertEqual(db.cmd_send(), 0)
+        self.assertTrue(fake_tg.sent_messages)
+        for message in fake_tg.sent_messages:
+            self.assertEqual(db.SEND_NETWORK_RETRIES, message["network_retries"])
+        self.assertGreaterEqual(db.SEND_NETWORK_RETRIES, 1)
+
     def test_claim_then_send_failure_marks_failed(self):
         """claim(plan) 후 텔레그램 발송 실패 → failed 기록, 재시도로 회복."""
         self.seed_queue(self._queue())

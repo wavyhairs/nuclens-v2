@@ -110,9 +110,21 @@ try {
     await pubsTab.click();
     await page.locator("#view-report").waitFor({ state: "visible", timeout: 10000 })
       .catch(() => failures.push("보고서 탭 클릭 후 #view-report 가 보이지 않음"));
+    // 바로 읽으면 안 된다. 홈은 2단계로 뜬다(app.js loadFullData — 2026-09-19
+    // 5fc45865): 위의 목차 대기는 1단계(today.json)만 보고 풀리는데, 발간물은
+    // 2단계 데이터라 그 순간엔 아직 오는 중이고 switchView 는 state.partial 동안
+    // renderPubs 를 건너뛴다 — 2단계가 오면 finishBoot 가 그린다. 클릭 직후에
+    // 읽던 시절에는 이 검사가 09-19 부터 11-21 까지 **매일** 실패했다(라이브 실측:
+    // 클릭 직후 0건, 0.6초 뒤 49건). 거짓 경보가 매일 뜨면 진짜 고장이 그 뒤에
+    // 묻힌다. 그래서 렌더러의 출력(카드 또는 빈 상태)이 설 때까지 기다리고, 그래도
+    // 비어 있을 때만 실패로 적는다. 아래 두 판정은 그대로다.
+    await page.waitForFunction(() => {
+      const list = document.querySelector("#pubsList");
+      return !!list && !!list.querySelector(".pub-item, .empty-state");
+    }, null, { timeout: 30000 }).catch(() => {});
     const listHtml = (await page.innerHTML("#pubsList").catch(() => "")) || "";
     if (!listHtml.trim()) {
-      failures.push("renderPubs 가 아무것도 그리지 않음 (#pubsList 비어 있음)");
+      failures.push("renderPubs 가 30초 안에 아무것도 그리지 않음 (#pubsList 비어 있음)");
     }
     // 발간물이 있는 날은 카드가, 없는 날은 빈 상태가 나와야 한다. 둘 다 아니면 렌더 실패다.
     const cards = await page.locator("#pubsList .pub-item").count();

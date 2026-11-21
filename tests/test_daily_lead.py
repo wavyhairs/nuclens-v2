@@ -8,12 +8,21 @@ import json
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import daily_lead
 from gemini_client import GeminiError
+
+# 날짜를 고정하면 안 된다. daily_lead 는 저장할 때 KEEP_DAYS(90일)보다 오래된 날을
+# 지운다 — 고정 날짜 '2026-08-02' 는 10-31 부터 저장되자마자 지워져 이 파일의
+# 다섯 건이 KeyError 로 죽었다. main 은 10-28 뒤로 파이썬 검사가 안 돌아(봇 커밋은
+# .py 를 안 건드린다) 11-21 PR #279 에서야 드러났다.
+DAY = datetime.now(timezone(timedelta(hours=9))).date()
+TODAY = DAY.isoformat()
+YESTERDAY = (DAY - timedelta(days=1)).isoformat()
 
 
 # 길이 사다리를 시험하는 문장이지 환각을 시험하는 문장이 아니다 — 등장하는
@@ -35,7 +44,7 @@ _TITLES = [
 ]
 
 
-def delivery_row(idx=0, date="2026-08-02"):
+def delivery_row(idx=0, date=TODAY):
     return {
         "date": date,
         "hash": f"hash{idx}",
@@ -84,7 +93,7 @@ class DailyLeadTestCase(unittest.TestCase):
 
     def seed_existing(self):
         daily_lead.OUT_FILE.write_text(
-            json.dumps({"leads": {"2026-08-01": {"lead": "기존 문장.", "evidence": []}}},
+            json.dumps({"leads": {YESTERDAY: {"lead": "기존 문장.", "evidence": []}}},
                        ensure_ascii=False),
             encoding="utf-8",
         )
@@ -106,7 +115,7 @@ class DailyLeadTestCase(unittest.TestCase):
         self.write_log([delivery_row(0)])
         self.raises = True
         self.assertFalse(daily_lead.generate())
-        self.assertEqual(self.read_leads()["2026-08-01"]["lead"], "기존 문장.")
+        self.assertEqual(self.read_leads()[YESTERDAY]["lead"], "기존 문장.")
 
     def test_empty_lead_preserves_existing_and_writes(self):
         self.seed_existing()
@@ -114,8 +123,8 @@ class DailyLeadTestCase(unittest.TestCase):
         self.responses = [{"lead": ""}]
         self.assertFalse(daily_lead.generate())
         leads = self.read_leads()
-        self.assertIn("2026-08-01", leads)
-        self.assertNotIn("2026-08-02", leads)
+        self.assertIn(YESTERDAY, leads)
+        self.assertNotIn(TODAY, leads)
 
     # ── 성공 경로 ──────────────────────────────────────────────────
 
@@ -123,7 +132,7 @@ class DailyLeadTestCase(unittest.TestCase):
         self.write_log([delivery_row(0), delivery_row(1)])
         self.responses = [{"lead": "한수원이 영덕군과 신규 원전 건설에 합의한 가운데 헝가리는 가뭄으로 가동을 중단했습니다", "evidence_idx": [0, 1, 99]}]
         self.assertTrue(daily_lead.generate())
-        entry = self.read_leads()["2026-08-02"]
+        entry = self.read_leads()[TODAY]
         self.assertIn("영덕군", entry["lead"])
         self.assertEqual([e["hash"] for e in entry["evidence"]], ["hash0", "hash1"])
         self.assertNotIn("truncated", entry)
@@ -145,7 +154,7 @@ class DailyLeadTestCase(unittest.TestCase):
         self.responses = [{"lead": LONG_LEAD, "evidence_idx": [0]},
                           {"lead": "한수원이 영덕군과 신규 원전 건설에 합의했습니다", "evidence_idx": [0]}]
         self.assertTrue(daily_lead.generate())
-        entry = self.read_leads()["2026-08-02"]
+        entry = self.read_leads()[TODAY]
         self.assertIn("영덕군", entry["lead"])
         self.assertEqual(len(self.calls), 2)
         self.assertNotIn("truncated", entry)
@@ -156,7 +165,7 @@ class DailyLeadTestCase(unittest.TestCase):
         self.responses = [{"lead": LONG_LEAD, "evidence_idx": [0]},
                           {"lead": LONG_LEAD, "evidence_idx": [0]}]
         self.assertTrue(daily_lead.generate())
-        entry = self.read_leads()["2026-08-02"]
+        entry = self.read_leads()[TODAY]
         self.assertTrue(entry.get("truncated"))
         self.assertLessEqual(len(entry["lead"]), daily_lead.LEAD_LIMIT + 1)
         self.assertTrue(entry["lead"])
@@ -178,7 +187,7 @@ class DailyLeadTestCase(unittest.TestCase):
                           {"lead": "한수원이 영덕군과 신규 원전 건설에 합의했습니다", "evidence_idx": [0]}]
         self.assertTrue(daily_lead.generate())
         self.assertEqual(len(self.calls), 2, "공허하면 한 번 더 물어야 한다")
-        self.assertIn("영덕군", self.read_leads()["2026-08-02"]["lead"])
+        self.assertIn("영덕군", self.read_leads()[TODAY]["lead"])
 
     def test_twice_vacuous_saves_nothing_so_web_uses_the_title(self):
         self.write_log([delivery_row(0)])
@@ -186,7 +195,7 @@ class DailyLeadTestCase(unittest.TestCase):
         self.responses = [{"lead": vacuous, "evidence_idx": [0]},
                           {"lead": vacuous, "evidence_idx": [0]}]
         self.assertFalse(daily_lead.generate())
-        self.assertNotIn("2026-08-02", self.read_leads())
+        self.assertNotIn(TODAY, self.read_leads())
 
     # ── 근거 밖 사실 차단 ────────────────────────────────────
     #
@@ -201,7 +210,7 @@ class DailyLeadTestCase(unittest.TestCase):
         self.responses = [{"lead": bad, "evidence_idx": [0]},
                           {"lead": good, "evidence_idx": [0]}]
         self.assertTrue(daily_lead.generate())
-        entry = self.read_leads()["2026-08-02"]
+        entry = self.read_leads()[TODAY]
         self.assertEqual(entry["lead"], good + ".")
         self.assertNotIn("웨스팅하우스", entry["lead"])
         self.assertEqual(len(self.calls), 2)
@@ -213,13 +222,13 @@ class DailyLeadTestCase(unittest.TestCase):
         self.responses = [{"lead": bad, "evidence_idx": [0]},
                           {"lead": bad, "evidence_idx": [0]}]
         self.assertFalse(daily_lead.generate())
-        self.assertNotIn("2026-08-02", self.read_leads())
+        self.assertNotIn(TODAY, self.read_leads())
 
     def test_facts_present_in_the_day_are_not_flagged(self):
         items = [delivery_row(0), delivery_row(2)]
         self.assertEqual(daily_lead.unsupported_lead_facts(
             "한수원이 영덕군과 합의한 가운데 중국은 신규 원전 8기를 승인했습니다.",
-            items, {}, "2026-08-02"), {})
+            items, {}, TODAY), {})
 
     def test_repair_result_is_checked_again_before_saving(self):
         """마지막 변환 뒤에 다시 본다 — 재요청 답이 새 사실을 넣을 수도 있다."""
@@ -229,7 +238,7 @@ class DailyLeadTestCase(unittest.TestCase):
             {"lead": "한수원이 영덕군에 원전 500MW 건설을 합의했습니다", "evidence_idx": [0]},
         ]
         self.assertFalse(daily_lead.generate())
-        self.assertNotIn("2026-08-02", self.read_leads())
+        self.assertNotIn(TODAY, self.read_leads())
 
     def test_clause_cut_prefers_boundary(self):
         cut = daily_lead._clause_cut(LONG_LEAD)
