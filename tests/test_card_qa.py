@@ -123,6 +123,25 @@ class GroundingTests(unittest.TestCase):
                 self.assertNotIn("ungrounded", codes(
                     card_qa.review_step(step(facts=[f"{form} 시범사업 착수"]), SOURCE)))
 
+    def test_part_of_a_source_date_is_grounded(self):
+        """원문 「2027년 2월 18일」을 카피가 「2027년 2월」로 줄여도 근거가 있다.
+
+        2026-11-22 실측 오탐: 날짜 안의 숫자는 숫자 목록에서 빠지고 날짜 목록엔
+        (월, 일)만 남아서 2027 과 2 가 "입력에 없는 숫자" 로 걸렸다.
+        """
+        source = "이번 명령으로 2026년 11월 21일부터 2027년 2월 18일까지 가동을 연장한다"
+        for text in ("2027년 2월까지 가동 연장", "2027년까지 연장",
+                     "2월 18일까지 연장", "18일까지 연장"):
+            with self.subTest(text=text):
+                self.assertEqual(card_qa.ungrounded(text, source), [])
+
+    def test_a_date_part_does_not_ground_another_unit(self):
+        """2월 날짜가 있다고 「2GW」·「2028년」까지 통과시키지 않는다."""
+        source = "2027년 2월 18일까지 가동을 연장한다"
+        self.assertTrue(card_qa.ungrounded("2GW 추가", source))
+        self.assertTrue(card_qa.ungrounded("2028년 2월까지 연장", source))
+        self.assertTrue(card_qa.ungrounded("2027년 3월까지 연장", source))
+
     def test_a_substring_is_not_grounding(self):
         """**예전 검사가 여기서 틀렸다.** `"17" in "170"` 이 참이라 통과했다."""
         self.assertTrue(card_qa.ungrounded("17건 의결", "170건 접수"))
