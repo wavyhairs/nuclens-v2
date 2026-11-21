@@ -135,15 +135,43 @@ def send_text(text: str, parse_mode: str | None = "HTML",
         raise RuntimeError(f"Telegram API HTTP {e.code}: {body}") from e
 
 
+def is_network_error(error: BaseException) -> bool:
+    """텔레그램 서버의 **응답**이 아니라 연결 자체가 실패한 오류인가.
+
+    send_text 는 HTTP 오류(400 잘못된 요청·403 차단·429 한도)를 RuntimeError 로
+    바꿔 올린다 — 서버가 답했다는 뜻이고, 같은 요청을 곧바로 다시 보내도 대개
+    같은 답이 온다. 여기 걸리는 것은 그 앞 단계다: 경로 없음(Errno 101)·연결
+    끊김(Errno 104)·응답 지연(timeout). URLError 와 그 밑의 소켓 오류는 모두
+    OSError 다. HTTPError 도 OSError 의 자식이라 따로 뺀다 — send_text 를 거치지
+    않고 이 판정을 쓰는 호출자가 있어도 서버 응답을 재시도하지 않게.
+    """
+    return isinstance(error, OSError) and not isinstance(error, urllib.error.HTTPError)
+
+
 def send_long_text(text: str, parse_mode: str | None = "HTML",
                    reply_markup: dict | None = None,
                    disable_preview: bool = False,
-                   chat_id: str | None = None) -> list[dict]:
+                   chat_id: str | None = None,
+                   network_retries: int = 0,
+                   retry_wait: float = 20.0) -> list[dict]:
     """긴 메시지를 자동으로 여러 메시지로 쪼개서 발송.
 
     가능하면 단락(\\n\\n) 경계에서 끊고, 안 되면 줄(\\n) 경계, 그것도 안 되면
     글자 단위로 잘라서 보냄. reply_markup 은 마지막 청크에만 부착
     (피드백 키보드가 브리핑 끝에 오도록).
+
+    network_retries: 연결 오류(:func:`is_network_error`)가 나면 retry_wait 초 쉬고
+    **그 청크만** 다시 보낸다. 기본 0 — 예전 호출자는 그대로다. 청크 단위인 이유:
+    브리핑 전체를 다시 보내면 이미 나간 앞 청크가 구독자에게 두 번 간다.
+
+    2026-11-21 05:16 KST 아침 브리핑에서 러너 네트워크가 몇 초 끊겨 보고서추천
+    (Errno 101)·국내(Errno 104)가 실패했고, 2초 뒤 해외는 정상으로 나갔다. 재시도가
+    없어서 두 브리핑은 다음 체인 회차(06:51)까지 1시간 35분 늦었다.
+
+    Errno 104 는 서버가 메시지를 받은 뒤 답이 끊긴 것일 수도 있어 재시도가 같은
+    청크를 두 번 보낼 수 있다. 그 위험은 새로 생기는 것이 아니다 — 재시도가
+    없을 때도 다음 회차가 실패한 브리핑을 통째로 다시 보낸다. 여기서 다시 보내면
+    늦는 시간만 줄어들고, 겹쳐도 브리핑 전체가 아니라 청크 하나다.
     """
     chunks = split_by_length(text, MAX_LEN)
     results = []
@@ -151,8 +179,21 @@ def send_long_text(text: str, parse_mode: str | None = "HTML",
         if i > 0:
             time.sleep(0.5)  # 텔레그램 rate limit 회피
         markup = reply_markup if i == len(chunks) - 1 else None
-        results.append(send_text(chunk, parse_mode=parse_mode, reply_markup=markup,
-                                 disable_preview=disable_preview, chat_id=chat_id))
+        attempt = 0
+        while True:
+            try:
+                result = send_text(chunk, parse_mode=parse_mode, reply_markup=markup,
+                                   disable_preview=disable_preview, chat_id=chat_id)
+                break
+            except Exception as error:  # noqa: BLE001 — 판정 뒤 그대로 다시 올린다
+                if attempt >= network_retries or not is_network_error(error):
+                    raise
+                attempt += 1
+                print(f"[telegram] 연결 오류 — {retry_wait:g}초 뒤 청크 {i + 1}/{len(chunks)} "
+                      f"다시 보냄 ({attempt}/{network_retries}): "
+                      f"{type(error).__name__}: {str(error)[:120]}")
+                time.sleep(retry_wait)
+        results.append(result)
     return results
 
 

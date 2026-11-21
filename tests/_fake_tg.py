@@ -9,9 +9,11 @@ fake.fail_next = False
 
 
 def _send_long_text(text, parse_mode="HTML", reply_markup=None,
-                    disable_preview=False, chat_id=None):
+                    disable_preview=False, chat_id=None,
+                    network_retries=0, retry_wait=20.0):
     fake.sent_messages.append({"text": text, "reply_markup": reply_markup,
-                               "chat_id": chat_id})
+                               "chat_id": chat_id,
+                               "network_retries": network_retries})
     if fake.fail_next:
         fake.fail_next = False
         raise RuntimeError("telegram down (모의)")

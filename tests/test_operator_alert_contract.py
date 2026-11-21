@@ -79,6 +79,7 @@ class OperatorSentenceTests(unittest.TestCase):
             # 한쪽만 실패한 날은 문장이 통째로 갈린다 — 그쪽도 계약을 지켜야 한다.
             monitor.audio_pipeline_signals(
                 "success", "failure", observation_id="daily-brief:2") +
+            monitor.render_smoke_signals("failure", observation_id="daily-brief:3") +
             monitor.source_health_signals({"sources": {"산업부 보도자료": {
                 "kind": "official", "consecutive_failures": 3,
                 "last_error": "ConnectTimeout: HTTPSConnectionPool(host='www.motir.go.kr')",

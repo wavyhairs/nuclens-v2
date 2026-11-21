@@ -552,6 +552,22 @@ class WorkflowWiringTests(unittest.TestCase):
         self.assertIn("steps.web-build.outcome == 'success'", daily)
         self.assertNotIn("steps.web-build.conclusion", daily)
 
+    def test_render_smoke_reaches_the_morning_digest(self):
+        """2026-09-19~11-21 이 검사는 매일 실패했는데 잡이 초록이라 아무도 못 봤다.
+
+        결과가 하루 요약의 '할 일'에 실리려면 라이브 배포 검증 뒤·요약 알림 앞에서
+        돌고, 그 outcome 을 요약 알림에 넘겨야 한다.
+        """
+        daily = self.daily()
+        deployed = daily.index("id: web-deploy\n")
+        smoke = daily.index("id: render-smoke\n")
+        handoff = daily.index('--render-smoke-outcome "${{ steps.render-smoke.outcome }}"')
+        digest = daily.index("python operational_alerts.py --notify --digest")
+        self.assertLess(deployed, smoke, "배포 전 사이트를 검사하면 뜻이 없다")
+        self.assertLess(smoke, handoff, "outcome 을 넘기는 곳이 스모크보다 앞이면 늘 빈 값이다")
+        self.assertLess(handoff, digest, "요약 알림이 스모크 결과를 받지 못한다")
+        self.assertEqual(1, daily.count("id: render-smoke\n"))
+
     def test_daily_brief_publishes_the_failure_domains(self):
         daily = self.daily()
         self.assertIn("python tools/failure_domains.py --domain daily-brief", daily)

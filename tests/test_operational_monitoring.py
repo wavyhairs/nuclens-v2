@@ -613,6 +613,30 @@ class AudioPipelineSignalTests(unittest.TestCase):
         self.assertIn("전문가", signals[0].title)
 
 
+class RenderSmokeSignalTests(unittest.TestCase):
+    """라이브 화면 검증은 2026-09-19~11-21 매일 실패했는데 어떤 알림도 없었다."""
+
+    def test_a_failed_smoke_is_a_digest_todo_not_a_page(self):
+        signals = monitor.render_smoke_signals("failure", observation_id="daily-brief:9")
+        self.assertEqual(1, len(signals))
+        signal = signals[0].normalized()
+        self.assertEqual("quality:render-smoke-failure", signal.key)
+        self.assertEqual("render_smoke", signal.scope)
+        self.assertEqual(monitor.LEVEL_ATTENTION, signal.level)
+        self.assertEqual(monitor.DELIVERY_DIGEST, signal.delivery)
+        self.assertEqual(1, signal.min_occurrences, "하루 한 번 도는 검사 — 이틀을 기다리면 안 된다")
+        self.assertEqual("daily-brief:9", signal.observation_id)
+
+    def test_success_and_unjudged_runs_raise_nothing(self):
+        for outcome in ("success", "skipped", "cancelled", "", None):
+            with self.subTest(outcome=outcome):
+                self.assertEqual([], monitor.render_smoke_signals(outcome))
+
+    def test_only_judged_outcomes_count(self):
+        """스킵·취소는 판정이 아니다 — 앞선 실패를 '정상'으로 해소하면 안 된다."""
+        self.assertEqual({"success", "failure"}, set(monitor.RENDER_SMOKE_JUDGED))
+
+
 class WebIdentityDegradedTests(unittest.TestCase):
     """degraded 는 step outcome 이 success 라 web_pipeline 신호로는 절대 안 나온다.
 

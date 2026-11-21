@@ -194,6 +194,55 @@ class OperationalAlertsCliTests(unittest.TestCase):
         self.assertFalse(state["operational_alerts"]["items"]
                          ["quality:audio-brief-missing"]["active"])
 
+    def test_render_smoke_failure_is_a_todo_in_the_morning_digest(self):
+        """2026-09-19~11-21 라이브 화면 검증이 매일 실패했는데 아무 데도 안 떴다.
+
+        새벽에 따로 울리지 않고, 같은 아침의 하루 요약 '할 일'에 실린다. 검사가
+        안 돈 회차(스킵)는 앞선 실패를 지우지 않고, 다시 통과한 회차가 지운다.
+        """
+        self.write_sent()
+        self.write_brief_ok()
+        messages = []
+        send = lambda text: messages.append(text) or {"ok": True}  # noqa: E731
+        failed = cli.run(
+            sent_path=self.sent, log_path=self.log, notify=True, sender=send,
+            expected_sources={}, render_smoke_outcome="failure", digest_requested=True,
+            pipeline_observation_id="daily-brief:300", now=NOW)
+        self.assertFalse(failed["sent"], "즉시 알림으로는 나가지 않는다")
+        self.assertTrue(failed["digest_sent"])
+        self.assertEqual(1, len(messages))
+        self.assertIn("🔧 할 일 1건", messages[0])
+        self.assertIn("사이트 화면 점검이 실패했습니다", messages[0])
+        self.assertIn("보고서 탭", messages[0])
+
+        def active():
+            state = json.loads(self.sent.read_text(encoding="utf-8"))
+            return state["operational_alerts"]["items"]["quality:render-smoke-failure"]["active"]
+
+        cli.run(sent_path=self.sent, log_path=self.log, sender=send, expected_sources={},
+                render_smoke_outcome="skipped",
+                pipeline_observation_id="daily-brief:301", now=NOW + timedelta(hours=1))
+        self.assertTrue(active(), "안 돈 검사가 어제의 화면 고장을 '정상'으로 덮었다")
+
+        recovered = cli.run(
+            sent_path=self.sent, log_path=self.log, sender=send, expected_sources={},
+            render_smoke_outcome="success",
+            pipeline_observation_id="daily-brief:302", now=NOW + timedelta(hours=2))
+        self.assertFalse(recovered["sent"], "알리지 않은 것의 '풀림'도 없다")
+        self.assertFalse(active())
+        self.assertEqual(1, len(messages))
+
+    def test_cli_accepts_an_empty_render_smoke_outcome(self):
+        """스텝이 안 돈 회차는 빈 값을 넘긴다. 거기서 argparse 가 죽으면 알림 스텝이 통째로 사라진다."""
+        self.write_sent()
+        argv = ["operational_alerts.py", "--sent", str(self.sent), "--delivery-log", str(self.log),
+                "--render-smoke-outcome", ""]
+        with patch.object(sys, "argv", argv), patch.object(cli, "run", return_value={
+                "ok": True, "saved": True, "due": 0, "sent": False,
+                "digest_due": False, "digest_sent": False}) as run:
+            self.assertEqual(0, cli.main())
+        self.assertIsNone(run.call_args.kwargs["render_smoke_outcome"])
+
     # ── 주간 판세: Weekly 워크플로 밖에서 보는 유일한 눈 ──────────────────
     #
     # 2026-09-18 Weekly 는 열한 번 연속 startup_failure 로 죽었다. 잡이 뜨기 전에

@@ -79,6 +79,12 @@ FOREIGN_CAP = 6
 # 넘기면 stale_skipped — 낡은 브리핑 재발송·중복 발송 방지.
 RESEND_WINDOW_H = 36
 
+# 위 창은 **다음 회차**의 재발송이다. 이 둘은 같은 회차 안의 재시도다 — 연결
+# 오류(경로 없음·연결 끊김·응답 지연)일 때만 이만큼 쉬고 그 청크를 한 번 더
+# 보낸다. HTTP 오류(서버가 답한 것)는 재시도하지 않는다.
+SEND_NETWORK_RETRIES = 1
+SEND_RETRY_WAIT_S = 20.0
+
 # Outbox 는 claim 뒤 별도 workflow 단계에서 발송된다. 품질 게이트가 강화되기
 # 전에 만들어진 pending outbox 를 새 발송 코드가 그대로 보내면 최종 검증을
 # 우회하므로, 계획 시점의 게이트 계약을 명시하고 발송 시 정확히 일치시킨다.
@@ -1607,7 +1613,11 @@ def send_outbox(outbox: dict, now: datetime | None = None) -> list[dict]:
             time.sleep(2)  # 텔레그램 rate limit
         first_send = False
         try:
-            resp = send_long_text(brief["text"], parse_mode="HTML")
+            # 연결 오류 한 번은 그 자리에서 다시 보낸다(telegram_send.send_long_text
+            # 설명 — 2026-11-21 러너 네트워크가 몇 초 끊겨 두 브리핑이 1시간 35분 늦었다).
+            resp = send_long_text(brief["text"], parse_mode="HTML",
+                                  network_retries=SEND_NETWORK_RETRIES,
+                                  retry_wait=SEND_RETRY_WAIT_S)
             ok = sum(1 for r in resp if r.get("ok"))
             success = ok == len(resp) and ok > 0
         except Exception as e:  # noqa: BLE001 — 브리핑 1개 실패가 나머지를 막지 않게

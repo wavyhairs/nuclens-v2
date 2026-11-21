@@ -54,6 +54,8 @@ _KIND_PHRASE = {
 _TODO_KEYS = frozenset({
     "quality:audio-brief-missing", "quality:audio-brief-undelivered",
     "quality-event:audio-script-unverified",
+    # 화면 점검 실패 — 09-19~11-21 매일 실패했는데 로그 주석에만 남아 아무도 몰랐다.
+    "quality:render-smoke-failure",
 })
 # 품질 이벤트 중 아래에서 따로 풀어 쓰는 것. 나머지는 제목 한 줄로 싣는다.
 _DETAILED_EVENTS = frozenset({
