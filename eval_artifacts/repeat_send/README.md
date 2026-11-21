@@ -41,6 +41,14 @@ python tools/repeat_send_replay.py --misses   # 원장이 못 찾은 재탕 나�
 
 찾은 뒤에 판정이 맞는지는 그림자 기록(`repeat_shadow_log.jsonl`)이 쌓여야 잰다.
 
+## 실기록 판정 (2026-11-21)
+
+`live_shadow_drops_2026-11-21.jsonl` — 그림자 판정 v2 가 10/29~11/21 실제 발송 카드 405장 중
+뺐을(drop) 18장에 사람 1인이 붙인 판정. `human` 은 `repeat`(재탕 맞음, 12) 또는 `new`(새 소식 —
+그림자가 잘못 뺄 카드, 6). `told` 는 그림자가 "이미 전했다"고 짚은 앞선 발송 카드다. 위 회귀셋과
+달리 의심 쌍이 아니라 **그림자가 뺀 카드만** 모았으므로, 잘못 뺀 비율(6/18)은 재되 놓친 재탕은 못 잰다.
+결론은 `docs/2026-10-25-repeat-send-root-cause-review.md` §6.2.
+
 ## 관련 자료
 
 - `eval_artifacts/2026-09-24-repeat-briefing-pairs.json` — 8/16~9/24 연속 발송일 쌍 9개(재탕 2).
