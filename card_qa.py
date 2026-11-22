@@ -224,12 +224,37 @@ def number_atoms(text: object) -> set[tuple[str, str]]:
     return out
 
 
+def date_parts(text: object) -> set[tuple[str, str]]:
+    """입력의 날짜를 이루는 (값, 단위) 조각 — 연도는 「년」, 월은 단위 없음, 일은 「일」.
+
+    `number_atoms` 는 날짜로 읽히는 숫자를 빼고 `date_atoms` 는 (월, 일)만 남긴다.
+    그래서 원문의 「2027년 2월 18일」에서 **2027 과 2 는 어디에도 남지 않았다** —
+    카피가 날짜를 줄여 「2027년 2월까지」라고 쓰면 두 숫자가 "입력에 없는 숫자"
+    로 걸렸다(2026-11-22 실측: 에디스톤 비상명령, 이 오탐 하나로 일일 Writer 가
+    두 번 떨어지고 같은 응답의 스토리 카피까지 버려졌다).
+
+    값만 보지 않고 단위까지 묶는다 — 2월 날짜가 있다고 「2GW」를 통과시키지 않는다.
+    """
+    value = unicodedata.normalize("NFKC", str(text or ""))
+    out: set[tuple[str, str]] = set()
+    for pattern in (_ISO_DATE_RE, _KR_DATE_RE, _DOT_DATE_RE):
+        for match in pattern.finditer(value):
+            year, month, day = match.group(1), int(match.group(2)), int(match.group(3))
+            if not (1 <= month <= 12 and 1 <= day <= 31):
+                continue
+            if year:
+                out.update({(year, "년"), (year, "")})
+            out.update({(str(month), ""), (str(day), "일"), (str(day), "")})
+    return out
+
+
 def ungrounded(text: object, haystack: str, *,
                allow_numbers: frozenset[str] = frozenset()) -> list[str]:
     """이 문장이 입력에 없는 숫자·날짜를 주장하는가."""
     out: list[str] = []
     source_numbers = number_atoms(haystack)
     bare_source = {value for value, _ in source_numbers}
+    source_date_parts = date_parts(haystack)
     for value, unit in number_atoms(text):
         if value in allow_numbers:
             continue
@@ -239,6 +264,9 @@ def ungrounded(text: object, haystack: str, *,
         # 「3호기」와 「3·4호기」처럼 같은 값이 다른 꼴로 적히는 경우가 흔하고,
         # 거기까지 막으면 정상 카피가 줄줄이 걸린다.
         if value in bare_source:
+            continue
+        # 입력 날짜의 일부만 옮겨 적은 경우(「2027년 2월 18일」→「2027년 2월」).
+        if (value, unit) in source_date_parts:
             continue
         out.append(f'"{value}{unit}" 은 입력에 없는 숫자')
     source_dates = date_atoms(haystack)

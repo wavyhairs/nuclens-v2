@@ -395,6 +395,52 @@ class StoryDomainTests(unittest.TestCase):
                          ["card_editorial_narrator", "card_writer", "card_writer_repair"])
 
 
+class DailyOnlyFailureTests(unittest.TestCase):
+    """**반대 방향의 분리.** 일일 카피만 끝내 깨졌으면 통과한 스토리 카피를 살린다.
+
+    2026-11-22 실측: 통합 Writer 의 일일 카피가 날짜 오탐으로 두 번 떨어졌고,
+    QA 를 통과한 스토리 카피까지 같이 버려져 그날 스토리 카드가 0 장이었다.
+    """
+
+    _run = StoryDomainTests._run
+
+    @staticmethod
+    def _bad_daily_with_story():
+        raw = copy(with_story=True)
+        raw["daily"]["steps"][0]["why"] = ["진안·금산에서 착수", "실증기간 1년"]
+        return raw
+
+    def test_a_passed_story_survives_a_daily_that_fails_twice(self):
+        daily, story, call = self._run(
+            [brief(story_thread="thread-x"), self._bad_daily_with_story(),
+             self._bad_daily_with_story(), copy()["daily"]],
+            [[], []])
+        self.assertIsNotNone(daily)
+        self.assertEqual(story, {"cover": {"headline": "SAR"}})
+        self.assertEqual([c.args[0] for c in call.call_args_list],
+                         ["card_editorial_narrator", "card_writer", "card_writer_repair",
+                          "card_daily_writer"])
+
+    def test_a_story_that_never_passed_is_still_dropped(self):
+        daily, story, call = self._run(
+            [brief(story_thread="thread-x"), self._bad_daily_with_story(),
+             self._bad_daily_with_story(), copy()["daily"]],
+            [["안 됨"], ["여전히 안 됨"]])
+        self.assertIsNotNone(daily)
+        self.assertIsNone(story)
+
+    def test_the_first_passing_story_is_kept_if_the_repair_breaks_it(self):
+        good_daily_bad_story = copy(with_story=True)
+        good_daily_bad_story["story"] = {"cover": {"headline": "망가진 스토리"}}
+        daily, story, call = self._run(
+            [brief(story_thread="thread-x"), self._bad_daily_with_story(),
+             good_daily_bad_story],
+            [[], ["repair 가 망침"]])
+        self.assertIsNotNone(daily)
+        self.assertEqual(story, {"cover": {"headline": "SAR"}})
+        self.assertEqual(call.call_count, 3)
+
+
 class WhyCountTests(unittest.TestCase):
     """**의미 불릿 하한은 1 이다.** 규격이 아니라 재료를 따른다.
 
