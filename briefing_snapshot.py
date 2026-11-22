@@ -138,7 +138,8 @@ def reconcile(rows: list[dict], briefing_date: str, snapshot: dict,
     - 없으면 얼린 문장으로 카드를 세우고 `classification_note` 로 지금 어디에
       있는지 알린다. 무거운 칸은 대표 기사를 지금 들고 있는 행에서 빌린다.
     - 얼린 카드들이 이미 대신 말한 지금 행(해시가 전부 얼린 쪽에 있는 행)은 뺀다.
-    - 순서는 얼린 순서를 따른다. 얼린 뒤 새로 생긴 행은 뒤에 지금 순서대로.
+    - 순서는 얼린 순서를 따른다. 얼린 뒤 새로 생긴 행은 **자기 지역의 순위 자리**에
+      끼운다(`_merge_late_rows`) — 얼린 카드끼리의 순서는 그대로다.
     """
     cards = snapshot.get("cards") or []
     if not cards:
@@ -201,7 +202,51 @@ def reconcile(rows: list[dict], briefing_date: str, snapshot: dict,
     placed = [entry for entry in placed
               if entry[1] >= 0 or entry[2].get("issue_id") not in live_ids]
     placed.sort(key=lambda entry: (entry[0], entry[1]))
-    return [row for _, _, row in placed], sum(1 for _, index, _ in placed if index < 0)
+    frozen_rows = [row for order, _, row in placed if order < tail]
+    late_rows = [row for order, _, row in placed if order >= tail]
+    return (_merge_late_rows(frozen_rows, late_rows),
+            sum(1 for _, index, _ in placed if index < 0))
+
+
+def _is_domestic(row: dict) -> bool:
+    return row.get("region") == "국내"
+
+
+def _merge_late_rows(frozen_rows: list[dict], late_rows: list[dict]) -> list[dict]:
+    """얼린 뒤 생긴 행을 맨 뒤가 아니라 **자기 지역의 순위 자리**에 끼운다.
+
+    브리핑은 국내·해외 두 갈래를 지역 안 순위끼리 맞물려 세운다(build_data.
+    order_issue_rows). 그런데 한 갈래가 원장이 얼린 **뒤에** 발송되면, 그 갈래의
+    카드가 전부 '얼린 뒤 새로 생긴 행'이 되어 꼬리에 붙었다. 2026-11-21 실측:
+    05:16 러너 네트워크 오류로 국내 발송이 06:51 로 밀렸고, 05:18 빌드가 해외 9장만
+    얼렸다. 그 뒤 모든 빌드에서 11-21 국내 첫 이슈가 10번째로 섰고, 사이트 배포가
+    `test_domestic_issues_are_not_pushed_to_the_bottom` 에 걸려 매번 실패했다.
+
+    얼린 카드끼리의 순서는 건드리지 않는다. 늦은 행은 지역 안 n번째라면, 지역 안
+    순위가 n 이하인 마지막 행 바로 뒤에 선다 — 지역 안 상대 순서는 그대로다.
+    """
+    if not late_rows:
+        return frozen_rows
+    out = list(frozen_rows)
+
+    def region_rank(rows: list[dict]) -> list[int]:
+        seen = {True: 0, False: 0}
+        ranks = []
+        for row in rows:
+            key = _is_domestic(row)
+            ranks.append(seen[key])
+            seen[key] += 1
+        return ranks
+
+    for row in late_rows:
+        same = sum(1 for other in out if _is_domestic(other) == _is_domestic(row))
+        ranks = region_rank(out)
+        insert_at = 0
+        for index, rank in enumerate(ranks):
+            if rank <= same:
+                insert_at = index + 1
+        out.insert(insert_at, row)
+    return out
 
 
 def _frozen_late(day: str, frozen_at: object) -> bool:
