@@ -141,6 +141,52 @@ class ReconcileTests(unittest.TestCase):
                          ["issue-6260", "issue-italy", "issue-late"],
                          "발송 당시 순서가 지켜지지 않았다")
 
+    def test_a_lane_sent_after_the_freeze_is_interleaved_not_appended(self):
+        """2026-11-21 실측: 해외 9장만 얼린 뒤 국내 갈래가 늦게 발송됐다.
+
+        늦은 국내 카드가 꼬리에 붙어 국내 첫 이슈가 10번째로 섰고, 배포가 매번
+        `test_domestic_issues_are_not_pushed_to_the_bottom` 에 걸렸다.
+        """
+        day = "2026-11-21"
+        store = {"dates": {}}
+
+        def regional(issue_id, hash_, region):
+            row = _row(issue_id, [hash_], issue_id)
+            row["related_articles"] = [_article(hash_, day=day)]
+            row["region"] = region
+            return row
+
+        overseas = [regional(f"o{i}", f"h{i}", "해외") for i in range(4)]
+        bs.apply([_briefing(overseas, day)], store, "2026-11-21T05:18:53+09:00")
+        domestic = [regional(f"d{i}", f"k{i}", "국내") for i in range(2)]
+        # 늦은 빌드는 지금 순서대로(맞물린 채) 온다
+        now = [overseas[0], domestic[0], overseas[1], domestic[1], overseas[2], overseas[3]]
+        briefing = _briefing(now, day)
+        bs.apply([briefing], store, "t")
+        self.assertEqual([r["issue_id"] for r in briefing["issues"]],
+                         ["o0", "d0", "o1", "d1", "o2", "o3"])
+        self.assertEqual(briefing["highlights"][1], "d0")
+
+    def test_frozen_cards_keep_their_order_when_late_rows_arrive(self):
+        """늦은 행을 끼울 뿐, 얼린 카드끼리의 순서는 다시 정렬하지 않는다."""
+        day = "2026-11-20"
+        store = {"dates": {}}
+
+        def regional(issue_id, hash_, region):
+            row = _row(issue_id, [hash_], issue_id)
+            row["related_articles"] = [_article(hash_, day=day)]
+            row["region"] = region
+            return row
+
+        sent = [regional("o0", "h0", "해외"), regional("o1", "h1", "해외"),
+                regional("d0", "k0", "국내")]   # 그날 실제로 이 순서로 나갔다
+        bs.apply([_briefing(sent, day)], store, "t1")
+        late = regional("d1", "k1", "국내")
+        briefing = _briefing([sent[2], sent[0], late, sent[1]], day)
+        bs.apply([briefing], store, "t2")
+        self.assertEqual([r["issue_id"] for r in briefing["issues"]],
+                         ["o0", "o1", "d0", "d1"])
+
     def test_a_legacy_frozen_status_does_not_mix_with_current_tracking(self):
         """`status` 는 문장이 아니라 추적 메타데이터다 (2026-09-30 복구 중 발견).
 
