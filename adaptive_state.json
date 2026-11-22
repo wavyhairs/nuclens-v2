@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 0,
+    "count": 2,
     "date": "2026-11-22"
   },
   "retired": {
@@ -1366,9 +1366,74 @@
     }
   },
   "spent": {
-    "count": 1,
+    "count": 3,
     "date": "2026-11-22"
   },
-  "terms": {},
+  "terms": {
+    "법안과관련해": {
+      "articles": 1,
+      "created_at": "2026-11-22T12:40:45.593610+00:00",
+      "domains": [
+        "sedaily.com"
+      ],
+      "evidence": [
+        {
+          "domain": "sedaily.com",
+          "hash": "905f7a311b986d8d",
+          "importance": "must_read",
+          "title": "산업부, 전략수출상생기여금 부과 대상서 원전 공기업 제외 의견 제출"
+        }
+      ],
+      "expires_at": "2026-11-23T12:40:45.593610+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-22T12:40:47.783628+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-22T12:40:45.593610+00:00",
+      "queries_run": 1,
+      "query": "법안과 관련해 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "법안과 관련해",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
+    "부과대상서": {
+      "articles": 1,
+      "created_at": "2026-11-22T12:40:45.593610+00:00",
+      "domains": [
+        "sedaily.com"
+      ],
+      "evidence": [
+        {
+          "domain": "sedaily.com",
+          "hash": "905f7a311b986d8d",
+          "importance": "must_read",
+          "title": "산업부, 전략수출상생기여금 부과 대상서 원전 공기업 제외 의견 제출"
+        }
+      ],
+      "expires_at": "2026-11-23T12:40:45.593610+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-22T12:40:47.783628+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-22T12:40:45.593610+00:00",
+      "queries_run": 1,
+      "query": "부과 대상서 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "부과 대상서",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    }
+  },
   "version": 1
 }
