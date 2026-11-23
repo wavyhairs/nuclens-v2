@@ -283,6 +283,23 @@
       "right_title": "한-미 에너지 당국, 데이터센터 전력수요 대응 및 에너지 안보 협력 논의",
       "verdict": "different_thread"
     },
+    "issue-01083ffbfa10992b--story-72e9e37eb0bd5788": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국, 원전 기자재 조달에 24조원 대출…韓 기업 기회",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국의 원전 지원 예고에서 프레임워크 합의로 진전",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한미 원전 프레임워크 합의…미국 내 대형 원전 8기 건설 추진",
+      "verdict": "same_thread"
+    },
     "issue-01083ffbfa10992b--story-81252f915ed7dbd8": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국, 원전 기자재 조달에 24조원 대출…韓 기업 기회",
@@ -2494,6 +2511,17 @@
       "reviewed_at": "2026-10-15T21:58:46.863071+00:00",
       "right_title": "정부, 12차 전기본 수립 위해 3개월간 원전 공론화 추진",
       "verdict": "same_thread"
+    },
+    "issue-0412d08712c9a60e--issue-d1e966b5772613fd": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "국회 기후부 종합감사, 12차 전기본 및 신규 원전 추진 쟁점",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국회 현안이나 대상과 세부 사안이 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "발전5사 통합 공사 설립 시 출자 규모 61조원 추산",
+      "verdict": "different_thread"
     },
     "issue-0412d08712c9a60e--issue-d4010b67b8de8881": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -6088,6 +6116,17 @@
       "relationship": "",
       "reviewed_at": "2026-11-18T21:00:49.951615+00:00",
       "right_title": "한국, 베트남 닌투언 2호 원전 수주 위해 금융 지원 패키지 제안",
+      "verdict": "different_thread"
+    },
+    "issue-065dc3057ee2df9d--story-e4e49e74f6c863d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "핵추진잠수함 특별법 국무회의 통과…한미 핵연료 협상 재개",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "핵잠수함 특별법 추진과 한전 해킹 사고는 무관함",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한국전력, 고객 및 조달 시스템 해킹으로 152만 건 정보 유출",
       "verdict": "different_thread"
     },
     "issue-065dc3057ee2df9d--story-e6e494d12cf8f808": {
@@ -13629,6 +13668,17 @@
       "right_title": "한국, 베트남 닌투언 2호 원전 수주 위해 금융 지원 패키지 제안",
       "verdict": "different_thread"
     },
+    "issue-147ece88607645c4--story-5e301c2826a5be47": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, APR1400 미국 진출 2기 한정 확인…연내 원자력협력협정(SA) 개정 협의 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "APR1400 미국 진출과 핵추진잠수함 도입은 완전히 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, 핵추진잠수함 도입 관련 IAEA 협의 개시 통보",
+      "verdict": "different_thread"
+    },
     "issue-147ece88607645c4--story-614dcae9e8cd7ed9": {
       "gate": {
         "at": "2026-11-12T22:24:16+00:00",
@@ -13801,6 +13851,23 @@
       "reviewed_at": "2026-10-08T22:20:38.344867+00:00",
       "right_title": "세종시, 7조원 규모 AI 데이터센터 건립 투자협약 체결",
       "verdict": "different_thread"
+    },
+    "issue-147ece88607645c4--story-831a6f9d89a400e6": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, APR1400 미국 진출 2기 한정 확인…연내 원자력협력협정(SA) 개정 협의 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "APR1400 미국 진출 한정 확인 및 프레임워크 가동 연계",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한미 원전협력 프레임워크 가동, APR1400 미국 진출 길 열려",
+      "verdict": "same_thread"
     },
     "issue-147ece88607645c4--story-8524f0ab6cf373ec": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -14124,6 +14191,17 @@
       "right_title": "한국, 베트남 닌투언 2호 원전 수주 위해 금융 지원 패키지 제안",
       "verdict": "different_thread"
     },
+    "issue-147ece88607645c4--story-e4e49e74f6c863d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, APR1400 미국 진출 2기 한정 확인…연내 원자력협력협정(SA) 개정 협의 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "APR1400 미국 진출과 한전 해킹 사고는 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한국전력, 고객 및 조달 시스템 해킹으로 152만 건 정보 유출",
+      "verdict": "different_thread"
+    },
     "issue-147ece88607645c4--story-e6e494d12cf8f808": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한미 원전 프레임워크 합의, 미국 내 대형 원전 8기 건설 프로젝트 구체화",
@@ -14239,6 +14317,23 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-20T22:06:00.552221+00:00",
       "right_title": "웨스팅하우스, 미국 내 APR1400 로열티 인상 요구",
+      "verdict": "same_thread"
+    },
+    "issue-147ece88607645c4--story-f5851c361278f148": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, APR1400 미국 진출 2기 한정 확인…연내 원자력협력협정(SA) 개정 협의 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "APR1400 2기 진출 확인에서 구체적 협상 지속으로",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, 미국 대형 원전 8기 건설 협상 지속…한국형 원전 2기 진출 확보",
       "verdict": "same_thread"
     },
     "issue-147ece88607645c4--story-f8ba7787a0786e80": {
@@ -22654,6 +22749,17 @@
       "right_title": "미 상원의원들, 빅테크 기업에 AI 데이터센터 세액공제 내역 요구",
       "verdict": "different_thread"
     },
+    "issue-2bdc5f2fb94508de--story-5d0487459982421b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 버지니아주, 데이터센터 등 대규모 전력 수요 대응 위한 규제 전략 강화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 버지니아주와 일본 정부의 서로 다른 데이터센터 전력 정책임",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "일본 정부, 데이터센터 전력망 접속규율 강화 및 지방분산 추진",
+      "verdict": "different_thread"
+    },
     "issue-2bdc5f2fb94508de--story-603a7c13853cd80b": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 텍사스주 Fermi America 원전 건설 환경영향평가 초안 완료",
@@ -24104,6 +24210,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-28T21:57:44.369538+00:00",
       "right_title": "IEA, 수소 활용 에너지 안보 강화 강조…한국은 지원 축소 우려",
+      "verdict": "different_thread"
+    },
+    "issue-30943d4c45bc5f69--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "IEA, 호르무즈 해협 충격으로 2026년 세계 석유 공급 전망 하향",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "IEA의 석유 공급 전망과 데이터센터 배출량 전망은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
       "verdict": "different_thread"
     },
     "issue-30943d4c45bc5f69--story-f6096b181488a70b": {
@@ -26197,6 +26314,17 @@
       "right_title": "정부, 2001년 분리된 발전공기업 5사 내년 재통합 추진",
       "verdict": "different_thread"
     },
+    "issue-35df5b1854c92043--story-e3337315de9c0677": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "중국 연계 해커, AI 에이전트 활용 대만 에너지·원자력 기관 공격",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "대만 원자력 기관 해킹과 발전공사법 발의는 무관함",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "박해철 의원, 5개 발전공기업 통합 ‘한국발전공사법’ 대표 발의",
+      "verdict": "different_thread"
+    },
     "issue-3733dacb6eb9bc94--issue-3d40dcc6ed6f3fac": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "산업통상부 장관, 한수원·SK-테라파워 상업화 계약 체결식 참석 예정",
@@ -27369,6 +27497,67 @@
       "right_title": "한수원, 체코 두코바니 원전 시공사 재선정 착수…내년 7월 계약 목표",
       "verdict": "different_thread"
     },
+    "issue-398ea9aca0c50a35--issue-9f78f3de3e01224a": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "경주시, 2027년 본예산 2조 2,200억 편성…SMR 제작지원센터 등 원전 사업 반영",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "경주시의 원전 및 SMR 관련 예산·지원 정책",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "경주시, 월성 2·3·4호기 계속운전 및 SMR 건설 지원 건의",
+      "verdict": "same_thread"
+    },
+    "issue-398ea9aca0c50a35--issue-c50e1b9e7a78a81e": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "경주시, 2027년 본예산 2조 2,200억 편성…SMR 제작지원센터 등 원전 사업 반영",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "경주시와 창원시의 각각 다른 지자체 미래에너지 육성 정책임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "창원시, SMR·수소 등 미래에너지 산업 육성 및 청정에너지 수도 전환",
+      "verdict": "different_thread"
+    },
+    "issue-398ea9aca0c50a35--story-0f73e43ddd951956": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "경주시, 2027년 본예산 2조 2,200억 편성…SMR 제작지원센터 등 원전 사업 반영",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "경주시의 원전 정책 건의와 예산 편성은 별개의 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "경주시, 월성 2·3·4호기 계속운전 및 SMR 건설 지원 건의",
+      "verdict": "different_thread"
+    },
+    "issue-398ea9aca0c50a35--story-aadc53e9bb3ae9c6": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "경주시, 2027년 본예산 2조 2,200억 편성…SMR 제작지원센터 등 원전 사업 반영",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "경주시와 경상남도의 서로 다른 지자체 예산 편성",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "경남도, 2027년 예산안 14.7조 편성…SMR 제조 거점 구축 포함",
+      "verdict": "different_thread"
+    },
+    "issue-398ea9aca0c50a35--story-accf4201d8c8346b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "경주시, 2027년 본예산 2조 2,200억 편성…SMR 제작지원센터 등 원전 사업 반영",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "경주시 예산안과 부산시 시정 계획은 서로 다른 지자체 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "부산시, 35조 규모 민선9기 시정 청사진 확정",
+      "verdict": "different_thread"
+    },
     "issue-398fa0e5ecf0d24a--issue-4e6a1d2c0301a4d0": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 해양광물관리국, NRC와 해상 원자력 프로젝트 협력 MOU 체결",
@@ -27936,6 +28125,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-29T20:25:52.526267+00:00",
       "right_title": "프라마톰, 첫 상업용 LEU+ 공급 계약 체결",
+      "verdict": "different_thread"
+    },
+    "issue-39d2da80812a25d1--story-9cdedb2d81bf01db": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 해사청(MARAD), 코퍼스 크리스티 항만과 SMR 개발 협력 MOU 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "해사청의 SMR 협력과 남부발전의 연료전지 사업은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "남부발전, 미국 데이터센터 연계 연료전지 사업 등 협력 확대",
       "verdict": "different_thread"
     },
     "issue-39d2da80812a25d1--story-a0ddc0f1138d2ea5": {
@@ -33165,6 +33365,23 @@
       "reviewed_at": "2026-09-12T18:00:40.727296+00:00",
       "right_title": "한-미 에너지 당국, 데이터센터 전력수요 대응 및 에너지 안보 협력 논의",
       "verdict": "different_thread"
+    },
+    "issue-410bd72bfb8cf04f--story-72e9e37eb0bd5788": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "美 원전 투자 재시동 및 국내 전력수요 급증, 건설사 수주 기대감 상승",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 원전 건설 대출 발표가 한미 원전 프레임워크 합의로 이어짐",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한미 원전 프레임워크 합의…미국 내 대형 원전 8기 건설 추진",
+      "verdict": "same_thread"
     },
     "issue-410bd72bfb8cf04f--story-81252f915ed7dbd8": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -41725,6 +41942,17 @@
       "right_title": "중국 톈완 원전 7호기, 계통 연결 성공",
       "verdict": "different_thread"
     },
+    "issue-5190f5f0f0d050de--story-e299dc0cfab1d7ee": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "유럽, 폭염 및 가뭄 대응 위해 원전 냉각수 확보 조치 시행",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "유럽 원전 냉각수 확보 조치와 체코 두코바니 원전 사업 일정임",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한수원·팀코리아, 체코 두코바니 원전 사업 일정 유지 재확인",
+      "verdict": "different_thread"
+    },
     "issue-5190f5f0f0d050de--story-e4db53e82ffb05e7": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "루마니아, 다뉴브강 수위 저하로 원전 가동 중단 후 전력 절약 요청",
@@ -46011,6 +46239,17 @@
       "right_title": "스페이스X, 3분기 AI 매출 9배 급증하며 흑자 전환",
       "verdict": "different_thread"
     },
+    "issue-5acc5e77897a84d4--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "AI 데이터센터 전력 수요 급증에 따른 전력수급기본계획 재조정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 전력수급기본계획과 IEA의 글로벌 배출량 전망",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
+      "verdict": "different_thread"
+    },
     "issue-5acc5e77897a84d4--story-e370c941ec2c02f6": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, 2040년 전력수요 최대 885TWh 전망…발전설비 확충 시급",
@@ -46417,6 +46656,17 @@
       "reviewed_at": "2026-10-27T22:24:22.123185+00:00",
       "right_title": "미국 정부, 웨스팅하우스 황금주 확보…韓 지분투자 실효성 논란",
       "verdict": "same_thread"
+    },
+    "issue-5b0c7f1f9010565a--story-53bce9fe9fcb6487": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "웨스팅하우스, 미국 내 APR1400 로열티 인상 요구",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 내 APR1400 로열티 분쟁과 폴란드 AP1000 부품 발주임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
+      "verdict": "different_thread"
     },
     "issue-5b0c7f1f9010565a--story-5f997f5524147b74": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -48129,6 +48379,17 @@
       "right_title": "조셉 윤 \"미국 내 핵잠·우라늄농축 공감대 부족…전작권도 시각차\"",
       "verdict": "different_thread"
     },
+    "issue-618e0452f62b99d1--story-df1f9911899d55d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "니제르 정부, 오라노(Orano) 보유 아를리트 우라늄 광산 채굴권 국영기업에 부여",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "니제르 광산 채굴권 변경과 미국 우라늄 환경평가는 국가가 다름",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
+      "verdict": "different_thread"
+    },
     "issue-618e0452f62b99d1--story-e6607125b9c03873": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "니제르 정부, 오라노(Orano) 보유 아를리트 우라늄 광산 채굴권 국영기업에 부여",
@@ -49203,6 +49464,17 @@
       "reviewed_at": "2026-11-06T22:20:01.884487+00:00",
       "right_title": "기후부, AI 데이터센터 전용 전기요금제 설계 추진",
       "verdict": "same_thread"
+    },
+    "issue-6260c0799db78ac9--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "AI 데이터센터 전력 수요 급증에 따른 전력수급기본계획 재조정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 전력수급기본계획 조정과 IEA 글로벌 보고서는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
+      "verdict": "different_thread"
     },
     "issue-6260c0799db78ac9--story-e370c941ec2c02f6": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -51977,6 +52249,17 @@
       "right_title": "테라파워, 메타와 나트륨 원전 8기 개발 협력 및 SK 참여 확대",
       "verdict": "same_thread"
     },
+    "issue-66d8933507f8bf75--story-9cdedb2d81bf01db": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "SK이노베이션의 SMR 협력과 남부발전의 연료전지 협력은 별개",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "남부발전, 미국 데이터센터 연계 연료전지 사업 등 협력 확대",
+      "verdict": "different_thread"
+    },
     "issue-66d8933507f8bf75--story-9fc4f7c368d0b655": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "SK이노베이션-테라파워, 나트륨 SMR 사업 공조 및 글로벌 진출 합의",
@@ -53993,6 +54276,17 @@
       "right_title": "미 NRC, AP1000 원전 환경영향평가 초안 공개 및 통합허가 권고",
       "verdict": "different_thread"
     },
+    "issue-6b93ed7e22e9bb4b--story-df1f9911899d55d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 원자력규제위원회(NRC), 공청회서 신규 규정 제안 내용 공개",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "NRC의 일반 규정 제안 공청회와 뉴멕시코 우라늄 채굴 환경평가임",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
+      "verdict": "different_thread"
+    },
     "issue-6c28e5d6eeed09d6--issue-6da9d8c70fd660b7": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한수원 체코 두코바니 원전 사업, 지질조사 완료 및 2029년 착공 준비",
@@ -54412,6 +54706,23 @@
       "reviewed_at": "2026-09-20T19:50:20.531512+00:00",
       "right_title": "한수원 등, 포항 공영주차장 RE100 신재생에너지 설치 협약",
       "verdict": "different_thread"
+    },
+    "issue-6c28e5d6eeed09d6--story-e299dc0cfab1d7ee": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한수원 체코 두코바니 원전 사업, 지질조사 완료 및 2029년 착공 준비",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "체코 두코바니 원전 사업 일정 추진 과정",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한수원·팀코리아, 체코 두코바니 원전 사업 일정 유지 재확인",
+      "verdict": "same_thread"
     },
     "issue-6c28e5d6eeed09d6--story-e730ac1298490463": {
       "gate": {
@@ -58794,6 +59105,17 @@
       "right_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
       "verdict": "different_thread"
     },
+    "issue-747d0b07ad5d7e48--story-53bce9fe9fcb6487": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원전 프레임워크 합의, 미국 내 대형 원전 8기 건설 프로젝트 구체화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 원전 8기 프레임워크와 폴란드 원전 부품 발주는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
+      "verdict": "different_thread"
+    },
     "issue-747d0b07ad5d7e48--story-614dcae9e8cd7ed9": {
       "gate": {
         "at": "2026-11-13T22:17:14+00:00",
@@ -58899,6 +59221,17 @@
       "relationship": "",
       "reviewed_at": "2026-11-13T22:15:02.825438+00:00",
       "right_title": "미 NRC, 웨스팅하우스 AP1000 표준설계 인증 갱신 승인",
+      "verdict": "different_thread"
+    },
+    "issue-747d0b07ad5d7e48--story-7eab5728eaa649b5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원전 프레임워크 합의, 미국 내 대형 원전 8기 건설 프로젝트 구체화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 내 원전 건설 프레임워크와 폴란드 원전 계약은 다른 사업임",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
       "verdict": "different_thread"
     },
     "issue-747d0b07ad5d7e48--story-831a6f9d89a400e6": {
@@ -59051,6 +59384,23 @@
       "relationship": "cause_effect",
       "reviewed_at": "2026-11-17T22:27:05.730896+00:00",
       "right_title": "웨스팅하우스, 미국 내 APR1400 로열티 인상 요구",
+      "verdict": "same_thread"
+    },
+    "issue-747d0b07ad5d7e48--story-f5851c361278f148": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원전 프레임워크 합의, 미국 내 대형 원전 8기 건설 프로젝트 구체화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 대형 원전 8기 및 한국형 원전 진출 협상 과정",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, 미국 대형 원전 8기 건설 협상 지속…한국형 원전 2기 진출 확보",
       "verdict": "same_thread"
     },
     "issue-756c2e6e80bbd36e--issue-7e141e62d1c4ffb4": {
@@ -60202,6 +60552,17 @@
       "right_title": "스페이스X, 3분기 AI 매출 9배 급증하며 흑자 전환",
       "verdict": "different_thread"
     },
+    "issue-76e475ad2520cd4f--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "AI 데이터센터 전력 수요 급증에 따른 전력수급기본계획 재조정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 전력수급기본계획과 IEA 글로벌 보고서로 대상이 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
+      "verdict": "different_thread"
+    },
     "issue-76e475ad2520cd4f--story-e370c941ec2c02f6": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "기후부, 12차 전기본서 신규 원전 적정 설비 규모 결정 방침",
@@ -61148,6 +61509,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-18T21:00:49.951615+00:00",
       "right_title": "IEA, 수소 활용 에너지 안보 강화 강조…한국은 지원 축소 우려",
+      "verdict": "different_thread"
+    },
+    "issue-7842c412d267fd49--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부·IEA, 아시아 에너지안보 협력체 'RISE ASIA' 출범",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "협력체 출자와 IEA의 데이터센터 전망은 다른 주제임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
       "verdict": "different_thread"
     },
     "issue-78926903156f16fa--issue-9b707d5bc0e90593": {
@@ -64364,6 +64736,17 @@
       "right_title": "한수원, 체코 두코바니 원전 건설허가 신청 준비…2029년 착공 목표",
       "verdict": "different_thread"
     },
+    "issue-7fbf45e0f47e3880--story-e299dc0cfab1d7ee": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "대우건설, 하반기 신규 수주 목표 20조원…체코 두코바니 원전 포함",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "건설사의 일반 수주 목표 언급과 특정 원전 사업 공동성명임",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한수원·팀코리아, 체코 두코바니 원전 사업 일정 유지 재확인",
+      "verdict": "different_thread"
+    },
     "issue-7fbf45e0f47e3880--story-e730ac1298490463": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "대우건설, 하반기 신규 수주 목표 20조원…체코 두코바니 원전 포함",
@@ -65141,6 +65524,17 @@
       "right_title": "IEA, 수소 활용 에너지 안보 강화 강조…한국은 지원 축소 우려",
       "verdict": "different_thread"
     },
+    "issue-81474f0865e4fe98--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "IEA 사무총장, 유럽 겨울철 LNG 수급 불안 및 에너지 안보 협력 강조",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "IEA의 서로 다른 주제에 대한 발언 및 보고서",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
+      "verdict": "different_thread"
+    },
     "issue-8223afcb92f21518--issue-8c6d1301f5b1cbb3": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "유럽 원전 냉각수 리스크 부각, 한수원 두코바니 냉각탑 방식 주목",
@@ -65449,6 +65843,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-13T19:36:11.671952+00:00",
       "right_title": "한수원, 발전소 주변지역 지원사업 계약 절차 및 자재 관리 부실 논란",
+      "verdict": "different_thread"
+    },
+    "issue-8223afcb92f21518--story-e299dc0cfab1d7ee": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "유럽 원전 냉각수 리스크 부각, 한수원 두코바니 냉각탑 방식 주목",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "유럽 냉각수 리스크 일반론과 두코바니 원전 사업 일정은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한수원·팀코리아, 체코 두코바니 원전 사업 일정 유지 재확인",
       "verdict": "different_thread"
     },
     "issue-8223afcb92f21518--story-e730ac1298490463": {
@@ -72162,6 +72567,34 @@
       "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
       "verdict": "different_thread"
     },
+    "issue-9957f9f4b43552f8--story-540d0db6d7f27ed7": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "트럼프 미국 대통령, 데이터센터 건설 반대 여론에 정면 대응",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "트럼프의 데이터센터 및 AI 규제 반대 입장",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "트럼프, 민주당의 AI 규제 입법 움직임에 반대 입장 표명",
+      "verdict": "same_thread"
+    },
+    "issue-9957f9f4b43552f8--story-5d0487459982421b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "트럼프 미국 대통령, 데이터센터 건설 반대 여론에 정면 대응",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 대통령 발언과 일본의 전력망 규제는 다른 지역·사안",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "일본 정부, 데이터센터 전력망 접속규율 강화 및 지방분산 추진",
+      "verdict": "different_thread"
+    },
     "issue-9957f9f4b43552f8--story-661b1150fb0281ea": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "트럼프 미국 대통령, 데이터센터 건설 반대 여론에 정면 대응",
@@ -73142,6 +73575,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-19T21:20:37.113659+00:00",
       "right_title": "국회, 전력망 투자 재원 마련 위한 전기요금 선납제 토론회 개최",
+      "verdict": "different_thread"
+    },
+    "issue-9b707d5bc0e90593--story-9cdedb2d81bf01db": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "전남광주통합특별시의회, SK 100조원 투자 지원 예고",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "지자체 지원 예고와 남부발전의 연료전지 사업 협약은 별개",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "남부발전, 미국 데이터센터 연계 연료전지 사업 등 협력 확대",
       "verdict": "different_thread"
     },
     "issue-9b707d5bc0e90593--story-9fc4f7c368d0b655": {
@@ -77976,6 +78420,17 @@
       "right_title": "정부, 제12차 전력수급기본계획 발표 3개월 연기…시민참여단 숙의 절차 착수",
       "verdict": "different_thread"
     },
+    "issue-aa165fa0824b87d8--story-809858468c743eed": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "11차 전기본 신규 양수발전 1.25GW 입찰, 발전사 수주 경쟁 심화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "양수발전 입찰과 전력시장 제도 개편은 서로 다른 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, 지역별 한계가격제(LMP) 및 가격입찰제 도입 추진",
+      "verdict": "different_thread"
+    },
     "issue-aa165fa0824b87d8--story-9a5b1e174d0f721a": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "11차 전기본 신규 양수발전 1.25GW 입찰, 발전사 수주 경쟁 심화",
@@ -79233,6 +79688,17 @@
       "relationship": "",
       "reviewed_at": "2026-11-15T22:25:44.100235+00:00",
       "right_title": "발전 5사 통합 논의, 전력시장 정산 체계 등 과제 산적",
+      "verdict": "different_thread"
+    },
+    "issue-aafd59741b95cafa--story-e4e49e74f6c863d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 핵잠수함 협력 1주년, 특별법 제정 및 농축·재처리 권한 확보 시급",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 핵잠수함 협력과 한전 해킹 사고는 무관함",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한국전력, 고객 및 조달 시스템 해킹으로 152만 건 정보 유출",
       "verdict": "different_thread"
     },
     "issue-aafd59741b95cafa--story-e78317b0b3d11e27": {
@@ -93817,6 +94283,17 @@
       "right_title": "카자흐스탄, 석탄화력 현대화 및 데이터센터 밸리 조성 등 에너지 전환 추진",
       "verdict": "different_thread"
     },
+    "issue-d1e54858467d9da4--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "AI 데이터센터 전력 수요 급증에 따른 전력수급기본계획 재조정",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국내 전력수급기본계획 재조정과 IEA 탄소배출 전망은 별개 사안",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
+      "verdict": "different_thread"
+    },
     "issue-d1e54858467d9da4--story-ea3cd0e3c5ec410e": {
       "gate": {
         "at": "2026-10-03T21:57:31+00:00",
@@ -93968,6 +94445,17 @@
       "right_title": "정부, SMR·차세대 태양광을 미래 성장동력으로 육성 발표",
       "verdict": "same_thread"
     },
+    "issue-d1e966b5772613fd--story-0427146f06883f7f": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "발전5사 통합 공사 설립 시 출자 규모 61조원 추산",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "발전5사 통합과 전력수급기본계획 일반론으로 별개 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "[창간사] 에너지 대전환, 다시 '기본'을 묻는다",
+      "verdict": "different_thread"
+    },
     "issue-d1e966b5772613fd--story-05ac84b7a3f7fc7f": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, SMR·핵융합 등 '7대 시드' 육성으로 AI 시대 이후 성장동력 확보 추진",
@@ -94007,6 +94495,17 @@
       "right_title": "IAEA 원자력 장관회의 한국 개최…SMR 글로벌 생산 거점 도약 선언",
       "verdict": "different_thread"
     },
+    "issue-d1e966b5772613fd--story-242ac2ad82f1fa62": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "발전5사 통합 공사 설립 시 출자 규모 61조원 추산",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "순서만 바뀐 동일한 비연관 기사 쌍",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "국회 기후부 종합감사, 12차 전기본 및 신규 원전 추진 쟁점",
+      "verdict": "different_thread"
+    },
     "issue-d1e966b5772613fd--story-35258fc2445fec63": {
       "gate": {
         "at": "2026-10-05T22:35:01+00:00",
@@ -94023,6 +94522,17 @@
       "reviewed_at": "2026-10-05T22:33:46.799041+00:00",
       "right_title": "과기정통부, 2027년 예산 29.6조 원 편성…SMR 등 7대 시드 프로젝트 추진",
       "verdict": "same_thread"
+    },
+    "issue-d1e966b5772613fd--story-3829399405b29c04": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "발전5사 통합 공사 설립 시 출자 규모 61조원 추산",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "발전사 통합 검토와 데이터센터 전력 수요 관리는 다른 주제임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, 12차 전기본 통해 데이터센터 전력 수요 옥석 가리기",
+      "verdict": "different_thread"
     },
     "issue-d1e966b5772613fd--story-4796900841f0262b": {
       "gate": {
@@ -94083,6 +94593,28 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-12T21:55:20.372872+00:00",
       "right_title": "정부, 핵추진잠수함 도입 관련 IAEA 협의 개시 통보",
+      "verdict": "different_thread"
+    },
+    "issue-d1e966b5772613fd--story-5fe3eac18a020401": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "발전5사 통합 공사 설립 시 출자 규모 61조원 추산",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "발전공기업 통합과 제주도 해상풍력 사업은 다른 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "제주도, 추자해상풍력 제12차 전력수급기본계획 반영 건의",
+      "verdict": "different_thread"
+    },
+    "issue-d1e966b5772613fd--story-60b0002a231795d6": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "발전5사 통합 공사 설립 시 출자 규모 61조원 추산",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "발전공기업 통합과 제주도 해상풍력 사업은 다른 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "제주도, 추자해상풍력 제12차 전력수급기본계획 반영 건의",
       "verdict": "different_thread"
     },
     "issue-d1e966b5772613fd--story-670a3cca09a35cf9": {
@@ -97589,6 +98121,23 @@
       "right_title": "미 DOE ARPA-E, 차세대 원전용 재활용 핵연료 개발 프로젝트 8건 선정",
       "verdict": "different_thread"
     },
+    "issue-d8ff953b5bf78b3c--story-676079a6309ac357": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 주정부 데이터센터 인허가 규제 강화, 전력망 비용 분담 법제화 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 데이터센터 전력망 법안의 통과 과정",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 상원, 데이터센터 전력망 증설비 부담 의무화 법안 통과",
+      "verdict": "same_thread"
+    },
     "issue-d8ff953b5bf78b3c--story-f1ecac74ad93af10": {
       "gate": {
         "at": "2026-09-23T21:48:05+00:00",
@@ -99985,6 +100534,17 @@
       "right_title": "IEA, 수소 활용 에너지 안보 강화 강조…한국은 지원 축소 우려",
       "verdict": "different_thread"
     },
+    "issue-de93da97c359fa12--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "IEA, 일본 하반기 도매 전기요금 40% 급등 경고",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "주체가 IEA이나 일본 전기요금 전망과 데이터센터 배출량 전망은 별개",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
+      "verdict": "different_thread"
+    },
     "issue-de93da97c359fa12--story-e370c941ec2c02f6": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "IEA, 일본 하반기 도매 전기요금 40% 급등 경고",
@@ -101525,6 +102085,23 @@
       "reviewed_at": "2026-10-29T22:26:30.611396+00:00",
       "right_title": "미국, 한국에 대미 투자 신속 이행 압박 및 전략 분야 협력 강조",
       "verdict": "different_thread"
+    },
+    "issue-e0c2d46c6a2b5c2a--story-f5851c361278f148": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원전협력 프레임워크 가동, APR1400 미국 진출 길 열려",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 원전 협력 합의 후 후속 계약 진전",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, 미국 대형 원전 8기 건설 협상 지속…한국형 원전 2기 진출 확보",
+      "verdict": "same_thread"
     },
     "issue-e0c2d46c6a2b5c2a--story-f8ba7787a0786e80": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -103816,6 +104393,17 @@
       "right_title": "대미 에너지·AI 동맹, 원전·LNG 투자 협상 전략적 접근 필요",
       "verdict": "different_thread"
     },
+    "issue-ec91ed3e3ac96397--story-90031490d7ae4f5c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "일본, 호르무즈 우회 송유관 건설 지원 및 원전 활용 방침 재확인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "일본 에너지 정책과 미국 뉴욕주 원전 계획은 무관함",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미국 뉴욕주, 5GW 신규 원전 건설 마스터플랜 발표",
+      "verdict": "different_thread"
+    },
     "issue-ec91ed3e3ac96397--story-9331f7da38f1d727": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "일본, 호르무즈 우회 송유관 건설 지원 및 원전 활용 방침 재확인",
@@ -104332,6 +104920,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-18T21:00:49.951615+00:00",
       "right_title": "미국 제너럴 매터, 패듀카 우라늄 농축시설 건설 인허가 신청",
+      "verdict": "different_thread"
+    },
+    "issue-f016fc6728215437--story-df1f9911899d55d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 NRC, 오라노(Orano)의 '프로젝트 아이크' 농축시설 인허가 심사 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "오라노 농축시설과 뉴멕시코 우라늄 채굴로 대상이 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
       "verdict": "different_thread"
     },
     "issue-f016fc6728215437--story-f3bd58fe25a45aff": {
@@ -107858,6 +108457,17 @@
       "right_title": "공군 1호기 정보유출 의심 보안업체, 원자력·전력 공공기관 보안관제 수행",
       "verdict": "different_thread"
     },
+    "issue-fb600cacc188187d--story-53bce9fe9fcb6487": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원전 프레임워크 후속 협상 과제 산적",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 원전 협상 과제와 폴란드 부품 발주는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
+      "verdict": "different_thread"
+    },
     "issue-fb600cacc188187d--story-591e1596c506abe7": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "한미 원전 프레임워크 후속 협상 과제 산적",
@@ -108007,6 +108617,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-02T22:29:48.709022+00:00",
       "right_title": "안살도 에너지, 미국 가스터빈 시장 재진입",
+      "verdict": "different_thread"
+    },
+    "issue-fb600cacc188187d--story-7eab5728eaa649b5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원전 프레임워크 후속 협상 과제 산적",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 원전 협상 과제와 폴란드 계약은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
       "verdict": "different_thread"
     },
     "issue-fb600cacc188187d--story-812ba6100657c8fa": {
@@ -109662,6 +110283,17 @@
       "right_title": "한미 원전 프레임워크 합의, 미국 내 대형 원전 8기 건설 프로젝트 구체화",
       "verdict": "different_thread"
     },
+    "story-01092a570f92afc5--story-7eab5728eaa649b5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "네덜란드, 신규 원전 건설을 위한 FEED 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "네덜란드 신규 원전 FEED와 폴란드 원전 건설 계약은 별개 사업",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
+      "verdict": "different_thread"
+    },
     "story-01092a570f92afc5--story-8de39c6959e696a8": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "네덜란드, 신규 원전 건설을 위한 FEED 계약 체결",
@@ -111109,6 +111741,23 @@
       "reviewed_at": "2026-10-25T21:18:21.651818+00:00",
       "right_title": "미국 중간선거 결과, 데이터센터 전력망 규제 및 AI 투자 변수 부상",
       "verdict": "different_thread"
+    },
+    "story-015ebdcde220bd7e--story-540d0db6d7f27ed7": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "트럼프 미국 대통령, 대규모 AI 데이터센터 자체 발전 의무화 방침 발표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "트럼프의 데이터센터 전력 관련 정책 기조임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "트럼프, 민주당의 AI 규제 입법 움직임에 반대 입장 표명",
+      "verdict": "same_thread"
     },
     "story-015ebdcde220bd7e--story-661b1150fb0281ea": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -113437,6 +114086,17 @@
       "right_title": "정부, 태양광 업계 반발에 지역별 한계가격제(LMP) 도입 일정 보류",
       "verdict": "different_thread"
     },
+    "story-0427146f06883f7f--story-8aef586f4736bf27": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "[창간사] 에너지 대전환, 다시 '기본'을 묻는다",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "창간사 언급과 국회 검토 결과로 별개 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "발전5사 통합 공사 설립 시 출자 규모 61조원 추산",
+      "verdict": "different_thread"
+    },
     "story-0427146f06883f7f--story-99e8417b939b0c3e": {
       "gate": {
         "at": "2026-11-03T19:43:17+00:00",
@@ -115378,6 +116038,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-02T22:39:44.763197+00:00",
       "right_title": "정부, 2027년 예산안 발표…AI·데이터센터 등 전략기술에 21.3조 투입",
+      "verdict": "different_thread"
+    },
+    "story-0a9a31b8d6d153f7--story-5d0487459982421b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "NERC, 데이터센터 및 AI 시설 대상 전력망 신뢰도 표준안 의결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "NERC의 북미 표준안과 일본 정부의 데이터센터 규제는 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "일본 정부, 데이터센터 전력망 접속규율 강화 및 지방분산 추진",
       "verdict": "different_thread"
     },
     "story-0a9a31b8d6d153f7--story-661b1150fb0281ea": {
@@ -118200,6 +118871,17 @@
       "right_title": "미국 제너럴 매터, 패듀카 우라늄 농축시설 건설 인허가 신청",
       "verdict": "different_thread"
     },
+    "story-10b0434dfdbd3b5c--story-df1f9911899d55d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 레이븐-플린트, 우라늄 전환 시설 인허가 신청서 NRC 접수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 기업의 우라늄 관련 인허가 신청임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
+      "verdict": "different_thread"
+    },
     "story-10b0434dfdbd3b5c--story-e12b9d7a49649245": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 레이븐-플린트, 우라늄 전환 시설 인허가 신청서 NRC 접수",
@@ -118526,6 +119208,23 @@
       "right_title": "마이크로소프트, 중동 4개국 AI 인프라에 13조 원 투자",
       "verdict": "different_thread"
     },
+    "story-110514064e83212b--story-493c617e1ba8d70c": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "백악관 대변인, 한국의 대미 에너지 투자 패키지 2000억 달러 공식 언급",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한국 대미 에너지 투자 패키지와 트럼프의 투자 압박",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "대미 무역흑자 1천억 달러 돌파 확실, 트럼프 투자 압박 가중",
+      "verdict": "same_thread"
+    },
     "story-110514064e83212b--story-4e1bbcf5fe2a6b99": {
       "gate": {
         "at": "2026-10-02T10:48:41+00:00",
@@ -118764,6 +119463,17 @@
       "right_title": "오바마 전 대통령, 앤트로픽 CEO의 'AI 속도조절론' 공개 지지",
       "verdict": "different_thread"
     },
+    "story-110514064e83212b--story-a6b116c117585ec5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "백악관 대변인, 한국의 대미 에너지 투자 패키지 2000억 달러 공식 언급",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 대형 에너지 투자와 민간 기업의 LNG 공급 협력은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "페트로나스, 한국 대상 LNG 공급 및 에너지 협력 확대",
+      "verdict": "different_thread"
+    },
     "story-110514064e83212b--story-a71ed0190b30aa57": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "트럼프, 한국 기업의 미국 내 2,000억 달러 투자 계획 발표 예정",
@@ -118923,6 +119633,23 @@
       "reviewed_at": "2026-10-02T22:29:48.709022+00:00",
       "right_title": "미 상원, 데이터센터 송전망 비용 전액 부담 입법 추진",
       "verdict": "different_thread"
+    },
+    "story-110514064e83212b--story-f224021b13b24f99": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "백악관 대변인, 한국의 대미 에너지 투자 패키지 2000억 달러 공식 언급",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 에너지 투자 패키지 및 원전·LNG 협상 관련 내용",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "대미 에너지·AI 동맹, 원전·LNG 투자 협상 전략적 접근 필요",
+      "verdict": "same_thread"
     },
     "story-110514064e83212b--story-fc64f50e257b3a0a": {
       "gate": {
@@ -119159,6 +119886,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-21T19:35:06.273557+00:00",
       "right_title": "미국 원자력학회(ANS), NRC 방사선 보호 프레임워크 개정안에 의견 제출",
+      "verdict": "different_thread"
+    },
+    "story-112be2ef35e4c363--story-df1f9911899d55d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 NRC, 핵연료 재처리 시설 규제 강화 규칙 개정안 의견 수렴",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "핵연료 재처리 시설 규제와 우라늄 채굴 환경평가는 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
       "verdict": "different_thread"
     },
     "story-112be2ef35e4c363--story-f755685c16ddc039": {
@@ -122353,6 +123091,17 @@
       "right_title": "IEA, 수소 활용 에너지 안보 강화 강조…한국은 지원 축소 우려",
       "verdict": "different_thread"
     },
+    "story-16691682d4bb37d5--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "기후부-IEA, COP31서 아시아 에너지 안보 협력 '라이즈 아시아' 공개",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "COP31 협력 구상 발표와 데이터센터 배출량 전망은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
+      "verdict": "different_thread"
+    },
     "story-166d03d61f2780a1--story-16bab8dc452d7e6e": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "원전수소 생산 위한 전력거래 제도 정비 필요성 제기",
@@ -125361,6 +126110,17 @@
       "right_title": "미 상원의원들, 빅테크 기업에 AI 데이터센터 세액공제 내역 요구",
       "verdict": "different_thread"
     },
+    "story-1b079ec311939519--story-82e3589e5d7329f1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "센트러스-오클로, 메타 데이터센터용 SMR 연료 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "SMR 연료 공급 계약과 배터리 ESS 홍보는 다른 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "삼성SDI·LG엔솔, 북미 AI 데이터센터 전력 시장 공략 가속",
+      "verdict": "different_thread"
+    },
     "story-1b079ec311939519--story-9c51472585aa4b54": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "센트러스-오클로, 메타 데이터센터용 SMR 연료 공급 계약 체결",
@@ -125946,6 +126706,17 @@
       "right_title": "AI 인프라 투자 급증에 따른 구조적 비용 인플레이션 우려 확산",
       "verdict": "different_thread"
     },
+    "story-1c46e9a5a98c8020--story-5d0487459982421b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "동남아 데이터센터 반대 여론 확산…말레이시아, 전력·물 대책 미비 시 투자 반려",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "동남아 규제 강화와 일본의 전력망 접속규율로 대상이 다름",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "일본 정부, 데이터센터 전력망 접속규율 강화 및 지방분산 추진",
+      "verdict": "different_thread"
+    },
     "story-1c46e9a5a98c8020--story-6000eb6a34efba72": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "동남아 데이터센터 반대 여론 확산…말레이시아, 전력·물 대책 미비 시 투자 반려",
@@ -126460,6 +127231,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-10T22:17:47.944956+00:00",
       "right_title": "한수원, 프랑스 오라노와 우라늄 농축 분야 장기 협력의향서 체결",
+      "verdict": "different_thread"
+    },
+    "story-1d520f00b968a9ff--story-9cdedb2d81bf01db": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "건물용 연료전지 업계, 공공시장 위축에 해외 진출 및 사업 다변화 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "연료전지 시장 동향과 개별 기업의 해외 사업 협력임",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "남부발전, 미국 데이터센터 연계 연료전지 사업 등 협력 확대",
       "verdict": "different_thread"
     },
     "story-1d520f00b968a9ff--story-d8ad552fa30d8d15": {
@@ -130940,6 +131722,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-27T22:24:22.123185+00:00",
       "right_title": "미 에너지부(DOE), 2.15억 달러 규모 양자 컴퓨팅 경진대회 개최",
+      "verdict": "different_thread"
+    },
+    "story-23e8a39c3216ac04--story-f17161cb85097b31": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 에너지부, 콘스텔레이션 원전 8기 업그레이드에 50억 달러 대출",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 원전 대출과 인도 원전 확충 계획은 대상이 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "인도, 2030년까지 원전 20GW 확충 및 핑크수소 개발 추진",
       "verdict": "different_thread"
     },
     "story-23e8a39c3216ac04--story-f6cca926ebb3cd2c": {
@@ -136724,6 +137517,17 @@
       "right_title": "정부, 대미 투자 1호 사업 22억 달러 이달 말 송금 및 웨스팅하우스 지분 인수 추진",
       "verdict": "same_thread"
     },
+    "story-2eba66f067fdc974--story-7eab5728eaa649b5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한수원-웨스팅하우스, 미국 내 원전 8기 건설 협력 잠정 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 원전 협력 잠정 합의와 폴란드 원전 계약은 다른 프로젝트임",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
+      "verdict": "different_thread"
+    },
     "story-2eba66f067fdc974--story-8e205925596e9fd2": {
       "gate": {
         "at": "2026-10-29T22:27:52+00:00",
@@ -139825,6 +140629,17 @@
       "right_title": "미국 버지니아주, 도미니언 에너지 3GW급 가스발전소 승인",
       "verdict": "different_thread"
     },
+    "story-354d6a8766c37d84--story-f16eb06774ce7944": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, 동서울변환소 증설 합의 불발 시 특별법 적용 시사",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "동서울변환소 증설과 구글 지열 PPA 체결은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "퍼보 에너지, 구글과 396MW 규모 강화지열 PPA 체결",
+      "verdict": "different_thread"
+    },
     "story-354d6a8766c37d84--story-f566fef48e2aca03": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "정부, 동서울변환소 증설 합의 불발 시 특별법 적용 시사",
@@ -139889,6 +140704,17 @@
       "relationship": "",
       "reviewed_at": "2026-10-17T21:01:57.804054+00:00",
       "right_title": "정부, 내년 에너지 R&D 예산 48% 증액…원자력 R&D 역대 최대",
+      "verdict": "different_thread"
+    },
+    "story-357748fdb84fe405--story-90031490d7ae4f5c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "원전 AI 도입 안전성 논의…규제 체계 정비 및 책임 소재 명확화 필요",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국가 및 대상 사업이 서로 다른 별개의 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미국 뉴욕주, 5GW 신규 원전 건설 마스터플랜 발표",
       "verdict": "different_thread"
     },
     "story-357748fdb84fe405--story-9a8db3343b523dfb": {
@@ -140304,6 +141130,17 @@
       "relationship": "stage_progress",
       "reviewed_at": "2026-09-13T02:57:19.147638+00:00",
       "right_title": "한-미 에너지 당국, 데이터센터 전력수요 대응 및 에너지 안보 협력 논의",
+      "verdict": "same_thread"
+    },
+    "story-362c511c2701fab3--story-72e9e37eb0bd5788": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "美 정부, 원자력 산업의 규제자에서 적극적 시장 참여자로 역할 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국의 원전 정책 기조 전환이 실제 원전 건설 합의로 이어짐",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한미 원전 프레임워크 합의…미국 내 대형 원전 8기 건설 추진",
       "verdict": "same_thread"
     },
     "story-362c511c2701fab3--story-7da9ce11e51366cc": {
@@ -140993,6 +141830,17 @@
       "relationship": "stage_progress",
       "reviewed_at": "2026-11-07T19:48:59.735803+00:00",
       "right_title": "전력당국, 지역별 전력도매가격(LMP) 도입 추진…발전업계 반발",
+      "verdict": "different_thread"
+    },
+    "story-377fe68271be4d4f--story-8aef586f4736bf27": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "에너지업계, AI 전력수요 급증 대응 위한 원전 비중 확대 필요성 제기",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "원전 비중 확대 주장과 발전5사 통합 검토는 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "발전5사 통합 공사 설립 시 출자 규모 61조원 추산",
       "verdict": "different_thread"
     },
     "story-377fe68271be4d4f--story-9b1fae628f12cba4": {
@@ -141886,6 +142734,17 @@
       "right_title": "BWXT, 캐나다 SMR 핵심기기 공장 확장 및 가동 개시",
       "verdict": "different_thread"
     },
+    "story-398ea9aca0c50a35--story-ff43b2c5d0246488": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "경북도, 경주 SMR 제작지원센터 구축 및 연구개발특구 유치 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "경북과 경남의 각각 다른 지역 SMR 인프라 추진",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "경남 SMR 특구 추진, 지역 전문인력 양성 과제 부상",
+      "verdict": "different_thread"
+    },
     "story-39a2e5de12c38fe1--story-5fe3eac18a020401": {
       "gate": {
         "at": "2026-09-23T21:48:05+00:00",
@@ -142605,6 +143464,23 @@
       "reviewed_at": "2026-11-08T22:22:40.892388+00:00",
       "right_title": "산업부, 대미 투자 및 한미 원전 협력 구체적 사항 미확정 공식 발표",
       "verdict": "different_thread"
+    },
+    "story-3c8ac90639a80e9e--story-e299dc0cfab1d7ee": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "홍지선 국토부 장관, 체코 원전 협상 결렬 관련 국토부 역할 검토 시사",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "체코 두코바니 원전 협상 및 사업 일정 관련 후속",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한수원·팀코리아, 체코 두코바니 원전 사업 일정 유지 재확인",
+      "verdict": "same_thread"
     },
     "story-3c8ac90639a80e9e--story-e730ac1298490463": {
       "gate": {
@@ -144858,6 +145734,23 @@
       "right_title": "미국 민주당 상·하원 장악에 따른 에너지 정책 변화 전망",
       "verdict": "different_thread"
     },
+    "story-3f5d78931fa31362--story-540d0db6d7f27ed7": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 중간선거 결과, 데이터센터 전력망 규제 및 AI 투자 변수 부상",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국의 AI 및 데이터센터 규제 관련 정치적 대응",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "트럼프, 민주당의 AI 규제 입법 움직임에 반대 입장 표명",
+      "verdict": "same_thread"
+    },
     "story-3f5d78931fa31362--story-676079a6309ac357": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 중간선거 결과, 데이터센터 전력망 규제 및 AI 투자 변수 부상",
@@ -145932,6 +146825,17 @@
       "right_title": "일본, 대미 투자 패키지 3차 후보로 차세대 SMR 및 전력망 낙점",
       "verdict": "different_thread"
     },
+    "story-40ca26f6684b7913--story-5d0487459982421b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "현대건설, 호주 오스넷과 전력망 연계 사업 협력 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "현대건설의 호주 전력망 협력과 일본 정부의 전력망 규제 정책임",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "일본 정부, 데이터센터 전력망 접속규율 강화 및 지방분산 추진",
+      "verdict": "different_thread"
+    },
     "story-40ca26f6684b7913--story-6958421adb3eed2a": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "현대건설, 호주 오스넷과 전력망 연계 사업 협력 확대",
@@ -146872,6 +147776,17 @@
       "relationship": "",
       "reviewed_at": "2026-11-19T21:06:23.244564+00:00",
       "right_title": "텍사스주, 데이터센터 환경 허가 심사 재개…스페이스X 발전설비 승인",
+      "verdict": "different_thread"
+    },
+    "story-4213b7845d65ad8a--story-9cdedb2d81bf01db": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "영국 재무부, 데이터센터 전력망 지원에 환경·지역사회 기준 연계",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "영국 정책과 남부발전의 미국 연료전지 사업은 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "남부발전, 미국 데이터센터 연계 연료전지 사업 등 협력 확대",
       "verdict": "different_thread"
     },
     "story-4213b7845d65ad8a--story-a7d58adc0fed51a4": {
@@ -148696,6 +149611,17 @@
       "right_title": "텍사스주, 데이터센터 환경 인허가 중단…엔시날 발전소 전력 판매처 불확실성",
       "verdict": "different_thread"
     },
+    "story-45fe7f9b1b8948f8--story-5d0487459982421b": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "AI 인프라 투자 급증에 따른 구조적 비용 인플레이션 우려 확산",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "AI 인프라 물가 우려와 일본 전력망 규율임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "일본 정부, 데이터센터 전력망 접속규율 강화 및 지방분산 추진",
+      "verdict": "different_thread"
+    },
     "story-45fe7f9b1b8948f8--story-6000eb6a34efba72": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "AI 인프라 투자 급증에 따른 구조적 비용 인플레이션 우려 확산",
@@ -150094,6 +151020,17 @@
       "right_title": "IAEA, 2060년 세계 원전 설비 용량 3.4배 확대 전망",
       "verdict": "different_thread"
     },
+    "story-490fe57f73c93405--story-9645de2123dffd5f": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "세계원자력협회, COP31의 '35-by-35' 전기화 목표에 원자력 명시 촉구",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "원자력협회의 요구와 COP31 본회의 최종 합의 결과임",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "COP31, 화석연료 퇴출 문구 삭제…전력 비중 35% 확대 합의",
+      "verdict": "different_thread"
+    },
     "story-490fe57f73c93405--story-b1e5de12ef74998c": {
       "gate": {
         "at": "2026-11-22T19:56:55+00:00",
@@ -150426,6 +151363,23 @@
       "reviewed_at": "2026-11-21T19:35:06.273557+00:00",
       "right_title": "한미 원전 프레임워크 후속 협상 과제 산적",
       "verdict": "different_thread"
+    },
+    "story-498180393c058995--story-7eab5728eaa649b5": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "폴란드 원전 사업, 웨스팅하우스-벡텔 컨소시엄과 기자재 조달 협력 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 원전 기자재 협력에서 대규모 건설 계약 임박으로 진전",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
+      "verdict": "same_thread"
     },
     "story-498180393c058995--story-8de39c6959e696a8": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -151762,6 +152716,23 @@
       "right_title": "미 NRC, 웨스팅하우스 AP1000 표준설계 인증 갱신 승인",
       "verdict": "different_thread"
     },
+    "story-4c72df21fde87f87--story-7eab5728eaa649b5": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 원전 부품 발주에서 최종 계약 임박 단계로 진전",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
+      "verdict": "same_thread"
+    },
     "story-4c72df21fde87f87--story-831a6f9d89a400e6": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
@@ -152032,6 +153003,17 @@
       "reviewed_at": "2026-10-26T21:06:31.139264+00:00",
       "right_title": "카메코(Cameco), 글로벌 레이저 엔리치먼트(GLE) 생산 우라늄 독점 판매 대행 계약 체결",
       "verdict": "same_thread"
+    },
+    "story-4c952b20900b7898--story-df1f9911899d55d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 NRC, 파두카 레이저 우라늄 농축공장 최종 환경영향평가서 발간",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "파두카 농축공장과 뉴멕시코 채굴 프로젝트는 다른 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
+      "verdict": "different_thread"
     },
     "story-4c952b20900b7898--story-e986fb0eff8a9592": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -156833,6 +157815,17 @@
       "right_title": "미 하원, 데이터센터 전력망 확충 비용 부담 법안 가결",
       "verdict": "different_thread"
     },
+    "story-52fde51600afefc3--story-9645de2123dffd5f": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 민주당 상·하원 장악에 따른 에너지 정책 변화 전망",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 의회 장악에 따른 전망과 COP31 합의는 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "COP31, 화석연료 퇴출 문구 삭제…전력 비중 35% 확대 합의",
+      "verdict": "different_thread"
+    },
     "story-52fde51600afefc3--story-99ab97555b65e3c6": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 중간선거 결과에 따른 에너지 정책 변화 전망",
@@ -156965,6 +157958,17 @@
       "right_title": "스페이스X, 3분기 AI 매출 9배 급증하며 흑자 전환",
       "verdict": "different_thread"
     },
+    "story-538c980a9890c302--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "아마존 AWS, AI 인프라 수요 급증으로 향후 2년간 40% 이상 성장 전망",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "AWS 기업 성장 전망과 IEA의 탄소배출량 전망",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
+      "verdict": "different_thread"
+    },
     "story-538c980a9890c302--story-ea68ebe1d13353f6": {
       "gate": {
         "at": "2026-10-30T22:31:11+00:00",
@@ -156993,6 +157997,28 @@
       "right_title": "폴란드전력공사, 웨스팅하우스와 원전 핵심 기자재 6종 조기 발주 착수",
       "verdict": "different_thread"
     },
+    "story-53bce9fe9fcb6487--story-71db1b47140a1ea2": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 원전 부품 발주와 지분 투자 이슈는 별개 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "웨스팅하우스 지분 투자, 실질적 수익성 확보가 관건",
+      "verdict": "different_thread"
+    },
+    "story-53bce9fe9fcb6487--story-747d0b07ad5d7e48": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 부품 발주와 미국 원전 8기 프로젝트는 서로 다른 사업",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한미 원전 프레임워크 합의, 미국 내 대형 원전 8기 건설 프로젝트 구체화",
+      "verdict": "different_thread"
+    },
     "story-53bce9fe9fcb6487--story-7524648ff8032947": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "폴란드, 원전 프로그램 업데이트…1호기 상업운전 2036년으로 3년 연기",
@@ -157003,6 +158029,34 @@
       "reviewed_at": "2026-11-10T19:42:41.195477+00:00",
       "right_title": "정부, 텍사스 가스복합발전 사업에 24억 달러 투자금 송금",
       "verdict": "different_thread"
+    },
+    "story-53bce9fe9fcb6487--story-77a6705d575be156": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 부품 발주와 NRC 표준설계 인증임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 웨스팅하우스 AP1000 표준설계 인증 갱신 승인",
+      "verdict": "different_thread"
+    },
+    "story-53bce9fe9fcb6487--story-7eab5728eaa649b5": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 원전 부품 발주에서 최종 계약 임박 단계로 진전",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
+      "verdict": "same_thread"
     },
     "story-53bce9fe9fcb6487--story-8de39c6959e696a8": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -157082,6 +158136,12 @@
       "verdict": "different_thread"
     },
     "story-53bce9fe9fcb6487--story-d793c1b7b8c06295": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "폴란드, 원전 프로그램 업데이트…1호기 상업운전 2036년으로 3년 연기",
       "model": "gemini-3.5-flash-lite",
@@ -157091,6 +158151,17 @@
       "reviewed_at": "2026-11-06T22:20:01.884487+00:00",
       "right_title": "IHI, 폴란드 루비아토보-코팔리노 원전용 AP1000 핵심 부품 공급 계약",
       "verdict": "same_thread"
+    },
+    "story-53bce9fe9fcb6487--story-d874dbf160e7219d": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "웨스팅하우스, 폴란드 AP1000 원전용 안전 모듈 조건부 구매 주문 발주",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 원전 부품 발주와 기업 IPO 추진은 무관함",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "웨스팅하우스, IPO 추진…기업가치 500억 달러 목표설 제기",
+      "verdict": "different_thread"
     },
     "story-53bce9fe9fcb6487--story-e7c56234fc4b4464": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -157465,6 +158536,17 @@
       "relationship": "",
       "reviewed_at": "2026-10-12T21:55:20.372872+00:00",
       "right_title": "美 a16z, 11억 달러 AI 인프라 펀드 조성…한국 반도체·로봇 투자 모색",
+      "verdict": "different_thread"
+    },
+    "story-540d0db6d7f27ed7--story-c788cfcc584ad45c": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "트럼프, 민주당의 AI 규제 입법 움직임에 반대 입장 표명",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 정치와 유럽 시민 시위로 대상과 사안이 다름",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "유럽 내 데이터센터 신규 건설 반대 시위 확산",
       "verdict": "different_thread"
     },
     "story-540d0db6d7f27ed7--story-d589d53fe167f206": {
@@ -160296,6 +161378,23 @@
       "right_title": "두산에너빌리티, 3분기 영업익 2612억원…테라파워 SMR 기자재 제작 등 수주 성과",
       "verdict": "different_thread"
     },
+    "story-5cc162d0cc50fe32--story-e299dc0cfab1d7ee": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "두산퓨얼셀, 해외 원전·가스터빈 수주 확대에 따른 수익성 개선",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "체코 두코바니 원전 프로젝트 관련 기업 성과와 사업 일정",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한수원·팀코리아, 체코 두코바니 원전 사업 일정 유지 재확인",
+      "verdict": "same_thread"
+    },
     "story-5cc162d0cc50fe32--story-e730ac1298490463": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "두산퓨얼셀, 해외 원전·가스터빈 수주 확대에 따른 수익성 개선",
@@ -160323,6 +161422,50 @@
       "reviewed_at": "2026-10-31T19:37:08.291664+00:00",
       "right_title": "한수원, 체코 두코바니 원전 시공사 재선정 착수…내년 7월 계약 목표",
       "verdict": "same_thread"
+    },
+    "story-5d0487459982421b--story-661b1150fb0281ea": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "일본 정부, 데이터센터 전력망 접속규율 강화 및 지방분산 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "국가와 정책 주체가 다른 데이터센터 전력 정책임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "중국, 제15차 5개년 계획 통해 데이터센터와 녹색전력 공동 배치 추진",
+      "verdict": "different_thread"
+    },
+    "story-5d0487459982421b--story-695f6dbbf28db5df": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "일본 정부, 데이터센터 전력망 접속규율 강화 및 지방분산 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "일본과 EU의 데이터센터 규제는 대상 지역과 주체가 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "EU, 데이터센터 에너지·물 소비량 등급제 도입 추진",
+      "verdict": "different_thread"
+    },
+    "story-5d0487459982421b--story-8cef40d37b9514ab": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "일본 정부, 데이터센터 전력망 접속규율 강화 및 지방분산 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "일본 전력망 규정과 미국 상무부 반도체 압박은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 상무부, 반도체 관세 확대 및 한국 기업 대미 투자 압박",
+      "verdict": "different_thread"
+    },
+    "story-5d0487459982421b--story-a17a67befd9de655": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "일본 정부, 데이터센터 전력망 접속규율 강화 및 지방분산 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "일본과 핀란드의 각각 다른 데이터센터 전력망 정책임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "핀란드, 데이터센터 전력망 접속 후순위 법안 내년 1월 시행",
+      "verdict": "different_thread"
     },
     "story-5d245189720ab0e2--story-62448b3db1ae30ae": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -161214,6 +162357,17 @@
       "right_title": "유렌코(Urenco), 독일 그로나우 우라늄 저장시설 가동",
       "verdict": "different_thread"
     },
+    "story-5eaf50940ba3cffe--story-ebfc8b452964833f": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 제너럴 매터, 패듀카 우라늄 농축시설 건설 인허가 신청",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 기업의 별개 인허가 건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "퍼시픽 퓨전, 뉴멕시코 핵물질 면허 획득…핵융합 실증시설 가속화",
+      "verdict": "different_thread"
+    },
     "story-5eaf50940ba3cffe--story-ecca6d8becee2a24": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 제너럴 매터, 패듀카 우라늄 농축시설 건설 인허가 신청",
@@ -161356,6 +162510,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-21T22:39:03.800095+00:00",
       "right_title": "미 NRC, 웨스팅하우스 AP1000 표준설계 인증 갱신 승인",
+      "verdict": "different_thread"
+    },
+    "story-5f997f5524147b74--story-7eab5728eaa649b5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "웨스팅하우스, 미국 내 10억 달러 규모 LEU+ 연료 공장 투자",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "웨스팅하우스 연료 공장 투자와 폴란드 원전 계약은 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
       "verdict": "different_thread"
     },
     "story-5f997f5524147b74--story-8de39c6959e696a8": {
@@ -162939,6 +164104,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-29T20:25:52.526267+00:00",
       "right_title": "국내 우라늄 농축 시설 구축 필요성 제기…연 1조 원 수입대체 효과 기대",
+      "verdict": "different_thread"
+    },
+    "story-618e0452f62b99d1--story-df1f9911899d55d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국, 니제르 우라늄 자원 투자 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "니제르 우라늄 투자와 미국 내 채굴 환경평가는 대상이 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
       "verdict": "different_thread"
     },
     "story-618e0452f62b99d1--story-e986fb0eff8a9592": {
@@ -165046,6 +166222,23 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-17T22:27:05.730896+00:00",
       "right_title": "트럼프, 민주당의 AI 규제 입법 움직임에 반대 입장 표명",
+      "verdict": "same_thread"
+    },
+    "story-676079a6309ac357--story-a771d0d5b3509df6": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 상원, 데이터센터 전력망 증설비 부담 의무화 법안 통과",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 데이터센터 전력망 비용 부담 및 규제 관련 연동 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 FERC, 데이터센터 전력 차단 계획 기각…빅테크 SMR 자체 발전 선회 가속",
       "verdict": "same_thread"
     },
     "story-676079a6309ac357--story-a7d58adc0fed51a4": {
@@ -170209,6 +171402,17 @@
       "right_title": "조현 외교부 장관, 한미 전략투자 프로젝트 및 안보 협의 가속화 강조",
       "verdict": "different_thread"
     },
+    "story-72aa61d2f784353e--story-df1f9911899d55d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "나미비아 에탕고 우라늄 프로젝트, 최종 투자 결정으로 건설 착수",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "나미비아 광산과 미국 NRC 규제는 무관함",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
+      "verdict": "different_thread"
+    },
     "story-72aa61d2f784353e--story-ef96aafc7f363583": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "나미비아 에탕고 우라늄 프로젝트, 최종 투자 결정으로 건설 착수",
@@ -170545,6 +171749,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-03T19:41:57.796629+00:00",
       "right_title": "미 NRC, 웨스팅하우스 AP1000 표준설계 인증 갱신 승인",
+      "verdict": "different_thread"
+    },
+    "story-72e9e37eb0bd5788--story-7eab5728eaa649b5": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원전 프레임워크 합의…미국 내 대형 원전 8기 건설 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 원전 협력 프레임워크와 폴란드 원전 계약은 다른 사업임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
       "verdict": "different_thread"
     },
     "story-72e9e37eb0bd5788--story-831a6f9d89a400e6": {
@@ -171369,6 +172584,34 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-22T19:54:45.784644+00:00",
       "right_title": "IHI, 폴란드 루비아토보-코팔리노 원전용 AP1000 핵심 부품 공급 계약",
+      "verdict": "different_thread"
+    },
+    "story-747d0b07ad5d7e48--story-f5851c361278f148": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원전 프레임워크 합의, 미국 내 대형 원전 8기 건설 프로젝트 구체화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 대형 원전 8기 프로젝트 합의 및 후속 협상 단계",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, 미국 대형 원전 8기 건설 협상 지속…한국형 원전 2기 진출 확보",
+      "verdict": "same_thread"
+    },
+    "story-7482339152ced97c--story-addf1e2ee5f478b9": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "GMI클라우드 CEO, AI 데이터센터 전력난 해소를 위해 아시아 사업 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "데이터센터 전력난 대응과 클라우드 효율화는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "네이버클라우드, AMD 에픽 CPU 도입 확대…데이터센터 전력 효율 개선",
       "verdict": "different_thread"
     },
     "story-74d9ee0f5acbb1cb--story-7eb1aa603fa1727d": {
@@ -173179,6 +174422,17 @@
       "right_title": "미국 제너럴 매터, 패듀카 우라늄 농축시설 건설 인허가 신청",
       "verdict": "same_thread"
     },
+    "story-787189b9430bc15e--story-df1f9911899d55d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 NRC, 제너럴 매터(General Matter) 농축 사업 신청 수리",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "우라늄 농축 사업 신청과 우라늄 채굴 환경평가는 별개",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
+      "verdict": "different_thread"
+    },
     "story-787189b9430bc15e--story-e986fb0eff8a9592": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미 NRC, 피터 틸 투자 우라늄 농축 스타트업 제너럴 매터 신청서 수리",
@@ -174038,6 +175292,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-14T22:27:33.332286+00:00",
       "right_title": "미국 오하이오주, 데이터센터 전력·용수 사용 논란 선거 쟁점화",
+      "verdict": "different_thread"
+    },
+    "story-7a2f767931f11036--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "트럼프, AI 데이터센터 전력 인프라 비용 주민 전가 방지 및 세제 혜택 축소 시사",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "트럼프의 데이터센터 정책 발언과 IEA의 탄소배출 전망은 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
       "verdict": "different_thread"
     },
     "story-7a2f767931f11036--story-eab1acc56964ea11": {
@@ -175655,6 +176920,17 @@
       "right_title": "국회 국감서 원전 4기 계속운전 심사 신속 추진 요구 제기",
       "verdict": "different_thread"
     },
+    "story-7dd0752f226748ca--story-d334e64e2b838c5d": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "캐나다, 서구권 첫 SMR 프로젝트 비용 급증 및 공기 지연 발생",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "프로젝트 지연과 부품사 공장 확장은 다른 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "BWXT, 캐나다 SMR 핵심기기 공장 확장 및 가동 개시",
+      "verdict": "different_thread"
+    },
     "story-7dd0752f226748ca--story-f5dc9a76e5e40425": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "온타리오전력(OPG), 달링턴 SMR 1호기 건설 일정 및 비용 초과 공식화",
@@ -175719,6 +176995,50 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-22T19:54:45.784644+00:00",
       "right_title": "미국, 태양광 공급망을 국가안보 자산으로 격상…12월 4일 관세 시행",
+      "verdict": "different_thread"
+    },
+    "story-7eab5728eaa649b5--story-d5217cd852b861bd": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 계약 건과 한미 후속 협상은 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한미 원전 프레임워크 후속 협상 과제 산적",
+      "verdict": "different_thread"
+    },
+    "story-7eab5728eaa649b5--story-d793c1b7b8c06295": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 원전 관련이나 계약 주체와 사업 범위가 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IHI, 폴란드 루비아토보-코팔리노 원전용 AP1000 핵심 부품 공급 계약",
+      "verdict": "different_thread"
+    },
+    "story-7eab5728eaa649b5--story-d874dbf160e7219d": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 원전 계약과 웨스팅하우스 IPO임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "웨스팅하우스, IPO 추진…기업가치 500억 달러 목표설 제기",
+      "verdict": "different_thread"
+    },
+    "story-7eab5728eaa649b5--story-e6e494d12cf8f808": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "폴란드, 웨스팅하우스·벡텔과 500억 달러 규모 원전 건설 계약 임박",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "폴란드 원전 계약과 네덜란드 신규 원전 기본설계는 다른 프로젝트임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "현대건설, 네덜란드 신규 원전 1단계 기본설계 계약 체결",
       "verdict": "different_thread"
     },
     "story-7eb1aa603fa1727d--story-88bd5673cf01350f": {
@@ -176336,6 +177656,28 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-08T22:20:38.344867+00:00",
       "right_title": "HD건설기계, 미국 데이터센터용 발전엔진 3900억 수주",
+      "verdict": "different_thread"
+    },
+    "story-817e78759f6c2a84--story-9a6d3dec4b9e41c9": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "세종시, 7조원 규모 AI 데이터센터 건립 투자협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "세종시 데이터센터 건립과 텍사스주 환경 허가 심사는 다른 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "텍사스주, 데이터센터 환경 허가 심사 재개…스페이스X 발전설비 승인",
+      "verdict": "different_thread"
+    },
+    "story-817e78759f6c2a84--story-9cdedb2d81bf01db": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "세종시, 7조원 규모 AI 데이터센터 건립 투자협약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "세종시 데이터센터 협약과 남부발전 미국 연료전지 사업은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "남부발전, 미국 데이터센터 연계 연료전지 사업 등 협력 확대",
       "verdict": "different_thread"
     },
     "story-817e78759f6c2a84--story-9fc4f7c368d0b655": {
@@ -176983,6 +178325,23 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-20T22:06:00.552221+00:00",
       "right_title": "정부, APR1400 미국 진출 2기 한정 확인…연내 원자력협력협정(SA) 개정 협의 추진",
+      "verdict": "same_thread"
+    },
+    "story-831a6f9d89a400e6--story-f5851c361278f148": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한미 원전협력 프레임워크 가동, APR1400 미국 진출 길 열려",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한미 원전 협력 및 APR1400 미국 진출 협상 진행 과정",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, 미국 대형 원전 8기 건설 협상 지속…한국형 원전 2기 진출 확보",
       "verdict": "same_thread"
     },
     "story-831a6f9d89a400e6--story-fb5d83881f113de0": {
@@ -178267,6 +179626,23 @@
       "right_title": "IAEA, 과학 포럼서 암 치료 접근성 확대 위한 '희망의 빛' 이니셔티브 강조",
       "verdict": "different_thread"
     },
+    "story-89c1ce7ebf89478f--story-e299dc0cfab1d7ee": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "원안위, 체코 원자력안전청과 신규 원전 안전규제 협력 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "체코 원전 규제 협력 논의 후 사업 일정 유지 재확인",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한수원·팀코리아, 체코 두코바니 원전 사업 일정 유지 재확인",
+      "verdict": "same_thread"
+    },
     "story-89c1ce7ebf89478f--story-e5dd914c17bd60cc": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "원안위, 체코 원자력안전청과 신규 원전 안전규제 협력 논의",
@@ -178470,6 +179846,23 @@
       "relationship": "stage_progress",
       "reviewed_at": "2026-11-22T19:54:45.784644+00:00",
       "right_title": "박해철 의원, 5개 발전공기업 통합 ‘한국발전공사법’ 대표 발의",
+      "verdict": "same_thread"
+    },
+    "story-8aef586f4736bf27--story-ea3cd0e3c5ec410e": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "발전5사 통합 공사 설립 시 출자 규모 61조원 추산",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "제12차 전기본 수립 과정에서 다뤄지는 관련 정책들임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, 제12차 전기본 내 LNG 발전 탄소 배출 기준 검토",
       "verdict": "same_thread"
     },
     "story-8b1fe0649bcfd30b--story-923327b8dac9d72e": {
@@ -180232,6 +181625,17 @@
       "right_title": "일본, 전력난 대응 위해 노후 화력발전소 수명 연장 검토",
       "verdict": "different_thread"
     },
+    "story-90031490d7ae4f5c--story-b09fe707587e5bb0": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 뉴욕주, 5GW 신규 원전 건설 마스터플랜 발표",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "뉴욕주 원전 마스터플랜과 태평양 북서부 지열 발전은 대상이 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "헥사곤 에너지-웨이어하우저, 미국 태평양 북서부 지열 발전 개발 협약",
+      "verdict": "different_thread"
+    },
     "story-90031490d7ae4f5c--story-cb4aab6da55b59d3": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 뉴욕주, 2033년 전력난 전망…최대 5GW 원전 추가 마스터플랜 발표",
@@ -180953,6 +182357,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-10-26T21:06:31.139264+00:00",
       "right_title": "스페이스X, 3분기 AI 매출 9배 급증하며 흑자 전환",
+      "verdict": "different_thread"
+    },
+    "story-91e8184be74ce6a6--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "HD현대, AI 데이터센터 전력 수요 대응 육상용 발전 엔진 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "HD현대 엔진 사업과 IEA 글로벌 데이터센터 전망은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
       "verdict": "different_thread"
     },
     "story-91e8184be74ce6a6--story-f6b15870627509bd": {
@@ -181943,6 +183358,23 @@
       "reviewed_at": "2026-09-24T19:40:40.260812+00:00",
       "right_title": "정부, 대미 전략투자 연간 200억 달러 제한 재확인",
       "verdict": "different_thread"
+    },
+    "story-9645de2123dffd5f--story-b1e5de12ef74998c": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "COP31, 화석연료 퇴출 문구 삭제…전력 비중 35% 확대 합의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "COP31 회의의 합의 불발에서 최종 합의 도출",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "제31차 유엔기후변화협약 당사국총회(COP31) 합의문 채택 불발",
+      "verdict": "same_thread"
     },
     "story-96e2f96f86719e09--story-989a6f3c0c2b539a": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -183495,6 +184927,23 @@
       "right_title": "웨스팅하우스, 미국 내 APR1400 로열티 인상 요구",
       "verdict": "same_thread"
     },
+    "story-9af72c1f7069a074--story-f5851c361278f148": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "정부, APR1400 미국 진출 2기 한정 확인…연내 원자력협력협정(SA) 개정 협의 추진",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 대형 원전 및 APR1400 진출 협상",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, 미국 대형 원전 8기 건설 협상 지속…한국형 원전 2기 진출 확보",
+      "verdict": "same_thread"
+    },
     "story-9af72c1f7069a074--story-f8ba7787a0786e80": {
       "gate": {
         "at": "2026-10-29T22:27:52+00:00",
@@ -183996,6 +185445,17 @@
       "right_title": "원안위, 새울 3호기 재가동 승인…운전원 설정값 입력 오류 확인",
       "verdict": "different_thread"
     },
+    "story-9c51472585aa4b54--story-9cdedb2d81bf01db": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "프라마톰, 첫 상업용 LEU+ 공급 계약 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "우라늄 공급 계약과 미국 연료전지 사업은 별개임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "남부발전, 미국 데이터센터 연계 연료전지 사업 등 협력 확대",
+      "verdict": "different_thread"
+    },
     "story-9c51472585aa4b54--story-c3f7bd0e60d4e425": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "프라마톰, 첫 상업용 LEU+ 공급 계약 체결",
@@ -184242,6 +185702,39 @@
       "reviewed_at": "2026-11-14T22:27:33.332286+00:00",
       "right_title": "한미 핵잠수함 협력 1주년, 특별법 제정 및 농축·재처리 권한 확보 시급",
       "verdict": "same_thread"
+    },
+    "story-9cdedb2d81bf01db--story-bd711166efdeeefc": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "남부발전, 미국 데이터센터 연계 연료전지 사업 등 협력 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 연료전지 사업과 한-프랑스 원자력 협정은 다름",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한-프랑스, 국빈방문 계기 원자력 연료주기 등 9개 협력 성과 도출",
+      "verdict": "different_thread"
+    },
+    "story-9cdedb2d81bf01db--story-c40700f5efc73fe8": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "남부발전, 미국 데이터센터 연계 연료전지 사업 등 협력 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "미국 연료전지 사업과 국내 조력발전 MOU는 대상 사업이 다름",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한수원·수자원공사·농어촌공사, 새만금 조력발전 공동개발 MOU 체결",
+      "verdict": "different_thread"
+    },
+    "story-9cdedb2d81bf01db--story-d8ad552fa30d8d15": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "남부발전, 미국 데이터센터 연계 연료전지 사업 등 협력 확대",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "발전사 협력 사업과 주의 재생에너지 입찰은 다른 사안",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미국 메릴랜드주, 재생에너지·ESS 보조금 경쟁입찰 개시",
+      "verdict": "different_thread"
     },
     "story-9d1fe1976fd1a6a4--story-e0dd333f959cbd3d": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
@@ -184992,6 +186485,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-09-28T21:57:44.369538+00:00",
       "right_title": "이재명 대통령, 칼둔 UAE 행정청장 접견…원전 등 협력 후속 논의",
+      "verdict": "different_thread"
+    },
+    "story-9fc4f7c368d0b655--story-d6bb83d1f184fc66": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "이재명 대통령, 29일 3차 민관합동 점검회의서 메가프로젝트 정주여건 논의",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "한국의 정주여건 논의와 미국의 해외 데이터센터 규제 경고임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "트럼프 미국 대통령, 해외 데이터센터 투자 기업에 고액 세금 부과 경고",
       "verdict": "different_thread"
     },
     "story-9fc4f7c368d0b655--story-eab1acc56964ea11": {
@@ -185794,6 +187298,17 @@
       "reviewed_at": "2026-10-27T22:24:22.123185+00:00",
       "right_title": "미국, 전력망 인프라 안보 강화 위한 행정명령 발동",
       "verdict": "same_thread"
+    },
+    "story-a399a72020f9a358--story-d6bb83d1f184fc66": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 행정명령 14421호, 중국산 전력망 장비 사용 제한 리스크 관리 필요",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "전력망 장비 제한 행정명령과 해외 데이터센터 투자 경고는 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "트럼프 미국 대통령, 해외 데이터센터 투자 기업에 고액 세금 부과 경고",
+      "verdict": "different_thread"
     },
     "story-a3e57010d24635a7--story-afa0cf52daa8ec64": {
       "gate": {
@@ -190775,6 +192290,23 @@
       "right_title": "한수원 등, 포항 공영주차장 RE100 신재생에너지 설치 협약",
       "verdict": "different_thread"
     },
+    "story-bb5be47ba3fd8a11--story-e299dc0cfab1d7ee": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한수원, 체코 원전 시공사 교체 착수…공사비 갈등 심화",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "체코 원전 시공사 교체 및 후속 일정 유지",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한수원·팀코리아, 체코 두코바니 원전 사업 일정 유지 재확인",
+      "verdict": "same_thread"
+    },
     "story-bb5be47ba3fd8a11--story-e730ac1298490463": {
       "gate": {
         "at": "2026-10-28T19:31:07+00:00",
@@ -191450,6 +192982,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-03T19:41:57.796629+00:00",
       "right_title": "조현 외교부 장관, 한미 전략투자 프로젝트 및 안보 협의 가속화 강조",
+      "verdict": "different_thread"
+    },
+    "story-bfa88d6cd6b51985--story-df1f9911899d55d1": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "美 와이오밍주, 우라늄 채굴 등 인프라 사업 인허가 가속화 MOU 체결",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "와이오밍주 인허가 법령과 뉴멕시코주 개별 프로젝트 환경평가임",
+      "relationship": "",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
       "verdict": "different_thread"
     },
     "story-bfa88d6cd6b51985--story-ef96aafc7f363583": {
@@ -194661,6 +196204,17 @@
       "right_title": "트럼프 미국 대통령, 해외 데이터센터 투자 기업에 고액 세금 부과 경고",
       "verdict": "different_thread"
     },
+    "story-d589d53fe167f206--story-e2ac6ebbf9de5d50": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "AI GPU 대여 전문 클라우드 업체 급성장과 전력 인프라 확보 경쟁",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "클라우드 시장 동향과 IEA의 배출량 전망임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
+      "verdict": "different_thread"
+    },
     "story-d589d53fe167f206--story-ea68ebe1d13353f6": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "AI GPU 대여 전문 클라우드 업체 급성장과 전력 인프라 확보 경쟁",
@@ -195362,6 +196916,17 @@
       "right_title": "Valar Atomics, 유타주 SMR 데이터센터 캠퍼스 인허가 신청",
       "verdict": "different_thread"
     },
+    "story-dc617ac727429a81--story-ebfc8b452964833f": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미국 제너럴 매터, 패듀카 우라늄 농축시설 건설 인허가 신청",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 기업의 별개 인허가 건임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "퍼시픽 퓨전, 뉴멕시코 핵물질 면허 획득…핵융합 실증시설 가속화",
+      "verdict": "different_thread"
+    },
     "story-dc617ac727429a81--story-ecca6d8becee2a24": {
       "generation_policy_fingerprint": "4a45c8c6c00470cc",
       "left_title": "미국 제너럴 매터, 패듀카 우라늄 농축시설 건설 인허가 신청",
@@ -195503,6 +197068,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-19T21:06:23.244564+00:00",
       "right_title": "엔비디아, AI 인프라 금융 지원을 전력·부지 확보 중심으로 전환",
+      "verdict": "different_thread"
+    },
+    "story-df1f9911899d55d1--story-f755685c16ddc039": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "미 NRC, 뉴멕시코주 우라늄 채굴 프로젝트 환경평가 초안 공개",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "서로 다른 지역과 프로젝트의 규제 사안임",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "미 NRC, LIS 테크놀로지스 오크리지 시설 보안 절차 계획 승인",
       "verdict": "different_thread"
     },
     "story-dfa6d9a12ae86223--story-dffe5181d554fc6d": {
@@ -195848,6 +197424,51 @@
       "right_title": "한·이집트 정상회담…전략적 동반자 관계 격상 및 12건 협정 체결",
       "verdict": "different_thread"
     },
+    "story-e299dc0cfab1d7ee--story-e730ac1298490463": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한수원·팀코리아, 체코 두코바니 원전 사업 일정 유지 재확인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "체코 두코바니 원전 사업의 계약 마찰과 일정 유지 재확인",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "대우건설, 체코 원전 협상 결렬에 유감 표명…재협상 촉구",
+      "verdict": "same_thread"
+    },
+    "story-e299dc0cfab1d7ee--story-e78317b0b3d11e27": {
+      "gate": {
+        "at": "2026-11-23T20:16:11+00:00",
+        "basis": "",
+        "passed": true,
+        "policy": "cb13100a6deb"
+      },
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한수원·팀코리아, 체코 두코바니 원전 사업 일정 유지 재확인",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "체코 원전 협약 종료 및 후속 입장 표명",
+      "relationship": "stage_progress",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한수원, 체코 원전 시공 컨소시엄 협약 종료…내년 7월 새 시공사 선정",
+      "verdict": "same_thread"
+    },
+    "story-e2ac6ebbf9de5d50--story-eab1acc56964ea11": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "IEA, 2030년 데이터센터 탄소배출량 70% 증가 전망",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "IEA 글로벌 전망과 한국 정부의 국내 전망 수정은 별개",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "정부, AI 데이터센터 전력 수요 전망치 3~4GW 하향 조정 검토",
+      "verdict": "different_thread"
+    },
     "story-e317f8765b0d98e2--story-e3337315de9c0677": {
       "gate": {
         "at": "2026-09-30T22:31:23+00:00",
@@ -195979,6 +197600,17 @@
       "relationship": "same_matter",
       "reviewed_at": "2026-11-03T19:41:57.796629+00:00",
       "right_title": "울산시의회 원전특위, 월성 1호기 해체 사업 지역기업 참여 확대 모색",
+      "verdict": "different_thread"
+    },
+    "story-e4e49e74f6c863d1--story-f029b67e03227c12": {
+      "generation_policy_fingerprint": "4a45c8c6c00470cc",
+      "left_title": "한국전력, 고객 및 조달 시스템 해킹으로 152만 건 정보 유출",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": 1,
+      "reason": "해킹 유출 사고와 사채 한도 재무 위기는 별개 사안",
+      "relationship": "same_matter",
+      "reviewed_at": "2026-11-23T20:09:45.373873+00:00",
+      "right_title": "한전, 사채 한도 특례 종료로 내년말 19조 초과 위기…전기요금 인상론 제기",
       "verdict": "different_thread"
     },
     "story-e4e49e74f6c863d1--story-f9bfa1bc554c3fb9": {
