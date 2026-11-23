@@ -148,13 +148,54 @@ class StoryOutcomeTests(unittest.TestCase):
         return daily, story, outcome
 
     def test_a_writer_503_is_recorded_as_a_failure_not_as_no_story(self):
-        """그날 실사고: 일일은 단독 Writer 로 살고 스토리는 사라졌다 — 그 사실이 남는다."""
+        """그날 실사고: 일일은 단독 Writer 로 살고 스토리는 사라졌다 — 그 사실이 남는다.
+
+        스토리의 두 번째 기회(통합 Writer 재호출)도 503 으로 죽는 경우다.
+        """
         daily, story, outcome = self._run(
-            [brief(story_thread="thread-x"), overload(), copy()["daily"]])
+            [brief(story_thread="thread-x"), overload(), copy()["daily"], overload()])
         self.assertIsNotNone(daily)
         self.assertIsNone(story)
         self.assertEqual(outcome["status"], make_cards.STORY_FAILED)
         self.assertIn("503", outcome["reason"])
+
+    def test_a_writer_503_gives_the_story_a_second_chance(self):
+        """2026-11-24 실측: card_writer 가 503 대기 사다리를 다 쓰고 포기한 직후
+        일일 단독 호출은 같은 모델로 성공했다 — 스토리도 같은 기회를 받는다."""
+        with mock.patch.object(make_cards, "story_problems",
+                               side_effect=lambda *_, **__: []), \
+                mock.patch.object(make_cards, "card_editorial") as fake:
+            fake.validate_brief = card_editorial.validate_brief
+            fake.normalize_brief = card_editorial.normalize_brief
+            fake.daily_writer_system = lambda **_: "sys"
+            fake.writer_system = lambda **_: "sys"
+            fake.NARRATOR_SYSTEM = "sys"
+            fake.call = mock.Mock(side_effect=[
+                brief(story_thread="thread-x"), overload(), copy()["daily"],
+                copy(with_story=True)])
+            daily, story = make_cards.run_editorial(
+                ITEMS, "2026-11-24", 10, dict(self.PAYLOAD), [], {})
+        self.assertIsNotNone(daily)
+        self.assertEqual(story, {"cover": {"headline": "SAR"}})
+        self.assertEqual([c.args[0] for c in fake.call.call_args_list],
+                         ["card_editorial_narrator", "card_writer",
+                          "card_daily_writer", "card_writer"])
+
+    def test_a_story_rejected_by_qa_gets_no_second_call(self):
+        """두 번째 기회는 **호출 실패**에만 — QA 거부는 같은 판단을 다시 사지 않는다."""
+        responses = [brief(story_thread="thread-x"), copy(with_story=True),
+                     copy(with_story=True)]
+        with mock.patch.object(make_cards, "story_problems",
+                               side_effect=lambda *_, **__: ["cover.headline: 31자 > 26"]), \
+                mock.patch.object(make_cards, "card_editorial") as fake:
+            fake.validate_brief = card_editorial.validate_brief
+            fake.normalize_brief = card_editorial.normalize_brief
+            fake.daily_writer_system = lambda **_: "sys"
+            fake.writer_system = lambda **_: "sys"
+            fake.NARRATOR_SYSTEM = "sys"
+            fake.call = mock.Mock(side_effect=responses)
+            make_cards.run_editorial(ITEMS, "2026-11-24", 10, dict(self.PAYLOAD), [], {})
+        self.assertEqual(fake.call.call_count, 3)
 
     def test_a_narrator_failure_is_a_failure(self):
         _daily, _story, outcome = self._run([overload(), copy()["daily"]])

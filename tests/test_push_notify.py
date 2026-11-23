@@ -507,7 +507,11 @@ class WorkflowWiringTests(unittest.TestCase):
         self.assertIn("inputs.notify", notify)
         wait = self._step(notify, "Wait for the card deploy")
         send = self._step(notify, "Web push (아침 알림)")
-        self.assertIn("gh run watch", wait)
+        # `gh run watch` 는 API 오류 한 번에 스텝을 죽여 알림을 건너뛰게 했다
+        # (2026-11-24, HTTP 500). 직접 폴링하고 API 오류는 넘긴다.
+        self.assertNotIn("gh run watch", wait)
+        self.assertIn('gh run view "$run_id"', wait)
+        self.assertIn('2>/dev/null) || state=""', wait)
         self.assertIn("needs.cards.outputs.deploy_triggered == 'true'", wait)
         # 배포 실패가 알림을 막지 않는다 — 브리핑은 첫 배포로 이미 라이브다.
         self.assertNotIn("--exit-status", wait)

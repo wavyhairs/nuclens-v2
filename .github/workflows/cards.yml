@@ -491,11 +491,26 @@ jobs:
             exit 0
           fi
           echo "deploy-web 런 $run_id 를 기다린다 (since=$SINCE)"
-          # --exit-status 를 쓰지 않는다 — 배포 실패가 알림을 막을 이유가 아니다.
-          gh run watch "$run_id" -R "${{ github.repository }}" --interval 10
-          conclusion=$(gh run view "$run_id" -R "${{ github.repository }}" --json conclusion --jq .conclusion)
+          # `gh run watch` 를 쓰지 않는다. 그것은 GitHub API 오류 **한 번**에 비영(非0)으로
+          # 죽고, 이 스텝이 빨개지면 뒤의 알림 스텝이 전부 건너뛰어진다 — 2026-11-24:
+          # 배포(#278)는 성공했는데 watch 가 HTTP 500 하나에 죽어 아침 알림이 안 나갔다.
+          # 위 주석의 약속("어느 경우도 이 스텝은 실패하지 않는다")을 코드로 지킨다:
+          # 직접 폴링하고, 한 번의 API 오류는 다음 회차로 넘긴다. 10초 × 180 = 30분
+          # (잡 timeout 40분 안). 배포 실패도 알림을 막지 않는다(--exit-status 없음과 같은 뜻).
+          conclusion=""
+          for i in $(seq 1 180); do
+            state=$(gh run view "$run_id" -R "${{ github.repository }}" \
+              --json status,conclusion --jq '.status + " " + (.conclusion // "")' 2>/dev/null) || state=""
+            case "$state" in
+              completed*) conclusion="${state#completed }"; break ;;
+              "") echo "API 응답 없음 ($i회차) — 다음 회차에 다시 본다" ;;
+            esac
+            sleep 10
+          done
           if [ "$conclusion" = "success" ]; then
             echo "카드 배포 완료 — 알림을 보낼 자리다"
+          elif [ -z "$conclusion" ]; then
+            echo "::warning::deploy-web 런 $run_id 결과를 30분 안에 못 읽었다 — 브리핑은 라이브다. 알림은 보낸다"
           else
             echo "::warning::deploy-web 런 $run_id 결과 '$conclusion' — 카드가 아직 없을 수 있지만 브리핑은 라이브다. 알림은 보낸다"
           fi

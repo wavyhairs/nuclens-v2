@@ -708,8 +708,8 @@ def run_editorial(items: list[dict], date: str, collected: int,
         since = (story_payload or {}).get("since_last")
         if since and isinstance(brief.get("story"), dict):
             brief["story"]["since_last"] = since
-        raw, rescued_story = _writer_round(brief, items, date, story_payload, call_log,
-                                           story_outcome)
+        raw, rescued_story, call_failed = _writer_round(
+            brief, items, date, story_payload, call_log, story_outcome)
         if raw is not None:
             return _daily_of(raw), raw.get("story") or None
         if rescued_story is not None:
@@ -717,8 +717,43 @@ def run_editorial(items: list[dict], date: str, collected: int,
                   "일일 카드를 단독 호출로 다시 만든다")
         else:
             print("[cards] Writer 실패 — 일일 카드를 단독 호출로 다시 만든다")
-        story_payload = None
+        daily = _daily_only(items, date, collected, call_log)
+        if rescued_story is None and call_failed and story_payload is not None:
+            rescued_story = _story_second_chance(brief, items, date, story_payload, call_log)
+        return daily, rescued_story
     return _daily_only(items, date, collected, call_log), rescued_story
+
+
+def _story_second_chance(brief: dict, items: list[dict], date: str,
+                         story_payload: dict, call_log: list[dict]) -> dict | None:
+    """통합 Writer **호출**이 죽은 날, 스토리에도 일일과 같은 두 번째 기회를 준다.
+
+    통합 Writer 가 일시 과부하(503)로 대기 사다리를 다 쓰고 떨어지면 일일 카드는
+    `card_daily_writer` 로 한 번 더 불리지만 스토리는 그 길이 없었다. 2026-11-24
+    실측: card_writer 가 503 으로 45+120초를 기다리다 포기했고, 곧바로 부른 일일
+    단독 호출은 같은 모델로 성공했다 — 과부하는 이미 풀려 있었는데 스토리만 빠졌다.
+
+    브리프는 이미 있으므로 Narrator 를 다시 부르지 않는다. 통합 Writer 를 한 번 더
+    불러 **스토리 칸만** 검증해 쓴다(일일은 방금 단독 호출로 확정됐다). 실패하면
+    조용히 None — 스토리가 빠진 첫 원인은 이미 story_outcome 에 적혀 있다.
+    """
+    print("[cards] 스토리 두 번째 기회 — 브리프로 통합 Writer 를 한 번 더 부른다(스토리 칸만 쓴다)")
+    try:
+        raw = ask_writer(brief, items, date, with_story=True,
+                         story_events=story_payload.get("events"),
+                         story_background=story_payload.get("background"),
+                         log=call_log, task="card_writer")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[cards] 스토리 두 번째 기회도 실패 — {type(exc).__name__}: {exc}"[:300])
+        return None
+    keep_raw_copy("card_writer_story_retry", raw)
+    story = (raw or {}).get("story")
+    problems = story_problems(story, story_payload)
+    if problems:
+        print(f"[cards] 스토리 두 번째 기회 QA 실패: {'; '.join(problems[:3])}")
+        return None
+    print("[cards] 스토리 두 번째 기회 성공 — 스토리 카피를 살린다")
+    return story
 
 
 def _daily_only(items: list[dict], date: str, collected: int,
@@ -778,12 +813,14 @@ def story_problems(copy: object, payload: dict, *, strict_length: bool = False) 
 
 def _writer_round(brief: dict, items: list[dict], date: str,
                   story_payload: dict | None, call_log: list[dict],
-                  story_outcome: dict | None = None) -> tuple[dict | None, dict | None]:
+                  story_outcome: dict | None = None,
+                  ) -> tuple[dict | None, dict | None, bool]:
     """Writer 1회 + 필요하면 repair 1회. **Narrator 는 다시 부르지 않는다.**
 
-    돌려주는 것은 (통합 응답, 살린 스토리 카피). 통합 응답이 None 이면 호출자가
-    일일 단독 호출로 내려가고, 그때 두 번째 칸에 QA 를 통과한 스토리 카피가
-    있으면 그것을 그대로 쓴다.
+    돌려주는 것은 (통합 응답, 살린 스토리 카피, 호출 실패 여부). 통합 응답이 None
+    이면 호출자가 일일 단독 호출로 내려가고, 그때 두 번째 칸에 QA 를 통과한 스토리
+    카피가 있으면 그것을 그대로 쓴다. 세 번째 칸은 **호출 자체가 죽었는가**(QA
+    거부가 아니라) — 그때만 호출자가 스토리에 두 번째 기회를 준다.
 
     **두 도메인을 같이 본다.** 예전에는 일일만 검증하고 스토리 카피는 검증 없이
     저장했다 — 그래서 잘못된 스토리는 한참 뒤 렌더 단계에서 처음 걸렸고, 그때는
@@ -812,11 +849,11 @@ def _writer_round(brief: dict, items: list[dict], date: str,
             print(f"[cards] Writer({task}) 실패 — {type(exc).__name__}: {exc}")
             if passed_story is not None:
                 # 첫 회차의 스토리는 통과했다 — repair 호출이 죽었다고 버리지 않는다.
-                return None, passed_story
+                return None, passed_story, True
             if with_story:
                 _story_drop(story_outcome, STORY_FAILED,
                             f"Writer({task}) 호출 실패 — {type(exc).__name__}: {exc}")
-            return None, None
+            return None, None, True
         keep_raw_copy(task, raw)
         # 첫 회차만 원문 길이로 잰다. repair 뒤에도 넘치면 clip() 이 받는다 —
         # 길이 한 자에 앨범을 떨어뜨리지 않는다는 원칙(09-20)은 그대로다.
@@ -825,7 +862,7 @@ def _writer_round(brief: dict, items: list[dict], date: str,
         story_bad = (story_problems(raw.get("story"), story_payload, strict_length=strict)
                      if with_story else [])
         if not daily_bad and not story_bad:
-            return raw, None
+            return raw, None, False
         if with_story and not story_bad and raw.get("story"):
             passed_story = raw.get("story")
         for label, problems in (("일일", daily_bad), ("스토리", story_bad)):
@@ -835,24 +872,24 @@ def _writer_round(brief: dict, items: list[dict], date: str,
     if daily_bad:
         if passed_story is not None:
             print("[cards] 일일 카피만 QA 실패 — 통과한 스토리 카피는 살린다")
-            return None, passed_story
+            return None, passed_story, False
         if with_story:
             _story_drop(story_outcome, STORY_QUALITY,
                         f"일일 카피 QA 실패로 통합 Writer 결과를 버림 — {'; '.join(daily_bad[:2])}")
-        return None, None
+        return None, None, False
     # 일일은 통과했고 스토리만 끝내 안 됐다. **일일을 살린다.**
     if passed_story is not None:
         # 첫 회차 스토리는 통과했는데 repair 가 그것을 망쳤다 — 통과본을 쓴다.
         print("[cards] repair 회차 스토리 실패 — 첫 회차의 통과한 스토리 카피를 쓴다")
         raw = dict(raw or {})
         raw["story"] = passed_story
-        return raw, None
+        return raw, None, False
     _story_drop(story_outcome, STORY_QUALITY,
                 f"스토리 카피 QA 실패 — {'; '.join(story_bad[:2])}")
     print("[cards] 스토리 카피만 제외 — 일일 카드는 이 회차 결과로 간다")
     raw = dict(raw or {})
     raw["story"] = None
-    return raw, None
+    return raw, None, False
 
 
 _SENT_SPLIT_RE = re.compile(r"(?<=[.!?。])\s+|\n+")
