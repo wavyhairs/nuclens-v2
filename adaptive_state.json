@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 2,
-    "date": "2026-11-24"
+    "count": 1,
+    "date": "2026-11-25"
   },
   "retired": {
     "acrs": {
@@ -1262,8 +1262,8 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-11-24"
+    "count": 3,
+    "date": "2026-11-25"
   },
   "terms": {
     "asme": {
@@ -1297,12 +1297,12 @@
       ],
       "expires_at": "2026-11-25T12:27:24.948225+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 3,
-      "last_run": "2026-11-24T00:41:45.679217+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-11-24T15:42:01.951000+00:00",
       "new_articles": 26,
       "origin": "auto",
-      "planned_at": "2026-11-24T00:41:41.775809+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-11-24T15:41:58.296337+00:00",
+      "queries_run": 4,
       "query": "ASME 원자력",
       "score": 5.34,
       "status": "extended",
@@ -1314,7 +1314,7 @@
         "2026-11-24"
       ],
       "yields": 2,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "uvpp": {
       "articles": 4,
@@ -1348,11 +1348,11 @@
       "expires_at": "2026-11-24T21:41:39.788512+00:00",
       "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-11-23T21:41:43.213715+00:00",
+      "last_run": "2026-11-24T15:42:01.951000+00:00",
       "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-11-23T21:41:39.788512+00:00",
-      "queries_run": 1,
+      "planned_at": "2026-11-24T15:41:58.296337+00:00",
+      "queries_run": 2,
       "query": "U-VPP 원자력",
       "score": 3.18,
       "status": "tracking",
@@ -1361,7 +1361,7 @@
       "type": "company",
       "yield_days": [],
       "yields": 0,
-      "zero_streak": 1
+      "zero_streak": 2
     },
     "미국기계학회": {
       "articles": 5,
@@ -1412,6 +1412,38 @@
       ],
       "yields": 1,
       "zero_streak": 0
+    },
+    "박정의원": {
+      "articles": 1,
+      "created_at": "2026-11-24T15:41:58.296337+00:00",
+      "domains": [
+        "gukjenews.com"
+      ],
+      "evidence": [
+        {
+          "domain": "gukjenews.com",
+          "hash": "19cc83661e069c70",
+          "importance": "must_read",
+          "title": "박정 의원, 원전 핵심 기자재 사전조달 법적 근거 마련 개정안 발의"
+        }
+      ],
+      "expires_at": "2026-11-25T15:41:58.296337+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-24T15:42:01.951000+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-24T15:41:58.296337+00:00",
+      "queries_run": 1,
+      "query": "박정 의원 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "박정 의원",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
     },
     "전문위원3인": {
       "articles": 1,
