@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-11-24"
   },
   "retired": {
@@ -1236,14 +1236,6 @@
       "type": "plant",
       "until": "2026-10-18T18:43:26.442906+00:00"
     },
-    "해치": {
-      "new_articles": 0,
-      "reason": "성과 없음",
-      "retired_at": "2026-09-25T03:41:21.217536+00:00",
-      "term": "해치",
-      "type": "plant",
-      "until": "2026-10-09T03:41:21.217536+00:00"
-    },
     "현판식을열고": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -1286,7 +1278,7 @@
     }
   },
   "spent": {
-    "count": 11,
+    "count": 12,
     "date": "2026-11-24"
   },
   "terms": {
@@ -1386,6 +1378,56 @@
       "yield_days": [],
       "yields": 0,
       "zero_streak": 1
+    },
+    "미국기계학회": {
+      "articles": 5,
+      "created_at": "2026-11-24T03:41:21.789009+00:00",
+      "domains": [
+        "weeklytoday.com",
+        "electimes.com",
+        "sedaily.com",
+        "apnews.kr",
+        "newstopkorea.com"
+      ],
+      "evidence": [
+        {
+          "domain": "weeklytoday.com",
+          "hash": "b19dbde267e6802f",
+          "importance": "noise",
+          "title": "효성굿스프링스, 원전용 펌프 ASME 인증 획득으로 해외 시장 공략"
+        },
+        {
+          "domain": "electimes.com",
+          "hash": "0c225d6d2a2bd3ad",
+          "importance": "nice_to_know",
+          "title": "효성굿스프링스, 원전 펌프 전 제품 ASME 인증 획득"
+        },
+        {
+          "domain": "sedaily.com",
+          "hash": "f10d510d650b6be9",
+          "importance": "nice_to_know",
+          "title": "효성굿스프링스, 원전용 펌프 전 제품 ASME 인증 획득"
+        }
+      ],
+      "expires_at": "2026-11-26T03:41:21.789009+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 2,
+      "last_run": "2026-11-24T03:41:23.009679+00:00",
+      "new_articles": 2,
+      "origin": "auto",
+      "planned_at": "2026-11-24T03:41:21.789009+00:00",
+      "queries_run": 1,
+      "query": "미국기계학회 원자력",
+      "score": 5.78,
+      "status": "extended",
+      "term": "미국기계학회",
+      "ttl_hours": 48,
+      "type": "org",
+      "yield_days": [
+        "2026-11-24"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     },
     "전문위원3인": {
       "articles": 1,
