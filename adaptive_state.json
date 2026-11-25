@@ -956,6 +956,14 @@
       "type": "org",
       "until": "2026-11-19T18:41:04.366222+00:00"
     },
+    "전문위원3인": {
+      "new_articles": 15,
+      "reason": "성과 없음",
+      "retired_at": "2026-11-25T18:41:36.859044+00:00",
+      "term": "전문위원 3인",
+      "type": "plant",
+      "until": "2026-12-09T18:41:36.859044+00:00"
+    },
     "정부가방산": {
       "new_articles": 0,
       "reason": "관리자 삭제",
@@ -1286,7 +1294,7 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 5,
     "date": "2026-11-26"
   },
   "terms": {
@@ -1322,12 +1330,12 @@
       ],
       "expires_at": "2026-11-26T03:41:41.619662+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 1,
-      "last_run": "2026-11-25T03:41:41.619662+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-11-25T18:41:36.859001+00:00",
       "new_articles": 3,
       "origin": "auto",
-      "planned_at": "2026-11-25T03:41:37.769008+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-11-25T18:41:34.588925+00:00",
+      "queries_run": 4,
       "query": "미국기계학회 원자력",
       "score": 5.78,
       "status": "extended",
@@ -1339,7 +1347,7 @@
         "2026-11-25"
       ],
       "yields": 2,
-      "zero_streak": 0
+      "zero_streak": 1
     },
     "박정의원": {
       "articles": 1,
@@ -1408,41 +1416,6 @@
       ],
       "yields": 1,
       "zero_streak": 0
-    },
-    "전문위원3인": {
-      "articles": 1,
-      "created_at": "2026-11-23T12:27:24.948225+00:00",
-      "domains": [
-        "yna.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "yna.co.kr",
-          "hash": "5e39e70a3b833038",
-          "importance": "must_read",
-          "title": "제12차 전기본 원전 공론화 전문위원 3인, 참여 중단 선언"
-        }
-      ],
-      "expires_at": "2026-11-25T00:41:45.679217+00:00",
-      "importance": "must_read",
-      "last_result_count": 0,
-      "last_run": "2026-11-25T03:41:41.619662+00:00",
-      "new_articles": 15,
-      "origin": "auto",
-      "planned_at": "2026-11-25T03:41:37.769008+00:00",
-      "queries_run": 5,
-      "query": "전문위원 3인 원전",
-      "score": 3.6,
-      "status": "promote_candidate",
-      "term": "전문위원 3인",
-      "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-11-23",
-        "2026-11-24"
-      ],
-      "yields": 3,
-      "zero_streak": 2
     },
     "한국발전공사": {
       "articles": 4,
