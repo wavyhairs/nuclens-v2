@@ -1,7 +1,7 @@
 {
   "minted": {
-    "count": 5,
-    "date": "2026-11-26"
+    "count": 2,
+    "date": "2026-11-27"
   },
   "retired": {
     "acrs": {
@@ -940,6 +940,14 @@
       "type": "plant",
       "until": "2026-11-15T03:40:35.427826+00:00"
     },
+    "장관은대미": {
+      "new_articles": 4,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-26T16:54:11.390739+00:00",
+      "term": "장관은 대미",
+      "type": "plant",
+      "until": "2026-12-10T16:54:11.390739+00:00"
+    },
     "전국5개": {
       "new_articles": 7,
       "reason": "성과 없음",
@@ -1310,10 +1318,57 @@
     }
   },
   "spent": {
-    "count": 12,
-    "date": "2026-11-26"
+    "count": 3,
+    "date": "2026-11-27"
   },
   "terms": {
+    "mmr": {
+      "articles": 4,
+      "created_at": "2026-11-26T16:54:11.390739+00:00",
+      "domains": [
+        "edaily.co.kr",
+        "newspim.com",
+        "popcornnews.net",
+        "thevaluenews.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "edaily.co.kr",
+          "hash": "f945791d46354e8d",
+          "importance": "nice_to_know",
+          "title": "오리온이엔씨, 휘슬랩·비나 아토믹스와 운송형 마이크로원자로 공동개발"
+        },
+        {
+          "domain": "newspim.com",
+          "hash": "697eaa5a70db030b",
+          "importance": "nice_to_know",
+          "title": "오리온이엔씨, 캐나다 비나 아토믹스와 운송형 마이크로원자로 개발 협약"
+        },
+        {
+          "domain": "popcornnews.net",
+          "hash": "61f88bc7fe612f1f",
+          "importance": "nice_to_know",
+          "title": "오리온이엔씨, 휘슬랩·비나 아토믹스와 운송형 마이크로원자로 공동개발 MOU 체결"
+        }
+      ],
+      "expires_at": "2026-11-29T16:54:11.390739+00:00",
+      "importance": "nice_to_know",
+      "last_result_count": 0,
+      "last_run": "2026-11-26T16:54:14.634727+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-26T16:54:11.390739+00:00",
+      "queries_run": 1,
+      "query": "MMR 원자력",
+      "score": 6.3,
+      "status": "tracking",
+      "term": "MMR",
+      "ttl_hours": 72,
+      "type": "company",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "srs": {
       "articles": 1,
       "created_at": "2026-11-25T21:41:29.317572+00:00",
@@ -1394,38 +1449,51 @@
       "yields": 1,
       "zero_streak": 0
     },
-    "장관은대미": {
-      "articles": 1,
-      "created_at": "2026-11-25T15:41:38.743426+00:00",
+    "금융통화위원회": {
+      "articles": 4,
+      "created_at": "2026-11-26T16:54:11.390739+00:00",
       "domains": [
-        "seoul.co.kr"
+        "mk.co.kr",
+        "sbs.co.kr",
+        "niceeconomy.co.kr",
+        "kbsm.net"
       ],
       "evidence": [
         {
-          "domain": "seoul.co.kr",
-          "hash": "9cf410fefde41e7a",
-          "importance": "must_read",
-          "title": "산업부 장관, 대미 원전 프로젝트 부지 정보 미확보 및 통상 불확실성 언급"
+          "domain": "mk.co.kr",
+          "hash": "b0fa4c23e13aaf9a",
+          "importance": "nice_to_know",
+          "title": "한국은행, 기준금리 0.25%p 인상…연 3.25% 도달"
+        },
+        {
+          "domain": "sbs.co.kr",
+          "hash": "6664ee54b6ca1728",
+          "importance": "nice_to_know",
+          "title": "한국은행, 기준금리 3.25%로 0.25%p 인상…긴축 기조 재확인"
+        },
+        {
+          "domain": "niceeconomy.co.kr",
+          "hash": "9a99693144e8f9c7",
+          "importance": "noise",
+          "title": "한국은행, 기준금리 0.25%p 인상해 3.25%로 결정"
         }
       ],
-      "expires_at": "2026-11-26T15:41:42.200685+00:00",
-      "importance": "must_read",
+      "expires_at": "2026-11-27T16:54:11.390739+00:00",
+      "importance": "nice_to_know",
       "last_result_count": 0,
-      "last_run": "2026-11-26T00:41:55.725513+00:00",
-      "new_articles": 4,
+      "last_run": "2026-11-26T16:54:14.634727+00:00",
+      "new_articles": 0,
       "origin": "auto",
-      "planned_at": "2026-11-26T00:41:51.727999+00:00",
-      "queries_run": 2,
-      "query": "장관은 대미 원전",
-      "score": 3.6,
-      "status": "extended",
-      "term": "장관은 대미",
+      "planned_at": "2026-11-26T16:54:11.390739+00:00",
+      "queries_run": 1,
+      "query": "금융통화위원회 원자력",
+      "score": 3.09,
+      "status": "tracking",
+      "term": "금융통화위원회",
       "ttl_hours": 24,
-      "type": "plant",
-      "yield_days": [
-        "2026-11-26"
-      ],
-      "yields": 1,
+      "type": "org",
+      "yield_days": [],
+      "yields": 0,
       "zero_streak": 1
     },
     "한국발전공사": {
@@ -1457,24 +1525,25 @@
           "title": "장동혁 의원, '한국발전공사법안' 대표 발의…보령시 유치 추진"
         }
       ],
-      "expires_at": "2026-11-27T00:41:55.725513+00:00",
+      "expires_at": "2026-11-27T16:54:14.634727+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 4,
-      "last_run": "2026-11-26T00:41:55.725513+00:00",
-      "new_articles": 9,
+      "last_result_count": 2,
+      "last_run": "2026-11-26T16:54:14.634727+00:00",
+      "new_articles": 11,
       "origin": "auto",
-      "planned_at": "2026-11-26T00:41:51.727999+00:00",
-      "queries_run": 2,
+      "planned_at": "2026-11-26T16:54:11.390739+00:00",
+      "queries_run": 3,
       "query": "한국발전공사 원자력",
       "score": 3.34,
-      "status": "extended",
+      "status": "promote_candidate",
       "term": "한국발전공사",
       "ttl_hours": 24,
       "type": "org",
       "yield_days": [
-        "2026-11-26"
+        "2026-11-26",
+        "2026-11-27"
       ],
-      "yields": 2,
+      "yields": 3,
       "zero_streak": 0
     },
     "한국전기안전공사": {
