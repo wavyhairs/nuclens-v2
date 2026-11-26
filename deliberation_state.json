@@ -5093,6 +5093,13 @@
    "reason": "continued_operation",
    "v": 2
   },
+  "73685e3c07cd9c48": {
+   "at": "2026-11-26T03:38:08.048394+00:00",
+   "feed": "정책",
+   "in": true,
+   "reason": "none",
+   "v": 2
+  },
   "73972a8cee4ad3bd": {
    "at": "2026-10-15T10:51:59.260037+00:00",
    "feed": "공론화·Google 백필 주제 2026-09-04",
@@ -7455,6 +7462,13 @@
    "reason": "continued_operation",
    "v": 2
   },
+  "acc3df1b8a1a5238": {
+   "at": "2026-11-26T03:38:08.048394+00:00",
+   "feed": "정책",
+   "in": true,
+   "reason": "none",
+   "v": 2
+  },
   "acc6cf64e5476597": {
    "at": "2026-11-23T12:34:36.182108+00:00",
    "feed": "공론화·Google 원전 공론화",
@@ -8099,6 +8113,13 @@
    "in": true,
    "reason": "none",
    "v": 1
+  },
+  "bba9d1cb788e479b": {
+   "at": "2026-11-26T03:38:08.048394+00:00",
+   "feed": "정책",
+   "in": true,
+   "reason": "inherited",
+   "v": 2
   },
   "bbc45e706c8c3033": {
    "at": "2026-10-15T09:52:39.891637+00:00",
@@ -9699,6 +9720,13 @@
    "reason": "none",
    "v": 2
   },
+  "dd51fa1a8dd503ca": {
+   "at": "2026-11-26T03:38:08.048394+00:00",
+   "feed": "정책",
+   "in": true,
+   "reason": "none",
+   "v": 2
+  },
   "dd61bce9b4a60683": {
    "at": "2026-10-15T10:30:00+00:00",
    "feed": "",
@@ -11251,224 +11279,6 @@
   }
  },
  "runs": [
-  {
-   "at": "2026-11-21T21:43:14.132007+00:00",
-   "backlog_in": 0,
-   "deferred": 0,
-   "duplicate": 72,
-   "excluded": 0,
-   "failed": 0,
-   "feeds": {
-    "공론화·Google 기타 지역지": {
-     "fetched": 2,
-     "fresh": 2
-    },
-    "공론화·Google 사설": {
-     "fetched": 2,
-     "fresh": 2
-    },
-    "공론화·Google 에너지 전문지": {
-     "fetched": 35,
-     "fresh": 35
-    },
-    "공론화·Google 영남 지역지": {
-     "fetched": 1,
-     "fresh": 1
-    },
-    "공론화·Google 원전 공론화": {
-     "fetched": 3,
-     "fresh": 3
-    },
-    "공론화·Google 지역": {},
-    "공유 풀": {
-     "fetched": 868,
-     "fresh": 868
-    },
-    "네이버 「경주 공론화」": {
-     "fetched": 100,
-     "fresh": 2,
-     "pages": 1,
-     "total": 8879
-    },
-    "네이버 「공론화위원회 원전」": {
-     "fetched": 100,
-     "fresh": 5,
-     "pages": 1,
-     "total": 22398
-    },
-    "네이버 「기고 원전 공론화」": {
-     "fetched": 100,
-     "pages": 1,
-     "total": 433
-    },
-    "네이버 「기장 공론화」": {
-     "fetched": 100,
-     "fresh": 3,
-     "pages": 1,
-     "total": 1987
-    },
-    "네이버 「기후에너지환경부 공론화」": {
-     "fetched": 100,
-     "fresh": 4,
-     "pages": 1,
-     "total": 3490
-    },
-    "네이버 「사설 공론화 원전」": {
-     "fetched": 100,
-     "pages": 1,
-     "total": 1222
-    },
-    "네이버 「사설 원전 공론화」": {
-     "fetched": 100,
-     "pages": 1,
-     "total": 1222
-    },
-    "네이버 「삼척 공론화」": {
-     "fetched": 100,
-     "pages": 1,
-     "total": 1440
-    },
-    "네이버 「시론 공론화」": {
-     "fetched": 100,
-     "pages": 1,
-     "total": 1129
-    },
-    "네이버 「시민참여단 원전」": {
-     "fetched": 100,
-     "fresh": 1,
-     "pages": 1,
-     "total": 5176
-    },
-    "네이버 「신규 원전 공론화」": {
-     "fetched": 100,
-     "fresh": 7,
-     "pages": 1,
-     "total": 6990
-    },
-    "네이버 「신규원전 공론화」": {
-     "fetched": 100,
-     "fresh": 7,
-     "pages": 1,
-     "total": 6990
-    },
-    "네이버 「영광 공론화」": {
-     "fetched": 100,
-     "fresh": 2,
-     "pages": 1,
-     "total": 3272
-    },
-    "네이버 「영덕 공론화」": {
-     "fetched": 100,
-     "fresh": 4,
-     "pages": 1,
-     "total": 1598
-    },
-    "네이버 「울진 공론화」": {
-     "fetched": 100,
-     "fresh": 3,
-     "pages": 1,
-     "total": 2483
-    },
-    "네이버 「원전 공론조사」": {
-     "fetched": 100,
-     "fresh": 3,
-     "pages": 1,
-     "total": 12678
-    },
-    "네이버 「원전 공론화 국회」": {
-     "fetched": 100,
-     "fresh": 1,
-     "pages": 1,
-     "total": 10473
-    },
-    "네이버 「원전 공론화 권고안」": {
-     "fetched": 100,
-     "fresh": 1,
-     "pages": 1,
-     "total": 4341
-    },
-    "네이버 「원전 공론화 반발」": {
-     "fetched": 100,
-     "fresh": 2,
-     "pages": 1,
-     "total": 4402
-    },
-    "네이버 「원전 공론화 의제」": {
-     "fetched": 100,
-     "fresh": 1,
-     "pages": 1,
-     "total": 1667
-    },
-    "네이버 「원전 공론화 주민」": {
-     "fetched": 100,
-     "fresh": 4,
-     "pages": 1,
-     "total": 10857
-    },
-    "네이버 「원전 공론화 지역」": {
-     "fetched": 100,
-     "fresh": 6,
-     "pages": 1,
-     "total": 15295
-    },
-    "네이버 「원전 공론화 환경단체」": {
-     "fetched": 100,
-     "pages": 1,
-     "total": 2796
-    },
-    "네이버 「원전 공론화」": {
-     "fetched": 100,
-     "fresh": 7,
-     "pages": 1,
-     "total": 32662
-    },
-    "네이버 「원전 공론화위」": {
-     "fetched": 100,
-     "fresh": 2,
-     "pages": 1,
-     "total": 8992
-    },
-    "네이버 「원전 숙의」": {
-     "fetched": 100,
-     "fresh": 2,
-     "pages": 1,
-     "total": 5885
-    },
-    "네이버 「전기본 공론화」": {
-     "fetched": 100,
-     "fresh": 2,
-     "pages": 1,
-     "total": 1287
-    },
-    "네이버 「전력수급기본계획 공론화」": {
-     "fetched": 100,
-     "fresh": 5,
-     "pages": 1,
-     "total": 3947
-    },
-    "네이버 「칼럼 원전 공론화」": {
-     "fetched": 100,
-     "fresh": 1,
-     "pages": 1,
-     "total": 649
-    },
-    "이번 회차 대표": {
-     "fetched": 20,
-     "fresh": 20
-    },
-    "접힌 기사": {
-     "fetched": 1,
-     "fresh": 1
-    }
-   },
-   "guarded": 0,
-   "included": 0,
-   "inherited": 0,
-   "judged": 0,
-   "pool": 1007,
-   "prefilter_out": 909,
-   "seen": 26
-  },
   {
    "at": "2026-11-22T00:45:00.891903+00:00",
    "backlog_in": 0,
@@ -20372,6 +20182,238 @@
    "pool": 3259,
    "prefilter_out": 1275,
    "seen": 1641
+  },
+  {
+   "at": "2026-11-26T03:38:08.048394+00:00",
+   "backlog_in": 0,
+   "deferred": 0,
+   "duplicate": 333,
+   "excluded": 0,
+   "failed": 0,
+   "feeds": {
+    "공론화·Google 기타 지역지": {
+     "fetched": 38,
+     "fresh": 36
+    },
+    "공론화·Google 사설": {
+     "fetched": 51,
+     "fresh": 51
+    },
+    "공론화·Google 에너지 전문지": {
+     "fetched": 38,
+     "fresh": 38
+    },
+    "공론화·Google 영남 지역지": {
+     "fetched": 12,
+     "fresh": 12
+    },
+    "공론화·Google 원전 공론화": {
+     "fetched": 90,
+     "fresh": 90
+    },
+    "공론화·Google 지역": {
+     "fetched": 7,
+     "fresh": 7
+    },
+    "공유 풀": {
+     "fetched": 1229,
+     "fresh": 1229
+    },
+    "네이버 「경주 공론화」": {
+     "fetched": 100,
+     "fresh": 6,
+     "pages": 1,
+     "total": 8886
+    },
+    "네이버 「공론화위원회 원전」": {
+     "fetched": 200,
+     "fresh": 185,
+     "pages": 2,
+     "total": 22591
+    },
+    "네이버 「기고 원전 공론화」": {
+     "fetched": 100,
+     "pages": 1,
+     "total": 433
+    },
+    "네이버 「기장 공론화」": {
+     "fetched": 100,
+     "fresh": 2,
+     "pages": 1,
+     "total": 1989
+    },
+    "네이버 「기후에너지환경부 공론화」": {
+     "fetched": 200,
+     "fresh": 123,
+     "pages": 2,
+     "total": 3623
+    },
+    "네이버 「사설 공론화 원전」": {
+     "fetched": 100,
+     "fresh": 16,
+     "pages": 1,
+     "total": 1239
+    },
+    "네이버 「사설 원전 공론화」": {
+     "fetched": 100,
+     "fresh": 16,
+     "pages": 1,
+     "total": 1239
+    },
+    "네이버 「삼척 공론화」": {
+     "fetched": 100,
+     "fresh": 1,
+     "pages": 1,
+     "total": 1441
+    },
+    "네이버 「시론 공론화」": {
+     "fetched": 100,
+     "fresh": 1,
+     "pages": 1,
+     "total": 1130
+    },
+    "네이버 「시민참여단 원전」": {
+     "fetched": 200,
+     "fresh": 131,
+     "pages": 2,
+     "total": 5311
+    },
+    "네이버 「신규 원전 공론화」": {
+     "fetched": 100,
+     "fresh": 88,
+     "pages": 1,
+     "total": 7085
+    },
+    "네이버 「신규원전 공론화」": {
+     "fetched": 100,
+     "fresh": 88,
+     "pages": 1,
+     "total": 7085
+    },
+    "네이버 「영광 공론화」": {
+     "fetched": 100,
+     "fresh": 2,
+     "pages": 1,
+     "total": 3276
+    },
+    "네이버 「영덕 공론화」": {
+     "fetched": 100,
+     "fresh": 4,
+     "pages": 1,
+     "total": 1602
+    },
+    "네이버 「울진 공론화」": {
+     "fetched": 100,
+     "fresh": 3,
+     "pages": 1,
+     "total": 2487
+    },
+    "네이버 「원전 공론조사」": {
+     "fetched": 100,
+     "fresh": 26,
+     "pages": 1,
+     "total": 12707
+    },
+    "네이버 「원전 공론화 국회」": {
+     "fetched": 100,
+     "fresh": 59,
+     "pages": 1,
+     "total": 10535
+    },
+    "네이버 「원전 공론화 권고안」": {
+     "fetched": 100,
+     "fresh": 50,
+     "pages": 1,
+     "total": 4393
+    },
+    "네이버 「원전 공론화 반발」": {
+     "fetched": 100,
+     "fresh": 53,
+     "pages": 1,
+     "total": 4456
+    },
+    "네이버 「원전 공론화 의제」": {
+     "fetched": 100,
+     "fresh": 20,
+     "pages": 1,
+     "total": 1688
+    },
+    "네이버 「원전 공론화 주민」": {
+     "fetched": 100,
+     "fresh": 12,
+     "pages": 1,
+     "total": 10874
+    },
+    "네이버 「원전 공론화 지역」": {
+     "fetched": 100,
+     "fresh": 26,
+     "pages": 1,
+     "total": 15326
+    },
+    "네이버 「원전 공론화 환경단체」": {
+     "fetched": 100,
+     "fresh": 42,
+     "pages": 1,
+     "total": 2838
+    },
+    "네이버 「원전 공론화」": {
+     "fetched": 300,
+     "fresh": 208,
+     "pages": 3,
+     "total": 32880
+    },
+    "네이버 「원전 공론화위」": {
+     "fetched": 200,
+     "fresh": 110,
+     "pages": 2,
+     "total": 9106
+    },
+    "네이버 「원전 숙의」": {
+     "fetched": 200,
+     "fresh": 122,
+     "pages": 2,
+     "total": 6008
+    },
+    "네이버 「전기본 공론화」": {
+     "fetched": 200,
+     "fresh": 113,
+     "pages": 2,
+     "total": 1406
+    },
+    "네이버 「전력수급기본계획 공론화」": {
+     "fetched": 200,
+     "fresh": 182,
+     "pages": 2,
+     "total": 4137
+    },
+    "네이버 「칼럼 원전 공론화」": {
+     "fetched": 100,
+     "fresh": 3,
+     "pages": 1,
+     "total": 652
+    },
+    "이번 회차 대표": {
+     "candidates": 1,
+     "fetched": 62,
+     "fresh": 62,
+     "included": 1,
+     "judged": 1
+    },
+    "접힌 기사": {
+     "candidates": 2,
+     "fetched": 94,
+     "fresh": 94,
+     "included": 3,
+     "judged": 2
+    }
+   },
+   "guarded": 0,
+   "included": 4,
+   "inherited": 1,
+   "judged": 3,
+   "pool": 3311,
+   "prefilter_out": 1331,
+   "seen": 1643
   }
  ]
 }
