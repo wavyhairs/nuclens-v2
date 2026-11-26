@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 4,
+    "count": 5,
     "date": "2026-11-26"
   },
   "retired": {
@@ -1310,7 +1310,7 @@
     }
   },
   "spent": {
-    "count": 11,
+    "count": 12,
     "date": "2026-11-26"
   },
   "terms": {
@@ -1345,6 +1345,54 @@
       "yield_days": [],
       "yields": 0,
       "zero_streak": 2
+    },
+    "ustr": {
+      "articles": 3,
+      "created_at": "2026-11-26T09:41:43.956018+00:00",
+      "domains": [
+        "pinpointnews.co.kr",
+        "motir.go.kr",
+        "seoul.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "pinpointnews.co.kr",
+          "hash": "c82bf692a722e07c",
+          "importance": "nice_to_know",
+          "title": "미 USTR, 한국 제조업 대상 관세 부과 가능성 시사"
+        },
+        {
+          "domain": "motir.go.kr",
+          "hash": "f3567a84ae1d3d45",
+          "importance": "must_read",
+          "title": "美 USTR, 한국산 제조업 제품에 15% 관세 제안…최종 결정 전 협의 예정"
+        },
+        {
+          "domain": "seoul.co.kr",
+          "hash": "c0947fb348ae0bdb",
+          "importance": "nice_to_know",
+          "title": "미국, 일본에 15% 관세 부과…일본 정부, 대미 투자 이행 강조하며 유감 표명"
+        }
+      ],
+      "expires_at": "2026-11-27T09:41:45.434479+00:00",
+      "importance": "must_read",
+      "last_result_count": 3,
+      "last_run": "2026-11-26T09:41:45.434479+00:00",
+      "new_articles": 3,
+      "origin": "auto",
+      "planned_at": "2026-11-26T09:41:43.956018+00:00",
+      "queries_run": 1,
+      "query": "USTR 원자력",
+      "score": 3.1,
+      "status": "extended",
+      "term": "USTR",
+      "ttl_hours": 24,
+      "type": "company",
+      "yield_days": [
+        "2026-11-26"
+      ],
+      "yields": 1,
+      "zero_streak": 0
     },
     "장관은대미": {
       "articles": 1,
