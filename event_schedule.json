@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-27T02:06:28+09:00",
+ "generated_at": "2026-11-28T00:48:03+09:00",
  "events": [
   {
    "id": "of-165097f37d1c",
@@ -129,7 +129,7 @@
  ],
  "last_checked": {
   "kns_notice": {
-   "at": "2026-11-27T02:06:28+09:00",
+   "at": "2026-11-28T00:48:03+09:00",
    "ok": true,
    "parsed": 1,
    "kept": 1,
@@ -137,22 +137,22 @@
    "dropped": {}
   },
   "kaif_notice": {
-   "at": "2026-11-27T02:06:28+09:00",
+   "at": "2026-11-28T00:48:03+09:00",
    "ok": true,
    "parsed": 8,
    "kept": 1,
-   "new": 0,
+   "new": 1,
    "dropped": {
     "low_significance": 3,
     "not_an_event": 4
    }
   },
   "kaif_calendar": {
-   "at": "2026-11-27T02:06:28+09:00",
+   "at": "2026-11-28T00:48:03+09:00",
    "ok": true,
    "parsed": 60,
    "kept": 36,
-   "new": 33,
+   "new": 34,
    "dropped": {
     "no_interest_match": 18,
     "off_topic": 4,
@@ -161,7 +161,7 @@
    }
   },
   "niftep_notice": {
-   "at": "2026-11-27T02:06:28+09:00",
+   "at": "2026-11-28T00:48:03+09:00",
    "ok": true,
    "parsed": 0,
    "kept": 0,
@@ -169,18 +169,19 @@
    "dropped": {}
   },
   "assembly_events": {
-   "at": "2026-11-27T02:06:28+09:00",
+   "at": "2026-11-28T00:48:03+09:00",
    "ok": true,
-   "parsed": 59,
+   "parsed": 62,
    "kept": 0,
    "new": 0,
    "dropped": {
-    "no_interest_match": 58,
+    "no_interest_match": 60,
+    "off_topic": 1,
     "not_an_event": 1
    }
   },
   "kpx_notice": {
-   "at": "2026-11-27T02:06:28+09:00",
+   "at": "2026-11-28T00:48:03+09:00",
    "ok": true,
    "parsed": 20,
    "kept": 2,
