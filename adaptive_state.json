@@ -196,14 +196,6 @@
       "type": "company",
       "until": "2026-11-18T18:41:21.740708+00:00"
     },
-    "npn": {
-      "new_articles": 0,
-      "reason": "성과 없음",
-      "retired_at": "2026-09-28T18:40:48.265607+00:00",
-      "term": "NPN",
-      "type": "company",
-      "until": "2026-10-12T18:40:48.265607+00:00"
-    },
     "nsda": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -435,6 +427,14 @@
       "term": "규모 한미",
       "type": "plant",
       "until": "2026-11-25T00:41:11.573159+00:00"
+    },
+    "금융통화위원회": {
+      "new_articles": 0,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-27T18:40:52.148732+00:00",
+      "term": "금융통화위원회",
+      "type": "org",
+      "until": "2026-12-11T18:40:52.148732+00:00"
     },
     "기에한국형": {
       "new_articles": 9,
@@ -811,6 +811,14 @@
       "term": "엘다바",
       "type": "plant",
       "until": "2026-10-23T18:23:03.513677+00:00"
+    },
+    "열고영덕": {
+      "new_articles": 0,
+      "reason": "성과 없음",
+      "retired_at": "2026-11-27T18:40:55.602908+00:00",
+      "term": "열고 영덕",
+      "type": "plant",
+      "until": "2026-12-11T18:40:55.602908+00:00"
     },
     "영덕군이": {
       "new_articles": 5,
@@ -1334,7 +1342,7 @@
     }
   },
   "spent": {
-    "count": 3,
+    "count": 6,
     "date": "2026-11-28"
   },
   "terms": {
@@ -1369,11 +1377,11 @@
       "expires_at": "2026-11-27T22:41:26.904194+00:00",
       "importance": "must_read",
       "last_result_count": 0,
-      "last_run": "2026-11-27T06:41:37.693041+00:00",
+      "last_run": "2026-11-27T18:40:55.602731+00:00",
       "new_articles": 4,
       "origin": "auto",
-      "planned_at": "2026-11-27T06:41:33.712603+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-11-27T18:40:52.148732+00:00",
+      "queries_run": 4,
       "query": "USTR 원자력",
       "score": 3.1,
       "status": "extended",
@@ -1385,99 +1393,6 @@
         "2026-11-27"
       ],
       "yields": 2,
-      "zero_streak": 1
-    },
-    "금융통화위원회": {
-      "articles": 4,
-      "created_at": "2026-11-26T16:54:11.390739+00:00",
-      "domains": [
-        "mk.co.kr",
-        "sbs.co.kr",
-        "niceeconomy.co.kr",
-        "kbsm.net"
-      ],
-      "evidence": [
-        {
-          "domain": "mk.co.kr",
-          "hash": "b0fa4c23e13aaf9a",
-          "importance": "nice_to_know",
-          "title": "한국은행, 기준금리 0.25%p 인상…연 3.25% 도달"
-        },
-        {
-          "domain": "sbs.co.kr",
-          "hash": "6664ee54b6ca1728",
-          "importance": "nice_to_know",
-          "title": "한국은행, 기준금리 3.25%로 0.25%p 인상…긴축 기조 재확인"
-        },
-        {
-          "domain": "niceeconomy.co.kr",
-          "hash": "9a99693144e8f9c7",
-          "importance": "noise",
-          "title": "한국은행, 기준금리 0.25%p 인상해 3.25%로 결정"
-        }
-      ],
-      "expires_at": "2026-11-27T16:54:11.390739+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-27T00:41:26.045072+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-11-27T00:41:22.597121+00:00",
-      "queries_run": 2,
-      "query": "금융통화위원회 원자력",
-      "score": 3.09,
-      "status": "tracking",
-      "term": "금융통화위원회",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [],
-      "yields": 0,
-      "zero_streak": 2
-    },
-    "열고영덕": {
-      "articles": 3,
-      "created_at": "2026-11-26T22:41:23.512951+00:00",
-      "domains": [
-        "dkilbo.com",
-        "kyongbuk.co.kr",
-        "newstown.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "dkilbo.com",
-          "hash": "a2d640ea03794bf2",
-          "importance": "nice_to_know",
-          "title": "포항시, 영덕원전 연계 전력망 및 SMR 파운드리 포럼 추진"
-        },
-        {
-          "domain": "kyongbuk.co.kr",
-          "hash": "cb2b51ec6c9c87db",
-          "importance": "nice_to_know",
-          "title": "포항시, 영덕원전 연계 전력공급망 구축 및 SMR 포럼 추진"
-        },
-        {
-          "domain": "newstown.co.kr",
-          "hash": "dee8b4cef4703c7a",
-          "importance": "nice_to_know",
-          "title": "포항시 에너지위원회, 영덕원전 연계 전력공급망 구축 논의"
-        }
-      ],
-      "expires_at": "2026-11-28T22:41:23.512951+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-27T06:41:37.693041+00:00",
-      "new_articles": 0,
-      "origin": "auto",
-      "planned_at": "2026-11-27T06:41:33.712603+00:00",
-      "queries_run": 2,
-      "query": "열고 영덕 원전",
-      "score": 4.6,
-      "status": "tracking",
-      "term": "열고 영덕",
-      "ttl_hours": 48,
-      "type": "plant",
-      "yield_days": [],
-      "yields": 0,
       "zero_streak": 2
     },
     "지방시대위원회": {
@@ -1613,12 +1528,12 @@
       ],
       "expires_at": "2026-11-28T06:41:37.693041+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 1,
-      "last_run": "2026-11-27T06:41:37.693041+00:00",
+      "last_result_count": 0,
+      "last_run": "2026-11-27T18:40:55.602731+00:00",
       "new_articles": 2,
       "origin": "auto",
-      "planned_at": "2026-11-27T06:41:33.712603+00:00",
-      "queries_run": 3,
+      "planned_at": "2026-11-27T18:40:52.148732+00:00",
+      "queries_run": 4,
       "query": "한국전기안전공사 원자력",
       "score": 3.32,
       "status": "extended",
@@ -1630,7 +1545,7 @@
         "2026-11-27"
       ],
       "yields": 2,
-      "zero_streak": 0
+      "zero_streak": 1
     }
   },
   "version": 1
