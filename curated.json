@@ -549644,5 +549644,243 @@
     },
     "hash": "9aa9e5303c73850e",
     "published_at": "2026-11-27T21:10:00+00:00"
+  },
+  "d6312a36ef1849ee": {
+    "features": {
+      "event_type": "market_signal",
+      "korea_relevance": 2,
+      "market_materiality": 3,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "khnp",
+    "scope": "kr",
+    "category": "시장",
+    "topics": [
+      "power_market",
+      "datacenter_ai"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "외국인 투자자, 전력기기·에너지 관련주 순매수 확대",
+    "summary": "외국인 투자자들이 AI 데이터센터 확산에 따른 전력 수요 증가를 주목하며 두산에너빌리티, LS ELECTRIC 등 전력기기 및 에너지 관련주를 순매수했다.",
+    "detail": "",
+    "implication": "",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#전력기기",
+      "#데이터센터",
+      "#외국인수급"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "on_topic",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-11-27T21:21:57.435660+00:00",
+    "title": "[주간 거래소 외국인] 두산에너빌리티·LS ELECTRIC 사고 반도체 대형주...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=509065",
+    "feed": "정책",
+    "domain": "pinpointnews.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "d6312a36ef1849ee",
+      "source_components": {
+        "article_hash": "d6312a36ef1849ee",
+        "title": "0c8a92ad8e90068c13a061b3ca80d25cdf456a5f09cadb9fa89cd3d282cfb141",
+        "source_excerpt": "f0249c63d5868f810913d1661576696f10fa564bedbb8aea46a23a3c81ac9f9b",
+        "published_at": "c0e3aa0488882d2ebc51666b67cbfd6ad05cda6814dbfc6846acef9eb0fd5c3a"
+      },
+      "source_fingerprint": "f2edd2b2b8b47369a438652f06ddb89aa250ecfaad2665fcdda876da525c2d29",
+      "entities": [
+        "doosan",
+        "kepco"
+      ],
+      "countries": [
+        "KR"
+      ],
+      "topics": [
+        "grid",
+        "safety"
+      ],
+      "stages": [
+        "contract"
+      ],
+      "claims": [
+        "28일",
+        "23일",
+        "27일"
+      ],
+      "quantities": {
+        "일": [
+          "23",
+          "27",
+          "28"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "8c7da40ee6ebd5a343716fff8a78aa19e9bcc50c244ac66f160797bf71fc4524"
+    },
+    "verified_source_components": {
+      "article_hash": "d6312a36ef1849ee",
+      "title": "0c8a92ad8e90068c13a061b3ca80d25cdf456a5f09cadb9fa89cd3d282cfb141",
+      "source_excerpt": "f0249c63d5868f810913d1661576696f10fa564bedbb8aea46a23a3c81ac9f9b",
+      "published_at": "c0e3aa0488882d2ebc51666b67cbfd6ad05cda6814dbfc6846acef9eb0fd5c3a"
+    },
+    "hash": "d6312a36ef1849ee",
+    "published_at": "2026-11-27T21:16:00+00:00"
+  },
+  "cbb169dee6b44d45": {
+    "features": {
+      "event_type": "corporate_move",
+      "korea_relevance": 3,
+      "market_materiality": 2,
+      "policy_materiality": 1,
+      "novelty": 0,
+      "evidence_strength": 0,
+      "report_worthiness": 0
+    },
+    "importance": "nice_to_know",
+    "section": "domestic",
+    "scope": "kr",
+    "category": "기술",
+    "topics": [
+      "datacenter_ai"
+    ],
+    "countries": [
+      "KR"
+    ],
+    "article_type": "news",
+    "title_kr": "파네시아, 국산 메모리 중심의 한국형 AI 데이터센터 참조 모델 제안",
+    "summary": "파네시아가 SK K-AI 얼라이언스 밋업에서 국산 메모리와 CXL 기술을 결합한 한국형 AI 데이터센터 참조 모델을 구축해 소버린 AI 시장에 공급하자고 제안했다.",
+    "detail": "파네시아 정명수 대표는 27일 열린 'K-AI 얼라이언스 서울 밋업 2026'에서 특정 기업 기술에 종속되지 않는 컴포저블 AI 인프라를 강조했다. CXL 기술을 활용해 서버 간 메모리 자원을 공유하고, 국산 메모리와 AI 가속기를 조합해 시스템 효율을 극대화하는 방식이다. 파네시아는 SK텔레콤과 CXL 기반 차세대 데이터센터 구조를 공동 개발 중이며, 향후 랙 단위 연결 시장으로 사업을 확대할 계획이다. 정 대표는 실제 데이터센터 환경에서 전력 소비량과 TTFT 등을 검증해 글로벌 표준과의 호환성을 확보해야 한다고 덧붙였다.",
+    "implication": "글로벌 표준인 이더넷을 수용하면서도 국산 메모리 생태계를 결합한 참조 모델 확보가 소버린 AI 시장 진출의 핵심 관건이다.",
+    "why_important": "",
+    "why_short": "",
+    "open_question": "",
+    "open_question_source": "unknown",
+    "open_question_reject": "",
+    "watch_next": "",
+    "tags": [
+      "#AI인프라",
+      "#CXL",
+      "#데이터센터"
+    ],
+    "related_reports": [],
+    "event_date": null,
+    "event_date_type": "unknown",
+    "event_date_precision": "unknown",
+    "event_date_source": "unknown",
+    "topic_verdict": "adjacent",
+    "curation_status": "reviewed",
+    "curation_source": "gemini",
+    "cached_at": "2026-11-27T21:21:57.435660+00:00",
+    "title": "“메모리 중심으로 AI 인프라 재설계”…파네시아, 한국형 데이터센터 ...",
+    "link": "https://www.edaily.co.kr/News/Read?mediaCodeNo=257&newsId=01302166645650312",
+    "feed": "정책",
+    "domain": "edaily.co.kr",
+    "matched": "데이터센터 전력",
+    "verified_evidence": {
+      "version": 2,
+      "article_hash": "cbb169dee6b44d45",
+      "source_components": {
+        "article_hash": "cbb169dee6b44d45",
+        "title": "e56807379a52941d1ece1ec0033a2bec3140b208ede62f8b7dff100d273e6e87",
+        "source_excerpt": "ff7a5121d6b1c4c32e73c72f0f1c6a6fff2fd4068b87c907bd877fc66b913850",
+        "published_at": "77761faa2eb4a4f35e5f964c7ebb584c2e2a66b3de78c827b251533840cc6fa2"
+      },
+      "source_fingerprint": "826f24c1001c3ca14bd21b0c396fdf295dae4c2cd31a2c9821407dbe3dc91f51",
+      "entities": [],
+      "countries": [
+        "CN",
+        "JP",
+        "KR",
+        "RU",
+        "US"
+      ],
+      "topics": [
+        "grid",
+        "safety"
+      ],
+      "stages": [
+        "approval",
+        "contract",
+        "incident",
+        "restart"
+      ],
+      "claims": [
+        "1년",
+        "2년",
+        "27일",
+        "3월",
+        "100억원",
+        "12.95%",
+        "1150억원",
+        "3.1%",
+        "100일",
+        "95%",
+        "2조원",
+        "63%",
+        "37%",
+        "nvl72",
+        "sdi63"
+      ],
+      "quantities": {
+        "%": [
+          "12.95",
+          "3.1",
+          "37",
+          "63",
+          "95"
+        ],
+        "년": [
+          "1",
+          "1968",
+          "1969",
+          "2",
+          "2026",
+          "95"
+        ],
+        "억원": [
+          "100",
+          "1150"
+        ],
+        "월": [
+          "11",
+          "3"
+        ],
+        "일": [
+          "100",
+          "27"
+        ],
+        "조원": [
+          "2"
+        ]
+      },
+      "quantity_rules": 3,
+      "manifest_fingerprint": "d07d64a957e10d903feb21db017acb982424d2b67238b195c42804a04af77b10"
+    },
+    "verified_source_components": {
+      "article_hash": "cbb169dee6b44d45",
+      "title": "e56807379a52941d1ece1ec0033a2bec3140b208ede62f8b7dff100d273e6e87",
+      "source_excerpt": "ff7a5121d6b1c4c32e73c72f0f1c6a6fff2fd4068b87c907bd877fc66b913850",
+      "published_at": "77761faa2eb4a4f35e5f964c7ebb584c2e2a66b3de78c827b251533840cc6fa2"
+    },
+    "hash": "cbb169dee6b44d45",
+    "published_at": "2026-11-27T21:18:00+00:00"
   }
 }
