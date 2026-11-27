@@ -5749,7 +5749,7 @@
   },
   "operational_alerts": {
     "version": 1,
-    "updated_at": "2026-11-27T21:29:43+00:00",
+    "updated_at": "2026-11-27T21:55:27+00:00",
     "items": {
       "source:DOE:stale": {
         "consecutive": 0,
@@ -5829,7 +5829,7 @@
         "title": "AI 요약이 원문과 맞지 않는 기사를 이번 수집에서 뺐습니다",
         "detail": "AI가 만든 제목·요약이 원문과 다른 내용을 가리키는 기사 1건을 두 번 만들어 봐도 맞지 않아 이번 수집에서 뺐습니다. 다음 수집에서 다시 만들어 보고, 6번 연속이면 보류합니다. 예: 「정부 ESS 최대규모 입찰서 삼성SDI 63%, SK온 37% 확보」.",
         "severity": "critical",
-        "last_seen_at": "2026-11-27T21:29:43+00:00",
+        "last_seen_at": "2026-11-27T21:55:27+00:00",
         "last_observation_id": "2026-11-28T00:42:55.712797+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-11-01T09:48:31+00:00",
@@ -5852,7 +5852,7 @@
         "title": "AI 요약이 안 된 기사를 브리핑 후보에서 잠시 뺐습니다",
         "detail": "AI 요약을 받지 못해 원문 첫 문장만 있는 기사 1건을 브리핑 후보에 넣지 않았습니다. 1건은 두 번 모두 실패해 더 시도하지 않고 뺐습니다. 예: 「민주당 전남광주시당, 국책사업 14건 국비 541억 증액 건의…4대 법…」.",
         "severity": "warning",
-        "last_seen_at": "2026-11-27T21:29:43+00:00",
+        "last_seen_at": "2026-11-27T21:55:27+00:00",
         "last_observation_id": "2026-11-27T15:46:27.853820+09:00",
         "min_occurrences": 1,
         "first_seen_at": "2026-11-23T06:51:29+00:00",
@@ -5899,7 +5899,7 @@
         "title": "근거가 없는 해석 문장을 카드에서 지웠습니다",
         "detail": "기사 근거로 확인되지 않는 항목 1개를 카드 1개에서 빼고 발송했습니다.",
         "severity": "warning",
-        "last_seen_at": "2026-11-27T21:29:43+00:00",
+        "last_seen_at": "2026-11-27T21:55:27+00:00",
         "last_observation_id": "2026-11-27T21:26:51.491827+00:00",
         "min_occurrences": 2,
         "first_seen_at": "2026-11-27T21:29:43+00:00",
@@ -5912,14 +5912,14 @@
         "pending_notification": false
       },
       "quality:archive-integrity": {
-        "consecutive": 132,
+        "consecutive": 133,
         "scope": "data_gate",
         "active": true,
         "title": "신뢰하기 어려운 아카이브 기사를 자동 제외했습니다",
         "detail": "원문과 내용이 다른 기사를 사이트 출력에서 뺐습니다 — 새로 제외 0건 · 기존 제외 유지 4건. 사건일 73건은 사이트에 표시하지 않았습니다 — 원문 근거를 다시 확인할 수 없음 73건 · 날짜 이상 0건.",
         "severity": "critical",
-        "last_seen_at": "2026-11-27T21:29:43+00:00",
-        "last_observation_id": "github-run:45907969487",
+        "last_seen_at": "2026-11-27T21:55:27+00:00",
+        "last_observation_id": "github-run:46069672840",
         "min_occurrences": 1,
         "first_seen_at": "2026-08-17T19:52:52+00:00",
         "pending_notification": false,
@@ -5929,7 +5929,7 @@
         "level": "attention",
         "impact": "없음 — 제외된 기사만 사이트에서 빠지고, 나머지 뉴스와 서비스는 정상입니다.",
         "action": "필요 없음 — 자동으로 처리됐습니다. 매 빌드에서 다시 검사합니다.",
-        "technical": "checked=38684 quarantined=4 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 5c87f37d62e3",
+        "technical": "checked=39011 quarantined=4 sanitized=73 sanitize_codes=source_unavailable:73 samples=0faaec9db87a, 2107047860d5, 2b7d62b5b3f7, 38edd8cffbc1, 5c87f37d62e3",
         "fingerprint": "q=4:ca2b08fddaf1eafc",
         "last_notified_fingerprint": "q=35:37a796ac13006af0",
         "delivery": "digest"
@@ -6762,7 +6762,7 @@
         "action": "해당 사이트에 새 글이 있는지 확인해 주세요.",
         "technical": "consecutive_empty=29 last_count=0",
         "fingerprint": "",
-        "last_seen_at": "2026-11-27T21:29:43+00:00",
+        "last_seen_at": "2026-11-27T21:55:27+00:00",
         "last_observation_id": "2026-11-27T21:26:30+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6800,7 +6800,7 @@
         "action": "필요 없음 — 원자력 기사가 여기 들어 있으면 topic_gate 의 어휘를 봐 주세요.",
         "technical": "demoted=2 sedaily.com:not_required:1.5; fnnews.com:not_required:1.5",
         "fingerprint": "off-topic~1",
-        "last_seen_at": "2026-11-27T21:29:43+00:00",
+        "last_seen_at": "2026-11-27T21:55:27+00:00",
         "last_observation_id": "2026-11-28T06:16:42.484484+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6819,7 +6819,7 @@
         "action": "필요 없음 — 새 소식이 여기 섞여 있으면 알려 주세요.",
         "technical": "ksilbo.co.kr←gukjenews.com@2026-11-27 sim=1.0; cstimes.com←munhwa.com@2026-11-26 sim=1.0",
         "fingerprint": "story-echo~1",
-        "last_seen_at": "2026-11-27T21:29:43+00:00",
+        "last_seen_at": "2026-11-27T21:55:27+00:00",
         "last_observation_id": "2026-11-27T21:26:51.491827+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6838,7 +6838,7 @@
         "action": "해당 사이트에 실제로 새 글이 있는지 한 번만 확인해 주세요.",
         "technical": "newest_pub=2026-11-09T17:34:04+00:00 quiet_days=18 threshold=14 observed_normal_gap_max=5",
         "fingerprint": "newest=2026-11-09T17:34:04+00:00",
-        "last_seen_at": "2026-11-27T21:29:43+00:00",
+        "last_seen_at": "2026-11-27T21:55:27+00:00",
         "last_observation_id": "2026-11-27T21:26:30+00:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -6877,7 +6877,7 @@
         "action": "틀린 기사가 보이면 알려 주세요. 자주 틀리면 저장소 변수 INTEGRITY_RELEASE 를 off 로 두면 예전처럼 보류합니다.",
         "technical": "released=1f571f03:curation-regen:body:summary_source_mismatch",
         "fingerprint": "released~1",
-        "last_seen_at": "2026-11-27T21:29:43+00:00",
+        "last_seen_at": "2026-11-27T21:55:27+00:00",
         "last_observation_id": "2026-11-28T00:43:02.825427+09:00",
         "min_occurrences": 1,
         "delivery": "digest",
@@ -7012,8 +7012,8 @@
     }
   },
   "operational_digest": {
-    "last_sent_date": "2026-11-27",
-    "last_sent_at": "2026-11-26T23:27:21+00:00"
+    "last_sent_date": "2026-11-28",
+    "last_sent_at": "2026-11-27T21:55:27+00:00"
   },
   "integrity_holds": {
     "a1fd4176394d13a4": {
