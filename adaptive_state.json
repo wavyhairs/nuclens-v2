@@ -1,6 +1,6 @@
 {
   "minted": {
-    "count": 1,
+    "count": 2,
     "date": "2026-11-28"
   },
   "retired": {
@@ -372,14 +372,6 @@
       "type": "org",
       "until": "2026-11-03T06:40:38.904809+00:00"
     },
-    "광시성베일롱": {
-      "new_articles": 0,
-      "reason": "성과 없음",
-      "retired_at": "2026-09-29T06:40:56.440197+00:00",
-      "term": "광시성 베일롱",
-      "type": "plant",
-      "until": "2026-10-13T06:40:56.440197+00:00"
-    },
     "구성의결": {
       "new_articles": 0,
       "reason": "기간 만료",
@@ -579,14 +571,6 @@
       "term": "법안과 관련해",
       "type": "plant",
       "until": "2026-12-07T00:41:09.824739+00:00"
-    },
-    "베일롱": {
-      "new_articles": 0,
-      "reason": "성과 없음",
-      "retired_at": "2026-09-29T06:40:56.440197+00:00",
-      "term": "베일롱",
-      "type": "plant",
-      "until": "2026-10-13T06:40:56.440197+00:00"
     },
     "보건환경연구원": {
       "new_articles": 0,
@@ -1268,6 +1252,14 @@
       "type": "org",
       "until": "2026-11-30T15:41:37.558902+00:00"
     },
+    "한국발전공사": {
+      "new_articles": 14,
+      "reason": "성과 없음",
+      "retired_at": "2026-11-28T06:41:39.920747+00:00",
+      "term": "한국발전공사",
+      "type": "org",
+      "until": "2026-12-12T06:41:39.920747+00:00"
+    },
     "한국방사성폐기물학회": {
       "new_articles": 0,
       "reason": "성과 없음",
@@ -1275,6 +1267,14 @@
       "term": "한국방사성폐기물학회",
       "type": "org",
       "until": "2026-11-07T03:40:54.867909+00:00"
+    },
+    "한국전기안전공사": {
+      "new_articles": 2,
+      "reason": "기간 만료",
+      "retired_at": "2026-11-28T06:41:39.920747+00:00",
+      "term": "한국전기안전공사",
+      "type": "org",
+      "until": "2026-12-12T06:41:39.920747+00:00"
     },
     "한국전기연구원": {
       "new_articles": 34,
@@ -1350,10 +1350,42 @@
     }
   },
   "spent": {
-    "count": 9,
+    "count": 12,
     "date": "2026-11-28"
   },
   "terms": {
+    "이는표준형": {
+      "articles": 1,
+      "created_at": "2026-11-28T06:41:36.020145+00:00",
+      "domains": [
+        "asiae.co.kr"
+      ],
+      "evidence": [
+        {
+          "domain": "asiae.co.kr",
+          "hash": "2a54b96ea9dbeeea",
+          "importance": "must_read",
+          "title": "강원 동해시, 15조원 규모 AI 데이터센터 착공…원전 1기급 전력 소비"
+        }
+      ],
+      "expires_at": "2026-11-29T06:41:36.020145+00:00",
+      "importance": "must_read",
+      "last_result_count": 0,
+      "last_run": "2026-11-28T06:41:39.920650+00:00",
+      "new_articles": 0,
+      "origin": "auto",
+      "planned_at": "2026-11-28T06:41:36.020145+00:00",
+      "queries_run": 1,
+      "query": "이는 표준형 원전",
+      "score": 3.6,
+      "status": "tracking",
+      "term": "이는 표준형",
+      "ttl_hours": 24,
+      "type": "plant",
+      "yield_days": [],
+      "yields": 0,
+      "zero_streak": 1
+    },
     "지방시대위원회": {
       "articles": 7,
       "created_at": "2026-11-27T15:41:01.346870+00:00",
@@ -1387,12 +1419,12 @@
       ],
       "expires_at": "2026-11-30T15:41:01.346870+00:00",
       "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-28T00:41:04.854074+00:00",
-      "new_articles": 1,
+      "last_result_count": 1,
+      "last_run": "2026-11-28T06:41:39.920650+00:00",
+      "new_articles": 2,
       "origin": "auto",
-      "planned_at": "2026-11-28T00:41:01.174408+00:00",
-      "queries_run": 2,
+      "planned_at": "2026-11-28T06:41:36.020145+00:00",
+      "queries_run": 3,
       "query": "지방시대위원회 원자력",
       "score": 6.21,
       "status": "extended",
@@ -1402,109 +1434,8 @@
       "yield_days": [
         "2026-11-28"
       ],
-      "yields": 1,
-      "zero_streak": 1
-    },
-    "한국발전공사": {
-      "articles": 4,
-      "created_at": "2026-11-25T15:41:38.743426+00:00",
-      "domains": [
-        "e-platform.net",
-        "ajunews.com",
-        "cctimes.kr",
-        "ccdn.co.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "e-platform.net",
-          "hash": "926e75a95195233f",
-          "importance": "nice_to_know",
-          "title": "국회, 발전공사 통합 및 원전 기자재 선발주 법안 발의"
-        },
-        {
-          "domain": "ajunews.com",
-          "hash": "4fad457efcce0b9b",
-          "importance": "nice_to_know",
-          "title": "장동혁 의원, 발전공기업 통합본사 보령 유치 법안 발의"
-        },
-        {
-          "domain": "cctimes.kr",
-          "hash": "31563605b39bcc0f",
-          "importance": "nice_to_know",
-          "title": "장동혁 의원, '한국발전공사법안' 대표 발의…보령시 유치 추진"
-        }
-      ],
-      "expires_at": "2026-11-28T00:41:26.045072+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-28T00:41:04.854074+00:00",
-      "new_articles": 14,
-      "origin": "auto",
-      "planned_at": "2026-11-28T00:41:01.174408+00:00",
-      "queries_run": 6,
-      "query": "한국발전공사 원자력",
-      "score": 3.34,
-      "status": "promote_candidate",
-      "term": "한국발전공사",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [
-        "2026-11-26",
-        "2026-11-27"
-      ],
-      "yields": 4,
-      "zero_streak": 2
-    },
-    "한국전기안전공사": {
-      "articles": 5,
-      "created_at": "2026-11-26T06:41:43.622827+00:00",
-      "domains": [
-        "ytn.co.kr",
-        "energy-news.co.kr",
-        "sjbnews.com",
-        "jjn.co.kr",
-        "newsmaker.or.kr"
-      ],
-      "evidence": [
-        {
-          "domain": "ytn.co.kr",
-          "hash": "e4f675dcb8c5a962",
-          "importance": "nice_to_know",
-          "title": "한국전기안전공사, 정읍 연수원에 154kV 초고압 변전 실습설비 구축"
-        },
-        {
-          "domain": "energy-news.co.kr",
-          "hash": "d765da5f764aa20a",
-          "importance": "nice_to_know",
-          "title": "전기안전공사, 정읍에 154kV 초고압 변전 실습설비 준공"
-        },
-        {
-          "domain": "sjbnews.com",
-          "hash": "2c299ba86ef1b0e8",
-          "importance": "nice_to_know",
-          "title": "한국전기안전공사, 154kV 초고압 변전 실습설비 준공"
-        }
-      ],
-      "expires_at": "2026-11-28T06:41:37.693041+00:00",
-      "importance": "nice_to_know",
-      "last_result_count": 0,
-      "last_run": "2026-11-28T00:41:04.854074+00:00",
-      "new_articles": 2,
-      "origin": "auto",
-      "planned_at": "2026-11-28T00:41:01.174408+00:00",
-      "queries_run": 5,
-      "query": "한국전기안전공사 원자력",
-      "score": 3.32,
-      "status": "extended",
-      "term": "한국전기안전공사",
-      "ttl_hours": 24,
-      "type": "org",
-      "yield_days": [
-        "2026-11-26",
-        "2026-11-27"
-      ],
       "yields": 2,
-      "zero_streak": 2
+      "zero_streak": 0
     }
   },
   "version": 1
